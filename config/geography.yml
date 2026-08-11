@@ -1,0 +1,26 @@
+# Geographic scope. NJ-first, not NJ-only (SPEC principle 3, ARCHITECTURE #14).
+# Expanding to another state is an edit here plus source coverage — never a schema or
+# analytics change. No state code is hard-coded anywhere in src/hip.
+
+scope:
+  states:
+    - NJ
+
+  levels:
+    - state
+    - county
+    - municipality
+    - zip
+    - tract
+
+  # OPEN DECISION, must be settled before Milestone 1 loads `regions`.
+  # Whichever system is chosen becomes `regions.geoid` at the municipality level and is
+  # expensive to change afterward, because every fact row references the resulting
+  # region_id. `census_mcd` keeps municipalities on the same GEOID scheme as every other
+  # level and matches ACS and Zillow crosswalks directly; `nj_municipal_code` matches
+  # MOD-IV and NJ state publications but needs a crosswalk for every federal source.
+  # Defaulting to census_mcd on the grounds that federal sources outnumber state ones.
+  municipality_id_system: census_mcd
+
+# `parcel` is deliberately absent from `levels`: parcels stay in Parquet/DuckDB and
+# reach Postgres only as municipality-level aggregates (ARCHITECTURE #16).

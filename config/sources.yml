@@ -1,0 +1,100 @@
+# Public data source registry. One entry per source; adapters are implemented at
+# Milestone 2 and later. `url` is the publisher's stable landing or API root — the exact
+# file URL for a given vintage is the adapter's job, because publishers rename files.
+# Nothing here is fetched until `hip acquire` runs.
+
+sources:
+  zillow_zhvi:
+    name: Zillow Home Value Index
+    publisher: Zillow Research
+    license: Free for non-commercial use with attribution
+    url: https://www.zillow.com/research/data/
+    cadence: monthly
+    adapter: hip.sources.zillow:ZhviAdapter
+    notes: >-
+      Smoothed, seasonally adjusted index revised retroactively; a new release can
+      change history already loaded. See Known Limitations in ARCHITECTURE.md.
+
+  zillow_zori:
+    name: Zillow Observed Rent Index
+    publisher: Zillow Research
+    license: Free for non-commercial use with attribution
+    url: https://www.zillow.com/research/data/
+    cadence: monthly
+    adapter: hip.sources.zillow:ZoriAdapter
+
+  census_acs:
+    name: American Community Survey, 5-year estimates
+    publisher: U.S. Census Bureau
+    license: Public domain (U.S. Government work)
+    url: https://api.census.gov/data
+    cadence: annual
+    adapter: hip.sources.census_acs:AcsAdapter
+    api_key_env: CENSUS_API_KEY
+    notes: >-
+      Consecutive 5-year vintages overlap by four years, so year-over-year change is
+      not an independent measurement.
+
+  census_permits:
+    name: Building Permits Survey
+    publisher: U.S. Census Bureau
+    license: Public domain (U.S. Government work)
+    url: https://www.census.gov/construction/bps/
+    cadence: monthly
+    adapter: hip.sources.census_permits:PermitsAdapter
+
+  fhfa_hpi:
+    name: House Price Index
+    publisher: Federal Housing Finance Agency
+    license: Public domain (U.S. Government work)
+    url: https://www.fhfa.gov/data/hpi
+    cadence: quarterly
+    adapter: hip.sources.fhfa:HpiAdapter
+
+  fred:
+    name: Federal Reserve Economic Data
+    publisher: Federal Reserve Bank of St. Louis
+    license: Free with attribution; series-level terms vary by originator
+    url: https://api.stlouisfed.org/fred
+    cadence: monthly
+    adapter: hip.sources.fred:FredAdapter
+    api_key_env: FRED_API_KEY
+    notes: No anonymous access; a key is required for every request.
+
+  bls:
+    name: Local Area Unemployment Statistics and QCEW
+    publisher: U.S. Bureau of Labor Statistics
+    license: Public domain (U.S. Government work)
+    url: https://api.bls.gov/publicAPI/v2
+    cadence: monthly
+    adapter: hip.sources.bls:BlsAdapter
+    api_key_env: BLS_API_KEY
+    notes: Anonymous tier works but is rate-limited to 25 queries per day.
+
+  irs_migration:
+    name: SOI county-to-county migration flows
+    publisher: Internal Revenue Service
+    license: Public domain (U.S. Government work)
+    url: https://www.irs.gov/statistics/soi-tax-stats-migration-data
+    cadence: annual
+    adapter: hip.sources.irs_migration:MigrationAdapter
+
+  nj_modiv:
+    name: MOD-IV property tax assessment records
+    publisher: New Jersey Division of Taxation
+    license: Open public record
+    url: https://www.state.nj.us/treasury/taxation/lpt/lptvalue.shtml
+    cadence: annual
+    adapter: hip.sources.nj_modiv:ModivAdapter
+    notes: >-
+      Assessed values are not market values; ratios vary by municipality and
+      revaluation year. Stays in Parquet/DuckDB per ARCHITECTURE #16.
+
+  njgin_parcels:
+    name: NJ statewide parcel boundaries
+    publisher: NJ Office of GIS (NJGIN)
+    license: Open data
+    url: https://njogis-newjersey.opendata.arcgis.com/
+    cadence: annual
+    adapter: hip.sources.nj_modiv:ParcelGeometryAdapter
+    notes: Roughly 3.5M parcels statewide; never loaded row-wise into Postgres.

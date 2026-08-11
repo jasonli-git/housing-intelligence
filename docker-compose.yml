@@ -1,0 +1,27 @@
+# Postgres + PostGIS only (ARCHITECTURE #13). Python and Node run natively so the code
+# under edit is not behind a container rebuild.
+# Values come from .env; copy .env.example first.
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: hip-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hip}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hip}
+      POSTGRES_DB: ${POSTGRES_DB:-hip}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER:-hip} -d ${POSTGRES_DB:-hip}
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:

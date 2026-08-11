@@ -1,0 +1,30 @@
+# Kept in the project rather than ~/.dbt so a clean checkout works without setup.
+# No credentials here — everything is env_var.
+#
+# Always invoked from the repo root as:
+#   dbt <cmd> --project-dir dbt --profiles-dir dbt
+# The duckdb path is relative to the working directory, not the project dir, so running
+# dbt from anywhere else needs HIP_DUCKDB_PATH set. `make` targets handle this.
+
+hip:
+  target: duckdb
+  outputs:
+    # Default. Transform tier: reads Parquet in place, no server required.
+    duckdb:
+      type: duckdb
+      path: "{{ env_var('HIP_DUCKDB_PATH', 'data/duckdb/hip.duckdb') }}"
+      threads: 4
+      extensions:
+        - httpfs
+        - spatial
+
+    # Serving tier. Used for post-load tests against the curated warehouse.
+    postgres:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST', 'localhost') }}"
+      port: "{{ env_var('POSTGRES_PORT', '5432') | int }}"
+      user: "{{ env_var('POSTGRES_USER', 'hip') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD', 'hip') }}"
+      dbname: "{{ env_var('POSTGRES_DB', 'hip') }}"
+      schema: public
+      threads: 4

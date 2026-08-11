@@ -1,0 +1,103 @@
+# Metric definitions. Each key becomes a row in the `metrics` warehouse table and is
+# the `metric_id` referenced by every fact (ARCHITECTURE #8). Two sources supplying the
+# same concept write to the same metric_id, which makes their disagreement visible
+# instead of turning it into two columns.
+#
+# direction: how to read a rise — used by rankings and by packet caveats.
+
+metrics:
+  zhvi_sfr:
+    label: Home value index, single-family
+    unit: usd
+    frequency: monthly
+    direction: neutral
+    description: Zillow smoothed, seasonally adjusted typical home value.
+    source_id: zillow_zhvi
+
+  zori_all:
+    label: Observed rent index, all homes
+    unit: usd_month
+    frequency: monthly
+    direction: neutral
+    description: Zillow repeat-rent index of asking rents.
+    source_id: zillow_zori
+
+  acs_median_hh_income:
+    label: Median household income
+    unit: usd
+    frequency: annual
+    direction: higher_is_better
+    description: ACS 5-year estimate, table B19013.
+    source_id: census_acs
+
+  acs_median_gross_rent:
+    label: Median gross rent
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: ACS 5-year estimate, table B25064. Contract rent plus utilities.
+    source_id: census_acs
+
+  acs_population:
+    label: Total population
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: ACS 5-year estimate, table B01003.
+    source_id: census_acs
+
+  acs_median_home_value:
+    label: Median owner-occupied home value
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: ACS 5-year estimate, table B25077. Self-reported by owners.
+    source_id: census_acs
+
+  acs_renter_cost_burden:
+    label: Renters paying over 30% of income on housing
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: ACS 5-year estimate derived from table B25070.
+    source_id: census_acs
+
+  permits_total_units:
+    label: Residential units permitted
+    unit: count
+    frequency: monthly
+    direction: higher_is_better
+    description: New privately-owned housing units authorized, all structure sizes.
+    source_id: census_permits
+
+  fhfa_hpi:
+    label: House price index
+    unit: index
+    frequency: quarterly
+    direction: neutral
+    description: Repeat-sales index of conforming mortgage transactions.
+    source_id: fhfa_hpi
+
+  mortgage_rate_30y:
+    label: 30-year fixed mortgage rate
+    unit: percent
+    frequency: monthly
+    direction: lower_is_better
+    description: FRED series MORTGAGE30US, monthly average. National, not regional.
+    source_id: fred
+
+  unemployment_rate:
+    label: Unemployment rate
+    unit: percent
+    frequency: monthly
+    direction: lower_is_better
+    description: BLS Local Area Unemployment Statistics, not seasonally adjusted.
+    source_id: bls
+
+  net_migration_returns:
+    label: Net migration, tax returns
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: IRS SOI inflow minus outflow returns, a proxy for household moves.
+    source_id: irs_migration

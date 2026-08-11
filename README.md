@@ -11,19 +11,27 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-08-09): no application code exists yet.** This repository currently
-> holds the specification and planning documents. Milestone 0 (scaffolding) is in
-> progress — see [ROADMAP.md](ROADMAP.md) for what is planned and
-> [CHANGELOG.md](CHANGELOG.md) for what has shipped, which is so far nothing.
+> **Status (2026-08-10): Milestone 0, scaffolding.** The skeleton runs — CLI, config
+> layer, `GET /health`, dashboard, migrations, dbt, 30 passing tests — but no housing
+> data has been downloaded and no warehouse table exists. See
+> [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md) for what
+> has been built.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
 
 ## Features
 
-None of these are built yet. Each is listed with the milestone that delivers it, so this
-section can be checked against [ROADMAP.md](ROADMAP.md) rather than believed.
+Each is listed with the milestone that delivers it, so this section can be checked
+against [ROADMAP.md](ROADMAP.md) rather than believed.
 
+- **Config-driven source registry** (M0, built) — 10 public sources and 12 metrics
+  defined in YAML with license, cadence, and update frequency. `hip check-config`
+  validates them and catches a metric naming an undefined source, or a source whose
+  API key is missing, before any fetch is attempted.
+- **Enforced module boundaries** (M0, built) — a test parses every module's imports and
+  fails the build if the API reaches into the pipeline, or if an import flows backward
+  along it. The read-only API is structural, not a convention.
 - **NJ geography spine** (M1) — one `regions` table covering state, county,
   municipality, ZIP, and tract with PostGIS geometry, parent roll-up, and weighted
   crosswalks for geographies that do not nest.
@@ -51,13 +59,13 @@ section can be checked against [ROADMAP.md](ROADMAP.md) rather than believed.
 
 | Layer | Choice | Why |
 |-------|--------|-----|
-| Language | Python 3.12+, TypeScript | Python for data work, TypeScript for the dashboard |
+| Language | Python 3.12.13, TypeScript | Python for data work, TypeScript for the dashboard |
 | CLI | Typer | One command per pipeline stage; the only write path |
 | Raw storage | Parquet | Immutable columnar landings, readable without a database |
 | Transform | DuckDB + dbt-core | Out-of-core SQL over Parquet, with lineage and tests |
 | Warehouse | PostgreSQL 16 + PostGIS | Concurrent readers, constraints, spatial queries |
 | API | FastAPI + SQLAlchemy | Read-only, typed, OpenAPI for free |
-| Dashboard | Next.js + React | Charts, maps, and comparison views over the API |
+| Dashboard | Next.js 16 + React 19 | Charts, maps, and comparison views over the API |
 | Packaging | `uv`, Docker Compose | Locked Python env; Postgres is the only container |
 
 The reasoning behind each of these, and what was rejected, is in the Decisions Log in
@@ -65,32 +73,50 @@ The reasoning behind each of these, and what was rejected, is in the Decisions L
 
 ## Setup
 
-**Prerequisites** — install these now; they are what Milestone 0 will build against.
+**Prerequisites**
 
-- Docker Desktop (runs Postgres + PostGIS; nothing else is containerized)
-- [`uv`](https://docs.astral.sh/uv/) for Python 3.12+
+- [`uv`](https://docs.astral.sh/uv/) — installs the pinned Python 3.12.13 itself
 - Node.js 20+ for the dashboard
-
-**What works today.** The repository contains documents only:
+- Docker Desktop, for Postgres + PostGIS. **Not yet installed on this machine**, so
+  every database-dependent step below is unverified.
 
 ```bash
 git clone https://github.com/jasonli-git/housing-intelligence.git
+cd housing-intelligence
+make setup
 ```
 
-**After Milestone 0 lands**, setup becomes the commands below. They do not work yet — the
-`Makefile`, `pyproject.toml`, and `web/` package they depend on are the deliverables of
-that milestone, tracked in [TODO.md](TODO.md).
+`make setup` syncs the Python environment, installs dashboard dependencies, creates the
+local `data/` directories, and copies `.env.example` to `.env` if you have none.
+
+**Verified today** — these need no database:
 
 ```bash
-make setup      # uv sync, install web deps
-make db-up      # docker compose up postgres + postgis
-make api        # FastAPI on http://localhost:8000  (docs at /docs)
-make web        # Next.js on http://localhost:3000
-make test       # pytest + dbt tests
+make test          # 30 tests
+make lint          # ruff + ruff format --check + mypy --strict
+make check-config  # exits 1 until the source API keys in .env are filled in
+make api           # http://localhost:8000  (OpenAPI docs at /docs)
+make web           # http://localhost:3000  — renders the API health response
 ```
+
+**Needs Docker** — written but never run:
+
+```bash
+make db-up         # Postgres 16 + PostGIS, waits for the healthcheck
+make migrate       # alembic upgrade head — creates the PostGIS extension
+make dbt-debug     # checks both the duckdb and postgres targets
+```
+
+With the warehouse down, `make api` and `make web` still work and report the degraded
+state — that path is verified. `make` on its own lists every target.
+
+**API keys.** `CENSUS_API_KEY` and `FRED_API_KEY` are required from Milestone 3;
+`BLS_API_KEY` is optional but raises a 25-query daily limit. All three are free.
+`.env.example` links to each signup page.
 
 ## Project Status
 
-Pre-release, Milestone 0 of 8 in progress, no version tagged. Milestones and their status
-are in [ROADMAP.md](ROADMAP.md); shipped work is recorded in
-[CHANGELOG.md](CHANGELOG.md).
+Pre-release, Milestone 0 of 8, no version tagged. The scaffolding is built and tested;
+closing the milestone requires running the Postgres path once Docker is available.
+Milestones and their status are in [ROADMAP.md](ROADMAP.md); the current working list,
+including known rough edges, is in [TODO.md](TODO.md).

@@ -5,11 +5,13 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-08-09):** no code exists in this repository yet. Every section below
-> records a decision that has been made, not an implementation that can be inspected.
-> Paths, tables, and endpoints named here are targets for the milestones in
-> [ROADMAP.md](ROADMAP.md), and this document gets rewritten against real code as each
-> milestone lands. Nothing here should be read as "already works".
+> **Status (2026-08-10):** Milestone 0 scaffolding exists and runs. Built and verified:
+> the module layout and its enforced boundary rule, the config layer, the CLI shell,
+> `GET /health`, the Alembic harness, the dbt project on DuckDB, the dashboard shell,
+> and 30 passing tests. Still decision-only, marked per section below: every warehouse
+> table, all eight pipeline stages (the CLI commands exist and exit non-zero), the
+> analysis packet, and every API endpoint except `/health`. Sections get rewritten
+> against real code as each milestone in [ROADMAP.md](ROADMAP.md) lands.
 
 ## System Shape
 
@@ -64,52 +66,53 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 15 | Validation is a distinct gate stage that can block the load, not a set of assertions scattered through ETL. | A failed load is worse than a skipped one, and the gate is where "is this release sane" is answered once. Pandera checks shapes at the DuckDB boundary; dbt tests check the warehouse after load. Costs a stage that will occasionally block on a real-but-unusual upstream change. |
 | 16 | Parcel and MOD-IV data stay in Parquet/DuckDB; only aggregates are promoted to Postgres. | NJ has roughly 3.5M parcels with wide records — worth analyzing, not worth serving row-by-row from the API in V1. Rejected: loading all parcels into Postgres, which inflates the warehouse and the backup for a feature nothing yet consumes. Costs: parcel-level API endpoints are impossible until this is revisited, which is a post-V1 item in [ROADMAP.md](ROADMAP.md). |
 | 17 | `uv` manages Python dependencies and the virtualenv; the lockfile is committed. | Fast, single-tool resolution and a reproducible environment for anyone cloning the repo. Rejected: Poetry (slower) and bare pip + requirements.txt (no real lock). Costs a tool that is newer than pip. |
+| 18 | The Python patch version is pinned in `.python-version` (3.12.13), not just `>=3.12` in `pyproject.toml`. | Found the hard way on 2026-08-10: uv resolved Python through a `cpython-3.12` symlink and wrote that path as `home` in `pyvenv.cfg`, while CPython resolved the symlink to `cpython-3.12.13`. The mismatch stopped CPython recognizing the venv, which silently disabled `.pth` processing and broke *every* editable install — surfacing only as `ModuleNotFoundError: No module named 'hip'` after an unrelated `uv sync`. Pinning the patch makes uv record the resolved path. Costs a pin to bump on upgrades, and it is a workaround for an environment bug, not a fix for it. |
+| 19 | dbt lives in its own `dbt` dependency group, not in the main dependencies. | dbt-core carries a large pinned tree of its own; keeping it out of the default resolution stops it from constraining FastAPI, Pydantic, and SQLAlchemy versions later. They currently co-resolve cleanly, so this costs nothing today and buys an escape hatch when they stop. Costs: `uv sync` alone gives no dbt — `make setup` installs both groups. |
+| 20 | Tests import `hip` from `src/` via pytest's `pythonpath`, not via the editable install. | A broken editable install then fails loudly at `uv sync` instead of showing up as a collection error in every test file — which is exactly how #18 first presented, and it cost real time to trace. Costs a second import mechanism that must stay in step with the package layout. |
 
 ## Module Layout
 
-None of these paths exist yet; this is the layout Milestone 0 creates.
+What exists as of 2026-08-10. Empty pipeline packages are real directories holding only
+`__init__.py` — they exist so the boundary rule in `tests/test_module_boundaries.py` has
+something to enforce against. Planned files are marked with the milestone that adds them.
 
 ```text
 housing-intelligence/
+├── .python-version            # pinned patch version (#18)
 ├── config/
-│   ├── sources.yml            # source registry: urls, cadence, license, adapter name
+│   ├── sources.yml            # 10 sources: url, cadence, license, adapter name
 │   ├── geography.yml          # in-scope states and levels (#14)
-│   └── metrics.yml            # metric_id → label, unit, frequency, direction
+│   └── metrics.yml            # 12 metrics: label, unit, frequency, direction
 ├── src/hip/
-│   ├── cli.py                 # Typer entrypoint; one command per pipeline stage
-│   ├── config.py              # settings + YAML config loading, env resolution
-│   ├── sources/               # one adapter per public source; fetch → local path
-│   │   ├── base.py            # SourceAdapter protocol, retry/cache behavior
-│   │   ├── zillow.py          # ZHVI, ZORI
-│   │   ├── census_acs.py      # ACS 5-year tables
-│   │   ├── census_permits.py  # Building Permits Survey
-│   │   ├── fhfa.py            # HPI
-│   │   ├── fred.py            # mortgage rates, macro series
-│   │   ├── bls.py             # employment, wages
-│   │   ├── irs_migration.py   # SOI county-to-county flows
-│   │   └── nj_modiv.py        # NJGIN parcels, MOD-IV
-│   ├── landing/               # raw → Parquet, manifest + checksum writing (#10)
-│   ├── transform/             # DuckDB session, staging model execution
-│   ├── geography/             # region key resolution, crosswalks, PostGIS load
-│   ├── validate/              # Pandera schemas and the gate (#15)
-│   ├── warehouse/             # SQLAlchemy models, migrations, Postgres loaders
-│   ├── analytics/             # change metrics, affordability, rankings
-│   ├── packets/               # analysis packet assembly + JSON schema (#12)
-│   └── api/                   # FastAPI app
-│       ├── main.py
-│       ├── deps.py            # read-only session dependency
-│       └── routers/           # regions, metrics, rankings, compare, sources
+│   ├── cli.py                 # Typer entrypoint; check-config + 8 stage commands
+│   ├── config.py              # settings, YAML loading, env resolution, cross-checks
+│   ├── sources/               # (M2) one adapter per source; fetch → local path
+│   ├── landing/               # (M2) raw → Parquet, manifest + checksum (#10)
+│   ├── transform/             # (M2) DuckDB session, staging model execution
+│   ├── geography/             # (M1) region key resolution, crosswalks, PostGIS load
+│   ├── validate/              # (M2) Pandera schemas and the gate (#15)
+│   ├── warehouse/
+│   │   ├── db.py              # engine, session_scope, probe() for /health
+│   │   └── migrations/        # Alembic; 0001 baseline enables PostGIS
+│   ├── analytics/             # (M4) change metrics, affordability, rankings
+│   ├── packets/               # (M6) packet assembly + JSON schema (#12)
+│   └── api/
+│       ├── main.py            # FastAPI app, CORS for the dashboard origin
+│       └── routers/health.py  # GET /health — the only endpoint so far
 ├── dbt/
-│   ├── models/staging/        # one model per source release, typed and renamed
-│   ├── models/marts/          # fact and dimension models
-│   └── tests/                 # schema + data tests run by the gate
-├── web/                       # Next.js dashboard, maps, rankings, reports
+│   ├── dbt_project.yml        # staging = views, marts = tables
+│   ├── profiles.yml           # duckdb (default) and postgres targets
+│   └── models/staging|marts/  # (M1–M2) empty
+├── web/                       # Next.js 16 + React 19 dashboard
+│   └── app/page.tsx           # renders GET /health; the whole UI at M0
 ├── data/                      # gitignored, machine-local
 │   ├── raw/                   # immutable downloads, content-addressed
 │   ├── parquet/               # landing tier
 │   └── duckdb/                # working analytical database
-├── tests/
+├── tests/                     # 30 tests: config, cli, health, module boundaries
+├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
+├── Makefile                   # setup, db-up, migrate, api, web, test, lint
 └── pyproject.toml
 ```
 
@@ -129,8 +132,12 @@ importable from anywhere; every other cross-stage import is a boundary violation
 
 ## Warehouse Schema
 
-The curated Postgres schema. Types are indicative; the migration in Milestone 1 is
-authoritative once it exists.
+**None of these tables exist yet.** Migration `0001_baseline` creates the PostGIS
+extension and nothing else, and has only been verified in Alembic's offline mode
+(`alembic upgrade head --sql`) — it has not run against a live database, because Docker
+is not installed on the development machine. Milestone 1 adds `regions` and
+`region_crosswalk`; the migration it writes, not this block, becomes authoritative.
+Types below are indicative.
 
 ```sql
 CREATE TYPE region_level AS ENUM
@@ -249,6 +256,11 @@ nothing to fix; the mitigation is that the weight and method stay queryable.
 
 Eight stages, each a CLI command, each persisting before the next runs (SPEC principle 6).
 
+**All eight commands exist and none are implemented.** Each prints the milestone that
+delivers it and exits 1, so a stub can never be mistaken for a successful run — a
+no-op that exits 0 would make an empty warehouse look like a clean pipeline.
+`hip check-config` is the one command that does real work today.
+
 ```text
 hip acquire   →  data/raw/<source>/<sha256>/        immutable download + manifest
      ↓
@@ -327,11 +339,12 @@ is the point: the contract gets to stabilize before a model shapes it.
 
 ## API
 
-FastAPI over Postgres, read-only (#6), served at `http://localhost:8000`.
+FastAPI over Postgres, read-only (#6), served at `http://localhost:8000`. **Only
+`/health` is implemented**; the rest arrive with the milestones that produce their data.
 
 | Method | Path | Returns |
 |--------|------|---------|
-| GET | `/health` | service + database + last successful load timestamp |
+| GET | `/health` | ✅ service + database + last successful load timestamp |
 | GET | `/regions` | regions filtered by `level`, `state`, `parent_id` |
 | GET | `/regions/{region_id}` | one region, its parent chain, available metrics |
 | GET | `/regions/{region_id}/metrics` | observations filtered by `metric_id`, `from`, `to` |
@@ -365,5 +378,11 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **Parcel data is not queryable through the API** (#16). It exists in Parquet and DuckDB
   and reaches Postgres only as municipality-level aggregates.
 - **There is no AI layer** (#11). Packets are produced and go nowhere until Milestone 8.
-- **Refresh is manual.** There is no scheduler; a refresh is `hip refresh --all` run by a
+- **Refresh is manual.** There is no scheduler; a refresh is a `hip` command run by a
   person or a cron entry they write themselves. Deliberate — see #6.
+- **The Postgres path has never been executed.** Docker is not installed on the
+  development machine, so `docker compose up`, `alembic upgrade head` against a live
+  database, and dbt's `postgres` target are all unrun as of 2026-08-10. They are
+  written, and `/health` plus the dashboard both degrade correctly when the warehouse
+  is unreachable — which is the one Postgres-adjacent behavior that *is* verified.
+  Milestone 1 cannot start until this is cleared.
