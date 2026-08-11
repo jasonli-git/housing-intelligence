@@ -2,8 +2,16 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup db-up db-down db-logs migrate api web test lint format \
-        check-config dbt-debug clean
+.PHONY: help setup venv-fix db-up db-down db-logs migrate pipeline api web test lint \
+        format check-config dbt-debug clean
+
+SITE_PACKAGES = $(wildcard .venv/lib/python*/site-packages)
+
+# Every recipe below runs with src/ on the import path, so nothing depends on the
+# editable install's .pth file. uv sets macOS's UF_HIDDEN flag on .pth files and
+# CPython's site.py skips hidden .pth files, which silently breaks `import hip` after
+# any sync (ARCHITECTURE #24). PYTHONPATH is immune to that and portable.
+export PYTHONPATH := $(CURDIR)/src
 
 help:  ## List available targets
 	@grep -hE '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -11,9 +19,19 @@ help:  ## List available targets
 
 setup:  ## Install Python and Node dependencies, create local data dirs
 	uv sync --group dev --group dbt
+	$(MAKE) venv-fix
 	mkdir -p data/raw data/parquet data/duckdb data/packets reports/validation
 	cd web && npm install
 	@test -f .env || (cp .env.example .env && echo "Created .env from .env.example")
+
+venv-fix:  ## Un-hide .pth files so bare `uv run hip` works (see ARCHITECTURE #24)
+	@# Only needed outside make: every make target already exports PYTHONPATH. uv
+	@# re-hides these on each sync, so re-run this whenever `uv run hip` starts failing
+	@# with ModuleNotFoundError.
+	@-chflags nohidden $(SITE_PACKAGES)/*.pth 2>/dev/null || true
+	@.venv/bin/python -c "import hip" 2>/dev/null \
+		&& echo "venv OK: bare 'uv run hip' works" \
+		|| echo "still broken outside make; use make targets, which set PYTHONPATH"
 
 db-up:  ## Start Postgres + PostGIS (requires Docker)
 	docker compose up -d
@@ -30,6 +48,13 @@ db-logs:  ## Tail Postgres logs
 
 migrate:  ## Apply Alembic migrations to the warehouse
 	uv run alembic upgrade head
+
+pipeline:  ## Run the full geography pipeline: acquire -> land -> geocode -> load
+	@# Each stage persists before the next begins, so any one can be re-run alone.
+	uv run hip acquire
+	uv run hip land
+	uv run hip geocode
+	uv run hip load
 
 api:  ## Run the API on http://localhost:8000 (docs at /docs)
 	uv run uvicorn hip.api.main:app --reload --port 8000

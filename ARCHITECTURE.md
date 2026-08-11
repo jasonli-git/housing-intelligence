@@ -5,13 +5,13 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-08-10):** Milestone 0 scaffolding exists and runs. Built and verified:
-> the module layout and its enforced boundary rule, the config layer, the CLI shell,
-> `GET /health`, the Alembic harness, the dbt project on DuckDB, the dashboard shell,
-> and 30 passing tests. Still decision-only, marked per section below: every warehouse
-> table, all eight pipeline stages (the CLI commands exist and exit non-zero), the
-> analysis packet, and every API endpoint except `/health`. Sections get rewritten
-> against real code as each milestone in [ROADMAP.md](ROADMAP.md) lands.
+> **Status (2026-08-11):** Milestones 0 and 1 are complete. The warehouse holds a real
+> NJ geography spine — 3,365 regions across five levels with PostGIS geometry and 1,902
+> allocation weights — loaded end to end from Census TIGER/Line through
+> `acquire → land → geocode → load`, and served by `/regions`, `/regions/{id}`, and
+> `/geo/{level}`. 64 tests pass. Still decision-only, marked per section below: the
+> metric fact tables, the `stage`/`validate`/`analyze`/`pack` stages, the analysis
+> packet, and every API endpoint beyond geography and health.
 
 ## System Shape
 
@@ -69,10 +69,16 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 18 | The Python patch version is pinned in `.python-version` (3.12.13), not just `>=3.12` in `pyproject.toml`. | Found the hard way on 2026-08-10: uv resolved Python through a `cpython-3.12` symlink and wrote that path as `home` in `pyvenv.cfg`, while CPython resolved the symlink to `cpython-3.12.13`. The mismatch stopped CPython recognizing the venv, which silently disabled `.pth` processing and broke *every* editable install — surfacing only as `ModuleNotFoundError: No module named 'hip'` after an unrelated `uv sync`. Pinning the patch makes uv record the resolved path. Costs a pin to bump on upgrades, and it is a workaround for an environment bug, not a fix for it. |
 | 19 | dbt lives in its own `dbt` dependency group, not in the main dependencies. | dbt-core carries a large pinned tree of its own; keeping it out of the default resolution stops it from constraining FastAPI, Pydantic, and SQLAlchemy versions later. They currently co-resolve cleanly, so this costs nothing today and buys an escape hatch when they stop. Costs: `uv sync` alone gives no dbt — `make setup` installs both groups. |
 | 20 | Tests import `hip` from `src/` via pytest's `pythonpath`, not via the editable install. | A broken editable install then fails loudly at `uv sync` instead of showing up as a collection error in every test file — which is exactly how #18 first presented, and it cost real time to trace. Costs a second import mechanism that must stay in step with the package layout. |
+| 21 | Municipalities key on Census County Subdivision (MCD) FIPS; NJ's own municipal code is stored in `region_identifiers`. | Keeps municipalities on the same GEOID scheme as every other level, so ACS, Zillow, and Building Permits join with no reconciliation — federal sources outnumber state ones. Rejected: keying on the NJ municipal code, which would force a crosswalk for every federal source and has no analogue in other states. Storing both rather than choosing one costs a small table and removes the need to ever revisit. `region_identifiers` stays empty until Milestone 7 supplies MOD-IV. |
+| 22 | Boundary geometry comes from Census TIGER/Line, currently the 2025 vintage. | TIGER's GEOIDs *are* the join keys the largest sources use, so geometry and attributes agree by construction. Rejected: NJGIN's authoritative NJ boundaries — higher fidelity, but needs a GEOID crosswalk for every federal source and does not generalize past NJ. Costs generalized boundaries and a 635MB initial download, 529MB of which is the national ZCTA file Census stopped partitioning by state after 2020. |
+| 23 | `hip/config.py` and `hip/duck.py` are infrastructure leaves, importable from any module. | `hip.landing` needs DuckDB to read shapefiles in place, and landing importing `hip.transform` would run backward along the pipeline. Making the DuckDB session a leaf resolves that without weakening the rule for anything that carries pipeline logic. Costs two modules exempt from the ordering check; the boundary test names them explicitly so the exemption cannot spread by accident. |
+| 24 | The Makefile exports `PYTHONPATH=src`; nothing depends on the editable install's `.pth` file. **Supersedes #18.** | #18 blamed a stale interpreter symlink. The real cause: `uv` sets macOS's `UF_HIDDEN` flag on every `.pth` file it writes, and CPython's `site.py` (3.12, line 176) silently skips hidden `.pth` files — so `import hip` broke after every sync, including syncs triggered implicitly by `uv run`. No `.pth`-based fix survives, because uv re-hides the file each time. `PYTHONPATH` sidesteps `.pth` entirely and is portable. The `.python-version` pin from #18 is harmless and stays; its stated rationale was wrong. `make venv-fix` clears the flag for anyone running bare `uv run hip`. |
+| 25 | Regions are upserted on `(level, geoid)` and never deleted and reinserted. | `region_id` is a surrogate key every future fact row will reference. A reload that reassigned ids would silently repoint every metric in the warehouse at the wrong place — the worst class of bug here, because nothing would error. Costs an upsert path plus insertion in parent-before-child order, since the parent lookup is inline. |
+| 26 | ZIP→municipality and ZIP→county weights are computed by **area** overlap, in EPSG:5070. | Self-contained and needs no credential, so the crosswalk exists from day one. Equal-area projection because computing on raw 4269 degrees shrinks a degree of longitude with latitude and biases every weight. Rejected *for now*: HUD's USPS crosswalk, which is residential-address-weighted and genuinely better for housing — it needs a registered API key, so adopting it silently was not an option. `method` is stored per row so both can coexist and be compared; the seam is the `method` column. |
 
 ## Module Layout
 
-What exists as of 2026-08-10. Empty pipeline packages are real directories holding only
+What exists as of 2026-08-11. Empty pipeline packages are real directories holding only
 `__init__.py` — they exist so the boundary rule in `tests/test_module_boundaries.py` has
 something to enforce against. Planned files are marked with the milestone that adds them.
 
@@ -85,20 +91,28 @@ housing-intelligence/
 │   └── metrics.yml            # 12 metrics: label, unit, frequency, direction
 ├── src/hip/
 │   ├── cli.py                 # Typer entrypoint; check-config + 8 stage commands
-│   ├── config.py              # settings, YAML loading, env resolution, cross-checks
-│   ├── sources/               # (M2) one adapter per source; fetch → local path
-│   ├── landing/               # (M2) raw → Parquet, manifest + checksum (#10)
-│   ├── transform/             # (M2) DuckDB session, staging model execution
-│   ├── geography/             # (M1) region key resolution, crosswalks, PostGIS load
+│   ├── config.py              # settings, YAML loading, env resolution, STATE_FIPS
+│   ├── duck.py                # DuckDB session + /vsizip path helper (#23)
+│   ├── sources/
+│   │   ├── base.py            # SourceAdapter, retry, content-addressed cache (#10)
+│   │   └── tiger.py           # Census TIGER/Line: 5 layers (#22)
+│   ├── landing/shapefile.py   # zip → Parquet via ST_Read, geometry to MultiPolygon
+│   ├── transform/             # (M2) dbt staging model execution
+│   ├── geography/
+│   │   ├── regions.py         # stg_regions: 5 levels, parent chain by geoid
+│   │   └── crosswalk.py       # area-weighted ZIP allocation in EPSG:5070 (#26)
 │   ├── validate/              # (M2) Pandera schemas and the gate (#15)
 │   ├── warehouse/
 │   │   ├── db.py              # engine, session_scope, probe() for /health
-│   │   └── migrations/        # Alembic; 0001 baseline enables PostGIS
+│   │   ├── models.py          # Region, RegionIdentifier, RegionCrosswalk
+│   │   ├── load.py            # one-transaction upsert of the spine (#25)
+│   │   └── migrations/        # Alembic; 0001 PostGIS, 0002 geography spine
 │   ├── analytics/             # (M4) change metrics, affordability, rankings
 │   ├── packets/               # (M6) packet assembly + JSON schema (#12)
 │   └── api/
 │       ├── main.py            # FastAPI app, CORS for the dashboard origin
-│       └── routers/health.py  # GET /health — the only endpoint so far
+│       ├── deps.py            # read-only session dependency
+│       └── routers/           # health.py, regions.py
 ├── dbt/
 │   ├── dbt_project.yml        # staging = views, marts = tables
 │   ├── profiles.yml           # duckdb (default) and postgres targets
@@ -109,7 +123,7 @@ housing-intelligence/
 │   ├── raw/                   # immutable downloads, content-addressed
 │   ├── parquet/               # landing tier
 │   └── duckdb/                # working analytical database
-├── tests/                     # 30 tests: config, cli, health, module boundaries
+├── tests/                     # 64 tests; test_api_regions.py skips without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, api, web, test, lint
@@ -127,17 +141,20 @@ sources → landing → transform → geography → validate → warehouse → a
 `api` may import `warehouse` read models and `packets`, and nothing else from the
 pipeline — it must not be able to import `sources` or `transform`, which is what keeps
 decision #6 true by construction rather than by discipline. Nothing imports `api`.
-`web/` reaches the API over HTTP only and shares no code with Python. `config` is
-importable from anywhere; every other cross-stage import is a boundary violation.
+`web/` reaches the API over HTTP only and shares no code with Python. `config` and
+`duck` are infrastructure leaves importable from anywhere (#23); every other cross-stage
+import is a boundary violation. `cli` sits outside the chain and orchestrates all of it,
+which is why every write path lives there.
 
 ## Warehouse Schema
 
-**None of these tables exist yet.** Migration `0001_baseline` creates the PostGIS
-extension and nothing else, and has only been verified in Alembic's offline mode
-(`alembic upgrade head --sql`) — it has not run against a live database, because Docker
-is not installed on the development machine. Milestone 1 adds `regions` and
-`region_crosswalk`; the migration it writes, not this block, becomes authoritative.
-Types below are indicative.
+**Built as of Milestone 1:** `regions`, `region_identifiers`, `region_crosswalk`,
+`sources`, and `source_releases` all exist and are populated — see
+`src/hip/warehouse/migrations/versions/0002_regions.py`, which is authoritative for DDL,
+and `src/hip/warehouse/models.py` for the ORM mapping. The block below is the shape;
+where it and the migration disagree, the migration wins. `metrics`,
+`fact_metric_observation`, `fact_metric_change`, and `region_rankings` are **not built**
+— they arrive with Milestones 2 and 4.
 
 ```sql
 CREATE TYPE region_level AS ENUM
@@ -236,8 +253,13 @@ CREATE TABLE region_rankings (
   rather than appends, so a double-run cannot silently double a county's population.
 - Every fact traces to exactly one source file. `DELETE FROM source_releases WHERE
   release_id = ?` removes precisely what that file contributed and nothing else.
-- `parent_id` gives roll-up (tract → municipality → county → state) without duplicating
-  geometry, and it is a strict hierarchy — which is why ZIP codes are *not* in it.
+- `parent_id` is a strict hierarchy: `state → county → {municipality, tract}`.
+  Municipality and tract are **siblings**, not nested — Census tracts nest within
+  *counties*, and a tract can straddle municipal lines. (An earlier version of this
+  document claimed tracts roll up through municipalities; that was wrong, and it
+  matters: any municipality-level figure derived from tract data needs a crosswalk,
+  exactly like ZIP.) ZIP codes are in no hierarchy at all, so `parent_id` is NULL for
+  them and `ck_regions_parent_by_level` enforces that.
 - All levels share one table, so a query that filters `level = 'county'` can be changed
   to `'municipality'` without touching its joins.
 - A metric is defined once. Two sources supplying median rent write to the same
@@ -256,10 +278,16 @@ nothing to fix; the mitigation is that the weight and method stay queryable.
 
 Eight stages, each a CLI command, each persisting before the next runs (SPEC principle 6).
 
-**All eight commands exist and none are implemented.** Each prints the milestone that
-delivers it and exits 1, so a stub can never be mistaken for a successful run — a
-no-op that exits 0 would make an empty warehouse look like a clean pipeline.
-`hip check-config` is the one command that does real work today.
+**Implemented as of Milestone 1:** `acquire`, `land`, `geocode`, and `load` run the
+geography spine end to end. `stage`, `validate`, `analyze`, and `pack` remain stubs that
+print the milestone delivering them and exit 1, so a stub can never be mistaken for a
+successful run — a no-op exiting 0 would make an empty warehouse look like a clean
+pipeline. `src/hip/cli.py` keeps the stub list in `_STAGE_MILESTONE`, and a test asserts
+implemented stages have been removed from it, so the map cannot go stale.
+
+`geocode` currently does its work in DuckDB directly rather than through dbt models;
+`stage` is where dbt enters at Milestone 2, once there are source attributes worth
+modelling rather than geometry to intersect.
 
 ```text
 hip acquire   →  data/raw/<source>/<sha256>/        immutable download + manifest
@@ -339,21 +367,21 @@ is the point: the contract gets to stabilize before a model shapes it.
 
 ## API
 
-FastAPI over Postgres, read-only (#6), served at `http://localhost:8000`. **Only
-`/health` is implemented**; the rest arrive with the milestones that produce their data.
+FastAPI over Postgres, read-only (#6), served at `http://localhost:8000`. Endpoints
+marked ✅ are implemented; the rest arrive with the milestones that produce their data.
 
 | Method | Path | Returns |
 |--------|------|---------|
 | GET | `/health` | ✅ service + database + last successful load timestamp |
-| GET | `/regions` | regions filtered by `level`, `state`, `parent_id` |
-| GET | `/regions/{region_id}` | one region, its parent chain, available metrics |
+| GET | `/regions` | ✅ paged regions filtered by `level`, `state`, `parent_id`, name `q` |
+| GET | `/regions/{region_id}` | ✅ one region, its full ancestor chain, child count |
+| GET | `/geo/{level}` | ✅ GeoJSON FeatureCollection, simplified by default |
 | GET | `/regions/{region_id}/metrics` | observations filtered by `metric_id`, `from`, `to` |
 | GET | `/regions/{region_id}/summary` | headline changes, rank, caveats — dashboard landing |
 | GET | `/regions/{region_id}/packet` | the analysis packet for a region |
 | GET | `/rankings` | ranked regions for `metric_id`, `level`, window |
 | GET | `/compare` | aligned series for several `region_ids` and `metric_ids` |
 | GET | `/sources` | source registry and the releases currently loaded |
-| GET | `/geo/{level}` | GeoJSON boundaries for map rendering |
 
 Every response that contains a metric value also carries the `release_id` and source
 vintage behind it — provenance is a field, not a separate lookup. The API holds a
@@ -380,9 +408,21 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **There is no AI layer** (#11). Packets are produced and go nowhere until Milestone 8.
 - **Refresh is manual.** There is no scheduler; a refresh is a `hip` command run by a
   person or a cron entry they write themselves. Deliberate — see #6.
-- **The Postgres path has never been executed.** Docker is not installed on the
-  development machine, so `docker compose up`, `alembic upgrade head` against a live
-  database, and dbt's `postgres` target are all unrun as of 2026-08-10. They are
-  written, and `/health` plus the dashboard both degrade correctly when the warehouse
-  is unreachable — which is the one Postgres-adjacent behavior that *is* verified.
-  Milestone 1 cannot start until this is cleared.
+- **ZIP allocation is area-weighted, not population-weighted** (#26). A half-empty ZIP
+  contributes area it does not contribute households for, so ZIP-derived municipal
+  figures skew toward large, sparsely populated areas. HUD's USPS crosswalk is the fix
+  and needs an API key.
+- **ZIP membership is decided by geometry, not by address.** 598 ZCTAs overlap NJ by
+  positive area; ZCTAs that only touch the border across the Delaware or Hudson are
+  excluded. A ZCTA mostly in Pennsylvania but partly in NJ is still recorded with
+  `state_code = 'NJ'`, because scope contains only NJ — the label means "in scope and
+  overlapping", not "majority of its area is here".
+- **`/geo` geometry type varies with simplification.** `ST_SimplifyPreserveTopology` can
+  reduce a single-part MultiPolygon to a Polygon, so the same region may serialize as
+  either. GeoJSON consumers accept both; a client that switches on geometry type will
+  be surprised.
+- **dbt is configured but unused.** `geocode` does its spatial work directly in DuckDB.
+  dbt earns its place at Milestone 2, when there are source attributes to model.
+- **The Postgres container runs under emulation.** `postgis/postgis:16-3.4` resolves to
+  linux/amd64 on this arm64 Mac, so Docker emulates it. Correct but slower than native;
+  irrelevant at 3,365 rows, worth revisiting when the fact tables arrive.

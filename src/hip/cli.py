@@ -18,10 +18,19 @@ from hip import __version__
 from hip.config import (
     ConfigError,
     check_config,
+    get_settings,
     load_geography,
     load_metrics,
     load_sources,
 )
+from hip.duck import duckdb_session
+from hip.geography.crosswalk import build_crosswalk
+from hip.geography.regions import build_regions
+from hip.landing.shapefile import land_shapefile
+from hip.sources.tiger import TigerAdapter, shapefile_member
+from hip.warehouse.db import get_engine
+from hip.warehouse.load import ReleaseProvenance, SourceRecord
+from hip.warehouse.load import load_geography as load_warehouse_geography
 
 app = typer.Typer(
     name="hip",
@@ -30,14 +39,12 @@ app = typer.Typer(
     add_completion=False,
 )
 
-# Stage name -> milestone that implements it. Keep in step with ROADMAP.md.
+# Stages still to be implemented, and the milestone that delivers each. Implemented
+# stages are removed from this map, so it doubles as the list of remaining work.
+# Keep in step with ROADMAP.md.
 _STAGE_MILESTONE = {
-    "acquire": 2,
-    "land": 2,
     "stage": 2,
-    "geocode": 1,
     "validate": 2,
-    "load": 2,
     "analyze": 4,
     "pack": 6,
 }
@@ -98,15 +105,84 @@ def check_config_command() -> None:
 
 
 @app.command()
-def acquire() -> None:
+def acquire(
+    source: Annotated[
+        str, typer.Option("--source", "-s", help="Source id, e.g. census_tiger.")
+    ] = "census_tiger",
+    vintage: Annotated[
+        str | None, typer.Option("--vintage", help="Source vintage; defaults per source.")
+    ] = None,
+    force: Annotated[
+        bool, typer.Option("--force", help="Re-download even if cached.")
+    ] = False,
+) -> None:
     """Download source releases to data/raw/, content-addressed and immutable."""
-    _not_yet("acquire")
+    if source != TigerAdapter.source_id:
+        typer.secho(
+            f"Only '{TigerAdapter.source_id}' has an adapter so far; "
+            f"'{source}' ships in Milestone 2. See ROADMAP.md.",
+            fg=typer.colors.YELLOW,
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    settings = get_settings()
+    adapter = TigerAdapter(states=load_geography().states)
+    total = 0
+    for release in adapter.fetch_all(
+        raw_dir=settings.raw_dir, vintage=vintage, force=force
+    ):
+        origin = "cached" if release.from_cache else "downloaded"
+        typer.echo(
+            f"{release.ref.key:<22} {origin:<10} "
+            f"{release.size_bytes / 1e6:>8.1f} MB  {release.sha256[:12]}"
+        )
+        total += release.size_bytes
+    typer.secho(f"{total / 1e6:.1f} MB in data/raw/{source}/", fg=typer.colors.GREEN)
 
 
 @app.command()
-def land() -> None:
+def land(
+    vintage: Annotated[str | None, typer.Option("--vintage")] = None,
+    overwrite: Annotated[
+        bool, typer.Option("--overwrite", help="Re-transcode even if Parquet exists.")
+    ] = False,
+) -> None:
     """Transcode raw downloads to typed Parquet under data/parquet/."""
-    _not_yet("land")
+    settings = get_settings()
+    adapter = TigerAdapter(states=load_geography().states)
+    for release in adapter.fetch_all(raw_dir=settings.raw_dir, vintage=vintage):
+        table = land_shapefile(
+            release,
+            shapefile_member(release.ref),
+            parquet_dir=settings.parquet_dir,
+            overwrite=overwrite,
+        )
+        typer.echo(f"{release.ref.key:<22} {table.row_count:>8,} rows  {table.path}")
+
+
+@app.command()
+def geocode(
+    vintage: Annotated[str | None, typer.Option("--vintage")] = None,
+) -> None:
+    """Resolve source geographies to region rows and build allocation crosswalks."""
+    settings = get_settings()
+    scope = load_geography()
+    with duckdb_session(settings.duckdb_path, spatial=True) as con:
+        counts = build_regions(
+            con,
+            parquet_dir=settings.parquet_dir,
+            vintage=vintage or TigerAdapter.default_vintage,
+            scope=scope,
+        )
+        crosswalk = build_crosswalk(con)
+
+    for level in scope.levels:
+        typer.echo(f"{level:<14} {counts.by_level.get(level, 0):>8,}")
+    typer.echo(
+        f"crosswalk      {crosswalk.rows:>8,} rows from {crosswalk.sources:,} ZIPs"
+    )
+    typer.secho(f"{counts.total:,} regions staged", fg=typer.colors.GREEN)
 
 
 @app.command()
@@ -116,21 +192,57 @@ def stage() -> None:
 
 
 @app.command()
-def geocode() -> None:
-    """Resolve source geographies to region_id via GEOID match, then crosswalk."""
-    _not_yet("geocode")
-
-
-@app.command()
 def validate() -> None:
     """Gate stage: block the load if a release fails its checks."""
     _not_yet("validate")
 
 
 @app.command()
-def load() -> None:
-    """Load validated releases into PostgreSQL, one transaction per release."""
-    _not_yet("load")
+def load(
+    vintage: Annotated[str | None, typer.Option("--vintage")] = None,
+) -> None:
+    """Load the staged geography spine into PostgreSQL in one transaction."""
+    settings = get_settings()
+    scope = load_geography()
+    configured = load_sources()
+    adapter = TigerAdapter(states=scope.states)
+
+    source = configured[TigerAdapter.source_id]
+    provenance = [
+        ReleaseProvenance(
+            source_id=release.ref.source_id,
+            layer=release.ref.key,
+            vintage=release.ref.vintage,
+            fetched_at=release.fetched_at,
+            file_sha256=release.sha256,
+            row_count=release.size_bytes,
+        )
+        for release in adapter.fetch_all(raw_dir=settings.raw_dir, vintage=vintage)
+    ]
+
+    result = load_warehouse_geography(
+        get_engine(),
+        settings.duckdb_path,
+        sources=[
+            SourceRecord(
+                source_id=TigerAdapter.source_id,
+                name=source.name,
+                publisher=source.publisher,
+                license=source.license,
+                url=source.url,
+                cadence=source.cadence,
+            )
+        ],
+        releases=provenance,
+    )
+
+    for level, count in result.regions_by_level.items():
+        typer.echo(f"{level:<14} {count:>8,}")
+    typer.echo(f"crosswalk      {result.crosswalk_rows:>8,}")
+    typer.secho(
+        f"{result.total_regions:,} regions loaded from {result.releases} releases",
+        fg=typer.colors.GREEN,
+    )
 
 
 @app.command()

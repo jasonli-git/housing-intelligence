@@ -1,11 +1,10 @@
 # Housing Intelligence Platform — Roadmap
 
-Version 1 is in progress at Milestone 0, which is built but not closed: every
-deliverable exists and 30 tests pass, but the Postgres path — `docker compose up`,
-`alembic upgrade head`, and dbt's `postgres` target — has never been executed, because
-Docker is not installed on the development machine. See the open item in
-[TODO.md](TODO.md). A milestone counts as done when its capability is reachable through
-the CLI, the API, or the dashboard on a clean checkout; its tests pass; and
+Version 1 is in progress. Milestones 0 and 1 are complete: the warehouse holds a real
+NJ geography spine — 3,365 regions and 1,902 allocation weights, loaded from Census
+TIGER/Line and served over the API — with 64 tests passing. Milestone 2 is next.
+A milestone counts as done when its capability is reachable through the CLI, the API,
+or the dashboard on a clean checkout; its tests pass; and
 [ARCHITECTURE.md](ARCHITECTURE.md), [CHANGELOG.md](CHANGELOG.md), and
 [README.md](README.md) have been updated to match what actually exists.
 
@@ -13,8 +12,8 @@ the CLI, the API, or the dashboard on a clean checkout; its tests pass; and
 
 | M | Status | Deliverable |
 |---|--------|-------------|
-| 0 | 🚧 in progress | **Scaffolding** — repo layout, `uv` + `pyproject.toml`, config layer, Docker Compose Postgres/PostGIS, Alembic baseline, dbt project, Next.js app, `hip` CLI, `GET /health`, 30 tests, project docs. Built; blocked on running the Postgres path |
-| 1 | ⬜ planned | **NJ geography spine** — `regions` loaded with NJ state, counties, municipalities, tracts, and ZIPs with PostGIS geometry and crosswalks; `/regions` and `/geo/{level}` serve real data |
+| 0 | ✅ done | **Scaffolding** — repo layout, `uv` + `pyproject.toml`, config layer, Docker Compose Postgres/PostGIS, Alembic baseline, dbt project, Next.js app, `hip` CLI, `GET /health`, project docs |
+| 1 | ✅ done | **NJ geography spine** — 3,365 regions (1 state, 21 counties, 564 municipalities, 2,181 tracts, 598 ZIPs) with PostGIS geometry, parent chains, and 1,902 area-weighted ZIP allocations; `/regions`, `/regions/{id}`, `/geo/{level}` serve real data |
 | 2 | ⬜ planned | **Home values and rents** — Zillow ZHVI + ZORI from `hip acquire` to `hip load`; NJ county and municipal series queryable at `/regions/{id}/metrics` with source provenance on every value |
 | 3 | ⬜ planned | **Economic and demographic context** — ACS, Census Building Permits, FHFA HPI, FRED, BLS, and IRS migration loaded through the same adapter and dbt pattern |
 | 4 | ⬜ planned | **Computed housing intelligence** — change metrics, affordability (price-to-income, rent burden), and rankings in the warehouse; `/rankings`, `/compare`, `/regions/{id}/summary` |

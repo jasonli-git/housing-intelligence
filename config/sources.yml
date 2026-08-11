@@ -4,6 +4,18 @@
 # Nothing here is fetched until `hip acquire` runs.
 
 sources:
+  census_tiger:
+    name: TIGER/Line boundary files
+    publisher: U.S. Census Bureau
+    license: Public domain (U.S. Government work)
+    url: https://www2.census.gov/geo/tiger
+    cadence: annual
+    adapter: hip.sources.tiger:TigerAdapter
+    notes: >-
+      The geometry behind every region. GEOIDs here are the join keys ACS, Building
+      Permits, and the Zillow crosswalks use, so the largest sources need no geographic
+      reconciliation. Boundaries are generalized, not survey-grade.
+
   zillow_zhvi:
     name: Zillow Home Value Index
     publisher: Zillow Research

@@ -13,6 +13,12 @@ runner = CliRunner()
 # The pipeline stages, in the order ARCHITECTURE.md runs them.
 STAGES = ["acquire", "land", "stage", "geocode", "validate", "load", "analyze", "pack"]
 
+# Stages with a real implementation. These must never be invoked bare in a test: acquire
+# would download 635MB of TIGER data, and load would write to whatever database the
+# environment points at. Their behavior is covered by tests/test_sources.py and
+# tests/test_geography.py, which exercise the same code without I/O.
+IMPLEMENTED = [s for s in STAGES if s not in _STAGE_MILESTONE]
+
 
 def test_version_flag() -> None:
     result = runner.invoke(app, ["--version"])
@@ -29,7 +35,7 @@ def test_every_pipeline_stage_has_a_command() -> None:
         assert stage in result.stdout
 
 
-@pytest.mark.parametrize("stage", STAGES)
+@pytest.mark.parametrize("stage", sorted(_STAGE_MILESTONE))
 def test_stage_stub_fails_loudly_and_names_its_milestone(stage: str) -> None:
     """A stub must never look like a successful run."""
     result = runner.invoke(app, [stage])
@@ -38,8 +44,18 @@ def test_stage_stub_fails_loudly_and_names_its_milestone(stage: str) -> None:
     assert f"Milestone {_STAGE_MILESTONE[stage]}" in result.output
 
 
-def test_stage_milestone_map_covers_exactly_the_stages() -> None:
-    assert set(_STAGE_MILESTONE) == set(STAGES)
+def test_stage_milestone_map_only_lists_unimplemented_stages() -> None:
+    """The map doubles as the remaining-work list, so a stale entry is a lie."""
+    assert set(_STAGE_MILESTONE) <= set(STAGES)
+    assert set(IMPLEMENTED) == {"acquire", "land", "geocode", "load"}
+
+
+def test_acquire_rejects_a_source_without_an_adapter_before_any_io() -> None:
+    """Guards the network: an unknown source must fail on argument handling alone."""
+    result = runner.invoke(app, ["acquire", "--source", "zillow_zhvi"])
+
+    assert result.exit_code == 1
+    assert "Milestone 2" in result.output
 
 
 def test_check_config_reports_the_repo_config(monkeypatch: pytest.MonkeyPatch) -> None:
