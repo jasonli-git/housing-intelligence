@@ -145,9 +145,16 @@ Local models should be tested against standardized housing-analysis scenarios be
 Candidate local models include:
 
 * Qwen3 8B
+* Qwen3.5 9B
 * Gemma 4 E4B
+* Gemma 4 QAT
 * Nemotron 3 Nano 4B
 * Phi-4 Mini Reasoning
+
+Because Gemma 4 QAT is a quantization variant rather than a distinct model, the
+evaluation has two axes: which model family reasons best about housing analytics, and
+how much quality a quantized build gives up for its smaller memory footprint. Both
+should be reported.
 
 Claude usage credits may be used as an evaluator for model-performance testing, not as the default production intelligence layer.
 
@@ -551,7 +558,7 @@ The AI layer now has two specific roles:
 
 The specification now treats model selection as an empirical process.
 
-**Reason:** Qwen3 8B, Gemma 4 E4B, Nemotron 3 Nano 4B, and Phi-4 Mini Reasoning should be compared on actual housing-analysis tasks rather than selected from generic benchmarks alone.
+**Reason:** Qwen3 8B, Qwen3.5 9B, Gemma 4 E4B, Gemma 4 QAT, Nemotron 3 Nano 4B, and Phi-4 Mini Reasoning should be compared on actual housing-analysis tasks rather than selected from generic benchmarks alone.
 
 #### 7. Strengthened Version 1 boundaries
 
