@@ -142,6 +142,66 @@ with PostGIS geometry and crosswalks; `/regions` and `/geo/{level}` serving real
 - Note: `postgis/postgis:16-3.4` has no arm64 image, so Docker runs it emulated on this
   Mac. Fine at 3,365 rows; check performance when the fact tables land at Milestone 2.
 
+## Milestone 2 — Home values and rents
+
+Deliverable: Zillow ZHVI + ZORI from `hip acquire` to `hip load`; NJ county, municipal,
+and ZIP series queryable at `/regions/{id}/metrics` with source provenance on every
+value.
+
+- [ ] `hip.sources.zillow` — `ZhviAdapter` and `ZoriAdapter` over county, city, and ZIP
+      layers (6 files, ~245MB)
+- [ ] `hip.landing.tabular` — CSV → Parquet, wide format preserved verbatim
+- [ ] dbt staging models — unpivot ~318 date columns to long
+      `(region_key, period, value)`. dbt's first real job (ARCHITECTURE #4)
+- [ ] `hip.geography.matching` — resolve Zillow keys to `(level, geoid)`: county by
+      `StateCodeFIPS || MunicipalCodeFIPS`, ZIP by code, municipality by normalized
+      name + county with **ambiguous matches rejected, not guessed**
+- [ ] `hip.validate` — the gate: unresolved keys, out-of-range values, duplicate
+      `(region, metric, period)`, coverage drop vs the previous release
+- [ ] Migration `0003` — `metrics`, `fact_metric_observation`, and a
+      `region_source_match` audit table recording how each key was resolved
+- [ ] `hip load` extended to facts, one transaction per release
+- [ ] `GET /regions/{id}/metrics`, `GET /metrics`, coverage exposed per level
+- [ ] `hip stage` and `hip validate` implemented, removing them from `_STAGE_MILESTONE`
+- [ ] Tests: unpivot shape, all three matchers, ambiguity rejection, gate behavior
+
+- Note: **decided 2026-08-11 with measured numbers.** Zillow's city-level files carry no
+  FIPS, only a name and county. Of 496 NJ "cities": 422 rows match 406 municipalities
+  (72%) after normalizing `Township|Borough|City|Town|Village` suffixes and joining on
+  county; 90 rows are census-designated places inside townships (Iselin, Colonia,
+  Whiting) with no municipal counterpart; and 16 are genuinely ambiguous because NJ has
+  co-located pairs like Chatham Borough and Chatham Township in one county. Ambiguous
+  rows are rejected rather than guessed, so expect ~69% municipal coverage. County and
+  ZIP joins are exact and unaffected.
+- Note: Zillow publishes by USPS ZIP; `regions` holds Census ZCTAs. The codes mostly
+  correspond but are different objects — ZIPs are delivery routes with no area. Recorded
+  as a metric caveat so it travels into analysis packets rather than living only here.
+- Note: using the headline ZHVI cut (`uc_sfrcondo_tier_0.33_0.67_sm_sa`, smoothed and
+  seasonally adjusted) and the all-homes ZORI (`uc_sfrcondomfr_sm`). Zillow publishes
+  bottom/top tier and SFR-only variants; adding one later is a `sources.yml` entry plus
+  a `metric_id`, not a schema change.
+
+- Note: **the validation gate earned its place on the first run.** It blocked a load
+  carrying 318 duplicate `(region, metric, period)` rows. Cause: normalizing away
+  `Township`/`City` suffixes merged Boonton with Boonton Township and Egg Harbor City
+  with Egg Harbor Township — genuinely different municipalities with different home
+  values. Ambiguity is now rejected on both sides of the join (ARCHITECTURE #28).
+- Note: an early version of the reject query compared each of 333,000 observations
+  against a correlated scalar subquery and exhausted 12.8GB of DuckDB temp space.
+  Resolution is a property of the *geography*, not the observation, so collapsing to
+  ~2,500 distinct geographies first made it instant. Watch for this shape in the
+  analytics milestone.
+- Note: municipal coverage is 403/564 (71%) and that is a ceiling under name matching,
+  not a bug to fix. Raising it needs a real Zillow-to-MCD crosswalk. Worth revisiting at
+  Milestone 7 when MOD-IV arrives with NJ municipal codes — a Zillow city name could
+  then be matched through the NJ code instead of by string.
+- Note: `hip stage` runs dbt through its Python entry point. dbt emits several
+  deprecation warnings (`MissingArgumentsPropertyInGenericTestDeprecation`) from the
+  custom `accepted_range` test. Harmless today; fix when dbt makes it an error.
+- Note: ZORI is thin — 15,836 observations against ZHVI's 293,514, starting only in
+  2015. Any rent-based analytic at Milestone 4 needs to handle sparse series rather
+  than assume ZHVI-like density.
+
 ## Parked / needs user input
 
 - **Census API key** — needed at Milestone 3 for ACS pulls above the anonymous rate

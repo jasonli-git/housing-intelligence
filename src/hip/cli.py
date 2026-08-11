@@ -25,11 +25,32 @@ from hip.config import (
 )
 from hip.duck import duckdb_session
 from hip.geography.crosswalk import build_crosswalk
+from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
 from hip.landing.shapefile import land_shapefile
+from hip.landing.tabular import land_csv
+from hip.sources.base import SourceAdapter
+from hip.sources.registry import (
+    IMPLEMENTED,
+    METRIC_SOURCES,
+    UnknownSourceError,
+    build_adapter,
+)
 from hip.sources.tiger import TigerAdapter, shapefile_member
+from hip.transform.dbt_runner import (
+    STAGING_SCHEMA,
+    ZILLOW_MODELS,
+    DbtError,
+    run_dbt,
+)
+from hip.validate.gate import run_checks, write_report
 from hip.warehouse.db import get_engine
-from hip.warehouse.load import ReleaseProvenance, SourceRecord
+from hip.warehouse.load import (
+    MetricRecord,
+    ReleaseProvenance,
+    SourceRecord,
+    load_facts,
+)
 from hip.warehouse.load import load_geography as load_warehouse_geography
 
 app = typer.Typer(
@@ -43,8 +64,6 @@ app = typer.Typer(
 # stages are removed from this map, so it doubles as the list of remaining work.
 # Keep in step with ROADMAP.md.
 _STAGE_MILESTONE = {
-    "stage": 2,
-    "validate": 2,
     "analyze": 4,
     "pack": 6,
 }
@@ -104,11 +123,22 @@ def check_config_command() -> None:
     typer.secho("config OK", fg=typer.colors.GREEN)
 
 
+def _adapters(source: str | None) -> list[SourceAdapter]:
+    """Resolve --source to adapters, defaulting to everything implemented."""
+    scope = load_geography()
+    names = [source] if source else list(IMPLEMENTED)
+    try:
+        return [build_adapter(name, scope) for name in names]
+    except UnknownSourceError as exc:
+        typer.secho(str(exc), fg=typer.colors.YELLOW, err=True)
+        raise typer.Exit(code=1) from exc
+
+
 @app.command()
 def acquire(
     source: Annotated[
-        str, typer.Option("--source", "-s", help="Source id, e.g. census_tiger.")
-    ] = "census_tiger",
+        str | None, typer.Option("--source", "-s", help="Source id; default all.")
+    ] = None,
     vintage: Annotated[
         str | None, typer.Option("--vintage", help="Source vintage; defaults per source.")
     ] = None,
@@ -117,32 +147,26 @@ def acquire(
     ] = False,
 ) -> None:
     """Download source releases to data/raw/, content-addressed and immutable."""
-    if source != TigerAdapter.source_id:
-        typer.secho(
-            f"Only '{TigerAdapter.source_id}' has an adapter so far; "
-            f"'{source}' ships in Milestone 2. See ROADMAP.md.",
-            fg=typer.colors.YELLOW,
-            err=True,
-        )
-        raise typer.Exit(code=1)
-
     settings = get_settings()
-    adapter = TigerAdapter(states=load_geography().states)
     total = 0
-    for release in adapter.fetch_all(
-        raw_dir=settings.raw_dir, vintage=vintage, force=force
-    ):
-        origin = "cached" if release.from_cache else "downloaded"
-        typer.echo(
-            f"{release.ref.key:<22} {origin:<10} "
-            f"{release.size_bytes / 1e6:>8.1f} MB  {release.sha256[:12]}"
-        )
-        total += release.size_bytes
-    typer.secho(f"{total / 1e6:.1f} MB in data/raw/{source}/", fg=typer.colors.GREEN)
+    for adapter in _adapters(source):
+        for release in adapter.fetch_all(
+            raw_dir=settings.raw_dir, vintage=vintage, force=force
+        ):
+            origin = "cached" if release.from_cache else "downloaded"
+            typer.echo(
+                f"{adapter.source_id:<14} {release.ref.key:<18} {origin:<10} "
+                f"{release.size_bytes / 1e6:>8.1f} MB  {release.sha256[:12]}"
+            )
+            total += release.size_bytes
+    typer.secho(f"{total / 1e6:.1f} MB in data/raw/", fg=typer.colors.GREEN)
 
 
 @app.command()
 def land(
+    source: Annotated[
+        str | None, typer.Option("--source", "-s", help="Source id; default all.")
+    ] = None,
     vintage: Annotated[str | None, typer.Option("--vintage")] = None,
     overwrite: Annotated[
         bool, typer.Option("--overwrite", help="Re-transcode even if Parquet exists.")
@@ -150,15 +174,23 @@ def land(
 ) -> None:
     """Transcode raw downloads to typed Parquet under data/parquet/."""
     settings = get_settings()
-    adapter = TigerAdapter(states=load_geography().states)
-    for release in adapter.fetch_all(raw_dir=settings.raw_dir, vintage=vintage):
-        table = land_shapefile(
-            release,
-            shapefile_member(release.ref),
-            parquet_dir=settings.parquet_dir,
-            overwrite=overwrite,
-        )
-        typer.echo(f"{release.ref.key:<22} {table.row_count:>8,} rows  {table.path}")
+    for adapter in _adapters(source):
+        for release in adapter.fetch_all(raw_dir=settings.raw_dir, vintage=vintage):
+            if adapter.landing_format == "shapefile":
+                table = land_shapefile(
+                    release,
+                    shapefile_member(release.ref),
+                    parquet_dir=settings.parquet_dir,
+                    overwrite=overwrite,
+                )
+            else:
+                table = land_csv(
+                    release, parquet_dir=settings.parquet_dir, overwrite=overwrite
+                )
+            typer.echo(
+                f"{adapter.source_id:<14} {release.ref.key:<18} "
+                f"{table.row_count:>8,} rows  {table.path.name}"
+            )
 
 
 @app.command()
@@ -177,6 +209,22 @@ def geocode(
         )
         crosswalk = build_crosswalk(con)
 
+        # Observations can only be resolved once `hip stage` has produced the models.
+        # A geography-only run is legitimate, so absence is a notice, not an error.
+        staged = _staged_models()
+        present = {
+            row[0]
+            for row in con.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = ?",
+                [STAGING_SCHEMA],
+            ).fetchall()
+        }
+        matches = (
+            build_observations(con, staged_models=staged, staging_schema=STAGING_SCHEMA)
+            if present.issuperset(staged)
+            else None
+        )
+
     for level in scope.levels:
         typer.echo(f"{level:<14} {counts.by_level.get(level, 0):>8,}")
     typer.echo(
@@ -184,17 +232,107 @@ def geocode(
     )
     typer.secho(f"{counts.total:,} regions staged", fg=typer.colors.GREEN)
 
+    if matches is None:
+        typer.secho(
+            "no staged metric models found — run `hip stage` to resolve observations",
+            fg=typer.colors.YELLOW,
+        )
+        return
+
+    typer.echo("")
+    for level in ("county", "municipality", "zip"):
+        available = counts.by_level.get(level, 0)
+        covered = matches.regions_covered.get(level, 0)
+        share = f"{100 * covered / available:.0f}%" if available else "n/a"
+        typer.echo(
+            f"{level:<14} {matches.matched.get(level, 0):>9,} observations   "
+            f"{covered:>4,}/{available:<4,} regions ({share})"
+        )
+    typer.secho(
+        f"{matches.total_matched:,} observations resolved; "
+        f"{matches.total_rejected:,} source geographies unresolved "
+        f"(see `hip validate`)",
+        fg=typer.colors.GREEN,
+    )
+
+
+def _staged_models() -> dict[str, str]:
+    """dbt model name -> the metric_id its values represent, derived from config.
+
+    Fails loudly rather than guessing when a source declares several metrics: that is
+    true of ACS at Milestone 3 and will need a per-column mapping, not a default.
+    """
+    metrics = load_metrics()
+    models: dict[str, str] = {}
+    for source_id in METRIC_SOURCES:
+        ids = [mid for mid, m in metrics.items() if m.source_id == source_id]
+        if len(ids) != 1:
+            raise typer.BadParameter(
+                f"metrics.yml: source '{source_id}' maps to {len(ids)} metrics "
+                f"({', '.join(ids) or 'none'}); staging needs exactly one."
+            )
+        models[f"stg_{source_id}"] = ids[0]
+    return models
+
 
 @app.command()
-def stage() -> None:
+def stage(
+    vintage: Annotated[str, typer.Option("--vintage")] = "current",
+    select: Annotated[str | None, typer.Option("--select", help="dbt selector.")] = None,
+    skip_tests: Annotated[bool, typer.Option("--skip-tests")] = False,
+) -> None:
     """Run dbt staging models over the Parquet tier in DuckDB."""
-    _not_yet("stage")
+    settings = get_settings()
+    scope = load_geography()
+    try:
+        run_dbt("run", settings=settings, scope=scope, vintage=vintage, select=select)
+        typer.secho("dbt run complete", fg=typer.colors.GREEN)
+        if not skip_tests:
+            run_dbt(
+                "test", settings=settings, scope=scope, vintage=vintage, select=select
+            )
+            typer.secho("dbt tests passed", fg=typer.colors.GREEN)
+    except DbtError as exc:
+        typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+
+    with duckdb_session(settings.duckdb_path) as con:
+        for model in ZILLOW_MODELS:
+            rows = con.execute(
+                f"SELECT layer, count(*) FROM {STAGING_SCHEMA}.{model} "
+                f"GROUP BY 1 ORDER BY 1"
+            ).fetchall()
+            total = sum(int(n) for _, n in rows)
+            detail = "  ".join(f"{layer}={n:,}" for layer, n in rows)
+            typer.echo(f"{model:<18} {total:>9,} observations   {detail}")
 
 
 @app.command()
 def validate() -> None:
     """Gate stage: block the load if a release fails its checks."""
-    _not_yet("validate")
+    settings = get_settings()
+    with duckdb_session(settings.duckdb_path) as con:
+        report = run_checks(con)
+    path = write_report(report, settings.data_dir.parent / "reports" / "validation")
+
+    for check in report.checks:
+        mark = "ok  " if check.passed else "FAIL"
+        colour = typer.colors.GREEN if check.passed else typer.colors.RED
+        typer.secho(
+            f"{mark} {check.name:<34} {check.count:>9,}  {check.detail}", fg=colour
+        )
+    typer.echo(f"\nreport: {path}")
+
+    if not report.passed:
+        typer.secho(
+            f"{len(report.failures())} check(s) failed — load blocked",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=1)
+    typer.secho(
+        f"{report.observations:,} observations cleared to load", fg=typer.colors.GREEN
+    )
 
 
 @app.command()
@@ -241,6 +379,67 @@ def load(
     typer.echo(f"crosswalk      {result.crosswalk_rows:>8,}")
     typer.secho(
         f"{result.total_regions:,} regions loaded from {result.releases} releases",
+        fg=typer.colors.GREEN,
+    )
+
+    # Facts, if any have been staged. A geography-only load stays valid.
+    with duckdb_session(settings.duckdb_path) as con:
+        staged = {
+            row[0]
+            for row in con.execute(
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_schema = 'main'"
+            ).fetchall()
+        }
+    if "stg_metric_observation" not in staged:
+        return
+
+    metric_config = load_metrics()
+    metric_sources = {m.source_id for m in metric_config.values()}
+    fact_provenance: list[ReleaseProvenance] = []
+    fact_sources: list[SourceRecord] = []
+    for source_id in METRIC_SOURCES:
+        definition = configured[source_id]
+        fact_sources.append(
+            SourceRecord(
+                source_id=source_id,
+                name=definition.name,
+                publisher=definition.publisher,
+                license=definition.license,
+                url=definition.url,
+                cadence=definition.cadence,
+            )
+        )
+        metric_adapter: SourceAdapter = build_adapter(source_id, scope)
+        fact_provenance += [
+            ReleaseProvenance(
+                source_id=release.ref.source_id,
+                layer=release.ref.layer,
+                vintage=release.ref.vintage,
+                fetched_at=release.fetched_at,
+                file_sha256=release.sha256,
+                row_count=release.size_bytes,
+            )
+            for release in metric_adapter.fetch_all(raw_dir=settings.raw_dir)
+        ]
+
+    facts = load_facts(
+        get_engine(),
+        settings.duckdb_path,
+        metrics=[
+            MetricRecord(metric_id=mid, **m.model_dump())
+            for mid, m in metric_config.items()
+            if m.source_id in metric_sources & set(METRIC_SOURCES)
+        ],
+        sources=fact_sources,
+        releases=fact_provenance,
+    )
+    typer.echo("")
+    for metric_id, count in sorted(facts.by_metric.items()):
+        typer.echo(f"{metric_id:<14} {count:>9,} observations")
+    typer.secho(
+        f"{facts.observations:,} observations loaded; "
+        f"{facts.rejects} unresolved geographies recorded",
         fg=typer.colors.GREEN,
     )
 

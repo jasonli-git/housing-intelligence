@@ -182,6 +182,188 @@ def _insert_releases(conn: Any, releases: Sequence[ReleaseProvenance]) -> int:
     return len(releases)
 
 
+@dataclass(frozen=True)
+class MetricRecord:
+    metric_id: str
+    label: str
+    unit: str
+    frequency: str
+    direction: str
+    description: str
+    source_id: str
+
+
+@dataclass(frozen=True)
+class FactLoadResult:
+    observations: int
+    by_metric: dict[str, int]
+    rejects: int
+
+
+_INSERT_FACT = text(
+    """
+    INSERT INTO fact_metric_observation
+        (region_id, metric_id, period_start, period_end, value, release_id, match_method)
+    SELECT r.region_id, :metric_id, :period_start, :period_end, :value,
+           :release_id, :match_method
+    FROM regions r
+    WHERE r.level = CAST(:level AS region_level) AND r.geoid = :geoid
+    ON CONFLICT (region_id, metric_id, period_start) DO UPDATE SET
+        period_end   = EXCLUDED.period_end,
+        value        = EXCLUDED.value,
+        release_id   = EXCLUDED.release_id,
+        match_method = EXCLUDED.match_method
+    """
+)
+
+
+def load_facts(
+    engine: Engine,
+    duckdb_path: Path,
+    *,
+    metrics: Sequence[MetricRecord],
+    sources: Sequence[SourceRecord],
+    releases: Sequence[ReleaseProvenance],
+    observation_table: str = "stg_metric_observation",
+    reject_table: str = "stg_match_reject",
+) -> FactLoadResult:
+    """Load staged observations into the warehouse in one transaction.
+
+    Values are upserted on (region, metric, period), so re-running after a Zillow
+    revision updates history in place rather than accumulating duplicates.
+
+    Each fact points at the release for its own (source, layer): a county value and a
+    ZIP value come from different files, and attributing both to one release would make
+    the provenance a lie.
+    """
+    with duckdb_session(duckdb_path) as duck:
+        rows = duck.execute(
+            f"""
+            SELECT geoid, level, metric_id, period_start, period_end, value,
+                   source_id, layer, match_method
+            FROM {observation_table}
+            """
+        ).fetchall()
+        rejects = duck.execute(
+            f"""
+            SELECT source_id, layer, region_name, county_name, observations, reason
+            FROM {reject_table}
+            """
+        ).fetchall()
+
+    by_metric: dict[str, int] = {}
+    with engine.begin() as conn:
+        _upsert_sources(conn, sources)
+        _insert_releases(conn, releases)
+        _upsert_metrics(conn, metrics)
+        release_by_layer = _release_ids(conn, releases)
+
+        payload = []
+        for geoid, level, metric_id, start, end, value, source_id, layer, method in rows:
+            release_id = release_by_layer.get((str(source_id), str(layer)))
+            if release_id is None:
+                continue
+            payload.append(
+                {
+                    "geoid": geoid,
+                    "level": level,
+                    "metric_id": metric_id,
+                    "period_start": start,
+                    "period_end": end,
+                    "value": float(value),
+                    "release_id": release_id,
+                    "match_method": method,
+                }
+            )
+            by_metric[str(metric_id)] = by_metric.get(str(metric_id), 0) + 1
+
+        for start_index in range(0, len(payload), BATCH):
+            conn.execute(_INSERT_FACT, payload[start_index : start_index + BATCH])
+
+        _replace_rejects(conn, rejects)
+
+    return FactLoadResult(
+        observations=len(payload), by_metric=by_metric, rejects=len(rejects)
+    )
+
+
+def _release_ids(
+    conn: Any, releases: Sequence[ReleaseProvenance]
+) -> dict[tuple[str, str], int]:
+    """Map (source_id, layer) to the release row just inserted for it."""
+    if not releases:
+        return {}
+    rows = conn.execute(
+        text(
+            """
+            SELECT source_id, layer, release_id FROM source_releases
+            WHERE (source_id, layer, vintage, file_sha256) IN (
+                SELECT unnest(CAST(:sources AS text[])),
+                       unnest(CAST(:layers AS text[])),
+                       unnest(CAST(:vintages AS text[])),
+                       unnest(CAST(:hashes AS text[]))
+            )
+            """
+        ),
+        {
+            "sources": [r.source_id for r in releases],
+            "layers": [r.layer for r in releases],
+            "vintages": [r.vintage for r in releases],
+            "hashes": [r.file_sha256 for r in releases],
+        },
+    ).fetchall()
+    return {(str(s), str(layer)): int(rid) for s, layer, rid in rows}
+
+
+def _upsert_metrics(conn: Any, metrics: Sequence[MetricRecord]) -> None:
+    if not metrics:
+        return
+    conn.execute(
+        text(
+            """
+            INSERT INTO metrics
+                (metric_id, label, unit, frequency, direction, description, source_id)
+            VALUES
+                (:metric_id, :label, :unit, :frequency, :direction, :description,
+                 :source_id)
+            ON CONFLICT (metric_id) DO UPDATE SET
+                label = EXCLUDED.label, unit = EXCLUDED.unit,
+                frequency = EXCLUDED.frequency, direction = EXCLUDED.direction,
+                description = EXCLUDED.description, source_id = EXCLUDED.source_id
+            """
+        ),
+        [m.__dict__ for m in metrics],
+    )
+
+
+def _replace_rejects(conn: Any, rows: Sequence[tuple[Any, ...]]) -> None:
+    """Rebuilt wholesale — it describes the current release, not an accumulating log."""
+    conn.execute(text("DELETE FROM source_match_reject"))
+    if not rows:
+        return
+    conn.execute(
+        text(
+            """
+            INSERT INTO source_match_reject
+                (source_id, layer, region_name, county_name, observations, reason)
+            VALUES (:source_id, :layer, :region_name, :county_name, :observations,
+                    :reason)
+            """
+        ),
+        [
+            {
+                "source_id": r[0],
+                "layer": r[1],
+                "region_name": r[2],
+                "county_name": r[3],
+                "observations": int(r[4]),
+                "reason": r[5],
+            }
+            for r in rows
+        ],
+    )
+
+
 def _load_crosswalk(conn: Any, rows: Sequence[tuple[Any, ...]]) -> int:
     """Replace the crosswalk wholesale — it is derived and referenced by nothing."""
     conn.execute(text("DELETE FROM region_crosswalk"))

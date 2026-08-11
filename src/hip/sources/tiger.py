@@ -28,6 +28,7 @@ class TigerAdapter(SourceAdapter):
 
     source_id: ClassVar[str] = "census_tiger"
     default_vintage: ClassVar[str] = "2025"
+    landing_format: ClassVar[str] = "shapefile"
 
     # layer -> (TIGER directory, filename stem template, scope)
     LAYERS: ClassVar[dict[str, tuple[str, str, LayerScope]]] = {

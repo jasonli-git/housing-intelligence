@@ -111,6 +111,9 @@ class SourceAdapter(ABC):
 
     source_id: ClassVar[str]
     default_vintage: ClassVar[str]
+    # What kind of file this source ships, so the landing stage knows how to transcode
+    # it. A property of the publisher's format, which is the adapter's business.
+    landing_format: ClassVar[str] = "csv"
 
     @abstractmethod
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:

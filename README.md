@@ -11,11 +11,11 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-08-11): v0.1.0, Milestone 1 complete.** New Jersey's geography is
-> loaded and queryable — 3,365 regions across five levels with PostGIS boundaries and
-> 1,902 ZIP allocation weights, built end to end from Census TIGER/Line. No housing
-> metrics yet; those start at Milestone 2. See [ROADMAP.md](ROADMAP.md) for what is
-> planned and [CHANGELOG.md](CHANGELOG.md) for what shipped.
+> **Status (2026-08-11): v0.2.0, Milestone 2 complete.** New Jersey's geography and its
+> housing metrics are loaded and queryable — 3,365 regions and **309,350 Zillow home
+> value and rent observations from 2000 to 2026**, with the source file and match method
+> recorded on every value. See [ROADMAP.md](ROADMAP.md) for what is planned and
+> [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
@@ -25,7 +25,7 @@ Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 Each is listed with the milestone that delivers it, so this section can be checked
 against [ROADMAP.md](ROADMAP.md) rather than believed.
 
-- **Config-driven source registry** (M0, built) — 10 public sources and 12 metrics
+- **Config-driven source registry** (M0, built) — 11 public sources and 12 metrics
   defined in YAML with license, cadence, and update frequency. `hip check-config`
   validates them and catches a metric naming an undefined source, or a source whose
   API key is missing, before any fetch is attempted.
@@ -41,13 +41,21 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   content-addressed, cached by hash so a re-run touches no network, and every load
   records the exact file it came from. Re-running the pipeline is a no-op, verified:
   `region_id` values are stable across reloads because facts will reference them.
-- **Staged public-data pipeline** (M2–M3) — eight CLI stages from download to analysis
-  packet, each persisting before the next runs. Four are implemented (`acquire`,
-  `land`, `geocode`, `load`); the rest exit non-zero naming the milestone that
-  delivers them.
-- **Provenance on every value** (M2) — each metric observation carries the source
-  release, vintage, and file checksum it came from; deleting a release removes exactly
-  what it contributed.
+- **Staged public-data pipeline** (M2–M3, built) — eight CLI stages from download to
+  analysis packet, each persisting before the next runs. Six are implemented
+  (`acquire`, `land`, `stage`, `geocode`, `validate`, `load`); `analyze` and `pack` exit
+  non-zero naming the milestone that delivers them.
+- **Provenance on every value** (M2, built) — each observation carries the source
+  release and how its geography was resolved (`fips`, `zip_code`, `name_county`), so a
+  county figure matched on FIPS is distinguishable from a municipal one matched by name.
+- **Home values and rents** (M2, built) — Zillow ZHVI and ZORI at county, municipal,
+  and ZIP level. County coverage is 21/21 and ZIP 548/598; municipalities reach 403/564
+  because Zillow publishes no FIPS below county level, and ambiguous name matches are
+  rejected rather than guessed. `/sources/unresolved` names every gap and why.
+- **A validation gate that blocks bad loads** (M2, built) — duplicate observations,
+  out-of-range values, orphaned regions, and coverage collapse each stop the load before
+  it reaches the warehouse. It has already caught a real bug: 318 duplicate rows caused
+  by name normalization merging two distinct municipalities.
 - **Computed housing intelligence** (M4) — value and rent growth, income and population
   change, permit activity, price-to-income and rent-burden affordability, and county and
   municipal rankings, all calculated in SQL rather than inferred by a model.
@@ -95,14 +103,14 @@ make setup
 `make setup` syncs the Python environment, installs dashboard dependencies, creates the
 local `data/` directories, and copies `.env.example` to `.env` if you have none.
 
-**Build the warehouse.** The first `acquire` downloads 635MB of Census TIGER/Line data,
-529MB of which is the national ZCTA file; it is cached by content hash and never
-re-downloaded.
+**Build the warehouse.** The first `acquire` downloads ~880MB — 635MB of Census
+TIGER/Line (529MB of it the national ZCTA file) plus 245MB of Zillow CSVs. Everything is
+cached by content hash and never re-downloaded.
 
 ```bash
 make db-up         # Postgres 16 + PostGIS, waits for the healthcheck
 make migrate       # alembic upgrade head
-make pipeline      # acquire → land → geocode → load  (~2 min after the download)
+make pipeline      # acquire → land → stage → geocode → validate → load
 ```
 
 **Run it.**
@@ -110,15 +118,17 @@ make pipeline      # acquire → land → geocode → load  (~2 min after the do
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 64 tests; API tests skip without a loaded warehouse
+make test          # 81 tests; API tests skip without a loaded warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
 Try it:
 
 ```bash
-curl 'http://localhost:8000/regions?level=county&state=NJ'
-curl 'http://localhost:8000/geo/county?state=NJ'
+curl 'http://localhost:8000/metrics'
+curl 'http://localhost:8000/regions?level=county&q=Mercer'
+curl 'http://localhost:8000/regions/11/metrics?metric_id=zhvi_sfr&from=2025-01-01'
+curl 'http://localhost:8000/sources/unresolved'
 ```
 
 `make` on its own lists every target. With the warehouse down, the API and dashboard
@@ -134,7 +144,8 @@ still run and report the degraded state rather than failing.
 
 ## Project Status
 
-v0.1.0 — Milestones 0 and 1 of 8 complete. New Jersey's geography spine is loaded and
-served; housing metrics begin at Milestone 2 with Zillow ZHVI and ZORI. Milestones and
+v0.2.0 — Milestones 0, 1, and 2 of 8 complete. Geography and Zillow home values and
+rents are loaded and served; Milestone 3 adds ACS, permits, FHFA, FRED, BLS, and IRS
+migration. Milestones and
 their status are in [ROADMAP.md](ROADMAP.md); the current working list, including known
 rough edges and parked API keys, is in [TODO.md](TODO.md).

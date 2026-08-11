@@ -5,13 +5,14 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-08-11):** Milestones 0 and 1 are complete. The warehouse holds a real
-> NJ geography spine — 3,365 regions across five levels with PostGIS geometry and 1,902
-> allocation weights — loaded end to end from Census TIGER/Line through
-> `acquire → land → geocode → load`, and served by `/regions`, `/regions/{id}`, and
-> `/geo/{level}`. 64 tests pass. Still decision-only, marked per section below: the
-> metric fact tables, the `stage`/`validate`/`analyze`/`pack` stages, the analysis
-> packet, and every API endpoint beyond geography and health.
+> **Status (2026-08-11):** Milestones 0, 1, and 2 are complete. The warehouse holds a
+> NJ geography spine (3,365 regions, 1,902 allocation weights) and **309,350 housing
+> observations** — Zillow ZHVI and ZORI from 2000 to 2026 across counties,
+> municipalities, and ZIPs — loaded through `acquire → land → stage → geocode →
+> validate → load` and served by `/regions`, `/geo`, `/metrics`, and
+> `/regions/{id}/metrics`. 81 tests pass. Still decision-only, marked per section
+> below: the derived change and ranking tables, the `analyze` and `pack` stages, the
+> analysis packet, and the comparison endpoints.
 
 ## System Shape
 
@@ -75,6 +76,9 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 24 | The Makefile exports `PYTHONPATH=src`; nothing depends on the editable install's `.pth` file. **Supersedes #18.** | #18 blamed a stale interpreter symlink. The real cause: `uv` sets macOS's `UF_HIDDEN` flag on every `.pth` file it writes, and CPython's `site.py` (3.12, line 176) silently skips hidden `.pth` files — so `import hip` broke after every sync, including syncs triggered implicitly by `uv run`. No `.pth`-based fix survives, because uv re-hides the file each time. `PYTHONPATH` sidesteps `.pth` entirely and is portable. The `.python-version` pin from #18 is harmless and stays; its stated rationale was wrong. `make venv-fix` clears the flag for anyone running bare `uv run hip`. |
 | 25 | Regions are upserted on `(level, geoid)` and never deleted and reinserted. | `region_id` is a surrogate key every future fact row will reference. A reload that reassigned ids would silently repoint every metric in the warehouse at the wrong place — the worst class of bug here, because nothing would error. Costs an upsert path plus insertion in parent-before-child order, since the parent lookup is inline. |
 | 26 | ZIP→municipality and ZIP→county weights are computed by **area** overlap, in EPSG:5070. | Self-contained and needs no credential, so the crosswalk exists from day one. Equal-area projection because computing on raw 4269 degrees shrinks a degree of longitude with latitude and biases every weight. Rejected *for now*: HUD's USPS crosswalk, which is residential-address-weighted and genuinely better for housing — it needs a registered API key, so adopting it silently was not an option. `method` is stored per row so both can coexist and be compared; the seam is the `method` column. |
+| 27 | Geography resolution is recorded per fact in `match_method`, and unresolvable source geographies are **rejected, not guessed**. | Zillow publishes no FIPS below county level, so municipalities can only be matched by name. New Jersey has co-located pairs (Chatham Borough / Chatham Township) that a name+county key cannot separate, and stripping legal-form suffixes merges genuinely different places (Boonton vs Boonton Township, Egg Harbor City vs Egg Harbor Township). Picking one silently puts a real number on the wrong town, which is worse than a gap — the platform's whole claim is that a figure can be trusted. Costs ~29% of municipalities having no Zillow data; `source_match_reject` and `/sources/unresolved` say which and why. |
+| 28 | Ambiguity is rejected on **both** sides of the join, not just the lookup side. | Found by the validation gate, which blocked a load with 318 duplicate `(region, metric, period)` rows. Checking only for two municipalities sharing a name missed the mirror case: two *source* rows collapsing onto one municipality after normalization. Both directions are fatal and both are now tested. |
+| 29 | dbt models select Zillow's date columns by the pattern `YYYY-MM-DD` rather than excluding a known identifier list. | Zillow's identifier columns differ per level — ZIP files carry a `City` column that county and city files do not — and a new date column appears every month. An exclude-list broke immediately on the first and would have silently stopped importing new months on the second. Costs nothing; the pattern is stable. |
 
 ## Module Layout
 
@@ -95,13 +99,18 @@ housing-intelligence/
 │   ├── duck.py                # DuckDB session + /vsizip path helper (#23)
 │   ├── sources/
 │   │   ├── base.py            # SourceAdapter, retry, content-addressed cache (#10)
-│   │   └── tiger.py           # Census TIGER/Line: 5 layers (#22)
-│   ├── landing/shapefile.py   # zip → Parquet via ST_Read, geometry to MultiPolygon
-│   ├── transform/             # (M2) dbt staging model execution
+│   │   ├── registry.py        # which sources have adapters; PLANNED names the rest
+│   │   ├── tiger.py           # Census TIGER/Line: 5 layers (#22)
+│   │   └── zillow.py          # ZHVI + ZORI over county, city, ZIP
+│   ├── landing/
+│   │   ├── shapefile.py       # zip → Parquet via ST_Read, geometry to MultiPolygon
+│   │   └── tabular.py         # CSV → Parquet, wide format preserved
+│   ├── transform/dbt_runner.py # runs dbt; STAGING_SCHEMA = main_staging
 │   ├── geography/
 │   │   ├── regions.py         # stg_regions: 5 levels, parent chain by geoid
-│   │   └── crosswalk.py       # area-weighted ZIP allocation in EPSG:5070 (#26)
-│   ├── validate/              # (M2) Pandera schemas and the gate (#15)
+│   │   ├── crosswalk.py       # area-weighted ZIP allocation in EPSG:5070 (#26)
+│   │   └── matching.py        # source keys → regions; rejects ambiguity (#27, #28)
+│   ├── validate/gate.py       # the load gate + JSON report (#15)
 │   ├── warehouse/
 │   │   ├── db.py              # engine, session_scope, probe() for /health
 │   │   ├── models.py          # Region, RegionIdentifier, RegionCrosswalk
@@ -112,18 +121,19 @@ housing-intelligence/
 │   └── api/
 │       ├── main.py            # FastAPI app, CORS for the dashboard origin
 │       ├── deps.py            # read-only session dependency
-│       └── routers/           # health.py, regions.py
+│       └── routers/           # health.py, regions.py, metrics.py
 ├── dbt/
 │   ├── dbt_project.yml        # staging = views, marts = tables
 │   ├── profiles.yml           # duckdb (default) and postgres targets
-│   └── models/staging|marts/  # (M1–M2) empty
+│   ├── macros/                # zillow_observations (UNPIVOT), accepted_range test
+│   └── models/staging/        # stg_zillow_zhvi, stg_zillow_zori + 15 dbt tests
 ├── web/                       # Next.js 16 + React 19 dashboard
 │   └── app/page.tsx           # renders GET /health; the whole UI at M0
 ├── data/                      # gitignored, machine-local
 │   ├── raw/                   # immutable downloads, content-addressed
 │   ├── parquet/               # landing tier
 │   └── duckdb/                # working analytical database
-├── tests/                     # 64 tests; test_api_regions.py skips without a warehouse
+├── tests/                     # 81 tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, api, web, test, lint
@@ -149,12 +159,17 @@ which is why every write path lives there.
 ## Warehouse Schema
 
 **Built as of Milestone 1:** `regions`, `region_identifiers`, `region_crosswalk`,
-`sources`, and `source_releases` all exist and are populated — see
-`src/hip/warehouse/migrations/versions/0002_regions.py`, which is authoritative for DDL,
-and `src/hip/warehouse/models.py` for the ORM mapping. The block below is the shape;
-where it and the migration disagree, the migration wins. `metrics`,
-`fact_metric_observation`, `fact_metric_change`, and `region_rankings` are **not built**
-— they arrive with Milestones 2 and 4.
+`sources`, and `source_releases` exist and are populated (migration `0002`). Milestone 2
+added `metrics`, `fact_metric_observation`, and `source_match_reject` (migration `0003`),
+which holds 309,350 observations. The migrations are authoritative for DDL and
+`src/hip/warehouse/models.py` carries the ORM mapping; where they and the block below
+disagree, the migrations win. `fact_metric_change` and `region_rankings` are **not
+built** — they arrive with Milestone 4.
+
+`fact_metric_observation` carries one column the original sketch did not: `match_method`,
+recording how the row's geography was resolved (`fips`, `zip_code`, `name_county`). See
+#27 — a municipal value matched by name is a weaker claim than a county value matched by
+FIPS, and a consumer must be able to tell them apart without redoing the join.
 
 ```sql
 CREATE TYPE region_level AS ENUM
@@ -278,16 +293,16 @@ nothing to fix; the mitigation is that the weight and method stay queryable.
 
 Eight stages, each a CLI command, each persisting before the next runs (SPEC principle 6).
 
-**Implemented as of Milestone 1:** `acquire`, `land`, `geocode`, and `load` run the
-geography spine end to end. `stage`, `validate`, `analyze`, and `pack` remain stubs that
+**Implemented as of Milestone 2:** six of the eight stages run — `acquire`, `land`,
+`stage`, `geocode`, `validate`, and `load`. Only `analyze` and `pack` remain stubs that
 print the milestone delivering them and exit 1, so a stub can never be mistaken for a
 successful run — a no-op exiting 0 would make an empty warehouse look like a clean
 pipeline. `src/hip/cli.py` keeps the stub list in `_STAGE_MILESTONE`, and a test asserts
 implemented stages have been removed from it, so the map cannot go stale.
 
-`geocode` currently does its work in DuckDB directly rather than through dbt models;
-`stage` is where dbt enters at Milestone 2, once there are source attributes worth
-modelling rather than geometry to intersect.
+`validate` is a real gate and has already earned it: it blocked a load carrying 318
+duplicate observations caused by over-aggressive name normalization (#28). `make
+pipeline` runs the six stages in order, and a failing gate stops the chain.
 
 ```text
 hip acquire   →  data/raw/<source>/<sha256>/        immutable download + manifest
@@ -376,12 +391,13 @@ marked ✅ are implemented; the rest arrive with the milestones that produce the
 | GET | `/regions` | ✅ paged regions filtered by `level`, `state`, `parent_id`, name `q` |
 | GET | `/regions/{region_id}` | ✅ one region, its full ancestor chain, child count |
 | GET | `/geo/{level}` | ✅ GeoJSON FeatureCollection, simplified by default |
-| GET | `/regions/{region_id}/metrics` | observations filtered by `metric_id`, `from`, `to` |
+| GET | `/regions/{region_id}/metrics` | ✅ observations filtered by `metric_id`, `from`, `to`, each with source and match method |
 | GET | `/regions/{region_id}/summary` | headline changes, rank, caveats — dashboard landing |
 | GET | `/regions/{region_id}/packet` | the analysis packet for a region |
 | GET | `/rankings` | ranked regions for `metric_id`, `level`, window |
 | GET | `/compare` | aligned series for several `region_ids` and `metric_ids` |
 | GET | `/sources` | source registry and the releases currently loaded |
+| GET | `/sources/unresolved` | ✅ source geographies with no region, and why |
 
 Every response that contains a metric value also carries the `release_id` and source
 vintage behind it — provenance is a field, not a separate lookup. The API holds a
@@ -421,8 +437,22 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   reduce a single-part MultiPolygon to a Polygon, so the same region may serialize as
   either. GeoJSON consumers accept both; a client that switches on geometry type will
   be surprised.
-- **dbt is configured but unused.** `geocode` does its spatial work directly in DuckDB.
-  dbt earns its place at Milestone 2, when there are source attributes to model.
+- **Municipal Zillow coverage is 403 of 564 (71%), and that is a ceiling, not a bug.**
+  Zillow publishes no FIPS below county level. 90 of its NJ "cities" are
+  census-designated places inside townships with no municipal counterpart, and the rest
+  are unresolvable name collisions (#27, #28). County coverage is 21/21 and ZIP is
+  548/598. `/sources/unresolved` names every gap and its reason.
+- **Municipal values are name-matched and labelled as such.** `match_method =
+  'name_county'` is a weaker claim than `'fips'`. Analytics that mix levels should say
+  so; nothing currently enforces that.
+- **Zillow revises history and does not version its URLs.** The same path always serves
+  the current file, so `vintage` is ours to assign (`current`) and the content hash is
+  what actually distinguishes releases. A reload upserts, so the warehouse shows
+  current-best history rather than what was published at the time.
+- **ZORI starts in 2015 and covers far less.** 15,836 observations against ZHVI's
+  293,514, because a repeat-rent index needs listing volume. Rent-based analysis will
+  be thinner than value-based analysis at every level, and much thinner at municipal
+  level.
 - **The Postgres container runs under emulation.** `postgis/postgis:16-3.4` resolves to
   linux/amd64 on this arm64 Mac, so Docker emulates it. Correct but slower than native;
   irrelevant at 3,365 rows, worth revisiting when the fact tables arrive.

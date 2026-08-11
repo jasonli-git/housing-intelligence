@@ -3,6 +3,66 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.0] — 2026-08-11
+
+Housing metrics arrive. 309,350 Zillow home-value and rent observations spanning
+2000–2026 are loaded, matched to regions, and served — with the source file and the
+geography-matching method recorded on every single value.
+
+### Added
+- **Milestone 2 — Zillow ZHVI and ZORI.** Two adapters over three geography levels each
+  (county, city, ZIP), 245MB of CSVs, cached by content hash. `hip.sources.registry`
+  now resolves any source to its adapter, so the CLI is no longer wired to one source
+  and `--source` names an unimplemented source with the milestone that delivers it.
+- **dbt earns its place.** `stg_zillow_zhvi` and `stg_zillow_zori` unpivot ~318 wide
+  monthly columns into long observations, with 15 dbt tests. Columns are selected by the
+  `YYYY-MM-DD` pattern rather than by excluding known identifiers, so a new month is
+  picked up automatically and a new identifier column cannot break the model.
+- **Geographic matching with recorded method.** County by FIPS, ZIP by code,
+  municipality by normalized name plus county. Every fact stores `match_method`, so a
+  county figure matched on FIPS is distinguishable from a municipal one matched by name.
+  Coverage: 21/21 counties, 548/598 ZIPs, 403/564 municipalities.
+- **`hip validate`, a gate that actually blocks.** Duplicate observations, orphaned
+  regions, out-of-range values, and coverage collapse each stop the load before it
+  reaches the warehouse. Every run writes a JSON report to `reports/validation/`,
+  passing or failing, so a metric quietly losing coverage is visible.
+- **`source_match_reject` and `GET /sources/unresolved`.** Every source geography that
+  could not be matched, with the reason — a census-designated place inside a township,
+  an unresolvable name collision, or a geography outside scope. A user who notices a
+  missing municipality gets an answer instead of silence.
+- **Migration `0003`** — `metrics`, `fact_metric_observation` (keyed
+  `(region_id, metric_id, period_start)` with a `release_id` and `match_method`), and
+  `source_match_reject`.
+- **`GET /metrics`** with per-metric coverage and date range, optionally narrowed to one
+  region level, and **`GET /regions/{id}/metrics`** with date filtering and provenance
+  on every observation.
+- `make pipeline` now runs all six implemented stages in order and stops on a failing
+  gate.
+
+### Fixed
+- The validation gate blocked its first load: 318 duplicate `(region, metric, period)`
+  rows. Normalizing away `Township` and `City` suffixes had merged Boonton with Boonton
+  Township, and Egg Harbor City with Egg Harbor Township — genuinely different
+  municipalities with different home values. Ambiguity is now rejected on both sides of
+  the join, and both directions are tested.
+- The reject-reason query compared each of 333,000 observations against a correlated
+  subquery and exhausted 12.8GB of DuckDB temp space. Resolution is a property of the
+  geography, not the observation, so it now runs over ~2,500 distinct geographies.
+- `hip acquire` was invoked for real by a CLI stub test, downloading 635MB on every
+  `make test`. Stub tests now derive from the unimplemented-stage map, so implementing a
+  stage removes it from that test automatically.
+- dbt failures printed several kilobytes of `RunResult` node metadata, burying the
+  actual error. Only the failing node and its message are surfaced now.
+- `/metrics?level=` put its filter in a `LEFT JOIN` condition, which nulled the region
+  but kept the fact row, so every count still included every level.
+
+### Known gaps
+- Municipal coverage is capped at 71% by name matching; raising it needs a real
+  Zillow-to-MCD crosswalk, likely via NJ municipal codes when MOD-IV lands at M7.
+- ZORI is sparse: 15,836 observations against ZHVI's 293,514, starting only in 2015.
+- No derived metrics yet — change, affordability, and rankings arrive at Milestone 4.
+- The dashboard still renders `/health`.
+
 ## [0.1.0] — 2026-08-11
 
 First release with a populated warehouse. New Jersey's geography is loaded end to end

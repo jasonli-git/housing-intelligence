@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: stg_zillow_zhvi
+    description: >-
+      Zillow Home Value Index in long form. One row per (geography, month) with a
+      non-null value. Geography is unresolved here — `fips_key` is populated only for
+      counties, because Zillow publishes no FIPS at city or ZIP level.
+    columns:
+      - name: source_id
+        tests: [not_null]
+      - name: layer
+        tests:
+          - not_null
+          - accepted_values: {values: ['county', 'city', 'zip']}
+      - name: region_name
+        tests: [not_null]
+      - name: state_code
+        tests: [not_null]
+      - name: period_start
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          # A home value index outside this range means the file changed shape or the
+          # unpivot picked up a non-value column.
+          - accepted_range:
+              min_value: 1000
+              max_value: 100000000
+
+  - name: stg_zillow_zori
+    description: >-
+      Zillow Observed Rent Index in long form, same shape as ZHVI. Coverage is thinner:
+      ZORI needs enough active listings, so small geographies are frequently absent.
+    columns:
+      - name: source_id
+        tests: [not_null]
+      - name: layer
+        tests:
+          - not_null
+          - accepted_values: {values: ['county', 'city', 'zip']}
+      - name: region_name
+        tests: [not_null]
+      - name: period_start
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 100
+              max_value: 100000

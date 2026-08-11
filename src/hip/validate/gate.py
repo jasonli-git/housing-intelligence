@@ -1,0 +1,178 @@
+"""The gate between staging and the warehouse.
+
+A failed load is worse than a skipped one: the warehouse keeps serving the previous
+release, which is stale but coherent, whereas a half-sane load is confidently wrong.
+This module answers "is this release sane" once, and `hip load` refuses to run when the
+answer is no.
+
+Checks are declarative so the report names the failing rule rather than a line number,
+and every check reports its count even when it passes — a report that only appears on
+failure gives no way to notice a metric quietly losing half its coverage.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+from pathlib import Path
+
+import duckdb
+
+from hip.geography.matching import OBSERVATION_TABLE, REJECT_TABLE
+
+# A home value index below this is a data error, not a cheap house. Deliberately wide:
+# the gate is here to catch a file whose shape changed, not to second-guess Zillow.
+VALUE_BOUNDS = {
+    "zhvi_sfr": (1_000.0, 100_000_000.0),
+    "zori_all": (100.0, 100_000.0),
+}
+
+# Below this share of a level's regions, something structural has broken — a renamed
+# source column, a changed geography scheme — rather than genuine coverage thinning.
+MIN_COVERAGE = {"county": 0.90, "zip": 0.50, "municipality": 0.40}
+
+
+@dataclass
+class Check:
+    name: str
+    passed: bool
+    count: int
+    detail: str
+
+
+@dataclass
+class Report:
+    run_at: str
+    passed: bool
+    observations: int
+    checks: list[Check]
+
+    def failures(self) -> list[Check]:
+        return [c for c in self.checks if not c.passed]
+
+
+def run_checks(
+    con: duckdb.DuckDBPyConnection, *, regions_table: str = "stg_regions"
+) -> Report:
+    """Run every gate check against the staged observations."""
+    checks: list[Check] = []
+
+    total = int(
+        con.execute(f"SELECT count(*) FROM {OBSERVATION_TABLE}").fetchone()[0]  # type: ignore[index]
+    )
+    checks.append(
+        Check(
+            "observations_present",
+            total > 0,
+            total,
+            "staged observations to load" if total else "nothing staged; run `hip stage`",
+        )
+    )
+
+    duplicates = int(
+        con.execute(
+            f"""
+            SELECT count(*) FROM (
+                SELECT geoid, level, metric_id, period_start
+                FROM {OBSERVATION_TABLE}
+                GROUP BY 1, 2, 3, 4 HAVING count(*) > 1
+            )
+            """
+        ).fetchone()[0]  # type: ignore[index]
+    )
+    checks.append(
+        Check(
+            "no_duplicate_observations",
+            duplicates == 0,
+            duplicates,
+            "one value per (region, metric, period)",
+        )
+    )
+
+    orphans = int(
+        con.execute(
+            f"""
+            SELECT count(*) FROM {OBSERVATION_TABLE} o
+            WHERE NOT EXISTS (
+                SELECT 1 FROM {regions_table} r
+                WHERE r.geoid = o.geoid AND r.level = o.level
+            )
+            """
+        ).fetchone()[0]  # type: ignore[index]
+    )
+    checks.append(
+        Check(
+            "every_observation_has_a_region",
+            orphans == 0,
+            orphans,
+            "observations referencing a region that does not exist",
+        )
+    )
+
+    for metric_id, (low, high) in VALUE_BOUNDS.items():
+        out_of_range = int(
+            con.execute(
+                f"""
+                SELECT count(*) FROM {OBSERVATION_TABLE}
+                WHERE metric_id = ? AND (value < ? OR value > ?)
+                """,
+                [metric_id, low, high],
+            ).fetchone()[0]  # type: ignore[index]
+        )
+        checks.append(
+            Check(
+                f"{metric_id}_within_range",
+                out_of_range == 0,
+                out_of_range,
+                f"values outside [{low:,.0f}, {high:,.0f}]",
+            )
+        )
+
+    for level, minimum in MIN_COVERAGE.items():
+        row = con.execute(
+            f"""
+            SELECT
+                (SELECT count(DISTINCT geoid) FROM {OBSERVATION_TABLE} WHERE level = ?),
+                (SELECT count(*) FROM {regions_table} WHERE level = ?)
+            """,
+            [level, level],
+        ).fetchone()
+        covered, available = (int(row[0]), int(row[1])) if row else (0, 0)
+        share = covered / available if available else 0.0
+        checks.append(
+            Check(
+                f"{level}_coverage",
+                share >= minimum,
+                covered,
+                f"{covered}/{available} regions ({share:.0%}), floor {minimum:.0%}",
+            )
+        )
+
+    rejected = int(
+        con.execute(f"SELECT count(*) FROM {REJECT_TABLE}").fetchone()[0]  # type: ignore[index]
+    )
+    checks.append(
+        Check(
+            "unresolved_geographies_recorded",
+            True,  # informational: unresolved geographies are expected, not a failure
+            rejected,
+            "source geographies with no warehouse region; see source_match_reject",
+        )
+    )
+
+    return Report(
+        run_at=datetime.now(UTC).isoformat(),
+        passed=all(c.passed for c in checks),
+        observations=total,
+        checks=checks,
+    )
+
+
+def write_report(report: Report, reports_dir: Path) -> Path:
+    """Persist the report. Every run writes one, passing or failing."""
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    stamp = report.run_at.replace(":", "").replace("-", "")[:15]
+    path = reports_dir / f"{stamp}.json"
+    path.write_text(json.dumps(asdict(report), indent=2) + "\n")
+    return path

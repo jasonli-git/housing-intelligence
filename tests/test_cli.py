@@ -47,15 +47,27 @@ def test_stage_stub_fails_loudly_and_names_its_milestone(stage: str) -> None:
 def test_stage_milestone_map_only_lists_unimplemented_stages() -> None:
     """The map doubles as the remaining-work list, so a stale entry is a lie."""
     assert set(_STAGE_MILESTONE) <= set(STAGES)
-    assert set(IMPLEMENTED) == {"acquire", "land", "geocode", "load"}
+    assert set(IMPLEMENTED) == {"acquire", "land", "stage", "geocode", "validate", "load"}
 
 
 def test_acquire_rejects_a_source_without_an_adapter_before_any_io() -> None:
-    """Guards the network: an unknown source must fail on argument handling alone."""
-    result = runner.invoke(app, ["acquire", "--source", "zillow_zhvi"])
+    """Guards the network: a source with no adapter must fail on argument handling.
+
+    Must name a source that is still unimplemented — pointing this at an implemented
+    one would download hundreds of megabytes on every test run, which is exactly what
+    happened once already.
+    """
+    result = runner.invoke(app, ["acquire", "--source", "census_acs"])
 
     assert result.exit_code == 1
-    assert "Milestone 2" in result.output
+    assert "Milestone 3" in result.output
+
+
+def test_acquire_rejects_an_unknown_source() -> None:
+    result = runner.invoke(app, ["acquire", "--source", "not_a_source"])
+
+    assert result.exit_code == 1
+    assert "not a known source" in result.output
 
 
 def test_check_config_reports_the_repo_config(monkeypatch: pytest.MonkeyPatch) -> None:
