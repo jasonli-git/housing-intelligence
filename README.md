@@ -11,11 +11,11 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-08-12): v0.5.0, Milestones 4 and 9 complete.** New Jersey's geography and its
-> housing and economic context are loaded and queryable — 3,365 regions and **329,975
-> observations across 14 metrics from 9 public sources, spanning 1971 to 2026**, plus
-> 19,338 computed changes and 19,328 rankings. The source file and match method are
-> recorded on every value. See [ROADMAP.md](ROADMAP.md) for what is planned and
+> **Status (2026-08-12): v0.6.0, Milestone 5 complete.** New Jersey's geography and its
+> housing and economic context are loaded, queryable, and now **visible** — 3,365
+> regions and **332,609 observations across 17 metrics from 9 public sources, spanning
+> 1971 to 2026**, plus 19,527 computed changes and 19,517 rankings, served behind a
+> two-page dashboard. The source file and match method are recorded on every value. See [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
@@ -70,8 +70,10 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   using HUD residential-address ratios rather than land area, so a half-empty ZIP no
   longer contributes as if it were fully built out. Affordability can also be expressed
   against HUD's published area median income, not only an ACS survey estimate.
-- **Dashboard and maps** (M5) — region explorer, trend charts, side-by-side county
-  comparison, choropleth maps, and ranking tables.
+- **Dashboard and maps** (M5, built) — county choropleth and ranking table on the
+  overview, region detail pages with metric tiles and trend charts, and a table view of
+  every series with its source. Drawn as inline SVG from our own GeoJSON: no map
+  library, no tile server, no third-party in the render path.
 - **Read-only analytics API** (M4–M6) — FastAPI endpoints for regions, metrics,
   rankings, comparisons, GeoJSON boundaries, and analysis packets.
 - **Analysis packets** (M6) — small versioned JSON documents holding computed metrics,

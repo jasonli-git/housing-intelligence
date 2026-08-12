@@ -5,16 +5,14 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-08-12):** Milestones 0 through 4 and 9 are complete. The warehouse holds a
-> NJ geography spine (3,365 regions, 1,902 allocation weights) and **309,350 housing
-> observations** across **12 metrics from 8 sources**, spanning 1971 to 2026 at
-> nation, state, county, municipality, and ZIP level — loaded through
-> `acquire → land → stage → geocode → validate → load` and served by `/regions`,
-> `/geo`, `/metrics`, and `/regions/{id}/metrics`. 81 tests pass. Still decision-only,
-> marked per section below: the derived change and ranking tables, the `analyze` and
-> `pack` stages, and the analysis packet. Milestone 4 added 19,338 change rows, 19,328
-> rankings, two computed affordability metrics, and `/rankings`, `/compare`, and
-> `/regions/{id}/summary`.
+> **Status (2026-08-12):** Milestones 0 through 5 and 9 are complete. The warehouse
+> holds a NJ geography spine (3,365 regions; 2,491 ZIP allocation weights, 2,456 of them
+> HUD residential-address ratios) and **332,609 observations across 17 metrics from 9
+> sources**, spanning 1971 to 2026 at nation, state, county, municipality, and ZIP level
+> — loaded through `acquire → land → stage → geocode → validate → load → analyze`,
+> served by the API, and displayed by a two-page dashboard. 19,527 computed changes and
+> 19,517 rankings. 88 Python tests pass and `tsc --noEmit` is clean. Still
+> decision-only, marked per section below: the analysis packet and the `pack` stage.
 
 ## System Shape
 
@@ -90,6 +88,9 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 36 | Rankings are computed on `pct_change` within a level, ordered by the metric's own `direction`. | "Fastest rising" is the question a ranking answers, and comparing a county's home value against a ZIP's is meaningless. Taking direction from `metrics` means rank 1 is the better end wherever "better" is defined, without every caller re-deriving it. Costs: a `neutral` metric is ordered by largest increase, which is presentation rather than judgment. |
 | 37 | HUD residential-address ratios supersede area weights per `(zip, target level)`; area survives only where HUD has no coverage. **Supersedes the coexistence claim in #26.** | Area weighting assumes a metric is spread evenly across a ZIP's surface, which counts a golf course like a subdivision; HUD weights by the share of a ZIP's dwellings. #26 said `method` would let both coexist and be compared — the primary key on `(from_region_id, to_region_id)` does not permit it, so one method wins per pair. 2,456 of 2,491 NJ crosswalk rows are now HUD; 35 remain area. `method` still records which produced every row. |
 | 38 | HUD's bearer token lives on the adapter instance, not the class. | `SourceAdapter.headers` was a `ClassVar`, which a per-instance credential cannot override without mutating shared state for every adapter. Making it a plain class attribute lets HUD set its own on the instance while everything else inherits the default User-Agent. |
+| 39 | Choropleths and charts are inline SVG drawn from our own GeoJSON — no map or charting library. | A tile server or charting CDN puts a third-party in the render path of a platform whose premise is local-first (SPEC principle 7); the dashboard now works with the network off. Rejected: MapLibre (needs a tile source, and a keyed provider is a dependency the project spent four milestones avoiding) and Recharts (~500KB, and its styling fights the provenance annotations every value here carries). Costs: no pan, zoom, or basemap, and axis and tooltip logic written once by hand. MapLibre becomes worth revisiting when parcels arrive at Milestone 7. |
+| 40 | The choropleth picks its colour ramp from the data, not from the metric. | Percentage change is signed, so a diverging ramp is right *when values straddle zero*. NJ home values rose in all 21 counties over five years, and a diverging ramp centred on zero painted every county the same step — a map conveying nothing. The component now uses the sequential single-hue ramp when every value shares a sign, and quintile breaks rather than fixed thresholds, so it separates the regions it actually contains. |
+| 41 | Value formatters live in `web/lib/format.ts`, apart from `web/lib/api.ts`. | Functions cannot cross the React server/client boundary as props, and passing `formatValue` into the client chart failed at render. Splitting the pure formatters from the fetch layer lets a client component import one without pulling the API base URL into the browser bundle. |
 
 ## Module Layout
 
@@ -455,6 +456,12 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **A change window is the nearest observation within 400 days of the target**, not an
   exact date. Sources have different frequencies, so an exact match would drop every
   annual metric. Beyond 400 days the row is omitted rather than stretched.
+- **The dashboard covers two pages.** An overview map with county rankings, and a
+  region detail page. There is no side-by-side region comparison UI yet, even though
+  `/compare` exists to serve one, and no municipality or ZIP choropleth — only county.
+- **The map has no basemap, pan, or zoom.** A deliberate consequence of #39: boundaries
+  render without roads or labels underneath, so a region is identified by shape and
+  tooltip rather than by context.
 - **AMI-based affordability is county-only.** HUD publishes income limits per county,
   so `price_to_ami` has 105 observations against `price_to_income`'s 2,026. A municipal
   AMI figure would mean allocating a county limit downward, which HUD does not sanction.

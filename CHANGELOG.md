@@ -3,6 +3,40 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.0] — 2026-08-12
+
+The warehouse gets a face. Two pages, no map library, no charting library, no tile
+server — the dashboard renders from our own GeoJSON and works offline.
+
+### Added
+- **Milestone 5 — overview page.** County choropleth of five-year change drawn as inline
+  SVG, beside a ranking table. Clicking a county opens its detail page.
+- **Region detail page.** Metric tiles with change and rank, trend charts for home
+  values, rents, and income, the ancestor breadcrumb, and the caveats that qualify the
+  numbers.
+- **Table view under every chart**, listing each observation with its source and match
+  method. It is the accessible fallback and it satisfies the relief rule for the one
+  palette step below 3:1 on the light surface.
+- **Validated palette** as CSS custom properties, light and dark both selected rather
+  than one flipped into the other. The three categorical slots clear all-pairs CVD and
+  normal-vision floors in both modes; checked with a validator before any chart was
+  drawn, not by eye.
+
+### Fixed
+- The choropleth rendered every county the same colour. A diverging ramp centred on zero
+  is wrong when no value crosses zero — NJ home values rose in all 21 counties — so the
+  component now selects a sequential ramp in that case and uses quintile breaks instead
+  of fixed thresholds.
+- `next/link` inside `<svg>` renders an HTML anchor, which is invalid there; the browser
+  relocated it and React reported a hydration mismatch. Replaced with SVG's own anchor.
+- Passing `formatValue` as a prop into a client chart failed: functions cannot cross the
+  React server/client boundary. Pure formatters moved to `web/lib/format.ts`.
+
+### Known gaps
+- Only the county level has a choropleth; municipalities and ZIPs do not.
+- No side-by-side comparison UI, though `/compare` exists to serve one.
+- No pan, zoom, or basemap — the deliberate cost of shipping without a map library.
+
 ## [0.5.0] — 2026-08-12
 
 Allocation stops guessing. ZIP data is now weighted by where people actually live, and

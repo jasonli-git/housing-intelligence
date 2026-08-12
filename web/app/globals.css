@@ -1,89 +1,122 @@
+/*
+ * Palette from the dataviz reference instance, validated before any chart was drawn:
+ * the three categorical slots clear the all-pairs CVD and normal-vision floors in both
+ * light and dark. Dark is a *selected* set of steps for the dark surface, not an
+ * automatic inversion.
+ *
+ * Aqua (--series-3) measures 2.74:1 on the light surface. That is below 3:1, so the
+ * relief rule applies: every chart using it ships direct labels and a table view.
+ */
 :root {
-  --bg: #ffffff;
-  --fg: #18181b;
-  --muted: #71717a;
-  --border: #e4e4e7;
-  --ok: #15803d;
-  --warn: #b45309;
-  --err: #b91c1c;
+  color-scheme: light;
+
+  --surface-1: #fcfcfb;
+  --surface-2: #f4f3f0;
+  --border: #dedcd6;
+  --grid: #e8e6e1;
+
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #77756e;
+
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+
+  /* Sequential blue, for unsigned magnitude. */
+  --seq-100: #cde2fb;
+  --seq-250: #86b6ef;
+  --seq-400: #3987e5;
+  --seq-550: #1c5cab;
+  --seq-700: #0d366b;
+
+  /* Diverging blue -> neutral -> red, for signed change. */
+  --div-neg-2: #1c5cab;
+  --div-neg-1: #86b6ef;
+  --div-mid: #f0efec;
+  --div-pos-1: #ec835a;
+  --div-pos-2: #d03b3b;
+
+  --good: #0ca30c;
+  --critical: #d03b3b;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0a0a0b;
-    --fg: #fafafa;
-    --muted: #a1a1aa;
-    --border: #27272a;
-    --ok: #4ade80;
-    --warn: #fbbf24;
-    --err: #f87171;
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --surface-2: #232322;
+    --border: #35342f;
+    --grid: #2b2b28;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #96958b;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --div-mid: #383835;
   }
 }
 
-* {
-  box-sizing: border-box;
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --surface-2: #232322;
+  --border: #35342f;
+  --grid: #2b2b28;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #96958b;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --div-mid: #383835;
 }
+
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  padding: 3rem 1.5rem;
-  background: var(--bg);
-  color: var(--fg);
-  font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding: 2rem 1.5rem 4rem;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-main {
-  max-width: 44rem;
-  margin: 0 auto;
-}
+main { max-width: 76rem; margin: 0 auto; }
 
-h1 {
-  font-size: 1.5rem;
-  margin: 0 0 0.25rem;
-}
+h1 { font-size: 1.6rem; margin: 0 0 0.2rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.05rem; margin: 2.5rem 0 0.75rem; letter-spacing: -0.005em; }
+a { color: var(--series-1); }
 
-.sub {
-  color: var(--muted);
-  margin: 0 0 2rem;
-}
+.sub { color: var(--text-secondary); margin: 0 0 1.5rem; }
+.muted { color: var(--text-muted); font-size: 0.85rem; }
 
 .card {
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.25rem 1.5rem;
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem;
+  background: var(--surface-1);
 }
 
-.row {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border);
-}
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.75rem; }
+.tile { border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; }
+.tile .label { color: var(--text-secondary); font-size: 0.8rem; }
+.tile .value { font-size: 1.5rem; font-variant-numeric: tabular-nums; margin-top: 0.15rem; }
+.tile .meta { color: var(--text-muted); font-size: 0.78rem; margin-top: 0.2rem; }
 
-.row:last-child {
-  border-bottom: none;
-}
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--grid); }
+th { color: var(--text-secondary); font-weight: 500; font-size: 0.82rem; }
+td.num, th.num { text-align: right; }
 
-.key {
-  color: var(--muted);
-}
+details { margin-top: 0.75rem; }
+summary { color: var(--text-secondary); cursor: pointer; font-size: 0.85rem; }
 
-.val {
-  font-variant-numeric: tabular-nums;
-}
+.legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.legend span { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem;
+  color: var(--text-secondary); }
+.swatch { width: 10px; height: 10px; border-radius: 2px; }
 
-.ok {
-  color: var(--ok);
-}
-.warn {
-  color: var(--warn);
-}
-.err {
-  color: var(--err);
-}
-
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.9em;
-}
+.scroll-x { overflow-x: auto; }
+.caveats { margin-top: 1rem; padding-left: 1.1rem; color: var(--text-secondary); font-size: 0.85rem; }
