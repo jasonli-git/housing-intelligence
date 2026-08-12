@@ -5,14 +5,17 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-08-12):** Milestones 0 through 5 and 9 are complete. The warehouse
+> **Status (2026-08-12):** Milestones 0 through 6 and 9 are complete. The warehouse
 > holds a NJ geography spine (3,365 regions; 2,491 ZIP allocation weights, 2,456 of them
 > HUD residential-address ratios) and **332,609 observations across 17 metrics from 9
 > sources**, spanning 1971 to 2026 at nation, state, county, municipality, and ZIP level
-> — loaded through `acquire → land → stage → geocode → validate → load → analyze`,
-> served by the API, and displayed by a two-page dashboard. 19,527 computed changes and
-> 19,517 rankings. 88 Python tests pass and `tsc --noEmit` is clean. Still
-> decision-only, marked per section below: the analysis packet and the `pack` stage.
+> — loaded through all eight stages, `acquire → land → stage → geocode → validate →
+> load → analyze → pack`, served by the API, and displayed by a three-page dashboard.
+> 19,527 computed changes and 19,517 rankings. Analysis packets are built and validated
+> against `schemas/packet-v1.json`; 21 county packets and their Markdown reports are
+> produced by `hip pack --report`. 131 Python tests and 24 dashboard tests pass,
+> `tsc --noEmit` is clean. Nothing consumes a packet yet — the LLM layer is deliberately
+> deferred to Milestone 8 (#11).
 
 ## System Shape
 
@@ -91,64 +94,96 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 39 | Choropleths and charts are inline SVG drawn from our own GeoJSON — no map or charting library. | A tile server or charting CDN puts a third-party in the render path of a platform whose premise is local-first (SPEC principle 7); the dashboard now works with the network off. Rejected: MapLibre (needs a tile source, and a keyed provider is a dependency the project spent four milestones avoiding) and Recharts (~500KB, and its styling fights the provenance annotations every value here carries). Costs: no pan, zoom, or basemap, and axis and tooltip logic written once by hand. MapLibre becomes worth revisiting when parcels arrive at Milestone 7. |
 | 40 | The choropleth picks its colour ramp from the data, not from the metric. | Percentage change is signed, so a diverging ramp is right *when values straddle zero*. NJ home values rose in all 21 counties over five years, and a diverging ramp centred on zero painted every county the same step — a map conveying nothing. The component now uses the sequential single-hue ramp when every value shares a sign, and quintile breaks rather than fixed thresholds, so it separates the regions it actually contains. |
 | 41 | Value formatters live in `web/lib/format.ts`, apart from `web/lib/api.ts`. | Functions cannot cross the React server/client boundary as props, and passing `formatValue` into the client chart failed at render. Splitting the pure formatters from the fetch layer lets a client component import one without pulling the API base URL into the browser bundle. |
+| 42 | The packet endpoints assemble from Postgres per request; `hip pack` writes files that the API never reads. | One assembler, two callers. A cached file served as current would go stale the moment the pipeline ran without a re-pack, and staleness in the artifact whose whole purpose is provenance is the worst place to have it. Packets are small — 15 metric rows and five queries — so assembling per request costs less than reconciling a cache. Rejected: serving `data/packets/<window>/<id>.json`, which would also give the read-only API a filesystem dependency it does not otherwise have. Costs: five queries per request instead of one file read. |
+| 43 | The published JSON Schema is generated from the Pydantic models and committed to `schemas/packet-v1.json`, with a test that fails on drift. | The models must be the single definition or the two disagree, but a consumer in another language needs a file, not a Python import. Generating and committing gives both, and the drift test is what stops the committed copy from quietly becoming fiction. `hip schema --write` regenerates. Rejected: hand-writing the schema (drifts immediately) and generating at build time (nothing to review in a diff). Costs a regeneration step whenever a field changes. |
+| 44 | A packet carries no wall-clock field. | Regenerating from an unchanged warehouse produces byte-identical output, so `diff` between two packs answers "what changed in the data" rather than "when did I run this" — which is what makes packets usable as test fixtures and as an evaluation corpus at Milestone 8. When the data was gathered is a property of the releases, and every packet carries `sources[].fetched_at`. Rejected: a `generated_at` field, which would make every regeneration differ in a field nobody reads. |
+| 45 | The exportable report is Markdown rendered from the packet, with the dashboard's report page as a second view of the same contract. | Markdown is readable as text, diffable between runs, and opens anywhere; the browser's own print dialog turns the page into a PDF. Rejected: WeasyPrint or headless Chromium, which is a heavy rendering dependency for a file the browser already produces (the same reasoning as #39). The two renderers are not duplication — they are two media over one contract, which is the first real demonstration that the packet is a contract at all. Costs: a value formatter written once in Python and once in TypeScript. |
+| 46 | Caveat derivation lives in `hip.packets.caveats` and `/regions/{id}/summary` calls it. | The router kept its own copy from Milestone 4, so a model reading a packet and a person reading the dashboard could be told different things about the same figure. `api` may import `packets` (the boundary rule allows exactly this), so one pure function serves both. Costs: `/summary` now returns more caveats than it did, which is the correction, not a regression. |
+| 47 | Release provenance names the right source but not always the right vintage. **Refines #33 with the actual cause.** | #33 blamed a layer-matching fallback. The real defect is narrower and worse: `_release_ids` keys releases by `(source_id, layer)`, which is not unique when a source publishes several vintages — ACS has ten releases across five vintages, HUD has 107 — so all but one collapse and every year's fact points at the survivor. Every ACS observation for a region currently cites vintage 2019. Found by building a packet and reading its sources. The fix is to carry each row's source file through staging (the ACS model already extracts a vintage from the filename) and key releases on `(source, layer, vintage)`; that touches five dbt models, the matcher, and the loader, so it is scheduled work rather than a patch. Until then packets say so in a caveat naming the affected sources. |
+| 48 | Chart and map arithmetic lives in `web/lib/scale.ts`, tested with Vitest. | The one-colour map (#40) shipped because the classifier could not be called without rendering a component. The ramp choice, the quintile breaks, the class assignment, and the chart's projection are pure functions, so they are now tested directly — including a regression asserting that 21 same-signed values land in five classes. Node environment, no jsdom: the bugs were arithmetic, not markup. Costs one dev dependency in `web/`. |
 
 ## Module Layout
 
-What exists as of 2026-08-11. Empty pipeline packages are real directories holding only
-`__init__.py` — they exist so the boundary rule in `tests/test_module_boundaries.py` has
-something to enforce against. Planned files are marked with the milestone that adds them.
+What exists as of 2026-08-12. Every pipeline package now holds real modules; the
+boundary rule in `tests/test_module_boundaries.py` enforces the import direction between
+them. Planned files are marked with the milestone that adds them.
 
 ```text
 housing-intelligence/
 ├── .python-version            # pinned patch version (#18)
 ├── config/
-│   ├── sources.yml            # 10 sources: url, cadence, license, adapter name
+│   ├── sources.yml            # 13 sources: url, cadence, license, adapter name
 │   ├── geography.yml          # in-scope states and levels (#14)
-│   └── metrics.yml            # 12 metrics: label, unit, frequency, direction
+│   └── metrics.yml            # 17 metrics: label, unit, frequency, direction
+├── schemas/
+│   └── packet-v1.json         # published packet contract, generated from code (#43)
 ├── src/hip/
-│   ├── cli.py                 # Typer entrypoint; check-config + 8 stage commands
+│   ├── cli.py                 # Typer entrypoint; check-config, schema, 8 stages
 │   ├── config.py              # settings, YAML loading, env resolution, STATE_FIPS
 │   ├── duck.py                # DuckDB session + /vsizip path helper (#23)
 │   ├── sources/
 │   │   ├── base.py            # SourceAdapter, retry, content-addressed cache (#10)
 │   │   ├── registry.py        # which sources have adapters; PLANNED names the rest
 │   │   ├── tiger.py           # Census TIGER/Line: 5 layers (#22)
-│   │   └── zillow.py          # ZHVI + ZORI over county, city, ZIP
+│   │   ├── zillow.py          # ZHVI + ZORI over county, city, ZIP
+│   │   ├── census_acs.py      # 5-year estimates at county and cousub (#31)
+│   │   ├── census_permits.py  # Building Permits Survey, county annual
+│   │   ├── fhfa.py            # hpi_master.csv — state level only
+│   │   ├── fred.py            # MORTGAGE30US, national
+│   │   ├── bls.py             # LAUS county unemployment
+│   │   ├── irs_migration.py   # SOI county inflow/outflow, reduced to net
+│   │   └── hud.py             # USPS crosswalk + income limits (#37, #38)
 │   ├── landing/
 │   │   ├── shapefile.py       # zip → Parquet via ST_Read, geometry to MultiPolygon
-│   │   └── tabular.py         # CSV → Parquet, wide format preserved
+│   │   └── tabular.py         # CSV/JSON → Parquet, wide format preserved
 │   ├── transform/dbt_runner.py # runs dbt; STAGING_SCHEMA = main_staging
 │   ├── geography/
 │   │   ├── regions.py         # stg_regions: 5 levels, parent chain by geoid
-│   │   ├── crosswalk.py       # area-weighted ZIP allocation in EPSG:5070 (#26)
+│   │   ├── crosswalk.py       # ZIP allocation; HUD weights supersede area (#37)
 │   │   └── matching.py        # source keys → regions; rejects ambiguity (#27, #28)
 │   ├── validate/gate.py       # the load gate + JSON report (#15)
 │   ├── warehouse/
 │   │   ├── db.py              # engine, session_scope, probe() for /health
 │   │   ├── models.py          # Region, RegionIdentifier, RegionCrosswalk
-│   │   ├── load.py            # one-transaction upsert of the spine (#25)
-│   │   └── migrations/        # Alembic; 0001 PostGIS, 0002 geography spine
-│   ├── analytics/             # (M4) change metrics, affordability, rankings
-│   ├── packets/               # (M6) packet assembly + JSON schema (#12)
+│   │   ├── load.py            # one-transaction upsert of spine and facts (#25)
+│   │   └── migrations/        # Alembic 0001–0005
+│   ├── analytics/compute.py   # change, CAGR, affordability, rankings (#34–#36)
+│   ├── packets/
+│   │   ├── schema.py          # Pydantic models = the contract (#12, #43, #44)
+│   │   ├── assemble.py        # build_packet(session, region_id, window) (#42)
+│   │   ├── caveats.py         # pure caveat derivation, shared with /summary (#46)
+│   │   └── report.py          # render_markdown(packet) — pure (#45)
 │   └── api/
 │       ├── main.py            # FastAPI app, CORS for the dashboard origin
 │       ├── deps.py            # read-only session dependency
-│       └── routers/           # health.py, regions.py, metrics.py
+│       ├── params.py          # RegionLevel and Window, shared by the routers
+│       └── routers/           # health, regions, metrics, analytics, packets
 ├── dbt/
 │   ├── dbt_project.yml        # staging = views, marts = tables
 │   ├── profiles.yml           # duckdb (default) and postgres targets
 │   ├── macros/                # zillow_observations (UNPIVOT), accepted_range test
-│   └── models/staging/        # stg_zillow_zhvi, stg_zillow_zori + 15 dbt tests
+│   └── models/staging/        # 10 staging models + dbt tests
 ├── web/                       # Next.js 16 + React 19 dashboard
-│   └── app/page.tsx           # renders GET /health; the whole UI at M0
+│   ├── app/page.tsx           # overview: choropleth + ranking table
+│   ├── app/regions/[id]/page.tsx        # region detail: tiles, trends, tables
+│   ├── app/regions/[id]/report/page.tsx # print-ready report from the packet (#45)
+│   ├── components/            # Choropleth, TrendChart, PrintButton
+│   ├── lib/api.ts             # server-side fetchers + packet types
+│   ├── lib/format.ts          # pure value formatting (#41)
+│   ├── lib/scale.ts           # ramp, breaks, projection — pure and tested (#48)
+│   └── vitest.config.ts       # node environment, lib/**/*.test.ts
 ├── data/                      # gitignored, machine-local
 │   ├── raw/                   # immutable downloads, content-addressed
 │   ├── parquet/               # landing tier
-│   └── duckdb/                # working analytical database
-├── tests/                     # 81 tests; API tests skip without a warehouse
+│   ├── duckdb/                # working analytical database
+│   └── packets/<window>/      # analysis packets, one JSON per region
+├── reports/                   # human-facing output, not rebuildable input
+│   ├── validation/            # gate reports per run
+│   └── regions/<window>/      # Markdown reports, one per region
+├── tests/                     # 131 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
-├── Makefile                   # setup, db-up, migrate, api, web, test, lint
+├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
 └── pyproject.toml
 ```
 
@@ -170,13 +205,14 @@ which is why every write path lives there.
 
 ## Warehouse Schema
 
-**Built as of Milestone 1:** `regions`, `region_identifiers`, `region_crosswalk`,
-`sources`, and `source_releases` exist and are populated (migration `0002`). Milestone 2
-added `metrics`, `fact_metric_observation`, and `source_match_reject` (migration `0003`),
-which holds 309,350 observations. The migrations are authoritative for DDL and
-`src/hip/warehouse/models.py` carries the ORM mapping; where they and the block below
-disagree, the migrations win. `fact_metric_change` and `region_rankings` are **not
-built** — they arrive with Milestone 4.
+**Every table below is built and populated.** Migration `0002` created `regions`,
+`region_identifiers`, `region_crosswalk`, `sources`, and `source_releases`; `0003` added
+`metrics`, `fact_metric_observation`, and `source_match_reject`; `0004` added the
+`nation` level; `0005` added `fact_metric_change` and `region_rankings`. The fact table
+holds 332,609 observations, with 19,527 changes and 19,517 rankings derived from them.
+The migrations are authoritative for DDL and `src/hip/warehouse/models.py` carries the
+ORM mapping for the spine; where they and the block below disagree, the migrations win —
+in particular both derived tables carry a `"window"` column that this sketch predates.
 
 `fact_metric_observation` carries one column the original sketch did not: `match_method`,
 recording how the row's geography was resolved (`fips`, `zip_code`, `name_county`). See
@@ -305,16 +341,15 @@ nothing to fix; the mitigation is that the weight and method stay queryable.
 
 Eight stages, each a CLI command, each persisting before the next runs (SPEC principle 6).
 
-**Implemented as of Milestone 2:** six of the eight stages run — `acquire`, `land`,
-`stage`, `geocode`, `validate`, and `load`. Only `analyze` and `pack` remain stubs that
-print the milestone delivering them and exit 1, so a stub can never be mistaken for a
+**All eight stages run as of Milestone 6.** Until a stage was implemented it exited 1
+naming the milestone that would deliver it, so a stub could never be mistaken for a
 successful run — a no-op exiting 0 would make an empty warehouse look like a clean
-pipeline. `src/hip/cli.py` keeps the stub list in `_STAGE_MILESTONE`, and a test asserts
-implemented stages have been removed from it, so the map cannot go stale.
+pipeline. `src/hip/cli.py` keeps that list in `_STAGE_MILESTONE`, now empty, and a test
+asserts it and the command list agree, so the map cannot go stale.
 
 `validate` is a real gate and has already earned it: it blocked a load carrying 318
 duplicate observations caused by over-aggressive name normalization (#28). `make
-pipeline` runs the six stages in order, and a failing gate stops the chain.
+pipeline` runs all eight stages in order, and a failing gate stops the chain.
 
 ```text
 hip acquire   →  data/raw/<source>/<sha256>/        immutable download + manifest
@@ -331,7 +366,8 @@ hip load      →  postgres: regions, facts, releases  transactional, per-releas
      ↓
 hip analyze   →  postgres: changes, rankings         derived tables, full rebuild
      ↓
-hip pack      →  data/packets/<region_id>.json       analysis packets (#12)
+hip pack      →  data/packets/<window>/<id>.json     analysis packets (#12)
+                 reports/regions/<window>/<geoid>.md  with --report (#45)
 ```
 
 **What each stage guarantees.** `acquire` is the only stage that touches the network; it
@@ -342,7 +378,9 @@ without network access. `stage` and `geocode` operate entirely inside DuckDB and
 thrown away and rebuilt from Parquet. `load` wraps each release in one transaction: a
 release is fully present or fully absent, never half-loaded. `analyze` truncates and
 rebuilds its tables rather than incrementally updating them, because they are cheap to
-recompute and expensive to reason about when stale.
+recompute and expensive to reason about when stale. `pack` is pure output: it reads the
+warehouse and writes files, touching no database state, so it can be re-run at any time
+and its artifacts deleted without consequence.
 
 **Failure behavior.** `validate` failing is the designed stop: the warehouse keeps
 serving the previous release and the report names the failing check, the source, and the
@@ -350,8 +388,10 @@ row count. A failure in `acquire` or `land` affects only that source — the CLI
 sources independently and reports a per-source exit summary, so one dead upstream URL
 does not block a refresh of the other eight. A failure in `load` rolls back to the prior
 release for that source only. A failure in `analyze` leaves the derived tables empty
-rather than stale, and the API returns 503 for ranking endpoints while facts endpoints
-keep working.
+rather than stale: `/rankings` and `/compare` then return empty results, `/regions/{id}/
+packet` and `/regions/{id}/report` return 404 naming `hip analyze`, and every fact
+endpoint keeps working. (An earlier version of this document promised 503 from the
+ranking endpoints; nothing implements that, and an empty ranking is not a server error.)
 
 **Degradation when a dependency is unavailable.** No Docker or no Postgres means stages 1
 through 5 still run end-to-end — everything up to `load` is Parquet and DuckDB only,
@@ -359,38 +399,75 @@ which is deliberate: the expensive, slow work does not require the database to b
 
 ## Analysis Packets
 
-The contract between deterministic analytics and any future model (#12). Small, fully
-computed, and schema-validated before it is written.
+The contract between deterministic analytics and any consumer (#12). Small, fully
+computed, and validated against `schemas/packet-v1.json` before it is written. A county
+packet is roughly 13KB — 15 metrics, 8 sources, 6 caveats.
+
+`src/hip/packets/schema.py` holds the Pydantic models that *are* the schema; the JSON
+Schema file is generated from them and committed (#43), and `hip schema` prints it.
+Assembly is `build_packet(session, region_id, window)`; the API calls it per request and
+`hip pack` calls it in a loop (#42).
 
 ```json
 {
   "packet_version": "1.0",
-  "region": { "region_id": 3411, "name": "Mercer County", "level": "county",
-              "state_code": "NJ" },
-  "period": { "start": "2019-01-01", "end": "2025-12-01" },
+  "region": { "region_id": 11, "geoid": "34021", "level": "county", "name": "Mercer",
+              "label": "Mercer County, NJ", "state_code": "NJ",
+              "parent": { "region_id": 1, "name": "New Jersey", "level": "state" } },
+  "window": { "label": "5y", "start": "2018-12-31", "end": "2026-06-30" },
   "metrics": [
-    { "metric_id": "zhvi_sfr", "label": "Home value index", "unit": "usd",
-      "start_value": 264100, "end_value": 388300, "pct_change": 47.0,
-      "release_id": 812 }
+    { "metric_id": "zhvi_sfr", "label": "Home value index, single-family",
+      "unit": "usd", "direction": "neutral",
+      "window_start": "2021-06-30", "window_end": "2026-06-30",
+      "start_value": 329222.0, "end_value": 453317.0, "pct_change": 37.69,
+      "cagr": 6.63, "rank": 9, "of": 21, "percentile": 60.0,
+      "release_id": 41, "source_id": "zillow_zhvi", "match_method": "fips" }
   ],
-  "comparisons": { "peer_level": "county", "peer_scope": "NJ",
-                   "rank": { "zhvi_sfr": 6, "of": 21 } },
-  "caveats": ["ACS 5-year estimates overlap; year-over-year change is not independent."],
-  "sources": [ { "source_id": "zillow_zhvi", "vintage": "2026-06",
-                 "publisher": "Zillow Research" } ]
+  "comparisons": { "peer_level": "county", "peer_scope": "NJ", "peer_count": 21 },
+  "highlights": [
+    { "metric_id": "permits_total_units", "label": "Residential units permitted",
+      "position": "leading", "rank": 1, "of": 21, "pct_change": 319.33 }
+  ],
+  "caveats": ["ACS 5-year vintages overlap by four years, so consecutive estimates ..."],
+  "sources": [
+    { "source_id": "zillow_zhvi", "name": "Zillow Home Value Index",
+      "publisher": "Zillow Research", "license": "Free for non-commercial use with
+      attribution", "url": "...", "vintage": "current",
+      "fetched_at": "2026-08-11T...", "release_ids": [41] }
+  ]
 }
 ```
 
-Every number in a packet is read from the warehouse, never computed at packet-assembly
-time — if a value is not in `fact_metric_observation` or `fact_metric_change`, it does
-not go in the packet. `caveats` is populated from metric metadata and from the crosswalk
-method used, so the limitations travel with the data instead of living in a doc a model
-will never read. Packets carry `release_id` and vintage so an explanation can be traced
-back to the exact files behind it.
+**Key properties.**
 
-**Surprising but intentional.** Nothing consumes these in Version 1 (#11). They are
-written, validated, and tested as fixtures with no reader, which looks like dead code and
-is the point: the contract gets to stabilize before a model shapes it.
+- Every number is read from the warehouse, never computed at assembly time. If a value
+  is not in `fact_metric_observation`, `fact_metric_change`, or `region_rankings`, it
+  does not appear.
+- `window.start` and `window.end` are the **envelope** across metrics, not a span each
+  one covers. ACS is annual and ends in 2023, Zillow is monthly and ends in 2026, so a
+  `5y` window resolves to different dates per metric (#35). Each metric carries its own
+  pair, and both the report and the dashboard say so rather than printing the envelope
+  as though it were shared.
+- `highlights` is selection, not statistics: a metric where the region ranks in the top
+  or bottom three of a cohort of at least five. The rank comes from `region_rankings`;
+  nothing new is derived.
+- `caveats` come from `hip.packets.caveats`, the same pure function
+  `/regions/{id}/summary` uses (#46), so limitations travel with the data instead of
+  living in a document a reader never opens.
+- There is no wall-clock field (#44), so two packs of an unchanged warehouse are
+  byte-identical and `diff` shows only what the data did.
+- An empty packet is never produced. A region with no analytics raises
+  `PacketUnavailable`, which the API turns into a 404 naming `hip analyze` — a
+  schema-valid packet with no metrics would tell a reader nothing while looking fine.
+
+**Surprising but intentional.** No model consumes these in Version 1 (#11). The report
+renderer and the dashboard's report page are their only readers, which is the point: the
+contract is exercised by two independent media before an LLM shapes it.
+
+**Known-wrong, and stated in the packet.** `metrics[].release_id` names the right source
+but not always the right vintage, because the loader keys releases by `(source, layer)`
+and a multi-vintage source collapses to one (#47). Every affected packet carries a caveat
+naming the sources involved. This is a defect awaiting a fix, not an accepted trade-off.
 
 ## API
 
@@ -404,12 +481,18 @@ marked ✅ are implemented; the rest arrive with the milestones that produce the
 | GET | `/regions/{region_id}` | ✅ one region, its full ancestor chain, child count |
 | GET | `/geo/{level}` | ✅ GeoJSON FeatureCollection, simplified by default |
 | GET | `/regions/{region_id}/metrics` | ✅ observations filtered by `metric_id`, `from`, `to`, each with source and match method |
-| GET | `/regions/{region_id}/summary` | headline changes, rank, caveats — dashboard landing |
-| GET | `/regions/{region_id}/packet` | the analysis packet for a region |
-| GET | `/rankings` | ranked regions for `metric_id`, `level`, window |
-| GET | `/compare` | aligned series for several `region_ids` and `metric_ids` |
+| GET | `/regions/{region_id}/summary` | ✅ headline changes, rank, caveats — dashboard landing |
+| GET | `/regions/{region_id}/packet` | ✅ the analysis packet, assembled per request (#42) |
+| GET | `/regions/{region_id}/report` | ✅ the same packet as `text/markdown` |
+| GET | `/rankings` | ✅ ranked regions for `metric_id`, `level`, window |
+| GET | `/compare` | ✅ aligned series for several `region_ids` |
 | GET | `/sources` | source registry and the releases currently loaded |
 | GET | `/sources/unresolved` | ✅ source geographies with no region, and why |
+
+`/compare` takes one `metric_id` across several regions, not several metrics — the
+earlier version of this table said otherwise. `/sources` is the only endpoint here still
+unbuilt; a packet already carries the releases behind its own numbers, which is what the
+dashboard needed it for.
 
 Every response that contains a metric value also carries the `release_id` and source
 vintage behind it — provenance is a field, not a separate lookup. The API holds a
@@ -433,7 +516,22 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **ZIP-level metrics are allocated, not observed** (see the schema section).
 - **Parcel data is not queryable through the API** (#16). It exists in Parquet and DuckDB
   and reaches Postgres only as municipality-level aggregates.
-- **There is no AI layer** (#11). Packets are produced and go nowhere until Milestone 8.
+- **There is no AI layer** (#11). Packets are produced and read only by the report
+  renderer and the dashboard's report page until Milestone 8.
+- **A fact's release names the right source but not always the right vintage** (#47).
+  `_release_ids` keys releases by `(source_id, layer)`, which collapses ACS's ten
+  releases to two and HUD's 107 to one, so every year's value cites a single release.
+  Packets carry a caveat naming the affected sources. The fix — carrying each row's
+  source file through staging — is scheduled, not accepted.
+- **A packet is per region and per window.** There is no cross-region packet, so a
+  comparison between two counties means two packets. `/compare` serves that shape for
+  a single metric; nothing packages it.
+- **The report is Markdown and a print stylesheet, not a PDF** (#45). "Save as PDF" is
+  the browser's dialog, so page breaks are the browser's judgment, and headers, footers,
+  and page numbers are whatever it chooses to print.
+- **The dashboard's tests cover arithmetic, not rendering** (#48). `lib/scale.ts` and
+  `lib/format.ts` are tested directly; no test asserts that a page renders, that the
+  report route fetches, or that print styles hide what they should.
 - **Refresh is manual.** There is no scheduler; a refresh is a `hip` command run by a
   person or a cron entry they write themselves. Deliberate — see #6.
 - **ZIP allocation is area-weighted, not population-weighted** (#26). A half-empty ZIP
@@ -456,9 +554,10 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **A change window is the nearest observation within 400 days of the target**, not an
   exact date. Sources have different frequencies, so an exact match would drop every
   annual metric. Beyond 400 days the row is omitted rather than stretched.
-- **The dashboard covers two pages.** An overview map with county rankings, and a
-  region detail page. There is no side-by-side region comparison UI yet, even though
-  `/compare` exists to serve one, and no municipality or ZIP choropleth — only county.
+- **The dashboard covers three pages.** An overview map with county rankings, a region
+  detail page, and a print-ready region report. There is no side-by-side region
+  comparison UI yet, even though `/compare` exists to serve one, and no municipality or
+  ZIP choropleth — only county.
 - **The map has no basemap, pan, or zoom.** A deliberate consequence of #39: boundaries
   render without roads or labels underneath, so a region is identified by shape and
   tooltip rather than by context.

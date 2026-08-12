@@ -4,8 +4,10 @@ One command per pipeline stage, in the order they run (see the Pipeline section 
 ARCHITECTURE.md). Every write path to the warehouse is here and nowhere else — the API
 never triggers a stage (ARCHITECTURE #6).
 
-Stage commands are not implemented yet. They exit non-zero and name the milestone that
-delivers them, so a stub can never be mistaken for a successful run.
+All eight stages are implemented as of Milestone 6. Until then each unimplemented stage
+exited non-zero naming the milestone that would deliver it, so a stub could never be
+mistaken for a successful run; `_STAGE_MILESTONE` is the now-empty record of that, and
+a test fails if it and the command list disagree.
 """
 
 from __future__ import annotations
@@ -13,6 +15,7 @@ from __future__ import annotations
 from typing import Annotated
 
 import typer
+from sqlalchemy.orm import Session
 
 from hip import __version__
 from hip.analytics.compute import rebuild
@@ -30,6 +33,15 @@ from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
 from hip.landing.shapefile import land_shapefile
 from hip.landing.tabular import land_csv, land_json
+from hip.packets import (
+    SCHEMA_PATH,
+    Packet,
+    PacketUnavailable,
+    build_packet,
+    regions_for_level,
+    render_markdown,
+    schema_text,
+)
 from hip.sources.base import SourceAdapter
 from hip.sources.registry import (
     IMPLEMENTED,
@@ -65,22 +77,9 @@ app = typer.Typer(
 )
 
 # Stages still to be implemented, and the milestone that delivers each. Implemented
-# stages are removed from this map, so it doubles as the list of remaining work.
-# Keep in step with ROADMAP.md.
-_STAGE_MILESTONE = {
-    "pack": 6,
-}
-
-
-def _not_yet(stage: str) -> None:
-    milestone = _STAGE_MILESTONE[stage]
-    typer.secho(
-        f"`hip {stage}` is not implemented yet — it ships in Milestone {milestone}. "
-        f"See ROADMAP.md.",
-        fg=typer.colors.YELLOW,
-        err=True,
-    )
-    raise typer.Exit(code=1)
+# stages are removed from this map, so it doubles as the list of remaining work — empty
+# since Milestone 6, when `pack` landed and the pipeline became complete.
+_STAGE_MILESTONE: dict[str, int] = {}
 
 
 def _version_callback(value: bool) -> None:
@@ -365,7 +364,7 @@ def validate() -> None:
     settings = get_settings()
     with duckdb_session(settings.duckdb_path) as con:
         report = run_checks(con)
-    path = write_report(report, settings.data_dir.parent / "reports" / "validation")
+    path = write_report(report, settings.reports_dir / "validation")
 
     for check in report.checks:
         mark = "ok  " if check.passed else "FAIL"
@@ -523,9 +522,100 @@ def analyze() -> None:
 
 
 @app.command()
-def pack() -> None:
-    """Emit analysis packets as JSON under data/packets/."""
-    _not_yet("pack")
+def pack(
+    region: Annotated[
+        int | None, typer.Option("--region", "-r", help="One region id; default all.")
+    ] = None,
+    level: Annotated[
+        str, typer.Option("--level", help="Level to pack when --region is absent.")
+    ] = "county",
+    window: Annotated[str, typer.Option("--window", help="Change window label.")] = "5y",
+    report: Annotated[
+        bool, typer.Option("--report", help="Also write a Markdown report per region.")
+    ] = False,
+) -> None:
+    """Emit analysis packets as JSON under data/packets/<window>/.
+
+    Each packet is re-parsed from the exact bytes about to be written before the file
+    is created, so a packet on disk has always satisfied the model that generated
+    `schemas/packet-v1.json`. The published schema file itself is exercised against
+    real packets in `tests/test_packets.py`, which keeps `jsonschema` out of the
+    runtime dependencies.
+    """
+    settings = get_settings()
+    out_dir = settings.packets_dir / window
+    report_dir = settings.reports_dir / "regions" / window
+    out_dir.mkdir(parents=True, exist_ok=True)
+    if report:
+        report_dir.mkdir(parents=True, exist_ok=True)
+
+    with Session(get_engine()) as session:
+        region_ids = (
+            [region] if region is not None else regions_for_level(session, level, window)
+        )
+        if not region_ids:
+            typer.secho(
+                f"no {level} regions have analytics for window '{window}' — "
+                f"run `hip analyze`",
+                fg=typer.colors.YELLOW,
+                err=True,
+            )
+            raise typer.Exit(code=1)
+
+        # Per-region lines are useful for a county run and noise for 564 municipalities.
+        verbose = len(region_ids) <= 30
+        written = 0
+        skipped: list[str] = []
+        for region_id in region_ids:
+            try:
+                packet = build_packet(session, region_id, window)
+            except PacketUnavailable as exc:
+                # An explicit --region that cannot be packed is an error; one bad
+                # region in a bulk run is a gap to report, not a reason to stop.
+                if region is not None:
+                    typer.secho(str(exc), fg=typer.colors.RED, err=True)
+                    raise typer.Exit(code=1) from exc
+                skipped.append(str(exc))
+                continue
+
+            payload = packet.model_dump_json(indent=2) + "\n"
+            Packet.model_validate_json(payload)
+            (out_dir / f"{region_id}.json").write_text(payload)
+            if report:
+                (report_dir / f"{packet.region.geoid}.md").write_text(
+                    render_markdown(packet)
+                )
+            written += 1
+            if verbose:
+                typer.echo(
+                    f"{packet.region.label:<28} {len(packet.metrics):>3} metrics  "
+                    f"{len(packet.sources):>2} sources  "
+                    f"{len(packet.caveats):>2} caveats  {len(payload) / 1024:>5.1f} KB"
+                )
+
+    for problem in skipped:
+        typer.secho(f"skipped: {problem}", fg=typer.colors.YELLOW, err=True)
+    typer.secho(
+        f"{written:,} packets written to {out_dir}"
+        + (f"; {written:,} reports to {report_dir}" if report else ""),
+        fg=typer.colors.GREEN,
+    )
+
+
+@app.command()
+def schema(
+    write: Annotated[
+        bool, typer.Option("--write", help="Update schemas/packet-v1.json in place.")
+    ] = False,
+) -> None:
+    """Print the published analysis-packet JSON Schema (ARCHITECTURE #12)."""
+    text = schema_text()
+    if not write:
+        typer.echo(text, nl=False)
+        return
+    SCHEMA_PATH.parent.mkdir(parents=True, exist_ok=True)
+    SCHEMA_PATH.write_text(text)
+    typer.secho(f"wrote {SCHEMA_PATH}", fg=typer.colors.GREEN)
 
 
 if __name__ == "__main__":  # pragma: no cover

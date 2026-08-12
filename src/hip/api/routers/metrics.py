@@ -8,17 +8,16 @@ because a number without its source is exactly what this platform exists not to 
 from __future__ import annotations
 
 from datetime import date
-from typing import Annotated, Literal
+from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import text
 
 from hip.api.deps import SessionDep
+from hip.api.params import RegionLevel
 
 router = APIRouter(tags=["metrics"])
-
-RegionLevel = Literal["state", "county", "municipality", "zip", "tract", "parcel"]
 
 
 class Metric(BaseModel):

@@ -3,6 +3,69 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.0] — 2026-08-12
+
+The pipeline reaches its last stage. Analytics now emit a versioned, schema-validated
+packet, and the same packet becomes a Markdown report and a printable page — two
+independent readers for a contract whose eventual consumer is a model that has not been
+chosen yet.
+
+### Added
+- **Milestone 6 — analysis packet `1.0`.** `hip.packets.schema` holds the Pydantic
+  models that define the contract; `schemas/packet-v1.json` is generated from them,
+  committed, and printed by `hip schema`. A test fails when the file and the models
+  drift, and another validates real packets against the published file with
+  `jsonschema`, as an external consumer would.
+- **`hip.packets.assemble`** — `build_packet(session, region_id, window)` reading every
+  number from `fact_metric_change`, `region_rankings`, and `fact_metric_observation`. A
+  county packet is ~13KB: 15 metrics with rank, percentile, CAGR and provenance, the
+  peer cohort, highlights, caveats, and the source releases behind the values.
+- **`hip pack`** — the eighth and last pipeline stage. Writes
+  `data/packets/<window>/<region_id>.json` for every region at a level, and with
+  `--report` also `reports/regions/<window>/<geoid>.md`. 21 county packets and reports
+  on this warehouse. Each packet is re-parsed from the bytes about to be written before
+  the file is created.
+- **`GET /regions/{id}/packet` and `GET /regions/{id}/report`** — the packet as JSON and
+  as `text/markdown`, both assembled from Postgres per request rather than served from
+  the files `hip pack` writes, so neither can go stale.
+- **Print-ready report page** at `/regions/[id]/report` — the same packet laid out for a
+  screen and a sheet of paper, with a print stylesheet, a print button, and a link to
+  the Markdown export. Reached from the region detail page.
+- **Vitest in `web/`**, closing the gap Milestone 5 left open. 24 tests over
+  `lib/format.ts` and the newly extracted `lib/scale.ts`, including a regression for the
+  one-colour map: 21 same-signed values must land in five classes.
+- **`hip schema`** prints the published packet contract, or writes it with `--write`.
+
+### Changed
+- `/regions/{id}/summary` now derives its caveats from `hip.packets.caveats`, the same
+  function packets use. It returns more caveats than before; the dashboard and a packet
+  reader can no longer be told different things about the same figure.
+- `make test` runs both suites. `make test-py` and `make test-web` run one each.
+- `make pipeline` ends with `hip pack --report`.
+- Chart and map arithmetic moved out of the components into `web/lib/scale.ts`, and
+  `RegionLevel`/`Window` out of three routers into `hip/api/params.py`. `nation` is now
+  an accepted `level` on `/metrics` and `/regions`, which it always was in the warehouse.
+- Tables inside a `.scroll-x` container now scroll on a narrow screen instead of
+  compressing every cell to three wrapped lines.
+
+### Fixed
+- `hip validate` and `hip pack` resolve `reports/` through `Settings.reports_dir`
+  instead of rebuilding the path from `data_dir.parent` inline.
+- Documentation drift: the API table left `/rankings`, `/compare`, and
+  `/regions/{id}/summary` unmarked though Milestone 4 shipped them, described `/compare`
+  as taking several metrics when it takes one, claimed the derived tables were unbuilt,
+  and promised a 503 from ranking endpoints that nothing implements.
+
+### Known gaps
+- **A fact's `release_id` names the right source but not always the right vintage.**
+  Found by reading a packet's sources: the loader keys releases by `(source, layer)`,
+  which is not unique for a source with several vintages, so all of ACS's five vintages
+  cite one release. Every affected packet now carries a caveat naming the sources. The
+  fix means carrying each row's source file through staging — five dbt models, the
+  matcher, and the loader — and is scheduled rather than accepted.
+- No cross-region packet: comparing two counties means two packets.
+- The dashboard's tests cover arithmetic only; no test renders a page.
+
 ## [0.6.0] — 2026-08-12
 
 The warehouse gets a face. Two pages, no map library, no charting library, no tile

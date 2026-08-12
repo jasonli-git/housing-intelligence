@@ -7,17 +7,17 @@ so `level` is a filter rather than a different code path (ARCHITECTURE #7).
 from __future__ import annotations
 
 import json
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 
 from hip.api.deps import SessionDep
+from hip.api.params import RegionLevel
 
 router = APIRouter(tags=["regions"])
 
-RegionLevel = Literal["state", "county", "municipality", "zip", "tract", "parcel"]
 
 # Geometry payloads are the one place this API can accidentally return 50MB. Tracts and
 # ZIPs are numerous and detailed, so /geo simplifies by default; the tolerance is in

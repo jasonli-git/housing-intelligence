@@ -119,4 +119,51 @@ summary { color: var(--text-secondary); cursor: pointer; font-size: 0.85rem; }
 .swatch { width: 10px; height: 10px; border-radius: 2px; }
 
 .scroll-x { overflow-x: auto; }
+/* Scroll rather than compress. Without a floor, `width: 100%` squeezes a seven-column
+   table into a phone and every cell wraps to three lines. */
+.scroll-x table { min-width: 32rem; }
 .caveats { margin-top: 1rem; padding-left: 1.1rem; color: var(--text-secondary); font-size: 0.85rem; }
+
+button {
+  font: inherit;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.report { max-width: 60rem; }
+.report footer { margin-top: 2.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+/* A rank, a date range, and a vintage each read as one token; wrapping "14 / 21" onto
+   two lines makes a table of them unreadable. Metric and source names still wrap. */
+.report td.num, .report .nowrap { white-space: nowrap; }
+
+/*
+ * Print is a first-class output here: the region report is meant to be saved as a PDF
+ * from the browser rather than rendered by a PDF library. Colours are pinned to black
+ * on white because a printer has one surface regardless of the reader's theme, and the
+ * table borders are what carry structure once the fills are gone.
+ */
+@media print {
+  :root {
+    --surface-1: #ffffff;
+    --surface-2: #ffffff;
+    --border: #999999;
+    --grid: #cccccc;
+    --text-primary: #000000;
+    --text-secondary: #222222;
+    --text-muted: #444444;
+  }
+  body { padding: 0; font-size: 11pt; }
+  main { max-width: none; }
+  .print-hide { display: none !important; }
+  /* A URL under every link is noise on paper; the sources table already cites them. */
+  a { color: inherit; text-decoration: none; }
+  .scroll-x { overflow-x: visible; }
+  h2 { margin-top: 1.4rem; }
+  /* Never split a table row or leave a heading stranded at the foot of a page. */
+  tr, li { break-inside: avoid; }
+  h1, h2 { break-after: avoid; }
+}

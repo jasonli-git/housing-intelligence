@@ -8,18 +8,17 @@ and the platform's claim is that a number can be traced to a run.
 from __future__ import annotations
 
 from datetime import date
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import text
 
 from hip.api.deps import SessionDep
+from hip.api.params import RegionLevel, Window
+from hip.packets import caveats_for
 
 router = APIRouter(tags=["analytics"])
-
-RegionLevel = Literal["nation", "state", "county", "municipality", "zip", "tract"]
-Window = Literal["1y", "3y", "5y", "10y", "since_2019"]
 
 
 class RankedRegion(BaseModel):
@@ -207,19 +206,6 @@ class Summary(BaseModel):
     caveats: list[str]
 
 
-# Caveats that travel with a figure rather than living only in the docs. Keyed by what
-# triggers them, so a reader sees the limitation next to the number it applies to.
-_CAVEATS = {
-    "acs": "ACS 5-year vintages overlap by four years, so consecutive estimates are "
-    "not independent measurements.",
-    "zip": "ZIP-level values are allocated from Census ZCTAs by area, not measured; "
-    "a ZIP straddling several municipalities is an estimate.",
-    "municipality": "Zillow municipal values are matched by name and county, not by "
-    "FIPS; ACS municipal values are exact.",
-    "national": "The mortgage rate is national and identical for every region.",
-}
-
-
 @router.get(
     "/regions/{region_id}/summary",
     response_model=Summary,
@@ -264,15 +250,20 @@ def summary(
 
     headlines = [Headline(window=window, **row) for row in rows]
 
-    caveats = []
-    if any(h.metric_id.startswith("acs_") for h in headlines):
-        caveats.append(_CAVEATS["acs"])
-    if region["level"] == "zip":
-        caveats.append(_CAVEATS["zip"])
-    if region["level"] == "municipality":
-        caveats.append(_CAVEATS["municipality"])
-    if any(h.metric_id == "mortgage_rate_30y" for h in headlines):
-        caveats.append(_CAVEATS["national"])
+    # The same derivation the analysis packet uses (hip.packets.caveats), so the
+    # dashboard and a packet reader are told the same things about the same figures.
+    match_methods = session.execute(
+        text(
+            "SELECT DISTINCT match_method FROM fact_metric_observation "
+            "WHERE region_id = :id"
+        ),
+        {"id": region_id},
+    ).scalars()
+    caveats = caveats_for(
+        level=region["level"],
+        metric_ids=[h.metric_id for h in headlines],
+        match_methods=list(match_methods),
+    )
 
     return Summary(
         region_id=region["region_id"],

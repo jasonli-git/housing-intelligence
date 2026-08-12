@@ -2,8 +2,8 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup venv-fix db-up db-down db-logs migrate pipeline api web test lint \
-        format check-config dbt-debug clean
+.PHONY: help setup venv-fix db-up db-down db-logs migrate pipeline api web test test-py \
+        test-web lint format check-config dbt-debug clean
 
 SITE_PACKAGES = $(wildcard .venv/lib/python*/site-packages)
 
@@ -49,7 +49,7 @@ db-logs:  ## Tail Postgres logs
 migrate:  ## Apply Alembic migrations to the warehouse
 	uv run alembic upgrade head
 
-pipeline:  ## Full pipeline: acquire -> land -> stage -> geocode -> validate -> load -> analyze
+pipeline:  ## Full pipeline: acquire -> land -> stage -> geocode -> validate -> load -> analyze -> pack
 	@# Each stage persists before the next begins, so any one can be re-run alone.
 	@# `validate` is a gate: a non-zero exit here stops the load, and make stops with it.
 	uv run hip acquire
@@ -59,6 +59,7 @@ pipeline:  ## Full pipeline: acquire -> land -> stage -> geocode -> validate -> 
 	uv run hip validate
 	uv run hip load
 	uv run hip analyze
+	uv run hip pack --report
 
 api:  ## Run the API on http://localhost:8000 (docs at /docs)
 	uv run uvicorn hip.api.main:app --reload --port 8000
@@ -66,8 +67,19 @@ api:  ## Run the API on http://localhost:8000 (docs at /docs)
 web:  ## Run the dashboard on http://localhost:3000
 	cd web && npm run dev
 
-test:  ## Run the Python test suite
+test:  ## Run both test suites — Python, then the dashboard
 	uv run pytest
+	@# The dashboard suite covers the pure chart arithmetic. Skipped rather than failed
+	@# when node_modules is absent, so `make test` still works before `make setup`.
+	@test -d web/node_modules \
+		&& (cd web && npm test --silent) \
+		|| echo "web/node_modules missing — skipping dashboard tests (run make setup)"
+
+test-py:  ## Run the Python test suite alone
+	uv run pytest
+
+test-web:  ## Run the dashboard test suite alone
+	cd web && npm test
 
 lint:  ## Lint and type-check
 	uv run ruff check .

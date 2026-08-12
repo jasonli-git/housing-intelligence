@@ -11,12 +11,14 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-08-12): v0.6.0, Milestone 5 complete.** New Jersey's geography and its
-> housing and economic context are loaded, queryable, and now **visible** — 3,365
-> regions and **332,609 observations across 17 metrics from 9 public sources, spanning
-> 1971 to 2026**, plus 19,527 computed changes and 19,517 rankings, served behind a
-> two-page dashboard. The source file and match method are recorded on every value. See [ROADMAP.md](ROADMAP.md) for what is planned and
-> [CHANGELOG.md](CHANGELOG.md) for what shipped.
+> **Status (2026-08-12): v0.7.0, Milestone 6 complete.** New Jersey's geography and its
+> housing and economic context are loaded, queryable, visible, and now **exportable** —
+> 3,365 regions and **332,609 observations across 17 metrics from 9 public sources,
+> spanning 1971 to 2026**, plus 19,527 computed changes and 19,517 rankings, served
+> behind a three-page dashboard and packaged as versioned analysis packets. All eight
+> pipeline stages run. The source file and match method are recorded on every value. See
+> [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md) for what
+> shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
@@ -26,7 +28,7 @@ Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 Each is listed with the milestone that delivers it, so this section can be checked
 against [ROADMAP.md](ROADMAP.md) rather than believed.
 
-- **Config-driven source registry** (M0, built) — 11 public sources and 12 metrics
+- **Config-driven source registry** (M0, built) — 13 public sources and 17 metrics
   defined in YAML with license, cadence, and update frequency. `hip check-config`
   validates them and catches a metric naming an undefined source, or a source whose
   API key is missing, before any fetch is attempted.
@@ -42,10 +44,10 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   content-addressed, cached by hash so a re-run touches no network, and every load
   records the exact file it came from. Re-running the pipeline is a no-op, verified:
   `region_id` values are stable across reloads because facts will reference them.
-- **Staged public-data pipeline** (M2–M3, built) — eight CLI stages from download to
-  analysis packet, each persisting before the next runs. Six are implemented
-  (`acquire`, `land`, `stage`, `geocode`, `validate`, `load`); `analyze` and `pack` exit
-  non-zero naming the milestone that delivers them.
+- **Staged public-data pipeline** (M2–M6, built) — eight CLI stages from download to
+  analysis packet, each persisting before the next runs: `acquire`, `land`, `stage`,
+  `geocode`, `validate`, `load`, `analyze`, `pack`. `make pipeline` runs them in order
+  and a failing validation gate stops the chain.
 - **Provenance on every value** (M2, built) — each observation carries the source
   release and how its geography was resolved (`fips`, `zip_code`, `name_county`), so a
   county figure matched on FIPS is distinguishable from a municipal one matched by name.
@@ -74,11 +76,16 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   overview, region detail pages with metric tiles and trend charts, and a table view of
   every series with its source. Drawn as inline SVG from our own GeoJSON: no map
   library, no tile server, no third-party in the render path.
-- **Read-only analytics API** (M4–M6) — FastAPI endpoints for regions, metrics,
-  rankings, comparisons, GeoJSON boundaries, and analysis packets.
-- **Analysis packets** (M6) — small versioned JSON documents holding computed metrics,
-  peer comparisons, caveats, and source metadata; the entire contract any future model
-  is allowed to see.
+- **Read-only analytics API** (M4–M6, built) — FastAPI endpoints for regions, metrics,
+  rankings, comparisons, GeoJSON boundaries, analysis packets, and Markdown reports.
+- **Analysis packets** (M6, built) — small versioned JSON documents holding computed
+  metrics with their ranks, the peer cohort, caveats, and the source releases behind
+  every value: the entire contract any future model is allowed to see. The schema is
+  published at [`schemas/packet-v1.json`](schemas/packet-v1.json), generated from the
+  code and checked against it by a test. `hip pack` writes one per region.
+- **Exportable region reports** (M6, built) — the same packet rendered as Markdown by
+  `hip pack --report` or `GET /regions/{id}/report`, and as a print-ready page at
+  `/regions/[id]/report` in the dashboard. Two media, one contract, no PDF library.
 - **Model evaluation** (M8) — the same housing scenarios run against candidate local
   models, graded on factual accuracy, hallucination rate, and usefulness, with the
   selection justified by measured results.
@@ -126,7 +133,7 @@ cached by content hash and never re-downloaded.
 ```bash
 make db-up         # Postgres 16 + PostGIS, waits for the healthcheck
 make migrate       # alembic upgrade head
-make pipeline      # acquire → land → stage → geocode → validate → load → analyze
+make pipeline      # acquire → … → analyze → pack, all eight stages
 ```
 
 **Run it.**
@@ -134,7 +141,7 @@ make pipeline      # acquire → land → stage → geocode → validate → loa
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 88 tests; API tests skip without a loaded warehouse
+make test          # 131 Python + 24 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -147,6 +154,16 @@ curl 'http://localhost:8000/regions/11/metrics?metric_id=zhvi_sfr&from=2025-01-0
 curl 'http://localhost:8000/sources/unresolved'
 curl 'http://localhost:8000/rankings?metric_id=price_to_income&level=county&window=5y'
 curl 'http://localhost:8000/regions/11/summary?window=5y'
+curl 'http://localhost:8000/regions/11/packet?window=5y'
+curl 'http://localhost:8000/regions/11/report?window=5y'
+```
+
+Packets and reports on disk, and the contract they satisfy:
+
+```bash
+uv run hip pack --report          # data/packets/5y/ and reports/regions/5y/
+uv run hip pack --region 11       # one region
+uv run hip schema                 # the published JSON Schema
 ```
 
 `make` on its own lists every target. With the warehouse down, the API and dashboard
@@ -162,8 +179,9 @@ still run and report the degraded state rather than failing.
 
 ## Project Status
 
-v0.4.0 — Milestones 0 through 4 of 8 complete. Geography, prices, rents, economic
-context, and computed change/affordability/rankings are all served; Milestone 5 builds
-the dashboard. Milestones and
-their status are in [ROADMAP.md](ROADMAP.md); the current working list, including known
-rough edges and parked API keys, is in [TODO.md](TODO.md).
+v0.7.0 — Milestones 0 through 6 and 9 complete. Geography, prices, rents, economic
+context, computed change and affordability and rankings, the dashboard, and versioned
+analysis packets with exportable reports are all built; Milestone 7 adds the parcel and
+MOD-IV layer. Milestones and their status are in [ROADMAP.md](ROADMAP.md); the current
+working list, including known rough edges and the release-vintage defect found while
+building packets, is in [TODO.md](TODO.md).

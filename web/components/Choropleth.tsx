@@ -15,6 +15,7 @@
 
 import type { Feature, FeatureCollection } from "@/lib/api";
 import { formatChange } from "@/lib/format";
+import { classIndex, quantileBreaks, sortedValues, straddlesZero } from "@/lib/scale";
 
 type Props = {
   geo: FeatureCollection;
@@ -38,22 +39,6 @@ const SEQUENTIAL = [
   "var(--seq-700)",
 ];
 
-/** Quantile edges: four cut points giving five classes. */
-function quantileBreaks(sorted: number[]): number[] {
-  return [0.2, 0.4, 0.6, 0.8].map((q) => {
-    const position = q * (sorted.length - 1);
-    const low = Math.floor(position);
-    const high = Math.ceil(position);
-    return sorted[low] + (sorted[high] - sorted[low]) * (position - low);
-  });
-}
-
-function classIndex(value: number, breaks: number[]): number {
-  let index = 0;
-  while (index < breaks.length && value > breaks[index]) index += 1;
-  return index;
-}
-
 const WIDTH = 620;
 const HEIGHT = 680;
 
@@ -68,9 +53,9 @@ function rings(feature: Feature): number[][][] {
 }
 
 export function Choropleth({ geo, values, title }: Props) {
-  const observed = [...values.values()].sort((a, b) => a - b);
-  const straddlesZero = observed.length > 0 && observed[0] < 0 && observed.at(-1)! > 0;
-  const ramp = straddlesZero ? DIVERGING : SEQUENTIAL;
+  const observed = sortedValues(values.values());
+  const diverging = straddlesZero(observed);
+  const ramp = diverging ? DIVERGING : SEQUENTIAL;
   const breaks = observed.length > 4 ? quantileBreaks(observed) : [];
 
   const fillFor = (pct: number | undefined) =>
@@ -172,7 +157,7 @@ export function Choropleth({ geo, values, title }: Props) {
         })}
       </svg>
       <p className="muted" style={{ marginTop: "0.35rem" }}>
-        {straddlesZero
+        {diverging
           ? "Diverging scale: values cross zero, so the midpoint is no change."
           : "Sequential scale: every value shares a sign, so a diverging ramp would show one colour."}{" "}
         Breaks are quintiles of the observed range. Click a region for its detail page.

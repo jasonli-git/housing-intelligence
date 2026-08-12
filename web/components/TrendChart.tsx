@@ -11,6 +11,7 @@
 import { useState } from "react";
 
 import { formatValue } from "@/lib/format";
+import { linearScale, nearestIndex, paddedExtent } from "@/lib/scale";
 
 type Point = { date: string; value: number };
 
@@ -34,17 +35,13 @@ export function TrendChart({ points, label, unit }: Props) {
   const times = points.map((p) => new Date(p.date).getTime());
   const values = points.map((p) => p.value);
   const [minT, maxT] = [Math.min(...times), Math.max(...times)];
-  // Include zero only when the series legitimately approaches it; a ratio or an index
-  // hovering near 400 does not want 0 on the axis, and forcing it flattens the shape.
-  const rawMin = Math.min(...values);
-  const rawMax = Math.max(...values);
-  const pad = (rawMax - rawMin) * 0.08 || Math.abs(rawMax) * 0.08 || 1;
-  const [minV, maxV] = [rawMin - pad, rawMax + pad];
+  const [minV, maxV] = paddedExtent(values);
 
   const plotW = WIDTH - PAD.left - PAD.right;
   const plotH = HEIGHT - PAD.top - PAD.bottom;
-  const x = (t: number) => PAD.left + ((t - minT) / (maxT - minT || 1)) * plotW;
-  const y = (v: number) => PAD.top + (1 - (v - minV) / (maxV - minV || 1)) * plotH;
+  const x = linearScale([minT, maxT], [PAD.left, PAD.left + plotW]);
+  // Range reversed: SVG y grows downward, the value axis grows upward.
+  const y = linearScale([minV, maxV], [PAD.top + plotH, PAD.top]);
 
   const d = points
     .map((p, i) => `${i === 0 ? "M" : "L"}${x(times[i]).toFixed(1)},${y(p.value).toFixed(1)}`)
@@ -68,11 +65,7 @@ export function TrendChart({ points, label, unit }: Props) {
           const box = event.currentTarget.getBoundingClientRect();
           const px = ((event.clientX - box.left) / box.width) * WIDTH;
           const t = minT + ((px - PAD.left) / plotW) * (maxT - minT);
-          let nearest = 0;
-          for (let i = 1; i < times.length; i += 1) {
-            if (Math.abs(times[i] - t) < Math.abs(times[nearest] - t)) nearest = i;
-          }
-          setHover(nearest);
+          setHover(nearestIndex(times, t));
         }}
       >
         {ticks.map((v) => (

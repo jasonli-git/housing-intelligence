@@ -394,6 +394,67 @@ ranking tables.
   this Next version differs from older conventions, which is how the async-`params`
   change was caught.
 
+## Milestone 6 — Analysis packets and reports
+
+Deliverable: a versioned packet schema with a published JSON Schema file, `hip pack`
+writing packets to disk, `GET /regions/{id}/packet`, and an exportable county report in
+Markdown and as a print-ready page.
+
+- [x] `hip.packets.schema` — Pydantic models for packet `1.0`, `extra="forbid"`
+- [x] `schemas/packet-v1.json` — the published contract, generated from the models, with
+      a drift test so the file and the code cannot disagree
+- [x] `hip.packets.caveats` — pure caveat derivation, shared with `/regions/{id}/summary`
+      instead of the router keeping its own copy
+- [x] `hip.packets.assemble` — `build_packet(session, region_id, window)` reading every
+      number from the warehouse
+- [x] `hip.packets.report` — `render_markdown(packet)`, pure
+- [x] `hip pack` — packets to `data/packets/<window>/`, `--report` also writes Markdown
+      to `reports/regions/<window>/`; removed from `_STAGE_MILESTONE`, which is now empty
+- [x] `hip schema` — print or `--write` the published JSON Schema
+- [x] `GET /regions/{id}/packet` and `GET /regions/{id}/report` (text/markdown)
+- [x] Web `/regions/[id]/report` — print-ready page laid out from the packet
+- [x] Vitest in `web/`, closing the Milestone 5 gap: `lib/format.ts` and the extracted
+      `lib/scale.ts` (choropleth ramp, quintile breaks, chart projection) — 24 tests
+- [x] Tests (131 Python, 24 dashboard) and docs
+- [ ] **Fix release-vintage provenance** — see the note below. Not Milestone 6 work; it
+      is a Milestone 3 load-stage defect and needs its own slice.
+
+- Note: **a packet's `release_id` names the right source but the wrong vintage.** Found
+  by building the first packet and reading its sources table: every ACS observation for
+  Mercer County, across all five vintages, cites release 98 (vintage 2019).
+  `_release_ids` in `hip.warehouse.load` returns `dict[(source_id, layer), release_id]`,
+  which is not a unique key for a source publishing several vintages — ACS has 10
+  releases, HUD has 107 — so all but one collapse and every year's fact points at the
+  survivor. ARCHITECTURE #33 described a milder version of this as a layer-matching
+  fallback; #47 records the real cause. The fix: carry each row's source file through
+  staging (the ACS dbt model already extracts a vintage from `filename`), add it to
+  `stg_metric_observation`, and key releases on `(source, layer, vintage)`. Five dbt
+  models, `matching.py`, `load.py`, and a re-run of `stage → geocode → load`. Until then
+  every affected packet carries a caveat naming the sources. **Candidate for the front
+  of Milestone 7.**
+- Note: the packet is deliberately per (region, window). Comparing two counties means two
+  packets. A cross-region packet would be a different contract, not a bigger one; leave
+  it until something actually needs it.
+- Note: `web/` tests cover arithmetic, not rendering — no jsdom, no component tests. The
+  bugs Milestone 5 shipped were arithmetic (the one-colour map), so that is where the
+  coverage went. A render test needs jsdom plus a React testing library, which is a
+  bigger dependency decision than this milestone wanted to make.
+- Note: `make test` now runs both suites and prints a skip message when
+  `web/node_modules` is absent rather than failing. `make test-py` and `make test-web`
+  run one each.
+- Note: both `data/` and `reports/` are gitignored, so packets and generated reports are
+  machine-local and rebuildable — correct for artifacts, but it means no example report
+  is visible to anyone browsing the repository. If one is wanted as a portfolio artifact,
+  it needs a deliberate `git add -f` of a single file, not a change to `.gitignore`.
+- Note: `web/tsconfig.tsbuildinfo` is tracked and changes on every `tsc` run, so it shows
+  up dirty in unrelated diffs. It is a build artifact and belongs in `.gitignore` plus a
+  `git rm --cached`. Left alone here because it is a git-history change, not a
+  Milestone 6 one.
+- Note: stale `.next/types/*d 2.ts` duplicates (macOS file-duplication artifacts inside
+  the build directory) made `npx tsc --noEmit` report ~20 duplicate-identifier errors
+  that had nothing to do with the source. `rm -rf web/.next` clears it; `make clean`
+  already does. Worth remembering before debugging a phantom type error.
+
 ## Parked / needs user input
 
 - ~~Census, FRED, and BLS API keys~~ — all three supplied 2026-08-12 and in `.env`.

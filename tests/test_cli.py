@@ -13,10 +13,11 @@ runner = CliRunner()
 # The pipeline stages, in the order ARCHITECTURE.md runs them.
 STAGES = ["acquire", "land", "stage", "geocode", "validate", "load", "analyze", "pack"]
 
-# Stages with a real implementation. These must never be invoked bare in a test: acquire
-# would download 635MB of TIGER data, and load would write to whatever database the
-# environment points at. Their behavior is covered by tests/test_sources.py and
-# tests/test_geography.py, which exercise the same code without I/O.
+# Stages with a real implementation — all eight since Milestone 6. These must never be
+# invoked bare in a test: acquire would download 635MB of TIGER data, and load would
+# write to whatever database the environment points at. Their behavior is covered by
+# tests/test_sources.py, tests/test_geography.py, and tests/test_packets.py, which
+# exercise the same code without I/O.
 IMPLEMENTED = [s for s in STAGES if s not in _STAGE_MILESTONE]
 
 
@@ -35,27 +36,25 @@ def test_every_pipeline_stage_has_a_command() -> None:
         assert stage in result.stdout
 
 
-@pytest.mark.parametrize("stage", sorted(_STAGE_MILESTONE))
-def test_stage_stub_fails_loudly_and_names_its_milestone(stage: str) -> None:
-    """A stub must never look like a successful run."""
-    result = runner.invoke(app, [stage])
-
-    assert result.exit_code == 1
-    assert f"Milestone {_STAGE_MILESTONE[stage]}" in result.output
-
-
 def test_stage_milestone_map_only_lists_unimplemented_stages() -> None:
-    """The map doubles as the remaining-work list, so a stale entry is a lie."""
+    """The map doubles as the remaining-work list, so a stale entry is a lie.
+
+    Empty since Milestone 6: every stage in the pipeline has a real implementation.
+    A future stage added as a stub belongs here, and this assertion is what forces it
+    to be removed again once it works.
+    """
     assert set(_STAGE_MILESTONE) <= set(STAGES)
-    assert set(IMPLEMENTED) == {
-        "acquire",
-        "land",
-        "stage",
-        "geocode",
-        "validate",
-        "load",
-        "analyze",
-    }
+    assert set(IMPLEMENTED) == set(STAGES)
+    assert _STAGE_MILESTONE == {}
+
+
+def test_schema_command_prints_the_published_contract() -> None:
+    """`hip schema` is how a consumer gets the packet contract without reading code."""
+    result = runner.invoke(app, ["schema"])
+
+    assert result.exit_code == 0
+    assert '"$id": "packet-v1.json"' in result.stdout
+    assert "packet_version" in result.stdout
 
 
 def test_acquire_rejects_a_source_without_an_adapter_before_any_io() -> None:

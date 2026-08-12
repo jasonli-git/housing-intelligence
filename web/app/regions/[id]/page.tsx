@@ -54,7 +54,8 @@ export default async function RegionPage({
       </p>
       <h1>{region.name}</h1>
       <p className="sub">
-        {region.level} · {summary.headlines.length} metrics · {WINDOW} change
+        {region.level} · {summary.headlines.length} metrics · {WINDOW} change ·{" "}
+        <Link href={`/regions/${regionId}/report`}>report</Link>
       </p>
 
       <div className="tiles">

@@ -126,6 +126,19 @@ class Settings(BaseSettings):
     def duckdb_path(self) -> Path:
         return self.data_dir / "duckdb" / "hip.duckdb"
 
+    @property
+    def packets_dir(self) -> Path:
+        return self.data_dir / "packets"
+
+    @property
+    def reports_dir(self) -> Path:
+        """Human-facing output — validation reports and region reports.
+
+        Beside `data/` rather than inside it: these are meant to be read and shared,
+        while everything under `data/` is a rebuildable machine artifact.
+        """
+        return self.data_dir.parent / "reports"
+
 
 class Source(BaseModel):
     """One public data source. ``adapter`` is resolved at Milestone 2."""

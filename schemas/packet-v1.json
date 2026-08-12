@@ -1,0 +1,430 @@
+{
+  "$defs": {
+    "PacketComparisons": {
+      "additionalProperties": false,
+      "description": "The cohort this region was ranked against.\n\n`peer_count` is how many regions of this level are in scope; a metric's own `of`\ncan be smaller, because not every region carries every metric. Where they differ,\na caveat says so.",
+      "properties": {
+        "peer_count": {
+          "title": "Peer Count",
+          "type": "integer"
+        },
+        "peer_level": {
+          "title": "Peer Level",
+          "type": "string"
+        },
+        "peer_scope": {
+          "title": "Peer Scope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "peer_level",
+        "peer_scope",
+        "peer_count"
+      ],
+      "title": "PacketComparisons",
+      "type": "object"
+    },
+    "PacketHighlight": {
+      "additionalProperties": false,
+      "description": "A metric where this region sits at one end of its cohort.\n\nSelection, not statistics: the rank is read from `region_rankings` and nothing new\nis computed. `leading` is the good end as the metric's own `direction` defines it.",
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "metric_id": {
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "of": {
+          "title": "Of",
+          "type": "integer"
+        },
+        "pct_change": {
+          "title": "Pct Change",
+          "type": "number"
+        },
+        "position": {
+          "enum": [
+            "leading",
+            "trailing"
+          ],
+          "title": "Position",
+          "type": "string"
+        },
+        "rank": {
+          "title": "Rank",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "metric_id",
+        "label",
+        "position",
+        "rank",
+        "of",
+        "pct_change"
+      ],
+      "title": "PacketHighlight",
+      "type": "object"
+    },
+    "PacketMetric": {
+      "additionalProperties": false,
+      "description": "One metric's change over the window, with its rank and its provenance.\n\n`release_id`, `source_id`, and `match_method` describe the observation behind\n`end_value`. They are null only when the derived tables are stale relative to the\nfacts \u2014 a rebuilt `hip analyze` restores them.",
+      "properties": {
+        "cagr": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cagr"
+        },
+        "direction": {
+          "title": "Direction",
+          "type": "string"
+        },
+        "end_value": {
+          "title": "End Value",
+          "type": "number"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "match_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Match Method"
+        },
+        "metric_id": {
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "of": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Of"
+        },
+        "pct_change": {
+          "title": "Pct Change",
+          "type": "number"
+        },
+        "percentile": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Percentile"
+        },
+        "rank": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rank"
+        },
+        "release_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Release Id"
+        },
+        "source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Id"
+        },
+        "start_value": {
+          "title": "Start Value",
+          "type": "number"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "window_end": {
+          "format": "date",
+          "title": "Window End",
+          "type": "string"
+        },
+        "window_start": {
+          "format": "date",
+          "title": "Window Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "metric_id",
+        "label",
+        "unit",
+        "direction",
+        "window_start",
+        "window_end",
+        "start_value",
+        "end_value",
+        "pct_change"
+      ],
+      "title": "PacketMetric",
+      "type": "object"
+    },
+    "PacketRegion": {
+      "additionalProperties": false,
+      "properties": {
+        "geoid": {
+          "title": "Geoid",
+          "type": "string"
+        },
+        "label": {
+          "description": "Display name, e.g. 'Mercer County, NJ'.",
+          "title": "Label",
+          "type": "string"
+        },
+        "level": {
+          "title": "Level",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RegionRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "region_id": {
+          "title": "Region Id",
+          "type": "integer"
+        },
+        "state_code": {
+          "title": "State Code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "region_id",
+        "geoid",
+        "level",
+        "name",
+        "label",
+        "state_code"
+      ],
+      "title": "PacketRegion",
+      "type": "object"
+    },
+    "PacketSource": {
+      "additionalProperties": false,
+      "description": "One source release behind the numbers, so a claim can be traced to a file.",
+      "properties": {
+        "fetched_at": {
+          "format": "date-time",
+          "title": "Fetched At",
+          "type": "string"
+        },
+        "license": {
+          "title": "License",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "publisher": {
+          "title": "Publisher",
+          "type": "string"
+        },
+        "release_ids": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Release Ids",
+          "type": "array"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        },
+        "vintage": {
+          "title": "Vintage",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "name",
+        "publisher",
+        "license",
+        "url",
+        "vintage",
+        "fetched_at",
+        "release_ids"
+      ],
+      "title": "PacketSource",
+      "type": "object"
+    },
+    "PacketWindow": {
+      "additionalProperties": false,
+      "description": "The change window, and the span the metrics in this packet actually cover.\n\n`start` and `end` are the envelope across every metric, not a claim that each one\nspans it: ACS is annual, Zillow monthly, FHFA quarterly, so a `5y` window resolves\nto slightly different dates per metric (ARCHITECTURE #35). The exact span for each\nis on the metric itself.",
+      "properties": {
+        "end": {
+          "format": "date",
+          "title": "End",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "start": {
+          "format": "date",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "start",
+        "end"
+      ],
+      "title": "PacketWindow",
+      "type": "object"
+    },
+    "RegionRef": {
+      "additionalProperties": false,
+      "description": "A region named but not described \u2014 used for the parent.",
+      "properties": {
+        "level": {
+          "title": "Level",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "region_id": {
+          "title": "Region Id",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "region_id",
+        "name",
+        "level"
+      ],
+      "title": "RegionRef",
+      "type": "object"
+    }
+  },
+  "$id": "packet-v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "caveats": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Caveats",
+      "type": "array"
+    },
+    "comparisons": {
+      "$ref": "#/$defs/PacketComparisons"
+    },
+    "highlights": {
+      "items": {
+        "$ref": "#/$defs/PacketHighlight"
+      },
+      "title": "Highlights",
+      "type": "array"
+    },
+    "metrics": {
+      "items": {
+        "$ref": "#/$defs/PacketMetric"
+      },
+      "title": "Metrics",
+      "type": "array"
+    },
+    "packet_version": {
+      "const": "1.0",
+      "title": "Packet Version",
+      "type": "string"
+    },
+    "region": {
+      "$ref": "#/$defs/PacketRegion"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/PacketSource"
+      },
+      "title": "Sources",
+      "type": "array"
+    },
+    "window": {
+      "$ref": "#/$defs/PacketWindow"
+    }
+  },
+  "required": [
+    "packet_version",
+    "region",
+    "window",
+    "metrics",
+    "comparisons",
+    "highlights",
+    "caveats",
+    "sources"
+  ],
+  "title": "Packet",
+  "type": "object"
+}

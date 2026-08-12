@@ -1,9 +1,13 @@
 /**
  * Typed access to the read-only analytics API.
  *
- * Server-side only: pages fetch here during render, so the API base URL never reaches
- * the browser and first paint carries real data. `cache: "no-store"` because the
- * warehouse changes when the pipeline runs, not on a schedule Next could revalidate on.
+ * Server-side only: pages fetch here during render, so no request goes out from the
+ * browser and first paint carries real data. `cache: "no-store"` because the warehouse
+ * changes when the pipeline runs, not on a schedule Next could revalidate on.
+ *
+ * One exception, and it is explicit: `publicApiUrl` is rendered into the Markdown
+ * export link, which the browser follows to the API directly. That is a URL in an
+ * href, not a fetcher shipped to the client.
  */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -72,6 +76,66 @@ export type Observation = {
   match_method: string;
 };
 
+/**
+ * The analysis packet, mirroring `schemas/packet-v1.json`. Hand-written rather than
+ * generated: one file, and a generator in the build would be a dependency for less
+ * than a hundred lines. `packet_version` is what a consumer checks before trusting
+ * the shape — bump it here when the published schema's major version changes.
+ */
+export type PacketMetric = {
+  metric_id: string;
+  label: string;
+  unit: string;
+  direction: string;
+  window_start: string;
+  window_end: string;
+  start_value: number;
+  end_value: number;
+  pct_change: number;
+  cagr: number | null;
+  rank: number | null;
+  of: number | null;
+  percentile: number | null;
+  release_id: number | null;
+  source_id: string | null;
+  match_method: string | null;
+};
+
+export type Packet = {
+  packet_version: string;
+  region: {
+    region_id: number;
+    geoid: string;
+    level: string;
+    name: string;
+    label: string;
+    state_code: string;
+    parent: { region_id: number; name: string; level: string } | null;
+  };
+  window: { label: string; start: string; end: string };
+  metrics: PacketMetric[];
+  comparisons: { peer_level: string; peer_scope: string; peer_count: number };
+  highlights: {
+    metric_id: string;
+    label: string;
+    position: "leading" | "trailing";
+    rank: number;
+    of: number;
+    pct_change: number;
+  }[];
+  caveats: string[];
+  sources: {
+    source_id: string;
+    name: string;
+    publisher: string;
+    license: string;
+    url: string;
+    vintage: string;
+    fetched_at: string;
+    release_ids: number[];
+  }[];
+};
+
 export type Feature = {
   type: "Feature";
   id: number;
@@ -106,7 +170,17 @@ export const api = {
     tryGet<{ observations: Observation[] }>(
       `/regions/${id}/metrics?metric_id=${metricId}`,
     ),
+  packet: (id: number, window: string) =>
+    tryGet<Packet>(`/regions/${id}/packet?window=${window}`),
   geo: (level: string) => tryGet<FeatureCollection>(`/geo/${level}?state=NJ`),
 };
+
+/**
+ * The API's public origin, for links the *browser* follows — the Markdown export is
+ * a direct download from the API, not a page this app renders. Everything else in
+ * this module is fetched during server render, which is why `API_URL` otherwise stays
+ * off the client.
+ */
+export const publicApiUrl = API_URL;
 
 export { formatValue, formatChange } from "./format";

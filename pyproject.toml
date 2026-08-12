@@ -30,6 +30,10 @@ dev = [
     "ruff>=0.5",
     "mypy>=1.10",
     "types-pyyaml>=6.0",
+    # Validates emitted packets against `schemas/packet-v1.json` as an external consumer
+    # would. Dev-only on purpose: `hip pack` re-parses through the Pydantic model that
+    # generated the schema, so the runtime needs no second validator.
+    "jsonschema>=4.22",
 ]
 # dbt resolves against its own pinned dependency tree; keeping it in a separate group
 # stops it from constraining the application environment (ARCHITECTURE #4).
