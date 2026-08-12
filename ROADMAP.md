@@ -3,7 +3,9 @@
 Version 1 is in progress. Milestones 0 through 4 are complete: the warehouse holds a NJ
 geography spine, 332,294 observations across 14 metrics from 9 sources spanning
 1971–2026, and 19,338 computed changes with 19,328 rankings — all served over the API,
-with 86 tests passing. Milestone 5 is next.
+with 88 tests passing. Milestone 9 was taken out of numeric order, before
+Milestone 5, because it corrects numbers the dashboard will display — fixing them
+after the dashboard ships would mean re-checking every chart. Milestone 5 is next.
 
 A milestone counts as done when its capability is reachable through the CLI, the API,
 or the dashboard on a clean checkout; its tests pass; and
@@ -23,6 +25,8 @@ or the dashboard on a clean checkout; its tests pass; and
 | 6 | ⬜ planned | **Analysis packets and reports** — versioned packet schema, `hip pack`, `/regions/{id}/packet`, and an exportable county report |
 | 7 | ⬜ planned | **Parcel and MOD-IV layer** — NJ parcels in Parquet/DuckDB, municipality-level assessment aggregates promoted to the warehouse and surfaced in the dashboard |
 | 8 | ⬜ planned | **Model evaluation and optional explanations** — standardized housing scenarios, local model runner, Claude-graded rubric, published evaluation report, and an explanation panel labeled as interpretation |
+
+| 9 | ✅ done | **HUD affordability inputs** — USPS crosswalk replacing area weights with residential-address ratios (2,456 of 2,491 rows), HUD area median income and 80% AMI limits, and `price_to_ami`. Built before Milestone 5 |
 
 ## Post-Version 1 (not scheduled)
 

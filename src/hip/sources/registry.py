@@ -14,6 +14,7 @@ from hip.sources.census_acs import AcsAdapter
 from hip.sources.census_permits import PermitsAdapter
 from hip.sources.fhfa import HpiAdapter
 from hip.sources.fred import FredAdapter
+from hip.sources.hud import HudAdapter
 from hip.sources.irs_migration import MigrationAdapter
 from hip.sources.tiger import TigerAdapter
 from hip.sources.zillow import ZhviAdapter, ZoriAdapter
@@ -39,6 +40,7 @@ IMPLEMENTED: tuple[str, ...] = (
     AcsAdapter.source_id,
     FredAdapter.source_id,
     BlsAdapter.source_id,
+    HudAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -52,6 +54,7 @@ METRIC_SOURCES: tuple[str, ...] = (
     AcsAdapter.source_id,
     FredAdapter.source_id,
     BlsAdapter.source_id,
+    HudAdapter.source_id,
 )
 
 
@@ -88,6 +91,8 @@ def build_adapter(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return FredAdapter()
     if source_id == BlsAdapter.source_id:
         return BlsAdapter(county_fips=_county_fips(scope), end_year=BLS_END_YEAR)
+    if source_id == HudAdapter.source_id:
+        return HudAdapter(states=scope.states, county_fips=_county_fips(scope))
     if (milestone := PLANNED.get(source_id)) is not None:
         raise UnknownSourceError(
             f"'{source_id}' has no adapter yet — it ships in Milestone {milestone}. "

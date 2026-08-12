@@ -25,7 +25,7 @@ from hip.config import (
     load_sources,
 )
 from hip.duck import duckdb_session
-from hip.geography.crosswalk import build_crosswalk
+from hip.geography.crosswalk import apply_hud_weights, build_crosswalk
 from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
 from hip.landing.shapefile import land_shapefile
@@ -39,6 +39,7 @@ from hip.sources.registry import (
 )
 from hip.sources.tiger import TigerAdapter, shapefile_member
 from hip.transform.dbt_runner import (
+    CROSSWALK_MODEL,
     KEYED_MODELS,
     STAGING_SCHEMA,
     ZILLOW_MODELS,
@@ -220,6 +221,19 @@ def geocode(
             scope=scope,
         )
         crosswalk = build_crosswalk(con)
+        hud_rows, crosswalk_total = (
+            apply_hud_weights(con, staging_schema=STAGING_SCHEMA)
+            if CROSSWALK_MODEL
+            in {
+                r[0]
+                for r in con.execute(
+                    "SELECT table_name FROM information_schema.tables "
+                    "WHERE table_schema = ?",
+                    [STAGING_SCHEMA],
+                ).fetchall()
+            }
+            else (0, crosswalk.rows)
+        )
 
         # Observations can only be resolved once `hip stage` has produced the models.
         # A geography-only run is legitimate, so absence is a notice, not an error.
@@ -256,8 +270,13 @@ def geocode(
     for level in scope.levels:
         typer.echo(f"{level:<14} {counts.by_level.get(level, 0):>8,}")
     typer.echo(
-        f"crosswalk      {crosswalk.rows:>8,} rows from {crosswalk.sources:,} ZIPs"
+        f"crosswalk      {crosswalk_total:>8,} rows from {crosswalk.sources:,} ZIPs"
     )
+    if hud_rows:
+        typer.echo(
+            f"  of which      {hud_rows:>8,} use HUD residential-address weights, "
+            f"{crosswalk_total - hud_rows:,} area"
+        )
     typer.secho(f"{counts.total:,} regions staged", fg=typer.colors.GREEN)
 
     if matches is None:

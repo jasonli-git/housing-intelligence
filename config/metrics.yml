@@ -122,3 +122,34 @@ metrics:
       Twelve months of observed rent divided by median household income. The 30%
       threshold that defines cost burden corresponds to a ratio of 0.30.
     source_id: hip_derived
+
+  hud_area_median_income:
+    label: Area median income (HUD)
+    unit: usd
+    frequency: annual
+    direction: higher_is_better
+    description: >-
+      HUD's area median family income, the denominator behind every AMI band. Published
+      per county and revised annually.
+    source_id: hud
+
+  hud_income_limit_80:
+    label: Low-income limit, 80% AMI, 4-person household
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      HUD's 80% of area median income threshold for a four-person household, the
+      conventional reference figure in housing policy.
+    source_id: hud
+
+  price_to_ami:
+    label: Home value to area median income
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Typical home value divided by HUD's area median income. Parallel to
+      price_to_income but against a published policy benchmark rather than an ACS
+      survey estimate.
+    source_id: hip_derived

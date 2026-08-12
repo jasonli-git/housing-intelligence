@@ -5,7 +5,7 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-08-12):** Milestones 0 through 4 are complete. The warehouse holds a
+> **Status (2026-08-12):** Milestones 0 through 4 and 9 are complete. The warehouse holds a
 > NJ geography spine (3,365 regions, 1,902 allocation weights) and **309,350 housing
 > observations** across **12 metrics from 8 sources**, spanning 1971 to 2026 at
 > nation, state, county, municipality, and ZIP level — loaded through
@@ -88,6 +88,8 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 34 | Computed metrics are ordinary facts under a synthetic `hip_derived` source, one release per `analyze` run. | Affordability ratios are metrics, so #8 says they are rows in `fact_metric_observation`, not a new table — and #9 says every fact names a release. A synthetic source satisfies both and makes a derived figure traceable to the run that produced it. Rejected: a separate `fact_derived` table, which would split every metric query in two, and a nullable `release_id`, which would weaken the provenance guarantee for measured values too. |
 | 35 | Change windows are anchored on `period_end`, never `period_start`. | An ACS 5-year estimate begins four years before it ends. Anchoring on `period_start` labelled a comparison of the 2019 and 2023 vintages as "2015 to 2019" — a real span of eight years reported as four. Anchoring on `period_end` makes the recorded window match its label, and recovered 3,333 additional change rows by aligning sources with different frequencies. |
 | 36 | Rankings are computed on `pct_change` within a level, ordered by the metric's own `direction`. | "Fastest rising" is the question a ranking answers, and comparing a county's home value against a ZIP's is meaningless. Taking direction from `metrics` means rank 1 is the better end wherever "better" is defined, without every caller re-deriving it. Costs: a `neutral` metric is ordered by largest increase, which is presentation rather than judgment. |
+| 37 | HUD residential-address ratios supersede area weights per `(zip, target level)`; area survives only where HUD has no coverage. **Supersedes the coexistence claim in #26.** | Area weighting assumes a metric is spread evenly across a ZIP's surface, which counts a golf course like a subdivision; HUD weights by the share of a ZIP's dwellings. #26 said `method` would let both coexist and be compared — the primary key on `(from_region_id, to_region_id)` does not permit it, so one method wins per pair. 2,456 of 2,491 NJ crosswalk rows are now HUD; 35 remain area. `method` still records which produced every row. |
+| 38 | HUD's bearer token lives on the adapter instance, not the class. | `SourceAdapter.headers` was a `ClassVar`, which a per-instance credential cannot override without mutating shared state for every adapter. Making it a plain class attribute lets HUD set its own on the instance while everything else inherits the default User-Agent. |
 
 ## Module Layout
 
@@ -453,10 +455,14 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **A change window is the nearest observation within 400 days of the target**, not an
   exact date. Sources have different frequencies, so an exact match would drop every
   annual metric. Beyond 400 days the row is omitted rather than stretched.
-- **HUD is approved in SPEC but not yet wired.** The USPS crosswalk (`type=11`,
-  zip-countysub, with residential-address ratios) and income limits are reachable and
-  the token is in `.env`; ZIP allocation is still area-weighted (#26) and affordability
-  still uses plain ratios rather than AMI bands.
+- **AMI-based affordability is county-only.** HUD publishes income limits per county,
+  so `price_to_ami` has 105 observations against `price_to_income`'s 2,026. A municipal
+  AMI figure would mean allocating a county limit downward, which HUD does not sanction.
+- **35 ZIP crosswalk rows still use area weighting**, where HUD has no residential
+  addresses for the pair. `method` distinguishes them, and an allocation mixing the two
+  is silently mixing assumptions.
+- **HUD Fair Market Rents and CHAS are in SPEC but not fetched.** Both were approved as
+  Version 1 sources; only the crosswalk and income limits are wired.
 - **BLS history is 20 years and needs a key.** Without `BLS_API_KEY` the adapter falls
   back to API v1: three years of history and 25 queries a day, which is one run for New
   Jersey's 21 counties and too short for Milestone 4's change metrics.

@@ -116,7 +116,9 @@ class SourceAdapter(ABC):
     landing_format: ClassVar[str] = "csv"
     # Several federal hosts (notably download.bls.gov) reject requests with no
     # identifying User-Agent. Sending one is what they ask for, not evasion.
-    headers: ClassVar[dict[str, str]] = {
+    # Not a ClassVar: an adapter needing per-instance auth (HUD's bearer token)
+    # overrides this on the instance.
+    headers: dict[str, str] = {
         "User-Agent": "housing-intelligence/0.2 (public data research)"
     }
     # Extra arguments for DuckDB's read_csv, for publishers whose files are not a

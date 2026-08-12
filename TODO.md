@@ -300,7 +300,7 @@ Deliverable: change metrics, affordability, and rankings in the warehouse;
 - [x] Migration `0005` — `fact_metric_change`, `region_rankings`, `hip_derived` source
 - [x] `hip.analytics.compute` — pct change and CAGR over 1y/3y/5y/10y/since-2019
 - [x] Affordability — `price_to_income` and `rent_to_income` as computed metrics
-- [ ] HUD AMI bands — approved in SPEC, token in `.env`, not yet wired
+- [x] HUD AMI bands — `price_to_ami` shipped in Milestone 9
 - [x] Rankings — rank, percentile, and cohort size per (metric, level, window)
 - [ ] `hip.sources.hud` — USPS crosswalk (types 2 and 11) and income limits
 - [ ] Replace area-weighted ZIP allocation with HUD `res_ratio`, keeping `method` so
@@ -331,6 +331,35 @@ Deliverable: change metrics, affordability, and rankings in the warehouse;
   value-based one, and the API does not yet surface that difference.
 - Note: rankings compare `pct_change` only. Ranking on level ("most expensive county")
   is a separate question the tables do not answer yet.
+
+## Milestone 9 — HUD affordability inputs
+
+Taken before Milestone 5 deliberately: both changes improve numbers the dashboard will
+display, and fixing them after it ships means re-checking every chart.
+
+- [x] `hip.sources.hud` — crosswalk types 2 and 11, income limits 2020-2024
+- [x] dbt staging models for both
+- [x] HUD weights supersede area: 2,456 of 2,491 rows, 35 area fallbacks
+- [x] `hud_area_median_income`, `hud_income_limit_80`, and derived `price_to_ami`
+- [x] Tests (88 passing) and docs
+
+- Note: HUD income limits are published per county per year, so a full pull is 21
+  counties x 5 vintages = 105 small requests. Slower than one bulk file but the API is
+  the only public route.
+- Note: the 4-person household figure is used for `hud_income_limit_80`. HUD publishes
+  limits for 1-8 person households; 4-person is the conventional reference and the one
+  policy documents quote.
+
+- Note: **ARCHITECTURE #26 was wrong about coexistence.** It claimed `method` would let
+  area and HUD weights sit side by side and be compared; the primary key on
+  `(from_region_id, to_region_id)` allows one method per pair. #37 supersedes it. Truly
+  comparing methods would need `method` in the key.
+- Note: `price_to_ami` has 105 observations against `price_to_income`'s 2,026 because
+  HUD publishes income limits per county only. A municipal AMI would mean pushing a
+  county limit downward, which HUD does not sanction.
+- Note: HUD Fair Market Rents and CHAS are approved in SPEC but not fetched. FMR would
+  fill ZORI's sparsity at county level; CHAS would replace the cost-burden ratio
+  computed from raw ACS columns.
 
 ## Parked / needs user input
 

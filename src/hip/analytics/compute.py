@@ -72,9 +72,13 @@ def _affordability(conn: object) -> dict[str, int]:
     ).scalar_one()
 
     counts: dict[str, int] = {}
-    for metric_id, numerator, multiplier in (
-        ("price_to_income", "zhvi_sfr", 1.0),
-        ("rent_to_income", "zori_all", 12.0),
+    # (computed metric, monthly numerator, annual denominator, multiplier).
+    # price_to_ami uses HUD's published area median income rather than the ACS survey
+    # estimate, so the same question can be asked against a policy benchmark.
+    for metric_id, numerator, denominator, multiplier in (
+        ("price_to_income", "zhvi_sfr", "acs_median_hh_income", 1.0),
+        ("rent_to_income", "zori_all", "acs_median_hh_income", 12.0),
+        ("price_to_ami", "zhvi_sfr", "hud_area_median_income", 1.0),
     ):
         inserted = conn.execute(  # type: ignore[attr-defined]
             text(
@@ -97,7 +101,7 @@ def _affordability(conn: object) -> dict[str, int]:
                 ) num
                   ON num.region_id = income.region_id
                  AND num.yr = date_trunc('year', income.period_end)::date
-                WHERE income.metric_id = 'acs_median_hh_income'
+                WHERE income.metric_id = :denominator
                   AND income.value > 0
                 ON CONFLICT (region_id, metric_id, period_start) DO UPDATE SET
                     value = EXCLUDED.value,
@@ -108,6 +112,7 @@ def _affordability(conn: object) -> dict[str, int]:
             {
                 "metric_id": metric_id,
                 "numerator": numerator,
+                "denominator": denominator,
                 "multiplier": multiplier,
                 "release_id": release_id,
             },

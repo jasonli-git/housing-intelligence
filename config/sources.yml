@@ -95,6 +95,18 @@ sources:
     api_key_env: BLS_API_KEY
     notes: Anonymous tier works but is rate-limited to 25 queries per day.
 
+  hud:
+    name: USPS ZIP crosswalk and income limits
+    publisher: U.S. Department of Housing and Urban Development
+    license: Public domain (U.S. Government work)
+    url: https://www.huduser.gov/hudapi/public
+    cadence: quarterly
+    adapter: hip.sources.hud:HudAdapter
+    api_key_env: HUD_API_TOKEN
+    notes: >-
+      Residential-address ratios for allocating ZIP data, and the income limits housing
+      agencies use. Supersedes the area-weighted crosswalk from Milestone 1.
+
   irs_migration:
     name: SOI county-to-county migration flows
     publisher: Internal Revenue Service

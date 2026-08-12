@@ -25,7 +25,11 @@ import pytest
 
 from hip.config import GeographyScope
 from hip.duck import duckdb_session
-from hip.geography.crosswalk import CROSSWALK_TABLE, build_crosswalk
+from hip.geography.crosswalk import (
+    CROSSWALK_TABLE,
+    apply_hud_weights,
+    build_crosswalk,
+)
 from hip.geography.regions import STAGING_TABLE, build_regions
 
 VINTAGE = "2025"
@@ -320,3 +324,73 @@ def test_crosswalk_covers_every_zip(con: duckdb.DuckDBPyConnection) -> None:
     ).fetchone()
 
     assert unreachable == (0,)
+
+
+def test_hud_weights_supersede_area_weights(con: duckdb.DuckDBPyConnection) -> None:
+    """HUD residential-address ratios replace area weights for the pairs they cover.
+
+    Area weighting counts a golf course like a subdivision; HUD weights by dwellings.
+    `region_crosswalk` keys a row on (from, to), so one method wins per pair — HUD
+    supersedes rather than coexisting, and `method` records which was used.
+    """
+    build_crosswalk(con)
+    con.execute("CREATE SCHEMA IF NOT EXISTS hud_stg")
+    con.execute(
+        """
+        CREATE OR REPLACE TABLE hud_stg.stg_hud_crosswalk AS
+        SELECT '10001' AS from_geoid, 'zip' AS from_level,
+               '9900110000' AS to_geoid, 'municipality' AS to_level,
+               0.75 AS raw_weight, 'hud_res_ratio' AS method
+        UNION ALL
+        SELECT '10001', 'zip', '9900120000', 'municipality', 0.25, 'hud_res_ratio'
+        """
+    )
+
+    hud_rows, total = apply_hud_weights(con, staging_schema="hud_stg")
+
+    assert hud_rows == 2
+    assert total >= hud_rows
+    rows = dict(
+        con.execute(
+            f"""
+            SELECT to_geoid, weight FROM {CROSSWALK_TABLE}
+            WHERE from_geoid = '10001' AND method = 'hud_res_ratio'
+            """
+        ).fetchall()
+    )
+    assert rows == pytest.approx({"9900110000": 0.75, "9900120000": 0.25})
+
+    # Superseded area rows are gone at the level HUD covers. The county-level area row
+    # survives, which is correct: HUD supersedes per (zip, target level), not per ZIP.
+    assert con.execute(
+        f"SELECT count(*) FROM {CROSSWALK_TABLE} WHERE from_geoid = '10001' "
+        f"AND to_level = 'municipality' AND method = 'area'"
+    ).fetchone() == (0,)
+    assert con.execute(
+        f"SELECT count(*) FROM {CROSSWALK_TABLE} WHERE from_geoid = '10001' "
+        f"AND to_level = 'county' AND method = 'area'"
+    ).fetchone() != (0,), "area weights must remain where HUD has no coverage"
+
+
+def test_hud_weights_renormalize_to_one(con: duckdb.DuckDBPyConnection) -> None:
+    """HUD ratios are national; dropping out-of-scope targets must not leak weight."""
+    build_crosswalk(con)
+    con.execute("CREATE SCHEMA IF NOT EXISTS hud_stg2")
+    con.execute(
+        """
+        CREATE OR REPLACE TABLE hud_stg2.stg_hud_crosswalk AS
+        SELECT '10001' AS from_geoid, 'zip' AS from_level,
+               '9900110000' AS to_geoid, 'municipality' AS to_level,
+               0.4 AS raw_weight, 'hud_res_ratio' AS method
+        UNION ALL
+        SELECT '10001', 'zip', '5500199999', 'municipality', 0.6, 'hud_res_ratio'
+        """
+    )
+
+    apply_hud_weights(con, staging_schema="hud_stg2")
+
+    total = con.execute(
+        f"SELECT SUM(weight) FROM {CROSSWALK_TABLE} "
+        f"WHERE from_geoid = '10001' AND to_level = 'municipality'"
+    ).fetchone()
+    assert total is not None and total[0] == pytest.approx(1.0)

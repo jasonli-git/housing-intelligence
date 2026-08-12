@@ -5,12 +5,15 @@ county lines and belong to no hierarchy, so a ZIP-level value can only be expres
 another level by allocating it. This module computes those allocation weights once, so
 every downstream metric allocates the same way and the method travels with the data.
 
-Weights are **area-based**, which assumes a metric is spread evenly across a ZIP's
-surface. For housing metrics that is the weaker assumption — population is what matters,
-and a half-empty ZIP contributes area but not households. HUD's USPS crosswalk publishes
-residential-address-weighted ratios and is the intended upgrade; it needs a registered
-API key, so it is deferred rather than adopted silently. ``method`` is stored per row so
-both can coexist and be compared.
+Two methods, in preference order. **HUD residential-address ratios** are used wherever
+HUD covers the ZIP: they weight by the share of a ZIP's dwellings in each target, which
+is what a household-based measure should be allocated on. **Area weighting** is the
+fallback, computed here from the geometry, and it assumes a metric is spread evenly
+across a ZIP's surface — which counts a golf course like a subdivision.
+
+``method`` records which was used for every row. It cannot record *both* for one pair:
+`region_crosswalk` is keyed on (from_region_id, to_region_id), so HUD supersedes area
+rather than sitting beside it.
 """
 
 from __future__ import annotations
@@ -115,3 +118,63 @@ def build_crosswalk(
             f"double-count values."
         )
     return counts
+
+
+def apply_hud_weights(
+    con: duckdb.DuckDBPyConnection,
+    *,
+    staging_schema: str,
+    model: str = "stg_hud_crosswalk",
+) -> tuple[int, int]:
+    """Supersede area weights with HUD residential-address weights where available.
+
+    Area weighting assumes a metric is spread evenly across a ZIP's surface, which is
+    wrong for housing: it counts a golf course like a subdivision. HUD publishes the
+    share of each ZIP's *residential addresses* per target geography, which is what a
+    household-based measure should be allocated on.
+
+    Superseding rather than coexisting is forced by the schema: `region_crosswalk` is
+    keyed on (from_region_id, to_region_id), so a pair can hold exactly one method.
+    ARCHITECTURE #26 anticipated both methods living side by side; the primary key does
+    not allow it. Area weights survive only for ZIPs HUD does not cover, and `method`
+    still records which was used for every row.
+
+    Returns (HUD rows, total rows) — the caller cannot reuse the count from
+    ``build_crosswalk``, which was measured before this ran.
+    """
+    con.execute(
+        f"""
+        DELETE FROM {CROSSWALK_TABLE}
+        WHERE EXISTS (
+            SELECT 1 FROM {staging_schema}.{model} h
+            WHERE h.from_geoid = {CROSSWALK_TABLE}.from_geoid
+              AND h.to_level = {CROSSWALK_TABLE}.to_level
+        )
+        """
+    )
+
+    con.execute(
+        f"""
+        INSERT INTO {CROSSWALK_TABLE}
+        SELECT from_geoid, from_level, to_geoid, to_level,
+               raw_weight / SUM(raw_weight) OVER (PARTITION BY from_geoid, to_level),
+               method
+        FROM {staging_schema}.{model} h
+        -- Only targets that exist in scope; HUD covers geographies we do not load.
+        WHERE EXISTS (
+            SELECT 1 FROM stg_regions r
+            WHERE r.geoid = h.to_geoid AND r.level = h.to_level
+        )
+        AND EXISTS (
+            SELECT 1 FROM stg_regions z
+            WHERE z.geoid = h.from_geoid AND z.level = 'zip'
+        )
+        """
+    )
+    row = con.execute(
+        f"""
+        SELECT count(*) FILTER (WHERE method = 'hud_res_ratio'), count(*)
+        FROM {CROSSWALK_TABLE}
+        """
+    ).fetchone()
+    return (int(row[0]), int(row[1])) if row else (0, 0)

@@ -11,7 +11,7 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-08-12): v0.4.0, Milestone 4 complete.** New Jersey's geography and its
+> **Status (2026-08-12): v0.5.0, Milestones 4 and 9 complete.** New Jersey's geography and its
 > housing and economic context are loaded and queryable — 3,365 regions and **329,975
 > observations across 14 metrics from 9 public sources, spanning 1971 to 2026**, plus
 > 19,338 computed changes and 19,328 rankings. The source file and match method are
@@ -66,6 +66,10 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   plus percentile per metric and level, all calculated in SQL rather than inferred by a
   model. `/regions/{id}/summary` returns the headline changes with the caveats that
   qualify them.
+- **Allocation by households, not acres** (M9, built) — ZIP-level data is allocated
+  using HUD residential-address ratios rather than land area, so a half-empty ZIP no
+  longer contributes as if it were fully built out. Affordability can also be expressed
+  against HUD's published area median income, not only an ACS survey estimate.
 - **Dashboard and maps** (M5) — region explorer, trend charts, side-by-side county
   comparison, choropleth maps, and ranking tables.
 - **Read-only analytics API** (M4–M6) — FastAPI endpoints for regions, metrics,
@@ -128,7 +132,7 @@ make pipeline      # acquire → land → stage → geocode → validate → loa
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 86 tests; API tests skip without a loaded warehouse
+make test          # 88 tests; API tests skip without a loaded warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 

@@ -57,6 +57,7 @@ def test_repo_config_loads(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CENSUS_API_KEY", "x")
     monkeypatch.setenv("FRED_API_KEY", "x")
     monkeypatch.setenv("BLS_API_KEY", "x")
+    monkeypatch.setenv("HUD_API_TOKEN", "x")
 
     sources = load_sources(REPO_CONFIG)
     metrics = load_metrics(REPO_CONFIG)

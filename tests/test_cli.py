@@ -82,6 +82,7 @@ def test_check_config_reports_the_repo_config(monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setenv("CENSUS_API_KEY", "x")
     monkeypatch.setenv("FRED_API_KEY", "x")
     monkeypatch.setenv("BLS_API_KEY", "x")
+    monkeypatch.setenv("HUD_API_TOKEN", "x")
 
     result = runner.invoke(app, ["check-config"])
 

@@ -32,7 +32,11 @@ KEYED_MODELS = (
     "stg_irs_migration",
     "stg_fred",
     "stg_bls",
+    "stg_hud_income_limits",
 )
+
+# Not a metric model: it feeds region_crosswalk, not fact_metric_observation.
+CROSSWALK_MODEL = "stg_hud_crosswalk"
 
 
 class DbtError(Exception):

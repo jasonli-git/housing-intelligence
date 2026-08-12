@@ -3,6 +3,32 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.5.0] — 2026-08-12
+
+Allocation stops guessing. ZIP data is now weighted by where people actually live, and
+affordability can cite a published policy benchmark.
+
+### Added
+- **Milestone 9 — HUD USPS crosswalk.** `type=2` (zip-county) and `type=11`
+  (zip-countysub) residential-address ratios. 2,456 of 2,491 NJ crosswalk rows now use
+  HUD weights; 35 keep area weighting where HUD has no coverage.
+- **HUD income limits.** `hud_area_median_income` and `hud_income_limit_80` (4-person
+  household) per county per year, 2020–2024.
+- **`price_to_ami`** — typical home value against HUD's published area median income,
+  the benchmark housing agencies use, alongside the ACS-survey-based
+  `price_to_income`.
+
+### Changed
+- ZIP allocation is residential-address weighted where HUD covers the pair. Area
+  weighting assumed a metric spreads evenly across a ZIP's surface, which counts a golf
+  course like a subdivision. Every ZIP-derived figure changes as a result.
+- `SourceAdapter.headers` is no longer a `ClassVar`, so an adapter needing per-instance
+  credentials can override it without mutating state shared by every other source.
+
+### Known gaps
+- AMI affordability is county-only; HUD publishes no municipal income limits.
+- Fair Market Rents and CHAS are approved in SPEC but not fetched.
+
 ## [0.4.0] — 2026-08-12
 
 The warehouse starts answering questions instead of only storing answers. Change over
