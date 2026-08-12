@@ -23,6 +23,17 @@ STAGING_SCHEMA = "main_staging"
 # The staged models the rest of the pipeline reads.
 ZILLOW_MODELS = ("stg_zillow_zhvi", "stg_zillow_zori")
 
+# Models that already carry an exact (geoid, level); they need no name matching and are
+# unioned straight into the observation table.
+KEYED_MODELS = (
+    "stg_census_acs",
+    "stg_fhfa_hpi",
+    "stg_census_permits",
+    "stg_irs_migration",
+    "stg_fred",
+    "stg_bls",
+)
+
 
 class DbtError(Exception):
     """dbt is missing, or a dbt invocation failed."""
@@ -46,12 +57,20 @@ def _runner() -> Any:
     return dbtRunner()
 
 
-def dbt_vars(settings: Settings, scope: GeographyScope, vintage: str) -> dict[str, str]:
+def dbt_vars(
+    settings: Settings, scope: GeographyScope, vintage: str
+) -> dict[str, object]:
     """Everything the models need that is not knowable from the dbt project alone."""
+    from hip.config import fips_for
+
     return {
         "parquet_dir": str(settings.parquet_dir),
-        # Rendered straight into an IN (...) clause, so it must arrive pre-quoted.
+        # Rendered straight into an IN (...) clause, so they must arrive pre-quoted.
         "states": ", ".join(f"'{s}'" for s in scope.states),
+        "state_fips": ", ".join(f"'{fips_for(s)}'" for s in scope.states),
+        # Sources that identify states by postal code need a mapping to the FIPS code
+        # `regions` keys on. FHFA is the only one today.
+        "state_fips_pairs": [[s, fips_for(s)] for s in scope.states],
         "zillow_vintage": vintage,
     }
 

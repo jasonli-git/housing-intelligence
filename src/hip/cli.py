@@ -28,7 +28,7 @@ from hip.geography.crosswalk import build_crosswalk
 from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
 from hip.landing.shapefile import land_shapefile
-from hip.landing.tabular import land_csv
+from hip.landing.tabular import land_csv, land_json
 from hip.sources.base import SourceAdapter
 from hip.sources.registry import (
     IMPLEMENTED,
@@ -38,6 +38,7 @@ from hip.sources.registry import (
 )
 from hip.sources.tiger import TigerAdapter, shapefile_member
 from hip.transform.dbt_runner import (
+    KEYED_MODELS,
     STAGING_SCHEMA,
     ZILLOW_MODELS,
     DbtError,
@@ -183,9 +184,19 @@ def land(
                     parquet_dir=settings.parquet_dir,
                     overwrite=overwrite,
                 )
+            elif adapter.landing_format == "json":
+                table = land_json(
+                    release,
+                    type(adapter),
+                    parquet_dir=settings.parquet_dir,
+                    overwrite=overwrite,
+                )
             else:
                 table = land_csv(
-                    release, parquet_dir=settings.parquet_dir, overwrite=overwrite
+                    release,
+                    parquet_dir=settings.parquet_dir,
+                    overwrite=overwrite,
+                    csv_options=adapter.csv_read_options,
                 )
             typer.echo(
                 f"{adapter.source_id:<14} {release.ref.key:<18} "
@@ -219,11 +230,27 @@ def geocode(
                 [STAGING_SCHEMA],
             ).fetchall()
         }
+        # Match whatever has actually been staged, rather than requiring every
+        # metric source to have a model. A source whose dbt model does not exist yet
+        # (its adapter landed before its staging model) must not silently stop the
+        # sources that do have one from being resolved.
+        staged_present = {m: mid for m, mid in staged.items() if m in present}
         matches = (
-            build_observations(con, staged_models=staged, staging_schema=STAGING_SCHEMA)
-            if present.issuperset(staged)
+            build_observations(
+                con,
+                staged_models=staged_present,
+                staging_schema=STAGING_SCHEMA,
+                keyed_models=tuple(m for m in KEYED_MODELS if m in present),
+            )
+            if staged_present
             else None
         )
+        if missing := sorted(set(staged) - set(staged_present)):
+            typer.secho(
+                f"no staging model yet for: {', '.join(missing)} — "
+                f"their observations are not resolved",
+                fg=typer.colors.YELLOW,
+            )
 
     for level in scope.levels:
         typer.echo(f"{level:<14} {counts.by_level.get(level, 0):>8,}")
@@ -256,6 +283,11 @@ def geocode(
     )
 
 
+def _zillow_metric_sources() -> tuple[str, ...]:
+    """Sources needing name matching. Everything else publishes an exact identifier."""
+    return ("zillow_zhvi", "zillow_zori")
+
+
 def _staged_models() -> dict[str, str]:
     """dbt model name -> the metric_id its values represent, derived from config.
 
@@ -264,7 +296,7 @@ def _staged_models() -> dict[str, str]:
     """
     metrics = load_metrics()
     models: dict[str, str] = {}
-    for source_id in METRIC_SOURCES:
+    for source_id in _zillow_metric_sources():
         ids = [mid for mid, m in metrics.items() if m.source_id == source_id]
         if len(ids) != 1:
             raise typer.BadParameter(

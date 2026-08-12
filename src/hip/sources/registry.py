@@ -9,18 +9,22 @@ from __future__ import annotations
 
 from hip.config import GeographyScope
 from hip.sources.base import SourceAdapter
+from hip.sources.bls import BlsAdapter
+from hip.sources.census_acs import AcsAdapter
+from hip.sources.census_permits import PermitsAdapter
+from hip.sources.fhfa import HpiAdapter
+from hip.sources.fred import FredAdapter
+from hip.sources.irs_migration import MigrationAdapter
 from hip.sources.tiger import TigerAdapter
 from hip.sources.zillow import ZhviAdapter, ZoriAdapter
 
 # source_id -> the milestone that delivers its adapter. Sources absent from this map
 # and absent from the builders below are simply unknown.
+# The most recent full year of BLS data. Passed to the adapter explicitly so a run is
+# reproducible; bump it when a new year completes.
+BLS_END_YEAR = 2025
+
 PLANNED: dict[str, int] = {
-    "census_acs": 3,
-    "census_permits": 3,
-    "fhfa_hpi": 3,
-    "fred": 3,
-    "bls": 3,
-    "irs_migration": 3,
     "nj_modiv": 7,
     "njgin_parcels": 7,
 }
@@ -29,11 +33,36 @@ IMPLEMENTED: tuple[str, ...] = (
     TigerAdapter.source_id,
     ZhviAdapter.source_id,
     ZoriAdapter.source_id,
+    HpiAdapter.source_id,
+    PermitsAdapter.source_id,
+    MigrationAdapter.source_id,
+    AcsAdapter.source_id,
+    FredAdapter.source_id,
+    BlsAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
 # loader iterate this; TIGER is deliberately absent because it produces regions.
-METRIC_SOURCES: tuple[str, ...] = (ZhviAdapter.source_id, ZoriAdapter.source_id)
+METRIC_SOURCES: tuple[str, ...] = (
+    ZhviAdapter.source_id,
+    ZoriAdapter.source_id,
+    HpiAdapter.source_id,
+    PermitsAdapter.source_id,
+    MigrationAdapter.source_id,
+    AcsAdapter.source_id,
+    FredAdapter.source_id,
+    BlsAdapter.source_id,
+)
+
+
+# NJ county FIPS, needed to build BLS series ids. Derived from the state scope rather
+# than hard-coded; counties are 001..041 odd-numbered in New Jersey.
+def _county_fips(scope: GeographyScope) -> list[str]:
+    from hip.config import fips_for
+
+    return [
+        f"{fips_for(state)}{n:03d}" for state in scope.states for n in range(1, 42, 2)
+    ]
 
 
 class UnknownSourceError(Exception):
@@ -47,6 +76,18 @@ def build_adapter(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return ZhviAdapter()
     if source_id == ZoriAdapter.source_id:
         return ZoriAdapter()
+    if source_id == HpiAdapter.source_id:
+        return HpiAdapter()
+    if source_id == PermitsAdapter.source_id:
+        return PermitsAdapter()
+    if source_id == MigrationAdapter.source_id:
+        return MigrationAdapter()
+    if source_id == AcsAdapter.source_id:
+        return AcsAdapter(states=scope.states)
+    if source_id == FredAdapter.source_id:
+        return FredAdapter()
+    if source_id == BlsAdapter.source_id:
+        return BlsAdapter(county_fips=_county_fips(scope), end_year=BLS_END_YEAR)
     if (milestone := PLANNED.get(source_id)) is not None:
         raise UnknownSourceError(
             f"'{source_id}' has no adapter yet — it ships in Milestone {milestone}. "

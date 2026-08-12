@@ -202,13 +202,100 @@ value.
   2015. Any rent-based analytic at Milestone 4 needs to handle sparse series rather
   than assume ZHVI-like density.
 
+## Milestone 3 — Economic and demographic context
+
+Deliverable: ACS, Census Building Permits, FHFA HPI, FRED, BLS, and IRS migration
+loaded through the same adapter and dbt pattern.
+
+- [x] `hip.sources.fhfa` — `hpi_master.csv` (17MB). **State level, not county** — see
+      the note below
+- [x] `hip.sources.census_permits` — Building Permits Survey county annual files, 10
+      years, 2.1MB
+- [x] `hip.sources.irs_migration` — county inflow and outflow, 5 year-pairs, 44.3MB
+- [x] `hip.sources.registry` extended; all three acquire cleanly through `hip acquire`
+- [x] `hip.sources.bls` — LAUS county unemployment via the keyless v1 API. Adapter
+      correct; **acquisition throttled** — see the note below
+- [x] `hip.sources.census_acs` — 4 direct metrics plus the 5 cost-burden parts, at
+      county and county-subdivision level, 5 ACS vintages. Landed: 21 counties and 570
+      subdivisions per year
+- [x] `hip.sources.fred` — MORTGAGE30US, 664 monthly observations
+- [x] `land_json` + `SourceAdapter.to_records` — JSON APIs land through one lander, with
+      each adapter owning its own response shape
+- [ ] `hip.sources.census_acs` — 5 metrics at county, MCD, and ZCTA level (needs a key)
+- [ ] `hip.sources.fred` — MORTGAGE30US, national (needs a key)
+- [x] Migration `0004` — `nation` level, nullable `regions.geom`, US region row
+- [x] dbt staging models for all six sources
+- [x] Keyed matching path — sources with an exact identifier bypass the fuzzy matcher
+- [x] Gate bounds for all 12 metrics, with an out-of-range tolerance
+- [x] `test_api_metrics` updated: municipal `match_method` now differs by source
+- [ ] Unit tests for the six new adapters and the keyed matching path. The pipeline is
+      verified end to end but the new adapters have no direct coverage
+
+- Note: **decided 2026-08-11 after probing every endpoint.** BLS v1, Building Permits,
+  and IRS migration work with no credentials. ACS returns a "Missing Key" HTML page
+  (HTTP 200, which is worth knowing — a naive adapter would treat that as success), and
+  FRED returns HTTP 400. ACS and FRED adapters are written and tested against fixtures
+  now, and run when the keys land.
+- Note: national series get a `nation` level and a US region rather than a separate
+  table, so `/regions/{id}/metrics` and the fact table work unchanged. The US region has
+  no geometry, which makes it the first region where `geom` cannot be NOT NULL.
+- Note: IRS county-to-county pairs are reduced to net returns per county for the
+  warehouse; the full origin→destination matrix stays in DuckDB for post-V1
+  migration-demand work.
+- Note: **FHFA publishes no county HPI at a reachable URL.** Four documented paths all
+  return 404 as of 2026-08-11; `hpi_master.csv` carries only `State`, `MSA`, and
+  `USA or Census Division` levels. NJ gets 487 state-level rows, which makes FHFA the
+  only source landing at `state` level and the only exercise of that matching path.
+  County HPI exists in FHFA's annual "developmental" datasets — find a stable URL, or
+  drop the county ambition and say so in `config/metrics.yml`.
+- Note: **a keyless ACS request returns HTTP 200 with an HTML "Missing Key" page.** Any
+  adapter that trusts the status code will cache an error page as data. The ACS adapter
+  must assert the response parses as JSON before writing it — this is exactly the shape
+  of bug the content-addressed cache would then preserve forever.
+- Note: **BLS v1 allows 25 queries per day and NJ needs 21.** The first run used its
+  quota discovering that my series ids were malformed, so the corrected run was refused
+  with `REQUEST_NOT_PROCESSED`. The adapter is right — it now reaches a quota error
+  rather than "series does not exist" — but BLS cannot be acquired again until the
+  quota resets. Setting `BLS_API_KEY` (free) switches to v2: 500 queries per day and 20
+  years of history instead of 3. The adapter does not use v2 yet.
+- Note: the LAUS series id is `LAU` + `CN` + a **13-character** area code + a
+  2-character measure, so a county is its 5-digit FIPS plus **8** zeros. Getting the
+  padding wrong returns HTTP 200, `status: REQUEST_SUCCEEDED`, an empty data array, and
+  the real explanation buried in a `message` field. `to_records` now raises on that
+  message rather than reporting "no rows".
+- Note: IRS SOI files are **latin-1, not UTF-8** — `countyinflow2122.csv` aborts a
+  UTF-8 read at line 2333 on a county name. Landing now decodes latin-1, which loses no
+  rows. Worth assuming for any older federal flat file.
+- Note: federal hosts increasingly reject clients with no User-Agent. `SourceAdapter`
+  now sends one for every request. It is not enough for `download.bls.gov`, which
+  returns 403 to programmatic clients regardless — hence the API route for BLS.
+- Note: adding the three sources to `METRIC_SOURCES` briefly broke Zillow matching.
+  `geocode` required a dbt staging model for *every* metric source before resolving
+  any, so sources whose adapter landed ahead of their staging model silently stopped
+  the ones that were ready. It now matches whatever is staged and names what is not.
+  Caught by re-running the pipeline, not by a test — worth a test when the staging
+  models land.
+
+- Note: **ACS closed the municipal gap entirely.** Coverage went from 403/564 to
+  564/564 because ACS publishes county-subdivision GEOIDs. Zillow's name-matched
+  municipal values remain, labelled `name_county`, alongside ACS's `fips` values — the
+  reason `match_method` is stored per fact rather than per source.
+- Note: ACS ZIP-level data is not fetched. Since 2020 ACS no longer nests ZCTAs within
+  states, so a ZIP pull means downloading all ~33,000 nationally per vintage for the 598
+  that matter. Revisit if ZIP-level income is needed at Milestone 4.
+- Note: fact provenance for keyed sources falls back from `(source, layer)` to
+  `(source)` (ARCHITECTURE #33). ACS municipal rows stage as `municipality` but arrive
+  in the `cousub` release, and the exact match silently dropped them. The clean fix is
+  to carry the release layer through staging, which needs the globbed dbt models to
+  record which file each row came from.
+- Note: `hip load` re-fetches every source's refs just to rebuild provenance, which
+  means `acquire`-level work inside `load`. Harmless while cached, wrong in principle —
+  the loader should read the manifests instead.
+
 ## Parked / needs user input
 
-- **Census API key** — needed at Milestone 3 for ACS pulls above the anonymous rate
-  limit. Free, requires an email address.
-- **FRED API key** — required at Milestone 3; there is no anonymous access.
-- **BLS API key** — optional at Milestone 3, but the anonymous tier is 25 queries per
-  day, which is limiting for repeated pulls.
+- ~~Census, FRED, and BLS API keys~~ — all three supplied 2026-08-12 and in `.env`.
+  They are in the chat transcript of that session, so rotate them if it is ever shared.
 - **HUD USPS crosswalk token** — optional but wanted. Would replace the area-weighted
   ZIP allocation (ARCHITECTURE #26) with residential-address weighting, which is the
   right basis for housing metrics. Free, requires registration at

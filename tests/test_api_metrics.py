@@ -76,16 +76,28 @@ def test_period_spans_the_month(loaded: None) -> None:
     assert observation["period_end"] == "2025-01-31"
 
 
-def test_municipal_values_are_labelled_as_name_matched(loaded: None) -> None:
-    """Municipal rows are name-matched, and a consumer must be able to see that."""
-    page = client.get("/regions?level=municipality&limit=40").json()
+def test_municipal_match_method_reflects_the_source(loaded: None) -> None:
+    """Municipal data arrives two ways and a consumer must be able to tell them apart.
 
+    ACS publishes county-subdivision GEOIDs, so its municipal rows are `fips` — exact.
+    Zillow publishes only a city name, so its municipal rows are `name_county`. Both
+    land at the same level, which is precisely why `match_method` is stored per fact.
+    """
+    page = client.get("/regions?level=municipality&limit=60").json()
+
+    methods: dict[str, set[str]] = {}
     for item in page["items"]:
-        body = client.get(f"/regions/{item['region_id']}/metrics").json()
-        if body["observations"]:
-            assert body["observations"][0]["match_method"] == "name_county"
-            return
-    pytest.fail("no municipality in the first 40 had observations")
+        for observation in client.get(f"/regions/{item['region_id']}/metrics").json()[
+            "observations"
+        ]:
+            methods.setdefault(observation["source_id"], set()).add(
+                observation["match_method"]
+            )
+
+    assert methods, "no municipality in the first 60 had observations"
+    assert methods.get("census_acs") == {"fips"}
+    if "zillow_zhvi" in methods:
+        assert methods["zillow_zhvi"] == {"name_county"}
 
 
 def test_unresolved_geographies_are_explained(loaded: None) -> None:

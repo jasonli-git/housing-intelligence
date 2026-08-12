@@ -11,10 +11,10 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-08-11): v0.2.0, Milestone 2 complete.** New Jersey's geography and its
-> housing metrics are loaded and queryable — 3,365 regions and **309,350 Zillow home
-> value and rent observations from 2000 to 2026**, with the source file and match method
-> recorded on every value. See [ROADMAP.md](ROADMAP.md) for what is planned and
+> **Status (2026-08-12): v0.3.0, Milestone 3 complete.** New Jersey's geography and its
+> housing and economic context are loaded and queryable — 3,365 regions and **329,975
+> observations across 12 metrics from 8 public sources, spanning 1971 to 2026**, with
+> the source file and match method recorded on every value. See [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
@@ -56,6 +56,10 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   out-of-range values, orphaned regions, and coverage collapse each stop the load before
   it reaches the warehouse. It has already caught a real bug: 318 duplicate rows caused
   by name normalization merging two distinct municipalities.
+- **Economic and demographic context** (M3, built) — ACS income, rent, population, home
+  value, and renter cost burden; building permits; FHFA HPI; the 30-year mortgage rate;
+  county unemployment; and net migration. ACS is FIPS-exact at municipal level, which
+  takes municipal coverage to 564/564.
 - **Computed housing intelligence** (M4) — value and rent growth, income and population
   change, permit activity, price-to-income and rent-burden affordability, and county and
   municipal rankings, all calculated in SQL rather than inferred by a model.
@@ -93,6 +97,9 @@ The reasoning behind each of these, and what was rejected, is in the Decisions L
 - [`uv`](https://docs.astral.sh/uv/) — installs the pinned Python 3.12.13 itself
 - Node.js 20+ for the dashboard
 - Docker Desktop, for Postgres + PostGIS (`brew install --cask docker-desktop`)
+- Free API keys in `.env`: `CENSUS_API_KEY` and `FRED_API_KEY` are required (neither has
+  a usable anonymous tier), `BLS_API_KEY` is strongly recommended — without it BLS
+  returns 3 years of history instead of 20. Links are in `.env.example`.
 
 ```bash
 git clone https://github.com/jasonli-git/housing-intelligence.git
@@ -144,8 +151,8 @@ still run and report the degraded state rather than failing.
 
 ## Project Status
 
-v0.2.0 — Milestones 0, 1, and 2 of 8 complete. Geography and Zillow home values and
-rents are loaded and served; Milestone 3 adds ACS, permits, FHFA, FRED, BLS, and IRS
-migration. Milestones and
+v0.3.0 — Milestones 0 through 3 of 8 complete. Geography, housing prices and rents, and
+economic context are loaded and served; Milestone 4 computes change, affordability, and
+rankings. Milestones and
 their status are in [ROADMAP.md](ROADMAP.md); the current working list, including known
 rough edges and parked API keys, is in [TODO.md](TODO.md).

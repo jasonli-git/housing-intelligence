@@ -258,9 +258,18 @@ def load_facts(
         _upsert_metrics(conn, metrics)
         release_by_layer = _release_ids(conn, releases)
 
+        # Keyed sources stage their region level as `layer`, which does not always
+        # equal the release layer the file arrived under — ACS municipal rows are
+        # `municipality` but come from the `cousub` release. Exact match first, then any
+        # release for that source. The fallback costs layer-level provenance precision
+        # for those sources; it never attributes a value to the wrong *source*.
+        any_release = {src: rid for (src, _), rid in release_by_layer.items()}
+
         payload = []
         for geoid, level, metric_id, start, end, value, source_id, layer, method in rows:
-            release_id = release_by_layer.get((str(source_id), str(layer)))
+            release_id = release_by_layer.get(
+                (str(source_id), str(layer))
+            ) or any_release.get(str(source_id))
             if release_id is None:
                 continue
             payload.append(

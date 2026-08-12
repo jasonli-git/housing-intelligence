@@ -61,6 +61,7 @@ def build_observations(
     staged_models: dict[str, str],
     staging_schema: str,
     regions_table: str = "stg_regions",
+    keyed_models: tuple[str, ...] = (),
 ) -> MatchCounts:
     """Resolve every staged observation to a region, or record why it could not be.
 
@@ -182,8 +183,41 @@ def build_observations(
         """
     )
 
+    if keyed_models:
+        _append_keyed(con, keyed_models, staging_schema)
+
     _build_rejects(con)
     return _count(con)
+
+
+def _append_keyed(
+    con: duckdb.DuckDBPyConnection, models: tuple[str, ...], staging_schema: str
+) -> None:
+    """Append models that already carry an exact (geoid, level).
+
+    ACS, permits, BLS, IRS, FHFA, and FRED all publish a real identifier — FIPS, a
+    state code, or nothing at all in FRED's case — so there is no matching to do and
+    nothing to reject. They are unioned in with the `match_method` their own model
+    declares, which is what keeps `fips` distinguishable from Zillow's `name_county`.
+
+    Rows whose geography is not in scope are dropped by the join to `stg_regions`.
+    The `nation` level is exempt: the US region is created by migration 0004 and never
+    appears in the TIGER-derived staging table.
+    """
+    for model in models:
+        con.execute(
+            f"""
+            INSERT INTO {OBSERVATION_TABLE}
+            SELECT s.metric_id, s.geoid, s.level, s.period_start, s.period_end,
+                   s.value, s.source_id, s.level AS layer, s.match_method
+            FROM {staging_schema}.{model} s
+            WHERE s.level = 'nation'
+               OR EXISTS (
+                    SELECT 1 FROM stg_regions r
+                    WHERE r.geoid = s.geoid AND r.level = s.level
+               )
+            """
+        )
 
 
 def _build_rejects(con: duckdb.DuckDBPyConnection) -> None:

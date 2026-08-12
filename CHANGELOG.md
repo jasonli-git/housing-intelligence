@@ -3,6 +3,51 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.0] — 2026-08-12
+
+Context arrives. Six more sources join Zillow, taking the warehouse to 12 metrics from 8
+publishers and 1971–2026 of history. Municipal coverage reaches every New Jersey
+municipality.
+
+### Added
+- **Milestone 3 — six sources.** Census ACS (median household income, gross rent,
+  population, home value, and renter cost burden), Census Building Permits, FHFA HPI,
+  FRED, BLS Local Area Unemployment, and IRS migration. 20,625 new observations.
+- **Exact municipal data.** ACS publishes county-subdivision GEOIDs, so its municipal
+  rows join on the same key TIGER uses. Municipal coverage went from **403/564 (71%) to
+  564/564 (100%)** — the gap Zillow's name matching could not close.
+- **A `nation` region level** and a synthetic US region, so national series such as the
+  30-year mortgage rate live in the same fact table as everything else instead of a
+  parallel one (migration `0004`).
+- **JSON API landing.** `land_json` plus a `to_records` hook per adapter, so Census,
+  FRED, and BLS each own their own response shape while sharing one lander.
+- Per-adapter `csv_read_options` and a default User-Agent, for publishers whose files
+  are not plain CSV or who reject unidentified clients.
+
+### Changed
+- Range checks now tolerate a small share of out-of-range values rather than failing on
+  the first. ACS really does publish a $99 median gross rent for Alexandria Township;
+  blocking a 330,000-row load over two such rows made the gate an obstacle.
+- `hip geocode` matches whatever has been staged instead of requiring a staging model
+  for every metric source, so a source whose adapter lands before its model no longer
+  silently stops the sources that are ready.
+
+### Fixed
+- BLS series ids were one character short — the LAUS area code is 13 characters, so a
+  county is its FIPS plus eight zeros. A wrong pad returns HTTP 200,
+  `REQUEST_SUCCEEDED`, an empty array, and the real reason in a `message` field.
+- IRS SOI files are latin-1; a UTF-8 read aborted at line 2333 of `countyinflow2122.csv`.
+- Census Building Permits has two header rows *and* a blank line; skipping only the
+  headers left DuckDB sniffing one unusable column.
+- ACS municipal facts were dropped at load: they stage as `municipality` but arrive in
+  the `cousub` release, so an exact `(source, layer)` provenance match found nothing.
+
+### Known gaps
+- FHFA is state-level only; no county HPI is published at a reachable URL.
+- BLS falls back to 3 years of history without `BLS_API_KEY`.
+- IRS migration is stored as net returns per county, not as flows.
+- ACS ZIP-level data is not fetched: since 2020 ACS no longer nests ZCTAs in states.
+
 ## [0.2.0] — 2026-08-11
 
 Housing metrics arrive. 309,350 Zillow home-value and rent observations spanning

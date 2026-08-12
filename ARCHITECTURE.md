@@ -5,14 +5,14 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-08-11):** Milestones 0, 1, and 2 are complete. The warehouse holds a
+> **Status (2026-08-12):** Milestones 0 through 3 are complete. The warehouse holds a
 > NJ geography spine (3,365 regions, 1,902 allocation weights) and **309,350 housing
-> observations** — Zillow ZHVI and ZORI from 2000 to 2026 across counties,
-> municipalities, and ZIPs — loaded through `acquire → land → stage → geocode →
-> validate → load` and served by `/regions`, `/geo`, `/metrics`, and
-> `/regions/{id}/metrics`. 81 tests pass. Still decision-only, marked per section
-> below: the derived change and ranking tables, the `analyze` and `pack` stages, the
-> analysis packet, and the comparison endpoints.
+> observations** across **12 metrics from 8 sources**, spanning 1971 to 2026 at
+> nation, state, county, municipality, and ZIP level — loaded through
+> `acquire → land → stage → geocode → validate → load` and served by `/regions`,
+> `/geo`, `/metrics`, and `/regions/{id}/metrics`. 81 tests pass. Still decision-only,
+> marked per section below: the derived change and ranking tables, the `analyze` and
+> `pack` stages, the analysis packet, and the comparison endpoints.
 
 ## System Shape
 
@@ -79,6 +79,10 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 27 | Geography resolution is recorded per fact in `match_method`, and unresolvable source geographies are **rejected, not guessed**. | Zillow publishes no FIPS below county level, so municipalities can only be matched by name. New Jersey has co-located pairs (Chatham Borough / Chatham Township) that a name+county key cannot separate, and stripping legal-form suffixes merges genuinely different places (Boonton vs Boonton Township, Egg Harbor City vs Egg Harbor Township). Picking one silently puts a real number on the wrong town, which is worse than a gap — the platform's whole claim is that a figure can be trusted. Costs ~29% of municipalities having no Zillow data; `source_match_reject` and `/sources/unresolved` say which and why. |
 | 28 | Ambiguity is rejected on **both** sides of the join, not just the lookup side. | Found by the validation gate, which blocked a load with 318 duplicate `(region, metric, period)` rows. Checking only for two municipalities sharing a name missed the mirror case: two *source* rows collapsing onto one municipality after normalization. Both directions are fatal and both are now tested. |
 | 29 | dbt models select Zillow's date columns by the pattern `YYYY-MM-DD` rather than excluding a known identifier list. | Zillow's identifier columns differ per level — ZIP files carry a `City` column that county and city files do not — and a new date column appears every month. An exclude-list broke immediately on the first and would have silently stopped importing new months on the second. Costs nothing; the pattern is stable. |
+| 30 | National series get a `nation` region level and a synthetic `US` region, rather than a separate table. | FRED's mortgage rate has no regional breakdown, but every fact needs a region. One enum value and one row keep national data in the same fact table, endpoints, and provenance path as everything else (#7). Rejected: a parallel `fact_national_observation` that every cross-level query would have to union; and attaching the rate to New Jersey, which would record a national figure as a state measurement. Costs a nullable `regions.geom` — the US region has no boundary. |
+| 31 | Sources publishing an exact identifier bypass the matcher entirely; only Zillow is name-matched. | ACS, permits, BLS, IRS, and FHFA all ship FIPS or a state code, so their dbt models emit `(geoid, level, match_method)` directly and are unioned in. Running them through the fuzzy matcher would invent ambiguity that does not exist. The payoff is concrete: ACS publishes county-subdivision GEOIDs, which took municipal coverage from 403/564 to **564/564**. |
+| 32 | Range checks tolerate a small share of out-of-range values instead of failing on the first. | ACS genuinely publishes a $99 median gross rent for Alexandria Township, where the renter sample is a handful of households — real, published, and useless, but not a parsing bug. Blocking a 330,000-row load over two such rows makes the gate an obstacle; ignoring a third of a metric makes it decoration. A metric now fails only above both an absolute floor (5 rows) and a share (0.1%). Costs: a genuine small-scale corruption under both thresholds would pass. |
+| 33 | Fact provenance falls back from `(source, layer)` to `(source)` when a keyed model's level does not name its release layer. | ACS municipal rows are staged as `municipality` but arrive in the `cousub` release, so an exact layer match dropped them silently. The fallback never attributes a value to the wrong *source*; it loses layer precision for keyed sources. The exact fix is to carry the release layer through staging, which needs the globbed models to record which file each row came from. |
 
 ## Module Layout
 
@@ -437,11 +441,19 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   reduce a single-part MultiPolygon to a Polygon, so the same region may serialize as
   either. GeoJSON consumers accept both; a client that switches on geometry type will
   be surprised.
+- **BLS history is 20 years and needs a key.** Without `BLS_API_KEY` the adapter falls
+  back to API v1: three years of history and 25 queries a day, which is one run for New
+  Jersey's 21 counties and too short for Milestone 4's change metrics.
+- **FHFA is state-level only.** No county HPI is published at a reachable URL, so FHFA
+  is the warehouse's only `state`-level metric and cannot participate in county rankings.
+- **IRS migration is net returns per county, not flows.** The origin→destination matrix
+  stays in Parquet and DuckDB; promoting it needs a two-region fact table.
 - **Municipal Zillow coverage is 403 of 564 (71%), and that is a ceiling, not a bug.**
   Zillow publishes no FIPS below county level. 90 of its NJ "cities" are
   census-designated places inside townships with no municipal counterpart, and the rest
   are unresolvable name collisions (#27, #28). County coverage is 21/21 and ZIP is
-  548/598. `/sources/unresolved` names every gap and its reason.
+  548/598. `/sources/unresolved` names every gap and its reason. ACS covers all 564
+  municipalities exactly (#31), so the gap is Zillow-specific rather than structural.
 - **Municipal values are name-matched and labelled as such.** `match_method =
   'name_county'` is a weaker claim than `'fips'`. Analytics that mix levels should say
   so; nothing currently enforces that.

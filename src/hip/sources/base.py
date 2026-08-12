@@ -114,10 +114,33 @@ class SourceAdapter(ABC):
     # What kind of file this source ships, so the landing stage knows how to transcode
     # it. A property of the publisher's format, which is the adapter's business.
     landing_format: ClassVar[str] = "csv"
+    # Several federal hosts (notably download.bls.gov) reject requests with no
+    # identifying User-Agent. Sending one is what they ask for, not evasion.
+    headers: ClassVar[dict[str, str]] = {
+        "User-Agent": "housing-intelligence/0.2 (public data research)"
+    }
+    # Extra arguments for DuckDB's read_csv, for publishers whose files are not a
+    # plain single-header CSV. Census Building Permits ships two header rows, which
+    # collapse into one unusable column unless both are skipped.
+    csv_read_options: ClassVar[str] = ""
 
     @abstractmethod
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         """The releases this source offers for a vintage, without fetching them."""
+
+    @classmethod
+    def to_records(cls, payload: object, ref: ReleaseRef) -> list[dict[str, object]]:
+        """Flatten a JSON payload into rows, for sources whose API returns JSON.
+
+        Only called when ``landing_format == "json"``. Every JSON API shapes its
+        response differently — Census returns a matrix with a header row, FRED a list
+        under one key, BLS a doubly-nested series structure — and that shape is the
+        adapter's knowledge, not the landing stage's. Landing stays dumb by asking the
+        adapter rather than by branching on source id.
+        """
+        raise NotImplementedError(
+            f"{cls.__name__} lands JSON but does not implement to_records()"
+        )
 
     def fetch_all(
         self, *, raw_dir: Path, vintage: str | None = None, force: bool = False
@@ -188,7 +211,11 @@ class SourceAdapter(ABC):
         level up so every adapter inherits them rather than reimplementing them.
         """
         with httpx.stream(
-            "GET", ref.url, timeout=_TIMEOUT, follow_redirects=True
+            "GET",
+            ref.url,
+            timeout=_TIMEOUT,
+            follow_redirects=True,
+            headers=self.headers,
         ) as response:
             response.raise_for_status()
             with destination.open("wb") as handle:

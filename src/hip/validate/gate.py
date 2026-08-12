@@ -26,11 +26,32 @@ from hip.geography.matching import OBSERVATION_TABLE, REJECT_TABLE
 VALUE_BOUNDS = {
     "zhvi_sfr": (1_000.0, 100_000_000.0),
     "zori_all": (100.0, 100_000.0),
+    "acs_median_hh_income": (5_000.0, 500_000.0),
+    "acs_median_gross_rent": (200.0, 10_000.0),
+    "acs_population": (0.0, 50_000_000.0),
+    "acs_median_home_value": (10_000.0, 10_000_000.0),
+    "acs_renter_cost_burden": (0.0, 1.0),
+    "permits_total_units": (0.0, 1_000_000.0),
+    "fhfa_hpi": (1.0, 10_000.0),
+    "mortgage_rate_30y": (0.5, 25.0),
+    "unemployment_rate": (0.0, 60.0),
+    # Net migration is a signed difference and can legitimately be large and negative.
+    "net_migration_returns": (-1_000_000.0, 1_000_000.0),
 }
 
 # Below this share of a level's regions, something structural has broken — a renamed
 # source column, a changed geography scheme — rather than genuine coverage thinning.
 MIN_COVERAGE = {"county": 0.90, "zip": 0.50, "municipality": 0.40}
+
+# Range checks exist to catch a file whose shape changed, not to second-guess a
+# publisher's noisy small-area estimates. ACS genuinely reports a $99 median gross rent
+# for Alexandria Township, where the renter sample is a handful of households — real,
+# published, and useless, but not a parsing bug. Blocking a 330,000-row load over two
+# such rows makes the gate an obstacle instead of a safeguard; ignoring a third of a
+# metric makes it decoration. So a metric fails only once out-of-range rows exceed both
+# an absolute floor and a share of that metric's rows.
+OUT_OF_RANGE_ALLOWANCE = 5
+OUT_OF_RANGE_SHARE = 0.001
 
 
 @dataclass
@@ -94,7 +115,10 @@ def run_checks(
         con.execute(
             f"""
             SELECT count(*) FROM {OBSERVATION_TABLE} o
-            WHERE NOT EXISTS (
+            -- The US region is created by migration 0004, not by the TIGER-derived
+            -- staging table, so a national observation has no stg_regions row.
+            WHERE o.level <> 'nation'
+              AND NOT EXISTS (
                 SELECT 1 FROM {regions_table} r
                 WHERE r.geoid = o.geoid AND r.level = o.level
             )
@@ -111,21 +135,24 @@ def run_checks(
     )
 
     for metric_id, (low, high) in VALUE_BOUNDS.items():
-        out_of_range = int(
-            con.execute(
-                f"""
-                SELECT count(*) FROM {OBSERVATION_TABLE}
-                WHERE metric_id = ? AND (value < ? OR value > ?)
-                """,
-                [metric_id, low, high],
-            ).fetchone()[0]  # type: ignore[index]
-        )
+        row = con.execute(
+            f"""
+            SELECT
+                count(*) FILTER (WHERE value < ? OR value > ?),
+                count(*)
+            FROM {OBSERVATION_TABLE} WHERE metric_id = ?
+            """,
+            [low, high, metric_id],
+        ).fetchone()
+        out_of_range, present = (int(row[0]), int(row[1])) if row else (0, 0)
+        allowed = max(OUT_OF_RANGE_ALLOWANCE, int(present * OUT_OF_RANGE_SHARE))
         checks.append(
             Check(
                 f"{metric_id}_within_range",
-                out_of_range == 0,
+                out_of_range <= allowed,
                 out_of_range,
-                f"values outside [{low:,.0f}, {high:,.0f}]",
+                f"of {present:,} outside [{low:,.0f}, {high:,.0f}]; "
+                f"tolerance {allowed:,}",
             )
         )
 
