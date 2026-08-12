@@ -5,14 +5,16 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-08-12):** Milestones 0 through 3 are complete. The warehouse holds a
+> **Status (2026-08-12):** Milestones 0 through 4 are complete. The warehouse holds a
 > NJ geography spine (3,365 regions, 1,902 allocation weights) and **309,350 housing
 > observations** across **12 metrics from 8 sources**, spanning 1971 to 2026 at
 > nation, state, county, municipality, and ZIP level — loaded through
 > `acquire → land → stage → geocode → validate → load` and served by `/regions`,
 > `/geo`, `/metrics`, and `/regions/{id}/metrics`. 81 tests pass. Still decision-only,
 > marked per section below: the derived change and ranking tables, the `analyze` and
-> `pack` stages, the analysis packet, and the comparison endpoints.
+> `pack` stages, and the analysis packet. Milestone 4 added 19,338 change rows, 19,328
+> rankings, two computed affordability metrics, and `/rankings`, `/compare`, and
+> `/regions/{id}/summary`.
 
 ## System Shape
 
@@ -83,6 +85,9 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 31 | Sources publishing an exact identifier bypass the matcher entirely; only Zillow is name-matched. | ACS, permits, BLS, IRS, and FHFA all ship FIPS or a state code, so their dbt models emit `(geoid, level, match_method)` directly and are unioned in. Running them through the fuzzy matcher would invent ambiguity that does not exist. The payoff is concrete: ACS publishes county-subdivision GEOIDs, which took municipal coverage from 403/564 to **564/564**. |
 | 32 | Range checks tolerate a small share of out-of-range values instead of failing on the first. | ACS genuinely publishes a $99 median gross rent for Alexandria Township, where the renter sample is a handful of households — real, published, and useless, but not a parsing bug. Blocking a 330,000-row load over two such rows makes the gate an obstacle; ignoring a third of a metric makes it decoration. A metric now fails only above both an absolute floor (5 rows) and a share (0.1%). Costs: a genuine small-scale corruption under both thresholds would pass. |
 | 33 | Fact provenance falls back from `(source, layer)` to `(source)` when a keyed model's level does not name its release layer. | ACS municipal rows are staged as `municipality` but arrive in the `cousub` release, so an exact layer match dropped them silently. The fallback never attributes a value to the wrong *source*; it loses layer precision for keyed sources. The exact fix is to carry the release layer through staging, which needs the globbed models to record which file each row came from. |
+| 34 | Computed metrics are ordinary facts under a synthetic `hip_derived` source, one release per `analyze` run. | Affordability ratios are metrics, so #8 says they are rows in `fact_metric_observation`, not a new table — and #9 says every fact names a release. A synthetic source satisfies both and makes a derived figure traceable to the run that produced it. Rejected: a separate `fact_derived` table, which would split every metric query in two, and a nullable `release_id`, which would weaken the provenance guarantee for measured values too. |
+| 35 | Change windows are anchored on `period_end`, never `period_start`. | An ACS 5-year estimate begins four years before it ends. Anchoring on `period_start` labelled a comparison of the 2019 and 2023 vintages as "2015 to 2019" — a real span of eight years reported as four. Anchoring on `period_end` makes the recorded window match its label, and recovered 3,333 additional change rows by aligning sources with different frequencies. |
+| 36 | Rankings are computed on `pct_change` within a level, ordered by the metric's own `direction`. | "Fastest rising" is the question a ranking answers, and comparing a county's home value against a ZIP's is meaningless. Taking direction from `metrics` means rank 1 is the better end wherever "better" is defined, without every caller re-deriving it. Costs: a `neutral` metric is ordered by largest increase, which is presentation rather than judgment. |
 
 ## Module Layout
 
@@ -441,6 +446,17 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   reduce a single-part MultiPolygon to a Polygon, so the same region may serialize as
   either. GeoJSON consumers accept both; a client that switches on geometry type will
   be surprised.
+- **Affordability ratios exist only where both sides do.** `price_to_income` needs ACS
+  income and Zillow values for the same region and year; `rent_to_income` needs ZORI,
+  which is sparse — hence 2,026 rows against 293. A municipality with no Zillow match
+  has no ratio, even though it has ACS income.
+- **A change window is the nearest observation within 400 days of the target**, not an
+  exact date. Sources have different frequencies, so an exact match would drop every
+  annual metric. Beyond 400 days the row is omitted rather than stretched.
+- **HUD is approved in SPEC but not yet wired.** The USPS crosswalk (`type=11`,
+  zip-countysub, with residential-address ratios) and income limits are reachable and
+  the token is in `.env`; ZIP allocation is still area-weighted (#26) and affordability
+  still uses plain ratios rather than AMI bands.
 - **BLS history is 20 years and needs a key.** Without `BLS_API_KEY` the adapter falls
   back to API v1: three years of history and 25 queries a day, which is one run for New
   Jersey's 21 counties and too short for Milestone 4's change metrics.

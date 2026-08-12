@@ -82,7 +82,17 @@ Initial sources should include:
 * FRED
 * BLS
 * IRS migration
+* HUD USPS ZIP crosswalk
+* HUD income limits
+* HUD Fair Market Rents
+* HUD Comprehensive Housing Affordability Strategy (CHAS)
 * NJ-specific public data
+
+The HUD datasets serve affordability specifically. Income limits and Fair Market Rents
+supply the thresholds housing agencies actually use, so an affordability figure can cite
+a published standard rather than a threshold the platform invented. The USPS crosswalk
+supplies residential-address weights for allocating ZIP-level data, which is the correct
+basis for housing measures where area weighting is not.
 
 Paid proprietary listing data should not be required for Version 1.
 

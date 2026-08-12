@@ -4,6 +4,18 @@
 # Nothing here is fetched until `hip acquire` runs.
 
 sources:
+  hip_derived:
+    name: Computed by the platform
+    publisher: Housing Intelligence Platform
+    license: Derived from cited sources
+    url: https://github.com/jasonli-git/housing-intelligence
+    cadence: irregular
+    adapter: none
+    notes: >-
+      Not fetched. Metrics the platform computes from other sources — affordability
+      ratios today — are written as ordinary facts under this source so every value
+      still names a release (ARCHITECTURE #9).
+
   census_tiger:
     name: TIGER/Line boundary files
     publisher: U.S. Census Bureau

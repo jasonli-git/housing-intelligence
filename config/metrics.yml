@@ -101,3 +101,24 @@ metrics:
     direction: neutral
     description: IRS SOI inflow minus outflow returns, a proxy for household moves.
     source_id: irs_migration
+
+  price_to_income:
+    label: Home value to household income
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Typical home value divided by median household income, both for the same year.
+      Zillow is monthly and ACS is annual, so the Zillow side is the mean of that
+      year's months. A ratio near 3 was long considered affordable; above 5 is strained.
+    source_id: hip_derived
+
+  rent_to_income:
+    label: Annual rent to household income
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Twelve months of observed rent divided by median household income. The 30%
+      threshold that defines cost burden corresponds to a ratio of 0.30.
+    source_id: hip_derived

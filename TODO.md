@@ -292,6 +292,46 @@ loaded through the same adapter and dbt pattern.
   means `acquire`-level work inside `load`. Harmless while cached, wrong in principle —
   the loader should read the manifests instead.
 
+## Milestone 4 — Computed housing intelligence
+
+Deliverable: change metrics, affordability, and rankings in the warehouse;
+`/rankings`, `/compare`, `/regions/{id}/summary`.
+
+- [x] Migration `0005` — `fact_metric_change`, `region_rankings`, `hip_derived` source
+- [x] `hip.analytics.compute` — pct change and CAGR over 1y/3y/5y/10y/since-2019
+- [x] Affordability — `price_to_income` and `rent_to_income` as computed metrics
+- [ ] HUD AMI bands — approved in SPEC, token in `.env`, not yet wired
+- [x] Rankings — rank, percentile, and cohort size per (metric, level, window)
+- [ ] `hip.sources.hud` — USPS crosswalk (types 2 and 11) and income limits
+- [ ] Replace area-weighted ZIP allocation with HUD `res_ratio`, keeping `method` so
+      both remain comparable (ARCHITECTURE #26 named this seam)
+- [x] `hip analyze` implemented and removed from `_STAGE_MILESTONE`
+- [x] `GET /rankings`, `GET /compare`, `GET /regions/{id}/summary` with caveats
+- [x] Tests (86 passing) and docs
+
+- Note: **SPEC.md edited 2026-08-12 with explicit approval** — HUD USPS crosswalk,
+  income limits, Fair Market Rents, and CHAS added to the Version 1 source list. This is
+  the only SPEC change so far; it was proposed and approved rather than made unilaterally.
+- Note: HUD publishes `type=11` **zip-countysub** with residential-address ratios, so
+  ZIP data can be allocated to municipalities on household share rather than land area.
+  That is the correct basis for housing measures and directly supersedes the area
+  weighting from Milestone 1.
+- Note: derived metrics are written to `fact_metric_observation` as ordinary
+  `metric_id`s under a synthetic `hip_derived` source, one release per `analyze` run.
+  Keeps ARCHITECTURE #8 (one fact table, new metrics are rows) and #9 (every fact
+  traces to a release) true for computed values, and makes a derivation reproducible.
+
+- Note: **change windows were mislabelled** until anchored on `period_end`. An ACS
+  5-year estimate begins four years before it ends, so a 2019-vintage vs 2023-vintage
+  comparison was recorded as "2015 to 2019" — a real eight-year span reported as four.
+  Found by reading actual `/rankings` output, not by a test; there is now a test
+  asserting a 5y window spans 1,400–2,200 days.
+- Note: `rent_to_income` has 293 observations against `price_to_income`'s 2,026, because
+  ZORI is sparse. Any rent-based ranking is over a much smaller cohort than a
+  value-based one, and the API does not yet surface that difference.
+- Note: rankings compare `pct_change` only. Ranking on level ("most expensive county")
+  is a separate question the tables do not answer yet.
+
 ## Parked / needs user input
 
 - ~~Census, FRED, and BLS API keys~~ — all three supplied 2026-08-12 and in `.env`.

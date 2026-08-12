@@ -3,6 +3,42 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.0] — 2026-08-12
+
+The warehouse starts answering questions instead of only storing answers. Change over
+time, affordability, and rankings are computed and served.
+
+### Added
+- **Milestone 4 — change metrics.** Percentage change and CAGR over 1y, 3y, 5y, 10y, and
+  since-2019, for every region and metric where both ends exist: 19,338 rows in
+  `fact_metric_change`.
+- **Affordability as computed metrics.** `price_to_income` (2,026 observations) and
+  `rent_to_income` (293) are written to `fact_metric_observation` like any measured
+  metric, under a synthetic `hip_derived` source with one release per `analyze` run — so
+  a computed figure names the run that produced it, exactly as a measured one names its
+  file.
+- **Rankings.** 19,328 rows of rank, percentile, and cohort size per metric, level, and
+  window. Rank 1 is the better end as the metric's own `direction` defines it.
+- **`GET /rankings`, `GET /compare`, `GET /regions/{id}/summary`.** The summary attaches
+  caveats to the numbers they qualify — ACS vintage overlap, area-allocated ZIP values,
+  name-matched municipal values — rather than leaving them in the docs.
+- `hip analyze`, the seventh of eight pipeline stages.
+- HUD added to `SPEC.md`'s Version 1 source list (USPS crosswalk, income limits, Fair
+  Market Rents, CHAS) — proposed and approved, the first SPEC change of the project.
+
+### Fixed
+- Change windows were anchored on `period_start`. An ACS 5-year estimate begins four
+  years before it ends, so a comparison of the 2019 and 2023 vintages was labelled
+  "2015 to 2019" — an eight-year span reported as four. Anchoring on `period_end` makes
+  the window match its label and recovered 3,333 change rows that frequency mismatches
+  had been dropping.
+
+### Known gaps
+- HUD is approved in SPEC and reachable, but not wired: ZIP allocation is still
+  area-weighted and affordability uses plain ratios rather than AMI bands.
+- `rent_to_income` is thin because ZORI is thin.
+- Rankings cover `pct_change` only, not levels.
+
 ## [0.3.0] — 2026-08-12
 
 Context arrives. Six more sources join Zillow, taking the warehouse to 12 metrics from 8

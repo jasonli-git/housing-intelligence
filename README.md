@@ -11,10 +11,11 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-08-12): v0.3.0, Milestone 3 complete.** New Jersey's geography and its
+> **Status (2026-08-12): v0.4.0, Milestone 4 complete.** New Jersey's geography and its
 > housing and economic context are loaded and queryable — 3,365 regions and **329,975
-> observations across 12 metrics from 8 public sources, spanning 1971 to 2026**, with
-> the source file and match method recorded on every value. See [ROADMAP.md](ROADMAP.md) for what is planned and
+> observations across 14 metrics from 9 public sources, spanning 1971 to 2026**, plus
+> 19,338 computed changes and 19,328 rankings. The source file and match method are
+> recorded on every value. See [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
@@ -60,9 +61,11 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   value, and renter cost burden; building permits; FHFA HPI; the 30-year mortgage rate;
   county unemployment; and net migration. ACS is FIPS-exact at municipal level, which
   takes municipal coverage to 564/564.
-- **Computed housing intelligence** (M4) — value and rent growth, income and population
-  change, permit activity, price-to-income and rent-burden affordability, and county and
-  municipal rankings, all calculated in SQL rather than inferred by a model.
+- **Computed housing intelligence** (M4, built) — percentage change and CAGR over
+  1y/3y/5y/10y/since-2019, price-to-income and rent-to-income affordability, and rank
+  plus percentile per metric and level, all calculated in SQL rather than inferred by a
+  model. `/regions/{id}/summary` returns the headline changes with the caveats that
+  qualify them.
 - **Dashboard and maps** (M5) — region explorer, trend charts, side-by-side county
   comparison, choropleth maps, and ranking tables.
 - **Read-only analytics API** (M4–M6) — FastAPI endpoints for regions, metrics,
@@ -117,7 +120,7 @@ cached by content hash and never re-downloaded.
 ```bash
 make db-up         # Postgres 16 + PostGIS, waits for the healthcheck
 make migrate       # alembic upgrade head
-make pipeline      # acquire → land → stage → geocode → validate → load
+make pipeline      # acquire → land → stage → geocode → validate → load → analyze
 ```
 
 **Run it.**
@@ -125,7 +128,7 @@ make pipeline      # acquire → land → stage → geocode → validate → loa
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 81 tests; API tests skip without a loaded warehouse
+make test          # 86 tests; API tests skip without a loaded warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -136,6 +139,8 @@ curl 'http://localhost:8000/metrics'
 curl 'http://localhost:8000/regions?level=county&q=Mercer'
 curl 'http://localhost:8000/regions/11/metrics?metric_id=zhvi_sfr&from=2025-01-01'
 curl 'http://localhost:8000/sources/unresolved'
+curl 'http://localhost:8000/rankings?metric_id=price_to_income&level=county&window=5y'
+curl 'http://localhost:8000/regions/11/summary?window=5y'
 ```
 
 `make` on its own lists every target. With the warehouse down, the API and dashboard
@@ -151,8 +156,8 @@ still run and report the degraded state rather than failing.
 
 ## Project Status
 
-v0.3.0 — Milestones 0 through 3 of 8 complete. Geography, housing prices and rents, and
-economic context are loaded and served; Milestone 4 computes change, affordability, and
-rankings. Milestones and
+v0.4.0 — Milestones 0 through 4 of 8 complete. Geography, prices, rents, economic
+context, and computed change/affordability/rankings are all served; Milestone 5 builds
+the dashboard. Milestones and
 their status are in [ROADMAP.md](ROADMAP.md); the current working list, including known
 rough edges and parked API keys, is in [TODO.md](TODO.md).

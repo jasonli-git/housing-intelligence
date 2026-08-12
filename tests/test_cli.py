@@ -47,7 +47,15 @@ def test_stage_stub_fails_loudly_and_names_its_milestone(stage: str) -> None:
 def test_stage_milestone_map_only_lists_unimplemented_stages() -> None:
     """The map doubles as the remaining-work list, so a stale entry is a lie."""
     assert set(_STAGE_MILESTONE) <= set(STAGES)
-    assert set(IMPLEMENTED) == {"acquire", "land", "stage", "geocode", "validate", "load"}
+    assert set(IMPLEMENTED) == {
+        "acquire",
+        "land",
+        "stage",
+        "geocode",
+        "validate",
+        "load",
+        "analyze",
+    }
 
 
 def test_acquire_rejects_a_source_without_an_adapter_before_any_io() -> None:

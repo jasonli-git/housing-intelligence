@@ -49,7 +49,7 @@ db-logs:  ## Tail Postgres logs
 migrate:  ## Apply Alembic migrations to the warehouse
 	uv run alembic upgrade head
 
-pipeline:  ## Run the full pipeline: acquire -> land -> stage -> geocode -> validate -> load
+pipeline:  ## Full pipeline: acquire -> land -> stage -> geocode -> validate -> load -> analyze
 	@# Each stage persists before the next begins, so any one can be re-run alone.
 	@# `validate` is a gate: a non-zero exit here stops the load, and make stops with it.
 	uv run hip acquire
@@ -58,6 +58,7 @@ pipeline:  ## Run the full pipeline: acquire -> land -> stage -> geocode -> vali
 	uv run hip geocode
 	uv run hip validate
 	uv run hip load
+	uv run hip analyze
 
 api:  ## Run the API on http://localhost:8000 (docs at /docs)
 	uv run uvicorn hip.api.main:app --reload --port 8000

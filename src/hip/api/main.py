@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from hip import __version__
-from hip.api.routers import health, metrics, regions
+from hip.api.routers import analytics, health, metrics, regions
 
 app = FastAPI(
     title="Housing Intelligence Platform API",
@@ -31,3 +31,4 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(regions.router)
 app.include_router(metrics.router)
+app.include_router(analytics.router)

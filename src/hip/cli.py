@@ -15,6 +15,7 @@ from typing import Annotated
 import typer
 
 from hip import __version__
+from hip.analytics.compute import rebuild
 from hip.config import (
     ConfigError,
     check_config,
@@ -50,6 +51,7 @@ from hip.warehouse.load import (
     MetricRecord,
     ReleaseProvenance,
     SourceRecord,
+    _upsert_metrics,
     load_facts,
 )
 from hip.warehouse.load import load_geography as load_warehouse_geography
@@ -65,7 +67,6 @@ app = typer.Typer(
 # stages are removed from this map, so it doubles as the list of remaining work.
 # Keep in step with ROADMAP.md.
 _STAGE_MILESTONE = {
-    "analyze": 4,
     "pack": 6,
 }
 
@@ -478,8 +479,28 @@ def load(
 
 @app.command()
 def analyze() -> None:
-    """Rebuild derived change metrics and rankings."""
-    _not_yet("analyze")
+    """Rebuild derived change metrics, affordability ratios, and rankings."""
+    metric_config = load_metrics()
+    engine = get_engine()
+
+    # Derived metrics must exist in `metrics` before facts can reference them.
+    with engine.begin() as conn:
+        _upsert_metrics(
+            conn,
+            [
+                MetricRecord(metric_id=mid, **m.model_dump())
+                for mid, m in metric_config.items()
+                if m.source_id == "hip_derived"
+            ],
+        )
+
+    result = rebuild(engine)
+
+    for metric_id, count in sorted(result.derived_observations.items()):
+        typer.echo(f"{metric_id:<20} {count:>9,} observations")
+    typer.echo(f"{'change rows':<20} {result.changes:>9,}")
+    typer.echo(f"{'ranking rows':<20} {result.rankings:>9,}")
+    typer.secho("analytics rebuilt", fg=typer.colors.GREEN)
 
 
 @app.command()
