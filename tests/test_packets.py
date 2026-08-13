@@ -177,10 +177,10 @@ def test_acs_metrics_carry_the_overlap_caveat() -> None:
 def test_a_zip_names_the_weights_behind_its_allocation() -> None:
     """Area and HUD weights encode different assumptions (ARCHITECTURE #37)."""
     caveats = caveats_for(
-        level="zip", metric_ids=["zhvi_sfr"], crosswalk_methods=["hud_usps", "area"]
+        level="zip", metric_ids=["zhvi_sfr"], crosswalk_methods=["hud_res_ratio", "area"]
     )
 
-    assert any("allocated" in c and "area, hud_usps" in c for c in caveats)
+    assert any("allocated" in c and "area, hud_res_ratio" in c for c in caveats)
 
 
 def test_name_matched_values_say_so() -> None:

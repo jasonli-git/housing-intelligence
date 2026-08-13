@@ -253,7 +253,7 @@ CREATE TABLE region_crosswalk (
   from_region_id BIGINT NOT NULL REFERENCES regions(region_id),
   to_region_id   BIGINT NOT NULL REFERENCES regions(region_id),
   weight         NUMERIC(8,6) NOT NULL,  -- allocation share, sums to 1.0 per from_id
-  method         TEXT NOT NULL,          -- 'hud_usps', 'area', 'population'
+  method         TEXT NOT NULL,          -- 'hud_res_ratio' or 'area' in practice
   PRIMARY KEY (from_region_id, to_region_id)
 );
 

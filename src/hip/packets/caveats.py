@@ -64,9 +64,9 @@ TEXTS: dict[str, str] = {
         "cohort size each one reports."
     ),
     "collapsed_vintage": (
-        "Release provenance names the source correctly but not always the vintage. The "
-        "loader assigns one release per source and layer, so a source publishing "
-        "several vintages attributes every year's value to a single release row. "
+        "Release provenance names the source correctly but not the vintage: values "
+        "spanning several periods all cite one release, though the source publishes "
+        "more than one. The figures are right; the file credited for them may not be. "
         "Sources affected here: {sources}."
     ),
 }
@@ -83,14 +83,16 @@ def caveats_for(
 ) -> list[str]:
     """The caveats that apply to one region's figures, in a stable order.
 
-    `crosswalk_methods` names the allocation weights behind a ZIP's values (`hud_usps`
-    or `area`, ARCHITECTURE #37); naming them matters because the two encode different
-    assumptions and a reader cannot tell from the number which one produced it.
+    `crosswalk_methods` names the allocation weights behind a ZIP's values —
+    `hud_res_ratio` or `area` (ARCHITECTURE #37). Naming them matters because the two
+    encode different assumptions and a reader cannot tell from the number which one
+    produced it.
 
-    `multi_vintage_sources` are sources with more than one vintage in the warehouse,
-    which is exactly the set whose per-fact vintage cannot be trusted (ARCHITECTURE
-    #43). Naming them beats a general disclaimer: a reader can see whether the figure
-    they care about is affected.
+    `multi_vintage_sources` are sources whose facts for this region actually cite one
+    release across several periods when the source publishes more than one vintage.
+    Milestone 7 fixed the loader that caused it (#53), so the caller now derives this
+    from the fact table rather than from a source's vintage count — the caveat should
+    appear only if something regresses.
     """
     present = set(metric_ids)
     methods = set(match_methods)

@@ -98,8 +98,8 @@ with PostGIS geometry and crosswalks; `/regions` and `/geo/{level}` serving real
 - [x] `GET /regions`, `GET /regions/{region_id}`, `GET /geo/{level}`
 - [x] Tests: 21 NJ counties, 564 municipalities, crosswalk weights sum to 1.0,
       parent chain integrity, endpoint shape — 64 passing
-- [ ] Point the dashboard at `/regions` instead of `/health`. Deferred to Milestone 5,
-      which owns the UI; the M0 health page is still what `make web` serves.
+- [x] Point the dashboard at `/regions` instead of `/health` — done at Milestone 5. The
+      overview reads `/rankings` and `/geo`, and no page renders `/health` any more.
 
 - Note: TIGER returns 569 NJ county subdivisions; 564 are municipalities and 5 are
   `CLASSFP = 'Z9'` / `COUSUBFP = '00000'` water and undefined areas. Both filters agree,
@@ -148,22 +148,23 @@ Deliverable: Zillow ZHVI + ZORI from `hip acquire` to `hip load`; NJ county, mun
 and ZIP series queryable at `/regions/{id}/metrics` with source provenance on every
 value.
 
-- [ ] `hip.sources.zillow` — `ZhviAdapter` and `ZoriAdapter` over county, city, and ZIP
+- [x] `hip.sources.zillow` — `ZhviAdapter` and `ZoriAdapter` over county, city, and ZIP
       layers (6 files, ~245MB)
-- [ ] `hip.landing.tabular` — CSV → Parquet, wide format preserved verbatim
-- [ ] dbt staging models — unpivot ~318 date columns to long
+- [x] `hip.landing.tabular` — CSV → Parquet, wide format preserved verbatim
+- [x] dbt staging models — unpivot ~318 date columns to long
       `(region_key, period, value)`. dbt's first real job (ARCHITECTURE #4)
-- [ ] `hip.geography.matching` — resolve Zillow keys to `(level, geoid)`: county by
+- [x] `hip.geography.matching` — resolve Zillow keys to `(level, geoid)`: county by
       `StateCodeFIPS || MunicipalCodeFIPS`, ZIP by code, municipality by normalized
       name + county with **ambiguous matches rejected, not guessed**
-- [ ] `hip.validate` — the gate: unresolved keys, out-of-range values, duplicate
+- [x] `hip.validate` — the gate: unresolved keys, out-of-range values, duplicate
       `(region, metric, period)`, coverage drop vs the previous release
-- [ ] Migration `0003` — `metrics`, `fact_metric_observation`, and a
-      `region_source_match` audit table recording how each key was resolved
-- [ ] `hip load` extended to facts, one transaction per release
-- [ ] `GET /regions/{id}/metrics`, `GET /metrics`, coverage exposed per level
-- [ ] `hip stage` and `hip validate` implemented, removing them from `_STAGE_MILESTONE`
-- [ ] Tests: unpivot shape, all three matchers, ambiguity rejection, gate behavior
+- [x] Migration `0003` — `metrics`, `fact_metric_observation`, and the match audit
+      table. Named `source_match_reject` in the end, not `region_source_match`: it
+      records what failed to resolve and why, which is the useful half.
+- [x] `hip load` extended to facts, one transaction per release
+- [x] `GET /regions/{id}/metrics`, `GET /metrics`, coverage exposed per level
+- [x] `hip stage` and `hip validate` implemented, removing them from `_STAGE_MILESTONE`
+- [x] Tests: unpivot shape, all three matchers, ambiguity rejection, gate behavior
 
 - Note: **decided 2026-08-11 with measured numbers.** Zillow's city-level files carry no
   FIPS, only a name and county. Of 496 NJ "cities": 422 rows match 406 municipalities
@@ -224,15 +225,22 @@ loaded through the same adapter and dbt pattern.
 - [x] `hip.sources.fred` — MORTGAGE30US, 664 monthly observations
 - [x] `land_json` + `SourceAdapter.to_records` — JSON APIs land through one lander, with
       each adapter owning its own response shape
-- [ ] `hip.sources.census_acs` — 5 metrics at county, MCD, and ZCTA level (needs a key)
-- [ ] `hip.sources.fred` — MORTGAGE30US, national (needs a key)
+- [x] `hip.sources.census_acs` — keys supplied 2026-08-12; county and MCD are loaded.
+      **ZCTA level dropped**, not deferred: since 2020 ACS no longer nests ZCTAs within
+      states, so a ZIP pull means all ~33,000 nationally per vintage for the 598 that
+      matter. See the note below.
+- [x] `hip.sources.fred` — MORTGAGE30US, national, 664 observations loaded
 - [x] Migration `0004` — `nation` level, nullable `regions.geom`, US region row
 - [x] dbt staging models for all six sources
 - [x] Keyed matching path — sources with an exact identifier bypass the fuzzy matcher
 - [x] Gate bounds for all 12 metrics, with an out-of-range tolerance
 - [x] `test_api_metrics` updated: municipal `match_method` now differs by source
-- [ ] Unit tests for the six new adapters and the keyed matching path. The pipeline is
-      verified end to end but the new adapters have no direct coverage
+- [ ] Unit tests for the source adapters. Still open and **wider than first written**:
+      as of Milestone 7 only `ModivAdapter` has direct tests (`tests/test_nj_modiv.py`).
+      Zillow, ACS, FRED, BLS, FHFA, permits, IRS, and HUD are all exercised end to end
+      by pipeline runs and by `tests/test_matching.py`, but none has a test that drives
+      its own `refs()` or `to_records()` against a stubbed response. `test_nj_modiv.py`
+      is the pattern to copy — a `MockTransport` subclass, no network.
 
 - Note: **decided 2026-08-11 after probing every endpoint.** BLS v1, Building Permits,
   and IRS migration work with no credentials. ACS returns a "Missing Key" HTML page
@@ -260,7 +268,9 @@ loaded through the same adapter and dbt pattern.
   with `REQUEST_NOT_PROCESSED`. The adapter is right — it now reaches a quota error
   rather than "series does not exist" — but BLS cannot be acquired again until the
   quota resets. Setting `BLS_API_KEY` (free) switches to v2: 500 queries per day and 20
-  years of history instead of 3. The adapter does not use v2 yet.
+  years of history instead of 3. ~~The adapter does not use v2 yet.~~ **Corrected
+  2026-08-13: it does** — `bls.py` picks `BASE_V2` whenever the key is present, and the
+  key has been in `.env` since 2026-08-12.
 - Note: the LAUS series id is `LAU` + `CN` + a **13-character** area code + a
   2-character measure, so a county is its 5-digit FIPS plus **8** zeros. Getting the
   padding wrong returns HTTP 200, `status: REQUEST_SUCCEEDED`, an empty data array, and
@@ -305,9 +315,11 @@ Deliverable: change metrics, affordability, and rankings in the warehouse;
 - [x] Affordability — `price_to_income` and `rent_to_income` as computed metrics
 - [x] HUD AMI bands — `price_to_ami` shipped in Milestone 9
 - [x] Rankings — rank, percentile, and cohort size per (metric, level, window)
-- [ ] `hip.sources.hud` — USPS crosswalk (types 2 and 11) and income limits
-- [ ] Replace area-weighted ZIP allocation with HUD `res_ratio`, keeping `method` so
-      both remain comparable (ARCHITECTURE #26 named this seam)
+- [x] `hip.sources.hud` — USPS crosswalk (types 2 and 11) and income limits, shipped in
+      Milestone 9
+- [x] Replace area-weighted ZIP allocation with HUD `res_ratio` — 2,456 of 2,491 rows,
+      shipped in Milestone 9. `method` records which produced each row, though it does
+      **not** let both coexist for one pair; see the Milestone 9 note on #37.
 - [x] `hip analyze` implemented and removed from `_STAGE_MILESTONE`
 - [x] `GET /rankings`, `GET /compare`, `GET /regions/{id}/summary` with caveats
 - [x] Tests (86 passing) and docs
@@ -377,7 +389,8 @@ ranking tables.
 - [x] `/` overview and `/regions/[id]` detail pages
 - [x] Table view under every chart, with source and match method per observation
 - [x] Docs; 88 Python tests still green and `tsc --noEmit` clean
-- [ ] Frontend tests — there is no test runner in `web/` at all
+- [x] Frontend tests — Vitest added at Milestone 6; 26 tests over `lib/format.ts` and
+      `lib/scale.ts`. Still arithmetic only: no test renders a component.
 
 - Note: palette validated with the dataviz skill's script before any chart code was
   written. The three categorical slots pass all-pairs CVD and normal-vision floors in
@@ -523,7 +536,66 @@ release-vintage provenance fix carried over from Milestone 6.
 
 - ~~Census, FRED, and BLS API keys~~ — all three supplied 2026-08-12 and in `.env`.
   They are in the chat transcript of that session, so rotate them if it is ever shared.
-- **HUD USPS crosswalk token** — optional but wanted. Would replace the area-weighted
-  ZIP allocation (ARCHITECTURE #26) with residential-address weighting, which is the
-  right basis for housing metrics. Free, requires registration at
-  https://www.huduser.gov/portal/dataset/uspszip-api.html
+- ~~HUD USPS crosswalk token~~ — supplied and in use: 2,456 of 2,491 crosswalk rows are
+  `hud_res_ratio`, and HUD income limits back `price_to_ami`.
+
+**Nothing is blocked on user input.** Every key the platform currently uses is present.
+The list below is opportunity, not blockage — sources worth adding, and what each costs.
+
+## Data sources worth adding
+
+Reachability probed 2026-08-13; each line says what it would add and what it needs.
+
+**No new key — the credential is already in `.env`**
+
+- [ ] **HUD Fair Market Rents** — approved in SPEC, never fetched. **Verified working
+      2026-08-13 with the token already in `.env`**: `/hudapi/public/fmr/data/3402199999
+      ?year=2025` returns Mercer County efficiency $1,391 through four-bedroom $2,747,
+      by bedroom count. Same adapter shape as income limits, five bedroom sizes per
+      county per year. Would give a county rent benchmark where ZORI is sparse (293
+      rent-to-income rows against price-to-income's 2,026) and let rent burden cite a
+      published standard rather than a survey estimate. **The single highest-value
+      gap**, and it needs nothing from the user.
+- [ ] **HUD CHAS** — approved in SPEC, never fetched. Endpoint returns 200 with the
+      existing token (probed 2026-08-13). Published cost-burden tables would replace
+      `acs_renter_cost_burden`, which the platform currently derives from raw B25070
+      columns.
+- [ ] **ACS housing-stock tables** — same `CENSUS_API_KEY`, same adapter, more
+      variables. **Verified 2026-08-13**: B25002 (vacancy), B25003 (tenure), B25024
+      (units in structure) and B25034 (year built) all return NJ county data on the
+      2023 5-year endpoint. Adding one is a `metrics.yml` entry and a column in the
+      existing model, not new plumbing. Vacancy and tenure are the notable gaps — the
+      warehouse has no ownership rate at all.
+- [x] ~~BLS v2~~ — **already done.** `hip.sources.bls` selects `BASE_V2` whenever
+      `BLS_API_KEY` is set, so the 20-year history and 500-query allowance are in use.
+      The Milestone 3 note saying otherwise was stale; it is corrected in place.
+- [ ] **FRED housing series** — same `FRED_API_KEY`. All four probed 200 on 2026-08-13:
+      `NJSTHPI` (NJ house price index — would give the state a second, independent HPI
+      against FHFA), `HOUST` (national housing starts), `RRVRUSQ156N` (rental vacancy),
+      `MSPUS` (national median sale price). Each is a `sources.yml` line plus a
+      `metric_id`; the adapter already handles multi-series pulls.
+
+**No key at all**
+
+- [ ] **Zillow's other cuts** — bottom-tier and top-tier ZHVI, SFR-only, new-construction
+      sale price, days-to-pending, for-sale inventory. Same CSV host, same adapter,
+      already anticipated: "adding one later is a `sources.yml` entry plus a `metric_id`,
+      not a schema change."
+- [ ] **Census Building Permits at place level** — currently county only, so the
+      warehouse has no municipal construction signal at all. BPS publishes place-level
+      annual files by region (`.../econ/bps/Place/Northeast Region/ne<yy>06y.txt`,
+      confirmed 200 on 2026-08-13). Place codes are not MCD FIPS, so this needs a
+      match — but MOD-IV has now supplied `region_identifiers`, which is exactly the
+      kind of join that makes it tractable.
+- [ ] **LEHD LODES** — jobs by workplace and residence per census block, which supports
+      jobs-housing balance and commute-shed analysis. Large but static files.
+
+**Needs a new free key**
+
+- [ ] **NJ Parcels geometry (`njgin_parcels`)** — no key, but listed here because it is
+      the one blocked item: the REST path Milestone 7 uses returns attributes only, and
+      the geometry needed for a parcel map layer would be an enormous download.
+
+- Note: **FMR and CHAS are the two SPEC-approved sources still unfetched.** Both were
+  added to SPEC with explicit approval at Milestone 4 and neither has an adapter. They
+  are the only gap between the Version 1 source list and what the warehouse holds.
