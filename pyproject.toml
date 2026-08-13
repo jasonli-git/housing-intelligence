@@ -35,6 +35,13 @@ dev = [
     # generated the schema, so the runtime needs no second validator.
     "jsonschema>=4.22",
 ]
+# Apple-silicon only, and only needed to run local models for the Milestone 8
+# evaluation. Its own group for the same reason dbt has one: mlx pins a numpy/
+# transformers tree that must not constrain the application environment, and a
+# non-macOS checkout must still be able to `uv sync` the rest.
+mlx = [
+    "mlx-lm>=0.29",
+]
 # dbt resolves against its own pinned dependency tree; keeping it in a separate group
 # stops it from constraining the application environment (ARCHITECTURE #4).
 dbt = [

@@ -542,6 +542,136 @@ release-vintage provenance fix carried over from Milestone 6.
   callback. httpx's own INFO logging had to be silenced or a 1,741-request fetch prints
   1,741 URLs.
 
+## Milestone 8 prep — local model environment (2026-08-13)
+
+Not a milestone. Environment and measurement work done between Milestone 7 and
+Milestone 8 so the evaluation starts from measured facts about this machine rather
+than from benchmark reputation (SPEC principle 9). The only repository change is a
+dependency group; the models, the two helper scripts, and every number below live
+outside the repo. The design decisions are recorded here rather than in
+[ARCHITECTURE.md](ARCHITECTURE.md) because nothing implements them yet — they become
+Decisions Log rows when Milestone 8 lands.
+
+### What now exists
+
+- [x] **`mlx` dependency group** in `pyproject.toml` and `uv.lock` (ARCHITECTURE #55).
+      `mlx-lm` 0.31.3 on `mlx` 0.32.0, in the project's own 3.12.13 environment. An
+      earlier `python3 -m pip install mlx-lm` had landed on the system Python 3.9.6 —
+      EOL since October 2025, a different interpreter from the project's, console
+      scripts off `PATH`. 146 Python and 26 dashboard tests still pass after the change.
+- [x] **Four MLX models**, all 4-bit, read in place from `~/.lmstudio/models/` with no
+      import step: Qwen3-8B, Qwen3.5-9B, gemma-4-E4B, Phi-4-mini-reasoning.
+- [x] **Six GGUF models registered with Ollama**, imported from LM Studio and then
+      hardlinked back to the original file, so the second registration costs near-zero
+      disk on the same APFS volume:
+
+| Ollama name | Quant | Weights |
+|---|---|---|
+| `bench-qwen3-8b-q4` | Q4_K_M | 4.7G |
+| `bench-qwen3-8b-q6` | Q6_K | 6.3G |
+| `bench-gemma-4-e4b-q4` | Q4_K_M | 5.0G |
+| `bench-gemma-4-e4b-q8` | Q8_0 | 7.5G |
+| `bench-gemma-4-12b` | Q4_0 (QAT) | 6.5G |
+| `bench-nemotron-3-4b` | Q4_K_M | 2.6G |
+
+- [x] Telemetry paths confirmed on both runtimes (below).
+
+### Measured on this machine (M4, 16GB unified memory)
+
+- **Memory is the binding constraint, and context size is the lever.** gemma-4-E4B
+  Q8_0 at Ollama's default `num_ctx: 16384` pushed swap from 758MB to 3,718MB. The
+  same model at `num_ctx: 4096` with `keep_alive: 0` added 0 MB of swap.
+- **KV-cache quantization is not the lever.** f16 → q8_0 → q4_0 on gemma-4-E4B saved
+  roughly 0.1GB and cost 7–10% throughput. **Weight quantization is:** Q8_0 → Q4_K_M
+  saved 2.6GB (32%) and ran 51% faster (26.3 against 17.4 tok/s) on the same prompt,
+  with the same correct answer.
+- **Packet format is a 3× token decision.** A county packet serialized as JSON is
+  6,043 tokens; the same packet as Markdown is 2,096. Identical information.
+- **Ollama telemetry** comes from `/api/generate` with `"stream": false` —
+  `prompt_eval_count`, `eval_count`, `eval_duration`, `load_duration`,
+  `total_duration`. Quantization from `ollama show`.
+- **MLX telemetry** comes from `stream_generate` — `prompt_tokens`,
+  `generation_tokens`, `prompt_tps`, `generation_tps`, `peak_memory`, `finish_reason`.
+  TTFT is the timestamp of the first yield (measured 208ms). Quantization from
+  `config.json`.
+- **The two memory numbers are not comparable.** `mx.get_peak_memory()` is a true
+  allocator peak; Ollama exposes only process RSS.
+
+### Decisions taken (not yet built)
+
+1. **Two cohorts, then a format comparison, with the anchor pairs run first.** MLX
+   models go through MLX-LM, GGUF models through Ollama; a targeted JSON-vs-Markdown
+   comparison follows. The original plan ran the anchors second. Corrected: choosing
+   "the best model" across two cohorts *is* a cross-runtime comparison, so cohort
+   separation alone does not remove the confound — the anchors are what license the
+   comparison and therefore have to come first. Both anchor pairs are matched at
+   4-bit: Qwen3-8B Q4_K_M against MLX 4bit, gemma-4-E4B Q4_K_M against MLX 4bit.
+2. **Grade final answers only; count reasoning tokens as a separate efficiency
+   metric.** Supported by the Nemotron measurement below.
+3. **Two modes: deterministic for selection, temp 0.7 for stability on the winners.**
+   Two additions to the original: vary the seed across stability runs (a fixed seed at
+   0.7 reproduces the same sample, which tests reproducibility rather than stability),
+   and verify that temp-0 actually is deterministic on Metal before relying on it.
+4. **Judge model is `claude-opus-5`** ($5/$25 per MTok, verified 2026-08-13). Through
+   the Batch API's flat 50% that is roughly $0.018 a judgment, about 550 judgments in
+   $10. `claude-sonnet-5` carries introductory pricing of $2/$10 through 2026-08-31 if
+   the budget is better spent on more scenarios than on judge quality.
+
+### Notes
+
+- Note: **`num_ctx: 4096` was a mistake and must not survive into Milestone 8.** A
+  6,043-token JSON packet is silently truncated at that setting — no error, just a
+  model answering from two-thirds of a packet. Size context to the payload; 8192 is
+  the floor for JSON packets.
+- Note: **reasoning models return an empty answer when `num_predict` is too small.**
+  At 20 tokens Nemotron spent the entire budget on hidden reasoning and returned
+  `response: ""`. A harness would record that as a zero-quality answer rather than a
+  truncation. Measured: 91% of Nemotron's generated text was reasoning, and
+  `eval_count` counts both.
+- Note: **sampling defaults differ sharply between the runtimes.** MLX-LM defaults to
+  temp 0.0 (greedy). Ollama ships no baked parameters for these models, so its own
+  defaults apply — temp 0.8, top_p 0.9, top_k 40, repeat_penalty 1.1. Pin every
+  parameter explicitly on both sides, or the comparison is a stochastic sampler
+  against a deterministic one.
+- Note: **reasoning is surfaced differently.** Ollama splits it into a `thinking`
+  field; MLX leaves `<think>` inline in the text. Same model, same prompt, different
+  text handed to the grader unless it is normalized — including the unterminated case,
+  where the model runs out of budget mid-thought.
+- Note: **`bench-gemma-4-e4b-q8` exists only as an Ollama blob** (link count 1, since
+  the LM Studio copy was deleted). `ollama rm bench-gemma-4-e4b-q8` destroys it
+  permanently, and it is 7.5GB of real disk rather than a shared link.
+- Note: **never run Ollama and MLX with models loaded at the same time.** That is the
+  fastest route back into swap on 16GB.
+- Note: **thinking tokens bill as output at $25/MTok on the judge.** Budget ~800
+  output tokens a judgment, not 300. On `claude-opus-5` thinking is on by default —
+  omitting the parameter runs adaptive — and `max_tokens` caps thinking plus response
+  text together, so a tight cap truncates the verdict rather than the reasoning.
+- Note: **the Batch API and prompt caching do not stack cleanly.** Parallel batch
+  requests sharing a prefix all miss the cache. Take the flat 50% and treat any cache
+  hit as a bonus.
+- Note: **check `stop_reason` before reading `content` on the judge.** `claude-opus-5`
+  can return `refusal` with an empty content array. Use `output_config.format` for the
+  scores so there is no regex parsing and no retry loop.
+- Note: the two helper scripts are at
+  `/private/tmp/claude-502/-Users-jasonli-Desktop-PROJECTS-housing-intelligence/aae42b4b-a6d4-431f-a8a3-102664bf408b/scratchpad/`
+  — `import_gguf.sh` (16 lines: `ollama create` from a Modelfile, then replace
+  Ollama's copied blob with a hardlink to the LM Studio original) and `kvbench.sh`
+  (35 lines: KV/quant measurement). **`/private/tmp` does not survive a reboot**, so
+  copy them into the repo before anything else at Milestone 8.
+
+### Open for Milestone 8
+
+- [ ] Move `import_gguf.sh` and `kvbench.sh` into the repo (`scripts/`) before the
+      scratchpad is cleared.
+- [ ] Decide whether packets reach the models as JSON or as Markdown. The 3× token
+      difference makes this a design decision, not a detail: JSON is the published
+      contract (ARCHITECTURE #12, #43) and Markdown is already a rendering of it
+      (#45), so both are available — but they are not interchangeable at 16GB.
+- [ ] Add `ANTHROPIC_API_KEY` to `.env` and `.env.example`. It is the first key the
+      platform needs that is not free.
+- [ ] Confirm whether the Q8-vs-Q4 quantization axis is still in scope now that
+      `bench-gemma-4-e4b-q8` exists only inside Ollama.
+
 ## Data sources worth adding
 
 Reachability probed 2026-08-13; each line says what it would add and what it needs.
@@ -607,5 +737,11 @@ Reachability probed 2026-08-13; each line says what it would add and what it nee
 - ~~HUD USPS crosswalk token~~ — supplied and in use: 2,456 of 2,491 crosswalk rows are
   `hud_res_ratio`, and HUD income limits back `price_to_ami`.
 
-**Nothing is blocked on user input.** Every key the platform currently uses is present,
-and every source in the section above needs either no credential or one already held.
+- [ ] **`ANTHROPIC_API_KEY`** — needed by Milestone 8 for the Claude-graded rubric, and
+  the first key the platform uses that is not free. Roughly $10 covers ~550 judgments
+  on `claude-opus-5` through the Batch API. Nothing before Milestone 8 touches it.
+
+**Nothing already built is blocked on user input.** Every key the pipeline currently
+uses is present, and every source in the section above needs either no credential or one
+already held. The one outstanding key is the Anthropic key above, which Milestone 8
+needs and nothing else does.

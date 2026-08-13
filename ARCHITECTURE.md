@@ -17,7 +17,9 @@ scope; this document does not restate it.
 > `1.1` is validated against `schemas/packet-v1.json`; 21 county and 564 municipal
 > packets are produced by `hip pack`. 146 Python tests and 26 dashboard tests pass,
 > `tsc --noEmit` is clean. Nothing consumes a packet yet — the LLM layer is deliberately
-> deferred to Milestone 8 (#11).
+> deferred to Milestone 8 (#11). The candidate models for that milestone are installed
+> and measured on this machine but live entirely outside the repository; what was found
+> and what it constrains is in [TODO.md](TODO.md).
 
 ## System Shape
 
@@ -109,6 +111,7 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 52 | Rankings carry a `basis`: `change` over a window, or `value` at the latest observation. | MOD-IV publishes one composite, so its metrics have no change and would have loaded correctly and then been invisible to `/rankings`, `/summary`, and every packet. `basis` also answers a question the warehouse never could — "which municipality is most expensive", not only "which rose fastest" — closing a Milestone 4 note. Both bases share one table (#8) because a second rankings table would split every ranking query in two. Costs an overloaded `window` column, which holds the literal `latest` for a value ranking since a level has no span. |
 | 53 | Releases are keyed `(source_id, layer, vintage)`, resolved most-precise-first. **Fixes #47.** | `(source, layer)` was not unique for a source publishing several vintages — ACS has ten releases across five vintages, HUD 107 — so all but one collapsed and every year's fact cited the survivor. Every ACS observation claimed vintage 2019. Every staging model now carries `release_vintage`, read off the Parquet path by the `release_vintage()` macro, because landing writes `<source>/<vintage>/<layer>.parquet` for every source with no per-source knowledge. Lookup falls back `(source, layer, vintage)` → `(source, vintage)` → `(source, layer)` → `(source)`: vintage outranks layer, because the wrong *year* misstates when a thing was measured while the wrong layer of the right vintage only loses which file carried it. |
 | 54 | Packet `1.1` adds `levels`; `metrics` keeps its exact 1.0 meaning. | A snapshot source has no change, so `metrics` — which reads `fact_metric_change` — could never carry it. `levels` holds the latest observation of every metric with its value rank, which is also the first migration the published schema has actually had to perform. Additive and backward-compatible: a 1.0 reader parses a 1.1 packet and simply does not see the new array, which is what the minor version signals. A packet with levels and no changes is now valid, because that is what a MOD-IV-only municipality genuinely looks like. |
+| 55 | `mlx-lm` lives in its own optional `mlx` dependency group, and local models are never a runtime dependency. | Same reasoning as #19: mlx pins its own numpy/transformers tree, which must not constrain FastAPI, Pydantic, and SQLAlchemy, and a non-macOS checkout must still `uv sync` everything else — mlx is Apple-silicon only. `make setup` installs `dev` and `dbt` and deliberately not this. It also fixes a real break: an earlier `python3 -m pip install mlx-lm` landed on the system Python 3.9.6, EOL since October 2025 and a different interpreter from the project's; the group puts `mlx-lm` 0.31.3 / `mlx` 0.32.0 in the 3.12.13 environment the rest of the code uses. Costs one more group to remember, and the Milestone 8 harness must degrade rather than fail when the group is absent (#11 still holds — nothing in the Version 1 runtime imports a model). |
 
 ## Module Layout
 
@@ -194,7 +197,7 @@ housing-intelligence/
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
-└── pyproject.toml
+└── pyproject.toml             # deps + dev / dbt / mlx groups (#19, #55)
 ```
 
 **Dependency rule.** Imports flow one direction along the pipeline and never back:
