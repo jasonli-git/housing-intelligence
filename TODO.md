@@ -554,6 +554,8 @@ Decisions Log rows when Milestone 8 lands.
 
 ### What now exists
 
+Eight candidate models, four per cohort, **every one of them 4-bit**.
+
 - [x] **`mlx` dependency group** in `pyproject.toml` and `uv.lock` (ARCHITECTURE #55).
       `mlx-lm` 0.31.3 on `mlx` 0.32.0, in the project's own 3.12.13 environment. An
       earlier `python3 -m pip install mlx-lm` had landed on the system Python 3.9.6 —
@@ -561,19 +563,25 @@ Decisions Log rows when Milestone 8 lands.
       scripts off `PATH`. 146 Python and 26 dashboard tests still pass after the change.
 - [x] **Four MLX models**, all 4-bit, read in place from `~/.lmstudio/models/` with no
       import step: Qwen3-8B, Qwen3.5-9B, gemma-4-E4B, Phi-4-mini-reasoning.
-- [x] **Six GGUF models registered with Ollama**, imported from LM Studio and then
+- [x] **Four GGUF models registered with Ollama**, imported from LM Studio and then
       hardlinked back to the original file, so the second registration costs near-zero
-      disk on the same APFS volume:
+      disk on the same APFS volume. Verified 2026-08-13: every blob below has link
+      count 2, so no model holds a private copy of its weights.
 
 | Ollama name | Quant | Weights |
 |---|---|---|
 | `bench-qwen3-8b-q4` | Q4_K_M | 4.7G |
-| `bench-qwen3-8b-q6` | Q6_K | 6.3G |
 | `bench-gemma-4-e4b-q4` | Q4_K_M | 5.0G |
-| `bench-gemma-4-e4b-q8` | Q8_0 | 7.5G |
 | `bench-gemma-4-12b` | Q4_0 (QAT) | 6.5G |
 | `bench-nemotron-3-4b` | Q4_K_M | 2.6G |
 
+- [x] **Two higher-precision models removed** — `bench-qwen3-8b-q6` (Q6_K, 6.3G) and
+      `bench-gemma-4-e4b-q8` (Q8_0, 7.5G), deleted 2026-08-13 after their measurements
+      were taken. Both had been imported and measured; deleting the LM Studio originals
+      dropped each Ollama blob to link count 1, so the registrations were holding the
+      only remaining copies — 13.7 GiB of real disk on a machine where memory is the
+      binding constraint. `ollama rm` on both took `~/.ollama/models/blobs` from 33G to
+      19G. This retires the quantization axis (below).
 - [x] Telemetry paths confirmed on both runtimes (below).
 
 ### Measured on this machine (M4, 16GB unified memory)
@@ -584,7 +592,15 @@ Decisions Log rows when Milestone 8 lands.
 - **KV-cache quantization is not the lever.** f16 → q8_0 → q4_0 on gemma-4-E4B saved
   roughly 0.1GB and cost 7–10% throughput. **Weight quantization is:** Q8_0 → Q4_K_M
   saved 2.6GB (32%) and ran 51% faster (26.3 against 17.4 tok/s) on the same prompt,
-  with the same correct answer.
+  with the same correct answer. This is the finding that made the Q8 and Q6 models
+  disposable: 4-bit won decisively on memory and throughput, which are the two
+  constraints that bind here, and showed no quality cost on the prompts tried. That
+  last clause is the weak one — quality was spot-checked, not graded, which is exactly
+  the thing Milestone 8 exists to do properly. Retiring the axis accepts that gap
+  deliberately rather than pretending it was closed.
+- Both bullets above were measured on models that **no longer exist locally**. The
+  numbers stand as the record of why the cohort is uniformly 4-bit; re-running either
+  comparison would mean re-downloading Q8_0 or Q6_K weights.
 - **Packet format is a 3× token decision.** A county packet serialized as JSON is
   6,043 tokens; the same packet as Markdown is 2,096. Identical information.
 - **Ollama telemetry** comes from `/api/generate` with `"stream": false` —
@@ -605,7 +621,10 @@ Decisions Log rows when Milestone 8 lands.
    "the best model" across two cohorts *is* a cross-runtime comparison, so cohort
    separation alone does not remove the confound — the anchors are what license the
    comparison and therefore have to come first. Both anchor pairs are matched at
-   4-bit: Qwen3-8B Q4_K_M against MLX 4bit, gemma-4-E4B Q4_K_M against MLX 4bit.
+   4-bit: Qwen3-8B Q4_K_M against MLX 4bit, gemma-4-E4B Q4_K_M against MLX 4bit. Since
+   the Q6 and Q8 models were deleted, **every model in both cohorts is 4-bit**, so
+   precision is no longer a variable anywhere in the comparison — the anchors now
+   isolate the runtime alone, which is all they were ever meant to test.
 2. **Grade final answers only; count reasoning tokens as a separate efficiency
    metric.** Supported by the Nemotron measurement below.
 3. **Two modes: deterministic for selection, temp 0.7 for stability on the winners.**
@@ -637,9 +656,13 @@ Decisions Log rows when Milestone 8 lands.
   field; MLX leaves `<think>` inline in the text. Same model, same prompt, different
   text handed to the grader unless it is normalized — including the unterminated case,
   where the model runs out of budget mid-thought.
-- Note: **`bench-gemma-4-e4b-q8` exists only as an Ollama blob** (link count 1, since
-  the LM Studio copy was deleted). `ollama rm bench-gemma-4-e4b-q8` destroys it
-  permanently, and it is 7.5GB of real disk rather than a shared link.
+- Note: ~~`bench-gemma-4-e4b-q8` exists only as an Ollama blob~~ — **resolved by
+  deleting it, along with `bench-qwen3-8b-q6`, on 2026-08-13.** The general lesson
+  survives the specific case: deleting a model from LM Studio does **not** remove it
+  from Ollama. The registration stays and its blob silently drops from link count 2 to
+  1, converting a free hardlink into a private copy that is now the only surviving
+  one. `ollama list` is the source of truth for what is registered; the LM Studio
+  directory is not. Check link counts before assuming an import is still free.
 - Note: **never run Ollama and MLX with models loaded at the same time.** That is the
   fastest route back into swap on 16GB.
 - Note: **thinking tokens bill as output at $25/MTok on the judge.** Budget ~800
@@ -669,8 +692,10 @@ Decisions Log rows when Milestone 8 lands.
       (#45), so both are available — but they are not interchangeable at 16GB.
 - [ ] Add `ANTHROPIC_API_KEY` to `.env` and `.env.example`. It is the first key the
       platform needs that is not free.
-- [ ] Confirm whether the Q8-vs-Q4 quantization axis is still in scope now that
-      `bench-gemma-4-e4b-q8` exists only inside Ollama.
+- [x] ~~Confirm whether the Q8-vs-Q4 quantization axis is still in scope~~ — **it is
+      not.** Resolved 2026-08-13 by deleting both higher-precision models. Milestone 8
+      compares models and runtimes at a fixed 4-bit precision; quantization is a
+      settled input, not a variable. Reopening it means re-downloading weights.
 
 ## Data sources worth adding
 

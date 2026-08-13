@@ -7,8 +7,9 @@ over the API, displayed by the dashboard, and packaged as versioned analysis pac
 with 146 Python and 26 dashboard tests passing. All eight pipeline stages run. Milestone
 9 was built out of numeric order, before Milestone 5, because it corrects numbers the
 dashboard displays; fixing them afterwards would have meant re-checking every chart.
-Milestone 8 is the last of Version 1; it has not started, but its ten candidate models
-are installed and measured — see the Milestone 8 prep section of [TODO.md](TODO.md).
+Milestone 8 is the last of Version 1; it has not started, but its eight candidate models
+— four per runtime, all 4-bit — are installed and measured. See the Milestone 8 prep
+section of [TODO.md](TODO.md).
 
 A milestone counts as done when its capability is reachable through the CLI, the API,
 or the dashboard on a clean checkout; its tests pass; and
