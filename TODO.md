@@ -164,7 +164,14 @@ value.
 - [x] `hip load` extended to facts, one transaction per release
 - [x] `GET /regions/{id}/metrics`, `GET /metrics`, coverage exposed per level
 - [x] `hip stage` and `hip validate` implemented, removing them from `_STAGE_MILESTONE`
-- [x] Tests: unpivot shape, all three matchers, ambiguity rejection, gate behavior
+- [x] Tests: all three matchers and ambiguity rejection on both sides
+      (`tests/test_matching.py`, 10 tests)
+- [ ] Tests: **unpivot shape and gate behavior — never written.** Corrected 2026-08-13
+      after this line was briefly ticked in full. `test_matching.py` builds
+      `stg_zillow_zhvi` as a hand-made fixture, so the dbt UNPIVOT of ~318 date columns
+      is exercised by pipeline runs only. `hip.validate.gate` (216 lines) has no test
+      importing it at all — the thing whose whole job is to block a bad load is the
+      least-tested module in the pipeline.
 
 - Note: **decided 2026-08-11 with measured numbers.** Zillow's city-level files carry no
   FIPS, only a name and county. Of 496 NJ "cities": 422 rows match 406 municipalities
@@ -236,11 +243,14 @@ loaded through the same adapter and dbt pattern.
 - [x] Gate bounds for all 12 metrics, with an out-of-range tolerance
 - [x] `test_api_metrics` updated: municipal `match_method` now differs by source
 - [ ] Unit tests for the source adapters. Still open and **wider than first written**:
-      as of Milestone 7 only `ModivAdapter` has direct tests (`tests/test_nj_modiv.py`).
-      Zillow, ACS, FRED, BLS, FHFA, permits, IRS, and HUD are all exercised end to end
-      by pipeline runs and by `tests/test_matching.py`, but none has a test that drives
-      its own `refs()` or `to_records()` against a stubbed response. `test_nj_modiv.py`
-      is the pattern to copy — a `MockTransport` subclass, no network.
+      as of Milestone 7, 2 of 11 adapters have direct tests — `TigerAdapter`
+      (`tests/test_sources.py`) and `ModivAdapter` (`tests/test_nj_modiv.py`). The nine
+      metric adapters — Zillow ZHVI and ZORI, ACS, FRED, BLS, FHFA, permits, IRS, HUD —
+      have none. They are exercised end to end by pipeline runs, but nothing drives
+      their `refs()` or `to_records()` against a stubbed response, so a publisher
+      changing a response shape would surface as a pipeline failure rather than a test.
+      `test_nj_modiv.py` is the pattern to copy — a `MockTransport` subclass, no
+      network.
 
 - Note: **decided 2026-08-11 after probing every endpoint.** BLS v1, Building Permits,
   and IRS migration work with no credentials. ACS returns a "Missing Key" HTML page
@@ -532,16 +542,6 @@ release-vintage provenance fix carried over from Milestone 6.
   callback. httpx's own INFO logging had to be silenced or a 1,741-request fetch prints
   1,741 URLs.
 
-## Parked / needs user input
-
-- ~~Census, FRED, and BLS API keys~~ — all three supplied 2026-08-12 and in `.env`.
-  They are in the chat transcript of that session, so rotate them if it is ever shared.
-- ~~HUD USPS crosswalk token~~ — supplied and in use: 2,456 of 2,491 crosswalk rows are
-  `hud_res_ratio`, and HUD income limits back `price_to_ami`.
-
-**Nothing is blocked on user input.** Every key the platform currently uses is present.
-The list below is opportunity, not blockage — sources worth adding, and what each costs.
-
 ## Data sources worth adding
 
 Reachability probed 2026-08-13; each line says what it would add and what it needs.
@@ -599,3 +599,13 @@ Reachability probed 2026-08-13; each line says what it would add and what it nee
 - Note: **FMR and CHAS are the two SPEC-approved sources still unfetched.** Both were
   added to SPEC with explicit approval at Milestone 4 and neither has an adapter. They
   are the only gap between the Version 1 source list and what the warehouse holds.
+
+## Parked / needs user input
+
+- ~~Census, FRED, and BLS API keys~~ — all three supplied 2026-08-12 and in `.env`.
+  They are in the chat transcript of that session, so rotate them if it is ever shared.
+- ~~HUD USPS crosswalk token~~ — supplied and in use: 2,456 of 2,491 crosswalk rows are
+  `hud_res_ratio`, and HUD income limits back `price_to_ami`.
+
+**Nothing is blocked on user input.** Every key the platform currently uses is present,
+and every source in the section above needs either no credential or one already held.
