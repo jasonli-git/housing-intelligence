@@ -3,6 +3,77 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.8.0] — 2026-08-13
+
+The parcel tier arrives, and with it the housing *stock* — how much of it there is, how
+old, on what lots — which nothing else in the warehouse measured. It also forced two
+things the platform had been deferring: ranking by value rather than only by change, and
+a provenance defect that had been shipping a caveat in every packet.
+
+### Added
+- **Milestone 7 — 3.48M NJ parcels.** `hip.sources.nj_modiv` acquires the statewide
+  parcel/MOD-IV composite from NJGIN's ArcGIS Feature Service in 1,741 `OBJECTID`-window
+  requests (~32 minutes, 1.16GB NDJSON, 67MB Parquet). The parcels stay in Parquet and
+  DuckDB; only aggregates reach Postgres.
+- **Six municipality assessment metrics** — median assessed value, residential parcel
+  count, median year built, median lot size, vacant land share, and apartment share,
+  computed in DuckDB for 554 of 564 municipalities.
+- **`region_identifiers` is populated at last.** 554 NJ municipal codes under scheme
+  `nj_cd_code`, the column Milestone 1 created and left empty pending exactly this
+  source. A future NJ source keyed on `CD_CODE` now joins without name matching.
+- **Value-based rankings** — `region_rankings.basis` distinguishes `change` over a
+  window from `value` at the latest observation (migration `0006`). 8,302 value
+  rankings. `/rankings?basis=value` answers "which municipality is most expensive",
+  which the warehouse could not answer before.
+- **Packet `1.1`** adds `levels`: every metric's most recent reading with its value
+  rank. Additive and backward-compatible, and the first migration the published schema
+  has had to perform. A packet with levels and no changes is now valid, because that is
+  what a snapshot-only municipality genuinely is.
+- **Current-values tables** on the region page and the report page, and a `Current
+  values` section in the Markdown report.
+- **`land_ndjson`** streams newline-delimited JSON straight to Parquet through DuckDB,
+  so 3.48M rows never pass through Python.
+- **`SourceAdapter.filename()`** lets an adapter that assembles a release from many API
+  calls name the result, instead of inheriting the last path segment of a query URL.
+
+### Fixed
+- **Release provenance now names the right vintage** (ARCHITECTURE #47 → #53). The
+  loader keyed releases on `(source_id, layer)`, which is not unique for a source
+  publishing several vintages, so every ACS observation in the warehouse cited the 2019
+  release. Every staging model now carries `release_vintage`, read off the Parquet path
+  by a new `release_vintage()` macro, and the loader resolves most-precise-first. Each
+  ACS year cites its own release; all five vintages are in use.
+- The packet caveat that reported that defect now asks the fact table whether provenance
+  is actually collapsed, rather than inferring it from a source's vintage count — so it
+  disappeared on its own once the data no longer warranted it.
+- Tables inside `.scroll-x` no longer compress on a narrow screen (carried from 0.7.0).
+
+### Changed
+- `/rankings` takes `basis` and returns `unit` plus an always-present `value`; the
+  change-only fields are null under `basis=value`.
+- `/regions/{id}/summary` returns `levels` alongside `headlines`.
+- `hip analyze` reports change rankings and value rankings separately.
+- `hip` configures logging at INFO so a 32-minute parcel fetch reports progress, with
+  httpx's per-request logging silenced.
+- `year` and `acres` units format correctly in both the Markdown report and the
+  dashboard — a year renders as `1958`, not `1,958`.
+- `njgin_parcels` moved from a Milestone 7 source to Milestone 8: the MOD-IV composite
+  already carries the geometry, so a separate geometry source would fetch the same
+  shapes twice.
+
+### Known gaps
+- **The bulk 943MB geodatabase is unreachable to an automated client.** `geoapps.nj.gov`
+  sits behind Imperva bot protection — `HEAD` returns 200, `GET` returns a 403
+  JavaScript challenge. Working around bot detection is out of scope, so acquisition
+  uses the public REST API instead.
+- **No parcel geometry**, so no parcel map layer. Attributes only.
+- **10 municipalities unmatched**, all names MOD-IV truncated to fit a fixed-width field
+  (Upper Saddle River, Parsippany-Troy Hills, South Orange Village, and seven others).
+  Resolving them means a rule per place, which is guessing.
+- **Assessed values are not market values**, and equalization ratios are not loaded.
+- **Layer-level provenance is still approximate** for keyed sources: vintage is exact,
+  but which file within a vintage carried a row can still be wrong.
+
 ## [0.7.0] — 2026-08-12
 
 The pipeline reaches its last stage. Analytics now emit a versioned, schema-validated

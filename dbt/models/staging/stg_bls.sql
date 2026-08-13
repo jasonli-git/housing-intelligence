@@ -10,7 +10,8 @@ select
     (make_date(year::int, substr(period, 2, 2)::int, 1)
         + interval 1 month - interval 1 day)::date as period_end,
     try_cast(value as double) as value,
-    'fips' as match_method
+    'fips' as match_method,
+    'current' as release_vintage
 from read_parquet('{{ var("parquet_dir") }}/bls/current/*.parquet')
 -- BLS writes '-' for a suppressed month, which is an absence, not a zero.
 where try_cast(value as double) is not null

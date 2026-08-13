@@ -34,12 +34,28 @@ export type Headline = {
   of: number | null;
 };
 
+/** A metric's most recent value and its rank by value, not by change. */
+export type LevelReading = {
+  metric_id: string;
+  label: string;
+  unit: string;
+  direction: string;
+  value: number;
+  period_start: string;
+  period_end: string;
+  source_id: string;
+  rank: number | null;
+  of: number | null;
+};
+
 export type Summary = {
   region_id: number;
   name: string;
   level: string;
   window: string;
   headlines: Headline[];
+  /** Every metric with an observation, including snapshot-only ones like MOD-IV. */
+  levels: LevelReading[];
   caveats: string[];
 };
 
@@ -50,17 +66,22 @@ export type RankedRegion = {
   region_id: number;
   name: string;
   level: string;
-  pct_change: number;
-  start_value: number;
-  end_value: number;
-  window_start: string;
-  window_end: string;
+  /** The quantity ranked: a percentage change under basis=change, a level otherwise. */
+  value: number;
+  // Null for a value ranking, which has no window and no starting point.
+  pct_change: number | null;
+  start_value: number | null;
+  end_value: number | null;
+  window_start: string | null;
+  window_end: string | null;
 };
 
 export type Ranking = {
   metric_id: string;
   label: string;
+  unit: string;
   direction: string;
+  basis: "change" | "value";
   window: string;
   level: string;
   items: RankedRegion[];
@@ -101,6 +122,22 @@ export type PacketMetric = {
   match_method: string | null;
 };
 
+export type PacketLevel = {
+  metric_id: string;
+  label: string;
+  unit: string;
+  direction: string;
+  value: number;
+  period_start: string;
+  period_end: string;
+  rank: number | null;
+  of: number | null;
+  percentile: number | null;
+  release_id: number | null;
+  source_id: string | null;
+  match_method: string | null;
+};
+
 export type Packet = {
   packet_version: string;
   region: {
@@ -114,6 +151,7 @@ export type Packet = {
   };
   window: { label: string; start: string; end: string };
   metrics: PacketMetric[];
+  levels: PacketLevel[];
   comparisons: { peer_level: string; peer_scope: string; peer_count: number };
   highlights: {
     metric_id: string;
@@ -162,9 +200,16 @@ export const api = {
   region: (id: number) => tryGet<Region & { ancestors: Region[] }>(`/regions/${id}`),
   summary: (id: number, window: string) =>
     tryGet<Summary>(`/regions/${id}/summary?window=${window}`),
-  rankings: (metricId: string, level: string, window: string, limit = 25) =>
+  rankings: (
+    metricId: string,
+    level: string,
+    window: string,
+    limit = 25,
+    basis: "change" | "value" = "change",
+  ) =>
     tryGet<Ranking>(
-      `/rankings?metric_id=${metricId}&level=${level}&window=${window}&limit=${limit}`,
+      `/rankings?metric_id=${metricId}&level=${level}&window=${window}` +
+        `&limit=${limit}&basis=${basis}`,
     ),
   observations: (id: number, metricId: string) =>
     tryGet<{ observations: Observation[] }>(

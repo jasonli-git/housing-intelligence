@@ -17,3 +17,12 @@ RegionLevel = Literal[
 ]
 
 Window = Literal["1y", "3y", "5y", "10y", "since_2019"]
+
+# What a ranking is ordered by (migration 0006). `change` needs two observations;
+# `value` ranks the most recent one, which is the only thing a snapshot source such as
+# MOD-IV can be ranked on.
+RankingBasis = Literal["change", "value"]
+
+# The window recorded against a value ranking. A level has no span, but the column is
+# part of the primary key, so it carries this literal rather than a lie about a period.
+LATEST_WINDOW = "latest"

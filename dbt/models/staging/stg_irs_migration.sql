@@ -35,5 +35,7 @@ select
     make_date(2000 + substr(pair, 3, 2)::int, 1, 1) as period_start,
     make_date(2000 + substr(pair, 3, 2)::int, 12, 31) as period_end,
     net_returns::double as value,
-    'fips' as match_method
+    'fips' as match_method,
+    -- The year-pair directory ('1718') is the release vintage.
+    pair as release_vintage
 from net

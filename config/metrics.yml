@@ -143,6 +143,76 @@ metrics:
       conventional reference figure in housing policy.
     source_id: hud
 
+  # MOD-IV assessment aggregates. Every one is a municipality-level summary of the
+  # 3.48M-parcel file, computed in DuckDB and promoted as a single value per place
+  # (ARCHITECTURE #16). They describe the housing *stock* — how much of it there is,
+  # how old, on what lots — which nothing else in the warehouse measures.
+  #
+  # All six are snapshots: MOD-IV publishes one current composite, so these have a
+  # single period and therefore no change or CAGR. They are ranked by value instead
+  # (ARCHITECTURE #52).
+  modiv_median_assessed_value:
+    label: Median assessed value, residential parcels
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median MOD-IV net assessed value across class-2 (1-4 family residential) parcels.
+      An assessment is not a market value: ratios drift between revaluations and vary by
+      municipality, so this tracks the tax roll rather than what houses sell for.
+    source_id: nj_modiv
+
+  modiv_residential_parcels:
+    label: Residential parcels
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Count of class-2 parcels. The size of the taxable residential stock, which is a
+      different quantity from households or housing units — one parcel can carry a
+      four-family building.
+    source_id: nj_modiv
+
+  modiv_median_year_built:
+    label: Median year built, residential parcels
+    unit: year
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median year of construction across class-2 parcels reporting one. The age of the
+      housing stock, which no other source in the warehouse measures.
+    source_id: nj_modiv
+
+  modiv_median_lot_acres:
+    label: Median residential lot size
+    unit: acres
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median calculated acreage of class-2 parcels. A density proxy: half-acre minimums
+      and quarter-acre grids are visible here where zoning text is not.
+    source_id: nj_modiv
+
+  modiv_vacant_land_share:
+    label: Vacant land share of parcels
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Class-1 (vacant land) parcels as a share of all parcels. Read as development
+      capacity with care — vacant also covers unbuildable wetland and preserved land.
+    source_id: nj_modiv
+
+  modiv_multifamily_share:
+    label: Apartment share of residential parcels
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Class-4C (apartment) parcels as a share of class-2 plus class-4C. Measures parcels,
+      not units, so a single 200-unit building counts once.
+    source_id: nj_modiv
+
   price_to_ami:
     label: Home value to area median income
     unit: ratio

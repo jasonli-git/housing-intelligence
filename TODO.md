@@ -194,7 +194,10 @@ value.
 - Note: municipal coverage is 403/564 (71%) and that is a ceiling under name matching,
   not a bug to fix. Raising it needs a real Zillow-to-MCD crosswalk. Worth revisiting at
   Milestone 7 when MOD-IV arrives with NJ municipal codes — a Zillow city name could
-  then be matched through the NJ code instead of by string.
+  then be matched through the NJ code instead of by string. **Milestone 7 update:**
+  MOD-IV landed and `region_identifiers` now holds 554 NJ codes, so the crosswalk exists
+  — but routing Zillow through it still needs a Zillow-name-to-CD_CODE mapping, which
+  MOD-IV does not supply. Zillow's 403 stands.
 - Note: `hip stage` runs dbt through its Python entry point. dbt emits several
   deprecation warnings (`MissingArgumentsPropertyInGenericTestDeprecation`) from the
   custom `accepted_range` test. Harmless today; fix when dbt makes it an error.
@@ -416,8 +419,7 @@ Markdown and as a print-ready page.
 - [x] Vitest in `web/`, closing the Milestone 5 gap: `lib/format.ts` and the extracted
       `lib/scale.ts` (choropleth ramp, quintile breaks, chart projection) — 24 tests
 - [x] Tests (131 Python, 24 dashboard) and docs
-- [ ] **Fix release-vintage provenance** — see the note below. Not Milestone 6 work; it
-      is a Milestone 3 load-stage defect and needs its own slice.
+- [x] **Fix release-vintage provenance** — done in Milestone 7, see that section.
 
 - Note: **a packet's `release_id` names the right source but the wrong vintage.** Found
   by building the first packet and reading its sources table: every ACS observation for
@@ -429,9 +431,10 @@ Markdown and as a print-ready page.
   fallback; #47 records the real cause. The fix: carry each row's source file through
   staging (the ACS dbt model already extracts a vintage from `filename`), add it to
   `stg_metric_observation`, and key releases on `(source, layer, vintage)`. Five dbt
-  models, `matching.py`, `load.py`, and a re-run of `stage → geocode → load`. Until then
-  every affected packet carries a caveat naming the sources. **Candidate for the front
-  of Milestone 7.**
+  models, `matching.py`, `load.py`, and a re-run of `stage → geocode → load`. **Fixed in
+  Milestone 7** (ARCHITECTURE #53), and the approach turned out simpler than sketched:
+  the Parquet path already encodes the vintage for every source, so one macro covers all
+  of them.
 - Note: the packet is deliberately per (region, window). Comparing two counties means two
   packets. A cross-region packet would be a different contract, not a bigger one; leave
   it until something actually needs it.
@@ -454,6 +457,67 @@ Markdown and as a print-ready page.
   the build directory) made `npx tsc --noEmit` report ~20 duplicate-identifier errors
   that had nothing to do with the source. `rm -rf web/.next` clears it; `make clean`
   already does. Worth remembering before debugging a phantom type error.
+
+## Milestone 7 — Parcel and MOD-IV layer
+
+Deliverable: NJ parcels in Parquet/DuckDB, municipality-level assessment aggregates
+promoted to the warehouse and surfaced in the dashboard. Taken with two additions agreed
+before starting: full support for level metrics (packet `1.1`, rank-on-value), and the
+release-vintage provenance fix carried over from Milestone 6.
+
+- [x] `hip.sources.nj_modiv` — 3.48M parcels via `OBJECTID`-window paging, 1,741
+      requests, ~32 minutes, 1.16GB NDJSON
+- [x] `land_ndjson` — DuckDB streams NDJSON to Parquet, 67MB, no Python in the path
+- [x] `SourceAdapter.filename()` so an assembled release names its own file
+- [x] `stg_nj_modiv` — six municipality aggregates for 554 of 564 municipalities
+- [x] `nj_municipal_name()` macro — legal-form match, county half by arithmetic
+- [x] `stg_nj_municipal_codes` + `load_region_identifiers` — 554 codes, delivering the
+      `region_identifiers` column open since Milestone 1 (ARCHITECTURE #21)
+- [x] Migration `0006` — `region_rankings.basis`; `_value_rankings` builds 8,302 rows
+- [x] `/rankings?basis=value`, `/regions/{id}/summary` levels
+- [x] Packet `1.1` — `levels` array, report section, dashboard tables
+- [x] **Release-vintage fix** — `release_vintage()` macro, every staging model carries
+      it, loader keys `(source, layer, vintage)`. Each ACS year now cites its own
+      release; all five vintages in use (ARCHITECTURE #53)
+- [x] Gate bounds for the six new metrics
+- [x] Tests (146 Python, 26 dashboard) and docs
+
+- Note: **the 943MB bulk geodatabase is unreachable to an automated client.** NJGIN
+  publishes the whole composite at `geoapps.nj.gov`, which would be one download instead
+  of 1,741 requests. That host is behind Imperva: `HEAD` returns 200, `GET` returns a 403
+  JavaScript challenge. Defeating bot protection is out of scope, so acquisition uses the
+  ArcGIS Feature Service, which is a public API meant to be queried. `_fetch_bytes` is
+  the seam if the file ever becomes reachable.
+- Note: **`resultOffset` paging would have taken 13 hours.** Measured 2026-08-12: a
+  2000-row page costs 0.76s at offset 0 and 26.7s at offset 1,500,000, because the server
+  materializes and discards every skipped row. `OBJECTID` windows are ~1.0s at any depth.
+  Worth remembering for any other ArcGIS bulk extract.
+- Note: **ArcGIS returns dates as epoch milliseconds**, so `PCL_PBDATE` arrives as a
+  BIGINT and `::date` fails outright. `epoch_ms()` first. It failed loudly, which is
+  better than the silent 1970 a looser cast would have produced.
+- Note: the first fetch was restarted seven minutes in to add `PCL_PBDATE`. Without it
+  the observation period would have had to be invented, and a fact with a made-up date is
+  worse than no fact. Counties publish on their own cycles, so the dates genuinely range
+  from 2023-10-03 to 2026-06-04.
+- Note: **10 municipalities remain unmatched**, all MOD-IV truncations from a fixed-width
+  field — "UPPER SADDLE RIV", "PARSIPPANY TR HLS", "SOUTH ORANGE VILLAGE TW",
+  "PEAPACK GLADSTONE", "LOWER ALLOWAY CREEK", "PT PLEASANT BEACH", "ORANGE CITY",
+  "CALDWELL BORO", "NORTH CALDWELL", "ESSEX FELLS". General abbreviation rules got 534 →
+  554; the rest need a rule per place, which is the guessing ARCHITECTURE #27 rejects.
+  Revisit only if a published CD_CODE-to-GEOID crosswalk turns up.
+- Note: `modiv_median_year_built` can land on a half-year (1931.5) because a median over
+  an even count interpolates. The `year` formatter rounds for display. Harmless, but it
+  is why the stored value is not an integer.
+- Note: value rankings cover 8,302 rows against 19,517 change rankings, because a value
+  ranking exists once per (metric, level) while a change ranking exists once per
+  (metric, level, window).
+- Note: **`/rankings` response changed shape.** `pct_change`, `start_value`, `end_value`,
+  `window_start`, and `window_end` are now nullable, and `value` always carries the
+  ranked quantity. The dashboard overview reads `value`; any other consumer must handle
+  the nulls under `basis=value`.
+- Note: adapters now report progress through `logging`, configured once in the CLI
+  callback. httpx's own INFO logging had to be silenced or a 1,741-request fetch prints
+  1,741 URLs.
 
 ## Parked / needs user input
 

@@ -10,7 +10,8 @@ select
     date as period_start,
     (date + interval 1 month - interval 1 day)::date as period_end,
     try_cast(value as double) as value,
-    'national' as match_method
+    'national' as match_method,
+    'current' as release_vintage
 from read_parquet('{{ var("parquet_dir") }}/fred/current/*.parquet')
 where series_id = 'MORTGAGE30US'
   and try_cast(value as double) is not null

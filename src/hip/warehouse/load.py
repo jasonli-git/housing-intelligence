@@ -240,7 +240,7 @@ def load_facts(
         rows = duck.execute(
             f"""
             SELECT geoid, level, metric_id, period_start, period_end, value,
-                   source_id, layer, match_method
+                   source_id, layer, match_method, release_vintage
             FROM {observation_table}
             """
         ).fetchall()
@@ -256,20 +256,46 @@ def load_facts(
         _upsert_sources(conn, sources)
         _insert_releases(conn, releases)
         _upsert_metrics(conn, metrics)
-        release_by_layer = _release_ids(conn, releases)
+        release_index = _release_ids(conn, releases)
 
-        # Keyed sources stage their region level as `layer`, which does not always
-        # equal the release layer the file arrived under — ACS municipal rows are
-        # `municipality` but come from the `cousub` release. Exact match first, then any
-        # release for that source. The fallback costs layer-level provenance precision
-        # for those sources; it never attributes a value to the wrong *source*.
-        any_release = {src: rid for (src, _), rid in release_by_layer.items()}
+        # Resolution order, most precise first. Vintage matters more than layer: a
+        # value attributed to the wrong *year* of a source misstates when it was
+        # measured, while a value attributed to the wrong layer of the right vintage
+        # only loses which file within that release carried it.
+        #
+        # `(source, layer)` alone was the only key until Milestone 7, and it is not
+        # unique for a source publishing several vintages — ACS has ten releases across
+        # five vintages, HUD 107 — so all but one collapsed and every year's value cited
+        # the survivor (ARCHITECTURE #47, #53).
+        by_layer_vintage = {(s, la, v): r for (s, la, v), r in release_index.items()}
+        by_vintage: dict[tuple[str, str], int] = {}
+        by_layer: dict[tuple[str, str], int] = {}
+        any_release: dict[str, int] = {}
+        for (src, layer_name, vintage), rid in release_index.items():
+            by_vintage.setdefault((src, vintage), rid)
+            by_layer.setdefault((src, layer_name), rid)
+            any_release.setdefault(src, rid)
 
         payload = []
-        for geoid, level, metric_id, start, end, value, source_id, layer, method in rows:
-            release_id = release_by_layer.get(
-                (str(source_id), str(layer))
-            ) or any_release.get(str(source_id))
+        for (
+            geoid,
+            level,
+            metric_id,
+            start,
+            end,
+            value,
+            source_id,
+            layer,
+            method,
+            vintage,
+        ) in rows:
+            source = str(source_id)
+            release_id = (
+                by_layer_vintage.get((source, str(layer), str(vintage)))
+                or by_vintage.get((source, str(vintage)))
+                or by_layer.get((source, str(layer)))
+                or any_release.get(source)
+            )
             if release_id is None:
                 continue
             payload.append(
@@ -296,16 +322,67 @@ def load_facts(
     )
 
 
+def load_region_identifiers(
+    engine: Engine, duckdb_path: Path, *, staging_table: str = "stg_nj_municipal_codes"
+) -> int:
+    """Populate `region_identifiers` from a staged (identifier, geoid, scheme) model.
+
+    Upserted on `(region_id, scheme)`, so re-running is a no-op and a corrected code
+    replaces the old one rather than accumulating a second row for the same scheme.
+    Returns 0 when the model has not been staged, which is a legitimate state — the
+    geography spine loads without any NJ-specific source present.
+    """
+    with duckdb_session(duckdb_path) as duck:
+        staged = {
+            row[0]
+            for row in duck.execute(
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_schema = 'main_staging'"
+            ).fetchall()
+        }
+        if staging_table not in staged:
+            return 0
+        rows = duck.execute(
+            f"SELECT identifier, geoid, scheme FROM main_staging.{staging_table}"
+        ).fetchall()
+
+    if not rows:
+        return 0
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                INSERT INTO region_identifiers (region_id, scheme, identifier)
+                SELECT r.region_id, :scheme, :identifier
+                FROM regions r
+                WHERE r.level = 'municipality' AND r.geoid = :geoid
+                ON CONFLICT (region_id, scheme) DO UPDATE SET
+                    identifier = EXCLUDED.identifier
+                """
+            ),
+            [
+                {"identifier": identifier, "geoid": geoid, "scheme": scheme}
+                for identifier, geoid, scheme in rows
+            ],
+        )
+    return len(rows)
+
+
 def _release_ids(
     conn: Any, releases: Sequence[ReleaseProvenance]
-) -> dict[tuple[str, str], int]:
-    """Map (source_id, layer) to the release row just inserted for it."""
+) -> dict[tuple[str, str, str], int]:
+    """Map (source_id, layer, vintage) to the release row just inserted for it.
+
+    Keyed on all three because two of them are not enough: `(source, layer)` collapses
+    a source's vintages onto one release, which is the defect ARCHITECTURE #47 records.
+    """
     if not releases:
         return {}
     rows = conn.execute(
         text(
             """
-            SELECT source_id, layer, release_id FROM source_releases
+            SELECT source_id, layer, vintage, release_id FROM source_releases
             WHERE (source_id, layer, vintage, file_sha256) IN (
                 SELECT unnest(CAST(:sources AS text[])),
                        unnest(CAST(:layers AS text[])),
@@ -321,7 +398,9 @@ def _release_ids(
             "hashes": [r.file_sha256 for r in releases],
         },
     ).fetchall()
-    return {(str(s), str(layer)): int(rid) for s, layer, rid in rows}
+    return {
+        (str(s), str(layer), str(vintage)): int(rid) for s, layer, vintage, rid in rows
+    }
 
 
 def _upsert_metrics(conn: Any, metrics: Sequence[MetricRecord]) -> None:

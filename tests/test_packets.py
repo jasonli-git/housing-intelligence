@@ -31,6 +31,7 @@ from hip.packets import (
 from hip.packets.report import format_change, format_value
 from hip.packets.schema import (
     PacketComparisons,
+    PacketLevel,
     PacketMetric,
     PacketRegion,
     PacketSource,
@@ -77,6 +78,23 @@ def _packet(**overrides: object) -> Packet:
         "comparisons": PacketComparisons(
             peer_level="county", peer_scope="NJ", peer_count=21
         ),
+        "levels": [
+            PacketLevel(
+                metric_id="modiv_median_assessed_value",
+                label="Median assessed value, residential parcels",
+                unit="usd",
+                direction="neutral",
+                value=351000.0,
+                period_start=date(2023, 10, 3),
+                period_end=date(2023, 10, 3),
+                rank=12,
+                of=21,
+                percentile=45.0,
+                release_id=41,
+                source_id="nj_modiv",
+                match_method="nj_cd_code",
+            )
+        ],
         "highlights": [],
         "caveats": [],
         "sources": [
@@ -392,13 +410,46 @@ def test_rebuilding_a_packet_produces_identical_bytes(
 
 
 @warehouse
-def test_unknown_region_and_unknown_window_both_refuse(session: Session) -> None:
-    """An empty packet would validate while telling a reader nothing."""
+def test_an_unknown_region_refuses(session: Session) -> None:
     with pytest.raises(PacketUnavailable, match="No region"):
         build_packet(session, -1, "5y")
 
+
+@warehouse
+def test_a_region_with_no_facts_at_all_refuses(session: Session) -> None:
+    """An empty packet would validate while telling a reader nothing.
+
+    Since Milestone 7 an unrecognised window is *not* enough to refuse: levels are
+    window-independent, so a region with observations still packs. Only a region with
+    neither change rows nor observations has nothing to say — a tract, which no source
+    reaches.
+    """
+    bare = session.execute(
+        text(
+            """
+            SELECT r.region_id FROM regions r
+            WHERE NOT EXISTS (
+                SELECT 1 FROM fact_metric_observation f WHERE f.region_id = r.region_id
+            )
+            LIMIT 1
+            """
+        )
+    ).scalar_one_or_none()
+    if bare is None:
+        pytest.skip("every region carries at least one observation")
+
     with pytest.raises(PacketUnavailable, match="No analytics"):
-        build_packet(session, 1, "since_2019_but_wrong")
+        build_packet(session, int(bare), "5y")
+
+
+@warehouse
+def test_levels_survive_a_window_with_no_change_rows(
+    session: Session, county_id: int
+) -> None:
+    """A snapshot metric must not disappear because the change window found nothing."""
+    packet = build_packet(session, county_id, "1y")
+
+    assert packet.levels, "levels are window-independent and must always be present"
 
 
 @warehouse

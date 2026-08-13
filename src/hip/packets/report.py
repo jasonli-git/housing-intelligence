@@ -15,7 +15,7 @@ mean shipping Python to the browser or JavaScript to the pipeline.
 
 from __future__ import annotations
 
-from hip.packets.schema import Packet, PacketMetric
+from hip.packets.schema import Packet, PacketLevel, PacketMetric
 
 
 def format_value(value: float, unit: str) -> str:
@@ -28,6 +28,11 @@ def format_value(value: float, unit: str) -> str:
         return f"{value:.2f}"
     if unit == "count":
         return f"{round(value):,}"
+    # A year is a label, not a quantity: "1,955" is wrong.
+    if unit == "year":
+        return str(round(value))
+    if unit == "acres":
+        return f"{value:,.2f} ac"
     formatted = f"{value:,.1f}"
     return formatted[:-2] if formatted.endswith(".0") else formatted
 
@@ -41,8 +46,8 @@ def _cell(text: str) -> str:
     return text.replace("|", "\\|")
 
 
-def _rank(metric: PacketMetric) -> str:
-    return "—" if metric.rank is None else f"{metric.rank} / {metric.of}"
+def _rank(entry: PacketMetric | PacketLevel) -> str:
+    return "—" if entry.rank is None else f"{entry.rank} / {entry.of}"
 
 
 def _annualised(metric: PacketMetric) -> str:
@@ -101,6 +106,28 @@ def render_markdown(packet: Packet) -> str:
         "better, not always the largest rise.",
         "",
     ]
+
+    if packet.levels:
+        lines += [
+            "## Current values",
+            "",
+            "Every metric's most recent reading, ranked against peers by value rather "
+            "than by change. Metrics published as a single snapshot — the MOD-IV "
+            "assessment aggregates — appear only here, because a change needs two "
+            "observations.",
+            "",
+            "| Metric | Value | Rank | As of | Source |",
+            "| --- | ---: | ---: | --- | --- |",
+        ]
+        for level in packet.levels:
+            lines.append(
+                f"| {_cell(level.label)} "
+                f"| {format_value(level.value, level.unit)} "
+                f"| {_rank(level)} "
+                f"| {level.period_end} "
+                f"| {_cell(level.source_id or '—')} |"
+            )
+        lines.append("")
 
     if packet.caveats:
         lines += ["## Caveats", ""]

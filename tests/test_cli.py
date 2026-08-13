@@ -62,12 +62,13 @@ def test_acquire_rejects_a_source_without_an_adapter_before_any_io() -> None:
 
     Must name a source that is still unimplemented — pointing this at an implemented
     one would download hundreds of megabytes on every test run, which is exactly what
-    happened once already.
+    happened once already. `nj_modiv` held this role until Milestone 7 implemented it;
+    pointing it there now would start a 32-minute parcel fetch.
     """
-    result = runner.invoke(app, ["acquire", "--source", "nj_modiv"])
+    result = runner.invoke(app, ["acquire", "--source", "njgin_parcels"])
 
     assert result.exit_code == 1
-    assert "Milestone 7" in result.output
+    assert "Milestone 8" in result.output
 
 
 def test_acquire_rejects_an_unknown_source() -> None:

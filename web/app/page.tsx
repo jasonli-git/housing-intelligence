@@ -26,7 +26,9 @@ export default async function Home() {
     );
   }
 
-  const values = new Map(ranking.items.map((r) => [r.region_id, r.pct_change]));
+  // `value` is the ranked quantity whatever the basis — a percentage change here,
+  // and non-null by construction, unlike the change-only fields.
+  const values = new Map(ranking.items.map((r) => [r.region_id, r.value]));
   const window = ranking.items[0];
 
   return (
@@ -75,8 +77,12 @@ export default async function Home() {
                     <td>
                       <Link href={`/regions/${row.region_id}`}>{row.name}</Link>
                     </td>
-                    <td className="num">{formatChange(row.pct_change)}</td>
-                    <td className="num">{formatValue(row.end_value, "usd")}</td>
+                    <td className="num">{formatChange(row.value)}</td>
+                    <td className="num">
+                      {row.end_value === null
+                        ? "—"
+                        : formatValue(row.end_value, ranking.unit)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

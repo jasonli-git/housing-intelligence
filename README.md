@@ -11,14 +11,14 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-08-12): v0.7.0, Milestone 6 complete.** New Jersey's geography and its
-> housing and economic context are loaded, queryable, visible, and now **exportable** —
-> 3,365 regions and **332,609 observations across 17 metrics from 9 public sources,
-> spanning 1971 to 2026**, plus 19,527 computed changes and 19,517 rankings, served
-> behind a three-page dashboard and packaged as versioned analysis packets. All eight
-> pipeline stages run. The source file and match method are recorded on every value. See
-> [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md) for what
-> shipped.
+> **Status (2026-08-13): v0.8.0, Milestone 7 complete.** New Jersey's geography, its
+> housing and economic context, and now its **property tax roll** are loaded, queryable,
+> visible, and exportable — 3,365 regions, **3.48M parcels**, and **335,927 observations
+> across 23 metrics from 10 public sources, spanning 1971 to 2026**, plus 19,527 computed
+> changes and 27,819 rankings, served behind a three-page dashboard and packaged as
+> versioned analysis packets. All eight pipeline stages run. The source file and match
+> method are recorded on every value. See [ROADMAP.md](ROADMAP.md) for what is planned
+> and [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
@@ -28,7 +28,7 @@ Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 Each is listed with the milestone that delivers it, so this section can be checked
 against [ROADMAP.md](ROADMAP.md) rather than believed.
 
-- **Config-driven source registry** (M0, built) — 13 public sources and 17 metrics
+- **Config-driven source registry** (M0, built) — 13 public sources and 23 metrics
   defined in YAML with license, cadence, and update frequency. `hip check-config`
   validates them and catches a metric naming an undefined source, or a source whose
   API key is missing, before any fetch is attempted.
@@ -86,6 +86,15 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
 - **Exportable region reports** (M6, built) — the same packet rendered as Markdown by
   `hip pack --report` or `GET /regions/{id}/report`, and as a print-ready page at
   `/regions/[id]/report` in the dashboard. Two media, one contract, no PDF library.
+- **NJ parcels and the property tax roll** (M7, built) — 3.48M parcels acquired from
+  NJGIN's ArcGIS service and held in Parquet/DuckDB, aggregated to six municipality
+  metrics that describe the housing *stock*: median assessed value, parcel count, median
+  year built, median lot size, vacant land share, and apartment share. Matched to Census
+  municipalities on the legal form ("Boonton township" against "Boonton town"), which
+  reaches 554 of 564 with zero ambiguity where Zillow's name matching ceilings at 403.
+- **Ranked by value, not only by change** (M7, built) — "which municipality is most
+  expensive" is now a query, not just "which rose fastest". Snapshot sources like MOD-IV
+  have no change at all, so without this their data would load and stay invisible.
 - **Model evaluation** (M8) — the same housing scenarios run against candidate local
   models, graded on factual accuracy, hallucination rate, and usefulness, with the
   selection justified by measured results.
@@ -126,9 +135,10 @@ make setup
 `make setup` syncs the Python environment, installs dashboard dependencies, creates the
 local `data/` directories, and copies `.env.example` to `.env` if you have none.
 
-**Build the warehouse.** The first `acquire` downloads ~880MB — 635MB of Census
-TIGER/Line (529MB of it the national ZCTA file) plus 245MB of Zillow CSVs. Everything is
-cached by content hash and never re-downloaded.
+**Build the warehouse.** The first `acquire` downloads ~2GB — 635MB of Census
+TIGER/Line (529MB of it the national ZCTA file), 245MB of Zillow CSVs, and 1.16GB of NJ
+parcels assembled from 1,741 API requests over roughly 32 minutes. Everything is cached
+by content hash and never re-downloaded.
 
 ```bash
 make db-up         # Postgres 16 + PostGIS, waits for the healthcheck
@@ -141,7 +151,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 131 Python + 24 dashboard tests; API tests skip without a warehouse
+make test          # 146 Python + 26 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -156,6 +166,7 @@ curl 'http://localhost:8000/rankings?metric_id=price_to_income&level=county&wind
 curl 'http://localhost:8000/regions/11/summary?window=5y'
 curl 'http://localhost:8000/regions/11/packet?window=5y'
 curl 'http://localhost:8000/regions/11/report?window=5y'
+curl 'http://localhost:8000/rankings?metric_id=modiv_median_assessed_value&level=municipality&basis=value'
 ```
 
 Packets and reports on disk, and the contract they satisfy:
@@ -179,9 +190,9 @@ still run and report the degraded state rather than failing.
 
 ## Project Status
 
-v0.7.0 — Milestones 0 through 6 and 9 complete. Geography, prices, rents, economic
-context, computed change and affordability and rankings, the dashboard, and versioned
-analysis packets with exportable reports are all built; Milestone 7 adds the parcel and
-MOD-IV layer. Milestones and their status are in [ROADMAP.md](ROADMAP.md); the current
-working list, including known rough edges and the release-vintage defect found while
-building packets, is in [TODO.md](TODO.md).
+v0.8.0 — Milestones 0 through 7 and 9 complete. Geography, prices, rents, economic
+context, computed change and affordability and rankings, the dashboard, versioned
+analysis packets with exportable reports, and the NJ parcel and MOD-IV layer are all
+built. Milestone 8 — evaluating local models against standardized housing scenarios — is
+the last of Version 1. Milestones and their status are in [ROADMAP.md](ROADMAP.md); the
+current working list and known rough edges are in [TODO.md](TODO.md).

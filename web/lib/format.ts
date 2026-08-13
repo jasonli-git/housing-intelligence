@@ -13,6 +13,9 @@ export function formatValue(value: number, unit: string): string {
   if (unit === "percent") return `${value.toFixed(1)}%`;
   if (unit === "ratio") return value.toFixed(2);
   if (unit === "count") return Math.round(value).toLocaleString();
+  // A year is a label, not a quantity: "1,955" is wrong.
+  if (unit === "year") return String(Math.round(value));
+  if (unit === "acres") return `${value.toFixed(2)} ac`;
   return value.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
 

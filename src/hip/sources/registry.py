@@ -16,6 +16,7 @@ from hip.sources.fhfa import HpiAdapter
 from hip.sources.fred import FredAdapter
 from hip.sources.hud import HudAdapter
 from hip.sources.irs_migration import MigrationAdapter
+from hip.sources.nj_modiv import ModivAdapter
 from hip.sources.tiger import TigerAdapter
 from hip.sources.zillow import ZhviAdapter, ZoriAdapter
 
@@ -25,9 +26,12 @@ from hip.sources.zillow import ZhviAdapter, ZoriAdapter
 # reproducible; bump it when a new year completes.
 BLS_END_YEAR = 2025
 
+# `njgin_parcels` stays planned: the MOD-IV composite layer already carries parcel
+# geometry alongside the assessment attributes, so a separate geometry source would
+# fetch the same shapes twice. It is kept here because a parcel map layer (post-V1)
+# needs geometry this adapter deliberately does not download.
 PLANNED: dict[str, int] = {
-    "nj_modiv": 7,
-    "njgin_parcels": 7,
+    "njgin_parcels": 8,
 }
 
 IMPLEMENTED: tuple[str, ...] = (
@@ -41,6 +45,7 @@ IMPLEMENTED: tuple[str, ...] = (
     FredAdapter.source_id,
     BlsAdapter.source_id,
     HudAdapter.source_id,
+    ModivAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -55,6 +60,7 @@ METRIC_SOURCES: tuple[str, ...] = (
     FredAdapter.source_id,
     BlsAdapter.source_id,
     HudAdapter.source_id,
+    ModivAdapter.source_id,
 )
 
 
@@ -93,6 +99,8 @@ def build_adapter(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return BlsAdapter(county_fips=_county_fips(scope), end_year=BLS_END_YEAR)
     if source_id == HudAdapter.source_id:
         return HudAdapter(states=scope.states, county_fips=_county_fips(scope))
+    if source_id == ModivAdapter.source_id:
+        return ModivAdapter()
     if (milestone := PLANNED.get(source_id)) is not None:
         raise UnknownSourceError(
             f"'{source_id}' has no adapter yet — it ships in Milestone {milestone}. "

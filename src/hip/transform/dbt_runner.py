@@ -33,10 +33,14 @@ KEYED_MODELS = (
     "stg_fred",
     "stg_bls",
     "stg_hud_income_limits",
+    "stg_nj_modiv",
 )
 
 # Not a metric model: it feeds region_crosswalk, not fact_metric_observation.
 CROSSWALK_MODEL = "stg_hud_crosswalk"
+
+# Also not a metric model: it feeds region_identifiers (ARCHITECTURE #21).
+IDENTIFIER_MODEL = "stg_nj_municipal_codes"
 
 
 class DbtError(Exception):

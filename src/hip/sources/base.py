@@ -131,6 +131,17 @@ class SourceAdapter(ABC):
         """The releases this source offers for a vintage, without fetching them."""
 
     @classmethod
+    def filename(cls, ref: ReleaseRef) -> str:
+        """What the downloaded file is called on disk.
+
+        The last path segment of the URL for a source that serves files. An adapter
+        that assembles its release from many API calls has no such segment and names
+        the result itself. Cached releases keep the name recorded in their manifest,
+        so overriding this never invalidates an existing download.
+        """
+        return Path(ref.url).name or "download"
+
+    @classmethod
     def to_records(cls, payload: object, ref: ReleaseRef) -> list[dict[str, object]]:
         """Flatten a JSON payload into rows, for sources whose API returns JSON.
 
@@ -165,7 +176,7 @@ class SourceAdapter(ABC):
                 return release
 
         with tempfile.TemporaryDirectory(prefix="hip-acquire-") as tmp:
-            staged = Path(tmp) / Path(ref.url).name
+            staged = Path(tmp) / self.filename(ref)
             self._download(ref, staged)
             sha = _sha256(staged)
             size = staged.stat().st_size

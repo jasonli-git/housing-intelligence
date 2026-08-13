@@ -23,7 +23,10 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-PACKET_VERSION = "1.0"
+# 1.1 adds `levels`. Additive and backward-compatible: every 1.0 field kept its name and
+# meaning, so a reader written against 1.0 still parses a 1.1 packet and simply does not
+# see the new array. The minor version is the signal that nothing was taken away.
+PACKET_VERSION = "1.1"
 
 # The published contract. Resolved from the source tree, which is where this project
 # runs from (ARCHITECTURE #13 — local-first, no packaged deployment yet).
@@ -94,6 +97,34 @@ class PacketMetric(_Strict):
     match_method: str | None = None
 
 
+class PacketLevel(_Strict):
+    """A metric's most recent observed value, and where it stands among peers.
+
+    `metrics` describes movement and needs two observations to exist at all. A snapshot
+    source — MOD-IV publishes one composite of 3.48M parcels — has no movement, so
+    without this array its figures would load into the warehouse and never reach a
+    reader. Ranked by value rather than by change (migration 0006).
+
+    Every metric with an observation appears here, including those that also appear in
+    `metrics`: "the value now" and "how it moved" are both worth stating, and a
+    consumer should not have to reconstruct the first from the second.
+    """
+
+    metric_id: str
+    label: str
+    unit: str
+    direction: str
+    value: float
+    period_start: date
+    period_end: date
+    rank: int | None = None
+    of: int | None = None
+    percentile: float | None = None
+    release_id: int | None = None
+    source_id: str | None = None
+    match_method: str | None = None
+
+
 class PacketComparisons(_Strict):
     """The cohort this region was ranked against.
 
@@ -136,10 +167,11 @@ class PacketSource(_Strict):
 
 
 class Packet(_Strict):
-    packet_version: Literal["1.0"]
+    packet_version: Literal["1.1"]
     region: PacketRegion
     window: PacketWindow
     metrics: list[PacketMetric]
+    levels: list[PacketLevel]
     comparisons: PacketComparisons
     highlights: list[PacketHighlight]
     caveats: list[str]

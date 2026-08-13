@@ -30,6 +30,16 @@ describe("formatValue", () => {
   it("keeps a negative readable", () => {
     expect(formatValue(-1987, "count")).toBe("-1,987");
   });
+
+  it("renders a year without a thousands separator", () => {
+    // MOD-IV's median year built. "1,955" would read as a quantity, not a date.
+    expect(formatValue(1955, "year")).toBe("1955");
+    expect(formatValue(1955.5, "year")).toBe("1956");
+  });
+
+  it("renders acreage with its unit", () => {
+    expect(formatValue(0.374, "acres")).toBe("0.37 ac");
+  });
 });
 
 describe("formatChange", () => {

@@ -12,6 +12,7 @@ current would undermine the provenance the packet exists to carry.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from sqlalchemy import text
@@ -23,6 +24,7 @@ from hip.packets.schema import (
     Packet,
     PacketComparisons,
     PacketHighlight,
+    PacketLevel,
     PacketMetric,
     PacketRegion,
     PacketSource,
@@ -73,6 +75,26 @@ _METRICS_SQL = text(
     """
 )
 
+# The latest observation of every metric this region has, with its value rank. This is
+# the only route into a packet for a single-vintage source: `fact_metric_change` needs
+# two observations, and MOD-IV publishes one composite.
+_LEVELS_SQL = text(
+    """
+    SELECT DISTINCT ON (f.metric_id)
+           f.metric_id, m.label, m.unit, m.direction, f.value,
+           f.period_start, f.period_end,
+           k.rank, k.of, k.percentile,
+           f.release_id, sr.source_id, f.match_method
+    FROM fact_metric_observation f
+    JOIN metrics m ON m.metric_id = f.metric_id
+    JOIN source_releases sr ON sr.release_id = f.release_id
+    LEFT JOIN region_rankings k
+      ON k.region_id = f.region_id AND k.metric_id = f.metric_id AND k.basis = 'value'
+    WHERE f.region_id = :id
+    ORDER BY f.metric_id, f.period_end DESC
+    """
+)
+
 _PEERS_SQL = text(
     """
     SELECT count(*) FROM regions
@@ -95,20 +117,32 @@ _SOURCES_SQL = text(
     """
 )
 
-# Sources holding more than one vintage. Those are the ones whose per-fact release is
-# only source-accurate, not vintage-accurate (ARCHITECTURE #43) — the packet says so
-# rather than presenting a release row it cannot stand behind.
+# Sources whose provenance in *this region* is actually collapsed: several periods
+# observed, one release cited, and more than one vintage available to have cited.
+#
+# Milestone 6 approximated this as "the source has several vintages", which was true of
+# every multi-vintage source while the loader keyed releases on `(source, layer)` alone
+# (ARCHITECTURE #47). Milestone 7 fixed the loader (#53), so the approximation would now
+# report a defect that no longer exists. This asks the fact table directly, which means
+# the caveat disappears exactly when the data stops warranting it.
 #
 # `hip_derived` is excluded and is not a false negative: its releases are one per
 # `hip analyze` run rather than one per upstream file, and the derived facts genuinely
 # carry the release of the run that computed them (#34).
 _MULTI_VINTAGE_SQL = text(
     """
-    SELECT source_id FROM source_releases
-    WHERE source_id = ANY(:ids) AND source_id <> 'hip_derived'
-    GROUP BY source_id
-    HAVING count(DISTINCT vintage) > 1
-    ORDER BY source_id
+    SELECT sr.source_id
+    FROM fact_metric_observation f
+    JOIN source_releases sr ON sr.release_id = f.release_id
+    WHERE f.region_id = :id AND sr.source_id <> 'hip_derived'
+    GROUP BY sr.source_id
+    HAVING count(DISTINCT f.period_end) > 1
+       AND count(DISTINCT f.release_id) = 1
+       AND (
+           SELECT count(DISTINCT s2.vintage) FROM source_releases s2
+           WHERE s2.source_id = sr.source_id
+       ) > 1
+    ORDER BY sr.source_id
     """
 )
 
@@ -137,21 +171,28 @@ def display_label(name: str, level: str, state_code: str) -> str:
 def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet:
     """One region's packet for one change window.
 
-    Raises `PacketUnavailable` when the region does not exist, or when `hip analyze`
-    has produced no change rows for it — an empty packet would validate against the
-    schema while telling a reader nothing, which is worse than an error.
+    Raises `PacketUnavailable` when the region does not exist, or when it has neither
+    change rows nor observations — an empty packet would validate against the schema
+    while telling a reader nothing, which is worse than an error. Having only one of
+    the two is not empty: a snapshot-only region has levels and no changes.
     """
     region = session.execute(_REGION_SQL, {"id": region_id}).mappings().one_or_none()
     if region is None:
         raise PacketUnavailable(f"No region {region_id}")
 
     rows = list(session.execute(_METRICS_SQL, {"id": region_id, "w": window}).mappings())
-    if not rows:
+    metrics = [PacketMetric(**row) for row in rows]
+    levels = [
+        PacketLevel(**row)
+        for row in session.execute(_LEVELS_SQL, {"id": region_id}).mappings()
+    ]
+    # A region with observations but no change rows is a real case, not an error: it is
+    # what a place covered only by a single-vintage source looks like. Refusing it here
+    # would make MOD-IV-only municipalities unpackagable.
+    if not metrics and not levels:
         raise PacketUnavailable(
             f"No analytics for region {region_id} at window {window} — run `hip analyze`"
         )
-
-    metrics = [PacketMetric(**row) for row in rows]
 
     peer_count = int(
         session.execute(
@@ -165,17 +206,10 @@ def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet
         else []
     )
 
-    sources = _sources(session, metrics)
-    multi_vintage = (
-        [
-            str(row[0])
-            for row in session.execute(
-                _MULTI_VINTAGE_SQL, {"ids": [s.source_id for s in sources]}
-            )
-        ]
-        if sources
-        else []
-    )
+    sources = _sources(session, [*metrics, *levels])
+    multi_vintage = [
+        str(row[0]) for row in session.execute(_MULTI_VINTAGE_SQL, {"id": region_id})
+    ]
 
     packet = Packet(
         packet_version=PACKET_VERSION,  # type: ignore[arg-type]
@@ -196,12 +230,19 @@ def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet
                 else None
             ),
         ),
+        # With no change rows the envelope falls back to the observation periods, so a
+        # snapshot-only region still reports the span its figures describe.
         window=PacketWindow(
             label=window,
-            start=min(m.window_start for m in metrics),
-            end=max(m.window_end for m in metrics),
+            start=min(m.window_start for m in metrics)
+            if metrics
+            else min(lv.period_start for lv in levels),
+            end=max(m.window_end for m in metrics)
+            if metrics
+            else max(lv.period_end for lv in levels),
         ),
         metrics=metrics,
+        levels=levels,
         comparisons=PacketComparisons(
             peer_level=region["level"],
             peer_scope=region["state_code"],
@@ -210,8 +251,11 @@ def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet
         highlights=_highlights(metrics),
         caveats=caveats_for(
             level=region["level"],
-            metric_ids=[m.metric_id for m in metrics],
-            match_methods=[m.match_method for m in metrics if m.match_method],
+            metric_ids=[m.metric_id for m in metrics] + [lv.metric_id for lv in levels],
+            match_methods=[
+                *(m.match_method for m in metrics if m.match_method),
+                *(lv.match_method for lv in levels if lv.match_method),
+            ],
             crosswalk_methods=crosswalk_methods,
             thin_cohort=any(m.of is not None and m.of < peer_count for m in metrics),
             multi_vintage_sources=multi_vintage,
@@ -254,9 +298,15 @@ def _highlights(metrics: list[PacketMetric]) -> list[PacketHighlight]:
     return leading + trailing
 
 
-def _sources(session: Session, metrics: list[PacketMetric]) -> list[PacketSource]:
-    """The releases behind the packet's end values, one entry per source and vintage."""
-    release_ids = sorted({m.release_id for m in metrics if m.release_id is not None})
+def _sources(
+    session: Session, entries: Sequence[PacketMetric | PacketLevel]
+) -> list[PacketSource]:
+    """The releases behind the packet's values, one entry per source and vintage.
+
+    Takes both arrays: a source reaching the packet only through `levels` — which is
+    every snapshot source — still has to appear in the source table.
+    """
+    release_ids = sorted({e.release_id for e in entries if e.release_id is not None})
     if not release_ids:
         return []
 

@@ -142,7 +142,8 @@ def build_observations(
                date_trunc('month', s.period_start)::date AS period_start,
                (date_trunc('month', s.period_start) + INTERVAL 1 MONTH
                     - INTERVAL 1 DAY)::date AS period_end,
-               s.value, s.source_id, s.layer, 'fips' AS match_method
+               s.value, s.source_id, s.layer, 'fips' AS match_method,
+               'current' AS release_vintage
         FROM staged s
         JOIN county_lookup c ON c.geoid = s.fips_key
         WHERE s.layer = 'county'
@@ -154,7 +155,8 @@ def build_observations(
                date_trunc('month', s.period_start)::date,
                (date_trunc('month', s.period_start) + INTERVAL 1 MONTH
                     - INTERVAL 1 DAY)::date,
-               s.value, s.source_id, s.layer, 'zip_code'
+               s.value, s.source_id, s.layer, 'zip_code' AS match_method,
+               'current' AS release_vintage
         FROM staged s
         JOIN zip_lookup z ON z.geoid = s.region_name
         WHERE s.layer = 'zip'
@@ -166,7 +168,8 @@ def build_observations(
                date_trunc('month', s.period_start)::date,
                (date_trunc('month', s.period_start) + INTERVAL 1 MONTH
                     - INTERVAL 1 DAY)::date,
-               s.value, s.source_id, s.layer, 'name_county'
+               s.value, s.source_id, s.layer, 'name_county' AS match_method,
+               'current' AS release_vintage
         FROM staged s
         JOIN muni_lookup m
           ON m.name_key = {_norm("s.region_name")}
@@ -209,7 +212,8 @@ def _append_keyed(
             f"""
             INSERT INTO {OBSERVATION_TABLE}
             SELECT s.metric_id, s.geoid, s.level, s.period_start, s.period_end,
-                   s.value, s.source_id, s.level AS layer, s.match_method
+                   s.value, s.source_id, s.level AS layer, s.match_method,
+               s.release_vintage
             FROM {staging_schema}.{model} s
             WHERE s.level = 'nation'
                OR EXISTS (

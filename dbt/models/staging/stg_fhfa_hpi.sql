@@ -15,7 +15,8 @@ select
     (make_date(yr, (period - 1) * 3 + 1, 1) + interval 3 month - interval 1 day)::date
         as period_end,
     index_sa::double as value,
-    'state_code' as match_method
+    'state_code' as match_method,
+    'current' as release_vintage
 from read_parquet('{{ var("parquet_dir") }}/fhfa_hpi/current/master.parquet')
 where level = 'State'
   and hpi_flavor = 'purchase-only'

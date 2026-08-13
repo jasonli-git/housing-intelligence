@@ -12,6 +12,7 @@ select
     make_date(regexp_extract(filename, '/(\d{4})/', 1)::int, 12, 31) as period_end,
     -- Units across all structure sizes: 1-unit, 2-unit, 3-4 unit, 5+ unit.
     (column07 + column10 + column13 + column16)::double as value,
-    'fips' as match_method
+    'fips' as match_method,
+    {{ release_vintage() }} as release_vintage
 from read_parquet('{{ var("parquet_dir") }}/census_permits/*/*.parquet', filename=true)
 where lpad(column01::varchar, 2, '0') in ({{ var("state_fips") }})

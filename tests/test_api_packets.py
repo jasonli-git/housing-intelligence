@@ -31,8 +31,20 @@ def test_packet_endpoint_serves_the_published_contract(county_id: int) -> None:
 
     assert response.status_code == 200
     body = response.json()
-    assert body["packet_version"] == "1.0"
+    assert body["packet_version"] == "1.1"
     jsonschema.validate(body, json.loads(SCHEMA_PATH.read_text()))
+
+
+def test_packet_levels_agree_with_the_summary_endpoint(county_id: int) -> None:
+    """Snapshot metrics must read the same in both views."""
+    packet = client.get(f"/regions/{county_id}/packet?window=5y").json()
+    summary = client.get(f"/regions/{county_id}/summary?window=5y").json()
+
+    levels = {lv["metric_id"]: lv for lv in summary["levels"]}
+    assert levels
+    for level in packet["levels"]:
+        assert level["value"] == levels[level["metric_id"]]["value"]
+        assert level["rank"] == levels[level["metric_id"]]["rank"]
 
 
 def test_packet_agrees_with_the_summary_endpoint(county_id: int) -> None:

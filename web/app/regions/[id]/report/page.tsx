@@ -126,6 +126,42 @@ export default async function ReportPage({
         </p>
       </section>
 
+      {packet.levels.length > 0 && (
+        <section>
+          <h2>Current values</h2>
+          <p className="muted">
+            Ranked by value rather than by change. Snapshot metrics — the MOD-IV
+            assessment aggregates — appear only here.
+          </p>
+          <div className="scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th className="num">Value</th>
+                  <th className="num">Rank</th>
+                  <th>As of</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                {packet.levels.map((l) => (
+                  <tr key={l.metric_id}>
+                    <td>{l.label}</td>
+                    <td className="num">{formatValue(l.value, l.unit)}</td>
+                    <td className="num">
+                      {l.rank === null ? "—" : `${l.rank} / ${l.of}`}
+                    </td>
+                    <td className="nowrap">{l.period_end}</td>
+                    <td>{l.source_id ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       {packet.caveats.length > 0 && (
         <section>
           <h2>Caveats</h2>

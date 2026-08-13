@@ -69,6 +69,125 @@
       "title": "PacketHighlight",
       "type": "object"
     },
+    "PacketLevel": {
+      "additionalProperties": false,
+      "description": "A metric's most recent observed value, and where it stands among peers.\n\n`metrics` describes movement and needs two observations to exist at all. A snapshot\nsource \u2014 MOD-IV publishes one composite of 3.48M parcels \u2014 has no movement, so\nwithout this array its figures would load into the warehouse and never reach a\nreader. Ranked by value rather than by change (migration 0006).\n\nEvery metric with an observation appears here, including those that also appear in\n`metrics`: \"the value now\" and \"how it moved\" are both worth stating, and a\nconsumer should not have to reconstruct the first from the second.",
+      "properties": {
+        "direction": {
+          "title": "Direction",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "match_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Match Method"
+        },
+        "metric_id": {
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "of": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Of"
+        },
+        "percentile": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Percentile"
+        },
+        "period_end": {
+          "format": "date",
+          "title": "Period End",
+          "type": "string"
+        },
+        "period_start": {
+          "format": "date",
+          "title": "Period Start",
+          "type": "string"
+        },
+        "rank": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rank"
+        },
+        "release_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Release Id"
+        },
+        "source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Id"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "metric_id",
+        "label",
+        "unit",
+        "direction",
+        "value",
+        "period_start",
+        "period_end"
+      ],
+      "title": "PacketLevel",
+      "type": "object"
+    },
     "PacketMetric": {
       "additionalProperties": false,
       "description": "One metric's change over the window, with its rank and its provenance.\n\n`release_id`, `source_id`, and `match_method` describe the observation behind\n`end_value`. They are null only when the derived tables are stale relative to the\nfacts \u2014 a rebuilt `hip analyze` restores them.",
@@ -389,6 +508,13 @@
       "title": "Highlights",
       "type": "array"
     },
+    "levels": {
+      "items": {
+        "$ref": "#/$defs/PacketLevel"
+      },
+      "title": "Levels",
+      "type": "array"
+    },
     "metrics": {
       "items": {
         "$ref": "#/$defs/PacketMetric"
@@ -397,7 +523,7 @@
       "type": "array"
     },
     "packet_version": {
-      "const": "1.0",
+      "const": "1.1",
       "title": "Packet Version",
       "type": "string"
     },
@@ -420,6 +546,7 @@
     "region",
     "window",
     "metrics",
+    "levels",
     "comparisons",
     "highlights",
     "caveats",

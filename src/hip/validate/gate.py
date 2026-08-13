@@ -37,6 +37,17 @@ VALUE_BOUNDS = {
     "unemployment_rate": (0.0, 60.0),
     # Net migration is a signed difference and can legitimately be large and negative.
     "net_migration_returns": (-1_000_000.0, 1_000_000.0),
+    # MOD-IV aggregates. An assessment is not a market value, so the floor is well below
+    # anything Zillow would report: municipalities that have not revalued in decades
+    # carry assessments at a fraction of market.
+    "modiv_median_assessed_value": (1_000.0, 100_000_000.0),
+    "modiv_residential_parcels": (0.0, 1_000_000.0),
+    # New Jersey's oldest housing predates the republic; the ceiling is the near future,
+    # because MOD-IV records a year of construction for permitted-but-unbuilt parcels.
+    "modiv_median_year_built": (1600.0, 2100.0),
+    "modiv_median_lot_acres": (0.0, 10_000.0),
+    "modiv_vacant_land_share": (0.0, 1.0),
+    "modiv_multifamily_share": (0.0, 1.0),
 }
 
 # Below this share of a level's regions, something structural has broken — a renamed

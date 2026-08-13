@@ -63,6 +63,52 @@ def land_csv(
     )
 
 
+def land_ndjson(
+    release: Release,
+    *,
+    parquet_dir: Path,
+    overwrite: bool = False,
+) -> LandedTable:
+    """Transcode newline-delimited JSON to Parquet without going through Python.
+
+    `land_json` parses the whole payload into Python objects, which is fine for the
+    hundred-row responses HUD and FRED return and impossible for 3.48M parcels. DuckDB
+    streams NDJSON straight to Parquet, so peak memory is a scan buffer rather than the
+    file. The adapter has already flattened each line to one object, so there is no
+    `to_records` step to run.
+    """
+    out = parquet_path(release, parquet_dir)
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    with duckdb_session() as con:
+        if not out.exists() or overwrite:
+            # sample_size=-1 for the same reason as the CSV lander: MOD-IV leaves
+            # numeric columns null for long runs of unmatched parcels, and a sampled
+            # inference types them as VARCHAR and then drops every value that will
+            # not cast.
+            con.execute(
+                f"""
+                COPY (
+                    SELECT * FROM read_json_auto('{release.path}',
+                                                 format='newline_delimited',
+                                                 sample_size=-1)
+                ) TO '{out}' (FORMAT PARQUET, COMPRESSION ZSTD)
+                """
+            )
+        result = con.execute(
+            "SELECT count(*) FROM read_parquet(?)", [str(out)]
+        ).fetchone()
+
+    return LandedTable(
+        source_id=release.ref.source_id,
+        layer=release.ref.layer,
+        vintage=release.ref.vintage,
+        scope=release.ref.scope,
+        path=out,
+        row_count=int(result[0]) if result else 0,
+    )
+
+
 def land_json(
     release: Release,
     adapter: type[SourceAdapter],

@@ -119,6 +119,43 @@ export default async function RegionPage({
         );
       })}
 
+      {summary.levels.length > 0 && (
+        <section>
+          <h2>Current values</h2>
+          <p className="muted" style={{ marginTop: "-0.4rem" }}>
+            Each metric&rsquo;s most recent reading, ranked against peers by value rather
+            than by change. The MOD-IV assessment aggregates appear only here: they are a
+            single published snapshot, and a change needs two observations.
+          </p>
+          <div className="scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th className="num">Value</th>
+                  <th className="num">Rank</th>
+                  <th>As of</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.levels.map((l) => (
+                  <tr key={l.metric_id}>
+                    <td>{l.label}</td>
+                    <td className="num">{formatValue(l.value, l.unit)}</td>
+                    <td className="num">
+                      {l.rank === null ? "—" : `${l.rank} / ${l.of}`}
+                    </td>
+                    <td className="nowrap">{l.period_end}</td>
+                    <td>{l.source_id}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       {summary.caveats.length > 0 && (
         <>
           <h2>Caveats</h2>

@@ -20,6 +20,7 @@ select
     make_date(year::int, 1, 1)  as period_start,
     make_date(year::int, 12, 31) as period_end,
     value::double as value,
-    'fips' as match_method
+    'fips' as match_method,
+    year::varchar as release_vintage
 from unpivoted
 where value is not null

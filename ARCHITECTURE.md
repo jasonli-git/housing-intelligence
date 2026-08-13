@@ -5,15 +5,17 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-08-12):** Milestones 0 through 6 and 9 are complete. The warehouse
+> **Status (2026-08-13):** Milestones 0 through 7 and 9 are complete. The warehouse
 > holds a NJ geography spine (3,365 regions; 2,491 ZIP allocation weights, 2,456 of them
-> HUD residential-address ratios) and **332,609 observations across 17 metrics from 9
-> sources**, spanning 1971 to 2026 at nation, state, county, municipality, and ZIP level
-> — loaded through all eight stages, `acquire → land → stage → geocode → validate →
-> load → analyze → pack`, served by the API, and displayed by a three-page dashboard.
-> 19,527 computed changes and 19,517 rankings. Analysis packets are built and validated
-> against `schemas/packet-v1.json`; 21 county packets and their Markdown reports are
-> produced by `hip pack --report`. 131 Python tests and 24 dashboard tests pass,
+> HUD residential-address ratios; 554 NJ municipal codes in `region_identifiers`) and
+> **335,927 observations across 23 metrics from 10 sources**, spanning 1971 to 2026 at
+> nation, state, county, municipality, and ZIP level — loaded through all eight stages,
+> `acquire → land → stage → geocode → validate → load → analyze → pack`, served by the
+> API, and displayed by a three-page dashboard. 19,527 computed changes, 19,517 change
+> rankings and 8,302 value rankings. **3.48M NJ parcels** live in Parquet and DuckDB and
+> reach the warehouse only as six municipality-level assessment aggregates (#49). Packet
+> `1.1` is validated against `schemas/packet-v1.json`; 21 county and 564 municipal
+> packets are produced by `hip pack`. 146 Python tests and 26 dashboard tests pass,
 > `tsc --noEmit` is clean. Nothing consumes a packet yet — the LLM layer is deliberately
 > deferred to Milestone 8 (#11).
 
@@ -99,8 +101,14 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 44 | A packet carries no wall-clock field. | Regenerating from an unchanged warehouse produces byte-identical output, so `diff` between two packs answers "what changed in the data" rather than "when did I run this" — which is what makes packets usable as test fixtures and as an evaluation corpus at Milestone 8. When the data was gathered is a property of the releases, and every packet carries `sources[].fetched_at`. Rejected: a `generated_at` field, which would make every regeneration differ in a field nobody reads. |
 | 45 | The exportable report is Markdown rendered from the packet, with the dashboard's report page as a second view of the same contract. | Markdown is readable as text, diffable between runs, and opens anywhere; the browser's own print dialog turns the page into a PDF. Rejected: WeasyPrint or headless Chromium, which is a heavy rendering dependency for a file the browser already produces (the same reasoning as #39). The two renderers are not duplication — they are two media over one contract, which is the first real demonstration that the packet is a contract at all. Costs: a value formatter written once in Python and once in TypeScript. |
 | 46 | Caveat derivation lives in `hip.packets.caveats` and `/regions/{id}/summary` calls it. | The router kept its own copy from Milestone 4, so a model reading a packet and a person reading the dashboard could be told different things about the same figure. `api` may import `packets` (the boundary rule allows exactly this), so one pure function serves both. Costs: `/summary` now returns more caveats than it did, which is the correction, not a regression. |
-| 47 | Release provenance names the right source but not always the right vintage. **Refines #33 with the actual cause.** | #33 blamed a layer-matching fallback. The real defect is narrower and worse: `_release_ids` keys releases by `(source_id, layer)`, which is not unique when a source publishes several vintages — ACS has ten releases across five vintages, HUD has 107 — so all but one collapse and every year's fact points at the survivor. Every ACS observation for a region currently cites vintage 2019. Found by building a packet and reading its sources. The fix is to carry each row's source file through staging (the ACS model already extracts a vintage from the filename) and key releases on `(source, layer, vintage)`; that touches five dbt models, the matcher, and the loader, so it is scheduled work rather than a patch. Until then packets say so in a caveat naming the affected sources. |
+| 47 | Release provenance names the right source but not always the right vintage. **Refines #33; fixed by #53 at Milestone 7.** | #33 blamed a layer-matching fallback. The real defect is narrower and worse: `_release_ids` keys releases by `(source_id, layer)`, which is not unique when a source publishes several vintages — ACS has ten releases across five vintages, HUD has 107 — so all but one collapse and every year's fact points at the survivor. Every ACS observation for a region currently cites vintage 2019. Found by building a packet and reading its sources. The fix is to carry each row's source file through staging (the ACS model already extracts a vintage from the filename) and key releases on `(source, layer, vintage)`; that touches five dbt models, the matcher, and the loader, so it is scheduled work rather than a patch. Until then packets say so in a caveat naming the affected sources. |
 | 48 | Chart and map arithmetic lives in `web/lib/scale.ts`, tested with Vitest. | The one-colour map (#40) shipped because the classifier could not be called without rendering a component. The ramp choice, the quintile breaks, the class assignment, and the chart's projection are pure functions, so they are now tested directly — including a regression asserting that 21 same-signed values land in five classes. Node environment, no jsdom: the bugs were arithmetic, not markup. Costs one dev dependency in `web/`. |
+| 49 | NJ parcels are acquired from the ArcGIS Feature Service, not the 943MB bulk geodatabase. | NJGIN publishes the whole composite as one file at `geoapps.nj.gov`, which would be a single download. That host sits behind Imperva bot protection: `HEAD` returns 200, `GET` returns a 403 JavaScript challenge. Defeating bot detection is not something this project does, and the Feature Service is a public API meant to be queried programmatically, so acquisition goes there. Costs 1,741 requests and ~32 minutes instead of one download, and forgoes parcel geometry, which the REST path would make enormous. `_fetch_bytes` is the seam if the file ever becomes reachable — everything downstream reads NDJSON and would not change. |
+| 50 | The parcel layer is paged by `OBJECTID` window, never by `resultOffset`. | Measured 2026-08-12: a 2000-row page at offset 0 takes 0.76s and the same page at offset 1,500,000 takes 26.7s, because the server materializes and discards every skipped row. An indexed `OBJECTID >= lo AND OBJECTID < hi` window is ~1.0s at any depth. Offset paging would have taken roughly 13 hours against 32 minutes. A window that reports `exceededTransferLimit` splits in half rather than dropping the overflow — defensive, since `OBJECTID` is dense today (max id equals row count). |
+| 51 | MOD-IV matches Census municipalities on the legal form, and the county half resolves by arithmetic. | NJ county codes run 01-21 alphabetically and NJ county FIPS run odd and alphabetically, so `FIPS = 2*code - 1` needs no name at all. For the municipality half MOD-IV carries the legal form — "BOONTON TWP" against "BOONTON TOWN" — which is exactly what Zillow lacks and exactly what separates Boonton town from Boonton township (#27, #28). 554 of 564 match one-to-one with **zero ambiguity on either side**, against Zillow's 403 ceiling. The 10 misses are MOD-IV truncations from a fixed-width field ("UPPER SADDLE RIV", "PARSIPPANY TR HLS"); a rule per place would be the guessing #27 rejects, so they are reported instead. |
+| 52 | Rankings carry a `basis`: `change` over a window, or `value` at the latest observation. | MOD-IV publishes one composite, so its metrics have no change and would have loaded correctly and then been invisible to `/rankings`, `/summary`, and every packet. `basis` also answers a question the warehouse never could — "which municipality is most expensive", not only "which rose fastest" — closing a Milestone 4 note. Both bases share one table (#8) because a second rankings table would split every ranking query in two. Costs an overloaded `window` column, which holds the literal `latest` for a value ranking since a level has no span. |
+| 53 | Releases are keyed `(source_id, layer, vintage)`, resolved most-precise-first. **Fixes #47.** | `(source, layer)` was not unique for a source publishing several vintages — ACS has ten releases across five vintages, HUD 107 — so all but one collapsed and every year's fact cited the survivor. Every ACS observation claimed vintage 2019. Every staging model now carries `release_vintage`, read off the Parquet path by the `release_vintage()` macro, because landing writes `<source>/<vintage>/<layer>.parquet` for every source with no per-source knowledge. Lookup falls back `(source, layer, vintage)` → `(source, vintage)` → `(source, layer)` → `(source)`: vintage outranks layer, because the wrong *year* misstates when a thing was measured while the wrong layer of the right vintage only loses which file carried it. |
+| 54 | Packet `1.1` adds `levels`; `metrics` keeps its exact 1.0 meaning. | A snapshot source has no change, so `metrics` — which reads `fact_metric_change` — could never carry it. `levels` holds the latest observation of every metric with its value rank, which is also the first migration the published schema has actually had to perform. Additive and backward-compatible: a 1.0 reader parses a 1.1 packet and simply does not see the new array, which is what the minor version signals. A packet with levels and no changes is now valid, because that is what a MOD-IV-only municipality genuinely looks like. |
 
 ## Module Layout
 
@@ -114,7 +122,7 @@ housing-intelligence/
 ├── config/
 │   ├── sources.yml            # 13 sources: url, cadence, license, adapter name
 │   ├── geography.yml          # in-scope states and levels (#14)
-│   └── metrics.yml            # 17 metrics: label, unit, frequency, direction
+│   └── metrics.yml            # 23 metrics: label, unit, frequency, direction
 ├── schemas/
 │   └── packet-v1.json         # published packet contract, generated from code (#43)
 ├── src/hip/
@@ -132,10 +140,11 @@ housing-intelligence/
 │   │   ├── fred.py            # MORTGAGE30US, national
 │   │   ├── bls.py             # LAUS county unemployment
 │   │   ├── irs_migration.py   # SOI county inflow/outflow, reduced to net
-│   │   └── hud.py             # USPS crosswalk + income limits (#37, #38)
+│   │   ├── hud.py             # USPS crosswalk + income limits (#37, #38)
+│   │   └── nj_modiv.py        # 3.48M NJ parcels via OBJECTID paging (#49, #50)
 │   ├── landing/
 │   │   ├── shapefile.py       # zip → Parquet via ST_Read, geometry to MultiPolygon
-│   │   └── tabular.py         # CSV/JSON → Parquet, wide format preserved
+│   │   └── tabular.py         # CSV/JSON/NDJSON → Parquet, format preserved
 │   ├── transform/dbt_runner.py # runs dbt; STAGING_SCHEMA = main_staging
 │   ├── geography/
 │   │   ├── regions.py         # stg_regions: 5 levels, parent chain by geoid
@@ -146,7 +155,7 @@ housing-intelligence/
 │   │   ├── db.py              # engine, session_scope, probe() for /health
 │   │   ├── models.py          # Region, RegionIdentifier, RegionCrosswalk
 │   │   ├── load.py            # one-transaction upsert of spine and facts (#25)
-│   │   └── migrations/        # Alembic 0001–0005
+│   │   └── migrations/        # Alembic 0001–0006
 │   ├── analytics/compute.py   # change, CAGR, affordability, rankings (#34–#36)
 │   ├── packets/
 │   │   ├── schema.py          # Pydantic models = the contract (#12, #43, #44)
@@ -161,8 +170,9 @@ housing-intelligence/
 ├── dbt/
 │   ├── dbt_project.yml        # staging = views, marts = tables
 │   ├── profiles.yml           # duckdb (default) and postgres targets
-│   ├── macros/                # zillow_observations (UNPIVOT), accepted_range test
-│   └── models/staging/        # 10 staging models + dbt tests
+│   ├── macros/                # zillow_observations, accepted_range,
+│   │                          #   release_vintage (#53), nj_municipal_name (#51)
+│   └── models/staging/        # 12 staging models + dbt tests
 ├── web/                       # Next.js 16 + React 19 dashboard
 │   ├── app/page.tsx           # overview: choropleth + ranking table
 │   ├── app/regions/[id]/page.tsx        # region detail: tiles, trends, tables
@@ -175,12 +185,12 @@ housing-intelligence/
 ├── data/                      # gitignored, machine-local
 │   ├── raw/                   # immutable downloads, content-addressed
 │   ├── parquet/               # landing tier
-│   ├── duckdb/                # working analytical database
+│   ├── duckdb/                # working analytical database; 3.48M parcels live here
 │   └── packets/<window>/      # analysis packets, one JSON per region
 ├── reports/                   # human-facing output, not rebuildable input
 │   ├── validation/            # gate reports per run
 │   └── regions/<window>/      # Markdown reports, one per region
-├── tests/                     # 131 Python tests; API tests skip without a warehouse
+├── tests/                     # 146 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
@@ -208,8 +218,11 @@ which is why every write path lives there.
 **Every table below is built and populated.** Migration `0002` created `regions`,
 `region_identifiers`, `region_crosswalk`, `sources`, and `source_releases`; `0003` added
 `metrics`, `fact_metric_observation`, and `source_match_reject`; `0004` added the
-`nation` level; `0005` added `fact_metric_change` and `region_rankings`. The fact table
-holds 332,609 observations, with 19,527 changes and 19,517 rankings derived from them.
+`nation` level; `0005` added `fact_metric_change` and `region_rankings`; `0006` added
+`region_rankings.basis` (#52). The fact table holds 335,927 observations, with 19,527
+changes, 19,517 change rankings and 8,302 value rankings derived from them.
+`region_identifiers`, empty since Milestone 1, now holds 554 NJ municipal codes under
+scheme `nj_cd_code` — the join MOD-IV was always going to supply (#21, #51).
 The migrations are authoritative for DDL and `src/hip/warehouse/models.py` carries the
 ORM mapping for the spine; where they and the block below disagree, the migrations win —
 in particular both derived tables carry a `"window"` column that this sketch predates.
@@ -370,6 +383,12 @@ hip pack      →  data/packets/<window>/<id>.json     analysis packets (#12)
                  reports/regions/<window>/<geoid>.md  with --report (#45)
 ```
 
+Only the parcel tier stops short of Postgres. `hip land` writes 3.48M NJ parcels to a
+67MB Parquet file, `hip stage` aggregates them to 554 municipalities inside DuckDB, and
+only those aggregates cross into the warehouse (#16, #49). The parcels stay queryable
+where they are, which is what makes a parcel-level question answerable later without
+re-downloading anything.
+
 **What each stage guarantees.** `acquire` is the only stage that touches the network; it
 is idempotent by content hash, so re-running it after a partial failure re-fetches only
 what is missing, and an unchanged upstream file produces no new release. `land` is pure
@@ -410,7 +429,7 @@ Assembly is `build_packet(session, region_id, window)`; the API calls it per req
 
 ```json
 {
-  "packet_version": "1.0",
+  "packet_version": "1.1",
   "region": { "region_id": 11, "geoid": "34021", "level": "county", "name": "Mercer",
               "label": "Mercer County, NJ", "state_code": "NJ",
               "parent": { "region_id": 1, "name": "New Jersey", "level": "state" } },
@@ -422,6 +441,14 @@ Assembly is `build_packet(session, region_id, window)`; the API calls it per req
       "start_value": 329222.0, "end_value": 453317.0, "pct_change": 37.69,
       "cagr": 6.63, "rank": 9, "of": 21, "percentile": 60.0,
       "release_id": 41, "source_id": "zillow_zhvi", "match_method": "fips" }
+  ],
+  "levels": [
+    { "metric_id": "modiv_median_assessed_value",
+      "label": "Median assessed value, residential parcels", "unit": "usd",
+      "direction": "neutral", "value": 5153500.0,
+      "period_start": "2026-03-06", "period_end": "2026-03-06",
+      "rank": 1, "of": 553, "percentile": 100.0,
+      "release_id": 372, "source_id": "nj_modiv", "match_method": "nj_cd_code" }
   ],
   "comparisons": { "peer_level": "county", "peer_scope": "NJ", "peer_count": 21 },
   "highlights": [
@@ -448,6 +475,10 @@ Assembly is `build_packet(session, region_id, window)`; the API calls it per req
   `5y` window resolves to different dates per metric (#35). Each metric carries its own
   pair, and both the report and the dashboard say so rather than printing the envelope
   as though it were shared.
+- `metrics` describes movement and `levels` describes position. A metric published as
+  a single snapshot — every MOD-IV aggregate — has no movement and appears only in
+  `levels`, ranked by value (#52, #54). A metric with history appears in both, because
+  "what it is now" and "how it moved" are both worth stating.
 - `highlights` is selection, not statistics: a metric where the region ranks in the top
   or bottom three of a cohort of at least five. The rank comes from `region_rankings`;
   nothing new is derived.
@@ -464,10 +495,12 @@ Assembly is `build_packet(session, region_id, window)`; the API calls it per req
 renderer and the dashboard's report page are their only readers, which is the point: the
 contract is exercised by two independent media before an LLM shapes it.
 
-**Known-wrong, and stated in the packet.** `metrics[].release_id` names the right source
-but not always the right vintage, because the loader keys releases by `(source, layer)`
-and a multi-vintage source collapses to one (#47). Every affected packet carries a caveat
-naming the sources involved. This is a defect awaiting a fix, not an accepted trade-off.
+**Fixed at Milestone 7.** `metrics[].release_id` used to name the right source and the
+wrong vintage (#47); the loader now keys releases on `(source, layer, vintage)` (#53), so
+each ACS year cites its own release. The caveat that reported the defect is still built,
+but it now asks the fact table whether provenance is actually collapsed for that region
+rather than assuming it from the source's vintage count — so it disappeared on its own
+when the data stopped warranting it, and would return if a future source regressed.
 
 ## API
 
@@ -484,7 +517,7 @@ marked ✅ are implemented; the rest arrive with the milestones that produce the
 | GET | `/regions/{region_id}/summary` | ✅ headline changes, rank, caveats — dashboard landing |
 | GET | `/regions/{region_id}/packet` | ✅ the analysis packet, assembled per request (#42) |
 | GET | `/regions/{region_id}/report` | ✅ the same packet as `text/markdown` |
-| GET | `/rankings` | ✅ ranked regions for `metric_id`, `level`, window |
+| GET | `/rankings` | ✅ ranked regions for `metric_id`, `level`, and `basis` (`change` over a window, or `value`) |
 | GET | `/compare` | ✅ aligned series for several `region_ids` |
 | GET | `/sources` | source registry and the releases currently loaded |
 | GET | `/sources/unresolved` | ✅ source geographies with no region, and why |
@@ -514,15 +547,33 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   municipality and revaluation year. Any parcel-derived value metric is an approximation
   until equalization ratios are applied, which is not in Version 1.
 - **ZIP-level metrics are allocated, not observed** (see the schema section).
-- **Parcel data is not queryable through the API** (#16). It exists in Parquet and DuckDB
-  and reaches Postgres only as municipality-level aggregates.
+- **Parcel data is not queryable through the API** (#16). All 3.48M NJ parcels exist in
+  Parquet and DuckDB; only six municipality-level aggregates reach Postgres. There is no
+  parcel endpoint and no parcel map layer.
+- **Parcel geometry is not downloaded** (#49). The REST path fetches attributes only, so
+  the parcel polygons a map layer would need are absent — `njgin_parcels` stays a planned
+  source for exactly that reason.
+- **MOD-IV covers 554 of 564 municipalities** (#51). The ten misses are names MOD-IV
+  truncated to fit a fixed-width field — Upper Saddle River, Parsippany-Troy Hills, South
+  Orange Village, Peapack-Gladstone, Lower Alloways Creek, Point Pleasant Beach, Orange,
+  Caldwell, North Caldwell, Essex Fells. Resolving them means a rule per place, which is
+  the guessing #27 rejects.
+- **An assessment is not a market value.** Ratios drift between revaluations and vary by
+  municipality, so `modiv_median_assessed_value` tracks the tax roll rather than what
+  houses sell for. Equalization ratios would fix this and are not loaded.
+- **MOD-IV is one snapshot, so it has no change metrics.** Its six metrics carry a value
+  and a value rank and nothing else; `/rankings?basis=change` returns nothing for them.
+  A second vintage would need a second published composite, which NJGIN does not archive.
+- **1.4% of parcels carry no `CD_CODE`** and are dropped before aggregation, because the
+  composite could not confidently match the polygon to a MOD-IV record. They cannot be
+  attributed to any municipality.
 - **There is no AI layer** (#11). Packets are produced and read only by the report
   renderer and the dashboard's report page until Milestone 8.
-- **A fact's release names the right source but not always the right vintage** (#47).
-  `_release_ids` keys releases by `(source_id, layer)`, which collapses ACS's ten
-  releases to two and HUD's 107 to one, so every year's value cites a single release.
-  Packets carry a caveat naming the affected sources. The fix — carrying each row's
-  source file through staging — is scheduled, not accepted.
+- **Layer-level provenance is still approximate for keyed sources** (#53). Vintage is
+  now exact, but a staged row names its region level rather than the release layer it
+  arrived under, so `(source, vintage)` is often the most precise key that matches. The
+  release named is always the right source and the right vintage; which file within that
+  vintage carried the row can still be wrong for ACS county-versus-cousub.
 - **A packet is per region and per window.** There is no cross-region packet, so a
   comparison between two counties means two packets. `/compare` serves that shape for
   a single metric; nothing packages it.

@@ -12,6 +12,8 @@ a test fails if it and the command list disagree.
 
 from __future__ import annotations
 
+import logging
+import sys
 from typing import Annotated
 
 import typer
@@ -32,7 +34,7 @@ from hip.geography.crosswalk import apply_hud_weights, build_crosswalk
 from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
 from hip.landing.shapefile import land_shapefile
-from hip.landing.tabular import land_csv, land_json
+from hip.landing.tabular import land_csv, land_json, land_ndjson
 from hip.packets import (
     SCHEMA_PATH,
     Packet,
@@ -66,6 +68,7 @@ from hip.warehouse.load import (
     SourceRecord,
     _upsert_metrics,
     load_facts,
+    load_region_identifiers,
 )
 from hip.warehouse.load import load_geography as load_warehouse_geography
 
@@ -98,6 +101,14 @@ def main(
     ] = False,
 ) -> None:
     """Housing Intelligence Platform CLI."""
+    # Adapters report long-running progress through `logging` rather than printing,
+    # because a source module writing to stdout would couple the pipeline to a
+    # particular front end. Without a handler the NJ parcel fetch is silent for half
+    # an hour, so the entry point installs one.
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
+    # httpx logs every request at INFO. For a source that issues 1,741 of them that is
+    # 1,741 lines of URL between us and the progress we actually wanted.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 @app.command("check-config")
@@ -184,6 +195,10 @@ def land(
                     shapefile_member(release.ref),
                     parquet_dir=settings.parquet_dir,
                     overwrite=overwrite,
+                )
+            elif adapter.landing_format == "ndjson":
+                table = land_ndjson(
+                    release, parquet_dir=settings.parquet_dir, overwrite=overwrite
                 )
             elif adapter.landing_format == "json":
                 table = land_json(
@@ -433,6 +448,12 @@ def load(
         fg=typer.colors.GREEN,
     )
 
+    # NJ municipal codes, if a source has staged them. Delivers the column
+    # region_identifiers has held open since Milestone 1 (ARCHITECTURE #21).
+    identifiers = load_region_identifiers(get_engine(), settings.duckdb_path)
+    if identifiers:
+        typer.echo(f"identifiers   {identifiers:>8,} nj_cd_code")
+
     # Facts, if any have been staged. A geography-only load stays valid.
     with duckdb_session(settings.duckdb_path) as con:
         staged = {
@@ -517,7 +538,8 @@ def analyze() -> None:
     for metric_id, count in sorted(result.derived_observations.items()):
         typer.echo(f"{metric_id:<20} {count:>9,} observations")
     typer.echo(f"{'change rows':<20} {result.changes:>9,}")
-    typer.echo(f"{'ranking rows':<20} {result.rankings:>9,}")
+    typer.echo(f"{'change rankings':<20} {result.rankings:>9,}")
+    typer.echo(f"{'value rankings':<20} {result.value_rankings:>9,}")
     typer.secho("analytics rebuilt", fg=typer.colors.GREEN)
 
 

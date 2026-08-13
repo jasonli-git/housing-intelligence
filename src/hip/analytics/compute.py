@@ -39,6 +39,7 @@ TOLERANCE_DAYS = 400
 class AnalyticsResult:
     changes: int = 0
     rankings: int = 0
+    value_rankings: int = 0
     derived_observations: dict[str, int] = field(default_factory=dict)
 
 
@@ -48,7 +49,11 @@ def rebuild(engine: Engine) -> AnalyticsResult:
     with engine.begin() as conn:
         result.derived_observations = _affordability(conn)
         result.changes = _changes(conn)
+        # One TRUNCATE for both bases, so the two ranking passes cannot half-rebuild
+        # the table and leave a stale basis behind.
+        conn.execute(text("TRUNCATE region_rankings"))
         result.rankings = _rankings(conn)
+        result.value_rankings = _value_rankings(conn)
     return result
 
 
@@ -199,13 +204,13 @@ def _rankings(conn: object) -> int:
     meaningless anyway. Direction comes from the metric, so rank 1 is always the
     better end where "better" is defined.
     """
-    conn.execute(text("TRUNCATE region_rankings"))  # type: ignore[attr-defined]
     return int(
         conn.execute(  # type: ignore[attr-defined]
             text(
                 """
                 INSERT INTO region_rankings
-                    (metric_id, level, "window", region_id, value, rank, of, percentile)
+                    (metric_id, level, basis, "window", region_id, value,
+                     rank, of, percentile)
                 WITH ranked AS (
                     SELECT c.metric_id, r.level::text AS level, c."window", c.region_id,
                            c.pct_change AS value,
@@ -222,12 +227,66 @@ def _rankings(conn: object) -> int:
                     JOIN regions r ON r.region_id = c.region_id
                     JOIN metrics m ON m.metric_id = c.metric_id
                 )
-                SELECT metric_id, level, "window", region_id, value, rank, of,
+                SELECT metric_id, level, 'change', "window", region_id, value, rank, of,
                        CASE WHEN of > 1
                             THEN 100.0 * (of - rank) / (of - 1)
                             ELSE 100.0 END
                 FROM ranked
                 -- A ranking over one region is not a ranking.
+                WHERE of > 1
+                """
+            )
+        ).rowcount
+    )
+
+
+def _value_rankings(conn: object) -> int:
+    """Rank regions by their most recent observed value, within their own level.
+
+    The question "which municipality has the highest assessed value" is different from
+    "which rose fastest", and until Milestone 7 the warehouse could only answer the
+    second. A snapshot source such as MOD-IV has no change at all, so without this its
+    metrics would load correctly and then be invisible to every ranked view.
+
+    `window` is the literal 'latest' rather than a span, because a level has no span.
+    `basis` is what actually distinguishes these rows (migration 0006).
+    """
+    return int(
+        conn.execute(  # type: ignore[attr-defined]
+            text(
+                """
+                INSERT INTO region_rankings
+                    (metric_id, level, basis, "window", region_id, value,
+                     rank, of, percentile)
+                WITH latest AS (
+                    SELECT DISTINCT ON (f.region_id, f.metric_id)
+                           f.region_id, f.metric_id, f.value
+                    FROM fact_metric_observation f
+                    ORDER BY f.region_id, f.metric_id, f.period_end DESC
+                ),
+                ranked AS (
+                    SELECT l.metric_id, r.level::text AS level, l.region_id, l.value,
+                           rank() OVER (
+                               PARTITION BY l.metric_id, r.level
+                               -- Same convention as change rankings: rank 1 is the
+                               -- better end wherever the metric defines one. A
+                               -- `neutral` metric ranks largest first, which is
+                               -- presentation rather than judgment.
+                               ORDER BY CASE WHEN m.direction = 'lower_is_better'
+                                             THEN l.value ELSE -l.value END
+                           ) AS rank,
+                           count(*) OVER (
+                               PARTITION BY l.metric_id, r.level
+                           ) AS of
+                    FROM latest l
+                    JOIN regions r ON r.region_id = l.region_id
+                    JOIN metrics m ON m.metric_id = l.metric_id
+                )
+                SELECT metric_id, level, 'value', 'latest', region_id, value, rank, of,
+                       CASE WHEN of > 1
+                            THEN 100.0 * (of - rank) / (of - 1)
+                            ELSE 100.0 END
+                FROM ranked
                 WHERE of > 1
                 """
             )
