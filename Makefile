@@ -2,8 +2,8 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup venv-fix db-up db-down db-logs migrate pipeline api web test test-py \
-        test-web lint format check-config dbt-debug clean
+.PHONY: help setup setup-eval venv-fix db-up db-down db-logs migrate pipeline api web \
+        test test-py test-web lint format check-config dbt-debug eval clean
 
 SITE_PACKAGES = $(wildcard .venv/lib/python*/site-packages)
 
@@ -23,6 +23,21 @@ setup:  ## Install Python and Node dependencies, create local data dirs
 	mkdir -p data/raw data/parquet data/duckdb data/packets reports/validation
 	cd web && npm install
 	@test -f .env || (cp .env.example .env && echo "Created .env from .env.example")
+
+setup-eval:  ## Also install the optional mlx + eval groups (Milestone 8, Apple silicon)
+	@# `uv sync` makes the environment match exactly the groups named, so syncing
+	@# without these REMOVES them — plain `make setup` uninstalls mlx-lm and anthropic.
+	@# Run this instead whenever the evaluation harness is needed (ARCHITECTURE #56).
+	uv sync --group dev --group dbt --group mlx --group eval
+	$(MAKE) venv-fix
+
+eval:  ## Full evaluation: scenarios -> run -> judge -> report (hours; judging costs money)
+	@# Split into four commands rather than one because the stages have very different
+	@# costs: generation is hours of local inference and resumable, judging is billed.
+	uv run hip eval scenarios
+	uv run hip eval run
+	uv run hip eval judge
+	uv run hip eval report
 
 venv-fix:  ## Un-hide .pth files so bare `uv run hip` works (see ARCHITECTURE #24)
 	@# Only needed outside make: every make target already exports PYTHONPATH. uv

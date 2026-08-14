@@ -95,9 +95,18 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
 - **Ranked by value, not only by change** (M7, built) — "which municipality is most
   expensive" is now a query, not just "which rose fastest". Snapshot sources like MOD-IV
   have no change at all, so without this their data would load and stay invisible.
-- **Model evaluation** (M8) — the same housing scenarios run against candidate local
-  models, graded on factual accuracy, hallucination rate, and usefulness, with the
-  selection justified by measured results.
+- **Model evaluation harness** (M8, built) — five standardized scenarios built from
+  real analysis packets, run against eight local candidates across two runtimes through
+  one `ModelRunner` protocol, with sampling pinned identically on both sides. Every
+  stated figure is verified against the packet deterministically, so hallucination rate
+  is counted rather than graded; Claude scores only what a reader can judge. A model
+  that fabricates figures above a 5% rate is ineligible however well it writes.
+- **Explanations labeled as interpretation** (M8, built) — `hip explain` generates a
+  short narrative per region with the selected model and stores it with the model name,
+  the runtime, and a hash of the packet it was written from.
+  `GET /regions/{id}/explanation` serves it with `kind: "interpretation"` and a `stale`
+  flag; the dashboard panel is styled to be unmistakable as commentary. The platform is
+  fully usable with none of this generated — a missing explanation renders nothing.
 
 ## Tech Stack
 
@@ -135,6 +144,10 @@ make setup
 `make setup` syncs the Python environment, installs dashboard dependencies, creates the
 local `data/` directories, and copies `.env.example` to `.env` if you have none.
 
+For the Milestone 8 evaluation, run `make setup-eval` instead: it adds the optional
+`mlx` and `eval` groups. Note that `uv sync` makes the environment match exactly the
+groups it is given, so a later plain `make setup` **uninstalls** them again.
+
 **Build the warehouse.** The first `acquire` downloads ~2GB — 635MB of Census
 TIGER/Line (529MB of it the national ZCTA file), 245MB of Zillow CSVs, and 1.16GB of NJ
 parcels assembled from 1,741 API requests over roughly 32 minutes. Everything is cached
@@ -151,7 +164,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 146 Python + 26 dashboard tests; API tests skip without a warehouse
+make test          # 223 Python + 26 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -177,6 +190,19 @@ uv run hip pack --region 11       # one region
 uv run hip schema                 # the published JSON Schema
 ```
 
+Evaluate local models and generate explanations (Milestone 8, needs `make setup-eval`,
+Ollama running, and Apple silicon for the MLX cohort):
+
+```bash
+uv run hip eval models             # candidates, and whether each runtime can serve them
+uv run hip eval scenarios          # build the question set from real packets
+uv run hip eval run                # every scenario through every model — hours
+uv run hip eval cost               # what judging would cost, without spending it
+uv run hip eval judge              # rubric grading; the only command that costs money
+uv run hip eval report             # reports/evaluation/<run>.md
+uv run hip explain --region 11     # write an explanation the API can serve
+```
+
 `make` on its own lists every target. With the warehouse down, the API and dashboard
 still run and report the degraded state rather than failing.
 
@@ -186,7 +212,8 @@ still run and report the degraded state rather than failing.
 
 **API keys.** `CENSUS_API_KEY` and `FRED_API_KEY` are required from Milestone 3;
 `BLS_API_KEY` is optional but raises a 25-query daily limit. All three are free.
-`.env.example` links to each signup page.
+`ANTHROPIC_API_KEY` is the one paid key and is read by `hip eval judge` alone — every
+other stage runs without it. `.env.example` links to each signup page.
 
 ## Project Status
 

@@ -25,11 +25,14 @@ from hip.config import (
     ConfigError,
     check_config,
     get_settings,
+    load_env_file,
     load_geography,
     load_metrics,
     load_sources,
 )
 from hip.duck import duckdb_session
+from hip.eval_cli import app as eval_app
+from hip.eval_cli import explain_command
 from hip.geography.crosswalk import apply_hud_weights, build_crosswalk
 from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
@@ -79,6 +82,11 @@ app = typer.Typer(
     add_completion=False,
 )
 
+# `hip eval ...` lives in its own module because it is the only part of the platform
+# with optional dependencies (`mlx`, `eval`). Its commands import those lazily, so a
+# checkout without them still runs every pipeline stage.
+app.add_typer(eval_app, name="eval")
+
 # Stages still to be implemented, and the milestone that delivers each. Implemented
 # stages are removed from this map, so it doubles as the list of remaining work — empty
 # since Milestone 6, when `pack` landed and the pipeline became complete.
@@ -101,6 +109,11 @@ def main(
     ] = False,
 ) -> None:
     """Housing Intelligence Platform CLI."""
+    # Put `.env` into the environment before anything reads a key. Source adapters and
+    # the judge resolve credentials with `os.environ.get()`, and pydantic-settings only
+    # exports its own `HIP_`-prefixed fields — so without this, keys placed in `.env`
+    # exactly as `.env.example` instructs were invisible to every consumer of them.
+    load_env_file()
     # Adapters report long-running progress through `logging` rather than printing,
     # because a source module writing to stdout would couple the pipeline to a
     # particular front end. Without a handler the NJ parcel fetch is silent for half
@@ -622,6 +635,35 @@ def pack(
         + (f"; {written:,} reports to {report_dir}" if report else ""),
         fg=typer.colors.GREEN,
     )
+
+
+@app.command()
+def explain(
+    region: Annotated[
+        int | None, typer.Option("--region", "-r", help="One region id; default all.")
+    ] = None,
+    model: Annotated[
+        str | None,
+        typer.Option("--model", help="Override the model the evaluation selected."),
+    ] = None,
+    window: Annotated[str, typer.Option("--window")] = "5y",
+    level: Annotated[str, typer.Option("--level")] = "county",
+    payload_format: Annotated[
+        str, typer.Option("--format", help="Packet payload: markdown | json.")
+    ] = "markdown",
+    limit: Annotated[
+        int | None, typer.Option("--limit", help="Stop after this many regions.")
+    ] = None,
+) -> None:
+    """Write model explanations into the warehouse for the API to serve.
+
+    A write path, and therefore a CLI command rather than an API call (ARCHITECTURE #6):
+    an explanation costs a model load and seconds of inference, which does not belong in
+    a page view. The model defaults to whichever one the most recent evaluation run
+    selected, which is the whole point of Milestone 8 — the choice comes from measured
+    performance rather than from a name someone typed once.
+    """
+    explain_command(region, model, window, level, payload_format, limit)
 
 
 @app.command()

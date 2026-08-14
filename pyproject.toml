@@ -42,6 +42,13 @@ dev = [
 mlx = [
     "mlx-lm>=0.29",
 ]
+# The judge for `hip eval judge`, and nothing else. Kept out of the application
+# dependencies deliberately: SPEC requires the platform stay fully useful with the AI
+# layer disabled, so no runtime import path may depend on an LLM client being present
+# (ARCHITECTURE #56). Separate from `mlx` because this one installs anywhere.
+eval = [
+    "anthropic>=0.40",
+]
 # dbt resolves against its own pinned dependency tree; keeping it in a separate group
 # stops it from constraining the application environment (ARCHITECTURE #4).
 dbt = [
@@ -72,6 +79,13 @@ warn_unreachable = true
 
 [[tool.mypy.overrides]]
 module = ["duckdb.*"]
+ignore_missing_imports = true
+
+# Apple-silicon only and installed from the optional `mlx` group, so a checkout without
+# that group must still type-check. `hip.eval.runners.mlx_runner` imports these inside
+# functions for the same reason (ARCHITECTURE #55).
+[[tool.mypy.overrides]]
+module = ["mlx.*", "mlx_lm.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

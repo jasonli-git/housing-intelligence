@@ -1,0 +1,195 @@
+# Milestone 8 evaluation: which models are compared, on what, and how they are graded.
+#
+# Product configuration rather than code, for the same reason geography.yml is
+# (ARCHITECTURE #14): adding a candidate model or a scenario must not be a code change.
+#
+# Every candidate is 4-bit. The higher-precision Q6_K and Q8_0 imports were measured and
+# then deleted on 2026-08-13 — weight quantization was decisively worse on memory and
+# throughput here, so precision is a settled input, not a variable under test.
+
+# Sampling is pinned identically on both runtimes. MLX-LM defaults to greedy (temp 0.0)
+# while Ollama applies its own defaults (temp 0.8, top_p 0.9, top_k 40,
+# repeat_penalty 1.1) when a model ships no parameters. Leaving either at its default
+# compares a stochastic sampler against a deterministic one, so both are stated here.
+sampling:
+  deterministic:
+    temperature: 0.0
+    top_p: 1.0
+    top_k: 1
+    repeat_penalty: 1.0
+    seed: 0
+  # Stability probing for the finalists. The seed varies per repeat: holding it fixed at
+  # temperature 0.7 reproduces one sample, which measures reproducibility rather than
+  # stability.
+  stability:
+    temperature: 0.7
+    top_p: 0.9
+    top_k: 40
+    repeat_penalty: 1.0
+
+limits:
+  # Sized to the payload, not to the machine. A county packet is 6,043 tokens as JSON;
+  # 4096 silently truncated it with no error and no warning, leaving models to answer
+  # from two-thirds of a packet.
+  context_tokens: 12288
+  # Covers reasoning *and* answer, because reasoning models spend it before emitting a
+  # word. Raised twice, each time from measurement rather than guesswork:
+  #
+  #   1600 → 3000: Qwen3-8B wrote 5,747 characters of reasoning, hit the cap, and
+  #     returned an empty answer. Truncating reasoning models specifically would have
+  #     biased the comparison against exactly the models this harness normalizes for.
+  #   3000 → 6000: gemma-4-12b answered cleanly on 7 of 15 scenarios, peaking at 2,785
+  #     tokens, and returned nothing at all on the other 8 — the cap was marginal for
+  #     it, not generous. 6000 is roughly twice its observed natural peak.
+  #
+  # Deliberately not higher. phi-4-mini and Qwen3.5-9B never terminate at any budget
+  # tried (0/15 natural stops, with visibly repeating output), so headroom beyond this
+  # buys more loop rather than more answer. Their still hitting 6000 is a firmer
+  # finding than hitting 3000: it rules out the budget as the explanation.
+  #
+  # Safe to raise without touching context_tokens: the prompt is ~1,900 tokens, so
+  # 1,900 + 6,000 still sits well inside the 12,288 window.
+  max_output_tokens: 6000
+  # Ollama unloads immediately after each generation. 16GB of unified memory cannot hold
+  # two of these at once, and a resident model pushes the next one into swap.
+  keep_alive: 0
+
+cohorts:
+  gguf:
+    runner: ollama
+    endpoint: http://localhost:11434
+    models:
+      - id: qwen3-8b-q4
+        ref: bench-qwen3-8b-q4
+        label: Qwen3 8B
+        quantization: Q4_K_M
+        anchor: qwen3-8b
+      - id: gemma-4-e4b-q4
+        ref: bench-gemma-4-e4b-q4
+        label: Gemma 4 E4B
+        quantization: Q4_K_M
+        anchor: gemma-4-e4b
+      - id: gemma-4-12b-q4
+        ref: bench-gemma-4-12b
+        label: Gemma 4 12B (QAT)
+        quantization: Q4_0
+      - id: nemotron-3-4b-q4
+        ref: bench-nemotron-3-4b
+        label: Nemotron 3 Nano 4B
+        quantization: Q4_K_M
+  mlx:
+    runner: mlx
+    models:
+      - id: qwen3-8b-mlx
+        ref: lmstudio-community/Qwen3-8B-MLX-4bit
+        label: Qwen3 8B
+        quantization: 4bit
+        anchor: qwen3-8b
+      - id: gemma-4-e4b-mlx
+        ref: lmstudio-community/gemma-4-E4B-it-MLX-4bit
+        label: Gemma 4 E4B
+        quantization: 4bit
+        anchor: gemma-4-e4b
+      - id: qwen35-9b-mlx
+        ref: lmstudio-community/Qwen3.5-9B-MLX-4bit
+        label: Qwen3.5 9B
+        quantization: 4bit
+      - id: phi-4-mini-mlx
+        ref: lmstudio-community/Phi-4-mini-reasoning-MLX-4bit
+        label: Phi-4 mini reasoning
+        quantization: 4bit
+
+# The instruction every model receives. Deliberately short: an over-specified prompt
+# measures prompt engineering rather than the model, and the platform's own rule is that
+# the model explains computed metrics without adding claims of its own.
+system_prompt: |
+  You are a housing-market analyst. You are given a data packet for one region,
+  already computed by a deterministic pipeline. Answer using only the numbers in that
+  packet.
+
+  Rules:
+  - Never invent a figure. Every number you state must appear in the packet.
+  - If the packet does not support an answer, say so plainly.
+  - Attribute causes only when the packet's own fields support them. Otherwise
+    describe what changed without asserting why.
+  - Repeat the caveats that qualify any figure you rely on.
+  - Be concise and specific. No preamble.
+
+# Applied to every packet in the sample. Each names the packet fields a correct answer
+# has to draw on, which is what the deterministic checker scores against.
+scenarios:
+  - id: headline_change
+    question: |
+      Which single metric changed most sharply over this window, in which direction,
+      and by how much? State the figure and the period it covers.
+    grounds: [metrics]
+  - id: affordability
+    question: |
+      Is housing in this region becoming more or less affordable? Cite the specific
+      affordability metrics in the packet and their direction.
+    grounds: [metrics, levels]
+  - id: peer_standing
+    question: |
+      How does this region compare with its peers? Name the metrics where it sits at
+      either end of the cohort, with its rank.
+    grounds: [highlights, comparisons]
+  - id: caveats
+    question: |
+      A reader wants to quote the home-value figure in a published article. What
+      qualifications must accompany it, and which of them come from the data rather
+      than from interpretation?
+    grounds: [caveats, sources]
+  - id: refusal
+    question: |
+      What was the median household income in this region in 1985, and how did the
+      2008 financial crisis affect local construction permits?
+    grounds: []
+    # Nothing in the packet reaches back to 1985 or isolates 2008. A good answer
+    # declines both halves. This scenario exists because a model that always produces
+    # a confident paragraph scores well on every other scenario and is still unusable.
+    expects_refusal: true
+
+rubric:
+  # Scored 0-4 by the judge. Split so a model that writes beautifully and invents a
+  # number cannot average its way to the top.
+  criteria:
+    - id: factual_accuracy
+      weight: 3.0
+      description: >
+        Every figure stated matches the packet. A single fabricated or misattributed
+        number caps this criterion at 1.
+    - id: grounding
+      weight: 2.0
+      description: >
+        Claims stay inside what the packet supports. Causal assertions the packet
+        cannot license are penalized here, not under accuracy.
+    - id: completeness
+      weight: 1.5
+      description: >
+        The question is answered in full, including the parts the packet supports but
+        the model did not have to volunteer.
+    - id: caveat_handling
+      weight: 1.5
+      description: >
+        Qualifications that materially change how a figure should be read are carried
+        through rather than dropped.
+    - id: clarity
+      weight: 1.0
+      description: >
+        A non-specialist reader can act on the answer. Length is not a virtue.
+    - id: instruction_following
+      weight: 1.0
+      description: >
+        Honors the response rules, including declining when the packet cannot support
+        an answer.
+
+judge:
+  model: claude-opus-5
+  # Batch is half price and the whole run is submitted at once, so latency does not
+  # matter. `--sync` on the CLI switches to the Messages API for small runs.
+  mode: batch
+  # Thinking bills as output at the Opus rate and is on by default on this model, so
+  # max_tokens has to cover reasoning plus the verdict. A tight cap truncates the
+  # verdict, not the reasoning.
+  max_tokens: 3000
+  effort: medium

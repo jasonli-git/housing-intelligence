@@ -7,10 +7,13 @@ autogenerate has something to diff against.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from geoalchemy2 import Geometry
 from sqlalchemy import (
     BigInteger,
     CheckConstraint,
+    DateTime,
     Enum,
     ForeignKey,
     Index,
@@ -18,6 +21,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -86,6 +90,39 @@ class RegionIdentifier(Base):
     identifier: Mapped[str] = mapped_column(String(32), nullable=False)
 
     __table_args__ = (Index("ix_region_identifiers_lookup", "scheme", "identifier"),)
+
+
+class RegionExplanation(Base):
+    """A local model's prose about one region, precomputed and attributed.
+
+    The only place generated text enters the warehouse, and it enters as a leaf: nothing
+    reads this to compute anything. `hip explain` writes it, `/regions/{id}/explanation`
+    serves it, and the dashboard labels it as interpretation (migration 0007).
+
+    `packet_sha256` is what makes staleness detectable rather than invisible — the text
+    is pinned to the packet bytes it was written from, so a later pipeline run leaves a
+    mismatch the API can report instead of quietly serving prose about old numbers.
+    """
+
+    __tablename__ = "region_explanations"
+
+    region_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("regions.region_id", ondelete="CASCADE"), primary_key=True
+    )
+    window: Mapped[str] = mapped_column(String(16), primary_key=True)
+    model_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    model_label: Mapped[str] = mapped_column(Text, nullable=False)
+    runtime: Mapped[str] = mapped_column(String(16), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    packet_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    generated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint("length(body) > 0", name="ck_explanation_body_not_empty"),
+        Index("ix_region_explanations_model", "model_id"),
+    )
 
 
 class RegionCrosswalk(Base):

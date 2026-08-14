@@ -194,6 +194,25 @@ async function tryGet<T>(path: string): Promise<T | null> {
   }
 }
 
+/**
+ * A model-written note about a region. Every field that lets a reader discount it is
+ * required, because the failure this type guards against is prose being mistaken for a
+ * measurement: `kind` is always the literal "interpretation", the model is named, and
+ * `stale` says whether the numbers moved since the text was written.
+ */
+export type Explanation = {
+  kind: "interpretation";
+  region_id: number;
+  window: string;
+  body: string;
+  model_id: string;
+  model_label: string;
+  runtime: string;
+  generated_at: string;
+  stale: boolean;
+  disclaimer: string;
+};
+
 export const api = {
   regions: (query: string) =>
     tryGet<{ total: number; items: Region[] }>(`/regions?${query}`),
@@ -218,6 +237,8 @@ export const api = {
   packet: (id: number, window: string) =>
     tryGet<Packet>(`/regions/${id}/packet?window=${window}`),
   geo: (level: string) => tryGet<FeatureCollection>(`/geo/${level}?state=NJ`),
+  explanation: (id: number, window: string) =>
+    tryGet<Explanation>(`/regions/${id}/explanation?window=${window}`),
 };
 
 /**

@@ -15,11 +15,14 @@ scope; this document does not restate it.
 > rankings and 8,302 value rankings. **3.48M NJ parcels** live in Parquet and DuckDB and
 > reach the warehouse only as six municipality-level assessment aggregates (#49). Packet
 > `1.1` is validated against `schemas/packet-v1.json`; 21 county and 564 municipal
-> packets are produced by `hip pack`. 146 Python tests and 26 dashboard tests pass,
-> `tsc --noEmit` is clean. Nothing consumes a packet yet — the LLM layer is deliberately
-> deferred to Milestone 8 (#11). The candidate models for that milestone are installed
-> and measured on this machine but live entirely outside the repository; what was found
-> and what it constrains is in [TODO.md](TODO.md).
+> packets are produced by `hip pack`. 223 Python tests and 26 dashboard tests pass,
+> `tsc --noEmit` is clean. **Milestone 8 is under way (#56-#61):** the evaluation
+> harness, `region_explanations` (migration `0007`), `GET /regions/{id}/explanation`,
+> and the dashboard's interpretation panel are built and tested against eight local
+> candidates across two runtimes. The packet finally has a model-facing consumer — but
+> no model has been selected yet, because the generation run and the judged report that
+> selects one are still outstanding. Nothing in the pipeline or the API depends on a
+> model being present.
 
 ## System Shape
 
@@ -112,6 +115,15 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 53 | Releases are keyed `(source_id, layer, vintage)`, resolved most-precise-first. **Fixes #47.** | `(source, layer)` was not unique for a source publishing several vintages — ACS has ten releases across five vintages, HUD 107 — so all but one collapsed and every year's fact cited the survivor. Every ACS observation claimed vintage 2019. Every staging model now carries `release_vintage`, read off the Parquet path by the `release_vintage()` macro, because landing writes `<source>/<vintage>/<layer>.parquet` for every source with no per-source knowledge. Lookup falls back `(source, layer, vintage)` → `(source, vintage)` → `(source, layer)` → `(source)`: vintage outranks layer, because the wrong *year* misstates when a thing was measured while the wrong layer of the right vintage only loses which file carried it. |
 | 54 | Packet `1.1` adds `levels`; `metrics` keeps its exact 1.0 meaning. | A snapshot source has no change, so `metrics` — which reads `fact_metric_change` — could never carry it. `levels` holds the latest observation of every metric with its value rank, which is also the first migration the published schema has actually had to perform. Additive and backward-compatible: a 1.0 reader parses a 1.1 packet and simply does not see the new array, which is what the minor version signals. A packet with levels and no changes is now valid, because that is what a MOD-IV-only municipality genuinely looks like. |
 | 55 | `mlx-lm` lives in its own optional `mlx` dependency group, and local models are never a runtime dependency. | Same reasoning as #19: mlx pins its own numpy/transformers tree, which must not constrain FastAPI, Pydantic, and SQLAlchemy, and a non-macOS checkout must still `uv sync` everything else — mlx is Apple-silicon only. `make setup` installs `dev` and `dbt` and deliberately not this. It also fixes a real break: an earlier `python3 -m pip install mlx-lm` landed on the system Python 3.9.6, EOL since October 2025 and a different interpreter from the project's; the group puts `mlx-lm` 0.31.3 / `mlx` 0.32.0 in the 3.12.13 environment the rest of the code uses. Costs one more group to remember, and the Milestone 8 harness must degrade rather than fail when the group is absent (#11 still holds — nothing in the Version 1 runtime imports a model). |
+| 56 | The evaluation is a pipeline stage (`eval`) after `packets`, and `anthropic` lives in an optional `eval` dependency group. | A packet is the entire contract a model may see, so the stage that feeds models belongs after the stage that builds them, and the boundary test enforces it: `eval` may read `packets` and `warehouse`, and nothing may import `eval`. The group keeps the judge out of the application dependencies because SPEC requires the platform stay fully useful with the AI layer disabled — no runtime import path may need an LLM client present. Costs: `uv sync` with an explicit group list *removes* unlisted groups, so `make setup` alone strips `mlx` and `eval`; `make setup-eval` installs all four. |
+| 57 | Local models are reached through one `ModelRunner` protocol; Ollama and MLX-LM are two implementations of it. | SPEC principle 9 says the model choice follows measurement rather than reputation, which is only true if swapping a runtime is a config edit. Each implementation normalizes its own telemetry and is required to be honest about what it cannot report: MLX's `mx.get_peak_memory()` is a true allocator peak, Ollama exposes only process RSS, so `memory_basis` records which one a figure is instead of letting a reader assume they are comparable. Rejected: a single Ollama-only path, which would have made the MLX cohort unmeasurable and the runtime choice permanent. |
+| 58 | Numeric accuracy is checked deterministically; the judge grades only what a reader can judge. | SPEC draws this line explicitly — Claude evaluates qualitative quality and does not replace deterministic validation. A set lookup is a better instrument than a language model for "is 4.7 in this packet", costs nothing per call, and cannot itself hallucinate, so hallucination *rate* — the number the selection turns on — is counted rather than graded. The judge scores grounding, caveat handling, and usability, which counting cannot reach. |
+| 59 | A model that fabricates figures is ineligible regardless of its rubric score. | Selection is quality-ordered but gated: above a 5% unsupported-figure rate a model is excluded however well it writes. The platform's entire claim is that a figure traces to a source file, so an explainer that invents them is not a worse option — it is a disqualified one. A gate rather than another weighted term, because weighting lets a high clarity score buy back a fabrication. |
+| 60 | Explanations are precomputed by `hip explain`, stored in `region_explanations`, and served read-only. | Generating at request time would put a multi-gigabyte model load in a page view, and on 16GB of unified memory a resident model means swap. Storing them keeps #6 intact — the CLI is still the only write path — and lets the row carry what makes generated text accountable: the model, the runtime, and `packet_sha256`, which pins the prose to the bytes it was written from so staleness is detectable rather than merely suspected. Nothing reads this table to compute anything; the arrow points out to the reader. |
+| 61 | `packet_hash()` lives in `hip.packets`, not in the evaluation. | The API has to answer "is this explanation stale?" and may not import `eval` (the dependency rule). The hash is a property of the packet anyway, and it is meaningful precisely because a packet carries no wall-clock field (#44): it changes when the data changes and at no other time. |
+| 62 | Every prompt reaches a model through that model's own instruct formatting: `tokenizer.apply_chat_template` on MLX, `/api/chat` on Ollama. | Both runtimes silently accept a raw string and neither warns. Untemplated, a model never sees the turn markers it was tuned on and never emits its end-of-turn token. Measured 2026-08-13 on Qwen3-8B, the matched anchor pair: templated Ollama stopped at 528 tokens with a clean answer while untemplated MLX produced the same opening and ran to the 3,000-token cap, inflating its stated-figure count from 89 to 1,461 and burying the answer past where refusal detection could see it. Ollama's `/api/chat` is byte-identical to `/api/generate` for a model whose renderer applies either way (verified on gemma-4-E4B: same 819 tokens, same text), and is the difference between output and silence for a thinking model — gemma-4-12B returned an empty string from the raw path for every prompt, including "Reply with exactly: OK". Rejected: hand-writing a template per model in the Modelfile, which puts the formatting in an import script rather than with the model that owns it. |
+| 63 | `hip` loads `.env` into `os.environ` at startup. | `Settings` reads `.env` only for its own `HIP_`-prefixed fields; pydantic-settings exports nothing else. Every source credential and the judge key are resolved with `os.environ.get()`, so keys placed in `.env` — exactly where `.env.example`, the README, and the judge's own error message all say to put them — were invisible to the code that needed them, and had to be exported by hand. The documentation was right and the loader was missing. A real environment variable still wins, so an explicit export overrides the file and CI can inject secrets with no `.env` present. |
+| 64 | The output-token budget is sized from measurement, and is uniform across every candidate. | It has to cover reasoning *and* answer, because a reasoning model spends it before emitting a word. Raised twice from evidence: 1600 truncated Qwen3-8B after 5,747 characters of reasoning into an empty answer; 3000 left gemma-4-12B returning nothing on 8 of 15 scenarios. At 6000, gemma-4-12B stops cleanly on 9 of 15. Uniform because a per-model budget reintroduces the confound the anchors exist to remove — and uniformity is cheap here, since deterministic sampling means a model that stops at 826 tokens produces byte-identical output at any higher cap, so raising it only requires re-running the models that actually hit it. |
 
 ## Module Layout
 
@@ -125,7 +137,8 @@ housing-intelligence/
 ├── config/
 │   ├── sources.yml            # 13 sources: url, cadence, license, adapter name
 │   ├── geography.yml          # in-scope states and levels (#14)
-│   └── metrics.yml            # 23 metrics: label, unit, frequency, direction
+│   ├── metrics.yml            # 23 metrics: label, unit, frequency, direction
+│   └── evaluation.yml         # candidates, scenarios, rubric, judge (#56)
 ├── schemas/
 │   └── packet-v1.json         # published packet contract, generated from code (#43)
 ├── src/hip/
@@ -158,18 +171,32 @@ housing-intelligence/
 │   │   ├── db.py              # engine, session_scope, probe() for /health
 │   │   ├── models.py          # Region, RegionIdentifier, RegionCrosswalk
 │   │   ├── load.py            # one-transaction upsert of spine and facts (#25)
-│   │   └── migrations/        # Alembic 0001–0006
+│   │   └── migrations/        # Alembic 0001–0007
 │   ├── analytics/compute.py   # change, CAGR, affordability, rankings (#34–#36)
 │   ├── packets/
 │   │   ├── schema.py          # Pydantic models = the contract (#12, #43, #44)
 │   │   ├── assemble.py        # build_packet(session, region_id, window) (#42)
 │   │   ├── caveats.py         # pure caveat derivation, shared with /summary (#46)
 │   │   └── report.py          # render_markdown(packet) — pure (#45)
+│   ├── eval/                  # Milestone 8: model evaluation + explanations (#56)
+│   │   ├── types.py           # Scenario, Generation, CheckResult, Judgment
+│   │   ├── scenarios.py       # questions x sampled packets, deterministic
+│   │   ├── prompts.py         # packet → JSON or Markdown payload; prompt assembly
+│   │   ├── normalize.py       # reasoning/answer split across both runtimes
+│   │   ├── checks.py          # deterministic numeric verification (#58)
+│   │   ├── runner.py          # the run loop: one model resident at a time
+│   │   ├── runners/           # base protocol (#57), ollama.py, mlx_runner.py
+│   │   ├── judge.py           # Claude rubric grading, Batch API
+│   │   ├── store.py           # JSONL artifacts per stage, resumable
+│   │   ├── report.py          # the published evaluation report (#59)
+│   │   └── explain.py         # explanations for the selected model (#60)
+│   ├── eval_cli.py            # `hip eval ...`; optional deps imported lazily
 │   └── api/
 │       ├── main.py            # FastAPI app, CORS for the dashboard origin
 │       ├── deps.py            # read-only session dependency
 │       ├── params.py          # RegionLevel and Window, shared by the routers
-│       └── routers/           # health, regions, metrics, analytics, packets
+│       └── routers/           # health, regions, metrics, analytics, packets,
+│                              #   explanations (#60)
 ├── dbt/
 │   ├── dbt_project.yml        # staging = views, marts = tables
 │   ├── profiles.yml           # duckdb (default) and postgres targets
@@ -189,11 +216,13 @@ housing-intelligence/
 │   ├── raw/                   # immutable downloads, content-addressed
 │   ├── parquet/               # landing tier
 │   ├── duckdb/                # working analytical database; 3.48M parcels live here
-│   └── packets/<window>/      # analysis packets, one JSON per region
+│   ├── packets/<window>/      # analysis packets, one JSON per region
+│   └── eval/<run>/            # scenarios, generations, checks, judgments (JSONL)
 ├── reports/                   # human-facing output, not rebuildable input
 │   ├── validation/            # gate reports per run
-│   └── regions/<window>/      # Markdown reports, one per region
-├── tests/                     # 146 Python tests; API tests skip without a warehouse
+│   ├── regions/<window>/      # Markdown reports, one per region
+│   └── evaluation/            # the published model-evaluation report
+├── tests/                     # 223 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
@@ -203,13 +232,14 @@ housing-intelligence/
 **Dependency rule.** Imports flow one direction along the pipeline and never back:
 
 ```text
-sources → landing → transform → geography → validate → warehouse → analytics → packets
-                                                          ↑
-                                                        api (reads only)
+sources → landing → transform → geography → validate → warehouse → analytics
+    → packets → eval
+                   ↑
+                 api (reads only)
 ```
 
 `api` may import `warehouse` read models and `packets`, and nothing else from the
-pipeline — it must not be able to import `sources` or `transform`, which is what keeps
+pipeline — including `eval`, which is why `packet_hash()` lives in `packets` (#61) — it must not be able to import `sources` or `transform`, which is what keeps
 decision #6 true by construction rather than by discipline. Nothing imports `api`.
 `web/` reaches the API over HTTP only and shares no code with Python. `config` and
 `duck` are infrastructure leaves importable from anywhere (#23); every other cross-stage
@@ -586,6 +616,44 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **The dashboard's tests cover arithmetic, not rendering** (#48). `lib/scale.ts` and
   `lib/format.ts` are tested directly; no test asserts that a page renders, that the
   report route fetches, or that print styles hide what they should.
+- **The evaluation samples three counties, not all 21** (`hip eval scenarios
+  --regions`). Five questions across three packets is 15 scenarios per model; widening
+  it is a flag, but each added region costs one generation per model per question, and a
+  generation is 40 seconds to 3 minutes on this machine.
+- **Reasoning is measured, never graded.** Only final answers reach the judge. A model
+  whose reasoning is excellent and whose answer is wrong scores as wrong, which is the
+  intent — but it also means the evaluation says nothing about reasoning quality.
+- **Refusal detection is a heuristic** (`hip.eval.normalize.looks_like_refusal`): a
+  phrase list plus a length ceiling. Tuned to under-report rather than over-report,
+  because crediting a model for a decline it never made is the worse error. The judge
+  scores refusal quality properly under `instruction_following`; the heuristic exists so
+  the deterministic layer can score the refusal scenario without paying for a judgment.
+- **The numeric checker verifies existence, not correct use.** A figure that appears in
+  the packet counts as supported even if the model attached it to the wrong metric.
+  Catching that is the judge's job, under `factual_accuracy`. The counted rate is
+  therefore a floor on fabrication, not a complete accuracy measure.
+- **Token counts in the evaluation are estimates** (characters over four), not tokenizer
+  output. An exact count needs each model's own tokenizer, which would make the scenario
+  — the thing every model must receive identically — differ per model.
+- **Explanations are generated per region and go stale silently in the warehouse.**
+  `packet_sha256` makes staleness *detectable* and the API reports it, but nothing
+  regenerates automatically; a pipeline run leaves every explanation stale until
+  `hip explain` is run again.
+- **`gemma-4-e4b-mlx` cannot be loaded at all.** mlx-lm 0.31.3 rejects the weights
+  with `Received 126 parameters not in model` — the E4B MatFormer architecture is not
+  supported. All 15 of its generations are recorded as errors rather than dropped, and
+  it costs one of the two anchor pairs, so the cross-runtime comparison rests on
+  Qwen3-8B alone.
+- **Three candidates do not converge within a 6,000-token budget.** `phi-4-mini-mlx`
+  hits the cap on 15 of 15 (a visible doubt loop: *"Wait, perhaps the window is 6
+  years…"*), `qwen35-9b-mlx` on 13 of 15 (re-enumerating the same caveats, individual
+  lines repeated four times), and `gemma-4-12b-q4` on 6 of 15 at 12.6 tok/s, which is
+  8.6 minutes per attempt. Doubling the budget from 3,000 changed the first two not at
+  all, which is what makes "does not converge" a finding rather than a suspicion.
+- **The judge's rubric schema cannot express numeric bounds.** Structured outputs
+  reject `minimum`/`maximum`, and the rejection happens per request at submission time,
+  not when the schema is built — the first batch returned 105 errors for 105 requests.
+  Scores are bounded by an enum instead, which also forces whole-number grades.
 - **Refresh is manual.** There is no scheduler; a refresh is a `hip` command run by a
   person or a cron entry they write themselves. Deliberate — see #6.
 - **ZIP allocation is area-weighted, not population-weighted** (#26). A half-empty ZIP

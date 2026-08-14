@@ -1,8 +1,9 @@
 """Enforce the module dependency rule from ARCHITECTURE.md.
 
-    sources → landing → transform → geography → validate → warehouse → analytics → packets
-                                                              ↑
-                                                            api (reads only)
+    sources → landing → transform → geography → validate → warehouse → analytics
+        → packets → eval
+                       ↑
+                     api (reads only)
 
 Imports flow one direction along the pipeline and never back. ``api`` may import only
 ``warehouse`` and ``packets``; nothing imports ``api``; ``hip.config`` is importable
@@ -28,6 +29,7 @@ PIPELINE = [
     "warehouse",
     "analytics",
     "packets",
+    "eval",
 ]
 STAGE_INDEX = {name: i for i, name in enumerate(PIPELINE)}
 

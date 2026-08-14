@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -153,3 +154,49 @@ def test_missing_file_names_the_path(tmp_path: Path) -> None:
         load_sources(tmp_path)
 
     assert "sources.yml" in str(exc.value)
+
+
+def test_env_file_is_loaded_into_the_process_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keys placed in `.env` must reach `os.environ`.
+
+    pydantic-settings reads `.env` only for its own `HIP_`-prefixed fields, so source
+    credentials and the judge's key — all resolved with `os.environ.get()` — never saw
+    the file. `.env.example` and every error message said to put keys there, and doing
+    so had no effect until this loader existed.
+    """
+    from hip.config import load_env_file
+
+    env = tmp_path / ".env"
+    env.write_text("DEMO_API_KEY=from-file\n")
+    monkeypatch.delenv("DEMO_API_KEY", raising=False)
+    load_env_file.cache_clear()
+
+    assert load_env_file(env) == 1
+    assert os.environ["DEMO_API_KEY"] == "from-file"
+    load_env_file.cache_clear()
+
+
+def test_a_real_environment_variable_beats_the_env_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An explicit export still wins, so CI can inject secrets with no `.env` present."""
+    from hip.config import load_env_file
+
+    env = tmp_path / ".env"
+    env.write_text("DEMO_API_KEY=from-file\n")
+    monkeypatch.setenv("DEMO_API_KEY", "from-shell")
+    load_env_file.cache_clear()
+
+    load_env_file(env)
+    assert os.environ["DEMO_API_KEY"] == "from-shell"
+    load_env_file.cache_clear()
+
+
+def test_a_missing_env_file_is_not_an_error(tmp_path: Path) -> None:
+    from hip.config import load_env_file
+
+    load_env_file.cache_clear()
+    assert load_env_file(tmp_path / "absent") == 0
+    load_env_file.cache_clear()

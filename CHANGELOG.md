@@ -3,6 +3,90 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+Milestone 8 in progress. The evaluation harness, the explanation endpoint, and the
+dashboard panel are built and tested, and the full 120-generation run is complete. The
+judged report that selects a model is outstanding, so no model has been selected yet.
+
+### Added
+- **Evaluation harness** — `hip eval scenarios | run | check | judge | report | models |
+  show | cost`. Five standardized scenarios are built from real analysis packets and put
+  through eight local candidates across two runtimes, with sampling pinned identically
+  on both sides so the comparison is not a stochastic sampler against a greedy one.
+- **One `ModelRunner` protocol** over Ollama and MLX-LM (ARCHITECTURE #57). Each
+  implementation normalizes its runtime's telemetry and declares what it cannot report:
+  MLX exposes a true allocator peak, Ollama only process RSS, and `memory_basis` says
+  which a figure is rather than letting a reader assume they are comparable.
+- **Deterministic numeric verification** (#58) — every figure a model states is matched
+  against the packet it was given, so hallucination rate is counted rather than graded.
+  Claude scores only what a reader can judge: grounding, caveat handling, usability.
+- **Reasoning normalization** — Ollama splits reasoning into a `thinking` field while
+  MLX leaves `<think>` inline, for the same model and prompt. Both are reduced to one
+  answer before grading, including the unterminated case where the budget ran out
+  mid-thought. Reasoning tokens are measured as cost and never graded as quality.
+- **`region_explanations` and `GET /regions/{id}/explanation`** (migration `0007`, #60)
+  — `hip explain` generates a short narrative per region with the selected model and
+  stores it with the model, the runtime, and `packet_sha256`. The response carries
+  `kind: "interpretation"`, names the model, and reports `stale` when the numbers have
+  moved since the text was written.
+- **Explanation panel** on the region page, styled as commentary rather than as another
+  data card, with attribution in the heading. Renders nothing when no explanation
+  exists — the dashboard is fully usable with no AI layer at all.
+- **`config/evaluation.yml`** — candidates, scenarios, rubric and weights, and judge
+  settings as product configuration, cross-checked by `hip check-config`.
+- **`make setup-eval` and `make eval`**, plus the optional `eval` dependency group.
+
+### Fixed
+- **Neither runtime was applying the models' instruct formatting.** MLX-LM's
+  `stream_generate` takes a raw string and does not template it; Ollama models imported
+  with a bare `FROM` carry `TEMPLATE {{ .Prompt }}`. Untemplated, a model never emits
+  its end-of-turn token: the same Qwen3-8B at the same precision reported 89 stated
+  figures on one runtime and 1,461 on the other, with 3/3 correct refusals against 0/3.
+  Prompts now go through `apply_chat_template` on MLX and `/api/chat` on Ollama. Caught
+  by the matched anchor pair, which is what the anchors are for.
+- **A thinking model returned nothing at all through `/api/generate`.** gemma-4-12B
+  produced an empty string for every prompt — including "Reply with exactly: OK" — while
+  consuming the whole token budget, because its output goes to a reasoning channel the
+  raw endpoint never populates. The same call on `/api/chat` returns its reasoning.
+- **`.env` was never loaded into the process environment.** pydantic-settings reads it
+  only for `HIP_`-prefixed settings, so every source credential and the judge key —
+  all resolved with `os.environ.get()` — ignored the file that `.env.example`, the
+  README, and the judge's own error message all told you to put them in.
+- **The judge's rubric schema was rejected by the API.** Structured outputs do not
+  support `minimum`/`maximum` on numbers, and the rejection lands per request at
+  submission: the first batch returned 105 errors for 105 requests. Scores are an enum
+  now, and `collect_batch` carries the API's message through instead of recording only
+  the result type.
+- **The numeric checker counted correctly-cited dates as fabrications.** `2019-12-31`
+  was decomposed by the number pattern into 2019, -12, and -31, so every citation of a
+  window produced three phantom "unsupported" figures. Measured on a real run: 33 of 148
+  figures reported unsupported for gemma-4-E4B, against 0 of 74 after the fix. Two
+  related false positives went with it — a number inside a metric *name*, and a year
+  echoed from the question while correctly declining to answer.
+- **The output budget truncated reasoning models specifically.** At 1,600 tokens
+  Qwen3-8B wrote 5,747 characters of reasoning, hit the cap, and returned an empty
+  answer. Grading that as a zero would have biased the entire comparison against
+  reasoning models, which is the confound the milestone exists to avoid.
+
+### Known gaps
+- **No model has been selected.** The judging batch is in flight; the report and
+  `hip explain` over the counties follow it.
+- **`gemma-4-e4b-mlx` cannot be loaded** by mlx-lm 0.31.3 (`Received 126 parameters not
+  in model` — the E4B MatFormer architecture). All 15 of its generations are recorded
+  as errors, and it costs one of the two anchor pairs.
+- **Three candidates do not converge at a 6,000-token budget** — `phi-4-mini-mlx` on
+  15 of 15, `qwen35-9b-mlx` on 13 of 15, `gemma-4-12b-q4` on 6 of 15 at 8.6 minutes per
+  attempt. Doubling the budget from 3,000 changed the first two not at all.
+- **The evaluation samples three counties**, not all 21. Widening it is a flag, at one
+  generation per model per question.
+- **Refusal detection is a heuristic** — a phrase list plus a length ceiling, tuned to
+  under-report rather than credit a decline that was never made.
+- **The numeric checker verifies existence, not correct use.** A packet figure attached
+  to the wrong metric passes the count and is the judge's to catch.
+- **`uv sync` removes unlisted groups**, so `make setup` uninstalls `mlx-lm` and
+  `anthropic`; `make setup-eval` is the one that installs them.
+
 ## [0.8.0] — 2026-08-13
 
 The parcel tier arrives, and with it the housing *stock* — how much of it there is, how

@@ -22,6 +22,7 @@ from hip.packets.schema import (
     PACKET_VERSION,
     SCHEMA_PATH,
     Packet,
+    packet_hash,
     published_schema,
     schema_text,
 )
@@ -36,6 +37,7 @@ __all__ = [
     "display_label",
     "format_change",
     "format_value",
+    "packet_hash",
     "published_schema",
     "regions_for_level",
     "render_markdown",

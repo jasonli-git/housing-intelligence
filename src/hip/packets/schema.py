@@ -16,6 +16,7 @@ which every packet carries in `sources[].fetched_at`.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import date, datetime
 from pathlib import Path
@@ -176,6 +177,20 @@ class Packet(_Strict):
     highlights: list[PacketHighlight]
     caveats: list[str]
     sources: list[PacketSource]
+
+
+def packet_hash(packet: Packet) -> str:
+    """SHA-256 of a packet's canonical JSON — its identity as data.
+
+    Lives here rather than with the code that generates explanations because it is a
+    property of the packet, and because the API needs it to answer "is this explanation
+    stale?" without importing the evaluation stage (which the dependency rule forbids).
+
+    Meaningful precisely because a packet carries no wall-clock field (#44): the hash
+    changes when the data changes and at no other time, so a mismatch is a real
+    difference in the numbers rather than a different generation timestamp.
+    """
+    return hashlib.sha256(packet.model_dump_json().encode()).hexdigest()
 
 
 def published_schema() -> dict[str, Any]:

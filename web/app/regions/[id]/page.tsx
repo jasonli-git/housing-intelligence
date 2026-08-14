@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { TrendChart } from "@/components/TrendChart";
 import { api, formatChange, formatValue } from "@/lib/api";
 
@@ -15,9 +16,13 @@ export default async function RegionPage({
   const { id } = await params;
   const regionId = Number(id);
 
-  const [region, summary] = await Promise.all([
+  // The explanation is fetched alongside the data and is allowed to be absent: the
+  // dashboard is fully usable with no AI layer at all, so a missing one renders nothing
+  // rather than an error or an empty slot (SPEC: the platform stays useful without it).
+  const [region, summary, explanation] = await Promise.all([
     api.region(regionId),
     api.summary(regionId, WINDOW),
+    api.explanation(regionId, WINDOW),
   ]);
 
   if (!region || !summary) {
@@ -155,6 +160,8 @@ export default async function RegionPage({
           </div>
         </section>
       )}
+
+      <ExplanationPanel explanation={explanation} />
 
       {summary.caveats.length > 0 && (
         <>

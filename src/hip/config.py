@@ -178,6 +178,123 @@ class GeographyScope(BaseModel):
     municipality_id_system: Literal["census_mcd", "nj_municipal_code"]
 
 
+class SamplingParams(BaseModel):
+    """One pinned sampling configuration, applied identically to every runtime.
+
+    Stated in full rather than partially because the two runtimes disagree on defaults:
+    MLX-LM is greedy at temperature 0.0, while Ollama applies temp 0.8 / top_p 0.9 /
+    top_k 40 / repeat_penalty 1.1 for models that ship no parameters of their own. A
+    field left unset here would silently mean two different things per cohort.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    temperature: float = Field(ge=0.0, le=2.0)
+    top_p: float = Field(ge=0.0, le=1.0)
+    top_k: int = Field(ge=1)
+    repeat_penalty: float = Field(gt=0.0)
+    seed: int | None = None
+
+
+class SamplingConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    deterministic: SamplingParams
+    stability: SamplingParams
+
+
+class EvalLimits(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    context_tokens: int = Field(ge=2048)
+    max_output_tokens: int = Field(ge=256)
+    keep_alive: int = 0
+
+
+class CandidateModel(BaseModel):
+    """One model under test. ``anchor`` pairs it with its counterpart in the other
+    cohort, which is what licenses any cross-runtime comparison."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    ref: str
+    label: str
+    quantization: str
+    anchor: str | None = None
+
+
+class Cohort(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    runner: Literal["ollama", "mlx"]
+    endpoint: str | None = None
+    models: list[CandidateModel] = Field(min_length=1)
+
+
+class EvalScenario(BaseModel):
+    """One question asked of every model against every sampled packet."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    question: str
+    grounds: list[str] = Field(default_factory=list)
+    expects_refusal: bool = False
+
+
+class RubricCriterion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    weight: float = Field(gt=0.0)
+    description: str
+
+
+class Rubric(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    criteria: list[RubricCriterion] = Field(min_length=1)
+
+
+class JudgeConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    model: str
+    mode: Literal["batch", "sync"] = "batch"
+    max_tokens: int = Field(ge=1024)
+    effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
+
+
+class EvaluationConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    sampling: SamplingConfig
+    limits: EvalLimits
+    cohorts: dict[str, Cohort] = Field(min_length=1)
+    system_prompt: str
+    scenarios: list[EvalScenario] = Field(min_length=1)
+    rubric: Rubric
+    judge: JudgeConfig
+
+    @property
+    def models(self) -> list[CandidateModel]:
+        """Every candidate across every cohort, in declaration order."""
+        return [m for cohort in self.cohorts.values() for m in cohort.models]
+
+    def cohort_of(self, model_id: str) -> str:
+        for name, cohort in self.cohorts.items():
+            if any(m.id == model_id for m in cohort.models):
+                return name
+        raise ConfigError(f"evaluation.yml: no cohort declares model '{model_id}'")
+
+    def model(self, model_id: str) -> CandidateModel:
+        for candidate in self.models:
+            if candidate.id == model_id:
+                return candidate
+        raise ConfigError(f"evaluation.yml: no model '{model_id}'")
+
+
 class SourcesConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -251,6 +368,33 @@ def _validate[T: BaseModel](model: type[T], data: dict[str, Any], path: Path) ->
 
 
 @lru_cache(maxsize=1)
+def load_env_file(path: Path | None = None) -> int:
+    """Load `.env` into the process environment. Returns how many names were set.
+
+    `Settings` reads `.env` for its own `HIP_`-prefixed fields, but pydantic-settings
+    does not export anything else into `os.environ` — so the source API keys, which are
+    read with `os.environ.get()` (`_resolve_env`, `check_config`, and the judge), never
+    saw a `.env` at all. Every key had to be exported by hand while `.env.example` and
+    the error messages both said to put it in `.env`. The documentation was not wrong
+    about where keys belong; the loader was missing.
+
+    Real values already in the environment win, so an explicit `export` still overrides
+    the file and CI can inject secrets without a `.env` present.
+    """
+    from dotenv import dotenv_values
+
+    env_path = path or (REPO_ROOT / ".env")
+    if not env_path.exists():
+        return 0
+    loaded = 0
+    for key, value in dotenv_values(env_path).items():
+        if value is not None and key not in os.environ:
+            os.environ[key] = value
+            loaded += 1
+    return loaded
+
+
+@lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()
 
@@ -270,6 +414,58 @@ def load_geography(config_dir: Path | None = None) -> GeographyScope:
     return _validate(GeographyConfig, _load_yaml(path), path).scope
 
 
+def load_evaluation(config_dir: Path | None = None) -> EvaluationConfig:
+    """The Milestone 8 evaluation plan. Only `hip eval` and `hip explain` read this."""
+    path = (config_dir or get_settings().config_dir) / "evaluation.yml"
+    return _validate(EvaluationConfig, _load_yaml(path), path)
+
+
+def _duplicates(values: list[str]) -> list[str]:
+    return sorted({v for v in values if values.count(v) > 1})
+
+
+def _check_evaluation(config_dir: Path | None) -> list[str]:
+    """Cross-check evaluation.yml, when the checkout has one.
+
+    Unlike the other three files this one is not load-bearing for the pipeline — only
+    `hip eval` and `hip explain` read it — so its absence must not stop `hip acquire`.
+    A file that exists and is wrong is still an error; both of those commands fail
+    loudly on a missing file, which covers the misspelled-filename case.
+    """
+    path = (config_dir or get_settings().config_dir) / "evaluation.yml"
+    if not path.exists():
+        return []
+
+    evaluation = load_evaluation(config_dir)
+    problems = [
+        f"evaluation.yml: duplicate model id '{dup}'"
+        for dup in _duplicates([m.id for m in evaluation.models])
+    ]
+    problems += [
+        f"evaluation.yml: duplicate scenario id '{dup}'"
+        for dup in _duplicates([s.id for s in evaluation.scenarios])
+    ]
+    problems += [
+        f"evaluation.yml: duplicate rubric criterion '{dup}'"
+        for dup in _duplicates([c.id for c in evaluation.rubric.criteria])
+    ]
+
+    # An anchor exists to license a cross-runtime comparison, so one that names models
+    # inside a single cohort is measuring nothing and is almost certainly a typo.
+    anchors: dict[str, set[str]] = {}
+    for name, cohort in evaluation.cohorts.items():
+        for candidate in cohort.models:
+            if candidate.anchor:
+                anchors.setdefault(candidate.anchor, set()).add(name)
+    problems += [
+        f"evaluation.yml: anchor '{anchor}' appears only in cohort "
+        f"'{next(iter(cohorts))}'; an anchor pairs models across cohorts"
+        for anchor, cohorts in sorted(anchors.items())
+        if len(cohorts) < 2
+    ]
+    return problems
+
+
 def check_config(config_dir: Path | None = None) -> list[str]:
     """Load all three files and cross-check them. Returns a list of problems.
 
@@ -281,6 +477,7 @@ def check_config(config_dir: Path | None = None) -> list[str]:
     sources = load_sources(config_dir)
     metrics = load_metrics(config_dir)
     load_geography(config_dir)
+    problems.extend(_check_evaluation(config_dir))
 
     for metric_id, metric in metrics.items():
         if metric.source_id not in sources:

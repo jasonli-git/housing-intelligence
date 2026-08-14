@@ -167,3 +167,55 @@ button {
   tr, li { break-inside: avoid; }
   h1, h2 { break-after: avoid; }
 }
+
+/* --- Interpretation panel ---------------------------------------------------------
+   The only text on the dashboard a model wrote rather than the pipeline computed. It is
+   styled to be unmistakable as commentary: dashed rather than solid, so it does not read
+   as another data card; indented from the measured content; and carrying its attribution
+   in the heading rather than in a footnote. SPEC requires a reader to distinguish
+   computed metrics from model interpretation, and typography is how that promise is kept
+   on screen. */
+.interpretation {
+  margin-top: 2rem;
+  padding: 1rem 1.15rem;
+  border: 1px dashed var(--border);
+  border-left: 3px solid var(--text-muted);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+.interpretation-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.interpretation-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.interpretation-source { font-size: 0.8rem; color: var(--text-muted); }
+.interpretation-runtime { opacity: 0.75; }
+.interpretation p { margin: 0 0 0.7rem; font-size: 0.9rem; line-height: 1.6; }
+.interpretation p:last-child { margin-bottom: 0; }
+.interpretation-note {
+  margin-top: 0.9rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+/* Stale text still looks authoritative, which is exactly the danger — so the warning
+   sits above the prose rather than below it. */
+.interpretation-stale {
+  margin-bottom: 0.8rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 6px;
+  background: var(--div-pos-1);
+  color: #fff;
+  font-size: 0.8rem;
+}

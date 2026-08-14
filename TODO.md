@@ -697,6 +697,110 @@ Eight candidate models, four per cohort, **every one of them 4-bit**.
       compares models and runtimes at a fixed 4-bit precision; quantization is a
       settled input, not a variable. Reopening it means re-downloading weights.
 
+## Milestone 8 — Model evaluation and optional explanations
+
+Deliverable: standardized housing scenarios built from real packets, a runner that puts
+the same scenario through every candidate model, deterministic numeric checks, a
+Claude-graded rubric, a published evaluation report naming the selected model and why,
+and an explanation panel that is labeled as interpretation rather than measurement.
+
+- [x] `config/evaluation.yml` — 8 candidates, 5 scenarios, 6 rubric criteria, pinned
+      sampling for both runtimes, judge settings. Validated by `hip check-config`
+- [x] `hip.eval.scenarios` — questions x an evenly-spaced packet sample; deterministic,
+      so two runs grade the same questions without a recorded seed
+- [x] `hip.eval.prompts` — packet → JSON or Markdown payload, prompt assembly, and a
+      context check that refuses to let a runtime truncate a packet silently
+- [x] `hip.eval.runners` — `ModelRunner` protocol (ARCHITECTURE #57) over Ollama and
+      MLX-LM, each normalizing its own telemetry and declaring what it cannot report
+- [x] `hip.eval.normalize` — reasoning/answer split across both runtimes, including the
+      unterminated `<think>` case
+- [x] `hip.eval.checks` — deterministic numeric verification (#58)
+- [x] `hip.eval.judge` — rubric grading via the Batch API, structured output, cost
+      estimate before spending
+- [x] `hip.eval.store` — JSONL per stage; a run is resumable and a partial run reports
+- [x] `hip.eval.report` — anchors first, deterministic table, then rubric scores
+- [x] `hip.eval.explain` — explanations from the selected model, written by CLI
+- [x] Migration `0007` — `region_explanations`, applied
+- [x] `GET /regions/{id}/explanation` and the dashboard panel (#60)
+- [x] `hip eval scenarios | run | check | judge | report | models | show | cost` and
+      `hip explain`; `make setup-eval` and `make eval`
+- [x] Tests — 68 harness tests, 7 endpoint tests, 3 for `.env` loading, module
+      boundary extended to `eval`
+- [x] **The full generation run** — 120 generations, 105 usable. Completed
+      2026-08-14 after three harness bugs were found and fixed mid-run (below)
+- [x] `.env` is loaded into the process environment (ARCHITECTURE #63)
+- [ ] **The judged report.** Batch `msgbatch_01G2u9KT2weSd1vnG5ZXfApH` submitted
+      2026-08-14, 105 judgments, ~$2.89
+- [ ] `hip explain` over the 21 counties, using whichever model the report selects
+- [ ] Move `import_gguf.sh` and `kvbench.sh` into the repo — still outstanding from the
+      prep work, and `import_gguf.sh` is now known to produce passthrough templates
+
+- Note: **the numeric checker had a false-positive bug that would have published a wrong
+  headline number.** `2019-12-31` was decomposed by the number regex into 2019, -12, and
+  -31, so every correctly-cited window counted as three fabricated figures. Measured on
+  a real run: it reported 33/148 figures unsupported for gemma-4-E4B; the true figure
+  after fixing dates, packet-verbatim matches, and question echoes is 0/74. Two related
+  false positives went with it — a number inside a metric *name* ("Renters paying over
+  30% of income") and a year echoed from the question while correctly declining.
+  Regression tests hold all four cases.
+- Note: **checks are computed as each generation lands, not in a pass at the end.** The
+  first design batched them after the run loop, so the 10-minute timeout that surfaced
+  the bug above also lost every check for 13 expensive generations. `hip eval check`
+  backfills idempotently for runs recorded before a checker change, and `--restart` now
+  clears `checks.jsonl` alongside `generations.jsonl` — leaving it behind would mix two
+  configs' results in one file, which is usually the thing a restart is correcting.
+- Note: **the output budget truncated reasoning models specifically, and the first full
+  run had to be discarded because of it.** At `max_output_tokens: 1600` Qwen3-8B wrote
+  5,747 characters of reasoning, hit the cap, and returned an empty answer with
+  `finish_reason: length`. Non-reasoning models were unaffected, so grading the empty
+  answer as a zero would have biased the comparison against exactly the models the
+  reasoning-normalization work exists to handle fairly. Raised to 3000 — about twice the
+  largest observed trace — and the run restarted so every model faces one budget.
+- Note: **`uv sync` removes packages from groups it is not told about.** `make setup`
+  (dev + dbt) silently uninstalls `mlx-lm` and `anthropic`; `make setup-eval` installs
+  all four groups. Found by running the two in sequence.
+- Note: **generation is far slower than the prep measurements suggested.** Those were
+  short prompts; a real scenario carries a ~1,500-token packet and asks for a paragraph.
+  gemma-4-E4B averages 42s, Qwen3-8B about 2.5 minutes. A 120-generation run is hours,
+  which is why the store appends and the runner resumes.
+- Note: **Markdown payloads are ~1,500 tokens against JSON's ~6,000 for the same
+  county.** The evaluation now measures whether that costs quality; `hip explain`
+  defaults to Markdown on the assumption it does not, which the run can overturn.
+- Note: the judge is the only paid dependency, and `ANTHROPIC_API_KEY` was supplied in
+  chat on 2026-08-13. **It is in that transcript — rotate it if the conversation is
+  shared.** Same caveat as the Census/FRED/BLS keys.
+- Note: **neither runtime was applying the models' instruct formatting, and neither
+  said so** (ARCHITECTURE #62). MLX-LM's `stream_generate` takes a raw string and does
+  not template it; Ollama models imported with a bare `FROM` get
+  `TEMPLATE {{ .Prompt }}`. Untemplated, a model never emits its end-of-turn token.
+  Caught by the Qwen3-8B anchor pair, which is the entire reason the anchors exist: the
+  same model at the same precision reported 89 stated figures on one runtime and 1,461
+  on the other, with 3/3 correct refusals against 0/3. Without the pair this would have
+  been published as "Ollama beats MLX".
+- Note: **`/api/chat` is not cosmetic for thinking models.** `gemma-4-12b` returned an
+  empty string from `/api/generate` for *every* prompt including "Reply with exactly:
+  OK", while consuming the whole token budget — its output goes to a reasoning channel
+  the raw path never populates. On `/api/chat` the same call returns 17,458 characters
+  of reasoning. Verified byte-identical on a non-thinking model (gemma-4-E4B: same 819
+  tokens, same text) before switching, so the change is safe for the whole cohort.
+- Note: **the first judging batch failed 105 for 105** on
+  `output_config.format.schema: For 'number' type, properties maximum, minimum are not
+  supported`. Structured outputs reject numeric range constraints, and the rejection is
+  per-request at submission, not at schema build. Scores are an enum now. Nothing was
+  billed — validation failures never reach inference — but the harness recorded only
+  the result *type*, so diagnosing it needed a separate script against the batch
+  endpoint. `collect_batch` now carries the API's message through.
+- Note: **the measured "natural peak" of a model can be an artifact of a broken read
+  path.** gemma-4-12b appeared to peak at 2,785 tokens, which is what justified raising
+  the budget to 6,000. That figure was the visible fragment of a thinking model whose
+  reasoning was being discarded; its real requirement exceeds 6,000. The raise was still
+  correct — 9 of 15 scenarios now stop cleanly against 7 before — but the reasoning
+  behind it was wrong, and a number measured through an unverified path is not evidence.
+- Note: three candidates are **not viable on this machine** and the report says so
+  rather than scoring them as merely poor: `gemma-4-e4b-mlx` cannot be loaded by
+  mlx-lm 0.31.3 at all, and `phi-4-mini-mlx` and `qwen35-9b-mlx` fail to terminate at
+  twice the token budget.
+
 ## Data sources worth adding
 
 Reachability probed 2026-08-13; each line says what it would add and what it needs.
