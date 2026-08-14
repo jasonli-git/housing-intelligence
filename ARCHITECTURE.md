@@ -16,13 +16,15 @@ scope; this document does not restate it.
 > reach the warehouse only as six municipality-level assessment aggregates (#49). Packet
 > `1.1` is validated against `schemas/packet-v1.json`; 21 county and 564 municipal
 > packets are produced by `hip pack`. 223 Python tests and 26 dashboard tests pass,
-> `tsc --noEmit` is clean. **Milestone 8 is under way (#56-#61):** the evaluation
-> harness, `region_explanations` (migration `0007`), `GET /regions/{id}/explanation`,
-> and the dashboard's interpretation panel are built and tested against eight local
-> candidates across two runtimes. The packet finally has a model-facing consumer — but
-> no model has been selected yet, because the generation run and the judged report that
-> selects one are still outstanding. Nothing in the pipeline or the API depends on a
-> model being present.
+> `tsc --noEmit` is clean. **Version 1 is complete (Milestone 8, #56-#64).** Eight local
+> models across two runtimes answered five standardized scenarios over three real county
+> packets — 120 generations, 105 usable — with every stated figure checked against its
+> packet deterministically and 105 rubric judgments from `claude-opus-5`. **Gemma 4 E4B
+> (Q4_K_M, Ollama) was selected** on measured performance: 3.21/4.00, 0.0% unsupported
+> figures, 28.6 tok/s. It wrote the 21 county explanations in `region_explanations`
+> (migration `0007`), served by `GET /regions/{id}/explanation` and shown as
+> interpretation in the dashboard. Nothing in the pipeline or the API depends on a model
+> being present: with the table empty, every page and endpoint still works.
 
 ## System Shape
 

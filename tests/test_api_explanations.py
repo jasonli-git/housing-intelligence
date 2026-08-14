@@ -62,6 +62,44 @@ def _store(region_id: int, packet_sha256: str) -> None:
         session.commit()
 
 
+@pytest.fixture(autouse=True)
+def preserve_real_explanations(county_id: int) -> Iterator[None]:
+    """Snapshot and restore any real explanation for the county under test.
+
+    These tests write and delete rows in a developer's actual warehouse, and one of
+    them deletes deliberately to exercise the 404 path. Without this, running the suite
+    silently destroys generated explanations — it removed Atlantic County's on
+    2026-08-14, which only surfaced because a count came back 20 instead of 21.
+
+    Autouse so a test added later cannot forget it. Restores the exact row, including
+    `generated_at`, so the warehouse is byte-identical afterwards.
+    """
+    with Session(get_engine()) as session:
+        saved = [
+            {
+                "region_id": row.region_id,
+                "window": row.window,
+                "model_id": row.model_id,
+                "model_label": row.model_label,
+                "runtime": row.runtime,
+                "body": row.body,
+                "packet_sha256": row.packet_sha256,
+                "generated_at": row.generated_at,
+            }
+            for row in session.execute(
+                select(RegionExplanation).where(RegionExplanation.region_id == county_id)
+            ).scalars()
+        ]
+    yield
+    with Session(get_engine()) as session:
+        session.execute(
+            delete(RegionExplanation).where(RegionExplanation.region_id == county_id)
+        )
+        for row in saved:
+            session.add(RegionExplanation(**row))
+        session.commit()
+
+
 @pytest.fixture
 def current_explanation(county_id: int) -> Iterator[int]:
     """An explanation pinned to the packet as it currently stands."""
@@ -69,11 +107,6 @@ def current_explanation(county_id: int) -> Iterator[int]:
         digest = packet_hash(build_packet(session, county_id, WINDOW))
     _store(county_id, digest)
     yield county_id
-    with Session(get_engine()) as session:
-        session.execute(
-            delete(RegionExplanation).where(RegionExplanation.region_id == county_id)
-        )
-        session.commit()
 
 
 def test_absent_explanation_is_a_404_not_an_error(county_id: int) -> None:
@@ -122,15 +155,8 @@ def test_an_explanation_written_from_other_numbers_reports_stale(
 ) -> None:
     """Prose about revised figures still reads as authoritative — hence the flag."""
     _store(county_id, "0" * 64)
-    try:
-        body = client.get(f"/regions/{county_id}/explanation?window={WINDOW}").json()
-        assert body["stale"] is True
-    finally:
-        with Session(get_engine()) as session:
-            session.execute(
-                delete(RegionExplanation).where(RegionExplanation.region_id == county_id)
-            )
-            session.commit()
+    body = client.get(f"/regions/{county_id}/explanation?window={WINDOW}").json()
+    assert body["stale"] is True
 
 
 def test_the_endpoint_does_not_write(current_explanation: int) -> None:

@@ -1,16 +1,17 @@
 # Housing Intelligence Platform — Roadmap
 
-Version 1 is in progress. Milestones 0 through 7 and 9 are complete: the warehouse holds
-a NJ geography spine, 335,927 observations across 23 metrics from 10 sources spanning
+**Version 1 is complete — all ten milestones shipped.** The warehouse holds a NJ
+geography spine, 335,927 observations across 23 metrics from 10 sources spanning
 1971–2026, 19,527 computed changes, and 19,517 change plus 8,302 value rankings — served
 over the API, displayed by the dashboard, and packaged as versioned analysis packets,
-with 223 Python and 26 dashboard tests passing. All eight pipeline stages run. Milestone
-9 was built out of numeric order, before Milestone 5, because it corrects numbers the
-dashboard displays; fixing them afterwards would have meant re-checking every chart.
-Milestone 8 is the last of Version 1 and is under way: the evaluation harness, the
-explanation endpoint, and the dashboard panel are built and tested against eight
-candidate models — four per runtime, all 4-bit. All 120 generations are complete; what
-remains is the judged report that selects a model.
+with 223 Python and 26 dashboard tests passing. All eight pipeline stages run.
+
+Two milestones ran out of numeric order. Milestone 9 was built before Milestone 5,
+because it corrects numbers the dashboard displays and fixing them afterwards would have
+meant re-checking every chart. Milestone 8 closed last, on 2026-08-14: eight local models
+were evaluated against standardized scenarios built from real packets, Gemma 4 E4B was
+selected on measured performance rather than reputation, and it now writes the
+interpretation panel on every county page.
 
 A milestone counts as done when its capability is reachable through the CLI, the API,
 or the dashboard on a clean checkout; its tests pass; and
@@ -29,7 +30,7 @@ or the dashboard on a clean checkout; its tests pass; and
 | 5 | ✅ done | **Dashboard and maps** — county choropleth drawn as inline SVG from our own GeoJSON, ranking table, region detail with metric tiles, trend charts with crosshair tooltips, and a table view of every series with its source |
 | 6 | ✅ done | **Analysis packets and reports** — packet `1.0` published as a generated JSON Schema, `hip pack` writing 21 county packets and their Markdown reports, `/regions/{id}/packet` and `/regions/{id}/report`, and a print-ready report page in the dashboard |
 | 7 | ✅ done | **Parcel and MOD-IV layer** — 3.48M NJ parcels in Parquet/DuckDB, six municipality assessment aggregates promoted to the warehouse for 554 of 564 municipalities, value-based rankings and packet `1.1` levels so a snapshot metric is visible at all, 554 NJ municipal codes in `region_identifiers`, and the release-vintage provenance defect fixed |
-| 8 | 🔄 in progress | **Model evaluation and optional explanations** — 5 standardized scenarios over sampled county packets, a `ModelRunner` protocol over Ollama and MLX-LM, deterministic numeric checks, a Claude-graded rubric, a published evaluation report, and `/regions/{id}/explanation` with a dashboard panel labeled as interpretation. Harness, serving path, and the 120-generation run complete (105 usable; one MLX model cannot be loaded by mlx-lm). The judged report and `hip explain` over the counties are outstanding |
+| 8 | ✅ done | **Model evaluation and optional explanations** — 5 standardized scenarios over 3 real county packets put through 8 local models across 2 runtimes (120 generations, 105 usable), every stated figure checked against its packet, 105 rubric judgments from `claude-opus-5`, and a published report selecting **Gemma 4 E4B** on measured performance. `hip explain` wrote 21 county explanations, served by `/regions/{id}/explanation` and shown as interpretation in the dashboard |
 | 9 | ✅ done | **HUD affordability inputs** — USPS crosswalk replacing area weights with residential-address ratios (2,456 of 2,491 rows), HUD area median income and 80% AMI limits, and `price_to_ami`. Built out of order, before Milestone 5 |
 
 ## Post-Version 1 (not scheduled)

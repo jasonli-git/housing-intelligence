@@ -729,11 +729,14 @@ and an explanation panel that is labeled as interpretation rather than measureme
 - [x] **The full generation run** — 120 generations, 105 usable. Completed
       2026-08-14 after three harness bugs were found and fixed mid-run (below)
 - [x] `.env` is loaded into the process environment (ARCHITECTURE #63)
-- [ ] **The judged report.** Batch `msgbatch_01G2u9KT2weSd1vnG5ZXfApH` submitted
-      2026-08-14, 105 judgments, ~$2.89
-- [ ] `hip explain` over the 21 counties, using whichever model the report selects
+- [x] **The judged report** — batch `msgbatch_01G2u9KT2weSd1vnG5ZXfApH`, 105 of 105
+      graded, `reports/evaluation/v1.md`. **Gemma 4 E4B selected**: 3.21/4.00 weighted,
+      0.0% unsupported figures, 3/3 correct refusals, 28.6 tok/s
+- [x] `hip explain` over the 21 counties, written by the selected model and served at
+      `/regions/{id}/explanation`
 - [ ] Move `import_gguf.sh` and `kvbench.sh` into the repo — still outstanding from the
       prep work, and `import_gguf.sh` is now known to produce passthrough templates
+      (ARCHITECTURE #62), so it needs the template fix before it is committed
 
 - Note: **the numeric checker had a false-positive bug that would have published a wrong
   headline number.** `2019-12-31` was decomposed by the number regex into 2019, -12, and
@@ -800,6 +803,28 @@ and an explanation panel that is labeled as interpretation rather than measureme
   rather than scoring them as merely poor: `gemma-4-e4b-mlx` cannot be loaded by
   mlx-lm 0.31.3 at all, and `phi-4-mini-mlx` and `qwen35-9b-mlx` fail to terminate at
   twice the token budget.
+- Note: **the anchor gap came out small, which is the result that licenses the
+  leaderboard.** Qwen3-8B scored 3.05 on Ollama against 2.91 on MLX — 0.14 on a 4-point
+  scale, against a 3.21-to-1.34 spread across the field. Runtime is therefore not what
+  separates the models, and the cross-cohort ranking can be read as a model comparison.
+  Had the gap been large the report would have had to stop at two separate tables.
+- Note: **the deterministic gate never had to fire.** Every model that was judged came
+  in under the 5% fabrication bar, so the winner was decided on rubric score alone. The
+  gate is still what makes the ordering safe to state — it just did not bind this time,
+  and that is worth knowing before anyone concludes it is decorative.
+- Note: **the API tests were deleting real explanations.**
+  `tests/test_api_explanations.py` picks the top-ranked county and deletes its row to
+  exercise the 404 path, against the developer's actual warehouse. Running `make test`
+  after `hip explain` destroyed Atlantic County's explanation, and it surfaced only
+  because a count came back 20 against an expected 21 — nothing failed. An autouse
+  fixture now snapshots and restores the row, `generated_at` included. Any test that
+  writes to a real warehouse needs this treatment; the other API suites are read-only,
+  which is why the problem had not appeared before.
+- Note: **`completeness` and `caveat_handling` are the weakest criteria across every
+  model** (2.1 and 2.5 even for the winner, against 3.8 for factual accuracy). Local
+  models quote the packet accurately and then omit half of what it supports. That is the
+  finding most likely to shape the explanation prompt, and it is why `hip explain` asks
+  for a narrative rather than answers to questions.
 
 ## Data sources worth adding
 

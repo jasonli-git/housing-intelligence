@@ -3,11 +3,18 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.9.0] — 2026-08-14
 
-Milestone 8 in progress. The evaluation harness, the explanation endpoint, and the
-dashboard panel are built and tested, and the full 120-generation run is complete. The
-judged report that selects a model is outstanding, so no model has been selected yet.
+The last milestone of Version 1, and the first time a model touches the platform. Eight
+local candidates answered the same five questions about the same real analysis packets;
+every figure they stated was checked against the packet deterministically, and Claude
+graded only what counting cannot reach. **Gemma 4 E4B (Q4_K_M, Ollama) was selected** —
+3.21/4.00 weighted, 0.0% unsupported figures, 3/3 correct refusals, 28.6 tok/s — and it
+now writes the explanation shown on every county page, labeled as interpretation.
+
+Three of the four harness bugs found along the way would have published a wrong result.
+They are listed under Fixed because that is what they were, and because the anchor pair
+that caught the largest one is the reason the report can be trusted at all.
 
 ### Added
 - **Evaluation harness** — `hip eval scenarios | run | check | judge | report | models |
@@ -58,6 +65,10 @@ judged report that selects a model is outstanding, so no model has been selected
   submission: the first batch returned 105 errors for 105 requests. Scores are an enum
   now, and `collect_batch` carries the API's message through instead of recording only
   the result type.
+- **The explanation API tests deleted real data.** They pick the top-ranked county and
+  delete its row to exercise the 404 path, against the developer's own warehouse, so
+  running the suite after `hip explain` silently destroyed one county's explanation.
+  An autouse fixture now snapshots and restores it.
 - **The numeric checker counted correctly-cited dates as fabrications.** `2019-12-31`
   was decomposed by the number pattern into 2019, -12, and -31, so every citation of a
   window produced three phantom "unsupported" figures. Measured on a real run: 33 of 148
@@ -70,8 +81,14 @@ judged report that selects a model is outstanding, so no model has been selected
   reasoning models, which is the confound the milestone exists to avoid.
 
 ### Known gaps
-- **No model has been selected.** The judging batch is in flight; the report and
-  `hip explain` over the counties follow it.
+- **The deterministic fabrication gate never bound.** Every judged model came in under
+  the 5% bar, so the winner was decided on rubric score alone. The gate makes the
+  ordering safe to state; it did not have to fire this time.
+- **`completeness` and `caveat_handling` are the weakest criteria for every model** —
+  2.1 and 2.5 even for the winner, against 3.8 for factual accuracy. Local models quote
+  the packet accurately and then leave out much of what it supports.
+- **The evaluation covers three counties and one payload format.** Markdown only; the
+  JSON-vs-Markdown comparison the 3x token gap motivates has not been run.
 - **`gemma-4-e4b-mlx` cannot be loaded** by mlx-lm 0.31.3 (`Received 126 parameters not
   in model` — the E4B MatFormer architecture). All 15 of its generations are recorded
   as errors, and it costs one of the two anchor pairs.

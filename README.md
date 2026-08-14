@@ -11,14 +11,17 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-08-13): v0.8.0, Milestone 7 complete.** New Jersey's geography, its
+> **Status (2026-08-14): v0.9.0, Version 1 complete.** New Jersey's geography, its
 > housing and economic context, and now its **property tax roll** are loaded, queryable,
 > visible, and exportable — 3,365 regions, **3.48M parcels**, and **335,927 observations
 > across 23 metrics from 10 public sources, spanning 1971 to 2026**, plus 19,527 computed
 > changes and 27,819 rankings, served behind a three-page dashboard and packaged as
 > versioned analysis packets. All eight pipeline stages run. The source file and match
-> method are recorded on every value. See [ROADMAP.md](ROADMAP.md) for what is planned
-> and [CHANGELOG.md](CHANGELOG.md) for what shipped.
+> method are recorded on every value. Eight local models were then evaluated against
+> standardized scenarios built from those packets, and the winner writes a short
+> interpretation on each county page — clearly labeled as interpretation, never as
+> measurement. See [ROADMAP.md](ROADMAP.md) for what is planned and
+> [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
@@ -95,6 +98,12 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
 - **Ranked by value, not only by change** (M7, built) — "which municipality is most
   expensive" is now a query, not just "which rose fastest". Snapshot sources like MOD-IV
   have no change at all, so without this their data would load and stay invisible.
+- **A model chosen by measurement** (M8, built) — **Gemma 4 E4B** (Q4_K_M via Ollama)
+  was selected from eight candidates across two runtimes on observed performance on this
+  task: 3.21/4.00 weighted rubric score, 0.0% of stated figures unsupported, 3/3 correct
+  refusals, 28.6 tok/s. The report at [`reports/evaluation/`](reports/evaluation/) shows
+  the evidence, including the matched anchor pair that makes the cross-runtime
+  comparison legitimate and the three candidates that proved unusable on this hardware.
 - **Model evaluation harness** (M8, built) — five standardized scenarios built from
   real analysis packets, run against eight local candidates across two runtimes through
   one `ModelRunner` protocol, with sampling pinned identically on both sides. Every
@@ -217,9 +226,12 @@ other stage runs without it. `.env.example` links to each signup page.
 
 ## Project Status
 
-v0.8.0 — Milestones 0 through 7 and 9 complete. Geography, prices, rents, economic
-context, computed change and affordability and rankings, the dashboard, versioned
-analysis packets with exportable reports, and the NJ parcel and MOD-IV layer are all
-built. Milestone 8 — evaluating local models against standardized housing scenarios — is
-the last of Version 1. Milestones and their status are in [ROADMAP.md](ROADMAP.md); the
-current working list and known rough edges are in [TODO.md](TODO.md).
+v0.9.0 — **Version 1 is complete.** Geography, prices, rents, economic context, computed
+change and affordability and rankings, the dashboard, versioned analysis packets with
+exportable reports, the NJ parcel and MOD-IV layer, and the evaluated local-model
+explanation layer are all built. The AI layer is optional throughout: with no
+explanations generated, every page and endpoint still works.
+
+Milestones and their status are in [ROADMAP.md](ROADMAP.md); the current working list,
+the findings from the evaluation, and known rough edges are in [TODO.md](TODO.md).
+Post-Version-1 work is listed at the end of the roadmap.
