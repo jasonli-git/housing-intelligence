@@ -221,9 +221,9 @@ housing-intelligence/
 │   ├── packets/<window>/      # analysis packets, one JSON per region
 │   └── eval/<run>/            # scenarios, generations, checks, judgments (JSONL)
 ├── reports/                   # human-facing output, not rebuildable input
-│   ├── validation/            # gate reports per run
-│   ├── regions/<window>/      # Markdown reports, one per region
-│   └── evaluation/            # the published model-evaluation report
+│   ├── validation/            # gate reports per run; gitignored, per-run machine state
+│   ├── regions/<window>/      # Markdown reports, one per region; 5y committed, README-linked
+│   └── evaluation/            # the published model-evaluation report; committed
 ├── tests/                     # 223 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)

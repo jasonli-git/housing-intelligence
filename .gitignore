@@ -1,6 +1,17 @@
 # Data tiers — machine-local, rebuildable, never committed (ARCHITECTURE #10)
 data/
-reports/
+
+# reports/ is machine-local output too, with two published exceptions: the 21 county
+# region reports and the model-evaluation report. Both are small Markdown, both are
+# linked from the README, and both stay rebuildable — `hip pack --report` and
+# `hip eval report` overwrite them. Validation-gate JSON stays out: it is per-run
+# machine state, not a document anyone reads.
+reports/**
+!reports/regions/
+!reports/regions/5y/
+!reports/regions/5y/*.md
+!reports/evaluation/
+!reports/evaluation/*.md
 
 # Python
 .venv/

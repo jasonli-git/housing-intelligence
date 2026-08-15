@@ -26,6 +26,35 @@ product, and an optional AI layer only explains metrics that were already comput
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
 
+## Screenshots
+
+All eight are the running application against a fully loaded warehouse — no mockups, no
+seeded demo data.
+
+![Overview: NJ county choropleth and ranking table](screenshots/dashboard.png)
+*The overview — a county choropleth of five-year home-value change beside the ranking table it is drawn from, both served by the same query.*
+
+![County detail page with 15 metric tiles](screenshots/metrics.png)
+*A county detail page: 15 metric tiles, each carrying its five-year change and its rank among the 21 NJ counties.*
+
+![Home value index trend with the underlying values and sources](screenshots/hvi+sources.png)
+*Every trend chart opens into the values behind it, with the source release and the geography match method on each row.*
+
+![Observed rent index and median household income trends](screenshots/ori+mhi.png)
+*Series are drawn over whatever history the source actually publishes — 138 monthly rent observations here, 5 annual income ones.*
+
+![Current values table ranked by value](screenshots/cv.png)
+*Current values ranked by value rather than by change, which is the only way snapshot sources like MOD-IV become visible at all.*
+
+![Model interpretation panel and computed caveats](screenshots/interp+caveats.png)
+*The local model's interpretation, styled to be unmistakable as commentary and followed by the caveats the platform computes for itself.*
+
+![Print-ready region report](screenshots/report_snippet.png)
+*The print-ready region report, rendered from the same packet the API serves — this is Bergen County, published in full at [`reports/regions/5y/34003.md`](reports/regions/5y/34003.md).*
+
+![OpenAPI documentation at /docs](screenshots/api.png)
+*The read-only API documents itself — OpenAPI 3.1 at `/docs`, every endpoint runnable from the page.*
+
 ## Features
 
 Each is listed with the milestone that delivers it, so this section can be checked
@@ -88,7 +117,9 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   code and checked against it by a test. `hip pack` writes one per region.
 - **Exportable region reports** (M6, built) — the same packet rendered as Markdown by
   `hip pack --report` or `GET /regions/{id}/report`, and as a print-ready page at
-  `/regions/[id]/report` in the dashboard. Two media, one contract, no PDF library.
+  `/regions/[id]/report` in the dashboard. Two media, one contract, no PDF library. All
+  21 counties are published under [`reports/regions/5y/`](reports/regions/5y/) —
+  [Bergen](reports/regions/5y/34003.md) is the one shown above.
 - **NJ parcels and the property tax roll** (M7, built) — 3.48M parcels acquired from
   NJGIN's ArcGIS service and held in Parquet/DuckDB, aggregated to six municipality
   metrics that describe the housing *stock*: median assessed value, parcel count, median
@@ -101,9 +132,11 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
 - **A model chosen by measurement** (M8, built) — **Gemma 4 E4B** (Q4_K_M via Ollama)
   was selected from eight candidates across two runtimes on observed performance on this
   task: 3.21/4.00 weighted rubric score, 0.0% of stated figures unsupported, 3/3 correct
-  refusals, 28.6 tok/s. The report at [`reports/evaluation/`](reports/evaluation/) shows
-  the evidence, including the matched anchor pair that makes the cross-runtime
-  comparison legitimate and the three candidates that proved unusable on this hardware.
+  refusals, 28.6 tok/s. The published report at
+  [`reports/evaluation/v1.md`](reports/evaluation/v1.md) shows the evidence, including the
+  matched anchor pair that makes the cross-runtime comparison legitimate and the three
+  candidates that proved unusable on this hardware; the
+  [excerpt below](#model-evaluation--run-v1) has the headline tables.
 - **Model evaluation harness** (M8, built) — five standardized scenarios built from
   real analysis packets, run against eight local candidates across two runtimes through
   one `ModelRunner` protocol, with sampling pinned identically on both sides. Every
@@ -116,6 +149,91 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   `GET /regions/{id}/explanation` serves it with `kind: "interpretation"` and a `stale`
   flag; the dashboard panel is styled to be unmistakable as commentary. The platform is
   fully usable with none of this generated — a missing explanation renders nothing.
+
+## Sample output
+
+`reports/` is machine-local output, but two sets are published so the claims above can be
+read without building the warehouse first: the
+[21 county reports](reports/regions/5y/) and the
+[model-evaluation report](reports/evaluation/v1.md). Both stay rebuildable — the commands
+below overwrite them — and the excerpts here link to the full text.
+
+### Region report — Bergen County, 5y window
+
+Written by `uv run hip pack --report` to
+[`reports/regions/5y/34003.md`](reports/regions/5y/34003.md), and served unchanged by
+`GET /regions/11/report?window=5y`. The other 20 counties are in the
+[same directory](reports/regions/5y/).
+
+> **Where this region stands out**
+>
+> - **Unemployment rate** — rank 1 of 21 (best end), -45.5%
+> - **Home value to area median income** — rank 2 of 21 (best end), +5.9%
+> - **Home value to household income** — rank 2 of 21 (best end), +3.4%
+> - **Annual rent to household income** — rank 2 of 16 (best end), +2.5%
+> - **Area median income (HUD)** — rank 3 of 21 (best end), +24.3%
+> - **Renters paying over 30% of income on housing** — rank 19 of 21 (worst end), +4.4%
+
+Six of the report's 15 metrics. Each carries its own window, because each source
+publishes on its own cadence and none are stretched to match:
+
+| Metric | Start | Latest | Change | Annualised | Rank | Window |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Median gross rent | $1,506 | $1,863 | +23.7% | 5.5%/yr | 7 / 21 | 2019-12-31 → 2023-12-31 |
+| Median household income | $101,144 | $123,715 | +22.3% | 5.2%/yr | 10 / 21 | 2019-12-31 → 2023-12-31 |
+| Area median income (HUD) | $104,200 | $129,500 | +24.3% | 5.6%/yr | 3 / 21 | 2020-12-31 → 2024-12-31 |
+| Home value to household income | 5.16 | 5.34 | +3.4% | 0.8%/yr | 2 / 21 | 2019-12-31 → 2023-12-31 |
+| Unemployment rate | 6.6% | 3.6% | -45.5% | -11.4%/yr | 1 / 21 | 2020-12-31 → 2025-12-31 |
+| Home value index, single-family | $598,242 | $791,116 | +32.2% | 5.7%/yr | 17 / 21 | 2021-06-30 → 2026-06-30 |
+
+Rank 1 is the better end of the cohort as the metric defines better, not always the
+largest rise. The [full report](reports/regions/5y/34003.md) adds the remaining nine
+metrics, a current-values table ranked by value, and the caveats that qualify each figure.
+
+### Model evaluation — run `v1`
+
+Written by `uv run hip eval report` to
+[`reports/evaluation/v1.md`](reports/evaluation/v1.md). 120 generations from 8 models over
+5 scenarios and 3 regions.
+
+**Selected: Gemma 4 E4B** (`gemma-4-e4b-q4`, gguf cohort, Q4_K_M) — rubric score
+3.21/4.00, 0.0% of stated figures unsupported, 28.6 tok/s. Chosen on measured performance
+on this task, not on benchmark reputation, and only from among models that cleared the
+deterministic bar first: any model fabricating more than 5% of its figures is ineligible
+however well it reads.
+
+Deterministic checks — counted, not graded. Every figure a model stated is matched
+against the packet it was given; no language model is involved:
+
+| Model | Cohort | Answers | Figures | Unsupported | Empty | Errors | Refusal |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Gemma 4 E4B | gguf | 15 | 77 | 0.0% | 0 | 0 | 3/3 |
+| Nemotron 3 Nano 4B | gguf | 15 | 64 | 0.0% | 2 | 0 | 3/3 |
+| Gemma 4 E4B | mlx | 15 | 0 | 0.0% | 0 | 15 | — |
+| Gemma 4 12B (QAT) | gguf | 15 | 48 | 0.0% | 6 | 0 | 3/3 |
+| Qwen3.5 9B | mlx | 15 | 2660 | 0.1% | 0 | 0 | 0/3 |
+| Qwen3 8B | mlx | 15 | 72 | 2.8% | 1 | 0 | 3/3 |
+| Qwen3 8B | gguf | 15 | 89 | 4.5% | 0 | 0 | 3/3 |
+| Phi-4 mini reasoning | mlx | 15 | 462 | 6.1% | 5 | 0 | 0/3 |
+
+Rubric scores, graded by `claude-opus-5` against the criteria in
+`config/evaluation.yml`. Final answers only — reasoning tokens are measured as cost,
+never graded as quality:
+
+| Model | Weighted | Factual accuracy | Grounding | Caveat handling | Clarity | Flagged |
+|---|---:|---:|---:|---:|---:|---:|
+| Gemma 4 E4B | 3.21 | 3.8 | 3.5 | 2.5 | 3.5 | 0 |
+| Qwen3 8B (gguf) | 3.05 | 3.5 | 3.3 | 2.2 | 3.5 | 5 |
+| Qwen3 8B (mlx) | 2.91 | 3.3 | 3.3 | 2.0 | 3.2 | 4 |
+| Nemotron 3 Nano 4B | 2.51 | 3.4 | 2.9 | 1.4 | 2.3 | 1 |
+| Gemma 4 12B (QAT) | 2.10 | 2.4 | 2.4 | 1.5 | 2.3 | 0 |
+| Qwen3.5 9B | 1.58 | 1.9 | 2.3 | 1.7 | 0.5 | 9 |
+| Phi-4 mini reasoning | 1.34 | 1.5 | 1.7 | 1.1 | 0.8 | 16 |
+
+The [full report](reports/evaluation/v1.md) adds the matched anchor pair that makes the
+cross-runtime comparison legitimate, the completeness and instruction-following columns,
+throughput and peak memory, and the artifacts in `data/eval/v1/` that every figure
+recomputes from.
 
 ## Tech Stack
 
