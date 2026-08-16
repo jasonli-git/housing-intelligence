@@ -35,6 +35,30 @@ or the dashboard on a clean checkout; its tests pass; and
 
 ## Post-Version 1 (not scheduled)
 
+- **Citation binding for generated text** — resolve every figure in an interpretation back
+  to the packet field, source release, period, and match method that licensed it, and do
+  it inside `hip explain` so prose and citations are written together rather than
+  reattached at render time. Deterministic string-to-packet matching: no second model
+  call, no tokens spent on citing, and no opportunity for the model to invent a citation.
+  The retention this needs already exists — Milestone 2 puts a source release and match
+  method on every value, Milestone 6 carries source, URL, publisher, license, vintage,
+  period, and caveats into every packet — so the work is the index, not the schema: a map
+  from value to provenance path, replacing the flat `set[float]` in `hip.eval.checks`,
+  which can answer whether a number is in the packet but has already discarded which field
+  produced it. Two rules have to be decided rather than defaulted: what to do with figures
+  that legitimately resolve to more than one field, since rounded and derived forms are
+  deliberately in that set and two metrics can share a rank, and whether citation should
+  inherit the tolerant matching that the fabrication rate uses. A wrong citation is worse
+  than no citation here. Sentences with no figure stay bare, and that is the point — the
+  causal claims are exactly what a packet cannot license, so an uncited sentence reads as
+  the interpretation it is.
+- **Evidence references in the evaluation report** — retain the same ground-truth index
+  alongside each benchmark scenario, so the deterministic pass can report which packet
+  field supports a stated figure instead of only that some value matched within tolerance,
+  and cite it in the published report. The batch Claude pass keeps doing what only it can:
+  semantic corroboration, unsupported claims, hallucination, and causal overreach, graded
+  against the criteria that already exist. Same index as the entry above, second consumer —
+  which is the argument for building them together.
 - Northeast expansion, then selected national comparison states
 - Parcel-level API endpoints and a parcel map layer, which need the parcel geometry
   Milestone 7 deliberately did not download
