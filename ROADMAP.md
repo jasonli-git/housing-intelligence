@@ -69,3 +69,5 @@ or the dashboard on a clean checkout; its tests pass; and
 - Publicly hosted analytics API
 - Model-comparison dashboard driven by the Milestone 8 evaluation results
 - Scheduled refresh with retry and alerting, replacing manual `hip refresh`
+- Resource usage capture — RAM, CPU, and storage recorded per pipeline stage and per
+  model run, so ingest cost and local inference cost are measurable rather than estimated
