@@ -131,6 +131,12 @@ export function Choropleth({ geo, values, title }: Props) {
       >
         {geo.features.map((feature) => {
           const pct = values.get(feature.properties.region_id);
+          // Built as one string, not interpolated JSX children: SVG <title> takes
+          // text content only, and React warns when it receives several children
+          // because it cannot join them itself.
+          const tooltip = `${feature.properties.name}: ${
+            pct === undefined ? "no data" : formatChange(pct)
+          }`;
           return (
             // An SVG <a>, not next/link: Link renders an HTML anchor, which is
             // invalid inside <svg>. The browser relocates it and React reports a
@@ -147,10 +153,7 @@ export function Choropleth({ geo, values, title }: Props) {
                 stroke="var(--surface-1)"
                 strokeWidth={1}
               >
-                <title>
-                  {feature.properties.name}:{" "}
-                  {pct === undefined ? "no data" : formatChange(pct)}
-                </title>
+                <title>{tooltip}</title>
               </path>
             </a>
           );

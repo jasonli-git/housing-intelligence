@@ -37,6 +37,9 @@ node_modules/
 web/.next/
 web/out/
 web/next-env.d.ts
+# Incremental typecheck cache: rewritten by every `tsc`, so tracking it turns any
+# typecheck into a dirty working tree.
+*.tsbuildinfo
 
 # Secrets and local overrides
 .env
