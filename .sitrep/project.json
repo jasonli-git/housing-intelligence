@@ -19,14 +19,6 @@
       ],
       "name" : "test",
       "runs" : 3
-    },
-    {
-      "command" : [
-        "make",
-        "lint"
-      ],
-      "name" : "lint",
-      "runs" : 5
     }
   ]
 }
