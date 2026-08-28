@@ -1,0 +1,16 @@
+{
+  "externalServices" : [
+
+  ],
+  "project" : "housing-intelligence",
+  "scenarios" : [
+    {
+      "command" : [
+        "echo",
+        "replace this with your workload"
+      ],
+      "name" : "default",
+      "runs" : 5
+    }
+  ]
+}
