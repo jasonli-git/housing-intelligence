@@ -57,6 +57,15 @@ dbt = [
     "dbt-postgres>=1.8",
 ]
 
+[tool.uv]
+# `uv run` syncs the environment to the default groups before every command, so
+# without this line each `uv run` silently uninstalls whatever the last explicit
+# `uv sync --group ...` added. `make setup` installed dbt and the next `uv run mypy`
+# removed it again, which surfaced as an import-not-found on dbt.cli.main. dbt is
+# named here because `make pipeline` needs it at runtime; `mlx` and `eval` stay
+# opt-in and are handled by the mypy overrides below instead.
+default-groups = ["dev", "dbt"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -86,6 +95,15 @@ ignore_missing_imports = true
 # functions for the same reason (ARCHITECTURE #55).
 [[tool.mypy.overrides]]
 module = ["mlx.*", "mlx_lm.*"]
+ignore_missing_imports = true
+
+# Installed from the optional `eval` group, and deliberately not a default: SPEC
+# requires the platform stay fully useful with the AI layer disabled, so no runtime
+# import path may depend on an LLM client being present (ARCHITECTURE #56). Same
+# argument as the mlx override above — a checkout without the group must still
+# type-check. `hip.eval.judge` is the only importer.
+[[tool.mypy.overrides]]
+module = ["anthropic.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
