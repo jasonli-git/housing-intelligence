@@ -6,10 +6,26 @@
   "scenarios" : [
     {
       "command" : [
-        "echo",
-        "replace this with your workload"
+        "make",
+        "pipeline"
       ],
-      "name" : "default",
+      "name" : "pipeline",
+      "runs" : 3
+    },
+    {
+      "command" : [
+        "make",
+        "test"
+      ],
+      "name" : "test",
+      "runs" : 3
+    },
+    {
+      "command" : [
+        "make",
+        "lint"
+      ],
+      "name" : "lint",
       "runs" : 5
     }
   ]
