@@ -6,6 +6,12 @@ geography spine, 335,927 observations across 23 metrics from 10 sources spanning
 over the API, displayed by the dashboard, and packaged as versioned analysis packets,
 with 223 Python and 26 dashboard tests passing. All eight pipeline stages run.
 
+**Version 2 is planned and not started.** It moves the platform off `localhost` and
+past New Jersey: publication as static artifacts on a public domain, interpretation
+written by a hosted model rather than a local one, and geography expanded to the
+Northeast and then to every US county. Everything it runs on — the warehouse schema,
+the analytics layer, the packet contract — is what Version 1 built.
+
 Two milestones ran out of numeric order. Milestone 9 was built before Milestone 5,
 because it corrects numbers the dashboard displays and fixing them afterwards would have
 meant re-checking every chart. Milestone 8 closed last, on 2026-08-14: eight local models
@@ -33,41 +39,159 @@ or the dashboard on a clean checkout; its tests pass; and
 | 8 | ✅ done | **Model evaluation and optional explanations** — 5 standardized scenarios over 3 real county packets put through 8 local models across 2 runtimes (120 generations, 105 usable), every stated figure checked against its packet, 105 rubric judgments from `claude-opus-5`, and a published report selecting **Gemma 4 E4B** on measured performance. `hip explain` wrote 21 county explanations, served by `/regions/{id}/explanation` and shown as interpretation in the dashboard |
 | 9 | ✅ done | **HUD affordability inputs** — USPS crosswalk replacing area weights with residential-address ratios (2,456 of 2,491 rows), HUD area median income and 80% AMI limits, and `price_to_ami`. Built out of order, before Milestone 5 |
 
-## Post-Version 1 (not scheduled)
+## Version 2 Milestones (public hosting and expansion)
 
-- **Citation binding for generated text** — resolve every figure in an interpretation back
-  to the packet field, source release, period, and match method that licensed it, and do
-  it inside `hip explain` so prose and citations are written together rather than
-  reattached at render time. Deterministic string-to-packet matching: no second model
-  call, no tokens spent on citing, and no opportunity for the model to invent a citation.
-  The retention this needs already exists — Milestone 2 puts a source release and match
-  method on every value, Milestone 6 carries source, URL, publisher, license, vintage,
-  period, and caveats into every packet — so the work is the index, not the schema: a map
-  from value to provenance path, replacing the flat `set[float]` in `hip.eval.checks`,
-  which can answer whether a number is in the packet but has already discarded which field
-  produced it. Two rules have to be decided rather than defaulted: what to do with figures
-  that legitimately resolve to more than one field, since rounded and derived forms are
-  deliberately in that set and two metrics can share a rank, and whether citation should
-  inherit the tolerant matching that the fabrication rate uses. A wrong citation is worse
-  than no citation here. Sentences with no figure stay bare, and that is the point — the
-  causal claims are exactly what a packet cannot license, so an uncited sentence reads as
-  the interpretation it is.
-- **Evidence references in the evaluation report** — retain the same ground-truth index
-  alongside each benchmark scenario, so the deterministic pass can report which packet
-  field supports a stated figure instead of only that some value matched within tolerance,
-  and cite it in the published report. The batch Claude pass keeps doing what only it can:
-  semantic corroboration, unsupported claims, hallucination, and causal overreach, graded
-  against the criteria that already exist. Same index as the entry above, second consumer —
-  which is the argument for building them together.
-- Northeast expansion, then selected national comparison states
-- Parcel-level API endpoints and a parcel map layer, which need the parcel geometry
+**Planned as of 2026-08-30; none started.** Version 2 changes three things and
+deliberately not a fourth: where the platform runs (a public domain rather than
+`localhost`), how much geography it covers (Northeast, then national at county level),
+and what writes the interpretation (a hosted model rather than a local one). The
+warehouse schema, the analytics layer, and the packet contract are not in scope — SPEC
+principle "each future capability should reuse the same warehouse and analytics layer"
+holds, and a Version 2 that rewrites the fact table has gone wrong.
+
+| M | Status | Deliverable |
+|---|--------|-------------|
+| 10 | ⬜ planned | **Portable build environment** — `HIP_DATA_DIR` honored by every stage, `reports_dir` decoupled from it, the Postgres volume relocatable off the boot disk, and per-stage wall-clock and bytes recorded alongside the RAM figures already in the README, so a full build runs from an external SSD and its cost is measured rather than estimated |
+| 11 | ⬜ planned | **Static publication** — `hip publish` rendering every API response and dashboard page as immutable files under a content-addressed manifest, `make publish` deploying them, and New Jersey served from the custom domain with no database and no application server in production |
+| 12 | ⬜ planned | **Hosted inference** — a `HostedRunner` implementing `ModelRunner`, hosted candidates measured against Gemma 4 E4B on the Milestone 8 scenarios and rubric, staleness compared at display precision rather than on raw floats, and batch submission for the regeneration pass |
+| 13 | ⬜ planned | **Citation binding** — every figure in an interpretation resolved to the packet field, source release, period, and match method that licensed it, produced inside `hip explain`, with the same ground-truth index reused by the evaluation report |
+| 14 | ⬜ planned | **Northeast expansion** — CT, MA, ME, NH, NY, PA, RI, VT loaded at all five levels, the first run of the pipeline at roughly seven times current volume, and a per-state coverage report showing what each source did and did not resolve |
+| 15 | ⬜ planned | **National county coverage** — all 50 states, DC, and PR at `state` and `county` level only, on federal sources that key on exact FIPS, giving national coverage without a national municipality model |
+| 16 | ⬜ planned | **Three-dimensional national map** — county choropleth extruded by a magnitude metric and colored by a ratio metric, replacing the inline-SVG map as the landing view |
+| 17 | ⬜ planned | **Consumer entry point** — search by place name or ZIP, and an income-to-affordability view built on the existing `price_to_income` and `price_to_ami` metrics |
+
+The done criterion from Version 1 is unchanged: a milestone counts as done when its
+capability is reachable through the CLI, the API, or the dashboard on a clean checkout;
+its tests pass; and [ARCHITECTURE.md](ARCHITECTURE.md), [CHANGELOG.md](CHANGELOG.md),
+and [README.md](README.md) have been updated to match what actually exists. Milestone 11
+adds one condition to that list, because it is the first milestone whose output is not
+on this machine: the published artifact must be reachable at its public URL.
+
+### Why this order
+
+**Cost before scale.** Milestones 10 through 13 are all at New Jersey's current size —
+3,365 regions, 335,927 observations. Each removes a cost that would otherwise be
+multiplied by every state added afterwards. Publishing is proven at 21 counties before
+it is attempted at 3,144; inference is moved off the local runtime before the
+region count grows sevenfold. Expanding first and optimizing afterwards means paying
+the unoptimized bill on the larger dataset and rebuilding the pipeline under a live
+site.
+
+**Milestone 10 is small and blocks everything.** `data/` is 2.9GB today against 32GB
+free on the boot disk, and Northeast expansion adds TIGER `cousub` and `tract`
+downloads for eight more states. The work itself is a config seam and a Docker volume,
+but nothing after it fits without it. One defect is already known and is the reason
+this is a milestone rather than a chore: `Settings.reports_dir` derives from
+`data_dir.parent` ([src/hip/config.py:140](src/hip/config.py:140)), so relocating the
+data root silently relocates `reports/` with it — and `reports/regions/5y/*.md` are
+tracked in git and linked from the README.
+
+**Milestone 12 precedes 14 because of wall-clock, not price.** Gemma 4 E4B took
+9,140ms per generation in the Milestone 8 measurements. Twenty-one counties is three
+minutes. Every Northeast county is about thirty; every US county is about eight hours,
+serially, on a machine that cannot hold two models at once. Hosted inference is
+concurrent, which is the property that matters. The token bill is the smaller argument:
+at the measured prompt size a full county-level regeneration is single-digit dollars,
+and it is the only recurring cost in the Version 2 architecture that is not rounding
+error — which is why display-precision staleness gating is in the same milestone rather
+than deferred as an optimization. Zillow revises its indexes retroactively every month,
+so hashing raw floats marks nearly every region stale on every run and pays to rewrite
+prose that reads identically.
+
+**Milestone 13 follows 12 rather than preceding it.** Citation binding is deterministic
+and model-independent, so either order works mechanically. It is scheduled second
+because Milestone 12 measures the hosted candidates' fabrication rate against the
+0.0% Gemma 4 E4B achieved, and that number is the argument for how strict the binding
+has to be. It is scheduled before any expansion because it is the guardrail on prose
+published under a personal domain, and because the retention it needs already exists —
+the work is the index, not the schema.
+
+**Milestones 14 and 15 are different axes and can be reordered.** 14 adds depth
+(all five levels, few states); 15 adds breadth (two levels, every state). 15 is the
+easier engineering — 3,144 regions matched on exact FIPS, no name matching — and it is
+the milestone that unblocks 16. Northeast is scheduled first because it follows SPEC
+principle 3's stated progression and because it exercises the volume increase at a size
+where a bad load is still cheap to reload. Swapping them buys the map sooner at the
+cost of testing scale later; both are defensible and the choice is open until 13 ships.
+
+### Decisions this version needs from the user
+
+Two are expensive to reverse and are not the architect's to make alone.
+
+- **Hosted inference is a change to SPEC, not only to ARCHITECTURE.** The AI and
+  Evaluation Philosophy section specifies a *local* LLM and gives RAM efficiency as
+  part of the rationale. Milestone 12 keeps every other constraint in that section
+  intact — packets only, explanation not chat, model choice from measurement, the API
+  still never runs a model ([ARCHITECTURE.md](ARCHITECTURE.md) #6) — but "local" would
+  no longer be true. [SPEC.md](SPEC.md) is only edited when the user asks; until then
+  Milestone 12 is planned against a spec it contradicts, and that is recorded here
+  rather than resolved quietly.
+- **Milestone 16 reverses the no-map-library decision.** The current choropleth is
+  inline SVG rendered from our own GeoJSON, chosen deliberately. An extruded map means
+  a WebGL renderer and a vector-tile format for anything below county level. It is a
+  real reversal and gets its own Decisions Log row superseding the original, not a
+  quiet dependency addition.
+
+### Known constraints carried into Version 2
+
+Written down now because each one shapes a milestone and none is a bug to be fixed
+later.
+
+- **`cousub` is the municipality layer**
+  ([src/hip/sources/tiger.py:37](src/hip/sources/tiger.py:37), and
+  `municipality_id_system: census_mcd`). New Jersey is a strong-MCD state where county
+  subdivisions are real incorporated municipalities, and so is every state in
+  Milestone 14. Much of the South and West is not: county subdivisions there are
+  statistical divisions with no government, and Zillow's city-level data keys to Census
+  *places* rather than to MCDs. Milestone 15 avoids the problem by stopping at county
+  level. Anything below county level outside the strong-MCD states needs the geography
+  decision listed under Post-Version 2, and `config/geography.yml` already warns that
+  the identifier system is expensive to change once fact rows reference it.
+- **Parcel and MOD-IV coverage does not generalize.** There is no free national parcel
+  dataset; every state publishes its own format under its own license. The 3.48M NJ
+  parcels stay a single-state depth layer, and no Version 2 milestone extends them.
+- **Zillow is licensed for non-commercial use with attribution.** Public hosting as a
+  portfolio piece is within that; monetizing the result is not.
+- **Cloudflare Pages caps files per deployment.** Milestone 11 must confirm the current
+  limit before choosing between one rendered file per region and a queryable data layer
+  for the long tail. At national municipality scale the per-region approach does not
+  fit, which is a constraint on the artifact layout rather than on the schedule.
+
+## Post-Version 2 (not scheduled)
+
+Citation binding, evidence references in the evaluation report, Northeast expansion,
+automated monthly reports, and the publicly hosted analytics API have moved into the
+Version 2 table above. What remains unscheduled:
+
+- **Geography model for non-MCD states** — whether `place` becomes a sixth level
+  alongside `municipality`, whether the identifier system is chosen per state in
+  `config/geography.yml`, or whether municipality-level analysis simply stops at the
+  strong-MCD states. The schema change is small — a `region_level` enum value and a
+  config key — and the migration is not, because `region_id` is referenced by every
+  fact row. Needs deciding before any expansion past Milestone 14, not before.
+- **State expansion past the Northeast**, in strong-MCD order — WI, MI, MN, ND, SD
+  extend Milestone 14 with no geography change at all; everything else waits on the
+  entry above.
+- **Climate and flood-risk overlays** — the highest consumer value of anything on this
+  list, and FEMA's National Flood Hazard Layer is free. Held back only because it adds
+  a source family with different geometry semantics than any current source.
+- **Model-comparison dashboard driven by the Milestone 8 evaluation results** — the
+  data already exists in `data/eval/v1`, so this is a presentation milestone whose cost
+  is close to zero. A natural companion to Milestone 16 rather than a milestone of its
+  own.
+- **Scheduled refresh with retry and alerting, replacing manual `make pipeline`** —
+  becomes necessary rather than convenient once a published site is expected to reflect
+  a monthly cadence. Deferred because a manual run is honest at one state and
+  misleading only at scale. (Earlier versions of this list said `hip refresh`; no such
+  command exists — the eight stages are invoked individually or through
+  `make pipeline`.)
+- **Parcel-level API endpoints and a parcel map layer**, which need the parcel geometry
   Milestone 7 deliberately did not download
-- MOD-IV equalization ratios so assessed values approximate market values
-- Affordability forecasting and migration-driven demand analysis
-- Climate and flood-risk overlays
-- Automated monthly housing reports
-- Publicly hosted analytics API
-- Model-comparison dashboard driven by the Milestone 8 evaluation results
-- Scheduled refresh with retry and alerting, replacing manual `hip refresh`
-- Resource usage capture — RAM, CPU, and storage recorded per pipeline stage and per
-  model run, so ingest cost and local inference cost are measurable rather than estimated
+- **MOD-IV equalization ratios** so assessed values approximate market values
+- **Migration-driven demand analysis**
+- **Affordability forecasting** — listed in SPEC's long-term direction and deliberately
+  left unscheduled. Every other output the platform publishes is measured and traceable
+  to a source release; a forecast would be the only one that is neither, on a site whose
+  entire claim is provenance. If it is built, it needs its own accuracy evaluation in
+  the same way the interpretation layer got one, and that is a milestone rather than a
+  feature.
