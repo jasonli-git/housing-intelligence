@@ -1,5 +1,5 @@
 # Housing Intelligence Platform Specifications
-## Product Specification v1.0
+## Product Specification v1.1
 
 ### Vision
 
@@ -150,7 +150,7 @@ The AI layer should be replaceable.
 
 #### 9. AI should be evaluated, not assumed.
 
-Local models should be tested against standardized housing-analysis scenarios before being selected.
+Candidate models should be tested against standardized housing-analysis scenarios before being selected. This applies to every candidate, local or hosted: a model that has not been measured on these scenarios does not write text the platform publishes.
 
 Candidate local models include:
 
@@ -324,7 +324,7 @@ Dashboard / API / Reports
 
 ↓
 
-Optional Local LLM Explanation
+Optional LLM Explanation
 ```
 
 Each stage should persist its output before the next stage begins.
@@ -376,7 +376,7 @@ Small JSON analysis packet
 
 ↓
 
-Local LLM
+Explanation model
 
 ↓
 
@@ -413,7 +413,7 @@ It should clearly distinguish between:
 
 ---
 
-The local LLM should operate only on structured analysis packets.
+The explanation model should operate only on structured analysis packets.
 
 The model should not ingest:
 
@@ -434,7 +434,7 @@ The model should receive:
 * known caveats
 * source metadata
 
-This keeps inference cheap, fast, and RAM-efficient.
+This keeps inference cheap and fast. On a local runtime it also keeps inference RAM-efficient; on a hosted one it keeps the billed token count small, which is the same constraint expressed in the other runtime's currency.
 
 ---
 
@@ -442,7 +442,7 @@ The platform should include a model-evaluation workflow.
 
 Standardized test scenarios should be generated from real or representative housing analytics.
 
-Each local model should receive the same prompt and the same analysis packet.
+Each candidate model should receive the same prompt and the same analysis packet.
 
 Claude may evaluate the outputs using a rubric.
 
@@ -467,9 +467,37 @@ Claude should evaluate qualitative quality, not replace deterministic validation
 
 The model-evaluation report should become a portfolio artifact.
 
-The report should explain which local model was selected and why.
+The report should explain which model was selected and why.
 
 The final model choice should be based on observed performance in the housing-analysis task, not generic benchmark reputation.
+
+---
+
+The platform should run hosted inference by default and retain a local runtime as a working fallback.
+
+Hosted inference should be chosen for concurrency rather than for price. Local generation is serial on a machine that cannot hold two models at once, and that does not scale to national coverage.
+
+The local runtime should remain installable and working. It is what keeps the explanation layer durable when a vendor is not.
+
+---
+
+Model selection should resolve through an ordered preference list rather than a single pinned model.
+
+The list should contain only models that have passed the evaluation described above, ordered by preference, with a local model last.
+
+Generation should use the first model in the list that is currently available. A model that is deprecated, unreachable, or rate-limited should fall through to the next, and the platform should record which model actually produced each explanation.
+
+Hosted model identifiers should be pinned to explicit versions rather than to moving aliases. A pinned model that is withdrawn fails loudly and falls through to the next candidate; an alias that is repointed changes the platform's published output silently, which is worse.
+
+Cost should be recorded per candidate and reported alongside quality, so that a cheaper model is chosen on measured evidence rather than on assumption. Cost should not by itself reorder the preference list at generation time.
+
+---
+
+The platform should accept that hosted generation is not reproducible, and should record that rather than obscure it.
+
+A local model at a fixed seed reproduces its output indefinitely from a file on disk. A hosted model does not: it can be withdrawn, repriced, or changed behind its identifier.
+
+This is an accepted trade rather than an oversight. Its mitigations are the retained local runtime, the pinned model versions, the model identity stored on every generated row, and the packet hash that marks prose stale when the numbers behind it move.
 
 ---
 
@@ -575,3 +603,48 @@ The specification now treats model selection as an empirical process.
 The specification now excludes nationwide scope, paid listing data, chatbot behavior, raw-data LLM ingestion, and cloud-first warehousing from Version 1.
 
 **Reason:** Clear boundaries reduce scope creep and make the first version more achievable, polished, and portfolio-ready.
+
+---
+
+### Amendments in v1.1
+
+Recorded 2026-09-01. The sections above are the current specification; this section
+says what changed and why, in the same way "Changes from Previous Draft" does for v1.0.
+
+#### 1. Explanation inference may be hosted; it is hosted by default, with local retained
+
+**Previous idea:** The explanation layer was specified as a local LLM throughout, with
+RAM efficiency given as part of the rationale.
+
+**Current version:** The platform runs hosted inference by default and keeps a local
+runtime as a working fallback. Every other constraint on the layer is unchanged — it
+consumes analysis packets only, it explains rather than computes, it is optional, and
+the API still never runs a model.
+
+**Reason:** Measured local generation is 9,140ms per region and serial. That is three
+minutes for New Jersey's 21 counties and roughly eight hours for every US county, which
+is the binding constraint on national coverage. Principle 8 already required the AI
+layer to be replaceable and named Gemini and DeepSeek among the providers the platform
+must not depend on, so this exercises that principle rather than weakening it.
+
+#### 2. The evaluation obligation extends to hosted candidates
+
+**Previous idea:** Principle 9 required *local* models to be tested before selection.
+
+**Current version:** Every candidate is tested on the same scenarios, local or hosted.
+
+**Reason:** The purpose of principle 9 is that model choice follows measurement. A
+hosted model exempted from the benchmark would be exactly the assumption that principle
+exists to prevent, and it would be publishing prose under a public domain.
+
+#### 3. Reproducibility of generated prose is explicitly traded, not assumed
+
+**Previous idea:** Not addressed. Local inference made reproducibility a property the
+specification never had to claim.
+
+**Current version:** Hosted generation is stated to be non-reproducible, with the
+mitigations named: the retained local runtime, pinned model versions, stored model
+identity per row, and the existing packet hash.
+
+**Reason:** A property being lost should be written down as a cost rather than
+discovered later. The mitigations are what keep the loss bounded.
