@@ -887,6 +887,13 @@ defaulted in the first commit that needs them.
   (five levels, nine states); 15 is breadth (two levels, every state). 15 is the easier
   engineering and unblocks the map; 14 exercises the volume increase where a bad load is
   still cheap to reload. Recorded in [ROADMAP.md](ROADMAP.md) under "Why this order".
+- Note: **The typeface and wordmark in Milestone 18 are a taste decision, not an
+  engineering one.** Everything else in that milestone is checkable — focus states
+  exist or they do not, the metric selector works or it does not — but the type
+  pairing and the mark are the owner's call and should be chosen rather than
+  defaulted. What is *not* open: the palette, the tabular figures, the print
+  stylesheet, and the interpretation panel's dashed treatment are all deliberate and
+  documented, and Milestone 18 restyles around them rather than over them.
 - Note: **`place` versus `cousub` outside the strong-MCD states.** Not a Version 2
   decision — Milestone 14's nine states are all strong-MCD and Milestone 15 stops at
   county level, so nothing in Version 2 needs it. It becomes blocking the first time

@@ -8,9 +8,10 @@ with 223 Python and 26 dashboard tests passing. All eight pipeline stages run.
 
 **Version 2 is planned and not started.** It moves the platform off `localhost` and
 past New Jersey: publication as static artifacts on a public domain, interpretation
-written by a hosted model rather than a local one, and geography expanded to the
-Northeast and then to every US county. Everything it runs on — the warehouse schema,
-the analytics layer, the packet contract — is what Version 1 built.
+written by a hosted model rather than a local one, geography expanded to the Northeast
+and then to every US county, and a design language to present it in. Everything it
+runs on — the warehouse schema, the analytics layer, the packet contract — is what
+Version 1 built.
 
 Two milestones ran out of numeric order. Milestone 9 was built before Milestone 5,
 because it corrects numbers the dashboard displays and fixing them afterwards would have
@@ -41,11 +42,13 @@ or the dashboard on a clean checkout; its tests pass; and
 
 ## Version 2 Milestones (public hosting and expansion)
 
-**Planned as of 2026-08-30; none started.** Version 2 changes three things and
-deliberately not a fourth: where the platform runs (a public domain rather than
+**Planned as of 2026-08-30; none started.** Version 2 changes four things and
+deliberately not a fifth: where the platform runs (a public domain rather than
 `localhost`), how much geography it covers (Northeast, then national at county level),
-and what writes the interpretation (a hosted model rather than a local one). The
-warehouse schema, the analytics layer, and the packet contract are not in scope — SPEC
+what writes the interpretation (a hosted model rather than a local one), and what the
+result looks and behaves like (a design language of its own, rather than the system
+defaults the dashboard reaches for today). The warehouse schema, the analytics layer,
+and the packet contract are not in scope — SPEC
 principle "each future capability should reuse the same warehouse and analytics layer"
 holds, and a Version 2 that rewrites the fact table has gone wrong.
 
@@ -59,6 +62,7 @@ holds, and a Version 2 that rewrites the fact table has gone wrong.
 | 15 | ⬜ planned | **National county coverage** — all 50 states, DC, and PR at `state` and `county` level only, on federal sources that key on exact FIPS, giving national coverage without a national municipality model |
 | 16 | ⬜ planned | **Three-dimensional national map** — county choropleth extruded by a magnitude metric and colored by a ratio metric, replacing the inline-SVG map as the landing view |
 | 17 | ⬜ planned | **Consumer entry point** — search by place name or ZIP, and an income-to-affordability view built on the existing `price_to_income` and `price_to_ami` metrics |
+| 18 | ⬜ planned | **Design system and identity** — a typeface pairing and a wordmark replacing the system font stack, the interaction and focus states the stylesheet currently declares none of, metric and window chosen by the reader rather than fixed as module constants, and a named component layer replacing per-page inline grids. Built before 16 and 17 |
 
 The done criterion from Version 1 is unchanged: a milestone counts as done when its
 capability is reachable through the CLI, the API, or the dashboard on a clean checkout;
@@ -107,6 +111,33 @@ back door around Milestone 8's discipline: only benchmarked models are eligible 
 list, and hosted identifiers are pinned to explicit versions rather than to moving
 aliases — a withdrawn pin fails loudly and falls through, where a repointed alias would
 change published prose with nothing in the output to show it had happened.
+
+**Milestone 18 is scheduled before 16 and 17, out of numeric order.** Version 1 set the
+precedent and the reasoning is the same: Milestone 9 was built before Milestone 5
+because it corrected numbers the dashboard displayed, and fixing them afterwards would
+have meant re-checking every chart. Establishing a design language after building the
+three-dimensional map and the consumer entry point would mean rebuilding both of them
+in it.
+
+The problem is specific rather than cosmetic, and three findings define it.
+`web/app/globals.css` declares no `:hover`, `:focus`, `:focus-visible`, `:active`, or
+`transition` rule anywhere, so nothing on the page responds to being pointed at and
+keyboard focus falls back to whatever the browser supplies. The landing page's metric
+and window are module constants — `const METRIC = "zhvi_sfr"` in
+[web/app/page.tsx](web/app/page.tsx) — so a reader cannot ask it a different question,
+and a dashboard nothing can be asked of reads as a screenshot of one. And the type is
+the system stack, which is the single largest reason a competent page still looks like
+every other data page.
+
+**What Milestone 18 must not discard matters as much as what it changes.** The palette
+is a validated instrument rather than a default: warm neutrals instead of slate, three
+categorical slots cleared against CVD and normal-vision contrast floors in both themes,
+a documented relief rule for the aqua that measures 2.74:1, and dark steps selected for
+the dark surface rather than inverted into it. `font-variant-numeric: tabular-nums` is
+load-bearing on every table and tile. The print stylesheet is a first-class output, not
+an afterthought. The interpretation panel's dashed border and indentation are how a SPEC
+requirement is kept on screen rather than merely asserted. A revamp that restyles those
+away is a regression wearing a new typeface.
 
 **Milestone 13 follows 12 rather than preceding it.** Citation binding is deterministic
 and model-independent, so either order works mechanically. It is scheduled second
