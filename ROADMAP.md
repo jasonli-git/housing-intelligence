@@ -53,7 +53,7 @@ holds, and a Version 2 that rewrites the fact table has gone wrong.
 |---|--------|-------------|
 | 10 | ⬜ planned | **Portable build environment** — `HIP_DATA_DIR` honored by every stage, `reports_dir` decoupled from it, the Postgres volume relocatable off the boot disk, and per-stage wall-clock and bytes recorded alongside the RAM figures already in the README, so a full build runs from an external SSD and its cost is measured rather than estimated |
 | 11 | ⬜ planned | **Static publication** — `hip publish` rendering every API response and dashboard page as immutable files under a content-addressed manifest, `make publish` deploying them, and New Jersey served from the custom domain with no database and no application server in production |
-| 12 | ⬜ planned | **Hosted inference** — a `HostedRunner` implementing `ModelRunner`, hosted candidates measured against Gemma 4 E4B on the Milestone 8 scenarios and rubric, staleness compared at display precision rather than on raw floats, and batch submission for the regeneration pass |
+| 12 | ⬜ planned | **Hosted inference** — a `HostedRunner` implementing `ModelRunner`, hosted candidates measured against Gemma 4 E4B on the Milestone 8 scenarios and rubric, an ordered preference list of benchmarked models resolved at generation time with the local runtime last, version-pinned model identifiers, staleness compared at display precision rather than on raw floats, and batch submission for the regeneration pass |
 | 13 | ⬜ planned | **Citation binding** — every figure in an interpretation resolved to the packet field, source release, period, and match method that licensed it, produced inside `hip explain`, with the same ground-truth index reused by the evaluation report |
 | 14 | ⬜ planned | **Northeast expansion** — CT, MA, ME, NH, NY, PA, RI, VT loaded at all five levels, the first run of the pipeline at roughly seven times current volume, and a per-state coverage report showing what each source did and did not resolve |
 | 15 | ⬜ planned | **National county coverage** — all 50 states, DC, and PR at `state` and `county` level only, on federal sources that key on exact FIPS, giving national coverage without a national municipality model |
@@ -98,6 +98,16 @@ than deferred as an optimization. Zillow revises its indexes retroactively every
 so hashing raw floats marks nearly every region stale on every run and pays to rewrite
 prose that reads identically.
 
+**The preference list in Milestone 12 is a durability mechanism, not a tuning knob.**
+Pinning generation to one hosted model reintroduces, as a vendor dependency, exactly
+the single point of failure that running locally never had. The list resolves at
+generation time to the first available candidate and ends at the local runtime, so no
+vendor decision can stop `hip explain` from running. Two rules keep it from becoming a
+back door around Milestone 8's discipline: only benchmarked models are eligible for the
+list, and hosted identifiers are pinned to explicit versions rather than to moving
+aliases — a withdrawn pin fails loudly and falls through, where a repointed alias would
+change published prose with nothing in the output to show it had happened.
+
 **Milestone 13 follows 12 rather than preceding it.** Citation binding is deterministic
 and model-independent, so either order works mechanically. It is scheduled second
 because Milestone 12 measures the hosted candidates' fabrication rate against the
@@ -116,16 +126,16 @@ cost of testing scale later; both are defensible and the choice is open until 13
 
 ### Decisions this version needs from the user
 
-Two are expensive to reverse and are not the architect's to make alone.
-
-- **Hosted inference is a change to SPEC, not only to ARCHITECTURE.** The AI and
-  Evaluation Philosophy section specifies a *local* LLM and gives RAM efficiency as
-  part of the rationale. Milestone 12 keeps every other constraint in that section
-  intact — packets only, explanation not chat, model choice from measurement, the API
-  still never runs a model ([ARCHITECTURE.md](ARCHITECTURE.md) #6) — but "local" would
-  no longer be true. [SPEC.md](SPEC.md) is only edited when the user asks; until then
-  Milestone 12 is planned against a spec it contradicts, and that is recorded here
-  rather than resolved quietly.
+- **Hosted inference — settled 2026-09-01, [SPEC.md](SPEC.md) amended to v1.1.**
+  Hosted by default, local runtime retained as a working fallback. An earlier version
+  of this section said Milestone 12 contradicted the specification; that was wrong.
+  Principle 8 already required the AI layer to be replaceable and named Gemini and
+  DeepSeek among the providers the platform must not depend on, so the amendment was
+  narrow rather than a change of philosophy: the evaluation obligation was widened from
+  local models to every candidate, the diagrams were relabelled, and the loss of
+  reproducible generation was written down as an accepted trade. Every other constraint
+  is unchanged — packets only, explanation not chat, model choice from measurement, and
+  the API still never runs a model ([ARCHITECTURE.md](ARCHITECTURE.md) #6).
 - **Milestone 16 reverses the no-map-library decision.** The current choropleth is
   inline SVG rendered from our own GeoJSON, chosen deliberately. An extruded map means
   a WebGL renderer and a vector-tile format for anything below county level. It is a
