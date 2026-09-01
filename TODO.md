@@ -826,6 +826,74 @@ and an explanation panel that is labeled as interpretation rather than measureme
   finding most likely to shape the explanation prompt, and it is why `hip explain` asks
   for a narrative rather than answers to questions.
 
+## Milestone 10 — Portable build environment
+
+Next up; not started. Decomposed here because it is the current milestone. Milestones 11
+through 17 stay in [ROADMAP.md](ROADMAP.md) at deliverable granularity until each one
+starts — two half-decomposed plans in two files is how they drift apart.
+
+- [ ] `HIP_DATA_DIR` honored end to end: `hip acquire` through `hip pack` read and write
+      under it with no path assembled from `REPO_ROOT` outside `config.py`
+- [ ] `reports_dir` decoupled from the data root. It currently derives from
+      `data_dir.parent` ([src/hip/config.py:140](src/hip/config.py:140)), so relocating
+      `data/` to an external volume also relocates `reports/` — which holds 21
+      git-tracked county reports and `reports/evaluation/v1.md`, both linked from the
+      README. Needs its own setting defaulting to the repo root
+- [ ] Postgres data off the boot disk: `pgdata` moved from a Docker named volume to a
+      configurable bind mount, with the path in `.env` alongside `HIP_DATA_DIR`
+- [ ] `.env.example` documents both new paths, and `make setup` creates the data tree
+      wherever it now points
+- [ ] Per-stage wall-clock and bytes-written recorded alongside the RAM figures already
+      in the README's Resource Requirements table, so the cost of a state is measured
+      before eight more are added
+- [ ] A full pipeline run from an external volume, with the README's resource table
+      regenerated from it
+
+- Note: **The trigger is disk, not tidiness.** `data/` is 2.9GB against 32GB free on the
+  boot disk, and Milestone 14 adds TIGER `cousub` and `tract` downloads for eight more
+  states. The two largest files already on disk — the 529MB national ZCTA layer and the
+  245MB Zillow CSVs — are national and do not grow per state, so the increment is
+  smaller than the region count suggests, but it is still eight states of new geometry.
+- Note: **Format the external volume APFS, not exFAT.** DuckDB and Postgres on exFAT
+  get no sparse files, poor metadata performance, and unreliable locking. Thunderbolt or
+  USB4 NVMe rather than USB 3.0 — `hip stage` does out-of-core work against the Parquet
+  tier and is the stage that will feel a slow bus.
+
+## Decisions deferred to their milestones
+
+Recorded here so they are decided deliberately when the milestone opens, rather than
+defaulted in the first commit that needs them.
+
+- Note: **Mixed-model prose across the site (Milestone 12).** The preference list can
+  fall through mid-run, so some regions may carry prose from one model and some from
+  another. `region_explanations` already stores `model_id`, `model_label`, and `runtime`,
+  and the dashboard already shows them, so it is visible rather than hidden. The open
+  question is whether a change of model should *force* regeneration — a consistent voice
+  at the cost of a full re-run — or leave existing prose in place, which is free and
+  leaves several models' writing on the site indefinitely. Leaning toward leaving it:
+  every row is labelled, and the packet hash already guarantees nobody reads prose about
+  stale numbers. Not decided.
+- Note: **Staleness currently ignores model identity (Milestone 12).**
+  `hip.eval.explain.is_stale` compares only `packet_sha256`, so swapping models does not
+  mark anything stale. That is the correct default under the leaning above, but it is a
+  default nobody chose — it falls out of the Milestone 8 implementation. Whichever way
+  the decision above goes, this function should say so explicitly.
+- Note: **Cloudflare Pages caps files per deployment (Milestone 11).** Verify the
+  current limit before choosing the artifact layout. One rendered file per region fits
+  at county scale (3,144) and does not fit at national municipality scale, which decides
+  between per-region files and a queryable data layer for the long tail — a layout
+  decision, not a scheduling one.
+- Note: **Milestones 14 and 15 are reorderable (open until 13 ships).** 14 is depth
+  (five levels, nine states); 15 is breadth (two levels, every state). 15 is the easier
+  engineering and unblocks the map; 14 exercises the volume increase where a bad load is
+  still cheap to reload. Recorded in [ROADMAP.md](ROADMAP.md) under "Why this order".
+- Note: **`place` versus `cousub` outside the strong-MCD states.** Not a Version 2
+  decision — Milestone 14's nine states are all strong-MCD and Milestone 15 stops at
+  county level, so nothing in Version 2 needs it. It becomes blocking the first time
+  municipality-level data is wanted in a state where county subdivisions are statistical
+  divisions. `config/geography.yml` already warns that the identifier system is expensive
+  to change once fact rows reference it.
+
 ## Data sources worth adding
 
 Reachability probed 2026-08-13; each line says what it would add and what it needs.
@@ -891,11 +959,27 @@ Reachability probed 2026-08-13; each line says what it would add and what it nee
 - ~~HUD USPS crosswalk token~~ — supplied and in use: 2,456 of 2,491 crosswalk rows are
   `hud_res_ratio`, and HUD income limits back `price_to_ami`.
 
-- [ ] **`ANTHROPIC_API_KEY`** — needed by Milestone 8 for the Claude-graded rubric, and
-  the first key the platform uses that is not free. Roughly $10 covers ~550 judgments
-  on `claude-opus-5` through the Batch API. Nothing before Milestone 8 touches it.
+- ~~`ANTHROPIC_API_KEY`~~ — supplied and spent: Milestone 8 closed on 2026-08-14 with
+  105 rubric judgments from `claude-opus-5`. Still the only paid key the platform uses,
+  and still read by nothing outside `hip eval judge`.
 
-**Nothing already built is blocked on user input.** Every key the pipeline currently
-uses is present, and every source in the section above needs either no credential or one
-already held. The one outstanding key is the Anthropic key above, which Milestone 8
-needs and nothing else does.
+**Needed by Version 2, none of it yet**
+
+- [ ] **A hosted inference key — DeepSeek or Gemini, ideally both** (Milestone 12). Both
+  are needed to benchmark rather than assume: the point of running them through the
+  Milestone 8 harness is comparing them against each other and against Gemma 4 E4B, and
+  one key only measures one candidate. Benchmarking is 15 generations per model and
+  costs cents. A full national county regeneration at the measured prompt size is
+  single-digit dollars.
+- [ ] **The domain, and a Cloudflare account it is served from** (Milestone 11). Nothing
+  before Milestone 11 touches either, and Milestone 11 cannot be called done without
+  them — its done criterion is a reachable public URL, which is the one condition
+  Version 1's milestones never had.
+- Note: no external SSD is listed here as blocking. Milestone 10's code changes can be
+  written and tested against a second local path; only the full-volume pipeline run at
+  the end of that milestone needs the hardware.
+
+**Nothing already built is blocked on user input.** Every key the existing pipeline uses
+is present, and every source in the section above needs either no credential or one
+already held. The outstanding items are all Version 2: a hosted inference key for
+Milestone 12, and the domain plus hosting account for Milestone 11.
