@@ -834,23 +834,36 @@ starts — two half-decomposed plans in two files is how they drift apart.
 
 Measurement first; the tasks are ordered the way they should be built.
 
-- [ ] Per-stage wall-clock and bytes-written recorded for every stage of `make pipeline`,
-      alongside the RAM figures already in the README's Resource Requirements table
-- [ ] One full NJ pipeline run with those numbers captured, and the README's resource
-      table regenerated from it. This is the baseline Milestone 14 gets planned against:
-      without it, "the Northeast run takes a while" is the whole estimate
-- [ ] `HIP_DATA_DIR` honored end to end: `hip acquire` through `hip pack` read and write
-      under it with no path assembled from `REPO_ROOT` outside `config.py`
-- [ ] `reports_dir` decoupled from the data root. It currently derives from
-      `data_dir.parent` ([src/hip/config.py:140](src/hip/config.py:140)), so relocating
-      `data/` also relocates `reports/` — which holds 21 git-tracked county reports and
-      `reports/evaluation/v1.md`, both linked from the README. Needs its own setting
-      defaulting to the repo root
-- [ ] Postgres data relocatable: `pgdata` moved from a Docker named volume to a
-      configurable bind mount, with the path in `.env` alongside `HIP_DATA_DIR`
-- [ ] `.env.example` documents both new paths, and `make setup` creates the data tree
-      wherever it now points
+Revised 2026-09-01, after reading the repository: `mac-sitrep` already measures wall
+clock, CPU, peak RAM, disk I/O, and swap for `make pipeline` and `make test`, and
+generates the README's Resource Requirements block. This milestone reuses it rather than
+building a second timing harness, and adds only the two things it cannot answer.
 
+- [x] Seven per-stage scenarios in `.sitrep/project.json`, so the existing tool reports
+      which stage dominates instead of only the eight together. `acquire` excluded: it
+      returns cached releases without touching the network, so profiling it measures a
+      hash check rather than a download
+- [x] `hip footprint` — bytes per storage tier, per warehouse table, and per state, plus
+      the Postgres size, with `--json`. Degrades to the filesystem half when Postgres is
+      unreachable
+- [x] `hip footprint` captured for New Jersey and published in the README as a Storage
+      Footprint section beside the sitrep block, not inside it
+- [x] `reports_dir` promoted to its own setting (`HIP_REPORTS_DIR`), defaulting to the
+      repo root. A test asserts the default equals the expression it replaced
+- [x] `HIP_DATA_DIR` honored end to end, with `~` expanded on all three path settings
+- [x] Postgres relocatable through `HIP_PGDATA`, defaulting to the existing `pgdata`
+      named volume so nothing already loaded is disturbed. Both branches verified with
+      `docker compose config`
+- [x] `.env.example` documents all three paths; `make setup` delegates to a new
+      `make data-dirs` that asks the config rather than hardcoding `data/`
+
+- Note: **The README's 22-second pipeline figure is a warm run.** `hip acquire` returns
+  cached releases without touching the network unless `--force`
+  ([src/hip/sources/base.py:170](src/hip/sources/base.py:170)), so the measured run
+  re-processes 2GB that was already on disk and downloads nothing. The number is correct
+  and answers a different question than Milestone 14 needs: adding a state means
+  actually fetching its TIGER layers. Cold-run cost has never been measured, and the
+  README should say which of the two it is reporting.
 - Note: **The trigger is measurement, not disk pressure.** An earlier version of this
   section said disk was the driver. That was overstated and is corrected here. `data/`
   is 2.9GB against 32GB free, and the two largest items in it do not grow when states
@@ -869,6 +882,22 @@ Measurement first; the tasks are ordered the way they should be built.
   against the Parquet tier and is the stage that would feel a slow bus. Losing the
   volume costs a re-download and nothing else: `data/` is rebuildable by design
   (ARCHITECTURE #10), so it never needs to be backed up.
+
+- Note: **The milestone was re-scoped on 2026-09-01 after reading the repository.** It
+  was planned as per-stage timing plus disk relocation. Both premises were wrong:
+  `mac-sitrep` already measures time, CPU, RAM, and I/O, so a second harness would have
+  put rival numbers in one README; and the disk argument did not survive measurement,
+  since NJ MOD-IV (1.1GB) and the national ZCTA layer (529MB) do not grow when states
+  are added. What survived was a real path defect and a real measurement gap. The
+  roadmap row now describes what shipped rather than what was planned.
+- Note: **`make pipeline` dirties 21 tracked files on every run.** `analyze` writes a
+  new `hip_derived` source release stamped with the run time, so each region report's
+  provenance table changes even when no number moves. Correct but noisy; making the
+  derived vintage stable would be a behaviour change and was out of scope here.
+- Note: **Cold-run cost is still unmeasured**, and it is the number Milestone 14
+  actually needs for the download half. `hip acquire --force` against one state would
+  produce it. Not done here because forcing a re-download of all 2GB to measure it is a
+  poor trade while the answer only matters at expansion time.
 
 ## Decisions deferred to their milestones
 

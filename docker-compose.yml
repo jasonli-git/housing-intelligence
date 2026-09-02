@@ -13,7 +13,11 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # Named volume by default, a bind mount when HIP_PGDATA is set to a path.
+      # Opt-in on purpose: switching the source does not migrate anything, it points
+      # Postgres at a different directory, and an empty one initialises a new cluster.
+      # Anyone who never sets the variable keeps the volume they already have.
+      - ${HIP_PGDATA:-pgdata}:/var/lib/postgresql/data
     healthcheck:
       test:
         - CMD-SHELL
@@ -23,5 +27,7 @@ services:
       retries: 10
     restart: unless-stopped
 
+# Still declared, because that is what the default above resolves to. A bind-mount
+# path bypasses this block entirely.
 volumes:
   pgdata:

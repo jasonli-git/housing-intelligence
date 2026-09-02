@@ -6,12 +6,12 @@ geography spine, 335,927 observations across 23 metrics from 10 sources spanning
 over the API, displayed by the dashboard, and packaged as versioned analysis packets,
 with 223 Python and 26 dashboard tests passing. All eight pipeline stages run.
 
-**Version 2 is planned and not started.** It moves the platform off `localhost` and
-past New Jersey: publication as static artifacts on a public domain, interpretation
-written by a hosted model rather than a local one, geography expanded to the Northeast
-and then to every US county, and a design language to present it in. Everything it
-runs on — the warehouse schema, the analytics layer, the packet contract — is what
-Version 1 built.
+**Version 2 is under way — Milestone 10 shipped 2026-09-02.** It moves the platform
+off `localhost` and past New Jersey: publication as static artifacts on a public
+domain, interpretation written by a hosted model rather than a local one, geography
+expanded to the Northeast and then to every US county, and a design language to present
+it in. Everything it runs on — the warehouse schema, the analytics layer, the packet
+contract — is what Version 1 built.
 
 Two milestones ran out of numeric order. Milestone 9 was built before Milestone 5,
 because it corrects numbers the dashboard displays and fixing them afterwards would have
@@ -42,9 +42,10 @@ or the dashboard on a clean checkout; its tests pass; and
 
 ## Version 2 Milestones (public hosting and expansion)
 
-**Planned as of 2026-08-30; none started.** Version 2 changes four things and
-deliberately not a fifth: where the platform runs (a public domain rather than
-`localhost`), how much geography it covers (Northeast, then national at county level),
+**Milestone 10 closed 2026-09-02; the rest are planned and not started.** Version 2
+changes four things and deliberately not a fifth: where the platform runs (a public
+domain rather than `localhost`), how much geography it covers (Northeast, then national
+at county level),
 what writes the interpretation (a hosted model rather than a local one), and what the
 result looks and behaves like (a design language of its own, rather than the system
 defaults the dashboard reaches for today). The warehouse schema, the analytics layer,
@@ -54,7 +55,7 @@ fact table has gone wrong.
 
 | M | Status | Deliverable |
 |---|--------|-------------|
-| 10 | ⬜ planned | **Build cost and data placement** — per-stage wall-clock and bytes recorded alongside the RAM figures already in the README, so the cost of one state is known before eight more are added; and `HIP_DATA_DIR` honored by every stage with `reports_dir` decoupled from it and the Postgres volume relocatable off the boot disk, so growth is a setting rather than a migration |
+| 10 | ✅ done | **Build cost and data placement** — `hip footprint` reporting bytes per storage tier, per warehouse table, and per state, including the Postgres size that lives inside Docker where `du` cannot see it; seven per-stage scenarios added to the existing `mac-sitrep` profile rather than a second timing harness; `HIP_REPORTS_DIR` promoted from a path derived off the data root, `HIP_PGDATA` relocating Postgres opt-in, and `~` expanded in both; measured for New Jersey and published in the README |
 | 11 | ⬜ planned | **Static publication** — `hip publish` rendering every API response and dashboard page as immutable files under a content-addressed manifest, `make publish` deploying them, and New Jersey served from the custom domain with no database and no application server in production |
 | 12 | ⬜ planned | **Hosted inference** — a `HostedRunner` implementing `ModelRunner`, hosted candidates measured against Gemma 4 E4B on the Milestone 8 scenarios and rubric, an ordered preference list of benchmarked models resolved at generation time with the local runtime last, version-pinned model identifiers, per-candidate token rates recorded in config so the evaluation report can carry a quality-per-dollar column, staleness compared at display precision rather than on raw floats, and batch submission for the regeneration pass |
 | 13 | ⬜ planned | **Citation binding** — every figure in an interpretation resolved to the packet field, source release, period, and match method that licensed it, produced inside `hip explain`, with the same ground-truth index reused by the evaluation report |

@@ -8,7 +8,9 @@ from pathlib import Path
 import pytest
 
 from hip.config import (
+    REPO_ROOT,
     ConfigError,
+    Settings,
     check_config,
     load_geography,
     load_metrics,
@@ -200,3 +202,51 @@ def test_a_missing_env_file_is_not_an_error(tmp_path: Path) -> None:
     load_env_file.cache_clear()
     assert load_env_file(tmp_path / "absent") == 0
     load_env_file.cache_clear()
+
+
+# --- Path settings (Milestone 10) -------------------------------------------------
+
+
+def test_reports_dir_does_not_follow_data_dir(tmp_path: Path) -> None:
+    """The regression this milestone exists to prevent.
+
+    `reports_dir` used to be `data_dir.parent / "reports"`, so relocating the data root
+    to an external volume silently took `reports/` with it — including the 21
+    git-tracked county reports the README links to.
+    """
+    settings = Settings(data_dir=tmp_path / "elsewhere" / "data", _env_file=None)
+    assert settings.reports_dir == REPO_ROOT / "reports"
+    assert tmp_path not in settings.reports_dir.parents
+
+
+def test_default_reports_dir_matches_the_expression_it_replaced() -> None:
+    """Promoting the property to a field must not move anyone's reports directory."""
+    settings = Settings(_env_file=None)
+    assert settings.reports_dir == settings.data_dir.parent / "reports"
+
+
+def test_reports_dir_is_independently_settable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("HIP_REPORTS_DIR", str(tmp_path / "published"))
+    settings = Settings(_env_file=None)
+    assert settings.reports_dir == tmp_path / "published"
+
+
+def test_paths_expand_user(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`~` in a hand-written .env must not become a directory named `~`."""
+    monkeypatch.setenv("HIP_DATA_DIR", "~/hip-data")
+    settings = Settings(_env_file=None)
+    assert "~" not in str(settings.data_dir)
+    assert settings.data_dir == (Path.home() / "hip-data").resolve()
+
+
+def test_storage_tiers_follow_data_dir(tmp_path: Path) -> None:
+    settings = Settings(data_dir=tmp_path / "d", _env_file=None)
+    for path in (
+        settings.raw_dir,
+        settings.parquet_dir,
+        settings.duckdb_path,
+        settings.packets_dir,
+    ):
+        assert str(path).startswith(str(tmp_path / "d"))

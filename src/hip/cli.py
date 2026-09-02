@@ -12,6 +12,7 @@ a test fails if it and the command list disagree.
 
 from __future__ import annotations
 
+import json
 import logging
 import sys
 from typing import Annotated
@@ -33,6 +34,7 @@ from hip.config import (
 from hip.duck import duckdb_session
 from hip.eval_cli import app as eval_app
 from hip.eval_cli import explain_command
+from hip.footprint import as_dict, human_bytes, measure
 from hip.geography.crosswalk import apply_hud_weights, build_crosswalk
 from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
@@ -147,6 +149,57 @@ def check_config_command() -> None:
             typer.secho(f"  - {problem}", fg=typer.colors.YELLOW, err=True)
         raise typer.Exit(code=1)
     typer.secho("config OK", fg=typer.colors.GREEN)
+
+
+@app.command()
+def footprint(
+    as_json: Annotated[
+        bool, typer.Option("--json", help="Emit JSON instead of a table.")
+    ] = False,
+) -> None:
+    """Report bytes per storage tier and rows per state.
+
+    An inspection command, not a pipeline stage: it reads and reports, and `make
+    pipeline` does not call it. The question it answers is what one state costs, which
+    is what Milestone 14 multiplies.
+    """
+    settings = get_settings()
+    result = measure(settings)
+
+    if as_json:
+        typer.echo(json.dumps(as_dict(result), indent=2))
+        return
+
+    for tier in result.tiers:
+        note = "" if tier.exists else "  (absent)"
+        typer.echo(f"{tier.name:<12} {human_bytes(tier.bytes):>10}{note}")
+    typer.echo(f"{'filesystem':<12} {human_bytes(result.filesystem_bytes):>10}")
+
+    if result.database_error:
+        # Not an error exit: the filesystem answer is the larger half and is complete.
+        typer.secho(
+            f"postgres     unavailable ({result.database_error}) — "
+            f"start it with `make db-up` for the database half",
+            fg=typer.colors.YELLOW,
+            err=True,
+        )
+    else:
+        typer.echo(f"{'postgres':<12} {human_bytes(result.database_bytes or 0):>10}")
+        typer.echo()
+        for table in result.tables:
+            rows = "?" if table.rows is None else f"{table.rows:,}"
+            typer.echo(
+                f"  {table.name:<28} {human_bytes(table.bytes):>10} "
+                f"{rows:>12} rows (est.)"
+            )
+        typer.echo()
+        for state in result.states:
+            typer.echo(
+                f"  {state.state_code:<4} {state.regions:>8,} regions "
+                f"{state.observations:>12,} observations"
+            )
+
+    typer.secho(f"{human_bytes(result.total_bytes)} total", fg=typer.colors.GREEN)
 
 
 def _adapters(source: str | None) -> list[SourceAdapter]:

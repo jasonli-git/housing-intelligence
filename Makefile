@@ -2,7 +2,7 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup setup-eval venv-fix db-up db-down db-logs migrate pipeline api web \
+.PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline api web \
         test test-py test-web lint format check-config dbt-debug eval clean
 
 SITE_PACKAGES = $(wildcard .venv/lib/python*/site-packages)
@@ -20,7 +20,10 @@ help:  ## List available targets
 setup:  ## Install Python and Node dependencies, create local data dirs
 	uv sync --group dev --group dbt
 	$(MAKE) venv-fix
-	mkdir -p data/raw data/parquet data/duckdb data/packets reports/validation
+	@# Asks the config where the tiers are rather than assuming ./data, so a setup run
+	@# with HIP_DATA_DIR set does not leave an unused data/ in the repo. Every write
+	@# path creates its own parents anyway; this just makes a fresh tree visible.
+	$(MAKE) data-dirs
 	cd web && npm install
 	@test -f .env || (cp .env.example .env && echo "Created .env from .env.example")
 
@@ -38,6 +41,13 @@ eval:  ## Full evaluation: scenarios -> run -> judge -> report (hours; judging c
 	uv run hip eval run
 	uv run hip eval judge
 	uv run hip eval report
+
+data-dirs:  ## Create the storage tiers wherever the config points them
+	@.venv/bin/python -c "\
+from pathlib import Path; from hip.config import get_settings; s = get_settings(); \
+dirs = [s.raw_dir, s.parquet_dir, s.duckdb_path.parent, s.packets_dir, s.reports_dir / 'validation']; \
+[d.mkdir(parents=True, exist_ok=True) for d in dirs]; \
+print('\n'.join(str(d) for d in dirs))"
 
 venv-fix:  ## Un-hide .pth files so bare `uv run hip` works (see ARCHITECTURE #24)
 	@# Only needed outside make: every make target already exports PYTHONPATH. uv

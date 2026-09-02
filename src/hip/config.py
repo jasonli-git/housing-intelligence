@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 RegionLevel = Literal["state", "county", "municipality", "zip", "tract", "parcel"]
@@ -113,6 +113,29 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://hip:hip@localhost:5432/hip"
     data_dir: Path = REPO_ROOT / "data"
     config_dir: Path = REPO_ROOT / "config"
+    # Human-facing output — validation reports and region reports. Beside `data/` rather
+    # than inside it: these are meant to be read, shared, and in the case of the 21
+    # county reports committed, while everything under `data/` is a rebuildable machine
+    # artifact (ARCHITECTURE #10).
+    #
+    # Its own setting rather than a path derived from `data_dir`, which is what it was
+    # until 2026-09-01. Deriving it as `data_dir.parent / "reports"` produced the right
+    # answer only while `data_dir` sat inside the repo: pointing HIP_DATA_DIR at an
+    # external volume silently moved `reports/` there too, taking the git-tracked county
+    # reports and the README's links to them off the repo entirely (#65). The default
+    # here is byte-identical to what that expression returned, so nothing moves for
+    # anyone who does not set the variable.
+    reports_dir: Path = REPO_ROOT / "reports"
+
+    @field_validator("data_dir", "config_dir", "reports_dir")
+    @classmethod
+    def _expand(cls, value: Path) -> Path:
+        """Expand `~` and resolve, so a hand-written .env path behaves like a shell one.
+
+        Pydantic parses `Path` without touching `~`, which would otherwise create a
+        directory literally named `~` in the repo root the first time a stage ran.
+        """
+        return value.expanduser().resolve()
 
     @property
     def raw_dir(self) -> Path:
@@ -129,15 +152,6 @@ class Settings(BaseSettings):
     @property
     def packets_dir(self) -> Path:
         return self.data_dir / "packets"
-
-    @property
-    def reports_dir(self) -> Path:
-        """Human-facing output — validation reports and region reports.
-
-        Beside `data/` rather than inside it: these are meant to be read and shared,
-        while everything under `data/` is a rebuildable machine artifact.
-        """
-        return self.data_dir.parent / "reports"
 
 
 class Source(BaseModel):

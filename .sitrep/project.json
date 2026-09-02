@@ -1,24 +1,92 @@
 {
-  "externalServices" : [
-
-  ],
-  "project" : "housing-intelligence",
-  "scenarios" : [
+  "externalServices": [],
+  "project": "housing-intelligence",
+  "scenarios": [
     {
-      "command" : [
+      "command": [
         "make",
         "pipeline"
       ],
-      "name" : "pipeline",
-      "runs" : 3
+      "name": "pipeline",
+      "runs": 3
     },
     {
-      "command" : [
+      "command": [
         "make",
         "test"
       ],
-      "name" : "test",
-      "runs" : 3
+      "name": "test",
+      "runs": 3
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "hip",
+        "land"
+      ],
+      "name": "stage-land",
+      "runs": 3
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "hip",
+        "stage"
+      ],
+      "name": "stage-stage",
+      "runs": 3
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "hip",
+        "geocode"
+      ],
+      "name": "stage-geocode",
+      "runs": 3
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "hip",
+        "validate"
+      ],
+      "name": "stage-validate",
+      "runs": 3
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "hip",
+        "load"
+      ],
+      "name": "stage-load",
+      "runs": 3
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "hip",
+        "analyze"
+      ],
+      "name": "stage-analyze",
+      "runs": 3
+    },
+    {
+      "command": [
+        "uv",
+        "run",
+        "hip",
+        "pack"
+      ],
+      "name": "stage-pack",
+      "runs": 3
     }
   ]
 }

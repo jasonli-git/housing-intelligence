@@ -126,6 +126,8 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 62 | Every prompt reaches a model through that model's own instruct formatting: `tokenizer.apply_chat_template` on MLX, `/api/chat` on Ollama. | Both runtimes silently accept a raw string and neither warns. Untemplated, a model never sees the turn markers it was tuned on and never emits its end-of-turn token. Measured 2026-08-13 on Qwen3-8B, the matched anchor pair: templated Ollama stopped at 528 tokens with a clean answer while untemplated MLX produced the same opening and ran to the 3,000-token cap, inflating its stated-figure count from 89 to 1,461 and burying the answer past where refusal detection could see it. Ollama's `/api/chat` is byte-identical to `/api/generate` for a model whose renderer applies either way (verified on gemma-4-E4B: same 819 tokens, same text), and is the difference between output and silence for a thinking model — gemma-4-12B returned an empty string from the raw path for every prompt, including "Reply with exactly: OK". Rejected: hand-writing a template per model in the Modelfile, which puts the formatting in an import script rather than with the model that owns it. |
 | 63 | `hip` loads `.env` into `os.environ` at startup. | `Settings` reads `.env` only for its own `HIP_`-prefixed fields; pydantic-settings exports nothing else. Every source credential and the judge key are resolved with `os.environ.get()`, so keys placed in `.env` — exactly where `.env.example`, the README, and the judge's own error message all say to put them — were invisible to the code that needed them, and had to be exported by hand. The documentation was right and the loader was missing. A real environment variable still wins, so an explicit export overrides the file and CI can inject secrets with no `.env` present. |
 | 64 | The output-token budget is sized from measurement, and is uniform across every candidate. | It has to cover reasoning *and* answer, because a reasoning model spends it before emitting a word. Raised twice from evidence: 1600 truncated Qwen3-8B after 5,747 characters of reasoning into an empty answer; 3000 left gemma-4-12B returning nothing on 8 of 15 scenarios. At 6000, gemma-4-12B stops cleanly on 9 of 15. Uniform because a per-model budget reintroduces the confound the anchors exist to remove — and uniformity is cheap here, since deterministic sampling means a model that stops at 826 tokens produces byte-identical output at any higher cap, so raising it only requires re-running the models that actually hit it. |
+| 65 | Every storage location is a setting, never a path derived from another setting. | `reports_dir` was `data_dir.parent / "reports"`, which was right only while `data_dir` sat in the repo: pointing `HIP_DATA_DIR` at an external volume silently moved `reports/` there too, taking the 21 git-tracked county reports and the README's links to them off the repo. It is now `HIP_REPORTS_DIR`, defaulting to the repo root — byte-identical to what the old expression returned at the default, so nothing moves for anyone who does not set it. Postgres follows the same rule through `HIP_PGDATA` in `docker-compose.yml`, defaulting to the existing `pgdata` named volume. Rejected: deriving the Postgres path from `HIP_DATA_DIR`, which would have relocated a loaded cluster the moment the data root moved and silently initialised an empty one. Costs three variables where there was one, and the relocation is opt-in rather than automatic — moving a path points Postgres at a different directory, it does not migrate what is already there. |
+| 66 | Footprint is measured in `hip footprint`; wall clock, CPU, RAM, and I/O are left to `mac-sitrep`. | The two answer different questions and only one was covered. sitrep already profiles `make pipeline` and generates the README's Resource Requirements block, but it reports I/O *volume* — bytes moved during a run — while capacity planning needs *footprint*, the bytes still occupied afterwards, split by tier and by state. Postgres makes the gap concrete: it lives inside Docker's disk image, invisible both to sitrep's process accounting and to `du` against `data/`, and it is the tier that grows fastest with geography because geometry is stored per region. Rejected: a second timing harness inside `hip`, which would duplicate a working tool and produce a rival set of numbers in the same README. Costs a dependency on a Mac-only external tool for the throughput half, recorded as a limitation below. |
 
 ## Module Layout
 
@@ -144,9 +146,10 @@ housing-intelligence/
 ├── schemas/
 │   └── packet-v1.json         # published packet contract, generated from code (#43)
 ├── src/hip/
-│   ├── cli.py                 # Typer entrypoint; check-config, schema, 8 stages
+│   ├── cli.py                 # Typer entrypoint; check-config, schema, footprint, 8 stages
 │   ├── config.py              # settings, YAML loading, env resolution, STATE_FIPS
 │   ├── duck.py                # DuckDB session + /vsizip path helper (#23)
+│   ├── footprint.py           # bytes per storage tier and per state (#66)
 │   ├── sources/
 │   │   ├── base.py            # SourceAdapter, retry, content-addressed cache (#10)
 │   │   ├── registry.py        # which sources have adapters; PLANNED names the rest
@@ -596,6 +599,18 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **An assessment is not a market value.** Ratios drift between revaluations and vary by
   municipality, so `modiv_median_assessed_value` tracks the tax roll rather than what
   houses sell for. Equalization ratios would fix this and are not loaded.
+- **Throughput is measured by an external, Mac-only tool** (#66). `mac-sitrep` produces
+  the README's Resource Requirements block; without it, wall clock, CPU, peak RAM, and
+  disk I/O go unmeasured on this project. `hip footprint` covers only the storage half
+  and has no such dependency.
+- **The published pipeline timing is a warm run.** `hip acquire` returns cached releases
+  without touching the network unless `--force`, so the 22-second figure re-processes
+  data already on disk and downloads nothing. Cold-run cost — which is what adding a
+  state actually incurs — has never been measured.
+- **`make pipeline` always dirties 21 tracked files.** `analyze` writes a new
+  `hip_derived` source release stamped with the run time, so every region report's
+  provenance table changes on every run even when no number moves. The reports are
+  correct; the diff is noise.
 - **MOD-IV is one snapshot, so it has no change metrics.** Its six metrics carry a value
   and a value rank and nothing else; `/rankings?basis=change` returns nothing for them.
   A second vintage would need a second published composite, which NJGIN does not archive.

@@ -3,6 +3,69 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.10.0] — 2026-09-02
+
+First milestone of Version 2, and the smallest one on the plan. It answers a question
+nobody could answer before: what does one state cost? Not in throughput — `mac-sitrep`
+has profiled `make pipeline` since 2026-08-28 — but in bytes left on disk afterwards,
+split by storage tier and by state. That is the figure Milestone 14 multiplies by nine,
+and New Jersey's is now published rather than guessed at.
+
+The milestone was re-scoped mid-flight. It was planned as per-stage timing plus disk
+relocation, on the premise that disk pressure was the constraint. Reading the repository
+showed both halves of that were wrong: sitrep already measures time, CPU, RAM, and I/O,
+so a second harness would have produced rival numbers in the same README; and the disk
+argument did not survive the measurement, since the two largest items under `data/` —
+1.1 GB of NJ MOD-IV and the 529 MB national ZCTA layer — do not grow when states are
+added. What survived was a latent path defect and a genuine measurement gap.
+
+### Added
+- **`hip footprint`** (ARCHITECTURE #66) — bytes per storage tier, per warehouse table,
+  and per state, with `--json` for capturing into a document. Postgres is included
+  because it lives inside Docker's disk image, invisible both to sitrep's process
+  accounting and to `du` against `data/`. Degrades to the filesystem half when Postgres
+  is unreachable, matching `warehouse.db.probe` — a capacity question should not require
+  `docker compose up`.
+- **`HIP_REPORTS_DIR`** — reports are now located by their own setting.
+- **`HIP_PGDATA`** — relocates the Postgres data directory, read by
+  `docker-compose.yml`. Defaults to the existing `pgdata` named volume, so a warehouse
+  that is already loaded stays untouched until someone opts in.
+- **Seven per-stage scenarios** in `.sitrep/project.json`, so the existing profiler
+  reports which stage dominates instead of only the eight together. `acquire` is
+  deliberately excluded: it returns cached releases without touching the network, so
+  profiling it measures a hash check rather than a download.
+- **Storage Footprint section in the README**, measured for New Jersey: 3.1 GB across
+  the filesystem tiers plus 339.3 MB in Postgres, 3.4 GB in total. `regions` is 40 kB
+  per row because it carries PostGIS geometry, which is why a state's cost tracks how
+  finely it is subdivided rather than how much history it holds.
+- **`make data-dirs`**, which creates the storage tiers wherever the config points them.
+
+### Changed
+- **Storage locations are settings, never derivations** (ARCHITECTURE #65).
+  `Settings.reports_dir` was a property returning `data_dir.parent / "reports"`; it is
+  now a field defaulting to the repo root. The default is byte-identical to what the old
+  expression returned, so nothing moves for anyone who does not set the variable.
+- **`make setup` no longer hardcodes `data/`** — it asks the config where the tiers are,
+  so a setup run with `HIP_DATA_DIR` set does not leave an unused `data/` in the repo.
+- **`~` is expanded** in `HIP_DATA_DIR`, `HIP_CONFIG_DIR`, and `HIP_REPORTS_DIR`, which
+  would otherwise have created a directory literally named `~`.
+
+### Fixed
+- **Relocating the data root silently relocated `reports/` with it.** Because
+  `reports_dir` derived from `data_dir.parent`, pointing `HIP_DATA_DIR` at an external
+  volume would have taken the 21 git-tracked county reports and the evaluation report
+  off the repo, breaking every README link to them. Dormant until someone moved the data
+  root, which is exactly what this milestone was going to make easy.
+
+### Documented
+- **The published pipeline timing is a warm run.** `hip acquire` returns cached releases
+  unless `--force`, so the 22-second figure re-processes data already on disk and
+  downloads nothing. Cold-run cost — what adding a state actually incurs — has never
+  been measured. Recorded in the README and in Known Limitations.
+- **`make pipeline` always dirties 21 tracked files**, because `analyze` writes a new
+  `hip_derived` release stamped with the run time. The reports are correct; the diff is
+  noise.
+
 ## [0.9.0] — 2026-08-14
 
 The last milestone of Version 1, and the first time a model touches the platform. Eight
