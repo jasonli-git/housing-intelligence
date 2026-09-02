@@ -48,13 +48,13 @@ deliberately not a fifth: where the platform runs (a public domain rather than
 what writes the interpretation (a hosted model rather than a local one), and what the
 result looks and behaves like (a design language of its own, rather than the system
 defaults the dashboard reaches for today). The warehouse schema, the analytics layer,
-and the packet contract are not in scope — SPEC
-principle "each future capability should reuse the same warehouse and analytics layer"
-holds, and a Version 2 that rewrites the fact table has gone wrong.
+and the packet contract are not in scope — SPEC principle "each future capability should
+reuse the same warehouse and analytics layer" holds, and a Version 2 that rewrites the
+fact table has gone wrong.
 
 | M | Status | Deliverable |
 |---|--------|-------------|
-| 10 | ⬜ planned | **Portable build environment** — `HIP_DATA_DIR` honored by every stage, `reports_dir` decoupled from it, the Postgres volume relocatable off the boot disk, and per-stage wall-clock and bytes recorded alongside the RAM figures already in the README, so a full build runs from an external SSD and its cost is measured rather than estimated |
+| 10 | ⬜ planned | **Build cost and data placement** — per-stage wall-clock and bytes recorded alongside the RAM figures already in the README, so the cost of one state is known before eight more are added; and `HIP_DATA_DIR` honored by every stage with `reports_dir` decoupled from it and the Postgres volume relocatable off the boot disk, so growth is a setting rather than a migration |
 | 11 | ⬜ planned | **Static publication** — `hip publish` rendering every API response and dashboard page as immutable files under a content-addressed manifest, `make publish` deploying them, and New Jersey served from the custom domain with no database and no application server in production |
 | 12 | ⬜ planned | **Hosted inference** — a `HostedRunner` implementing `ModelRunner`, hosted candidates measured against Gemma 4 E4B on the Milestone 8 scenarios and rubric, an ordered preference list of benchmarked models resolved at generation time with the local runtime last, version-pinned model identifiers, per-candidate token rates recorded in config so the evaluation report can carry a quality-per-dollar column, staleness compared at display precision rather than on raw floats, and batch submission for the regeneration pass |
 | 13 | ⬜ planned | **Citation binding** — every figure in an interpretation resolved to the packet field, source release, period, and match method that licensed it, produced inside `hip explain`, with the same ground-truth index reused by the evaluation report |
@@ -81,14 +81,24 @@ region count grows sevenfold. Expanding first and optimizing afterwards means pa
 the unoptimized bill on the larger dataset and rebuilding the pipeline under a live
 site.
 
-**Milestone 10 is small and blocks everything.** `data/` is 2.9GB today against 32GB
-free on the boot disk, and Northeast expansion adds TIGER `cousub` and `tract`
-downloads for eight more states. The work itself is a config seam and a Docker volume,
-but nothing after it fits without it. One defect is already known and is the reason
-this is a milestone rather than a chore: `Settings.reports_dir` derives from
-`data_dir.parent` ([src/hip/config.py:140](src/hip/config.py:140)), so relocating the
-data root silently relocates `reports/` with it — and `reports/regions/5y/*.md` are
-tracked in git and linked from the README.
+**Milestone 10 comes first for the measurement, not for the disk.** Nobody currently
+knows how long a full pipeline run takes for one state or how many bytes a state costs,
+because only RAM was ever recorded. Planning Milestone 14 without those numbers means
+guessing whether the Northeast run is two hours or twenty. Measuring one state is cheap;
+measuring it after committing to eight is too late for the number to inform anything.
+
+Data placement rides along because it is cheap now and a migration later. An earlier
+version of this section justified the milestone on disk pressure, and that was
+overstated: `data/` is 2.9GB against 32GB free, and the two largest items in it —
+1.1GB of NJ MOD-IV and the 529MB national ZCTA layer — do not grow when states are
+added. The Northeast adds roughly 3 to 6GB counting Postgres, and Milestone 15 stops at
+county level, which is where large national geometry would have been. **No Version 2
+milestone as scoped requires an external volume.** What does justify the work is a
+defect: `Settings.reports_dir` derives from `data_dir.parent`
+([src/hip/config.py:140](src/hip/config.py:140)), so relocating the data root silently
+relocates `reports/` with it — and `reports/regions/5y/*.md` are tracked in git and
+linked from the README. It is dormant until someone moves the data root, and a trap
+when they do.
 
 **Milestone 12 precedes 14 because of wall-clock, not price.** Gemma 4 E4B took
 9,140ms per generation in the Milestone 8 measurements. Twenty-one counties is three

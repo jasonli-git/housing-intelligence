@@ -826,38 +826,49 @@ and an explanation panel that is labeled as interpretation rather than measureme
   finding most likely to shape the explanation prompt, and it is why `hip explain` asks
   for a narrative rather than answers to questions.
 
-## Milestone 10 — Portable build environment
+## Milestone 10 — Build cost and data placement
 
 Next up; not started. Decomposed here because it is the current milestone. Milestones 11
-through 17 stay in [ROADMAP.md](ROADMAP.md) at deliverable granularity until each one
+through 18 stay in [ROADMAP.md](ROADMAP.md) at deliverable granularity until each one
 starts — two half-decomposed plans in two files is how they drift apart.
 
+Measurement first; the tasks are ordered the way they should be built.
+
+- [ ] Per-stage wall-clock and bytes-written recorded for every stage of `make pipeline`,
+      alongside the RAM figures already in the README's Resource Requirements table
+- [ ] One full NJ pipeline run with those numbers captured, and the README's resource
+      table regenerated from it. This is the baseline Milestone 14 gets planned against:
+      without it, "the Northeast run takes a while" is the whole estimate
 - [ ] `HIP_DATA_DIR` honored end to end: `hip acquire` through `hip pack` read and write
       under it with no path assembled from `REPO_ROOT` outside `config.py`
 - [ ] `reports_dir` decoupled from the data root. It currently derives from
       `data_dir.parent` ([src/hip/config.py:140](src/hip/config.py:140)), so relocating
-      `data/` to an external volume also relocates `reports/` — which holds 21
-      git-tracked county reports and `reports/evaluation/v1.md`, both linked from the
-      README. Needs its own setting defaulting to the repo root
-- [ ] Postgres data off the boot disk: `pgdata` moved from a Docker named volume to a
+      `data/` also relocates `reports/` — which holds 21 git-tracked county reports and
+      `reports/evaluation/v1.md`, both linked from the README. Needs its own setting
+      defaulting to the repo root
+- [ ] Postgres data relocatable: `pgdata` moved from a Docker named volume to a
       configurable bind mount, with the path in `.env` alongside `HIP_DATA_DIR`
 - [ ] `.env.example` documents both new paths, and `make setup` creates the data tree
       wherever it now points
-- [ ] Per-stage wall-clock and bytes-written recorded alongside the RAM figures already
-      in the README's Resource Requirements table, so the cost of a state is measured
-      before eight more are added
-- [ ] A full pipeline run from an external volume, with the README's resource table
-      regenerated from it
 
-- Note: **The trigger is disk, not tidiness.** `data/` is 2.9GB against 32GB free on the
-  boot disk, and Milestone 14 adds TIGER `cousub` and `tract` downloads for eight more
-  states. The two largest files already on disk — the 529MB national ZCTA layer and the
-  245MB Zillow CSVs — are national and do not grow per state, so the increment is
-  smaller than the region count suggests, but it is still eight states of new geometry.
-- Note: **Format the external volume APFS, not exFAT.** DuckDB and Postgres on exFAT
-  get no sparse files, poor metadata performance, and unreliable locking. Thunderbolt or
-  USB4 NVMe rather than USB 3.0 — `hip stage` does out-of-core work against the Parquet
-  tier and is the stage that will feel a slow bus.
+- Note: **The trigger is measurement, not disk pressure.** An earlier version of this
+  section said disk was the driver. That was overstated and is corrected here. `data/`
+  is 2.9GB against 32GB free, and the two largest items in it do not grow when states
+  are added: `data/raw/nj_modiv` is 1.1GB and is NJ-only, and 529MB of the TIGER
+  download is the national ZCTA layer. Docker's disk image holds another 2.2GB for
+  Postgres and does grow. The Northeast adds roughly 3 to 6GB all in. **No Version 2
+  milestone as scoped needs an external volume** — Milestone 15 stops at county level,
+  which is where large national geometry would have been.
+- Note: **What actually justifies doing this before Milestone 14** is that nobody knows
+  what one state costs in time or bytes, because only RAM was ever recorded. Measuring
+  one state is cheap. Measuring it after committing to eight is too late for the number
+  to change any decision.
+- Note: **If an external volume is used later, format it APFS, not exFAT.** DuckDB and
+  Postgres on exFAT get no sparse files, poor metadata performance, and unreliable
+  locking. Thunderbolt or USB4 rather than USB 3.0 — `hip stage` does out-of-core work
+  against the Parquet tier and is the stage that would feel a slow bus. Losing the
+  volume costs a re-download and nothing else: `data/` is rebuildable by design
+  (ARCHITECTURE #10), so it never needs to be backed up.
 
 ## Decisions deferred to their milestones
 
@@ -982,9 +993,9 @@ Reachability probed 2026-08-13; each line says what it would add and what it nee
   before Milestone 11 touches either, and Milestone 11 cannot be called done without
   them — its done criterion is a reachable public URL, which is the one condition
   Version 1's milestones never had.
-- Note: no external SSD is listed here as blocking. Milestone 10's code changes can be
-  written and tested against a second local path; only the full-volume pipeline run at
-  the end of that milestone needs the hardware.
+- Note: no external volume is listed here, because none is needed. Milestone 10 is
+  written and tested against a second local path, and no Version 2 milestone as scoped
+  outgrows the boot disk. See the Milestone 10 notes for the numbers.
 
 **Nothing already built is blocked on user input.** Every key the existing pipeline uses
 is present, and every source in the section above needs either no credential or one
