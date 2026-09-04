@@ -45,13 +45,12 @@ or the dashboard on a clean checkout; its tests pass; and
 **Milestone 10 closed 2026-09-02; the rest are planned and not started.** Version 2
 changes four things and deliberately not a fifth: where the platform runs (a public
 domain rather than `localhost`), how much geography it covers (Northeast, then national
-at county level),
-what writes the interpretation (a hosted model rather than a local one), and what the
-result looks and behaves like (a design language of its own, rather than the system
-defaults the dashboard reaches for today). The warehouse schema, the analytics layer,
-and the packet contract are not in scope — SPEC principle "each future capability should
-reuse the same warehouse and analytics layer" holds, and a Version 2 that rewrites the
-fact table has gone wrong.
+at county level), what writes the interpretation (a hosted model rather than a local
+one), and what the result looks and behaves like (a design language of its own, rather
+than the system defaults the dashboard reaches for today). The warehouse schema, the
+analytics layer, and the packet contract are not in scope — SPEC principle "each future
+capability should reuse the same warehouse and analytics layer" holds, and a Version 2
+that rewrites the fact table has gone wrong.
 
 | M | Status | Deliverable |
 |---|--------|-------------|
@@ -224,6 +223,20 @@ Version 2 table above. What remains unscheduled:
 - **State expansion past the Northeast**, in strong-MCD order — WI, MI, MN, ND, SD
   extend Milestone 14 with no geography change at all; everything else waits on the
   entry above.
+- **Bring-your-own-model comparison** — let a visitor point the platform at a local
+  model of their own and see it answer the same scenarios the hosted one does, scored
+  the same way. Every piece already exists and none of it is currently public: the five
+  standardized scenarios, the deterministic figure-checking that counts fabrication
+  rather than grading it, the rubric, and the `ModelRunner` protocol that made eight
+  candidates interchangeable in the first place. Milestone 12 adds a hosted
+  implementation of that protocol; this exposes the harness behind it. Two things make
+  it harder than it sounds and are the reason it is unscheduled rather than queued: the
+  platform is published as static artifacts with no server to run anything
+  (Milestone 11), so the model call has to happen in the visitor's own browser or against
+  their own endpoint, and the rubric half needs a judge, which is a paid API call the
+  visitor would have to supply a key for. The deterministic half needs neither and is
+  the honest place to start — fabrication rate against a real packet is a complete
+  answer on its own, and it is the number Milestone 8 treated as the eligibility gate.
 - **Climate and flood-risk overlays** — the highest consumer value of anything on this
   list, and FEMA's National Flood Hazard Layer is free. Held back only because it adds
   a source family with different geometry semantics than any current source.
