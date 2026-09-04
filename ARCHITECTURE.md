@@ -599,6 +599,14 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **An assessment is not a market value.** Ratios drift between revaluations and vary by
   municipality, so `modiv_median_assessed_value` tracks the tax roll rather than what
   houses sell for. Equalization ratios would fix this and are not loaded.
+- **README excerpts have no staleness check.** The platform detects stale prose about
+  its own data — `region_explanations` stores a packet hash, `is_stale` compares it, and
+  the API serves a `stale` flag the dashboard renders — but the figures quoted in
+  `README.md` are copied by hand and nothing compares them with the artifacts they came
+  from. A source release that revises history moves the numbers in
+  `reports/regions/5y/34003.md` without moving the ones quoted beside it. Mitigated by
+  dating every excerpt and linking the live file; `sitrep export --check` is the pattern
+  a real check would follow, and Milestone 11 is where publishing makes the drift matter.
 - **Throughput is measured by an external, Mac-only tool** (#66). `mac-sitrep` produces
   the README's Resource Requirements block; without it, wall clock, CPU, peak RAM, and
   disk I/O go unmeasured on this project. `hip footprint` covers only the storage half

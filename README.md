@@ -54,7 +54,7 @@ seeded demo data.
 *Current values ranked by value rather than by change, which is the only way snapshot sources like MOD-IV become visible at all.*
 
 ![Model interpretation panel and computed caveats](screenshots/interp+caveats.png)
-*The local model's interpretation, styled to be unmistakable as commentary and followed by the caveats the platform computes for itself.*
+*The selected model's interpretation, styled to be unmistakable as commentary and followed by the caveats the platform computes for itself. Captured 2026-08-14, when that model was Gemma 4 E4B running locally; the panel's shape is the durable part, not the runtime behind it.*
 
 ![Print-ready region report](screenshots/report_snippet.png)
 *The print-ready region report, rendered from the same packet the API serves — this is Bergen County, published in full at [`reports/regions/5y/34003.md`](reports/regions/5y/34003.md).*
@@ -165,7 +165,14 @@ read without building the warehouse first: the
 [model-evaluation report](reports/evaluation/v1.md). Both stay rebuildable — the commands
 below overwrite them — and the excerpts here link to the full text.
 
-### Region report — Bergen County, 5y window
+**The excerpts below are dated, and the linked files are the live version.** Figures were
+published on 2026-08-14 and are copied here by hand, so a source release that revises
+history will move the numbers in the linked report without moving the ones quoted here.
+The two kinds of excerpt age differently: the region report is pipeline output and
+changes whenever a source publishes, while the evaluation is a record of one experiment
+against packets as they stood on that date, and does not change when data refreshes.
+
+### Region report — Bergen County, 5y window, as published 2026-08-14
 
 Written by `uv run hip pack --report` to
 [`reports/regions/5y/34003.md`](reports/regions/5y/34003.md), and served unchanged by
@@ -197,7 +204,7 @@ Rank 1 is the better end of the cohort as the metric defines better, not always 
 largest rise. The [full report](reports/regions/5y/34003.md) adds the remaining nine
 metrics, a current-values table ranked by value, and the caveats that qualify each figure.
 
-### Model evaluation — run `v1`
+### Model evaluation — run `v1`, 2026-08-14
 
 Written by `uv run hip eval report` to
 [`reports/evaluation/v1.md`](reports/evaluation/v1.md). 120 generations from 8 models over
