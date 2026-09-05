@@ -61,7 +61,7 @@ that rewrites the fact table has gone wrong.
 | 14 | ⬜ planned | **Northeast expansion** — CT, MA, ME, NH, NY, PA, RI, VT loaded at all five levels, the first run of the pipeline at roughly seven times current volume, and a per-state coverage report showing what each source did and did not resolve |
 | 15 | ⬜ planned | **National county coverage** — all 50 states, DC, and PR at `state` and `county` level only, on federal sources that key on exact FIPS, giving national coverage without a national municipality model |
 | 16 | ⬜ planned | **Three-dimensional national map** — county choropleth extruded by a magnitude metric and colored by a ratio metric, replacing the inline-SVG map as the landing view; selection shown by highlight-and-mute, where chosen regions keep full colour and gain a contrasting outline while every other region drops to a neutral it cannot be confused with; a legend that states what height and colour each encode, since a two-channel map does not explain itself |
-| 17 | ⬜ planned | **Consumer entry point** — search by place name or ZIP, disambiguated by county and legal type rather than by ZIP, which is many-to-many; a one-sentence plain-language answer at the top of every region page; an income-to-affordability view built on the existing `price_to_income` and `price_to_ami` metrics; and `NAMELSAD` loaded from TIGER, without which 30 NJ municipality names are ambiguous and four pairs are indistinguishable |
+| 17 | ⬜ planned | **Consumer entry point** — three views that answer a decision rather than report a figure: **"what can I afford here"**, taking an income and returning the places within reach, inverting `price_to_income` and `price_to_ami` into the question people actually ask; **a verdict sentence** on every region page, turning "$791,116, rank 17 of 21" into "more expensive than 16 of New Jersey's 21 counties, and rising more slowly than most", computed from rank and percentile with no model involved; and **the tradeoff named**, pairing a cheaper home value against the higher property taxes MOD-IV already records or the migration flows IRS already supplies, because every real housing decision is a trade and reporting one side of it is half an answer. Plus search disambiguated by county and legal type — ZIP is many-to-many and cannot label a result — over the `name_lsad` column loaded in 2026-09-05 |
 | 18 | ⬜ planned | **Design system and identity** — a typeface pairing and a wordmark replacing the system font stack, the interaction and focus states the stylesheet currently declares none of, metric and window chosen by the reader rather than fixed as module constants, a named component layer replacing per-page inline grids, an inline glossary so `ZHVI` and `price_to_ami` are defined where they appear, and caveats placed beside the figure they qualify rather than collected at the foot of the report. Built before 16 and 17 |
 
 The done criterion from Version 1 is unchanged: a milestone counts as done when its
@@ -162,6 +162,25 @@ mute must also be a neutral that cannot be read as the ramp's lowest step, which
 `--seq-100` at `#cde2fb` very nearly is. Unselected regions stay visible on purpose:
 this platform's product is rank and percentile, so removing the comparison set would
 delete the context that makes a single figure mean anything.
+
+**Milestone 17 is where the platform stops reporting and starts answering.** Everything
+before it produces figures that are correct and that a reader still has to interpret: a
+rank of 17 of 21 means nothing until you know whether 1 is good. The three views in that
+row are deliberately deterministic — every one is computed from rank, percentile, and
+metrics the warehouse already holds, with no model and no new source — because the
+interpretation people need most is the interpretation least safe to generate. A verdict
+sentence that is wrong is worse than a table that is merely unhelpful, and a sentence
+derived from a percentile cannot be wrong in the way generated prose can.
+
+**Affordability forecasting stays out of Version 2, and cost is not the reason.**
+Extrapolating a CAGR is arithmetic; it would be nearly free. The objection is that it
+would be the only number the platform publishes that traces to an assumption rather than
+to a source release, on a site whose entire claim is that every figure names its origin.
+It is also the one output where being wrong changes somebody's decision. If it is ever
+built it needs its own accuracy evaluation — backtested against held-out history with
+published error bars — in the way the interpretation layer got one, which makes it a
+milestone rather than a feature. The honest cheap version already ships: a five-year
+change and an annualised rate are forward-looking without claiming to know the future.
 
 **Milestone 18 is scheduled before 16 and 17, out of numeric order.** Version 1 set the
 precedent and the reasoning is the same: Milestone 9 was built before Milestone 5
