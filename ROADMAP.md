@@ -56,7 +56,7 @@ that rewrites the fact table has gone wrong.
 |---|--------|-------------|
 | 10 | ✅ done | **Build cost and data placement** — `hip footprint` reporting bytes per storage tier, per warehouse table, and per state, including the Postgres size that lives inside Docker where `du` cannot see it; seven per-stage scenarios added to the existing `mac-sitrep` profile rather than a second timing harness; `HIP_REPORTS_DIR` promoted from a path derived off the data root, `HIP_PGDATA` relocating Postgres opt-in, and `~` expanded in both; measured for New Jersey and published in the README |
 | 11 | ✅ done | **Static publication** — `hip publish` rendering the *enumerable* API surface to files whose paths mirror the endpoints, by replaying the ASGI app so the bytes match what the API serves (#67); a manifest carrying a sha256 per artifact and naming what cannot be published; the dashboard built as a static export over the same regions; `make publish` assembling both; and New Jersey served from the custom domain with no database and no application server in production. Earlier wording promised "every API response" and content-addressed URLs — neither survived contact with the parameter space (`/compare` is combinatorial) or with the point of the exercise (a hashed URL stops mirroring its endpoint) |
-| 12 | ⬜ planned | **Hosted inference** — a `HostedRunner` implementing `ModelRunner`, hosted candidates measured against Gemma 4 E4B on the Milestone 8 scenarios and rubric, an ordered preference list of benchmarked models resolved at generation time with the local runtime last, version-pinned model identifiers, per-candidate token rates recorded in config so the evaluation report can carry a quality-per-dollar column, staleness compared at display precision rather than on raw floats, and batch submission for the regeneration pass |
+| 12 | ⬜ planned | **Hosted inference** — a `HostedRunner` implementing `ModelRunner`, hosted candidates measured against Gemma 4 E4B on the Milestone 8 scenarios and rubric, an ordered preference list of benchmarked models resolved at generation time — DeepSeek, then Gemini, then Mistral, then local Gemma 4 E4B last, version-pinned model identifiers, per-candidate token rates recorded in config so the evaluation report can carry a quality-per-dollar column, staleness compared at display precision rather than on raw floats, and batch submission for the regeneration pass |
 | 13 | ⬜ planned | **Citation binding** — every figure in an interpretation resolved to the packet field, source release, period, and match method that licensed it, produced inside `hip explain`, with the same ground-truth index reused by the evaluation report |
 | 14 | ⬜ planned | **Northeast expansion** — CT, MA, ME, NH, NY, PA, RI, VT loaded at all five levels, the first run of the pipeline at roughly seven times current volume, and a per-state coverage report showing what each source did and did not resolve |
 | 15 | ⬜ planned | **National county coverage** — all 50 states, DC, and PR at `state` and `county` level only, on federal sources that key on exact FIPS, giving national coverage without a national municipality model |
@@ -121,6 +121,24 @@ back door around Milestone 8's discipline: only benchmarked models are eligible 
 list, and hosted identifiers are pinned to explicit versions rather than to moving
 aliases — a withdrawn pin fails loudly and falls through, where a repointed alias would
 change published prose with nothing in the output to show it had happened.
+
+**Three hosted tiers before the local one, chosen for jurisdiction rather than for
+capability.** DeepSeek, Gemini, and Mistral sit in three regulatory regimes — China, the
+United States, the European Union — so no single policy action can remove two tiers at
+once. That is the correlated failure worth designing against; simultaneous technical
+outage across independent providers is not, and a network failure at this end is covered
+only by the local runtime, which no number of hosted candidates improves. Capability is
+deliberately not the ordering criterion, because Milestone 8 measured that it does not
+predict quality on this task: Gemma 4 E4B scored 3.21 against Gemma 4 12B's 2.10, the
+smaller model beating the larger one from its own family, with grounding and caveat
+handling separating them rather than raw capability. Candidates are therefore chosen on
+price and availability and ranked by the benchmark, never the reverse.
+
+A router such as OpenRouter would supply this breadth through one integration and is
+rejected for a specific reason: `region_explanations` records the model that wrote every
+row and the dashboard shows it, so a service that silently selects a different backend
+breaks the provenance the panel exists to provide, and would put prose from an
+unbenchmarked model on a public page.
 
 **Milestone 18 is scheduled before 16 and 17, out of numeric order.** Version 1 set the
 precedent and the reasoning is the same: Milestone 9 was built before Milestone 5
