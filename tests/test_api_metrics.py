@@ -112,3 +112,32 @@ def test_unresolved_geographies_are_explained(loaded: None) -> None:
 
 def test_unknown_region_metrics_is_a_404(loaded: None) -> None:
     assert client.get("/regions/99999999/metrics").status_code == 404
+
+
+def test_sources_lists_every_registered_source_with_its_terms() -> None:
+    body = client.get("/sources").json()
+    assert body, "the registry is never empty"
+    for entry in body:
+        assert entry["license"], entry["source_id"]
+        assert entry["publisher"] and entry["url"], entry["source_id"]
+
+
+def test_sources_surfaces_the_non_commercial_restriction() -> None:
+    """The footer renders from this, so the restriction has to survive the API.
+
+    Attribution is a condition of Zillow's licence rather than a courtesy; if this
+    string stops arriving, the site quietly stops disclosing it.
+    """
+    body = client.get("/sources").json()
+    zillow = [e for e in body if e["publisher"] == "Zillow Research"]
+    assert zillow, "ZHVI and ZORI are both loaded"
+    assert all("non-commercial" in e["license"].lower() for e in zillow), zillow
+
+
+def test_sources_reports_the_releases_actually_ingested() -> None:
+    body = client.get("/sources").json()
+    loaded = [e for e in body if e["releases"]]
+    assert loaded, "a loaded warehouse has releases"
+    for entry in loaded:
+        for release in entry["releases"]:
+            assert release["vintage"] and release["row_count"] >= 0

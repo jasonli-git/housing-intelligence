@@ -977,6 +977,28 @@ spine but have no observations at all, so pages for them would be empty.
   up to and including a complete local artifact tree is in scope; the deploy step is
   written but unverified until those exist.
 
+## Attribution and licensing
+
+- [x] **Site-wide source footer** (2026-09-05). Was: the landing page's choropleth and
+      ranking table are both `zhvi_sfr` and named no source at all. Now all 2,273 pages
+      carry every source with its terms, up from 1,671 that mentioned Zillow only
+      because a report happened to print its packet's sources table. Rendered from a new
+      `GET /sources` — the one endpoint ARCHITECTURE listed as unbuilt — so the footer
+      reads the same rows the packet does and cannot drift when a source is added.
+- [x] **`NOTICE` separating code terms from data terms** (2026-09-05). MIT covers the
+      software; data and derived outputs stay under each publisher's terms, generated
+      from `config/sources.yml`.
+- Note: **The footer cost 2,272 files and 62MB** — one extra RSC payload per route, so
+      `dist/site` went from 11,375 files to 13,647 and from 254MB to 316MB. Still inside
+      Cloudflare Pages' 20,000-file free tier, but it consumed a third of the remaining
+      headroom for a footer, which is a concrete instance of the pre-rendering cost noted
+      under ARCHITECTURE #68.
+- Note: **Per-source licences are already recorded and already travel with the data.**
+  `config/sources.yml` carries a `license` for every source, packets carry it per source,
+  and the Markdown reports print it. The gap is not the data model; it is that the two
+  surfaces a casual visitor actually sees — the landing page and the repository root —
+  do not surface what the packet already knows.
+
 ## Decisions deferred to their milestones
 
 Recorded here so they are decided deliberately when the milestone opens, rather than

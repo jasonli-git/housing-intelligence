@@ -132,6 +132,7 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 68 | The dashboard is a static export, and HTML and data artifacts are deployed to two different origins. | `output: "export"` renders all 2,273 pages at build time, so production runs no Node server and no database — the same argument as #67, applied to the other half. Splitting the destinations is forced by measurement rather than taste: the export emits 11,375 files for 1,135 regions (one HTML plus four RSC payloads per page, 261MB), against 5,844 artifact files at 84MB. Static site hosts cap files per deployment — 20,000 free, 100,000 paid on Cloudflare Pages — while object stores do not, so HTML goes to the page host and the JSON tree to object storage, addressed by `NEXT_PUBLIC_ARTIFACT_URL`. Rejected: one origin for both, which fits New Jersey and breaks at the Northeast. Costs a second origin to configure, and a build-time warning because an unset artifact origin bakes `localhost` into every download link rather than failing at runtime. |
 | 69 | The API's connection pool is sized explicitly at 20 with 20 overflow. | SQLAlchemy's default of 5 plus 10 was never chosen; it was never reached, because until the static export existed the only client was a dashboard serving one reader at a time. Six parallel export workers exhausted it in minutes: requests queued the full 30-second pool timeout, page renders passed their own 60-second deadline, Next retried them, and the retries kept the pool empty. The API stopped answering `/health` at all, and the build failed at 1,641 of 2,273 pages. 40 against PostgreSQL's default `max_connections` of 100 leaves room for psql and dbt while covering a fan-out wider than any human client. Rejected: capping the export's worker count, which hides a real defect — the first concurrent client found it, and a public deployment would have found it too. |
 | 70 | `regions` stores TIGER's `NAMELSAD` beside `NAME`. | `name` is the label a reader wants — "Boonton", not "Boonton township" — and it does not identify a place. New Jersey alone reuses 30 municipality names; `parent_id` resolves most, because a municipality has one county, but four pairs share a name *and* a county (Andover borough/township in Sussex, Boonton town/township in Morris, Bordentown city/township in Burlington, Washington borough/township in Warren) and were separable only by GEOID. Stored rather than derived: legal status is a property of the place that only the source knows. NOT NULL with a fallback to `name`, so no consumer branches on absence — TIGER publishes no NAMELSAD for states and no name columns for ZCTAs, and there the bare name already is the full one. Rejected: replacing `name` with NAMELSAD, which would change every displayed label and every published page to say "township" where a reader expects a town. Costs one column and one index. |
+| 71 | Attribution is rendered site-wide from `GET /sources`, not written into a template. | Zillow publishes ZHVI and ZORI "free for non-commercial use with attribution", which makes attribution a condition of use. Before 2026-09-05 only report pages carried it, because a packet ships its own sources table — the landing page showed a `zhvi_sfr` choropleth and ranking naming no source at all, and 1,135 region pages likewise. Reading the registry means the footer and the packet quote the same rows, so adding a source cannot leave the site under-attributing. Rejected: a hard-coded list in the footer component, half the work and wrong the first time `sources.yml` changes — and wrong here is a licence problem, not a stale copy. Costs one file per route in the static export, 2,272 files and 62MB, because the footer makes every page carry an extra payload segment. Also builds `/sources`, the last endpoint in the API table that had no implementation. |
 
 ## Module Layout
 
@@ -562,13 +563,15 @@ marked ✅ are implemented; the rest arrive with the milestones that produce the
 | GET | `/regions/{region_id}/report` | ✅ the same packet as `text/markdown` |
 | GET | `/rankings` | ✅ ranked regions for `metric_id`, `level`, and `basis` (`change` over a window, or `value`) |
 | GET | `/compare` | ✅ aligned series for several `region_ids` |
-| GET | `/sources` | source registry and the releases currently loaded |
+| GET | `/sources` | ✅ source registry and the releases currently loaded (#71) |
 | GET | `/sources/unresolved` | ✅ source geographies with no region, and why |
 
 `/compare` takes one `metric_id` across several regions, not several metrics — the
-earlier version of this table said otherwise. `/sources` is the only endpoint here still
-unbuilt; a packet already carries the releases behind its own numbers, which is what the
-dashboard needed it for.
+earlier version of this table said otherwise. Every endpoint here is now implemented:
+`/sources` was the last, built on 2026-09-05 for the site-wide attribution footer (#71).
+A packet already carried the releases behind its own numbers, which is what the dashboard
+needed — but no surface outside a report exposed them, and attribution is a licence
+condition rather than a report detail.
 
 Every response that contains a metric value also carries the `release_id` and source
 vintage behind it — provenance is a field, not a separate lookup. The API holds a

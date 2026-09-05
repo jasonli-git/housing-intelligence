@@ -1,0 +1,120 @@
+# NOTICE
+
+This repository contains two things under two different sets of terms, and conflating
+them would misstate what a user is permitted to do.
+
+## Code
+
+The software — everything under `src/`, `web/`, `dbt/`, and `tests/` — is licensed under
+the MIT License. See [LICENSE](LICENSE).
+
+## Data, and anything derived from it
+
+**Not covered by the MIT License.** Public data is ingested from the sources below and
+remains subject to each publisher's terms. That includes derived outputs this repository
+ships or publishes: the county reports under `reports/regions/5y/`, the analysis packets,
+the published artifact tree, and every figure shown on the website.
+
+These terms are passed on, not granted. This project holds no right to relicense another
+publisher's data and does not purport to.
+
+### Non-commercial restriction
+
+**Zillow Home Value Index (ZHVI) and Zillow Observed Rent Index (ZORI) are licensed for
+non-commercial use with attribution.** Home-value and rent figures throughout this
+project derive from them, as do the rankings, change metrics, and affordability ratios
+computed on top of them.
+
+Commercial use of those figures — including using a downloaded report in the course of a
+business — is not permitted by Zillow's terms, and nothing in this repository grants it.
+Attribution is a condition of use rather than a courtesy, which is why every page of the
+website names its sources.
+
+### Everything is traceable
+
+Each value in the warehouse records the source release it came from and how its geography
+was resolved. `config/sources.yml` is the registry, `GET /sources` serves it with the
+releases actually ingested, and every analysis packet carries the licence of every source
+behind its own numbers. If you need to know which terms apply to a specific figure, the
+packet for that region answers it precisely.
+
+## Sources
+
+### American Community Survey, 5-year estimates
+
+- Publisher: U.S. Census Bureau
+- Terms: Public domain (U.S. Government work)
+- https://api.census.gov/data
+
+### Building Permits Survey
+
+- Publisher: U.S. Census Bureau
+- Terms: Public domain (U.S. Government work)
+- https://www.census.gov/construction/bps/
+
+### Federal Reserve Economic Data
+
+- Publisher: Federal Reserve Bank of St. Louis
+- Terms: Free with attribution; series-level terms vary by originator
+- https://api.stlouisfed.org/fred
+
+### House Price Index
+
+- Publisher: Federal Housing Finance Agency
+- Terms: Public domain (U.S. Government work)
+- https://www.fhfa.gov/data/hpi
+
+### Local Area Unemployment Statistics and QCEW
+
+- Publisher: U.S. Bureau of Labor Statistics
+- Terms: Public domain (U.S. Government work)
+- https://api.bls.gov/publicAPI/v2
+
+### MOD-IV property tax assessment records
+
+- Publisher: New Jersey Division of Taxation
+- Terms: Open public record
+- https://www.state.nj.us/treasury/taxation/lpt/lptvalue.shtml
+
+### NJ statewide parcel boundaries
+
+- Publisher: NJ Office of GIS (NJGIN)
+- Terms: Open data
+- https://njogis-newjersey.opendata.arcgis.com/
+
+### SOI county-to-county migration flows
+
+- Publisher: Internal Revenue Service
+- Terms: Public domain (U.S. Government work)
+- https://www.irs.gov/statistics/soi-tax-stats-migration-data
+
+### TIGER/Line boundary files
+
+- Publisher: U.S. Census Bureau
+- Terms: Public domain (U.S. Government work)
+- https://www2.census.gov/geo/tiger
+
+### USPS ZIP crosswalk and income limits
+
+- Publisher: U.S. Department of Housing and Urban Development
+- Terms: Public domain (U.S. Government work)
+- https://www.huduser.gov/hudapi/public
+
+### Zillow Home Value Index
+
+- Publisher: Zillow Research
+- Terms: Free for non-commercial use with attribution
+- https://www.zillow.com/research/data/
+
+### Zillow Observed Rent Index
+
+- Publisher: Zillow Research
+- Terms: Free for non-commercial use with attribution
+- https://www.zillow.com/research/data/
+
+
+---
+
+Generated from `config/sources.yml`, which is the single registry the pipeline, the API,
+the packets, and the website footer all read. Re-generate rather than hand-edit when a
+source is added.

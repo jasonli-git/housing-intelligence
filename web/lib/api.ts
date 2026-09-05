@@ -245,6 +245,7 @@ export const api = {
   geo: (level: string) => tryGet<FeatureCollection>(`/geo/${level}?state=NJ`),
   explanation: (id: number, window: string) =>
     tryGet<Explanation>(`/regions/${id}/explanation?window=${window}`),
+  sources: () => tryGet<SourceEntry[]>(`/sources`),
 };
 
 /**
@@ -299,3 +300,14 @@ export async function regionsWithData(): Promise<Region[]> {
  */
 export const artifactUrl =
   process.env.NEXT_PUBLIC_ARTIFACT_URL ?? API_URL;
+
+/** A source and the terms it was published under, for the site-wide attribution. */
+export type SourceEntry = {
+  source_id: string;
+  name: string;
+  publisher: string;
+  license: string;
+  url: string;
+  cadence: string;
+  releases: { vintage: string; fetched_at: string; row_count: number }[];
+};

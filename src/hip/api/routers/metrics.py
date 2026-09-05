@@ -7,11 +7,11 @@ because a number without its source is exactly what this platform exists not to 
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import text
 
 from hip.api.deps import SessionDep
@@ -169,6 +169,78 @@ class UnresolvedGeography(BaseModel):
     county_name: str | None = None
     observations: int
     reason: str
+
+
+class SourceRelease(BaseModel):
+    """One ingested file, so a reader can see how current a source is."""
+
+    vintage: str
+    fetched_at: datetime
+    row_count: int
+
+
+class SourceEntry(BaseModel):
+    """A source and the terms it was published under."""
+
+    source_id: str
+    name: str
+    publisher: str
+    license: str
+    url: str
+    cadence: str
+    releases: list[SourceRelease] = Field(default_factory=list)
+
+
+@router.get(
+    "/sources",
+    response_model=list[SourceEntry],
+    summary="Source registry and the releases currently loaded",
+)
+def sources(session: SessionDep) -> list[SourceEntry]:
+    """Every source behind the warehouse, with its licence and what has been ingested.
+
+    Attribution is a condition of use for at least one source rather than a courtesy —
+    Zillow publishes "free for non-commercial use with attribution" — so the terms have
+    to be reachable from any surface that displays a figure, not only from a report that
+    happens to carry a sources table. This endpoint is what a site-wide footer renders,
+    which is also why the footer cannot drift: both it and the packet read the same rows.
+    """
+    rows = session.execute(
+        text(
+            """
+            SELECT s.source_id, s.name, s.publisher, s.license, s.url, s.cadence,
+                   r.vintage, r.fetched_at, r.row_count
+            FROM sources s
+            LEFT JOIN source_releases r ON r.source_id = s.source_id
+            ORDER BY s.name, r.fetched_at DESC
+            """
+        )
+    ).mappings()
+
+    entries: dict[str, SourceEntry] = {}
+    for row in rows:
+        entry = entries.get(row["source_id"])
+        if entry is None:
+            entry = SourceEntry(
+                source_id=row["source_id"],
+                name=row["name"],
+                publisher=row["publisher"],
+                license=row["license"],
+                url=row["url"],
+                cadence=row["cadence"],
+            )
+            entries[row["source_id"]] = entry
+        # LEFT JOIN: a registered source with nothing ingested yet has a null vintage
+        # and belongs in the list anyway — it is still a source the platform declares.
+        if row["vintage"] is not None:
+            entry.releases.append(
+                SourceRelease(
+                    vintage=row["vintage"],
+                    fetched_at=row["fetched_at"],
+                    row_count=row["row_count"],
+                )
+            )
+    return list(entries.values())
 
 
 @router.get(

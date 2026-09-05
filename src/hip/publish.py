@@ -188,6 +188,9 @@ def _plan(
     """Yield (api_path, output_path) pairs. Pure, so the layout is testable alone."""
     yield "/health", "health.json"
     yield "/metrics", "metrics.json"
+    # The attribution the site footer renders. Static like everything else, so the terms
+    # travel with the artifacts rather than depending on an API being up.
+    yield "/sources", "sources.json"
     yield "/sources/unresolved", "sources/unresolved.json"
 
     for level in ("state", "county", "municipality", "zip"):

@@ -219,3 +219,49 @@ button {
   color: #fff;
   font-size: 0.8rem;
 }
+
+/* --- Site-wide source attribution -------------------------------------------------
+   Licence terms rather than decoration, so it is quiet but never hidden: no collapse,
+   no toggle, and it prints. `print-hide` is deliberately not applied — a report saved
+   as a PDF carries the same restriction as the page it came from, and that is exactly
+   the copy most likely to be forwarded to somebody who never saw the site. */
+.site-footer {
+  max-width: 76rem;
+  margin: 4rem auto 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+.site-footer h2 {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 0.4rem;
+}
+.source-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.35rem 1.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0;
+}
+.source-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding-bottom: 0.35rem;
+}
+.source-publisher { color: var(--text-muted); }
+.source-license { color: var(--text-muted); font-size: 0.75rem; }
+/* The one line a reader must not miss, so it is the only part with a fill. */
+.source-restriction {
+  margin: 1rem 0;
+  padding: 0.6rem 0.8rem;
+  border-left: 3px solid var(--critical);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
