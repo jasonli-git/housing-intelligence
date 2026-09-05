@@ -67,34 +67,41 @@ def parquet_dir(tmp_path: Path) -> Path:
             con,
             base / "county.parquet",
             f"""
-            SELECT '99001' AS GEOID, 'Left' AS NAME, '99' AS STATEFP,
-                   {wkb(_box(-75, 39, -74.5, 40))} AS geom_wkb
+            SELECT '99001' AS GEOID, 'Left' AS NAME, 'Left County' AS NAMELSAD,
+                   '99' AS STATEFP, {wkb(_box(-75, 39, -74.5, 40))} AS geom_wkb
             UNION ALL
-            SELECT '99002', 'Right', '99', {wkb(_box(-74.5, 39, -74, 40))}
+            SELECT '99002', 'Right', 'Right County', '99',
+                   {wkb(_box(-74.5, 39, -74, 40))}
             UNION ALL
             -- A county in a state that is not in scope must be excluded.
-            SELECT '88001', 'Elsewhere', '88', {wkb(_box(-80, 39, -79, 40))}
+            SELECT '88001', 'Elsewhere', 'Elsewhere County', '88',
+                   {wkb(_box(-80, 39, -79, 40))}
             """,
         )
         _write(
             con,
             base / "cousub_ZZ.parquet",
             f"""
-            SELECT '9900110000' AS GEOID, 'Muni A' AS NAME, '99' AS STATEFP,
+            -- Muni A appears twice in county 001 under two legal statuses, which is
+            -- the real NJ shape: Boonton town and Boonton township share a name and a
+            -- county, so only NAMELSAD separates them.
+            SELECT '9900110000' AS GEOID, 'Muni A' AS NAME,
+                   'Muni A township' AS NAMELSAD, '99' AS STATEFP,
                    '001' AS COUNTYFP, '10000' AS COUSUBFP,
                    {wkb(_box(-75, 39.5, -74.5, 40))} AS geom_wkb
             UNION ALL
-            SELECT '9900120000', 'Muni B', '99', '001', '20000',
+            SELECT '9900120000', 'Muni A', 'Muni A borough', '99', '001', '20000',
                    {wkb(_box(-75, 39, -74.5, 39.5))}
             UNION ALL
-            SELECT '9900230000', 'Muni C', '99', '002', '30000',
+            SELECT '9900230000', 'Muni C', 'Muni C township', '99', '002', '30000',
                    {wkb(_box(-74.5, 39.5, -74, 40))}
             UNION ALL
-            SELECT '9900240000', 'Muni D', '99', '002', '40000',
+            SELECT '9900240000', 'Muni D', 'Muni D city', '99', '002', '40000',
                    {wkb(_box(-74.5, 39, -74, 39.5))}
             UNION ALL
             -- Water / "county subdivisions not defined": must be filtered out.
-            SELECT '9900100000', 'County subdivisions not defined', '99', '001',
+            SELECT '9900100000', 'County subdivisions not defined',
+                   'County subdivisions not defined', '99', '001',
                    '00000', {wkb(_box(-75, 39, -74, 40))}
             """,
         )
@@ -394,3 +401,43 @@ def test_hud_weights_renormalize_to_one(con: duckdb.DuckDBPyConnection) -> None:
         f"WHERE from_geoid = '10001' AND to_level = 'municipality'"
     ).fetchone()
     assert total is not None and total[0] == pytest.approx(1.0)
+
+
+def test_name_lsad_separates_two_places_sharing_a_name_and_county(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    """The fixture's two Muni A rows are the Boonton town / Boonton township shape.
+
+    `name` and `parent_geoid` are identical for both, so anything keyed on those alone
+    cannot tell them apart — which is exactly the state the warehouse was in before
+    migration 0008.
+    """
+    rows = con.execute(
+        f"""
+        SELECT name, name_lsad, parent_geoid FROM {STAGING_TABLE}
+        WHERE level = 'municipality' AND name = 'Muni A' ORDER BY name_lsad
+        """
+    ).fetchall()
+    assert len(rows) == 2
+    assert {r[0] for r in rows} == {"Muni A"}, "bare names collide, by construction"
+    assert {r[2] for r in rows} == {"99001"}, "and so does the county"
+    assert [r[1] for r in rows] == ["Muni A borough", "Muni A township"]
+
+
+def test_every_staged_region_has_a_name_lsad(con: duckdb.DuckDBPyConnection) -> None:
+    """Fallback to `name` where TIGER publishes none, so the column is never empty."""
+    missing = con.execute(
+        f"SELECT count(*) FROM {STAGING_TABLE} WHERE name_lsad IS NULL OR name_lsad = ''"
+    ).fetchone()
+    assert missing is not None and missing[0] == 0
+
+
+def test_states_and_zips_fall_back_to_their_bare_name(
+    con: duckdb.DuckDBPyConnection,
+) -> None:
+    """For these two levels the bare name *is* the full one — not a placeholder."""
+    rows = con.execute(
+        f"SELECT name, name_lsad FROM {STAGING_TABLE} WHERE level IN ('state', 'zip')"
+    ).fetchall()
+    assert rows
+    assert all(name == lsad for name, lsad in rows)

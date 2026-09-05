@@ -109,6 +109,12 @@ def build_regions(
             geoid        VARCHAR NOT NULL,
             level        VARCHAR NOT NULL,
             name         VARCHAR NOT NULL,
+            -- TIGER's NAMELSAD: the name with its legal status ("Washington township").
+            -- `name` stays the label to show; this is the label that tells two places
+            -- of the same name in the same county apart. Falls back to `name` where
+            -- TIGER publishes no NAMELSAD — for a state the bare name already is the
+            -- full one, so the fallback is correct rather than a placeholder.
+            name_lsad    VARCHAR NOT NULL,
             state_code   VARCHAR NOT NULL,
             parent_geoid VARCHAR,
             parent_level VARCHAR,
@@ -120,7 +126,7 @@ def build_regions(
     con.execute(
         f"""
         INSERT INTO {STAGING_TABLE}
-        SELECT statefp, 'state', name, state_code, NULL, NULL, geom_wkb
+        SELECT statefp, 'state', name, name, state_code, NULL, NULL, geom_wkb
         FROM scope_state
         """
     )
@@ -128,7 +134,8 @@ def build_regions(
     con.execute(
         f"""
         INSERT INTO {STAGING_TABLE}
-        SELECT c.GEOID, 'county', c.NAME, s.state_code, s.statefp, 'state', c.geom_wkb
+        SELECT c.GEOID, 'county', c.NAME, c.NAMELSAD, s.state_code,
+               s.statefp, 'state', c.geom_wkb
         FROM src_county c
         JOIN scope_state s ON c.STATEFP = s.statefp
         """
@@ -139,7 +146,7 @@ def build_regions(
     con.execute(
         f"""
         INSERT INTO {STAGING_TABLE}
-        SELECT m.GEOID, 'municipality', m.NAME, s.state_code,
+        SELECT m.GEOID, 'municipality', m.NAME, m.NAMELSAD, s.state_code,
                m.STATEFP || m.COUNTYFP, 'county', m.geom_wkb
         FROM src_cousub m
         JOIN scope_state s ON m.STATEFP = s.statefp
@@ -150,7 +157,8 @@ def build_regions(
     con.execute(
         f"""
         INSERT INTO {STAGING_TABLE}
-        SELECT t.GEOID, 'tract', t.NAMELSAD, s.state_code,
+        -- `name` is already NAMELSAD here ("Census Tract 1.01"), so both columns agree.
+        SELECT t.GEOID, 'tract', t.NAMELSAD, t.NAMELSAD, s.state_code,
                t.STATEFP || t.COUNTYFP, 'county', t.geom_wkb
         FROM src_tract t
         JOIN scope_state s ON t.STATEFP = s.statefp
@@ -198,7 +206,10 @@ def _insert_zctas(con: duckdb.DuckDBPyConnection) -> None:
     con.execute(
         f"""
         INSERT INTO {STAGING_TABLE}
-        SELECT z.GEOID20, 'zip', z.GEOID20, best.state_code, NULL, NULL, z.geom_wkb
+        -- A ZCTA's name is its own code; TIGER publishes no name columns for the
+        -- layer at all, so both name columns carry the GEOID.
+        SELECT z.GEOID20, 'zip', z.GEOID20, z.GEOID20, best.state_code,
+               NULL, NULL, z.geom_wkb
         FROM src_zcta z
         JOIN (
             SELECT geoid, state_code,

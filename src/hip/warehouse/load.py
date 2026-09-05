@@ -63,9 +63,9 @@ class LoadResult:
 
 _INSERT_REGION = text(
     """
-    INSERT INTO regions (geoid, level, name, state_code, parent_id, geom)
+    INSERT INTO regions (geoid, level, name, name_lsad, state_code, parent_id, geom)
     VALUES (
-        :geoid, CAST(:level AS region_level), :name, :state_code,
+        :geoid, CAST(:level AS region_level), :name, :name_lsad, :state_code,
         -- Explicit casts: inside a bare CASE WHEN ... IS NULL, Postgres has no column
         -- context to infer the parameter type from and rejects it as ambiguous.
         -- (Note: never write a colon-prefixed token in these comments — SQLAlchemy's
@@ -79,6 +79,7 @@ _INSERT_REGION = text(
     )
     ON CONFLICT (level, geoid) DO UPDATE SET
         name       = EXCLUDED.name,
+        name_lsad  = EXCLUDED.name_lsad,
         state_code = EXCLUDED.state_code,
         parent_id  = EXCLUDED.parent_id,
         geom       = EXCLUDED.geom
@@ -99,7 +100,8 @@ def load_geography(
     with duckdb_session(duckdb_path) as duck:
         region_rows = duck.execute(
             f"""
-            SELECT geoid, level, name, state_code, parent_geoid, parent_level, geom_wkb
+            SELECT geoid, level, name, name_lsad, state_code,
+                   parent_geoid, parent_level, geom_wkb
             FROM {staging_table}
             """
         ).fetchall()
@@ -128,10 +130,11 @@ def load_geography(
                     "geoid": r[0],
                     "level": r[1],
                     "name": r[2],
-                    "state_code": r[3],
-                    "parent_geoid": r[4],
-                    "parent_level": r[5],
-                    "geom": bytes(r[6]),
+                    "name_lsad": r[3],
+                    "state_code": r[4],
+                    "parent_geoid": r[5],
+                    "parent_level": r[6],
+                    "geom": bytes(r[7]),
                 }
                 for r in rows
             ]

@@ -47,6 +47,10 @@ class Region(Base):
     geoid: Mapped[str] = mapped_column(String(16), nullable=False)
     level: Mapped[str] = mapped_column(region_level_enum, nullable=False)
     name: Mapped[str] = mapped_column(Text, nullable=False)
+    # TIGER's NAMELSAD — the name carrying its legal status. `name` is what a reader
+    # sees; this is what tells "Boonton town" from "Boonton township", which share a
+    # name and a county and are otherwise separable only by GEOID (migration 0008).
+    name_lsad: Mapped[str] = mapped_column(Text, nullable=False)
     state_code: Mapped[str] = mapped_column(String(2), nullable=False)
     parent_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("regions.region_id"), nullable=True

@@ -30,6 +30,11 @@ class Region(BaseModel):
     geoid: str
     level: str
     name: str
+    # The name carrying its legal status — "Boonton town" against "Boonton township".
+    # `name` is the label to display; this is the one that identifies. Four NJ
+    # municipality pairs share a name *and* a county and are otherwise separable only
+    # by GEOID, so a search result list needs this to be usable.
+    name_lsad: str
     state_code: str
     parent_id: int | None = None
 
@@ -100,7 +105,7 @@ def list_regions(
     rows = session.execute(
         text(
             f"""
-            SELECT region_id, geoid, level::text, name, state_code, parent_id
+            SELECT region_id, geoid, level::text, name, name_lsad, state_code, parent_id
             FROM regions WHERE {where}
             ORDER BY level, geoid
             LIMIT :limit OFFSET :offset
@@ -122,7 +127,7 @@ def get_region(region_id: int, session: SessionDep) -> RegionDetail:
         session.execute(
             text(
                 """
-            SELECT region_id, geoid, level::text, name, state_code, parent_id
+            SELECT region_id, geoid, level::text, name, name_lsad, state_code, parent_id
             FROM regions WHERE region_id = :region_id
             """
             ),
@@ -140,14 +145,15 @@ def get_region(region_id: int, session: SessionDep) -> RegionDetail:
         text(
             """
             WITH RECURSIVE chain AS (
-                SELECT region_id, geoid, level, name, state_code, parent_id, 0 AS depth
+                SELECT region_id, geoid, level, name, name_lsad, state_code,
+                       parent_id, 0 AS depth
                 FROM regions WHERE region_id = :region_id
                 UNION ALL
-                SELECT p.region_id, p.geoid, p.level, p.name, p.state_code,
+                SELECT p.region_id, p.geoid, p.level, p.name, p.name_lsad, p.state_code,
                        p.parent_id, c.depth + 1
                 FROM regions p JOIN chain c ON p.region_id = c.parent_id
             )
-            SELECT region_id, geoid, level::text, name, state_code, parent_id
+            SELECT region_id, geoid, level::text, name, name_lsad, state_code, parent_id
             FROM chain WHERE depth > 0 ORDER BY depth
             """
         ),

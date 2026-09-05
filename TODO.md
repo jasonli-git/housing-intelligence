@@ -1005,6 +1005,27 @@ defaulted in the first commit that needs them.
   (five levels, nine states); 15 is breadth (two levels, every state). 15 is the easier
   engineering and unblocks the map; 14 exercises the volume increase where a bad load is
   still cheap to reload. Recorded in [ROADMAP.md](ROADMAP.md) under "Why this order".
+- [x] **`regions.name_lsad` loaded from TIGER's NAMELSAD** (2026-09-05, migration
+  0008, ARCHITECTURE #70). Done ahead of Milestone 17 because it is a pipeline and
+  schema change, not a frontend one. NJ reuses 30 municipality names; `parent_id`
+  resolved most, but four pairs shared a name *and* a county — Andover borough/township
+  in Sussex, Boonton town/township in Morris, Bordentown city/township in Burlington,
+  Washington borough/township in Warren — and were separable only by GEOID. After the
+  reload, zero municipalities are ambiguous on `(name_lsad, parent_id)`. `name` is
+  unchanged, so no published label moved. Also exposed on the API's `Region` model,
+  including inside the recursive ancestors CTE, which selects its own columns and would
+  otherwise have drifted.
+- Note: **ZIP cannot label a search result, though it is a fine search input**
+  (Milestone 17). Newark maps to 15 ZIP codes; `region_crosswalk` makes ZIP↔municipality
+  many-to-many by design, so there is no single ZIP to display and showing one would be
+  wrong. County plus legal type is the label; population is useful only for ordering
+  results, since it says which match is larger rather than which is the one meant.
+- Note: **Milestone 17's second user path needs a query the static tree cannot answer.**
+  Someone evaluating a place they are moving to wants it compared against where they
+  live now, which is `/compare` — one of the three endpoints in the publish manifest's
+  `unpublishable` list, because an arbitrary set of region ids is combinatorial. So the
+  consumer entry point carries a dependency on a browser-side query layer over published
+  data, and is larger than its row suggests. Worth settling before it is scheduled.
 - Note: **The typeface and wordmark in Milestone 18 are a taste decision, not an
   engineering one.** Everything else in that milestone is checkable — focus states
   exist or they do not, the metric selector works or it does not — but the type

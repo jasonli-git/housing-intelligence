@@ -159,3 +159,38 @@ def test_has_data_composes_with_other_filters() -> None:
     assert counties["total"] > 0
     both = client.get("/regions?has_data=true&level=county&state=NJ&limit=1").json()
     assert both["total"] == counties["total"]
+
+
+def test_name_lsad_disambiguates_places_sharing_a_name_and_county() -> None:
+    """Four NJ pairs share a name *and* a county; only the legal status separates them.
+
+    `parent_id` resolves most of the 30 duplicated municipality names, because a
+    municipality belongs to one county — but not Boonton town against Boonton township,
+    both in Morris. Without NAMELSAD a search returns two identical rows.
+    """
+    items = client.get("/regions?level=municipality&q=Boonton&limit=10").json()["items"]
+    assert len(items) >= 2, "expected the Boonton pair"
+    assert len({i["name"] for i in items}) == 1, "bare names are identical, by design"
+    assert len({i["name_lsad"] for i in items}) == len(items), items
+
+
+def test_every_region_carries_a_name_lsad() -> None:
+    """NOT NULL with a fallback to `name`, so no consumer has to branch on absence."""
+    for level in ("state", "county", "municipality", "zip"):
+        items = client.get(f"/regions?level={level}&limit=5").json()["items"]
+        assert items, level
+        assert all(i["name_lsad"] for i in items), level
+
+
+def test_counties_carry_their_full_name() -> None:
+    items = client.get("/regions?level=county&q=Bergen&limit=1").json()["items"]
+    assert items[0]["name"] == "Bergen"
+    assert items[0]["name_lsad"] == "Bergen County"
+
+
+def test_ancestors_carry_name_lsad_too() -> None:
+    """The recursive chain selects its own columns and can drift from the outer query."""
+    body = client.get("/regions?level=municipality&limit=1").json()["items"][0]
+    detail = client.get(f"/regions/{body['region_id']}").json()
+    assert detail["ancestors"], "a municipality has a county above it"
+    assert all(a["name_lsad"] for a in detail["ancestors"])

@@ -60,9 +60,9 @@ that rewrites the fact table has gone wrong.
 | 13 | ⬜ planned | **Citation binding** — every figure in an interpretation resolved to the packet field, source release, period, and match method that licensed it, produced inside `hip explain`, with the same ground-truth index reused by the evaluation report |
 | 14 | ⬜ planned | **Northeast expansion** — CT, MA, ME, NH, NY, PA, RI, VT loaded at all five levels, the first run of the pipeline at roughly seven times current volume, and a per-state coverage report showing what each source did and did not resolve |
 | 15 | ⬜ planned | **National county coverage** — all 50 states, DC, and PR at `state` and `county` level only, on federal sources that key on exact FIPS, giving national coverage without a national municipality model |
-| 16 | ⬜ planned | **Three-dimensional national map** — county choropleth extruded by a magnitude metric and colored by a ratio metric, replacing the inline-SVG map as the landing view |
-| 17 | ⬜ planned | **Consumer entry point** — search by place name or ZIP, and an income-to-affordability view built on the existing `price_to_income` and `price_to_ami` metrics |
-| 18 | ⬜ planned | **Design system and identity** — a typeface pairing and a wordmark replacing the system font stack, the interaction and focus states the stylesheet currently declares none of, metric and window chosen by the reader rather than fixed as module constants, and a named component layer replacing per-page inline grids. Built before 16 and 17 |
+| 16 | ⬜ planned | **Three-dimensional national map** — county choropleth extruded by a magnitude metric and colored by a ratio metric, replacing the inline-SVG map as the landing view; selection shown by highlight-and-mute, where chosen regions keep full colour and gain a contrasting outline while every other region drops to a neutral it cannot be confused with; a legend that states what height and colour each encode, since a two-channel map does not explain itself |
+| 17 | ⬜ planned | **Consumer entry point** — search by place name or ZIP, disambiguated by county and legal type rather than by ZIP, which is many-to-many; a one-sentence plain-language answer at the top of every region page; an income-to-affordability view built on the existing `price_to_income` and `price_to_ami` metrics; and `NAMELSAD` loaded from TIGER, without which 30 NJ municipality names are ambiguous and four pairs are indistinguishable |
+| 18 | ⬜ planned | **Design system and identity** — a typeface pairing and a wordmark replacing the system font stack, the interaction and focus states the stylesheet currently declares none of, metric and window chosen by the reader rather than fixed as module constants, a named component layer replacing per-page inline grids, an inline glossary so `ZHVI` and `price_to_ami` are defined where they appear, and caveats placed beside the figure they qualify rather than collected at the foot of the report. Built before 16 and 17 |
 
 The done criterion from Version 1 is unchanged: a milestone counts as done when its
 capability is reachable through the CLI, the API, or the dashboard on a clean checkout;
@@ -139,6 +139,29 @@ rejected for a specific reason: `region_explanations` records the model that wro
 row and the dashboard shows it, so a service that silently selects a different backend
 breaks the provenance the panel exists to provide, and would put prose from an
 unbenchmarked model on a public page.
+
+**What was borrowed from looking at comparable work, and what was not.** Reviewed
+`edu.inframap.org` on 2026-09-05. Taken: a plain-language answer sentence at the top of
+a region page, an inline glossary, caveats sitting beside the chart they qualify rather
+than collected at the end, and disambiguating search results rather than listing bare
+names. Rejected after argument, and recorded so it is not proposed again: **search as a
+gate**, where nothing renders until the visitor searches. That is friction for both real
+entry paths — a resident checking where they live, and someone evaluating a place they
+are moving to — because both already know the place name and neither browses to find
+one. Search belongs *on* the map as an always-available affordance, never in front of
+it. A guided onboarding trail was rejected for the same reason: a choropleth of housing
+costs is a familiar object in a way that a map of transmission lines is not, and a four-
+step tutorial over it would be condescending. What survives from that idea is only that
+Milestone 16's map must explain its own two-channel encoding in its legend.
+
+**Selection is encoded by outline, not by colour, and unselected regions are muted rather
+than hidden** (Milestone 16). Colour is already carrying the metric, so a selected region
+that merely keeps its fill is indistinguishable from its neighbours at the pale end of the
+sequential ramp; selection therefore needs a channel the data is not already using. The
+mute must also be a neutral that cannot be read as the ramp's lowest step, which
+`--seq-100` at `#cde2fb` very nearly is. Unselected regions stay visible on purpose:
+this platform's product is rank and percentile, so removing the comparison set would
+delete the context that makes a single figure mean anything.
 
 **Milestone 18 is scheduled before 16 and 17, out of numeric order.** Version 1 set the
 precedent and the reasoning is the same: Milestone 9 was built before Milestone 5
