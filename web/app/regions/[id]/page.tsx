@@ -1,9 +1,23 @@
 import Link from "next/link";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { TrendChart } from "@/components/TrendChart";
-import { api, formatChange, formatValue } from "@/lib/api";
+import { api, formatChange, formatValue, regionsWithData } from "@/lib/api";
 
 const WINDOW = "5y";
+
+/**
+ * Which region pages exist. Every region carrying data, and no others.
+ *
+ * Under `output: "export"` this is what tells Next how many pages to write; without it
+ * a dynamic segment has no enumeration and the export fails. Tracts are excluded by
+ * `has_data` rather than by naming levels, so a source that starts publishing at tract
+ * level would add those pages automatically instead of silently omitting them.
+ */
+export async function generateStaticParams() {
+  const regions = await regionsWithData();
+  return regions.map((region) => ({ id: String(region.region_id) }));
+}
+
 // The series worth plotting on a region page, in the order a reader wants them.
 const TREND_METRICS = ["zhvi_sfr", "zori_all", "acs_median_hh_income"];
 

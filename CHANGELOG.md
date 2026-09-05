@@ -3,6 +3,70 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.11.0] — 2026-09-05
+
+The platform leaves `localhost`. New Jersey is served from `housing.jasonli.app` with
+no database and no application server in production — the warehouse ran once, on a
+laptop, and its answers were saved.
+
+That is the whole idea: every endpoint is a pure function of a warehouse that changes
+only when the pipeline runs, so the API does not need to be *running*, it needs to have
+*run*. What is deployed is 5,844 recorded answers and 11,375 pre-rendered pages.
+
+### Added
+- **`hip publish`** (ARCHITECTURE #67) — renders the enumerable API surface to files
+  whose paths mirror the endpoints. Artifacts are produced by replaying the API's own
+  ASGI app rather than re-querying the warehouse, so a published file cannot drift from
+  the endpoint it claims to mirror. `tests/test_publish.py` asserts byte-identity.
+- **Window as a path segment** — `/regions/8/summary?window=5y` becomes
+  `regions/8/summary/5y.json`, because a static file cannot vary on a query string.
+  Chosen so a second window later adds files instead of moving every existing URL.
+- **A manifest** carrying a sha256 per artifact, the endpoints that cannot be published
+  and why, and a `region_id → geoid` map.
+- **`has_data` on `/regions`** — partitions the spine exactly: 1,135 regions carry an
+  observation, 2,231 do not, and every one of the 2,181 tracts is empty. It exists so
+  the static build can ask over HTTP which pages to generate rather than reading the
+  publisher's output or rendering blank tract pages.
+- **Static export of the dashboard** (#68) — `output: "export"`, `generateStaticParams`
+  over the same 1,135 regions, 2,273 pages in 16 seconds.
+- **`make publish`** builds both halves into `dist/`; **`make deploy`** syncs artifacts
+  to R2 and the site to Pages; **`make check-dist`** refuses to deploy a tree that is
+  incomplete or that has `localhost` baked into its links.
+- **A region-identity guard** — `hip publish` compares `region_id → geoid` against the
+  previous manifest and refuses to overwrite a tree whose ids have been reassigned.
+
+### Changed
+- **The API's connection pool is sized explicitly** at 20 with 20 overflow (#69).
+- **HTML and data artifacts deploy to two origins** (#68), addressed by
+  `NEXT_PUBLIC_ARTIFACT_URL`. Measured: the export is 11,375 files and 254MB against
+  5,844 artifact files and 84MB, and static hosts cap files per deployment where object
+  stores do not.
+
+### Fixed
+- **The API could be taken down by six concurrent clients** (#69). SQLAlchemy's default
+  pool of 5 plus 10 overflow was never chosen, only never reached: until the export
+  existed the only client was a dashboard serving one reader at a time. Six parallel
+  workers exhausted it, requests queued the full 30-second pool timeout, renders passed
+  their own 60-second deadline, Next retried, and the retries kept the pool empty. The
+  API stopped answering `/health` and the build failed at 1,641 of 2,273 pages. The
+  export found it; a public deployment would have been the alternative discoverer.
+- **`/rankings` returned 422 for every value ranking during publish.**
+  `region_rankings` stores those under the sentinel window `latest`, which is storage
+  vocabulary the endpoint's `Window` literal does not accept. Caught by the publish
+  gate rather than shipped as 47 missing files.
+- **The README attributed region 11 to Bergen County.** Region 11 is Mercer; Bergen is
+  region 8. `region_id` is a surrogate key with no relationship to a GEOID.
+
+### Documented
+- **Published URLs key on a surrogate key.** `warehouse.load` upserts on
+  `(level, geoid)` and never reassigns, so ids survive reloads and new states — but not
+  a database rebuilt from empty, which is what `HIP_PGDATA` pointed at a fresh directory
+  produces. The manifest guard turns that from a silent wrong answer into a refused
+  publish. Keying published URLs on GEOID is the durable fix and is not in this release.
+- **Pre-rendering breaks on file count before storage or bandwidth** (#68). At Northeast
+  scale the export is roughly 100,000 files; beyond that, region pages have to render in
+  the browser from the artifacts instead of being pre-rendered.
+
 ## [0.10.0] — 2026-09-02
 
 First milestone of Version 2, and the smallest one on the plan. It answers a question

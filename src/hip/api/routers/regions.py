@@ -55,9 +55,21 @@ def list_regions(
     state: Annotated[str | None, Query(max_length=2)] = None,
     parent_id: Annotated[int | None, Query()] = None,
     q: Annotated[str | None, Query(description="Case-insensitive name match.")] = None,
+    has_data: Annotated[
+        bool | None,
+        Query(description="Restrict to regions that carry at least one observation."),
+    ] = None,
     limit: Annotated[int, Query(ge=1, le=1000)] = 100,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> RegionPage:
+    """Regions filtered by level, state, parent, name, and whether they hold data.
+
+    `has_data` exists because the spine and the data do not have the same shape: of
+    3,366 NJ regions, 1,135 carry an observation and every one of the 2,181 tracts is
+    empty, since no loaded source publishes at tract level. Without this filter a
+    consumer listing regions has no way to tell which ones would render a blank page,
+    and the static build had no way to decide which pages to generate at all.
+    """
     filters = ["TRUE"]
     params: dict[str, Any] = {"limit": limit, "offset": offset}
     if level:
@@ -72,6 +84,14 @@ def list_regions(
     if q:
         filters.append("name ILIKE :q")
         params["q"] = f"%{q}%"
+    if has_data is not None:
+        # EXISTS rather than a join: a region is wanted once, not once per observation,
+        # and the planner stops at the first matching row instead of counting 335,927.
+        clause = "EXISTS" if has_data else "NOT EXISTS"
+        filters.append(
+            f"{clause} (SELECT 1 FROM fact_metric_observation f "
+            f"WHERE f.region_id = regions.region_id)"
+        )
     where = " AND ".join(filters)
 
     total = session.execute(

@@ -2,7 +2,8 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline api web \
+.PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline publish \
+        check-dist deploy api web \
         test test-py test-web lint format check-config dbt-debug eval clean
 
 SITE_PACKAGES = $(wildcard .venv/lib/python*/site-packages)
@@ -122,6 +123,64 @@ dbt-debug:  ## Verify dbt can reach both targets
 	uv run dbt debug --project-dir dbt --profiles-dir dbt --target duckdb
 	uv run dbt debug --project-dir dbt --profiles-dir dbt --target postgres
 
+# Deployment configuration. In the Makefile rather than in .env on purpose: none of it
+# is secret — the artifact URL is embedded in 1,135 public pages — and .env is both
+# gitignored and documented as "secrets and paths only, never product configuration".
+# Keeping it here means a fresh clone builds correctly instead of silently baking in
+# localhost, and one file states where this project deploys. Override per-invocation
+# with `make publish ARTIFACT_URL=...` when testing against somewhere else.
+#
+# The names are fixed rather than passed in because the failure they prevent is a
+# mistyped path: `rclone sync` deletes destination files absent from the source, so the
+# wrong bucket does not merely upload badly, it erases whatever was there.
+R2_BUCKET     ?= housing-artifacts
+R2_REMOTE     ?= r2
+PAGES_PROJECT ?= housing-intelligence
+ARTIFACT_URL  ?= https://housing-data.jasonli.app
+
+publish:  ## Build both halves of the deployable site into dist/
+	@# Two directories on purpose, not one merged tree (ARCHITECTURE #68). They go to
+	@# different hosts: the HTML to a static page host, which caps files per deployment,
+	@# and the JSON/Markdown artifacts to object storage, which does not. Merging them
+	@# would fit New Jersey and break at the Northeast.
+	@#
+	@# The API has to be running: a static export fetches its data at build time. It is
+	@# started here and stopped again, so `make publish` is one command rather than two
+	@# terminals.
+	@echo "Artifact origin: $(ARTIFACT_URL)"
+	rm -rf dist
+	uv run hip publish --out dist/artifacts
+	@echo "Starting the API for the export..."
+	@uv run uvicorn hip.api.main:app --port 8000 > /tmp/hip-publish-api.log 2>&1 & \
+	  echo $$! > /tmp/hip-publish-api.pid; \
+	  until curl -sf http://localhost:8000/health > /dev/null; do sleep 1; done; \
+	  echo "API ready."
+	@cd web && NEXT_PUBLIC_ARTIFACT_URL=$(ARTIFACT_URL) npm run build; status=$$?; \
+	  kill $$(cat /tmp/hip-publish-api.pid) 2>/dev/null; rm -f /tmp/hip-publish-api.pid; \
+	  exit $$status
+	mkdir -p dist/site && cp -R web/out/. dist/site/
+	@echo
+	@echo "dist/artifacts  $$(find dist/artifacts -type f | wc -l | tr -d ' ') files, $$(du -sh dist/artifacts | cut -f1)  -> object storage (R2)"
+	@echo "dist/site       $$(find dist/site -type f | wc -l | tr -d ' ') files, $$(du -sh dist/site | cut -f1)  -> static host (Pages)"
+
+check-dist:  ## Verify dist/ is complete and was built for production
+	@test -f dist/artifacts/manifest.json || { \
+	  echo "dist/artifacts/manifest.json missing — run 'make publish' first"; exit 1; }
+	@test -f dist/site/index.html || { \
+	  echo "dist/site/index.html missing — run 'make publish' first"; exit 1; }
+	@# A static export bakes the artifact origin into every page, so localhost in the
+	@# output means the whole site would ship with dead download links. Caught here
+	@# rather than by a reader clicking one.
+	@if grep -rl "localhost:8000" dist/site --include="*.html" | head -1 | grep -q .; then \
+	  echo "dist/site contains localhost links — rebuild with:"; \
+	  echo "  NEXT_PUBLIC_ARTIFACT_URL=$(ARTIFACT_URL) make publish"; exit 1; fi
+	@echo "dist OK: $$(find dist/artifacts -type f | wc -l | tr -d ' ') artifacts, \
+$$(find dist/site -type f | wc -l | tr -d ' ') site files"
+
+deploy: check-dist  ## Upload artifacts to R2 and the site to Pages
+	rclone sync dist/artifacts $(R2_REMOTE):$(R2_BUCKET) --progress --checksum
+	wrangler pages deploy dist/site --project-name=$(PAGES_PROJECT)
+
 clean:  ## Remove build artifacts and caches (leaves data/ alone)
-	rm -rf .pytest_cache .mypy_cache .ruff_cache dbt/target dbt/logs web/.next
+	rm -rf .pytest_cache .mypy_cache .ruff_cache dbt/target dbt/logs web/.next web/out dist
 	find . -type d -name __pycache__ -not -path './.venv/*' -exec rm -rf {} +

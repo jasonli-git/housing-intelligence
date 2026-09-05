@@ -21,10 +21,30 @@ from hip.config import get_settings
 
 @lru_cache(maxsize=1)
 def get_engine() -> Engine:
-    """Process-wide engine. Short connect timeout so /health fails fast, not hangs."""
+    """Process-wide engine. Short connect timeout so /health fails fast, not hangs.
+
+    The pool is sized explicitly rather than left at SQLAlchemy's default of 5 with 10
+    overflow. That default was never chosen — it was simply never hit, because until
+    2026-09-02 the only client was a dashboard serving one reader at a time. The first
+    genuinely concurrent workload, a static export rendering 2,273 pages across six
+    worker processes, exhausted it in minutes: requests queued the full 30-second pool
+    timeout, page renders passed their own 60-second deadline, Next retried them, and
+    the added load kept the pool empty. The API stopped answering entirely, including
+    `/health`.
+
+    40 connections against PostgreSQL's default `max_connections` of 100 leaves room for
+    psql, dbt, and a second process, while covering a build that fans out much wider
+    than any human ever will. Read-only sessions hold a connection only for the length
+    of one query (#6), so this is headroom for concurrency, not for leaks.
+    """
     return create_engine(
         get_settings().database_url,
         pool_pre_ping=True,
+        pool_size=20,
+        max_overflow=20,
+        # Fail a starved request in 10s rather than 30. A caller that cannot get a
+        # connection should learn quickly enough to retry inside its own deadline.
+        pool_timeout=10,
         connect_args={"connect_timeout": 3},
     )
 

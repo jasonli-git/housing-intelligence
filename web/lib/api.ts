@@ -2,8 +2,14 @@
  * Typed access to the read-only analytics API.
  *
  * Server-side only: pages fetch here during render, so no request goes out from the
- * browser and first paint carries real data. `cache: "no-store"` because the warehouse
- * changes when the pipeline runs, not on a schedule Next could revalidate on.
+ * browser and first paint carries real data.
+ *
+ * Under `output: "export"` that render happens once, at build time, against an API the
+ * build starts and then stops. `cache: "no-store"` used to be set here because the
+ * warehouse changes when the pipeline runs rather than on a schedule; it is gone now
+ * because it forces dynamic rendering, which a static export cannot do. Freshness is a
+ * property of *when the build ran*, which is the same thing the artifact manifest
+ * records.
  *
  * One exception, and it is explicit: `publicApiUrl` is rendered into the Markdown
  * export link, which the browser follows to the API directly. That is a URL in an
@@ -186,7 +192,7 @@ export type FeatureCollection = { type: "FeatureCollection"; features: Feature[]
 /** Returns null when the API is unreachable, so a page renders a message not a crash. */
 async function tryGet<T>(path: string): Promise<T | null> {
   try {
-    const response = await fetch(`${API_URL}${path}`, { cache: "no-store" });
+    const response = await fetch(`${API_URL}${path}`);
     if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {
@@ -250,3 +256,46 @@ export const api = {
 export const publicApiUrl = API_URL;
 
 export { formatValue, formatChange } from "./format";
+
+/**
+ * Every region that carries at least one observation, for `generateStaticParams`.
+ *
+ * Asks the API rather than reading `hip publish`'s manifest off disk: the dashboard and
+ * the Python side share no code and communicate only over HTTP (ARCHITECTURE #5), and
+ * reading its output files would be a second kind of coupling for the sake of one list.
+ * The `has_data` filter exists precisely so this question has an HTTP answer — without
+ * it the only options were to build 2,181 blank tract pages or to read the manifest.
+ *
+ * Pages explicitly, because `limit` is capped at 1000 by the endpoint and New Jersey
+ * alone returns 1,135. A silent single-page fetch would have dropped 135 regions and
+ * produced a site with holes that nothing would have flagged.
+ */
+export async function regionsWithData(): Promise<Region[]> {
+  const all: Region[] = [];
+  const limit = 1000;
+  for (let offset = 0; ; offset += limit) {
+    const page = await tryGet<{ total: number; items: Region[] }>(
+      `/regions?has_data=true&limit=${limit}&offset=${offset}`,
+    );
+    if (!page) {
+      // A build that cannot reach the API should fail loudly rather than emit a site
+      // with three pages in it.
+      throw new Error(
+        `Cannot reach the API at ${API_URL}. A static export needs it running: ` +
+          `start it with \`make api\` before \`npm run build\`.`,
+      );
+    }
+    all.push(...page.items);
+    if (all.length >= page.total || page.items.length === 0) return all;
+  }
+}
+
+/**
+ * Origin the published JSON artifacts are served from, for links the browser follows.
+ *
+ * Separate from `publicApiUrl` because the two halves are deployed to different places:
+ * HTML to a static host with a file-count limit, artifacts to object storage without
+ * one. In development both default to the same local API.
+ */
+export const artifactUrl =
+  process.env.NEXT_PUBLIC_ARTIFACT_URL ?? API_URL;

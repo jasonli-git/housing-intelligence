@@ -1,8 +1,28 @@
 import Link from "next/link";
 import { PrintButton } from "@/components/PrintButton";
-import { api, formatChange, formatValue, publicApiUrl } from "@/lib/api";
+import {
+  api,
+  artifactUrl,
+  formatChange,
+  formatValue,
+  regionsWithData,
+} from "@/lib/api";
 
 const WINDOW = "5y";
+
+/**
+ * Which region pages exist. Every region carrying data, and no others.
+ *
+ * Under `output: "export"` this is what tells Next how many pages to write; without it
+ * a dynamic segment has no enumeration and the export fails. Tracts are excluded by
+ * `has_data` rather than by naming levels, so a source that starts publishing at tract
+ * level would add those pages automatically instead of silently omitting them.
+ */
+export async function generateStaticParams() {
+  const regions = await regionsWithData();
+  return regions.map((region) => ({ id: String(region.region_id) }));
+}
+
 
 /**
  * The exportable region report, laid out from the analysis packet.
@@ -60,8 +80,16 @@ export default async function ReportPage({
         </p>
         <p className="print-hide" style={{ display: "flex", gap: "0.75rem" }}>
           <PrintButton />
+          {/*
+            The published artifact path, not the API's. A static file cannot vary on
+            `?window=`, so `hip publish` writes the window as a path segment; this href
+            has to name the file that actually exists. In development both origins
+            default to the local API, where this path is served by `hip publish`'s
+            output rather than by FastAPI — so check the link against a published tree,
+            not against `make api`.
+          */}
           <a
-            href={`${publicApiUrl}/regions/${regionId}/report?window=${WINDOW}`}
+            href={`${artifactUrl}/regions/${regionId}/report/${WINDOW}.md`}
             download={`${region.geoid}.md`}
           >
             Download Markdown

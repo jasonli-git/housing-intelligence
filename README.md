@@ -11,7 +11,7 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-09-02): v0.10.0, Version 1 complete and Version 2 under way.** New
+> **Status (2026-09-05): v0.11.0, Version 1 complete and Version 2 under way.** New
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
 > **335,927 observations across 23 metrics from 10 public sources, spanning 1971 to
@@ -22,10 +22,12 @@ product, and an optional AI layer only explains metrics that were already comput
 > writes a short interpretation on each county page — clearly labeled as interpretation,
 > never as measurement.
 >
-> Version 2 takes the platform off `localhost` and past New Jersey. Its first milestone
-> shipped on 2026-09-02: `hip footprint` now reports what a state costs on disk — 3.4 GB
-> for New Jersey, of which 40 kB per region is PostGIS geometry — which is the
-> figure the Northeast expansion multiplies.
+>
+> **Version 2 is live.** The platform now publishes itself: `hip publish` records the
+> API's answers as 5,844 static files and the dashboard pre-renders 2,273 pages, served
+> with no database and no application server in production. Milestone 10 measured what a
+> state costs on disk (3.4 GB for New Jersey, 40 kB per region of PostGIS geometry);
+> Milestone 11 put the result on the internet.
 >
 > See [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md)
 > for what shipped.
@@ -176,8 +178,13 @@ against packets as they stood on that date, and does not change when data refres
 
 Written by `uv run hip pack --report` to
 [`reports/regions/5y/34003.md`](reports/regions/5y/34003.md), and served unchanged by
-`GET /regions/11/report?window=5y`. The other 20 counties are in the
+`GET /regions/8/report?window=5y`. The other 20 counties are in the
 [same directory](reports/regions/5y/).
+
+`region_id` is a surrogate key, not a GEOID: Bergen is region 8 and GEOID 34003, and the
+two are not derivable from one another. An earlier version of this line said region 11,
+which is Mercer. Look an id up with `/regions?level=county&q=Bergen` rather than
+guessing it — the `curl` examples further down do exactly that.
 
 > **Where this region stands out**
 >
@@ -358,6 +365,44 @@ still run and report the degraded state rather than failing.
 `ANTHROPIC_API_KEY` is the one paid key and is read by `hip eval judge` alone — every
 other stage runs without it. `.env.example` links to each signup page.
 
+## Publishing
+
+The platform has no request-time compute, so production is a set of files rather than a
+running service. `make publish` builds them; `make deploy` sends them.
+
+```bash
+make publish   # dist/artifacts (5,845 files, 84 MB) + dist/site (11,375 files, 254 MB)
+make deploy    # artifacts -> object storage, site -> static host
+```
+
+Two directories because they go to two hosts, and that split is forced by measurement
+rather than taste (ARCHITECTURE #68): the export is three times the size of the data it
+displays, and static hosts cap files per deployment where object stores do not.
+
+`make deploy` runs `make check-dist` first, which refuses to ship a tree that is
+incomplete or that has `localhost` baked into its links — a static export has no runtime
+in which to correct a wrong artifact origin, so it would otherwise publish 1,135 dead
+download links silently.
+
+**One-time setup.** Deployment targets Cloudflare, but nothing about the artifacts is
+Cloudflare-specific — they are ordinary files at ordinary paths, and any object store
+and static host will serve them.
+
+1. Create an R2 bucket, and connect a custom domain to it for public reads.
+2. Create an R2 API token with **Object Read & Write**, scoped to that bucket alone.
+3. Configure an `rclone` remote named `r2` (type `s3`, provider `Cloudflare`) with those
+   keys and the bucket's S3 endpoint. `no_check_bucket = true` is required: a token
+   scoped to one bucket cannot list buckets, and rclone's default existence check fails
+   with a 403 that reads like bad credentials.
+4. Set `ARTIFACT_URL`, `R2_BUCKET`, and `PAGES_PROJECT` in the Makefile. They live
+   there rather than in `.env` because none is secret — the artifact URL is embedded in
+   1,135 public pages — and `.env` is gitignored, so a fresh clone would silently build
+   with `localhost`.
+
+Deploys are direct uploads, not a Git integration, and cannot be otherwise: the build
+fetches 1,135 regions from a local API backed by a warehouse that is gitignored by design
+(#10). A hosted builder has nothing to build from.
+
 ## Project Status
 
 v0.10.0 — **Version 1 is complete; Version 2 is under way.**
@@ -371,7 +416,7 @@ endpoint still works.
 Version 2 moves it off `localhost` and past New Jersey: static publication on a public
 domain, hosted inference in place of local generation, citation binding, expansion to the
 Northeast and then to every US county, a three-dimensional national map, a consumer entry
-point, and a design system. Nine milestones, one shipped.
+point, and a design system. Nine milestones, two shipped.
 
 **Milestone 10 — build cost and data placement (2026-09-02).** `hip footprint` reports
 bytes per storage tier, per warehouse table, and per state, including the Postgres size
@@ -379,6 +424,13 @@ that lives inside Docker where `du` cannot reach it. Storage locations became se
 rather than paths derived from one another, so the data root, the reports directory, and
 the Postgres data directory each relocate independently. Nothing user-facing changed;
 what changed is that the cost of adding a state is now measured instead of estimated.
+
+**Milestone 11 — static publication (2026-09-05).** `hip publish` renders the enumerable
+API surface to files whose paths mirror the endpoints, produced by replaying the API's own
+ASGI app so the bytes on disk are the bytes the API serves. The dashboard is a static
+export over the same 1,135 regions. `make publish` builds both halves; `make deploy` sends
+artifacts to object storage and the site to a static host. Production runs no database and
+no application server.
 
 Milestones and their status are in [ROADMAP.md](ROADMAP.md); the current working list and
 known rough edges are in [TODO.md](TODO.md). Work not scheduled for Version 2 is listed at

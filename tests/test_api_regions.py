@@ -132,3 +132,30 @@ def test_simplification_shrinks_the_payload(loaded: None) -> None:
 
 def test_invalid_level_is_rejected(loaded: None) -> None:
     assert client.get("/geo/planet").status_code == 422
+
+
+def test_has_data_partitions_the_spine() -> None:
+    """Every region is on exactly one side of the filter."""
+    total = client.get("/regions?limit=1").json()["total"]
+    with_data = client.get("/regions?has_data=true&limit=1").json()["total"]
+    without = client.get("/regions?has_data=false&limit=1").json()["total"]
+    assert with_data + without == total
+    assert with_data and without, "a partition with an empty side proves nothing"
+
+
+def test_tracts_carry_no_observations() -> None:
+    """The reason `has_data` exists: the spine and the data have different shapes.
+
+    No source loaded so far publishes at tract level, so a tract page would render
+    blank. The static build uses this filter to decide which pages exist at all.
+    """
+    body = client.get("/regions?has_data=true&level=tract&limit=1").json()
+    assert body["total"] == 0
+    assert client.get("/regions?has_data=false&level=tract&limit=1").json()["total"] > 0
+
+
+def test_has_data_composes_with_other_filters() -> None:
+    counties = client.get("/regions?has_data=true&level=county&limit=1").json()
+    assert counties["total"] > 0
+    both = client.get("/regions?has_data=true&level=county&state=NJ&limit=1").json()
+    assert both["total"] == counties["total"]

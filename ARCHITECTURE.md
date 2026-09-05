@@ -128,6 +128,9 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 64 | The output-token budget is sized from measurement, and is uniform across every candidate. | It has to cover reasoning *and* answer, because a reasoning model spends it before emitting a word. Raised twice from evidence: 1600 truncated Qwen3-8B after 5,747 characters of reasoning into an empty answer; 3000 left gemma-4-12B returning nothing on 8 of 15 scenarios. At 6000, gemma-4-12B stops cleanly on 9 of 15. Uniform because a per-model budget reintroduces the confound the anchors exist to remove — and uniformity is cheap here, since deterministic sampling means a model that stops at 826 tokens produces byte-identical output at any higher cap, so raising it only requires re-running the models that actually hit it. |
 | 65 | Every storage location is a setting, never a path derived from another setting. | `reports_dir` was `data_dir.parent / "reports"`, which was right only while `data_dir` sat in the repo: pointing `HIP_DATA_DIR` at an external volume silently moved `reports/` there too, taking the 21 git-tracked county reports and the README's links to them off the repo. It is now `HIP_REPORTS_DIR`, defaulting to the repo root — byte-identical to what the old expression returned at the default, so nothing moves for anyone who does not set it. Postgres follows the same rule through `HIP_PGDATA` in `docker-compose.yml`, defaulting to the existing `pgdata` named volume. Rejected: deriving the Postgres path from `HIP_DATA_DIR`, which would have relocated a loaded cluster the moment the data root moved and silently initialised an empty one. Costs three variables where there was one, and the relocation is opt-in rather than automatic — moving a path points Postgres at a different directory, it does not migrate what is already there. |
 | 66 | Footprint is measured in `hip footprint`; wall clock, CPU, RAM, and I/O are left to `mac-sitrep`. | The two answer different questions and only one was covered. sitrep already profiles `make pipeline` and generates the README's Resource Requirements block, but it reports I/O *volume* — bytes moved during a run — while capacity planning needs *footprint*, the bytes still occupied afterwards, split by tier and by state. Postgres makes the gap concrete: it lives inside Docker's disk image, invisible both to sitrep's process accounting and to `du` against `data/`, and it is the tier that grows fastest with geography because geometry is stored per region. Rejected: a second timing harness inside `hip`, which would duplicate a working tool and produce a rival set of numbers in the same README. Costs a dependency on a Mac-only external tool for the throughput half, recorded as a limitation below. |
+| 67 | Static artifacts are produced by replaying the API's own ASGI app, and `hip/publish.py` is the one module allowed to import `api`. | The published tree's whole claim is that `/regions/11/packet/5y.json` holds what `/regions/11/packet` serves. Replaying the app through `TestClient` makes that true by construction — response models, serialisation, float formatting, and null handling are the same code — where re-querying the warehouse in the publisher would be a second implementation of every endpoint, and the first one to change would break the promise with nothing to catch it. Narrows #6's "nothing imports api" rather than repealing it: the exception is one named path, and `test_only_the_publisher_imports_api` fails if a second importer appears, so the loophole cannot widen by accident. Rejected: publishing against a running server over real HTTP, which makes `make publish` depend on `make api` in another terminal. Costs the pipeline an import of FastAPI on the publish path only. |
+| 68 | The dashboard is a static export, and HTML and data artifacts are deployed to two different origins. | `output: "export"` renders all 2,273 pages at build time, so production runs no Node server and no database — the same argument as #67, applied to the other half. Splitting the destinations is forced by measurement rather than taste: the export emits 11,375 files for 1,135 regions (one HTML plus four RSC payloads per page, 261MB), against 5,844 artifact files at 84MB. Static site hosts cap files per deployment — 20,000 free, 100,000 paid on Cloudflare Pages — while object stores do not, so HTML goes to the page host and the JSON tree to object storage, addressed by `NEXT_PUBLIC_ARTIFACT_URL`. Rejected: one origin for both, which fits New Jersey and breaks at the Northeast. Costs a second origin to configure, and a build-time warning because an unset artifact origin bakes `localhost` into every download link rather than failing at runtime. |
+| 69 | The API's connection pool is sized explicitly at 20 with 20 overflow. | SQLAlchemy's default of 5 plus 10 was never chosen; it was never reached, because until the static export existed the only client was a dashboard serving one reader at a time. Six parallel export workers exhausted it in minutes: requests queued the full 30-second pool timeout, page renders passed their own 60-second deadline, Next retried them, and the retries kept the pool empty. The API stopped answering `/health` at all, and the build failed at 1,641 of 2,273 pages. 40 against PostgreSQL's default `max_connections` of 100 leaves room for psql and dbt while covering a fan-out wider than any human client. Rejected: capping the export's worker count, which hides a real defect — the first concurrent client found it, and a public deployment would have found it too. |
 
 ## Module Layout
 
@@ -146,10 +149,11 @@ housing-intelligence/
 ├── schemas/
 │   └── packet-v1.json         # published packet contract, generated from code (#43)
 ├── src/hip/
-│   ├── cli.py                 # Typer entrypoint; check-config, schema, footprint, 8 stages
+│   ├── cli.py                 # Typer entrypoint; check-config, schema, footprint, publish, 8 stages
 │   ├── config.py              # settings, YAML loading, env resolution, STATE_FIPS
 │   ├── duck.py                # DuckDB session + /vsizip path helper (#23)
 │   ├── footprint.py           # bytes per storage tier and per state (#66)
+│   ├── publish.py             # API surface rendered to static files (#67)
 │   ├── sources/
 │   │   ├── base.py            # SourceAdapter, retry, content-addressed cache (#10)
 │   │   ├── registry.py        # which sources have adapters; PLANNED names the rest
@@ -599,6 +603,18 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **An assessment is not a market value.** Ratios drift between revaluations and vary by
   municipality, so `modiv_median_assessed_value` tracks the tax roll rather than what
   houses sell for. Equalization ratios would fix this and are not loaded.
+- **The static export is 3× the size of the data it displays** (#68). 1,135 regions
+  produce 5,844 artifact files at 84MB and 11,375 export files at 261MB, because every
+  page embeds its own data and Next writes four RSC payloads per page alongside the
+  HTML. Pre-rendering therefore breaks on file count before storage or bandwidth become
+  a question, and it breaks at Northeast scale rather than national — roughly 100,000
+  export files for nine states. Beyond that, region pages have to render in the browser
+  from the published artifacts instead of being pre-rendered.
+- **`/compare` and region search cannot be published** (#67). Both take unbounded
+  parameters — an arbitrary set of `region_ids`, and free-text `q` — so neither
+  enumerates into files. The static tree names them in its manifest under
+  `unpublishable` rather than omitting them silently. The seam where they would return
+  is a queryable data layer in the browser over published Parquet, not a larger render.
 - **README excerpts have no staleness check.** The platform detects stale prose about
   its own data — `region_explanations` stores a packet hash, `is_stale` compares it, and
   the API serves a `stale` flag the dashboard renders — but the figures quoted in

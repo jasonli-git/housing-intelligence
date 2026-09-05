@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import sys
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -49,6 +50,7 @@ from hip.packets import (
     render_markdown,
     schema_text,
 )
+from hip.publish import publish as run_publish
 from hip.sources.base import SourceAdapter
 from hip.sources.registry import (
     IMPLEMENTED,
@@ -200,6 +202,32 @@ def footprint(
             )
 
     typer.secho(f"{human_bytes(result.total_bytes)} total", fg=typer.colors.GREEN)
+
+
+@app.command("publish")
+def publish_command(
+    out: Annotated[
+        Path | None,
+        typer.Option("--out", help="Output directory; defaults to <data_dir>/publish."),
+    ] = None,
+) -> None:
+    """Render the enumerable API surface to static files.
+
+    Not a pipeline stage: `make pipeline` builds the warehouse, this reads it. Run it
+    after the pipeline, when the numbers are the ones you mean to publish.
+    """
+    settings = get_settings()
+    root = out or settings.data_dir / "publish"
+    root.mkdir(parents=True, exist_ok=True)
+
+    result = run_publish(root)
+
+    typer.echo(f"{len(result.artifacts):>7,} artifacts")
+    typer.echo(f"{human_bytes(result.total_bytes):>7} on disk")
+    if result.skipped:
+        # Overwhelmingly explanations: only the 21 counties have one.
+        typer.echo(f"{len(result.skipped):>7,} skipped (404, mostly explanations)")
+    typer.secho(f"published to {root}", fg=typer.colors.GREEN)
 
 
 def _adapters(source: str | None) -> list[SourceAdapter]:

@@ -899,6 +899,84 @@ building a second timing harness, and adds only the two things it cannot answer.
   produce it. Not done here because forcing a re-download of all 2GB to measure it is a
   poor trade while the answer only matters at expansion time.
 
+## Milestone 11 — Static publication
+
+Started 2026-09-02. Scope settled with the user before any code: **all 1,135 regions
+that carry observations, at the 5y window only.** That is 21 counties, 564
+municipalities, 548 ZIPs, the state, and the nation row; the 2,181 tracts are in the
+spine but have no observations at all, so pages for them would be empty.
+
+- [x] `hip publish` renders the enumerable API surface to a directory tree whose paths
+      match the API's own, so `/regions/11/packet` is a file at the same path it is an
+      endpoint
+- [x] Window becomes a path segment (`/regions/11/summary/5y.json`) rather than a query
+      string, because a static file cannot vary on `?window=`. Chosen over implying 5y
+      in the path so that publishing a second window later adds files instead of moving
+      every existing URL
+- [x] A manifest listing every published artifact with its sha256, for drift detection
+- [x] Dashboard built as a static export, with `generateStaticParams` over the same
+      1,135 regions
+- [ ] `make publish` assembling both halves into one directory
+- [x] Tests: path mapping, manifest integrity, and that a published artifact is
+      byte-identical to the live API response for the same path
+
+- Note: **The publish gate earned itself on the first run.** `/rankings` returned 422
+  for every value ranking, because `region_rankings` stores those under the sentinel
+  window `latest` while the endpoint's `Window` literal has no such member and
+  `basis=value` ignores the parameter outright. Feeding storage vocabulary back as API
+  vocabulary is the kind of thing that would have shipped as 47 missing files. The
+  request now omits the window for value rankings while the path keeps it, and
+  `test_value_rankings_omit_the_window_from_the_request_but_keep_it_in_the_path` pins it.
+- Note: **Measured output, 2026-09-02:** 5,844 artifacts, 83.7MB, 1,114 skipped 404s —
+  exactly the 1,135 regions minus the 21 that have an explanation. Comfortably inside
+  Cloudflare Pages' ~20,000-file cap, which leaves room for the static export's own
+  output.
+- Note: **Open design question for the dashboard half.** `generateStaticParams` has to
+  learn which 1,135 regions to render. Reading `manifest.json` would guarantee the HTML
+  pages and the JSON artifacts describe the same regions, but it couples the web build
+  to a filesystem artifact where today the dashboard only ever talks HTTP. Fetching from
+  the API instead keeps that boundary but has no "regions with data" query to ask —
+  `/regions` includes the 2,181 empty tracts. Not yet decided.
+
+- [x] `has_data` on `/regions`, so the build can ask over HTTP which regions carry an
+      observation instead of reading `hip publish`'s output or rendering 2,181 blank
+      tract pages. Partitions the spine exactly: 1,135 with data, 2,231 without
+- Note: **The static export found a real API defect on its first run** (#69). Six
+  parallel workers exhausted a connection pool nobody had ever sized — SQLAlchemy's
+  default 5 plus 10 overflow — and the API stopped answering `/health` entirely. The
+  build failed at 1,641 of 2,273 pages with 60-second render timeouts. Sized to 20 plus
+  20; the rebuild completed with zero failures. Worth recording because the cause was
+  not the export: the API had simply never had a concurrent client, and a public
+  deployment would have been the alternative discoverer.
+- Note: **Measured export output: 11,375 files, 261MB, for 1,135 regions.** One HTML
+  plus four RSC payload files per page, and every page embeds its own data. That is
+  roughly triple the artifact tree it displays (5,844 files, 84MB), and it is the half
+  that hits a host's file-count cap first — at Northeast scale, not national.
+- Note: **An unset `NEXT_PUBLIC_ARTIFACT_URL` bakes `localhost` into 1,135 download
+  links.** A static export has no runtime to correct it. The build now warns rather than
+  throwing, because building locally against `make api` is how the export gets checked
+  at all — but a deploy without that variable ships dead links silently.
+
+- Note: **Two claims in the roadmap's Milestone 11 row were wrong and are corrected
+  here.** "Every API response" is not achievable — `/compare?region_ids=` is
+  combinatorial and `/regions?q=` is free-text search, so neither enumerates. Both are
+  omitted, recorded as a limitation, with DuckDB-WASM over published Parquet named as
+  the seam where they would return. And "content-addressed manifest" was the wrong
+  instinct: content-addressing the artifact URLs would break the property that makes
+  this worth doing, which is that the API's paths keep working as static files. The
+  manifest carries hashes; the URLs stay stable.
+- Note: **The published artifacts are produced by replaying the API's own ASGI app**
+  rather than by re-querying the warehouse. It is the only way the bytes on disk are
+  the same bytes the API serves — response models, serialisation, and rounding all
+  included — instead of a second implementation that drifts. This required a narrow
+  exception to `tests/test_module_boundaries.py`, which enforced that *nothing* imports
+  `api`. The exception is bounded and itself enforced: exactly one module may do it,
+  and the test fails if a second one appears.
+- Note: **`make publish` cannot be finished in this milestone.** Its done criterion is a
+  reachable public URL, and the domain and hosting account are still parked. Everything
+  up to and including a complete local artifact tree is in scope; the deploy step is
+  written but unverified until those exist.
+
 ## Decisions deferred to their milestones
 
 Recorded here so they are decided deliberately when the milestone opens, rather than
