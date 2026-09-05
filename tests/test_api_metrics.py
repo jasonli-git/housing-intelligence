@@ -141,3 +141,28 @@ def test_sources_reports_the_releases_actually_ingested() -> None:
     for entry in loaded:
         for release in entry["releases"]:
             assert release["vintage"] and release["row_count"] >= 0
+
+
+def test_every_source_resolves_a_homepage() -> None:
+    """Never null, so the footer never renders an empty href."""
+    for entry in client.get("/sources").json():
+        assert entry["homepage"], entry["source_id"]
+
+
+def test_api_rooted_sources_point_a_reader_somewhere_else() -> None:
+    """The defect this field exists for.
+
+    `url` is the canonical root the packet records; for these it is the API itself, and
+    linking it sent readers to raw JSON or a 404. `homepage` is where a person goes.
+    """
+    by_id = {e["source_id"]: e for e in client.get("/sources").json()}
+    for source_id in ("census_acs", "fred", "bls", "hud"):
+        entry = by_id[source_id]
+        assert entry["homepage"] != entry["url"], source_id
+        assert "api." not in entry["homepage"], entry["homepage"]
+
+
+def test_sources_without_a_separate_page_fall_back_to_url() -> None:
+    by_id = {e["source_id"]: e for e in client.get("/sources").json()}
+    entry = by_id["census_permits"]
+    assert entry["homepage"] == entry["url"]

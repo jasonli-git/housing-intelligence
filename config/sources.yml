@@ -52,6 +52,7 @@ sources:
     publisher: U.S. Census Bureau
     license: Public domain (U.S. Government work)
     url: https://api.census.gov/data
+    homepage: https://www.census.gov/programs-surveys/acs
     cadence: annual
     adapter: hip.sources.census_acs:AcsAdapter
     api_key_env: CENSUS_API_KEY
@@ -80,6 +81,7 @@ sources:
     publisher: Federal Reserve Bank of St. Louis
     license: Free with attribution; series-level terms vary by originator
     url: https://api.stlouisfed.org/fred
+    homepage: https://fred.stlouisfed.org/
     cadence: monthly
     adapter: hip.sources.fred:FredAdapter
     api_key_env: FRED_API_KEY
@@ -90,6 +92,7 @@ sources:
     publisher: U.S. Bureau of Labor Statistics
     license: Public domain (U.S. Government work)
     url: https://api.bls.gov/publicAPI/v2
+    homepage: https://www.bls.gov/lau/
     cadence: monthly
     adapter: hip.sources.bls:BlsAdapter
     api_key_env: BLS_API_KEY
@@ -100,6 +103,7 @@ sources:
     publisher: U.S. Department of Housing and Urban Development
     license: Public domain (U.S. Government work)
     url: https://www.huduser.gov/hudapi/public
+    homepage: https://www.huduser.gov/portal/datasets/usps_crosswalk.html
     cadence: quarterly
     adapter: hip.sources.hud:HudAdapter
     api_key_env: HUD_API_TOKEN
@@ -119,7 +123,7 @@ sources:
     name: MOD-IV property tax assessment records
     publisher: New Jersey Division of Taxation
     license: Open public record
-    url: https://www.state.nj.us/treasury/taxation/lpt/lptvalue.shtml
+    url: https://njogis-newjersey.opendata.arcgis.com/datasets/102a9bf3c6da4ca3b9b31f831a1e9f72
     cadence: annual
     adapter: hip.sources.nj_modiv:ModivAdapter
     notes: >-

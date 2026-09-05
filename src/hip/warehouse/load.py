@@ -47,6 +47,8 @@ class SourceRecord:
     publisher: str
     license: str
     url: str
+    # Human-facing landing page where it differs from the canonical root (#72).
+    homepage: str | None
     cadence: str
 
 
@@ -155,10 +157,13 @@ def _upsert_sources(conn: Any, sources: Sequence[SourceRecord]) -> None:
     conn.execute(
         text(
             """
-            INSERT INTO sources (source_id, name, publisher, license, url, cadence)
-            VALUES (:source_id, :name, :publisher, :license, :url, :cadence)
+            INSERT INTO sources
+                (source_id, name, publisher, license, url, homepage, cadence)
+            VALUES
+                (:source_id, :name, :publisher, :license, :url, :homepage, :cadence)
             ON CONFLICT (source_id) DO UPDATE SET
                 name = EXCLUDED.name, publisher = EXCLUDED.publisher,
+                homepage = EXCLUDED.homepage,
                 license = EXCLUDED.license, url = EXCLUDED.url,
                 cadence = EXCLUDED.cadence
             """

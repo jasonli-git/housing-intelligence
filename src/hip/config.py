@@ -162,7 +162,14 @@ class Source(BaseModel):
     name: str
     publisher: str
     license: str
+    # Canonical root, and what the packet carries. For a source fetched over an API this
+    # is the API root, which is the right answer for provenance and the wrong one for a
+    # person: `https://api.census.gov/data` returns JSON, and `api.bls.gov/publicAPI/v2`
+    # returns a 404 to a browser.
     url: str
+    # Where a reader should be sent instead, when those differ. Optional because for most
+    # sources they do not — `census.gov/construction/bps/` is both. Defaults to `url`.
+    homepage: str | None = None
     cadence: Cadence
     adapter: str
     api_key_env: str | None = None

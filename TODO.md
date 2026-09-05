@@ -993,6 +993,21 @@ spine but have no observations at all, so pages for them would be empty.
       Cloudflare Pages' 20,000-file free tier, but it consumed a third of the remaining
       headroom for a footer, which is a concrete instance of the pre-rendering cost noted
       under ARCHITECTURE #68.
+- [x] **Source links pointed at API roots, not pages** (2026-09-05, migration 0009,
+      ARCHITECTURE #72). Five of twelve were broken or machine-facing for a reader:
+      `api.census.gov/data` returned JSON, `api.bls.gov/publicAPI/v2` and
+      `api.stlouisfed.org/fred` 404ed, HUD's API root asked for a sign-in, and the
+      MOD-IV link had rotted — NJ retired that page and the tax list now lives on NJGIN.
+      `sources.url` stays as it was, because the packet contract carries it and it is
+      correct provenance; a new `homepage` holds the page a person should visit and
+      falls back to `url` where they are the same. The footer links `homepage`.
+- Note: **`make publish` now deletes `web/.next` before building.** Next's incremental
+      cache is keyed on source rather than on data fetched during the build, so a
+      component whose markup did not change but whose API response gained a field is
+      served from cache. That is exactly how the first corrected build shipped a footer
+      whose links had no `href` at all, while `dist/artifacts/sources.json` beside it
+      held the right values. Publishing is not a dev loop; a cold build is the right
+      trade.
 - Note: **Per-source licences are already recorded and already travel with the data.**
   `config/sources.yml` carries a `license` for every source, packets carry it per source,
   and the Markdown reports print it. The gap is not the data model; it is that the two

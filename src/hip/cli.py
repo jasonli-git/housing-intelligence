@@ -528,6 +528,7 @@ def load(
                 publisher=source.publisher,
                 license=source.license,
                 url=source.url,
+                homepage=source.homepage,
                 cadence=source.cadence,
             )
         ],
@@ -573,6 +574,7 @@ def load(
                 publisher=definition.publisher,
                 license=definition.license,
                 url=definition.url,
+                homepage=definition.homepage,
                 cadence=definition.cadence,
             )
         )

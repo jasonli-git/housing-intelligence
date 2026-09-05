@@ -186,7 +186,11 @@ class SourceEntry(BaseModel):
     name: str
     publisher: str
     license: str
+    # The canonical root, as the packet records it — an API root for API-fetched sources.
     url: str
+    # Where to send a reader. Resolved server-side so no consumer has to know that `url`
+    # may be machine-facing; equals `url` when a source publishes no separate page (#72).
+    homepage: str
     cadence: str
     releases: list[SourceRelease] = Field(default_factory=list)
 
@@ -208,7 +212,8 @@ def sources(session: SessionDep) -> list[SourceEntry]:
     rows = session.execute(
         text(
             """
-            SELECT s.source_id, s.name, s.publisher, s.license, s.url, s.cadence,
+            SELECT s.source_id, s.name, s.publisher, s.license, s.url,
+                   COALESCE(s.homepage, s.url) AS homepage, s.cadence,
                    r.vintage, r.fetched_at, r.row_count
             FROM sources s
             LEFT JOIN source_releases r ON r.source_id = s.source_id
@@ -227,6 +232,7 @@ def sources(session: SessionDep) -> list[SourceEntry]:
                 publisher=row["publisher"],
                 license=row["license"],
                 url=row["url"],
+                homepage=row["homepage"],
                 cadence=row["cadence"],
             )
             entries[row["source_id"]] = entry

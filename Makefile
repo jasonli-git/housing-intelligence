@@ -148,7 +148,12 @@ publish:  ## Build both halves of the deployable site into dist/
 	@# started here and stopped again, so `make publish` is one command rather than two
 	@# terminals.
 	@echo "Artifact origin: $(ARTIFACT_URL)"
-	rm -rf dist
+	@# Next's incremental cache is keyed on source, not on data fetched during the
+	@# build. A component whose markup is unchanged but whose API response has gained a
+	@# field is served from cache, so on 2026-09-05 every source link in the footer
+	@# rendered with no href at all while the artifact beside it held the right value.
+	@# A publish is not a dev loop: correctness beats the seconds a warm cache saves.
+	rm -rf dist web/.next web/out
 	uv run hip publish --out dist/artifacts
 	@echo "Starting the API for the export..."
 	@uv run uvicorn hip.api.main:app --port 8000 > /tmp/hip-publish-api.log 2>&1 & \

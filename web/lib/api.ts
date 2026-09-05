@@ -307,7 +307,10 @@ export type SourceEntry = {
   name: string;
   publisher: string;
   license: string;
+  /** Canonical root, as the packet records it — may be an API endpoint. */
   url: string;
+  /** Where to send a reader; equals `url` when the source has no separate page. */
+  homepage: string;
   cadence: string;
   releases: { vintage: string; fetched_at: string; row_count: number }[];
 };

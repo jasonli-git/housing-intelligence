@@ -38,7 +38,9 @@ export async function SourceFooter() {
       <ul className="source-list">
         {external.map((source) => (
           <li key={source.source_id}>
-            <a href={source.url} rel="noreferrer noopener" target="_blank">
+            {/* `homepage`, not `url`: for API-fetched sources the canonical root is
+                the API itself, which returns JSON or a 404 to a reader who clicks it. */}
+            <a href={source.homepage} rel="noreferrer noopener" target="_blank">
               {source.name}
             </a>
             <span className="source-publisher">{source.publisher}</span>
