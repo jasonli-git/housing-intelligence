@@ -21,6 +21,9 @@ select
     make_date(year::int, 12, 31) as period_end,
     value::double as value,
     'fips' as match_method,
+    -- HUD publishes one file per county per year; the adapter names the layer
+    -- `il_<fips>`. 107 releases collapsed onto five before this existed.
+    'il_' || county_fips as release_layer,
     year::varchar as release_vintage
 from unpivoted
 where value is not null

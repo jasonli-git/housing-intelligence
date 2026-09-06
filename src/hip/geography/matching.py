@@ -203,6 +203,17 @@ def _append_keyed(
     nothing to reject. They are unioned in with the `match_method` their own model
     declares, which is what keeps `fips` distinguishable from Zillow's `name_county`.
 
+    `layer` carries the model's `release_layer`, which is the layer of the *file* the
+    row arrived in — not the region level it describes. The two coincide for Zillow,
+    whose files are named by level, and diverge for every keyed source: BLS ships one
+    file per county series, HUD one per county-year, ACS one per (level, year) under
+    Census's own name for the level. Naming the region level here meant the loader's
+    exact `(source, layer, vintage)` lookup never matched, so it fell back to the first
+    release of that vintage and every BLS observation in the warehouse cited Atlantic
+    County's file, all 107 HUD releases collapsed onto five, and every ACS municipal row
+    cited the county file (#75, and the residue of #47 and #53 that vintage alone could
+    not fix).
+
     Rows whose geography is not in scope are dropped by the join to `stg_regions`.
     The `nation` level is exempt: the US region is created by migration 0004 and never
     appears in the TIGER-derived staging table.
@@ -212,7 +223,7 @@ def _append_keyed(
             f"""
             INSERT INTO {OBSERVATION_TABLE}
             SELECT s.metric_id, s.geoid, s.level, s.period_start, s.period_end,
-                   s.value, s.source_id, s.level AS layer, s.match_method,
+                   s.value, s.source_id, s.release_layer AS layer, s.match_method,
                s.release_vintage
             FROM {staging_schema}.{model} s
             WHERE s.level = 'nation'

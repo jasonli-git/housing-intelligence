@@ -131,6 +131,8 @@ select
     published as period_end,
     value::double as value,
     'nj_cd_code' as match_method,
+    -- One statewide composite is all the publisher offers (see the adapter).
+    'statewide' as release_layer,
     'current' as release_vintage
 from unpivoted
 where value is not null

@@ -36,6 +36,11 @@ select
     make_date(2000 + substr(pair, 3, 2)::int, 12, 31) as period_end,
     net_returns::double as value,
     'fips' as match_method,
+    -- Net returns are inflow minus outflow, so this row genuinely derives from
+    -- two files and `fact_metric_observation` can cite only one. Inflow is
+    -- named as the primary rather than left to the loader's fallback, which
+    -- picked whichever of the pair the catalog happened to return first.
+    'inflow' as release_layer,
     -- The year-pair directory ('1718') is the release vintage.
     pair as release_vintage
 from net

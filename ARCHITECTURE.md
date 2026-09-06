@@ -11,11 +11,11 @@ scope; this document does not restate it.
 > **335,927 observations across 23 metrics from 10 sources**, spanning 1971 to 2026 at
 > nation, state, county, municipality, and ZIP level — loaded through all eight stages,
 > `acquire → land → stage → geocode → validate → load → analyze → pack`, served by the
-> API, and displayed by a three-page dashboard. 19,527 computed changes, 19,517 change
+> API, and displayed by a three-page dashboard. 19,531 computed changes, 19,521 change
 > rankings and 8,302 value rankings. **3.48M NJ parcels** live in Parquet and DuckDB and
 > reach the warehouse only as six municipality-level assessment aggregates (#49). Packet
 > `1.1` is validated against `schemas/packet-v1.json`; 21 county and 564 municipal
-> packets are produced by `hip pack`. 272 Python tests and 26 dashboard tests pass,
+> packets are produced by `hip pack`. 289 Python tests and 26 dashboard tests pass,
 > `tsc --noEmit` is clean. **Version 1 is complete (Milestone 8, #56-#64).** Eight local
 > models across two runtimes answered five standardized scenarios over three real county
 > packets — 120 generations, 105 usable — with every stated figure checked against its
@@ -135,6 +135,12 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 71 | Attribution is rendered site-wide from `GET /sources`, not written into a template. | Zillow publishes ZHVI and ZORI "free for non-commercial use with attribution", which makes attribution a condition of use. Before 2026-09-05 only report pages carried it, because a packet ships its own sources table — the landing page showed a `zhvi_sfr` choropleth and ranking naming no source at all, and 1,135 region pages likewise. Reading the registry means the footer and the packet quote the same rows, so adding a source cannot leave the site under-attributing. Rejected: a hard-coded list in the footer component, half the work and wrong the first time `sources.yml` changes — and wrong here is a licence problem, not a stale copy. Costs one file per route in the static export, 2,272 files and 62MB, because the footer makes every page carry an extra payload segment. Also builds `/sources`, the last endpoint in the API table that had no implementation. |
 | 72 | `sources` carries a `homepage` beside `url`. | `url` is the canonical root and is what every analysis packet records, so for an API-ingested source it is the API — correct provenance, and useless to a person. The attribution footer (#71) linked it directly, and five of twelve links led somewhere broken or machine-facing: `api.census.gov/data` returns JSON, `api.bls.gov/publicAPI/v2` and `api.stlouisfed.org/fred` return 404 in a browser, HUD's API root asks for a sign-in, and NJ had retired the MOD-IV page entirely. `homepage` is where a reader goes; nullable, because for most sources the two are one page and duplicating it would invite drift, and consumers resolve `COALESCE(homepage, url)`. Rejected: repointing `url` at the landing page, which would silently rewrite the provenance every published packet carries. Costs one column and one field to keep current. |
 
+| 73 | `hip_derived` releases are content-addressed, and `analyze` prunes the ones no fact cites. | Every run minted a release stamped `to_char(now(), ...)` and repointed the three affordability metrics at it, so a packet's `sources[]` block and its derived metrics' `release_id` moved on every run. That falsified the one property the packet hash exists to have (#44, #61): it changed when the clock changed, not when the data did. The damage was downstream and silent — every stored explanation was marked stale by the next pipeline run whether or not a number had moved, so Milestone 12's staleness gate would have had nothing to gate on, and all 21 committed county reports showed a provenance diff with no figure behind it. The release is now identified by a sha256 over the derived rows, computed before it is written, exactly as the raw tier addresses a downloaded file by `sha256[:16]` (#10). An unchanged rebuild reuses the row; a real change makes a new one and correctly marks prose stale. Rejected: excluding provenance from the hash, which would have hidden the churn rather than removed it, and left the reports dirtying themselves forever. Costs a temp table per run and a hex vintage in place of a date, which is what a derived release honestly has. |
+| 74 | `source_releases.row_count` holds rows, counted from the landed Parquet, and a re-recorded release corrects it. | Both callers passed `release.size_bytes` into it, so `GET /sources` — and the published `sources.json` behind the site's attribution footer — reported the national ZCTA file as 529,118,424 rows and NJ MOD-IV as 1,156,147,940. The column has been named `row_count` since migration 0002 and no caller ever set one. DuckDB answers `count(*)` from the Parquet footer, so counting at load time is a metadata read per file. The conflict clause had to become `DO UPDATE SET row_count` for the same reason: releases are immutable by content, so `DO NOTHING` would have left every existing row lying. `fetched_at` is deliberately *not* updated — packets quote it, and rewriting it per load would reintroduce #73 from the loader side. Bytes are not lost: the raw manifest records them per release and `hip footprint` reports them per tier. |
+| 75 | A keyed staging model carries `release_layer` — the layer of the *file* the row arrived in, not the region level it describes. | The two coincide for Zillow, whose files are named by level, and diverge for every keyed source: BLS ships one file per county series, HUD one per county-year, ACS one per (level, year) under Census's own name for the level. `_append_keyed` wrote the region level into `layer`, so the loader's exact `(source, layer, vintage)` lookup never matched and fell through to the first release of that vintage. Every BLS observation in the warehouse cited Atlantic County's file, 107 HUD releases collapsed onto five, and every ACS municipal row cited the county file. This is the residue of #47 that #53 could not reach: vintage was made exact, layer never was. Measured after the fix — BLS 21/21 releases cited, HUD 105/107 (the two uncited are crosswalk files, which feed `region_crosswalk` rather than facts), ACS municipal rows on `cousub`. IRS keeps one imprecision by nature and now states it: a net figure is inflow minus outflow, so it derives from two files and can cite one, and it names inflow rather than leaving the loader to pick whichever the catalog returned first. |
+| 76 | A credential never reaches disk, because redaction happens where a URL is recorded rather than where it is built. | Census and FRED accept a key only as a query parameter — there is no header to move it to — so the key is unavoidably part of the request URL. The default filename was the URL's last segment and the manifest serialised the whole ref, so `data/raw/` held 32 manifests quoting live keys and files literally *named* `...?registrationkey=<key>`, where a screenshot, a backup, or a stray `find` would carry them off the machine. Three boundaries now redact: the filename drops the query string entirely, the manifest keeps a redacted `url` because which endpoint a release came from is real provenance while the key is not, and a failed download is raised `from None` with a redacted message, since httpx renders the failing URL into both its message and its traceback. Cached releases are unaffected — `_from_cache` reads the filename out of the manifest — so nothing re-downloads. |
+| 77 | Window selection in `hip analyze` is ordered totally, not by distance alone. | `DISTINCT ON` picked the observation nearest each window target, ordered only by `abs(period_end - target)`. That is not a total order: a target sitting between two observations is equidistant from both, which is 5,606 groups in New Jersey alone, so `window_start`, `start_value`, `pct_change` and `cagr` were whichever row the scan reached first. Two `analyze` runs over an identical warehouse produced different published figures and different row counts — measured at 19,527, 19,530 and 19,529 on three consecutive runs — which also meant #73 alone could not make a packet reproducible. Ties now resolve to the older observation, so a window is never shorter than its label, and `ends` gained a `DISTINCT ON` against two observations sharing a maximum `period_end`, the case the packet assembler already guarded. |
+
 ## Module Layout
 
 What exists as of 2026-08-12. Every pipeline package now holds real modules; the
@@ -234,7 +240,7 @@ housing-intelligence/
 │   ├── validation/            # gate reports per run; gitignored, per-run machine state
 │   ├── regions/<window>/      # Markdown reports, one per region; 5y committed, README-linked
 │   └── evaluation/            # the published model-evaluation report; committed
-├── tests/                     # 272 Python tests; API tests skip without a warehouse
+├── tests/                     # 289 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
@@ -266,7 +272,7 @@ which is why every write path lives there.
 `nation` level; `0005` added `fact_metric_change` and `region_rankings`; `0006` added
 `region_rankings.basis` (#52); `0007` added `region_explanations` (#57); `0008` added
 `regions.name_lsad` (#70); `0009` added `sources.homepage` (#72). The fact table holds
-335,927 observations, with 19,529 changes, 19,519 change rankings and 8,302 value
+335,927 observations, with 19,531 changes, 19,521 change rankings and 8,302 value
 rankings derived from them.
 `region_identifiers`, empty since Milestone 1, now holds 554 NJ municipal codes under
 scheme `nj_cd_code` — the join MOD-IV was always going to supply (#21, #51).
@@ -646,10 +652,13 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   without touching the network unless `--force`, so the 22-second figure re-processes
   data already on disk and downloads nothing. Cold-run cost — which is what adding a
   state actually incurs — has never been measured.
-- **`make pipeline` always dirties 21 tracked files.** `analyze` writes a new
-  `hip_derived` source release stamped with the run time, so every region report's
-  provenance table changes on every run even when no number moves. The reports are
-  correct; the diff is noise.
+- ~~**`make pipeline` always dirties 21 tracked files.**~~ Fixed 2026-09-06 (#73).
+  `analyze` wrote a new `hip_derived` release stamped with the run time, so every
+  report's provenance table changed on every run even when no number moved. The release
+  is now content-addressed, and a second `analyze` plus `pack --report` over an
+  unchanged warehouse produces a byte-identical set of reports and packets. The same
+  defect was silently marking every stored explanation stale, which is why it turned out
+  to be a Milestone 12 blocker rather than cosmetic.
 - **MOD-IV is one snapshot, so it has no change metrics.** Its six metrics carry a value
   and a value rank and nothing else; `/rankings?basis=change` returns nothing for them.
   A second vintage would need a second published composite, which NJGIN does not archive.
@@ -658,11 +667,22 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   attributed to any municipality.
 - **There is no AI layer** (#11). Packets are produced and read only by the report
   renderer and the dashboard's report page until Milestone 8.
-- **Layer-level provenance is still approximate for keyed sources** (#53). Vintage is
-  now exact, but a staged row names its region level rather than the release layer it
-  arrived under, so `(source, vintage)` is often the most precise key that matches. The
-  release named is always the right source and the right vintage; which file within that
-  vintage carried the row can still be wrong for ACS county-versus-cousub.
+- ~~**Layer-level provenance is still approximate for keyed sources**~~ (#53). Fixed
+  2026-09-06 (#75): every keyed staging model now carries `release_layer`, the layer of
+  the file the row arrived in, so the loader's exact `(source, layer, vintage)` lookup
+  matches instead of falling through. The understatement in the original wording is
+  worth keeping on the record — this was not only "ACS county-versus-cousub", it was
+  every BLS observation citing Atlantic County's file and 107 HUD releases collapsing
+  onto five.
+- **A net migration figure cites one of the two files it came from** (#75). Inflow minus
+  outflow is genuinely derived from two releases and `fact_metric_observation` holds one
+  `release_id`, so the row names inflow. Deterministic and documented rather than
+  correct; a faithful answer needs a fact-to-release relation, not a column.
+- **`census_tiger` releases record `layer` as a ref key** — `cousub:NJ@2025` rather than
+  `cousub` — because `hip load` passes `ReleaseRef.key` where the metric path passes
+  `ReleaseRef.layer`. Harmless today: TIGER produces regions rather than facts, so no
+  observation resolves against it. Correcting it would create a second row per TIGER
+  release rather than updating the existing one, which is why it is recorded instead.
 - **A packet is per region and per window.** There is no cross-region packet, so a
   comparison between two counties means two packets. `/compare` serves that shape for
   a single metric; nothing packages it.

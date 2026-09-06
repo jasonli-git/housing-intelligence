@@ -13,6 +13,8 @@ select
     -- Units across all structure sizes: 1-unit, 2-unit, 3-4 unit, 5+ unit.
     (column07 + column10 + column13 + column16)::double as value,
     'fips' as match_method,
+    -- One annual file per year, so the layer and the vintage are both the year.
+    {{ release_vintage() }} as release_layer,
     {{ release_vintage() }} as release_vintage
 from read_parquet('{{ var("parquet_dir") }}/census_permits/*/*.parquet', filename=true)
 where lpad(column01::varchar, 2, '0') in ({{ var("state_fips") }})

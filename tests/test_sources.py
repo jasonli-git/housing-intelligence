@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from hip.config import ConfigError
-from hip.sources.base import ReleaseRef, SourceAdapter, SourceError
+from hip.sources.base import ReleaseRef, SourceAdapter, SourceError, redact
 from hip.sources.tiger import TigerAdapter, shapefile_member
 
 PAYLOAD = b"tiger-bytes"
@@ -175,3 +175,93 @@ def test_a_transient_failure_is_retried(tmp_path: Path) -> None:
 
     assert adapter.downloads == 3
     assert release.path.read_bytes() == PAYLOAD
+
+
+# --- credentials never reach disk (#76) --------------------------------------------
+
+
+class KeyedAdapter(FakeAdapter):
+    """A source that authenticates by query parameter, as Census and FRED both do."""
+
+    source_id = "keyed_source"
+
+    def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+        return [
+            ReleaseRef(
+                source_id=self.source_id,
+                layer="demo",
+                vintage=vintage or self.default_vintage,
+                url="https://api.example.invalid/data/acs5?get=NAME&key=SUPERSECRET",
+            )
+        ]
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://x.invalid/a?key=SUPERSECRET",
+        "https://x.invalid/a?api_key=SUPERSECRET",
+        "https://x.invalid/a?apikey=SUPERSECRET",
+        "https://x.invalid/a?registrationkey=SUPERSECRET&startyear=2006",
+        "https://x.invalid/a?token=SUPERSECRET",
+        "Server error for url 'https://x.invalid/a?key=SUPERSECRET'",
+    ],
+)
+def test_every_credential_parameter_is_redacted(url: str) -> None:
+    assert "SUPERSECRET" not in redact(url)
+
+
+def test_redaction_keeps_the_rest_of_the_url_readable() -> None:
+    """Which endpoint a release came from is provenance; the key is not."""
+    out = redact("https://api.example.invalid/data/2023/acs5?get=NAME&key=SECRET")
+
+    assert out == "https://api.example.invalid/data/2023/acs5?get=NAME&key=***"
+
+
+def test_a_key_never_becomes_part_of_a_filename(tmp_path: Path) -> None:
+    """The failure this prevents: files literally named `...?key=<live key>`."""
+    adapter = KeyedAdapter()
+
+    release = adapter.fetch(adapter.refs()[0], raw_dir=tmp_path)
+
+    assert release.path.name == "acs5"
+    assert not any("SUPERSECRET" in path.name for path in tmp_path.rglob("*"))
+
+
+def test_the_manifest_records_a_redacted_url(tmp_path: Path) -> None:
+    adapter = KeyedAdapter()
+    adapter.fetch(adapter.refs()[0], raw_dir=tmp_path)
+
+    manifests = list(tmp_path.rglob("manifest.json"))
+    assert manifests, "no manifest written"
+    for manifest in manifests:
+        text = manifest.read_text()
+        assert "SUPERSECRET" not in text
+        assert "key=***" in text
+
+
+def test_a_download_failure_does_not_echo_the_key(tmp_path: Path) -> None:
+    """httpx renders the failing URL into its message; a keyed source's URL has a key."""
+
+    class FailingKeyed(KeyedAdapter):
+        def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
+            raise OSError(f"connection reset for {ref.url}")
+
+    adapter = FailingKeyed()
+
+    with pytest.raises(SourceError) as exc:
+        adapter.fetch(adapter.refs()[0], raw_dir=tmp_path)
+
+    assert "SUPERSECRET" not in str(exc.value)
+    # The diagnosis survives the redaction.
+    assert "OSError" in str(exc.value)
+    assert "keyed_source" in str(exc.value)
+
+
+def test_a_plain_file_url_still_names_the_file(tmp_path: Path) -> None:
+    """Dropping the query string must not change the name of an ordinary download."""
+    adapter = FakeAdapter()
+
+    release = adapter.fetch(adapter.refs()[0], raw_dir=tmp_path)
+
+    assert release.path.name == "demo.zip"

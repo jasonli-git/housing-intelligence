@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 from typing import Annotated
 
+import duckdb
 import typer
 from sqlalchemy.orm import Session
 
@@ -40,7 +41,7 @@ from hip.geography.crosswalk import apply_hud_weights, build_crosswalk
 from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
 from hip.landing.shapefile import land_shapefile
-from hip.landing.tabular import land_csv, land_json, land_ndjson
+from hip.landing.tabular import land_csv, land_json, land_ndjson, parquet_path
 from hip.packets import (
     SCHEMA_PATH,
     Packet,
@@ -51,7 +52,7 @@ from hip.packets import (
     schema_text,
 )
 from hip.publish import publish as run_publish
-from hip.sources.base import SourceAdapter
+from hip.sources.base import Release, SourceAdapter
 from hip.sources.registry import (
     IMPLEMENTED,
     METRIC_SOURCES,
@@ -495,6 +496,28 @@ def validate() -> None:
     )
 
 
+def _landed_rows(
+    con: duckdb.DuckDBPyConnection, release: Release, parquet_dir: Path
+) -> int:
+    """Rows in the Parquet this release landed as; 0 when it has not been landed.
+
+    `source_releases.row_count` means rows, which is what `GET /sources` tells a
+    reader it means. Both call sites below passed `release.size_bytes` into it until
+    2026-09-06, so the published registry reported the national ZCTA shapefile as
+    529,118,424 rows and every BLS county series as roughly 28,000 (#74). Bytes were
+    never lost by the change: the raw manifest records them per release and
+    `hip footprint` reports them per tier.
+
+    DuckDB answers `count(*)` from the Parquet footer, so this is a metadata read per
+    file rather than a scan.
+    """
+    path = parquet_path(release, parquet_dir)
+    if not path.exists():
+        return 0
+    row = con.execute("SELECT count(*) FROM read_parquet(?)", [str(path)]).fetchone()
+    return int(row[0]) if row else 0
+
+
 @app.command()
 def load(
     vintage: Annotated[str | None, typer.Option("--vintage")] = None,
@@ -506,17 +529,18 @@ def load(
     adapter = TigerAdapter(states=scope.states)
 
     source = configured[TigerAdapter.source_id]
-    provenance = [
-        ReleaseProvenance(
-            source_id=release.ref.source_id,
-            layer=release.ref.key,
-            vintage=release.ref.vintage,
-            fetched_at=release.fetched_at,
-            file_sha256=release.sha256,
-            row_count=release.size_bytes,
-        )
-        for release in adapter.fetch_all(raw_dir=settings.raw_dir, vintage=vintage)
-    ]
+    with duckdb_session() as con:
+        provenance = [
+            ReleaseProvenance(
+                source_id=release.ref.source_id,
+                layer=release.ref.key,
+                vintage=release.ref.vintage,
+                fetched_at=release.fetched_at,
+                file_sha256=release.sha256,
+                row_count=_landed_rows(con, release, settings.parquet_dir),
+            )
+            for release in adapter.fetch_all(raw_dir=settings.raw_dir, vintage=vintage)
+        ]
 
     result = load_warehouse_geography(
         get_engine(),
@@ -579,17 +603,18 @@ def load(
             )
         )
         metric_adapter: SourceAdapter = build_adapter(source_id, scope)
-        fact_provenance += [
-            ReleaseProvenance(
-                source_id=release.ref.source_id,
-                layer=release.ref.layer,
-                vintage=release.ref.vintage,
-                fetched_at=release.fetched_at,
-                file_sha256=release.sha256,
-                row_count=release.size_bytes,
-            )
-            for release in metric_adapter.fetch_all(raw_dir=settings.raw_dir)
-        ]
+        with duckdb_session() as con:
+            fact_provenance += [
+                ReleaseProvenance(
+                    source_id=release.ref.source_id,
+                    layer=release.ref.layer,
+                    vintage=release.ref.vintage,
+                    fetched_at=release.fetched_at,
+                    file_sha256=release.sha256,
+                    row_count=_landed_rows(con, release, settings.parquet_dir),
+                )
+                for release in metric_adapter.fetch_all(raw_dir=settings.raw_dir)
+            ]
 
     facts = load_facts(
         get_engine(),
@@ -636,6 +661,12 @@ def analyze() -> None:
     typer.echo(f"{'change rows':<20} {result.changes:>9,}")
     typer.echo(f"{'change rankings':<20} {result.rankings:>9,}")
     typer.echo(f"{'value rankings':<20} {result.value_rankings:>9,}")
+    if result.pruned_releases:
+        # Derived releases left behind by runs before #73, which minted one per run.
+        typer.echo(
+            f"{'pruned releases':<20} {result.pruned_releases:>9,} "
+            f"unreferenced hip_derived"
+        )
     typer.secho("analytics rebuilt", fg=typer.colors.GREEN)
 
 

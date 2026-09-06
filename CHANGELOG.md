@@ -3,6 +3,75 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.11.2] — 2026-09-06
+
+A review of the whole codebase before Milestone 12 opens. Five defects, four of them in
+provenance and one in the analytics itself, and between them they explain something the
+platform had been reporting for weeks without anyone reading it as a fault: every one of
+the 21 stored explanations was flagged stale, all of the time.
+
+None of it was Zillow revising its indexes, which is the cause the roadmap had assumed
+and planned a fix for. `hip analyze` was stamping a new release with the wall clock on
+every run, and `hip.analytics.compute` was picking window endpoints in an order that was
+not total. So the packet hash moved on every run, whether or not a number did — which
+made the staleness signal Milestone 12 is built on unable to carry information.
+
+### Fixed
+- **`hip analyze` minted a `hip_derived` release per run, moving every packet hash**
+  (ARCHITECTURE #73). The release is now content-addressed over the derived rows, so an
+  unchanged rebuild reuses it and a real change makes a new one. Measured: a second
+  `analyze` plus `pack --report` over an unchanged warehouse now produces a
+  byte-identical set of 21 reports and 21 packets, where before every report showed a
+  provenance diff with no figure behind it. `analyze` also prunes derived releases no
+  fact cites — there were 15, one per run since August, all listed by `GET /sources`.
+- **Window selection was nondeterministic, so published figures could differ between two
+  runs over identical data** (#77). `DISTINCT ON` ordered candidate observations by
+  distance to the window target alone, and a target sitting between two observations is
+  equidistant from both — 5,606 groups in New Jersey. `window_start`, `start_value`,
+  `pct_change` and `cagr` were whichever row the scan reached first. Three consecutive
+  runs produced 19,527, 19,530 and 19,529 change rows; they now produce 19,531 every
+  time. Found while verifying the fix above, and the reason that fix alone was not
+  enough.
+- **Every BLS observation cited Atlantic County's file** (#75). A keyed staging model
+  wrote its region level into `layer`, so the loader's exact `(source, layer, vintage)`
+  lookup never matched and fell through to the first release of that vintage. The
+  models now carry `release_layer`, the layer of the file the row arrived in.
+
+  | Source | Releases | Cited before | Cited after |
+  |---|---:|---:|---:|
+  | bls | 21 | 1 | 21 |
+  | hud | 107 | 5 | 105 |
+  | census_acs | 10 | 5 | 10 |
+
+  HUD's two uncited releases are the crosswalk files, which feed `region_crosswalk`
+  rather than facts. ACS municipal rows now cite `cousub` instead of the county file.
+- **`GET /sources` published file sizes under the name `row_count`** (#74) — the
+  national ZCTA file as 529,118,424 rows, NJ MOD-IV as 1,156,147,940. Both callers
+  passed `release.size_bytes`. Counted from the landed Parquet instead, which DuckDB
+  answers from the footer: 33,791 ZCTAs, 3,481,240 parcels, 240 monthly observations per
+  BLS county series. Re-recording a release now corrects `row_count` and deliberately
+  never touches `fetched_at`, which packets quote.
+- **API keys were written into raw filenames and manifests** (#76). Census and FRED
+  accept a key only as a query parameter, and the filename was the URL's last segment
+  while the manifest serialised the whole ref — so `data/raw/` held 32 manifests quoting
+  live keys and files named `...?registrationkey=<key>`. Filenames now drop the query
+  string, manifests record a redacted URL, and a failed download is raised `from None`
+  with a redacted message, because httpx renders the failing URL into its traceback.
+  Nothing published ever contained a key. Cached releases are unaffected and nothing
+  re-downloads.
+
+### Added
+- `tests/test_analytics.py` — the rebuild is asserted to be idempotent in the sense that
+  actually matters: same releases, same packet hash, no run timestamp in a packet, no
+  unreferenced derived releases. 289 Python tests pass, up from 272.
+- A structural test that every model in `KEYED_MODELS` declares `release_layer`, because
+  the failure mode it guards is silent rather than loud.
+
+### Documented
+- Known Limitations gains the two provenance imprecisions that remain and are not worth
+  a schema change: a net migration figure cites one of the two files it is computed
+  from, and `census_tiger` records its `layer` as a ref key.
+
 ## [0.11.1] — 2026-09-05
 
 Everything the first public deployment surfaced. Publishing the site was what turned

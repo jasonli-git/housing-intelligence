@@ -173,7 +173,20 @@ def _upsert_sources(conn: Any, sources: Sequence[SourceRecord]) -> None:
 
 
 def _insert_releases(conn: Any, releases: Sequence[ReleaseProvenance]) -> int:
-    """Record each fetched file. Unchanged bytes conflict and are skipped (#10)."""
+    """Record each fetched file. Unchanged bytes conflict and keep their identity (#10).
+
+    The conflict updates `row_count` and nothing else. A release is identified by its
+    content, so re-recording one must not move its identity or its `fetched_at` — that
+    timestamp is quoted in every analysis packet, and rewriting it on each load would
+    move every packet hash for no reason, which is exactly the defect #73 removed from
+    the analytics side.
+
+    `row_count` is exempt because it is a *description* of that fixed content rather
+    than part of it, and it was wrong until #74: both callers passed the file's byte
+    size. Left as `DO NOTHING`, the correction would only ever have reached releases
+    fetched after the fix, and the registry would have gone on reporting the national
+    ZCTA file as 529,118,424 rows indefinitely.
+    """
     if not releases:
         return 0
     conn.execute(
@@ -182,7 +195,8 @@ def _insert_releases(conn: Any, releases: Sequence[ReleaseProvenance]) -> int:
             INSERT INTO source_releases
                 (source_id, layer, vintage, fetched_at, file_sha256, row_count)
             VALUES (:source_id, :layer, :vintage, :fetched_at, :file_sha256, :row_count)
-            ON CONFLICT (source_id, layer, vintage, file_sha256) DO NOTHING
+            ON CONFLICT (source_id, layer, vintage, file_sha256) DO UPDATE SET
+                row_count = EXCLUDED.row_count
             """
         ),
         [r.__dict__ for r in releases],

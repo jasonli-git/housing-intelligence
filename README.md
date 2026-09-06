@@ -15,7 +15,7 @@ product, and an optional AI layer only explains metrics that were already comput
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
 > **335,927 observations across 23 metrics from 10 public sources, spanning 1971 to
-> 2026**, plus 19,527 computed changes and 27,819 rankings, served behind a three-page
+> 2026**, plus 19,531 computed changes and 27,823 rankings, served behind a three-page
 > dashboard and packaged as versioned analysis packets. All eight pipeline stages run.
 > The source file and match method are recorded on every value. Eight local models were
 > then evaluated against standardized scenarios built from those packets, and the winner
@@ -312,7 +312,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 272 Python + 26 dashboard tests; API tests skip without a warehouse
+make test          # 289 Python + 26 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 

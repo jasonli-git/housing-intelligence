@@ -11,6 +11,8 @@ select
     (date + interval 1 month - interval 1 day)::date as period_end,
     try_cast(value as double) as value,
     'national' as match_method,
+    -- FRED's release layer is the series id, not the region level.
+    'MORTGAGE30US' as release_layer,
     'current' as release_vintage
 from read_parquet('{{ var("parquet_dir") }}/fred/current/*.parquet')
 where series_id = 'MORTGAGE30US'

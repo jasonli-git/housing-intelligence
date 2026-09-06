@@ -977,6 +977,116 @@ spine but have no observations at all, so pages for them would be empty.
   up to and including a complete local artifact tree is in scope; the deploy step is
   written but unverified until those exist.
 
+## Pre-Milestone-12 review — 2026-09-06
+
+A full read of the codebase before Milestone 12 opens. Five defects were found and
+fixed the same day; they are recorded in [CHANGELOG.md](CHANGELOG.md) 0.11.2 and as
+ARCHITECTURE #73 through #77. What follows is everything else the review turned up and
+deliberately did not act on, so that none of it has to be found twice.
+
+### Things Milestone 12 will collide with
+
+Not defects today. Each becomes one the moment a hosted runner exists, and each is
+cheaper to handle while the milestone is being designed than after.
+
+- [ ] **A single transient error disqualifies a candidate model.**
+      `select_winner` requires `summary.errors == 0`
+      ([src/hip/eval/report.py:193](src/hip/eval/report.py:193)). That was right for
+      local runtimes, where an error means the model genuinely could not run — it is
+      how `gemma-4-e4b-mlx` was excluded. One HTTP 429 from a hosted provider would
+      disqualify an otherwise winning model on the same rule. The hosted runner needs
+      retry with backoff, and this gate should become a *rate* with a stated threshold,
+      the way the 5% fabrication bar already is (#59).
+- [ ] **Cohort names are hardcoded inside the runners.** `cohort="gguf"` in
+      [ollama.py](src/hip/eval/runners/ollama.py) and `cohort="mlx"` in
+      [mlx_runner.py](src/hip/eval/runners/mlx_runner.py), in both the success and the
+      failure paths. Three hosted providers behind one `HostedRunner` cannot each be
+      their own cohort under that scheme. The cohort should be passed in from config,
+      and `Cohort.runner`'s `Literal` has to gain the new value.
+- [ ] **Two strings say the explanation layer is local.** The judge's system prompt
+      ([judge.py:47](src/hip/eval/judge.py:47)) and the API disclaimer
+      ([explanations.py:31](src/hip/api/routers/explanations.py:31)). The disclaimer is
+      a straight edit. The judge prompt is not: changing it changes scores, so hosted
+      candidates cannot be compared against the stored `v1` judgments. Re-judge Gemma
+      4 E4B in the same batch as the hosted candidates and compare within that batch.
+- [ ] **`hip explain` has no staleness gate.** `is_stale`
+      ([explain.py:192](src/hip/eval/explain.py:192)) exists and is used only by the
+      API; `explain_command` regenerates every region unconditionally. Harmless at 21
+      counties and three local minutes, and the whole cost argument for hosted
+      inference at national scale. #73 had to land first — before it, the gate would
+      have answered "stale" for every region on every run.
+- [ ] **"The most recent evaluation run" is chosen lexically.** `runs()` sorts directory
+      names ([store.py:102](src/hip/eval/store.py:102)), so `v10` sorts before `v2` and
+      `hip explain` would silently pick the older run's winner. Either name the
+      Milestone 12 run so it sorts after `v1`, or sort by modification time.
+
+### Lower-priority findings, not acted on
+
+- [ ] **A missing Census permits year aborts the whole `hip acquire`.** The adapter
+      docstring says a year whose file does not exist yet "fails its own fetch and
+      leaves the others alone" ([census_permits.py:38](src/hip/sources/census_permits.py:38)),
+      but `fetch_all` is a plain generator with no per-ref exception handling, so the
+      `SourceError` propagates and takes every remaining source with it. Dormant until
+      `default_vintage` is bumped ahead of publication. Either make the docstring true
+      by catching per ref, or correct the docstring — the current pairing is the worst
+      of the two, because it invites someone to rely on behaviour that is not there.
+- [ ] **New Jersey is hardcoded in three places**, despite `config/geography.yml`
+      stating that no state code is hard-coded anywhere in `src/hip`. NJ's odd-numbered
+      county FIPS in [registry.py:73](src/hip/sources/registry.py:73), which is a real
+      arithmetic assumption about one state and not a constant; and `?state=NJ` in both
+      [publish.py:197](src/hip/publish.py:197) and
+      [web/lib/api.ts:245](web/lib/api.ts:245). Blocks Milestone 14, not 12.
+- [ ] **The validation gate has no range bounds for the two HUD metrics.**
+      `hud_area_median_income` and `hud_income_limit_80` are absent from `VALUE_BOUNDS`
+      ([gate.py](src/hip/validate/gate.py)), so the one metric family that feeds
+      `price_to_ami` passes the gate unchecked. Every other loaded metric has bounds.
+- [ ] **Two published limits have no headroom for Milestone 15.**
+      `/regions/{id}/metrics` is published at its default `limit=5000` with nothing in
+      the response saying whether it truncated; the largest region carries 760
+      observations today, so this is a watch item rather than a fault. `/rankings` caps
+      at 1,000, which is below the 3,144 counties Milestone 15 adds — a national
+      ranking would be silently cut off at rank 1,000.
+- [ ] **`python-dotenv` is imported but not declared.** `load_env_file`
+      ([config.py](src/hip/config.py)) imports it directly and it reaches the
+      environment only as a transitive dependency of `pydantic-settings`. It has been
+      load-bearing since #63; a resolver change that drops it breaks `hip` at startup.
+      One line in `pyproject.toml`.
+- [ ] **`GET /regions?q=` passes `%` and `_` through to `ILIKE`.** A caller searching
+      for `%` matches every region. Cosmetic today and worth settling before Milestone
+      17 builds a real search over this endpoint.
+- [ ] **Both public origins answer a programmatic client with an HTTP 403 challenge.**
+      `housing.jasonli.app` and `housing-data.jasonli.app` returned Cloudflare's
+      "Just a moment" interstitial to `curl` on 2026-09-06, so the deployed site could
+      not be verified from here. If that is bot protection left on for the artifact
+      origin, it also blocks every programmatic consumer of the JSON tree — which is
+      most of the argument for publishing artifacts as data rather than only as pages.
+      Worth checking in the Cloudflare dashboard.
+
+### Cleanup the fixes do not perform
+
+- [ ] **32 manifests and their files under `data/raw/` still contain live API keys.**
+      #76 stops new ones being written; it deliberately does not rewrite the immutable
+      content-addressed tree that already exists. `data/` is gitignored and nothing
+      published ever carried a key, so this is local hygiene rather than exposure — but
+      the keys are also in an August chat transcript, which is the stronger reason to
+      rotate. To clear the tree, delete the three sources and re-acquire:
+
+      ```
+      rm -rf data/raw/census_acs data/raw/fred data/raw/bls
+      uv run hip acquire -s census_acs && uv run hip acquire -s fred && uv run hip acquire -s bls
+      ```
+
+      `--force` alone is not enough: identical bytes hash to the same directory, so the
+      old key-named file would be left beside the new one.
+- [ ] **The 21 stored explanations are stale and stay stale until regenerated.** They
+      were written on 2026-08-14 and the numbers have genuinely moved since, so the
+      flag is now correct rather than spurious. Regenerating needs Ollama and Gemma 4
+      E4B resident, which is a Milestone 12 decision — a hosted runner would do it
+      concurrently and is the reason that milestone exists.
+- [ ] **`dist/` still holds the pre-fix artifacts.** Rebuild with `make publish` before
+      the next deploy; `sources.json` in particular still reports byte counts as
+      `row_count`.
+
 ## Attribution and licensing
 
 - [x] **Site-wide source footer** (2026-09-05). Was: the landing page's choropleth and

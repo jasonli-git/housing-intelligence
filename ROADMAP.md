@@ -2,9 +2,9 @@
 
 **Version 1 is complete — all ten milestones shipped.** The warehouse holds a NJ
 geography spine, 335,927 observations across 23 metrics from 10 sources spanning
-1971–2026, 19,527 computed changes, and 19,517 change plus 8,302 value rankings — served
+1971–2026, 19,531 computed changes, and 19,521 change plus 8,302 value rankings — served
 over the API, displayed by the dashboard, and packaged as versioned analysis packets,
-with 272 Python and 26 dashboard tests passing. All eight pipeline stages run.
+with 289 Python and 26 dashboard tests passing. All eight pipeline stages run.
 
 **Version 2 is under way — Milestones 10 and 11 shipped, on 2026-09-02 and
 2026-09-05.** The platform is now published: New Jersey is served from a public domain
@@ -108,9 +108,20 @@ concurrent, which is the property that matters. The token bill is the smaller ar
 at the measured prompt size a full county-level regeneration is single-digit dollars,
 and it is the only recurring cost in the Version 2 architecture that is not rounding
 error — which is why display-precision staleness gating is in the same milestone rather
-than deferred as an optimization. Zillow revises its indexes retroactively every month,
-so hashing raw floats marks nearly every region stale on every run and pays to rewrite
-prose that reads identically.
+than deferred as an optimization.
+
+**The premise behind that gating was wrong, and the real cause is now fixed.** This
+section previously argued that Zillow's retroactive monthly revisions marked nearly
+every region stale on every run. Every one of the 21 explanations was indeed always
+stale, but the review on 2026-09-06 found the cause elsewhere: `hip analyze` stamped a
+new `hip_derived` release with the wall clock on every run, and window selection was
+not deterministic, so the packet hash moved whether or not a number did (ARCHITECTURE
+#73 and #77). Both are fixed, and a rebuild over an unchanged warehouse now produces a
+byte-identical set of packets. Display-precision hashing stays on the milestone because
+Zillow's revisions are real and will move raw floats — but it is now an optimisation
+with a measurable baseline rather than a workaround for a defect, and Milestone 12
+should measure how many regions a real monthly refresh actually marks stale before
+deciding how much precision to discard.
 
 **The preference list in Milestone 12 is a durability mechanism, not a tuning knob.**
 Pinning generation to one hosted model reintroduces, as a vendor dependency, exactly

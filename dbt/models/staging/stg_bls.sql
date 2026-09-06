@@ -11,6 +11,8 @@ select
         + interval 1 month - interval 1 day)::date as period_end,
     try_cast(value as double) as value,
     'fips' as match_method,
+    -- One release per county series, so the FIPS *is* the release layer.
+    county_fips as release_layer,
     'current' as release_vintage
 from read_parquet('{{ var("parquet_dir") }}/bls/current/*.parquet')
 -- BLS writes '-' for a suppressed month, which is an absence, not a zero.

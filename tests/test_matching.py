@@ -16,6 +16,8 @@ were found the hard way:
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import duckdb
 import pytest
 
@@ -178,3 +180,39 @@ def test_period_covers_the_whole_month(con: duckdb.DuckDBPyConnection) -> None:
     assert row is not None
     assert str(row[0]) == "2025-01-01"
     assert str(row[1]) == "2025-01-31"
+
+
+# --- release provenance (#75) -------------------------------------------------------
+
+
+def test_every_keyed_model_declares_its_release_layer() -> None:
+    """`_append_keyed` reads `release_layer`, so a model without one is a hard error.
+
+    Structural rather than behavioural on purpose: the failure it guards against is a
+    new keyed source naming its region level as the release layer, which does not
+    break anything loudly — it silently attributes every fact to the first release of
+    that vintage. That is exactly how every BLS observation came to cite Atlantic
+    County's file.
+    """
+    from hip.transform.dbt_runner import KEYED_MODELS
+
+    root = Path(__file__).resolve().parents[1] / "dbt" / "models" / "staging"
+    missing = [
+        model
+        for model in KEYED_MODELS
+        if "as release_layer" not in (root / f"{model}.sql").read_text()
+    ]
+
+    assert not missing, f"keyed models with no release_layer: {missing}"
+
+
+def test_keyed_observations_carry_the_release_layer_not_the_region_level() -> None:
+    """The column `_append_keyed` selects into `layer`."""
+    import inspect
+
+    from hip.geography import matching
+
+    source = inspect.getsource(matching._append_keyed)
+
+    assert "s.release_layer AS layer" in source
+    assert "s.level AS layer" not in source

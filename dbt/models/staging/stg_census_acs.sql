@@ -56,6 +56,11 @@ select
     make_date(vintage, 12, 31)   as period_end,
     value,
     'fips' as match_method,
+    -- ACS ships one file per (level, year); Census calls the municipal level
+    -- 'cousub', which is the release layer, while our region level is
+    -- 'municipality'. Naming the level here cited the county file for every
+    -- municipal row.
+    case when level = 'county' then 'county' else 'cousub' end as release_layer,
     -- The ACS vintage is also the Parquet directory, so this is the release.
     vintage::varchar as release_vintage
 from unpivoted

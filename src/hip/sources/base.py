@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import tempfile
 from abc import ABC, abstractmethod
@@ -21,12 +22,35 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar
+from urllib.parse import urlsplit
 
 import httpx
 
 CHUNK_BYTES = 1 << 20
 _TIMEOUT = httpx.Timeout(30.0, read=300.0)
 _RETRIES = 3
+
+# Query parameters that carry a credential. Census and FRED accept a key *only* as a
+# query parameter — there is no header form to move it to — so the key is unavoidably
+# part of the request URL and the defence has to be at the recording boundary instead.
+# Longest first, so `api_key` is matched before `key` could match its tail.
+_SECRET_PARAMS = ("registrationkey", "access_token", "api_key", "apikey", "token", "key")
+_SECRET_PATTERN = re.compile(
+    r"\b(" + "|".join(_SECRET_PARAMS) + r")=[^&\s\"'\]}]*", re.IGNORECASE
+)
+
+
+def redact(text: str) -> str:
+    """Blank out any credential query parameter in a URL or a message.
+
+    Applied everywhere a URL is written down or shown: the release manifest, the
+    on-disk filename, and the text of a failed download. Before this, three sources
+    put their key in the request URL and the URL was recorded verbatim — so
+    `data/raw/` held 32 manifests quoting a live key and files literally *named*
+    `...?registrationkey=<key>`, where a screenshot, a backup, or a stray `find` would
+    carry it out of the machine (#76).
+    """
+    return _SECRET_PATTERN.sub(lambda m: f"{m.group(1)}=***", text)
 
 
 class SourceError(Exception):
@@ -138,8 +162,14 @@ class SourceAdapter(ABC):
         that assembles its release from many API calls has no such segment and names
         the result itself. Cached releases keep the name recorded in their manifest,
         so overriding this never invalidates an existing download.
+
+        The query string is dropped rather than sanitised. A file serves its bytes,
+        not its parameters, and for the three sources that authenticate by query
+        parameter the alternative was a filename containing a live credential (#76).
+        What remains is still the meaningful part: `acs5` for Census, `observations`
+        for FRED, the series id for BLS.
         """
-        return Path(ref.url).name or "download"
+        return Path(urlsplit(ref.url).path).name or "download"
 
     @classmethod
     def to_records(cls, payload: object, ref: ReleaseRef) -> list[dict[str, object]]:
@@ -248,14 +278,23 @@ class SourceAdapter(ABC):
                 destination.unlink(missing_ok=True)
                 if attempt == _RETRIES:
                     break
+        # Raised `from None`, not `from last`: httpx renders the failing URL into both
+        # its message and its traceback, and for a keyed source that URL carries the
+        # key. The type and the redacted message are kept, so nothing diagnostic is
+        # lost — only the chained traceback that would have reprinted the credential.
+        detail = f"{type(last).__name__}: {redact(str(last))}" if last else "unknown"
         raise SourceError(
             f"{ref.source_id}/{ref.layer} ({ref.vintage}): "
-            f"failed after {_RETRIES} attempts: {last}"
-        ) from last
+            f"failed after {_RETRIES} attempts: {detail}"
+        ) from None
 
     def _write_manifest(self, release: Release) -> None:
         manifest = {
             **asdict(release.ref),
+            # The one field that can carry a credential (#76). Redacted rather than
+            # dropped: which endpoint a release came from is real provenance, and the
+            # key is not part of it.
+            "url": redact(release.ref.url),
             "filename": release.path.name,
             "sha256": release.sha256,
             "size_bytes": release.size_bytes,

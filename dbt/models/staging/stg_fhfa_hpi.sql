@@ -16,6 +16,8 @@ select
         as period_end,
     index_sa::double as value,
     'state_code' as match_method,
+    -- The combined `hpi_master.csv` is the only release this source has.
+    'master' as release_layer,
     'current' as release_vintage
 from read_parquet('{{ var("parquet_dir") }}/fhfa_hpi/current/master.parquet')
 where level = 'State'
