@@ -1404,35 +1404,90 @@ cost column has to state which rate it used or it is not reproducible.
       cheaper place is *getting* cheaper or merely *is* cheaper is the question a buyer
       actually has, and only one of those is answerable today.
 
-- [ ] **Publish all five models' explanations per region, switchable by the reader.**
-      Asked 2026-09-06. Generation is trivial — $0.86 for 21 counties across the four
-      hosted candidates plus a free but ~10-minute local Gemma pass. The plumbing is
-      not, and the reason is a decision worth keeping: `hip publish` replays the ASGI
-      app so published bytes match what the API serves (ARCHITECTURE #67), so an extra
-      artifact carrying five explanations cannot simply be written — the API has to
-      serve that shape first. Five surfaces, in order: the `(region_id, window)` primary
-      key gains `model_id` (Alembic migration); `store` and `is_stale` in
-      [explain.py](src/hip/eval/explain.py) currently key on the old pair and
-      `scalar_one_or_none` would raise on five rows; the same call in
-      [explanations.py:84](src/hip/api/routers/explanations.py:84); the one-file-per-
-      region path at [publish.py:211](src/hip/publish.py:211); and the dashboard panel.
+## Milestone 19 — Multi-model interpretation
 
-      Worth doing, and worth doing as its own scoped work rather than folded into
-      Milestone 12 — the schema and API contract changes each deserve a Decisions Log
-      row and their own tests. Two arguments for it. It is **the reachable subset of the
-      already-listed "bring-your-own-model comparison"** under Post-Version 2, whose two
-      stated blockers were that there is no server to run a model on and that the rubric
-      half needs a paid judge; pre-generated explanations need neither, being ordinary
-      artifacts. And it is **on-thesis**: SPEC requires a reader can always tell
-      interpretation from measurement, and five models disagreeing about identical
-      numbers demonstrates that more forcefully than a disclaimer — the `v2` run already
-      showed the variance is real, with a 2.68-to-3.56 rubric spread on the same packets
-      and Mistral Large 3 describing an observed value as a forecast.
+Started 2026-09-06, out of numeric order and before 13-18. Precedent: Milestone 9 was
+built before 5, and 18 before 16 and 17. The reason here is that the evaluation data is
+fresh and the keys are live, so generating the content costs $0.86 today and a
+re-benchmark later.
 
-      Two cautions. It multiplies the staleness surface by five, since each region-model
-      pair carries its own packet hash. And at full NJ it would cost roughly $42 per
-      refresh, of which $30 is DeepSeek V4 Pro alone — so beyond county scope it wants a
-      four-model set, not five.
+**Deliverable.** Every county page carries all five benchmarked models' interpretations
+of the same packet, switchable by the reader and each attributed to the model and
+provider that wrote it. Same numbers under every one; only the prose differs.
+
+**Why it is a milestone rather than a task.** It changes the warehouse schema and a
+published API contract, both of which are expensive to reverse and earn Decisions Log
+rows. A TODO item that quietly alters a primary key would be mis-filed.
+
+### The design decision that shapes the rest
+
+`API_MAY_IMPORT` is `{warehouse, packets}` ([tests/test_module_boundaries.py:37](tests/test_module_boundaries.py:37)),
+so the API cannot read `generation.preference` to decide which of five explanations is
+the primary one. The ordering therefore has to be **data in the warehouse**, written at
+generation time: `region_explanations` gains a `rank` smallint carrying the model's
+position in the preference list when the row was written. That also records real
+provenance — which tier produced this paragraph — in the same spirit as the existing
+`model_id` and `runtime` columns, and it keeps `hip publish` able to replay the API
+without the API growing a config dependency.
+
+The published contract stays backwards compatible. `/regions/{id}/explanation` keeps
+returning **one** object with its existing shape — now the rank-1 row rather than the
+only row — so `regions/{id}/explanation/{window}.json` does not change shape for any
+consumer. A new `/regions/{id}/explanations` returns all of them ordered by rank, which
+publishes as a new file beside the old one. Rejected: making the existing endpoint
+return a list, which would break every consumer of an artifact tree whose whole point is
+being consumable.
+
+### Tasks
+
+- [x] Migration 0010: `region_explanations` primary key becomes
+      `(region_id, window, model_id)` and the table gains `rank smallint not null`.
+      Existing rows take rank 0
+- [x] `store` and `is_stale` in [explain.py](src/hip/eval/explain.py) key on the model as
+      well as the region and window; `is_stale` currently uses `scalar_one_or_none` and
+      would raise on five rows
+- [x] `hip explain` accepts `--model` repeatably and `--all`, which walks
+      `generation.preference` and generates one explanation per candidate. The staleness
+      gate becomes per `(region, model)` so a partial run resumes
+- [x] `GET /regions/{id}/explanations` returning all rows ordered by rank;
+      `GET /regions/{id}/explanation` unchanged in shape, now ordered by rank and
+      limited to one
+- [x] `hip publish` renders the new endpoint to
+      `regions/{id}/explanations/{window}.json`
+- [x] Dashboard: a switcher on the interpretation panel, defaulting to rank 1, labelling
+      each option with model and provider. The panel's dashed border and indentation are
+      how a SPEC requirement is kept on screen and must survive the change
+- [x] Generate all five sets for the 21 counties ($0.86, plus ~10 minutes of local Gemma)
+- [x] Tests: the migration round-trips, five rows per region coexist, the singular
+      endpoint still returns one object of the old shape, the plural returns five in rank
+      order, publish emits both paths, and the staleness gate is per model
+
+- Note: **DeepSeek V4 Pro needed a ceiling sized for its tail, and failing silently is
+      the part worth remembering.** At the evaluation's 6,000-token budget it returned an
+      empty answer for 12 of 21 counties, having spent the whole budget on reasoning; at
+      12,000 it still failed 2. Every one of those calls returned HTTP 200 with a
+      well-formed body — nothing in the response says you received nothing, and only a
+      row count caught it. Bergen County then completed the identical packet in 7,871
+      tokens under a 24,000 ceiling, so this is variance in reasoning length rather than
+      a threshold, which is precisely the non-reproducibility SPEC accepts for hosted
+      generation. The ceiling is now 24,000 for hosted cohorts and costs nothing: billing
+      is per token emitted, so a ceiling is not a reservation and headroom is free unless
+      used. Recorded as ARCHITECTURE #93.
+- Note: **Measured cost of the five-model set: $0.86 for 21 counties**, near the estimate.
+      DeepSeek V4 Pro is $0.031 per answer against Mistral Small 4's $0.0007 — 47x — on
+      rates only 1.06x higher on output, because it emits 2.6x the tokens and roughly 93%
+      of them are reasoning. Price per token is not price per answer, and that gap is the
+      argument for keeping the comparison to four models beyond county scope.
+
+
+- Note: **Two cautions carried from the write-up.** It multiplies the staleness surface
+      by five, since each region-model pair carries its own packet hash. And at full NJ
+      it would cost roughly $42 per refresh, $30 of which is DeepSeek V4 Pro alone — so
+      beyond county scope this wants a four-model set. County-only it is $0.86.
+- Note: **It is the reachable subset of "bring-your-own-model comparison"** under
+      Post-Version 2, whose two stated blockers were that there is no server to run a
+      model on and that the rubric half needs a paid judge. Pre-generated explanations
+      need neither, being ordinary artifacts.
 
 - [ ] **Nothing prunes superseded raw releases, and a refresh cadence makes that
       unbounded.** Measured 2026-09-06. The raw tier is content-addressed and immutable

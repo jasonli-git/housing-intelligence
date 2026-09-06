@@ -30,13 +30,13 @@ export default async function RegionPage({
   const { id } = await params;
   const regionId = Number(id);
 
-  // The explanation is fetched alongside the data and is allowed to be absent: the
+  // The explanations are fetched alongside the data and are allowed to be absent: the
   // dashboard is fully usable with no AI layer at all, so a missing one renders nothing
   // rather than an error or an empty slot (SPEC: the platform stays useful without it).
-  const [region, summary, explanation] = await Promise.all([
+  const [region, summary, explanations] = await Promise.all([
     api.region(regionId),
     api.summary(regionId, WINDOW),
-    api.explanation(regionId, WINDOW),
+    api.explanations(regionId, WINDOW),
   ]);
 
   if (!region || !summary) {
@@ -175,7 +175,7 @@ export default async function RegionPage({
         </section>
       )}
 
-      <ExplanationPanel explanation={explanation} />
+      <ExplanationPanel explanations={explanations?.explanations ?? []} />
 
       {summary.caveats.length > 0 && (
         <>

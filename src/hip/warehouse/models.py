@@ -18,6 +18,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Numeric,
+    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -100,12 +101,21 @@ class RegionExplanation(Base):
     """A model's prose about one region, precomputed and attributed.
 
     The only place generated text enters the warehouse, and it enters as a leaf: nothing
-    reads this to compute anything. `hip explain` writes it, `/regions/{id}/explanation`
-    serves it, and the dashboard labels it as interpretation (migration 0007).
+    reads this to compute anything. `hip explain` writes it, the explanation endpoints
+    serve it, and the dashboard labels it as interpretation (migrations 0007, 0010).
+
+    Keyed on the model as well as the region and window since migration 0010, so one
+    region can carry several models' readings of the same packet and a reader can
+    compare them. `rank` is the model's position in `generation.preference` when the row
+    was written: the API cannot look that up, because `API_MAY_IMPORT` is
+    `{warehouse, packets}` and ordering must therefore be data rather than configuration
+    read at request time. It is also provenance — the row records which tier produced
+    this paragraph, not merely that some model did.
 
     `packet_sha256` is what makes staleness detectable rather than invisible — the text
     is pinned to the packet bytes it was written from, so a later pipeline run leaves a
-    mismatch the API can report instead of quietly serving prose about old numbers.
+    mismatch the API can report instead of quietly serving prose about old numbers. It
+    is per row, so one model's explanation can be current while another's is stale.
     """
 
     __tablename__ = "region_explanations"
@@ -114,9 +124,10 @@ class RegionExplanation(Base):
         BigInteger, ForeignKey("regions.region_id", ondelete="CASCADE"), primary_key=True
     )
     window: Mapped[str] = mapped_column(String(16), primary_key=True)
-    model_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    model_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     model_label: Mapped[str] = mapped_column(Text, nullable=False)
     runtime: Mapped[str] = mapped_column(String(16), nullable=False)
+    rank: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     packet_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
     generated_at: Mapped[datetime] = mapped_column(
@@ -126,6 +137,7 @@ class RegionExplanation(Base):
     __table_args__ = (
         CheckConstraint("length(body) > 0", name="ck_explanation_body_not_empty"),
         Index("ix_region_explanations_model", "model_id"),
+        Index("ix_region_explanations_rank", "region_id", "window", "rank"),
     )
 
 

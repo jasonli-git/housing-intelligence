@@ -210,6 +210,14 @@ def _plan(
             yield f"{base}/report?window={window}", f"{out}/report/{window}.md"
             explain = f"{out}/explanation/{window}.json"
             yield f"{base}/explanation?window={window}", explain
+            # Beside the singular file rather than replacing it: the singular path is a
+            # published contract with consumers, and the plural is additive
+            # (Milestone 19). Both 404 for a region with no explanation, and a 404 is a
+            # skip, so this adds one file per explained region and none elsewhere.
+            yield (
+                f"{base}/explanations?window={window}",
+                f"{out}/explanations/{window}.json",
+            )
 
     for metric_id, level, window, basis in keys:
         # `window` here comes out of `region_rankings`, where a value ranking is stored

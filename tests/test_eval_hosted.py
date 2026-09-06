@@ -904,3 +904,25 @@ def test_reasoning_can_never_exceed_the_billed_output(
     telemetry = generation.telemetry
     assert telemetry.reasoning_tokens <= telemetry.generation_tokens
     assert telemetry.generation_tokens == 940
+
+
+# --- multi-model explanation storage (Milestone 19) ---------------------------------
+
+
+def test_rank_comes_from_preference_position() -> None:
+    from hip.eval.explain import rank_of
+
+    evaluation = _evaluation(["deepseek-test", "gemini-test", "gemma-4-e4b-q4"])
+    assert rank_of(evaluation, "deepseek-test") == 0
+    assert rank_of(evaluation, "gemini-test") == 1
+    assert rank_of(evaluation, "gemma-4-e4b-q4") == 2
+
+
+def test_a_model_not_on_the_list_sorts_last_not_first() -> None:
+    """A candidate named explicitly with `--model` must not silently become the
+    preferred explanation just because it has no listed position."""
+    from hip.eval.explain import rank_of
+
+    evaluation = _evaluation(["deepseek-test", "gemma-4-e4b-q4"])
+    assert rank_of(evaluation, "mistral-large-3") == 2
+    assert rank_of(evaluation, "mistral-large-3") > rank_of(evaluation, "gemma-4-e4b-q4")

@@ -70,17 +70,28 @@ def explanation(
     session: SessionDep,
     window: Annotated[Window, Query()] = "5y",
 ) -> Explanation:
-    """The stored explanation for one region and window.
+    """The preferred stored explanation for one region and window.
 
     404 when none has been generated. That is the ordinary state of a fresh warehouse,
     not an error condition — the platform is fully usable with no explanations at all,
     which is the SPEC requirement that the AI layer stay optional.
+
+    Shape deliberately unchanged by migration 0010. A region may now hold several
+    models' readings, and this endpoint still answers with one, because it is a
+    published contract and the artifact tree behind it exists to be consumed. Callers
+    that want the comparison ask `/regions/{id}/explanations` instead.
     """
+    # `LIMIT 1` over rank rather than `scalar_one_or_none`: since migration 0010 a
+    # region can carry one explanation per model, and this endpoint's contract is a
+    # single object. Rank 1 is the preferred model at the time the rows were written.
     row = session.execute(
-        select(RegionExplanation).where(
+        select(RegionExplanation)
+        .where(
             RegionExplanation.region_id == region_id,
             RegionExplanation.window == window,
         )
+        .order_by(RegionExplanation.rank, RegionExplanation.model_id)
+        .limit(1)
     ).scalar_one_or_none()
     if row is None:
         raise HTTPException(
@@ -110,4 +121,86 @@ def explanation(
         runtime=row.runtime,
         generated_at=row.generated_at,
         stale=stale,
+    )
+
+
+class Explanations(BaseModel):
+    """Every model's reading of one region's packet, in preference order.
+
+    A list rather than a map keyed by model, because the order is the information: it is
+    the preference list's own ranking, and a JSON object does not promise to keep it.
+    """
+
+    region_id: int
+    window: str
+    explanations: list[Explanation]
+
+
+@router.get(
+    "/regions/{region_id}/explanations",
+    response_model=Explanations,
+    summary="Every model's explanation for a region, in preference order",
+)
+def explanations(
+    region_id: int,
+    session: SessionDep,
+    window: Annotated[Window, Query()] = "5y",
+) -> Explanations:
+    """All stored explanations for one region and window, ordered by rank.
+
+    The point of serving them together is that the numbers underneath are identical, so
+    the differences are the models' own. That is the most honest demonstration the
+    platform can make of its own SPEC requirement that a reader can always tell
+    interpretation from measurement — a disclaimer asserts it, five readings of one
+    packet show it.
+
+    404 rather than an empty list when nothing has been generated, matching the singular
+    endpoint: `hip publish` treats a 404 as a skip, so an empty body would put a file
+    with no content in the artifact tree for every region that has no explanation.
+    """
+    rows = (
+        session.execute(
+            select(RegionExplanation)
+            .where(
+                RegionExplanation.region_id == region_id,
+                RegionExplanation.window == window,
+            )
+            .order_by(RegionExplanation.rank, RegionExplanation.model_id)
+        )
+        .scalars()
+        .all()
+    )
+    if not rows:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"no explanations for region {region_id} over window '{window}'. "
+                f"Generate them with `hip explain --region {region_id} --all`."
+            ),
+        )
+
+    # Staleness is computed once against the current warehouse and compared per row:
+    # models are generated independently, so one reading can be current while another
+    # is stale, and collapsing that to a single flag would misreport both.
+    try:
+        current = packet_hash(build_packet(session, region_id, window))
+    except PacketUnavailable:
+        current = None
+
+    return Explanations(
+        region_id=region_id,
+        window=window,
+        explanations=[
+            Explanation(
+                region_id=row.region_id,
+                window=row.window,
+                body=row.body,
+                model_id=row.model_id,
+                model_label=row.model_label,
+                runtime=row.runtime,
+                generated_at=row.generated_at,
+                stale=current is not None and row.packet_sha256 != current,
+            )
+            for row in rows
+        ],
     )

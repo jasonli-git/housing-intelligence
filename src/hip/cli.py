@@ -757,8 +757,11 @@ def explain(
         int | None, typer.Option("--region", "-r", help="One region id; default all.")
     ] = None,
     model: Annotated[
-        str | None,
-        typer.Option("--model", help="Override the model the evaluation selected."),
+        list[str] | None,
+        typer.Option(
+            "--model",
+            help="Override the resolved model. Repeat to generate several.",
+        ),
     ] = None,
     window: Annotated[str, typer.Option("--window")] = "5y",
     level: Annotated[str, typer.Option("--level")] = "county",
@@ -782,6 +785,14 @@ def explain(
             "only — it publishes prose from an unmeasured model.",
         ),
     ] = False,
+    all_models: Annotated[
+        bool,
+        typer.Option(
+            "--all",
+            help="Generate one explanation per model in the preference list, so a "
+            "reader can compare how each reads the same packet.",
+        ),
+    ] = False,
 ) -> None:
     """Write model explanations into the warehouse for the API to serve.
 
@@ -792,9 +803,22 @@ def explain(
     reachable, ending at a local model so that no vendor decision can stop this command
     (Milestone 12). Regions whose stored explanation was written from these exact
     numbers are skipped; `--force` regenerates them anyway.
+
+    `--all` generates one explanation per model on the preference list instead of one
+    from the first reachable candidate, which is what the dashboard's model comparison
+    is built from (Milestone 19). Staleness is tracked per region *and* model, so a
+    partial run resumes rather than restarting.
     """
     explain_command(
-        region, model, window, level, payload_format, limit, force, unbenchmarked
+        region,
+        model,
+        window,
+        level,
+        payload_format,
+        limit,
+        force,
+        unbenchmarked,
+        all_models,
     )
 
 

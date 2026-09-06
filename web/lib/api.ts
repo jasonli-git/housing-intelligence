@@ -245,6 +245,18 @@ export const api = {
   geo: (level: string) => tryGet<FeatureCollection>(`/geo/${level}?state=NJ`),
   explanation: (id: number, window: string) =>
     tryGet<Explanation>(`/regions/${id}/explanation?window=${window}`),
+  /**
+   * Every model's reading of one region, in preference order.
+   *
+   * Separate from `explanation` rather than replacing it: the singular endpoint is a
+   * published contract with an artifact tree behind it, and the plural is additive
+   * (Milestone 19). 404s to null like everything else here, because a region with no
+   * generated prose is the ordinary state, not an error.
+   */
+  explanations: (id: number, window: string) =>
+    tryGet<{ region_id: number; window: string; explanations: Explanation[] }>(
+      `/regions/${id}/explanations?window=${window}`,
+    ),
   sources: () => tryGet<SourceEntry[]>(`/sources`),
 };
 
