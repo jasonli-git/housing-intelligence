@@ -99,6 +99,111 @@ cohorts:
         label: Phi-4 mini reasoning
         quantization: 4bit
 
+# Hosted cohorts, one per provider. Three regulatory regimes — China, the United
+# States, the European Union — so no single policy action can remove two tiers at once.
+# That is the correlated failure worth designing against; simultaneous technical outage
+# across independent providers is not, and a network failure at this end is covered only
+# by the local runtime.
+#
+# Two candidates each, a cheap tier and a mid tier, because Milestone 8 measured that
+# capability does not predict quality on this task — Gemma 4 E4B scored 3.21 against
+# Gemma 4 12B's 2.10 — so choosing a tier by assumption is the reasoning that finding
+# disproved. Every ref below was confirmed against the provider's own /models endpoint
+# on 2026-09-06 (`hip eval models` re-checks them), and every rate against the
+# provider's own pricing page on the same day.
+#
+# Rejected candidates and the reasons are in TODO.md under "Milestone 12". In short:
+# gemini-3.8-flash costs ~40% more per task than 3.7 for ~30% more output tokens on a
+# workload whose rubric says length is not a virtue; anything ending -preview is a
+# moving target that `hip check-config` rejects outright; and Gemma 4 on the Gemini API
+# is free-tier only, which means training terms and free-tier rate limits and so cannot
+# be a preference-list tier however well it might score.
+  deepseek:
+    runner: hosted
+    provider: deepseek
+    api_key_env: DEEPSEEK_API_KEY
+    endpoint: https://api.deepseek.com/v1
+    models:
+      # Rates are the PEAK figures. DeepSeek prices by time of day — off-peak is
+      # exactly half, and peak is 01:00-04:00 and 06:00-10:00 UTC on weekdays — so a
+      # published cost column has to name which one it used or it is not reproducible.
+      # The higher one is recorded on the same principle as `estimated_cost`: a bill
+      # larger than the quote is the failure mode worth avoiding.
+      #
+      # Neither ref is a checkpoint. Confirmed on 2026-09-06: the provider serves
+      # exactly three models and offers no dated snapshot, while the Flash checkpoint
+      # moved to V4-Flash-0731 and Pro to V4-Pro-0813 without either id changing. This
+      # is the one tier that can change its published output silently, which SPEC's
+      # pinning rule exists to prevent and this provider does not permit. Recorded
+      # rather than worked around, and it is an argument for demoting DeepSeek below
+      # Mistral in the preference list once the benchmark has run.
+      - id: deepseek-v4-flash
+        ref: deepseek-v4-flash
+        label: DeepSeek V4 Flash
+        quantization: hosted
+        input_usd_per_mtok: 0.44
+        output_usd_per_mtok: 1.32
+      - id: deepseek-v4-pro
+        ref: deepseek-v4-pro
+        label: DeepSeek V4 Pro
+        quantization: hosted
+        input_usd_per_mtok: 1.32
+        output_usd_per_mtok: 3.96
+
+  gemini:
+    runner: hosted
+    provider: gemini
+    api_key_env: GEMINI_API_KEY
+    endpoint: https://generativelanguage.googleapis.com/v1beta
+    models:
+      # 3.1 Flash-Lite, not the cheaper 2.5 Flash-Lite. 2.5 is still returned by the
+      # /models endpoint and still advertises `generateContent`, and calling it returns
+      # 404 "no longer available to new users" — it is grandfathered for keys older
+      # than this one. Found on 2026-09-06 by calling it, which a listing check could
+      # not have caught. 3.1 is the cheapest Gemini this account can actually reach;
+      # 3.5 Flash-Lite also works and is dearer on both axes ($0.30/$2.50).
+      - id: gemini-3.1-flash-lite
+        ref: gemini-3.1-flash-lite
+        label: Gemini 3.1 Flash-Lite
+        quantization: hosted
+        input_usd_per_mtok: 0.25
+        output_usd_per_mtok: 1.50
+      # 3.7 rather than 3.8, which lists at the same price and is not the same cost:
+      # 3.8 emits roughly 30% more output tokens and takes more agentic turns, about
+      # 40% more per task, and Google points efficiency-first workloads at 3.7. This
+      # workload is single-turn short prose.
+      #
+      # These are introductory rates through 2026-12-31 and double on 2027-01-01, to
+      # $1.50 and $7.50. Recorded here so the change is a config edit someone can find
+      # rather than a surprise in a bill.
+      - id: gemini-3.7-flash
+        ref: gemini-3.7-flash
+        label: Gemini 3.7 Flash
+        quantization: hosted
+        input_usd_per_mtok: 0.75
+        output_usd_per_mtok: 3.75
+
+  mistral:
+    runner: hosted
+    provider: mistral
+    api_key_env: MISTRAL_API_KEY
+    endpoint: https://api.mistral.ai/v1
+    models:
+      # The only provider of the three that offers addressable dated snapshots, so
+      # these are the only two refs here that are pins in the sense SPEC means.
+      - id: mistral-small-4
+        ref: mistral-small-2603
+        label: Mistral Small 4
+        quantization: hosted
+        input_usd_per_mtok: 0.15
+        output_usd_per_mtok: 0.60
+      - id: mistral-large-3
+        ref: mistral-large-2512
+        label: Mistral Large 3
+        quantization: hosted
+        input_usd_per_mtok: 0.50
+        output_usd_per_mtok: 1.50
+
 # How `hip explain` picks a model, resolved at generation time rather than pinned.
 #
 # The list is a durability mechanism, not a tuning knob: it resolves to the first
@@ -116,6 +221,28 @@ cohorts:
 # was verified, and the one thing a pin exists to prevent is a silent substitution.
 generation:
   preference:
+    # Ordered from the `v2` benchmark (2026-09-06), not from reputation. Rubric scores
+    # in brackets; the full table is reports/evaluation/v2.md.
+    #
+    # Gemini leads on measurement [3.56] and 3.1 Flash-Lite sits second as a cheap
+    # in-provider step-down [2.98] — within 0.58 of the winner at a fifth the price,
+    # so a cost-driven fallback does not have to cross a jurisdiction. The trade is
+    # that tiers 1 and 2 share a failure domain: one Google policy action drops both,
+    # and the list only crosses to another regime at tier 3. Accepted deliberately —
+    # three regimes are still covered, and the list still ends on this machine.
+    #
+    # DeepSeek is third rather than first, against the original roadmap ordering, for
+    # three measured reasons: it serves no dated snapshot so its checkpoints roll
+    # behind a fixed id (the one tier that can change published prose silently, which
+    # is what SPEC's pinning rule exists to prevent); V4 Pro answered the 1985-income
+    # question it was supposed to decline on 2 of 3 packets; and it is the most
+    # expensive candidate measured, at $18.92 per thousand generations.
+    - gemini-3.7-flash
+    - gemini-3.1-flash-lite
+    - mistral-small-4
+    - deepseek-v4-pro
+    # Last, and not a token gesture: Gemma 4 E4B scored 2.90, beating three of the six
+    # hosted candidates. The fallback is a working model, not a degraded one.
     - gemma-4-e4b-q4
   # In-flight requests per hosted cohort. Hosted inference is on this milestone for
   # concurrency, but an unbounded fan-out earns 429s that look like model failures,

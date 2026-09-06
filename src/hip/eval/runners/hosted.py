@@ -61,6 +61,11 @@ _MAX_ATTEMPTS = 4
 _BACKOFF_BASE_S = 1.0
 _BACKOFF_CAP_S = 30.0
 
+# Greedy, so a probe measures reachability rather than sampling.
+_PROBE_SAMPLING = SamplingParams(
+    temperature=0.0, top_p=1.0, top_k=1, repeat_penalty=1.0, seed=0
+)
+
 
 @dataclass(frozen=True)
 class _Dialect:
@@ -176,6 +181,45 @@ class HostedRunner:
             # the config pins the bare ref, which is what the caller compares against.
             served.add(identifier.split("/")[-1])
         return served
+
+    def probe(self, model: CandidateModel) -> str | None:
+        """Call `model` once with a trivial prompt. Returns None on success.
+
+        `served_models` asks what the provider lists, which turns out not to be the
+        same question as what it will answer. On 2026-09-06 `gemini-2.5-flash-lite`
+        appeared in the listing and advertised `generateContent`, and calling it
+        returned 404 "no longer available to new users" — grandfathered for older keys.
+        A listing check cannot see that; only a call can.
+
+        Costs a few tokens per candidate, which is why it is opt-in rather than part of
+        `available()`. Finding a dead pin here costs a fraction of a cent; finding it
+        during a run costs fifteen generations and the judging batch behind them.
+        """
+        key = self._api_key()
+        if not key:
+            return f"{self._api_key_env} is not set"
+        probe_limits = EvalLimits(context_tokens=2048, max_output_tokens=256)
+        body = self._body(model, "Reply with exactly: OK", _PROBE_SAMPLING, probe_limits)
+        try:
+            response = httpx.post(
+                self._url(model),
+                json=body,
+                headers=self._headers(key),
+                timeout=httpx.Timeout(30.0, connect=10.0),
+            )
+            response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            detail = ""
+            try:
+                payload = exc.response.json()
+                detail = str(payload.get("error", {}).get("message") or "")[:120]
+            except ValueError:
+                detail = exc.response.text[:120]
+            return f"HTTP {exc.response.status_code}: {detail}" if detail else str(exc)
+        except httpx.HTTPError as exc:
+            return str(exc)
+        text, _, _ = self._extract(dict(response.json()))
+        return None if text.strip() else "returned no text"
 
     def _headers(self, key: str) -> dict[str, str]:
         return {
@@ -394,10 +438,22 @@ class HostedRunner:
                 int(details.get("reasoning_tokens") or 0),
             )
         usage = data.get("usageMetadata") or {}
+        # `candidatesTokenCount` counts the answer only; Gemini reports thinking
+        # separately in `thoughtsTokenCount` and bills both at the output rate. The
+        # OpenAI-shaped providers use the opposite convention — `completion_tokens`
+        # already includes `reasoning_tokens` — and Ollama's `eval_count` covers both
+        # as well. Three conventions, one column: `generation_tokens` means every token
+        # billed as output, everywhere, so the cost column and the invoice agree and
+        # `reasoning_share` cannot exceed 100%.
+        #
+        # Found 2026-09-06 by a 237% reasoning share on `gemini-3.7-flash` in run `v2`,
+        # which also meant its cost was under-reported by 58% — on the candidate the
+        # run selected.
+        thoughts = int(usage.get("thoughtsTokenCount") or 0)
         return (
             int(usage.get("promptTokenCount") or 0),
-            int(usage.get("candidatesTokenCount") or 0),
-            int(usage.get("thoughtsTokenCount") or 0),
+            int(usage.get("candidatesTokenCount") or 0) + thoughts,
+            thoughts,
         )
 
     def _failed(

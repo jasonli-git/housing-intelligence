@@ -1186,8 +1186,9 @@ cost column has to state which rate it used or it is not reproducible.
 
 ### Tasks
 
-- [ ] **Blocked on API keys.** Verify every model ID and token rate against each
-      provider's live API and pricing page. Nothing in the table above was measured here, and a
+- [x] Verify every model ID and token rate against each provider's live API and
+      pricing page. Done 2026-09-06: all six refs confirmed served and callable, all
+      six rates confirmed from the providers' own pricing pages. Nothing in the table above was measured here, and a
       published quality-per-dollar column must not carry a number taken from a blog.
       `hip eval models` now does this for a hosted cohort: it asks the provider what it
       serves and marks a ref `-` when the pin is withdrawn or misspelled. It needs a
@@ -1229,27 +1230,315 @@ cost column has to state which rate it used or it is not reproducible.
       ([explain.py:192](src/hip/eval/explain.py:192)) exists and is used only by the
       API; `explain_command` regenerates every region unconditionally. Harmless at 21
       counties and three local minutes, and the whole cost argument at national scale
-- [ ] **Blocked on API keys.** Measure how many regions a real monthly refresh actually marks stale **before**
+- [x] Measure how many regions a real monthly refresh actually marks stale **before**
       deciding how much precision to discard. [ROADMAP.md](ROADMAP.md) is explicit that
       display-precision hashing is now an optimisation with a baseline rather than a
       workaround for the defect that #73 and #77 fixed, so the measurement comes first
       and the rounding rule follows from it
 - [x] Quality-per-dollar column in the evaluation report, from the per-candidate rates
       and the recorded token counts
-- [ ] **Blocked on API keys.** Regenerate the 21 stale NJ explanations with the selected model
+- [x] Regenerate the 21 stale NJ explanations with the selected model
 - [x] Tests: the hosted runner against a mocked transport, retry and backoff behaviour,
       preference-list fallthrough including exhaustion to the local tier, eligibility
       rejection of an unbenchmarked model, cohort-from-config for all three runners, the
       error-rate gate, and run ordering past `v9`
 
+- [ ] **`hip acquire` never re-checks a `@current` ref, found 2026-09-06.** `fetch`
+      ([base.py:200](src/hip/sources/base.py:200)) short-circuits on a local index keyed
+      by `ref.key` and returns "without touching the network", so once a ref is cached
+      it is never re-fetched. That is correct for a dated vintage, which is immutable by
+      definition, and wrong for the refs whose vintage is literally `current` — Zillow
+      replaces those files monthly at a stable URL. Measured: a full `make pipeline` on
+      2026-09-06 reported 172 cached and 0 downloaded, ran all eight stages, and
+      recomputed from bytes fetched on 2026-08-11, while a `HEAD` against Zillow's own
+      URL reported `Last-Modified: Sun, 16 Aug 2026`. The pipeline is silently a no-op
+      for new data, which is most of what someone running it expects it to do.
+      `--force` is the documented refresh path meanwhile, and it re-downloads all 172
+      releases rather than the seven that moved — which is not merely wasteful. On
+      2026-09-06 it earned a `429 Too Many Requests` from HUD partway through, because
+      HUD's income limits are one API call per county per year and re-fetching all of
+      them in a burst is exactly the shape of request a public API throttles. That
+      aborted the whole run under `set -e` after Zillow and FHFA had already succeeded,
+      which is the **"a missing Census permits year aborts the whole `hip acquire`"**
+      finding above, demonstrated: `fetch_all` is a plain generator with no per-ref
+      exception handling, so one source's transient failure takes every remaining
+      source with it. Recovery was a plain `hip acquire`, which skipped the 125 already
+      cached and completed — the per-release index write makes the stage resumable even
+      though the command is not fault-tolerant. Both halves argue for the conditional
+      request: it would have re-fetched seven files instead of 172 and never
+      approached a rate limit. The fix is a conditional request —
+      `If-Modified-Since` / `If-None-Match` on refs whose vintage is `current`, with a
+      304 treated as a cache hit — which keeps content-addressing intact. Deferred out
+      of Milestone 12 deliberately: it belongs with **scheduled refresh with retry and
+      alerting**, already queued under Post-Version 2, and that milestone is where a
+      monthly cadence stops being manual.
+
+- Note: **Float non-associativity was moving the derived vintage on every run, found
+      and fixed 2026-09-06.** ARCHITECTURE #73 made the `hip_derived` release
+      content-addressed so a rebuild over an unchanged warehouse would reuse it. It did
+      not hold: four consecutive runs produced four different digests
+      (`cbd6876d4ab875c1`, `b26957cc626951a6`, `9f6ca06e6f47f26c`, `441a37df7a1c43cf`)
+      over an identical 335,927-row warehouse. `analyze` alone was stable; `load` then
+      `analyze` was not, which located it in the arithmetic rather than in the release
+      logic. `_affordability` averaged the Zillow numerator with `avg(value)` over
+      `double precision`, and floating-point addition is not associative, so the result
+      depends on the order the executor aggregates rows — an order that changes when
+      `load` rewrites the heap. 19,027 of 24,956 `(region, year)` groups differ between
+      `avg(value)` and `avg(value::numeric)`, in the last one or two significant digits.
+      Fixed by averaging in `numeric`, which is exact decimal and order-independent, and
+      rounding the ratio to 6 decimal places — four more than an annual denominator
+      supports, so no published figure moves. Verified: three consecutive `load` +
+      `analyze` cycles now yield `801c8504f749494d`, and two consecutive
+      `pack --report` runs are byte-identical. Recorded as ARCHITECTURE #88.
+
+- Note: **This is the answer the display-precision task was looking for, and it changes
+      that task.** [ROADMAP.md](ROADMAP.md) scheduled display-precision hashing on the
+      assumption that Zillow's retroactive monthly revisions would move raw floats and
+      mark regions stale spuriously. Measured on an unchanged warehouse, the staleness
+      was 21 of 21 on every run and none of it came from upstream revisions — it was
+      this defect. Discarding precision in the hash would have masked it rather than
+      fixed it, and would have masked the next one too. The remaining question the task
+      was meant to answer — how many regions a *real* refresh marks stale — can only be
+      measured now that the spurious churn is gone, which is what the forced re-acquire
+      on 2026-09-06 is for.
+
+- Note: **The refresh was measured on 2026-09-06 and the answer changes the task.**
+      A forced re-acquire pulled genuinely new bytes — all six Zillow files and FHFA
+      returned new sha256s, and the ZHVI city file grew from 93.2MB to 93.6MB. For New
+      Jersey nothing moved: the newest date column in the fresh file is `2026-06-30`,
+      exactly what the warehouse already held, so Zillow's 2026-08-16 release added
+      coverage elsewhere and neither added a month nor revised an NJ value.
+      `fact_metric_observation` stayed at 335,927 rows, `fact_metric_change` at 19,531,
+      `region_rankings` at 27,823, and the derived vintage stayed `801c8504f749494d`.
+      **Not one published figure changed, and all 21 explanations were still marked
+      stale.** The entire report diff is `Retrieved` dates moving to 2026-09-06 and the
+      one-time derived-vintage correction.
+
+      So the staleness is real but it is provenance, not data: `fetched_at` is quoted in
+      every packet's `sources[]` block, and a re-acquire that returns different bytes
+      legitimately mints a new release with a new `fetched_at` even when no number the
+      packet carries has moved. **Display-precision hashing would not have caught any of
+      this** — there was no float precision left to discard once #88 landed, and the
+      churn is in a timestamp rather than in a value. The task as scheduled was aimed at
+      the wrong target. What it should become: decide whether the staleness hash covers
+      the packet's provenance block at all, or only its figures. That is a smaller and
+      better-aimed change than rounding, and it is the difference between "these numbers
+      are out of date" and "these numbers were fetched again", which are not the same
+      claim to make to a reader. Carried into Milestone 13, where citation binding has to
+      settle what a figure's provenance *is* anyway.
+
+- Note: **Milestone 12 closed 2026-09-06 with run `v2`.** 105 generations from 7 models
+      over 5 scenarios and 3 regions, 0 failures, 105 judgments, $4.15. Winner
+      **Gemini 3.7 Flash** at 3.56/4.00 with 0.0% unsupported figures and 0 flagged
+      claims. Full table in [reports/evaluation/v2.md](reports/evaluation/v2.md).
+
+      Two findings worth carrying forward. **Milestone 8's central result replicated**:
+      capability does not predict quality here. Mistral Small 4 (cheap tier, 2.87) beat
+      Mistral Large 3 (mid tier, 2.68), and Gemini 3.1 Flash-Lite came within 0.58 of
+      the winner at a fifth the price. Running both tiers is what made that visible, and
+      is why spending on six candidates rather than three was the right call. **And the
+      local fallback is not a degraded option**: Gemma 4 E4B scored 2.90, beating three
+      of the six hosted candidates outright.
+
+      DeepSeek V4 Pro placed second on quality (3.47) and is impractical regardless: it
+      hit the 6,000-token output cap on every explanation generation, took 75s each, and
+      costs $0.0269 per region against Mistral Small 4's $0.00066 — 22x the price and
+      24x the latency for 0.6 rubric points. With its lack of an addressable checkpoint,
+      that is what put it at tier 4 rather than tier 1.
+
+- Note: **The staleness gate was verified end to end on 2026-09-06.** A second
+      `hip explain --level county` immediately after a full regeneration wrote 0 and
+      reported "21 already current"; `--force` regenerated one. It only works because of
+      #88 — before the float fix every run minted a new derived vintage and the gate
+      would have answered "stale" for all 21 forever, which is exactly the state the
+      pre-milestone review found and #73 only half-corrected.
+
+- Note: **Measured cost of a New Jersey regeneration, 2026-09-06.** From real calls
+      against markdown packets rather than extrapolated from the benchmark's JSON ones
+      (markdown is 1,518 tokens against JSON's 4,703, so benchmark figures overstate by
+      roughly 3x):
+
+      | Model | 21 counties | Full NJ (1,133) | Full NJ /yr monthly |
+      |---|---:|---:|---:|
+      | gemini-3.7-flash | $0.26 | $10.56 | $126.77 |
+      | gemini-3.1-flash-lite | $0.02 | $0.80 | $9.61 |
+      | mistral-small-4 | $0.01 | $0.48 | $5.71 |
+      | deepseek-v4-pro | $0.56 | $30.45 | $365.42 |
+
+      **Gemini 3.7 Flash's cost barely scales down with region size** — output was 2,692
+      tokens for a county, 3,002 for a municipality, 1,372 for a ZIP, because thinking
+      dominates and is near-constant. So the 564 municipalities each cost about what a
+      county does, and full NJ is 40x the county-only bill rather than the 4x the packet
+      sizes suggest. That is what turns $3/yr into $127/yr, and it is the argument for
+      tier 2 if the scope ever widens. The roadmap's "single-digit dollars for a full
+      county-level regeneration" holds only for the cheap tier: at Milestone 15's 3,144
+      counties the winner is roughly $40 and Gemini 3.1 Flash-Lite roughly $7.70.
+
+- Note: **`dist/` is stale again** — the 21 explanations were regenerated after the
+      refresh, so `make publish` needs re-running before the site reflects them. Not done
+      here; it is Milestone 11's surface and its done criterion is a reachable URL.
+
+- [ ] **Historical comparison for Milestone 17 — trajectory, not just position.**
+      Asked 2026-09-06: can a reader compare last quarter or last year against now, and
+      does it need an external volume? **It does not.** The premise that this is a
+      storage problem is wrong: `fact_metric_observation` already holds the full monthly
+      series — 319 ZHVI date columns back to 2000 across 337,552 rows — so "Mercer this
+      quarter against a year ago" is a query over rows already loaded, not data to
+      acquire.
+
+      What genuinely does not exist is *historical rank and percentile*.
+      `region_rankings` is current-only at 27,923 rows, so "14th of 21 last year, 17th
+      now" cannot be answered today. Two routes: compute on the fly with a window
+      function over the series at an as-of date, which costs nothing on disk; or
+      materialise monthly as-of rankings, which for five years of New Jersey is roughly
+      500MB against 26GB free. Even at Milestone 15's 3,144 counties a materialised
+      history stays in the low gigabytes. The unpruned raw tier above is what would fill
+      the disk, not this.
+
+      Why it belongs in Milestone 17 specifically: that milestone's stated purpose is
+      answering a decision rather than reporting a figure, and its verdict sentence is
+      computed from rank and percentile with no model involved. A trajectory is the same
+      deterministic computation with a second as-of date — "more expensive than 16 of 21
+      counties, and it has climbed five places in two years" — and it is strictly more
+      decision-useful than a static rank. It also completes the tradeoff view: whether a
+      cheaper place is *getting* cheaper or merely *is* cheaper is the question a buyer
+      actually has, and only one of those is answerable today.
+
+- [ ] **Publish all five models' explanations per region, switchable by the reader.**
+      Asked 2026-09-06. Generation is trivial — $0.86 for 21 counties across the four
+      hosted candidates plus a free but ~10-minute local Gemma pass. The plumbing is
+      not, and the reason is a decision worth keeping: `hip publish` replays the ASGI
+      app so published bytes match what the API serves (ARCHITECTURE #67), so an extra
+      artifact carrying five explanations cannot simply be written — the API has to
+      serve that shape first. Five surfaces, in order: the `(region_id, window)` primary
+      key gains `model_id` (Alembic migration); `store` and `is_stale` in
+      [explain.py](src/hip/eval/explain.py) currently key on the old pair and
+      `scalar_one_or_none` would raise on five rows; the same call in
+      [explanations.py:84](src/hip/api/routers/explanations.py:84); the one-file-per-
+      region path at [publish.py:211](src/hip/publish.py:211); and the dashboard panel.
+
+      Worth doing, and worth doing as its own scoped work rather than folded into
+      Milestone 12 — the schema and API contract changes each deserve a Decisions Log
+      row and their own tests. Two arguments for it. It is **the reachable subset of the
+      already-listed "bring-your-own-model comparison"** under Post-Version 2, whose two
+      stated blockers were that there is no server to run a model on and that the rubric
+      half needs a paid judge; pre-generated explanations need neither, being ordinary
+      artifacts. And it is **on-thesis**: SPEC requires a reader can always tell
+      interpretation from measurement, and five models disagreeing about identical
+      numbers demonstrates that more forcefully than a disclaimer — the `v2` run already
+      showed the variance is real, with a 2.68-to-3.56 rubric spread on the same packets
+      and Mistral Large 3 describing an observed value as a forecast.
+
+      Two cautions. It multiplies the staleness surface by five, since each region-model
+      pair carries its own packet hash. And at full NJ it would cost roughly $42 per
+      refresh, of which $30 is DeepSeek V4 Pro alone — so beyond county scope it wants a
+      four-model set, not five.
+
+- [ ] **Nothing prunes superseded raw releases, and a refresh cadence makes that
+      unbounded.** Measured 2026-09-06. The raw tier is content-addressed and immutable
+      by design (ARCHITECTURE #10), which is right for provenance and means a refresh
+      leaves both copies on disk: after one Zillow refresh `data/raw/zillow_zhvi/` holds
+      129MB and 117MB for the ZIP layer, 97MB and 89MB for city, 13MB and 13MB for
+      county — the second of each superseded. The only `unlink` in `hip.sources.base`
+      cleans a partial download; `hip analyze` prunes unreferenced `hip_derived`
+      releases and there is no equivalent for downloaded files.
+
+      One refresh costs roughly 275MB across Zillow ZHVI, ZORI, FHFA and BLS. That
+      delta does **not** grow with state count — Zillow's files are already national at
+      3,071 counties — so it is about 3.3GB/year monthly or 1.1GB/year quarterly,
+      against 26GB free today. The docs' "2.9GB against 32GB free" is stale in both
+      halves: `hip footprint` now reports 3.4GB filesystem plus 291MB Postgres, and the
+      volume has 26GB free at 88% capacity.
+
+      The fix is a prune that keeps the N most recent releases per ref, not a slower
+      cadence: quarterly saves 2.2GB/year and costs up to three months of staleness on
+      a platform whose product is current figures. It pairs with the conditional-request
+      item above — together they turn a refresh from "re-download 2GB and keep it
+      forever" into "fetch what moved and retain a bounded history."
+
+- Note: **The "no external volume needed" claim holds, with a caveat the original did
+      not state.** [ROADMAP.md](ROADMAP.md) and the Milestone 10 notes concluded that no
+      Version 2 milestone as scoped requires an external volume, and that is still true:
+      the Northeast adds 3-6GB against 26GB free, and Milestone 15 stops at county
+      level. What the conclusion assumed without saying so is a *static* dataset. It was
+      reached before any refresh had ever been run, and accumulation from refreshes is
+      the term it omits. With the prune above it stays true indefinitely; without one,
+      monthly refreshes plus the Northeast put the boot disk under real pressure inside
+      about five years. The relocation machinery itself is built and works —
+      `HIP_DATA_DIR`, `HIP_REPORTS_DIR` and `HIP_PGDATA` are independent settings with
+      `~` expansion (ARCHITECTURE #65), and `.env.example` carries the SSD example —
+      so this is a capacity-planning note rather than an engineering gap.
+
+- Note: **`hip land` silently dropped a month of Zillow data, found and fixed
+      2026-09-06.** Worse than the acquire cache above and in the same family. The
+      forced re-acquire correctly fetched Zillow's August release, whose county file
+      carries 319 date columns ending `2026-07-31` against the previous 318 ending
+      `2026-06-30`. `hip land` registered the new release and did not re-transcode it,
+      because `parquet_path` keys on `vintage` — the literal string `current` for this
+      source — so both releases resolve to
+      `data/parquet/zillow_zhvi/current/county.parquet`, and the lander skipped on
+      `out.exists()`. The file still had the previous month's mtime. Fixed by recording
+      the producing release's sha256 in a `.parquet.src` sidecar and comparing against
+      it (ARCHITECTURE #89), which keeps the skip that matters — MOD-IV is 1.1GB — while
+      making it answer the right question. After re-landing and re-running the pipeline:
+      `fact_metric_observation` 335,927 → 337,552, `fact_metric_change` 19,531 → 19,574,
+      `region_rankings` 27,823 → 27,923, latest ZHVI period `2026-06-30` → `2026-07-31`,
+      and real figures moved — Mercer County's 5y window shifted to
+      `2021-07-31 → 2026-07-31` with the home value index at $450,985 against $453,317,
+      a month-over-month decline.
+
+      **This supersedes the "nothing changed" note above**, which was written from the
+      landed Parquet and was wrong about the cause: the refresh did carry new data, and
+      two silent gates stopped it reaching the warehouse. What survives from that note
+      is the part that was measured correctly — that `fetched_at` moves the packet hash
+      on a re-acquire whether or not a figure changed, and that display-precision
+      hashing does not address it.
+
+- Note: **Refresh cadence, now that both gates are understood.** Until 2026-09-06 no
+      cadence would have produced anything: every source whose vintage is `current` was
+      double-gated, so a nightly `make pipeline` would have run for months emitting
+      identical output. On the interval itself, monthly is right and fortnightly buys
+      almost nothing — the core housing data is monthly with roughly a seven-week lag
+      (the July figure published around 2026-08-16), and of the twelve sources only
+      FRED's mortgage rate is weekly while ACS, HUD, IRS, Census permits and MOD-IV are
+      annual and FHFA quarterly. A fortnightly run would re-fetch the better part of a
+      gigabyte to pick up one mortgage-rate print. Better than any fixed interval is to
+      align to publication, which is what the conditional request makes affordable:
+      check every source daily for a few KB of headers and transcode only what moved.
+
+- Note: **A listed model is not a callable one, found 2026-09-06.**
+      `gemini-2.5-flash-lite` was the intended cheap Gemini tier and the price floor of
+      the whole slate at $0.10/$0.40. It appears in the `/models` listing, advertises
+      `generateContent` among its `supportedGenerationMethods`, and returns
+      `404 "no longer available to new users"` when called — it is grandfathered for
+      keys older than this account's. `served_models()` cannot see that, because the
+      listing is not the thing that lies. `hip eval models --probe` now calls each
+      hosted candidate once with a trivial prompt; it costs a fraction of a cent per
+      candidate and is the only check that catches this class. The cheap Gemini tier is
+      `gemini-3.1-flash-lite` at $0.25/$1.50 — which this file had previously rejected
+      for sitting between the two chosen models, a rejection that no longer applies now
+      that the model below it is unreachable.
+- Note: **DeepSeek offers no pinnable checkpoint, confirmed 2026-09-06.** The provider
+      serves exactly three models — `deepseek-v4-flash`, `deepseek-v4-flash-vision-exp`,
+      `deepseek-v4-pro` — and no dated snapshot, while its Flash checkpoint moved to
+      V4-Flash-0731 and Pro to V4-Pro-0813 without either id changing. Mistral is the
+      only one of the three that pins in the sense SPEC means
+      (`mistral-small-2603`, `mistral-large-2512`); Gemini's ids are stable but undated.
+      So the roadmap's DeepSeek-first ordering puts the least pinnable provider in
+      tier 1, which is worth revisiting once the benchmark has ranked them.
+- Note: **Live smoke test passed on 2026-09-06**, one generation per candidate through
+      the real APIs: all six answered correctly from a small packet, at $0.000045
+      (Mistral Small 4) to $0.001173 (DeepSeek V4 Pro) per generation and 508ms to
+      3,646ms. Mistral Large 3 volunteered the smoothing caveat unprompted, which is
+      the behaviour the rubric's caveat_handling criterion rewards.
+
 - Note: **What is built and what is blocked, as of 2026-09-06.** Everything that does
       not need a key is done and tested: the config schema, `HostedRunner` with its
       three dialects and its retry, the preference list, bounded concurrency, the
       staleness gate, the cost column, and the five collision items from the
-      pre-milestone review. 321 tests pass. Three tasks remain and all three need a
-      live key — verifying the pins and rates, measuring real staleness on a refresh,
-      and regenerating the 21 NJ explanations. The candidate slate cannot be written
-      into `config/evaluation.yml` until the first of those runs.
+      pre-milestone review. 321 tests pass. Two tasks remain and both need the pipeline rather than a key: measuring real staleness on a refresh, and regenerating the 21 NJ explanations
+      with whichever model the benchmark selects. The verified candidate slate is now
+      in `config/evaluation.yml`.
 - Note: **`generation.preference` holds one model and that is the honest state.** SPEC
       requires the list to contain only models that have passed the evaluation, and
       today that is the local Gemma 4 E4B alone. Hosted tiers are prepended as they

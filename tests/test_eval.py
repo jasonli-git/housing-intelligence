@@ -637,9 +637,37 @@ def test_every_model_id_is_unique(evaluation: EvaluationConfig) -> None:
     assert len(ids) == len(set(ids))
 
 
-def test_every_candidate_is_four_bit(evaluation: EvaluationConfig) -> None:
-    """Precision was retired as a variable; a stray Q8 would silently reintroduce it."""
-    assert all("4" in m.quantization for m in evaluation.models)
+def test_every_local_candidate_is_four_bit(evaluation: EvaluationConfig) -> None:
+    """Precision was retired as a variable; a stray Q8 would silently reintroduce it.
+
+    Local cohorts only. A hosted provider does not disclose the precision it serves and
+    could change it without telling anyone, so `quantization: hosted` records what is
+    actually known rather than asserting a number nobody here can verify. That is a
+    real reduction in what the comparison controls for, and it is one of the reasons
+    SPEC accepts hosted generation as non-reproducible.
+    """
+    local = [
+        candidate
+        for name, cohort in evaluation.cohorts.items()
+        if cohort.runner != "hosted"
+        for candidate in cohort.models
+    ]
+    assert local, "no local cohort is configured"
+    assert all("4" in m.quantization for m in local)
+
+
+def test_every_hosted_candidate_declares_its_precision_as_unknown(
+    evaluation: EvaluationConfig,
+) -> None:
+    """The counterpart: a hosted candidate must not claim a precision it cannot have
+    been checked for, because the column would then read as measured."""
+    hosted = [
+        candidate
+        for cohort in evaluation.cohorts.values()
+        if cohort.runner == "hosted"
+        for candidate in cohort.models
+    ]
+    assert all(m.quantization == "hosted" for m in hosted)
 
 
 def test_cohort_lookup_round_trips(evaluation: EvaluationConfig) -> None:

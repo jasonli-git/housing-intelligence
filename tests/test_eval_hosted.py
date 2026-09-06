@@ -243,7 +243,12 @@ def test_gemini_shaped_response_is_parsed_from_its_own_field_names(
     assert captured["auth"] == "goog-test"
     assert generation.answer == "Rents outpaced incomes."
     assert generation.telemetry.prompt_tokens == 2600
-    assert generation.telemetry.generation_tokens == 420
+    # 420 answer tokens + 90 thinking tokens. Gemini reports thinking separately in
+    # `thoughtsTokenCount` and bills it at the output rate, while the OpenAI-shaped
+    # providers fold it into `completion_tokens` and Ollama's `eval_count` covers both.
+    # `generation_tokens` means every token billed as output, under all three, or the
+    # cost column disagrees with the invoice and `reasoning_share` exceeds 100%.
+    assert generation.telemetry.generation_tokens == 510
     assert generation.telemetry.reasoning_tokens == 90
 
 
@@ -779,3 +784,123 @@ def _run_recording_concurrency(
         evaluation, [_scenario_n(i) for i in range(6)], f"v{runner_kind}", resume=False
     )
     return state["now"], state["peak"]
+
+
+# --- judge cost, measured rather than assumed ---------------------------------------
+
+
+def test_judge_cost_tracks_the_run_s_own_packet_size() -> None:
+    """A constant prompt size has been wrong twice: 7,000 tokens guessed, then 2,600
+    measured against `v1` — whose packets carry 1,514 tokens where `v2`'s carry ~4,700,
+    because the packet gained metrics and caveats across Milestones 7 and 9. The
+    estimate has to come from the run being priced."""
+    from hip.eval.judge import measured_cost
+
+    evaluation = load_evaluation(CONFIG_DIR)
+    small_gen, small_scenario = _judgeable(payload="x " * 500)
+    large_gen, large_scenario = _judgeable(payload="x " * 5000)
+
+    # A realistic run rather than one generation: the quote is rounded to cents, which
+    # is the right precision for the decision it informs and too coarse to compare a
+    # single call against another.
+    small_cost, small_tokens = measured_cost(
+        [small_gen] * 105, {small_scenario.key: small_scenario}, evaluation
+    )
+    large_cost, large_tokens = measured_cost(
+        [large_gen] * 105, {large_scenario.key: large_scenario}, evaluation
+    )
+
+    assert large_tokens > small_tokens * 2
+    assert large_cost > small_cost
+
+
+def test_batch_mode_is_half_of_sync() -> None:
+    from hip.eval.judge import measured_cost
+
+    evaluation = load_evaluation(CONFIG_DIR)
+    generation, scenario = _judgeable(payload="x " * 2000)
+    batch, _ = measured_cost([generation], {scenario.key: scenario}, evaluation)
+    evaluation.judge.mode = "sync"
+    sync, _ = measured_cost([generation], {scenario.key: scenario}, evaluation)
+    assert sync == pytest.approx(batch * 2, rel=0.02)
+
+
+def test_a_generation_with_no_matching_scenario_is_not_priced() -> None:
+    """Pricing a prompt that cannot be built would quote for work the judge will skip."""
+    from hip.eval.judge import measured_cost
+
+    evaluation = load_evaluation(CONFIG_DIR)
+    generation, _ = _judgeable(payload="x " * 100)
+    cost, tokens = measured_cost([generation], {}, evaluation)
+    assert (cost, tokens) == (0.0, 0)
+
+
+def _judgeable(*, payload: str) -> tuple[Generation, Scenario]:
+    scenario = _scenario().model_copy(update={"payload": payload})
+    generation = _priced_generation("gemini-3.7-flash", "gemini", prompt=10, output=5)
+    return generation.model_copy(update={"scenario_key": scenario.key}), scenario
+
+
+def test_generations_are_written_as_they_complete_not_in_a_final_pass(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`store` promises a resumable run. A cohort collected in memory and written at the
+    end loses everything if the process dies partway, which is when resumability is
+    worth having."""
+    from hip.eval.runner import run_evaluation
+    from hip.eval.store import run_dir
+
+    evaluation = _concurrent_evaluation()
+    scenarios = [_scenario_n(i) for i in range(6)]
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    monkeypatch.setattr("hip.eval.store.get_settings", lambda: _settings_at(tmp_path))
+
+    seen_on_disk: list[int] = []
+
+    def generate(self, model, scenario, prompt, sampling, limits, mode, repeat, seed):  # type: ignore[no-untyped-def]
+        path = run_dir("vstream") / "generations.jsonl"
+        seen_on_disk.append(len(path.read_text().splitlines()) if path.exists() else 0)
+        return _priced_generation_for(scenario, model.id, "hosted")
+
+    monkeypatch.setattr(HostedRunner, "generate", generate)
+    run_evaluation(evaluation, scenarios, "vstream", resume=False)
+
+    # The last generation must have seen earlier ones already durable. A final-pass
+    # write leaves every observation at zero.
+    assert max(seen_on_disk) > 0, "nothing was on disk while the cohort was still running"
+
+
+def test_reasoning_can_never_exceed_the_billed_output(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The invariant behind the fix. A `reasoning_share` above 100% is not a model that
+    thought unusually hard; it is two providers disagreeing about what the denominator
+    counts. Measured at 237% on `gemini-3.7-flash` in run `v2`, where it also meant the
+    published cost for the winning candidate was 58% low."""
+    monkeypatch.setenv("GEMINI_API_KEY", "goog-test")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "candidates": [
+                    {
+                        "content": {"parts": [{"text": "short answer"}]},
+                        "finishReason": "STOP",
+                    }
+                ],
+                # A thinking-heavy turn: far more reasoning than answer.
+                "usageMetadata": {
+                    "promptTokenCount": 100,
+                    "candidatesTokenCount": 40,
+                    "thoughtsTokenCount": 900,
+                },
+            },
+        )
+
+    runner = build_runner(_cohort("gemini", "https://x/v1beta"), "gemini")
+    assert isinstance(runner, HostedRunner)
+    generation = _generate(runner, handler, monkeypatch)
+    telemetry = generation.telemetry
+    assert telemetry.reasoning_tokens <= telemetry.generation_tokens
+    assert telemetry.generation_tokens == 940

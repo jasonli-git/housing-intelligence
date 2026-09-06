@@ -260,7 +260,7 @@ def judge_command(
     ] = None,
 ) -> None:
     """Grade generations against the rubric. This is the only command that costs money."""
-    from hip.eval.judge import collect_batch, estimated_cost, judge_batch, judge_sync
+    from hip.eval.judge import collect_batch, judge_batch, judge_sync, measured_cost
     from hip.eval.store import (
         JUDGMENTS,
         load_generations,
@@ -303,7 +303,8 @@ def judge_command(
             typer.secho(f"failed: {judgment.error}", err=True)
         return
 
-    cost = estimated_cost(len(generations), evaluation)
+    scenarios = {sc.key: sc for sc in load_scenarios(run)}
+    cost, _ = measured_cost(generations, scenarios, evaluation)
     typer.echo(
         f"judging {len(generations)} generations with {evaluation.judge.model} "
         f"via {evaluation.judge.mode}: about ${cost:.2f}"
@@ -374,7 +375,16 @@ def report_command(
 
 
 @app.command("models")
-def models_command() -> None:
+def models_command(
+    probe: Annotated[
+        bool,
+        typer.Option(
+            "--probe",
+            help="Call each hosted candidate once. Costs a fraction of a cent and "
+            "catches a listed-but-uncallable pin, which a listing cannot.",
+        ),
+    ] = False,
+) -> None:
     """List the configured candidates and whether each runtime can serve them.
 
     For a hosted cohort this verifies the pin rather than trusting it: the provider is
@@ -425,6 +435,12 @@ def models_command() -> None:
                 f"  {mark} {candidate.id:<20} {candidate.label:<24} "
                 f"{candidate.quantization:<8} {candidate.ref}{rates}"
             )
+            if probe and up and isinstance(runner, HostedRunner):
+                failure = runner.probe(candidate)
+                typer.secho(
+                    f"      probe: {failure or 'OK'}",
+                    fg=typer.colors.RED if failure else typer.colors.GREEN,
+                )
 
 
 @app.command("show")
@@ -577,22 +593,29 @@ def _is_fresh(session: Session, region_id: int, window: str, payload_format: str
 def cost_command(
     run: Annotated[str, typer.Option("--run")] = "v1",
 ) -> None:
-    """Estimate what judging this run costs, without spending anything."""
-    from hip.eval.judge import estimated_cost
-    from hip.eval.store import load_generations
+    """Estimate what judging this run costs, without spending anything.
+
+    Priced from the run's own prompts rather than from a constant, because the judge
+    prompt is dominated by the packet and packet size is a property of the run.
+    """
+    from hip.eval.judge import measured_cost
+    from hip.eval.store import load_generations, load_scenarios
 
     evaluation = load_evaluation()
     generations = [g for g in load_generations(run) if not g.error]
-    batch = estimated_cost(len(generations), evaluation)
+    scenarios = {s.key: s for s in load_scenarios(run)}
+    batch, mean_prompt = measured_cost(generations, scenarios, evaluation)
     evaluation.judge.mode = "sync"
+    sync, _ = measured_cost(generations, scenarios, evaluation)
     typer.echo(
         json.dumps(
             {
                 "run": run,
                 "judgeable_generations": len(generations),
                 "judge_model": evaluation.judge.model,
+                "mean_judge_prompt_tokens": mean_prompt,
                 "estimated_usd_batch": batch,
-                "estimated_usd_sync": estimated_cost(len(generations), evaluation),
+                "estimated_usd_sync": sync,
             },
             indent=2,
         )

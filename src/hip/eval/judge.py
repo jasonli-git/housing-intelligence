@@ -30,6 +30,7 @@ import time
 from typing import Any
 
 from hip.config import EvaluationConfig, Rubric
+from hip.eval.prompts import estimate_tokens
 from hip.eval.types import CriterionScore, Generation, Judgment, Scenario
 
 log = logging.getLogger(__name__)
@@ -337,10 +338,12 @@ def collect_batch(
 _JUDGE_IN_USD_PER_MTOK = 5.0
 _JUDGE_OUT_USD_PER_MTOK = 25.0
 
-# Measured on 2026-09-06 by rebuilding the real judge prompt over the stored `v1`
-# artifacts, rather than estimated: 226 tokens of system prompt, 442 of the generated
-# JSON schema, and 1,931 of user prompt (packet, criteria, question, and the model's
-# answer), meaning 15 scenarios against gemma-4-e4b-q4.
+# Fallback only, for a caller with no artifacts to measure. Prefer `measured_cost`,
+# which builds the real prompts: a constant here was wrong twice already. It was 7,000
+# (the packet, guessed) until 2026-09-06, then 2,600 (measured against run `v1`) — and
+# `v1`'s packets carry 1,514 tokens where `v2`'s carry 4,539 to 4,849, because the
+# packet gained metrics, sources and caveats across Milestones 7 and 9. Any constant
+# is a snapshot of one run's packet size and silently under-quotes the next one.
 _JUDGE_PROMPT_TOKENS = 2600
 
 # Output is dominated by thinking rather than by the verdict. `effort: medium` bills its
@@ -350,23 +353,56 @@ _JUDGE_PROMPT_TOKENS = 2600
 # under-reported the bill by between 15% and 60%.
 _JUDGE_OUTPUT_TOKENS = 2000
 
+# The system prompt and the generated JSON schema, which ride on every request and
+# do not vary with the run. Measured 2026-09-06: 226 + 442.
+_JUDGE_FIXED_TOKENS = 668
 
-def estimated_cost(count: int, evaluation: EvaluationConfig) -> float:
-    """Rough dollar cost of judging `count` generations.
 
-    Deliberately an over-estimate rather than an under-estimate: the number exists so
-    that `hip eval cost` can be trusted before spending money, and a judging run that
-    costs more than it was quoted is the failure mode worth avoiding.
-    """
+def _rates(evaluation: EvaluationConfig) -> tuple[float, float]:
     in_rate, out_rate = _JUDGE_IN_USD_PER_MTOK, _JUDGE_OUT_USD_PER_MTOK
     if evaluation.judge.mode == "batch":
-        in_rate, out_rate = in_rate / 2, out_rate / 2
-    return round(
-        count
-        * (
-            _JUDGE_PROMPT_TOKENS * in_rate
-            + min(_JUDGE_OUTPUT_TOKENS, evaluation.judge.max_tokens) * out_rate
-        )
-        / 1_000_000,
-        2,
-    )
+        return in_rate / 2, out_rate / 2
+    return in_rate, out_rate
+
+
+def _price(prompt_tokens: int, count: int, evaluation: EvaluationConfig) -> float:
+    in_rate, out_rate = _rates(evaluation)
+    output = min(_JUDGE_OUTPUT_TOKENS, evaluation.judge.max_tokens)
+    return round(count * (prompt_tokens * in_rate + output * out_rate) / 1_000_000, 2)
+
+
+def estimated_cost(count: int, evaluation: EvaluationConfig) -> float:
+    """Rough dollar cost of judging `count` generations, from a fixed prompt size.
+
+    Kept for callers with nothing to measure. `measured_cost` is strictly better and is
+    what `hip eval cost` uses.
+    """
+    return _price(_JUDGE_PROMPT_TOKENS, count, evaluation)
+
+
+def measured_cost(
+    generations: list[Generation],
+    scenarios: dict[str, Scenario],
+    evaluation: EvaluationConfig,
+) -> tuple[float, int]:
+    """Cost of judging exactly these generations, and the mean prompt size behind it.
+
+    Builds the real judge prompt for every generation rather than assuming one, because
+    the prompt is dominated by the packet and the packet's size is a property of the
+    run, not of this module. Returns an over-estimate on the output side — the full
+    thinking allowance — for the reason the docstring above gives: a judging run that
+    costs more than it was quoted is the failure worth avoiding.
+    """
+    total = 0
+    priced = 0
+    for generation in generations:
+        scenario = scenarios.get(generation.scenario_key)
+        if scenario is None:
+            continue
+        prompt = build_judge_prompt(generation, scenario, evaluation.rubric)
+        total += estimate_tokens(prompt) + _JUDGE_FIXED_TOKENS
+        priced += 1
+    if not priced:
+        return 0.0, 0
+    mean = total // priced
+    return _price(mean, priced, evaluation), mean

@@ -3,6 +3,91 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.12.0] — 2026-09-06
+
+Milestone 12. The explanation layer runs on hosted inference by default, chooses its
+model from an ordered preference list resolved at generation time, and falls through to
+the local runtime when no vendor can be reached. Six hosted candidates across three
+regulatory regimes were benchmarked against the local baseline on the Milestone 8
+scenarios and rubric; **Gemini 3.7 Flash** was selected on measurement at 3.56/4.00 with
+no fabricated figures.
+
+The milestone also found three defects that had nothing to do with inference and
+everything to do with whether a refresh works at all. Two of them meant `make pipeline`
+could not ingest new data for any source whose vintage is the string `current`, silently,
+and had been unable to since the sources were first loaded.
+
+### Added
+- **`HostedRunner`** — DeepSeek, Gemini and Mistral behind one `ModelRunner`, dispatched
+  by a per-provider dialect over raw `httpx` (#78). Retry with jittered exponential
+  backoff on 429 and 5xx, honouring `Retry-After`; 4xx is not retried.
+- **An ordered preference list** (`generation.preference`), resolved at generation time
+  to the first benchmarked candidate that is currently reachable and ending at the local
+  model, so no vendor decision can stop `hip explain` from running. Only models that
+  passed the benchmark are eligible, checked where the run results are.
+- **Bounded concurrency for hosted cohorts** (#82). Local cohorts stay sequential for the
+  memory reason that put them that way; concurrency is a property of the cohort, not of
+  the run loop. Generations are written in plan order however requests interleave.
+- **A quality-per-dollar column** in the evaluation report (#83), priced from each
+  provider's own token counters and per-candidate rates in config, so the column and the
+  invoice are computed from the same numbers.
+- **A staleness gate on `hip explain`** — regions whose stored prose was written from
+  these exact numbers are skipped, with `--force` to override. Verified: a second run
+  immediately after a full regeneration writes 0 and reports 21 already current.
+- **`hip eval models --probe`** — calls each hosted candidate once rather than trusting
+  the provider's own model listing (#86).
+
+### Fixed
+- **`hip land` silently dropped a month of Zillow data** (#89). `parquet_path` keys on
+  vintage, which for Zillow is the literal string `current`, so every release resolved to
+  one path and the lander skipped because the file existed. Zillow's August release
+  carried a `2026-07-31` column that the raw tier stored correctly and the warehouse
+  never saw. Landing now compares the producing release's sha256, recorded in a sidecar.
+  After re-landing: 335,927 → 337,552 observations, and real figures moved — Mercer
+  County's home value index at $450,985 against $453,317, a month-over-month decline.
+- **Floating-point non-associativity moved the derived release digest on every run**
+  (#88). `_affordability` averaged the Zillow numerator over `double precision`, and the
+  sum depends on the order the executor aggregates rows — which changes when `load`
+  rewrites the heap. Four consecutive runs over an identical warehouse produced four
+  digests; 19,027 of 24,956 groups differ between `avg(value)` and `avg(value::numeric)`.
+  #73 fixed the half of this in `analyze`; this was the half in the arithmetic. Without
+  it the staleness gate above would have answered "stale" for all 21 regions forever.
+- **`Telemetry.generation_tokens` meant three different things** (#90). Gemini reports
+  thinking separately from the answer and bills both; the OpenAI-shaped providers fold it
+  in; Ollama's `eval_count` covers both. Surfaced as a 237% reasoning share, and it
+  understated the selected model's cost by 58% — $8.11 against $12.83 per thousand
+  generations.
+- **`hip eval cost` under-reported by 15–60%**, then again by 25% on a larger packet. It
+  assumed a fixed prompt size; a constant was wrong twice, because the judge prompt is
+  dominated by the packet and packet size is a property of the run. It now builds the
+  real prompts for the run being priced.
+- **Evaluation runs were ordered lexically** (#85), so `v10` sorted before `v2` and
+  `hip explain` would have picked an older run's winner. Ordered by modification time.
+- **The winner gate was an absolute error count** (#81). Right for a local runtime, where
+  an error means the model could not run; one 429 that outlived four retries would have
+  disqualified a winning hosted candidate. Now a rate, at one generation in fifteen.
+- **Cohort names were hardcoded inside the runners** (#79), which three providers behind
+  one class cannot survive.
+
+### Changed
+- The evaluation report, the API disclaimer, and the judge's system prompt no longer
+  describe the explanation layer as local. Changing the judge prompt changes scores, so
+  Gemma 4 E4B was re-judged in the same batch as the hosted candidates rather than
+  compared against the stored `v1` verdicts.
+- `quantization: hosted` records what is actually known about a hosted model's precision,
+  and the four-bit invariant applies only to local cohorts (#87).
+
+### Measured
+- **Run `v2`**: 105 generations from 7 models, 0 failures, 105 judgments, $4.15.
+  Gemini 3.7 Flash 3.56, DeepSeek V4 Pro 3.47, Gemini 3.1 Flash-Lite 2.98, **Gemma 4 E4B
+  2.90**, Mistral Small 4 2.87, DeepSeek V4 Flash 2.76, Mistral Large 3 2.68. The local
+  fallback beat three of six hosted candidates, and the cheap Mistral tier beat the mid
+  one — Milestone 8's finding that capability does not predict quality here, replicated.
+- **A New Jersey regeneration** costs $0.26 for the 21 counties and $10.56 for all 1,133
+  regions at the selected model, against $0.80 at Gemini 3.1 Flash-Lite. Thinking
+  dominates the winner's output and barely scales with region size, so full NJ is 40x the
+  county bill rather than the 4x packet sizes suggest.
+
 ## [0.11.2] — 2026-09-06
 
 A review of the whole codebase before Milestone 12 opens. Five defects, four of them in

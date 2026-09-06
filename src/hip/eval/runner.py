@@ -184,20 +184,30 @@ def run_evaluation(
                             seed,
                         )
 
+                    def _record(stream: Iterable[Generation]) -> None:
+                        """Append each generation as it arrives, never in a final pass.
+
+                        Streaming rather than collecting, because `store` promises a
+                        resumable run: a batch materialized in memory and written at the
+                        end loses every generation in it if the process dies partway,
+                        which is exactly when resumability is worth having. It also
+                        keeps `on_generation` a progress callback rather than a summary.
+                        """
+                        for generation in stream:
+                            append_record(path, generation)
+                            produced.append(generation)
+                            if on_generation:
+                                on_generation(generation)
+
                     if concurrency > 1:
                         with ThreadPoolExecutor(max_workers=concurrency) as pool:
-                            # `map` yields in submission order, not completion order,
-                            # so the JSONL stays in plan order however the requests
-                            # interleave.
-                            results = list(pool.map(_one, pending))
+                            # `map` yields in submission order rather than completion
+                            # order, so the JSONL stays in plan order however the
+                            # requests interleave — and it yields lazily, so records
+                            # are still written as the run progresses.
+                            _record(pool.map(_one, pending))
                     else:
-                        results = [_one(item) for item in pending]
-
-                    for generation in results:
-                        append_record(path, generation)
-                        produced.append(generation)
-                        if on_generation:
-                            on_generation(generation)
+                        _record(_one(item) for item in pending)
                 # Release before the next model rather than after the cohort: MLX holds
                 # weights in this process, so the next load would otherwise peak at two
                 # models' worth of memory.

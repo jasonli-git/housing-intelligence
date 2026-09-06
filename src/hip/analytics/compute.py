@@ -100,12 +100,36 @@ def _affordability(conn: object) -> dict[str, int]:
                     (region_id, metric_id, period_start, period_end, value)
                 SELECT income.region_id, :metric_id,
                        income.period_start, income.period_end,
-                       (num.annual_value * :multiplier) / income.value
+                       -- Rounded, and computed in `numeric` throughout. Both halves
+                       -- are required for the value to be reproducible; see the
+                       -- averaging note below. Six decimal places on a ratio that
+                       -- lives between about 1 and 20 is four more than the annual
+                       -- denominator can support, so nothing a reader sees moves.
+                       round(
+                           (num.annual_value * CAST(:multiplier AS numeric))
+                               / income.value::numeric,
+                           6
+                       )::double precision
                 FROM fact_metric_observation income
                 JOIN (
                     SELECT region_id,
                            date_trunc('year', period_start)::date AS yr,
-                           avg(value) AS annual_value
+                           -- `avg(value::numeric)`, not `avg(value)`. Floating-point
+                           -- addition is not associative, so an average over
+                           -- `double precision` depends on the order the executor
+                           -- happens to aggregate rows in — which changes when `load`
+                           -- rewrites the heap or the planner picks a parallel scan.
+                           -- Measured on 2026-09-06: 19,027 of 24,956 (region, year)
+                           -- groups differ between the two, in the last one or two
+                           -- significant digits. That was enough to move the
+                           -- content-addressed derived vintage on every single
+                           -- pipeline run over an unchanged warehouse (four runs, four
+                           -- digests), which marked all 21 explanations stale every
+                           -- time and dirtied all 21 committed reports. #73 fixed the
+                           -- half of this that was in `analyze`; this is the half that
+                           -- was in the arithmetic. `numeric` is exact decimal, so the
+                           -- sum is order-independent.
+                           avg(value::numeric) AS annual_value
                     FROM fact_metric_observation
                     WHERE metric_id = :numerator
                     GROUP BY 1, 2
