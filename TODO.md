@@ -1059,13 +1059,12 @@ cheaper to handle while the milestone is being designed than after.
 - [ ] **`GET /regions?q=` passes `%` and `_` through to `ILIKE`.** A caller searching
       for `%` matches every region. Cosmetic today and worth settling before Milestone
       17 builds a real search over this endpoint.
-- [ ] **Both public origins answer a programmatic client with an HTTP 403 challenge.**
-      `housing.jasonli.app` and `housing-data.jasonli.app` returned Cloudflare's
-      "Just a moment" interstitial to `curl` on 2026-09-06, so the deployed site could
-      not be verified from here. If that is bot protection left on for the artifact
-      origin, it also blocks every programmatic consumer of the JSON tree — which is
-      most of the argument for publishing artifacts as data rather than only as pages.
-      Worth checking in the Cloudflare dashboard.
+- [x] **Both public origins answer a programmatic client with an HTTP 403 challenge**
+      — investigated and **settled as intended behaviour** on 2026-09-06, not fixed.
+      See ARCHITECTURE #94. The short version: the JSON tree is a build artifact rather
+      than a product, so the challenge costs nothing that is currently wanted and the
+      friction is aligned with Zillow's non-commercial licence. Reopen this only by
+      changing that premise, not by treating the 403 as a defect.
 
 ### Cleanup the fixes do not perform
 
