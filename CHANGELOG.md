@@ -71,6 +71,20 @@ made the staleness signal Milestone 12 is built on unable to carry information.
 - Known Limitations gains the two provenance imprecisions that remain and are not worth
   a schema change: a net migration figure cites one of the two files it is computed
   from, and `census_tiger` records its `layer` as a ref key.
+- **The published build figures were a release out of date.** README and ARCHITECTURE
+  still quoted the 0.11.0 export at 11,375 files and 261MB; the footer added in 0.11.1
+  put a fifth RSC payload on every route and had only been recorded in TODO. Re-measured
+  from a real `make publish`:
+
+  | Tree | Files | Size |
+  |---|---:|---:|
+  | `dist/artifacts` | 5,846 | 96 MB |
+  | `dist/site` | 13,647 | 316 MB |
+
+  That is 68% of Cloudflare Pages' 20,000-file free tier, and it moves the nine-state
+  projection from roughly 102,000 export files to roughly 123,000 — past the
+  100,000-file paid ceiling rather than just under it, which is the number Milestone 14
+  has to plan against.
 
 ## [0.11.1] — 2026-09-05
 

@@ -24,7 +24,7 @@ product, and an optional AI layer only explains metrics that were already comput
 >
 >
 > **Version 2 is live.** The platform now publishes itself: `hip publish` records the
-> API's answers as 5,844 static files and the dashboard pre-renders 2,273 pages, served
+> API's answers as 5,845 static files and the dashboard pre-renders 2,273 pages, served
 > with no database and no application server in production. Milestone 10 measured what a
 > state costs on disk (3.4 GB for New Jersey, 40 kB per region of PostGIS geometry);
 > Milestone 11 put the result on the internet.
@@ -371,7 +371,7 @@ The platform has no request-time compute, so production is a set of files rather
 running service. `make publish` builds them; `make deploy` sends them.
 
 ```bash
-make publish   # dist/artifacts (5,845 files, 84 MB) + dist/site (11,375 files, 254 MB)
+make publish   # dist/artifacts (5,846 files, 96 MB) + dist/site (13,647 files, 316 MB)
 make deploy    # artifacts -> object storage, site -> static host
 ```
 

@@ -952,6 +952,11 @@ spine but have no observations at all, so pages for them would be empty.
   plus four RSC payload files per page, and every page embeds its own data. That is
   roughly triple the artifact tree it displays (5,844 files, 84MB), and it is the half
   that hits a host's file-count cap first — at Northeast scale, not national.
+  **Superseded 2026-09-06: 13,647 files, 316MB, against 5,846 artifacts at 96MB.** The
+  footer added in 0.11.1 put a fifth RSC payload on every route. The conclusion is
+  unchanged and the margin is smaller: nine states project to roughly 123,000 export
+  files against a 100,000-file paid ceiling, where the original figures projected
+  102,000.
 - Note: **An unset `NEXT_PUBLIC_ARTIFACT_URL` bakes `localhost` into 1,135 download
   links.** A static export has no runtime to correct it. The build now warns rather than
   throwing, because building locally against `make api` is how the export gets checked
@@ -1083,9 +1088,12 @@ cheaper to handle while the milestone is being designed than after.
       flag is now correct rather than spurious. Regenerating needs Ollama and Gemma 4
       E4B resident, which is a Milestone 12 decision — a hosted runner would do it
       concurrently and is the reason that milestone exists.
-- [ ] **`dist/` still holds the pre-fix artifacts.** Rebuild with `make publish` before
-      the next deploy; `sources.json` in particular still reports byte counts as
-      `row_count`.
+- [x] **`dist/` rebuilt** (2026-09-06). `make publish` and `make check-dist` both pass,
+      and the fixes are present in the tree: `sources.json` reports real row counts,
+      packets carry the content-addressed derived vintage, and a grep over the whole
+      tree finds no credential. Not deployed. The 21 explanations are still flagged
+      stale, which is now correct rather than spurious — they were written on
+      2026-08-14 and the numbers have genuinely moved since.
 
 ## Attribution and licensing
 
