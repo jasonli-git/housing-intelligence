@@ -15,7 +15,7 @@ scope; this document does not restate it.
 > rankings and 8,302 value rankings. **3.48M NJ parcels** live in Parquet and DuckDB and
 > reach the warehouse only as six municipality-level assessment aggregates (#49). Packet
 > `1.1` is validated against `schemas/packet-v1.json`; 21 county and 564 municipal
-> packets are produced by `hip pack`. 223 Python tests and 26 dashboard tests pass,
+> packets are produced by `hip pack`. 272 Python tests and 26 dashboard tests pass,
 > `tsc --noEmit` is clean. **Version 1 is complete (Milestone 8, #56-#64).** Eight local
 > models across two runtimes answered five standardized scenarios over three real county
 > packets — 120 generations, 105 usable — with every stated figure checked against its
@@ -234,7 +234,7 @@ housing-intelligence/
 │   ├── validation/            # gate reports per run; gitignored, per-run machine state
 │   ├── regions/<window>/      # Markdown reports, one per region; 5y committed, README-linked
 │   └── evaluation/            # the published model-evaluation report; committed
-├── tests/                     # 223 Python tests; API tests skip without a warehouse
+├── tests/                     # 272 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
@@ -264,8 +264,10 @@ which is why every write path lives there.
 `region_identifiers`, `region_crosswalk`, `sources`, and `source_releases`; `0003` added
 `metrics`, `fact_metric_observation`, and `source_match_reject`; `0004` added the
 `nation` level; `0005` added `fact_metric_change` and `region_rankings`; `0006` added
-`region_rankings.basis` (#52). The fact table holds 335,927 observations, with 19,527
-changes, 19,517 change rankings and 8,302 value rankings derived from them.
+`region_rankings.basis` (#52); `0007` added `region_explanations` (#57); `0008` added
+`regions.name_lsad` (#70); `0009` added `sources.homepage` (#72). The fact table holds
+335,927 observations, with 19,529 changes, 19,519 change rankings and 8,302 value
+rankings derived from them.
 `region_identifiers`, empty since Milestone 1, now holds 554 NJ municipal codes under
 scheme `nj_cd_code` — the join MOD-IV was always going to supply (#21, #51).
 The migrations are authoritative for DDL and `src/hip/warehouse/models.py` carries the
@@ -286,7 +288,8 @@ CREATE TABLE regions (
   region_id   BIGSERIAL PRIMARY KEY,
   geoid       TEXT         NOT NULL,   -- Census GEOID, or source-native id
   level       region_level NOT NULL,
-  name        TEXT         NOT NULL,
+  name        TEXT         NOT NULL,   -- bare label: 'Boonton'
+  name_lsad   TEXT         NOT NULL,   -- with legal status: 'Boonton township' (#70)
   state_code  CHAR(2)      NOT NULL,
   parent_id   BIGINT       REFERENCES regions(region_id),
   geom        GEOMETRY(MultiPolygon, 4269),
@@ -307,7 +310,8 @@ CREATE TABLE sources (
   name       TEXT NOT NULL,
   publisher  TEXT NOT NULL,
   license    TEXT NOT NULL,
-  url        TEXT NOT NULL,
+  url        TEXT NOT NULL,              -- canonical root; the packet carries this
+  homepage   TEXT,                       -- page for a reader, when it differs (#72)
   cadence    TEXT NOT NULL               -- 'monthly', 'annual'
 );
 

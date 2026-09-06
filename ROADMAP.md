@@ -4,7 +4,7 @@
 geography spine, 335,927 observations across 23 metrics from 10 sources spanning
 1971–2026, 19,527 computed changes, and 19,517 change plus 8,302 value rankings — served
 over the API, displayed by the dashboard, and packaged as versioned analysis packets,
-with 223 Python and 26 dashboard tests passing. All eight pipeline stages run.
+with 272 Python and 26 dashboard tests passing. All eight pipeline stages run.
 
 **Version 2 is under way — Milestones 10 and 11 shipped, on 2026-09-02 and
 2026-09-05.** The platform is now published: New Jersey is served from a public domain

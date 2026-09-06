@@ -3,6 +3,63 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.11.1] — 2026-09-05
+
+Everything the first public deployment surfaced. Publishing the site was what turned
+three latent problems into visible ones: a licence condition nothing was satisfying, a
+set of links nobody had followed, and a build cache that could ship a stale page.
+
+### Added
+- **`GET /sources`** (ARCHITECTURE #71) — the source registry with the releases actually
+  ingested, and the last endpoint in the API table that had no implementation.
+- **A site-wide attribution footer**, rendered from that endpoint. Attribution is a
+  condition of Zillow's licence rather than a courtesy, and before this only report pages
+  carried it, because a packet ships its own sources table. The landing page displayed a
+  `zhvi_sfr` choropleth and ranking while naming no source at all. Coverage went from
+  1,671 pages to all 2,273. Not `print-hide`: a report saved as a PDF carries the same
+  restriction as the page it came from, and that copy is the one most likely to be
+  forwarded to somebody who never saw the site.
+- **`NOTICE`** separating the two sets of terms this repository ships under. MIT covers
+  the code; data and everything derived from it — the committed county reports, the
+  packets, the published artifacts — stay under each publisher's terms. Generated from
+  `config/sources.yml`, which is the registry the pipeline, the API, the packets, and the
+  footer all read.
+- **`regions.name_lsad`** (migration `0008`, #70) — TIGER's `NAMELSAD` beside `NAME`.
+  New Jersey reuses 30 municipality names; `parent_id` resolves most, but four pairs
+  share a name *and* a county — Andover borough/township in Sussex, Boonton
+  town/township in Morris, Bordentown city/township in Burlington, Washington
+  borough/township in Warren — and were separable only by GEOID. Loaded ahead of
+  Milestone 17 because it is a pipeline and schema change, not a frontend one. `name`
+  is unchanged, so no
+  published label moved.
+- **`sources.homepage`** (migration `0009`, #72) — the page a reader should visit, where
+  that differs from the canonical root the packet records.
+
+### Fixed
+- **Five of twelve source links led somewhere broken or machine-facing.**
+  `api.census.gov/data` returned JSON, `api.bls.gov/publicAPI/v2` and
+  `api.stlouisfed.org/fred` returned 404 in a browser, HUD's API root asked for a
+  sign-in, and the MOD-IV link had rotted — New Jersey retired that page and the tax
+  list now lives on NJGIN. That last one went unnoticed because the adapter fetches
+  from an
+  ArcGIS service and never used the configured URL. `url` is deliberately unchanged:
+  it is part of the published packet contract, and repointing it would silently rewrite
+  the provenance every packet carries.
+- **`make publish` could ship a stale page from a warm cache.** Next's incremental cache
+  is keyed on source rather than on data fetched during the build, so a component whose
+  markup barely changed but whose API response had gained a field was served from
+  cache — which is how the corrected footer first built with no `href` on any link,
+  while
+  `dist/artifacts/sources.json` beside it held the right values. `make publish` now
+  removes `web/.next` first. Publishing is not a dev loop.
+- **The README attributed `GET /regions/11/report` to Bergen County.** Region 11 is
+  Mercer; Bergen is region 8.
+
+### Documented
+- **Published URLs key on `region_id`, a surrogate key**, and the manifest now records
+  `region_id → geoid` so a publish refuses to overwrite a tree whose ids have been
+  reassigned — which a database rebuilt from empty would do.
+
 ## [0.11.0] — 2026-09-05
 
 The platform leaves `localhost`. New Jersey is served from `housing.jasonli.app` with
