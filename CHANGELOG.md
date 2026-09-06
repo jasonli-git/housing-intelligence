@@ -3,6 +3,49 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.12.1] — 2026-09-06
+
+Milestone 19. Every county page now carries five models' readings of the same packet,
+switchable by the reader. The numbers underneath each one are identical bytes — the
+packet hash every row is pinned to guarantees that — so every difference a reader sees is
+the model's own. SPEC requires that a reader can tell interpretation from measurement;
+a disclaimer asserts that, and five models disagreeing about one packet shows it.
+
+### Added
+- **`region_explanations` keyed on the model** (migration 0010), with a `rank` column
+  carrying preference-list position. `rank` exists because `API_MAY_IMPORT` is
+  `{warehouse, packets}`, so the API cannot read config to order five explanations and
+  the ordering has to travel with the rows (#91). Staleness stays per row, so one
+  model's reading can be current while another's is stale.
+- **`GET /regions/{id}/explanations`**, returning every model's reading in rank order,
+  published as `regions/{id}/explanations/{window}.json` beside the existing singular
+  artifact (#92).
+- **`hip explain --all`**, generating one explanation per candidate on the preference
+  list; `--model` now repeats. Staleness is tracked per region *and* model, so a partial
+  run resumes rather than restarting.
+- **A switcher on the interpretation panel**, a radiogroup rather than a tablist — five
+  answers to one question, so arrow-key semantics come free. It states the claim the
+  design depends on: every option describes the same figures from the same packet.
+- **Per-cohort generation limits**, separate from the evaluation's and never applied to
+  it (#93). A common evaluation budget is what makes the benchmark comparable; a
+  generation budget only has to let the selected model finish a paragraph, and that is a
+  property of the runtime — 12,288 context tokens is Gemma's window on this machine and
+  describes nothing about a hosted model's.
+
+### Changed
+- `GET /regions/{id}/explanation` answers `ORDER BY rank LIMIT 1` instead of
+  `scalar_one_or_none`. Response shape is deliberately unchanged: it is a published
+  contract with an artifact tree behind it whose purpose is being consumable.
+
+### Measured
+- **105 explanations**, five models over 21 counties, $0.86.
+- **DeepSeek V4 Pro failed silently at the evaluation's output budget** — an empty answer
+  for 12 of 21 counties, each returned as HTTP 200 with a well-formed body. At 12,000
+  tokens it still failed 2; Bergen County then completed the identical packet in 7,871
+  under a 24,000 ceiling, making this variance in reasoning length rather than a
+  threshold. The ceiling is now 24,000 and costs nothing, because billing is per token
+  emitted and a ceiling is not a reservation.
+
 ## [0.12.0] — 2026-09-06
 
 Milestone 12. The explanation layer runs on hosted inference by default, chooses its

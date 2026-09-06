@@ -11,23 +11,26 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-09-05): v0.11.0, Version 1 complete and Version 2 under way.** New
+> **Status (2026-09-06): v0.12.0, Version 1 complete and Version 2 under way.** New
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
-> **335,927 observations across 23 metrics from 10 public sources, spanning 1971 to
-> 2026**, plus 19,531 computed changes and 27,823 rankings, served behind a three-page
+> **337,552 observations across 23 metrics from 10 public sources, spanning 1971 to
+> 2026**, plus 19,574 computed changes and 27,923 rankings, served behind a three-page
 > dashboard and packaged as versioned analysis packets. All eight pipeline stages run.
-> The source file and match method are recorded on every value. Eight local models were
-> then evaluated against standardized scenarios built from those packets, and the winner
-> writes a short interpretation on each county page — clearly labeled as interpretation,
-> never as measurement.
+> The source file and match method are recorded on every value. Fourteen models — eight
+> local, six hosted across three regulatory regimes — have now been evaluated against
+> standardized scenarios built from those packets, and every county page carries five of
+> them reading the same packet side by side, switchable by the reader and each clearly
+> labeled as interpretation, never as measurement.
 >
 >
 > **Version 2 is live.** The platform now publishes itself: `hip publish` records the
-> API's answers as 5,845 static files and the dashboard pre-renders 2,273 pages, served
+> API's answers as 5,867 static files and the dashboard pre-renders 2,273 pages, served
 > with no database and no application server in production. Milestone 10 measured what a
 > state costs on disk (3.4 GB for New Jersey, 40 kB per region of PostGIS geometry);
-> Milestone 11 put the result on the internet.
+> Milestone 11 put the result on the internet; Milestone 12 moved generation to hosted
+> inference behind an ordered preference list that ends on this machine, so no vendor
+> decision can stop it.
 >
 > See [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md)
 > for what shipped.
@@ -415,7 +418,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.11.0 — **Version 1 is complete; Version 2 is under way.**
+v0.12.0 — **Version 1 is complete; Version 2 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -426,7 +429,7 @@ endpoint still works.
 Version 2 moves it off `localhost` and past New Jersey: static publication on a public
 domain, hosted inference in place of local generation, citation binding, expansion to the
 Northeast and then to every US county, a three-dimensional national map, a consumer entry
-point, and a design system. Nine milestones, two shipped.
+point, and a design system. Eleven milestones, four shipped.
 
 **Milestone 10 — build cost and data placement (2026-09-02).** `hip footprint` reports
 bytes per storage tier, per warehouse table, and per state, including the Postgres size
@@ -441,6 +444,20 @@ ASGI app so the bytes on disk are the bytes the API serves. The dashboard is a s
 export over the same 1,135 regions. `make publish` builds both halves; `make deploy` sends
 artifacts to object storage and the site to a static host. Production runs no database and
 no application server.
+
+**Milestone 12 — hosted inference (2026-09-06).** Generation runs on hosted models by
+default and resolves through an ordered preference list at generation time: the first
+benchmarked candidate that is currently reachable, ending at the local runtime, so no
+vendor decision can stop `hip explain` from running. Six hosted candidates across three
+regulatory regimes were measured against the local baseline on the Milestone 8 scenarios
+and rubric; Gemini 3.7 Flash was selected at 3.56/4.00 with no fabricated figures. The
+local model was not outclassed — it beat three of the six.
+
+**Milestone 19 — multi-model interpretation (2026-09-06).** Every county page carries
+five models' readings of the same packet, switchable by the reader and each attributed to
+the model and provider that wrote it. The numbers underneath are identical bytes, so the
+differences are the models' own — which demonstrates SPEC's requirement that a reader can
+tell interpretation from measurement rather than merely asserting it.
 
 Milestones and their status are in [ROADMAP.md](ROADMAP.md); the current working list and
 known rough edges are in [TODO.md](TODO.md). Work not scheduled for Version 2 is listed at
