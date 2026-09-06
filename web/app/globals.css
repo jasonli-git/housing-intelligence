@@ -209,6 +209,45 @@ button {
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+/* The model switcher. Five answers to one question, so it reads as a choice rather
+   than as navigation, and the selected option is marked by weight and border rather
+   than by colour alone — the panel already spends its colour budget on holding
+   interpretation apart from measurement. */
+.interpretation-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+.interpretation-switch-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-right: 0.15rem;
+}
+.interpretation-switch-option {
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.interpretation-switch-option[aria-checked="true"] {
+  border-color: var(--text-secondary);
+  color: var(--text-primary, var(--text-secondary));
+  font-weight: 600;
+}
+/* The one claim the switcher has to make, or it reads as five sources rather than five
+   readings of one source. */
+.interpretation-switch-note {
+  margin: 0 0 0.8rem;
+  font-size: 0.75rem !important;
+  color: var(--text-muted);
+}
+
 /* Stale text still looks authoritative, which is exactly the danger — so the warning
    sits above the prose rather than below it. */
 .interpretation-stale {

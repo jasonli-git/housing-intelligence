@@ -68,6 +68,10 @@ class Explanation:
     runtime: str
     body: str
     packet_sha256: str
+    # Position in `generation.preference` when this was written. Stored rather than
+    # looked up because the API may not read that config (`API_MAY_IMPORT`), so the
+    # order five explanations are offered in has to travel with the rows.
+    rank: int = 0
 
 
 def generate(
@@ -76,6 +80,7 @@ def generate(
     model_id: str,
     *,
     payload_format: str = "markdown",
+    rank: int | None = None,
 ) -> Explanation:
     """Run one packet through the selected model.
 
@@ -88,11 +93,16 @@ def generate(
     cohort = evaluation.cohorts[cohort_name]
     runner = build_runner(cohort, cohort_name)
 
+    # The cohort's own generation budget where it declares one, the evaluation's
+    # otherwise. Never the evaluation's for a hosted cohort that has stated its own: a
+    # reasoning model cut off mid-thought returns an empty answer, which this function
+    # reports as a failure — correctly, but for a reason that is a config artifact about
+    # different hardware rather than a property of the model.
+    limits = cohort.generation_limits or evaluation.limits
+
     payload = render_payload(packet, payload_format)
     prompt = build_prompt(EXPLAIN_PROMPT, payload, EXPLAIN_QUESTION)
-    if not fits_context(
-        prompt, evaluation.limits.max_output_tokens, evaluation.limits.context_tokens
-    ):
+    if not fits_context(prompt, limits.max_output_tokens, limits.context_tokens):
         raise ValueError(
             f"region {packet.region.region_id}: packet does not fit the configured "
             f"context window. Raise limits.context_tokens in config/evaluation.yml "
@@ -115,7 +125,7 @@ def generate(
             scenario,
             prompt,
             evaluation.sampling.deterministic,
-            evaluation.limits,
+            limits,
             "deterministic",
             0,
             evaluation.sampling.deterministic.seed,
@@ -138,7 +148,7 @@ def generate(
         raise RuntimeError(
             f"region {packet.region.region_id}: {model_id} returned no answer "
             f"({generation.telemetry.generation_tokens} tokens generated, {detail}). "
-            f"Raise limits.max_output_tokens."
+            f"Raise generation.max_output_tokens in config/evaluation.yml."
         )
 
     return Explanation(
@@ -153,15 +163,32 @@ def generate(
         runtime=cohort.provider or cohort.runner,
         body=generation.answer.strip(),
         packet_sha256=packet_hash(packet),
+        rank=rank if rank is not None else rank_of(evaluation, model_id),
     )
 
 
+def rank_of(evaluation: EvaluationConfig, model_id: str) -> int:
+    """Where `model_id` sits in the preference list.
+
+    A model that is not on the list — one named explicitly with `--model` — sorts after
+    every model that is, rather than silently ahead of them at position 0.
+    """
+    preference = evaluation.generation.preference
+    return preference.index(model_id) if model_id in preference else len(preference)
+
+
 def store(session: Session, explanation: Explanation) -> None:
-    """Replace any existing explanation for this region and window."""
+    """Replace this model's explanation for this region and window.
+
+    Scoped to the model since migration 0010. Deleting by `(region_id, window)` alone
+    would make generating a second model's reading erase the first, which is the whole
+    capability the key was widened for.
+    """
     session.execute(
         delete(RegionExplanation).where(
             RegionExplanation.region_id == explanation.region_id,
             RegionExplanation.window == explanation.window,
+            RegionExplanation.model_id == explanation.model_id,
         )
     )
     session.add(
@@ -171,6 +198,7 @@ def store(session: Session, explanation: Explanation) -> None:
             model_id=explanation.model_id,
             model_label=explanation.model_label,
             runtime=explanation.runtime,
+            rank=explanation.rank,
             body=explanation.body,
             packet_sha256=explanation.packet_sha256,
         )
@@ -193,12 +221,26 @@ def explain_region(
     return explanation
 
 
-def is_stale(session: Session, region_id: int, window: str, packet: Packet) -> bool:
-    """Whether the stored explanation was written from different numbers."""
-    stored = session.execute(
-        select(RegionExplanation.packet_sha256).where(
-            RegionExplanation.region_id == region_id,
-            RegionExplanation.window == window,
-        )
-    ).scalar_one_or_none()
-    return stored is not None and stored != packet_hash(packet)
+def is_stale(
+    session: Session,
+    region_id: int,
+    window: str,
+    packet: Packet,
+    model_id: str | None = None,
+) -> bool:
+    """Whether a stored explanation was written from different numbers.
+
+    Per model since migration 0010: one model's reading can be current while another's
+    is stale, because they are generated independently. With no `model_id` the question
+    is asked of the whole region — stale if *any* stored explanation is, which is the
+    conservative reading for a caller deciding whether to warn a reader.
+    """
+    query = select(RegionExplanation.packet_sha256).where(
+        RegionExplanation.region_id == region_id,
+        RegionExplanation.window == window,
+    )
+    if model_id is not None:
+        query = query.where(RegionExplanation.model_id == model_id)
+    stored = session.execute(query).scalars().all()
+    current = packet_hash(packet)
+    return any(sha != current for sha in stored)

@@ -122,6 +122,19 @@ cohorts:
     runner: hosted
     provider: deepseek
     api_key_env: DEEPSEEK_API_KEY
+    # `hip explain` only; the evaluation still runs every candidate under the common
+    # `limits` block, which is what makes the benchmark comparable. A 12,288-token
+    # window is Gemma's on this machine and has nothing to do with a hosted model's.
+    generation_limits:
+      context_tokens: 65536
+      # Sized for the tail, not the median, because a ceiling is not a reservation:
+      # billing is per token emitted, so headroom is free unless it is used. Measured
+      # 2026-09-06 on deepseek-v4-pro, whose reasoning length on this task varies far
+      # more than the others' — Bergen County exhausted a 12,000 budget and returned
+      # nothing, then finished the same packet in 7,871 under a 24,000 one. Hosted
+      # generation is accepted as non-reproducible (SPEC), and this is what that costs
+      # in practice: a cap set near the median truncates the tail into empty answers.
+      max_output_tokens: 24000
     endpoint: https://api.deepseek.com/v1
     models:
       # Rates are the PEAK figures. DeepSeek prices by time of day — off-peak is
@@ -154,6 +167,19 @@ cohorts:
     runner: hosted
     provider: gemini
     api_key_env: GEMINI_API_KEY
+    # `hip explain` only; the evaluation still runs every candidate under the common
+    # `limits` block, which is what makes the benchmark comparable. A 12,288-token
+    # window is Gemma's on this machine and has nothing to do with a hosted model's.
+    generation_limits:
+      context_tokens: 65536
+      # Sized for the tail, not the median, because a ceiling is not a reservation:
+      # billing is per token emitted, so headroom is free unless it is used. Measured
+      # 2026-09-06 on deepseek-v4-pro, whose reasoning length on this task varies far
+      # more than the others' — Bergen County exhausted a 12,000 budget and returned
+      # nothing, then finished the same packet in 7,871 under a 24,000 one. Hosted
+      # generation is accepted as non-reproducible (SPEC), and this is what that costs
+      # in practice: a cap set near the median truncates the tail into empty answers.
+      max_output_tokens: 24000
     endpoint: https://generativelanguage.googleapis.com/v1beta
     models:
       # 3.1 Flash-Lite, not the cheaper 2.5 Flash-Lite. 2.5 is still returned by the
@@ -187,6 +213,19 @@ cohorts:
     runner: hosted
     provider: mistral
     api_key_env: MISTRAL_API_KEY
+    # `hip explain` only; the evaluation still runs every candidate under the common
+    # `limits` block, which is what makes the benchmark comparable. A 12,288-token
+    # window is Gemma's on this machine and has nothing to do with a hosted model's.
+    generation_limits:
+      context_tokens: 65536
+      # Sized for the tail, not the median, because a ceiling is not a reservation:
+      # billing is per token emitted, so headroom is free unless it is used. Measured
+      # 2026-09-06 on deepseek-v4-pro, whose reasoning length on this task varies far
+      # more than the others' — Bergen County exhausted a 12,000 budget and returned
+      # nothing, then finished the same packet in 7,871 under a 24,000 one. Hosted
+      # generation is accepted as non-reproducible (SPEC), and this is what that costs
+      # in practice: a cap set near the median truncates the tail into empty answers.
+      max_output_tokens: 24000
     endpoint: https://api.mistral.ai/v1
     models:
       # The only provider of the three that offers addressable dated snapshots, so

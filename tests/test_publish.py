@@ -41,6 +41,18 @@ def test_plan_maps_query_windows_onto_path_segments() -> None:
     assert plan["/regions/11/report?window=5y"] == "regions/11/report/5y.md"
 
 
+def test_plan_publishes_both_explanation_shapes() -> None:
+    """Milestone 19 adds the plural beside the singular rather than replacing it.
+
+    `regions/{id}/explanation/{window}.json` is a published contract with consumers; the
+    comparison is a new file next to it. A plan that emitted only the plural would break
+    every reader of the artifact tree, which is the tree's entire purpose.
+    """
+    plan = dict(_plan([11], []))
+    assert plan["/regions/11/explanation?window=5y"] == "regions/11/explanation/5y.json"
+    assert plan["/regions/11/explanations?window=5y"] == "regions/11/explanations/5y.json"
+
+
 def test_plan_publishes_reports_as_markdown_not_json() -> None:
     """`/regions/{id}/report` serves text/markdown; the extension has to follow."""
     paths = [out for _, out in _plan([11], [])]
@@ -151,6 +163,8 @@ def test_every_manifest_entry_exists_on_disk(published: Path) -> None:
 def test_skipped_entries_are_explanations_not_data(published: Path) -> None:
     """404s are expected only where `hip explain` has not run, never for a packet."""
     manifest = json.loads((published / "manifest.json").read_text())
+    # Matches both the singular and plural paths: a region without generated prose
+    # 404s on each, and both are legitimate skips.
     unexpected = [path for path in manifest["skipped_404"] if "/explanation" not in path]
     assert not unexpected, f"unexpected 404s: {unexpected[:5]}"
 

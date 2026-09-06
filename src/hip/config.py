@@ -292,6 +292,21 @@ class Cohort(BaseModel):
     api_key_env: str | None = None
     endpoint: str | None = None
     models: list[CandidateModel] = Field(min_length=1)
+    # Overrides `limits` for `hip explain` only, never for the evaluation.
+    #
+    # The distinction is the point. `limits` is an *evaluation* budget: every candidate
+    # is compared under one ceiling, and holding it common is what makes the comparison
+    # mean anything, so a per-cohort override there would quietly invalidate the
+    # benchmark. Generation asks a different question — can this model, on this runtime,
+    # finish a paragraph — and the answer is a property of the runtime. A 12,288-token
+    # window is Gemma's on this machine; DeepSeek and Gemini have an order of magnitude
+    # more, and reserving output inside the local figure is arithmetic about the wrong
+    # hardware.
+    #
+    # Measured 2026-09-06: `deepseek-v4-pro` spent the whole 6,000-token evaluation
+    # budget on reasoning and returned nothing for 12 of 21 counties, then completed the
+    # same packet in 6,985.
+    generation_limits: EvalLimits | None = None
 
     @model_validator(mode="after")
     def _hosted_needs_credentials(self) -> Cohort:

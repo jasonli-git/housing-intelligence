@@ -55,6 +55,7 @@ def _store(region_id: int, packet_sha256: str) -> None:
                 model_id="gemma-4-e4b-q4",
                 model_label="Gemma 4 E4B",
                 runtime="ollama",
+                rank=0,
                 body=BODY,
                 packet_sha256=packet_sha256,
             )
@@ -82,6 +83,7 @@ def preserve_real_explanations(county_id: int) -> Iterator[None]:
                 "model_id": row.model_id,
                 "model_label": row.model_label,
                 "runtime": row.runtime,
+                "rank": row.rank,
                 "body": row.body,
                 "packet_sha256": row.packet_sha256,
                 "generated_at": row.generated_at,
@@ -176,3 +178,136 @@ def test_explanations_are_scoped_per_window(current_explanation: int) -> None:
     """A 5y narrative and a since-2019 one describe different things."""
     response = client.get(f"/regions/{current_explanation}/explanation?window=since_2019")
     assert response.status_code == 404
+
+
+# --- multi-model comparison (Milestone 19) ------------------------------------------
+
+
+def _store_many(
+    region_id: int, packet_sha256: str, models: list[tuple[str, str, int]]
+) -> None:
+    """Several models' readings of one region, each at its preference-list rank."""
+    with Session(get_engine()) as session:
+        session.execute(
+            delete(RegionExplanation).where(
+                RegionExplanation.region_id == region_id,
+                RegionExplanation.window == WINDOW,
+            )
+        )
+        for model_id, runtime, rank in models:
+            session.add(
+                RegionExplanation(
+                    region_id=region_id,
+                    window=WINDOW,
+                    model_id=model_id,
+                    model_label=model_id,
+                    runtime=runtime,
+                    rank=rank,
+                    body=f"{model_id} reading. {BODY}",
+                    packet_sha256=packet_sha256,
+                )
+            )
+        session.commit()
+
+
+@pytest.fixture
+def five_models(county_id: int) -> Iterator[int]:
+    with Session(get_engine()) as session:
+        digest = packet_hash(build_packet(session, county_id, WINDOW))
+    _store_many(
+        county_id,
+        digest,
+        [
+            ("gemini-3.7-flash", "gemini", 0),
+            ("gemini-3.1-flash-lite", "gemini", 1),
+            ("mistral-small-4", "mistral", 2),
+            ("deepseek-v4-pro", "deepseek", 3),
+            ("gemma-4-e4b-q4", "ollama", 4),
+        ],
+    )
+    yield county_id
+
+
+def test_several_models_coexist_for_one_region(five_models: int) -> None:
+    """The capability the widened primary key exists for. Before migration 0010 storing
+    a second model's reading silently erased the first."""
+    body = client.get(f"/regions/{five_models}/explanations?window={WINDOW}").json()
+    assert len(body["explanations"]) == 5
+    assert len({e["model_id"] for e in body["explanations"]}) == 5
+
+
+def test_explanations_are_returned_in_preference_order(five_models: int) -> None:
+    """The order is the information — it is the preference list's own ranking, and the
+    dashboard takes the first as its default."""
+    body = client.get(f"/regions/{five_models}/explanations?window={WINDOW}").json()
+    assert [e["model_id"] for e in body["explanations"]] == [
+        "gemini-3.7-flash",
+        "gemini-3.1-flash-lite",
+        "mistral-small-4",
+        "deepseek-v4-pro",
+        "gemma-4-e4b-q4",
+    ]
+
+
+def test_the_singular_endpoint_keeps_its_shape_and_returns_the_preferred_model(
+    five_models: int,
+) -> None:
+    """`/explanation` is a published contract with an artifact tree behind it. Migration
+    0010 must not turn it into a list, and it must answer with rank 1 rather than
+    whichever row the scan reached first."""
+    body = client.get(f"/regions/{five_models}/explanation?window={WINDOW}").json()
+    assert isinstance(body, dict)
+    assert body["model_id"] == "gemini-3.7-flash"
+    assert body["kind"] == "interpretation"
+    assert "explanations" not in body
+
+
+def test_every_model_reads_the_same_packet(five_models: int) -> None:
+    """The point of serving them together: the numbers underneath are identical, so any
+    difference in the prose is the model's own."""
+    body = client.get(f"/regions/{five_models}/explanations?window={WINDOW}").json()
+    assert all(e["stale"] is False for e in body["explanations"])
+
+
+def test_one_model_can_be_stale_while_another_is_current(
+    county_id: int,
+) -> None:
+    """Models are generated independently, so collapsing staleness to one flag per
+    region would misreport both."""
+    with Session(get_engine()) as session:
+        digest = packet_hash(build_packet(session, county_id, WINDOW))
+    _store_many(county_id, digest, [("gemini-3.7-flash", "gemini", 0)])
+    with Session(get_engine()) as session:
+        session.add(
+            RegionExplanation(
+                region_id=county_id,
+                window=WINDOW,
+                model_id="gemma-4-e4b-q4",
+                model_label="Gemma 4 E4B",
+                runtime="ollama",
+                rank=4,
+                body=BODY,
+                packet_sha256="0" * 64,
+            )
+        )
+        session.commit()
+
+    body = client.get(f"/regions/{county_id}/explanations?window={WINDOW}").json()
+    by_model = {e["model_id"]: e["stale"] for e in body["explanations"]}
+    assert by_model == {"gemini-3.7-flash": False, "gemma-4-e4b-q4": True}
+
+
+def test_absent_explanations_are_a_404_not_an_empty_list(
+    county_id: int,
+) -> None:
+    """`hip publish` treats a 404 as a skip. An empty body would put a contentless file
+    in the artifact tree for every region that has no explanation."""
+    with Session(get_engine()) as session:
+        session.execute(
+            delete(RegionExplanation).where(RegionExplanation.region_id == county_id)
+        )
+        session.commit()
+    assert (
+        client.get(f"/regions/{county_id}/explanations?window={WINDOW}").status_code
+        == 404
+    )

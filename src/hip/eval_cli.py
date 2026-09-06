@@ -477,13 +477,14 @@ def show_command(
 
 def explain_command(
     region: int | None,
-    model_id: str | None,
+    model_id: list[str] | None,
     window: str,
     level: str,
     payload_format: str,
     limit: int | None,
     force: bool = False,
     unbenchmarked: bool = False,
+    all_models: bool = False,
 ) -> None:
     """Body of `hip explain`, registered on the root app in cli.py."""
     from hip.eval.explain import explain_region
@@ -497,14 +498,24 @@ def explain_command(
     # a model on the command line stays possible, but the default is a decision made at
     # generation time from what is currently reachable, so no vendor outage stops this
     # command (SPEC: model selection resolves through an ordered preference list).
-    if model_id is None:
+    # Three ways to choose. `--all` walks the whole preference list, which is what
+    # produces the reader-facing comparison; `--model` names candidates explicitly and
+    # may repeat; neither resolves to the single first-available candidate.
+    if all_models:
+        models = list(evaluation.generation.preference)
+        typer.echo(
+            f"generating {len(models)} explanations per region: {', '.join(models)}"
+        )
+    elif model_id:
+        models = list(model_id)
+    else:
         try:
             resolution = resolve(evaluation, require_benchmark=not unbenchmarked)
         except NoModelAvailable as exc:
             typer.secho(str(exc), fg=typer.colors.RED, err=True)
             raise typer.Exit(code=1) from exc
-        model_id = resolution.model_id
-        typer.echo(f"using {model_id} ({resolution.runtime})")
+        models = [resolution.model_id]
+        typer.echo(f"using {resolution.model_id} ({resolution.runtime})")
         for passed_over, why in resolution.skipped:
             typer.secho(f"  skipped {passed_over}: {why}", fg=typer.colors.YELLOW)
         if unbenchmarked:
@@ -530,63 +541,76 @@ def explain_command(
 
         written = 0
         fresh = 0
-        for region_id in region_ids:
-            # Skip regions whose stored prose was written from these exact numbers.
-            # `is_stale` existed from Milestone 8 and was used only by the API; this
-            # command regenerated everything unconditionally, which was harmless at 21
-            # counties and three local minutes and is the entire cost argument at
-            # national scale. Only meaningful since ARCHITECTURE #73 and #77 — before
-            # those, a rebuild moved every packet hash whether a number changed or not.
-            if not force and _is_fresh(session, region_id, window, payload_format):
-                fresh += 1
-                continue
-            try:
-                explanation = explain_region(
-                    session,
-                    evaluation,
-                    region_id,
-                    model_id,
-                    window=window,
-                    payload_format=payload_format,
+        failed = 0
+        for candidate in models:
+            for region_id in region_ids:
+                # Skip work whose stored prose was written from these exact numbers.
+                # Keyed on the model as well as the region since migration 0010, so a
+                # partial `--all` run resumes rather than restarting. `is_stale` existed
+                # from Milestone 8 and was used only by the API; this command
+                # regenerated everything unconditionally, which was the entire cost
+                # argument at national scale, and only became meaningful once #73, #77
+                # and #88 stopped the packet hash moving on every run.
+                if not force and _is_fresh(session, region_id, window, candidate):
+                    fresh += 1
+                    continue
+                try:
+                    explanation = explain_region(
+                        session,
+                        evaluation,
+                        region_id,
+                        candidate,
+                        window=window,
+                        payload_format=payload_format,
+                    )
+                except RunnerUnavailable as exc:
+                    typer.secho(str(exc), fg=typer.colors.RED, err=True)
+                    raise typer.Exit(code=1) from exc
+                except (RuntimeError, ValueError) as exc:
+                    # One model failing must not lose the others: with `--all` this is
+                    # five models over 21 regions, and aborting on the first would throw
+                    # away every generation already paid for.
+                    typer.secho(
+                        f"skipped {candidate}/{region_id}: {exc}",
+                        fg=typer.colors.YELLOW,
+                        err=True,
+                    )
+                    failed += 1
+                    continue
+                session.commit()
+                written += 1
+                typer.echo(
+                    f"{explanation.model_id:<22}{explanation.region_id:>5}  "
+                    f"{len(explanation.body):>5} chars  "
+                    f"{explanation.body.splitlines()[0][:52]}..."
                 )
-            except RunnerUnavailable as exc:
-                typer.secho(str(exc), fg=typer.colors.RED, err=True)
-                raise typer.Exit(code=1) from exc
-            except (RuntimeError, ValueError) as exc:
-                typer.secho(f"skipped: {exc}", fg=typer.colors.YELLOW, err=True)
-                continue
-            session.commit()
-            written += 1
-            typer.echo(
-                f"{explanation.region_id:>5}  {len(explanation.body):>5} chars  "
-                f"{explanation.body.splitlines()[0][:70]}..."
-            )
 
-    summary = f"{written} explanations written by {model_id}"
+    summary = f"{written} explanations written by {len(models)} model(s)"
     if fresh:
         summary += f", {fresh} already current (--force to regenerate)"
-    typer.secho(summary, fg=typer.colors.GREEN)
+    if failed:
+        summary += f", {failed} failed"
+    typer.secho(summary, fg=typer.colors.RED if failed else typer.colors.GREEN)
 
 
-def _is_fresh(session: Session, region_id: int, window: str, payload_format: str) -> bool:
-    """Whether a stored explanation was written from exactly these numbers.
+def _is_fresh(session: Session, region_id: int, window: str, model_id: str) -> bool:
+    """Whether this model's stored explanation was written from exactly these numbers.
 
-    A region with no stored explanation is not fresh, and a packet that cannot be built
-    is not fresh either — in both cases the generation attempt should proceed and fail
-    on its own terms rather than be silently skipped here.
+    A region with no stored explanation for this model is not fresh, and a packet that
+    cannot be built is not fresh either — in both cases the generation attempt should
+    proceed and fail on its own terms rather than be silently skipped here.
     """
     from hip.eval.explain import is_stale
     from hip.packets import PacketUnavailable, build_packet
     from hip.warehouse.models import RegionExplanation
 
-    stored = session.get(RegionExplanation, (region_id, window))
-    if stored is None:
+    if session.get(RegionExplanation, (region_id, window, model_id)) is None:
         return False
     try:
         packet = build_packet(session, region_id, window)
     except PacketUnavailable:
         return False
-    return not is_stale(session, region_id, window, packet)
+    return not is_stale(session, region_id, window, packet, model_id)
 
 
 @app.command("cost")
