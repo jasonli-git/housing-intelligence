@@ -1378,6 +1378,46 @@ cost column has to state which rate it used or it is not reproducible.
       refresh, so `make publish` needs re-running before the site reflects them. Not done
       here; it is Milestone 11's surface and its done criterion is a reachable URL.
 
+- [ ] **Reasoning effort was never controlled, so the benchmark compared vendor
+      defaults rather than comparable configurations.** Raised 2026-09-06 from an
+      outside review and verified against the live API the same day. `HostedRunner`
+      sends no reasoning parameter, and DeepSeek V4 defaults to *high* — which fully
+      explains the 93-95% reasoning share, the 34,666 output tokens across 15 benchmark
+      runs, the $18.92 per thousand generations, and the 12-of-21 empty answers that
+      forced the 24,000-token ceiling (#93). Every DeepSeek cost figure in
+      [reports/evaluation/v2.md](reports/evaluation/v2.md) is therefore an upper bound
+      measured at the model's most expensive setting, not its floor.
+
+      Measured on `deepseek-v4-pro`, one packet-shaped prompt, 2026-09-06:
+
+      | Variant | output tok | reasoning | answer |
+      |---|---:|---:|---:|
+      | default (what `v2` benchmarked) | 858 | 661 | 879 chars |
+      | `reasoning_effort: "low"` | 801 | 603 | 883 chars |
+      | `thinking: {"type": "disabled"}` | **223** | 0 | **986 chars** |
+
+      Two things follow. `reasoning_effort: "low"` is not the lever — it saves 7%. The
+      lever is disabling thinking outright, which cuts output 3.8x *and* returned a
+      longer answer, so on this task the reasoning was not buying the reader anything.
+
+      **The wider finding is not about DeepSeek.** `v2` compared seven models each at its
+      own vendor default: Gemini 3.7 Flash spent 18,885 of 26,840 output tokens thinking,
+      Mistral spent none, DeepSeek nearly all. So the quality-per-dollar column partly
+      measures how much a vendor thinks by default rather than a model's efficiency at
+      comparable effort. That is a defensible thing to measure — it is what you get out
+      of the box — but it was not stated, and the report should say so. It does not move
+      the winner: rubric score is unaffected, and Gemini 3.7 Flash led at 3.56.
+
+      Scope when it is picked up: reasoning effort becomes a `CandidateModel` field so a
+      configuration is a candidate rather than a hidden default; add
+      `deepseek-v4-pro` and `gemini-3.7-flash` thinking-disabled variants to run `v2`;
+      judge only the new generations, since the judge prompt is unchanged and scores
+      stay comparable within the run. 2 variants x 15 scenarios = 30 judgments, about
+      $1.19 at the measured rate. **Do not quietly switch the generation path to
+      thinking-disabled first**: Milestone 8's rule is that only a benchmarked
+      configuration writes published prose, and a different reasoning setting is a
+      different configuration.
+
 - [ ] **Historical comparison for Milestone 17 — trajectory, not just position.**
       Asked 2026-09-06: can a reader compare last quarter or last year against now, and
       does it need an external volume? **It does not.** The premise that this is a
