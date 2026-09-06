@@ -95,8 +95,19 @@ def completed_keys(run: str) -> set[str]:
 
 
 def runs() -> Iterator[str]:
-    """Existing run names, newest directory name last."""
+    """Existing run names, most recently written last.
+
+    Ordered by modification time rather than by name. `hip explain` takes the last
+    entry as "the most recent evaluation", and a lexical sort puts `v10` before `v2` —
+    which would silently generate the whole site's prose with an older run's winner.
+    The name is a label; the filesystem knows which run actually happened last.
+    """
     root = eval_dir()
     if not root.exists():
         return iter([])
-    return iter(sorted(p.name for p in root.iterdir() if p.is_dir()))
+    directories = [p for p in root.iterdir() if p.is_dir()]
+    # Name breaks ties, so two runs written in the same clock tick still order
+    # deterministically rather than by directory-iteration order.
+    return iter(
+        p.name for p in sorted(directories, key=lambda d: (d.stat().st_mtime, d.name))
+    )

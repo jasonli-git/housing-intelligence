@@ -99,6 +99,29 @@ cohorts:
         label: Phi-4 mini reasoning
         quantization: 4bit
 
+# How `hip explain` picks a model, resolved at generation time rather than pinned.
+#
+# The list is a durability mechanism, not a tuning knob: it resolves to the first
+# available candidate and ends at a local model, so no vendor decision can stop `hip
+# explain` from running. Two rules keep it from becoming a back door around the
+# benchmark — every entry must be a model some cohort declares (checked by
+# `hip check-config`) and must have passed the evaluation (checked at resolution,
+# where the run results are).
+#
+# It holds one model today because one model has passed. Milestone 12's hosted tiers
+# are prepended as they clear the benchmark; the candidate slate, the rejected
+# candidates, and the reasons are in TODO.md under "Milestone 12 — Hosted inference".
+# Hosted refs are deliberately absent rather than provisional: a model identifier
+# taken from a blog and never called is indistinguishable in this file from one that
+# was verified, and the one thing a pin exists to prevent is a silent substitution.
+generation:
+  preference:
+    - gemma-4-e4b-q4
+  # In-flight requests per hosted cohort. Hosted inference is on this milestone for
+  # concurrency, but an unbounded fan-out earns 429s that look like model failures,
+  # and the retry that follows costs more wall-clock than the parallelism saved.
+  max_concurrency: 4
+
 # The instruction every model receives. Deliberately short: an over-specified prompt
 # measures prompt engineering rather than the model, and the platform's own rule is that
 # the model explains computed metrics without adding claims of its own.

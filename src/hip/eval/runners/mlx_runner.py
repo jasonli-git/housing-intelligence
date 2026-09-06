@@ -77,9 +77,12 @@ class MlxRunner:
     swap was measured to be the difference between a usable run and an unusable one.
     """
 
-    def __init__(self, models_dir: Path | None = None) -> None:
+    def __init__(self, models_dir: Path | None = None, cohort: str = "mlx") -> None:
         self._models_dir = models_dir or LMSTUDIO_MODELS
         self._loaded: tuple[str, Any, Any] | None = None
+        # Named by config rather than hardcoded, for the same reason as in the Ollama
+        # runner: the cohort is a grouping in the report, not a property of the class.
+        self._cohort = cohort
 
     def available(self) -> bool:
         try:
@@ -197,7 +200,7 @@ class MlxRunner:
             scenario_id=scenario.scenario_id,
             region_id=scenario.region_id,
             model_id=model.id,
-            cohort="mlx",
+            cohort=self._cohort,
             mode=mode,  # type: ignore[arg-type]
             repeat=repeat,
             answer=answer,
@@ -221,7 +224,7 @@ class MlxRunner:
             scenario_id=scenario.scenario_id,
             region_id=scenario.region_id,
             model_id=model.id,
-            cohort="mlx",
+            cohort=self._cohort,
             mode=mode,  # type: ignore[arg-type]
             repeat=repeat,
             answer="",

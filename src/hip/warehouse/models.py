@@ -97,7 +97,7 @@ class RegionIdentifier(Base):
 
 
 class RegionExplanation(Base):
-    """A local model's prose about one region, precomputed and attributed.
+    """A model's prose about one region, precomputed and attributed.
 
     The only place generated text enters the warehouse, and it enters as a leaf: nothing
     reads this to compute anything. `hip explain` writes it, `/regions/{id}/explanation`

@@ -1095,6 +1095,181 @@ cheaper to handle while the milestone is being designed than after.
       stale, which is now correct rather than spurious — they were written on
       2026-08-14 and the numbers have genuinely moved since.
 
+## Milestone 12 — Hosted inference
+
+Started 2026-09-06. Two scope decisions settled with the user before any code was
+written:
+
+- **Concurrent submission now; vendor batch deferred to Milestone 15.** Roadmap row 12
+  says "batch submission", but the milestone's own argument is wall-clock concurrency,
+  and the two point at different architectures. Bounded parallel requests against the
+  normal synchronous endpoints finish 21 counties in seconds and behave identically at
+  every tier of the preference list. Vendor batch APIs are roughly half price and
+  asynchronous, and DeepSeek has no equivalent — so adopting them now would make tier 1
+  behave differently from tiers 2 and 3 while discarding the concurrency that justifies
+  the milestone. The 50% discount starts mattering at Milestone 15's 3,144 counties;
+  the seam is recorded in [ARCHITECTURE.md](ARCHITECTURE.md), not built.
+- **Both a cheap and a mid tier per provider.** Six hosted candidates rather than three.
+  Milestone 8's central finding was that capability does not predict quality on this
+  task — Gemma 4 E4B scored 3.21 against Gemma 4 12B's 2.10 — so picking a tier by
+  assumption is exactly the reasoning that finding disproved. Six candidates is also
+  the only slate that produces a real quality-per-dollar column rather than a
+  price column beside a single measurement.
+
+### Candidate slate
+
+Chosen on price and jurisdiction, ranked by the benchmark, never the reverse
+([SPEC.md](SPEC.md) principle 9). Gemini rates are from Google's own pricing page and
+are firm; DeepSeek and Mistral rates come from secondary sources and are provisional
+until verified against each provider's live pricing — see the first task below.
+
+| Provider | Tier | Model ID | $/MTok in | $/MTok out |
+|---|---|---|---|---|
+| DeepSeek | cheap | `deepseek-v4-flash` | 0.22 off-peak / 0.44 peak | 0.66 / 1.32 |
+| DeepSeek | mid | `deepseek-v4-pro` | 0.66 / 1.32 | 1.98 / 3.96 |
+| Gemini | cheap | `gemini-2.5-flash-lite` | 0.10 | 0.40 |
+| Gemini | mid | `gemini-3.7-flash` | 0.75 | 3.75 |
+| Mistral | cheap | Mistral Small 4, dated snapshot | 0.15 | 0.60 |
+| Mistral | mid | Mistral Large 3, dated snapshot | 0.50 | 1.50 |
+
+Gemma 4 E4B is re-judged in the same batch. Its stored `v1` scores stop being
+comparable the moment the judge's system prompt loses the word "local" (see the
+pre-milestone review above), so the baseline is re-measured rather than carried over.
+Seven models × 15 scenarios = 105 judgments, ~$3.31–4.62 at the measured prompt size.
+
+**Rejected candidates, recorded so they are not re-proposed:**
+
+- **`gemini-3.8-flash`** — same list price as 3.7 Flash, but it generates roughly 30%
+  more output tokens and takes more agentic turns, so the same task costs about 40%
+  more. Google's own guidance points efficiency-first workloads at 3.7. This workload is
+  single-turn, short-prose, and the rubric's clarity criterion states that length is not
+  a virtue, so 3.8's extra deliberation is a liability here rather than a feature.
+- **`gemini-3-flash-preview` and `gemini-3.1-pro-preview`** — a `-preview` identifier is
+  a moving target, which is the one thing [SPEC.md](SPEC.md) forbids for a hosted pin
+  (principle: pinned versions, never aliases, because a repointed alias changes
+  published prose silently). Benchmarking them would spend judge dollars producing a
+  score for a model that can never enter the preference list.
+- **`gemini-3.1-flash-lite` and `gemini-3.5-flash-lite`** — they sit between the two
+  Gemini candidates chosen. Testing three Lite variants measures Google's version
+  increments rather than the price-versus-quality question the slate exists to answer.
+  2.5 Flash-Lite is the price floor across all three providers and 3.7 Flash is the
+  efficiency-first Flash, which is the widest spread Gemini offers: 7.5× on input,
+  9.4× on output.
+- **Gemma 4 26B A4B / 31B on the Gemini API** — free tier only, with no paid path.
+  That means Google's training terms apply to the prompts, the free tier's rate limits
+  apply to the requests, and neither is compatible with a preference-list tier whose
+  whole purpose is concurrency. Genuinely interesting as a benchmark — it would extend
+  Milestone 8's within-family curve past E4B and 12B — but it cannot ship, so it does
+  not earn judge dollars from a balance that has room for roughly one re-run. Worth
+  running on its own if the budget is topped up.
+
+### Version pinning is not equally achievable across the three
+
+[SPEC.md](SPEC.md) requires hosted identifiers pinned to explicit versions rather than
+moving aliases. The three providers support that to different degrees, and the
+difference is worth recording because it weakens the roadmap's DeepSeek-first ordering:
+
+- **Mistral pins cleanly.** Dated snapshots (`<model>-<YYMM>`) are addressable, and a
+  retired snapshot returns an error — a loud failure that falls through, which is
+  exactly the behaviour the SPEC asks for.
+- **Gemini's IDs are stable but undated.** `gemini-2.5-flash-lite` is not a `-latest`
+  alias, but neither is it a checkpoint.
+- **DeepSeek rolls checkpoints behind its ID.** `deepseek-v4-flash` moved to a
+  V4-Flash-0731 checkpoint on 2026-07-31 and `deepseek-v4-pro` to V4-Pro-0813 on
+  2026-08-13, without the ID changing. Whether an addressable pinned checkpoint exists
+  needs checking against the live API. If it does not, tier 1 of the preference list is
+  the one tier that can change its output silently, and that is an argument for
+  reordering rather than a detail.
+
+DeepSeek also prices by time of day (off-peak roughly 16:30–00:30 UTC), so a published
+cost column has to state which rate it used or it is not reproducible.
+
+### Tasks
+
+- [ ] **Blocked on API keys.** Verify every model ID and token rate against each
+      provider's live API and pricing page. Nothing in the table above was measured here, and a
+      published quality-per-dollar column must not carry a number taken from a blog.
+      `hip eval models` now does this for a hosted cohort: it asks the provider what it
+      serves and marks a ref `-` when the pin is withdrawn or misspelled. It needs a
+      key to answer, which is the only reason this row is not checked off
+- [x] `Cohort.runner` gains `hosted`; `Cohort` gains the provider dialect, the API key
+      environment variable, and the endpoint. `CandidateModel` gains input and output
+      token rates, so cost is per candidate rather than per provider
+- [x] Cohort name passed in from config rather than hardcoded in each runner
+      (`cohort="gguf"` in [ollama.py](src/hip/eval/runners/ollama.py), `cohort="mlx"` in
+      [mlx_runner.py](src/hip/eval/runners/mlx_runner.py), in both the success and
+      failure paths). Three providers cannot each be their own cohort until this moves
+- [x] `HostedRunner` implementing `ModelRunner`, over `httpx` with a per-provider
+      adapter for auth, endpoint, and response shape — no vendor SDKs, matching how
+      `OllamaRunner` already talks to its runtime. Normalizes each provider's usage
+      counters into `Telemetry`, and is honest about what a hosted API cannot report:
+      `peak_memory_mb` and `load_ms` stay null, and `memory_basis` gains no third value
+- [x] Retry with exponential backoff on 429 and 5xx, because without it a single
+      transient error disqualifies a candidate under the next item
+- [x] `select_winner`'s `summary.errors == 0` gate becomes an error *rate* with a
+      stated threshold, the way the 5% fabrication bar already is
+      ([report.py:193](src/hip/eval/report.py:193)). The absolute gate was right for
+      local runtimes, where an error means the model genuinely could not run; one HTTP
+      429 must not disqualify an otherwise winning hosted model
+- [x] Bounded-concurrency submission for the evaluation run and the regeneration pass.
+      [runner.py](src/hip/eval/runner.py) is strictly sequential for a memory reason
+      that does not apply to a hosted cohort, so the sequential path stays for local
+      cohorts and concurrency is a property of the runner rather than of the loop
+- [x] The two strings that say the explanation layer is local: the judge's system prompt
+      ([judge.py:47](src/hip/eval/judge.py:47)) and the API disclaimer
+      ([explanations.py:31](src/hip/api/routers/explanations.py:31))
+- [x] Ordered preference list resolved at generation time — DeepSeek, then Gemini, then
+      Mistral, then local Gemma 4 E4B last — with eligibility enforced against the
+      benchmark: a model that has not passed the evaluation cannot enter the list. The
+      resolved model is already recorded per row by `region_explanations.model_id`
+- [x] `runs()` orders lexically ([store.py:102](src/hip/eval/store.py:102)), so `v10`
+      would sort before `v2` and `hip explain` would silently pick the older run's
+      winner. Sort by modification time
+- [x] `hip explain` gains the staleness gate it never had. `is_stale`
+      ([explain.py:192](src/hip/eval/explain.py:192)) exists and is used only by the
+      API; `explain_command` regenerates every region unconditionally. Harmless at 21
+      counties and three local minutes, and the whole cost argument at national scale
+- [ ] **Blocked on API keys.** Measure how many regions a real monthly refresh actually marks stale **before**
+      deciding how much precision to discard. [ROADMAP.md](ROADMAP.md) is explicit that
+      display-precision hashing is now an optimisation with a baseline rather than a
+      workaround for the defect that #73 and #77 fixed, so the measurement comes first
+      and the rounding rule follows from it
+- [x] Quality-per-dollar column in the evaluation report, from the per-candidate rates
+      and the recorded token counts
+- [ ] **Blocked on API keys.** Regenerate the 21 stale NJ explanations with the selected model
+- [x] Tests: the hosted runner against a mocked transport, retry and backoff behaviour,
+      preference-list fallthrough including exhaustion to the local tier, eligibility
+      rejection of an unbenchmarked model, cohort-from-config for all three runners, the
+      error-rate gate, and run ordering past `v9`
+
+- Note: **What is built and what is blocked, as of 2026-09-06.** Everything that does
+      not need a key is done and tested: the config schema, `HostedRunner` with its
+      three dialects and its retry, the preference list, bounded concurrency, the
+      staleness gate, the cost column, and the five collision items from the
+      pre-milestone review. 321 tests pass. Three tasks remain and all three need a
+      live key — verifying the pins and rates, measuring real staleness on a refresh,
+      and regenerating the 21 NJ explanations. The candidate slate cannot be written
+      into `config/evaluation.yml` until the first of those runs.
+- Note: **`generation.preference` holds one model and that is the honest state.** SPEC
+      requires the list to contain only models that have passed the evaluation, and
+      today that is the local Gemma 4 E4B alone. Hosted tiers are prepended as they
+      clear the benchmark, so the config's own history records when each provider
+      earned its place rather than asserting it in advance.
+- Note: **`hip explain --unbenchmarked` exists for the bootstrap and is a loaded gun.**
+      The benchmark gate cannot be satisfied by a candidate that has never run, so
+      there has to be a way through it to run one. The flag says plainly in its help
+      text and in its output that it publishes prose from an unmeasured model. If it is
+      ever needed outside this milestone, that is a sign the gate is wrong rather than
+      that the flag is useful.
+
+- Note: **`hip eval cost` under-reports, found 2026-09-06.** `estimated_cost`
+      ([judge.py:342](src/hip/eval/judge.py:342)) assumes 7,000 input and 800 output
+      tokens per judgment. Rebuilding the real prompt over the stored `v1` artifacts
+      gives ~2,600 input (226 system + 442 schema + 1,931 user, mean of 15) and
+      2,000–3,000 output, because `effort: medium` thinking bills as output and
+      dominates the verdict JSON. The estimate is low by 15–60%. Corrected in this
+      milestone, which is also the one that adds a cost column.
+
 ## Attribution and licensing
 
 - [x] **Site-wide source footer** (2026-09-05). Was: the landing page's choropleth and

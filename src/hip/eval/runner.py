@@ -1,25 +1,36 @@
-"""The run loop: every model, every scenario, one generation at a time.
+"""The run loop: every model, every scenario.
 
-Ordered by model rather than by scenario, and strictly sequential. Both choices are
-memory, not style. Iterating scenario-first would load and unload each model once per
-question — Ollama's `load_duration` measured in seconds, MLX's model load in tens of
-seconds — and running two generations concurrently would put two models in 16GB of
-unified memory at once, which is the fastest route into swap. A model is loaded, asked
-everything, and unloaded before the next one starts.
+Ordered by model rather than by scenario, and — for a local cohort — strictly
+sequential. Both choices are memory, not style. Iterating scenario-first would load and
+unload each model once per question (Ollama's `load_duration` measured in seconds, MLX's
+model load in tens of seconds), and running two local generations concurrently would put
+two models in 16GB of unified memory at once, which is the fastest route into swap. A
+local model is loaded, asked everything, and unloaded before the next one starts, and
+the two local runtimes are never active at the same time for the same reason.
 
-The two runtimes are never active at the same time for the same reason: each cohort is
-finished and its runner released before the next cohort begins.
+**A hosted cohort has none of those constraints and is submitted concurrently.** Nothing
+is resident here; the model is somebody else's memory. Serializing hosted requests would
+throw away the single property that put hosted inference on Milestone 12 — the wall
+clock, not the price. Concurrency is therefore a property of the cohort rather than of
+this loop, bounded by `generation.max_concurrency` so that a fan-out does not earn the
+429s that a retry then pays for in the wall clock it was meant to save.
+
+Ordering is preserved regardless. Generations are written to disk in plan order even
+when they complete out of it, so a resumed run and a re-derived report are unaffected by
+which request happened to return first — the same reason the artifacts carry no
+wall-clock field (ARCHITECTURE #44).
 """
 
 from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Iterable
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from hip.config import EvaluationConfig, SamplingParams
+from hip.config import CandidateModel, EvaluationConfig, SamplingParams
 from hip.eval.prompts import build_prompt, estimate_tokens, fits_context
-from hip.eval.runners import RunnerUnavailable, build_runner
+from hip.eval.runners import ModelRunner, RunnerUnavailable, build_runner
 from hip.eval.runners.mlx_runner import MlxRunner
 from hip.eval.store import CHECKS, GENERATIONS, append_record, completed_keys, run_dir
 from hip.eval.types import Generation, Scenario
@@ -123,7 +134,7 @@ def run_evaluation(
         if not wanted:
             continue
 
-        runner = build_runner(cohort)
+        runner = build_runner(cohort, cohort_name)
         if not runner.available():
             raise RunnerUnavailable(
                 f"cohort '{cohort_name}' runner '{cohort.runner}' is unavailable. "
@@ -135,34 +146,34 @@ def run_evaluation(
                 )
             )
 
+        concurrency = (
+            evaluation.generation.max_concurrency if cohort.runner == "hosted" else 1
+        )
+
         try:
             for candidate in wanted:
                 for repeat in range(repeats if mode == "stability" else 1):
                     seed = _seed_for(evaluation, mode, repeat)
-                    for scenario in scenarios:
-                        key = f"{scenario.key}|{candidate.id}|{mode}|{repeat}"
-                        if key in already:
-                            continue
+                    pending = [
+                        (scenario, _prompt_for(evaluation, scenario))
+                        for scenario in scenarios
+                        if f"{scenario.key}|{candidate.id}|{mode}|{repeat}" not in already
+                    ]
+                    if not pending:
+                        continue
 
-                        prompt = build_prompt(
-                            evaluation.system_prompt, scenario.payload, scenario.question
-                        )
-                        if not fits_context(
-                            prompt,
-                            evaluation.limits.max_output_tokens,
-                            evaluation.limits.context_tokens,
-                        ):
-                            raise ContextOverflow(
-                                f"{scenario.key}: prompt is ~{estimate_tokens(prompt):,} "
-                                f"tokens plus {evaluation.limits.max_output_tokens:,} "
-                                f"reserved for output, over the configured "
-                                f"context_tokens of "
-                                f"{evaluation.limits.context_tokens:,}. Raise it in "
-                                f"config/evaluation.yml rather than letting the "
-                                f"runtime truncate the packet."
-                            )
-
-                        generation = runner.generate(
+                    # Every loop variable bound as a default. The closure is consumed
+                    # inside the iteration that creates it, so late binding would be
+                    # harmless today and a real bug the moment a future does not.
+                    def _one(
+                        item: tuple[Scenario, str],
+                        runner: ModelRunner = runner,
+                        candidate: CandidateModel = candidate,
+                        repeat: int = repeat,
+                        seed: int | None = seed,
+                    ) -> Generation:
+                        scenario, prompt = item
+                        return runner.generate(
                             candidate,
                             scenario,
                             prompt,
@@ -172,6 +183,17 @@ def run_evaluation(
                             repeat,
                             seed,
                         )
+
+                    if concurrency > 1:
+                        with ThreadPoolExecutor(max_workers=concurrency) as pool:
+                            # `map` yields in submission order, not completion order,
+                            # so the JSONL stays in plan order however the requests
+                            # interleave.
+                            results = list(pool.map(_one, pending))
+                    else:
+                        results = [_one(item) for item in pending]
+
+                    for generation in results:
                         append_record(path, generation)
                         produced.append(generation)
                         if on_generation:
@@ -186,6 +208,32 @@ def run_evaluation(
                 runner.unload()
 
     return produced
+
+
+def _prompt_for(evaluation: EvaluationConfig, scenario: Scenario) -> str:
+    """The prompt for one scenario, refusing one that would be silently truncated.
+
+    Fatal rather than a warning, and checked before anything is submitted: Ollama
+    truncates with no error and no flag on the response, so a model would answer from a
+    fraction of the packet and the run would record a confident wrong answer as a model
+    failing. Hoisted out of the loop so the concurrent and sequential paths cannot
+    diverge on it.
+    """
+    prompt = build_prompt(evaluation.system_prompt, scenario.payload, scenario.question)
+    if not fits_context(
+        prompt,
+        evaluation.limits.max_output_tokens,
+        evaluation.limits.context_tokens,
+    ):
+        raise ContextOverflow(
+            f"{scenario.key}: prompt is ~{estimate_tokens(prompt):,} "
+            f"tokens plus {evaluation.limits.max_output_tokens:,} "
+            f"reserved for output, over the configured context_tokens of "
+            f"{evaluation.limits.context_tokens:,}. Raise it in "
+            f"config/evaluation.yml rather than letting the runtime truncate "
+            f"the packet."
+        )
+    return prompt
 
 
 def scenario_path(run: str) -> Path:

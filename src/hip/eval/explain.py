@@ -86,7 +86,7 @@ def generate(
     candidate = evaluation.model(model_id)
     cohort_name = evaluation.cohort_of(model_id)
     cohort = evaluation.cohorts[cohort_name]
-    runner = build_runner(cohort)
+    runner = build_runner(cohort, cohort_name)
 
     payload = render_payload(packet, payload_format)
     prompt = build_prompt(EXPLAIN_PROMPT, payload, EXPLAIN_QUESTION)
@@ -146,7 +146,11 @@ def generate(
         window=packet.window.label,
         model_id=candidate.id,
         model_label=candidate.label,
-        runtime=cohort.runner,
+        # The provider, not the runner class, for a hosted cohort. Three providers
+        # share one `HostedRunner`, so storing `cohort.runner` would record "hosted" on
+        # every row and lose the one fact the dashboard's provenance panel exists to
+        # show — which vendor wrote this paragraph.
+        runtime=cohort.provider or cohort.runner,
         body=generation.answer.strip(),
         packet_sha256=packet_hash(packet),
     )

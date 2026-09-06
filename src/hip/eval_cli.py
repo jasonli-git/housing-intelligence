@@ -21,7 +21,7 @@ from hip.warehouse.db import get_engine
 
 app = typer.Typer(
     name="eval",
-    help="Evaluate local models against standardized housing scenarios.",
+    help="Evaluate candidate models against standardized housing scenarios.",
     no_args_is_help=True,
     add_completion=False,
 )
@@ -375,33 +375,55 @@ def report_command(
 
 @app.command("models")
 def models_command() -> None:
-    """List the configured candidates and whether each runtime can serve them."""
+    """List the configured candidates and whether each runtime can serve them.
+
+    For a hosted cohort this verifies the pin rather than trusting it: the provider is
+    asked what it actually serves, and a `-` marks a ref that is withdrawn or
+    misspelled. Finding that here costs one request; finding it during a run costs 15
+    identical 404s and a wasted judging batch.
+    """
     from hip.eval.runners import RunnerUnavailable, build_runner
+    from hip.eval.runners.hosted import HostedRunner
     from hip.eval.runners.ollama import OllamaRunner
 
     evaluation = load_evaluation()
     for cohort_name, cohort in evaluation.cohorts.items():
-        runner = build_runner(cohort)
+        runner = build_runner(cohort, cohort_name)
         up = runner.available()
-        installed: set[str] = set()
-        if isinstance(runner, OllamaRunner) and up:
+        served: set[str] = set()
+        detail = ""
+        if up and isinstance(runner, OllamaRunner | HostedRunner):
             try:
-                installed = runner.installed_models()
-            except RunnerUnavailable:
+                served = (
+                    runner.installed_models()
+                    if isinstance(runner, OllamaRunner)
+                    else runner.served_models()
+                )
+            except RunnerUnavailable as exc:
                 up = False
+                detail = f" — {exc}"
+        elif not up and cohort.runner == "hosted":
+            detail = f" — {cohort.api_key_env} is not set"
+
         state = (
             typer.style("available", fg=typer.colors.GREEN)
             if up
             else typer.style("unavailable", fg=typer.colors.RED)
         )
-        typer.echo(f"\n{cohort_name} ({cohort.runner}) — {state}")
+        label = cohort.provider or cohort.runner
+        typer.echo(f"\n{cohort_name} ({label}) — {state}{detail}")
         for candidate in cohort.models:
             mark = " "
-            if cohort.runner == "ollama" and up:
-                mark = "+" if candidate.ref.split(":")[0] in installed else "-"
+            if served:
+                mark = "+" if candidate.ref.split(":")[0] in served else "-"
+            rates = (
+                f"  ${candidate.input_usd_per_mtok:g}/${candidate.output_usd_per_mtok:g}"
+                if candidate.billed_per_token
+                else ""
+            )
             typer.echo(
                 f"  {mark} {candidate.id:<20} {candidate.label:<24} "
-                f"{candidate.quantization:<8} {candidate.ref}"
+                f"{candidate.quantization:<8} {candidate.ref}{rates}"
             )
 
 
@@ -444,54 +466,37 @@ def explain_command(
     level: str,
     payload_format: str,
     limit: int | None,
+    force: bool = False,
+    unbenchmarked: bool = False,
 ) -> None:
     """Body of `hip explain`, registered on the root app in cli.py."""
     from hip.eval.explain import explain_region
-    from hip.eval.report import select_winner, summarize
     from hip.eval.runners import RunnerUnavailable
-    from hip.eval.store import (
-        load_checks,
-        load_generations,
-        load_judgments,
-        runs,
-    )
+    from hip.eval.selection import NoModelAvailable, resolve
     from hip.packets import regions_for_level
 
     evaluation = load_evaluation()
 
-    # Default to whichever model the most recent evaluation selected. Naming a model on
-    # the command line stays possible, but the point of the milestone is that this
-    # choice comes from measurement rather than from a default someone typed once.
+    # Resolve through the ordered preference list rather than pinning one model. Naming
+    # a model on the command line stays possible, but the default is a decision made at
+    # generation time from what is currently reachable, so no vendor outage stops this
+    # command (SPEC: model selection resolves through an ordered preference list).
     if model_id is None:
-        available = list(runs())
-        if not available:
+        try:
+            resolution = resolve(evaluation, require_benchmark=not unbenchmarked)
+        except NoModelAvailable as exc:
+            typer.secho(str(exc), fg=typer.colors.RED, err=True)
+            raise typer.Exit(code=1) from exc
+        model_id = resolution.model_id
+        typer.echo(f"using {model_id} ({resolution.runtime})")
+        for passed_over, why in resolution.skipped:
+            typer.secho(f"  skipped {passed_over}: {why}", fg=typer.colors.YELLOW)
+        if unbenchmarked:
             typer.secho(
-                "no evaluation run found, so no model has been selected. Run the "
-                "evaluation, or name a model with --model.",
-                fg=typer.colors.RED,
-                err=True,
+                "  --unbenchmarked: the benchmark gate is off, so this model may not "
+                "have been measured on the evaluation scenarios",
+                fg=typer.colors.YELLOW,
             )
-            raise typer.Exit(code=1)
-        latest = available[-1]
-        winner = select_winner(
-            summarize(
-                evaluation,
-                load_generations(latest),
-                load_checks(latest),
-                load_judgments(latest),
-            )
-        )
-        if winner is None:
-            typer.secho(
-                f"run '{latest}' selected no model — every candidate either failed, "
-                f"was unjudged, or exceeded the hallucination bar. Name one with "
-                f"--model to override.",
-                fg=typer.colors.RED,
-                err=True,
-            )
-            raise typer.Exit(code=1)
-        model_id = winner.model_id
-        typer.echo(f"using {model_id}, selected by run '{latest}'")
 
     with Session(get_engine()) as session:
         region_ids = (
@@ -508,7 +513,17 @@ def explain_command(
             raise typer.Exit(code=1)
 
         written = 0
+        fresh = 0
         for region_id in region_ids:
+            # Skip regions whose stored prose was written from these exact numbers.
+            # `is_stale` existed from Milestone 8 and was used only by the API; this
+            # command regenerated everything unconditionally, which was harmless at 21
+            # counties and three local minutes and is the entire cost argument at
+            # national scale. Only meaningful since ARCHITECTURE #73 and #77 — before
+            # those, a rebuild moved every packet hash whether a number changed or not.
+            if not force and _is_fresh(session, region_id, window, payload_format):
+                fresh += 1
+                continue
             try:
                 explanation = explain_region(
                     session,
@@ -531,7 +546,31 @@ def explain_command(
                 f"{explanation.body.splitlines()[0][:70]}..."
             )
 
-    typer.secho(f"{written} explanations written by {model_id}", fg=typer.colors.GREEN)
+    summary = f"{written} explanations written by {model_id}"
+    if fresh:
+        summary += f", {fresh} already current (--force to regenerate)"
+    typer.secho(summary, fg=typer.colors.GREEN)
+
+
+def _is_fresh(session: Session, region_id: int, window: str, payload_format: str) -> bool:
+    """Whether a stored explanation was written from exactly these numbers.
+
+    A region with no stored explanation is not fresh, and a packet that cannot be built
+    is not fresh either — in both cases the generation attempt should proceed and fail
+    on its own terms rather than be silently skipped here.
+    """
+    from hip.eval.explain import is_stale
+    from hip.packets import PacketUnavailable, build_packet
+    from hip.warehouse.models import RegionExplanation
+
+    stored = session.get(RegionExplanation, (region_id, window))
+    if stored is None:
+        return False
+    try:
+        packet = build_packet(session, region_id, window)
+    except PacketUnavailable:
+        return False
+    return not is_stale(session, region_id, window, packet)
 
 
 @app.command("cost")

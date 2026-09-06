@@ -52,11 +52,25 @@ class ModelSummary:
     ttft_ms: list[float] = field(default_factory=list)
     reasoning_tokens: int = 0
     generated_tokens: int = 0
+    prompt_tokens: int = 0
+    # None for a model that is not billed per token. Kept distinct from 0.0, which
+    # would put a misleading free in a published cost column for a local model whose
+    # real cost is a machine and an afternoon.
+    usd: float | None = None
     peak_memory_mb: list[float] = field(default_factory=list)
 
     @property
     def mean_score(self) -> float | None:
         return round(statistics.fmean(self.scores), 2) if self.scores else None
+
+    @property
+    def error_rate(self) -> float:
+        """Share of this model's generations that failed outright.
+
+        Zero when nothing ran, so a model with no generations is never admitted by a
+        vacuously clean error rate — `mean_score is not None` is what excludes it.
+        """
+        return self.errors / self.generations if self.generations else 0.0
 
     @property
     def hallucination_rate(self) -> float:
@@ -81,6 +95,34 @@ class ModelSummary:
         if not self.generated_tokens:
             return 0.0
         return round(self.reasoning_tokens / self.generated_tokens, 3)
+
+    @property
+    def usd_per_generation(self) -> float | None:
+        if self.usd is None or not self.generations:
+            return None
+        return self.usd / self.generations
+
+    @property
+    def score_per_dollar(self) -> float | None:
+        """Rubric points per dollar, over a full 1,000-generation run.
+
+        Per-generation cost at these rates is a number with four leading zeros, which
+        no reader can compare at a glance. Scaled to 1,000 generations because that is
+        the order of a real regeneration pass — 1,135 published regions today, 3,144
+        counties at Milestone 15 — so the figure is one someone can reason about
+        against an actual bill rather than an abstract rate.
+        """
+        per = self.usd_per_generation
+        if per is None or self.mean_score is None:
+            return None
+        if per == 0:
+            return None
+        return round(self.mean_score / (per * 1000), 1)
+
+    @property
+    def usd_per_thousand(self) -> float | None:
+        per = self.usd_per_generation
+        return round(per * 1000, 2) if per is not None else None
 
     @property
     def median_tps(self) -> float | None:
@@ -128,7 +170,14 @@ def summarize(
 
         telemetry = generation.telemetry
         summary.generated_tokens += telemetry.generation_tokens
+        summary.prompt_tokens += telemetry.prompt_tokens
         summary.reasoning_tokens += telemetry.reasoning_tokens
+        # Priced from the provider's own token counters rather than from an estimate:
+        # they are what the invoice is computed from, so the cost column and the bill
+        # are derived from the same numbers.
+        billed = candidate.usd_for(telemetry.prompt_tokens, telemetry.generation_tokens)
+        if billed is not None:
+            summary.usd = (summary.usd or 0.0) + billed
         if telemetry.tokens_per_second:
             summary.tokens_per_second.append(telemetry.tokens_per_second)
         if telemetry.ttft_ms:
@@ -177,6 +226,18 @@ def _fmt(value: float | None, suffix: str = "", nd: int = 2) -> str:
     return "—" if value is None else f"{value:.{nd}f}{suffix}"
 
 
+# A model may fail this share of its generations and still be recommended. Stated as a
+# rate rather than as an absolute zero because the two runtimes fail differently: an
+# error from a local runtime means the model genuinely could not run, while a hosted
+# provider returns a 429 for reasons that have nothing to do with the model — and the
+# retry in `HostedRunner` has already exhausted its attempts by the time one is
+# recorded. An absolute gate would disqualify an otherwise winning hosted candidate on
+# one bad afternoon. Set at one generation in fifteen, so a single failure in a
+# standard 15-scenario run is survivable and two are not.
+MAX_ERROR_RATE = 0.07
+MAX_HALLUCINATION_RATE = 0.05
+
+
 def select_winner(summaries: dict[str, ModelSummary]) -> ModelSummary | None:
     """The recommended model.
 
@@ -184,13 +245,15 @@ def select_winner(summaries: dict[str, ModelSummary]) -> ModelSummary | None:
     bar: nothing that fabricated a figure at more than a 5% rate is eligible, however
     well it writes. A platform whose premise is traceable numbers cannot ship an
     explainer that invents them, so this is a gate rather than another weighted term.
+
+    The error bar is the same shape and for the reason above `MAX_ERROR_RATE`.
     """
     eligible = [
         summary
         for summary in summaries.values()
         if summary.mean_score is not None
-        and summary.hallucination_rate <= 0.05
-        and summary.errors == 0
+        and summary.hallucination_rate <= MAX_HALLUCINATION_RATE
+        and summary.error_rate <= MAX_ERROR_RATE
     ]
     if not eligible:
         return None
@@ -214,7 +277,7 @@ def render_report(
     formats = sorted({s.payload_format for s in scenarios})
 
     lines: list[str] = [
-        "# Local model evaluation",
+        "# Model evaluation",
         "",
         f"Run `{run}`. {len(generations):,} generations from "
         f"{len(summaries)} models over {len({s.scenario_id for s in scenarios})} "
@@ -340,7 +403,9 @@ def render_report(
         "It is an efficiency measure only. Peak memory is comparable within a cohort "
         "and not across one: MLX reports a true allocator peak, Ollama reports "
         "nothing, and a process-RSS reading taken from outside would not mean the "
-        "same thing.",
+        "same thing. `tok/s` is likewise not comparable across cohorts: a local "
+        "figure measures the machine, while a hosted one measures a request over a "
+        "network and is a latency number wearing a throughput label.",
         "",
         "| Model | Cohort | tok/s | TTFT | Reasoning | Truncated | Peak memory |",
         "|---|---|---:|---:|---:|---:|---:|",
@@ -358,6 +423,37 @@ def render_report(
             f"{summary.reasoning_share:.0%} | {summary.truncated_reasoning} | "
             f"{memory} |"
         )
+
+    priced = [s for s in summaries.values() if s.usd is not None]
+    if priced:
+        lines += [
+            "",
+            "### Quality per dollar",
+            "",
+            "Priced from each provider's own token counters and the per-candidate "
+            "rates in `config/evaluation.yml`, so this column and the invoice are "
+            "computed from the same numbers. Cost is reported beside quality and does "
+            "not reorder the preference list: a cheaper model is chosen on measured "
+            "evidence, never on price alone.",
+            "",
+            "Scaled to 1,000 generations because that is the order of a real "
+            "regeneration pass — 1,135 published regions today — and a per-generation "
+            "figure at these rates has four leading zeros. A local model has no row "
+            "here: its cost is a machine and an afternoon, not a token rate, and a "
+            "0.00 would read as free.",
+            "",
+            "| Model | Cohort | Rubric | Prompt tok | Output tok | $/1k gens | "
+            "Rubric per $ |",
+            "|---|---|---:|---:|---:|---:|---:|",
+        ]
+        for summary in sorted(priced, key=lambda s: -(s.score_per_dollar or 0)):
+            lines.append(
+                f"| {summary.label} | {summary.cohort} | "
+                f"{_fmt(summary.mean_score)} | "
+                f"{summary.prompt_tokens:,} | {summary.generated_tokens:,} | "
+                f"{_fmt(summary.usd_per_thousand, '', 2)} | "
+                f"{_fmt(summary.score_per_dollar, '', 1)} |"
+            )
 
     lines += [
         "",

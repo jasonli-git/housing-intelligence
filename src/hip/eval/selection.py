@@ -1,0 +1,169 @@
+"""Resolving the ordered preference list to the model that will actually write.
+
+`select_winner` in `report.py` answers "which candidate scored best". This answers a
+different question — "which candidate can write this paragraph right now" — and the two
+are deliberately not the same mechanism. The winner is a finding about a run; the
+resolution is a decision about a moment, and the moment is when a vendor is down.
+
+Three rules, each of them a SPEC requirement rather than a convenience:
+
+- **The list is walked in order and the first available candidate wins.** Not the best
+  available one: reordering by score at generation time would make the published prose
+  depend on a benchmark result that can change under a rebuild, and the point of a
+  preference list is that its behaviour is predictable.
+- **Only benchmarked models are eligible.** A model that has not been measured on these
+  scenarios does not write text the platform publishes, and an entry that has not passed
+  is skipped rather than trusted. This is what stops the list becoming a back door
+  around Milestone 8's discipline.
+- **The list ends at a local model**, enforced at config load. A hosted tail would mean
+  a vendor decision could stop `hip explain` from running, which is the single failure
+  mode the list exists to prevent.
+
+Unavailability is normal operation, not an error. A tier with no API key, a withdrawn
+pin, an unreachable Ollama — each is a fallthrough, and only exhausting the whole list
+raises.
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, field
+
+from hip.config import EvaluationConfig
+from hip.eval.report import MAX_ERROR_RATE, MAX_HALLUCINATION_RATE, ModelSummary
+from hip.eval.runners import RunnerUnavailable, build_runner
+
+log = logging.getLogger(__name__)
+
+
+class NoModelAvailable(RuntimeError):
+    """Every candidate in the preference list was skipped.
+
+    Carries the whole trail rather than only the last failure, because "no model
+    available" with no further detail is the least actionable message this command
+    could produce: the recovery differs per tier, and which tiers were tried is the
+    information that names it.
+    """
+
+
+@dataclass(frozen=True)
+class Resolution:
+    """The model that will generate, and what was passed over to reach it."""
+
+    model_id: str
+    cohort: str
+    runtime: str
+    skipped: list[tuple[str, str]] = field(default_factory=list)
+
+    @property
+    def is_fallback(self) -> bool:
+        """Whether a preferred tier was passed over to get here.
+
+        Worth surfacing in the CLI: a run that silently fell through to the local
+        runtime takes hours instead of seconds, and the operator should learn that from
+        the first line of output rather than from the wall clock.
+        """
+        return bool(self.skipped)
+
+
+def passed_benchmark(summary: ModelSummary) -> bool:
+    """Whether a model cleared the bars the report already applies to a winner.
+
+    Shared with `select_winner` rather than restated, so that a model can never be
+    eligible to *write* under looser rules than it was eligible to *win* under.
+    """
+    return (
+        summary.mean_score is not None
+        and summary.hallucination_rate <= MAX_HALLUCINATION_RATE
+        and summary.error_rate <= MAX_ERROR_RATE
+    )
+
+
+def benchmarked(evaluation: EvaluationConfig, run: str) -> dict[str, ModelSummary]:
+    """Summaries for the models in `run` that cleared the benchmark."""
+    from hip.eval.report import summarize
+    from hip.eval.store import load_checks, load_generations, load_judgments
+
+    summaries = summarize(
+        evaluation,
+        load_generations(run),
+        load_checks(run),
+        load_judgments(run),
+    )
+    return {
+        model_id: summary
+        for model_id, summary in summaries.items()
+        if passed_benchmark(summary)
+    }
+
+
+def latest_run() -> str | None:
+    """The most recently written evaluation run, or None if none exists."""
+    from hip.eval.store import runs
+
+    available = list(runs())
+    return available[-1] if available else None
+
+
+def resolve(
+    evaluation: EvaluationConfig,
+    *,
+    run: str | None = None,
+    require_benchmark: bool = True,
+) -> Resolution:
+    """The first candidate in the preference list that has passed and can be reached.
+
+    `require_benchmark=False` exists for the bootstrap case this milestone is itself in:
+    before any run has scored a hosted candidate there is nothing to check against, and
+    refusing to generate would make the benchmark unrunnable through this path. It is
+    not a flag for ordinary use, and `hip explain` states plainly when it is set.
+    """
+    run = run or latest_run()
+    eligible: dict[str, ModelSummary] = {}
+    if require_benchmark:
+        if run is None:
+            raise NoModelAvailable(
+                "no evaluation run exists, so no candidate has passed the benchmark. "
+                "Run `hip eval run` and `hip eval judge` first, or name a model with "
+                "--model."
+            )
+        eligible = benchmarked(evaluation, run)
+
+    skipped: list[tuple[str, str]] = []
+    declared = {m.id for m in evaluation.models}
+
+    for model_id in evaluation.generation.preference:
+        if model_id not in declared:
+            # `hip check-config` catches this; reaching it here means config changed
+            # under a running process.
+            skipped.append((model_id, "no cohort declares it"))
+            continue
+        if require_benchmark and model_id not in eligible:
+            skipped.append((model_id, f"has not passed the benchmark in run '{run}'"))
+            continue
+
+        cohort_name = evaluation.cohort_of(model_id)
+        cohort = evaluation.cohorts[cohort_name]
+        try:
+            runner = build_runner(cohort, cohort_name)
+            available = runner.available()
+        except RunnerUnavailable as exc:
+            skipped.append((model_id, str(exc)))
+            continue
+        if not available:
+            skipped.append((model_id, f"cohort '{cohort_name}' is unavailable"))
+            continue
+
+        for passed_over, why in skipped:
+            log.info("preference: skipped %s (%s)", passed_over, why)
+        return Resolution(
+            model_id=model_id,
+            cohort=cohort_name,
+            runtime=cohort.provider or cohort.runner,
+            skipped=skipped,
+        )
+
+    trail = "\n  ".join(f"{model_id}: {why}" for model_id, why in skipped)
+    raise NoModelAvailable(
+        "every candidate in generation.preference was skipped:\n  " + trail
+    )

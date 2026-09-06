@@ -15,7 +15,14 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 RegionLevel = Literal["state", "county", "municipality", "zip", "tract", "parcel"]
@@ -234,7 +241,14 @@ class EvalLimits(BaseModel):
 
 class CandidateModel(BaseModel):
     """One model under test. ``anchor`` pairs it with its counterpart in the other
-    cohort, which is what licenses any cross-runtime comparison."""
+    cohort, which is what licenses any cross-runtime comparison.
+
+    Token rates are per candidate rather than per provider because a provider's tiers
+    differ by an order of magnitude, and the quality-per-dollar column compares
+    candidates. They stay ``None`` for a local model: a local generation is not free,
+    it is simply not billed per token, and writing 0.0 would put a misleading zero in a
+    published cost column instead of an honest blank.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -243,14 +257,66 @@ class CandidateModel(BaseModel):
     label: str
     quantization: str
     anchor: str | None = None
+    input_usd_per_mtok: float | None = Field(default=None, ge=0.0)
+    output_usd_per_mtok: float | None = Field(default=None, ge=0.0)
+
+    @property
+    def billed_per_token(self) -> bool:
+        return self.input_usd_per_mtok is not None or self.output_usd_per_mtok is not None
+
+    def usd_for(self, prompt_tokens: int, generation_tokens: int) -> float | None:
+        """What one generation cost, or ``None`` when the candidate is not billed."""
+        if not self.billed_per_token:
+            return None
+        return (
+            prompt_tokens * (self.input_usd_per_mtok or 0.0)
+            + generation_tokens * (self.output_usd_per_mtok or 0.0)
+        ) / 1_000_000
 
 
 class Cohort(BaseModel):
+    """One runtime and the candidates it serves.
+
+    ``provider`` names the request and response dialect rather than the vendor as a
+    brand: three hosted providers sit behind one ``HostedRunner``, and what differs
+    between them is auth header, path, and where the usage counters live in the
+    response. ``api_key_env`` names the variable rather than carrying the key, which is
+    the same rule the source adapters follow and the reason a key has never reached a
+    manifest (ARCHITECTURE #76).
+    """
+
     model_config = ConfigDict(extra="forbid")
 
-    runner: Literal["ollama", "mlx"]
+    runner: Literal["ollama", "mlx", "hosted"]
+    provider: Literal["deepseek", "gemini", "mistral"] | None = None
+    api_key_env: str | None = None
     endpoint: str | None = None
     models: list[CandidateModel] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _hosted_needs_credentials(self) -> Cohort:
+        """A hosted cohort is unusable without a dialect and a key, and a local one has
+        no use for either. Both directions are errors rather than ignored fields, so a
+        stray `provider:` on the Ollama cohort fails at config load instead of being
+        silently discarded."""
+        if self.runner == "hosted":
+            missing = [
+                name
+                for name, value in (
+                    ("provider", self.provider),
+                    ("api_key_env", self.api_key_env),
+                    ("endpoint", self.endpoint),
+                )
+                if not value
+            ]
+            if missing:
+                raise ValueError(f"a hosted cohort requires {', '.join(missing)}")
+        elif self.provider or self.api_key_env:
+            raise ValueError(
+                f"runner '{self.runner}' is local; provider and api_key_env apply "
+                f"only to a hosted cohort"
+            )
+        return self
 
 
 class EvalScenario(BaseModel):
@@ -287,12 +353,35 @@ class JudgeConfig(BaseModel):
     effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
 
 
+class GenerationConfig(BaseModel):
+    """How `hip explain` chooses a model, and how hard it may push a provider.
+
+    The preference list is a durability mechanism rather than a tuning knob
+    ([SPEC.md](SPEC.md)): it resolves at generation time to the first available
+    candidate and ends at the local runtime, so no vendor decision can stop `hip
+    explain` from running. Two rules keep it from becoming a back door around the
+    evaluation — every entry must be a declared candidate (checked at config load) and
+    must have passed the benchmark (checked at resolution, where the run results are).
+
+    `max_concurrency` bounds in-flight requests per cohort. Hosted inference is on this
+    milestone for concurrency, but an unbounded fan-out earns 429s that look like model
+    failures, and the retry that follows costs more wall-clock than the parallelism
+    saved.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    preference: list[str] = Field(min_length=1)
+    max_concurrency: int = Field(default=4, ge=1, le=32)
+
+
 class EvaluationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     sampling: SamplingConfig
     limits: EvalLimits
     cohorts: dict[str, Cohort] = Field(min_length=1)
+    generation: GenerationConfig
     system_prompt: str
     scenarios: list[EvalScenario] = Field(min_length=1)
     rubric: Rubric
@@ -314,6 +403,10 @@ class EvaluationConfig(BaseModel):
             if candidate.id == model_id:
                 return candidate
         raise ConfigError(f"evaluation.yml: no model '{model_id}'")
+
+    def cohort_for(self, model_id: str) -> Cohort:
+        """The cohort object serving a model, not just its name."""
+        return self.cohorts[self.cohort_of(model_id)]
 
 
 class SourcesConfig(BaseModel):
@@ -483,6 +576,53 @@ def _check_evaluation(config_dir: Path | None) -> list[str]:
         f"'{next(iter(cohorts))}'; an anchor pairs models across cohorts"
         for anchor, cohorts in sorted(anchors.items())
         if len(cohorts) < 2
+    ]
+
+    # The preference list is what `hip explain` resolves against, so an entry naming a
+    # model no cohort declares is a silent fallthrough to the next tier rather than an
+    # error at the point of use. Caught here instead.
+    declared = {m.id for m in evaluation.models}
+    problems += [
+        f"evaluation.yml: generation.preference names '{model_id}', which no cohort "
+        f"declares"
+        for model_id in evaluation.generation.preference
+        if model_id not in declared
+    ]
+    problems += [
+        f"evaluation.yml: duplicate entry '{dup}' in generation.preference"
+        for dup in _duplicates(evaluation.generation.preference)
+    ]
+
+    # SPEC requires the list to end at the local runtime: it is what keeps the
+    # explanation layer working when every vendor is not.
+    if evaluation.generation.preference:
+        last = evaluation.generation.preference[-1]
+        if last in declared and evaluation.cohort_for(last).runner == "hosted":
+            problems.append(
+                f"evaluation.yml: generation.preference ends at '{last}', which is "
+                f"hosted. The list must end at a local model so that no vendor "
+                f"decision can stop `hip explain` from running."
+            )
+
+    # A pin, not an alias. A withdrawn pin fails loudly and falls through; a repointed
+    # alias changes published prose with nothing in the output to show it happened.
+    problems += [
+        f"evaluation.yml: model '{candidate.id}' pins ref '{candidate.ref}', which is "
+        f"a moving alias. Name an explicit version."
+        for cohort in evaluation.cohorts.values()
+        if cohort.runner == "hosted"
+        for candidate in cohort.models
+        if candidate.ref.endswith(("-latest", "-preview"))
+    ]
+
+    # A hosted candidate with no rates cannot appear in the quality-per-dollar column,
+    # which is most of why the rates are in config at all.
+    problems += [
+        f"evaluation.yml: hosted model '{candidate.id}' declares no token rates"
+        for cohort in evaluation.cohorts.values()
+        if cohort.runner == "hosted"
+        for candidate in cohort.models
+        if not candidate.billed_per_token
     ]
     return problems
 

@@ -153,8 +153,9 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   is counted rather than graded; Claude scores only what a reader can judge. A model
   that fabricates figures above a 5% rate is ineligible however well it writes.
 - **Explanations labeled as interpretation** (M8, built) — `hip explain` generates a
-  short narrative per region with the selected model and stores it with the model name,
-  the runtime, and a hash of the packet it was written from.
+  short narrative per region with the resolved model and stores it with the model name,
+  the runtime or provider that produced it, and a hash of the packet it was written
+  from.
   `GET /regions/{id}/explanation` serves it with `kind: "interpretation"` and a `stale`
   flag; the dashboard panel is styled to be unmistakable as commentary. The platform is
   fully usable with none of this generated — a missing explanation renders nothing.
@@ -340,18 +341,27 @@ uv run hip footprint              # bytes per storage tier and rows per state
 uv run hip footprint --json       # the same, for capturing into a document
 ```
 
-Evaluate local models and generate explanations (Milestone 8, needs `make setup-eval`,
-Ollama running, and Apple silicon for the MLX cohort):
+Evaluate candidate models and generate explanations (needs `make setup-eval`; the local
+cohorts additionally need Ollama running, and Apple silicon for MLX):
 
 ```bash
-uv run hip eval models             # candidates, and whether each runtime can serve them
+uv run hip eval models             # candidates, and whether each runtime serves them
 uv run hip eval scenarios          # build the question set from real packets
-uv run hip eval run                # every scenario through every model — hours
+uv run hip eval run                # every scenario through every model
 uv run hip eval cost               # what judging would cost, without spending it
 uv run hip eval judge              # rubric grading; the only command that costs money
 uv run hip eval report             # reports/evaluation/<run>.md
 uv run hip explain --region 11     # write an explanation the API can serve
 ```
+
+For a hosted cohort, `hip eval models` asks the provider what it actually serves and
+marks a pinned ref that has been withdrawn, which is cheaper to discover here than as
+fifteen identical 404s inside a run. `hip explain` resolves its model through the
+ordered preference list in `config/evaluation.yml` — the first benchmarked candidate
+that is currently reachable, ending at a local model so no vendor decision can stop the
+command — and skips regions whose stored prose was written from these exact numbers.
+Local cohorts run one model at a time because two do not fit in 16GB; hosted cohorts
+fan out, which is the reason hosted inference is on the roadmap at all.
 
 `make` on its own lists every target. With the warehouse down, the API and dashboard
 still run and report the degraded state rather than failing.

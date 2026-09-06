@@ -43,8 +43,12 @@ MISSING_SDK = (
     "group: `uv sync --group dev --group dbt --group mlx --group eval`."
 )
 
+# Changing this prompt changes scores, which is why Milestone 12 re-judges Gemma 4 E4B
+# in the same batch as the hosted candidates rather than comparing them against the
+# stored `v1` judgments. "local" is gone because it is no longer true and because
+# telling the judge where a model runs invites it to grade the runtime.
 _JUDGE_SYSTEM = """\
-You are grading a local language model's answer to a housing-analytics question.
+You are grading a language model's answer to a housing-analytics question.
 
 The model was given a data packet and told to answer using only what it contains. You
 are given the same packet, the question, and the answer.
@@ -329,17 +333,40 @@ def collect_batch(
     return judgments
 
 
+# Opus 5 list price. Batch halves both.
+_JUDGE_IN_USD_PER_MTOK = 5.0
+_JUDGE_OUT_USD_PER_MTOK = 25.0
+
+# Measured on 2026-09-06 by rebuilding the real judge prompt over the stored `v1`
+# artifacts, rather than estimated: 226 tokens of system prompt, 442 of the generated
+# JSON schema, and 1,931 of user prompt (packet, criteria, question, and the model's
+# answer), meaning 15 scenarios against gemma-4-e4b-q4.
+_JUDGE_PROMPT_TOKENS = 2600
+
+# Output is dominated by thinking rather than by the verdict. `effort: medium` bills its
+# reasoning at the output rate, and `max_tokens` is 3,000 precisely because a budget
+# sized for the JSON alone truncates the verdict while the reasoning consumes it. Taken
+# at two thirds of the cap: the earlier figure of 800 was the size of the JSON and
+# under-reported the bill by between 15% and 60%.
+_JUDGE_OUTPUT_TOKENS = 2000
+
+
 def estimated_cost(count: int, evaluation: EvaluationConfig) -> float:
     """Rough dollar cost of judging `count` generations.
 
-    Opus 5 list price is $5/MTok in and $25/MTok out; batch halves both. Input assumes a
-    packet-sized prompt, output assumes thinking plus verdict — thinking bills as output,
-    which is why the output figure is not the size of the JSON.
+    Deliberately an over-estimate rather than an under-estimate: the number exists so
+    that `hip eval cost` can be trusted before spending money, and a judging run that
+    costs more than it was quoted is the failure mode worth avoiding.
     """
-    in_rate, out_rate = 5.0, 25.0
+    in_rate, out_rate = _JUDGE_IN_USD_PER_MTOK, _JUDGE_OUT_USD_PER_MTOK
     if evaluation.judge.mode == "batch":
         in_rate, out_rate = in_rate / 2, out_rate / 2
-    prompt_tokens, output_tokens = 7000, 800
     return round(
-        count * (prompt_tokens * in_rate + output_tokens * out_rate) / 1_000_000, 2
+        count
+        * (
+            _JUDGE_PROMPT_TOKENS * in_rate
+            + min(_JUDGE_OUTPUT_TOKENS, evaluation.judge.max_tokens) * out_rate
+        )
+        / 1_000_000,
+        2,
     )

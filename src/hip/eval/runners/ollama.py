@@ -38,8 +38,14 @@ _NS_PER_MS = 1_000_000
 class OllamaRunner:
     """Implements `ModelRunner` over a local Ollama server."""
 
-    def __init__(self, endpoint: str = "http://localhost:11434") -> None:
+    def __init__(
+        self, endpoint: str = "http://localhost:11434", cohort: str = "gguf"
+    ) -> None:
         self._endpoint = endpoint.rstrip("/")
+        # Named by config rather than hardcoded. A runner is not its cohort: one
+        # `HostedRunner` serves three of them, and a second Ollama endpoint would be a
+        # second cohort on this same class.
+        self._cohort = cohort
 
     def available(self) -> bool:
         try:
@@ -151,7 +157,7 @@ class OllamaRunner:
             scenario_id=scenario.scenario_id,
             region_id=scenario.region_id,
             model_id=model.id,
-            cohort="gguf",
+            cohort=self._cohort,
             mode=mode,  # type: ignore[arg-type]
             repeat=repeat,
             answer=answer,
@@ -176,7 +182,7 @@ class OllamaRunner:
             scenario_id=scenario.scenario_id,
             region_id=scenario.region_id,
             model_id=model.id,
-            cohort="gguf",
+            cohort=self._cohort,
             mode=mode,  # type: ignore[arg-type]
             repeat=repeat,
             answer="",

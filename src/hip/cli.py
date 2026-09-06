@@ -768,16 +768,34 @@ def explain(
     limit: Annotated[
         int | None, typer.Option("--limit", help="Stop after this many regions.")
     ] = None,
+    force: Annotated[
+        bool,
+        typer.Option(
+            "--force", help="Regenerate regions whose stored prose is still current."
+        ),
+    ] = False,
+    unbenchmarked: Annotated[
+        bool,
+        typer.Option(
+            "--unbenchmarked",
+            help="Allow a candidate that has not passed the evaluation. Bootstrap "
+            "only — it publishes prose from an unmeasured model.",
+        ),
+    ] = False,
 ) -> None:
     """Write model explanations into the warehouse for the API to serve.
 
     A write path, and therefore a CLI command rather than an API call (ARCHITECTURE #6):
-    an explanation costs a model load and seconds of inference, which does not belong in
-    a page view. The model defaults to whichever one the most recent evaluation run
-    selected, which is the whole point of Milestone 8 — the choice comes from measured
-    performance rather than from a name someone typed once.
+    an explanation costs a model call and seconds of inference, which does not belong in
+    a page view. The model is resolved through the ordered preference list in
+    `config/evaluation.yml` — the first benchmarked candidate that is currently
+    reachable, ending at a local model so that no vendor decision can stop this command
+    (Milestone 12). Regions whose stored explanation was written from these exact
+    numbers are skipped; `--force` regenerates them anyway.
     """
-    explain_command(region, model, window, level, payload_format, limit)
+    explain_command(
+        region, model, window, level, payload_format, limit, force, unbenchmarked
+    )
 
 
 @app.command()
