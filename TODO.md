@@ -1404,8 +1404,12 @@ cost column has to state which rate it used or it is not reproducible.
       Mistral spent none, DeepSeek nearly all. So the quality-per-dollar column partly
       measures how much a vendor thinks by default rather than a model's efficiency at
       comparable effort. That is a defensible thing to measure — it is what you get out
-      of the box — but it was not stated, and the report should say so. It does not move
-      the winner: rubric score is unaffected, and Gemini 3.7 Flash led at 3.56.
+      of the box — but it was not stated. **The report now states it** (2026-09-07): the
+      quality-per-dollar section says every candidate ran at its provider's default, name
+      the three defaults, and calls the figures an upper bound for a reasoning-heavy
+      candidate. That closes the misleading-document half of this item; what remains is
+      measuring the alternative rather than describing it. It does not move the winner:
+      rubric score is unaffected, and Gemini 3.7 Flash led at 3.56.
 
       Scope when it is picked up: reasoning effort becomes a `CandidateModel` field so a
       configuration is a candidate rather than a hidden default; add

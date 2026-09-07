@@ -442,6 +442,21 @@ def render_report(
             "here: its cost is a machine and an afternoon, not a token rate, and a "
             "0.00 would read as free.",
             "",
+            # The caveat this table cannot state for itself. Every candidate runs at
+            # whatever reasoning its vendor does by default, because nothing in the
+            # harness sets one — so the column measures defaults rather than models at
+            # matched effort, and a reader who takes it as the latter is misled by a
+            # heading rather than by a number.
+            "**Each candidate ran at its provider's default reasoning setting; the "
+            "harness sets none.** Those defaults differ enough to move this column on "
+            "their own — DeepSeek V4 defaults to high reasoning and spent 93% of its "
+            "output tokens there, Gemini 3.7 Flash 70%, Mistral none — so what is "
+            "compared here is models as they arrive out of the box, not models at "
+            "matched effort. Measured 2026-09-06 on `deepseek-v4-pro`: disabling "
+            "thinking cut output from 858 tokens to 223 and returned a longer answer, "
+            "so the figures below are an upper bound for a reasoning-heavy candidate "
+            "rather than its floor. Rubric scores are unaffected.",
+            "",
             "| Model | Cohort | Rubric | Prompt tok | Output tok | $/1k gens | "
             "Rubric per $ |",
             "|---|---|---:|---:|---:|---:|---:|",
