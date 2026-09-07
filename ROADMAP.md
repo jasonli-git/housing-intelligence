@@ -58,13 +58,14 @@ that rewrites the fact table has gone wrong.
 | 11 | ✅ done | **Static publication** — `hip publish` rendering the *enumerable* API surface to files whose paths mirror the endpoints, by replaying the ASGI app so the bytes match what the API serves (#67); a manifest carrying a sha256 per artifact and naming what cannot be published; the dashboard built as a static export over the same regions; `make publish` assembling both; and New Jersey served from the custom domain with no database and no application server in production. Earlier wording promised "every API response" and content-addressed URLs — neither survived contact with the parameter space (`/compare` is combinatorial) or with the point of the exercise (a hashed URL stops mirroring its endpoint) |
 | 12 | ✅ done | **Hosted inference** — a `HostedRunner` implementing `ModelRunner`, hosted candidates measured against Gemma 4 E4B on the Milestone 8 scenarios and rubric, an ordered preference list of benchmarked models resolved at generation time — DeepSeek, then Gemini, then Mistral, then local Gemma 4 E4B last, version-pinned model identifiers, per-candidate token rates recorded in config so the evaluation report can carry a quality-per-dollar column, staleness compared at display precision rather than on raw floats, and batch submission for the regeneration pass |
 | 13 | ⬜ planned | **Citation binding** — every figure in an interpretation resolved to the packet field, source release, period, and match method that licensed it, produced inside `hip explain`, with the same ground-truth index reused by the evaluation report |
-| 14 | ⬜ planned | **Northeast expansion** — CT, MA, ME, NH, NY, PA, RI, VT loaded at all five levels, the first run of the pipeline at roughly seven times current volume, and a per-state coverage report showing what each source did and did not resolve |
-| 15 | ⬜ planned | **National county coverage** — all 50 states, DC, and PR at `state` and `county` level only, on federal sources that key on exact FIPS, giving national coverage without a national municipality model |
-| 16 | ⬜ planned | **Three-dimensional national map** — county choropleth extruded by a magnitude metric and colored by a ratio metric, replacing the inline-SVG map as the landing view; selection shown by highlight-and-mute, where chosen regions keep full colour and gain a contrasting outline while every other region drops to a neutral it cannot be confused with; a legend that states what height and colour each encode, since a two-channel map does not explain itself |
+| 14 | ⏸ deferred to Post-V2 | **Northeast expansion** — CT, MA, ME, NH, NY, PA, RI, VT loaded at all five levels, the first run of the pipeline at roughly seven times current volume, and a per-state coverage report showing what each source did and did not resolve |
+| 15 | ⏸ deferred to Post-V2 | **National county coverage** — all 50 states, DC, and PR at `state` and `county` level only, on federal sources that key on exact FIPS, giving national coverage without a national municipality model |
+| 16 | ⬜ planned | **Three-dimensional map, New Jersey** — 564 municipalities extruded by a magnitude metric and colored by a ratio metric, replacing the inline-SVG map as the landing view; selection shown by highlight-and-mute, where chosen regions keep full colour and gain a contrasting outline while every other region drops to a neutral it cannot be confused with; a legend that states what height and colour each encode, since a two-channel map does not explain itself |
 | 17 | ⬜ planned | **Consumer entry point** — three views that answer a decision rather than report a figure: **"what can I afford here"**, taking an income and returning the places within reach, inverting `price_to_income` and `price_to_ami` into the question people actually ask; **a verdict sentence** on every region page, turning "$791,116, rank 17 of 21" into "more expensive than 16 of New Jersey's 21 counties, and rising more slowly than most", computed from rank and percentile with no model involved; and **the tradeoff named**, pairing a cheaper home value against the higher property taxes MOD-IV already records or the migration flows IRS already supplies, because every real housing decision is a trade and reporting one side of it is half an answer. Plus search disambiguated by county and legal type — ZIP is many-to-many and cannot label a result — over the `name_lsad` column loaded in 2026-09-05 |
 | 18 | ⬜ planned | **Design system and identity** — a typeface pairing and a wordmark replacing the system font stack, the interaction and focus states the stylesheet currently declares none of, metric and window chosen by the reader rather than fixed as module constants, a named component layer replacing per-page inline grids, an inline glossary so `ZHVI` and `price_to_ami` are defined where they appear, and caveats placed beside the figure they qualify rather than collected at the foot of the report. Built before 16 and 17 |
 | 19 | ✅ done | **Multi-model interpretation** — every county page carries all five benchmarked models' readings of the same packet, switchable by the reader and each attributed to the model and provider that wrote it. `region_explanations` gains `model_id` in its primary key and a `rank` column carrying preference-list position, because `API_MAY_IMPORT` forbids the API reading config to order them; `/regions/{id}/explanation` keeps its shape and a new `/regions/{id}/explanations` returns all five. Built out of numeric order, before 13-18, because the benchmark data is fresh and the content costs $0.86 to generate today. It is also the reachable subset of Post-Version 2's bring-your-own-model comparison, whose blockers were a missing server and a paid judge — neither of which a pre-generated artifact needs |
 | 20 | ⬜ planned | **Reasoning effort as a measured variable** — `HostedRunner` sends no reasoning parameter, and DeepSeek V4 defaults to *high*, so run `v2` compared seven models each at its own vendor default rather than at comparable effort. That explains DeepSeek's 93-95% reasoning share and makes every DeepSeek cost figure an upper bound: measured 2026-09-06, `thinking: disabled` cut output 3.8x (858 → 223 tokens) and returned a *longer* answer, while `reasoning_effort: low` saved only 7%. Effort becomes a `CandidateModel` field so a configuration is a candidate rather than a hidden default, thinking-disabled variants of `deepseek-v4-pro` and `gemini-3.7-flash` join run `v2`, and the report states which effort each figure was measured at. Rubric scores are unaffected, so the winner does not move |
+| 21 | ⬜ planned | **New Jersey depth: the sources still missing** — HUD Fair Market Rents, ACS tenure and vacancy (B25003, B25002), FRED `NJSTHPI`, HUD CHAS, and Census Building Permits at place level. Every one uses a key already in `.env`, and all five together are under 10MB against a 2.4GB raw tier. Closes three real gaps: rent affordability rests on 293 rows against price-to-income's 2,026, the warehouse holds no ownership rate at all, and there is no municipal construction signal. Scheduled before 18, 16 and 17 so the design system, the map and the consumer views are built against the full metric set rather than retrofitted to it |
 
 The done criterion from Version 1 is unchanged: a milestone counts as done when its
 capability is reachable through the CLI, the API, or the dashboard on a clean checkout;
@@ -230,13 +231,37 @@ has to be. It is scheduled before any expansion because it is the guardrail on p
 published under a personal domain, and because the retention it needs already exists —
 the work is the index, not the schema.
 
-**Milestones 14 and 15 are different axes and can be reordered.** 14 adds depth
-(all five levels, few states); 15 adds breadth (two levels, every state). 15 is the
-easier engineering — 3,144 regions matched on exact FIPS, no name matching — and it is
-the milestone that unblocks 16. Northeast is scheduled first because it follows SPEC
-principle 3's stated progression and because it exercises the volume increase at a size
-where a bad load is still cheap to reload. Swapping them buys the map sooner at the
-cost of testing scale later; both are defensible and the choice is open until 13 ships.
+**Both expansion milestones were deferred on 2026-09-07, and the order was rebuilt
+around depth in one state.** The decision is to make New Jersey excellent before making
+anything broader. Version 2 now runs 13, 20, 21, 18, 16, 17, and 14 and 15 move to
+Post-Version 2.
+
+The storage argument for deferring them turned out to be half wrong, and the half that
+was wrong is worth stating so it is not repeated. **Milestone 15 adds almost no
+storage.** Zillow's county files, TIGER's county layer, FHFA, IRS migration and Census
+permits are already national downloads that the pipeline takes in full and filters to New
+Jersey at load time — the bytes are on disk today. Going national at county level is a
+load-filter change plus roughly 1.2GB of Postgres, measured from 739 observations per
+county across 3,196 regions. It is deferred because it does not serve the immediate goal,
+not because it is expensive.
+
+**Milestone 14 is the genuinely costly one**, and not chiefly in bytes. It is eight times
+the pipeline volume at all five levels, and MOD-IV has no national equivalent: every state
+publishes parcels in its own format under its own licence, so the depth layer that makes
+New Jersey interesting does not travel. That is the milestone to be wary of.
+
+**Milestone 16 is rescoped from a national county map to a New Jersey municipal one.** As
+written it extruded 3,144 counties and therefore depended on 15, which is now deferred —
+so the original could not be built in this order at all. The replacement is better on its
+own terms: 564 municipalities carry far more visual information than 21 counties, the
+geometry and the metrics are already loaded, and it removes the dependency entirely. A
+national version stays available for whenever breadth returns.
+
+**Milestone 21 is scheduled before 18, 16 and 17 on purpose.** Building a design system,
+a map and a set of consumer views against an incomplete metric set means retrofitting all
+three when tenure, vacancy and a rent benchmark arrive. The data is cheap — under 10MB
+for all five sources — so the only cost of doing it first is a short delay, against the
+certainty of rework if it goes last.
 
 ### Decisions this version needs from the user
 

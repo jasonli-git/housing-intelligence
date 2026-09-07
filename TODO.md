@@ -1532,6 +1532,26 @@ being consumable.
       model on and that the rubric half needs a paid judge. Pre-generated explanations
       need neither, being ordinary artifacts.
 
+- [ ] **Revision tracking — what the platform currently throws away.** Raised
+      2026-09-07 while settling the prune. Zillow revises published months
+      retroactively, and the warehouse cannot see it: `fact_metric_observation` is keyed
+      on `(region_id, metric_id, period_start)` and the loader upserts, so a revised June
+      silently replaces the old June and no record survives that the figure moved. The
+      only trace is the superseded file in `data/raw/`, which nothing reads and the prune
+      above would eventually delete.
+
+      Worth building rather than merely preserving, and it is on-thesis: a platform whose
+      claim is that every figure traces to a source release is unusually well placed to
+      say *"this figure was reported as $X last month and is $Y now"*, which is real
+      signal about a market and something almost nobody publishes. It is also cheap in
+      storage — a revision row is written only when a value actually changes, which today
+      is a small fraction of observations.
+
+      Not on the roadmap. The roadmap mentions Zillow's revisions only as a suspected
+      cause of staleness, and that suspicion turned out to be wrong (it was the float
+      defect, #88). Revisions as *data* have never been considered. Sequence it after the
+      prune, since the prune decides how much history is recoverable when it starts.
+
 - [ ] **Nothing prunes superseded raw releases, and a refresh cadence makes that
       unbounded.** Measured 2026-09-06. The raw tier is content-addressed and immutable
       by design (ARCHITECTURE #10), which is right for provenance and means a refresh
@@ -1548,8 +1568,23 @@ being consumable.
       halves: `hip footprint` now reports 3.4GB filesystem plus 291MB Postgres, and the
       volume has 26GB free at 88% capacity.
 
-      The fix is a prune that keeps the N most recent releases per ref, not a slower
-      cadence: quarterly saves 2.2GB/year and costs up to three months of staleness on
+      **A prune does not touch time comparisons, and the reason is worth stating.** Every
+      Zillow release carries the *entire* series — 319 monthly columns back to 2000, not a
+      delta — so the newest file supplies all history and the superseded ones are
+      redundant for that purpose. Year-over-year, quarterly and monthly trends are read
+      from `fact_metric_observation`, which keeps every observation from 1971 to 2026 and
+      is untouched by pruning `data/raw/`.
+
+      What a prune would cost is **revision history**, and that is already being lost:
+      `_INSERT_FACT` upserts on `(region_id, metric_id, period_start)`
+      ([load.py:233](src/hip/warehouse/load.py:233)), so when Zillow revises June
+      retroactively the previous value is overwritten and the superseded raw file becomes
+      the only record that it ever differed. Nothing reads that today, but pruning makes
+      the loss permanent. Keeping the N most recent releases per ref — three, say — stops
+      the unbounded growth while leaving a window in which a revision is still
+      recoverable, which is why that shape is preferred to deleting everything superseded.
+
+      The fix is that prune, not a slower cadence: quarterly saves 2.2GB/year and costs up to three months of staleness on
       a platform whose product is current figures. It pairs with the conditional-request
       item above — together they turn a refresh from "re-download 2GB and keep it
       forever" into "fetch what moved and retain a bounded history."
@@ -1760,6 +1795,27 @@ defaulted in the first commit that needs them.
 ## Data sources worth adding
 
 Reachability probed 2026-08-13; each line says what it would add and what it needs.
+
+**Sized on 2026-09-07, because storage was the deciding question.** Every candidate below
+that uses an existing key is negligible against a 2.4GB raw tier — all five of Milestone
+21's sources together are under 10MB, about 0.3% of what is already on disk:
+
+| Source | Measured | Ten-year NJ footprint |
+|---|---|---|
+| FRED `NJSTHPI` | 19.7 KB, full history in one call | ~20 KB |
+| HUD FMR | 0.3 KB per county-year | ~63 KB (21 counties x 10 years) |
+| ACS B25002/B25003 | same shape as the ACS files already held, single-digit KB each | ~200 KB |
+| HUD CHAS | endpoint returns 200; the query shape needs settling — it answered empty to a guessed `entityId`, so size it properly before scheduling | likely well under 1 MB |
+| Census BPS place, Northeast | 813 KB per year, whole NE region before filtering to NJ | ~7.9 MB |
+
+So storage is not a reason to sequence any of these, and **BPS place is the only one large
+enough to notice** — and it is large only because the file covers the whole Northeast
+region rather than one state.
+
+**The exception, and it is the expensive one:** Zillow's other cuts (bottom- and top-tier
+ZHVI, days-to-pending, for-sale inventory) are each another ~100MB national CSV *per
+refresh*, so they multiply the prune problem rather than adding to it once. They belong
+with expansion, not with New Jersey depth.
 
 **No new key — the credential is already in `.env`**
 
