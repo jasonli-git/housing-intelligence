@@ -3,6 +3,94 @@
 Working list for the current milestone. Longer-horizon items live in
 [ROADMAP.md](ROADMAP.md).
 
+## Resume here — state as of 2026-09-10
+
+Nothing in this section is in progress. It is the order agreed on 2026-09-10 for picking
+the work back up, and what has to be true before starting. Detail lives in the items it
+points to; this section only sequences them.
+
+**Where things stand.** Milestones 12, 19 and 22 are done. 12 and 19 are deployed and
+verified live; 22 changed no published byte, so it needs no deploy. The live site carries
+data through July 2026 and five models' explanations of every county. The preference
+list in `config/evaluation.yml` is `gemini-3.7-flash` → `gemini-3.1-flash-lite` →
+`mistral-small-4` → `deepseek-v4-pro` → `gemma-4-e4b-q4`.
+
+**The agreed sequence** — settled with the user on 2026-09-10, nothing started:
+
+1. **Milestone 20 — reasoning effort as a measured variable.** First because it has no
+   data dependency and edits the same per-provider request code and `CandidateModel`
+   that Milestone 22 just changed. Scope below under "Reasoning effort was never
+   controlled".
+2. **Milestone 21 — New Jersey depth.** The five sources in [ROADMAP.md](ROADMAP.md) row
+   21, each sized under "Data sources worth adding". Before 13 because it adds metrics to
+   every packet.
+3. **Milestone 13 — citation binding.** Built and tested against the packet shape 21
+   produces rather than retrofitted to it. Rework-avoidance, not a hard dependency: a
+   binding generic over packet fields would mostly survive going first. Going first would
+   not get it onto the live site any sooner either, because 21 marks all 105 published
+   explanations stale and nothing new ships until step 5.
+4. **A fresh benchmark, run `v3`.** Checklist below under "Run `v3`".
+5. **Act on `v3`:** reorder the preference list, retire the old rows, regenerate every
+   explanation, deploy. Checklist below under "After `v3`".
+6. Then **18 → 16 → 17**, per [ROADMAP.md](ROADMAP.md).
+
+**Before starting any of it:**
+
+- **Docker has to be running for Postgres.** Start Docker Desktop, then `make db-up`. It
+  was stopped at the start of the 2026-09-10 session, which is what a "connection
+  refused" from `hip` means.
+- **`make setup-eval`, never plain `make setup`, whenever the evaluation harness is
+  needed.** `uv sync` makes the environment match exactly the groups named, so `make
+  setup` silently uninstalls the `anthropic` SDK and the judge fails at submission
+  ([Makefile:33](Makefile:33)). It happened on 2026-09-06 and cost nothing only because it
+  fails before a batch is created.
+- **Top up the Anthropic credit before step 4** — see "Parked / needs user input".
+
+**Dates.** `deepseek-v4-pro` is routed to V4.1 Flash from 04:00 UTC on 2026-09-14. Nothing
+needs doing: Milestone 22's probe makes it fall through on its own, and its 21 published
+explanations were written by the real V4 Pro and stay correctly attributed until step 5.
+
+### Run `v3` — the re-benchmark
+
+- [ ] **A new run, not an extension of `v2`.** 21 changes every packet and `v2`'s scenarios
+      are frozen from the old ones, so extending it would measure models against data
+      the site no longer shows. `hip eval scenarios --run v3`, then
+      `hip eval run --run v3 --model ...` once per candidate below
+- [ ] **Candidates, seven or eight:** `gemini-3.7-flash`, `gemini-3.1-flash-lite`,
+      `mistral-small-4`, `deepseek-flash`, `gemma-4-e4b-q4`, and Milestone 20's
+      thinking-disabled variants of `deepseek-flash` and `gemini-3.7-flash`. **Exclude**
+      `deepseek-v4-flash` (already routed; the guard fails it) and `deepseek-v4-pro`
+      (routed from 2026-09-14). **Consider dropping** `mistral-large-3`: last in `v2` at
+      2.68, not on the preference list, and 15 fewer judgments
+- [ ] **Quote before spending**: `hip eval cost --run v3` prices the run from its own
+      prompts — a constant-based estimate was wrong twice. Expect roughly $5–6 for
+      105–120 judgments, since 21's larger packets make every judge prompt larger
+- [ ] `hip eval judge --run v3`, then `hip eval report --run v3`. Judge every candidate in
+      one run: the judge prompt is shared, which is what keeps scores comparable
+
+### After `v3`
+
+- [ ] **Reorder `generation.preference` from the `v3` result**, still ending at the local
+      model. DeepSeek's slot: if `deepseek-flash` passes, it replaces `deepseek-v4-pro`.
+      If it scores *below* `gemma-4-e4b-q4`, decide whether DeepSeek stays on the list at
+      all — its case has been jurisdictional diversity, and a hosted tier ranked above a
+      better local one is backwards on quality. Precedent from `v2`: V4 Flash scored 2.76
+      against Gemma's 2.90
+- [ ] **Retire the rows of models that left the list.** `hip explain` never deletes
+      explanations for a model that is no longer on the preference list, and
+      `/regions/{id}/explanations` returns every stored row — so without this step the
+      comparison would show V4 Pro *and* its replacement. There is no command for it yet:
+      either a one-off `DELETE FROM region_explanations WHERE model_id =
+      'deepseek-v4-pro'`, or, better, a `--prune` on `hip explain` that removes rows whose
+      model has left the list. Found 2026-09-10 while planning this step; decide which
+      when it comes up
+- [ ] **Regenerate every explanation**: `hip explain --level county --all --force`. This
+      rewrites all 21 counties for every model on the new list and refreshes their
+      ranks. Well under $1 for the hosted models with `deepseek-flash` in V4 Pro's place,
+      plus a ~10-minute local Gemma pass
+- [ ] **`make publish`, then `make deploy`.** Verify in a browser, not with `curl`: both
+      origins answer scripts with Cloudflare's bot challenge by design (ARCHITECTURE #94)
+
 ## Milestone 0 — Scaffolding
 
 - [x] Product specification written and agreed ([SPEC.md](SPEC.md))
@@ -1412,14 +1500,21 @@ cost column has to state which rate it used or it is not reproducible.
       rubric score is unaffected, and Gemini 3.7 Flash led at 3.56.
 
       Scope when it is picked up: reasoning effort becomes a `CandidateModel` field so a
-      configuration is a candidate rather than a hidden default; add
-      `deepseek-v4-pro` and `gemini-3.7-flash` thinking-disabled variants to run `v2`;
-      judge only the new generations, since the judge prompt is unchanged and scores
-      stay comparable within the run. 2 variants x 15 scenarios = 30 judgments, about
-      $1.19 at the measured rate. **Do not quietly switch the generation path to
-      thinking-disabled first**: Milestone 8's rule is that only a benchmarked
-      configuration writes published prose, and a different reasoning setting is a
-      different configuration.
+      configuration is a candidate rather than a hidden default, and `HostedRunner` sends
+      it per dialect — `thinking` / `reasoning_effort` on the OpenAI-shaped body,
+      `thinkingConfig` inside Gemini's `generationConfig`. Thinking-disabled variants of
+      **`deepseek-flash`** and `gemini-3.7-flash` join config as candidates with their own
+      ids — `deepseek-flash`, not `deepseek-v4-pro`, which DeepSeek routes to V4.1 Flash
+      from 2026-09-14 (Milestone 22), and which defaults to thinking on just as V4 did.
+
+      **Revised 2026-09-10: the variants are measured in the fresh run `v3`, not added to
+      `v2`.** Milestone 21 changes every packet, so `v2`'s frozen scenarios would measure
+      the variants against data the site no longer shows. The earlier plan — 30 judgments
+      appended to `v2`, about $1.19 — is superseded; see "Run `v3`" at the top of this
+      file. Milestone 20 itself therefore builds and tests the mechanism and runs no
+      benchmark. **Do not quietly switch the generation path to thinking-disabled
+      first**: Milestone 8's rule is that only a benchmarked configuration writes
+      published prose, and a different reasoning setting is a different configuration.
 
 - [ ] **Historical comparison for Milestone 17 — trajectory, not just position.**
       Asked 2026-09-06: can a reader compare last quarter or last year against now, and
@@ -1516,6 +1611,9 @@ reasoning-effort variants together, instead of three partial runs.
       cannot catch the *same* name meaning a new model. `system_fingerprint` is the only
       trace of that, which is why it is recorded rather than enforced — fingerprints also
       change for infrastructure reasons, so failing on them would be noise.
+      `hip check-config` cannot flag it either: it rejects only `-latest` and `-preview`
+      suffixes, and no name-based rule can tell a version from an alias in general,
+      which is why detection happens at runtime rather than at config load.
 - Note: **Nothing published is wrong.** The 21 V4 Pro explanations were written by the
       real V4 Pro on 2026-09-06 and are correctly attributed. They cannot be regenerated
       as V4 Pro after 2026-09-14, so they are replaced after the re-benchmark, not before.
@@ -1681,6 +1779,27 @@ being consumable.
       `HIP_DATA_DIR`, `HIP_REPORTS_DIR` and `HIP_PGDATA` are independent settings with
       `~` expansion (ARCHITECTURE #65), and `.env.example` carries the SSD example —
       so this is a capacity-planning note rather than an engineering gap.
+- Note: **Cloud storage and compute, costed 2026-09-07 — revisit with scheduled refresh,
+      not before.** Asked whether to put everything in the cloud instead of on an external
+      drive. Storage is effectively free: R2 is about $0.06 a month for today's 4GB and
+      under $1 at 50GB. **Managed Postgres is the whole bill** — $15–25 a month for a ~2GB
+      database on Neon, Supabase or RDS — and a monthly pipeline run on spot or CI compute
+      is well under a dollar. The catch is what the fee buys. Production does not use
+      Postgres: Milestone 11 ships static artifacts with no database and no application
+      server, and the architecture lists "no cloud service is required" among its
+      constraints ([ARCHITECTURE.md](ARCHITECTURE.md)). So the fee would host a
+      build-time dependency the live site never queries, breaking even against a one-off
+      SSD in five to eight
+      months. The cloud earns its keep only for running the pipeline on a schedule without
+      a laptop open, which is the Post-Version 2 scheduled-refresh item.
+- Note: **An external drive is probably unnecessary; fix the prune first.** 3.7GB is used
+      against 26GB free, and Milestones 14 and 15 would add only about 1.5GB and 1.2GB.
+      The unpruned raw tier is what would fill the disk, at ~275MB per refresh, and the
+      prune is a small code change against a purchase. If a drive is bought anyway, note
+      that USB-C is a connector, not a speed: the same port carries USB 3.0 (~500MB/s) or
+      USB4 and Thunderbolt (40Gbps). Check the protocol behind it — NVMe inside, USB 3.2
+      Gen 2 at minimum — because `hip stage` does random-read, out-of-core DuckDB work
+      against the Parquet tier. APFS, not exFAT, per the Milestone 10 note.
 
 - Note: **`hip land` silently dropped a month of Zillow data, found and fixed
       2026-09-06.** Worse than the acquire cache above and in the same family. The
@@ -1962,23 +2081,25 @@ with expansion, not with New Jersey depth.
   105 rubric judgments from `claude-opus-5`. Still the only paid key the platform uses,
   and still read by nothing outside `hip eval judge`.
 
-**Needed by Version 2, none of it yet**
+**Needed by Version 2**
 
-- [ ] **A hosted inference key — DeepSeek or Gemini, ideally both** (Milestone 12). Both
-  are needed to benchmark rather than assume: the point of running them through the
-  Milestone 8 harness is comparing them against each other and against Gemma 4 E4B, and
-  one key only measures one candidate. Benchmarking is 15 generations per model and
-  costs cents. A full national county regeneration at the measured prompt size is
-  single-digit dollars.
-- [ ] **The domain, and a Cloudflare account it is served from** (Milestone 11). Nothing
-  before Milestone 11 touches either, and Milestone 11 cannot be called done without
-  them — its done criterion is a reachable public URL, which is the one condition
-  Version 1's milestones never had.
+- [ ] **Top up the Anthropic credit before run `v3`.** About $3.47 remained after `v2`'s
+  judging batch — a count from quoted batch costs, not a console reading, so check the
+  console. `v3` needs roughly $5–6, plus a margin for one re-run; `hip eval cost --run
+  v3` quotes it exactly before anything is spent. The credit is read only by
+  `hip eval judge`, so nothing else waits on it.
+- [ ] **Rotate the DeepSeek, Gemini and Mistral keys if the 2026-09-06 transcript is ever
+  shared.** All three were pasted into chat to be written into `.env`, the same situation
+  the Census, FRED and BLS keys above are in.
+- ~~A hosted inference key~~ — DeepSeek, Gemini and Mistral keys supplied 2026-09-06 and
+  in `.env`; Milestone 12 benchmarked all three providers.
+- ~~The domain, and a Cloudflare account it is served from~~ — live since Milestone 11 at
+  `housing.jasonli.app`, with artifacts at `housing-data.jasonli.app`.
 - Note: no external volume is listed here, because none is needed. Milestone 10 is
   written and tested against a second local path, and no Version 2 milestone as scoped
-  outgrows the boot disk. See the Milestone 10 notes for the numbers.
+  outgrows the boot disk. See the Milestone 10 notes for the numbers, and "Nothing prunes
+  superseded raw releases" for the one thing that would change that.
 
 **Nothing already built is blocked on user input.** Every key the existing pipeline uses
-is present, and every source in the section above needs either no credential or one
-already held. The outstanding items are all Version 2: a hosted inference key for
-Milestone 12, and the domain plus hosting account for Milestone 11.
+is present. The one outstanding item is the Anthropic top-up, and it blocks only step 4
+of "Resume here".

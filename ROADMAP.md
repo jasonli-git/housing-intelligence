@@ -64,7 +64,7 @@ that rewrites the fact table has gone wrong.
 | 17 | ⬜ planned | **Consumer entry point** — three views that answer a decision rather than report a figure: **"what can I afford here"**, taking an income and returning the places within reach, inverting `price_to_income` and `price_to_ami` into the question people actually ask; **a verdict sentence** on every region page, turning "$791,116, rank 17 of 21" into "more expensive than 16 of New Jersey's 21 counties, and rising more slowly than most", computed from rank and percentile with no model involved; and **the tradeoff named**, pairing a cheaper home value against the higher property taxes MOD-IV already records or the migration flows IRS already supplies, because every real housing decision is a trade and reporting one side of it is half an answer. Plus search disambiguated by county and legal type — ZIP is many-to-many and cannot label a result — over the `name_lsad` column loaded in 2026-09-05 |
 | 18 | ⬜ planned | **Design system and identity** — a typeface pairing and a wordmark replacing the system font stack, the interaction and focus states the stylesheet currently declares none of, metric and window chosen by the reader rather than fixed as module constants, a named component layer replacing per-page inline grids, an inline glossary so `ZHVI` and `price_to_ami` are defined where they appear, and caveats placed beside the figure they qualify rather than collected at the foot of the report. Built before 16 and 17 |
 | 19 | ✅ done | **Multi-model interpretation** — every county page carries all five benchmarked models' readings of the same packet, switchable by the reader and each attributed to the model and provider that wrote it. `region_explanations` gains `model_id` in its primary key and a `rank` column carrying preference-list position, because `API_MAY_IMPORT` forbids the API reading config to order them; `/regions/{id}/explanation` keeps its shape and a new `/regions/{id}/explanations` returns all five. Built out of numeric order, before 13-18, because the benchmark data is fresh and the content costs $0.86 to generate today. It is also the reachable subset of Post-Version 2's bring-your-own-model comparison, whose blockers were a missing server and a paid judge — neither of which a pre-generated artifact needs |
-| 20 | ⬜ planned | **Reasoning effort as a measured variable** — `HostedRunner` sends no reasoning parameter, and DeepSeek V4 defaults to *high*, so run `v2` compared seven models each at its own vendor default rather than at comparable effort. That explains DeepSeek's 93-95% reasoning share and makes every DeepSeek cost figure an upper bound: measured 2026-09-06, `thinking: disabled` cut output 3.8x (858 → 223 tokens) and returned a *longer* answer, while `reasoning_effort: low` saved only 7%. Effort becomes a `CandidateModel` field so a configuration is a candidate rather than a hidden default, thinking-disabled variants of `deepseek-v4-pro` and `gemini-3.7-flash` join run `v2`, and the report states which effort each figure was measured at. Rubric scores are unaffected, so the winner does not move |
+| 20 | ⬜ planned | **Reasoning effort as a measured variable** — `HostedRunner` sends no reasoning parameter, and DeepSeek V4 defaults to *high*, so run `v2` compared seven models each at its own vendor default rather than at comparable effort. That explains DeepSeek's 93-95% reasoning share and makes every DeepSeek cost figure an upper bound: measured 2026-09-06, `thinking: disabled` cut output 3.8x (858 → 223 tokens) and returned a *longer* answer, while `reasoning_effort: low` saved only 7%. Effort becomes a `CandidateModel` field so a configuration is a candidate rather than a hidden default, thinking-disabled variants of `deepseek-flash` and `gemini-3.7-flash` are measured in the fresh run `v3` rather than appended to `v2` (`deepseek-v4-pro` is routed to V4.1 Flash from 2026-09-14, and 21 changes every packet), and the report states which effort each figure was measured at. Rubric scores are unaffected, so the winner does not move |
 | 21 | ⬜ planned | **New Jersey depth: the sources still missing** — HUD Fair Market Rents, ACS tenure and vacancy (B25003, B25002), FRED `NJSTHPI`, HUD CHAS, and Census Building Permits at place level. Every one uses a key already in `.env`, and all five together are under 10MB against a 2.4GB raw tier. Closes three real gaps: rent affordability rests on 293 rows against price-to-income's 2,026, the warehouse holds no ownership rate at all, and there is no municipal construction signal. Scheduled before 18, 16 and 17 so the design system, the map and the consumer views are built against the full metric set rather than retrofitted to it |
 | 22 | ✅ done | **DeepSeek migration and substitution detection** — DeepSeek retires models by *routing* them: `deepseek-v4-flash` already returns answers from `deepseek-flash` with HTTP 200, and `deepseek-v4-pro` follows at 04:00 UTC on 2026-09-14. A routed pin never fails, so SPEC's fall-through never fires and a regeneration would store the retired model's name against another model's prose. Every hosted response now has its served model checked against the requested ref, a mismatch is a recorded substitution, and `hip explain` probes hosted tiers so a withdrawn or routed pin genuinely falls through — which, it turned out, it never had. `deepseek-flash` joins as an unbenchmarked candidate; the benchmark itself waits for 21, 13 and 20. Scheduled ahead of 13 because of the vendor date |
 
@@ -234,8 +234,9 @@ the work is the index, not the schema.
 
 **Both expansion milestones were deferred on 2026-09-07, and the order was rebuilt
 around depth in one state.** The decision is to make New Jersey excellent before making
-anything broader. Version 2 now runs 13, 20, 21, 18, 16, 17, and 14 and 15 move to
-Post-Version 2.
+anything broader. The order set that day was 13, 20, 21, 18, 16, 17, with 14 and 15
+moved to Post-Version 2; it was revised on 2026-09-10 to 22, 20, 21, 13, a fresh
+benchmark, then 18, 16, 17 — see below.
 
 The storage argument for deferring them turned out to be half wrong, and the half that
 was wrong is worth stating so it is not repeated. **Milestone 15 adds almost no
@@ -272,6 +273,19 @@ landed, so one fresh run measures the final packet shape, citation binding and t
 reasoning-effort variants together — rather than three partial runs, each invalidated by
 the next milestone. It has to be a new run, not an extension of `v2`: Milestone 21 changes
 every packet, and `v2`'s scenarios are frozen from the old ones.
+
+**The order among them was settled on 2026-09-10: 20, then 21, then 13, then the
+benchmark.** 20 goes first because it has no data dependency and edits the same
+per-provider request code and `CandidateModel` that 22 had just changed. 21 goes before 13
+so citation binding is built and tested against the packet shape it will actually bind,
+since 21 adds metrics to every packet. That is rework-avoidance rather than a hard
+dependency — a binding generic over packet fields would mostly survive going first. The
+case for 13 first was reducing risk on the live site sooner, but 21 marks every published
+explanation stale, so nothing new reaches the site until the regeneration after the
+benchmark either way. After the benchmark the preference list is reordered from the
+result, the retired model's rows are removed, every explanation is regenerated, and the
+site is redeployed; then 18, 16 and 17. The working checklist is at the top of
+[TODO.md](TODO.md), under "Resume here".
 
 ### Decisions this version needs from the user
 

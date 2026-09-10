@@ -11,7 +11,7 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-09-06): v0.12.0, Version 1 complete and Version 2 under way.** New
+> **Status (2026-09-10): v0.12.2, Version 1 complete and Version 2 under way.** New
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
 > **337,552 observations across 23 metrics from 10 public sources, spanning 1971 to
@@ -384,7 +384,7 @@ The platform has no request-time compute, so production is a set of files rather
 running service. `make publish` builds them; `make deploy` sends them.
 
 ```bash
-make publish   # dist/artifacts (5,846 files, 96 MB) + dist/site (13,647 files, 316 MB)
+make publish   # dist/artifacts (5,867 files, 96 MB) + dist/site (13,647 files, 319 MB)
 make deploy    # artifacts -> object storage, site -> static host
 ```
 
@@ -396,6 +396,13 @@ displays, and static hosts cap files per deployment where object stores do not.
 incomplete or that has `localhost` baked into its links — a static export has no runtime
 in which to correct a wrong artifact origin, so it would otherwise publish 1,135 dead
 download links silently.
+
+**When to deploy.** On a change to published content — a data refresh, regenerated
+explanations, a dashboard change — not on every push. Most commits change code, docs or
+tests that alter no published byte, and `make deploy` is not a reflex action: its
+artifact half is an `rclone sync`, which deletes anything at the destination that `dist/`
+no longer contains. Verify a deploy in a browser rather than with `curl`, because both
+origins answer scripts with Cloudflare's bot challenge by design (ARCHITECTURE #94).
 
 **One-time setup.** Deployment targets Cloudflare, but nothing about the artifacts is
 Cloudflare-specific — they are ordinary files at ordinary paths, and any object store
@@ -418,7 +425,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.12.0 — **Version 1 is complete; Version 2 is under way.**
+v0.12.2 — **Version 1 is complete; Version 2 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -426,10 +433,12 @@ reports, the NJ parcel and MOD-IV layer, and the evaluated local-model explanati
 The AI layer is optional throughout — with no explanations generated, every page and
 endpoint still works.
 
-Version 2 moves it off `localhost` and past New Jersey: static publication on a public
-domain, hosted inference in place of local generation, citation binding, expansion to the
-Northeast and then to every US county, a three-dimensional national map, a consumer entry
-point, and a design system. Eleven milestones, four shipped.
+Version 2 moves it off `localhost` and makes New Jersey excellent before it goes anywhere
+else: static publication on a public domain, hosted inference in place of local
+generation, citation binding, deeper New Jersey sources, a three-dimensional map of its
+564 municipalities, a consumer entry point, and a design system. Expansion to the
+Northeast and to every US county was deferred past Version 2 on 2026-09-07. Eleven
+milestones, five shipped.
 
 **Milestone 10 — build cost and data placement (2026-09-02).** `hip footprint` reports
 bytes per storage tier, per warehouse table, and per state, including the Postgres size
@@ -458,6 +467,14 @@ five models' readings of the same packet, switchable by the reader and each attr
 the model and provider that wrote it. The numbers underneath are identical bytes, so the
 differences are the models' own — which demonstrates SPEC's requirement that a reader can
 tell interpretation from measurement rather than merely asserting it.
+
+**Milestone 22 — substitution detection (2026-09-10).** DeepSeek retires models by routing
+their names to a successor, so a request for a retired model returns HTTP 200 and a good
+answer from a different one. Nothing failed, so the preference list never fell through,
+and a regeneration would have stored the retired name above another model's prose. Every
+hosted response is now checked against the model requested, a mismatch is recorded as a
+substitution, and `hip explain` checks each hosted tier before using it — which also
+closed a gap from Milestone 12, whose fall-through had never covered a withdrawn model.
 
 Milestones and their status are in [ROADMAP.md](ROADMAP.md); the current working list and
 known rough edges are in [TODO.md](TODO.md). Work not scheduled for Version 2 is listed at
