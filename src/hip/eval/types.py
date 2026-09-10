@@ -16,6 +16,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from hip.config import ReasoningEffort
+
 
 class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -100,6 +102,12 @@ class Generation(_Strict):
     cohort: str
     mode: Literal["deterministic", "stability"]
     repeat: int = 0
+    # The reasoning control the harness sent, recorded on the answer rather than read
+    # back from config later: a report re-derived from these artifacts must say what this
+    # generation was asked for even if the candidate's config has changed since. Records
+    # written before Milestone 20 have no such field and parse as `default`, which is
+    # exactly what they were — no earlier run sent a reasoning control to anyone.
+    reasoning_effort: ReasoningEffort = "default"
     answer: str
     reasoning: str = ""
     truncated_reasoning: bool = False

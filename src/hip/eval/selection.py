@@ -5,7 +5,7 @@ different question — "which candidate can write this paragraph right now" — 
 are deliberately not the same mechanism. The winner is a finding about a run; the
 resolution is a decision about a moment, and the moment is when a vendor is down.
 
-Three rules, each of them a SPEC requirement rather than a convenience:
+Four rules, each of them a SPEC requirement rather than a convenience:
 
 - **The list is walked in order and the first available candidate wins.** Not the best
   available one: reordering by score at generation time would make the published prose
@@ -18,6 +18,9 @@ Three rules, each of them a SPEC requirement rather than a convenience:
 - **The list ends at a local model**, enforced at config load. A hosted tail would mean
   a vendor decision could stop `hip explain` from running, which is the single failure
   mode the list exists to prevent.
+- **Eligibility belongs to a configuration, not to a name** (Milestone 20). A model the
+  benchmark measured at one reasoning effort, and that config now sets to another, is
+  skipped: prose under its id would come from a configuration nobody measured.
 
 Unavailability is normal operation, not an error. A tier with no API key, an unreachable
 Ollama, and — when `probe` is on, as it is for `hip explain` — a withdrawn pin or one a
@@ -36,8 +39,8 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 
-from hip.config import EvaluationConfig
-from hip.eval.report import MAX_ERROR_RATE, MAX_HALLUCINATION_RATE, ModelSummary
+from hip.config import CandidateModel, EvaluationConfig
+from hip.eval.report import ModelSummary, meets_the_bar
 from hip.eval.runners import HostedRunner, RunnerUnavailable, build_runner
 
 log = logging.getLogger(__name__)
@@ -76,13 +79,28 @@ class Resolution:
 def passed_benchmark(summary: ModelSummary) -> bool:
     """Whether a model cleared the bars the report already applies to a winner.
 
-    Shared with `select_winner` rather than restated, so that a model can never be
-    eligible to *write* under looser rules than it was eligible to *win* under.
+    The predicate `select_winner` uses, called rather than restated. It was restated
+    until Milestone 20, which is how a docstring here could call the two shared while a
+    new condition would have had to be added twice.
     """
+    return meets_the_bar(summary)
+
+
+def configuration_drift(
+    candidate: CandidateModel, measured: set[str], run: str | None
+) -> str | None:
+    """Why `candidate` as configured is not what `run` measured, or None if it is.
+
+    Reasoning effort is the one part of a configuration every generation records, so it
+    is the one this can check. A model the run never measured returns None: whether an
+    unmeasured model may write is the benchmark gate's question, answered separately.
+    """
+    if not measured or measured == {candidate.reasoning_effort}:
+        return None
     return (
-        summary.mean_score is not None
-        and summary.hallucination_rate <= MAX_HALLUCINATION_RATE
-        and summary.error_rate <= MAX_ERROR_RATE
+        f"measured at reasoning effort {', '.join(sorted(measured))} in run '{run}' but "
+        f"configured as '{candidate.reasoning_effort}' — a different setting is a "
+        f"different candidate, with its own id and its own benchmark"
     )
 
 
@@ -154,6 +172,13 @@ def resolve(
         if require_benchmark and model_id not in eligible:
             skipped.append((model_id, f"has not passed the benchmark in run '{run}'"))
             continue
+        if require_benchmark:
+            drift = configuration_drift(
+                evaluation.model(model_id), eligible[model_id].reasoning_efforts, run
+            )
+            if drift:
+                skipped.append((model_id, drift))
+                continue
 
         cohort_name = evaluation.cohort_of(model_id)
         cohort = evaluation.cohorts[cohort_name]

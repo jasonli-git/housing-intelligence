@@ -89,11 +89,6 @@ def load_judgments(run: str) -> list[Judgment]:
     return read_records(run_dir(run) / JUDGMENTS, Judgment)
 
 
-def completed_keys(run: str) -> set[str]:
-    """Generation keys already recorded, so a resumed run skips finished work."""
-    return {generation.key for generation in load_generations(run)}
-
-
 def runs() -> Iterator[str]:
     """Existing run names, most recently written last.
 

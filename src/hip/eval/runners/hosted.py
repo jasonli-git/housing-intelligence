@@ -28,6 +28,17 @@ three APIs — so the runner sends what each accepts and records nothing about t
 The comparison this licenses is weaker than the local one, which is a real cost of
 hosting and is written down rather than papered over: hosted generation is already
 accepted as non-reproducible ([SPEC.md](SPEC.md)), and this is one of the reasons.
+Accepted is not the same as honoured, either: DeepSeek documents that `temperature` has
+no effect in thinking mode and raises `top_p` below 0.95 to 0.95, so a DeepSeek candidate
+at its default effort is sampled at the provider's settings whatever this runner sends.
+
+**Reasoning effort is part of the candidate, and is sent only where one is configured**
+(Milestone 20). `default` adds nothing, so a default candidate's request is byte-identical
+to what every run before this milestone sent; any other setting is added in the dialect's
+own shape. The setting is recorded on each `Generation`, so a report says what an answer
+was asked for rather than what config says today — and the reasoning tokens the provider
+reports sit beside it, because a setting is a request and only the count shows whether it
+was honoured.
 
 **Which model answered is read back, not assumed.** SPEC's pinning rule expects a
 withdrawn model to fail loudly and fall through. DeepSeek retires models differently: it
@@ -39,11 +50,13 @@ the requested ref and a mismatch is recorded as a substitution (Milestone 22).
 
 from __future__ import annotations
 
+import copy
 import logging
 import os
 import random
 import time
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
@@ -84,9 +97,16 @@ _CUTOFF_REASONS = frozenset({"length", "MAX_TOKENS"})
 class _Dialect:
     """The parts of a provider's HTTP surface that are not shared.
 
-    `usage_path` names where the token counters live: OpenAI-compatible providers put
-    them under `usage.prompt_tokens` / `usage.completion_tokens`, while Gemini reports
-    `usageMetadata.promptTokenCount` / `candidatesTokenCount`.
+    `openai_compatible` selects the request and response shape: the OpenAI-shaped
+    providers put their token counters under `usage.prompt_tokens` /
+    `usage.completion_tokens`, while Gemini reports `usageMetadata.promptTokenCount` /
+    `candidatesTokenCount`.
+
+    `reasoning` maps each non-default reasoning setting to the fields it adds — merged
+    into the body for an OpenAI-shaped provider, into `generationConfig` for Gemini.
+    `default` has no entry because it adds nothing. Its keys must equal what
+    `hip.config.REASONING_CONTROLS` declares for the provider, less `default`; config
+    validates against that table, and a test holds the two together.
     """
 
     chat_path: str
@@ -94,6 +114,7 @@ class _Dialect:
     auth_header: str
     auth_prefix: str
     openai_compatible: bool = True
+    reasoning: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
 
 
 _DIALECTS: dict[str, _Dialect] = {
@@ -104,7 +125,15 @@ _DIALECTS: dict[str, _Dialect] = {
         models_path="/models",
         auth_header="Authorization",
         auth_prefix="Bearer ",
+        # A hard off, where the default is thinking at high effort. Measured on
+        # `deepseek-flash` 2026-09-10, one county packet: output fell from 5,693 tokens to
+        # 512 and reasoning to none, for an answer of the same length. The documented
+        # `reasoning_effort: low` is not offered because it is not the lever — it saved
+        # 7% on `deepseek-v4-pro` (2026-09-06).
+        reasoning={"disabled": {"thinking": {"type": "disabled"}}},
     ),
+    # No reasoning control: `high` would change the shape of `message.content`, which
+    # `_extract` does not parse. See `REASONING_CONTROLS` in `hip.config`.
     "mistral": _Dialect(
         chat_path="/chat/completions",
         models_path="/models",
@@ -121,6 +150,13 @@ _DIALECTS: dict[str, _Dialect] = {
         auth_header="x-goog-api-key",
         auth_prefix="",
         openai_compatible=False,
+        # The lowest `thinkingLevel` 3.7 Flash accepts: it refuses the documented
+        # `minimal` with HTTP 400. Measured 2026-09-10 on Mercer County's packet, `low`
+        # cut output from 2,655 tokens to 545 with no thinking tokens at all. Not the
+        # legacy `thinkingBudget: 0`, which measured the same (549, none) but survives
+        # for backward compatibility only, with no documented meaning on Gemini 3: a
+        # published configuration should rest on the control the provider documents.
+        reasoning={"low": {"thinkingConfig": {"thinkingLevel": "low"}}},
     ),
 }
 
@@ -260,6 +296,7 @@ class HostedRunner:
         sampling: SamplingParams,
         limits: EvalLimits,
     ) -> dict[str, Any]:
+        reasoning = self._reasoning(model)
         if self._dialect.openai_compatible:
             return {
                 "model": model.ref,
@@ -268,6 +305,7 @@ class HostedRunner:
                 "temperature": sampling.temperature,
                 "top_p": sampling.top_p,
                 "max_tokens": limits.max_output_tokens,
+                **reasoning,
             }
         return {
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
@@ -275,8 +313,28 @@ class HostedRunner:
                 "temperature": sampling.temperature,
                 "topP": sampling.top_p,
                 "maxOutputTokens": limits.max_output_tokens,
+                **reasoning,
             },
         }
+
+    def _reasoning(self, model: CandidateModel) -> dict[str, Any]:
+        """The request fields that carry `model`'s reasoning setting; none for `default`.
+
+        Config refuses a setting the provider does not offer (`REASONING_CONTROLS`), so
+        this raises only for a runner handed a candidate that skipped validation. Raising
+        beats sending the request without the control, which would record an answer
+        against a configuration that never reached the model.
+        """
+        if model.reasoning_effort == "default":
+            return {}
+        fragment = self._dialect.reasoning.get(model.reasoning_effort)
+        if fragment is None:
+            raise RunnerUnavailable(
+                f"{self._provider} offers no reasoning_effort "
+                f"'{model.reasoning_effort}' (model '{model.id}')"
+            )
+        # Copied, so no request can mutate the table every other request reads.
+        return copy.deepcopy(dict(fragment))
 
     def _url(self, model: CandidateModel) -> str:
         return f"{self._endpoint}{self._dialect.chat_path.format(ref=model.ref)}"
@@ -365,6 +423,7 @@ class HostedRunner:
                 cohort=self._cohort,
                 mode=mode,  # type: ignore[arg-type]
                 repeat=repeat,
+                reasoning_effort=model.reasoning_effort,
                 answer="",
                 raw=raw,
                 telemetry=telemetry,
@@ -379,6 +438,7 @@ class HostedRunner:
             cohort=self._cohort,
             mode=mode,  # type: ignore[arg-type]
             repeat=repeat,
+            reasoning_effort=model.reasoning_effort,
             answer=answer,
             reasoning=reasoning,
             truncated_reasoning=truncated,
@@ -573,6 +633,7 @@ class HostedRunner:
             cohort=self._cohort,
             mode=mode,  # type: ignore[arg-type]
             repeat=repeat,
+            reasoning_effort=model.reasoning_effort,
             answer="",
             raw="",
             telemetry=Telemetry(

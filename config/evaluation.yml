@@ -118,6 +118,14 @@ cohorts:
 # moving target that `hip check-config` rejects outright; and Gemma 4 on the Gemini API
 # is free-tier only, which means training terms and free-tier rate limits and so cannot
 # be a preference-list tier however well it might score.
+#
+# `reasoning_effort` is part of each candidate (Milestone 20). `default`, which every
+# candidate has unless it says otherwise, sends no control and leaves the provider to
+# decide — and the providers decide differently: DeepSeek thinks at high effort, Gemini
+# 3.7 Flash at `high` (dynamic), Gemini 3.1 Flash-Lite at its minimal level, and neither
+# Mistral candidate reasoned at all in `v2`. A non-default setting is a new candidate
+# with its own id, never an edit to a benchmarked one: `hip explain` skips a model
+# configured at an effort its benchmark did not measure.
   deepseek:
     runner: hosted
     provider: deepseek
@@ -185,6 +193,22 @@ cohorts:
         quantization: hosted
         input_usd_per_mtok: 0.30
         output_usd_per_mtok: 1.20
+      # V4.1 Flash with thinking off, sent as `thinking: {"type": "disabled"}` — a hard
+      # off. Measured 2026-09-10 on Mercer County's packet: output fell from 5,693 tokens
+      # to 512 and reasoning from 5,068 to none, for an answer of the same length. It is
+      # also the only DeepSeek configuration the pinned sampling reaches:
+      # the provider documents that temperature "has no effect in thinking mode", so the
+      # default candidate above is never sampled greedily, and a comparison of the two
+      # varies sampling as well as thinking. A second candidate rather than a setting on
+      # the first, because a different effort is a different configuration (Milestone
+      # 20). Unbenchmarked, so not on the preference list; measured in `v3`.
+      - id: deepseek-flash-nothink
+        ref: deepseek-flash
+        label: DeepSeek V4.1 Flash (thinking off)
+        quantization: hosted
+        reasoning_effort: disabled
+        input_usd_per_mtok: 0.30
+        output_usd_per_mtok: 1.20
 
   gemini:
     runner: hosted
@@ -229,6 +253,23 @@ cohorts:
         ref: gemini-3.7-flash
         label: Gemini 3.7 Flash
         quantization: hosted
+        input_usd_per_mtok: 0.75
+        output_usd_per_mtok: 3.75
+      # 3.7 Flash at the lowest thinking level it accepts. It refuses the documented
+      # `minimal` with HTTP 400 and documents no off switch, so `low` is the floor — a
+      # level rather than a promise of none, which is why the report prints measured
+      # reasoning beside it. Measured 2026-09-10 on Mercer County's packet: output fell
+      # from 2,655 tokens to 545 and thinking from 2,083 tokens to none. The default it
+      # is compared with is `high`, dynamic, which spent 70% of `v2`'s output tokens
+      # thinking. Same rates as above, and the same 2027-01-01 change. A second
+      # candidate rather than a setting on the first, because a different effort is a
+      # different configuration (Milestone 20). Unbenchmarked, so not on the preference
+      # list; measured in `v3`.
+      - id: gemini-3.7-flash-low
+        ref: gemini-3.7-flash
+        label: Gemini 3.7 Flash (low thinking)
+        quantization: hosted
+        reasoning_effort: low
         input_usd_per_mtok: 0.75
         output_usd_per_mtok: 3.75
 

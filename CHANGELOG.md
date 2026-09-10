@@ -3,6 +3,68 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.12.3] — 2026-09-10
+
+Milestone 20. How hard a model thinks becomes part of its configuration instead of a
+default nobody chose. Run `v2` compared seven models each at its vendor's default, and
+the defaults differ enough to decide a cost column on their own — DeepSeek thinks at high
+effort unless told otherwise and spent 93% of its output there, Mistral none. A
+lower-effort setting is now its own candidate with its own id, sent in each provider's
+shape and recorded on every answer, so `v3` can measure it rather than a report merely
+describe it. No benchmark was run.
+
+### Added
+- **`reasoning_effort` on every candidate** (#98) — `default`, `disabled` or `low`.
+  `default` sends no control, so every existing candidate's request is byte-identical to
+  what `v2` sent; `disabled` reaches DeepSeek as `thinking: {"type": "disabled"}`, and
+  `low` reaches Gemini as `thinkingConfig.thinkingLevel`. Config refuses a setting a
+  local runner cannot send or a provider does not offer (#99).
+- **`Generation.reasoning_effort`**, recorded on every answer, failures included, rather
+  than read back from config. `v1` and `v2` records parse as `default`, which is what
+  they were.
+- **Two candidates for run `v3`**: `deepseek-flash-nothink` and `gemini-3.7-flash-low`,
+  unbenchmarked and off the preference list.
+- **An Effort column in all four tables of the evaluation report**, and on the
+  selected-model line. A `disabled` answer that still reported reasoning tokens is
+  flagged, and a model sent two efforts under one id is excluded from selection.
+
+### Changed
+- **Eligibility to write follows the configuration, not the name** (#100). `hip explain`
+  skips a model configured at an effort its benchmark did not measure — through
+  `resolve`, and through `--all` and `--model`, which bypass it. Flipping the effort on a
+  listed model can no longer publish prose from a setting nobody measured.
+- **`hip eval run` refuses to resume a candidate under a changed effort** rather than
+  appending answers made one way to answers made the other under one id. A new setting
+  is a new id, or `--restart`.
+- **`hip check-config` rejects two ids for one configuration** — the same ref at the same
+  effort in one cohort, which is what a variant copied from its base and left unchanged
+  looks like.
+- **`reports/evaluation/v2.md` re-rendered.** No figure moved; every table gains an
+  Effort column reading `default`, and the paragraph above the cost table is computed
+  from the run.
+- `hip eval models` prints each candidate's effort, and `--probe` sends it.
+
+### Fixed
+- **The evaluation report printed `v2`'s facts into every run.** The paragraph above the
+  quality-per-dollar table was written into the renderer — `v2`'s reasoning shares and a
+  2026-09-06 measurement that no artifact in the run directory holds — so it broke the
+  report's own promise to recompute from its files, and `v3`'s report would have carried
+  `v2`'s numbers.
+- **The winner and eligibility to write were two copies of one rule.**
+  `passed_benchmark` restated `select_winner`'s predicate while its docstring called the
+  two shared; both now call `meets_the_bar`.
+
+### Measured
+- **Live, 2026-09-10, on Mercer County's packet, one call each.** DeepSeek V4.1 Flash
+  with thinking off: 512 output tokens against 5,693, reasoning 0 against 5,068, for an
+  answer of the same length — 5.8x cheaper. Gemini 3.7 Flash at `low`: 565 against
+  2,655, thinking 0 against 2,083 — 2.9x cheaper. One call per configuration; quality is
+  `v3`'s question.
+- **Gemini 3.7 Flash refuses `thinkingLevel: minimal`** —
+  `400 Thinking level MINIMAL is not supported for this model` — though its documentation
+  offers `minimal` for Flash, and it documents no off switch. `--probe` caught it before
+  any run, so the variant is `low`.
+
 ## [0.12.2] — 2026-09-10
 
 Milestone 22. DeepSeek began retiring models by routing their names to a successor rather

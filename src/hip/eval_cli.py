@@ -97,7 +97,7 @@ def run_command(
 ) -> None:
     """Put every scenario through every model, appending as each answer lands."""
     from hip.eval.checks import check_generation
-    from hip.eval.runner import ContextOverflow, run_evaluation
+    from hip.eval.runner import ConfigurationChanged, ContextOverflow, run_evaluation
     from hip.eval.runners import RunnerUnavailable
     from hip.eval.store import (
         CHECKS,
@@ -173,7 +173,7 @@ def run_command(
                 resume=resume,
                 on_generation=record,
             )
-        except (RunnerUnavailable, ContextOverflow) as exc:
+        except (RunnerUnavailable, ContextOverflow, ConfigurationChanged) as exc:
             typer.secho(str(exc), fg=typer.colors.RED, err=True)
             raise typer.Exit(code=1) from exc
 
@@ -380,8 +380,9 @@ def models_command(
         bool,
         typer.Option(
             "--probe",
-            help="Call each hosted candidate once. Costs a fraction of a cent and "
-            "catches a listed-but-uncallable pin, which a listing cannot.",
+            help="Call each hosted candidate once, sending its reasoning setting. Costs "
+            "a fraction of a cent and catches a listed-but-uncallable pin or a refused "
+            "setting, which a listing cannot.",
         ),
     ] = False,
 ) -> None:
@@ -431,9 +432,16 @@ def models_command(
                 if candidate.billed_per_token
                 else ""
             )
+            # Shown only when set, because `default` is the absence of a setting: the
+            # line for a candidate the harness sends no control for stays as it was.
+            effort = (
+                f"  reasoning: {candidate.reasoning_effort}"
+                if candidate.reasoning_effort != "default"
+                else ""
+            )
             typer.echo(
-                f"  {mark} {candidate.id:<20} {candidate.label:<24} "
-                f"{candidate.quantization:<8} {candidate.ref}{rates}"
+                f"  {mark} {candidate.id:<24} {candidate.label:<34} "
+                f"{candidate.quantization:<8} {candidate.ref}{rates}{effort}"
             )
             if probe and up and isinstance(runner, HostedRunner):
                 failure = runner.probe(candidate)
@@ -629,20 +637,40 @@ def _is_fresh(session: Session, region_id: int, window: str, model_id: str) -> b
 
 
 def _verified(evaluation: EvaluationConfig, models: list[str]) -> list[str]:
-    """The requested models that can be reached and are answered by themselves.
+    """The requested models that can be reached, are answered by themselves, and are
+    configured as the latest run measured them.
 
     One probe per hosted model. Without it a routed pin fails every region separately,
     paying for each call to learn the same fact. Local models are not probed: they run
     the weights on disk, so there is nothing a provider could substitute.
-    """
-    from hip.eval.runners import HostedRunner, build_runner
 
+    `--all` and `--model` skip `resolve`, so its configuration check is repeated here: a
+    model whose reasoning effort differs from the one the latest run measured is skipped,
+    since prose under its id would come from a configuration nobody measured. A model
+    the run never measured passes — these flags have never required a benchmark, which
+    is a separate gap.
+    """
+    from hip.eval.report import measured_efforts
+    from hip.eval.runners import HostedRunner, build_runner
+    from hip.eval.selection import configuration_drift, latest_run
+    from hip.eval.store import load_generations
+
+    run = latest_run()
+    measured = measured_efforts(load_generations(run)) if run else {}
     kept: list[str] = []
     for model_id in models:
         try:
             cohort_name = evaluation.cohort_of(model_id)
         except ConfigError as exc:
             typer.secho(f"  skipping {model_id}: {exc}", fg=typer.colors.YELLOW, err=True)
+            continue
+        drift = configuration_drift(
+            evaluation.model(model_id), measured.get(model_id, set()), run
+        )
+        if drift:
+            typer.secho(
+                f"  skipping {model_id}: {drift}", fg=typer.colors.YELLOW, err=True
+            )
             continue
         runner = build_runner(evaluation.cohorts[cohort_name], cohort_name)
         if isinstance(runner, HostedRunner):

@@ -14,6 +14,10 @@ Two rules shape the layout:
 - Deterministic results and judged results stay in separate tables. Hallucination rate
   is counted, not graded; merging the two would hide which numbers a language model
   produced.
+- Every table states the reasoning effort each model was *sent*, read from the
+  generations rather than from config, and the reasoning it was *measured* at sits
+  beside it. A model at two settings is two candidates (Milestone 20), and a setting is
+  a request that only the token count shows was honoured.
 
 Rendered as Markdown, like the region report (ARCHITECTURE #45): diffable, readable as
 text, and printable by the browser without a rendering dependency.
@@ -23,6 +27,7 @@ from __future__ import annotations
 
 import statistics
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 
 from hip.config import EvaluationConfig
@@ -58,6 +63,21 @@ class ModelSummary:
     # real cost is a machine and an afternoon.
     usd: float | None = None
     peak_memory_mb: list[float] = field(default_factory=list)
+    # Every reasoning setting this model's generations were sent at. One value in any
+    # run written since Milestone 20, because `hip eval run` refuses to resume a
+    # candidate under a changed setting; two mean the run averages two configurations.
+    reasoning_efforts: set[str] = field(default_factory=set)
+    # Generations sent at `disabled` that still reported reasoning tokens. `disabled` is
+    # the one setting that makes a checkable claim — none — so it is checked rather than
+    # trusted. `low` promises only a level and is not counted here.
+    reasoned_while_disabled: int = 0
+
+    @property
+    def effort_label(self) -> str:
+        """The setting as the report prints it."""
+        if not self.reasoning_efforts:
+            return "—"
+        return ", ".join(sorted(self.reasoning_efforts))
 
     @property
     def mean_score(self) -> float | None:
@@ -167,6 +187,12 @@ def summarize(
             summary.errors += 1
         if generation.truncated_reasoning:
             summary.truncated_reasoning += 1
+        summary.reasoning_efforts.add(generation.reasoning_effort)
+        if (
+            generation.reasoning_effort == "disabled"
+            and generation.telemetry.reasoning_tokens > 0
+        ):
+            summary.reasoned_while_disabled += 1
 
         telemetry = generation.telemetry
         summary.generated_tokens += telemetry.generation_tokens
@@ -205,6 +231,19 @@ def summarize(
     return summaries
 
 
+def measured_efforts(generations: Iterable[Generation]) -> dict[str, set[str]]:
+    """The reasoning settings each model's generations were sent at.
+
+    Read from the answers, never from config, so it describes what a run did rather than
+    what config says now: the resume guard in `hip.eval.runner` and the configuration
+    check in `hip.eval.selection` both ask it.
+    """
+    measured: dict[str, set[str]] = {}
+    for generation in generations:
+        measured.setdefault(generation.model_id, set()).add(generation.reasoning_effort)
+    return measured
+
+
 def anchor_pairs(
     evaluation: EvaluationConfig, summaries: dict[str, ModelSummary]
 ) -> list[tuple[str, ModelSummary, ModelSummary]]:
@@ -226,6 +265,35 @@ def _fmt(value: float | None, suffix: str = "", nd: int = 2) -> str:
     return "—" if value is None else f"{value:.{nd}f}{suffix}"
 
 
+def _effort_note(priced: list[ModelSummary]) -> str:
+    """What the quality-per-dollar column compares, derived from the run.
+
+    Until Milestone 20 this was written into the renderer: `v2`'s reasoning shares and a
+    2026-09-06 measurement that no file in the run directory holds. That broke the
+    report's own promise to recompute from its artifacts and add nothing, and it would
+    have printed `v2`'s facts into every later run.
+    """
+    shares = [summary.reasoning_share for summary in priced]
+    spread = f"from {min(shares):.0%} to {max(shares):.0%}"
+    if all(summary.reasoning_efforts == {"default"} for summary in priced):
+        return (
+            "**Every candidate here ran at its provider's default reasoning effort; the "
+            "harness sent no reasoning control.** Defaults differ by vendor — reasoning "
+            f"runs {spread} of output tokens across these candidates — so this compares "
+            "models as they arrive out of the box, not at matched effort, and a "
+            "reasoning-heavy candidate's figure is what its default costs rather than "
+            "its floor."
+        )
+    return (
+        "**Reasoning effort is part of each candidate's configuration, and the Effort "
+        "column states it.** `default` means the harness sent no reasoning control and "
+        "the provider decided; any other setting was sent as that provider's own control "
+        "under its own candidate id, so a model at two settings is two rows rather than "
+        f"one average of both. Reasoning runs {spread} of output tokens across these "
+        "candidates."
+    )
+
+
 # A model may fail this share of its generations and still be recommended. Stated as a
 # rate rather than as an absolute zero because the two runtimes fail differently: an
 # error from a local runtime means the model genuinely could not run, while a hosted
@@ -238,6 +306,23 @@ MAX_ERROR_RATE = 0.07
 MAX_HALLUCINATION_RATE = 0.05
 
 
+def meets_the_bar(summary: ModelSummary) -> bool:
+    """Whether a model may be recommended — and, through `selection.passed_benchmark`,
+    whether it may write. One definition for both, so a model can never be eligible to
+    publish under looser rules than it was eligible to win under.
+
+    Judged, under the fabrication bar, under the error bar for the reason above
+    `MAX_ERROR_RATE`, and measured at one reasoning effort: a model run at two settings
+    under one id has no single result to recommend, only an average of two candidates.
+    """
+    return (
+        summary.mean_score is not None
+        and summary.hallucination_rate <= MAX_HALLUCINATION_RATE
+        and summary.error_rate <= MAX_ERROR_RATE
+        and len(summary.reasoning_efforts) <= 1
+    )
+
+
 def select_winner(summaries: dict[str, ModelSummary]) -> ModelSummary | None:
     """The recommended model.
 
@@ -245,16 +330,8 @@ def select_winner(summaries: dict[str, ModelSummary]) -> ModelSummary | None:
     bar: nothing that fabricated a figure at more than a 5% rate is eligible, however
     well it writes. A platform whose premise is traceable numbers cannot ship an
     explainer that invents them, so this is a gate rather than another weighted term.
-
-    The error bar is the same shape and for the reason above `MAX_ERROR_RATE`.
     """
-    eligible = [
-        summary
-        for summary in summaries.values()
-        if summary.mean_score is not None
-        and summary.hallucination_rate <= MAX_HALLUCINATION_RATE
-        and summary.error_rate <= MAX_ERROR_RATE
-    ]
+    eligible = [summary for summary in summaries.values() if meets_the_bar(summary)]
     if not eligible:
         return None
     return max(eligible, key=lambda s: (s.mean_score or 0, s.median_tps or 0))
@@ -294,13 +371,22 @@ def render_report(
             "",
         ]
 
+    for summary in summaries.values():
+        if len(summary.reasoning_efforts) > 1:
+            lines += [
+                f"> **{summary.label} was sent more than one reasoning effort in this "
+                f"run ({summary.effort_label}).** Its figures average two "
+                "configurations under one id, so it is not eligible for selection.",
+                "",
+            ]
+
     if winner:
         lines += [
             "## Selected model",
             "",
             f"**{winner.label}** (`{winner.model_id}`, {winner.cohort} cohort, "
-            f"{winner.quantization}) — rubric score "
-            f"{_fmt(winner.mean_score)}/4.00, "
+            f"{winner.quantization}, reasoning effort `{winner.effort_label}`) — "
+            f"rubric score {_fmt(winner.mean_score)}/4.00, "
             f"{winner.hallucination_rate:.1%} of stated figures unsupported, "
             f"{_fmt(winner.median_tps, ' tok/s', 1)}.",
             "",
@@ -345,8 +431,9 @@ def render_report(
         "packet it was given; a figure the packet cannot support is a fabrication "
         "regardless of how the answer reads. No language model is involved.",
         "",
-        "| Model | Cohort | Answers | Figures | Unsupported | Empty | Errors | Refusal |",
-        "|---|---|---:|---:|---:|---:|---:|---:|",
+        "| Model | Cohort | Effort | Answers | Figures | Unsupported | Empty | Errors "
+        "| Refusal |",
+        "|---|---|---|---:|---:|---:|---:|---:|---:|",
     ]
     for summary in sorted(summaries.values(), key=lambda s: s.hallucination_rate):
         refusal = (
@@ -355,9 +442,10 @@ def render_report(
             else "—"
         )
         lines.append(
-            f"| {summary.label} | {summary.cohort} | {summary.generations} | "
-            f"{summary.total_numbers} | {summary.hallucination_rate:.1%} | "
-            f"{summary.empty} | {summary.errors} | {refusal} |"
+            f"| {summary.label} | {summary.cohort} | {summary.effort_label} | "
+            f"{summary.generations} | {summary.total_numbers} | "
+            f"{summary.hallucination_rate:.1%} | {summary.empty} | {summary.errors} | "
+            f"{refusal} |"
         )
 
     if judged:
@@ -370,8 +458,8 @@ def render_report(
             "`config/evaluation.yml`. Final answers only — reasoning tokens are "
             "measured as cost, never graded as quality.",
             "",
-            "| Model | Weighted | " + " | ".join(criteria) + " | Flagged |",
-            "|---|---:|" + "---:|" * len(criteria) + "---:|",
+            "| Model | Effort | Weighted | " + " | ".join(criteria) + " | Flagged |",
+            "|---|---|---:|" + "---:|" * len(criteria) + "---:|",
         ]
         ranked = sorted(
             (s for s in summaries.values() if s.mean_score is not None),
@@ -390,7 +478,8 @@ def render_report(
                 for c in criteria
             ]
             lines.append(
-                f"| {summary.label} | {_fmt(summary.mean_score)} | "
+                f"| {summary.label} | {summary.effort_label} | "
+                f"{_fmt(summary.mean_score)} | "
                 + " | ".join(cells)
                 + f" | {summary.hallucinations} |"
             )
@@ -399,16 +488,20 @@ def render_report(
         "",
         "## Cost and efficiency",
         "",
-        "`reasoning` is the share of generated tokens spent before the answer began. "
-        "It is an efficiency measure only. Peak memory is comparable within a cohort "
+        "`effort` is the reasoning setting the harness sent — `default` means it sent "
+        "none and the provider or runtime decided — and `reasoning` is the share of "
+        "generated tokens actually spent before the answer began, which is how a setting "
+        "is checked rather than trusted. Reasoning is an efficiency measure only. Peak "
+        "memory is comparable within a cohort "
         "and not across one: MLX reports a true allocator peak, Ollama reports "
         "nothing, and a process-RSS reading taken from outside would not mean the "
         "same thing. `tok/s` is likewise not comparable across cohorts: a local "
         "figure measures the machine, while a hosted one measures a request over a "
         "network and is a latency number wearing a throughput label.",
         "",
-        "| Model | Cohort | tok/s | TTFT | Reasoning | Truncated | Peak memory |",
-        "|---|---|---:|---:|---:|---:|---:|",
+        "| Model | Cohort | tok/s | TTFT | Effort | Reasoning | Truncated | "
+        "Peak memory |",
+        "|---|---|---:|---:|---|---:|---:|---:|",
     ]
     for summary in sorted(summaries.values(), key=lambda s: -(s.median_tps or 0)):
         memory = (
@@ -419,10 +512,20 @@ def render_report(
         lines.append(
             f"| {summary.label} | {summary.cohort} | "
             f"{_fmt(summary.median_tps, '', 1)} | "
-            f"{_fmt(summary.median_ttft_ms, ' ms', 0)} | "
+            f"{_fmt(summary.median_ttft_ms, ' ms', 0)} | {summary.effort_label} | "
             f"{summary.reasoning_share:.0%} | {summary.truncated_reasoning} | "
             f"{memory} |"
         )
+    for summary in sorted(summaries.values(), key=lambda s: s.label):
+        if summary.reasoned_while_disabled:
+            lines += [
+                "",
+                f"**{summary.label} reasoned despite `disabled`** in "
+                f"{summary.reasoned_while_disabled} of {summary.generations} "
+                "generations: the provider reported reasoning tokens for a request that "
+                "asked for none, so these figures describe what it did rather than what "
+                "was configured.",
+            ]
 
     priced = [s for s in summaries.values() if s.usd is not None]
     if priced:
@@ -442,28 +545,17 @@ def render_report(
             "here: its cost is a machine and an afternoon, not a token rate, and a "
             "0.00 would read as free.",
             "",
-            # The caveat this table cannot state for itself. Every candidate runs at
-            # whatever reasoning its vendor does by default, because nothing in the
-            # harness sets one — so the column measures defaults rather than models at
-            # matched effort, and a reader who takes it as the latter is misled by a
-            # heading rather than by a number.
-            "**Each candidate ran at its provider's default reasoning setting; the "
-            "harness sets none.** Those defaults differ enough to move this column on "
-            "their own — DeepSeek V4 defaults to high reasoning and spent 93% of its "
-            "output tokens there, Gemini 3.7 Flash 70%, Mistral none — so what is "
-            "compared here is models as they arrive out of the box, not models at "
-            "matched effort. Measured 2026-09-06 on `deepseek-v4-pro`: disabling "
-            "thinking cut output from 858 tokens to 223 and returned a longer answer, "
-            "so the figures below are an upper bound for a reasoning-heavy candidate "
-            "rather than its floor. Rubric scores are unaffected.",
+            # The caveat this table cannot state for itself: the effort each row was
+            # measured at, which moves this column more than any rate does.
+            _effort_note(priced),
             "",
-            "| Model | Cohort | Rubric | Prompt tok | Output tok | $/1k gens | "
+            "| Model | Cohort | Effort | Rubric | Prompt tok | Output tok | $/1k gens | "
             "Rubric per $ |",
-            "|---|---|---:|---:|---:|---:|---:|",
+            "|---|---|---|---:|---:|---:|---:|---:|",
         ]
         for summary in sorted(priced, key=lambda s: -(s.score_per_dollar or 0)):
             lines.append(
-                f"| {summary.label} | {summary.cohort} | "
+                f"| {summary.label} | {summary.cohort} | {summary.effort_label} | "
                 f"{_fmt(summary.mean_score)} | "
                 f"{summary.prompt_tokens:,} | {summary.generated_tokens:,} | "
                 f"{_fmt(summary.usd_per_thousand, '', 2)} | "

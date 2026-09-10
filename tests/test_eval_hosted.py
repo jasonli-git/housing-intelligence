@@ -10,10 +10,12 @@ which failures are worth retrying.
 
 from __future__ import annotations
 
+import json
 import os
 import pathlib
 import threading
 import time
+from typing import Any
 
 import httpx
 import pytest
@@ -28,12 +30,18 @@ from hip.config import (
     Settings,
     load_evaluation,
 )
-from hip.eval.report import MAX_ERROR_RATE, ModelSummary, select_winner, summarize
+from hip.eval.report import (
+    MAX_ERROR_RATE,
+    ModelSummary,
+    render_report,
+    select_winner,
+    summarize,
+)
 from hip.eval.runners import build_runner
 from hip.eval.runners.hosted import HostedRunner
 from hip.eval.runners.ollama import OllamaRunner
 from hip.eval.selection import NoModelAvailable, passed_benchmark, resolve
-from hip.eval.types import Generation, Scenario, Telemetry
+from hip.eval.types import CriterionScore, Generation, Judgment, Scenario, Telemetry
 
 SAMPLING = SamplingParams(temperature=0.0, top_p=1.0, top_k=1, repeat_penalty=1.0, seed=0)
 LIMITS = EvalLimits(context_tokens=12288, max_output_tokens=6000, keep_alive=0)
@@ -1160,6 +1168,8 @@ def test_explicit_models_are_each_verified_once_and_local_ones_not_at_all(
     learning about a routed pin from one paid failure per region."""
     from hip.eval_cli import _verified
 
+    # No run on disk: this is about probing, not about what a run measured.
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: None)
     probed: list[str] = []
 
     def probe(self: HostedRunner, model: CandidateModel) -> str | None:
@@ -1174,9 +1184,12 @@ def test_explicit_models_are_each_verified_once_and_local_ones_not_at_all(
     assert probed == ["deepseek-test", "gemini-test"]
 
 
-def test_a_misspelled_model_is_skipped_rather_than_crashing_the_run() -> None:
+def test_a_misspelled_model_is_skipped_rather_than_crashing_the_run(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from hip.eval_cli import _verified
 
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: None)
     evaluation = _evaluation(["gemma-4-e4b-q4"])
     assert _verified(evaluation, ["no-such-model", "gemma-4-e4b-q4"]) == [
         "gemma-4-e4b-q4"
@@ -1195,3 +1208,507 @@ def test_telemetry_written_before_the_new_fields_still_parses() -> None:
     )
     assert old.served_model is None
     assert old.system_fingerprint is None
+
+
+# --- reasoning effort (Milestone 20) ------------------------------------------------
+
+
+def _at(provider: str, effort: str) -> CandidateModel:
+    """The test cohorts' candidate, asked for `effort`."""
+    return CandidateModel(
+        id=f"{provider}-test",
+        ref="pinned-model-0731",
+        label=f"{provider} test",
+        quantization="hosted",
+        reasoning_effort=effort,  # type: ignore[arg-type]
+        input_usd_per_mtok=0.25,
+        output_usd_per_mtok=1.5,
+    )
+
+
+def _generate_as(
+    runner: HostedRunner,
+    model: CandidateModel,
+    handler: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generation:
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:  # type: ignore[arg-type]
+        monkeypatch.setattr(httpx, "post", client.post)
+        return runner.generate(
+            model, _scenario(), "prompt", SAMPLING, LIMITS, "deterministic", 0, 0
+        )
+
+
+def _recording(body: dict[str, object], sent: list[dict[str, Any]]) -> object:
+    """A provider that answers `body` and keeps every request body it receives."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        sent.append(json.loads(request.content))
+        return httpx.Response(200, json=body)
+
+    return handler
+
+
+def _gemini_answer() -> dict[str, object]:
+    return {
+        "candidates": [{"content": {"parts": [{"text": "ok"}]}, "finishReason": "STOP"}],
+        "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 2},
+        "modelVersion": "pinned-model-0731",
+    }
+
+
+def _gemini(monkeypatch: pytest.MonkeyPatch) -> HostedRunner:
+    monkeypatch.setenv("GEMINI_API_KEY", "goog-test")
+    runner = build_runner(_cohort("gemini", "https://x/v1beta"), "gemini")
+    assert isinstance(runner, HostedRunner)
+    return runner
+
+
+def _with_effort(
+    evaluation: EvaluationConfig, model_id: str, effort: str
+) -> EvaluationConfig:
+    """`evaluation` with one candidate's effort edited in place — the edit Milestone 20's
+    guards exist to catch."""
+    cohorts = {
+        name: cohort.model_copy(
+            update={
+                "models": [
+                    m.model_copy(update={"reasoning_effort": effort})
+                    if m.id == model_id
+                    else m
+                    for m in cohort.models
+                ]
+            }
+        )
+        for name, cohort in evaluation.cohorts.items()
+    }
+    return evaluation.model_copy(update={"cohorts": cohorts})
+
+
+def _judged(
+    generation: Generation, score: float, evaluation: EvaluationConfig
+) -> Judgment:
+    return Judgment(
+        generation_key=generation.key,
+        model_id=generation.model_id,
+        scenario_id=generation.scenario_id,
+        scores={
+            criterion.id: CriterionScore(score=score, justification="")
+            for criterion in evaluation.rubric.criteria
+        },
+        summary="",
+        weighted_score=score,
+    )
+
+
+def test_a_default_candidate_sends_exactly_what_v2_sent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`v2` was measured with no reasoning field in any request. A default candidate must
+    keep sending exactly that, or its benchmarked configuration moves underneath it."""
+    sent: list[dict[str, Any]] = []
+    deepseek = _deepseek(monkeypatch)
+    answer = _recording(_openai_body("pinned-model-0731"), sent)
+    _generate_as(deepseek, _at("deepseek", "default"), answer, monkeypatch)
+    assert set(sent[-1]) == {
+        "model",
+        "messages",
+        "stream",
+        "temperature",
+        "top_p",
+        "max_tokens",
+    }
+
+    gemini = _gemini(monkeypatch)
+    _generate_as(
+        gemini, _at("gemini", "default"), _recording(_gemini_answer(), sent), monkeypatch
+    )
+    assert set(sent[-1]) == {"contents", "generationConfig"}
+    assert set(sent[-1]["generationConfig"]) == {"temperature", "topP", "maxOutputTokens"}
+
+
+def test_deepseek_disabled_is_sent_as_its_hard_off(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sent: list[dict[str, Any]] = []
+    runner = _deepseek(monkeypatch)
+    answer = _recording(_openai_body("pinned-model-0731"), sent)
+    _generate_as(runner, _at("deepseek", "disabled"), answer, monkeypatch)
+    assert sent[-1]["thinking"] == {"type": "disabled"}
+    # The documented `reasoning_effort` is not the lever — it saved 7% on V4 Pro.
+    assert "reasoning_effort" not in sent[-1]
+
+
+def test_gemini_low_is_sent_as_a_thinking_level_inside_generation_config(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sent: list[dict[str, Any]] = []
+    runner = _gemini(monkeypatch)
+    _generate_as(
+        runner, _at("gemini", "low"), _recording(_gemini_answer(), sent), monkeypatch
+    )
+    config = sent[-1]["generationConfig"]
+    assert config["thinkingConfig"] == {"thinkingLevel": "low"}
+    assert "thinkingConfig" not in sent[-1]
+    # Not the legacy budget, which Gemini 3 keeps only for backward compatibility.
+    assert "thinkingBudget" not in config["thinkingConfig"]
+
+
+def test_a_level_no_model_has_been_seen_to_accept_is_not_a_setting() -> None:
+    """`minimal` is documented for Gemini 3 Flash, and 3.7 Flash answered it with HTTP
+    400 on 2026-09-10. A value config accepts is a claim that some model honours it."""
+    with pytest.raises(ValueError, match="reasoning_effort"):
+        _at("gemini", "minimal")
+
+
+def test_every_generation_records_the_effort_it_was_sent_at(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Read from the answer rather than from config, so a report re-derived after a
+    config edit still says what each answer was asked for — failures included."""
+    runner = _deepseek(monkeypatch)
+    model = _at("deepseek", "disabled")
+
+    answered = _generate_as(
+        runner, model, _answering(_openai_body("pinned-model-0731")), monkeypatch
+    )
+    assert answered.error is None
+    assert answered.reasoning_effort == "disabled"
+
+    substituted = _generate_as(
+        runner, model, _answering(_openai_body("some-successor")), monkeypatch
+    )
+    assert substituted.error is not None
+    assert substituted.reasoning_effort == "disabled"
+
+    monkeypatch.delenv("DEEPSEEK_API_KEY")
+    unkeyed = runner.generate(
+        model, _scenario(), "prompt", SAMPLING, LIMITS, "deterministic", 0, 0
+    )
+    assert unkeyed.error is not None
+    assert unkeyed.reasoning_effort == "disabled"
+
+
+def test_records_from_before_the_field_parse_as_default() -> None:
+    """No run before Milestone 20 sent a reasoning control, so `default` is the truth
+    about every `v1` and `v2` record rather than a guess."""
+    record = _priced_generation("gemma-4-e4b-q4", "gguf", prompt=1, output=1)
+    old = record.model_dump(exclude={"reasoning_effort"})
+    assert "reasoning_effort" not in old
+    assert Generation.model_validate(old).reasoning_effort == "default"
+
+
+def test_a_local_cohort_cannot_be_given_a_reasoning_effort() -> None:
+    """The local runners send no reasoning control, so a setting there would be recorded
+    against answers it never reached."""
+    with pytest.raises(ValueError, match="sends no reasoning control"):
+        Cohort(
+            runner="ollama",
+            endpoint="http://localhost:11434",
+            models=[_at("local", "disabled")],
+        )
+
+
+@pytest.mark.parametrize(
+    ("provider", "effort"),
+    [
+        ("mistral", "disabled"),
+        ("mistral", "low"),
+        # Gemini 3.7 Flash accepts no off switch; `low` is its floor, a weaker claim.
+        ("gemini", "disabled"),
+        # Documented by DeepSeek and not the lever — 7% on V4 Pro — so not offered.
+        ("deepseek", "low"),
+    ],
+)
+def test_a_provider_is_never_asked_for_a_setting_it_does_not_offer(
+    provider: str, effort: str
+) -> None:
+    with pytest.raises(ValueError, match="does not offer"):
+        Cohort(
+            runner="hosted",
+            provider=provider,  # type: ignore[arg-type]
+            api_key_env="KEY",
+            endpoint="https://x",
+            models=[_at(provider, effort)],
+        )
+
+
+def test_every_offered_setting_has_a_wire_format_and_nothing_else_does() -> None:
+    """Config validates against `REASONING_CONTROLS` and the runner sends from its
+    dialect table. If they disagree, a setting either passes validation and is then
+    dropped, or has a wire format that config never lets anyone use."""
+    from hip.config import REASONING_CONTROLS
+    from hip.eval.runners.hosted import _DIALECTS
+
+    assert set(_DIALECTS) == set(REASONING_CONTROLS)
+    for provider, offered in REASONING_CONTROLS.items():
+        assert set(_DIALECTS[provider].reasoning) == offered - {"default"}, provider
+
+
+def test_a_runner_refuses_a_setting_rather_than_sending_without_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Unreachable through config. A runner handed an unvalidated candidate must not send
+    the request without the control and record the answer as though it had."""
+    from hip.eval.runners import RunnerUnavailable
+
+    monkeypatch.setenv("MISTRAL_API_KEY", "m-test")
+    runner = build_runner(_cohort("mistral", "https://x/v1"), "mistral")
+    assert isinstance(runner, HostedRunner)
+
+    def never(request: httpx.Request) -> httpx.Response:
+        raise AssertionError("a request went out without its reasoning control")
+
+    with pytest.raises(RunnerUnavailable, match="offers no reasoning_effort"):
+        _generate_as(runner, _at("mistral", "disabled"), never, monkeypatch)
+
+
+def test_the_probe_sends_the_configured_setting(monkeypatch: pytest.MonkeyPatch) -> None:
+    """So a provider that refuses a setting fails `hip eval models --probe`, rather than
+    fifteen generations into a run."""
+    sent: list[dict[str, Any]] = []
+    runner = _deepseek(monkeypatch)
+    handler = _recording(_openai_body("pinned-model-0731"), sent)
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:  # type: ignore[arg-type]
+        monkeypatch.setattr(httpx, "post", client.post)
+        assert runner.probe(_at("deepseek", "disabled")) is None
+    assert sent[-1]["thinking"] == {"type": "disabled"}
+
+
+def test_two_ids_for_one_configuration_are_a_config_problem() -> None:
+    """The realistic mistake: a variant copied from its base and left at the base's
+    effort, so one configuration is measured twice under two names."""
+    from hip.config import evaluation_problems
+
+    base = _evaluation(["deepseek-test", "gemma-4-e4b-q4"])
+    deepseek = base.cohorts["deepseek"]
+
+    def with_extra(candidate: CandidateModel) -> EvaluationConfig:
+        extended = deepseek.model_copy(update={"models": [*deepseek.models, candidate]})
+        return base.model_copy(update={"cohorts": {**base.cohorts, "deepseek": extended}})
+
+    twin = deepseek.models[0].model_copy(update={"id": "deepseek-test-copy"})
+    problems = evaluation_problems(with_extra(twin))
+    assert any("one configuration" in problem for problem in problems)
+
+    variant = twin.model_copy(update={"reasoning_effort": "disabled"})
+    problems = evaluation_problems(with_extra(variant))
+    assert not any("one configuration" in problem for problem in problems)
+
+
+def test_the_repo_config_adds_variants_without_touching_a_benchmarked_candidate() -> None:
+    evaluation = load_evaluation(CONFIG_DIR)
+    deepseek = evaluation.model("deepseek-flash-nothink")
+    gemini = evaluation.model("gemini-3.7-flash-low")
+    assert (deepseek.ref, deepseek.reasoning_effort) == ("deepseek-flash", "disabled")
+    assert (gemini.ref, gemini.reasoning_effort) == ("gemini-3.7-flash", "low")
+    # The same call as the base model, so the same rates.
+    for variant, base_id in ((deepseek, "deepseek-flash"), (gemini, "gemini-3.7-flash")):
+        base = evaluation.model(base_id)
+        assert variant.input_usd_per_mtok == base.input_usd_per_mtok
+        assert variant.output_usd_per_mtok == base.output_usd_per_mtok
+    # Unbenchmarked, so neither may write yet.
+    assert not {deepseek.id, gemini.id} & set(evaluation.generation.preference)
+    # Everything `v2` measured is still configured the way it was measured. An in-place
+    # edit here would publish prose from a setting nobody benchmarked.
+    measured_in_v2 = {
+        "deepseek-v4-flash",
+        "deepseek-v4-pro",
+        "gemini-3.1-flash-lite",
+        "gemini-3.7-flash",
+        "mistral-small-4",
+        "mistral-large-3",
+        "gemma-4-e4b-q4",
+    }
+    assert {evaluation.model(m).reasoning_effort for m in measured_in_v2} == {"default"}
+
+
+def _serial(evaluation: EvaluationConfig) -> EvaluationConfig:
+    return evaluation.model_copy(
+        update={
+            "generation": GenerationConfig(
+                preference=list(evaluation.generation.preference), max_concurrency=1
+            )
+        }
+    )
+
+
+def test_resuming_a_candidate_under_a_changed_effort_is_refused(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A resume would append answers made under the new setting to answers made under
+    the old one, and the report would average two configurations under one id."""
+    from hip.eval.runner import ConfigurationChanged, run_evaluation
+    from hip.eval.store import GENERATIONS, append_record, run_dir
+
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    monkeypatch.setattr("hip.eval.store.get_settings", lambda: _settings_at(tmp_path))
+    scenarios = [_scenario_n(i) for i in range(3)]
+    append_record(
+        run_dir("vresume") / GENERATIONS,
+        _priced_generation_for(scenarios[0], "deepseek-test", "hosted"),
+    )
+    changed = _with_effort(_concurrent_evaluation(), "deepseek-test", "disabled")
+    calls: list[int] = []
+    monkeypatch.setattr(
+        HostedRunner,
+        "generate",
+        lambda *a, **k: calls.append(1),  # type: ignore[arg-type,return-value]
+    )
+
+    with pytest.raises(ConfigurationChanged, match="--restart"):
+        run_evaluation(changed, scenarios, "vresume")
+    assert calls == [], "a generation was submitted before the refusal"
+
+
+def test_a_restart_runs_the_changed_configuration_and_records_it(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from hip.eval.runner import run_evaluation
+    from hip.eval.store import GENERATIONS, append_record, run_dir
+
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    monkeypatch.setattr("hip.eval.store.get_settings", lambda: _settings_at(tmp_path))
+    scenarios = [_scenario_n(i) for i in range(3)]
+    append_record(
+        run_dir("vrestart") / GENERATIONS,
+        _priced_generation_for(scenarios[0], "deepseek-test", "hosted"),
+    )
+    changed = _serial(_with_effort(_concurrent_evaluation(), "deepseek-test", "disabled"))
+    handler = _answering(_openai_body("pinned-model-0731"))
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:  # type: ignore[arg-type]
+        monkeypatch.setattr(httpx, "post", client.post)
+        produced = run_evaluation(changed, scenarios, "vrestart", resume=False)
+
+    assert len(produced) == 3
+    assert {generation.reasoning_effort for generation in produced} == {"disabled"}
+
+
+def test_resolve_skips_a_model_configured_at_an_effort_its_benchmark_did_not_measure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The back door the field would otherwise open: flip the effort on a listed model
+    and its id stays eligible while its configuration is new."""
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    monkeypatch.setenv("GEMINI_API_KEY", "goog-test")
+
+    def measured_at_default(
+        evaluation: EvaluationConfig, run: str
+    ) -> dict[str, ModelSummary]:
+        summaries = _all_pass(evaluation, run)
+        for summary in summaries.values():
+            summary.reasoning_efforts.add("default")
+        return summaries
+
+    monkeypatch.setattr("hip.eval.selection.benchmarked", measured_at_default)
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: "v2")
+    evaluation = _with_effort(
+        _evaluation(["deepseek-test", "gemini-test", "gemma-4-e4b-q4"]),
+        "deepseek-test",
+        "disabled",
+    )
+
+    resolution = resolve(evaluation)
+    assert resolution.model_id == "gemini-test"
+    passed_over, why = resolution.skipped[0]
+    assert passed_over == "deepseek-test"
+    assert "measured at reasoning effort default" in why
+    assert "configured as 'disabled'" in why
+
+
+def test_explicit_models_skip_a_configuration_the_latest_run_did_not_measure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`--all` and `--model` bypass `resolve`, and `--all` is the path the regeneration
+    after `v3` takes, so the same check has to hold there."""
+    from hip.eval_cli import _verified
+
+    measured = [
+        _priced_generation("gemini-test", "gemini", prompt=1, output=1),
+        _priced_generation("gemma-4-e4b-q4", "gguf", prompt=1, output=1),
+    ]
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: "v2")
+    monkeypatch.setattr("hip.eval.store.load_generations", lambda run: measured)
+    monkeypatch.setattr(HostedRunner, "probe", lambda self, model: None)
+    evaluation = _with_effort(
+        _evaluation(["gemini-test", "gemma-4-e4b-q4"]), "gemini-test", "low"
+    )
+
+    assert _verified(evaluation, ["gemini-test", "gemma-4-e4b-q4"]) == ["gemma-4-e4b-q4"]
+
+
+def test_every_table_states_the_effort_behind_its_figures() -> None:
+    evaluation = _evaluation(["deepseek-test", "gemini-test"])
+    generations = [
+        _priced_generation("deepseek-test", "deepseek", prompt=100, output=40),
+        _priced_generation("gemini-test", "gemini", prompt=100, output=40).model_copy(
+            update={"reasoning_effort": "low"}
+        ),
+    ]
+    judgments = [_judged(g, 3.0, evaluation) for g in generations]
+    text = render_report(evaluation, [_scenario()], generations, [], judgments, run="t")
+
+    # Deterministic checks, rubric scores, cost and efficiency, quality per dollar.
+    assert text.count("| Effort |") == 4
+    assert "| low |" in text
+    assert "reasoning effort `" in text  # the selected-model line
+    assert "Reasoning effort is part of each candidate's configuration" in text
+
+
+def test_a_run_at_provider_defaults_says_so_from_its_own_numbers() -> None:
+    """Derived from the run rather than written into the renderer, which until Milestone
+    20 printed `v2`'s shares and a V4 Pro measurement into every report."""
+    evaluation = _evaluation(["deepseek-test", "gemini-test"])
+    generations = [
+        _priced_generation("deepseek-test", "deepseek", prompt=100, output=40),
+        _priced_generation("gemini-test", "gemini", prompt=100, output=40),
+    ]
+    judgments = [_judged(g, 3.0, evaluation) for g in generations]
+    text = render_report(evaluation, [_scenario()], generations, [], judgments, run="t")
+
+    assert "Every candidate here ran at its provider's default reasoning effort" in text
+    assert "deepseek-v4-pro" not in text
+
+
+def test_a_disabled_answer_that_still_reasoned_is_flagged_and_low_is_not() -> None:
+    """`disabled` claims none, so it is checked against the count. `low` claims only a
+    level, so reasoning under it is the setting working as documented."""
+    evaluation = _evaluation(["deepseek-test", "gemini-test"])
+
+    def reasoned(model_id: str, cohort: str, effort: str) -> Generation:
+        generation = _priced_generation(model_id, cohort, prompt=100, output=40)
+        telemetry = generation.telemetry.model_copy(update={"reasoning_tokens": 30})
+        return generation.model_copy(
+            update={"reasoning_effort": effort, "telemetry": telemetry}
+        )
+
+    generations = [
+        reasoned("deepseek-test", "deepseek", "disabled"),
+        reasoned("gemini-test", "gemini", "low"),
+    ]
+    text = render_report(evaluation, [_scenario()], generations, [], [], run="t")
+
+    assert "**deepseek test reasoned despite `disabled`**" in text
+    assert "gemini test reasoned" not in text
+
+
+def test_a_model_sent_two_efforts_under_one_id_cannot_be_selected() -> None:
+    evaluation = _evaluation(["gemini-test"])
+    first = _priced_generation("gemini-test", "gemini", prompt=1, output=1)
+    second = first.model_copy(
+        update={
+            "scenario_key": "caveats:11:markdown",
+            "scenario_id": "caveats",
+            "reasoning_effort": "low",
+        }
+    )
+    judgments = [_judged(g, 4.0, evaluation) for g in (first, second)]
+    summaries = summarize(evaluation, [first, second], [], judgments)
+
+    assert summaries["gemini-test"].reasoning_efforts == {"default", "low"}
+    assert passed_benchmark(summaries["gemini-test"]) is False
+    assert select_winner(summaries) is None
+    text = render_report(
+        evaluation, [_scenario()], [first, second], [], judgments, run="t"
+    )
+    assert "more than one reasoning effort" in text

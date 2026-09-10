@@ -30,9 +30,10 @@ from pathlib import Path
 
 from hip.config import CandidateModel, EvaluationConfig, SamplingParams
 from hip.eval.prompts import build_prompt, estimate_tokens, fits_context
+from hip.eval.report import measured_efforts
 from hip.eval.runners import ModelRunner, RunnerUnavailable, build_runner
 from hip.eval.runners.mlx_runner import MlxRunner
-from hip.eval.store import CHECKS, GENERATIONS, append_record, completed_keys, run_dir
+from hip.eval.store import CHECKS, GENERATIONS, append_record, load_generations, run_dir
 from hip.eval.types import Generation, Scenario
 
 log = logging.getLogger(__name__)
@@ -47,6 +48,17 @@ class ContextOverflow(RuntimeError):
     response — so a model would answer from a fraction of the packet and the run would
     record a confident wrong answer as a model failing. The context is sized to the
     payload, not the payload trimmed to the context.
+    """
+
+
+class ConfigurationChanged(RuntimeError):
+    """A candidate's configuration differs from the one its recorded answers used.
+
+    Resuming skips what a run already holds and generates the rest under config as it
+    stands now. If a candidate's reasoning effort changed in between, the run would hold
+    answers made both ways under one id and the report would average them — the
+    confound Milestone 20 exists to remove, reintroduced by a config edit. A different
+    setting is a different candidate with its own id, or the run starts over.
     """
 
 
@@ -114,7 +126,9 @@ def run_evaluation(
     records stay on disk and are picked up by the report.
     """
     path = run_dir(run) / GENERATIONS
-    already = completed_keys(run) if resume else set()
+    recorded = load_generations(run) if resume else []
+    _refuse_changed_configuration(evaluation, recorded, models)
+    already = {generation.key for generation in recorded}
     if not resume:
         # Clear the derived artifact too. Checks are appended per generation, so a
         # restart that left them behind would mix results from two different configs in
@@ -218,6 +232,26 @@ def run_evaluation(
                 runner.unload()
 
     return produced
+
+
+def _refuse_changed_configuration(
+    evaluation: EvaluationConfig,
+    recorded: list[Generation],
+    models: list[str] | None,
+) -> None:
+    """Raise before anything is submitted if resuming would mix two configurations."""
+    measured = measured_efforts(recorded)
+    for candidate in evaluation.models:
+        if models is not None and candidate.id not in models:
+            continue
+        seen = measured.get(candidate.id)
+        if seen and seen != {candidate.reasoning_effort}:
+            raise ConfigurationChanged(
+                f"this run holds generations of '{candidate.id}' at reasoning_effort "
+                f"{', '.join(sorted(seen))}, and config now sets "
+                f"'{candidate.reasoning_effort}'. A different setting is a different "
+                f"candidate: give it its own id, or start the run over with --restart."
+            )
 
 
 def _prompt_for(evaluation: EvaluationConfig, scenario: Scenario) -> str:

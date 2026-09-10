@@ -11,7 +11,7 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-09-10): v0.12.2, Version 1 complete and Version 2 under way.** New
+> **Status (2026-09-10): v0.12.3, Version 1 complete and Version 2 under way.** New
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
 > **337,552 observations across 23 metrics from 10 public sources, spanning 1971 to
@@ -316,7 +316,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 289 Python + 26 dashboard tests; API tests skip without a warehouse
+make test          # 379 Python + 26 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -425,7 +425,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.12.2 — **Version 1 is complete; Version 2 is under way.**
+v0.12.3 — **Version 1 is complete; Version 2 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -438,7 +438,7 @@ else: static publication on a public domain, hosted inference in place of local
 generation, citation binding, deeper New Jersey sources, a three-dimensional map of its
 564 municipalities, a consumer entry point, and a design system. Expansion to the
 Northeast and to every US county was deferred past Version 2 on 2026-09-07. Eleven
-milestones, five shipped.
+milestones, six shipped.
 
 **Milestone 10 — build cost and data placement (2026-09-02).** `hip footprint` reports
 bytes per storage tier, per warehouse table, and per state, including the Postgres size
@@ -475,6 +475,16 @@ and a regeneration would have stored the retired name above another model's pros
 hosted response is now checked against the model requested, a mismatch is recorded as a
 substitution, and `hip explain` checks each hosted tier before using it — which also
 closed a gap from Milestone 12, whose fall-through had never covered a withdrawn model.
+
+**Milestone 20 — reasoning effort as a measured variable (2026-09-10).** How hard a model
+thinks is now part of its configuration rather than a vendor default nobody chose. `v2`
+compared seven models each at its own default — DeepSeek thinks at high effort unless
+told otherwise, Mistral not at all — so part of what it measured was the defaults. A
+lower-effort setting is now its own candidate, sent in each provider's own shape and
+recorded on every answer, and a model writes prose only at the setting its benchmark
+measured. On one county packet, turning DeepSeek's thinking off cut its output from
+5,693 tokens to 512 for an answer of the same length; whether quality holds is the next
+benchmark's question.
 
 Milestones and their status are in [ROADMAP.md](ROADMAP.md); the current working list and
 known rough edges are in [TODO.md](TODO.md). Work not scheduled for Version 2 is listed at

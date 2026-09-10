@@ -239,6 +239,42 @@ class EvalLimits(BaseModel):
     keep_alive: int = 0
 
 
+# The reasoning a candidate is asked for (Milestone 20). `default` sends no control and
+# leaves the decision to the provider, which is what every run before Milestone 20 did;
+# any other value is sent as that provider's own documented control by its dialect in
+# `hip.eval.runners.hosted`.
+#
+# Two values beyond the default, each the lowest setting its provider has been seen to
+# accept, and the only ones a candidate uses. `disabled` is a hard off (DeepSeek's
+# `thinking.type`) and makes a claim the report checks: no reasoning tokens. `low` is
+# Gemini 3.7 Flash's lowest accepted `thinkingLevel` and claims only a level. Others are
+# additive and deliberately absent until something measures them: a value config
+# accepts but no model has been seen to honour is the same unverified claim as a pin
+# copied from a blog. `minimal` was exactly that — documented for Gemini 3 Flash, and
+# refused by 3.7 Flash with HTTP 400 on 2026-09-10.
+ReasoningEffort = Literal["default", "disabled", "low"]
+
+# Which settings each hosted provider can express. The wire format lives beside each
+# dialect in `hip.eval.runners.hosted`; this is what config validates against at load,
+# and a test holds the two in agreement.
+#
+# Declared per provider rather than per model, which is an approximation: a provider's
+# models do not all accept the same levels, as `minimal` showed. A model that refuses a
+# setting its provider offers answers HTTP 400, which `hip eval models --probe`
+# surfaces before a run.
+#
+# Mistral is `default` only. Its control is `reasoning_effort` `none` | `high`, and
+# `high` turns `message.content` from a string into a list of thinking and text chunks,
+# which the OpenAI-shaped parser would stringify into a Python repr and grade as the
+# answer. `v2` measured no reasoning from either Mistral candidate at the default, so a
+# `none` variant would re-measure one configuration under a second id.
+REASONING_CONTROLS: dict[str, frozenset[str]] = {
+    "deepseek": frozenset({"default", "disabled"}),
+    "gemini": frozenset({"default", "low"}),
+    "mistral": frozenset({"default"}),
+}
+
+
 class CandidateModel(BaseModel):
     """One model under test. ``anchor`` pairs it with its counterpart in the other
     cohort, which is what licenses any cross-runtime comparison.
@@ -259,6 +295,13 @@ class CandidateModel(BaseModel):
     anchor: str | None = None
     input_usd_per_mtok: float | None = Field(default=None, ge=0.0)
     output_usd_per_mtok: float | None = Field(default=None, ge=0.0)
+    # Part of the candidate's identity rather than a runtime option. `v2` compared seven
+    # models each at its vendor's default, and DeepSeek's default is thinking at high
+    # effort, so part of what it measured was how much each vendor reasons when nobody
+    # asks. A different setting is a different configuration and gets its own id:
+    # flipping this on a benchmarked candidate in place would publish prose from a
+    # configuration nobody measured, which `hip.eval.selection` refuses.
+    reasoning_effort: ReasoningEffort = "default"
 
     @property
     def billed_per_token(self) -> bool:
@@ -331,6 +374,31 @@ class Cohort(BaseModel):
                 f"runner '{self.runner}' is local; provider and api_key_env apply "
                 f"only to a hosted cohort"
             )
+        return self
+
+    @model_validator(mode="after")
+    def _reasoning_is_expressible(self) -> Cohort:
+        """A setting the runner cannot send would be dropped on the floor, and the run
+        would record an answer against a configuration that never reached the model.
+        Both ways that can happen fail at load instead: a local runner sends no reasoning
+        control at all, and a hosted provider offers only what `REASONING_CONTROLS`
+        declares."""
+        for candidate in self.models:
+            effort = candidate.reasoning_effort
+            if effort == "default":
+                continue
+            if self.runner != "hosted":
+                raise ValueError(
+                    f"model '{candidate.id}' sets reasoning_effort '{effort}', but "
+                    f"runner '{self.runner}' is local and sends no reasoning control"
+                )
+            offered = REASONING_CONTROLS.get(self.provider or "", frozenset({"default"}))
+            if effort not in offered:
+                raise ValueError(
+                    f"model '{candidate.id}' sets reasoning_effort '{effort}', which "
+                    f"provider '{self.provider}' does not offer "
+                    f"(offered: {', '.join(sorted(offered))})"
+                )
         return self
 
 
@@ -565,7 +633,15 @@ def _check_evaluation(config_dir: Path | None) -> list[str]:
     if not path.exists():
         return []
 
-    evaluation = load_evaluation(config_dir)
+    return evaluation_problems(load_evaluation(config_dir))
+
+
+def evaluation_problems(evaluation: EvaluationConfig) -> list[str]:
+    """Every cross-reference problem in a loaded evaluation plan.
+
+    Separate from the file handling above, so a plan can be checked without writing it
+    to disk first.
+    """
     problems = [
         f"evaluation.yml: duplicate model id '{dup}'"
         for dup in _duplicates([m.id for m in evaluation.models])
@@ -578,6 +654,22 @@ def _check_evaluation(config_dir: Path | None) -> list[str]:
         f"evaluation.yml: duplicate rubric criterion '{dup}'"
         for dup in _duplicates([c.id for c in evaluation.rubric.criteria])
     ]
+
+    # A second id for one configuration splits that configuration's evidence across two
+    # rows and invites a reader to compare a model with itself. The way to get here is a
+    # variant copied from its base and left at the base's reasoning effort.
+    for cohort_name, cohort in evaluation.cohorts.items():
+        first: dict[tuple[str, str], str] = {}
+        for candidate in cohort.models:
+            key = (candidate.ref, candidate.reasoning_effort)
+            if key in first:
+                problems.append(
+                    f"evaluation.yml: '{first[key]}' and '{candidate.id}' in cohort "
+                    f"'{cohort_name}' are one configuration — ref '{candidate.ref}' at "
+                    f"reasoning_effort '{candidate.reasoning_effort}'"
+                )
+            else:
+                first[key] = candidate.id
 
     # An anchor exists to license a cross-runtime comparison, so one that names models
     # inside a single cohort is measuring nothing and is almost certainly a typo.

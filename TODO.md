@@ -9,18 +9,18 @@ Nothing in this section is in progress. It is the order agreed on 2026-09-10 for
 the work back up, and what has to be true before starting. Detail lives in the items it
 points to; this section only sequences them.
 
-**Where things stand.** Milestones 12, 19 and 22 are done. 12 and 19 are deployed and
-verified live; 22 changed no published byte, so it needs no deploy. The live site carries
-data through July 2026 and five models' explanations of every county. The preference
-list in `config/evaluation.yml` is `gemini-3.7-flash` → `gemini-3.1-flash-lite` →
-`mistral-small-4` → `deepseek-v4-pro` → `gemma-4-e4b-q4`.
+**Where things stand.** Milestones 12, 19, 20 and 22 are done. 12 and 19 are deployed and
+verified live; 20 and 22 changed no published byte, so neither needs a deploy. The live
+site carries data through July 2026 and five models' explanations of every county. The
+preference list in `config/evaluation.yml` is `gemini-3.7-flash` →
+`gemini-3.1-flash-lite` → `mistral-small-4` → `deepseek-v4-pro` → `gemma-4-e4b-q4`.
 
-**The agreed sequence** — settled with the user on 2026-09-10, nothing started:
+**The agreed sequence** — settled with the user on 2026-09-10; step 1 finished the same
+day:
 
-1. **Milestone 20 — reasoning effort as a measured variable.** First because it has no
-   data dependency and edits the same per-provider request code and `CandidateModel`
-   that Milestone 22 just changed. Scope below under "Reasoning effort was never
-   controlled".
+1. ✅ **Milestone 20 — reasoning effort as a measured variable.** Done 2026-09-10; see
+   its section below. It configured `deepseek-flash-nothink` and `gemini-3.7-flash-low`
+   for step 4.
 2. **Milestone 21 — New Jersey depth.** The five sources in [ROADMAP.md](ROADMAP.md) row
    21, each sized under "Data sources worth adding". Before 13 because it adds metrics to
    every packet.
@@ -57,11 +57,17 @@ explanations were written by the real V4 Pro and stay correctly attributed until
       the site no longer shows. `hip eval scenarios --run v3`, then
       `hip eval run --run v3 --model ...` once per candidate below
 - [ ] **Candidates, seven or eight:** `gemini-3.7-flash`, `gemini-3.1-flash-lite`,
-      `mistral-small-4`, `deepseek-flash`, `gemma-4-e4b-q4`, and Milestone 20's
-      thinking-disabled variants of `deepseek-flash` and `gemini-3.7-flash`. **Exclude**
+      `mistral-small-4`, `deepseek-flash`, `gemma-4-e4b-q4`, and Milestone 20's two
+      lower-effort variants, `deepseek-flash-nothink` and `gemini-3.7-flash-low`.
+      **Exclude**
       `deepseek-v4-flash` (already routed; the guard fails it) and `deepseek-v4-pro`
       (routed from 2026-09-14). **Consider dropping** `mistral-large-3`: last in `v2` at
       2.68, not on the preference list, and 15 fewer judgments
+- [ ] **Decide how `v3` treats sampling for thinking models, before running it.**
+      DeepSeek ignores temperature in thinking mode, so `deepseek-flash` against
+      `deepseek-flash-nothink` varies sampling as well as thinking; and Google recommends
+      temperature 1.0 for Gemini 3 where the harness pins 0.0. Either accept both and say
+      so in the report, or change the design first — see the Milestone 20 notes
 - [ ] **Quote before spending**: `hip eval cost --run v3` prices the run from its own
       prompts — a constant-based estimate was wrong twice. Expect roughly $5–6 for
       105–120 judgments, since 21's larger packets make every judge prompt larger
@@ -84,6 +90,10 @@ explanations were written by the real V4 Pro and stay correctly attributed until
       'deepseek-v4-pro'`, or, better, a `--prune` on `hip explain` that removes rows whose
       model has left the list. Found 2026-09-10 while planning this step; decide which
       when it comes up
+- [ ] **Decide whether `hip explain --all` must require the benchmark** before the
+      regeneration below runs it. Since Milestone 20 it checks each model's
+      configuration against the latest run, but a model the run never measured still
+      passes, as it always has — see the Milestone 20 note
 - [ ] **Regenerate every explanation**: `hip explain --level county --all --force`. This
       rewrites all 21 counties for every model on the new list and refreshes their
       ranks. Well under $1 for the hosted models with `deepseek-flash` in V4 Pro's place,
@@ -1465,7 +1475,7 @@ cost column has to state which rate it used or it is not reproducible.
       refresh, so `make publish` needs re-running before the site reflects them. Not done
       here; it is Milestone 11's surface and its done criterion is a reachable URL.
 
-- [ ] **Reasoning effort was never controlled, so the benchmark compared vendor
+- [x] **Reasoning effort was never controlled, so the benchmark compared vendor
       defaults rather than comparable configurations.** Raised 2026-09-06 from an
       outside review and verified against the live API the same day. `HostedRunner`
       sends no reasoning parameter, and DeepSeek V4 defaults to *high* — which fully
@@ -1515,6 +1525,10 @@ cost column has to state which rate it used or it is not reproducible.
       benchmark. **Do not quietly switch the generation path to thinking-disabled
       first**: Milestone 8's rule is that only a benchmarked configuration writes
       published prose, and a different reasoning setting is a different configuration.
+
+      **Built in Milestone 20 (2026-09-10)**, with one change of plan: Gemini 3.7 Flash
+      refuses its documented floor, `minimal`, and documents no off switch, so its
+      variant is `gemini-3.7-flash-low` rather than a thinking-disabled one.
 
 - [ ] **Historical comparison for Milestone 17 — trajectory, not just position.**
       Asked 2026-09-06: can a reader compare last quarter or last year against now, and
@@ -1624,6 +1638,116 @@ reasoning-effort variants together, instead of three partial runs.
       passed. No false positives: Gemini's `modelVersion` and Mistral's `model` both
       report exactly the pinned ref. After 04:00 UTC on 2026-09-14 this same probe is what
       makes `deepseek-v4-pro` fall through, so nothing else has to happen before that date.
+
+## Milestone 20 — Reasoning effort as a measured variable
+
+Started and finished 2026-09-10, the first of the order agreed that day: 20, 21, 13, then
+run `v3`. It builds and tests the mechanism and runs no benchmark; the variants it
+configures are measured in `v3`, once 21 and 13 have settled the packet they will be
+measured on.
+
+**What each provider documents, read 2026-09-10**, and what calling it showed:
+
+| Provider | Control | When nothing is sent | Lowest setting the model accepted |
+|---|---|---|---|
+| DeepSeek | `thinking.type` `enabled`/`disabled`; `reasoning_effort` `low`/`high`/`max` | thinking on, effort `high` | `thinking: disabled`, a hard off |
+| Gemini 3.x | `generationConfig.thinkingConfig.thinkingLevel` `minimal`/`low`/`medium`/`high` | `high` on Flash, `minimal` on Flash-Lite | `low` — 3.7 Flash refuses `minimal` with HTTP 400 |
+| Mistral | `reasoning_effort` `none`/`high` | not stated; `v2` measured no reasoning | not tried; `default` only |
+
+Four things follow, and they changed the scope as written in [ROADMAP.md](ROADMAP.md):
+
+- **Gemini 3.7 Flash accepts no off switch.** The roadmap asked for a "thinking-disabled"
+  Gemini variant. Google offers `minimal` as the floor for Flash and says even that
+  "does not guarantee that thinking is off"; 3.7 Flash answered it with `400 Thinking
+  level MINIMAL is not supported for this model`. The variant is therefore `low`, named
+  as a level rather than as an off, with measured reasoning printed beside it. The
+  legacy `thinkingBudget: 0` was tried and measured the same as `low` — 549 output
+  tokens, no thinking — and is not used: it survives for backward compatibility only,
+  with no documented meaning on Gemini 3.
+- **`--probe` caught the refusal before anything ran.** `minimal` passed config
+  validation, because capability is declared per provider, and failed its first call.
+  That is the case the probe exists for: a refused setting cost one request here rather
+  than fifteen generations inside `v3`.
+- **Mistral stays at `default`.** Its `high` turns `message.content` from a string into a
+  list of thinking and text chunks, which `_extract` would stringify into a Python repr
+  and grade as the answer. And `v2` already measured no reasoning at the default, so a
+  `none` variant would re-measure one configuration under two ids.
+- **DeepSeek ignored the pinned sampling in `v2`.** Its reference says `temperature`
+  "has no effect in thinking mode" and raises `top_p` below 0.95 to 0.95, so every
+  default-effort DeepSeek generation was sampled at the provider's settings rather than
+  greedily. Thinking off is the first configuration in which the deterministic mode
+  reaches DeepSeek at all — which also means the `v3` pair differs in two variables, not
+  one.
+
+### Tasks
+
+- [x] `CandidateModel.reasoning_effort` — `default`, `disabled`, or `low` — validated at
+      config load: a local cohort sends no reasoning control and cannot set one, and a
+      hosted candidate cannot request a setting its provider does not offer
+      (`REASONING_CONTROLS` in [config.py](src/hip/config.py))
+- [x] `HostedRunner` sends it in each dialect's own shape: `thinking: {"type":
+      "disabled"}` for DeepSeek, `thinkingConfig.thinkingLevel: "low"` inside Gemini's
+      `generationConfig`. `default` sends nothing, so a default candidate's request stays
+      byte-identical to the one `v2` measured
+- [x] Every `Generation` records the effort it was sent at. `v1` and `v2` records carry
+      no field and parse as `default`, which is what they were
+- [x] One id is one configuration: `hip eval run` refuses to resume a candidate whose
+      recorded generations used a different effort (`ConfigurationChanged`), and
+      `hip check-config` rejects two candidates in one cohort declaring the same ref at
+      the same effort
+- [x] Eligibility follows the configuration, not the name: `resolve` and
+      `hip explain --all`/`--model` skip a model configured at an effort the latest run
+      did not measure it at, so flipping the field on a listed model cannot publish
+      prose from an unmeasured configuration
+- [x] The report states the effort behind every figure — an Effort column in all four
+      tables and on the selected-model line — with the hard-coded `v2` paragraph
+      replaced by one derived from the run. It flags a `disabled` generation that still
+      reported reasoning tokens, and a model sent two efforts under one id, which is
+      excluded from selection
+- [x] `deepseek-flash-nothink` and `gemini-3.7-flash-low` in config, off the preference
+      list, for `v3`
+- [x] `hip eval models` prints each candidate's effort, and `--probe` sends it
+- [x] `reports/evaluation/v2.md` re-rendered: an Effort column reading `default` in every
+      row, and the effort paragraph computed from `v2`'s own figures. No figure moved
+- [x] Tests — 24 new, 379 Python tests in all
+- [x] Live check, 2026-09-10 — below. Nothing was written to `region_explanations` or
+      `data/eval`; the calls went through the runners directly
+
+- Note: **Measured on Mercer County's 5y packet, explain-shaped prompt, one call each**
+  (peak rates):
+
+  | Candidate | Output tokens | Reasoning | Answer | Cost |
+  |---|---:|---:|---:|---:|
+  | `deepseek-flash` (default) | 5,693 | 5,068 | 2,107 chars | $0.0075 |
+  | `deepseek-flash-nothink` | 512 | 0 | 2,049 chars | $0.0013 |
+  | `gemini-3.7-flash` (default) | 2,655 | 2,083 | 1,725 chars | $0.0120 |
+  | `gemini-3.7-flash-low` | 565 | 0 | 2,038 chars | $0.0042 |
+
+  One call per configuration is an anecdote, not a benchmark: it shows the controls do
+  what they claim and roughly what they save — 5.8x on DeepSeek, 2.9x on Gemini — and
+  says nothing about quality, which is `v3`'s question. Hosted generation also varies
+  between identical calls: the same `low` request returned 545 tokens once and 565 the
+  next.
+- Note: **the whole live check cost about $0.03**, including `hip eval models --probe`
+  over all nine hosted candidates. The probe also re-confirmed `deepseek-v4-flash` as a
+  substitution and every other pin as answered by itself.
+- Note: **`--all` and `--model` still require no benchmark at all.** Milestone 20 made
+  them check that a model's *configuration* matches what the latest run measured, which
+  closes the in-place effort edit. A model the run never measured still passes, as it
+  always has: the preference list is trusted to hold only benchmarked models, and
+  nothing outside `resolve` enforces it. Not introduced here and not widened; listed
+  under "After `v3`", because the regeneration there runs `--all`.
+- Note: **Gemini 3 recommends temperature 1.0** and warns that lower values "may lead to
+  unexpected behavior, such as looping or degraded performance". The harness pins 0.0
+  for every candidate so that none is sampled differently from the rest, and `v2`
+  scored Gemini 3.7 Flash highest under that pin, so it has not visibly cost anything —
+  but it departs from the provider's guidance, and it is a `v3` decision, not a
+  Milestone 20 one.
+- Note: **a report prices from the rates in config when it renders**, not from rates
+  recorded with the run. Gemini 3.7 Flash's rates double on 2027-01-01; if config is
+  updated then, re-rendering `v2` reprices it. Reasoning effort is read from the
+  generations for exactly this reason. The rates are the same hazard and are not fixed
+  here.
 
 ## Milestone 19 — Multi-model interpretation
 
