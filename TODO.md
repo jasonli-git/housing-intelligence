@@ -1447,6 +1447,86 @@ cost column has to state which rate it used or it is not reproducible.
       cheaper place is *getting* cheaper or merely *is* cheaper is the question a buyer
       actually has, and only one of those is answerable today.
 
+## Milestone 22 — DeepSeek migration and substitution detection
+
+Started 2026-09-10, ahead of 13 because of a vendor date. DeepSeek dropped
+`deepseek-v4-flash` from `/models` between 2026-09-06 and 2026-09-10, and retires
+`deepseek-v4-pro` at 04:00 UTC on 2026-09-14. Neither is being *withdrawn* in the sense
+SPEC anticipated. Both are **routed**: a request naming the retired model returns HTTP
+200 and a well-formed answer written by a different one.
+
+Measured 2026-09-10, one call each:
+
+| requested | HTTP | model the response says served it | `system_fingerprint` |
+|---|---|---|---|
+| `deepseek-v4-flash` | 200 | `deepseek-flash` | `aeb56401…` |
+| `deepseek-flash` | 200 | `deepseek-flash` | `aeb56401…` |
+| `deepseek-v4-pro` | 200 | `deepseek-v4-pro` | `a307abda…` |
+| `mistral-small-2603` | 200 | `mistral-small-2603` | none sent |
+| `mistral-large-2512` | 200 | `mistral-large-2512` | none sent |
+| `gemini-3.1-flash-lite` | 200 | `gemini-3.1-flash-lite` (`modelVersion`) | none sent |
+| `gemini-3.7-flash` | 200 | `gemini-3.7-flash` (`modelVersion`) | none sent |
+
+**Why routing is worse than withdrawal, and why the platform could not see it.** SPEC's
+pinning rule rests on a withdrawn pin failing loudly and falling through. A routed pin
+never fails. `HostedRunner` sends `"model": ref` and never reads back the model the
+response names, so after 2026-09-14 a regeneration would store `deepseek-v4-pro` against
+prose V4.1 Flash wrote. `--probe` would be fooled too: it checks that text arrives, not
+which model sent it. The response already carries the truth — every provider above names
+the model that answered — so the fix is to read it.
+
+**A second gap, found while designing the first.** The preference list is documented as
+falling through on a withdrawn pin ([selection.py](src/hip/eval/selection.py)), and it
+never has. `resolve` decides availability with `runner.available()`, which for a hosted
+cohort checks only that a key is set. A withdrawn or routed model therefore resolved as
+available and then failed every region one by one. Fall-through covered a missing key,
+not a missing model.
+
+**The benchmark is deliberately out of scope.** It waits until 21, 13 and 20 have landed,
+so that one fresh run measures the final packet shape, citation binding and the
+reasoning-effort variants together, instead of three partial runs.
+
+### Tasks
+
+- [x] `Telemetry` records the served model and, where the provider sends one, the
+      `system_fingerprint`. Both optional, so every existing JSONL record still parses
+- [x] A served model that differs from the requested ref is a **substitution**: recorded
+      as an error naming both, with the billed tokens kept (the call was paid for) and
+      the text never used. Exact match only — every current candidate reports exactly
+      its requested ref, and a spurious mismatch fails in the safe direction
+- [x] `probe()` checks which model answered, not just that it answered
+- [x] `resolve()` can probe hosted tiers, and `hip explain` asks it to, so a withdrawn or
+      routed pin actually falls through — as SPEC requires and the docs already claimed
+- [x] `hip explain --all` and `--model` verify each hosted model once up front, instead
+      of paying for 21 substituted calls to learn the same thing 21 times
+- [x] A reasoning model cut off before answering (`finish_reason` of `length` or
+      `MAX_TOKENS`) is marked `truncated_reasoning`. DeepSeek reasons in a separate
+      field the tag-based check never reads, which is why three empty `v2` answers
+      reported `truncated_reasoning=False` and the explain errors said "no reasoning
+      emitted" over 6,000 tokens of it
+- [x] Config: `deepseek-flash` (V4.1 Flash) added as an unbenchmarked candidate at peak
+      $0.30/$1.20, **not** on the preference list; `deepseek-v4-flash` kept and annotated
+      as routed, because dropping it would remove it from run `v2`'s report;
+      `deepseek-v4-pro` annotated as retiring — once routed, the guard makes it fall
+      through by itself
+- [x] Tests for all of the above
+
+- Note: **`deepseek-flash` cannot be pinned.** It carries no version at all and will be
+      repointed at the next Flash. The guard catches a *different* name coming back; it
+      cannot catch the *same* name meaning a new model. `system_fingerprint` is the only
+      trace of that, which is why it is recorded rather than enforced — fingerprints also
+      change for infrastructure reasons, so failing on them would be noise.
+- Note: **Nothing published is wrong.** The 21 V4 Pro explanations were written by the
+      real V4 Pro on 2026-09-06 and are correctly attributed. They cannot be regenerated
+      as V4 Pro after 2026-09-14, so they are replaced after the re-benchmark, not before.
+- Note: **Verified live on 2026-09-10.** `hip eval models --probe` against every hosted
+      candidate: `deepseek-v4-flash` reported `substitution: requested
+      'deepseek-v4-flash' but deepseek answered with 'deepseek-flash'`, and the other
+      six — including the new `deepseek-flash` and the still-live `deepseek-v4-pro` —
+      passed. No false positives: Gemini's `modelVersion` and Mistral's `model` both
+      report exactly the pinned ref. After 04:00 UTC on 2026-09-14 this same probe is what
+      makes `deepseek-v4-pro` fall through, so nothing else has to happen before that date.
+
 ## Milestone 19 — Multi-model interpretation
 
 Started 2026-09-06, out of numeric order and before 13-18. Precedent: Milestone 9 was

@@ -16,7 +16,7 @@ from typing import Annotated
 import typer
 from sqlalchemy.orm import Session
 
-from hip.config import get_settings, load_evaluation
+from hip.config import ConfigError, EvaluationConfig, get_settings, load_evaluation
 from hip.warehouse.db import get_engine
 
 app = typer.Typer(
@@ -510,7 +510,9 @@ def explain_command(
         models = list(model_id)
     else:
         try:
-            resolution = resolve(evaluation, require_benchmark=not unbenchmarked)
+            resolution = resolve(
+                evaluation, require_benchmark=not unbenchmarked, probe=True
+            )
         except NoModelAvailable as exc:
             typer.secho(str(exc), fg=typer.colors.RED, err=True)
             raise typer.Exit(code=1) from exc
@@ -524,6 +526,19 @@ def explain_command(
                 "have been measured on the evaluation scenarios",
                 fg=typer.colors.YELLOW,
             )
+
+    # Explicit models skip `resolve`, so they are verified here instead: one probe per
+    # hosted model up front, rather than learning about a routed pin from 21 paid
+    # failures that all say the same thing.
+    if all_models or model_id:
+        models = _verified(evaluation, models)
+        if not models:
+            typer.secho(
+                "no requested model can be reached or attributed; nothing generated",
+                fg=typer.colors.RED,
+                err=True,
+            )
+            raise typer.Exit(code=1)
 
     with Session(get_engine()) as session:
         region_ids = (
@@ -611,6 +626,34 @@ def _is_fresh(session: Session, region_id: int, window: str, model_id: str) -> b
     except PacketUnavailable:
         return False
     return not is_stale(session, region_id, window, packet, model_id)
+
+
+def _verified(evaluation: EvaluationConfig, models: list[str]) -> list[str]:
+    """The requested models that can be reached and are answered by themselves.
+
+    One probe per hosted model. Without it a routed pin fails every region separately,
+    paying for each call to learn the same fact. Local models are not probed: they run
+    the weights on disk, so there is nothing a provider could substitute.
+    """
+    from hip.eval.runners import HostedRunner, build_runner
+
+    kept: list[str] = []
+    for model_id in models:
+        try:
+            cohort_name = evaluation.cohort_of(model_id)
+        except ConfigError as exc:
+            typer.secho(f"  skipping {model_id}: {exc}", fg=typer.colors.YELLOW, err=True)
+            continue
+        runner = build_runner(evaluation.cohorts[cohort_name], cohort_name)
+        if isinstance(runner, HostedRunner):
+            failure = runner.probe(evaluation.model(model_id))
+            if failure:
+                typer.secho(
+                    f"  skipping {model_id}: {failure}", fg=typer.colors.YELLOW, err=True
+                )
+                continue
+        kept.append(model_id)
+    return kept
 
 
 @app.command("cost")

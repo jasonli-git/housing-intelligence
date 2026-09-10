@@ -3,6 +3,43 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.12.2] — 2026-09-10
+
+Milestone 22. DeepSeek began retiring models by routing their names to a successor rather
+than withdrawing them, and the platform could not tell: a routed request returns HTTP 200
+and a good answer from a different model, so nothing failed, and a regeneration would have
+stored the retired model's name above another model's prose. Every hosted response is now
+checked against the model that was asked for. No benchmark was run — that waits until
+Milestones 20, 21 and 13 have landed.
+
+### Added
+- **Substitution detection** (#95). The served model each provider reports (`model`, or
+  Gemini's `modelVersion`) is compared with the requested ref; a mismatch is recorded as an
+  error naming both, with the billed tokens kept and the text never used.
+  `Telemetry.served_model` and `system_fingerprint` record which model answered and, where
+  DeepSeek sends one, which backend — the only trace an unversioned alias leaves when it is
+  repointed without its name changing.
+- **`resolve(probe=True)`**, which `hip explain` always uses (#96), and a one-probe-per-model
+  check for explicit `--model` and `--all` runs.
+- **`deepseek-flash`** (V4.1 Flash) as a candidate at peak rates of $0.30/$1.20 —
+  unbenchmarked, so not on the preference list.
+
+### Fixed
+- **A withdrawn pin never actually fell through the preference list** (#96). Availability
+  was a check that a key was set, which a withdrawn model passes, so it resolved as
+  available and then failed every region; a routed model never failed at all. Documented
+  as working since 0.12.0.
+- **`truncated_reasoning` missed every DeepSeek cutoff** (#97), because DeepSeek reasons in a
+  separate field the tag-based check never read. Three empty `v2` answers that spent all
+  6,000 tokens reasoning were recorded as not truncated.
+- `hip eval models --probe` checked that text came back, which is exactly the test a routed
+  model passes. It now checks which model answered first.
+
+### Measured
+- **Live probe of every hosted candidate, 2026-09-10**: `deepseek-v4-flash` flagged as a
+  substitution (answered by `deepseek-flash`); the other six passed, with no false
+  positives — Gemini and Mistral both report exactly the pinned ref.
+
 ## [0.12.1] — 2026-09-06
 
 Milestone 19. Every county page now carries five models' readings of the same packet,

@@ -66,6 +66,7 @@ that rewrites the fact table has gone wrong.
 | 19 | ✅ done | **Multi-model interpretation** — every county page carries all five benchmarked models' readings of the same packet, switchable by the reader and each attributed to the model and provider that wrote it. `region_explanations` gains `model_id` in its primary key and a `rank` column carrying preference-list position, because `API_MAY_IMPORT` forbids the API reading config to order them; `/regions/{id}/explanation` keeps its shape and a new `/regions/{id}/explanations` returns all five. Built out of numeric order, before 13-18, because the benchmark data is fresh and the content costs $0.86 to generate today. It is also the reachable subset of Post-Version 2's bring-your-own-model comparison, whose blockers were a missing server and a paid judge — neither of which a pre-generated artifact needs |
 | 20 | ⬜ planned | **Reasoning effort as a measured variable** — `HostedRunner` sends no reasoning parameter, and DeepSeek V4 defaults to *high*, so run `v2` compared seven models each at its own vendor default rather than at comparable effort. That explains DeepSeek's 93-95% reasoning share and makes every DeepSeek cost figure an upper bound: measured 2026-09-06, `thinking: disabled` cut output 3.8x (858 → 223 tokens) and returned a *longer* answer, while `reasoning_effort: low` saved only 7%. Effort becomes a `CandidateModel` field so a configuration is a candidate rather than a hidden default, thinking-disabled variants of `deepseek-v4-pro` and `gemini-3.7-flash` join run `v2`, and the report states which effort each figure was measured at. Rubric scores are unaffected, so the winner does not move |
 | 21 | ⬜ planned | **New Jersey depth: the sources still missing** — HUD Fair Market Rents, ACS tenure and vacancy (B25003, B25002), FRED `NJSTHPI`, HUD CHAS, and Census Building Permits at place level. Every one uses a key already in `.env`, and all five together are under 10MB against a 2.4GB raw tier. Closes three real gaps: rent affordability rests on 293 rows against price-to-income's 2,026, the warehouse holds no ownership rate at all, and there is no municipal construction signal. Scheduled before 18, 16 and 17 so the design system, the map and the consumer views are built against the full metric set rather than retrofitted to it |
+| 22 | ✅ done | **DeepSeek migration and substitution detection** — DeepSeek retires models by *routing* them: `deepseek-v4-flash` already returns answers from `deepseek-flash` with HTTP 200, and `deepseek-v4-pro` follows at 04:00 UTC on 2026-09-14. A routed pin never fails, so SPEC's fall-through never fires and a regeneration would store the retired model's name against another model's prose. Every hosted response now has its served model checked against the requested ref, a mismatch is a recorded substitution, and `hip explain` probes hosted tiers so a withdrawn or routed pin genuinely falls through — which, it turned out, it never had. `deepseek-flash` joins as an unbenchmarked candidate; the benchmark itself waits for 21, 13 and 20. Scheduled ahead of 13 because of the vendor date |
 
 The done criterion from Version 1 is unchanged: a milestone counts as done when its
 capability is reachable through the CLI, the API, or the dashboard on a clean checkout;
@@ -262,6 +263,15 @@ a map and a set of consumer views against an incomplete metric set means retrofi
 three when tenure, vacancy and a rent benchmark arrive. The data is cheap — under 10MB
 for all five sources — so the only cost of doing it first is a short delay, against the
 certainty of rework if it goes last.
+
+**Milestone 22 jumped the queue on 2026-09-10 for a vendor date, and the next benchmark
+was deliberately held back.** DeepSeek began retiring models by routing their names to a
+successor, which the platform had no way to detect; 22 made it detectable without
+spending anything on a benchmark. The re-benchmark waits until 20, 21 and 13 have all
+landed, so one fresh run measures the final packet shape, citation binding and the
+reasoning-effort variants together — rather than three partial runs, each invalidated by
+the next milestone. It has to be a new run, not an extension of `v2`: Milestone 21 changes
+every packet, and `v2`'s scenarios are frozen from the old ones.
 
 ### Decisions this version needs from the user
 

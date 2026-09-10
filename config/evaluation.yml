@@ -150,18 +150,41 @@ cohorts:
       # pinning rule exists to prevent and this provider does not permit. Recorded
       # rather than worked around, and it is an argument for demoting DeepSeek below
       # Mistral in the preference list once the benchmark has run.
+      # Routed, not withdrawn — found 2026-09-10. Gone from /models, yet a request
+      # naming it returns HTTP 200 answered by `deepseek-flash`. Kept because run v2
+      # measured it and the report reads its candidates from this file; the
+      # substitution guard (Milestone 22) turns any new call into a loud failure.
       - id: deepseek-v4-flash
         ref: deepseek-v4-flash
         label: DeepSeek V4 Flash
         quantization: hosted
         input_usd_per_mtok: 0.44
         output_usd_per_mtok: 1.32
+      # Retires 04:00 UTC 2026-09-14: DeepSeek routes its requests to V4.1 Flash and
+      # bills them at that price. From then the guard sees the substitution and the
+      # preference list falls through past it. Its 21 published explanations were written
+      # by the real V4 Pro and stay correctly attributed until the re-benchmark.
       - id: deepseek-v4-pro
         ref: deepseek-v4-pro
         label: DeepSeek V4 Pro
         quantization: hosted
         input_usd_per_mtok: 1.32
         output_usd_per_mtok: 3.96
+      # V4.1 Flash, DeepSeek's only model after 2026-09-14. Unbenchmarked, so it is not
+      # on the preference list; it is measured in the re-benchmark after Milestones 21,
+      # 13 and 20. Peak rates per this file's convention — off-peak is exactly half.
+      #
+      # An unversioned alias, and the one ref here that cannot be pinned at all: it will
+      # be pointed at the next Flash without its name changing. The substitution guard
+      # cannot see that, because the name that comes back will still match, so the
+      # `system_fingerprint` recorded on every generation is the only trace a repoint
+      # leaves.
+      - id: deepseek-flash
+        ref: deepseek-flash
+        label: DeepSeek V4.1 Flash
+        quantization: hosted
+        input_usd_per_mtok: 0.30
+        output_usd_per_mtok: 1.20
 
   gemini:
     runner: hosted

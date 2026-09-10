@@ -59,6 +59,13 @@ class Telemetry(_Strict):
       records which one it is rather than letting a reader assume.
     - `load_ms` is Ollama's `load_duration`. MLX reads weights lazily through mmap and
       reports nothing equivalent, so it stays null instead of being reported as zero.
+    - `served_model` is the model a hosted provider says actually answered, which is
+      not always the one requested: DeepSeek retires a model by routing its name to a
+      successor, and on 2026-09-10 `deepseek-v4-flash` came back answered by
+      `deepseek-flash` with HTTP 200. `system_fingerprint` is the backend identity where
+      a provider sends one (DeepSeek does; Gemini and Mistral do not) — the only trace an
+      unversioned alias leaves when it is repointed without its name changing. Both stay
+      null for local runtimes, which run exactly the weights on disk.
     """
 
     prompt_tokens: int
@@ -72,6 +79,8 @@ class Telemetry(_Strict):
     peak_memory_mb: float | None = None
     memory_basis: Literal["allocator_peak", "process_rss"] | None = None
     finish_reason: str | None = None
+    served_model: str | None = None
+    system_fingerprint: str | None = None
 
 
 class Generation(_Strict):

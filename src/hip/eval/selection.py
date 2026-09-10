@@ -19,9 +19,16 @@ Three rules, each of them a SPEC requirement rather than a convenience:
   a vendor decision could stop `hip explain` from running, which is the single failure
   mode the list exists to prevent.
 
-Unavailability is normal operation, not an error. A tier with no API key, a withdrawn
-pin, an unreachable Ollama — each is a fallthrough, and only exhausting the whole list
-raises.
+Unavailability is normal operation, not an error. A tier with no API key, an unreachable
+Ollama, and — when `probe` is on, as it is for `hip explain` — a withdrawn pin or one a
+provider has routed to a different model are each a fallthrough, and only exhausting the
+whole list raises.
+
+The withdrawn-pin case was claimed here from Milestone 12 and was not true until 22.
+Availability was a check that a key existed, which a withdrawn model passes, so it
+resolved as available and then failed every region one at a time. A routed model was
+worse: it never failed at all. Probing asks the provider, which is the only party that
+knows.
 """
 
 from __future__ import annotations
@@ -31,7 +38,7 @@ from dataclasses import dataclass, field
 
 from hip.config import EvaluationConfig
 from hip.eval.report import MAX_ERROR_RATE, MAX_HALLUCINATION_RATE, ModelSummary
-from hip.eval.runners import RunnerUnavailable, build_runner
+from hip.eval.runners import HostedRunner, RunnerUnavailable, build_runner
 
 log = logging.getLogger(__name__)
 
@@ -110,6 +117,7 @@ def resolve(
     *,
     run: str | None = None,
     require_benchmark: bool = True,
+    probe: bool = False,
 ) -> Resolution:
     """The first candidate in the preference list that has passed and can be reached.
 
@@ -117,6 +125,11 @@ def resolve(
     before any run has scored a hosted candidate there is nothing to check against, and
     refusing to generate would make the benchmark unrunnable through this path. It is
     not a flag for ordinary use, and `hip explain` states plainly when it is set.
+
+    `probe=True` calls each hosted tier once before choosing it — a few tokens, a fraction
+    of a cent — and falls through past any that is unreachable or answered by a model
+    other than the one requested. Off by default so that resolving stays free for callers
+    that only want to know what the list would pick.
     """
     run = run or latest_run()
     eligible: dict[str, ModelSummary] = {}
@@ -153,6 +166,11 @@ def resolve(
         if not available:
             skipped.append((model_id, f"cohort '{cohort_name}' is unavailable"))
             continue
+        if probe and isinstance(runner, HostedRunner):
+            failure = runner.probe(evaluation.model(model_id))
+            if failure:
+                skipped.append((model_id, failure))
+                continue
 
         for passed_over, why in skipped:
             log.info("preference: skipped %s (%s)", passed_over, why)

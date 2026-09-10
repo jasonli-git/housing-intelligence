@@ -926,3 +926,272 @@ def test_a_model_not_on_the_list_sorts_last_not_first() -> None:
     evaluation = _evaluation(["deepseek-test", "gemma-4-e4b-q4"])
     assert rank_of(evaluation, "mistral-large-3") == 2
     assert rank_of(evaluation, "mistral-large-3") > rank_of(evaluation, "gemma-4-e4b-q4")
+
+
+# --- substitution detection (Milestone 22) ------------------------------------------
+
+
+def _openai_body(
+    served: str | None,
+    *,
+    content: str = "Values rose.",
+    finish: str = "stop",
+    fingerprint: str | None = None,
+    reasoning_tokens: int = 0,
+) -> dict[str, object]:
+    body: dict[str, object] = {
+        "choices": [{"message": {"content": content}, "finish_reason": finish}],
+        "usage": {
+            "prompt_tokens": 100,
+            "completion_tokens": 40,
+            "completion_tokens_details": {"reasoning_tokens": reasoning_tokens},
+        },
+    }
+    if served is not None:
+        body["model"] = served
+    if fingerprint is not None:
+        body["system_fingerprint"] = fingerprint
+    return body
+
+
+def _answering(body: dict[str, object]) -> object:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=body)
+
+    return handler
+
+
+def _probe(
+    runner: HostedRunner, handler: object, monkeypatch: pytest.MonkeyPatch
+) -> str | None:
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:  # type: ignore[arg-type]
+        monkeypatch.setattr(httpx, "post", client.post)
+        return runner.probe(runner_model(runner))
+
+
+def _deepseek(monkeypatch: pytest.MonkeyPatch) -> HostedRunner:
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    runner = build_runner(_cohort("deepseek", "https://x/v1"), "deepseek")
+    assert isinstance(runner, HostedRunner)
+    return runner
+
+
+def test_a_routed_model_is_recorded_as_a_substitution_not_an_answer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Measured 2026-09-10: `deepseek-v4-flash` returns HTTP 200 answered by
+    `deepseek-flash`. Nothing fails, so without this check the row would carry the
+    retired model's name above another model's prose."""
+    runner = _deepseek(monkeypatch)
+    body = _openai_body("deepseek-flash", fingerprint="aeb56401")
+    generation = _generate(runner, _answering(body), monkeypatch)
+
+    assert generation.error is not None
+    assert "substitution" in generation.error
+    assert "pinned-model-0731" in generation.error
+    assert "deepseek-flash" in generation.error
+    assert generation.answer == ""
+    # The call was billed, so the cost column has to see it.
+    assert generation.telemetry.generation_tokens == 40
+    assert generation.telemetry.served_model == "deepseek-flash"
+
+
+def test_the_requested_model_answering_is_recorded_with_its_fingerprint(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runner = _deepseek(monkeypatch)
+    body = _openai_body("pinned-model-0731", fingerprint="a307abda")
+    generation = _generate(runner, _answering(body), monkeypatch)
+
+    assert generation.error is None
+    assert generation.answer == "Values rose."
+    assert generation.telemetry.served_model == "pinned-model-0731"
+    assert generation.telemetry.system_fingerprint == "a307abda"
+
+
+def test_a_response_naming_no_model_is_accepted_rather_than_failed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Unverifiable is not the same as wrong. Failing here would make any provider that
+    omits the field unusable."""
+    runner = _deepseek(monkeypatch)
+    generation = _generate(runner, _answering(_openai_body(None)), monkeypatch)
+    assert generation.error is None
+    assert generation.telemetry.served_model is None
+
+
+def test_gemini_names_the_served_model_as_model_version(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("GEMINI_API_KEY", "goog-test")
+    runner = build_runner(_cohort("gemini", "https://x/v1beta"), "gemini")
+    assert isinstance(runner, HostedRunner)
+
+    def body(version: str) -> dict[str, object]:
+        return {
+            "candidates": [
+                {"content": {"parts": [{"text": "ok"}]}, "finishReason": "STOP"}
+            ],
+            "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 2},
+            "modelVersion": version,
+        }
+
+    same = _generate(runner, _answering(body("pinned-model-0731")), monkeypatch)
+    assert same.error is None
+    assert same.telemetry.served_model == "pinned-model-0731"
+    # Gemini sends no fingerprint, and that is not a failure.
+    assert same.telemetry.system_fingerprint is None
+
+    other = _generate(runner, _answering(body("gemini-some-successor")), monkeypatch)
+    assert other.error is not None and "substitution" in other.error
+
+
+def test_a_reasoning_model_cut_off_before_answering_is_marked_truncated(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """DeepSeek reasons in a separate field the tag-based check never reads, so three
+    empty `v2` answers that spent 6,000 tokens reasoning reported truncated=False."""
+    runner = _deepseek(monkeypatch)
+    body = _openai_body(
+        "pinned-model-0731", content="", finish="length", reasoning_tokens=6000
+    )
+    generation = _generate(runner, _answering(body), monkeypatch)
+    assert generation.answer == ""
+    assert generation.truncated_reasoning is True
+
+
+def test_a_cutoff_after_the_answer_began_is_not_truncated_reasoning(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Out of budget mid-answer is a different finding from out of budget mid-thought."""
+    runner = _deepseek(monkeypatch)
+    body = _openai_body("pinned-model-0731", content="Values rose and", finish="length")
+    generation = _generate(runner, _answering(body), monkeypatch)
+    assert generation.truncated_reasoning is False
+
+
+def test_gemini_max_tokens_before_any_text_is_also_truncation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("GEMINI_API_KEY", "goog-test")
+    runner = build_runner(_cohort("gemini", "https://x/v1beta"), "gemini")
+    assert isinstance(runner, HostedRunner)
+    body = {
+        "candidates": [{"content": {"parts": []}, "finishReason": "MAX_TOKENS"}],
+        "usageMetadata": {"promptTokenCount": 10, "thoughtsTokenCount": 900},
+        "modelVersion": "pinned-model-0731",
+    }
+    generation = _generate(runner, _answering(body), monkeypatch)
+    assert generation.truncated_reasoning is True
+
+
+def test_probe_catches_a_routed_model_that_answers_perfectly_well(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """ "Text came back" is exactly the test routing passes, which is why it is no longer
+    the test."""
+    runner = _deepseek(monkeypatch)
+    failure = _probe(runner, _answering(_openai_body("deepseek-flash")), monkeypatch)
+    assert failure is not None and "substitution" in failure
+
+
+def test_probe_accepts_a_reasoning_model_cut_off_by_its_small_budget(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """It is the right model and it responded. Failing it would wrongly skip a tier."""
+    runner = _deepseek(monkeypatch)
+    body = _openai_body("pinned-model-0731", content="", finish="length")
+    assert _probe(runner, _answering(body), monkeypatch) is None
+
+
+def test_probe_still_fails_an_empty_answer_that_was_not_a_cutoff(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runner = _deepseek(monkeypatch)
+    body = _openai_body("pinned-model-0731", content="", finish="stop")
+    assert _probe(runner, _answering(body), monkeypatch) == "returned no text"
+
+
+def test_resolve_falls_through_past_a_routed_pin_when_probing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The gap Milestone 22 closed: availability was a key check, so a withdrawn or
+    routed model resolved as available and then failed every region."""
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    monkeypatch.setenv("GEMINI_API_KEY", "goog-test")
+    monkeypatch.setattr("hip.eval.selection.benchmarked", _all_pass)
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: "v2")
+    monkeypatch.setattr(
+        HostedRunner,
+        "probe",
+        lambda self, model: (
+            "substitution: requested x but deepseek answered with y"
+            if self.provider == "deepseek"
+            else None
+        ),
+    )
+
+    resolution = resolve(
+        _evaluation(["deepseek-test", "gemini-test", "gemma-4-e4b-q4"]), probe=True
+    )
+    assert resolution.model_id == "gemini-test"
+    assert resolution.skipped[0][0] == "deepseek-test"
+    assert "substitution" in resolution.skipped[0][1]
+
+
+def test_resolve_does_not_probe_unless_asked(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Resolving stays free for callers that only ask what the list would pick."""
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    monkeypatch.setattr("hip.eval.selection.benchmarked", _all_pass)
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: "v2")
+
+    def forbidden(self: HostedRunner, model: CandidateModel) -> str | None:
+        raise AssertionError("resolve probed without being asked to")
+
+    monkeypatch.setattr(HostedRunner, "probe", forbidden)
+    resolution = resolve(_evaluation(["deepseek-test", "gemma-4-e4b-q4"]))
+    assert resolution.model_id == "deepseek-test"
+
+
+def test_explicit_models_are_each_verified_once_and_local_ones_not_at_all(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`--all` and `--model` skip `resolve`, so they are verified up front instead of
+    learning about a routed pin from one paid failure per region."""
+    from hip.eval_cli import _verified
+
+    probed: list[str] = []
+
+    def probe(self: HostedRunner, model: CandidateModel) -> str | None:
+        probed.append(model.id)
+        return "substitution: routed" if self.provider == "deepseek" else None
+
+    monkeypatch.setattr(HostedRunner, "probe", probe)
+    evaluation = _evaluation(["deepseek-test", "gemini-test", "gemma-4-e4b-q4"])
+    kept = _verified(evaluation, ["deepseek-test", "gemini-test", "gemma-4-e4b-q4"])
+
+    assert kept == ["gemini-test", "gemma-4-e4b-q4"]
+    assert probed == ["deepseek-test", "gemini-test"]
+
+
+def test_a_misspelled_model_is_skipped_rather_than_crashing_the_run() -> None:
+    from hip.eval_cli import _verified
+
+    evaluation = _evaluation(["gemma-4-e4b-q4"])
+    assert _verified(evaluation, ["no-such-model", "gemma-4-e4b-q4"]) == [
+        "gemma-4-e4b-q4"
+    ]
+
+
+def test_telemetry_written_before_the_new_fields_still_parses() -> None:
+    """Every run `v1` and `v2` record on disk predates these fields."""
+    old = Telemetry.model_validate(
+        {
+            "prompt_tokens": 1,
+            "generation_tokens": 1,
+            "generation_ms": 1.0,
+            "total_ms": 1.0,
+        }
+    )
+    assert old.served_model is None
+    assert old.system_fingerprint is None

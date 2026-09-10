@@ -28,6 +28,13 @@ three APIs — so the runner sends what each accepts and records nothing about t
 The comparison this licenses is weaker than the local one, which is a real cost of
 hosting and is written down rather than papered over: hosted generation is already
 accepted as non-reproducible ([SPEC.md](SPEC.md)), and this is one of the reasons.
+
+**Which model answered is read back, not assumed.** SPEC's pinning rule expects a
+withdrawn model to fail loudly and fall through. DeepSeek retires models differently: it
+routes the retired name to a successor and answers with HTTP 200, so nothing fails, and a
+regeneration would store the retired model's name against another model's prose. Every
+provider here names the model that actually answered, so each response is checked against
+the requested ref and a mismatch is recorded as a substitution (Milestone 22).
 """
 
 from __future__ import annotations
@@ -65,6 +72,12 @@ _BACKOFF_CAP_S = 30.0
 _PROBE_SAMPLING = SamplingParams(
     temperature=0.0, top_p=1.0, top_k=1, repeat_penalty=1.0, seed=0
 )
+
+# How each dialect says a generation stopped because it ran out of budget. A reasoning
+# model that stops this way with no answer was cut off mid-thought — a different finding
+# from a model that declined — and DeepSeek reasons in a separate field that the
+# tag-based check in `split_reasoning` never reads.
+_CUTOFF_REASONS = frozenset({"length", "MAX_TOKENS"})
 
 
 @dataclass(frozen=True)
@@ -194,6 +207,10 @@ class HostedRunner:
         Costs a few tokens per candidate, which is why it is opt-in rather than part of
         `available()`. Finding a dead pin here costs a fraction of a cent; finding it
         during a run costs fifteen generations and the judging batch behind them.
+
+        It checks *which* model answered before *whether* one did. A routed pin — a
+        retired name the provider quietly answers with a successor — returns a perfectly
+        good answer, and "text came back" is exactly the test routing passes.
         """
         key = self._api_key()
         if not key:
@@ -218,8 +235,17 @@ class HostedRunner:
             return f"HTTP {exc.response.status_code}: {detail}" if detail else str(exc)
         except httpx.HTTPError as exc:
             return str(exc)
-        text, _, _ = self._extract(dict(response.json()))
-        return None if text.strip() else "returned no text"
+        data = dict(response.json())
+        served, _ = self._served(data)
+        substitution = self._substitution(model, served)
+        if substitution:
+            return substitution
+        text, _, finish = self._extract(data)
+        if text.strip():
+            return None
+        # A reasoning model can spend a probe's small budget thinking and stop before the
+        # answer. It is the right model and it responded, which is what a probe asks.
+        return None if finish in _CUTOFF_REASONS else "returned no text"
 
     def _headers(self, key: str) -> dict[str, str]:
         return {
@@ -286,7 +312,13 @@ class HostedRunner:
 
         raw, reasoning_text, finish = self._extract(data)
         answer, reasoning, truncated = split_reasoning(raw, reasoning_text)
+        # Cut off by the budget before any answer arrived. The tag-based check above
+        # cannot see this when reasoning comes in its own field, as DeepSeek's does:
+        # three empty `v2` answers spent all 6,000 tokens reasoning and still reported
+        # `truncated_reasoning=False`.
+        truncated = truncated or (finish in _CUTOFF_REASONS and not answer.strip())
         prompt_tokens, generation_tokens, reasoning_tokens = self._usage(data)
+        served_model, fingerprint = self._served(data)
         elapsed_ms = (time.perf_counter() - started) * 1000
 
         telemetry = Telemetry(
@@ -309,7 +341,36 @@ class HostedRunner:
             peak_memory_mb=None,
             memory_basis=None,
             finish_reason=finish,
+            served_model=served_model,
+            system_fingerprint=fingerprint,
         )
+
+        substitution = self._substitution(model, served_model)
+        if substitution:
+            # Paid for, and recorded as such — the tokens stay on the telemetry, so the
+            # cost column sees them — but the text is never used as an answer. It was
+            # written by a model nobody benchmarked, and the row would carry the name of
+            # one that did not write it.
+            log.warning(
+                "%s substituted a model for %s: %s",
+                self._provider,
+                model.id,
+                substitution,
+            )
+            return Generation(
+                scenario_key=scenario.key,
+                scenario_id=scenario.scenario_id,
+                region_id=scenario.region_id,
+                model_id=model.id,
+                cohort=self._cohort,
+                mode=mode,  # type: ignore[arg-type]
+                repeat=repeat,
+                answer="",
+                raw=raw,
+                telemetry=telemetry,
+                error=substitution,
+            )
+
         return Generation(
             scenario_key=scenario.key,
             scenario_id=scenario.scenario_id,
@@ -454,6 +515,44 @@ class HostedRunner:
             int(usage.get("promptTokenCount") or 0),
             int(usage.get("candidatesTokenCount") or 0) + thoughts,
             thoughts,
+        )
+
+    def _served(self, data: dict[str, Any]) -> tuple[str | None, str | None]:
+        """The model the provider says answered, and its backend fingerprint if sent.
+
+        Read from the response rather than assumed from the request, because the two can
+        differ: DeepSeek retires a model by routing its name to a successor, and the only
+        honest record of which model wrote a paragraph is the one the provider returns.
+        OpenAI-shaped providers report it as `model`, Gemini as `modelVersion`.
+        """
+        if self._dialect.openai_compatible:
+            served = data.get("model")
+            fingerprint = data.get("system_fingerprint")
+        else:
+            served = data.get("modelVersion")
+            fingerprint = None
+        return (
+            str(served) if served else None,
+            str(fingerprint) if fingerprint else None,
+        )
+
+    def _substitution(self, model: CandidateModel, served: str | None) -> str | None:
+        """Why this response cannot be attributed to `model`, or None if it can.
+
+        Exact match only. Measured 2026-09-10, every current candidate reports exactly
+        its requested ref, so a difference is a substitution rather than a formatting
+        quirk — and if a provider ever starts reporting an expanded version string, the
+        mismatch fails in the safe direction: loudly, naming both, and falling through,
+        rather than storing one model's prose under another's name. A response that names
+        no model cannot be checked and is accepted, since failing it would make every
+        provider that omits the field unusable.
+        """
+        if served is None or served == model.ref:
+            return None
+        return (
+            f"substitution: requested '{model.ref}' but {self._provider} answered with "
+            f"'{served}'. The provider is routing a retired or repointed model; update "
+            f"the pin rather than publish prose under the wrong name."
         )
 
     def _failed(
