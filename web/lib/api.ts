@@ -126,6 +126,9 @@ export type PacketMetric = {
   release_id: number | null;
   source_id: string | null;
   match_method: string | null;
+  // Packet 1.2: the observation behind `start_value`, often an older release.
+  start_release_id?: number | null;
+  start_match_method?: string | null;
 };
 
 export type PacketLevel = {
@@ -201,10 +204,60 @@ async function tryGet<T>(path: string): Promise<T | null> {
 }
 
 /**
+ * One figure in a model's prose, bound to the packet field that licensed it
+ * (`hip.packets.citations.Citation`). `start` and `end` are offsets into the body.
+ */
+export type Citation = {
+  text: string;
+  start: number;
+  end: number;
+  value: number;
+  packet_value: number;
+  field: string | null;
+  kind:
+    | "value"
+    | "start"
+    | "change"
+    | "annualised"
+    | "rank"
+    | "cohort"
+    | "percentile"
+    | "year"
+    | "vintage"
+    | "text";
+  metric_id: string | null;
+  label: string | null;
+  period_start: string | null;
+  period_end: string | null;
+  match_method: string | null;
+  release_ids: number[];
+  alternatives: number;
+};
+
+export type CitedRelease = {
+  release_id: number;
+  source_id: string;
+  name: string;
+  publisher: string;
+  vintage: string;
+  fetched_at: string;
+};
+
+export type Binding = {
+  citations: Citation[];
+  releases: CitedRelease[];
+  unbound: { text: string; start: number; end: number; value: number }[];
+};
+
+/**
  * A model-written note about a region. Every field that lets a reader discount it is
  * required, because the failure this type guards against is prose being mistaken for a
  * measurement: `kind` is always the literal "interpretation", the model is named, and
  * `stale` says whether the numbers moved since the text was written.
+ *
+ * `binding` is null for text written before figures were checked (Milestone 13) — a
+ * reader is told its figures are unverified rather than shown an empty citation list,
+ * which would claim there was nothing to check.
  */
 export type Explanation = {
   kind: "interpretation";
@@ -216,6 +269,7 @@ export type Explanation = {
   runtime: string;
   generated_at: string;
   stale: boolean;
+  binding: Binding | null;
   disclaimer: string;
 };
 

@@ -19,7 +19,14 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from hip.api.main import app
-from hip.packets import build_packet, packet_hash
+from hip.packets import (
+    bind,
+    build_packet,
+    format_value,
+    packet_content_hash,
+    packet_hash,
+    render_markdown,
+)
 from hip.warehouse.db import get_engine, probe
 from hip.warehouse.models import RegionExplanation
 
@@ -86,6 +93,8 @@ def preserve_real_explanations(county_id: int) -> Iterator[None]:
                 "rank": row.rank,
                 "body": row.body,
                 "packet_sha256": row.packet_sha256,
+                "content_sha256": row.content_sha256,
+                "binding": row.binding,
                 "generated_at": row.generated_at,
             }
             for row in session.execute(
@@ -311,3 +320,72 @@ def test_absent_explanations_are_a_404_not_an_empty_list(
         client.get(f"/regions/{county_id}/explanations?window={WINDOW}").status_code
         == 404
     )
+
+
+# --- citation binding (Milestone 13) ------------------------------------------------
+
+
+def _store_bound(region_id: int, *, packet_sha256: str | None = None) -> str:
+    """A row as `hip explain` now writes one, bound and with both hashes; its body."""
+    with Session(get_engine()) as session:
+        packet = build_packet(session, region_id, WINDOW)
+    level = next(lv for lv in packet.levels if lv.metric_id == "zhvi_sfr")
+    body = f"The typical single-family home value is {format_value(level.value, 'usd')}."
+    binding = bind(body, packet, payload=render_markdown(packet))
+    assert binding.complete and binding.citations
+    with Session(get_engine()) as session:
+        session.execute(
+            delete(RegionExplanation).where(RegionExplanation.region_id == region_id)
+        )
+        session.add(
+            RegionExplanation(
+                region_id=region_id,
+                window=WINDOW,
+                model_id="gemma-4-e4b-q4",
+                model_label="Gemma 4 E4B",
+                runtime="ollama",
+                rank=0,
+                body=body,
+                packet_sha256=packet_sha256 or packet_hash(packet),
+                content_sha256=packet_content_hash(packet),
+                binding=binding.model_dump(mode="json"),
+            )
+        )
+        session.commit()
+    return body
+
+
+def test_a_bound_explanation_serves_where_each_figure_came_from(county_id: int) -> None:
+    body = _store_bound(county_id)
+    served = client.get(f"/regions/{county_id}/explanation?window={WINDOW}").json()
+
+    citation = served["binding"]["citations"][0]
+    assert body[citation["start"] : citation["end"]] == citation["text"]
+    assert citation["field"] == "levels[zhvi_sfr].value"
+    assert citation["kind"] == "value"
+    # The release it names is described, so a client needs no second request.
+    releases = {r["release_id"]: r for r in served["binding"]["releases"]}
+    assert citation["release_ids"] and citation["release_ids"][0] in releases
+    assert releases[citation["release_ids"][0]]["source_id"] == "zillow_zhvi"
+    assert served["binding"]["unbound"] == []
+
+
+def test_text_written_before_binding_says_it_is_unverified(
+    current_explanation: int,
+) -> None:
+    """Null, not an empty binding: an empty one would claim there was nothing to
+    check, where the truth is that nothing was checked."""
+    served = client.get(f"/regions/{current_explanation}/explanation?window={WINDOW}")
+    assert served.json()["binding"] is None
+    plural = client.get(f"/regions/{current_explanation}/explanations?window={WINDOW}")
+    assert plural.json()["explanations"][0]["binding"] is None
+
+
+def test_a_re_download_that_moved_no_figure_is_not_staleness(county_id: int) -> None:
+    """The full hash moves when a source is fetched again with different bytes; the
+    content hash moves only when a figure does, and staleness is decided on it."""
+    _store_bound(county_id, packet_sha256="0" * 64)
+    served = client.get(f"/regions/{county_id}/explanation?window={WINDOW}").json()
+    assert served["stale"] is False
+    plural = client.get(f"/regions/{county_id}/explanations?window={WINDOW}").json()
+    assert plural["explanations"][0]["stale"] is False

@@ -3,6 +3,61 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.13.0] — 2026-09-11
+
+Milestone 13, citation binding. Every figure in a model's explanation is bound to the
+packet field, source release, period and match method that licensed it inside
+`hip explain`, and prose stating a figure the packet does not carry is refused rather
+than stored. The evaluation counts fabrication with the same code, so the rate a benchmark
+reports and the rate at which the site would refuse a model's prose are one number.
+
+### Added
+- **`hip.packets.citations`** (#112): an index of every figure a packet licenses, and
+  `bind()`, which resolves each number in a text to one field — with its character span,
+  period, releases and match method — or reports it unbound. Measured on run `v2`'s
+  answers against the packets their models were shown: 976 of 977 figures bound, 879 of
+  them to exactly one field.
+- **A publication gate in `hip explain`** (#113): prose with an unbound figure is refused
+  and not stored; the closing summary counts refusals apart from failures, and the run
+  exits 3. The first real run bound all 14 figures in Gemma 4 E4B's reading of Mercer
+  County.
+- **`binding` on `/regions/{id}/explanation` and `/regions/{id}/explanations`**, null for
+  prose written before this release. Migration 0011 adds `region_explanations.binding`
+  and `content_sha256`.
+- **The dashboard marks every cited figure** and lists where each came from — metric,
+  quantity, period, source and edition, match method — and says so when a reading's
+  figures were never checked.
+- **Packet 1.2** (#117): `start_release_id` and `start_match_method`, and `sources[]`
+  listing the release behind the start of every change window. Mercer County's packet
+  names 15 releases where it named 10; 1.1 packets still parse.
+- **Scenarios keep their packet** (#115), and `hip eval run` and `hip eval check` grade
+  against it rather than against today's warehouse. Neither needs Postgres any more.
+- **A `Bound` column in the evaluation report**: how many of a model's answers
+  `hip explain` would have published, for runs checked by binding.
+
+### Changed
+- **Staleness is decided on what a packet says, not on where it says it from** (#114). A
+  re-download that mints a new release and moves no figure no longer marks prose stale:
+  `hip explain` re-binds the stored prose instead of paying a model to rewrite it, and
+  binds prose written before this release when its packet has not changed at all.
+- **Five checking rules** (#116): decimals, percentages and amounts under 20 are checked;
+  a quotation from the payload counts only as a whole token; a dropped sign is accepted
+  beside a word that says which way the value moved; years match exactly; durations and
+  hyphenated descriptors ("5-year", "4-person") are skipped. `v3`'s fabrication rate is
+  therefore not comparable with `v1`'s and `v2`'s, which keep their stored checks and
+  render unchanged.
+- A county packet grew from about 25KB to 28KB and its Markdown rendering to about 2,200
+  tokens; the 21 region reports each gained the five older releases their figures start
+  from.
+
+### Fixed
+- `hip eval check --run v1` would have re-graded `v1` against today's warehouse and
+  overwritten its checks; a run with no packet to check against is now refused (#115).
+- **The checker read "pre-2018" as minus 2018** — the one unsupported figure `v2` charged
+  to Mistral Small 4. A hyphen after a letter now joins a word, the typographic minus is
+  read as a sign, and a comma after a figure is no longer part of it.
+- The `[0.12.5]` heading below, lost when the 0.12.6 entry was written over it.
+
 ## [0.12.6] — 2026-09-11
 
 Milestone 21. The five New Jersey sources the warehouse was missing: HUD Fair Market Rents
@@ -48,6 +103,8 @@ sources. No new key — both new HUD sources use the token the crosswalk already
 ### Fixed
 - The permits adapter's docstring claimed a missing year's file would not stop the run;
   it does, which is why the start year is explicit.
+
+## [0.12.5] — 2026-09-11
 
 Qwen joins run `v3`'s slate. Not a milestone; Milestone 21 has not started.
 

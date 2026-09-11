@@ -5,8 +5,8 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-09-11):** Milestones 0 through 12, 19, 20, 21 and 22 are complete; 13,
-> 16, 17 and 18 are planned, and 14 and 15 were deferred past Version 2 on 2026-09-07
+> **Status (2026-09-11):** Milestones 0 through 13, 19, 20, 21 and 22 are complete; 16,
+> 17 and 18 are planned, and 14 and 15 were deferred past Version 2 on 2026-09-07
 > ([ROADMAP.md](ROADMAP.md)). The warehouse holds a NJ geography spine — 3,365 regions
 > and the `nation` row, 2,493 ZIP allocation weights (2,460 of them HUD
 > residential-address ratios), and 554 NJ municipal codes in `region_identifiers` — and
@@ -14,14 +14,16 @@ scope; this document does not restate it.
 > 26,805 computed changes, 26,790 change rankings and 11,884 value rankings derived from
 > them. All eight stages run, `acquire → land → stage → geocode → validate → load →
 > analyze → pack`. **3.48M NJ parcels** live in Parquet and DuckDB and reach the
-> warehouse only as six municipality-level aggregates (#49). Packet `1.1` is validated
+> warehouse only as six municipality-level aggregates (#49). Packet `1.2` is validated
 > against `schemas/packet-v1.json`. The API and a three-page dashboard are published as
 > static files, with no database and no application server in production (#67, #68).
 > Interpretation is written by hosted models behind a preference list that ends at a
 > local one (#78, #96): 105 explanations, five models' readings of each of the 21
 > counties (#91), chosen by evaluation runs `v1` and `v2`, with reasoning effort part of
-> each candidate's configuration since Milestone 20 (#98). 418 Python tests and 26
-> dashboard tests pass. Nothing in the pipeline or the API depends on a model being
+> each candidate's configuration since Milestone 20 (#98). Since Milestone 13 every
+> figure in new prose is bound to the packet field and release that licensed it before
+> it is stored, and prose stating a figure the packet does not carry is refused (#112,
+> #113). 452 Python tests and 34 dashboard tests pass. Nothing in the pipeline or the API depends on a model being
 > present: with no explanations stored, every page and endpoint still works.
 
 ## System Shape
@@ -54,7 +56,9 @@ and production is their output rendered to static files (#67, #68).
   local model or is simply absent.
 - **Models explain; they never compute.** `hip explain` generates prose from analysis
   packets and stores it with the model and packet hash that produced it (#60); the API
-  serves it and never runs a model (#6).
+  serves it and never runs a model (#6). Every figure in the prose is bound to the packet
+  field that licensed it before the row is written, and prose stating a figure the packet
+  does not carry is refused (#112, #113).
 
 Future deployment shapes stay cheap because of where the seams are. The API reads
 Postgres through SQLAlchemy and holds no DuckDB or Parquet dependency, so moving to a
@@ -182,6 +186,12 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 109 | FHFA's all-transactions index is read from `hpi_master.csv`, already fetched for `fhfa_hpi`, as a second metric — not from FRED's `NJSTHPI`. | `NJSTHPI` is FHFA's all-transactions index for New Jersey, republished by FRED; the master file carries it quarterly from 1975, with its source release already recorded. Fetching it through FRED would put FHFA's numbers under a second source and a second release. It is a separate metric, `fhfa_hpi_all_transactions`, rather than spliced onto the purchase-only series, because the two index different transactions — refinance appraisals are in one — and one is seasonally adjusted and the other is not. Costs: none in fetching; one more state-level metric, which like `fhfa_hpi` cannot be ranked across counties. |
 | 110 | Building permits reach municipalities through the Census region's place file, resolved by its FIPS MCD column. | The source list expected a name match, saying place codes are not MCD FIPS. The Northeast place file carries county and MCD FIPS codes for every permit-issuing place, and in New Jersey every such place is a municipality, so state, county and MCD make the municipal GEOID exactly. Measured on 2026-09-11: 2024's municipal permits sum to the county file's total exactly, 36,596 units. One file per region per year covers nine states, so Milestone 14 needs no new fetches for them. Only the Northeast is mapped in `PLACE_REGIONS`, because it is the only region file that has been read; another state is refused with the fix named, rather than guessed at as a URL. The county file is read by name (`????.parquet`) so the place files beside it, whose columns differ, never reach `stg_census_permits`. Costs: permit counts below county level are small and volatile, which `permits_volatile` already says. |
 | 111 | An adapter can declare `request_interval_s`, and a download answered HTTP 429 waits before retrying; the three HUD adapters pace at 1.1 seconds. | HUD User allows 60 requests a minute per token (`x-ratelimit-limit: 60`). The first municipal CHAS run stopped at release 101, because the retry loop retried a 429 instantly three times — spending every attempt inside the same window. Pacing lives in `SourceAdapter._download`, so a cached release never waits and every adapter can opt in; a 429 honours `Retry-After`, capped at a minute, or waits the minute when none is sent. Every HUD adapter paces, since the three share one token. Rejected: a pause inside the CHAS adapter alone, which the next HUD dataset would have to rediscover. Costs: a fresh CHAS fetch takes about twelve minutes; a cached one takes none. |
+| 112 | Citation binding lives in `hip.packets.citations`: one index of every figure a packet licenses, used by `hip explain` as its publication gate and by the evaluation as its fabrication count. | The figure check existed only in the evaluation (#58), so published prose was vouched for by fifteen benchmark answers per model and nothing else: `hip explain` stored whatever came back, and none of the 105 published explanations had been checked one by one. One index with two callers makes the rate a benchmark reports and the rate at which the site refuses prose one number from one piece of code. It lives with the packet, not in `eval`, because it is a property of the packet — as `packet_hash` is (#61) — and both evaluation callers import it without importing each other. A binding records, per figure, a character span, the packet field path, its kind (value, window start, change, annualised rate, rank, cohort, percentile, year, vintage, or the packet's own wording), metric, period, release ids, match method, and `alternatives`, the fields it matched equally well. The licensing rules keep the checker's generosity (#116); what is new is attribution — the field whose unit the writer used ("4%" is a rate, "$452,500" a value), then the one whose metric the sentence names or has already cited, so "Home value: $452,500, rank 4 of 21" binds the rank to home value even where another metric also ranks 4. Measured on `v2`'s answers against their own packets: 976 of 977 figures bound, 879 of them to exactly one field. The dashboard marks each cited figure and lists where it came from. Rejected: asking models to tag their own figures — a prompt change that would need benchmarking, and a tag a model can get wrong; a language model as the binder, which is the thing being checked (SPEC: a model does not replace deterministic validation). Costs: between equal numbers attribution is a best reading, stated as `alternatives`; and binding licenses figures, not claims — a correct number in a wrong sentence passes (Known Limitations). |
+| 113 | Prose stating a figure its packet does not carry is refused rather than stored; the run counts refusals apart from failures and exits 3. | The guardrail on prose published under a personal domain, which is why Milestone 13 preceded any expansion (ROADMAP). `v2` measured one unsupported figure in 1,007, and that one was a checker error (#116), so at `v2`'s rate a strict gate costs almost nothing, while any laxer rule is a judgement about which invented numbers are acceptable. A refusal leaves the model's previous row where it was — stale prose stays up labelled stale, as a skipped model's does (#102) — and the summary names every unbound figure with the nearest value the packet carries, so a false refusal points at the binder rather than disappearing. Rejected: storing the prose with the unbound figure flagged, which publishes a claim the data does not back, flag or not; retrying, which with sampling pinned at 0.0 asks for the same answer twice. Costs: a false refusal loses a model's reading of that region until the binder is fixed; `v3`'s `Bound` column measures the rate before the regeneration spends anything. |
+| 114 | Staleness is decided on a content hash that leaves provenance out, and a stored explanation whose figures have not moved is re-bound instead of regenerated. | Carried from Milestone 12's review: the packet hash covers `fetched_at` and every release id, so a re-download that mints a new release without moving a figure made prose stale, and a scheduled refresh would have paid a model to rewrite accurate text. `packet_content_hash` drops release ids, source ids, match methods, `sources[]` and the contract version, and keeps every figure, label, caveat, rank and date — anything the prose may have said. `hip explain` classifies each stored row: `current`, `rebind` — its words still describe the packet but its citations do not, because only provenance moved or because it predates binding — or `stale`; a rebind re-cites the unchanged prose against the current packet for free. The API's `stale` flag applies the same rule (`still_describes`). Migration 0011 adds `binding` and `content_sha256` as null on existing rows, which are bound only when their packet has not changed at all — the one case where binding them is exact. Rejected: display-precision hashing, Milestone 12's plan, since #88 left no float precision to discard and the churn was a timestamp; binding old rows against today's packet in the migration, which would cite numbers they were not written from. Costs: between a provenance-only change and the next `hip explain`, a row's citations name the superseded release — accurate about when it was bound, and repaired by the next run. |
+| 115 | A scenario keeps the packet it was rendered from, and `hip eval run` and `hip eval check` grade against it; a run with no packet to recover is refused. | Both commands rebuilt packets from the live warehouse, so a check was right only if nothing had loaded since the scenarios were built — and `hip eval check --run v1` on 2026-09-11 would have re-graded `v1` against Milestone 21's numbers and overwritten its record. A JSON payload is the packet, so `v2` is checkable; Markdown cannot be read back, so `v1` has no ground truth left and is refused with that said; every set built from now on carries its packet. Neither command needs Postgres any more. Rejected: approximating `v1` against today's warehouse, which writes a fabrication rate nobody measured over the one that was. Costs: `scenarios.jsonl` carries the packet, about 28KB per scenario. |
+| 116 | Five checking rules changed with binding, so `v3`'s fabrication rate is measured by a different instrument than `v1`'s and `v2`'s. | Found by re-deriving `v2` under the binder. (1) A decimal, percentage or amount under 20 is checked: the old rule skipped every number under 20 that failed to match exactly as an ordinal — 57 figures in `v2`, every one of which does match, so it hid no fabrication, but a gate cannot keep it. (2) A figure is quoted from the payload only as a whole token: substring matching had licensed 452 from $452,500; in `v2` it rescued four figures, none invented. (3) A negative value's size is licensed beside a word that says which way it moved ("fell 36.66%"), which three of those four needed; a bare "36.66%" states a rise. (4) Years and vintages match exactly: the 0.5% tolerance was ten years wide at 2020. (5) Durations and hyphenated descriptors — "5-year", "4-person" — are structure. Parsing changed too: "pre-2018" is the year 2018, and the typographic minus is a sign. `v2` re-derived: one unbound figure in 977, Mistral Large 3's "591 891" written with a space; its one recorded fabrication, Mistral Small 4's, was the old checker reading "pre-2018" as minus 2018. `v1` and `v2` keep their stored checks, and the report's `Bound` column appears only for runs checked by binding, so both render unchanged. Rejected: re-checking `v2` and republishing it — a published result changed to fix a checker, for a run `v3` replaces. Costs: the Unsupported column is not comparable across the `v2`/`v3` boundary, as the rubric already is not (#101). |
+| 117 | Packet 1.2 carries the provenance of each change window's start. | A packet named only the observation behind `end_value`, and in 10 of Mercer County's 19 metrics the start comes from an older release — ACS 2019 against 2023, HUD FY2020 against FY2024 — that `sources[]` never listed; a binding cannot cite a release the packet omits. `start_release_id` and `start_match_method` are resolved the way `hip analyze` chose the start observation, and `sources[]` lists the releases at both ends: Mercer's packet names 15 releases where it named 10. Additive, like 1.1: every new field is optional and 1.1 still parses, which the evaluation needs for `v2`'s stored packets. Timed for free: Milestone 21 had already made every explanation stale and `v3` was not yet built, so the change costs no regeneration and `v3` measures the final shape (ROADMAP). Costs: five more source rows per county report, about 180 tokens a prompt. |
 
 ## Module Layout
 
@@ -231,19 +241,20 @@ housing-intelligence/
 │   │   ├── db.py              # engine, session_scope, probe() for /health
 │   │   ├── models.py          # Region, RegionIdentifier, RegionCrosswalk, RegionExplanation
 │   │   ├── load.py            # one-transaction upsert of spine and facts (#25)
-│   │   └── migrations/        # Alembic 0001–0010
+│   │   └── migrations/        # Alembic 0001–0011
 │   ├── analytics/compute.py   # change, CAGR, affordability, rankings (#34–#36)
 │   ├── packets/
 │   │   ├── schema.py          # Pydantic models = the contract (#12, #43, #44)
 │   │   ├── assemble.py        # build_packet(session, region_id, window) (#42)
 │   │   ├── caveats.py         # pure caveat derivation, shared with /summary (#46)
+│   │   ├── citations.py       # citation binding: figure index + bind() (#112, #116)
 │   │   └── report.py          # render_markdown(packet) — pure (#45)
 │   ├── eval/                  # Milestone 8: model evaluation + explanations (#56)
 │   │   ├── types.py           # Scenario, Generation, CheckResult, Judgment
 │   │   ├── scenarios.py       # questions x sampled packets, deterministic
 │   │   ├── prompts.py         # packet → JSON or Markdown payload; prompt assembly
 │   │   ├── normalize.py       # reasoning/answer split across both runtimes
-│   │   ├── checks.py          # deterministic numeric verification (#58)
+│   │   ├── checks.py          # the fabrication count, by binding (#58, #112, #115)
 │   │   ├── runner.py          # the run loop: one local model at a time; hosted
 │   │   │                      #   cohorts fan out to max_concurrency (#82)
 │   │   ├── runners/           # base protocol (#57), ollama.py, mlx_runner.py,
@@ -252,7 +263,7 @@ housing-intelligence/
 │   │   ├── judge.py           # Claude rubric grading, Batch API; effort + usage per verdict (#101)
 │   │   ├── store.py           # JSONL artifacts per stage, resumable
 │   │   ├── report.py          # the published evaluation report (#59, #83, #98)
-│   │   └── explain.py         # explanations for the resolved model (#60)
+│   │   └── explain.py         # explanations; the binding gate and re-binding (#60, #113, #114)
 │   ├── eval_cli.py            # `hip eval ...`; optional deps imported lazily
 │   └── api/
 │       ├── main.py            # FastAPI app, CORS for the dashboard origin
@@ -273,6 +284,7 @@ housing-intelligence/
 │   ├── components/            # Choropleth, TrendChart, ExplanationPanel, SourceFooter, PrintButton
 │   ├── lib/api.ts             # server-side fetchers + packet types
 │   ├── lib/format.ts          # pure value formatting (#41)
+│   ├── lib/citations.ts       # a model's prose read against its binding (#112)
 │   ├── lib/scale.ts           # ramp, breaks, projection — pure and tested (#48)
 │   └── vitest.config.ts       # node environment, lib/**/*.test.ts
 ├── data/                      # gitignored, machine-local
@@ -285,7 +297,7 @@ housing-intelligence/
 │   ├── validation/            # gate reports per run; gitignored, per-run machine state
 │   ├── regions/<window>/      # Markdown reports, one per region; 5y committed, README-linked
 │   └── evaluation/            # the published model-evaluation report; committed
-├── tests/                     # 418 Python tests; API tests skip without a warehouse
+├── tests/                     # 452 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
@@ -319,12 +331,14 @@ which is why every write path lives there.
 `nation` level; `0005` added `fact_metric_change` and `region_rankings`; `0006` added
 `region_rankings.basis` (#52); `0007` added `region_explanations` (#60); `0008` added
 `regions.name_lsad` (#70); `0009` added `sources.homepage` (#72); `0010` keyed
-`region_explanations` on the model and gave it a `rank` (#91). Measured 2026-09-10, the
+`region_explanations` on the model and gave it a `rank` (#91); `0011` gave it `binding`
+and `content_sha256` (#112, #114). Measured 2026-09-10, the
 fact table holds 351,295 observations, with 26,805 changes, 26,790 change rankings and
 11,884 value rankings derived from them.
 `region_identifiers`, empty since Milestone 1, now holds 554 NJ municipal codes under
 scheme `nj_cd_code` — the join MOD-IV was always going to supply (#21, #51).
-The block below was regenerated from the live tables on 2026-09-10 — every column in its
+The block below was regenerated from the live tables on 2026-09-10, and
+`region_explanations` again on 2026-09-11 — every column in its
 real order with its real type, and every key and constraint, restated for reading;
 indexes other than keys are left out. The migrations stay authoritative for DDL.
 `src/hip/warehouse/models.py` maps only the spine and `region_explanations`; the fact and
@@ -470,6 +484,8 @@ CREATE TABLE region_explanations (
   packet_sha256 VARCHAR     NOT NULL,   -- the packet the prose was written from (#61)
   generated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   rank          SMALLINT    NOT NULL,   -- preference-list position when written (#91)
+  content_sha256 VARCHAR,               -- the packet without its provenance (#114)
+  binding       JSONB,                  -- every figure → field, period, release (#112)
   PRIMARY KEY (region_id, "window", model_id)
 );
 ```
@@ -576,10 +592,10 @@ which is deliberate: the expensive, slow work does not require the database to b
 
 The contract between deterministic analytics and any consumer (#12). Small, fully
 computed, and validated against `schemas/packet-v1.json` before it is written. A county
-packet is roughly 25KB: Mercer's, on 2026-09-11, carried 19 metrics, 22 levels, 10
-sources and 7 caveats — up from 14KB, 15, 15, 8 and 5 before Milestone 21 added its
-sources. Rendered as Markdown for a model, a county packet is about 2,000 tokens, a third
-more than before.
+packet is roughly 28KB: Mercer's, on 2026-09-11, carries 19 metrics, 22 levels, 15
+sources and 7 caveats. It was 14KB with 15, 15, 8 and 5 before Milestone 21 added its
+sources, and listed 10 sources before packet 1.2 named the release behind each window's
+start (#117). Rendered as Markdown for a model, a county packet is about 2,200 tokens.
 
 `src/hip/packets/schema.py` holds the Pydantic models that *are* the schema; the JSON
 Schema file is generated from them and committed (#43), and `hip schema` prints it.
@@ -589,7 +605,7 @@ the July 2026 data arrived:
 
 ```json
 {
-  "packet_version": "1.1",
+  "packet_version": "1.2",
   "region": { "region_id": 11, "geoid": "34021", "level": "county", "name": "Mercer",
               "label": "Mercer County, NJ", "state_code": "NJ",
               "parent": { "region_id": 1, "name": "New Jersey", "level": "state" } },
@@ -600,7 +616,8 @@ the July 2026 data arrived:
       "window_start": "2021-06-30", "window_end": "2026-06-30",
       "start_value": 329222.0, "end_value": 453317.0, "pct_change": 37.69,
       "cagr": 6.63, "rank": 9, "of": 21, "percentile": 60.0,
-      "release_id": 41, "source_id": "zillow_zhvi", "match_method": "fips" }
+      "release_id": 41, "source_id": "zillow_zhvi", "match_method": "fips",
+      "start_release_id": 41, "start_match_method": "fips" }
   ],
   "levels": [
     { "metric_id": "modiv_median_assessed_value",
@@ -635,6 +652,10 @@ the July 2026 data arrived:
   `5y` window resolves to different dates per metric (#35). Each metric carries its own
   pair, and both the report and the dashboard say so rather than printing the envelope
   as though it were shared.
+- Every figure names its release, both ends of a change window included (#117).
+  `release_id` and `match_method` describe the observation behind `end_value`,
+  `start_release_id` and `start_match_method` the one behind `start_value`, and
+  `sources[]` lists every release either names. A binding cites these (#112).
 - `metrics` describes movement and `levels` describes position. A metric published as
   a single snapshot — every MOD-IV aggregate — has no movement and appears only in
   `levels`, ranked by value (#52, #54). A metric with history appears in both, because
@@ -681,8 +702,8 @@ endpoints are implemented; `hip publish` renders every one to static files excep
 | GET | `/regions/{region_id}/summary` | ✅ headline changes, rank, caveats — dashboard landing |
 | GET | `/regions/{region_id}/packet` | ✅ the analysis packet, assembled per request (#42) |
 | GET | `/regions/{region_id}/report` | ✅ the same packet as `text/markdown` |
-| GET | `/regions/{region_id}/explanation` | ✅ the preferred model's interpretation, labelled `kind: "interpretation"`, with a `stale` flag (#60, #92) |
-| GET | `/regions/{region_id}/explanations` | ✅ every model's reading of the same packet, in preference order (#91, #92) |
+| GET | `/regions/{region_id}/explanation` | ✅ the preferred model's interpretation, labelled `kind: "interpretation"`, with a `stale` flag and its `binding` — every figure bound to the field and release that licensed it, null for prose written before Milestone 13 (#60, #92, #112, #114) |
+| GET | `/regions/{region_id}/explanations` | ✅ every model's reading of the same packet, in preference order, each with its `stale` flag and `binding` (#91, #92, #112) |
 | GET | `/rankings` | ✅ ranked regions for `metric_id`, `level`, and `basis` (`change` over a window, or `value`) |
 | GET | `/compare` | ✅ aligned series for several `region_ids` |
 | GET | `/sources` | ✅ source registry and the releases currently loaded (#71) |
@@ -833,10 +854,38 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   because crediting a model for a decline it never made is the worse error. The judge
   scores refusal quality properly under `instruction_following`; the heuristic exists so
   the deterministic layer can score the refusal scenario without paying for a judgment.
-- **The numeric checker verifies existence, not correct use.** A figure that appears in
-  the packet counts as supported even if the model attached it to the wrong metric.
-  Catching that is the judge's job, under `factual_accuracy`. The counted rate is
-  therefore a floor on fabrication, not a complete accuracy measure.
+- **Binding checks figures, not claims** (#112). A figure the packet carries is licensed
+  whatever the sentence around it says: Gemma 4 E4B's reading of Mercer County on
+  2026-09-11 counted homeownership's -1.8% among several "strong increases", with every
+  one of its 14 figures bound. In a benchmark the judge catches that, under
+  `factual_accuracy`; in production nothing does. The counted rate is a floor on error,
+  not an accuracy measure.
+- **Between equal numbers, attribution is a best reading** (#112). Where several fields
+  hold the number — two metrics that both rank 4 — the binding goes by the unit written
+  and the metric the sentence names, and records the rest as `alternatives`; 97 of the
+  976 figures bound in `v2`'s answers had some. Licensing is exact, the field it names is
+  not always, and the dashboard's tooltip says so.
+- **A wrong rank or count under 20 is not caught.** A plain whole number under 20 that
+  matches nothing is read as an ordinal ("the 3 points below"), so "ranked 5th" for a
+  rank of 4 passes unless 5 is some other value in the packet. Decimals, percentages and
+  amounts under 20 are checked (#116).
+- **Digit groups separated by a space are two numbers.** "591 891", Mistral Large 3's
+  way of writing 591,891 in `v2`, reads as 591 and 891, and the 891 would be refused —
+  the one unbound figure in `v2` under binding. A space is too ambiguous a separator to
+  join on.
+- **Prose written before Milestone 13 carries no binding.** Its figures were never
+  checked, and binding them against today's packet would cite numbers they were not
+  written from (#114). On 2026-09-11 that is 104 of the 105 stored rows, all stale since
+  Milestone 21; the dashboard says their figures are unverified, and the regeneration
+  after `v3` replaces them.
+- **Raw downloads are never pruned** (#10). On 2026-09-11 `data/raw/` kept 31 superseded
+  copies, 264MB, most of it three earlier Zillow ZHVI files at about 76MB a monthly
+  release; `source_releases` holds 46 releases no fact cites — TIGER's five build the
+  geography and CHAS's directory is a lookup, and most of the rest are files since
+  downloaded again. Only `hip analyze`'s orphaned derived releases are deleted (#73). A
+  scheduled refresh will want a retention rule; it has to keep every release a fact
+  cites, and a stored binding describes its releases itself, so pruning one cannot break
+  a published citation.
 - **Token counts in the evaluation are estimates** (characters over four), not tokenizer
   output. An exact count needs each model's own tokenizer, which would make the scenario
   — the thing every model must receive identically — differ per model.
@@ -868,9 +917,11 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   since — the title, and Milestone 20's Effort columns — and `v1` has not been
   re-rendered, so regenerating it would change the file without changing a figure.
 - **Explanations are generated per region and go stale silently in the warehouse.**
-  `packet_sha256` makes staleness *detectable* and the API reports it, but nothing
+  The stored hashes make staleness *detectable* and the API reports it, but nothing
   regenerates automatically: prose whose numbers moved stays stale until `hip explain`
-  runs again, and `hip explain` skips any region whose prose is still current. (This used
+  runs again, and `hip explain` skips any region whose prose is still current — decided
+  on the content hash since Milestone 13, so a re-download that moved no figure is
+  re-bound rather than regenerated (#114). (This used
   to say a pipeline run leaves every explanation stale; that was the defect #73 and #88
   fixed, and an unchanged rebuild now leaves them current.)
 - **`gemma-4-e4b-mlx` cannot be loaded at all.** mlx-lm 0.31.3 rejects the weights

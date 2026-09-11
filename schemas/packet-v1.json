@@ -190,7 +190,7 @@
     },
     "PacketMetric": {
       "additionalProperties": false,
-      "description": "One metric's change over the window, with its rank and its provenance.\n\n`release_id`, `source_id`, and `match_method` describe the observation behind\n`end_value`. They are null only when the derived tables are stale relative to the\nfacts \u2014 a rebuilt `hip analyze` restores them.",
+      "description": "One metric's change over the window, with its rank and its provenance.\n\n`release_id`, `source_id`, and `match_method` describe the observation behind\n`end_value`; `start_release_id` and `start_match_method` the one behind\n`start_value`, which for an annual source is a different release. All are null only\nwhen the derived tables are stale relative to the facts \u2014 a rebuilt `hip analyze`\nrestores them \u2014 and the start pair is absent from packets older than 1.2.",
       "properties": {
         "cagr": {
           "anyOf": [
@@ -295,6 +295,30 @@
           ],
           "default": null,
           "title": "Source Id"
+        },
+        "start_match_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Match Method"
+        },
+        "start_release_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Release Id"
         },
         "start_value": {
           "title": "Start Value",
@@ -523,7 +547,10 @@
       "type": "array"
     },
     "packet_version": {
-      "const": "1.1",
+      "enum": [
+        "1.1",
+        "1.2"
+      ],
       "title": "Packet Version",
       "type": "string"
     },

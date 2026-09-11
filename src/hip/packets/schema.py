@@ -27,7 +27,14 @@ from pydantic import BaseModel, ConfigDict, Field
 # 1.1 adds `levels`. Additive and backward-compatible: every 1.0 field kept its name and
 # meaning, so a reader written against 1.0 still parses a 1.1 packet and simply does not
 # see the new array. The minor version is the signal that nothing was taken away.
-PACKET_VERSION = "1.1"
+#
+# 1.2 adds the provenance of each change window's *start*: `start_release_id` and
+# `start_match_method` on a metric, and the releases they name in `sources[]`. Until
+# then a packet cited only the observation behind `end_value`, and the start of a window
+# very often comes from an older release — ACS 2019 against 2023 — that `sources[]`
+# never listed. Citation binding (Milestone 13) cannot resolve a figure to a release the
+# packet does not name. Additive in the same way 1.1 was.
+PACKET_VERSION = "1.2"
 
 # The published contract. Resolved from the source tree, which is where this project
 # runs from (ARCHITECTURE #13 — local-first, no packaged deployment yet).
@@ -76,8 +83,10 @@ class PacketMetric(_Strict):
     """One metric's change over the window, with its rank and its provenance.
 
     `release_id`, `source_id`, and `match_method` describe the observation behind
-    `end_value`. They are null only when the derived tables are stale relative to the
-    facts — a rebuilt `hip analyze` restores them.
+    `end_value`; `start_release_id` and `start_match_method` the one behind
+    `start_value`, which for an annual source is a different release. All are null only
+    when the derived tables are stale relative to the facts — a rebuilt `hip analyze`
+    restores them — and the start pair is absent from packets older than 1.2.
     """
 
     metric_id: str
@@ -96,6 +105,8 @@ class PacketMetric(_Strict):
     release_id: int | None = None
     source_id: str | None = None
     match_method: str | None = None
+    start_release_id: int | None = None
+    start_match_method: str | None = None
 
 
 class PacketLevel(_Strict):
@@ -168,7 +179,9 @@ class PacketSource(_Strict):
 
 
 class Packet(_Strict):
-    packet_version: Literal["1.1"]
+    # 1.1 still parses. Every 1.2 addition is optional, and the evaluation reads the 1.1
+    # packets frozen into run `v2`'s scenarios as the ground truth for its checks.
+    packet_version: Literal["1.1", "1.2"]
     region: PacketRegion
     window: PacketWindow
     metrics: list[PacketMetric]
@@ -188,9 +201,62 @@ def packet_hash(packet: Packet) -> str:
 
     Meaningful precisely because a packet carries no wall-clock field (#44): the hash
     changes when the data changes and at no other time, so a mismatch is a real
-    difference in the numbers rather than a different generation timestamp.
+    difference in the numbers rather than a different generation timestamp. Provenance
+    counts as data here, so a re-download that mints a new release moves it too;
+    `packet_content_hash` is the one that does not.
     """
     return hashlib.sha256(packet.model_dump_json().encode()).hexdigest()
+
+
+# The fields that say where a figure came from rather than what it is.
+_METRIC_PROVENANCE = {
+    "release_id",
+    "source_id",
+    "match_method",
+    "start_release_id",
+    "start_match_method",
+}
+_LEVEL_PROVENANCE = {"release_id", "source_id", "match_method"}
+
+
+def packet_content_hash(packet: Packet) -> str:
+    """SHA-256 of what a packet says, leaving out where it says it from.
+
+    `packet_hash` changes whenever a source is downloaded again and returns different
+    bytes, because the new file is a new release with a new `fetched_at` — even when not
+    one number a reader sees has moved. Prose written from the packet is still accurate
+    then; only its citations point at a superseded file. So staleness is decided on this
+    hash, and a change that moves only `packet_hash` is repaired by re-binding the stored
+    text rather than paying a model to rewrite it (Milestone 13).
+
+    Excluded: every release id, source id and match method, the `sources[]` block, and
+    the contract version. Included: every figure, label, caveat, rank and date, because
+    each of those is something the prose may have said.
+    """
+    content = packet.model_dump(
+        mode="json",
+        exclude={
+            "packet_version": True,
+            "sources": True,
+            "metrics": {"__all__": _METRIC_PROVENANCE},
+            "levels": {"__all__": _LEVEL_PROVENANCE},
+        },
+    )
+    canonical = json.dumps(content, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode()).hexdigest()
+
+
+def still_describes(
+    packet: Packet, *, packet_sha256: str, content_sha256: str | None
+) -> bool:
+    """Whether text written from a packet with these hashes still describes `packet`.
+
+    On the content hash where the text has one. Rows written before Milestone 13 carry
+    only the full hash, and for them the stricter comparison is the only one available.
+    """
+    if content_sha256 is not None:
+        return content_sha256 == packet_content_hash(packet)
+    return packet_sha256 == packet_hash(packet)
 
 
 def published_schema() -> dict[str, Any]:

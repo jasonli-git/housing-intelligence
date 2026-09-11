@@ -9,6 +9,12 @@ The response is shaped so a consumer cannot present this as a measurement by acc
 `kind` is the literal string `interpretation`, the generating model is named, and `stale`
 says whether the numbers moved since the text was written. A client that ignores all
 three has to do so deliberately.
+
+Since Milestone 13 each response also carries `binding`: every figure in the text, bound
+to the packet field, source release, period and match method that licensed it. `hip
+explain` refuses to store prose with a figure the packet does not carry, so a binding is
+always complete. It is null only for text written before figures were checked, and a
+client should say so rather than present that text as verified.
 """
 
 from __future__ import annotations
@@ -22,7 +28,7 @@ from sqlalchemy import select
 
 from hip.api.deps import SessionDep
 from hip.api.params import Window
-from hip.packets import PacketUnavailable, build_packet, packet_hash
+from hip.packets import Binding, PacketUnavailable, build_packet, still_describes
 from hip.warehouse.models import RegionExplanation
 
 router = APIRouter(tags=["explanations"])
@@ -53,11 +59,33 @@ class Explanation(BaseModel):
     generated_at: datetime
     stale: bool = Field(
         description=(
-            "True when the packet has changed since this text was written, so the "
-            "prose may describe numbers the warehouse no longer holds."
+            "True when the packet's figures have changed since this text was written, "
+            "so the prose may describe numbers the warehouse no longer holds. A "
+            "re-download that moved no figure does not make text stale."
+        )
+    )
+    binding: Binding | None = Field(
+        description=(
+            "Every figure in `body`, bound to the packet field, source release, period "
+            "and match method that licensed it. Null when the text was written before "
+            "figures were checked (Milestone 13): its figures are unverified."
         )
     )
     disclaimer: str = DISCLAIMER
+
+
+def _served(row: RegionExplanation, *, stale: bool) -> Explanation:
+    return Explanation(
+        region_id=row.region_id,
+        window=row.window,
+        body=row.body,
+        model_id=row.model_id,
+        model_label=row.model_label,
+        runtime=row.runtime,
+        generated_at=row.generated_at,
+        stale=stale,
+        binding=Binding.model_validate(row.binding) if row.binding is not None else None,
+    )
 
 
 @router.get(
@@ -106,22 +134,15 @@ def explanation(
     # to still describe current data — that comparison is the whole reason the hash is
     # stored. Same reasoning as ARCHITECTURE #42: the durable artifact is not the answer.
     try:
-        stale = packet_hash(build_packet(session, region_id, window)) != row.packet_sha256
+        packet = build_packet(session, region_id, window)
     except PacketUnavailable:
         # The region no longer builds a packet, so staleness cannot be established.
         # False is not a claim that the text is current — the disclaimer still stands.
-        stale = False
-
-    return Explanation(
-        region_id=row.region_id,
-        window=row.window,
-        body=row.body,
-        model_id=row.model_id,
-        model_label=row.model_label,
-        runtime=row.runtime,
-        generated_at=row.generated_at,
-        stale=stale,
+        return _served(row, stale=False)
+    current = still_describes(
+        packet, packet_sha256=row.packet_sha256, content_sha256=row.content_sha256
     )
+    return _served(row, stale=not current)
 
 
 class Explanations(BaseModel):
@@ -179,27 +200,26 @@ def explanations(
             ),
         )
 
-    # Staleness is computed once against the current warehouse and compared per row:
-    # models are generated independently, so one reading can be current while another
-    # is stale, and collapsing that to a single flag would misreport both.
+    # The packet is built once and compared per row: models are generated
+    # independently, so one reading can be current while another is stale, and
+    # collapsing that to a single flag would misreport both.
     try:
-        current = packet_hash(build_packet(session, region_id, window))
+        packet = build_packet(session, region_id, window)
     except PacketUnavailable:
-        current = None
+        packet = None
 
     return Explanations(
         region_id=region_id,
         window=window,
         explanations=[
-            Explanation(
-                region_id=row.region_id,
-                window=row.window,
-                body=row.body,
-                model_id=row.model_id,
-                model_label=row.model_label,
-                runtime=row.runtime,
-                generated_at=row.generated_at,
-                stale=current is not None and row.packet_sha256 != current,
+            _served(
+                row,
+                stale=packet is not None
+                and not still_describes(
+                    packet,
+                    packet_sha256=row.packet_sha256,
+                    content_sha256=row.content_sha256,
+                ),
             )
             for row in rows
         ],

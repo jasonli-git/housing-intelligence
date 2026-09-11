@@ -5,7 +5,7 @@ one that is useful. SPEC: AI is an enhancement, the platform stays fully useful 
 disabled, the model explains computed metrics rather than producing them, and the reader
 can always tell interpretation from measurement.
 
-Three consequences, all enforced in code rather than left to convention:
+Four consequences, all enforced in code rather than left to convention:
 
 - The model sees a packet and nothing else. No warehouse handle, no SQL, no raw source
   files — the same contract every evaluated model was given.
@@ -14,12 +14,17 @@ Three consequences, all enforced in code rather than left to convention:
 - The stored row carries the model, the runtime, and a hash of the packet it was written
   from, so a reader is never shown generated prose that looks like a computed figure and
   never shown prose about numbers that have since changed.
+- Every figure in the prose is bound to the packet field that licenses it before the
+  row is written, and prose stating a figure the packet does not carry is refused rather
+  than stored (Milestone 13). Until then the figure check ran only in the evaluation, so
+  published prose was vouched for by its model's benchmark and nothing else.
 """
 
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import Literal
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -29,10 +34,36 @@ from hip.eval.prompts import build_prompt, fits_context, render_payload
 from hip.eval.runners import build_runner
 from hip.eval.runners.mlx_runner import MlxRunner
 from hip.eval.types import Scenario
-from hip.packets import Packet, build_packet, packet_hash
+from hip.packets import (
+    Binding,
+    Packet,
+    bind,
+    build_packet,
+    packet_content_hash,
+    packet_hash,
+    still_describes,
+)
+from hip.packets.citations import describe_unbound
 from hip.warehouse.models import RegionExplanation
 
 log = logging.getLogger(__name__)
+
+
+class UnboundFigures(RuntimeError):
+    """Generated prose stated a figure its packet does not carry, so it was not stored.
+
+    A `RuntimeError`, like every other way a generation fails, so a bulk run records it
+    and moves on; its own type so the run can report it as a refusal rather than an
+    error — the model answered, and the answer was not publishable.
+    """
+
+    def __init__(self, region_id: int, model_id: str, binding: Binding) -> None:
+        self.binding = binding
+        super().__init__(
+            f"region {region_id}: {model_id} stated {len(binding.unbound)} figure(s) "
+            f"the packet does not carry — {describe_unbound(binding)} — not stored"
+        )
+
 
 # The instruction that produces an explanation rather than an answer to a question. It
 # differs from the evaluation's system prompt on purpose: the evaluation measures
@@ -68,6 +99,12 @@ class Explanation:
     runtime: str
     body: str
     packet_sha256: str
+    # What the packet said, without where it said it from: staleness is decided on
+    # this, so a re-download that moves nothing re-binds instead of regenerating.
+    content_sha256: str
+    # Every figure in `body`, resolved to the packet field that licenses it. Complete by
+    # construction — prose with an unbound figure never becomes an `Explanation`.
+    binding: Binding
     # Position in `generation.preference` when this was written. Stored rather than
     # looked up because the API may not read that config (`API_MAY_IMPORT`), so the
     # order five explanations are offered in has to travel with the rows.
@@ -151,6 +188,13 @@ def generate(
             f"Raise generation.max_output_tokens in config/evaluation.yml."
         )
 
+    # The gate. Bound against the payload the model was given, so a figure it quoted
+    # from the packet's own words is licensed by those words.
+    body = generation.answer.strip()
+    binding = bind(body, packet, payload=payload)
+    if not binding.complete:
+        raise UnboundFigures(packet.region.region_id, model_id, binding)
+
     return Explanation(
         region_id=packet.region.region_id,
         window=packet.window.label,
@@ -161,8 +205,10 @@ def generate(
         # every row and lose the one fact the dashboard's provenance panel exists to
         # show — which vendor wrote this paragraph.
         runtime=cohort.provider or cohort.runner,
-        body=generation.answer.strip(),
+        body=body,
         packet_sha256=packet_hash(packet),
+        content_sha256=packet_content_hash(packet),
+        binding=binding,
         rank=rank if rank is not None else rank_of(evaluation, model_id),
     )
 
@@ -201,6 +247,8 @@ def store(session: Session, explanation: Explanation) -> None:
             rank=explanation.rank,
             body=explanation.body,
             packet_sha256=explanation.packet_sha256,
+            content_sha256=explanation.content_sha256,
+            binding=explanation.binding.model_dump(mode="json"),
         )
     )
 
@@ -233,14 +281,56 @@ def is_stale(
     Per model since migration 0010: one model's reading can be current while another's
     is stale, because they are generated independently. With no `model_id` the question
     is asked of the whole region — stale if *any* stored explanation is, which is the
-    conservative reading for a caller deciding whether to warn a reader.
+    conservative reading for a caller deciding whether to warn a reader. On the content
+    hash since Milestone 13, so a re-download that moved no figure is not staleness.
     """
-    query = select(RegionExplanation.packet_sha256).where(
+    query = select(RegionExplanation).where(
         RegionExplanation.region_id == region_id,
         RegionExplanation.window == window,
     )
     if model_id is not None:
         query = query.where(RegionExplanation.model_id == model_id)
-    stored = session.execute(query).scalars().all()
-    current = packet_hash(packet)
-    return any(sha != current for sha in stored)
+    return any(
+        not still_describes(
+            packet, packet_sha256=row.packet_sha256, content_sha256=row.content_sha256
+        )
+        for row in session.execute(query).scalars()
+    )
+
+
+Freshness = Literal["current", "rebind", "stale"]
+
+
+def freshness(row: RegionExplanation, packet: Packet) -> Freshness:
+    """What a stored explanation needs, given the packet as it stands now.
+
+    `current` — written from these exact bytes and already bound. `rebind` — its words
+    still describe the packet but its citations do not: either it was written before
+    binding existed, or only provenance moved (a re-download that changed a release id
+    or a retrieval date and no figure). Both are repaired without a model call.
+    `stale` — the figures it describes have changed, so only a new generation will do.
+    """
+    if row.packet_sha256 == packet_hash(packet):
+        return "current" if row.binding is not None else "rebind"
+    if row.content_sha256 is not None and row.content_sha256 == packet_content_hash(
+        packet
+    ):
+        return "rebind"
+    return "stale"
+
+
+def rebind(
+    row: RegionExplanation, packet: Packet, *, payload_format: str = "markdown"
+) -> Binding:
+    """Bind a stored explanation to the current packet, and pin it there if it binds.
+
+    The row is updated only when every figure binds, so a refusal leaves it exactly as
+    it was. The prose and `generated_at` are untouched: the text was not rewritten, only
+    re-cited.
+    """
+    binding = bind(row.body, packet, payload=render_payload(packet, payload_format))
+    if binding.complete:
+        row.binding = binding.model_dump(mode="json")
+        row.packet_sha256 = packet_hash(packet)
+        row.content_sha256 = packet_content_hash(packet)
+    return binding

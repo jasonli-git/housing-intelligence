@@ -21,7 +21,8 @@ from hip.config import ConfigError, EvaluationConfig, get_settings, load_evaluat
 from hip.warehouse.db import get_engine
 
 if TYPE_CHECKING:
-    from hip.eval.types import Judgment
+    from hip.eval.types import Judgment, Scenario
+    from hip.packets import Packet
 
 app = typer.Typer(
     name="eval",
@@ -150,9 +151,8 @@ def run_command(
         )
         raise typer.Exit(code=1)
 
-    from hip.packets import Packet, build_packet
-
     by_key = {s.key: s for s in scenarios}
+    packets = _ground_truth(run, scenarios)
     checks_path = run_dir(run) / CHECKS
     counters = {"done": 0, "failed": 0, "checked": 0}
 
@@ -160,61 +160,78 @@ def run_command(
     # generation is checked the moment it lands rather than in a pass at the end: a
     # batch afterwards means an interrupted run keeps its expensive generations and
     # loses the free checks that make them scoreable.
-    with Session(get_engine()) as session:
-        packets: dict[int, Packet] = {}
-
-        def packet_for(region_id: int, window: str) -> Packet:
-            if region_id not in packets:
-                packets[region_id] = build_packet(session, region_id, window)
-            return packets[region_id]
-
-        def record(generation: Generation) -> None:
-            counters["done"] += 1
-            if generation.error:
-                counters["failed"] += 1
-            else:
-                scenario = by_key[generation.scenario_key]
-                append_record(
-                    checks_path,
-                    check_generation(
-                        generation,
-                        scenario,
-                        packet_for(scenario.region_id, scenario.window),
-                    ),
-                )
-                counters["checked"] += 1
-
-            status = (
-                typer.style("ERR", fg=typer.colors.RED)
-                if generation.error
-                else typer.style("ok ", fg=typer.colors.GREEN)
+    def record(generation: Generation) -> None:
+        counters["done"] += 1
+        if generation.error:
+            counters["failed"] += 1
+        else:
+            scenario = by_key[generation.scenario_key]
+            append_record(
+                checks_path,
+                check_generation(generation, scenario, packets[scenario.key]),
             )
-            typer.echo(
-                f"{status} {generation.model_id:<18} {generation.scenario_id:<16} "
-                f"{generation.telemetry.generation_tokens:>5} tok  "
-                f"{generation.telemetry.total_ms / 1000:>6.1f}s"
-            )
+            counters["checked"] += 1
 
-        try:
-            run_evaluation(
-                evaluation,
-                scenarios,
-                run,
-                mode=mode,
-                repeats=repeats,
-                models=model or None,
-                resume=resume,
-                on_generation=record,
-            )
-        except (RunnerUnavailable, ContextOverflow, ConfigurationChanged) as exc:
-            typer.secho(str(exc), fg=typer.colors.RED, err=True)
-            raise typer.Exit(code=1) from exc
+        status = (
+            typer.style("ERR", fg=typer.colors.RED)
+            if generation.error
+            else typer.style("ok ", fg=typer.colors.GREEN)
+        )
+        typer.echo(
+            f"{status} {generation.model_id:<18} {generation.scenario_id:<16} "
+            f"{generation.telemetry.generation_tokens:>5} tok  "
+            f"{generation.telemetry.total_ms / 1000:>6.1f}s"
+        )
+
+    try:
+        run_evaluation(
+            evaluation,
+            scenarios,
+            run,
+            mode=mode,
+            repeats=repeats,
+            models=model or None,
+            resume=resume,
+            on_generation=record,
+        )
+    except (RunnerUnavailable, ContextOverflow, ConfigurationChanged) as exc:
+        typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
 
     typer.secho(
         f"{counters['done']} generations ({counters['failed']} failed), "
         f"{counters['checked']} checks written",
         fg=typer.colors.GREEN if not counters["failed"] else typer.colors.YELLOW,
     )
+
+
+def _ground_truth(run: str, scenarios: list[Scenario]) -> dict[str, Packet]:
+    """Each scenario's packet, keyed like the scenario — or refuse the run.
+
+    A scenario set built from Markdown before Milestone 13 kept no packet and cannot be
+    parsed back into one, so the only thing left to check its answers against is the
+    warehouse as it stands now, which is not what its models were shown. Refused rather
+    than approximated: `checks.jsonl` is that run's record, and a check against other
+    numbers would overwrite it with a fabrication rate nobody measured.
+    """
+    from hip.eval.checks import scenario_packet
+
+    packets: dict[str, Packet] = {}
+    for scenario in scenarios:
+        packet = scenario_packet(scenario)
+        if packet is None:
+            typer.secho(
+                f"run '{run}' was built before scenarios kept their packet "
+                f"(Milestone 13), and its {scenario.payload_format} payloads cannot be "
+                f"read back into one, so its answers could only be checked against "
+                f"today's warehouse — not what its models were shown. Its checks.jsonl "
+                f"is the record; start a new run for new answers.",
+                fg=typer.colors.RED,
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        packets[scenario.key] = packet
+    return packets
 
 
 @app.command("check")
@@ -227,6 +244,10 @@ def check_command(
     that leaves: generations recorded before the checker existed or was changed, and a
     run interrupted in a way that lost its checks. Idempotent — it rewrites
     `checks.jsonl` from `generations.jsonl` and never touches the generations.
+
+    Checks against the packet each scenario's model was shown — kept on the scenario
+    since Milestone 13, or the payload itself for a JSON run — never against today's
+    warehouse; a run with neither is refused (ARCHITECTURE #115).
     """
     from hip.eval.checks import check_generation
     from hip.eval.store import (
@@ -236,7 +257,6 @@ def check_command(
         run_dir,
         write_records,
     )
-    from hip.packets import Packet, build_packet
 
     scenarios = {s.key: s for s in load_scenarios(run)}
     generations = [g for g in load_generations(run) if not g.error]
@@ -248,18 +268,18 @@ def check_command(
         )
         raise typer.Exit(code=1)
 
-    results = []
-    with Session(get_engine()) as session:
-        packets: dict[int, Packet] = {}
-        for generation in generations:
-            scenario = scenarios[generation.scenario_key]
-            if scenario.region_id not in packets:
-                packets[scenario.region_id] = build_packet(
-                    session, scenario.region_id, scenario.window
-                )
-            results.append(
-                check_generation(generation, scenario, packets[scenario.region_id])
-            )
+    # Against the packets the models were shown, never today's warehouse. Until
+    # Milestone 13 this rebuilt packets from the warehouse, so re-checking a finished run
+    # after any load graded its answers against numbers its models never saw.
+    packets = _ground_truth(run, list(scenarios.values()))
+    results = [
+        check_generation(
+            generation,
+            scenarios[generation.scenario_key],
+            packets[generation.scenario_key],
+        )
+        for generation in generations
+    ]
 
     path = run_dir(run) / CHECKS
     write_records(path, results)
@@ -550,7 +570,13 @@ class _Outcome:
 
     written: int = 0
     current: int = 0
+    # Stored prose re-cited against the current packet without a model call: its figures
+    # had not moved, only their provenance, or it predated binding (Milestone 13).
+    rebound: int = 0
     failed: int = 0
+    # Prose the model wrote and the binding would not publish: a figure the packet does
+    # not carry. Counted apart from `failed` because the model answered.
+    refused: int = 0
     # Why the model could not be used at all, when it could not.
     skipped: str | None = None
 
@@ -559,7 +585,9 @@ class _Outcome:
             f"{count} {what}"
             for count, what in (
                 (self.written, "written"),
+                (self.rebound, "re-bound"),
                 (self.current, "already current"),
+                (self.refused, "refused"),
                 (self.failed, "failed"),
             )
             if count
@@ -571,9 +599,15 @@ class _Outcome:
 
 def _exit_code(outcomes: dict[str, _Outcome]) -> int:
     """0, `PARTIAL` or 1, as defined beside `PARTIAL`."""
-    if not any(outcome.written or outcome.current for outcome in outcomes.values()):
+    if not any(
+        outcome.written or outcome.current or outcome.rebound
+        for outcome in outcomes.values()
+    ):
         return 1
-    if any(outcome.skipped or outcome.failed for outcome in outcomes.values()):
+    if any(
+        outcome.skipped or outcome.failed or outcome.refused
+        for outcome in outcomes.values()
+    ):
         return PARTIAL
     return 0
 
@@ -588,15 +622,23 @@ def _summarize(outcomes: dict[str, _Outcome]) -> int:
     for model_id, outcome in outcomes.items():
         typer.secho(
             outcome.line(model_id),
-            fg=typer.colors.YELLOW if outcome.skipped or outcome.failed else None,
+            fg=typer.colors.YELLOW
+            if outcome.skipped or outcome.failed or outcome.refused
+            else None,
         )
     written = sum(outcome.written for outcome in outcomes.values())
+    rebound = sum(outcome.rebound for outcome in outcomes.values())
     current = sum(outcome.current for outcome in outcomes.values())
+    refused = sum(outcome.refused for outcome in outcomes.values())
     failed = sum(outcome.failed for outcome in outcomes.values())
     skipped = sum(1 for outcome in outcomes.values() if outcome.skipped)
     total = f"{written} explanations written"
+    if rebound:
+        total += f", {rebound} re-bound without regenerating"
     if current:
         total += f", {current} already current (--force to regenerate)"
+    if refused:
+        total += f", {refused} refused for figures the packet does not carry"
     if failed:
         total += f", {failed} failed"
     if skipped:
@@ -719,23 +761,28 @@ def _explain_each(
     2026-09-11 but not for a missing runtime, which ended the run for every model after
     it.
     """
-    from hip.eval.explain import explain_region
+    from hip.eval.explain import UnboundFigures, explain_region
     from hip.eval.runners import RunnerUnavailable
 
     for candidate, outcome in outcomes.items():
         if outcome.skipped:
             continue
         for region_id in region_ids:
-            # Skip work whose stored prose was written from these exact numbers. Keyed
-            # on the model as well as the region since migration 0010, so a partial
-            # `--all` run resumes rather than restarting. `is_stale` existed from
-            # Milestone 8 and was used only by the API; this command regenerated
-            # everything unconditionally, which was the entire cost argument at national
-            # scale, and only became meaningful once #73, #77 and #88 stopped the packet
-            # hash moving on every run.
-            if not force and _is_fresh(session, region_id, window, candidate):
-                outcome.current += 1
-                continue
+            # Skip work whose stored prose still describes these numbers. Keyed on the
+            # model as well as the region since migration 0010, so a partial `--all`
+            # run resumes rather than restarting; and since Milestone 13, prose whose
+            # figures have not moved is re-cited for free instead of rewritten.
+            if not force:
+                state = _stored_state(
+                    session, region_id, window, candidate, payload_format
+                )
+                if state == "current":
+                    outcome.current += 1
+                    continue
+                if state == "rebound":
+                    session.commit()
+                    outcome.rebound += 1
+                    continue
             try:
                 explanation = explain_region(
                     session,
@@ -754,6 +801,16 @@ def _explain_each(
                     f"  skipping {candidate}: {exc}", fg=typer.colors.YELLOW, err=True
                 )
                 break
+            except UnboundFigures as exc:
+                # The model answered and the answer was not publishable. Whatever was
+                # stored before stays, labelled stale by the site if it is.
+                typer.secho(
+                    f"refused {candidate}/{region_id}: {exc}",
+                    fg=typer.colors.YELLOW,
+                    err=True,
+                )
+                outcome.refused += 1
+                continue
             except (RuntimeError, ValueError) as exc:
                 typer.secho(
                     f"skipped {candidate}/{region_id}: {exc}",
@@ -767,28 +824,44 @@ def _explain_each(
             typer.echo(
                 f"{explanation.model_id:<22}{explanation.region_id:>5}  "
                 f"{len(explanation.body):>5} chars  "
-                f"{explanation.body.splitlines()[0][:52]}..."
+                f"{len(explanation.binding.citations):>3} figures bound  "
+                f"{explanation.body.splitlines()[0][:40]}..."
             )
 
 
-def _is_fresh(session: Session, region_id: int, window: str, model_id: str) -> bool:
-    """Whether this model's stored explanation was written from exactly these numbers.
+def _stored_state(
+    session: Session,
+    region_id: int,
+    window: str,
+    model_id: str,
+    payload_format: str,
+) -> str:
+    """`current`, `rebound` or `stale` for this model's stored explanation.
 
-    A region with no stored explanation for this model is not fresh, and a packet that
-    cannot be built is not fresh either — in both cases the generation attempt should
-    proceed and fail on its own terms rather than be silently skipped here.
+    `rebound` means the stored prose was re-cited against the current packet in this
+    call — it predated binding, or only provenance moved since it was written — and the
+    row is updated but not committed. Anything that needs a model is `stale`: no stored
+    row, a packet that cannot be built (the generation attempt then fails on its own
+    terms rather than being silently skipped here), figures that changed, or prose that
+    no longer binds.
     """
-    from hip.eval.explain import is_stale
+    from hip.eval.explain import freshness, rebind
     from hip.packets import PacketUnavailable, build_packet
     from hip.warehouse.models import RegionExplanation
 
-    if session.get(RegionExplanation, (region_id, window, model_id)) is None:
-        return False
+    row = session.get(RegionExplanation, (region_id, window, model_id))
+    if row is None:
+        return "stale"
     try:
         packet = build_packet(session, region_id, window)
     except PacketUnavailable:
-        return False
-    return not is_stale(session, region_id, window, packet, model_id)
+        return "stale"
+    state = freshness(row, packet)
+    if state == "rebind":
+        if rebind(row, packet, payload_format=payload_format).complete:
+            return "rebound"
+        return "stale"
+    return state
 
 
 def _unusable(

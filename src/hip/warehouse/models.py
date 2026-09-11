@@ -8,6 +8,7 @@ autogenerate has something to diff against.
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from geoalchemy2 import Geometry
 from sqlalchemy import (
@@ -24,6 +25,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 REGION_LEVELS = ("state", "county", "municipality", "zip", "tract", "parcel")
@@ -116,6 +118,12 @@ class RegionExplanation(Base):
     is pinned to the packet bytes it was written from, so a later pipeline run leaves a
     mismatch the API can report instead of quietly serving prose about old numbers. It
     is per row, so one model's explanation can be current while another's is stale.
+
+    Since migration 0011, `binding` holds every figure in `body` resolved to the packet
+    field, release, period and match method that licensed it, and `content_sha256` the
+    hash of what the packet said without its provenance, which is what staleness is now
+    decided on. Both are null on rows written before Milestone 13, whose figures were
+    never checked; the API says so rather than implying otherwise.
     """
 
     __tablename__ = "region_explanations"
@@ -130,6 +138,8 @@ class RegionExplanation(Base):
     rank: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     packet_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    content_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    binding: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     generated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

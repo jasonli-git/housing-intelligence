@@ -17,29 +17,37 @@ from hip.packets.assemble import (
     regions_for_level,
 )
 from hip.packets.caveats import caveats_for
+from hip.packets.citations import Binding, Citation, bind
 from hip.packets.report import format_change, format_value, render_markdown
 from hip.packets.schema import (
     PACKET_VERSION,
     SCHEMA_PATH,
     Packet,
+    packet_content_hash,
     packet_hash,
     published_schema,
     schema_text,
+    still_describes,
 )
 
 __all__ = [
     "PACKET_VERSION",
     "SCHEMA_PATH",
+    "Binding",
+    "Citation",
     "Packet",
     "PacketUnavailable",
+    "bind",
     "build_packet",
     "caveats_for",
     "display_label",
     "format_change",
     "format_value",
+    "packet_content_hash",
     "packet_hash",
     "published_schema",
     "regions_for_level",
     "render_markdown",
     "schema_text",
+    "still_describes",
 ]

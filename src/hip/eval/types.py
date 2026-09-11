@@ -17,6 +17,8 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from hip.config import JudgeEffort, ReasoningEffort
+from hip.packets import Packet
+from hip.packets.citations import FigureKind
 
 
 class _Strict(BaseModel):
@@ -26,9 +28,13 @@ class _Strict(BaseModel):
 class Scenario(_Strict):
     """One question against one packet — the unit every model is given.
 
-    `packet_json` is the exact payload the model sees, kept alongside the question so
-    the deterministic checker and the judge both grade against the same bytes the model
-    was actually shown, not against a packet re-read from the warehouse later.
+    `payload` is the exact text the model sees and `packet` the packet it was rendered
+    from, both kept with the question so the deterministic checker and the judge grade
+    against what the model was actually shown, not a packet re-read from the warehouse
+    later. `packet` arrived with Milestone 13: until then the checker rebuilt packets
+    from the warehouse, which is only the same packet if nothing has been loaded since.
+    For a JSON payload the two are the same bytes; for Markdown the payload cannot be
+    parsed back, so older Markdown scenario sets have no packet at all.
     """
 
     scenario_id: str
@@ -43,6 +49,7 @@ class Scenario(_Strict):
     payload_tokens: int = Field(
         description="Whitespace-free character count / 4 — an estimate, not a tokenizer."
     )
+    packet: Packet | None = None
 
     @property
     def key(self) -> str:
@@ -121,12 +128,19 @@ class Generation(_Strict):
 
 
 class NumericCheck(_Strict):
-    """One number the model stated, and whether the packet contains it."""
+    """One number the model stated, and whether the packet contains it.
+
+    `nearest` is the packet value it matched, or for an unsupported figure the closest
+    one the packet carries. `field` and `kind` are the citation the figure bound to —
+    recorded since Milestone 13, so older checks parse with neither.
+    """
 
     value: float
     text: str
     supported: bool
     nearest: float | None = None
+    field: str | None = None
+    kind: FigureKind | None = None
 
 
 class CheckResult(_Strict):

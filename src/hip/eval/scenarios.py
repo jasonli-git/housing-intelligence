@@ -67,7 +67,12 @@ def build_scenarios(
 def scenarios_for_packet(
     packet: Packet, evaluation: EvaluationConfig, payload_format: str
 ) -> list[Scenario]:
-    """Every configured question against one packet."""
+    """Every configured question against one packet.
+
+    The packet travels with each scenario as the ground truth its answers are checked
+    against, so a pipeline run between building a set and running it cannot change what
+    the answers are graded on.
+    """
     payload = render_payload(packet, payload_format)
     return [
         Scenario(
@@ -81,6 +86,7 @@ def scenarios_for_packet(
             payload_format=payload_format,  # type: ignore[arg-type]
             payload=payload,
             payload_tokens=estimate_tokens(payload),
+            packet=packet,
         )
         for template in evaluation.scenarios
     ]

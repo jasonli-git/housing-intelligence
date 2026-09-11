@@ -48,6 +48,10 @@ class ModelSummary:
     truncated_reasoning: int = 0
     unsupported_numbers: int = 0
     total_numbers: int = 0
+    # Answers with a deterministic check, and those in which every figure bound — what
+    # `hip explain` would have stored rather than refused (Milestone 13).
+    checked_answers: int = 0
+    bound_answers: int = 0
     refusal_correct: int = 0
     refusal_total: int = 0
     scores: list[float] = field(default_factory=list)
@@ -215,6 +219,9 @@ def summarize(
         if check:
             summary.total_numbers += len(check.numbers)
             summary.unsupported_numbers += check.unsupported_count
+            summary.checked_answers += 1
+            if not check.unsupported_count and not check.empty_answer:
+                summary.bound_answers += 1
             if check.empty_answer:
                 summary.empty += 1
             if check.refusal_expected:
@@ -582,6 +589,10 @@ def render_report(
                 )
         lines.append("")
 
+    # Only for a run checked by citation binding, which records a kind on every figure
+    # it licenses. `v1` and `v2` were checked by the rules before it, and a column
+    # claiming to be the publication gate's verdict would misstate what they measured.
+    bound_column = any(n.kind is not None for check in checks for n in check.numbers)
     lines += [
         "## Deterministic checks",
         "",
@@ -589,9 +600,22 @@ def render_report(
         "packet it was given; a figure the packet cannot support is a fabrication "
         "regardless of how the answer reads. No language model is involved.",
         "",
-        "| Model | Cohort | Effort | Answers | Figures | Unsupported | Empty | Errors "
-        "| Refusal |",
-        "|---|---|---|---:|---:|---:|---:|---:|---:|",
+    ]
+    if bound_column:
+        lines += [
+            "`Bound` counts the answers in which every figure bound to a packet "
+            "field — the test `hip explain` applies before it stores prose, made by "
+            "the same code (Milestone 13). An answer it would refuse is one the site "
+            "would never have shown.",
+            "",
+        ]
+    lines += [
+        "| Model | Cohort | Effort | Answers | Figures | Unsupported | "
+        + ("Bound | " if bound_column else "")
+        + "Empty | Errors | Refusal |",
+        "|---|---|---|---:|---:|---:|"
+        + ("---:|" if bound_column else "")
+        + "---:|---:|---:|",
     ]
     for summary in sorted(summaries.values(), key=lambda s: s.hallucination_rate):
         refusal = (
@@ -599,11 +623,16 @@ def render_report(
             if summary.refusal_total
             else "—"
         )
+        bound = (
+            f"{summary.bound_answers}/{summary.checked_answers} | "
+            if summary.checked_answers
+            else "— | "
+        )
         lines.append(
             f"| {summary.label} | {summary.cohort} | {summary.effort_label} | "
             f"{summary.generations} | {summary.total_numbers} | "
-            f"{summary.hallucination_rate:.1%} | {summary.empty} | {summary.errors} | "
-            f"{refusal} |"
+            f"{summary.hallucination_rate:.1%} | {bound if bound_column else ''}"
+            f"{summary.empty} | {summary.errors} | {refusal} |"
         )
 
     if judged:

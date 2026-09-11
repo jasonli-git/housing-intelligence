@@ -53,6 +53,10 @@ _REGION_SQL = text(
 # DISTINCT ON guards the provenance join: `window_end` is a period_end, and while the
 # fact table is keyed on period_start, nothing stops two observations sharing an end
 # date. Without it a single metric could appear twice in a packet.
+#
+# The start observation is resolved the way `hip analyze` chose it — the one ending on
+# `window_start`, earliest `period_start` first — so the release cited for `start_value`
+# is the release that value was read from (packet 1.2).
 _METRICS_SQL = text(
     """
     SELECT DISTINCT ON (c.metric_id)
@@ -60,7 +64,8 @@ _METRICS_SQL = text(
            c.window_start, c.window_end, c.start_value, c.end_value,
            c.pct_change, c.cagr,
            k.rank, k.of, k.percentile,
-           o.release_id, sr.source_id, o.match_method
+           o.release_id, sr.source_id, o.match_method,
+           s.release_id AS start_release_id, s.match_method AS start_match_method
     FROM fact_metric_change c
     JOIN metrics m ON m.metric_id = c.metric_id
     LEFT JOIN region_rankings k
@@ -70,6 +75,14 @@ _METRICS_SQL = text(
       ON o.region_id = c.region_id AND o.metric_id = c.metric_id
      AND o.period_end = c.window_end
     LEFT JOIN source_releases sr ON sr.release_id = o.release_id
+    LEFT JOIN LATERAL (
+        SELECT f.release_id, f.match_method
+        FROM fact_metric_observation f
+        WHERE f.region_id = c.region_id AND f.metric_id = c.metric_id
+          AND f.period_end = c.window_start
+        ORDER BY f.period_start
+        LIMIT 1
+    ) s ON true
     WHERE c.region_id = :id AND c."window" = :w
     ORDER BY c.metric_id, o.period_start DESC
     """
@@ -254,6 +267,7 @@ def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet
             metric_ids=[m.metric_id for m in metrics] + [lv.metric_id for lv in levels],
             match_methods=[
                 *(m.match_method for m in metrics if m.match_method),
+                *(m.start_match_method for m in metrics if m.start_match_method),
                 *(lv.match_method for lv in levels if lv.match_method),
             ],
             crosswalk_methods=crosswalk_methods,
@@ -304,9 +318,13 @@ def _sources(
     """The releases behind the packet's values, one entry per source and vintage.
 
     Takes both arrays: a source reaching the packet only through `levels` — which is
-    every snapshot source — still has to appear in the source table.
+    every snapshot source — still has to appear in the source table. And both ends of
+    every change window: before packet 1.2 the start release was left out, so a packet
+    comparing ACS 2019 with ACS 2023 listed only 2023.
     """
-    release_ids = sorted({e.release_id for e in entries if e.release_id is not None})
+    cited = {e.release_id for e in entries}
+    cited |= {e.start_release_id for e in entries if isinstance(e, PacketMetric)}
+    release_ids = sorted(r for r in cited if r is not None)
     if not release_ids:
         return []
 

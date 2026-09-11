@@ -1,8 +1,9 @@
 "use client";
 
-import { useId, useState } from "react";
+import { Fragment, useId, useState } from "react";
 
 import type { Explanation } from "@/lib/api";
+import { describe, matchedBy, period, segment, sourceOf, whatItIs } from "@/lib/citations";
 
 /**
  * The one place on the dashboard where text was written by a model rather than computed.
@@ -29,6 +30,13 @@ import type { Explanation } from "@/lib/api";
  * The numbers underneath every option are the same bytes — the packet hash each row is
  * pinned to guarantees that — so every difference a reader sees is the model's own.
  *
+ * Since Milestone 13 every figure in the prose is marked and traceable: `hip explain`
+ * bound each one to the packet field, source release, period and match method that
+ * licensed it before storing the text, and refuses text it cannot bind. The panel says
+ * that the figures were checked, and lists where each came from. Text written before
+ * binding existed is shown as it always was, with a line saying its figures are
+ * unverified — never with an empty list, which would claim there was nothing to check.
+ *
  * A client component only because of the switcher's `useState`. With one explanation it
  * renders exactly what it always did, and the page is a static export either way.
  */
@@ -46,6 +54,9 @@ export function ExplanationPanel({
   // shorter on a later render than the one the reader last clicked in.
   const current = explanations[Math.min(selected, explanations.length - 1)];
   const comparable = explanations.length > 1;
+  // `?? null` because a response published before Milestone 13 has no field at all,
+  // and that text is exactly as unverified as one whose binding is null.
+  const binding = current.binding ?? null;
 
   return (
     <section aria-labelledby={`${groupId}-heading`} className="interpretation">
@@ -98,9 +109,67 @@ export function ExplanationPanel({
         </p>
       )}
 
-      {current.body.split(/\n{2,}/).map((paragraph, index) => (
-        <p key={index}>{paragraph}</p>
+      {segment(current.body, binding?.citations ?? []).map((runs, index) => (
+        <p key={index}>
+          {runs.map((run, at) =>
+            run.citation && binding ? (
+              <span
+                key={at}
+                className="cited"
+                title={describe(run.citation, binding.releases)}
+              >
+                {run.text}
+              </span>
+            ) : (
+              <Fragment key={at}>{run.text}</Fragment>
+            ),
+          )}
+        </p>
       ))}
+
+      {binding === null ? (
+        <p className="interpretation-unverified">
+          Written before figures were checked against the data: treat its numbers as
+          unverified.
+        </p>
+      ) : binding.citations.length > 0 ? (
+        <details className="interpretation-figures">
+          <summary>
+            All {binding.citations.length} figures checked against the data — where each
+            comes from
+          </summary>
+          <div className="scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Figure</th>
+                  <th scope="col">What it is</th>
+                  <th scope="col">Period</th>
+                  <th scope="col">Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                {binding.citations.map((citation) => (
+                  <tr key={citation.start}>
+                    <td className="num">{citation.text}</td>
+                    <td>{whatItIs(citation)}</td>
+                    <td>{period(citation)}</td>
+                    <td>
+                      {sourceOf(citation, binding.releases)}
+                      {matchedBy(citation) && (
+                        <span className="interpretation-matched">
+                          {" "}
+                          · {matchedBy(citation)}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      ) : null}
 
       <p className="interpretation-note">{current.disclaimer}</p>
     </section>

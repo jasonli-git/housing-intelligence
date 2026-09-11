@@ -248,6 +248,31 @@ button {
   color: var(--text-muted);
 }
 
+/* A figure the binding traced to the packet (Milestone 13). A dotted underline says
+   "there is more here" without the weight of a link; the full provenance is in the
+   figure list below, which is the path that works without a pointer. */
+.interpretation .cited {
+  text-decoration: underline dotted;
+  text-decoration-color: var(--text-muted);
+  text-underline-offset: 3px;
+}
+.interpretation-figures {
+  margin-top: 0.9rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.interpretation-figures summary { cursor: pointer; }
+.interpretation-figures table { margin-top: 0.5rem; font-size: 0.75rem; }
+.interpretation-figures td { vertical-align: top; }
+.interpretation-matched { opacity: 0.8; }
+/* The absence of a check is stated, not implied, and quietly: it is a fact about the
+   text rather than a warning that anything is wrong with it. */
+.interpretation-unverified {
+  margin-top: 0.9rem;
+  font-size: 0.75rem !important;
+  color: var(--text-muted);
+}
+
 /* Stale text still looks authoritative, which is exactly the danger — so the warning
    sits above the prose rather than below it. */
 .interpretation-stale {

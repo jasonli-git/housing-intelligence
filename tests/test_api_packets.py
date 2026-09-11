@@ -31,8 +31,26 @@ def test_packet_endpoint_serves_the_published_contract(county_id: int) -> None:
 
     assert response.status_code == 200
     body = response.json()
-    assert body["packet_version"] == "1.1"
+    assert body["packet_version"] == "1.2"
     jsonschema.validate(body, json.loads(SCHEMA_PATH.read_text()))
+
+
+def test_every_release_a_figure_came_from_is_listed(county_id: int) -> None:
+    """Packet 1.2: both ends of every change window cite a release `sources[]` names.
+
+    Until then only the release behind `end_value` was carried, and the start of a
+    window very often comes from an older one — ACS 2019 against 2023 — which the
+    packet never listed. A citation cannot point at a release the packet omits.
+    """
+    packet = client.get(f"/regions/{county_id}/packet?window=5y").json()
+    listed = {rid for source in packet["sources"] for rid in source["release_ids"]}
+    starts = {m["start_release_id"] for m in packet["metrics"]}
+    ends = {m["release_id"] for m in packet["metrics"]}
+
+    assert None not in starts
+    assert starts <= listed and ends <= listed
+    # Without a window spanning two releases this would prove nothing.
+    assert any(m["start_release_id"] != m["release_id"] for m in packet["metrics"])
 
 
 def test_packet_levels_agree_with_the_summary_endpoint(county_id: int) -> None:

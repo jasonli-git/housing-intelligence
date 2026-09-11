@@ -605,6 +605,34 @@ def test_report_leads_with_anchors_then_the_leaderboard(
     assert "data/eval/t/" in text
 
 
+def test_the_report_counts_the_answers_hip_explain_would_have_published(
+    packet: Packet, evaluation: EvaluationConfig
+) -> None:
+    """The benchmark and the publication gate are one piece of code (Milestone 13), so
+    the report can say how often a model's prose would have reached the site."""
+    honest = _generation("Values rose 45.97% to $452,500.")
+    liar = _generation("Values reached $612,300.", repeat=1)
+    checks = [check_generation(g, _scenario(), packet) for g in (honest, liar)]
+    text = render_report(evaluation, [_scenario()], [honest, liar], checks, [], run="t")
+
+    assert "| Bound |" in text
+    assert "| 1/2 |" in text
+
+    # A run checked before binding recorded no kinds, and gets no such column.
+    unbound_era = [
+        check.model_copy(
+            update={
+                "numbers": [n.model_copy(update={"kind": None}) for n in check.numbers]
+            }
+        )
+        for check in checks
+    ]
+    older = render_report(
+        evaluation, [_scenario()], [honest, liar], unbound_era, [], run="t"
+    )
+    assert "| Bound |" not in older
+
+
 def test_unjudged_report_says_so_instead_of_recommending(
     packet: Packet, evaluation: EvaluationConfig
 ) -> None:

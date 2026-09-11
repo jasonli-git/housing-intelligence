@@ -803,8 +803,11 @@ def explain(
     a page view. The model is resolved through the ordered preference list in
     `config/evaluation.yml` — the first benchmarked candidate that is currently
     reachable, ending at a local model so that no vendor decision can stop this command
-    (Milestone 12). Regions whose stored explanation was written from these exact
-    numbers are skipped; `--force` regenerates them anyway.
+    (Milestone 12). Every figure in a generation is bound to the packet field that
+    licensed it before it is stored, and prose stating a figure the packet does not
+    carry is refused (Milestone 13). A region whose stored prose still describes these
+    figures is skipped — re-bound for free first if only provenance moved — and
+    `--force` regenerates it anyway.
 
     `--all` generates one explanation per model on the preference list instead of one
     from the first reachable candidate, which is what the dashboard's model comparison
@@ -815,7 +818,8 @@ def explain(
     configured now; `--unbenchmarked` is the only way past that (ARCHITECTURE #102). A
     model that cannot be used is skipped rather than fatal, and the run ends with what
     each requested model came to. Exit status: 0 when every requested model's prose is
-    current, 3 when some is but something was skipped or failed, 1 when none is.
+    current, 3 when some is but something was skipped, failed or refused, 1 when none
+    is.
     """
     explain_command(
         region,

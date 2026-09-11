@@ -9,30 +9,31 @@ Nothing in this section is in progress. It is the order agreed on 2026-09-10 for
 the work back up, and what has to be true before starting. Detail lives in the items it
 points to; this section only sequences them.
 
-**Where things stand.** Milestones 12, 19, 20, 21 and 22 are done. 12 and 19 are deployed
-and verified live; 20 and 22 changed no published byte, so neither needs a deploy. 21
-changed the warehouse and every packet, and is deliberately not deployed: its new metrics
-reach the site with the regeneration after `v3` (step 5). The live site carries data
+**Where things stand.** Milestones 12, 13, 19, 20, 21 and 22 are done. 12 and 19 are
+deployed and verified live; 20 and 22 changed no published byte, so neither needs a
+deploy. 21 changed the warehouse and every packet, and 13 the packet contract and how
+explanations are stored; neither is deployed, deliberately: both reach the site with the
+regeneration after `v3` (step 5). The live site carries data
 through July 2026 and five models' explanations of every county. The
 preference list in `config/evaluation.yml` is `gemini-3.7-flash` →
 `gemini-3.1-flash-lite` → `mistral-small-4` → `deepseek-v4-pro` → `gemma-4-e4b-q4`.
 
-**The agreed sequence** — settled with the user on 2026-09-10; steps 1 and 2 are done:
+**The agreed sequence** — settled with the user on 2026-09-10; steps 1 to 3 are done:
 
 1. ✅ **Milestone 20 — reasoning effort as a measured variable.** Done 2026-09-10; see
    its section below. It configured `deepseek-flash-nothink` and `gemini-3.7-flash-low`
    for step 4.
 2. ✅ **Milestone 21 — New Jersey depth.** Done 2026-09-11; see its section below. Five
    sources, eight metrics, 13,638 observations, and a county packet a third larger.
-3. **Milestone 13 — citation binding.** Built and tested against the packet shape 21
-   produces rather than retrofitted to it. Rework-avoidance, not a hard dependency: a
-   binding generic over packet fields would mostly survive going first. Going first would
-   not get it onto the live site any sooner either, because 21 marks all 105 published
-   explanations stale and nothing new ships until step 5.
+3. ✅ **Milestone 13 — citation binding.** Done 2026-09-11; see its section below.
+   Every generation is now bound before it is stored and refused if a figure will not
+   bind, packets are at 1.2, and a scenario set keeps its packets — so `v3` measures the
+   final shape, and its report carries a `Bound` column.
 4. **A fresh benchmark, run `v3`.** Checklist below under "Run `v3`".
 5. **Act on `v3`:** reorder the preference list, retire the old rows, regenerate every
    explanation, deploy. Checklist below under "After `v3`".
-6. Then **18 → 16 → 17**, per [ROADMAP.md](ROADMAP.md).
+6. Then **18 → 17 → 16**, per [ROADMAP.md](ROADMAP.md). Changed from 18 → 16 → 17 on
+   2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
 **Before starting any of it:**
 
@@ -135,7 +136,8 @@ explanations were written by the real V4 Pro and stay correctly attributed until
       prompts — a constant-based estimate was wrong twice. Expect roughly $11.50–12.50
       for 165 judgments at effort `high` — `hip eval cost --run v1`, the last Markdown
       run, quotes $7.45 for 105 today, about 7 cents a verdict, and 21's larger packets
-      add to every prompt — plus under $0.50 of generation (`v2`'s recorded tokens,
+      add to every prompt, as do 13's five extra source rows (about 2,200 tokens a
+      county as Markdown, which moves the quote by cents) — plus under $0.50 of generation (`v2`'s recorded tokens,
       repriced for Markdown input; Qwen's share is inside its free quota). The quote
       assumes 5,000 output tokens per verdict at `high`, a planning figure that is most of
       it — `hip eval judge` now prints what the batch was actually billed
@@ -177,7 +179,10 @@ explanations were written by the real V4 Pro and stay correctly attributed until
 - [ ] **Regenerate every explanation**: `hip explain --level county --all --force`. This
       rewrites all 21 counties for every model on the new list and refreshes their
       ranks. Well under $1 for the hosted models with `deepseek-flash` in V4 Pro's place,
-      plus a ~10-minute local Gemma pass
+      plus a ~10-minute local Gemma pass. Since Milestone 13 each generation is bound
+      before it is stored: a refused one leaves that model's old row in place, stale and
+      marked unverified, the summary counts it, and the run exits 3. Read the refusals
+      before deploying — `v3`'s `Bound` column says how many to expect
 - [ ] **`make publish`, then `make deploy`.** Verify in a browser, not with `curl`: both
       origins answer scripts with Cloudflare's bot challenge by design (ARCHITECTURE #94)
 
@@ -2002,6 +2007,95 @@ paced.
 - Note: **every stored explanation is now stale**, as planned — Milestone 21 changes every
   packet — and nothing new ships until the regeneration after `v3`. The live site is
   static and unchanged until then.
+
+## Milestone 13 — Citation binding
+
+Started and finished 2026-09-11, third in the order agreed on 2026-09-10: 20, 21, 13, then
+run `v3`.
+
+**Deliverable.** [ROADMAP.md](ROADMAP.md) row 13: every figure in an interpretation
+resolved to the packet field, source release, period and match method that licensed it,
+produced inside `hip explain`, with the same ground-truth index reused by the evaluation
+report.
+
+**What reading the code showed on 2026-09-11.** Four things differ from how the milestone
+was framed:
+
+| Framed as | Found | So |
+|---|---|---|
+| A binding for prose that is already checked | The figure check runs in `hip eval run` and `hip eval check` only; `hip explain` stores whatever the model returns, so none of the 105 published explanations was checked one by one. `v2` measured Mistral Small 4, which is on the live list, at one unsupported figure in 60 | the binding is also the publication gate |
+| "The retention it needs already exists" | A packet carries release, source and match method for `end_value` only. In 10 of Mercer County's 19 metrics the start of the window comes from an older release — ACS 2019, HUD FY2021 — that `sources[]` never lists | packet 1.2 carries the start observation's provenance, and `sources[]` lists every release a figure came from |
+| The evaluation grades against what each model was shown | `hip eval run` and `hip eval check` rebuild packets from the live warehouse. `hip eval check --run v1` today would re-grade `v1` against numbers Milestone 21 loaded | a scenario stores its packet; checks grade against it; a run with no recoverable packet is refused |
+| Staleness, carried from Milestone 12's review | The packet hash covers `fetched_at` and release ids, so a re-download with unchanged numbers marks prose stale and a refresh would pay to rewrite it | a content hash decides staleness; a provenance-only change re-binds the stored prose for free |
+
+- [x] **Packet 1.2** — `start_release_id` and `start_match_method` on `PacketMetric`,
+      resolved as `hip analyze` chose the start observation; `sources[]` lists both ends
+      of every window; `schemas/packet-v1.json` regenerated; 1.1 still parses (#117)
+- [x] **`hip.packets.citations`** — `figure_index()` and `bind()`: each figure resolved
+      to one field with a character span, period, releases and match method, or
+      reported unbound (#112)
+- [x] **`packet_content_hash`** and `still_describes`, in `hip.packets.schema` (#114)
+- [x] **The evaluation checker on the index** — `check_generation` binds, and
+      `NumericCheck` records `field` and `kind`. Five rules changed on the way (#116), so
+      `v2`'s stored checks were re-derived rather than reproduced; every difference is
+      explained below
+- [x] **Scenarios keep their packet** — `hip eval run` and `hip eval check` grade
+      against it and refuse a run with none (#115); neither needs Postgres any more
+- [x] **The gate in `hip explain`** — `UnboundFigures`, counted as `refused` in the
+      summary, exit 3 (#113)
+- [x] **Migration 0011** — `region_explanations.binding` (JSONB) and `content_sha256`
+- [x] **Re-binding** — `freshness()` and `rebind()` classify each stored row `current`,
+      `rebind` or `stale`, and a rebind costs no model call (#114)
+- [x] **API** — `binding` on both explanation endpoints; `stale` from the content hash
+      where a row has one
+- [x] **Dashboard** — cited figures underlined, the full provenance in each one's
+      tooltip and in a figure list under the prose, and "unverified" on prose with no
+      binding (`web/lib/citations.ts`)
+- [x] **Evaluation report** — a `Bound` column, shown only for runs checked by binding,
+      so `v1` and `v2` render unchanged
+- [x] Tests — 34 new Python and 8 new dashboard tests: 452 and 34 in all
+- [x] Verified on real data: every `v2` answer bound against its own packet; all 21
+      county packets and reports rebuilt at 1.2; one explanation generated end to end
+      with local Gemma 4 E4B, served by the API and checked in the dashboard
+- [x] Docs: ARCHITECTURE #112–#117 and Known Limitations, README, ROADMAP (13 done, 17
+      before 16), CHANGELOG 0.13.0
+
+**What verification showed, 2026-09-11.**
+
+- **`v2` re-derived under binding:** 977 figures in 105 answers, where the old rules
+  counted 1,007 — durations and descriptors such as "5-year" are no longer claims. 976
+  bound, 879 of them to exactly one field. One unbound: Mistral Large 3's "591 891",
+  591,891 written with a space. `v2`'s one recorded fabrication, Mistral Small 4's one in
+  60, was the old checker reading "pre-2018" as minus 2018.
+- **57 small decimals and percentages** the old checker skipped as ordinals all match,
+  so the blind spot hid no fabrication in `v2`. The substring rule had rescued four
+  figures, none invented: three dropped signs, now licensed by a direction word, and the
+  "591 891" case.
+- **One real generation:** Gemma 4 E4B on Mercer County wrote 1,665 characters with 14
+  figures, all bound, none ambiguous, and each change cited both releases it spans (ACS
+  2019 and 2023, FMR FY2021 and FY2026). It replaced that model's stale Mercer row in the
+  local warehouse; the other 104 rows predate binding and are stale.
+- **Packets:** Mercer's names 15 releases where it named 10, about 28KB; its Markdown
+  rendering is about 2,209 tokens, up from 2,029. The 21 region reports each gained five
+  source rows and the version line, and nothing else.
+
+- Note: **binding checks figures, not claims.** The Gemma reading above counts
+  homeownership's -1.8% among several "strong increases", every figure bound. The judge
+  catches that in a benchmark; nothing catches it in production. In Known Limitations.
+- Note: **a wrong rank or count under 20 is not caught** — a plain whole number under 20
+  that matches nothing is an ordinal. Kept for the checker's generosity; in Known
+  Limitations with the other binding limits.
+- Note: **`reports/evaluation/v1.md` predates the renderer's title and Effort columns.**
+  Re-rendering it on 2026-09-11 changed its format and no figure, and was reverted:
+  restyling a published report is not this milestone's call. Already in Known
+  Limitations; say if it should be re-rendered.
+- Note: **the CHANGELOG's `[0.12.5]` heading had gone missing** — replaced rather than
+  kept when Milestone 21's entry was written on top of it, which left the Qwen entry
+  under 0.12.6. Restored.
+- Note: **raw downloads are never pruned** (#10): 31 superseded copies and 264MB on
+  2026-09-11, most of it three earlier Zillow ZHVI files at about 76MB a monthly release.
+  A scheduled refresh will want a retention rule, and it has to keep every release a fact
+  cites. In Known Limitations.
 
 ## Milestone 19 — Multi-model interpretation
 

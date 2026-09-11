@@ -2058,10 +2058,15 @@ def test_a_missing_runtime_skips_its_model_and_the_rest_still_run(
             raise RunnerUnavailable("mlx-lm is not installed")
         if region_id == 2:
             raise RuntimeError("empty answer")
-        return SimpleNamespace(model_id=model_id, region_id=region_id, body="Rose.\n")
+        return SimpleNamespace(
+            model_id=model_id,
+            region_id=region_id,
+            body="Rose.\n",
+            binding=SimpleNamespace(citations=[]),
+        )
 
     monkeypatch.setattr("hip.eval.explain.explain_region", explain_region)
-    monkeypatch.setattr("hip.eval_cli._is_fresh", lambda *args: False)
+    monkeypatch.setattr("hip.eval_cli._stored_state", lambda *args: "stale")
     outcomes = {
         "gemma-4-e4b-q4": _Outcome(),
         "gemini-test": _Outcome(),

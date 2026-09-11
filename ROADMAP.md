@@ -6,12 +6,12 @@ geography spine, 335,927 observations across 23 metrics from 10 sources spanning
 over the API, displayed by the dashboard, and packaged as versioned analysis packets,
 with 289 Python and 26 dashboard tests passing. All eight pipeline stages run.
 
-**Version 2 is under way — Milestones 10, 11, 12, 19, 22, 20 and 21 have shipped,
+**Version 2 is under way — Milestones 10, 11, 12, 19, 22, 20, 21 and 13 have shipped,
 between 2026-09-02 and 2026-09-11.** The platform is published: New Jersey is served from
 a public domain with no database and no application server, and its interpretation is
 written by hosted models behind a preference list that ends on this machine. What
-remains is depth in New Jersey — citation binding, a re-benchmark, a design language, a
-three-dimensional map and a consumer entry point; expansion past New Jersey was deferred
+remains is depth in New Jersey — a re-benchmark, a design language, a consumer entry
+point and a three-dimensional map; expansion past New Jersey was deferred
 on 2026-09-07. Everything it runs on — the warehouse schema, the
 analytics layer, the packet contract — is what Version 1 built.
 
@@ -44,7 +44,7 @@ or the dashboard on a clean checkout; its tests pass; and
 
 ## Version 2 Milestones (public hosting and expansion)
 
-**Milestones 10, 11, 12, 19, 22, 20 and 21 closed, between 2026-09-02 and 2026-09-11.**
+**Milestones 10, 11, 12, 19, 22, 20, 21 and 13 closed, between 2026-09-02 and 2026-09-11.**
 Version 2 changes four things and deliberately not a fifth: where the platform runs (a public
 domain rather than `localhost`), how much geography it covers (Northeast, then national
 at county level), what writes the interpretation (a hosted model rather than a local
@@ -59,7 +59,7 @@ that rewrites the fact table has gone wrong.
 | 10 | ✅ done | **Build cost and data placement** — `hip footprint` reporting bytes per storage tier, per warehouse table, and per state, including the Postgres size that lives inside Docker where `du` cannot see it; seven per-stage scenarios added to the existing `mac-sitrep` profile rather than a second timing harness; `HIP_REPORTS_DIR` promoted from a path derived off the data root, `HIP_PGDATA` relocating Postgres opt-in, and `~` expanded in both; measured for New Jersey and published in the README |
 | 11 | ✅ done | **Static publication** — `hip publish` rendering the *enumerable* API surface to files whose paths mirror the endpoints, by replaying the ASGI app so the bytes match what the API serves (#67); a manifest carrying a sha256 per artifact and naming what cannot be published; the dashboard built as a static export over the same regions; `make publish` assembling both; and New Jersey served from the custom domain with no database and no application server in production. Earlier wording promised "every API response" and content-addressed URLs — neither survived contact with the parameter space (`/compare` is combinatorial) or with the point of the exercise (a hashed URL stops mirroring its endpoint) |
 | 12 | ✅ done | **Hosted inference** — a `HostedRunner` implementing `ModelRunner`, hosted candidates measured against Gemma 4 E4B on the Milestone 8 scenarios and rubric, an ordered preference list of benchmarked models resolved at generation time — DeepSeek, then Gemini, then Mistral, then local Gemma 4 E4B last, version-pinned model identifiers, per-candidate token rates recorded in config so the evaluation report can carry a quality-per-dollar column, staleness compared at display precision rather than on raw floats, and batch submission for the regeneration pass |
-| 13 | ⬜ planned | **Citation binding** — every figure in an interpretation resolved to the packet field, source release, period, and match method that licensed it, produced inside `hip explain`, with the same ground-truth index reused by the evaluation report |
+| 13 | ✅ done | **Citation binding** — every figure in an interpretation resolved to the packet field, source release, period and match method that licensed it, inside `hip explain`, with the same index counting fabrication in the evaluation (`hip.packets.citations`, ARCHITECTURE #112–#117). Prose stating a figure the packet does not carry is refused rather than stored: until then the figure check ran only in the benchmark, and none of the 105 published explanations had been checked one by one. Packet 1.2 names the release behind each change window's start, which no packet had listed; scenarios keep the packet they were rendered from, so a re-check can no longer grade a finished run against today's warehouse; and staleness is decided on a content hash, so a re-download that moves no figure re-binds stored prose instead of regenerating it. Measured on `v2`'s answers against their own packets: 976 of 977 figures bound — and `v2`'s one recorded fabrication turned out to be the checker reading "pre-2018" as a negative number. The dashboard marks every cited figure and lists its source |
 | 14 | ⏸ deferred to Post-V2 | **Northeast expansion** — CT, MA, ME, NH, NY, PA, RI, VT loaded at all five levels, the first run of the pipeline at roughly seven times current volume, and a per-state coverage report showing what each source did and did not resolve |
 | 15 | ⏸ deferred to Post-V2 | **National county coverage** — all 50 states, DC, and PR at `state` and `county` level only, on federal sources that key on exact FIPS, giving national coverage without a national municipality model |
 | 16 | ⬜ planned | **Three-dimensional map, New Jersey** — 564 municipalities extruded by a magnitude metric and colored by a ratio metric, replacing the inline-SVG map as the landing view; selection shown by highlight-and-mute, where chosen regions keep full colour and gain a contrasting outline while every other region drops to a neutral it cannot be confused with; a legend that states what height and colour each encode, since a two-channel map does not explain itself |
@@ -240,7 +240,7 @@ the work is the index, not the schema.
 around depth in one state.** The decision is to make New Jersey excellent before making
 anything broader. The order set that day was 13, 20, 21, 18, 16, 17, with 14 and 15
 moved to Post-Version 2; it was revised on 2026-09-10 to 22, 20, 21, 13, a fresh
-benchmark, then 18, 16, 17 — see below.
+benchmark, then 18, 16, 17, and on 2026-09-11 to end 18, 17, 16 — see below.
 
 The storage argument for deferring them turned out to be half wrong, and the half that
 was wrong is worth stating so it is not repeated. **Milestone 15 adds almost no
@@ -290,6 +290,24 @@ benchmark either way. After the benchmark the preference list is reordered from 
 result, the retired model's rows are removed, every explanation is regenerated, and the
 site is redeployed; then 18, 16 and 17. The working checklist is at the top of
 [TODO.md](TODO.md), under "Resume here".
+
+**Milestone 17 moved ahead of 16 on 2026-09-11, so the order after the benchmark is 18,
+17, 16.** Nothing was recorded for 16 before 17 when 18 moved ahead of both; they simply
+kept their numbers. Three reasons for 17 first:
+
+- 17 is where the platform starts answering rather than reporting (above), and Milestone
+  21 has just loaded what its views need: Fair Market Rents, CHAS cost burden, tenure.
+- 16 carries the most risk of the three — it reverses the no-map-library decision and
+  brings in a WebGL renderer — and nothing else waits on it, so it is the one that can
+  slip without holding anything up.
+- They barely depend on each other. 17 lives mostly on region pages and in a new
+  affordability view; its one use of a map, marking the places within reach, works on
+  the current one, and 16 then designs its selection encoding against a real selection
+  rather than a hypothetical one. Search, which belongs on the map, goes onto today's and
+  moves with it.
+
+The cost is that 17's affordability view is drawn on the two-dimensional map first and
+moved onto the extruded one by 16.
 
 ### Decisions this version needs from the user
 

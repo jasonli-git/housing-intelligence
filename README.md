@@ -12,7 +12,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status (2026-09-11): v0.12.6, Version 1 complete and Version 2 under way.** New
+> **Status (2026-09-11): v0.13.0, Version 1 complete and Version 2 under way.** New
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
 > **351,295 observations across 31 metrics from 12 public sources, spanning 1971 to
@@ -22,7 +22,9 @@ layer only explains metrics that were already computed.
 > local, six hosted across three regulatory regimes — have now been evaluated against
 > standardized scenarios built from those packets, and every county page carries five of
 > them reading the same packet side by side, switchable by the reader and each clearly
-> labeled as interpretation, never as measurement.
+> labeled as interpretation, never as measurement. Since Milestone 13 every figure in
+> that prose is traced to the packet field and source release behind it before it is
+> stored, and prose stating a figure the packet does not carry is refused.
 >
 >
 > **Version 2 is live.** The platform now publishes itself: `hip publish` records the
@@ -169,6 +171,14 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   `GET /regions/{id}/explanation` serves it with `kind: "interpretation"` and a `stale`
   flag; the dashboard panel is styled to be unmistakable as commentary. The platform is
   fully usable with none of this generated — a missing explanation renders nothing.
+- **Every figure in an explanation traced to its source** (M13, built) — before storing
+  a model's prose, `hip explain` binds each figure in it to the packet field, source
+  release, period and match method that licensed it, and refuses prose that states a
+  figure the packet does not carry. The dashboard marks every cited figure and lists
+  where each came from; a reading written before binding existed says its figures are
+  unverified. The evaluation counts fabrication with the same code, so a benchmark's
+  fabrication rate and the rate at which the site would refuse a model's prose are one
+  number.
 
 ## Sample output
 
@@ -323,7 +333,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 418 Python + 26 dashboard tests; API tests skip without a warehouse
+make test          # 452 Python + 34 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -439,7 +449,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.12.6 — **Version 1 is complete; Version 2 is under way.**
+v0.13.0 — **Version 1 is complete; Version 2 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -452,7 +462,7 @@ else: static publication on a public domain, hosted inference in place of local
 generation, citation binding, deeper New Jersey sources, a three-dimensional map of its
 564 municipalities, a consumer entry point, and a design system. Expansion to the
 Northeast and to every US county was deferred past Version 2 on 2026-09-07. Eleven
-milestones, seven shipped.
+milestones, eight shipped.
 
 **Milestone 10 — build cost and data placement (2026-09-02).** `hip footprint` reports
 bytes per storage tier, per warehouse table, and per state, including the Postgres size
@@ -509,6 +519,16 @@ severe cost burden for all 21 counties and 563 of 564 municipalities; building p
 reach every municipality by exact FIPS code, summing to the county totals to the unit;
 and FHFA's all-transactions index takes the state's price history back to 1975. Eight
 metrics, 13,638 observations, and a county packet about a third larger.
+
+**Milestone 13 — citation binding (2026-09-11).** Every figure in a model's explanation is
+bound to the packet field, source release, period and match method that licensed it
+before the prose is stored, and prose stating a figure the packet does not carry is
+refused. Until now the figure check ran only in the benchmark, so published prose was
+vouched for by fifteen sample answers per model. The evaluation counts fabrication with
+the same code; packets now cite the release behind the start of every change window as
+well as its end; and staleness is decided on what a packet says rather than on when its
+files were fetched, so a re-download that moves no figure re-cites stored prose instead
+of paying a model to rewrite it.
 
 Milestones and their status are in [ROADMAP.md](ROADMAP.md); the current working list and
 known rough edges are in [TODO.md](TODO.md). Work not scheduled for Version 2 is listed at
