@@ -43,7 +43,7 @@ def build_scenarios(
     window: str = "5y",
     level: str = "county",
     regions: int = 3,
-    payload_format: str = "json",
+    payload_format: str = "markdown",
     region_ids: list[int] | None = None,
 ) -> list[Scenario]:
     """Every configured question against a deterministic sample of packets.

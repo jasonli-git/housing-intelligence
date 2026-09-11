@@ -3,12 +3,26 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.12.4] — 2026-09-10
+## [0.12.4] — 2026-09-11
 
-Preparation for run `v3`, and an audit of ARCHITECTURE.md against the code. Not a
-milestone; Milestone 21 has not started.
+Preparation for run `v3`, an audit of ARCHITECTURE.md against the code, and three guards
+found while deciding `v3`'s payload format (Markdown) and sampling (temperature 0.0). Not
+a milestone; Milestone 21 has not started.
 
 ### Changed
+- **`hip explain --all` and `--model` publish only from a model that passed the latest
+  judged run** (#102), as the preference list always has; until now either would
+  publish from a model no run had measured. A model that cannot be used — unmeasured,
+  routed, reconfigured, or its runtime missing — is skipped rather than fatal, and the
+  run ends with one line per requested model. Exit status is 0 when every requested
+  model's prose is current, 3 when some is, and 1 when none is; it used to be 0 even when
+  generations failed. `--unbenchmarked` still overrides, now on every path.
+- **"The latest run" means the latest judged one**, so a run still generating or waiting
+  on its batch no longer makes every model ineligible for `hip explain`.
+- **Every `hip eval` command names its run** (#103) — each defaulted to `v1`, the oldest
+  frozen run — and `make eval` needs `RUN=`. **`hip eval scenarios` defaults to
+  Markdown**, the payload `hip explain` sends. `v2` was built on the old JSON default
+  with no `--format`, so it measured prose from packets the site never sends.
 - **The judge grades at effort `high`, with `max_tokens` raised from 3,000 to 16,000**
   (#101). `v1` and `v2` were graded at `medium`; `v3` is the run boundary to change it
   at, since new packets already make it incomparable with `v2`. The ceiling rose because
@@ -24,8 +38,17 @@ milestone; Milestone 21 has not started.
 - **Every verdict records `judge_effort`, `input_tokens` and `output_tokens`** — including
   one cut off after it arrived, because it was paid for — and `hip eval judge` prints what
   the batch was billed. `v2`'s $4.15 was only ever the quote.
+- **`hip eval scenarios` refuses to rewrite a run's scenario set** once anything has been
+  generated against it, and rebuilds a draft only with `--replace` (#103). Before, a bare
+  `hip eval scenarios` rewrote `v1`'s without asking.
+- **The evaluation report states what temperature 0.0 does not control** (#104): DeepSeek
+  ignores it while its models reason, and Google recommends 1.0 for Gemini 3. Derived
+  from the run, so `v1` renders unchanged; `reports/evaluation/v2.md` gains that
+  paragraph and no figure changes.
 
 ### Fixed
+- **A runtime missing partway through `hip explain` ended the command** for every model
+  after it. It now skips that model and the rest run.
 - **ARCHITECTURE.md described behaviour the code does not have**, in eight places:
   `acquire` isolating sources (one failure stops the rest), `load` rolling back one
   source (it commits all or none), a failed `analyze` emptying the derived tables (it

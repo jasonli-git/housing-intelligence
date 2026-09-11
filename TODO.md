@@ -54,8 +54,20 @@ explanations were written by the real V4 Pro and stay correctly attributed until
 
 - [ ] **A new run, not an extension of `v2`.** 21 changes every packet and `v2`'s scenarios
       are frozen from the old ones, so extending it would measure models against data
-      the site no longer shows. `hip eval scenarios --run v3`, then
-      `hip eval run --run v3` with every candidate below named
+      the site no longer shows. `hip eval scenarios --run v3` (Markdown by default since
+      2026-09-11), then `hip eval run --run v3` with every candidate below named. Once
+      anything is generated the scenario set is frozen; before that, `--replace` rebuilds
+      it
+- [x] **Guard the frozen scenario sets before building `v3`'s** — found 2026-09-10, done
+      2026-09-11 (ARCHITECTURE #103). `hip eval scenarios` replaced
+      `data/eval/<run>/scenarios.jsonl` without asking, and every `hip eval` command
+      defaulted to `--run v1`, so README's bare evaluation commands — and `make eval`,
+      which ran them — would have overwritten `v1`'s frozen Markdown scenarios with JSON
+      packets from today's warehouse, then run, judged (billed) and re-rendered `v1`
+      against them. Now: a set with generations is refused even with `--replace`, a
+      draft needs `--replace`, every `hip eval` command requires `--run`, `make eval`
+      requires `RUN=`, and the payload defaults to Markdown. Checked against the real
+      runs: `--run v1` and `--run v2 --replace` are both refused, files untouched
 - [ ] **Candidates, seven — decided 2026-09-10:** `gemini-3.7-flash`,
       `gemini-3.7-flash-low`, `gemini-3.1-flash-lite`, `mistral-small-4`,
       `deepseek-flash`, `deepseek-flash-nothink`, and `gemma-4-e4b-q4`: 105 generations
@@ -71,24 +83,35 @@ explanations were written by the real V4 Pro and stay correctly attributed until
         --model gemini-3.1-flash-lite --model mistral-small-4 --model deepseek-flash \
         --model deepseek-flash-nothink --model gemma-4-e4b-q4
       ```
-- [ ] **Decide how `v3` treats sampling for thinking models, before running it.**
-      DeepSeek ignores temperature in thinking mode, so `deepseek-flash` against
-      `deepseek-flash-nothink` varies sampling as well as thinking; and Google recommends
-      temperature 1.0 for Gemini 3 where the harness pins 0.0. Either accept both and say
-      so in the report, or change the design first — see the Milestone 20 notes.
-      Recommended 2026-09-10, not yet decided: keep 0.0 — `v2` showed no looping from
-      Gemini at 0.0, and one sampling setting for every candidate is what makes the table
-      a comparison
-- [ ] **Decide the payload format, before `hip eval scenarios --run v3`.** `v2` gave models
-      JSON packets; `hip explain` publishes from Markdown. `--format markdown` would
-      benchmark what is actually published, at about a third of the input tokens and
-      roughly $1 less judging. Raised 2026-09-10, not decided
+- [x] **Sampling: temperature stays 0.0 for every candidate, thinking models included —
+      decided 2026-09-10.** DeepSeek ignores temperature in thinking mode, so
+      `deepseek-flash` against `deepseek-flash-nothink` varies sampling as well as
+      thinking; and Google recommends 1.0 for Gemini 3 where the harness pins 0.0. Both
+      are accepted rather than designed away: one sampling setting for every candidate is
+      what makes the table a comparison, and `v2` showed no looping from Gemini at 0.0.
+      Accepting them means the report has to say so — the next item
+- [x] **The report says what temperature 0.0 does not control** — done 2026-09-11
+      (ARCHITECTURE #104). Nothing in `report.py` mentioned sampling, so a reader would
+      have put the whole gap between the two DeepSeek rows down to thinking. Derived from
+      the run the way the effort note is (#98): a candidate that reasoned, on a provider
+      that ignores temperature while reasoning, is named, and so is a Gemini 3 candidate
+      held below Google's recommended 1.0. Renders nothing for `v1`; `v2` gained the
+      paragraph and was re-rendered, no figure changed
+- [x] **Payload format: Markdown — decided 2026-09-10.** It is what `hip explain`
+      publishes from — the same `render_markdown` output as `reports/regions/` — so
+      `v3` measures the prose the site shows. `v1` was built with `--format markdown`.
+      `v2`'s scenarios were built on 2026-09-06 by a Claude session that ran
+      `hip eval scenarios --run v2` with no `--format`; the command defaulted to JSON and
+      printed "(json)", and nobody caught it. Nobody decided on JSON. Markdown is the
+      default since 2026-09-11 (#103). On `v1`'s Markdown prompts the judge reads 3,362
+      tokens per verdict against `v2`'s 5,798
 - [ ] **Quote before spending**: `hip eval cost --run v3` prices the run from its own
-      prompts — a constant-based estimate was wrong twice. Expect roughly $8–10 for 105
-      judgments at effort `high`, plus about $0.60 of generation; 21's larger packets make
-      every judge prompt larger. The quote assumes 5,000 output tokens per verdict at
-      `high`, a planning figure — `hip eval judge` now prints what the batch was actually
-      billed
+      prompts — a constant-based estimate was wrong twice. Expect roughly $7.50–8 for 105
+      judgments at effort `high` — `hip eval cost --run v1`, the last Markdown run, quotes
+      $7.45 today, and 21's larger packets add to every prompt — plus under $0.50 of
+      generation (`v2`'s recorded tokens, repriced for Markdown input). The quote assumes
+      5,000 output tokens per verdict at `high`, a planning figure that is $6.56 of that
+      $7.45 — `hip eval judge` now prints what the batch was actually billed
 - [ ] `hip eval judge --run v3`, then `hip eval report --run v3`. Judge every candidate in
       one run: the judge prompt is shared, which is what keeps scores comparable. Graded
       at effort `high` (ARCHITECTURE #101), so no `v3` score compares with a `v2` one
@@ -109,10 +132,17 @@ explanations were written by the real V4 Pro and stay correctly attributed until
       'deepseek-v4-pro'`, or, better, a `--prune` on `hip explain` that removes rows whose
       model has left the list. Found 2026-09-10 while planning this step; decide which
       when it comes up
-- [ ] **Decide whether `hip explain --all` must require the benchmark** before the
-      regeneration below runs it. Since Milestone 20 it checks each model's
-      configuration against the latest run, but a model the run never measured still
-      passes, as it always has — see the Milestone 20 note
+- [x] **Decide whether `hip explain --all` must require the benchmark** — decided with
+      the user and built 2026-09-11 (ARCHITECTURE #102). No gate that stops the command:
+      `--all` and `--model` apply the preference list's benchmark gate per model, a model
+      that cannot be used is skipped and named with its reason, `--unbenchmarked`
+      overrides on every path, and the run ends with one line per requested model. Exit
+      status 0 when every requested model's prose is current, 3 when some is, 1 when none
+      is — a future scheduled refresh deploys on any of them (skipped prose stays up,
+      labelled stale by the site) and alerts on anything but 0. "Latest run" now means
+      the latest *judged* run, so `v3` in progress does not make every model ineligible.
+      For the regeneration below: reorder the list first, or every model `v3` did not
+      measure is skipped and the run exits 3
 - [ ] **Regenerate every explanation**: `hip explain --level county --all --force`. This
       rewrites all 21 counties for every model on the new list and refreshes their
       ranks. Well under $1 for the hosted models with `deepseek-flash` in V4 Pro's place,
@@ -803,10 +833,13 @@ Eight candidate models, four per cohort, **every one of them 4-bit**.
 
 - [ ] Move `import_gguf.sh` and `kvbench.sh` into the repo (`scripts/`) before the
       scratchpad is cleared.
-- [ ] Decide whether packets reach the models as JSON or as Markdown. The 3× token
+- [x] Decide whether packets reach the models as JSON or as Markdown. The 3× token
       difference makes this a design decision, not a detail: JSON is the published
       contract (ARCHITECTURE #12, #43) and Markdown is already a rendering of it
       (#45), so both are available — but they are not interchangeable at 16GB.
+      **Closed 2026-09-10: Markdown.** `hip explain` defaults to it; `hip eval scenarios`
+      defaulted to JSON until 2026-09-11, which `v2` ran on. `v3` uses Markdown — see
+      "Run `v3`"
 - [ ] Add `ANTHROPIC_API_KEY` to `.env` and `.env.example`. It is the first key the
       platform needs that is not free.
 - [x] ~~Confirm whether the Q8-vs-Q4 quantization axis is still in scope~~ — **it is
@@ -1768,10 +1801,11 @@ Four things follow, and they changed the scope as written in [ROADMAP.md](ROADMA
   generations for exactly this reason. The rates are the same hazard and are not fixed
   here.
 
-## Pre-`v3` preparation — 2026-09-10
+## Pre-`v3` preparation — 2026-09-10 and 11
 
 Not a milestone, and Milestone 21 has not started. Decisions taken with the user after
-Milestone 20 closed, and an audit of ARCHITECTURE.md against the code.
+Milestone 20 closed, an audit of ARCHITECTURE.md against the code, and three guards built
+on 2026-09-11 once `v3`'s payload format and sampling were decided.
 
 - [x] **The judge grades at effort `high` from `v3`, with `max_tokens` raised from 3,000
       to 16,000** (ARCHITECTURE #101). `v1` and `v2` were graded at `medium`; `v3` is
@@ -1796,19 +1830,39 @@ Milestone 20 closed, and an audit of ARCHITECTURE.md against the code.
       append-only: #11 gained a forward pointer, and two `#base.py` references were
       repaired
 - [x] Tests — 7 new, 386 Python tests in all
+- [x] **2026-09-11 — frozen scenario sets** (ARCHITECTURE #103): `hip eval scenarios`
+      refuses to rewrite a set with generations and needs `--replace` for a draft; every
+      `hip eval` command requires `--run`; `make eval` requires `RUN=`; scenarios default
+      to Markdown. README's evaluation commands now name a run
+- [x] **2026-09-11 — the sampling note** (#104): the report names the candidates whose
+      provider ignores or advises against the pinned temperature. `v2.md` re-rendered —
+      one paragraph added, no figure changed; `v1` renders no note
+- [x] **2026-09-11 — one benchmark gate for every `hip explain` path** (#102):
+      `benchmark_problem` in `selection`, used by `resolve` and by `--all`/`--model`;
+      per-model skips with reasons, a closing summary, exit status 0/3/1, a missing
+      runtime skipping its model instead of ending the command, and "latest run" meaning
+      the latest judged run. Checked against real data: the latest judged run is `v2`,
+      and all five models on today's list pass the gate, so nothing live changes
+- [x] Tests — 13 new, 399 Python tests in all
 
 - Note: **`high`'s 5,000 output tokens per verdict is a guess**, set on the high side;
   `v3`'s recorded usage replaces it. After `v3`, `hip eval cost` should read the recorded
   mean from the latest run judged at the same model and effort instead of the table — a
   small change, not made now because there is nothing recorded yet to read.
-- Note: **the judge sends no refusal fallback**, though Anthropic recommends one for Opus 5
-  by default: the Batch API rejects the parameter, and a verdict graded by a fallback
-  model would put two judges in one table. A refusal is recorded as a failed judgment, as
-  it always was.
-- Note: **still open, raised 2026-09-10**: the `v3` payload format (Markdown, as
-  `hip explain` publishes, or JSON, as `v2` used), whether Gemini keeps temperature 0.0
-  (recommended), and whether `hip explain --all` should require the benchmark. Each is an
-  item under "Run `v3`" or "After `v3`" above.
+- Note: **the judge sends no refusal fallback**, though Anthropic recommends one for
+  Opus 5 by default: the Batch API rejects the parameter, and a verdict graded by a
+  fallback model would put two judges in one table. A refusal is recorded as a failed
+  judgment, as it always was.
+- Note: **decided later on 2026-09-10**: `v3` gives models Markdown payloads, and every
+  candidate stays at temperature 0.0. On 2026-09-11 the user settled the benchmark gate
+  (no command-level gate; skip, name and summarize) and approved the scenario guard and
+  the sampling note — all three built the same day, above.
+- Note: **`reports/evaluation/v1.md` is as rendered at Milestone 8.** A re-render would
+  change its title and add Milestone 20's Effort columns without changing a figure, so it
+  was left alone; recorded in ARCHITECTURE's Known Limitations.
+- Note: **`--unbenchmarked` now lifts the configuration check on `--all` and `--model`
+  too**, as it always has in `resolve`. Milestone 20 applied that check to these flags
+  even with it; one definition of eligibility for every path was worth the narrowing.
 
 ## Milestone 19 — Multi-model interpretation
 

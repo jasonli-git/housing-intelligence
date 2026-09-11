@@ -11,7 +11,7 @@ and get a defensible answer with the source file behind every number. It is not 
 chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
 product, and an optional AI layer only explains metrics that were already computed.
 
-> **Status (2026-09-10): v0.12.4, Version 1 complete and Version 2 under way.** New
+> **Status (2026-09-11): v0.12.4, Version 1 complete and Version 2 under way.** New
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
 > **337,552 observations across 23 metrics from 10 public sources, spanning 1971 to
@@ -316,7 +316,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 386 Python + 26 dashboard tests; API tests skip without a warehouse
+make test          # 399 Python + 26 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -348,14 +348,18 @@ Evaluate candidate models and generate explanations (needs `make setup-eval`; th
 cohorts additionally need Ollama running, and Apple silicon for MLX):
 
 ```bash
-uv run hip eval models             # candidates, and whether each runtime serves them
-uv run hip eval scenarios          # build the question set from real packets
-uv run hip eval run                # every scenario through every model
-uv run hip eval cost               # what judging would cost, without spending it
-uv run hip eval judge              # rubric grading; the only command that costs money
-uv run hip eval report             # reports/evaluation/<run>.md
-uv run hip explain --region 11     # write an explanation the API can serve
+uv run hip eval models                # candidates, and whether each runtime serves them
+uv run hip eval scenarios --run v3    # a new run's question set, from real packets
+uv run hip eval run --run v3          # every scenario through every model, or --model
+uv run hip eval cost --run v3         # what judging would cost, without spending it
+uv run hip eval judge --run v3        # rubric grading, billed
+uv run hip eval report --run v3       # reports/evaluation/v3.md
+uv run hip explain --region 11        # write an explanation the API can serve
 ```
+
+Every `hip eval` command names its run, and a run's scenario set is frozen once anything
+has been generated against it. Scenarios give models the packet as Markdown, as
+`hip explain` does. Hosted candidates are billed per token, and so is the judge.
 
 For a hosted cohort, `hip eval models` asks the provider what it actually serves and
 marks a pinned ref that has been withdrawn, which is cheaper to discover here than as
@@ -363,8 +367,11 @@ fifteen identical 404s inside a run. `hip explain` resolves its model through th
 ordered preference list in `config/evaluation.yml` — the first benchmarked candidate
 that is currently reachable, ending at a local model so no vendor decision can stop the
 command — and skips regions whose stored prose was written from these exact numbers.
-Local cohorts run one model at a time because two do not fit in 16GB; hosted cohorts
-fan out, which is the reason hosted inference is on the roadmap at all.
+`--all` and `--model` hold every model to the same benchmark; a model that cannot be
+used is skipped and named in the closing summary, and the exit status is 0 when every
+requested model's prose is current, 3 when some is, and 1 when none is. Local cohorts
+run one model at a time because two do not fit in 16GB; hosted cohorts fan out, which is
+the reason hosted inference is on the roadmap at all.
 
 `make` on its own lists every target. With the warehouse down, the API and dashboard
 still run and report the degraded state rather than failing.

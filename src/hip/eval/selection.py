@@ -14,7 +14,9 @@ Four rules, each of them a SPEC requirement rather than a convenience:
 - **Only benchmarked models are eligible.** A model that has not been measured on these
   scenarios does not write text the platform publishes, and an entry that has not passed
   is skipped rather than trusted. This is what stops the list becoming a back door
-  around Milestone 8's discipline.
+  around Milestone 8's discipline. `benchmark_problem` is the gate, and `hip explain
+  --all` and `--model` apply it too (#102): until 2026-09-11 they published from any
+  model they could reach.
 - **The list ends at a local model**, enforced at config load. A hosted tail would mean
   a vendor decision could stop `hip explain` from running, which is the single failure
   mode the list exists to prevent.
@@ -104,6 +106,27 @@ def configuration_drift(
     )
 
 
+def benchmark_problem(
+    evaluation: EvaluationConfig,
+    model_id: str,
+    run: str | None,
+    eligible: dict[str, ModelSummary],
+) -> str | None:
+    """Why `model_id` may not publish, or None if the benchmark admits it.
+
+    The one gate for every way `hip explain` chooses a model — the preference list,
+    `--all` and `--model` alike (#102): passed in the latest judged run, and configured
+    as that run measured it. `eligible` is `benchmarked(evaluation, run)`, computed once
+    by the caller rather than once per model.
+    """
+    if run is None:
+        return "no evaluation run has been judged, so no candidate has passed"
+    summary = eligible.get(model_id)
+    if summary is None:
+        return f"has not passed the benchmark in run '{run}'"
+    return configuration_drift(evaluation.model(model_id), summary.reasoning_efforts, run)
+
+
 def benchmarked(evaluation: EvaluationConfig, run: str) -> dict[str, ModelSummary]:
     """Summaries for the models in `run` that cleared the benchmark."""
     from hip.eval.report import summarize
@@ -123,11 +146,18 @@ def benchmarked(evaluation: EvaluationConfig, run: str) -> dict[str, ModelSummar
 
 
 def latest_run() -> str | None:
-    """The most recently written evaluation run, or None if none exists."""
-    from hip.eval.store import runs
+    """The most recently written run that has been judged, or None if none has.
 
-    available = list(runs())
-    return available[-1] if available else None
+    Judged rather than merely written: a run exists from the moment `hip eval scenarios`
+    writes its first file, and nothing in it can pass until its verdicts arrive. Taking
+    it as the latest would make every model ineligible for the hours a run generates
+    and the day a batch can take to judge — `hip explain` would stop for exactly as long
+    as the benchmark meant to improve it was running.
+    """
+    from hip.eval.store import has_judgments, runs
+
+    judged = [run for run in runs() if has_judgments(run)]
+    return judged[-1] if judged else None
 
 
 def resolve(
@@ -154,9 +184,9 @@ def resolve(
     if require_benchmark:
         if run is None:
             raise NoModelAvailable(
-                "no evaluation run exists, so no candidate has passed the benchmark. "
-                "Run `hip eval run` and `hip eval judge` first, or name a model with "
-                "--model."
+                "no evaluation run has been judged, so no candidate has passed the "
+                "benchmark. Run `hip eval run` and `hip eval judge` first, or pass "
+                "--unbenchmarked to bootstrap."
             )
         eligible = benchmarked(evaluation, run)
 
@@ -169,15 +199,10 @@ def resolve(
             # under a running process.
             skipped.append((model_id, "no cohort declares it"))
             continue
-        if require_benchmark and model_id not in eligible:
-            skipped.append((model_id, f"has not passed the benchmark in run '{run}'"))
-            continue
         if require_benchmark:
-            drift = configuration_drift(
-                evaluation.model(model_id), eligible[model_id].reasoning_efforts, run
-            )
-            if drift:
-                skipped.append((model_id, drift))
+            problem = benchmark_problem(evaluation, model_id, run, eligible)
+            if problem:
+                skipped.append((model_id, problem))
                 continue
 
         cohort_name = evaluation.cohort_of(model_id)

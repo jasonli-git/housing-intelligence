@@ -499,6 +499,16 @@ def _all_pass(evaluation: EvaluationConfig, run: str) -> dict[str, ModelSummary]
     return {m.id: _summary(m.id, generations=15, errors=0) for m in evaluation.models}
 
 
+def _all_pass_at_default(
+    evaluation: EvaluationConfig, run: str
+) -> dict[str, ModelSummary]:
+    """Every model passed, each measured at its provider's default reasoning."""
+    summaries = _all_pass(evaluation, run)
+    for summary in summaries.values():
+        summary.reasoning_efforts.add("default")
+    return summaries
+
+
 def test_the_first_reachable_tier_wins_and_the_rest_are_recorded(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1171,10 +1181,11 @@ def test_explicit_models_are_each_verified_once_and_local_ones_not_at_all(
 ) -> None:
     """`--all` and `--model` skip `resolve`, so they are verified up front instead of
     learning about a routed pin from one paid failure per region."""
-    from hip.eval_cli import _verified
+    from hip.eval_cli import _unusable
 
-    # No run on disk: this is about probing, not about what a run measured.
-    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: None)
+    # Every model passed: this is about probing, not about what a run measured.
+    monkeypatch.setattr("hip.eval.selection.benchmarked", _all_pass)
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: "v2")
     probed: list[str] = []
 
     def probe(self: HostedRunner, model: CandidateModel) -> str | None:
@@ -1183,21 +1194,22 @@ def test_explicit_models_are_each_verified_once_and_local_ones_not_at_all(
 
     monkeypatch.setattr(HostedRunner, "probe", probe)
     evaluation = _evaluation(["deepseek-test", "gemini-test", "gemma-4-e4b-q4"])
-    kept = _verified(evaluation, ["deepseek-test", "gemini-test", "gemma-4-e4b-q4"])
+    unusable = _unusable(evaluation, ["deepseek-test", "gemini-test", "gemma-4-e4b-q4"])
 
-    assert kept == ["gemini-test", "gemma-4-e4b-q4"]
+    assert unusable == {"deepseek-test": "substitution: routed"}
     assert probed == ["deepseek-test", "gemini-test"]
 
 
 def test_a_misspelled_model_is_skipped_rather_than_crashing_the_run(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from hip.eval_cli import _verified
+    from hip.eval_cli import _unusable
 
-    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: None)
+    monkeypatch.setattr("hip.eval.selection.benchmarked", _all_pass)
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: "v2")
     evaluation = _evaluation(["gemma-4-e4b-q4"])
-    assert _verified(evaluation, ["no-such-model", "gemma-4-e4b-q4"]) == [
-        "gemma-4-e4b-q4"
+    assert list(_unusable(evaluation, ["no-such-model", "gemma-4-e4b-q4"])) == [
+        "no-such-model"
     ]
 
 
@@ -1626,20 +1638,18 @@ def test_explicit_models_skip_a_configuration_the_latest_run_did_not_measure(
 ) -> None:
     """`--all` and `--model` bypass `resolve`, and `--all` is the path the regeneration
     after `v3` takes, so the same check has to hold there."""
-    from hip.eval_cli import _verified
+    from hip.eval_cli import _unusable
 
-    measured = [
-        _priced_generation("gemini-test", "gemini", prompt=1, output=1),
-        _priced_generation("gemma-4-e4b-q4", "gguf", prompt=1, output=1),
-    ]
+    monkeypatch.setattr("hip.eval.selection.benchmarked", _all_pass_at_default)
     monkeypatch.setattr("hip.eval.selection.latest_run", lambda: "v2")
-    monkeypatch.setattr("hip.eval.store.load_generations", lambda run: measured)
     monkeypatch.setattr(HostedRunner, "probe", lambda self, model: None)
     evaluation = _with_effort(
         _evaluation(["gemini-test", "gemma-4-e4b-q4"]), "gemini-test", "low"
     )
 
-    assert _verified(evaluation, ["gemini-test", "gemma-4-e4b-q4"]) == ["gemma-4-e4b-q4"]
+    unusable = _unusable(evaluation, ["gemini-test", "gemma-4-e4b-q4"])
+    assert list(unusable) == ["gemini-test"]
+    assert "configured as 'low'" in unusable["gemini-test"]
 
 
 def test_every_table_states_the_effort_behind_its_figures() -> None:
@@ -1868,3 +1878,297 @@ def test_the_report_names_the_judge_as_its_verdicts_record_it() -> None:
         evaluation, [_scenario()], [generation], [], [unrecorded], run="t"
     )
     assert "Graded by `claude-opus-5` against" in text
+
+
+# --- Guards before `v3`, 2026-09-11 ------------------------------------------------
+
+
+def _run_on_disk(
+    name: str, *, generations: int = 0, judged: bool = False, written_at: int = 0
+) -> None:
+    """A run directory with a scenario set and as much of a run as asked for."""
+    from hip.eval.store import (
+        GENERATIONS,
+        JUDGMENTS,
+        SCENARIOS,
+        append_record,
+        run_dir,
+        write_records,
+    )
+
+    write_records(run_dir(name) / SCENARIOS, [_scenario()])
+    generation = _priced_generation("gemini-test", "gemini", prompt=1, output=1)
+    for _ in range(generations):
+        append_record(run_dir(name) / GENERATIONS, generation)
+    if judged:
+        verdict = _judged(generation, 3.0, _evaluation(["gemini-test"]))
+        append_record(run_dir(name) / JUDGMENTS, verdict)
+    if written_at:
+        os.utime(run_dir(name), (written_at, written_at))
+
+
+def test_a_scenario_set_is_frozen_once_anything_is_generated_against_it(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Rebuilding it would leave recorded answers graded against packets they were never
+    shown — and until 2026-09-10 a bare `hip eval scenarios` did that to `v1`."""
+    from hip.eval.store import scenario_set_problem
+
+    monkeypatch.setattr("hip.eval.store.get_settings", lambda: _settings_at(tmp_path))
+    _run_on_disk("v1", generations=2)
+
+    for replace in (False, True):
+        problem = scenario_set_problem("v1", replace=replace)
+        assert problem is not None
+        assert "2 generations" in problem
+        assert "frozen" in problem
+
+
+def test_a_draft_scenario_set_is_rebuilt_only_when_asked(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from hip.eval.store import scenario_set_problem
+
+    monkeypatch.setattr("hip.eval.store.get_settings", lambda: _settings_at(tmp_path))
+    assert scenario_set_problem("v3", replace=False) is None, "a new run"
+    _run_on_disk("v3")
+
+    problem = scenario_set_problem("v3", replace=False)
+    assert problem is not None
+    assert "--replace" in problem
+    assert scenario_set_problem("v3", replace=True) is None
+
+
+def test_every_eval_command_that_touches_a_run_names_it() -> None:
+    """Each defaulted to `v1`, the oldest frozen run, until 2026-09-10."""
+    from typer.testing import CliRunner
+
+    from hip.cli import app
+
+    for command in ("scenarios", "run", "check", "judge", "report", "show", "cost"):
+        result = CliRunner().invoke(app, ["eval", command])
+        assert result.exit_code == 2, command
+        assert "--run" in result.output, command
+
+
+def test_the_benchmark_gives_models_the_payload_hip_explain_sends() -> None:
+    """`v2` measured prose from JSON packets the site never sends: its scenarios were
+    built on this command's old default, JSON, with no `--format` (#103)."""
+    import inspect
+
+    from hip.cli import explain
+    from hip.eval.explain import explain_region
+    from hip.eval.scenarios import build_scenarios
+    from hip.eval_cli import scenarios_command
+
+    def default(function: Any) -> Any:
+        return inspect.signature(function).parameters["payload_format"].default
+
+    assert default(explain) == default(explain_region) == "markdown"
+    assert default(scenarios_command) == default(build_scenarios) == "markdown"
+
+
+def test_a_run_still_in_progress_does_not_become_the_latest(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A run exists from its first file, and nothing in it can pass until it is judged.
+    As the latest it would make every model ineligible while `v3` generates and waits
+    on its batch — `hip explain` stopped for exactly as long as the benchmark ran."""
+    from hip.eval.selection import latest_run
+    from hip.eval.store import JUDGMENTS, append_record, run_dir
+
+    monkeypatch.setattr("hip.eval.store.get_settings", lambda: _settings_at(tmp_path))
+    _run_on_disk("v2", generations=1, judged=True, written_at=1_700_000_000)
+    _run_on_disk("v3", generations=1, written_at=1_700_000_100)
+    assert latest_run() == "v2"
+
+    generation = _priced_generation("gemini-test", "gemini", prompt=1, output=1)
+    verdict = _judged(generation, 3.0, _evaluation(["gemini-test"]))
+    append_record(run_dir("v3") / JUDGMENTS, verdict)
+    assert latest_run() == "v3"
+
+
+def test_explicit_models_skip_one_the_latest_run_did_not_pass(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The gap Milestone 20 left open: `--all` and `--model` checked a model's
+    configuration but never its benchmark, so an unmeasured model published through
+    them while the preference list refused it."""
+    from hip.eval_cli import _unusable
+
+    def only_gemma(evaluation: EvaluationConfig, run: str) -> dict[str, ModelSummary]:
+        return {"gemma-4-e4b-q4": _summary("gemma-4-e4b-q4", generations=15, errors=0)}
+
+    monkeypatch.setattr("hip.eval.selection.benchmarked", only_gemma)
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: "v3")
+    probed: list[str] = []
+
+    def probe(self: HostedRunner, model: CandidateModel) -> str | None:
+        probed.append(model.id)
+        return None
+
+    monkeypatch.setattr(HostedRunner, "probe", probe)
+    evaluation = _evaluation(["gemini-test", "gemma-4-e4b-q4"])
+    requested = ["gemini-test", "gemma-4-e4b-q4"]
+
+    assert _unusable(evaluation, requested) == {
+        "gemini-test": "has not passed the benchmark in run 'v3'"
+    }
+    assert probed == [], "a model the gate refuses is not worth a paid probe"
+    # `--unbenchmarked` lifts the gate and nothing else: the probe still runs.
+    assert _unusable(evaluation, requested, require_benchmark=False) == {}
+    assert probed == ["gemini-test"]
+
+
+def test_with_no_judged_run_no_explicit_model_may_publish(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from hip.eval_cli import _unusable
+
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: None)
+    unusable = _unusable(_evaluation(["gemma-4-e4b-q4"]), ["gemma-4-e4b-q4"])
+    assert "no evaluation run has been judged" in unusable["gemma-4-e4b-q4"]
+
+
+def test_the_exit_status_tells_a_scheduler_partial_from_clean() -> None:
+    from hip.eval_cli import PARTIAL, _exit_code, _Outcome
+
+    clean = {"a": _Outcome(written=20, current=1), "b": _Outcome(current=21)}
+    assert _exit_code(clean) == 0
+    assert _exit_code({"a": _Outcome(written=21), "b": _Outcome(skipped="routed")}) == (
+        PARTIAL
+    )
+    assert _exit_code({"a": _Outcome(written=20, failed=1)}) == PARTIAL
+    assert _exit_code({"a": _Outcome(skipped="routed"), "b": _Outcome(failed=21)}) == 1
+    assert PARTIAL not in (0, 1, 2), "2 is Click's usage error"
+
+
+def test_a_missing_runtime_skips_its_model_and_the_rest_still_run(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A `RunnerUnavailable` ended the whole command until 2026-09-11, taking every model
+    after the one that raised it with it."""
+    from hip.eval.runners import RunnerUnavailable
+    from hip.eval_cli import PARTIAL, _explain_each, _Outcome, _summarize
+
+    def explain_region(
+        session: Any, evaluation: Any, region_id: int, model_id: str, **_: Any
+    ) -> Any:
+        if model_id == "gemma-4-e4b-q4":
+            raise RunnerUnavailable("mlx-lm is not installed")
+        if region_id == 2:
+            raise RuntimeError("empty answer")
+        return SimpleNamespace(model_id=model_id, region_id=region_id, body="Rose.\n")
+
+    monkeypatch.setattr("hip.eval.explain.explain_region", explain_region)
+    monkeypatch.setattr("hip.eval_cli._is_fresh", lambda *args: False)
+    outcomes = {
+        "gemma-4-e4b-q4": _Outcome(),
+        "gemini-test": _Outcome(),
+        "deepseek-test": _Outcome(skipped="routed to deepseek-flash"),
+    }
+
+    _explain_each(
+        SimpleNamespace(commit=lambda: None),  # type: ignore[arg-type]
+        _evaluation(["gemini-test"]),
+        outcomes,
+        [1, 2, 3],
+        window="5y",
+        payload_format="markdown",
+        force=False,
+    )
+
+    assert outcomes["gemma-4-e4b-q4"].skipped == "mlx-lm is not installed"
+    assert (outcomes["gemini-test"].written, outcomes["gemini-test"].failed) == (2, 1)
+    assert _summarize(outcomes) == PARTIAL
+    printed = capsys.readouterr().out
+    assert "skipped: mlx-lm is not installed" in printed
+    assert "skipped: routed to deepseek-flash" in printed
+    assert printed.rstrip().endswith(
+        "2 explanations written, 1 failed, 2 of 3 model(s) skipped — partial"
+    )
+
+
+def test_all_with_no_usable_model_exits_1_without_touching_the_warehouse(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import typer
+
+    from hip.eval_cli import explain_command
+
+    def forbidden() -> None:
+        raise AssertionError("opened the warehouse with nothing to generate")
+
+    evaluation = _evaluation(["gemini-test", "gemma-4-e4b-q4"])
+    monkeypatch.setattr("hip.eval_cli.load_evaluation", lambda: evaluation)
+    monkeypatch.setattr("hip.eval_cli.get_engine", forbidden)
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: None)
+
+    with pytest.raises(typer.Exit) as exited:
+        explain_command(None, None, "5y", "county", "markdown", None, all_models=True)
+    assert exited.value.exit_code == 1
+
+
+def _with_candidate(
+    evaluation: EvaluationConfig, cohort: str, candidate: CandidateModel
+) -> EvaluationConfig:
+    cohorts = dict(evaluation.cohorts)
+    cohorts[cohort] = cohorts[cohort].model_copy(
+        update={"models": [*cohorts[cohort].models, candidate]}
+    )
+    return evaluation.model_copy(update={"cohorts": cohorts})
+
+
+def test_the_report_says_when_deepseek_ignored_the_pinned_temperature() -> None:
+    """DeepSeek ignores temperature while its models reason, so `v3`'s two DeepSeek rows
+    differ in sampling as well as in reasoning — which no table can show (#104)."""
+    nothink = CandidateModel(
+        id="deepseek-nothink",
+        ref="pinned-model-0731",
+        label="deepseek nothink",
+        quantization="hosted",
+        reasoning_effort="disabled",
+        input_usd_per_mtok=0.25,
+        output_usd_per_mtok=1.5,
+    )
+    evaluation = _with_candidate(_evaluation(["deepseek-test"]), "deepseek", nothink)
+    thinking = _priced_generation("deepseek-test", "deepseek", prompt=100, output=40)
+    thinking = thinking.model_copy(
+        update={
+            "telemetry": thinking.telemetry.model_copy(update={"reasoning_tokens": 30})
+        }
+    )
+    silent = _priced_generation("deepseek-nothink", "deepseek", prompt=100, output=40)
+    silent = silent.model_copy(update={"reasoning_effort": "disabled"})
+
+    text = render_report(evaluation, [_scenario()], [thinking, silent], [], [], run="t")
+    assert "**Every candidate was sent temperature 0.0**" in text
+    assert "so **deepseek test** was sampled at DeepSeek's own setting" in text
+    assert "Set beside **deepseek nothink**, which did not reason" in text
+
+
+def test_the_report_says_gemini_3_ran_below_googles_recommended_temperature() -> None:
+    evaluation = _evaluation(["gemini-test"])
+    gemini = evaluation.cohorts["gemini"]
+    gemini_3 = gemini.models[0].model_copy(update={"ref": "gemini-3.7-flash"})
+    evaluation = evaluation.model_copy(
+        update={
+            "cohorts": {
+                **evaluation.cohorts,
+                "gemini": gemini.model_copy(update={"models": [gemini_3]}),
+            }
+        }
+    )
+    generation = _priced_generation("gemini-test", "gemini", prompt=1, output=1)
+
+    text = render_report(evaluation, [_scenario()], [generation], [], [], run="t")
+    assert "Google recommends temperature 1.0 for Gemini 3" in text
+    assert "**gemini test** was held to the same setting regardless" in text
+
+
+def test_a_run_the_pinned_temperature_fully_controls_carries_no_sampling_note() -> None:
+    """`v1` — local models only — renders as it did before the note existed."""
+    evaluation = _evaluation(["gemma-4-e4b-q4"])
+    generation = _priced_generation("gemma-4-e4b-q4", "gguf", prompt=1, output=1)
+    text = render_report(evaluation, [_scenario()], [generation], [], [], run="t")
+    assert "temperature" not in text

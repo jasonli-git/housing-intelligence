@@ -35,13 +35,17 @@ setup-eval:  ## Also install the optional mlx + eval groups (Milestone 8, Apple 
 	uv sync --group dev --group dbt --group mlx --group eval
 	$(MAKE) venv-fix
 
-eval:  ## Full evaluation: scenarios -> run -> judge -> report (hours; judging costs money)
+eval:  ## Full evaluation into a new run: make eval RUN=v3 (hours; hosted models and judging are billed)
 	@# Split into four commands rather than one because the stages have very different
 	@# costs: generation is hours of local inference and resumable, judging is billed.
-	uv run hip eval scenarios
-	uv run hip eval run
-	uv run hip eval judge
-	uv run hip eval report
+	@# RUN has no default. Every earlier run is frozen, and a default of `v1` is how the
+	@# bare commands could rewrite it (ARCHITECTURE #103). `hip eval run` without
+	@# --model runs every declared candidate; run the stages by hand to name fewer.
+	@test -n "$(RUN)" || { echo "usage: make eval RUN=<new run name>" >&2; exit 2; }
+	uv run hip eval scenarios --run $(RUN)
+	uv run hip eval run --run $(RUN)
+	uv run hip eval judge --run $(RUN)
+	uv run hip eval report --run $(RUN)
 
 data-dirs:  ## Create the storage tiers wherever the config points them
 	@.venv/bin/python -c "\

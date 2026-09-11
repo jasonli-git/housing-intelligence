@@ -373,7 +373,9 @@ Version 2 table above. What remains unscheduled:
   a monthly cadence. Deferred because a manual run is honest at one state and
   misleading only at scale. (Earlier versions of this list said `hip refresh`; no such
   command exists — the eight stages are invoked individually or through
-  `make pipeline`.)
+  `make pipeline`.) Its prose step already reports what alerting needs: `hip explain`
+  exits 0, 3 or 1 for all, some or none of the requested prose current, and the numbers
+  should deploy whichever it is (ARCHITECTURE #102).
 - **Parcel-level API endpoints and a parcel map layer**, which need the parcel geometry
   Milestone 7 deliberately did not download
 - **MOD-IV equalization ratios** so assessed values approximate market values

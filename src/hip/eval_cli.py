@@ -11,6 +11,7 @@ than an ImportError at startup.
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Annotated
 
 import typer
@@ -36,21 +37,50 @@ def _run_dir(run: str) -> object:
     return run_dir(run)
 
 
+# Every `hip eval` command names its run. Until 2026-09-10 each defaulted to `v1`, the
+# oldest frozen run, so a bare command from README's list rewrote `v1`'s scenario set,
+# appended new candidates to its generations, or billed a batch to judge them (#103).
+_RUN_HELP = "Run name under data/eval/."
+
+
 @app.command("scenarios")
 def scenarios_command(
-    run: Annotated[str, typer.Option("--run", help="Run name under data/eval/.")] = "v1",
+    run: Annotated[str, typer.Option("--run", help=_RUN_HELP)],
     window: Annotated[str, typer.Option("--window")] = "5y",
     level: Annotated[str, typer.Option("--level")] = "county",
     regions: Annotated[
         int, typer.Option("--regions", help="How many packets to sample.")
     ] = 3,
     payload_format: Annotated[
-        str, typer.Option("--format", help="Packet payload: json | markdown.")
-    ] = "json",
+        str,
+        typer.Option(
+            "--format",
+            help="Packet payload: markdown (what `hip explain` sends) | json.",
+        ),
+    ] = "markdown",
+    replace: Annotated[
+        bool,
+        typer.Option(
+            "--replace",
+            help="Rebuild a run's scenario set. Refused once anything has been "
+            "generated against it.",
+        ),
+    ] = False,
 ) -> None:
-    """Build the scenario set and write it to data/eval/<run>/scenarios.jsonl."""
+    """Build the scenario set and write it to data/eval/<run>/scenarios.jsonl.
+
+    Markdown by default, because it is what `hip explain` gives a model: a benchmark on
+    any other payload measures prose the site never publishes. `v2` was built on the
+    JSON default this replaced (#103).
+    """
     from hip.eval.scenarios import build_scenarios
-    from hip.eval.store import SCENARIOS, run_dir, write_records
+    from hip.eval.store import SCENARIOS, run_dir, scenario_set_problem, write_records
+
+    # Before the packets are built, so a refusal costs nothing.
+    problem = scenario_set_problem(run, replace=replace)
+    if problem:
+        typer.secho(problem, fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
 
     evaluation = load_evaluation()
     with Session(get_engine()) as session:
@@ -84,7 +114,7 @@ def scenarios_command(
 
 @app.command("run")
 def run_command(
-    run: Annotated[str, typer.Option("--run")] = "v1",
+    run: Annotated[str, typer.Option("--run", help=_RUN_HELP)],
     mode: Annotated[
         str, typer.Option("--mode", help="deterministic | stability.")
     ] = "deterministic",
@@ -189,7 +219,7 @@ def run_command(
 
 @app.command("check")
 def check_command(
-    run: Annotated[str, typer.Option("--run")] = "v1",
+    run: Annotated[str, typer.Option("--run", help=_RUN_HELP)],
 ) -> None:
     """Recompute deterministic checks for every generation in a run.
 
@@ -244,7 +274,7 @@ def check_command(
 
 @app.command("judge")
 def judge_command(
-    run: Annotated[str, typer.Option("--run")] = "v1",
+    run: Annotated[str, typer.Option("--run", help=_RUN_HELP)],
     sync: Annotated[
         bool, typer.Option("--sync", help="Messages API instead of Batch (full price).")
     ] = False,
@@ -358,7 +388,7 @@ def _report_billed(judgments: list[Judgment], evaluation: EvaluationConfig) -> N
 
 @app.command("report")
 def report_command(
-    run: Annotated[str, typer.Option("--run")] = "v1",
+    run: Annotated[str, typer.Option("--run", help=_RUN_HELP)],
     out: Annotated[
         str | None, typer.Option("--out", help="Write here instead of reports/.")
     ] = None,
@@ -476,7 +506,7 @@ def models_command(
 
 @app.command("show")
 def show_command(
-    run: Annotated[str, typer.Option("--run")] = "v1",
+    run: Annotated[str, typer.Option("--run", help=_RUN_HELP)],
     model: Annotated[str | None, typer.Option("--model")] = None,
     scenario: Annotated[str | None, typer.Option("--scenario")] = None,
 ) -> None:
@@ -506,6 +536,78 @@ def show_command(
             )
 
 
+# `hip explain` exits 0 when every requested model's prose is current, PARTIAL when some
+# is but a model was skipped or a region failed, and 1 when none is. A scheduled refresh
+# should deploy on any of them — prose that was not rewritten stays up, and the site
+# labels it stale — and alert on anything but 0 (#102). Not 2: Click exits 2 on a usage
+# error, and a typo in a cron line should not read as a partial run.
+PARTIAL = 3
+
+
+@dataclass
+class _Outcome:
+    """What one requested model came to, for the closing summary and the exit code."""
+
+    written: int = 0
+    current: int = 0
+    failed: int = 0
+    # Why the model could not be used at all, when it could not.
+    skipped: str | None = None
+
+    def line(self, model_id: str) -> str:
+        done = ", ".join(
+            f"{count} {what}"
+            for count, what in (
+                (self.written, "written"),
+                (self.current, "already current"),
+                (self.failed, "failed"),
+            )
+            if count
+        )
+        if self.skipped:
+            done = (f"{done}, then " if done else "") + f"skipped: {self.skipped}"
+        return f"  {model_id:<24}{done}"
+
+
+def _exit_code(outcomes: dict[str, _Outcome]) -> int:
+    """0, `PARTIAL` or 1, as defined beside `PARTIAL`."""
+    if not any(outcome.written or outcome.current for outcome in outcomes.values()):
+        return 1
+    if any(outcome.skipped or outcome.failed for outcome in outcomes.values()):
+        return PARTIAL
+    return 0
+
+
+def _summarize(outcomes: dict[str, _Outcome]) -> int:
+    """Print what every requested model came to, and return the exit code it means.
+
+    One block at the end, because a skip announced as it happens scrolls away under a
+    hundred lines of generation output, and the last lines are the ones a log is read by.
+    """
+    code = _exit_code(outcomes)
+    for model_id, outcome in outcomes.items():
+        typer.secho(
+            outcome.line(model_id),
+            fg=typer.colors.YELLOW if outcome.skipped or outcome.failed else None,
+        )
+    written = sum(outcome.written for outcome in outcomes.values())
+    current = sum(outcome.current for outcome in outcomes.values())
+    failed = sum(outcome.failed for outcome in outcomes.values())
+    skipped = sum(1 for outcome in outcomes.values() if outcome.skipped)
+    total = f"{written} explanations written"
+    if current:
+        total += f", {current} already current (--force to regenerate)"
+    if failed:
+        total += f", {failed} failed"
+    if skipped:
+        total += f", {skipped} of {len(outcomes)} model(s) skipped"
+    if code:
+        total += " — partial" if code == PARTIAL else " — nothing current"
+    colour = {0: typer.colors.GREEN, PARTIAL: typer.colors.YELLOW}.get(code)
+    typer.secho(total, fg=colour or typer.colors.RED)
+    return code
+
+
 def explain_command(
     region: int | None,
     model_id: list[str] | None,
@@ -518,8 +620,6 @@ def explain_command(
     all_models: bool = False,
 ) -> None:
     """Body of `hip explain`, registered on the root app in cli.py."""
-    from hip.eval.explain import explain_region
-    from hip.eval.runners import RunnerUnavailable
     from hip.eval.selection import NoModelAvailable, resolve
     from hip.packets import regions_for_level
 
@@ -551,25 +651,27 @@ def explain_command(
         typer.echo(f"using {resolution.model_id} ({resolution.runtime})")
         for passed_over, why in resolution.skipped:
             typer.secho(f"  skipped {passed_over}: {why}", fg=typer.colors.YELLOW)
-        if unbenchmarked:
-            typer.secho(
-                "  --unbenchmarked: the benchmark gate is off, so this model may not "
-                "have been measured on the evaluation scenarios",
-                fg=typer.colors.YELLOW,
-            )
+    if unbenchmarked:
+        typer.secho(
+            "  --unbenchmarked: the benchmark gate is off, so prose may come from a "
+            "model the evaluation has not passed",
+            fg=typer.colors.YELLOW,
+        )
 
-    # Explicit models skip `resolve`, so they are verified here instead: one probe per
-    # hosted model up front, rather than learning about a routed pin from 21 paid
-    # failures that all say the same thing.
+    # One outcome per requested model. Tiers `resolve` passed over are not among them:
+    # falling through the list is the list working, where a model someone asked for by
+    # name, or by `--all`, that cannot be used is something to report.
+    outcomes = {candidate: _Outcome() for candidate in models}
+
+    # Explicit models skip `resolve`, so they are checked here instead: the same
+    # benchmark gate, then one probe per hosted model up front rather than learning
+    # about a routed pin from 21 paid failures that all say the same thing.
     if all_models or model_id:
-        models = _verified(evaluation, models)
-        if not models:
-            typer.secho(
-                "no requested model can be reached or attributed; nothing generated",
-                fg=typer.colors.RED,
-                err=True,
-            )
-            raise typer.Exit(code=1)
+        unusable = _unusable(evaluation, models, require_benchmark=not unbenchmarked)
+        for candidate, why in unusable.items():
+            outcomes[candidate].skipped = why
+        if len(unusable) == len(outcomes):
+            raise typer.Exit(code=_summarize(outcomes))
 
     with Session(get_engine()) as session:
         region_ids = (
@@ -584,59 +686,89 @@ def explain_command(
                 err=True,
             )
             raise typer.Exit(code=1)
+        _explain_each(
+            session,
+            evaluation,
+            outcomes,
+            region_ids,
+            window=window,
+            payload_format=payload_format,
+            force=force,
+        )
 
-        written = 0
-        fresh = 0
-        failed = 0
-        for candidate in models:
-            for region_id in region_ids:
-                # Skip work whose stored prose was written from these exact numbers.
-                # Keyed on the model as well as the region since migration 0010, so a
-                # partial `--all` run resumes rather than restarting. `is_stale` existed
-                # from Milestone 8 and was used only by the API; this command
-                # regenerated everything unconditionally, which was the entire cost
-                # argument at national scale, and only became meaningful once #73, #77
-                # and #88 stopped the packet hash moving on every run.
-                if not force and _is_fresh(session, region_id, window, candidate):
-                    fresh += 1
-                    continue
-                try:
-                    explanation = explain_region(
-                        session,
-                        evaluation,
-                        region_id,
-                        candidate,
-                        window=window,
-                        payload_format=payload_format,
-                    )
-                except RunnerUnavailable as exc:
-                    typer.secho(str(exc), fg=typer.colors.RED, err=True)
-                    raise typer.Exit(code=1) from exc
-                except (RuntimeError, ValueError) as exc:
-                    # One model failing must not lose the others: with `--all` this is
-                    # five models over 21 regions, and aborting on the first would throw
-                    # away every generation already paid for.
-                    typer.secho(
-                        f"skipped {candidate}/{region_id}: {exc}",
-                        fg=typer.colors.YELLOW,
-                        err=True,
-                    )
-                    failed += 1
-                    continue
-                session.commit()
-                written += 1
-                typer.echo(
-                    f"{explanation.model_id:<22}{explanation.region_id:>5}  "
-                    f"{len(explanation.body):>5} chars  "
-                    f"{explanation.body.splitlines()[0][:52]}..."
+    code = _summarize(outcomes)
+    if code:
+        raise typer.Exit(code=code)
+
+
+def _explain_each(
+    session: Session,
+    evaluation: EvaluationConfig,
+    outcomes: dict[str, _Outcome],
+    region_ids: list[int],
+    *,
+    window: str,
+    payload_format: str,
+    force: bool,
+) -> None:
+    """Generate for every usable model and region, recording each result in `outcomes`.
+
+    Nothing here ends the command. One model failing must not lose the others: with
+    `--all` this is five models over 21 regions, and aborting on the first would throw
+    away every generation already paid for. That held for a failed region before
+    2026-09-11 but not for a missing runtime, which ended the run for every model after
+    it.
+    """
+    from hip.eval.explain import explain_region
+    from hip.eval.runners import RunnerUnavailable
+
+    for candidate, outcome in outcomes.items():
+        if outcome.skipped:
+            continue
+        for region_id in region_ids:
+            # Skip work whose stored prose was written from these exact numbers. Keyed
+            # on the model as well as the region since migration 0010, so a partial
+            # `--all` run resumes rather than restarting. `is_stale` existed from
+            # Milestone 8 and was used only by the API; this command regenerated
+            # everything unconditionally, which was the entire cost argument at national
+            # scale, and only became meaningful once #73, #77 and #88 stopped the packet
+            # hash moving on every run.
+            if not force and _is_fresh(session, region_id, window, candidate):
+                outcome.current += 1
+                continue
+            try:
+                explanation = explain_region(
+                    session,
+                    evaluation,
+                    region_id,
+                    candidate,
+                    window=window,
+                    payload_format=payload_format,
                 )
-
-    summary = f"{written} explanations written by {len(models)} model(s)"
-    if fresh:
-        summary += f", {fresh} already current (--force to regenerate)"
-    if failed:
-        summary += f", {failed} failed"
-    typer.secho(summary, fg=typer.colors.RED if failed else typer.colors.GREEN)
+            except RunnerUnavailable as exc:
+                # The runtime itself is missing — a local runtime not installed, a key
+                # not set — so every remaining region would fail the same way. Skipped
+                # like a model that failed its checks, and the models after it still run.
+                outcome.skipped = str(exc)
+                typer.secho(
+                    f"  skipping {candidate}: {exc}", fg=typer.colors.YELLOW, err=True
+                )
+                break
+            except (RuntimeError, ValueError) as exc:
+                typer.secho(
+                    f"skipped {candidate}/{region_id}: {exc}",
+                    fg=typer.colors.YELLOW,
+                    err=True,
+                )
+                outcome.failed += 1
+                continue
+            session.commit()
+            outcome.written += 1
+            typer.echo(
+                f"{explanation.model_id:<22}{explanation.region_id:>5}  "
+                f"{len(explanation.body):>5} chars  "
+                f"{explanation.body.splitlines()[0][:52]}..."
+            )
 
 
 def _is_fresh(session: Session, region_id: int, window: str, model_id: str) -> bool:
@@ -659,57 +791,59 @@ def _is_fresh(session: Session, region_id: int, window: str, model_id: str) -> b
     return not is_stale(session, region_id, window, packet, model_id)
 
 
-def _verified(evaluation: EvaluationConfig, models: list[str]) -> list[str]:
-    """The requested models that can be reached, are answered by themselves, and are
-    configured as the latest run measured them.
+def _unusable(
+    evaluation: EvaluationConfig, models: list[str], *, require_benchmark: bool = True
+) -> dict[str, str]:
+    """The requested models that may not publish, each with the reason.
 
-    One probe per hosted model. Without it a routed pin fails every region separately,
-    paying for each call to learn the same fact. Local models are not probed: they run
-    the weights on disk, so there is nothing a provider could substitute.
+    `--all` and `--model` skip `resolve`, so its checks are applied here. First the
+    benchmark gate — passed in the latest judged run, and configured as that run measured
+    it (#102) — unless `--unbenchmarked` lifts it. Until 2026-09-11 these flags checked
+    the configuration but never the benchmark, so a model no run had measured published
+    through them.
 
-    `--all` and `--model` skip `resolve`, so its configuration check is repeated here: a
-    model whose reasoning effort differs from the one the latest run measured is skipped,
-    since prose under its id would come from a configuration nobody measured. A model
-    the run never measured passes — these flags have never required a benchmark, which
-    is a separate gap.
+    Then one probe per hosted model. Without it a routed pin fails every region
+    separately, paying for each call to learn the same fact. Local models are not
+    probed: they run the weights on disk, so there is nothing a provider could
+    substitute.
     """
-    from hip.eval.report import measured_efforts
-    from hip.eval.runners import HostedRunner, build_runner
-    from hip.eval.selection import configuration_drift, latest_run
-    from hip.eval.store import load_generations
+    from hip.eval.runners import HostedRunner, RunnerUnavailable, build_runner
+    from hip.eval.selection import benchmark_problem, benchmarked, latest_run
 
-    run = latest_run()
-    measured = measured_efforts(load_generations(run)) if run else {}
-    kept: list[str] = []
+    run = latest_run() if require_benchmark else None
+    eligible = benchmarked(evaluation, run) if run else {}
+    unusable: dict[str, str] = {}
+
+    def skip(model_id: str, why: str) -> None:
+        unusable[model_id] = why
+        typer.secho(f"  skipping {model_id}: {why}", fg=typer.colors.YELLOW, err=True)
+
     for model_id in models:
         try:
             cohort_name = evaluation.cohort_of(model_id)
         except ConfigError as exc:
-            typer.secho(f"  skipping {model_id}: {exc}", fg=typer.colors.YELLOW, err=True)
+            skip(model_id, str(exc))
             continue
-        drift = configuration_drift(
-            evaluation.model(model_id), measured.get(model_id, set()), run
-        )
-        if drift:
-            typer.secho(
-                f"  skipping {model_id}: {drift}", fg=typer.colors.YELLOW, err=True
-            )
+        if require_benchmark:
+            problem = benchmark_problem(evaluation, model_id, run, eligible)
+            if problem:
+                skip(model_id, problem)
+                continue
+        try:
+            runner = build_runner(evaluation.cohorts[cohort_name], cohort_name)
+        except RunnerUnavailable as exc:
+            skip(model_id, str(exc))
             continue
-        runner = build_runner(evaluation.cohorts[cohort_name], cohort_name)
         if isinstance(runner, HostedRunner):
             failure = runner.probe(evaluation.model(model_id))
             if failure:
-                typer.secho(
-                    f"  skipping {model_id}: {failure}", fg=typer.colors.YELLOW, err=True
-                )
-                continue
-        kept.append(model_id)
-    return kept
+                skip(model_id, failure)
+    return unusable
 
 
 @app.command("cost")
 def cost_command(
-    run: Annotated[str, typer.Option("--run")] = "v1",
+    run: Annotated[str, typer.Option("--run", help=_RUN_HELP)],
 ) -> None:
     """Estimate what judging this run costs, without spending anything.
 

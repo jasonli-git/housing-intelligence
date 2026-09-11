@@ -89,13 +89,52 @@ def load_judgments(run: str) -> list[Judgment]:
     return read_records(run_dir(run) / JUDGMENTS, Judgment)
 
 
+def _records_in(path: Path) -> int:
+    """How many records a JSONL file holds, without parsing them."""
+    if not path.exists():
+        return 0
+    with path.open() as handle:
+        return sum(1 for line in handle if line.strip())
+
+
+def has_judgments(run: str) -> bool:
+    """Whether any verdict has been recorded for `run`."""
+    return _records_in(run_dir(run) / JUDGMENTS) > 0
+
+
+def scenario_set_problem(run: str, *, replace: bool) -> str | None:
+    """Why `hip eval scenarios` may not write `run`'s scenario set, or None if it may.
+
+    A scenario set is the exact bytes every model in a run was given, so it is frozen
+    once anything has been generated against it: rebuilding it would leave recorded
+    answers checked and graded against packets they were never shown. Before that it is
+    a draft, and `--replace` may rebuild it — but never by default. Until 2026-09-10 the
+    command replaced any existing set without asking, while every `hip eval` command
+    defaulted to `--run v1`, so README's bare commands would have rewritten `v1` (#103).
+    """
+    if not (run_dir(run) / SCENARIOS).exists():
+        return None
+    recorded = _records_in(run_dir(run) / GENERATIONS)
+    if recorded:
+        return (
+            f"run '{run}' has {recorded:,} generations measured against its scenario "
+            "set, which is therefore frozen — build a new run under another --run name"
+        )
+    if not replace:
+        return (
+            f"run '{run}' already has a scenario set. Nothing has been generated against "
+            "it yet, so --replace may rebuild it"
+        )
+    return None
+
+
 def runs() -> Iterator[str]:
     """Existing run names, most recently written last.
 
-    Ordered by modification time rather than by name. `hip explain` takes the last
-    entry as "the most recent evaluation", and a lexical sort puts `v10` before `v2` —
-    which would silently generate the whole site's prose with an older run's winner.
-    The name is a label; the filesystem knows which run actually happened last.
+    Ordered by modification time rather than by name. `selection.latest_run` takes the
+    last judged entry as "the most recent evaluation", and a lexical sort puts `v10`
+    before `v2` — which would silently generate the whole site's prose with an older
+    run's winner. The name is a label; the filesystem knows which run happened last.
     """
     root = eval_dir()
     if not root.exists():

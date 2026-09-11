@@ -5,7 +5,7 @@ performance on the housing task rather than from benchmark reputation. So the re
 leads with the selection and its evidence, and every table under it is something a
 reader can check against the artifacts in the run directory.
 
-Two rules shape the layout:
+Three rules shape the layout:
 
 - The anchor comparison comes first. Picking a winner across two cohorts is a
   cross-runtime comparison whether or not it is framed as one, and the matched 4-bit
@@ -312,6 +312,106 @@ def _effort_note(priced: list[ModelSummary]) -> str:
     )
 
 
+# How providers treat the one temperature the harness sends every candidate (#104), for
+# `_sampling_note` to state beside the candidates it touches. Documented behaviour, not
+# measured — no response says whether a temperature was honoured — so the note repeats
+# what each provider documents, and the run supplies only which candidates it touched.
+#
+# Providers that ignore temperature while a model reasons, keyed by `Cohort.provider`,
+# with the name the report prints.
+_IGNORES_TEMPERATURE_WHILE_REASONING = {"deepseek": "DeepSeek"}
+# Google recommends 1.0 for its Gemini 3 models and warns that lower values can cause
+# looping. Matched on the ref, because the guidance is for a family of models rather
+# than for everything the provider serves.
+_GEMINI_3_REF = "gemini-3"
+_GEMINI_3_TEMPERATURE = 1.0
+
+
+def _names(summaries: list[ModelSummary]) -> str:
+    labels = [f"**{summary.label}**" for summary in summaries]
+    return ", ".join(labels[:-1]) + " and " + labels[-1] if len(labels) > 1 else labels[0]
+
+
+def _temperature(value: float) -> str:
+    """0.0 rather than 0, which reads as a count rather than a setting."""
+    return f"{value:.1f}" if round(value, 1) == value else f"{value:g}"
+
+
+def _sampling_note(
+    evaluation: EvaluationConfig,
+    summaries: dict[str, ModelSummary],
+    generations: list[Generation],
+) -> str | None:
+    """What the pinned temperature did not control, or None where it controlled it all.
+
+    Every candidate is sent one sampling setting, so that no row is sampled differently
+    from the rest (#104), and two providers depart from it: DeepSeek ignores temperature
+    while its models reason — so a reasoning and a non-reasoning DeepSeek row differ in
+    sampling as well as in reasoning — and Google recommends 1.0 for Gemini 3. Derived
+    from the run: the temperature from the sampling mode each generation records, and
+    reasoning from its token counts. A run neither provider is in, like `v1`, renders
+    as it always has.
+
+    The temperature for a mode is read from config when the report renders, the same
+    hazard as the rates: nothing on a generation records the value it was sent.
+    """
+    profiles = {
+        "deterministic": evaluation.sampling.deterministic,
+        "stability": evaluation.sampling.stability,
+    }
+    sent: dict[str, set[float]] = defaultdict(set)
+    for generation in generations:
+        if generation.mode in profiles:
+            sent[generation.model_id].add(profiles[generation.mode].temperature)
+
+    reasoned: dict[str, list[ModelSummary]] = defaultdict(list)
+    held: dict[str, list[ModelSummary]] = defaultdict(list)
+    advised: list[ModelSummary] = []
+    for summary in sorted(summaries.values(), key=lambda s: s.label):
+        provider = evaluation.cohorts[evaluation.cohort_of(summary.model_id)].provider
+        if provider is not None and provider in _IGNORES_TEMPERATURE_WHILE_REASONING:
+            (reasoned if summary.reasoning_tokens else held)[provider].append(summary)
+        if evaluation.model(summary.model_id).ref.startswith(_GEMINI_3_REF) and any(
+            value < _GEMINI_3_TEMPERATURE for value in sent[summary.model_id]
+        ):
+            advised.append(summary)
+
+    sentences: list[str] = []
+    for ignoring, reasoning in reasoned.items():
+        vendor = _IGNORES_TEMPERATURE_WHILE_REASONING[ignoring]
+        sentence = (
+            f"{vendor} ignores temperature while its models reason, so "
+            f"{_names(reasoning)} {'was' if len(reasoning) == 1 else 'were'} sampled at "
+            f"{vendor}'s own setting rather than the one sent."
+        )
+        if held[ignoring]:
+            sentence += (
+                f" Set beside {_names(held[ignoring])}, which did not reason, the "
+                "difference is one of sampling as well as of reasoning."
+            )
+        sentences.append(sentence)
+    if advised:
+        sentences.append(
+            f"Google recommends temperature {_temperature(_GEMINI_3_TEMPERATURE)} for "
+            f"Gemini 3 and warns that lower values can cause looping; {_names(advised)} "
+            f"{'was' if len(advised) == 1 else 'were'} held to the same setting "
+            "regardless."
+        )
+    temperatures = sorted(set().union(*sent.values()))
+    if not sentences or not temperatures:
+        return None
+
+    lead = (
+        f"**Every candidate was sent temperature {_temperature(temperatures[0])}**, so "
+        "that no row is sampled differently from the rest."
+        if len(temperatures) == 1
+        else "**Candidates were sent temperature "
+        + " or ".join(_temperature(value) for value in temperatures)
+        + ", by sampling mode.**"
+    )
+    return " ".join([lead, *sentences])
+
+
 # A model may fail this share of its generations and still be recommended. Stated as a
 # rate rather than as an absolute zero because the two runtimes fail differently: an
 # error from a local runtime means the model genuinely could not run, while a hosted
@@ -380,6 +480,12 @@ def render_report(
         f"({', '.join(regions)}), payload format {', '.join(formats)}.",
         "",
     ]
+
+    # Beside the payload format, because both describe what every row was given: a
+    # comparison between two rows is only as clean as the settings they shared.
+    sampling = _sampling_note(evaluation, summaries, generations)
+    if sampling:
+        lines += [sampling, ""]
 
     if not judged:
         lines += [

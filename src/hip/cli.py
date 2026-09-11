@@ -781,8 +781,9 @@ def explain(
         bool,
         typer.Option(
             "--unbenchmarked",
-            help="Allow a candidate that has not passed the evaluation. Bootstrap "
-            "only — it publishes prose from an unmeasured model.",
+            help="Allow a candidate that has not passed the evaluation, on every path "
+            "— --all and --model included. Bootstrap only: it publishes prose from an "
+            "unmeasured model.",
         ),
     ] = False,
     all_models: Annotated[
@@ -790,7 +791,8 @@ def explain(
         typer.Option(
             "--all",
             help="Generate one explanation per model in the preference list, so a "
-            "reader can compare how each reads the same packet.",
+            "reader can compare how each reads the same packet. A model that cannot "
+            "be used is skipped, and the closing summary says why.",
         ),
     ] = False,
 ) -> None:
@@ -808,6 +810,12 @@ def explain(
     from the first reachable candidate, which is what the dashboard's model comparison
     is built from (Milestone 19). Staleness is tracked per region *and* model, so a
     partial run resumes rather than restarting.
+
+    Every path publishes only from a model that passed the latest judged run, as it is
+    configured now; `--unbenchmarked` is the only way past that (ARCHITECTURE #102). A
+    model that cannot be used is skipped rather than fatal, and the run ends with what
+    each requested model came to. Exit status: 0 when every requested model's prose is
+    current, 3 when some is but something was skipped or failed, 1 when none is.
     """
     explain_command(
         region,
