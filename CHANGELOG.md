@@ -3,6 +3,39 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.12.4] — 2026-09-10
+
+Preparation for run `v3`, and an audit of ARCHITECTURE.md against the code. Not a
+milestone; Milestone 21 has not started.
+
+### Changed
+- **The judge grades at effort `high`, with `max_tokens` raised from 3,000 to 16,000**
+  (#101). `v1` and `v2` were graded at `medium`; `v3` is the run boundary to change it
+  at, since new packets already make it incomparable with `v2`. The ceiling rose because
+  thinking and the verdict share it — at `high`, 3,000 would cut verdicts off mid-JSON —
+  and headroom costs nothing unless it is used.
+- **`hip eval cost` quotes output per verdict by effort** — 5,000 tokens at `high`, a
+  planning figure — and prints the effort and the assumption beside the quote. It used
+  to assume `medium`'s 2,000 whatever the effort.
+- The evaluation report names the judge from its verdicts, model and effort, rather than
+  from today's config. `v1` and `v2` render exactly as before.
+
+### Added
+- **Every verdict records `judge_effort`, `input_tokens` and `output_tokens`** — including
+  one cut off after it arrived, because it was paid for — and `hip eval judge` prints what
+  the batch was billed. `v2`'s $4.15 was only ever the quote.
+
+### Fixed
+- **ARCHITECTURE.md described behaviour the code does not have**, in eight places:
+  `acquire` isolating sources (one failure stops the rest), `load` rolling back one
+  source (it commits all or none), a failed `analyze` emptying the derived tables (it
+  keeps the previous ones), a read-only database role (the API connects as the
+  pipeline's own), "nothing imports `api`" (`hip/publish.py` does, by design), "no AI
+  layer", area-weighted ZIP allocation (HUD weights since Milestone 9), and provenance on
+  every response (`/rankings` and `/compare` carry none). The API table gains the three
+  endpoints it omitted, the schema sketch was regenerated from the live tables, and the
+  status block, system shape, module layout and figures now describe 2026-09-10.
+
 ## [0.12.3] — 2026-09-10
 
 Milestone 20. How hard a model thinks becomes part of its configuration instead of a

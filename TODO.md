@@ -55,24 +55,43 @@ explanations were written by the real V4 Pro and stay correctly attributed until
 - [ ] **A new run, not an extension of `v2`.** 21 changes every packet and `v2`'s scenarios
       are frozen from the old ones, so extending it would measure models against data
       the site no longer shows. `hip eval scenarios --run v3`, then
-      `hip eval run --run v3 --model ...` once per candidate below
-- [ ] **Candidates, seven or eight:** `gemini-3.7-flash`, `gemini-3.1-flash-lite`,
-      `mistral-small-4`, `deepseek-flash`, `gemma-4-e4b-q4`, and Milestone 20's two
-      lower-effort variants, `deepseek-flash-nothink` and `gemini-3.7-flash-low`.
-      **Exclude**
-      `deepseek-v4-flash` (already routed; the guard fails it) and `deepseek-v4-pro`
-      (routed from 2026-09-14). **Consider dropping** `mistral-large-3`: last in `v2` at
-      2.68, not on the preference list, and 15 fewer judgments
+      `hip eval run --run v3` with every candidate below named
+- [ ] **Candidates, seven — decided 2026-09-10:** `gemini-3.7-flash`,
+      `gemini-3.7-flash-low`, `gemini-3.1-flash-lite`, `mistral-small-4`,
+      `deepseek-flash`, `deepseek-flash-nothink`, and `gemma-4-e4b-q4`: 105 generations
+      and 105 judgments. **Excluded:** `deepseek-v4-flash` (already routed; the guard
+      fails it), `deepseek-v4-pro` (routed from 2026-09-14), and `mistral-large-3` (last
+      in `v2` at 2.68 and not on the preference list). Every model meant for the list
+      afterwards has to be here, because `hip explain` checks eligibility against the
+      latest run only. Name them — a bare `hip eval run --run v3` runs all 17 declared
+      candidates, including the retired DeepSeek pins and seven old local models:
+
+      ```
+      hip eval run --run v3 --model gemini-3.7-flash --model gemini-3.7-flash-low \
+        --model gemini-3.1-flash-lite --model mistral-small-4 --model deepseek-flash \
+        --model deepseek-flash-nothink --model gemma-4-e4b-q4
+      ```
 - [ ] **Decide how `v3` treats sampling for thinking models, before running it.**
       DeepSeek ignores temperature in thinking mode, so `deepseek-flash` against
       `deepseek-flash-nothink` varies sampling as well as thinking; and Google recommends
       temperature 1.0 for Gemini 3 where the harness pins 0.0. Either accept both and say
-      so in the report, or change the design first — see the Milestone 20 notes
+      so in the report, or change the design first — see the Milestone 20 notes.
+      Recommended 2026-09-10, not yet decided: keep 0.0 — `v2` showed no looping from
+      Gemini at 0.0, and one sampling setting for every candidate is what makes the table
+      a comparison
+- [ ] **Decide the payload format, before `hip eval scenarios --run v3`.** `v2` gave models
+      JSON packets; `hip explain` publishes from Markdown. `--format markdown` would
+      benchmark what is actually published, at about a third of the input tokens and
+      roughly $1 less judging. Raised 2026-09-10, not decided
 - [ ] **Quote before spending**: `hip eval cost --run v3` prices the run from its own
-      prompts — a constant-based estimate was wrong twice. Expect roughly $5–6 for
-      105–120 judgments, since 21's larger packets make every judge prompt larger
+      prompts — a constant-based estimate was wrong twice. Expect roughly $8–10 for 105
+      judgments at effort `high`, plus about $0.60 of generation; 21's larger packets make
+      every judge prompt larger. The quote assumes 5,000 output tokens per verdict at
+      `high`, a planning figure — `hip eval judge` now prints what the batch was actually
+      billed
 - [ ] `hip eval judge --run v3`, then `hip eval report --run v3`. Judge every candidate in
-      one run: the judge prompt is shared, which is what keeps scores comparable
+      one run: the judge prompt is shared, which is what keeps scores comparable. Graded
+      at effort `high` (ARCHITECTURE #101), so no `v3` score compares with a `v2` one
 
 ### After `v3`
 
@@ -1749,6 +1768,48 @@ Four things follow, and they changed the scope as written in [ROADMAP.md](ROADMA
   generations for exactly this reason. The rates are the same hazard and are not fixed
   here.
 
+## Pre-`v3` preparation — 2026-09-10
+
+Not a milestone, and Milestone 21 has not started. Decisions taken with the user after
+Milestone 20 closed, and an audit of ARCHITECTURE.md against the code.
+
+- [x] **The judge grades at effort `high` from `v3`, with `max_tokens` raised from 3,000
+      to 16,000** (ARCHITECTURE #101). `v1` and `v2` were graded at `medium`; `v3` is
+      the boundary to change it at, because it is incomparable with `v2` anyway
+- [x] Every verdict records `judge_effort`, `input_tokens` and `output_tokens`, and
+      `hip eval judge` prints what the batch was billed. `v2`'s $4.15 was only ever the
+      quote; the bill was never recorded anywhere but the Anthropic console
+- [x] `hip eval cost` quotes output per verdict by effort — 5,000 tokens at `high`, a
+      planning figure — and names the effort and the assumption in its output
+- [x] The evaluation report names the judge from the verdicts, model and effort, rather
+      than from today's config. `v1` and `v2` recorded the model only, so their reports
+      render exactly as before
+- [x] `mistral-large-3` dropped from `v3`: last in `v2` at 2.68, not on the preference
+      list, and 15 fewer judgments. It stays in config, because `v2`'s report reads its
+      candidates from there
+- [x] ARCHITECTURE.md audited against the code and corrected: eight claims about
+      behaviour that were false (source isolation in `acquire`, per-source rollback in
+      `load`, empty tables after a failed `analyze`, a read-only database role, "nothing
+      imports `api`", "no AI layer", area-weighted ZIPs, and provenance on every
+      response), the API table, a schema sketch regenerated from the live tables, the
+      system shape, the module layout, and stale figures. The Decisions Log stayed
+      append-only: #11 gained a forward pointer, and two `#base.py` references were
+      repaired
+- [x] Tests — 7 new, 386 Python tests in all
+
+- Note: **`high`'s 5,000 output tokens per verdict is a guess**, set on the high side;
+  `v3`'s recorded usage replaces it. After `v3`, `hip eval cost` should read the recorded
+  mean from the latest run judged at the same model and effort instead of the table — a
+  small change, not made now because there is nothing recorded yet to read.
+- Note: **the judge sends no refusal fallback**, though Anthropic recommends one for Opus 5
+  by default: the Batch API rejects the parameter, and a verdict graded by a fallback
+  model would put two judges in one table. A refusal is recorded as a failed judgment, as
+  it always was.
+- Note: **still open, raised 2026-09-10**: the `v3` payload format (Markdown, as
+  `hip explain` publishes, or JSON, as `v2` used), whether Gemini keeps temperature 0.0
+  (recommended), and whether `hip explain --all` should require the benchmark. Each is an
+  item under "Run `v3`" or "After `v3`" above.
+
 ## Milestone 19 — Multi-model interpretation
 
 Started 2026-09-06, out of numeric order and before 13-18. Precedent: Milestone 9 was
@@ -2207,11 +2268,12 @@ with expansion, not with New Jersey depth.
 
 **Needed by Version 2**
 
-- [ ] **Top up the Anthropic credit before run `v3`.** About $3.47 remained after `v2`'s
-  judging batch — a count from quoted batch costs, not a console reading, so check the
-  console. `v3` needs roughly $5–6, plus a margin for one re-run; `hip eval cost --run
-  v3` quotes it exactly before anything is spent. The credit is read only by
-  `hip eval judge`, so nothing else waits on it.
+- [ ] **Top up the Anthropic credit before run `v3` — to at least $10.** About $3.47
+  remained after `v2`'s judging batch — a count from quoted batch costs, not a console
+  reading, so check the console. `v3` needs roughly $8–10 at the judge's new effort,
+  `high`, plus a margin for one re-run; `hip eval cost --run v3` quotes it before
+  anything is spent, and `hip eval judge` now prints what was actually billed. The credit
+  is read only by `hip eval judge`, so nothing else waits on it.
 - [ ] **Rotate the DeepSeek, Gemini and Mistral keys if the 2026-09-06 transcript is ever
   shared.** All three were pasted into chat to be written into `.env`, the same situation
   the Census, FRED and BLS keys above are in.

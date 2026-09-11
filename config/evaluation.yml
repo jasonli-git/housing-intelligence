@@ -443,6 +443,16 @@ judge:
   mode: batch
   # Thinking bills as output at the Opus rate and is on by default on this model, so
   # max_tokens has to cover reasoning plus the verdict. A tight cap truncates the
-  # verdict, not the reasoning.
-  max_tokens: 3000
-  effort: medium
+  # verdict, not the reasoning — and records a paid-for answer as a failed judgment.
+  # Raised from 3,000 with the effort below; a ceiling is not a reservation, so the
+  # headroom costs nothing unless it is used. 16,000 also keeps a `--sync` request
+  # within what the SDK allows without streaming.
+  max_tokens: 16000
+  # `high` from run `v3`; `v1` and `v2` were graded at `medium`. Changing the judge
+  # changes scores, so it moves only at a run boundary — and `v3` is one, with new
+  # packets and a new slate, so no comparison is lost that was not already gone. `high`
+  # is the API's own default and the floor Anthropic recommends where accuracy matters;
+  # `medium` was a saving nobody had measured the quality cost of, on a judge whose
+  # scores decide close calls. Recorded on every verdict, so a report names what its
+  # scores were graded at (ARCHITECTURE #101).
+  effort: high

@@ -16,7 +16,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from hip.config import ReasoningEffort
+from hip.config import JudgeEffort, ReasoningEffort
 
 
 class _Strict(BaseModel):
@@ -172,4 +172,12 @@ class Judgment(_Strict):
     summary: str
     weighted_score: float = 0.0
     judge_model: str = ""
+    # How the judge was configured and what the verdict cost, recorded on the verdict
+    # rather than read back from config: effort moves scores, so a report re-rendered
+    # later has to say what each verdict was graded at, and the token counts are the only
+    # record of what judging was billed. Verdicts from before these fields — all of `v1`
+    # and `v2`, both graded at `medium` — parse with none of them.
+    judge_effort: JudgeEffort | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
     error: str | None = None

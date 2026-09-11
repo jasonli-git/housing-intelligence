@@ -5,31 +5,30 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-08-13):** Milestones 0 through 7 and 9 are complete. The warehouse
-> holds a NJ geography spine (3,365 regions; 2,491 ZIP allocation weights, 2,456 of them
-> HUD residential-address ratios; 554 NJ municipal codes in `region_identifiers`) and
-> **335,927 observations across 23 metrics from 10 sources**, spanning 1971 to 2026 at
-> nation, state, county, municipality, and ZIP level — loaded through all eight stages,
-> `acquire → land → stage → geocode → validate → load → analyze → pack`, served by the
-> API, and displayed by a three-page dashboard. 19,531 computed changes, 19,521 change
-> rankings and 8,302 value rankings. **3.48M NJ parcels** live in Parquet and DuckDB and
-> reach the warehouse only as six municipality-level assessment aggregates (#49). Packet
-> `1.1` is validated against `schemas/packet-v1.json`; 21 county and 564 municipal
-> packets are produced by `hip pack`. 289 Python tests and 26 dashboard tests pass,
-> `tsc --noEmit` is clean. **Version 1 is complete (Milestone 8, #56-#64).** Eight local
-> models across two runtimes answered five standardized scenarios over three real county
-> packets — 120 generations, 105 usable — with every stated figure checked against its
-> packet deterministically and 105 rubric judgments from `claude-opus-5`. **Gemma 4 E4B
-> (Q4_K_M, Ollama) was selected** on measured performance: 3.21/4.00, 0.0% unsupported
-> figures, 28.6 tok/s. It wrote the 21 county explanations in `region_explanations`
-> (migration `0007`), served by `GET /regions/{id}/explanation` and shown as
-> interpretation in the dashboard. Nothing in the pipeline or the API depends on a model
-> being present: with the table empty, every page and endpoint still works.
+> **Status (2026-09-10):** Milestones 0 through 12, 19, 20 and 22 are complete; 13, 16,
+> 17, 18 and 21 are planned, and 14 and 15 were deferred past Version 2 on 2026-09-07
+> ([ROADMAP.md](ROADMAP.md)). The warehouse holds a NJ geography spine — 3,365 regions
+> and the `nation` row, 2,493 ZIP allocation weights (2,460 of them HUD
+> residential-address ratios), and 554 NJ municipal codes in `region_identifiers` — and
+> **337,552 observations across 23 metrics from 10 sources**, spanning 1971 to 2026, with
+> 19,574 computed changes, 19,564 change rankings and 8,359 value rankings derived from
+> them. All eight stages run, `acquire → land → stage → geocode → validate → load →
+> analyze → pack`. **3.48M NJ parcels** live in Parquet and DuckDB and reach the
+> warehouse only as six municipality-level aggregates (#49). Packet `1.1` is validated
+> against `schemas/packet-v1.json`. The API and a three-page dashboard are published as
+> static files, with no database and no application server in production (#67, #68).
+> Interpretation is written by hosted models behind a preference list that ends at a
+> local one (#78, #96): 105 explanations, five models' readings of each of the 21
+> counties (#91), chosen by evaluation runs `v1` and `v2`, with reasoning effort part of
+> each candidate's configuration since Milestone 20 (#98). 386 Python tests and 26
+> dashboard tests pass. Nothing in the pipeline or the API depends on a model being
+> present: with no explanations stored, every page and endpoint still works.
 
 ## System Shape
 
-A local-first, single-machine analytical platform: a staged batch pipeline that builds a
-curated housing warehouse, with a read-only web application served on top of it.
+A local-first analytical platform that publishes itself: a staged batch pipeline builds a
+curated housing warehouse on one machine, a read-only API and dashboard sit on top of it,
+and production is their output rendered to static files (#67, #68).
 
 - **Runtime** — Python 3.12+ for acquisition, ETL, validation, and analytics, driven by
   a Typer CLI. dbt-core owns the warehouse transform DAG. FastAPI serves the HTTP API.
@@ -39,14 +38,22 @@ curated housing warehouse, with a read-only web application served on top of it.
   curated warehouse and the only thing the API reads.
 - **Boundary** — the pipeline writes, the API reads. No HTTP request triggers a pipeline
   stage, and no pipeline stage calls the API. They share the database, not code paths.
-- **External dependencies** — public HTTP endpoints only: Zillow research CSVs, Census
-  ACS and Building Permits, FHFA HPI, FRED, BLS, IRS SOI migration, and NJGIN parcel /
-  MOD-IV extracts. Each is reached through one source adapter, and every download is
-  cached to disk so a full rebuild never re-fetches.
-- **No cloud service is required.** Docker Compose provides Postgres/PostGIS; Python and
-  Node run natively.
-- **No LLM in the Version 1 runtime.** The analytics layer emits analysis packets as
-  JSON artifacts that currently have no consumer. See decision #11.
+- **Data sources** — public HTTP endpoints only: Census TIGER/Line, Zillow research CSVs,
+  Census ACS and Building Permits, FHFA HPI, FRED, BLS, IRS SOI migration, HUD's USPS
+  crosswalk and income limits, and NJGIN parcel / MOD-IV extracts. Each is reached
+  through one source adapter, and every download is cached to disk so a full rebuild
+  never re-fetches.
+- **Model and hosting services, all optional** — DeepSeek, Gemini and Mistral write
+  explanations by default, behind a preference list that ends at a local Ollama model
+  (#78, #96); Anthropic's API grades the evaluation and is read by `hip eval judge`
+  alone (#56); Cloudflare R2 and Pages serve the published files (#68).
+- **No cloud service is required to run it.** Docker Compose provides Postgres/PostGIS;
+  Python and Node run natively. Without the hosted services the platform still builds,
+  serves and renders everything except generated prose, which falls through to the
+  local model or is simply absent.
+- **Models explain; they never compute.** `hip explain` generates prose from analysis
+  packets and stores it with the model and packet hash that produced it (#60); the API
+  serves it and never runs a model (#6).
 
 Future deployment shapes stay cheap because of where the seams are. The API reads
 Postgres through SQLAlchemy and holds no DuckDB or Parquet dependency, so moving to a
@@ -54,7 +61,8 @@ managed Postgres is a connection-string change. dbt targets abstract the executi
 engine, so promoting a transform from DuckDB to warehouse-side SQL is a config edit, not
 a rewrite. Source adapters expose one method — fetch a release, return a local path — so
 swapping local disk for object storage replaces the storage backend and leaves all
-adapters untouched. `web/` is a separate deployable that only knows the API's base URL.
+adapters untouched. `web/` is a separate deployable that knows only the API's base URL at
+build time and the artifact origin at run time.
 Geographic expansion beyond New Jersey is a `config/geography.yml` scope change plus new
 source adapters, because no state code is hard-coded into schema or analytics (#14).
 
@@ -72,7 +80,7 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 8 | Metrics live in one long fact table keyed `(region_id, metric_id, period_start)`, not wide per-source tables. | Adding a source that supplies an existing metric adds rows, not columns, so no migration and no analytics change. Rankings and comparisons become one query shape across all metrics. Rejected: wide tables per source, which are pleasant to read and require a migration per source. Costs: reads need pivoting, and the table is the largest in the warehouse — mitigated by the composite primary key and a `metric_id, period_start` index. |
 | 9 | Every fact row carries a `release_id` pointing at the exact source file it came from. | Provenance is a SPEC requirement, and it makes a bad load reversible: delete the release, its facts cascade. Rejected: source-name-only columns, which cannot distinguish two vintages of the same source. Costs 8 bytes per row and a mandatory release record before any load. |
 | 10 | Raw downloads are immutable and content-addressed; a re-fetch that differs is a new release, never an overwrite. | Reproducibility, and it makes upstream revisions visible instead of silent — Zillow and ACS both revise history. Rejected: overwrite-in-place, which is smaller and destroys the audit trail. Costs disk that grows monotonically; pruning is manual and deliberate. |
-| 11 | The local LLM runtime is deferred. Version 1 emits analysis packets and stops there. | The packet contract is what matters and it is testable without a model; picking Ollama vs. llama.cpp vs. LM Studio before the eval scenarios exist would be choosing on reputation, which SPEC principle 9 rejects. Rejected: wiring Ollama now for a demo. Costs: no explanation feature ships in V1, and the packet schema gets its first real consumer only in M8. |
+| 11 | The local LLM runtime is deferred. Version 1 emits analysis packets and stops there. **Superseded at Milestone 8, when evaluation chose the runtime (#56–#60), and by hosted inference at Milestone 12 (#78).** | The packet contract is what matters and it is testable without a model; picking Ollama vs. llama.cpp vs. LM Studio before the eval scenarios exist would be choosing on reputation, which SPEC principle 9 rejects. Rejected: wiring Ollama now for a demo. Costs: no explanation feature ships in V1, and the packet schema gets its first real consumer only in M8. |
 | 12 | Analysis packets are versioned JSON artifacts validated against a published schema. | A stable, small contract keeps the AI layer replaceable (SPEC principle 8) and lets packets be diffed, tested, and stored as fixtures. Rejected: building prompt strings directly in the analytics layer, which welds the model to the metrics. Costs a schema to version and migrate. |
 | 13 | Docker Compose runs Postgres/PostGIS only; Python and Node run natively. | One reproducible command for the piece with real setup cost, without containerizing the code under active edit. Rejected: full containerization (slow rebuilds, painful debugging) and native Postgres via Homebrew (setup instructions become machine-specific). Costs: Docker is a prerequisite. |
 | 14 | Geographic scope is config, not code: `config/geography.yml` declares which states and levels are in scope. | NJ-first, not NJ-only (SPEC principle 3). A hard-coded `WHERE state = 'NJ'` in analytics is the thing that makes expansion an architecture change. Costs a config indirection that is pure overhead while only one state is loaded. |
@@ -139,7 +147,7 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 75 | A keyed staging model carries `release_layer` — the layer of the *file* the row arrived in, not the region level it describes. | The two coincide for Zillow, whose files are named by level, and diverge for every keyed source: BLS ships one file per county series, HUD one per county-year, ACS one per (level, year) under Census's own name for the level. `_append_keyed` wrote the region level into `layer`, so the loader's exact `(source, layer, vintage)` lookup never matched and fell through to the first release of that vintage. Every BLS observation in the warehouse cited Atlantic County's file, 107 HUD releases collapsed onto five, and every ACS municipal row cited the county file. This is the residue of #47 that #53 could not reach: vintage was made exact, layer never was. Measured after the fix — BLS 21/21 releases cited, HUD 105/107 (the two uncited are crosswalk files, which feed `region_crosswalk` rather than facts), ACS municipal rows on `cousub`. IRS keeps one imprecision by nature and now states it: a net figure is inflow minus outflow, so it derives from two files and can cite one, and it names inflow rather than leaving the loader to pick whichever the catalog returned first. |
 | 76 | A credential never reaches disk, because redaction happens where a URL is recorded rather than where it is built. | Census and FRED accept a key only as a query parameter — there is no header to move it to — so the key is unavoidably part of the request URL. The default filename was the URL's last segment and the manifest serialised the whole ref, so `data/raw/` held 32 manifests quoting live keys and files literally *named* `...?registrationkey=<key>`, where a screenshot, a backup, or a stray `find` would carry them off the machine. Three boundaries now redact: the filename drops the query string entirely, the manifest keeps a redacted `url` because which endpoint a release came from is real provenance while the key is not, and a failed download is raised `from None` with a redacted message, since httpx renders the failing URL into both its message and its traceback. Cached releases are unaffected — `_from_cache` reads the filename out of the manifest — so nothing re-downloads. |
 | 77 | Window selection in `hip analyze` is ordered totally, not by distance alone. | `DISTINCT ON` picked the observation nearest each window target, ordered only by `abs(period_end - target)`. That is not a total order: a target sitting between two observations is equidistant from both, which is 5,606 groups in New Jersey alone, so `window_start`, `start_value`, `pct_change` and `cagr` were whichever row the scan reached first. Two `analyze` runs over an identical warehouse produced different published figures and different row counts — measured at 19,527, 19,530 and 19,529 on three consecutive runs — which also meant #73 alone could not make a packet reproducible. Ties now resolve to the older observation, so a window is never shorter than its label, and `ends` gained a `DISTINCT ON` against two observations sharing a maximum `period_end`, the case the packet assembler already guarded. |
-| 78 | Three hosted providers sit behind one `HostedRunner`, dispatched by a per-provider `_Dialect`. | What differs between DeepSeek, Gemini, and Mistral on this task is mechanical — the auth header, the path, and where the answer and the token counters sit in the response. What does not differ is everything that carries risk: the retry policy, the contract that a model-level failure is a recorded finding rather than a raised exception (#`base.py`), the normalization into `Telemetry`, and the refusal to invent a memory figure for a machine we do not own. Three classes would have duplicated the second list to avoid duplicating the first. A fourth provider is a `_Dialect` entry. Raw `httpx` rather than three vendor SDKs, matching `OllamaRunner`: three SDKs would be three dependency surfaces and three release cadences in service of one non-streaming chat call. Gemini uses its native `generateContent` rather than its OpenAI compatibility layer, because that layer is a translation maintained for other people's clients and the field most likely to be dropped in one is a token counter the cost column depends on. Rejected again, for the reason first recorded on the roadmap: a router such as OpenRouter, which would supply the breadth through one integration and silently select a backend, putting prose from an unbenchmarked model on a public page under a row that names a different one. |
+| 78 | Three hosted providers sit behind one `HostedRunner`, dispatched by a per-provider `_Dialect`. | What differs between DeepSeek, Gemini, and Mistral on this task is mechanical — the auth header, the path, and where the answer and the token counters sit in the response. What does not differ is everything that carries risk: the retry policy, the contract that a model-level failure is a recorded finding rather than a raised exception (`ModelRunner` in `hip/eval/runners/base.py`), the normalization into `Telemetry`, and the refusal to invent a memory figure for a machine we do not own. Three classes would have duplicated the second list to avoid duplicating the first. A fourth provider is a `_Dialect` entry. Raw `httpx` rather than three vendor SDKs, matching `OllamaRunner`: three SDKs would be three dependency surfaces and three release cadences in service of one non-streaming chat call. Gemini uses its native `generateContent` rather than its OpenAI compatibility layer, because that layer is a translation maintained for other people's clients and the field most likely to be dropped in one is a token counter the cost column depends on. Rejected again, for the reason first recorded on the roadmap: a router such as OpenRouter, which would supply the breadth through one integration and silently select a backend, putting prose from an unbenchmarked model on a public page under a row that names a different one. |
 | 79 | A cohort is named by config and passed to its runner, rather than hardcoded in the runner class. | `cohort="gguf"` and `cohort="mlx"` were string literals in both the success and failure paths of the two local runners. That was invisible while each class served exactly one cohort and became wrong the moment three providers shared `HostedRunner`: every hosted generation would have carried the same cohort, collapsing three jurisdictions into one column in the report and one row in every per-cohort table. `build_runner` now takes the cohort's key in `config/evaluation.yml`. The same change makes a second Ollama endpoint a config edit rather than a subclass. |
 | 80 | An absent API key is *unavailability*, not a configuration error. | `check_config` treats a source's missing `api_key_env` as a hard problem, and applying that rule to a hosted cohort would have been the obvious symmetry and the wrong one. The preference list exists precisely so that a tier which cannot be reached is stepped over: a missing key, a withdrawn pin, and an unreachable Ollama are the same event to `resolve`, and only exhausting the list is an error. Making a key mandatory at config load would have turned normal degraded operation into a startup failure — and would have meant `make check-config` could not pass on a machine that deliberately holds only one of the three keys. |
 | 81 | The winner gate is an error *rate*; the write gate is the same predicate as the win gate. | `select_winner` required `summary.errors == 0`, which was right for a local runtime where an error means the model genuinely could not run — it is how `gemma-4-e4b-mlx` was excluded. Against a hosted provider one HTTP 429 that outlived four retries would have disqualified an otherwise winning candidate on one bad afternoon. It is now `MAX_ERROR_RATE`, stated at one generation in fifteen so a single failure in a standard run is survivable and two are not, in the same shape as the 5% fabrication bar (#59). Separately, `selection.passed_benchmark` reuses that predicate rather than restating it, so a model can never become eligible to *write* under looser rules than it was eligible to be *recommended* under. |
@@ -151,7 +159,7 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 87 | `quantization: hosted` is a statement of ignorance, and the four-bit invariant now applies only to local cohorts. | Every candidate through Milestone 8 was a 4-bit local import, and `test_every_candidate_is_four_bit` pinned that: precision was retired as a variable on 2026-08-13 and a stray Q8 would have silently reintroduced it. A hosted provider does not disclose the precision it serves and may change it without announcement, so the honest value is one that claims nothing. The invariant was scoped rather than deleted — it still holds where it can be checked — and a second test now requires that no hosted candidate claims a precision, so the column can never read as measured when it was not. This is a real reduction in what the cross-cohort comparison controls for and is one more reason SPEC accepts hosted generation as non-reproducible. |
 | 88 | Derived affordability ratios are averaged in `numeric` and rounded, so the derived release digest is reproducible. | #73 made the `hip_derived` release content-addressed precisely so an unchanged rebuild would reuse it, and the property did not hold: four consecutive runs over an identical 335,927-row warehouse minted four digests, so every run marked all 21 explanations stale and dirtied all 21 committed reports — the exact damage #73 was written to stop. `analyze` alone was reproducible and `load` then `analyze` was not, which put the cause in the arithmetic rather than in the release logic. `_affordability` averaged the monthly Zillow numerator with `avg(value)` over `double precision`; floating-point addition is not associative, so the sum depends on the order the executor aggregates rows, and that order changes when `load` rewrites the heap or the planner chooses a parallel scan. Measured: 19,027 of 24,956 `(region, year)` groups differ between `avg(value)` and `avg(value::numeric)`, in the last one or two significant digits — invisible in every published figure and decisive in a sha256. Now averaged as `numeric`, which is exact decimal and therefore order-independent, with the ratio rounded to 6 decimal places: four more than an annual survey denominator can support, so nothing a reader sees changes. Rejected: hashing at display precision, which was the scheduled Milestone 12 approach and would have hidden this defect rather than removed it — and hidden the next one identically. Verified by three consecutive `load` + `analyze` cycles yielding one digest, and two consecutive `pack --report` runs byte-identical. |
 | 89 | Landing skips on the producing release's sha256, recorded beside the Parquet, not on the destination path existing. | `parquet_path` is `{source}/{vintage}/{layer}.parquet`, and for every source whose vintage is the literal string `current` — Zillow, FHFA, FRED, BLS, MOD-IV — successive releases resolve to one path. `land_csv` skipped when that path existed, so a genuinely new release was registered in `source_releases` while the Parquet behind it stayed whatever the first run wrote. Measured on 2026-09-06: Zillow's August release carried a `2026-07-31` column, the raw tier stored it correctly under a new sha, and `data/parquet/zillow_zhvi/current/county.parquet` still had the mtime of the previous month's run — a full month of housing data acquired and never loaded. It compounded with the acquire cache (#TODO, deferred), which does not re-download a `@current` ref without `--force`: two independent gates, both silent, both defaulting to not refreshing, so `make pipeline` could not ingest new data for any of those five sources at all. The raw tier is content-addressed and was right; the landing tier keyed on a mutable string and was not. Now a `<name>.parquet.src` sidecar records the sha256 of the release that produced each Parquet and `needs_landing` compares against it. Rejected: dropping the skip entirely, which would re-transcode 1.1GB of MOD-IV on every run; and putting the sha in the path, which would content-address the landing tier at the cost of rewriting every downstream path and accumulating superseded Parquets. A Parquet with no sidecar is rebuilt once, because a file whose provenance is unknown cannot be trusted to be current. |
-| 90 | `Telemetry.generation_tokens` counts every token billed as output, normalized across three provider conventions. | The three disagree, and taking each at face value put a wrong number in a published column. Gemini's `candidatesTokenCount` is the answer alone and reports thinking separately in `thoughtsTokenCount`, billing both at the output rate; the OpenAI-shaped providers fold reasoning into `completion_tokens`; Ollama's `eval_count` covers both. Run `v2` surfaced it as a 237% `reasoning_share` for `gemini-3.7-flash` — a ratio that cannot exceed 100% under a consistent denominator — and the same error understated that candidate's cost by 58%, $8.11 against $12.83 per thousand generations, on the model the run went on to select. The runner now adds thinking into `generation_tokens` for Gemini and leaves the other two alone, so the cost column and the invoice are computed from the same quantity everywhere. This is the `memory_basis` lesson (#`base.py`) in a second column: a field whose meaning varies by runtime is worse than a field that is null, because it looks comparable. The stored `v2` telemetry was repaired in place rather than regenerated — both counts were present and correct as Google reported them, and the error was only in how they were combined, so the right figure is recoverable arithmetic rather than a new measurement. The pre-repair file is kept beside it as `generations.jsonl.pre-token-repair`. |
+| 90 | `Telemetry.generation_tokens` counts every token billed as output, normalized across three provider conventions. | The three disagree, and taking each at face value put a wrong number in a published column. Gemini's `candidatesTokenCount` is the answer alone and reports thinking separately in `thoughtsTokenCount`, billing both at the output rate; the OpenAI-shaped providers fold reasoning into `completion_tokens`; Ollama's `eval_count` covers both. Run `v2` surfaced it as a 237% `reasoning_share` for `gemini-3.7-flash` — a ratio that cannot exceed 100% under a consistent denominator — and the same error understated that candidate's cost by 58%, $8.11 against $12.83 per thousand generations, on the model the run went on to select. The runner now adds thinking into `generation_tokens` for Gemini and leaves the other two alone, so the cost column and the invoice are computed from the same quantity everywhere. This is the `memory_basis` lesson (see `hip/eval/runners/base.py`) in a second column: a field whose meaning varies by runtime is worse than a field that is null, because it looks comparable. The stored `v2` telemetry was repaired in place rather than regenerated — both counts were present and correct as Google reported them, and the error was only in how they were combined, so the right figure is recoverable arithmetic rather than a new measurement. The pre-repair file is kept beside it as `generations.jsonl.pre-token-repair`. |
 | 91 | `region_explanations` is keyed on the model, and carries the preference-list `rank` that orders several readings of one packet. | The table held one row per `(region_id, window)`, which was right while the platform ran one model and became the constraint the moment a reader could ask what a different model would have said. `model_id` joins the primary key (migration 0010). `rank` exists for a specific reason rather than convenience: `API_MAY_IMPORT` is `{warehouse, packets}`, so the API cannot read `generation.preference` to decide which of five explanations is the primary one, and the ordering therefore has to be data written at generation time rather than configuration read at request time. It doubles as provenance, recording which tier produced a paragraph in the same spirit as the existing `model_id` and `runtime`. `packet_sha256` stays per row, so one model's reading can be current while another's is stale — collapsing that to one flag per region would misreport both. |
 | 92 | `/regions/{id}/explanation` keeps its shape; the comparison is a new `/explanations` beside it. | The singular endpoint is a published contract with an artifact tree behind it whose entire purpose is being consumable, so turning it into a list would break every reader to add a feature none of them asked for. It now answers `ORDER BY rank LIMIT 1` instead of `scalar_one_or_none`, which preserves both the response shape and the meaning — the preferred model's reading. The plural is additive at every layer: a new endpoint, a new published path beside the old one, and a switcher that renders nothing extra when only one explanation exists. Rejected: a `?model=` parameter on the singular endpoint, which would have published one file per model per region and multiplied the artifact tree by five to serve a page that wants all of them at once. |
 | 93 | Generation limits are per cohort and separate from the evaluation's; the output ceiling is sized for the tail. | `limits` is an *evaluation* budget, and holding it common across candidates is what makes the benchmark mean anything — a per-cohort override there would quietly invalidate the comparison. Generation asks a different question, whether a model on a given runtime can finish a paragraph, and the answer is a property of the runtime: 12,288 context tokens is Gemma's window on this machine and describes nothing about a hosted model with an order of magnitude more. Reserving output inside the local figure was arithmetic about the wrong hardware. Measured 2026-09-06: `deepseek-v4-pro` spent the entire 6,000-token evaluation budget on reasoning and returned an empty answer for 12 of 21 counties, and the API reported HTTP 200 each time — nothing in the response says you received nothing. Raised to 12,000 it still failed 2 of 21; Bergen County exhausted 12,000 and then completed the identical packet in 7,871 under a 24,000 ceiling, which makes this variance rather than a threshold. The ceiling is therefore sized for the tail at 24,000, and that is free: billing is per token emitted, so headroom costs nothing unless it is used. |
@@ -162,10 +170,11 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 98 | Reasoning effort is a field of the candidate, sent in each provider's own shape and recorded on every generation; `default` sends nothing. | Run `v2` compared seven models each at its vendor's default, and the defaults differ enough to decide a cost column on their own — DeepSeek V4 thinks at high effort unless told otherwise and spent 93-95% of its output there, Mistral none — so part of what it measured was vendor defaults, and the report had to say so in a hand-written caveat. A `CandidateModel` field makes a configuration a candidate: a lower-effort setting gets its own id and is measured as one, never toggled at generation time, which is what keeps Milestone 8's rule — only a benchmarked configuration writes — true once effort can vary. The setting is recorded on each `Generation` rather than read back from config when a report renders, for the reason `served_model` is read back (#95): config can change after a run, and the artifact has to say what an answer was asked for. `default` adds nothing to the request, so every existing candidate's body is byte-identical to what `v2` sent and its benchmark still describes it; records written before the field parse as `default`, which is exactly what they were. Rejected: effort as a run-wide or cohort-wide option, which would let one id mean different configurations in different runs; and as a `hip explain` flag, which would publish prose from configurations no benchmark saw. Costs a candidate id per setting, which lengthens the slate and the report. |
 | 99 | The effort vocabulary is what a model has been seen to accept — `default`, `disabled`, `low` — declared per provider in config and sent from the dialect. | `disabled` is DeepSeek's `thinking: {"type": "disabled"}`, a hard off, and makes a claim the report checks: a `disabled` generation that reports reasoning tokens is flagged. `low` is Gemini 3.7 Flash's `thinkingConfig.thinkingLevel: "low"` and claims only a level. Both were called before being accepted, on 2026-09-10. `REASONING_CONTROLS` in `hip.config` declares what each provider offers, so config refuses at load a setting a local runner cannot send or a provider does not offer; the wire fragment lives beside each `_Dialect` in `hip.eval.runners.hosted`, and a test holds the two tables equal, because a setting that validates and is then dropped would record answers against a configuration that never reached the model. Rejected: every level the providers document. `minimal` is documented for Gemini 3 Flash, and 3.7 Flash answered it with `400 Thinking level MINIMAL is not supported for this model` — an accepted value no model honours is the same unverified claim as a pin copied from a blog. Rejected: Gemini's legacy `thinkingBudget: 0`, which measured the same as `low` (549 output tokens, no thinking) but is kept for backward compatibility only, with no documented meaning on Gemini 3. Rejected: Mistral's `reasoning_effort`, because `high` turns `message.content` into a list of chunks that `_extract` would stringify and grade, and `none` is what `v2` measured at the default. Costs: capability is per provider, which one model can contradict — `hip eval models --probe` sends each candidate's setting, and is how `minimal` was caught before any run. |
 | 100 | Eligibility belongs to a configuration, not a name: one candidate id is one configuration, enforced wherever a run or a write could mix two. | Once effort is a field, editing it on a benchmarked candidate would keep the id eligible while the configuration was new — the back door Milestone 8's rule closes, reopened by a config edit. So `resolve` compares each listed model's configured effort with the effort its benchmark measured, read from the generations, and skips a mismatch; `hip explain --all` and `--model`, which bypass `resolve`, repeat the check against the latest run; `hip eval run` refuses to resume a candidate whose recorded answers used another effort rather than averaging two configurations under one id; `hip check-config` rejects two ids declaring the same ref at the same effort; and a model measured at two efforts is excluded from selection by `meets_the_bar`, the predicate `passed_benchmark` now calls instead of restating. Rejected: effort in `Generation.key`, which would let a resume quietly start a second configuration under the same id in the same run. Costs: changing a listed model's effort now needs a re-benchmark before it writes, which is the intent. Not covered, and recorded rather than widened: `--all` and `--model` still require no benchmark for a model the latest run never measured, and a changed `ref` is invisible for runs recorded before `served_model` existed. |
+| 101 | The judge grades at effort `high` from run `v3`, under a 16,000-token ceiling, and every verdict records its effort and the tokens it was billed for. | Effort is part of the instrument: like the judge's prompt, changing it moves scores, so it changes only at a run boundary. `v3` is one — new packets and a new slate already make it incomparable with `v2` — so no comparison is lost that was not already gone. `v1` and `v2` were graded at `medium`, a saving whose quality cost was never measured, on a judge whose scores decide close calls (`v2`'s top two were 0.09 apart) and in a run whose main question, whether lower reasoning effort costs quality (#98), is a close call by construction. `high` is the API's own default and the floor Anthropic recommends where accuracy matters. `max_tokens` rose from 3,000 because thinking and the verdict share it: at `high`, 3,000 would cut verdicts off mid-JSON and record paid-for answers as failed judgments, and a ceiling is not a reservation (#93). The verdict records `judge_effort`, `input_tokens` and `output_tokens`, because a report re-rendered later must name what its scores were graded at — read from the verdicts, as #98 reads effort from the generations — and because nothing had recorded what judging actually cost: `v2`'s $4.15 was the quote, not the bill. `hip eval cost` quotes output per verdict by effort; `high`'s 5,000 is a planning figure that `v3`'s recorded usage replaces. Considered and not run: a pilot re-judging `v2` answers at both efforts first, for about $1 — the change lands at a run boundary either way, and scores at the two settings are never compared. Rejected: the server-side refusal fallback Anthropic recommends for Opus 5, which the Batch API does not accept and which would put verdicts from a second judge into one table. Costs about $4 more per 120-verdict run until `v3` measures it. |
 
 ## Module Layout
 
-What exists as of 2026-08-12. Every pipeline package now holds real modules; the
+What exists as of 2026-09-10. Every pipeline package now holds real modules; the
 boundary rule in `tests/test_module_boundaries.py` enforces the import direction between
 them. Planned files are marked with the milestone that adds them.
 
@@ -180,7 +189,7 @@ housing-intelligence/
 ├── schemas/
 │   └── packet-v1.json         # published packet contract, generated from code (#43)
 ├── src/hip/
-│   ├── cli.py                 # Typer entrypoint; check-config, schema, footprint, publish, 8 stages
+│   ├── cli.py                 # Typer entrypoint: 8 stages, explain, publish, footprint, schema, check-config
 │   ├── config.py              # settings, YAML loading, env resolution, STATE_FIPS
 │   ├── duck.py                # DuckDB session + /vsizip path helper (#23)
 │   ├── footprint.py           # bytes per storage tier and per state (#66)
@@ -209,9 +218,9 @@ housing-intelligence/
 │   ├── validate/gate.py       # the load gate + JSON report (#15)
 │   ├── warehouse/
 │   │   ├── db.py              # engine, session_scope, probe() for /health
-│   │   ├── models.py          # Region, RegionIdentifier, RegionCrosswalk
+│   │   ├── models.py          # Region, RegionIdentifier, RegionCrosswalk, RegionExplanation
 │   │   ├── load.py            # one-transaction upsert of spine and facts (#25)
-│   │   └── migrations/        # Alembic 0001–0007
+│   │   └── migrations/        # Alembic 0001–0010
 │   ├── analytics/compute.py   # change, CAGR, affordability, rankings (#34–#36)
 │   ├── packets/
 │   │   ├── schema.py          # Pydantic models = the contract (#12, #43, #44)
@@ -229,14 +238,14 @@ housing-intelligence/
 │   │   ├── runners/           # base protocol (#57), ollama.py, mlx_runner.py,
 │   │   │                      #   hosted.py — 3 providers, 1 runner (#78)
 │   │   ├── selection.py       # preference list → the model that will write
-│   │   ├── judge.py           # Claude rubric grading, Batch API
+│   │   ├── judge.py           # Claude rubric grading, Batch API; effort + usage per verdict (#101)
 │   │   ├── store.py           # JSONL artifacts per stage, resumable
-│   │   ├── report.py          # the published evaluation report (#59, #83)
+│   │   ├── report.py          # the published evaluation report (#59, #83, #98)
 │   │   └── explain.py         # explanations for the resolved model (#60)
 │   ├── eval_cli.py            # `hip eval ...`; optional deps imported lazily
 │   └── api/
 │       ├── main.py            # FastAPI app, CORS for the dashboard origin
-│       ├── deps.py            # read-only session dependency
+│       ├── deps.py            # session dependency; read-only by construction (#6)
 │       ├── params.py          # RegionLevel and Window, shared by the routers
 │       └── routers/           # health, regions, metrics, analytics, packets,
 │                              #   explanations (#60)
@@ -250,7 +259,7 @@ housing-intelligence/
 │   ├── app/page.tsx           # overview: choropleth + ranking table
 │   ├── app/regions/[id]/page.tsx        # region detail: tiles, trends, tables
 │   ├── app/regions/[id]/report/page.tsx # print-ready report from the packet (#45)
-│   ├── components/            # Choropleth, TrendChart, PrintButton
+│   ├── components/            # Choropleth, TrendChart, ExplanationPanel, SourceFooter, PrintButton
 │   ├── lib/api.ts             # server-side fetchers + packet types
 │   ├── lib/format.ts          # pure value formatting (#41)
 │   ├── lib/scale.ts           # ramp, breaks, projection — pure and tested (#48)
@@ -265,11 +274,11 @@ housing-intelligence/
 │   ├── validation/            # gate reports per run; gitignored, per-run machine state
 │   ├── regions/<window>/      # Markdown reports, one per region; 5y committed, README-linked
 │   └── evaluation/            # the published model-evaluation report; committed
-├── tests/                     # 289 Python tests; API tests skip without a warehouse
+├── tests/                     # 386 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
-└── pyproject.toml             # deps + dev / dbt / mlx groups (#19, #55)
+└── pyproject.toml             # deps + dev / dbt / mlx / eval groups (#19, #55, #56)
 ```
 
 **Dependency rule.** Imports flow one direction along the pipeline and never back:
@@ -283,7 +292,9 @@ sources → landing → transform → geography → validate → warehouse → a
 
 `api` may import `warehouse` read models and `packets`, and nothing else from the
 pipeline — including `eval`, which is why `packet_hash()` lives in `packets` (#61) — it must not be able to import `sources` or `transform`, which is what keeps
-decision #6 true by construction rather than by discipline. Nothing imports `api`.
+decision #6 true by construction rather than by discipline. Nothing imports `api` except
+`hip/publish.py`, which replays the app to render the published files (#67);
+`test_only_the_publisher_imports_api` fails if a second importer appears.
 `web/` reaches the API over HTTP only and shares no code with Python. `config` and
 `duck` are infrastructure leaves importable from anywhere (#23); every other cross-stage
 import is a boundary violation. `cli` sits outside the chain and orchestrates all of it,
@@ -295,111 +306,160 @@ which is why every write path lives there.
 `region_identifiers`, `region_crosswalk`, `sources`, and `source_releases`; `0003` added
 `metrics`, `fact_metric_observation`, and `source_match_reject`; `0004` added the
 `nation` level; `0005` added `fact_metric_change` and `region_rankings`; `0006` added
-`region_rankings.basis` (#52); `0007` added `region_explanations` (#57); `0008` added
-`regions.name_lsad` (#70); `0009` added `sources.homepage` (#72). The fact table holds
-335,927 observations, with 19,531 changes, 19,521 change rankings and 8,302 value
-rankings derived from them.
+`region_rankings.basis` (#52); `0007` added `region_explanations` (#60); `0008` added
+`regions.name_lsad` (#70); `0009` added `sources.homepage` (#72); `0010` keyed
+`region_explanations` on the model and gave it a `rank` (#91). Measured 2026-09-10, the
+fact table holds 337,552 observations, with 19,574 changes, 19,564 change rankings and
+8,359 value rankings derived from them.
 `region_identifiers`, empty since Milestone 1, now holds 554 NJ municipal codes under
 scheme `nj_cd_code` — the join MOD-IV was always going to supply (#21, #51).
-The migrations are authoritative for DDL and `src/hip/warehouse/models.py` carries the
-ORM mapping for the spine; where they and the block below disagree, the migrations win —
-in particular both derived tables carry a `"window"` column that this sketch predates.
+The block below was regenerated from the live tables on 2026-09-10 — every column in its
+real order with its real type, and every key and constraint, restated for reading;
+indexes other than keys are left out. The migrations stay authoritative for DDL.
+`src/hip/warehouse/models.py` maps only the spine and `region_explanations`; the fact and
+derived tables are written in SQL.
 
-`fact_metric_observation` carries one column the original sketch did not: `match_method`,
-recording how the row's geography was resolved (`fips`, `zip_code`, `name_county`). See
-#27 — a municipal value matched by name is a weaker claim than a county value matched by
-FIPS, and a consumer must be able to tell them apart without redoing the join.
+`fact_metric_observation.match_method` records how each row's geography was resolved —
+`fips`, `zip_code`, `state_code`, `name_county` or `nj_cd_code`, plus `national` for the
+nation row and `derived` for computed metrics. See #27: a municipal value matched by name
+is a weaker claim than a county value matched by FIPS, and a consumer must be able to
+tell them apart without redoing the join.
 
 ```sql
 CREATE TYPE region_level AS ENUM
-  ('state','county','municipality','zip','tract','parcel');
+  ('state', 'county', 'municipality', 'zip', 'tract', 'parcel', 'nation');
 
 -- Every geography, every level, one table (#7).
 CREATE TABLE regions (
-  region_id   BIGSERIAL PRIMARY KEY,
-  geoid       TEXT         NOT NULL,   -- Census GEOID, or source-native id
-  level       region_level NOT NULL,
-  name        TEXT         NOT NULL,   -- bare label: 'Boonton'
-  name_lsad   TEXT         NOT NULL,   -- with legal status: 'Boonton township' (#70)
-  state_code  CHAR(2)      NOT NULL,
-  parent_id   BIGINT       REFERENCES regions(region_id),
-  geom        GEOMETRY(MultiPolygon, 4269),
-  UNIQUE (level, geoid)
+  region_id  BIGSERIAL    PRIMARY KEY,
+  geoid      VARCHAR      NOT NULL,     -- Census GEOID, or source-native id
+  level      region_level NOT NULL,
+  name       TEXT         NOT NULL,     -- bare label: 'Boonton'
+  state_code VARCHAR      NOT NULL,
+  parent_id  BIGINT       REFERENCES regions(region_id),
+  geom       GEOMETRY(MultiPolygon, 4269),  -- NULL only for the nation row (#30)
+  name_lsad  TEXT         NOT NULL,     -- with legal status: 'Boonton township' (#70)
+  UNIQUE (level, geoid),
+  -- state, zip and nation have no parent; every other level must have one
+  CONSTRAINT ck_regions_parent_by_level
+    CHECK ((level IN ('state', 'zip', 'nation')) = (parent_id IS NULL))
+);
+
+-- A second identifier per region, by scheme: 554 NJ municipal codes (#21, #51).
+CREATE TABLE region_identifiers (
+  region_id  BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  scheme     VARCHAR NOT NULL,          -- 'nj_cd_code'
+  identifier VARCHAR NOT NULL,
+  PRIMARY KEY (region_id, scheme)
 );
 
 -- ZIP↔municipality is many-to-many, so it cannot live in parent_id.
 CREATE TABLE region_crosswalk (
-  from_region_id BIGINT NOT NULL REFERENCES regions(region_id),
-  to_region_id   BIGINT NOT NULL REFERENCES regions(region_id),
-  weight         NUMERIC(8,6) NOT NULL,  -- allocation share, sums to 1.0 per from_id
-  method         TEXT NOT NULL,          -- 'hud_res_ratio' or 'area' in practice
+  from_region_id BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  to_region_id   BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  weight         NUMERIC NOT NULL CHECK (weight > 0 AND weight <= 1),
+  method         VARCHAR NOT NULL,      -- 'hud_res_ratio' or 'area' (#37)
   PRIMARY KEY (from_region_id, to_region_id)
 );
 
 CREATE TABLE sources (
-  source_id  TEXT PRIMARY KEY,           -- 'zillow_zhvi', 'census_acs'
-  name       TEXT NOT NULL,
-  publisher  TEXT NOT NULL,
-  license    TEXT NOT NULL,
-  url        TEXT NOT NULL,              -- canonical root; the packet carries this
-  homepage   TEXT,                       -- page for a reader, when it differs (#72)
-  cadence    TEXT NOT NULL               -- 'monthly', 'annual'
+  source_id TEXT PRIMARY KEY,           -- 'zillow_zhvi', 'census_acs'
+  name      TEXT NOT NULL,
+  publisher TEXT NOT NULL,
+  license   TEXT NOT NULL,
+  url       TEXT NOT NULL,              -- canonical root; the packet carries this
+  cadence   TEXT NOT NULL,              -- 'monthly', 'annual'
+  homepage  TEXT                        -- page for a reader, when it differs (#72)
 );
 
--- One row per file we actually ingested (#9, #10).
+-- One row per file actually ingested (#9, #10, #53).
 CREATE TABLE source_releases (
-  release_id  BIGSERIAL PRIMARY KEY,
-  source_id   TEXT NOT NULL REFERENCES sources(source_id),
-  vintage     TEXT NOT NULL,             -- '2026-06', 'ACS 2020-2024'
+  release_id  BIGSERIAL   PRIMARY KEY,
+  source_id   TEXT        NOT NULL REFERENCES sources(source_id) ON DELETE CASCADE,
+  layer       TEXT        NOT NULL,     -- the file in the release: 'county', 'cousub' (#75)
+  vintage     TEXT        NOT NULL,     -- '2023', 'current', or a derived digest (#73)
   fetched_at  TIMESTAMPTZ NOT NULL,
-  file_sha256 TEXT NOT NULL,
-  row_count   BIGINT NOT NULL,
-  UNIQUE (source_id, vintage, file_sha256)
+  file_sha256 TEXT        NOT NULL,
+  row_count   BIGINT      NOT NULL,     -- rows, counted from the landed Parquet (#74)
+  UNIQUE (source_id, layer, vintage, file_sha256)
 );
 
 CREATE TABLE metrics (
-  metric_id   TEXT PRIMARY KEY,          -- 'zhvi_sfr', 'acs_median_hh_income'
+  metric_id   TEXT PRIMARY KEY,         -- 'zhvi_sfr', 'acs_median_hh_income'
   label       TEXT NOT NULL,
-  unit        TEXT NOT NULL,             -- 'usd', 'usd_month', 'count', 'ratio'
-  frequency   TEXT NOT NULL,             -- 'monthly', 'annual'
-  direction   TEXT NOT NULL,             -- 'higher_is_better' | 'lower_is_better' | 'neutral'
-  description TEXT NOT NULL
+  unit        TEXT NOT NULL,            -- 'usd', 'usd_month', 'count', 'ratio'
+  frequency   TEXT NOT NULL,            -- 'monthly', 'annual'
+  direction   TEXT NOT NULL
+              CHECK (direction IN ('higher_is_better', 'lower_is_better', 'neutral')),
+  description TEXT NOT NULL,
+  source_id   TEXT NOT NULL REFERENCES sources(source_id)
 );
 
 -- The one fact table (#8).
 CREATE TABLE fact_metric_observation (
-  region_id    BIGINT NOT NULL REFERENCES regions(region_id),
-  metric_id    TEXT   NOT NULL REFERENCES metrics(metric_id),
-  period_start DATE   NOT NULL,
-  period_end   DATE   NOT NULL,
+  region_id    BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  metric_id    TEXT    NOT NULL REFERENCES metrics(metric_id),
+  period_start DATE    NOT NULL,
+  period_end   DATE    NOT NULL CHECK (period_end >= period_start),
   value        DOUBLE PRECISION NOT NULL,
-  release_id   BIGINT NOT NULL REFERENCES source_releases(release_id) ON DELETE CASCADE,
+  release_id   BIGINT  NOT NULL REFERENCES source_releases(release_id) ON DELETE CASCADE,
+  match_method VARCHAR NOT NULL,        -- how the geography resolved (#27)
   PRIMARY KEY (region_id, metric_id, period_start)
 );
 CREATE INDEX ON fact_metric_observation (metric_id, period_start);
 
+-- Source geographies that matched no region, and why (#27, #28).
+CREATE TABLE source_match_reject (
+  reject_id    BIGSERIAL PRIMARY KEY,
+  source_id    TEXT      NOT NULL REFERENCES sources(source_id) ON DELETE CASCADE,
+  layer        TEXT      NOT NULL,
+  region_name  TEXT      NOT NULL,
+  county_name  TEXT,
+  observations BIGINT    NOT NULL,
+  reason       TEXT      NOT NULL,
+  UNIQUE (source_id, layer, region_name, county_name)
+);
+
 -- Analytics output: derived, always rebuildable, never a source of truth.
 CREATE TABLE fact_metric_change (
-  region_id     BIGINT NOT NULL REFERENCES regions(region_id),
-  metric_id     TEXT   NOT NULL REFERENCES metrics(metric_id),
-  window_start  DATE   NOT NULL,
-  window_end    DATE   NOT NULL,
-  start_value   DOUBLE PRECISION NOT NULL,
-  end_value     DOUBLE PRECISION NOT NULL,
-  pct_change    DOUBLE PRECISION NOT NULL,
-  cagr          DOUBLE PRECISION,
-  PRIMARY KEY (region_id, metric_id, window_start, window_end)
+  region_id    BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  metric_id    TEXT    NOT NULL REFERENCES metrics(metric_id),
+  "window"     VARCHAR NOT NULL,        -- '1y', '3y', '5y', '10y', 'since_2019'
+  window_start DATE    NOT NULL,
+  window_end   DATE    NOT NULL CHECK (window_end > window_start),
+  start_value  DOUBLE PRECISION NOT NULL,
+  end_value    DOUBLE PRECISION NOT NULL,
+  pct_change   DOUBLE PRECISION NOT NULL,
+  cagr         DOUBLE PRECISION,
+  PRIMARY KEY (region_id, metric_id, "window")
 );
 
 CREATE TABLE region_rankings (
-  metric_id    TEXT   NOT NULL REFERENCES metrics(metric_id),
-  level        region_level NOT NULL,
-  window_start DATE   NOT NULL,
-  window_end   DATE   NOT NULL,
-  region_id    BIGINT NOT NULL REFERENCES regions(region_id),
-  rank         INT    NOT NULL,
-  percentile   DOUBLE PRECISION NOT NULL,
-  PRIMARY KEY (metric_id, level, window_start, window_end, region_id)
+  metric_id  TEXT    NOT NULL REFERENCES metrics(metric_id),
+  level      TEXT    NOT NULL,          -- a region_level value, stored as text
+  "window"   VARCHAR NOT NULL,          -- as above, or 'latest' for a value ranking
+  region_id  BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  value      DOUBLE PRECISION NOT NULL, -- the ranked quantity: pct_change, or the value
+  rank       INT     NOT NULL,
+  "of"       INT     NOT NULL,          -- cohort size
+  percentile DOUBLE PRECISION NOT NULL,
+  basis      VARCHAR NOT NULL CHECK (basis IN ('change', 'value')),  -- #52
+  CHECK (rank >= 1 AND rank <= "of"),
+  PRIMARY KEY (metric_id, level, basis, "window", region_id)
+);
+
+-- Generated interpretation: one row per region, window and model (#60, #91).
+CREATE TABLE region_explanations (
+  region_id     BIGINT      NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  "window"      VARCHAR     NOT NULL,
+  model_id      VARCHAR     NOT NULL,
+  model_label   TEXT        NOT NULL,
+  runtime       VARCHAR     NOT NULL,   -- the provider, for a hosted model: 'gemini'
+  body          TEXT        NOT NULL CHECK (length(body) > 0),
+  packet_sha256 VARCHAR     NOT NULL,   -- the packet the prose was written from (#61)
+  generated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  rank          SMALLINT    NOT NULL,   -- preference-list position when written (#91)
+  PRIMARY KEY (region_id, "window", model_id)
 );
 ```
 
@@ -455,7 +515,7 @@ hip geocode   →  duckdb: resolved region_id columns  GEOID match, then crosswa
      ↓
 hip validate  →  reports/validation/<run_id>.json    GATE — non-zero exit blocks load
      ↓
-hip load      →  postgres: regions, facts, releases  transactional, per-release
+hip load      →  postgres: regions, facts, releases  transactional, all sources at once
      ↓
 hip analyze   →  postgres: changes, rankings         derived tables, full rebuild
      ↓
@@ -474,23 +534,28 @@ is idempotent by content hash, so re-running it after a partial failure re-fetch
 what is missing, and an unchanged upstream file produces no new release. `land` is pure
 transcoding — no business logic — so a bug there is always re-runnable from `data/raw/`
 without network access. `stage` and `geocode` operate entirely inside DuckDB and can be
-thrown away and rebuilt from Parquet. `load` wraps each release in one transaction: a
-release is fully present or fully absent, never half-loaded. `analyze` truncates and
-rebuilds its tables rather than incrementally updating them, because they are cheap to
+thrown away and rebuilt from Parquet. `load` writes every source's facts in one transaction —
+all of a refresh lands or none of it does — with the geography and the NJ municipal
+codes in transactions of their own. `analyze` truncates and rebuilds its tables inside
+one transaction rather than updating them incrementally, because they are cheap to
 recompute and expensive to reason about when stale. `pack` is pure output: it reads the
 warehouse and writes files, touching no database state, so it can be re-run at any time
 and its artifacts deleted without consequence.
 
 **Failure behavior.** `validate` failing is the designed stop: the warehouse keeps
 serving the previous release and the report names the failing check, the source, and the
-row count. A failure in `acquire` or `land` affects only that source — the CLI processes
-sources independently and reports a per-source exit summary, so one dead upstream URL
-does not block a refresh of the other eight. A failure in `load` rolls back to the prior
-release for that source only. A failure in `analyze` leaves the derived tables empty
-rather than stale: `/rankings` and `/compare` then return empty results, `/regions/{id}/
-packet` and `/regions/{id}/report` return 404 naming `hip analyze`, and every fact
-endpoint keeps working. (An earlier version of this document promised 503 from the
-ranking endpoints; nothing implements that, and an empty ranking is not a server error.)
+row count. `acquire` and `land` do not isolate sources: an exception from one adapter
+ends the command, and the sources after it are not attempted — a HUD rate limit aborted a
+forced re-acquire that way on 2026-09-06. Both are resumable rather than isolated, since
+a re-run skips every release already cached or landed; per-source error handling waits
+for scheduled refresh ([TODO.md](TODO.md)). A failure in `load` rolls back the whole fact
+load, every source together, so the warehouse keeps the previous refresh intact. A
+failure in `analyze` rolls back its single transaction, so the derived tables keep their
+previous contents: `/rankings`, `/compare` and packets go on serving the last successful
+analysis, stale but consistent. Every fact endpoint keeps working either way. (Until
+2026-09-10 this paragraph claimed per-source isolation in `acquire`, per-source rollback
+in `load`, and empty derived tables after a failed `analyze`; none was true. An earlier
+version still promised 503 from the ranking endpoints, which nothing implements.)
 
 **Degradation when a dependency is unavailable.** No Docker or no Postgres means stages 1
 through 5 still run end-to-end — everything up to `load` is Parquet and DuckDB only,
@@ -500,12 +565,14 @@ which is deliberate: the expensive, slow work does not require the database to b
 
 The contract between deterministic analytics and any consumer (#12). Small, fully
 computed, and validated against `schemas/packet-v1.json` before it is written. A county
-packet is roughly 13KB — 15 metrics, 8 sources, 6 caveats.
+packet is roughly 14KB: Mercer's, on 2026-09-10, carried 15 metrics, 15 levels, 8
+sources and 5 caveats.
 
 `src/hip/packets/schema.py` holds the Pydantic models that *are* the schema; the JSON
 Schema file is generated from them and committed (#43), and `hip schema` prints it.
 Assembly is `build_packet(session, region_id, window)`; the API calls it per request and
-`hip pack` calls it in a loop (#42).
+`hip pack` calls it in a loop (#42). An abridged example, with Mercer's figures from before
+the July 2026 data arrived:
 
 ```json
 {
@@ -571,9 +638,11 @@ Assembly is `build_packet(session, region_id, window)`; the API calls it per req
   `PacketUnavailable`, which the API turns into a 404 naming `hip analyze` — a
   schema-valid packet with no metrics would tell a reader nothing while looking fine.
 
-**Surprising but intentional.** No model consumes these in Version 1 (#11). The report
-renderer and the dashboard's report page are their only readers, which is the point: the
-contract is exercised by two independent media before an LLM shapes it.
+**Surprising but intentional.** The packet is the whole of what a model may see (#12):
+the evaluation's scenarios and `hip explain` both hand a model a packet, rendered as JSON
+or Markdown, and nothing else. Before any model read one, the report renderer and the
+dashboard's report page were its only readers — two independent media that exercised the
+contract before an LLM could shape it (#11).
 
 **Fixed at Milestone 7.** `metrics[].release_id` used to name the right source and the
 wrong vintage (#47); the loader now keys releases on `(source, layer, vintage)` (#53), so
@@ -584,8 +653,9 @@ when the data stopped warranting it, and would return if a future source regress
 
 ## API
 
-FastAPI over Postgres, read-only (#6), served at `http://localhost:8000`. Endpoints
-marked ✅ are implemented; the rest arrive with the milestones that produce their data.
+FastAPI over Postgres, read-only (#6), served at `http://localhost:8000`. All fifteen
+endpoints are implemented; `hip publish` renders every one to static files except
+`/compare` and `/regions?q=` search, which do not enumerate (#67).
 
 | Method | Path | Returns |
 |--------|------|---------|
@@ -593,25 +663,37 @@ marked ✅ are implemented; the rest arrive with the milestones that produce the
 | GET | `/regions` | ✅ paged regions filtered by `level`, `state`, `parent_id`, name `q` |
 | GET | `/regions/{region_id}` | ✅ one region, its full ancestor chain, child count |
 | GET | `/geo/{level}` | ✅ GeoJSON FeatureCollection, simplified by default |
+| GET | `/metrics` | ✅ metric catalog with coverage and date range, optionally for one `level` |
 | GET | `/regions/{region_id}/metrics` | ✅ observations filtered by `metric_id`, `from`, `to`, each with source and match method |
 | GET | `/regions/{region_id}/summary` | ✅ headline changes, rank, caveats — dashboard landing |
 | GET | `/regions/{region_id}/packet` | ✅ the analysis packet, assembled per request (#42) |
 | GET | `/regions/{region_id}/report` | ✅ the same packet as `text/markdown` |
+| GET | `/regions/{region_id}/explanation` | ✅ the preferred model's interpretation, labelled `kind: "interpretation"`, with a `stale` flag (#60, #92) |
+| GET | `/regions/{region_id}/explanations` | ✅ every model's reading of the same packet, in preference order (#91, #92) |
 | GET | `/rankings` | ✅ ranked regions for `metric_id`, `level`, and `basis` (`change` over a window, or `value`) |
 | GET | `/compare` | ✅ aligned series for several `region_ids` |
 | GET | `/sources` | ✅ source registry and the releases currently loaded (#71) |
 | GET | `/sources/unresolved` | ✅ source geographies with no region, and why |
 
 `/compare` takes one `metric_id` across several regions, not several metrics — the
-earlier version of this table said otherwise. Every endpoint here is now implemented:
-`/sources` was the last, built on 2026-09-05 for the site-wide attribution footer (#71).
+earlier version of this table said otherwise. `/sources` was the last of the originally
+planned endpoints, built on 2026-09-05 for the site-wide attribution footer (#71).
 A packet already carried the releases behind its own numbers, which is what the dashboard
 needed — but no surface outside a report exposed them, and attribution is a licence
 condition rather than a report detail.
 
-Every response that contains a metric value also carries the `release_id` and source
-vintage behind it — provenance is a field, not a separate lookup. The API holds a
-read-only Postgres role, so decision #6 survives a careless handler.
+Provenance travels with a value wherever a reader meets one on its own:
+`/regions/{id}/metrics` returns each observation with its source, vintage and match
+method, and every packet and report cites the release behind each figure. The aggregate
+endpoints — `/rankings`, `/compare`, and the summary's headlines — return values without
+per-row provenance; the metric they name is the route back to its source. (An earlier
+version of this paragraph said every response carried it.)
+
+The API is read-only by construction rather than by permission. It connects as the same
+`hip` role the pipeline writes with; what keeps it from writing is that no handler does,
+and that `tests/test_module_boundaries.py` denies it every module that could (#6). A
+read-only database role would make that a guarantee Postgres enforces as well; none is
+configured. (An earlier version said one was.)
 
 ## Known Limitations
 
@@ -643,15 +725,15 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **An assessment is not a market value.** Ratios drift between revaluations and vary by
   municipality, so `modiv_median_assessed_value` tracks the tax roll rather than what
   houses sell for. Equalization ratios would fix this and are not loaded.
-- **A warm Next cache can publish a stale page** (#72). The incremental cache is keyed
+- **A warm Next cache can publish a stale page**, found 2026-09-05. The incremental cache is keyed
   on source, not on data fetched during the build, so a component whose markup is
   unchanged but whose API response has gained a field is served from cache — which is
   how a corrected footer shipped with no `href` on any link while the artifact beside it
   held the right values. `make publish` now deletes `web/.next` first, which costs a cold
   build on every publish.
 - **The static export is 3× the size of the data it displays** (#68). Measured
-  2026-09-06: 1,135 regions produce 5,846 artifact files at 96MB and 13,647 export files
-  at 316MB, because every page embeds its own data and Next writes five RSC payloads per
+  2026-09-06, after Milestone 19: 1,135 regions produce 5,867 artifact files at 96MB and
+  13,647 export files at 319MB, because every page embeds its own data and Next writes five RSC payloads per
   page alongside the HTML. Pre-rendering therefore breaks on file count before storage or
   bandwidth become a question, and it breaks at Northeast scale rather than national —
   roughly 123,000 export files for nine states, against a 100,000-file paid ceiling.
@@ -698,8 +780,9 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **1.4% of parcels carry no `CD_CODE`** and are dropped before aggregation, because the
   composite could not confidently match the polygon to a MOD-IV record. They cannot be
   attributed to any municipality.
-- **There is no AI layer** (#11). Packets are produced and read only by the report
-  renderer and the dashboard's report page until Milestone 8.
+- ~~**There is no AI layer** (#11).~~ Superseded 2026-08-14: Milestone 8 added the
+  evaluated explanation layer (#56–#60), and Milestone 12 moved it to hosted inference
+  (#78). Packets are read by models as well as by the report renderer and the dashboard.
 - ~~**Layer-level provenance is still approximate for keyed sources**~~ (#53). Fixed
   2026-09-06 (#75): every keyed staging model now carries `release_layer`, the layer of
   the file the row arrived in, so the loader's exact `(source, layer, vintage)` lookup
@@ -727,8 +810,8 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   report route fetches, or that print styles hide what they should.
 - **The evaluation samples three counties, not all 21** (`hip eval scenarios
   --regions`). Five questions across three packets is 15 scenarios per model; widening
-  it is a flag, but each added region costs one generation per model per question, and a
-  generation is 40 seconds to 3 minutes on this machine.
+  it is a flag, but each added region costs one generation per model per question — 40
+  seconds to 3 minutes for a local model on this machine, seconds for a hosted one.
 - **Reasoning is measured, never graded.** Only final answers reach the judge. A model
   whose reasoning is excellent and whose answer is wrong scores as wrong, which is the
   intent — but it also means the evaluation says nothing about reasoning quality.
@@ -760,8 +843,10 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   for exactly this reason (#98); the rates are the same hazard, not yet fixed.
 - **Explanations are generated per region and go stale silently in the warehouse.**
   `packet_sha256` makes staleness *detectable* and the API reports it, but nothing
-  regenerates automatically; a pipeline run leaves every explanation stale until
-  `hip explain` is run again.
+  regenerates automatically: prose whose numbers moved stays stale until `hip explain`
+  runs again, and `hip explain` skips any region whose prose is still current. (This used
+  to say a pipeline run leaves every explanation stale; that was the defect #73 and #88
+  fixed, and an unchanged rebuild now leaves them current.)
 - **`gemma-4-e4b-mlx` cannot be loaded at all.** mlx-lm 0.31.3 rejects the weights
   with `Received 126 parameters not in model` — the E4B MatFormer architecture is not
   supported. All 15 of its generations are recorded as errors rather than dropped, and
@@ -779,10 +864,9 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   Scores are bounded by an enum instead, which also forces whole-number grades.
 - **Refresh is manual.** There is no scheduler; a refresh is a `hip` command run by a
   person or a cron entry they write themselves. Deliberate — see #6.
-- **ZIP allocation is area-weighted, not population-weighted** (#26). A half-empty ZIP
-  contributes area it does not contribute households for, so ZIP-derived municipal
-  figures skew toward large, sparsely populated areas. HUD's USPS crosswalk is the fix
-  and needs an API key.
+- ~~**ZIP allocation is area-weighted, not population-weighted** (#26).~~ Fixed
+  2026-08-12 (Milestone 9, #37): HUD's residential-address ratios weight 2,460 of the
+  2,493 crosswalk rows. The area-weighted remainder is recorded below.
 - **ZIP membership is decided by geometry, not by address.** 598 ZCTAs overlap NJ by
   positive area; ZCTAs that only touch the border across the Delaware or Hudson are
   excluded. A ZCTA mostly in Pennsylvania but partly in NJ is still recorded with
@@ -809,7 +893,8 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **AMI-based affordability is county-only.** HUD publishes income limits per county,
   so `price_to_ami` has 105 observations against `price_to_income`'s 2,026. A municipal
   AMI figure would mean allocating a county limit downward, which HUD does not sanction.
-- **35 ZIP crosswalk rows still use area weighting**, where HUD has no residential
+- **33 ZIP crosswalk rows still use area weighting** (measured 2026-09-10; 35 at
+  Milestone 9), where HUD has no residential
   addresses for the pair. `method` distinguishes them, and an allocation mixing the two
   is silently mixing assumptions.
 - **HUD Fair Market Rents and CHAS are in SPEC but not fetched.** Both were approved as
@@ -839,5 +924,7 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   be thinner than value-based analysis at every level, and much thinner at municipal
   level.
 - **The Postgres container runs under emulation.** `postgis/postgis:16-3.4` resolves to
-  linux/amd64 on this arm64 Mac, so Docker emulates it. Correct but slower than native;
-  irrelevant at 3,365 rows, worth revisiting when the fact tables arrive.
+  linux/amd64 on this arm64 Mac, so Docker emulates it. Correct but slower than native.
+  The fact tables arrived at Milestone 2 and now hold 337,552 rows, and a warm
+  `make pipeline` still measured 22 seconds on 2026-08-28, so emulation has not yet been
+  worth fixing.

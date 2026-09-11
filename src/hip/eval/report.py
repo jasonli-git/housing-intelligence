@@ -265,6 +265,24 @@ def _fmt(value: float | None, suffix: str = "", nd: int = 2) -> str:
     return "—" if value is None else f"{value:.{nd}f}{suffix}"
 
 
+def _judge_label(evaluation: EvaluationConfig, judged: list[Judgment]) -> str:
+    """The judge as its verdicts record it, not as config describes it today.
+
+    A report re-rendered after the judge changes must still name the judge that graded
+    it (#101). Verdicts from before `judge_effort` existed record the model but not the
+    effort, and the label then says nothing about effort rather than guess one — which
+    also keeps `v1` and `v2` rendering exactly as they did.
+    """
+    models = sorted({j.judge_model for j in judged if j.judge_model}) or [
+        evaluation.judge.model
+    ]
+    efforts = sorted({j.judge_effort for j in judged if j.judge_effort})
+    label = ", ".join(f"`{model}`" for model in models)
+    if efforts:
+        label += " at effort " + ", ".join(f"`{effort}`" for effort in efforts)
+    return label
+
+
 def _effort_note(priced: list[ModelSummary]) -> str:
     """What the quality-per-dollar column compares, derived from the run.
 
@@ -454,7 +472,7 @@ def render_report(
             "",
             "## Rubric scores",
             "",
-            f"Graded by `{evaluation.judge.model}` against the criteria in "
+            f"Graded by {_judge_label(evaluation, judged)} against the criteria in "
             "`config/evaluation.yml`. Final answers only — reasoning tokens are "
             "measured as cost, never graded as quality.",
             "",

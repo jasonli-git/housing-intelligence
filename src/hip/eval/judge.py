@@ -15,6 +15,10 @@ Three things about the API shape are load-bearing and each was a real failure mo
   model and bills as output, so a budget sized for the JSON alone truncates the verdict
   while the reasoning consumes the allowance.
 
+`effort` is part of the instrument. Like the system prompt it moves scores, so it changes
+only at a run boundary, and every verdict records the effort it was graded at and the
+tokens it was billed for (ARCHITECTURE #101).
+
 Batch is the default: the whole run is submitted at once, latency is irrelevant, and the
 flat 50% halves the cost. Prompt caching would not stack usefully — parallel batch
 requests sharing a prefix all miss the cache — so the discount is taken and any cache hit
@@ -182,7 +186,10 @@ def _request_params(
 
 
 def _parse(
-    payload: dict[str, Any], generation: Generation, evaluation: EvaluationConfig
+    payload: dict[str, Any],
+    generation: Generation,
+    evaluation: EvaluationConfig,
+    usage: tuple[int | None, int | None] = (None, None),
 ) -> Judgment:
     scores = {
         key: CriterionScore(
@@ -199,10 +206,18 @@ def _parse(
         summary=str(payload.get("summary", "")),
         weighted_score=weighted(scores, evaluation.rubric),
         judge_model=evaluation.judge.model,
+        judge_effort=evaluation.judge.effort,
+        input_tokens=usage[0],
+        output_tokens=usage[1],
     )
 
 
-def _failed(generation: Generation, evaluation: EvaluationConfig, error: str) -> Judgment:
+def _failed(
+    generation: Generation,
+    evaluation: EvaluationConfig,
+    error: str,
+    usage: tuple[int | None, int | None] = (None, None),
+) -> Judgment:
     return Judgment(
         generation_key=generation.key,
         model_id=generation.model_id,
@@ -210,8 +225,23 @@ def _failed(generation: Generation, evaluation: EvaluationConfig, error: str) ->
         scores={},
         summary="",
         judge_model=evaluation.judge.model,
+        judge_effort=evaluation.judge.effort,
+        input_tokens=usage[0],
+        output_tokens=usage[1],
         error=error,
     )
+
+
+def _usage(message: Any) -> tuple[int | None, int | None]:
+    """Input and output tokens the API billed for one verdict, where it reported them.
+
+    Output includes the judge's thinking, which is most of it. Cache counters are left
+    out: batch requests sharing a prefix all miss the cache (see the module docstring).
+    """
+    usage = getattr(message, "usage", None)
+    if usage is None:
+        return None, None
+    return getattr(usage, "input_tokens", None), getattr(usage, "output_tokens", None)
 
 
 def _text_of(message: Any) -> str:
@@ -238,16 +268,17 @@ def judge_sync(
     judgments: list[Judgment] = []
     for generation in generations:
         scenario = scenarios[generation.scenario_key]
+        message = None
         try:
             message = client.messages.create(
                 **_request_params(evaluation, generation, scenario)
             )
-            judgments.append(
-                _parse(json.loads(_text_of(message)), generation, evaluation)
-            )
+            payload = json.loads(_text_of(message))
+            judgments.append(_parse(payload, generation, evaluation, _usage(message)))
         except Exception as exc:  # noqa: BLE001 - one bad grade must not lose the rest
             log.warning("judge failed for %s: %s", generation.key, exc)
-            judgments.append(_failed(generation, evaluation, str(exc)))
+            # A verdict that arrived but could not be read was still billed.
+            judgments.append(_failed(generation, evaluation, str(exc), _usage(message)))
     return judgments
 
 
@@ -326,11 +357,14 @@ def collect_batch(
                 )
             )
             continue
+        message = result.result.message
         try:
-            payload = json.loads(_text_of(result.result.message))
-            judgments.append(_parse(payload, generation, evaluation))
+            payload = json.loads(_text_of(message))
+            judgments.append(_parse(payload, generation, evaluation, _usage(message)))
         except Exception as exc:  # noqa: BLE001 - one bad grade must not lose the rest
-            judgments.append(_failed(generation, evaluation, str(exc)))
+            # Most likely cut off by `max_tokens` mid-JSON. It was billed, so its usage is
+            # kept for the cost of the run even though the verdict is not.
+            judgments.append(_failed(generation, evaluation, str(exc), _usage(message)))
     return judgments
 
 
@@ -346,12 +380,21 @@ _JUDGE_OUT_USD_PER_MTOK = 25.0
 # is a snapshot of one run's packet size and silently under-quotes the next one.
 _JUDGE_PROMPT_TOKENS = 2600
 
-# Output is dominated by thinking rather than by the verdict. `effort: medium` bills its
-# reasoning at the output rate, and `max_tokens` is 3,000 precisely because a budget
-# sized for the JSON alone truncates the verdict while the reasoning consumes it. Taken
-# at two thirds of the cap: the earlier figure of 800 was the size of the JSON and
-# under-reported the bill by between 15% and 60%.
-_JUDGE_OUTPUT_TOKENS = 2000
+# Output per verdict, by effort, for quoting a run before it is judged. Dominated by
+# thinking rather than by the verdict JSON, and billed at the output rate. `medium` is
+# the figure calibrated against `v1`'s judging (#84) — the earlier 800 was the size of
+# the JSON alone and under-reported the bill by between 15% and 60%. The other levels
+# are planning figures scaled from it, not measurements, set on the high side because a
+# run that costs more than it was quoted is the failure worth avoiding. Every verdict now
+# records the output tokens it was billed for (#101), so `high` is the first of these a
+# run will replace with a measurement.
+_JUDGE_OUTPUT_TOKENS: dict[str, int] = {
+    "low": 1_000,
+    "medium": 2_000,
+    "high": 5_000,
+    "xhigh": 8_000,
+    "max": 12_000,
+}
 
 # The system prompt and the generated JSON schema, which ride on every request and
 # do not vary with the run. Measured 2026-09-06: 226 + 442.
@@ -365,9 +408,15 @@ def _rates(evaluation: EvaluationConfig) -> tuple[float, float]:
     return in_rate, out_rate
 
 
+def assumed_output_tokens(evaluation: EvaluationConfig) -> int:
+    """Output tokens per verdict a quote assumes: the effort's figure, within the cap."""
+    judge = evaluation.judge
+    return min(_JUDGE_OUTPUT_TOKENS[judge.effort], judge.max_tokens)
+
+
 def _price(prompt_tokens: int, count: int, evaluation: EvaluationConfig) -> float:
     in_rate, out_rate = _rates(evaluation)
-    output = min(_JUDGE_OUTPUT_TOKENS, evaluation.judge.max_tokens)
+    output = assumed_output_tokens(evaluation)
     return round(count * (prompt_tokens * in_rate + output * out_rate) / 1_000_000, 2)
 
 
@@ -389,9 +438,9 @@ def measured_cost(
 
     Builds the real judge prompt for every generation rather than assuming one, because
     the prompt is dominated by the packet and the packet's size is a property of the
-    run, not of this module. Returns an over-estimate on the output side — the full
-    thinking allowance — for the reason the docstring above gives: a judging run that
-    costs more than it was quoted is the failure worth avoiding.
+    run, not of this module. The output side is the effort's planning figure from
+    `_JUDGE_OUTPUT_TOKENS`, set high on purpose: a judging run that costs more than it
+    was quoted is the failure worth avoiding.
     """
     total = 0
     priced = 0
@@ -406,3 +455,27 @@ def measured_cost(
         return 0.0, 0
     mean = total // priced
     return _price(mean, priced, evaluation), mean
+
+
+def recorded_cost(
+    judgments: list[Judgment], evaluation: EvaluationConfig
+) -> tuple[float, int, int] | None:
+    """What judging these verdicts was billed, from the usage each one recorded.
+
+    Returns `(usd, input_tokens, output_tokens)`, or None when no verdict carries usage —
+    every run judged before the fields existed. Priced at the configured mode's rates,
+    which is the mode the batch ran in unless config changed since. A verdict that failed
+    after it arrived is counted, because it was paid for.
+    """
+    billed = [
+        judgment
+        for judgment in judgments
+        if judgment.input_tokens is not None and judgment.output_tokens is not None
+    ]
+    if not billed:
+        return None
+    tokens_in = sum(judgment.input_tokens or 0 for judgment in billed)
+    tokens_out = sum(judgment.output_tokens or 0 for judgment in billed)
+    in_rate, out_rate = _rates(evaluation)
+    usd = round((tokens_in * in_rate + tokens_out * out_rate) / 1_000_000, 2)
+    return usd, tokens_in, tokens_out

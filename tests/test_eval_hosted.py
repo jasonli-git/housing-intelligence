@@ -15,6 +15,7 @@ import os
 import pathlib
 import threading
 import time
+from types import SimpleNamespace
 from typing import Any
 
 import httpx
@@ -827,9 +828,13 @@ def test_batch_mode_is_half_of_sync() -> None:
 
     evaluation = load_evaluation(CONFIG_DIR)
     generation, scenario = _judgeable(payload="x " * 2000)
-    batch, _ = measured_cost([generation], {scenario.key: scenario}, evaluation)
+    # A run's worth rather than one call. The quote is rounded to cents, and a single
+    # judgment at `high` is a few cents with a half-cent that rounds differently in each
+    # mode — which compared the rounding, not the rates.
+    run = [generation] * 105
+    batch, _ = measured_cost(run, {scenario.key: scenario}, evaluation)
     evaluation.judge.mode = "sync"
-    sync, _ = measured_cost([generation], {scenario.key: scenario}, evaluation)
+    sync, _ = measured_cost(run, {scenario.key: scenario}, evaluation)
     assert sync == pytest.approx(batch * 2, rel=0.02)
 
 
@@ -1712,3 +1717,154 @@ def test_a_model_sent_two_efforts_under_one_id_cannot_be_selected() -> None:
         evaluation, [_scenario()], [first, second], [], judgments, run="t"
     )
     assert "more than one reasoning effort" in text
+
+
+# --- the judge's configuration (pre-v3, ARCHITECTURE #101) --------------------------
+
+
+def _verdict_json(evaluation: EvaluationConfig) -> str:
+    return json.dumps(
+        {
+            "scores": {
+                criterion.id: {"score": 3, "justification": "grounded"}
+                for criterion in evaluation.rubric.criteria
+            },
+            "hallucinations": [],
+            "summary": "fine",
+        }
+    )
+
+
+class _Batches:
+    def __init__(self, results: list[object]) -> None:
+        self._results = results
+
+    def results(self, batch_id: str) -> list[object]:
+        return self._results
+
+
+class _Client:
+    """The one corner of the Anthropic client that `collect_batch` reads."""
+
+    def __init__(self, results: list[object]) -> None:
+        self.messages = SimpleNamespace(batches=_Batches(results))
+
+
+def _succeeded(custom_id: str, text: str, *, tokens_in: int, tokens_out: int) -> object:
+    message = SimpleNamespace(
+        stop_reason="end_turn",
+        content=[SimpleNamespace(type="text", text=text)],
+        usage=SimpleNamespace(input_tokens=tokens_in, output_tokens=tokens_out),
+    )
+    return SimpleNamespace(
+        custom_id=custom_id, result=SimpleNamespace(type="succeeded", message=message)
+    )
+
+
+def test_the_judge_grades_at_high_with_room_to_finish() -> None:
+    """At `high` the verdict shares `max_tokens` with the thinking before it, so a cap
+    sized for `medium` would cut paid-for verdicts off mid-JSON."""
+    from hip.eval.judge import assumed_output_tokens
+
+    evaluation = load_evaluation(CONFIG_DIR)
+    assert evaluation.judge.effort == "high"
+    assert evaluation.judge.max_tokens >= 2 * assumed_output_tokens(evaluation)
+
+
+def test_judging_is_quoted_at_the_configured_effort() -> None:
+    from hip.eval.judge import assumed_output_tokens, measured_cost
+
+    evaluation = load_evaluation(CONFIG_DIR)
+    generation, scenario = _judgeable(payload="x " * 2000)
+    scenarios = {scenario.key: scenario}
+
+    high, _ = measured_cost([generation] * 105, scenarios, evaluation)
+    at_medium = evaluation.model_copy(
+        update={"judge": evaluation.judge.model_copy(update={"effort": "medium"})}
+    )
+    medium, _ = measured_cost([generation] * 105, scenarios, at_medium)
+    assert high > medium
+
+    # The assumption never exceeds what the cap would let the judge emit.
+    capped = evaluation.model_copy(
+        update={"judge": evaluation.judge.model_copy(update={"max_tokens": 1024})}
+    )
+    assert assumed_output_tokens(capped) == 1024
+
+
+def test_a_verdict_records_its_judge_effort_and_billed_tokens() -> None:
+    from hip.eval.judge import collect_batch
+
+    evaluation = load_evaluation(CONFIG_DIR)
+    generation = _priced_generation("gemini-3.7-flash", "gemini", prompt=10, output=5)
+    verdict = _verdict_json(evaluation)
+    client = _Client([_succeeded("g0", verdict, tokens_in=7200, tokens_out=4100)])
+
+    [judgment] = collect_batch("batch", {"g0": generation}, evaluation, client=client)
+    assert judgment.error is None
+    assert judgment.judge_effort == "high"
+    assert (judgment.input_tokens, judgment.output_tokens) == (7200, 4100)
+
+
+def test_a_verdict_cut_off_mid_json_keeps_its_billed_tokens() -> None:
+    """Truncated by `max_tokens`, it is a failed judgment — and it was still paid for."""
+    from hip.eval.judge import collect_batch
+
+    evaluation = load_evaluation(CONFIG_DIR)
+    generation = _priced_generation("gemini-3.7-flash", "gemini", prompt=10, output=5)
+    cut_off = '{"scores": {"factual_ac'
+    client = _Client([_succeeded("g0", cut_off, tokens_in=7200, tokens_out=16000)])
+
+    [judgment] = collect_batch("batch", {"g0": generation}, evaluation, client=client)
+    assert judgment.error is not None
+    assert judgment.output_tokens == 16000
+
+
+def test_verdicts_from_before_the_fields_still_parse() -> None:
+    """Every `v1` and `v2` verdict predates them; both runs were graded at `medium`."""
+    old = Judgment.model_validate(
+        {
+            "generation_key": "k",
+            "model_id": "m",
+            "scenario_id": "s",
+            "scores": {},
+            "summary": "",
+            "judge_model": "claude-opus-5",
+        }
+    )
+    assert (old.judge_effort, old.input_tokens, old.output_tokens) == (None, None, None)
+
+
+def test_recorded_cost_prices_what_the_verdicts_were_billed() -> None:
+    from hip.eval.judge import recorded_cost
+
+    evaluation = load_evaluation(CONFIG_DIR)  # batch: half of $5 in and $25 out per Mtok
+    billed = Judgment(
+        generation_key="k",
+        model_id="m",
+        scenario_id="s",
+        scores={},
+        summary="",
+        input_tokens=1_000_000,
+        output_tokens=1_000_000,
+    )
+    assert recorded_cost([billed], evaluation) == (15.0, 1_000_000, 1_000_000)
+    unrecorded = billed.model_copy(update={"input_tokens": None, "output_tokens": None})
+    assert recorded_cost([unrecorded], evaluation) is None
+
+
+def test_the_report_names_the_judge_as_its_verdicts_record_it() -> None:
+    """Re-rendering after the judge changes must not re-attribute old scores to it."""
+    evaluation = _evaluation(["gemini-test"])
+    generation = _priced_generation("gemini-test", "gemini", prompt=1, output=1)
+    judged = _judged(generation, 3.0, evaluation).model_copy(
+        update={"judge_model": "claude-opus-5", "judge_effort": "high"}
+    )
+    text = render_report(evaluation, [_scenario()], [generation], [], [judged], run="t")
+    assert "Graded by `claude-opus-5` at effort `high` against" in text
+
+    unrecorded = judged.model_copy(update={"judge_effort": None})
+    text = render_report(
+        evaluation, [_scenario()], [generation], [], [unrecorded], run="t"
+    )
+    assert "Graded by `claude-opus-5` against" in text

@@ -11,13 +11,16 @@ than an ImportError at startup.
 from __future__ import annotations
 
 import json
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 from sqlalchemy.orm import Session
 
 from hip.config import ConfigError, EvaluationConfig, get_settings, load_evaluation
 from hip.warehouse.db import get_engine
+
+if TYPE_CHECKING:
+    from hip.eval.types import Judgment
 
 app = typer.Typer(
     name="eval",
@@ -301,13 +304,14 @@ def judge_command(
         )
         for judgment in [j for j in judgments if j.error][:5]:
             typer.secho(f"failed: {judgment.error}", err=True)
+        _report_billed(judgments, evaluation)
         return
 
     scenarios = {sc.key: sc for sc in load_scenarios(run)}
     cost, _ = measured_cost(generations, scenarios, evaluation)
     typer.echo(
-        f"judging {len(generations)} generations with {evaluation.judge.model} "
-        f"via {evaluation.judge.mode}: about ${cost:.2f}"
+        f"judging {len(generations)} generations with {evaluation.judge.model} at "
+        f"effort {evaluation.judge.effort} via {evaluation.judge.mode}: about ${cost:.2f}"
     )
     if not yes and not typer.confirm("proceed?", default=True):
         raise typer.Exit(code=1)
@@ -330,6 +334,25 @@ def judge_command(
     typer.secho(
         f"wrote {path} ({len(scored)} scored, {len(failed)} failed)",
         fg=typer.colors.GREEN if not failed else typer.colors.YELLOW,
+    )
+    _report_billed(judgments, evaluation)
+
+
+def _report_billed(judgments: list[Judgment], evaluation: EvaluationConfig) -> None:
+    """Print what the verdicts were billed, from the usage each one recorded (#101).
+
+    The quote before a run is an estimate; this is the figure the invoice will show, and
+    until these fields existed nothing in the harness recorded it.
+    """
+    from hip.eval.judge import recorded_cost
+
+    billed = recorded_cost(judgments, evaluation)
+    if billed is None:
+        return
+    usd, tokens_in, tokens_out = billed
+    typer.echo(
+        f"billed {tokens_in:,} input and {tokens_out:,} output tokens: about ${usd:.2f} "
+        f"at {evaluation.judge.mode} rates"
     )
 
 
@@ -691,9 +714,11 @@ def cost_command(
     """Estimate what judging this run costs, without spending anything.
 
     Priced from the run's own prompts rather than from a constant, because the judge
-    prompt is dominated by the packet and packet size is a property of the run.
+    prompt is dominated by the packet and packet size is a property of the run. The
+    output side is not measured: it is the planning figure for the judge's effort, and it
+    is printed beside the quote so it is not mistaken for one.
     """
-    from hip.eval.judge import measured_cost
+    from hip.eval.judge import assumed_output_tokens, measured_cost
     from hip.eval.store import load_generations, load_scenarios
 
     evaluation = load_evaluation()
@@ -708,7 +733,9 @@ def cost_command(
                 "run": run,
                 "judgeable_generations": len(generations),
                 "judge_model": evaluation.judge.model,
+                "judge_effort": evaluation.judge.effort,
                 "mean_judge_prompt_tokens": mean_prompt,
+                "assumed_output_tokens_per_judgment": assumed_output_tokens(evaluation),
                 "estimated_usd_batch": batch,
                 "estimated_usd_sync": sync,
             },

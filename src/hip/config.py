@@ -427,13 +427,26 @@ class Rubric(BaseModel):
     criteria: list[RubricCriterion] = Field(min_length=1)
 
 
+# How hard the judge thinks before grading: `output_config.effort` on the Anthropic API.
+JudgeEffort = Literal["low", "medium", "high", "xhigh", "max"]
+
+
 class JudgeConfig(BaseModel):
+    """The model grading the evaluation, and how much it may spend doing it.
+
+    `effort` is part of the instrument — a change moves scores, so it changes only at a
+    run boundary and is recorded on every verdict (ARCHITECTURE #101). `max_tokens` caps
+    thinking and the verdict together, because thinking is on by default on Claude Opus 5
+    and bills as output, so it has to grow with `effort`: too small a cap cuts a verdict
+    off mid-JSON and records a paid-for answer as a failed judgment.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     model: str
     mode: Literal["batch", "sync"] = "batch"
     max_tokens: int = Field(ge=1024)
-    effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
+    effort: JudgeEffort = "medium"
 
 
 class GenerationConfig(BaseModel):
