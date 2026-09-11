@@ -2172,3 +2172,112 @@ def test_a_run_the_pinned_temperature_fully_controls_carries_no_sampling_note() 
     generation = _priced_generation("gemma-4-e4b-q4", "gguf", prompt=1, output=1)
     text = render_report(evaluation, [_scenario()], [generation], [], [], run="t")
     assert "temperature" not in text
+
+
+# --- Qwen, the fourth hosted provider, 2026-09-11 ----------------------------------
+
+
+def _qwen(monkeypatch: pytest.MonkeyPatch) -> HostedRunner:
+    monkeypatch.setenv("QWEN_API_KEY", "sk-ws-test")
+    runner = build_runner(_cohort("qwen", "https://x/compatible-mode/v1"), "qwen")
+    assert isinstance(runner, HostedRunner)
+    return runner
+
+
+def test_qwen_disabled_is_sent_as_enable_thinking_false_and_default_sends_nothing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Qwen 3.5-3.8 think by default. The off switch is a top-level field over plain
+    HTTP — `extra_body` is only how the OpenAI SDK spells it."""
+    sent: list[dict[str, Any]] = []
+    runner = _qwen(monkeypatch)
+    answer = _recording(_openai_body("pinned-model-0731"), sent)
+
+    _generate_as(runner, _at("qwen", "disabled"), answer, monkeypatch)
+    assert sent[-1]["enable_thinking"] is False
+
+    _generate_as(runner, _at("qwen", "default"), answer, monkeypatch)
+    assert "enable_thinking" not in sent[-1]
+
+
+def test_a_qwen_thinking_answer_is_split_and_counted_as_the_provider_bills_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The shape `qwen3.7-flash-2026-07-15` returned on 2026-09-11: thinking under
+    `reasoning_content`, counted inside `completion_tokens`, like DeepSeek's."""
+    body = {
+        "model": "pinned-model-0731",
+        "choices": [
+            {
+                "message": {
+                    "content": "Housing is becoming less affordable.",
+                    "reasoning_content": "The packet shows three ratios...",
+                },
+                "finish_reason": "stop",
+            }
+        ],
+        "usage": {
+            "prompt_tokens": 2821,
+            "completion_tokens": 2497,
+            "completion_tokens_details": {"reasoning_tokens": 2268},
+        },
+    }
+    generation = _generate_as(
+        _qwen(monkeypatch), _at("qwen", "default"), _answering(body), monkeypatch
+    )
+
+    assert generation.error is None
+    assert generation.answer == "Housing is becoming less affordable."
+    assert generation.reasoning == "The packet shows three ratios..."
+    assert generation.telemetry.generation_tokens == 2497
+    assert generation.telemetry.reasoning_tokens == 2268
+    assert generation.telemetry.served_model == "pinned-model-0731"
+
+
+def test_the_qwen_candidates_are_pinned_snapshots_at_both_efforts() -> None:
+    """Pinning is what Qwen offers DeepSeek's slot: a dated snapshot, where DeepSeek
+    serves only aliases it repoints."""
+    import re
+
+    evaluation = load_evaluation(CONFIG_DIR)
+    qwen = evaluation.cohorts["qwen"]
+    assert qwen.endpoint is not None
+    # A key is bound to its region, and only Singapore has the free quota.
+    assert qwen.endpoint.startswith("https://dashscope-intl.aliyuncs.com/")
+    for model in qwen.models:
+        assert re.search(r"-\d{4}-\d{2}-\d{2}$", model.ref), model.id
+    efforts: dict[str, set[str]] = {}
+    for model in qwen.models:
+        efforts.setdefault(model.ref, set()).add(model.reasoning_effort)
+    assert list(efforts.values()) == [{"default", "disabled"}] * 2
+
+
+def test_the_report_holds_qwen_to_the_temperature_its_cards_give_for_each_mode() -> None:
+    """Qwen recommends 1.0 when thinking and 0.7 when not, so at the stability mode's 0.7
+    only the candidate that reasoned sits below its recommendation (#104, #105)."""
+    evaluation = load_evaluation(CONFIG_DIR)
+    thinking = _priced_generation("qwen3.7-flash", "qwen", prompt=100, output=40)
+    thinking = thinking.model_copy(
+        update={
+            "mode": "stability",
+            "telemetry": thinking.telemetry.model_copy(update={"reasoning_tokens": 30}),
+        }
+    )
+    direct = _priced_generation("qwen3.7-flash-nothink", "qwen", prompt=100, output=40)
+    direct = direct.model_copy(
+        update={"mode": "stability", "reasoning_effort": "disabled"}
+    )
+
+    text = render_report(evaluation, [_scenario()], [thinking, direct], [], [], run="t")
+    assert "**Every candidate was sent temperature 0.7**" in text
+    assert (
+        "it publishes none for 3.7; **Qwen3.7 Flash** was held to the same setting "
+        "regardless." in text
+    )
+
+    greedy = [g.model_copy(update={"mode": "deterministic"}) for g in (thinking, direct)]
+    text = render_report(evaluation, [_scenario()], greedy, [], [], run="t")
+    assert (
+        "**Qwen3.7 Flash** and **Qwen3.7 Flash (thinking off)** were held to the same "
+        "setting regardless." in text
+    )

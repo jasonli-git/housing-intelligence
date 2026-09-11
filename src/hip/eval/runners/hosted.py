@@ -1,11 +1,11 @@
-"""The hosted cohorts, served by three vendors behind one runner.
+"""The hosted cohorts, served by four vendors behind one runner.
 
-One class rather than three, because what differs between DeepSeek, Gemini, and Mistral
-on this task is small and mechanical: the auth header, the path, and where the usage
-counters sit in the response. Everything that is not mechanical — retry policy, the
-error-is-a-finding contract, telemetry normalization, the refusal to invent a memory
-figure — is identical, and having it in one place is why a fourth provider is a
-`_Dialect` entry rather than a new module.
+One class rather than four, because what differs between DeepSeek, Gemini, Mistral, and
+Qwen on this task is small and mechanical: the auth header, the path, and where the
+usage counters sit in the response. Everything that is not mechanical — retry policy,
+the error-is-a-finding contract, telemetry normalization, the refusal to invent a memory
+figure — is identical, and having it in one place is why the fourth provider, Qwen, was
+a `_Dialect` entry rather than a new module.
 
 Raw `httpx` rather than three vendor SDKs, matching how `OllamaRunner` already talks to
 its runtime. Three SDKs would be three dependency surfaces, three auth abstractions, and
@@ -157,6 +157,22 @@ _DIALECTS: dict[str, _Dialect] = {
         # for backward compatibility only, with no documented meaning on Gemini 3: a
         # published configuration should rest on the control the provider documents.
         reasoning={"low": {"thinkingConfig": {"thinkingLevel": "low"}}},
+    ),
+    # Qwen through Alibaba Cloud Model Studio's OpenAI-compatible mode — the provider's
+    # own endpoint, not a shim over it. Its thinking arrives as DeepSeek's does: text
+    # under `reasoning_content`, and tokens counted inside `completion_tokens` with the
+    # share under `completion_tokens_details.reasoning_tokens`, so `_extract` and
+    # `_usage` read it unchanged. `enable_thinking` is a top-level field over plain
+    # HTTP; the OpenAI SDK's `extra_body` is only how a client library spells that.
+    # Measured 2026-09-11, one county packet: `qwen3.7-flash` reasoned for 2,268 of its
+    # 2,497 output tokens by default and for none of 161 with thinking off; Plus, 2,378
+    # of 2,796 against none of 224.
+    "qwen": _Dialect(
+        chat_path="/chat/completions",
+        models_path="/models",
+        auth_header="Authorization",
+        auth_prefix="Bearer ",
+        reasoning={"disabled": {"enable_thinking": False}},
     ),
 }
 

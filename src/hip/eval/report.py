@@ -320,11 +320,43 @@ def _effort_note(priced: list[ModelSummary]) -> str:
 # Providers that ignore temperature while a model reasons, keyed by `Cohort.provider`,
 # with the name the report prints.
 _IGNORES_TEMPERATURE_WHILE_REASONING = {"deepseek": "DeepSeek"}
-# Google recommends 1.0 for its Gemini 3 models and warns that lower values can cause
-# looping. Matched on the ref, because the guidance is for a family of models rather
-# than for everything the provider serves.
-_GEMINI_3_REF = "gemini-3"
-_GEMINI_3_TEMPERATURE = 1.0
+
+
+@dataclass(frozen=True)
+class _TemperatureAdvice:
+    """A temperature a model family's publisher recommends above the harness's pin.
+
+    Matched on the ref, because guidance is for a family of models rather than for
+    everything a provider serves. `thinking` applies to a candidate that reasoned and
+    `direct` to one that did not, since Qwen recommends a different value for each.
+    """
+
+    ref_prefix: str
+    thinking: float
+    direct: float
+    guidance: str
+
+
+_TEMPERATURE_ADVICE = (
+    _TemperatureAdvice(
+        "gemini-3",
+        1.0,
+        1.0,
+        "Google recommends temperature 1.0 for Gemini 3 and warns that lower values can "
+        "cause looping",
+    ),
+    # Qwen publishes no sampling guidance for 3.7, which is API-only: Model Studio's
+    # reference gives ranges, not recommendations. Its model cards for 3.6 and 3.8, the
+    # releases either side, agree — 1.0 thinking, 0.7 not — and unlike Qwen3's they do
+    # not warn against greedy decoding. Read 2026-09-11.
+    _TemperatureAdvice(
+        "qwen3.",
+        1.0,
+        0.7,
+        "Qwen recommends temperature 1.0 when thinking and 0.7 when not, in the model "
+        "cards for its 3.6 and 3.8 releases; it publishes none for 3.7",
+    ),
+)
 
 
 def _names(summaries: list[ModelSummary]) -> str:
@@ -345,12 +377,13 @@ def _sampling_note(
     """What the pinned temperature did not control, or None where it controlled it all.
 
     Every candidate is sent one sampling setting, so that no row is sampled differently
-    from the rest (#104), and two providers depart from it: DeepSeek ignores temperature
-    while its models reason — so a reasoning and a non-reasoning DeepSeek row differ in
-    sampling as well as in reasoning — and Google recommends 1.0 for Gemini 3. Derived
-    from the run: the temperature from the sampling mode each generation records, and
-    reasoning from its token counts. A run neither provider is in, like `v1`, renders
-    as it always has.
+    from the rest (#104), and three providers depart from it: DeepSeek ignores
+    temperature while its models reason — so a reasoning and a non-reasoning DeepSeek
+    row differ in sampling as well as in reasoning — Google recommends 1.0 for Gemini 3,
+    and Qwen recommends 1.0 when thinking and 0.7 when not (#105). Derived from the
+    run: the temperature from the sampling mode each generation records, and reasoning
+    from its token counts. A run none of them is in, like `v1`, renders as it always
+    has.
 
     The temperature for a mode is read from config when the report renders, the same
     hazard as the rates: nothing on a generation records the value it was sent.
@@ -366,15 +399,18 @@ def _sampling_note(
 
     reasoned: dict[str, list[ModelSummary]] = defaultdict(list)
     held: dict[str, list[ModelSummary]] = defaultdict(list)
-    advised: list[ModelSummary] = []
+    advised: dict[_TemperatureAdvice, list[ModelSummary]] = defaultdict(list)
     for summary in sorted(summaries.values(), key=lambda s: s.label):
         provider = evaluation.cohorts[evaluation.cohort_of(summary.model_id)].provider
         if provider is not None and provider in _IGNORES_TEMPERATURE_WHILE_REASONING:
             (reasoned if summary.reasoning_tokens else held)[provider].append(summary)
-        if evaluation.model(summary.model_id).ref.startswith(_GEMINI_3_REF) and any(
-            value < _GEMINI_3_TEMPERATURE for value in sent[summary.model_id]
-        ):
-            advised.append(summary)
+        ref = evaluation.model(summary.model_id).ref
+        for advice in _TEMPERATURE_ADVICE:
+            recommended = advice.thinking if summary.reasoning_tokens else advice.direct
+            if ref.startswith(advice.ref_prefix) and any(
+                value < recommended for value in sent[summary.model_id]
+            ):
+                advised[advice].append(summary)
 
     sentences: list[str] = []
     for ignoring, reasoning in reasoned.items():
@@ -390,12 +426,10 @@ def _sampling_note(
                 "difference is one of sampling as well as of reasoning."
             )
         sentences.append(sentence)
-    if advised:
+    for advice, below in advised.items():
         sentences.append(
-            f"Google recommends temperature {_temperature(_GEMINI_3_TEMPERATURE)} for "
-            f"Gemini 3 and warns that lower values can cause looping; {_names(advised)} "
-            f"{'was' if len(advised) == 1 else 'were'} held to the same setting "
-            "regardless."
+            f"{advice.guidance}; {_names(below)} "
+            f"{'was' if len(below) == 1 else 'were'} held to the same setting regardless."
         )
     temperatures = sorted(set().union(*sent.values()))
     if not sentences or not temperatures:

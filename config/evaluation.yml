@@ -306,6 +306,80 @@ cohorts:
         quantization: hosted
         input_usd_per_mtok: 0.50
         output_usd_per_mtok: 1.50
+  # Qwen through Alibaba Cloud Model Studio, International deployment (Singapore). Added
+  # 2026-09-11 for `v3`. Not a fourth regime: Alibaba is a Chinese company, so Qwen is
+  # an alternative for DeepSeek's slot rather than a hedge beside it, and one policy
+  # action against Chinese providers reaches both. What it offers that slot is pinning:
+  # dated snapshots, where DeepSeek serves only moving aliases and has retired two
+  # names in a month. An API key is bound to the region it was made in; this key's is
+  # Singapore, the only region with a free quota (1M tokens per model for 90 days,
+  # ordinary calls only). The cost column still prices every generation at list rates,
+  # because that is what the site would pay once the quota is gone.
+  qwen:
+    runner: hosted
+    provider: qwen
+    api_key_env: DASHSCOPE_API_KEY
+    generation_limits:
+      context_tokens: 65536
+      max_output_tokens: 24000
+    endpoint: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+    models:
+      # A cheap and a mid tier, each at its default — thinking on, as Qwen 3.5-3.8
+      # all default — and with thinking off, the lever DeepSeek measured. Both tiers
+      # get the variant because Plus is where thinking costs most.
+      #
+      # Measured 2026-09-11 on `v1`'s Ocean County affordability scenario, under the
+      # evaluation's own limits and sampling (2,821 prompt tokens):
+      #
+      #   qwen3.7-flash          2,497 output, 2,268 reasoning, 27s   ~$0.41 per 1,000
+      #   qwen3.7-flash-nothink    161 output,     0 reasoning,  3s   ~$0.11 per 1,000
+      #   qwen3.7-plus           2,796 output, 2,378 reasoning, 28s   ~$7.00 per 1,000
+      #   qwen3.7-plus-nothink     224 output,     0 reasoning,  5s   ~$1.86 per 1,000
+      #
+      # Every response named exactly the snapshot requested, so the substitution guard
+      # passes; none sends a `system_fingerprint`. Both refs accept the 24,000-token
+      # ceiling above. Thinking ended well inside the evaluation's 6,000.
+      #
+      # Sampled at the pinned 0.0 against Qwen's guidance — 1.0 thinking, 0.7 not, per
+      # its 3.6 and 3.8 model cards; none exists for 3.7 — which the report states
+      # (ARCHITECTURE #104, #105). Model Studio adds `presence_penalty` 1.5 in
+      # non-thinking mode by default, so the two thinking-off candidates run with a
+      # repetition penalty nothing else here gets.
+      #
+      # Free Quota Only is on for both snapshots and the account was activated
+      # 2026-09-11, so the free quota ends on 2026-12-10. After that every call here
+      # fails rather than bills, and `hip eval models --probe` says so.
+      #
+      # Rates from Alibaba's pricing page, 2026-09-11. Flash is tiered by input length
+      # and every prompt here sits in the lowest tier, 32K tokens and under.
+      - id: qwen3.7-flash
+        ref: qwen3.7-flash-2026-07-15
+        label: Qwen3.7 Flash
+        quantization: hosted
+        input_usd_per_mtok: 0.03
+        output_usd_per_mtok: 0.13
+      - id: qwen3.7-flash-nothink
+        ref: qwen3.7-flash-2026-07-15
+        label: Qwen3.7 Flash (thinking off)
+        quantization: hosted
+        reasoning_effort: disabled
+        input_usd_per_mtok: 0.03
+        output_usd_per_mtok: 0.13
+      # The page shows $0.40 / $1.60 after a time-limited 20% discount. The
+      # undiscounted rate is recorded, on the same principle as DeepSeek's peak rates.
+      - id: qwen3.7-plus
+        ref: qwen3.7-plus-2026-05-26
+        label: Qwen3.7 Plus
+        quantization: hosted
+        input_usd_per_mtok: 0.50
+        output_usd_per_mtok: 2.00
+      - id: qwen3.7-plus-nothink
+        ref: qwen3.7-plus-2026-05-26
+        label: Qwen3.7 Plus (thinking off)
+        quantization: hosted
+        reasoning_effort: disabled
+        input_usd_per_mtok: 0.50
+        output_usd_per_mtok: 2.00
 
 # How `hip explain` picks a model, resolved at generation time rather than pinned.
 #

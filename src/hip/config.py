@@ -268,10 +268,15 @@ ReasoningEffort = Literal["default", "disabled", "low"]
 # which the OpenAI-shaped parser would stringify into a Python repr and grade as the
 # answer. `v2` measured no reasoning from either Mistral candidate at the default, so a
 # `none` variant would re-measure one configuration under a second id.
+#
+# Qwen's `disabled` is `enable_thinking: false`, a hard off like DeepSeek's: Qwen 3.5
+# through 3.8 think by default. Measured 2026-09-11 on both 3.7 snapshots, one county
+# packet: reasoning fell from about 2,300 tokens to none, output from about 2,600 to 200.
 REASONING_CONTROLS: dict[str, frozenset[str]] = {
     "deepseek": frozenset({"default", "disabled"}),
     "gemini": frozenset({"default", "low"}),
     "mistral": frozenset({"default"}),
+    "qwen": frozenset({"default", "disabled"}),
 }
 
 
@@ -321,7 +326,7 @@ class Cohort(BaseModel):
     """One runtime and the candidates it serves.
 
     ``provider`` names the request and response dialect rather than the vendor as a
-    brand: three hosted providers sit behind one ``HostedRunner``, and what differs
+    brand: four hosted providers sit behind one ``HostedRunner``, and what differs
     between them is auth header, path, and where the usage counters live in the
     response. ``api_key_env`` names the variable rather than carrying the key, which is
     the same rule the source adapters follow and the reason a key has never reached a
@@ -331,7 +336,7 @@ class Cohort(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     runner: Literal["ollama", "mlx", "hosted"]
-    provider: Literal["deepseek", "gemini", "mistral"] | None = None
+    provider: Literal["deepseek", "gemini", "mistral", "qwen"] | None = None
     api_key_env: str | None = None
     endpoint: str | None = None
     models: list[CandidateModel] = Field(min_length=1)

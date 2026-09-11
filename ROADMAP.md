@@ -149,7 +149,9 @@ deliberately not the ordering criterion, because Milestone 8 measured that it do
 predict quality on this task: Gemma 4 E4B scored 3.21 against Gemma 4 12B's 2.10, the
 smaller model beating the larger one from its own family, with grounding and caveat
 handling separating them rather than raw capability. Candidates are therefore chosen on
-price and availability and ranked by the benchmark, never the reverse.
+price and availability and ranked by the benchmark, never the reverse. Qwen joined the
+`v3` slate on 2026-09-11 as a second contender for the China tier — for its pinned
+snapshots, which DeepSeek does not offer, not as a fourth regime (ARCHITECTURE #105).
 
 A router such as OpenRouter would supply this breadth through one integration and is
 rejected for a specific reason: `region_explanations` records the model that wrote every

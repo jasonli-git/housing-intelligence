@@ -68,21 +68,47 @@ explanations were written by the real V4 Pro and stay correctly attributed until
       draft needs `--replace`, every `hip eval` command requires `--run`, `make eval`
       requires `RUN=`, and the payload defaults to Markdown. Checked against the real
       runs: `--run v1` and `--run v2 --replace` are both refused, files untouched
-- [ ] **Candidates, seven — decided 2026-09-10:** `gemini-3.7-flash`,
-      `gemini-3.7-flash-low`, `gemini-3.1-flash-lite`, `mistral-small-4`,
-      `deepseek-flash`, `deepseek-flash-nothink`, and `gemma-4-e4b-q4`: 105 generations
-      and 105 judgments. **Excluded:** `deepseek-v4-flash` (already routed; the guard
-      fails it), `deepseek-v4-pro` (routed from 2026-09-14), and `mistral-large-3` (last
-      in `v2` at 2.68 and not on the preference list). Every model meant for the list
-      afterwards has to be here, because `hip explain` checks eligibility against the
-      latest run only. Name them — a bare `hip eval run --run v3` runs all 17 declared
-      candidates, including the retired DeepSeek pins and seven old local models:
+- [ ] **Candidates, eleven — seven decided 2026-09-10, four Qwen added 2026-09-11:**
+      `gemini-3.7-flash`, `gemini-3.7-flash-low`, `gemini-3.1-flash-lite`,
+      `mistral-small-4`, `deepseek-flash`, `deepseek-flash-nothink`, `qwen3.7-flash`,
+      `qwen3.7-flash-nothink`, `qwen3.7-plus`, `qwen3.7-plus-nothink`, and
+      `gemma-4-e4b-q4`: 165 generations and 165 judgments. **Excluded:**
+      `deepseek-v4-flash` (already routed; the guard fails it), `deepseek-v4-pro` (routed
+      from 2026-09-14), and `mistral-large-3` (last in `v2` at 2.68 and not on the
+      preference list). Every model meant for the list afterwards has to be here,
+      because `hip explain` checks eligibility against the latest judged run only. Name
+      them — a bare `hip eval run --run v3` runs all 21 declared candidates, including
+      the retired DeepSeek pins and seven old local models:
 
       ```
       hip eval run --run v3 --model gemini-3.7-flash --model gemini-3.7-flash-low \
         --model gemini-3.1-flash-lite --model mistral-small-4 --model deepseek-flash \
-        --model deepseek-flash-nothink --model gemma-4-e4b-q4
+        --model deepseek-flash-nothink --model qwen3.7-flash \
+        --model qwen3.7-flash-nothink --model qwen3.7-plus \
+        --model qwen3.7-plus-nothink --model gemma-4-e4b-q4
       ```
+- [ ] **Run `v3` before 2026-12-10, or lose the Qwen candidates.** The four Qwen
+      candidates run on Alibaba's new-account free quota: 1M tokens per model, Singapore
+      region only, 90 days from activation. The user activated Model Studio and turned on
+      **Free Quota Only** for both snapshots on 2026-09-11, so nothing can be billed —
+      and from 2026-12-10 every Qwen call fails instead. `v3` sits behind Milestones 21
+      and 13. If they run past that date, either drop the Qwen candidates from the
+      command above or turn Free Quota Only off and pay list (about $0.15 for the Qwen
+      share of `v3`). `v3` needs roughly 125,000 tokens of Flash and 130,000 of Plus at
+      the measured sizes, more once 21 enlarges the packets; about 17,000 were spent on
+      the 2026-09-11 measurement. `hip eval models --probe` shows a lapsed quota before a
+      run does
+- [x] **Check whether Qwen advises against greedy sampling for 3.7** — checked and
+      applied 2026-09-11 (ARCHITECTURE #105). Qwen publishes no sampling guidance for
+      3.7, which is API-only, and Model Studio's API reference gives ranges, not
+      recommendations. Its model cards for 3.6 and 3.8 — the releases either side —
+      agree: temperature 1.0 when thinking, 0.7 when not; unlike Qwen3's cards, neither
+      warns against greedy decoding. Followed Gemini's precedent: the report's sampling
+      note now names every Qwen candidate held below the value for its mode, citing the
+      3.6 and 3.8 cards. `v2` renders unchanged. Found on the way: Model Studio applies
+      `presence_penalty` 1.5 to 3.7 in non-thinking mode by default, and the harness
+      sends none, so the thinking-off Qwen candidates run with a repetition penalty no
+      other candidate gets — recorded in Known Limitations, not overridden
 - [x] **Sampling: temperature stays 0.0 for every candidate, thinking models included —
       decided 2026-09-10.** DeepSeek ignores temperature in thinking mode, so
       `deepseek-flash` against `deepseek-flash-nothink` varies sampling as well as
@@ -106,12 +132,13 @@ explanations were written by the real V4 Pro and stay correctly attributed until
       default since 2026-09-11 (#103). On `v1`'s Markdown prompts the judge reads 3,362
       tokens per verdict against `v2`'s 5,798
 - [ ] **Quote before spending**: `hip eval cost --run v3` prices the run from its own
-      prompts — a constant-based estimate was wrong twice. Expect roughly $7.50–8 for 105
-      judgments at effort `high` — `hip eval cost --run v1`, the last Markdown run, quotes
-      $7.45 today, and 21's larger packets add to every prompt — plus under $0.50 of
-      generation (`v2`'s recorded tokens, repriced for Markdown input). The quote assumes
-      5,000 output tokens per verdict at `high`, a planning figure that is $6.56 of that
-      $7.45 — `hip eval judge` now prints what the batch was actually billed
+      prompts — a constant-based estimate was wrong twice. Expect roughly $11.50–12.50
+      for 165 judgments at effort `high` — `hip eval cost --run v1`, the last Markdown
+      run, quotes $7.45 for 105 today, about 7 cents a verdict, and 21's larger packets
+      add to every prompt — plus under $0.50 of generation (`v2`'s recorded tokens,
+      repriced for Markdown input; Qwen's share is inside its free quota). The quote
+      assumes 5,000 output tokens per verdict at `high`, a planning figure that is most of
+      it — `hip eval judge` now prints what the batch was actually billed
 - [ ] `hip eval judge --run v3`, then `hip eval report --run v3`. Judge every candidate in
       one run: the judge prompt is shared, which is what keeps scores comparable. Graded
       at effort `high` (ARCHITECTURE #101), so no `v3` score compares with a `v2` one
@@ -119,8 +146,12 @@ explanations were written by the real V4 Pro and stay correctly attributed until
 ### After `v3`
 
 - [ ] **Reorder `generation.preference` from the `v3` result**, still ending at the local
-      model. DeepSeek's slot: if `deepseek-flash` passes, it replaces `deepseek-v4-pro`.
-      If it scores *below* `gemma-4-e4b-q4`, decide whether DeepSeek stays on the list at
+      model. The China slot now has two contenders: `deepseek-flash`, an alias DeepSeek
+      repoints, and the Qwen snapshots, which are pinned. Whichever scores better holds
+      it, and a Qwen tier that makes the list needs its free quota's end handled —
+      Free Quota Only turns an exhausted quota into a failed probe and a fall-through,
+      and without it the tier bills at list. If both Chinese candidates score *below*
+      `gemma-4-e4b-q4`, decide whether the slot stays on the list at
       all — its case has been jurisdictional diversity, and a hosted tier ranked above a
       better local one is backwards on quality. Precedent from `v2`: V4 Flash scored 2.76
       against Gemma's 2.90
@@ -1844,6 +1875,19 @@ on 2026-09-11 once `v3`'s payload format and sampling were decided.
       the latest judged run. Checked against real data: the latest judged run is `v2`,
       and all five models on today's list pass the gate, so nothing live changes
 - [x] Tests — 13 new, 399 Python tests in all
+- [x] **2026-09-11 — Qwen, a fourth hosted provider, with four `v3` candidates**
+      (ARCHITECTURE #105): `qwen3.7-flash-2026-07-15` and `qwen3.7-plus-2026-05-26`, each
+      at its default (thinking on) and with `enable_thinking: false`. A `_Dialect` entry
+      and a `REASONING_CONTROLS` entry, nothing else in the runner. Measured live on one
+      `v1` county scenario before either control was recorded, per #99: thinking off
+      took Flash from 2,497 output tokens to 161 and Plus from 2,796 to 224, reasoning
+      to none, and every response named the exact snapshot requested. About 17,000 free
+      tokens used, nothing billed. `DASHSCOPE_API_KEY` is in `.env` and `.env.example`
+- [x] **2026-09-11 — Qwen in the sampling note** (#105): candidates on `qwen3.` refs held
+      below Qwen's guidance for their mode — 1.0 thinking, 0.7 not, from the 3.6 and 3.8
+      model cards — are named, as Gemini 3's are. The note's advice became a small table
+      matched on ref prefix, since Qwen recommends a different value per mode
+- [x] Tests — 4 new, 403 Python tests in all
 
 - Note: **`high`'s 5,000 output tokens per verdict is a guess**, set on the high side;
   `v3`'s recorded usage replaces it. After `v3`, `hip eval cost` should read the recorded
@@ -2322,12 +2366,15 @@ with expansion, not with New Jersey depth.
 
 **Needed by Version 2**
 
-- [ ] **Top up the Anthropic credit before run `v3` — to at least $10.** About $3.47
+- [ ] **Top up the Anthropic credit before run `v3` — to at least $15.** About $3.47
   remained after `v2`'s judging batch — a count from quoted batch costs, not a console
-  reading, so check the console. `v3` needs roughly $8–10 at the judge's new effort,
-  `high`, plus a margin for one re-run; `hip eval cost --run v3` quotes it before
-  anything is spent, and `hip eval judge` now prints what was actually billed. The credit
-  is read only by `hip eval judge`, so nothing else waits on it.
+  reading, so check the console. `v3` needs roughly $11.50–12.50 at the judge's new
+  effort, `high`, for 165 verdicts since the four Qwen candidates joined on 2026-09-11
+  (it was $8–10 for 105); `hip eval cost --run v3` quotes it before anything is spent,
+  and `hip eval judge` now prints what was actually billed. The credit is read only by
+  `hip eval judge`, so nothing else waits on it.
+- [ ] **Rotate the Qwen (DashScope) key when convenient.** Pasted into chat on 2026-09-11
+  and written into `.env`; the same situation as the other keys below.
 - [ ] **Rotate the DeepSeek, Gemini and Mistral keys if the 2026-09-06 transcript is ever
   shared.** All three were pasted into chat to be written into `.env`, the same situation
   the Census, FRED and BLS keys above are in.

@@ -3,6 +3,31 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.12.5] — 2026-09-11
+
+Qwen joins run `v3`'s slate. Not a milestone; Milestone 21 has not started.
+
+### Added
+- **Qwen, a fourth hosted provider** (#105), through Alibaba Cloud Model Studio's
+  International endpoint, as a contender for the China slot DeepSeek holds. What it
+  brings is pinning: dated snapshots, where DeepSeek serves aliases it repoints. Not a
+  fourth regime — Alibaba is Chinese too.
+- **Four `v3` candidates**: `qwen3.7-flash` and `qwen3.7-plus` on the snapshots
+  `qwen3.7-flash-2026-07-15` and `qwen3.7-plus-2026-05-26`, each at its default,
+  thinking on, and with `enable_thinking: false`. Measured live on one county packet
+  before the controls were recorded: thinking off took Flash from 2,497 output tokens to
+  161 and Plus from 2,796 to 224, and every response named the snapshot requested.
+- `DASHSCOPE_API_KEY` in `.env.example`, with a note on Alibaba's region-bound keys and
+  the "Free Quota Only" switch.
+- **The evaluation report names Qwen candidates sampled below Qwen's guidance**, as it
+  names Gemini 3's (#104, #105): temperature 1.0 when thinking and 0.7 when not, from
+  the model cards for Qwen 3.6 and 3.8 — Qwen publishes none for 3.7. `v1` and `v2`
+  render unchanged.
+
+### Changed
+- `v3` grows from seven candidates to eleven — 165 generations and 165 judgments — and
+  its judging quote from about $8 to about $12.
+
 ## [0.12.4] — 2026-09-11
 
 Preparation for run `v3`, an audit of ARCHITECTURE.md against the code, and three guards
