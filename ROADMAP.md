@@ -380,9 +380,50 @@ Version 2 table above. What remains unscheduled:
   Milestone 7 deliberately did not download
 - **MOD-IV equalization ratios** so assessed values approximate market values
 - **Migration-driven demand analysis**
+- **Interpretation that relates metrics rather than listing them** — from a brainstorm
+  on 2026-09-11 that split interpretation into four functions: say what each metric
+  means, relate metrics to one another, name the tradeoffs, and synthesise. The framing
+  is right, but here most of it should not be a model's job. What a metric means is
+  Milestone 17's verdict sentence, computed from rank and percentile. Tradeoffs are
+  Milestone 17's "tradeoff named", and only mean something against a decision, so they
+  stay in the consumer views. Relationships are the hard part, and the answer is to
+  compute them: a section of relationship facts in the packet, drawn from a closed set of
+  relation types — "values rose 30% while incomes rose 12%, so price-to-income moved from
+  3.1 to 3.8" — which Milestone 13's citation binding extends to, so a model can narrate
+  only a relationship that exists as a fact. Synthesis stays one generation with fixed
+  sections in its output: completeness and caveat handling are the weakest rubric
+  criteria for every model measured so far, and a structure is something the harness can
+  test. The system prompt already forbids causes the packet does not support, and
+  nothing measures it; a check for causal wording ("because", "driven by", "due to") not
+  backed by a relationship fact belongs in the evaluation before any of this ships. Not
+  as four chained model calls, one per function: that multiplies cost and latency, and an
+  unsupported claim from the relating step becomes evidence for the synthesis step,
+  where the evaluation can no longer see where it came from. Needs Milestone 13 first.
+- **Historical persistence facts** — the descriptive answer to "is this affordability
+  pressure temporary or persistent?", which is the question a forecast would be asked to
+  answer. How far a region's price-to-income sits above its own long-run range, and how
+  long past episodes that far above it lasted: "the highest since 2006; the last time it
+  was this high, it took N years to return to the median". Computed, sourced to the
+  releases behind every point, and forward-looking without claiming to know the future —
+  the argument that already makes a five-year change and an annualised rate the honest
+  cheap version. Most of a forecast's consumer value at none of its provenance cost. The
+  constraint is history: the FHFA index Milestone 21 adds reaches back decades, the
+  income side of the ratio does not, and a range is only as long as its shorter series —
+  which the fact has to state.
 - **Affordability forecasting** — listed in SPEC's long-term direction and deliberately
   left unscheduled. Every other output the platform publishes is measured and traceable
   to a source release; a forecast would be the only one that is neither, on a site whose
   entire claim is provenance. If it is built, it needs its own accuracy evaluation in
   the same way the interpretation layer got one, and that is a milestone rather than a
-  feature.
+  feature. The shape from the 2026-09-11 brainstorm is the right one: a separate module
+  that produces evidence — direction, magnitude, horizon, interval, assumptions — for the
+  interpretation layer to read beside history, and never something a model does. Four
+  conditions come with it. It beats naive baselines — no change, and a straight-line
+  trend — on held-out history, or it does not publish. Its confidence is an interval
+  whose coverage the backtest measured, never a label, because a model reading
+  "confidence: high" will say it more strongly than it should. It states the lag it
+  inherits: the income side of price-to-income is ACS 5-year estimates, which overlap by
+  four years and trail their release, so today's ratio already pairs current prices with
+  incomes from years earlier, and a projection compounds that. And "temporary or
+  persistent" is computed by the module, not concluded by a model. It comes after the
+  persistence facts above, which answer the same question without predicting.
