@@ -3,19 +3,20 @@
 A local-first analytics platform that turns fragmented public housing data into a
 queryable warehouse of housing intelligence, starting with New Jersey. It pulls parcel
 and MOD-IV records, Zillow ZHVI and ZORI, Census ACS and Building Permits, FHFA HPI,
-FRED, BLS, and IRS migration data through one staged pipeline, resolves everything to a
-shared geography spine, and computes the facts — value growth, rent growth, affordability
-change, construction activity, county rankings — before anything is displayed. It is
-built for someone who wants to ask where affordability is worsening fastest in New Jersey
-and get a defensible answer with the source file behind every number. It is not a
-chatbot and not a listings site: dashboards, maps, rankings, reports, and an API are the
-product, and an optional AI layer only explains metrics that were already computed.
+FRED, BLS, IRS migration data, and HUD's income limits, Fair Market Rents and CHAS
+tables through one staged pipeline, resolves everything to a shared geography spine, and
+computes the facts — value growth, rent growth, affordability change, construction
+activity, county rankings — before anything is displayed. It is built for someone who
+wants to ask where affordability is worsening fastest in New Jersey and get a defensible
+answer with the source file behind every number. It is not a chatbot and not a listings
+site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
+layer only explains metrics that were already computed.
 
-> **Status (2026-09-11): v0.12.5, Version 1 complete and Version 2 under way.** New
+> **Status (2026-09-11): v0.12.6, Version 1 complete and Version 2 under way.** New
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
-> **337,552 observations across 23 metrics from 10 public sources, spanning 1971 to
-> 2026**, plus 19,574 computed changes and 27,923 rankings, served behind a three-page
+> **351,295 observations across 31 metrics from 12 public sources, spanning 1971 to
+> 2026**, plus 26,805 computed changes and 38,674 rankings, served behind a three-page
 > dashboard and packaged as versioned analysis packets. All eight pipeline stages run.
 > The source file and match method are recorded on every value. Fourteen models — eight
 > local, six hosted across three regulatory regimes — have now been evaluated against
@@ -72,7 +73,7 @@ seeded demo data.
 Each is listed with the milestone that delivers it, so this section can be checked
 against [ROADMAP.md](ROADMAP.md) rather than believed.
 
-- **Config-driven source registry** (M0, built) — 13 public sources and 23 metrics
+- **Config-driven source registry** (M0, built) — 15 sources and 31 metrics
   defined in YAML with license, cadence, and update frequency. `hip check-config`
   validates them and catches a metric naming an undefined source, or a source whose
   API key is missing, before any fetch is attempted.
@@ -116,6 +117,12 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   using HUD residential-address ratios rather than land area, so a half-empty ZIP no
   longer contributes as if it were fully built out. Affordability can also be expressed
   against HUD's published area median income, not only an ACS survey estimate.
+- **New Jersey depth** (M21, built) — HUD Fair Market Rents for every county, with rent
+  affordability against that published standard; ACS homeownership and vacancy rates
+  for every county and municipality; HUD CHAS cost burden for owners and renters,
+  including severe burden, at county and municipal level; building permits for every
+  municipality, resolved by FIPS code; and FHFA's all-transactions price index for the
+  state back to 1975. No new key: the HUD token covers both new HUD sources.
 - **Dashboard and maps** (M5, built) — county choropleth and ranking table on the
   overview, region detail pages with metric tiles and trend charts, and a table view of
   every series with its source. Drawn as inline SVG from our own GeoJSON: no map
@@ -316,7 +323,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 403 Python + 26 dashboard tests; API tests skip without a warehouse
+make test          # 418 Python + 26 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -432,7 +439,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.12.5 — **Version 1 is complete; Version 2 is under way.**
+v0.12.6 — **Version 1 is complete; Version 2 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -445,7 +452,7 @@ else: static publication on a public domain, hosted inference in place of local
 generation, citation binding, deeper New Jersey sources, a three-dimensional map of its
 564 municipalities, a consumer entry point, and a design system. Expansion to the
 Northeast and to every US county was deferred past Version 2 on 2026-09-07. Eleven
-milestones, six shipped.
+milestones, seven shipped.
 
 **Milestone 10 — build cost and data placement (2026-09-02).** `hip footprint` reports
 bytes per storage tier, per warehouse table, and per state, including the Postgres size
@@ -492,6 +499,16 @@ recorded on every answer, and a model writes prose only at the setting its bench
 measured. On one county packet, turning DeepSeek's thinking off cut its output from
 5,693 tokens to 512 for an answer of the same length; whether quality holds is the next
 benchmark's question.
+
+**Milestone 21 — New Jersey depth (2026-09-11).** Five sources the warehouse was missing,
+two of them new HUD sources on the token it already held. Every county now has HUD's Fair
+Market Rent and a rent-affordability ratio against it, where the Zillow-based ratio
+reached 19; every county and municipality has ACS homeownership and vacancy rates, the
+first ownership measure the warehouse has held; HUD's CHAS tables give owner, renter and
+severe cost burden for all 21 counties and 563 of 564 municipalities; building permits
+reach every municipality by exact FIPS code, summing to the county totals to the unit;
+and FHFA's all-transactions index takes the state's price history back to 1975. Eight
+metrics, 13,638 observations, and a county packet about a third larger.
 
 Milestones and their status are in [ROADMAP.md](ROADMAP.md); the current working list and
 known rough edges are in [TODO.md](TODO.md). Work not scheduled for Version 2 is listed at

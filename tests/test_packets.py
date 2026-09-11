@@ -458,3 +458,41 @@ def test_report_renders_from_a_real_packet(session: Session, county_id: int) -> 
 
     assert markdown.count("\n| ") > 10  # metrics and sources tables
     assert "None" not in markdown
+
+
+def test_fmr_figures_say_they_are_area_standards() -> None:
+    """Counties in one FMR area share a figure, so a rank among them compares areas."""
+    rent = caveats_for(level="county", metric_ids=["hud_fmr_2br"])
+    assert any("FMR area" in c for c in rent)
+
+    ratio = caveats_for(level="county", metric_ids=["fmr_to_income"])
+    assert any("FMR area" in c for c in ratio)
+    assert any("computed by this platform" in c for c in ratio), "a derived ratio"
+
+
+def test_chas_figures_name_their_single_vintage() -> None:
+    caveats = caveats_for(level="municipality", metric_ids=["chas_owner_cost_burden"])
+    assert any("2018-2022" in c and "no change over time" in c for c in caveats)
+
+
+def test_both_fhfa_indexes_carry_the_state_only_caveat() -> None:
+    for metric in ("fhfa_hpi", "fhfa_hpi_all_transactions"):
+        caveats = caveats_for(level="state", metric_ids=[metric])
+        assert any("state level only" in c for c in caveats), metric
+
+
+def test_a_neutral_metric_is_never_called_the_best_or_worst_end() -> None:
+    """A slow rise in home value is not "the worst end": neutral metrics rank largest
+    first with no judgement, and Milestone 21 added three of them to the highlights."""
+    from hip.packets.report import _end
+    from hip.packets.schema import PacketHighlight
+
+    def at(position: str) -> PacketHighlight:
+        return PacketHighlight(
+            metric_id="m", label="m", position=position, rank=1, of=21, pct_change=1.0
+        )
+
+    assert _end(at("leading"), {"m": "neutral"}) == "top"
+    assert _end(at("trailing"), {"m": "neutral"}) == "bottom"
+    assert _end(at("leading"), {"m": "lower_is_better"}) == "best"
+    assert _end(at("trailing"), {"m": "higher_is_better"}) == "worst"

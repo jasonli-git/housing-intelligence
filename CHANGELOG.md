@@ -3,7 +3,51 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.12.5] — 2026-09-11
+## [0.12.6] — 2026-09-11
+
+Milestone 21. The five New Jersey sources the warehouse was missing: HUD Fair Market Rents
+and CHAS, ACS tenure and vacancy, FHFA's all-transactions index, and building permits by
+municipality. Eight metrics and 13,638 observations, to 351,295 across 31 metrics from 12
+sources. No new key — both new HUD sources use the token the crosswalk already needed.
+
+### Added
+- **`hud_fmr`**, HUD's Fair Market Rents: the two-bedroom rent standard for all 21
+  counties, fiscal years 2017-2026, from one statewide call per year, and each year dated
+  as the fiscal year it is — FY2026 runs from 2025-10-01 (#106).
+- **`fmr_to_income`**: rent burden against that published standard, for every county and
+  ACS year — 105 values where the Zillow-based `rent_to_income` reached 19 counties. County
+  level only, because HUD sets FMRs per area.
+- **`hud_chas`**, HUD's CHAS tables, 2018-2022: renters paying over 30% and over 50% of
+  income, and owners over 30% — the warehouse's first severe-burden and owner-burden
+  measures — for 21 counties and 563 of 564 municipalities (#107).
+- **`acs_homeownership_rate` and `acs_vacancy_rate`** from B25003 and B25002, for every
+  county and municipality, 2019-2023 vintages. The warehouse held no ownership measure
+  before (#108).
+- **`fhfa_hpi_all_transactions`**: FHFA's all-transactions index for the state, 1975
+  onward, read from the master file `fhfa_hpi` already fetches — the series FRED
+  republishes as `NJSTHPI` (#109).
+- **Municipal building permits**: `permits_total_units` for all 564 municipalities,
+  2015-2024, resolved from the Census place file by its FIPS MCD code; 2024's municipal
+  figures sum to the county total exactly, 36,596 units (#110).
+- Packet caveats for Fair Market Rents (area-wide standards, a percentile change at FY2020,
+  Small Area FMRs not shown) and for CHAS (one vintage, a year behind ACS).
+- `HUD_API_TOKEN` in `.env.example`, which the `hud` source has needed since Milestone 9.
+
+### Changed
+- **Downloads can be paced, and a 429 waits before retrying** (#111). HUD allows 60
+  requests a minute; the first municipal CHAS run stopped at release 101 because three
+  instant retries all landed in the same window. The HUD adapters now pace at 1.1 seconds.
+- **Reports say "top" and "bottom" for a metric with no good direction**, where they said
+  "best" and "worst" by rank alone: a slow rise in home value is not the worst end. Both
+  the Markdown report and the dashboard's print page.
+- A county packet grew from about 14KB to 25KB — Mercer's carries 19 metrics, 22 current
+  values, 10 sources and 7 caveats — and its Markdown rendering by a third, to about
+  2,000 tokens. Every stored explanation is now stale, as planned: nothing new ships until
+  the regeneration after run `v3`.
+
+### Fixed
+- The permits adapter's docstring claimed a missing year's file would not stop the run;
+  it does, which is why the start year is explicit.
 
 Qwen joins run `v3`'s slate. Not a milestone; Milestone 21 has not started.
 

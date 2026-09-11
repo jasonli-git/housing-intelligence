@@ -27,12 +27,16 @@ ZILLOW_MODELS = ("stg_zillow_zhvi", "stg_zillow_zori")
 # unioned straight into the observation table.
 KEYED_MODELS = (
     "stg_census_acs",
+    "stg_census_acs_housing",
     "stg_fhfa_hpi",
     "stg_census_permits",
+    "stg_census_permits_place",
     "stg_irs_migration",
     "stg_fred",
     "stg_bls",
     "stg_hud_income_limits",
+    "stg_hud_fmr",
+    "stg_hud_chas",
     "stg_nj_modiv",
 )
 

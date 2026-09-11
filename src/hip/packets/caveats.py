@@ -14,7 +14,15 @@ from __future__ import annotations
 from collections.abc import Collection
 
 # Ratios the platform computes from two published series (ARCHITECTURE #34).
-DERIVED_RATIOS = frozenset({"price_to_income", "rent_to_income", "price_to_ami"})
+DERIVED_RATIOS = frozenset(
+    {"price_to_income", "rent_to_income", "price_to_ami", "fmr_to_income"}
+)
+
+# Milestone 21's HUD figures, each with a caveat of its own below.
+FMR_METRICS = frozenset({"hud_fmr_2br", "fmr_to_income"})
+CHAS_METRICS = frozenset(
+    {"chas_renter_cost_burden", "chas_renter_severe_burden", "chas_owner_cost_burden"}
+)
 
 # Each entry is written to stand on its own: a packet may be read with no other context,
 # so "see the docs" would be useless to its reader.
@@ -38,8 +46,21 @@ TEXTS: dict[str, str] = {
         "region and describes the country, not this place."
     ),
     "fhfa_state_only": (
-        "The FHFA house price index is published at state level only; no county series "
-        "is available at a reachable URL, so it cannot be compared across counties."
+        "FHFA's house price indexes are published at state level only; no county series "
+        "is available at a reachable URL, so they cannot be compared across counties."
+    ),
+    "hud_fmr_area": (
+        "Fair Market Rents are HUD's rent standard for a whole FMR area, set once per "
+        "federal fiscal year from 1 October, so counties in one area share a figure and "
+        "a rank among them compares areas. HUD moved some New Jersey areas from the "
+        "50th to the 40th percentile by fiscal 2020, so a change spanning that year "
+        "mixes two standards. In nine counties vouchers use HUD's ZIP-level Small Area "
+        "FMRs instead, which are not shown here."
+    ),
+    "chas_one_vintage": (
+        "CHAS figures are HUD's tabulation of ACS 2018-2022 microdata, published a year "
+        "behind the ACS they draw on. One vintage is loaded, so they show no change over "
+        "time and describe earlier years than the newest ACS figures beside them."
     ),
     "permits_volatile": (
         "Permit counts are small numbers below county level, so a large percentage "
@@ -108,10 +129,14 @@ def caveats_for(
         keys.append("permits_volatile")
     if "mortgage_rate_30y" in present:
         keys.append("national_series")
-    if "fhfa_hpi" in present:
+    if present & {"fhfa_hpi", "fhfa_hpi_all_transactions"}:
         keys.append("fhfa_state_only")
     if present & {"price_to_ami", "hud_area_median_income", "hud_income_limit_80"}:
         keys.append("hud_county_ami")
+    if present & FMR_METRICS:
+        keys.append("hud_fmr_area")
+    if present & CHAS_METRICS:
+        keys.append("chas_one_vintage")
 
     out = [TEXTS[key] for key in keys]
 

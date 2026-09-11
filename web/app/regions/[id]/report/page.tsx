@@ -11,6 +11,18 @@ import {
 const WINDOW = "5y";
 
 /**
+ * Which end of its cohort a highlight sits at, in words its metric can support: `best`
+ * and `worst` only where the metric's direction defines a good end. A neutral metric —
+ * home value, a Fair Market Rent, a homeownership or vacancy rate — ranks largest first
+ * with no judgement attached. Mirrors `_end` in `hip/packets/report.py`.
+ */
+function rankEnd(position: string, direction: string | undefined): string {
+  const leading = position === "leading";
+  if (direction === "neutral") return leading ? "top" : "bottom";
+  return leading ? "best" : "worst";
+}
+
+/**
  * Which region pages exist. Every region carrying data, and no others.
  *
  * Under `output: "export"` this is what tells Next how many pages to write; without it
@@ -104,7 +116,12 @@ export default async function ReportPage({
             {packet.highlights.map((h) => (
               <li key={h.metric_id}>
                 <strong>{h.label}</strong> — rank {h.rank} of {h.of} (
-                {h.position === "leading" ? "best" : "worst"} end),{" "}
+                {rankEnd(
+                  h.position,
+                  packet.metrics.find((m) => m.metric_id === h.metric_id)
+                    ?.direction,
+                )}{" "}
+                end),{" "}
                 {formatChange(h.pct_change)}
               </li>
             ))}
@@ -159,7 +176,7 @@ export default async function ReportPage({
           <h2>Current values</h2>
           <p className="muted">
             Ranked by value rather than by change. Snapshot metrics — the MOD-IV
-            assessment aggregates — appear only here.
+            assessment aggregates and HUD&apos;s CHAS tables — appear only here.
           </p>
           <div className="scroll-x">
             <table>

@@ -88,10 +88,17 @@ def _affordability(conn: object) -> dict[str, int]:
     # (computed metric, monthly numerator, annual denominator, multiplier).
     # price_to_ami uses HUD's published area median income rather than the ACS survey
     # estimate, so the same question can be asked against a policy benchmark.
+    #
+    # fmr_to_income (Milestone 21) puts HUD's two-bedroom Fair Market Rent where
+    # rent_to_income puts Zillow's observed rent. An FMR is dated as its fiscal year, so
+    # the year it is grouped under is the one its 1 October start falls in: FY2024 took
+    # effect in October 2023 and meets the ACS vintage ending 2023. FMRs exist only for
+    # counties, so the join yields county rows and nothing is allocated downward.
     for metric_id, numerator, denominator, multiplier in (
         ("price_to_income", "zhvi_sfr", "acs_median_hh_income", 1.0),
         ("rent_to_income", "zori_all", "acs_median_hh_income", 12.0),
         ("price_to_ami", "zhvi_sfr", "hud_area_median_income", 1.0),
+        ("fmr_to_income", "hud_fmr_2br", "acs_median_hh_income", 12.0),
     ):
         computed = conn.execute(  # type: ignore[attr-defined]
             text(

@@ -14,7 +14,7 @@ from hip.sources.census_acs import AcsAdapter
 from hip.sources.census_permits import PermitsAdapter
 from hip.sources.fhfa import HpiAdapter
 from hip.sources.fred import FredAdapter
-from hip.sources.hud import HudAdapter
+from hip.sources.hud import HudAdapter, HudChasAdapter, HudFmrAdapter
 from hip.sources.irs_migration import MigrationAdapter
 from hip.sources.nj_modiv import ModivAdapter
 from hip.sources.tiger import TigerAdapter
@@ -45,6 +45,8 @@ IMPLEMENTED: tuple[str, ...] = (
     FredAdapter.source_id,
     BlsAdapter.source_id,
     HudAdapter.source_id,
+    HudFmrAdapter.source_id,
+    HudChasAdapter.source_id,
     ModivAdapter.source_id,
 )
 
@@ -60,6 +62,8 @@ METRIC_SOURCES: tuple[str, ...] = (
     FredAdapter.source_id,
     BlsAdapter.source_id,
     HudAdapter.source_id,
+    HudFmrAdapter.source_id,
+    HudChasAdapter.source_id,
     ModivAdapter.source_id,
 )
 
@@ -88,7 +92,7 @@ def build_adapter(source_id: str, scope: GeographyScope) -> SourceAdapter:
     if source_id == HpiAdapter.source_id:
         return HpiAdapter()
     if source_id == PermitsAdapter.source_id:
-        return PermitsAdapter()
+        return PermitsAdapter(states=scope.states)
     if source_id == MigrationAdapter.source_id:
         return MigrationAdapter()
     if source_id == AcsAdapter.source_id:
@@ -99,6 +103,10 @@ def build_adapter(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return BlsAdapter(county_fips=_county_fips(scope), end_year=BLS_END_YEAR)
     if source_id == HudAdapter.source_id:
         return HudAdapter(states=scope.states, county_fips=_county_fips(scope))
+    if source_id == HudFmrAdapter.source_id:
+        return HudFmrAdapter(states=scope.states)
+    if source_id == HudChasAdapter.source_id:
+        return HudChasAdapter(states=scope.states, county_fips=_county_fips(scope))
     if source_id == ModivAdapter.source_id:
         return ModivAdapter()
     if (milestone := PLANNED.get(source_id)) is not None:

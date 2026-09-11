@@ -34,6 +34,14 @@ VARIABLES: dict[str, str] = {
 # Renter cost burden: households paying 30%+ of income on housing, over all renters.
 BURDEN_PARTS = ("B25070_001E", "B25070_007E", "B25070_008E", "B25070_009E", "B25070_010E")
 
+# Housing stock (Milestone 21): occupancy (B25002 — all units, vacant) and tenure (B25003
+# — occupied units, owner-occupied), from which vacancy and homeownership rates are
+# computed in dbt. A separate request under its own layers rather than more variables on
+# the one above: the raw cache is keyed by (layer, scope, vintage), not by URL, so a
+# widened request under the old key would be answered from the cached file that lacks
+# the new columns, silently. Separate layers also give these rows their own release.
+HOUSING_VARIABLES = ("B25002_001E", "B25002_003E", "B25003_001E", "B25003_002E")
+
 # Five ACS vintages. Each covers five years, so this spans 2015-2023 of sample.
 YEARS = (2023, 2022, 2021, 2020, 2019)
 
@@ -41,7 +49,7 @@ LEVELS = {"county": "county:*", "cousub": "county%20subdivision:*"}
 
 
 class AcsAdapter(SourceAdapter):
-    """Income, rent, population, home value, and renter cost burden."""
+    """Income, rent, population, home value, renter cost burden, occupancy, and tenure."""
 
     source_id: ClassVar[str] = "census_acs"
     default_vintage: ClassVar[str] = "2023"
@@ -58,27 +66,31 @@ class AcsAdapter(SourceAdapter):
                 "'Missing Key' page with HTTP 200, which would be cached as data. "
                 "Get one free at https://api.census.gov/data/key_signup.html"
             )
-        variables = ",".join(["NAME", *VARIABLES, *BURDEN_PARTS])
+        requests = {
+            "": ",".join(["NAME", *VARIABLES, *BURDEN_PARTS]),
+            "housing_": ",".join(["NAME", *HOUSING_VARIABLES]),
+        }
         years = [int(vintage)] if vintage else list(YEARS)
         refs = []
         for year in years:
-            for level, selector in LEVELS.items():
-                for state in self.states:
-                    inside = f"state:{fips_for(state)}"
-                    if level == "cousub":
-                        inside += "%20county:*"
-                    refs.append(
-                        ReleaseRef(
-                            source_id=self.source_id,
-                            layer=level,
-                            vintage=str(year),
-                            scope=state,
-                            url=(
-                                f"{BASE_URL}/{year}/acs/acs5?get={variables}"
-                                f"&for={selector}&in={inside}&key={key}"
-                            ),
+            for prefix, variables in requests.items():
+                for level, selector in LEVELS.items():
+                    for state in self.states:
+                        inside = f"state:{fips_for(state)}"
+                        if level == "cousub":
+                            inside += "%20county:*"
+                        refs.append(
+                            ReleaseRef(
+                                source_id=self.source_id,
+                                layer=f"{prefix}{level}",
+                                vintage=str(year),
+                                scope=state,
+                                url=(
+                                    f"{BASE_URL}/{year}/acs/acs5?get={variables}"
+                                    f"&for={selector}&in={inside}&key={key}"
+                                ),
+                            )
                         )
-                    )
         return refs
 
     @classmethod

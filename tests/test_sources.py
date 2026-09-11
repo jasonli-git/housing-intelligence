@@ -265,3 +265,247 @@ def test_a_plain_file_url_still_names_the_file(tmp_path: Path) -> None:
     release = adapter.fetch(adapter.refs()[0], raw_dir=tmp_path)
 
     assert release.path.name == "demo.zip"
+
+
+# --- Milestone 21: New Jersey depth -----------------------------------------------
+
+
+def _hud(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("HUD_API_TOKEN", "hud-test")
+
+
+def test_fmr_is_one_release_per_state_and_fiscal_year(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`statedata` answers every county at once: ten calls, not 210."""
+    from hip.sources.hud import FMR_YEARS, HudFmrAdapter
+
+    _hud(monkeypatch)
+    refs = HudFmrAdapter(states=["NJ"]).refs()
+
+    assert [r.vintage for r in refs] == [str(y) for y in FMR_YEARS]
+    assert refs[0].url.endswith("/fmr/statedata/NJ?year=2026")
+    assert len({r.key for r in refs}) == len(refs)
+    assert "2016" not in {r.vintage for r in refs}, "the API refuses FY2016"
+
+
+def test_fmr_records_keep_every_county_and_the_area_it_belongs_to() -> None:
+    from hip.sources.hud import HudFmrAdapter
+
+    ref = ReleaseRef("hud_fmr", "fmr", "2026", "https://x", scope="NJ")
+    payload = {
+        "data": {
+            "year": "2026",
+            "metroareas": [{"code": "ignored"}],
+            "counties": [
+                {
+                    "fips_code": "3402199999",
+                    "county_name": "Mercer County",
+                    "metro_name": "Trenton-Princeton, NJ MSA",
+                    "smallarea_status": "0",
+                    "FMR Percentile": 40,
+                    "Two-Bedroom": 1950,
+                }
+            ],
+        }
+    }
+
+    [row] = HudFmrAdapter.to_records(payload, ref)
+    assert row["fips_code"] == "3402199999"
+    assert row["two_bedroom"] == 1950
+    assert row["fmr_area"] == "Trenton-Princeton, NJ MSA"
+    assert row["fiscal_year"] == "2026"
+    with pytest.raises(ValueError, match="data.counties"):
+        HudFmrAdapter.to_records({"data": {}}, ref)
+
+
+def test_chas_refs_are_each_county_and_each_state_directory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """HUD's entity ids drop leading zeros: Mercer is 21, not 021, which answers []."""
+    from hip.sources.hud import CHAS_VINTAGE, HudChasAdapter
+
+    _hud(monkeypatch)
+    refs = HudChasAdapter(states=["NJ"], county_fips=["34001", "34021"]).refs()
+
+    counties = [r for r in refs if r.layer.startswith("county_")]
+    assert [r.layer for r in counties] == ["county_34001", "county_34021"]
+    assert counties[1].url.endswith(
+        f"/chas?type=3&year={CHAS_VINTAGE}&stateId=34&entityId=21"
+    )
+    [directory] = [r for r in refs if r.layer == "mcds"]
+    assert directory.url.endswith("/chas/listMCDs/34")
+    assert directory.vintage == "current"
+
+
+class _ChasFake:
+    """HUD's directory and one CHAS row per entity, with a download counter."""
+
+    def __init__(self) -> None:
+        self.downloads = 0
+
+    def __call__(self, ref: ReleaseRef, destination: Path) -> None:
+        import json
+
+        self.downloads += 1
+        if "listMCDs" in ref.url:
+            body: object = [
+                {"statecode": "34", "entityId": "70", "mcdname": "Aberdeen township"},
+                {"statecode": "36", "entityId": "70", "mcdname": "another state"},
+                {
+                    "statecode": "34",
+                    "entityId": "0",
+                    "mcdname": "County subdivisions not defined",
+                },
+            ]
+        else:
+            body = [{"geoname": "x", "year": "2018-2022", "A17": "100.0", "D8": "25.0"}]
+        destination.write_text(json.dumps(body))
+
+
+def test_municipal_chas_refs_come_from_the_cached_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The MCD list is HUD's, so it is fetched as a release — and a re-run, including
+    `hip load` rebuilding provenance, derives the same refs from the cache offline."""
+    from hip.sources.hud import HudChasAdapter
+
+    _hud(monkeypatch)
+    adapter = HudChasAdapter(states=["NJ"], county_fips=["34021"])
+    fake = _ChasFake()
+    monkeypatch.setattr(adapter, "_fetch_bytes", fake)
+
+    first = [r.ref.layer for r in adapter.fetch_all(raw_dir=tmp_path)]
+    assert first == ["county_34021", "mcds", "mcd_3400070"], (
+        "other states, and code 0 — water, not a municipality — are dropped"
+    )
+    assert fake.downloads == 3
+
+    again = list(adapter.fetch_all(raw_dir=tmp_path))
+    assert [r.ref.layer for r in again] == first
+    assert all(r.from_cache for r in again)
+    assert fake.downloads == 3
+
+
+def test_chas_records_carry_the_key_their_request_was_made_with() -> None:
+    """A CHAS row names its geography only in prose; the key comes from the ref."""
+    from hip.sources.hud import HudChasAdapter
+
+    county = ReleaseRef("hud_chas", "county_34021", "2018-2022", "https://x")
+    [row] = HudChasAdapter.to_records([{"year": "2018-2022", "A17": "51915.0"}], county)
+    assert (row["level"], row["geo_key"], row["chas_year"]) == (
+        "county",
+        "34021",
+        "2018-2022",
+    )
+    assert row["A17"] == "51915.0"
+
+    municipal = ReleaseRef("hud_chas", "mcd_3400070", "2018-2022", "https://x")
+    assert HudChasAdapter.to_records([], municipal) == [
+        {"level": "mcd", "geo_key": "3400070", "chas_year": None}
+    ], "an empty answer lands as one keyed row rather than failing the landing"
+
+
+def test_acs_housing_tables_are_their_own_layers(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The raw cache keys on (layer, scope, vintage), not the URL: widening the existing
+    request would have been answered from cached files that lack the new columns."""
+    from hip.sources.census_acs import HOUSING_VARIABLES, AcsAdapter
+
+    monkeypatch.setenv("CENSUS_API_KEY", "census-test")
+    refs = AcsAdapter(states=["NJ"]).refs(vintage="2023")
+
+    by_layer = {r.layer: r for r in refs}
+    assert set(by_layer) == {"county", "cousub", "housing_county", "housing_cousub"}
+    assert "B25002" not in by_layer["county"].url, "the cached request is unchanged"
+    assert all(v in by_layer["housing_cousub"].url for v in HOUSING_VARIABLES)
+
+
+def test_permits_add_the_region_place_file_for_every_year() -> None:
+    from hip.sources.census_permits import YEARS, PermitsAdapter
+
+    refs = PermitsAdapter(states=["NJ"]).refs()
+
+    places = [r for r in refs if r.layer == "place"]
+    assert len(places) == YEARS == len(refs) - len(places)
+    assert places[0].url.endswith("/Place/Northeast%20Region/ne2412y.txt")
+    assert places[0].scope == "ne"
+
+
+def test_permits_refuse_a_state_with_no_mapped_place_region() -> None:
+    """A guessed folder would fail as a 404 inside a run; refusing names the fix."""
+    from hip.sources.census_permits import PermitsAdapter
+
+    with pytest.raises(ConfigError, match="PLACE_REGIONS"):
+        PermitsAdapter(states=["CA"]).refs()
+
+
+def test_the_new_hud_sources_are_registered_as_metric_sources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from hip.config import load_geography
+    from hip.sources.hud import HudChasAdapter, HudFmrAdapter
+    from hip.sources.registry import IMPLEMENTED, METRIC_SOURCES, build_adapter
+
+    _hud(monkeypatch)
+    scope = load_geography()
+    assert isinstance(build_adapter("hud_fmr", scope), HudFmrAdapter)
+    assert isinstance(build_adapter("hud_chas", scope), HudChasAdapter)
+    assert {"hud_fmr", "hud_chas"} <= set(IMPLEMENTED) & set(METRIC_SOURCES)
+
+
+def test_an_adapter_with_a_request_interval_waits_between_downloads(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """HUD User allows 60 requests a minute; the first CHAS run hit 429 at release 101."""
+    import time
+
+    clock = {"now": 100.0}
+    slept: list[float] = []
+    monkeypatch.setattr(time, "monotonic", lambda: clock["now"])
+    monkeypatch.setattr(time, "sleep", lambda s: slept.append(s))
+
+    class Paced(FakeAdapter):
+        request_interval_s = 1.1
+
+        def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+            return [
+                ReleaseRef(self.source_id, f"layer{i}", "2025", "https://x/f")
+                for i in range(2)
+            ]
+
+    list(Paced().fetch_all(raw_dir=tmp_path))
+    assert slept == [pytest.approx(1.1)]
+
+    slept.clear()
+    list(Paced().fetch_all(raw_dir=tmp_path))
+    assert slept == [], "a cached release makes no request, so it waits for none"
+
+
+def test_a_rate_limited_download_waits_before_retrying(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An instant retry after 429 only spends the attempts inside the same window."""
+    import time
+
+    import httpx
+
+    slept: list[float] = []
+    monkeypatch.setattr(time, "sleep", lambda s: slept.append(s))
+
+    class Limited(FakeAdapter):
+        def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
+            self.downloads += 1
+            if self.downloads == 1:
+                request = httpx.Request("GET", ref.url)
+                raise httpx.HTTPStatusError(
+                    "429",
+                    request=request,
+                    response=httpx.Response(429, request=request),
+                )
+            destination.write_bytes(self.payload)
+
+    adapter = Limited()
+    adapter.fetch(adapter.refs()[0], raw_dir=tmp_path)
+
+    assert adapter.downloads == 2
+    assert slept == [60.0], "no Retry-After, so the whole minute"

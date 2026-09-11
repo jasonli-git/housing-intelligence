@@ -111,6 +111,37 @@ sources:
       Residential-address ratios for allocating ZIP data, and the income limits housing
       agencies use. Supersedes the area-weighted crosswalk from Milestone 1.
 
+  hud_fmr:
+    name: Fair Market Rents
+    publisher: U.S. Department of Housing and Urban Development
+    license: Public domain (U.S. Government work)
+    url: https://www.huduser.gov/hudapi/public/fmr
+    homepage: https://www.huduser.gov/portal/datasets/fmr.html
+    cadence: annual
+    adapter: hip.sources.hud:HudFmrAdapter
+    api_key_env: HUD_API_TOKEN
+    notes: >-
+      HUD's gross rent standard per FMR area — a metro area or a nonmetro county — set
+      each federal fiscal year from 1 October. Every NJ area is at the 40th percentile
+      from FY2020; before that some were at the 50th (six counties in FY2017-2018, two in
+      FY2019), so a change across FY2020 mixes two standards. Counties in one area share
+      one figure. Nine NJ counties are Small Area FMR areas, whose ZIP-level rents are not
+      loaded (Milestone 21).
+
+  hud_chas:
+    name: Comprehensive Housing Affordability Strategy (CHAS)
+    publisher: U.S. Department of Housing and Urban Development
+    license: Public domain (U.S. Government work)
+    url: https://www.huduser.gov/hudapi/public/chas
+    homepage: https://www.huduser.gov/portal/datasets/cp.html
+    cadence: annual
+    adapter: hip.sources.hud:HudChasAdapter
+    api_key_env: HUD_API_TOKEN
+    notes: >-
+      HUD's custom tabulation of ACS 5-year microdata: households by tenure, income
+      relative to area median, and cost burden. Published a year behind the ACS release
+      it tabulates, at county and municipal (MCD) level.
+
   irs_migration:
     name: SOI county-to-county migration flows
     publisher: Internal Revenue Service

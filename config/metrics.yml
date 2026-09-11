@@ -223,3 +223,88 @@ metrics:
       price_to_income but against a published policy benchmark rather than an ACS
       survey estimate.
     source_id: hip_derived
+
+  # Milestone 21 — New Jersey depth.
+  acs_homeownership_rate:
+    label: Homeownership rate
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Owner-occupied units as a share of occupied units, ACS 5-year table B25003. The
+      warehouse held no ownership measure before Milestone 21.
+    source_id: census_acs
+
+  acs_vacancy_rate:
+    label: Vacancy rate
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Vacant units as a share of all housing units, ACS 5-year table B25002. Counts
+      seasonal and for-sale units as vacant, so shore towns read high by definition.
+    source_id: census_acs
+
+  fhfa_hpi_all_transactions:
+    label: House price index, all transactions
+    unit: index
+    frequency: quarterly
+    direction: neutral
+    description: >-
+      FHFA's repeat-sales index including refinance appraisals, not seasonally adjusted,
+      from 1975 — sixteen years longer than the purchase-only index. The series FRED
+      republishes as NJSTHPI.
+    source_id: fhfa_hpi
+
+  hud_fmr_2br:
+    label: Fair Market Rent, two-bedroom
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      HUD's gross rent standard for a two-bedroom unit in the county's FMR area, set per
+      federal fiscal year from 1 October. Counties sharing an FMR area share a figure.
+    source_id: hud_fmr
+
+  fmr_to_income:
+    label: Two-bedroom Fair Market Rent to household income
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Twelve months of the two-bedroom Fair Market Rent divided by median household
+      income: rent burden against HUD's published standard rather than an observed
+      index, so it covers every county where rent_to_income covers 19. County level
+      only — HUD sets FMRs per area and does not sanction allocating one down.
+    source_id: hip_derived
+
+  chas_renter_cost_burden:
+    label: Renters paying over 30% of income, HUD CHAS
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Renter households paying more than 30% of income for housing, as HUD tabulates
+      it from ACS microdata. The published counterpart of acs_renter_cost_burden, which
+      the platform derives from B25070.
+    source_id: hud_chas
+
+  chas_renter_severe_burden:
+    label: Renters paying over 50% of income, HUD CHAS
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Renter households paying more than half of income for housing — HUD's severe cost
+      burden, which no ACS table the warehouse reads can give.
+    source_id: hud_chas
+
+  chas_owner_cost_burden:
+    label: Owners paying over 30% of income, HUD CHAS
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Owner households paying more than 30% of income for housing. The warehouse's
+      first owner-side burden measure.
+    source_id: hud_chas

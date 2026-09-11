@@ -2,7 +2,7 @@
 
 Every public source is reached through one adapter. Adapters declare *what* to fetch;
 this module does the fetching, so retry, caching, content addressing, and manifest
-writing are implemented once and behave identically for all ten sources.
+writing are implemented once and behave identically for every source.
 
 Raw downloads are immutable and content-addressed (ARCHITECTURE #10): a file lands at
 ``data/raw/<source_id>/<sha256[:16]>/<filename>`` and is never overwritten. Re-fetching
@@ -16,6 +16,7 @@ import json
 import re
 import shutil
 import tempfile
+import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from dataclasses import asdict, dataclass
@@ -55,6 +56,22 @@ def redact(text: str) -> str:
 
 class SourceError(Exception):
     """A source could not be fetched. Carries the source and layer that failed."""
+
+
+# How long to wait after HTTP 429 when the publisher sends no usable `Retry-After`: one
+# minute, the window HUD's limit is counted over, and the cap on any wait it asks for.
+_RATE_LIMIT_WAIT_S = 60.0
+
+
+def _rate_limit_wait(exc: BaseException) -> float:
+    """Seconds to wait before retrying `exc`: `Retry-After` for a 429, else none."""
+    if not isinstance(exc, httpx.HTTPStatusError) or exc.response.status_code != 429:
+        return 0.0
+    try:
+        return min(float(exc.response.headers.get("retry-after", "")), _RATE_LIMIT_WAIT_S)
+    except ValueError:
+        # Absent, or an HTTP date rather than seconds: wait out the whole window.
+        return _RATE_LIMIT_WAIT_S
 
 
 @dataclass(frozen=True)
@@ -149,6 +166,13 @@ class SourceAdapter(ABC):
     # plain single-header CSV. Census Building Permits ships two header rows, which
     # collapse into one unusable column unless both are skipped.
     csv_read_options: ClassVar[str] = ""
+    # Seconds to leave between this adapter's downloads; cached releases never wait.
+    # Zero for publishers that state no limit. HUD User answers 429 past 60 requests a
+    # minute (`x-ratelimit-limit: 60`), which 571 municipal CHAS calls reach in about
+    # 100 — found on 2026-09-11, when the first run stopped at release 101.
+    request_interval_s: ClassVar[float] = 0.0
+    # When this adapter last sent a request, for `request_interval_s`.
+    _last_request_at: float | None = None
 
     @abstractmethod
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
@@ -265,10 +289,25 @@ class SourceAdapter(ABC):
                 for chunk in response.iter_bytes(CHUNK_BYTES):
                     handle.write(chunk)
 
+    def _pace(self) -> None:
+        """Wait out `request_interval_s` since this adapter's previous request."""
+        if self.request_interval_s <= 0:
+            return
+        if self._last_request_at is not None:
+            wait = self.request_interval_s - (time.monotonic() - self._last_request_at)
+            if wait > 0:
+                time.sleep(wait)
+        self._last_request_at = time.monotonic()
+
     def _download(self, ref: ReleaseRef, destination: Path) -> None:
-        """Retry ``_fetch_bytes``, then fail with a message naming source and layer."""
+        """Retry ``_fetch_bytes``, then fail with a message naming source and layer.
+
+        A retry is immediate, except after HTTP 429: the publisher has said to slow
+        down, and three instant retries only spend the attempts inside the same window.
+        """
         last: Exception | None = None
         for attempt in range(1, _RETRIES + 1):
+            self._pace()
             try:
                 self._fetch_bytes(ref, destination)
                 return
@@ -278,6 +317,8 @@ class SourceAdapter(ABC):
                 destination.unlink(missing_ok=True)
                 if attempt == _RETRIES:
                     break
+                if wait := _rate_limit_wait(exc):
+                    time.sleep(wait)
         # Raised `from None`, not `from last`: httpx renders the failing URL into both
         # its message and its traceback, and for a keyed source that URL carries the
         # key. The type and the redacted message are kept, so nothing diagnostic is

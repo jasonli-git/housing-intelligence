@@ -49,3 +49,49 @@ models:
           - accepted_range:
               min_value: 100
               max_value: 100000
+
+  # Milestone 21. Keyed models: the geoid is exact, so the tests guard the shape of the
+  # files — a moved column shows up as nulls or out-of-range values here, before the
+  # gate or the warehouse sees it.
+  - name: stg_census_acs_housing
+    description: ACS vacancy (B25002) and homeownership (B25003) rates, county and municipal.
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: release_layer
+        tests:
+          - accepted_values: {values: ['housing_county', 'housing_cousub']}
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {min_value: 0, max_value: 1}
+
+  - name: stg_census_permits_place
+    description: Building permits by place, resolved to municipal GEOIDs by FIPS MCD code.
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {min_value: 0, max_value: 1000000}
+
+  - name: stg_hud_fmr
+    description: Two-bedroom Fair Market Rent per county per fiscal year.
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {min_value: 100, max_value: 20000}
+
+  - name: stg_hud_chas
+    description: HUD CHAS owner and renter cost burden, county and municipal, one vintage.
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {min_value: 0, max_value: 1}

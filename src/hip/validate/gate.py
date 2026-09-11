@@ -48,6 +48,15 @@ VALUE_BOUNDS = {
     "modiv_median_lot_acres": (0.0, 10_000.0),
     "modiv_vacant_land_share": (0.0, 1.0),
     "modiv_multifamily_share": (0.0, 1.0),
+    # Milestone 21. Rates are shares; the FMR floor is below any real two-bedroom rent,
+    # and the all-transactions index shares the purchase-only one's bounds.
+    "acs_homeownership_rate": (0.0, 1.0),
+    "acs_vacancy_rate": (0.0, 1.0),
+    "fhfa_hpi_all_transactions": (1.0, 10_000.0),
+    "hud_fmr_2br": (100.0, 20_000.0),
+    "chas_renter_cost_burden": (0.0, 1.0),
+    "chas_renter_severe_burden": (0.0, 1.0),
+    "chas_owner_cost_burden": (0.0, 1.0),
 }
 
 # Below this share of a level's regions, something structural has broken — a renamed

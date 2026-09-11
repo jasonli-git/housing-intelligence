@@ -15,7 +15,7 @@ mean shipping Python to the browser or JavaScript to the pipeline.
 
 from __future__ import annotations
 
-from hip.packets.schema import Packet, PacketLevel, PacketMetric
+from hip.packets.schema import Packet, PacketHighlight, PacketLevel, PacketMetric
 
 
 def format_value(value: float, unit: str) -> str:
@@ -44,6 +44,20 @@ def format_change(pct: float) -> str:
 def _cell(text: str) -> str:
     """A pipe inside a cell would silently split the column."""
     return text.replace("|", "\\|")
+
+
+def _end(highlight: PacketHighlight, directions: dict[str, str]) -> str:
+    """Which end of its cohort a highlight sits at, in words its metric can support.
+
+    `best` and `worst` only where the metric's direction defines a good end. A neutral
+    metric — home value, a Fair Market Rent, a homeownership or vacancy rate — ranks
+    largest first with no judgement attached, and calling a slow rise in home values the
+    "worst end" put one in the report that the data never made.
+    """
+    leading = highlight.position == "leading"
+    if directions.get(highlight.metric_id) == "neutral":
+        return "top" if leading else "bottom"
+    return "best" if leading else "worst"
 
 
 def _rank(entry: PacketMetric | PacketLevel) -> str:
@@ -76,11 +90,12 @@ def render_markdown(packet: Packet) -> str:
 
     if packet.highlights:
         lines += ["## Where this region stands out", ""]
+        directions = {metric.metric_id: metric.direction for metric in packet.metrics}
         for highlight in packet.highlights:
-            end = "best" if highlight.position == "leading" else "worst"
             lines.append(
                 f"- **{_cell(highlight.label)}** — rank {highlight.rank} of "
-                f"{highlight.of} ({end} end), {format_change(highlight.pct_change)}"
+                f"{highlight.of} ({_end(highlight, directions)} end), "
+                f"{format_change(highlight.pct_change)}"
             )
         lines.append("")
 
@@ -113,8 +128,8 @@ def render_markdown(packet: Packet) -> str:
             "",
             "Every metric's most recent reading, ranked against peers by value rather "
             "than by change. Metrics published as a single snapshot — the MOD-IV "
-            "assessment aggregates — appear only here, because a change needs two "
-            "observations.",
+            "assessment aggregates and HUD's CHAS tables — appear only here, because a "
+            "change needs two observations.",
             "",
             "| Metric | Value | Rank | As of | Source |",
             "| --- | ---: | ---: | --- | --- |",

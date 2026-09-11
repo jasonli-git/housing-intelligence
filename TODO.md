@@ -3,27 +3,27 @@
 Working list for the current milestone. Longer-horizon items live in
 [ROADMAP.md](ROADMAP.md).
 
-## Resume here — state as of 2026-09-10
+## Resume here — state as of 2026-09-11
 
 Nothing in this section is in progress. It is the order agreed on 2026-09-10 for picking
 the work back up, and what has to be true before starting. Detail lives in the items it
 points to; this section only sequences them.
 
-**Where things stand.** Milestones 12, 19, 20 and 22 are done. 12 and 19 are deployed and
-verified live; 20 and 22 changed no published byte, so neither needs a deploy. The live
-site carries data through July 2026 and five models' explanations of every county. The
+**Where things stand.** Milestones 12, 19, 20, 21 and 22 are done. 12 and 19 are deployed
+and verified live; 20 and 22 changed no published byte, so neither needs a deploy. 21
+changed the warehouse and every packet, and is deliberately not deployed: its new metrics
+reach the site with the regeneration after `v3` (step 5). The live site carries data
+through July 2026 and five models' explanations of every county. The
 preference list in `config/evaluation.yml` is `gemini-3.7-flash` →
 `gemini-3.1-flash-lite` → `mistral-small-4` → `deepseek-v4-pro` → `gemma-4-e4b-q4`.
 
-**The agreed sequence** — settled with the user on 2026-09-10; step 1 finished the same
-day:
+**The agreed sequence** — settled with the user on 2026-09-10; steps 1 and 2 are done:
 
 1. ✅ **Milestone 20 — reasoning effort as a measured variable.** Done 2026-09-10; see
    its section below. It configured `deepseek-flash-nothink` and `gemini-3.7-flash-low`
    for step 4.
-2. **Milestone 21 — New Jersey depth.** The five sources in [ROADMAP.md](ROADMAP.md) row
-   21, each sized under "Data sources worth adding". Before 13 because it adds metrics to
-   every packet.
+2. ✅ **Milestone 21 — New Jersey depth.** Done 2026-09-11; see its section below. Five
+   sources, eight metrics, 13,638 observations, and a county packet a third larger.
 3. **Milestone 13 — citation binding.** Built and tested against the packet shape 21
    produces rather than retrofitted to it. Rework-avoidance, not a hard dependency: a
    binding generic over packet fields would mostly survive going first. Going first would
@@ -1908,6 +1908,101 @@ on 2026-09-11 once `v3`'s payload format and sampling were decided.
   too**, as it always has in `resolve`. Milestone 20 applied that check to these flags
   even with it; one definition of eligibility for every path was worth the narrowing.
 
+## Milestone 21 — New Jersey depth: the sources still missing
+
+Started and finished 2026-09-11, second in the order agreed on 2026-09-10: 20, 21, 13,
+then run `v3`.
+No new key: HUD Fair Market Rents and CHAS use the `HUD_API_TOKEN` the `hud` source has
+held since Milestone 9, confirmed live on 2026-09-11; ACS and FHFA use what they use
+today, and Building Permits needs none.
+
+**Deliverable.** The five sources in [ROADMAP.md](ROADMAP.md) row 21, each carried through
+the whole pipeline into packets, the API and the site: a published rent standard for
+every county, ownership and vacancy rates for every county and municipality, FHFA's
+all-transactions index for the state back to 1975, HUD's published cost-burden tables
+for owners and renters at county and municipal level, and building permits for every
+municipality. Verified by a real pipeline run, not only by tests.
+
+**What probing the sources showed on 2026-09-11.** Three of the five differ from how
+they were sized:
+
+| Source | Planned | Found | So |
+|---|---|---|---|
+| HUD FMR | one call per county-year | `/fmr/statedata/NJ?year=` returns all 21 counties in one 9KB call; FY2017-FY2027 answer, FY2016 is refused; nine counties are Small Area FMR areas | one call per fiscal year, county FMRs only |
+| ACS B25002/B25003 | "a `metrics.yml` entry and a column in the existing model" | the raw cache is keyed by (layer, scope, vintage), not by URL, so adding variables to the existing request would silently reuse cached files that lack them | their own layers, `housing_county` and `housing_cousub` |
+| FRED `NJSTHPI` | a FRED series | it is FHFA's all-transactions NJ index, which `hpi_master.csv` — already fetched for `fhfa_hpi` — carries quarterly from 1975 | read from FHFA's file: no FRED call, no second source for one series |
+| HUD CHAS | "the query shape needs settling" | `type=3&stateId=34&entityId=21` for a county; `type=4` with an MCD's FIPS code for a municipality, listed by `chas/listMCDs/34` (571 entries); 2016-2020 to 2018-2022 answer, 2019-2023 is not yet published | county and municipality, 2018-2022 |
+| BPS place | "place codes are not MCD FIPS, so this needs a match" | the Northeast place file carries a `FIPS MCD Code` column, so state, county and MCD make the municipal GEOID exactly | exact FIPS, no matching |
+
+- [x] **`hud_fmr`** — a new source in `config/sources.yml`, `HudFmrAdapter` over
+      `/fmr/statedata/{state}?year=` for FY2017-FY2026, `stg_hud_fmr`, and metric
+      `hud_fmr_2br`. Each fiscal year is dated as its real window, 1 October to 30
+      September, not as a calendar year
+- [x] **`fmr_to_income`**, derived — twelve months of the two-bedroom FMR over ACS
+      median household income, county level only: HUD sets FMRs per area and does not
+      sanction allocating one down to a municipality, the rule `hud_county_ami` already
+      states for income limits
+- [x] **ACS tenure and vacancy** — `housing_county` and `housing_cousub` layers on
+      `AcsAdapter`, `stg_census_acs_housing`, and metrics `acs_homeownership_rate` and
+      `acs_vacancy_rate` at county and municipality
+- [x] **FHFA all-transactions index** — `stg_fhfa_hpi` gains
+      `fhfa_hpi_all_transactions`, state level, quarterly from 1975
+- [x] **`hud_chas`** — a new source, `HudChasAdapter` (county refs, plus municipal refs
+      derived from the cached `listMCDs` directory so a re-run touches no network),
+      `stg_hud_chas` resolving each MCD code through TIGER as `stg_nj_municipal_codes`
+      does, and metrics `chas_renter_cost_burden`, `chas_renter_severe_burden` and
+      `chas_owner_cost_burden`. One vintage, so ranked by value like MOD-IV (#52)
+- [x] **BPS place** — `PermitsAdapter` gains its Census region's place file per year;
+      `stg_census_permits_place` writes `permits_total_units` at municipality level
+- [x] The registry, `KEYED_MODELS`, validation ranges, dbt schema tests and packet
+      caveats for every new metric
+- [x] `.env.example` names `HUD_API_TOKEN`, which the `hud` source has required since
+      Milestone 9 and the file never listed
+- [x] Tests — 15 new, 418 Python tests in all
+- [x] A real pipeline run — acquire, land, stage, geocode, validate, load, analyze,
+      pack — with the region reports regenerated
+- [x] Docs: the sources list, ARCHITECTURE decisions and counts, README, ROADMAP,
+      CHANGELOG
+- [x] **Found on the way, and built:** download pacing and a wait after HTTP 429 in
+      `SourceAdapter` (ARCHITECTURE #111); "top"/"bottom" rather than "best"/"worst"
+      for a neutral metric in the report and the dashboard's print page; the code-0
+      "county subdivisions not defined" entries dropped from CHAS's municipal refs
+
+**What the run produced, 2026-09-11.** 348,595 observations cleared the gate and loaded,
+13,638 of them new; `analyze` wrote 2,534 derived rows, 105 of them `fmr_to_income`, for
+351,295 in all, with 26,805 changes, 26,790 change rankings and 11,884 value rankings.
+Coverage stayed 100% for counties and municipalities. Acquisition: FMR ten calls, ACS
+housing ten, BPS place ten files (7.3MB), CHAS 593 calls (1.1MB) — about twelve minutes,
+paced.
+
+- Note: **HUD User allows 60 requests a minute per token** (`x-ratelimit-limit: 60`).
+  The first CHAS run stopped at release 101 with HTTP 429 because the retry loop retried
+  instantly; the fix is general (#111), not CHAS-specific.
+- Note: **HUD changed FMR standard at FY2020.** Six NJ counties were at the 50th
+  percentile in FY2017-2018 and two in FY2019; every area is at the 40th since. The
+  default five-year window is clear of it; the 10-year and since-2019 windows are not,
+  and the packet caveat says so.
+- Note: **CHAS lists 571 MCD entries for NJ**: five are code 0 (water, one per coastal
+  county), two have no data and no TIGER municipality, and the other 564 match every
+  municipality. Three municipalities have no renter or no owner households, so one ratio
+  is absent for each: Cape May Point and Walpack (no renters), Teterboro (no owners).
+- Note: **2024's municipal permits sum to the county total exactly** (36,596 units).
+  466 of 562 municipalities carry a five-year change; 96 permitted nothing in 2019, and a
+  change from zero has no percentage.
+- Note: **the ACS vacancy rate reaches 1.0** for a handful of tiny municipalities and 0.6
+  for Cape May County: seasonal homes count as vacant. Recorded in Known Limitations.
+- Note: **a reload never deletes a row its source has stopped publishing** — 166 ZORI
+  rows, municipal and ZIP, that Zillow's current files no longer carry, citing the
+  current release all the same. Found reconciling this load's totals; it predates
+  Milestone 21, and changing the loader's semantics is its own decision. Recorded in
+  ARCHITECTURE's Known Limitations.
+- Note: **shares still render as `0.68`**, not `68%`: `ratio` covers both multiples
+  (price-to-income 4.5) and shares (homeownership 0.68). A share unit belongs with
+  Milestone 18's design system.
+- Note: **every stored explanation is now stale**, as planned — Milestone 21 changes every
+  packet — and nothing new ships until the regeneration after `v3`. The live site is
+  static and unchanged until then.
+
 ## Milestone 19 — Multi-model interpretation
 
 Started 2026-09-06, out of numeric order and before 13-18. Precedent: Milestone 9 was
@@ -2301,7 +2396,8 @@ with expansion, not with New Jersey depth.
 
 **No new key — the credential is already in `.env`**
 
-- [ ] **HUD Fair Market Rents** — approved in SPEC, never fetched. **Verified working
+- [x] **HUD Fair Market Rents** — **done in Milestone 21** as `hud_fmr`, all 21 counties,
+      FY2017-FY2026, with `fmr_to_income` beside it. Kept as written: **Verified working
       2026-08-13 with the token already in `.env`**: `/hudapi/public/fmr/data/3402199999
       ?year=2025` returns Mercer County efficiency $1,391 through four-bedroom $2,747,
       by bedroom count. Same adapter shape as income limits, five bedroom sizes per
@@ -2309,11 +2405,18 @@ with expansion, not with New Jersey depth.
       rent-to-income rows against price-to-income's 2,026) and let rent burden cite a
       published standard rather than a survey estimate. **The single highest-value
       gap**, and it needs nothing from the user.
-- [ ] **HUD CHAS** — approved in SPEC, never fetched. Endpoint returns 200 with the
-      existing token (probed 2026-08-13). Published cost-burden tables would replace
+- [x] **HUD CHAS** — **done in Milestone 21** as `hud_chas`, county and municipal,
+      2018-2022; kept beside `acs_renter_cost_burden` rather than replacing it, which
+      would have traded five vintages of trend for one (ARCHITECTURE #107). Kept as
+      written: approved in SPEC, never fetched. Endpoint returns 200 with the existing
+      token (probed 2026-08-13). Published cost-burden tables would replace
       `acs_renter_cost_burden`, which the platform currently derives from raw B25070
       columns.
-- [ ] **ACS housing-stock tables** — same `CENSUS_API_KEY`, same adapter, more
+- [ ] **ACS housing-stock tables** — **B25002 and B25003 done in Milestone 21**, as
+      vacancy and homeownership rates under their own layers; B25024 and B25034 remain.
+      "Adding one is a `metrics.yml` entry and a column" turned out wrong: the raw cache
+      keys on the layer, so a table needs a new layer (ARCHITECTURE #108). As written:
+      same `CENSUS_API_KEY`, same adapter, more
       variables. **Verified 2026-08-13**: B25002 (vacancy), B25003 (tenure), B25024
       (units in structure) and B25034 (year built) all return NJ county data on the
       2023 5-year endpoint. Adding one is a `metrics.yml` entry and a column in the
@@ -2322,7 +2425,10 @@ with expansion, not with New Jersey depth.
 - [x] ~~BLS v2~~ — **already done.** `hip.sources.bls` selects `BASE_V2` whenever
       `BLS_API_KEY` is set, so the 20-year history and 500-query allowance are in use.
       The Milestone 3 note saying otherwise was stale; it is corrected in place.
-- [ ] **FRED housing series** — same `FRED_API_KEY`. All four probed 200 on 2026-08-13:
+- [ ] **FRED housing series** — **`NJSTHPI` done in Milestone 21, from FHFA's master
+      file rather than FRED** — it is FHFA's all-transactions index, not an independent
+      one (ARCHITECTURE #109); the three national series remain. As written: same
+      `FRED_API_KEY`. All four probed 200 on 2026-08-13:
       `NJSTHPI` (NJ house price index — would give the state a second, independent HPI
       against FHFA), `HOUST` (national housing starts), `RRVRUSQ156N` (rental vacancy),
       `MSPUS` (national median sale price). Each is a `sources.yml` line plus a
@@ -2334,7 +2440,9 @@ with expansion, not with New Jersey depth.
       sale price, days-to-pending, for-sale inventory. Same CSV host, same adapter,
       already anticipated: "adding one later is a `sources.yml` entry plus a `metric_id`,
       not a schema change."
-- [ ] **Census Building Permits at place level** — currently county only, so the
+- [x] **Census Building Permits at place level** — **done in Milestone 21**, and no match
+      was needed: the place file carries a FIPS MCD column (ARCHITECTURE #110). As
+      written: currently county only, so the
       warehouse has no municipal construction signal at all. BPS publishes place-level
       annual files by region (`.../econ/bps/Place/Northeast Region/ne<yy>06y.txt`,
       confirmed 200 on 2026-08-13). Place codes are not MCD FIPS, so this needs a
@@ -2349,9 +2457,9 @@ with expansion, not with New Jersey depth.
       the one blocked item: the REST path Milestone 7 uses returns attributes only, and
       the geometry needed for a parcel map layer would be an enormous download.
 
-- Note: **FMR and CHAS are the two SPEC-approved sources still unfetched.** Both were
-  added to SPEC with explicit approval at Milestone 4 and neither has an adapter. They
-  are the only gap between the Version 1 source list and what the warehouse holds.
+- Note: ~~**FMR and CHAS are the two SPEC-approved sources still unfetched.**~~ Both
+  fetched since Milestone 21, which closes the gap between the Version 1 source list and
+  what the warehouse holds.
 
 ## Parked / needs user input
 

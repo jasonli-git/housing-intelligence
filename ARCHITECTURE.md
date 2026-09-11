@@ -5,13 +5,13 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-09-11):** Milestones 0 through 12, 19, 20 and 22 are complete; 13, 16,
-> 17, 18 and 21 are planned, and 14 and 15 were deferred past Version 2 on 2026-09-07
+> **Status (2026-09-11):** Milestones 0 through 12, 19, 20, 21 and 22 are complete; 13,
+> 16, 17 and 18 are planned, and 14 and 15 were deferred past Version 2 on 2026-09-07
 > ([ROADMAP.md](ROADMAP.md)). The warehouse holds a NJ geography spine — 3,365 regions
 > and the `nation` row, 2,493 ZIP allocation weights (2,460 of them HUD
 > residential-address ratios), and 554 NJ municipal codes in `region_identifiers` — and
-> **337,552 observations across 23 metrics from 10 sources**, spanning 1971 to 2026, with
-> 19,574 computed changes, 19,564 change rankings and 8,359 value rankings derived from
+> **351,295 observations across 31 metrics from 12 sources**, spanning 1971 to 2026, with
+> 26,805 computed changes, 26,790 change rankings and 11,884 value rankings derived from
 > them. All eight stages run, `acquire → land → stage → geocode → validate → load →
 > analyze → pack`. **3.48M NJ parcels** live in Parquet and DuckDB and reach the
 > warehouse only as six municipality-level aggregates (#49). Packet `1.1` is validated
@@ -20,7 +20,7 @@ scope; this document does not restate it.
 > Interpretation is written by hosted models behind a preference list that ends at a
 > local one (#78, #96): 105 explanations, five models' readings of each of the 21
 > counties (#91), chosen by evaluation runs `v1` and `v2`, with reasoning effort part of
-> each candidate's configuration since Milestone 20 (#98). 403 Python tests and 26
+> each candidate's configuration since Milestone 20 (#98). 418 Python tests and 26
 > dashboard tests pass. Nothing in the pipeline or the API depends on a model being
 > present: with no explanations stored, every page and endpoint still works.
 
@@ -40,7 +40,8 @@ and production is their output rendered to static files (#67, #68).
   stage, and no pipeline stage calls the API. They share the database, not code paths.
 - **Data sources** — public HTTP endpoints only: Census TIGER/Line, Zillow research CSVs,
   Census ACS and Building Permits, FHFA HPI, FRED, BLS, IRS SOI migration, HUD's USPS
-  crosswalk and income limits, and NJGIN parcel / MOD-IV extracts. Each is reached
+  crosswalk, income limits, Fair Market Rents and CHAS, and NJGIN parcel / MOD-IV
+  extracts. Each is reached
   through one source adapter, and every download is cached to disk so a full rebuild
   never re-fetches.
 - **Model and hosting services, all optional** — DeepSeek, Gemini and Mistral write
@@ -175,10 +176,16 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 103 | A run's scenario set is frozen once anything is generated against it, every `hip eval` command names its run, and scenarios default to the Markdown payload `hip explain` sends. | `hip eval scenarios` replaced its file unconditionally and every `hip eval` command defaulted to `--run v1`, so README's bare commands — and `make eval`, which ran them — would rewrite `v1`'s scenario set from today's packets, append new candidates to its generations, bill a batch to judge them, and re-render its report. The payload default was JSON, while `hip explain` has always sent the Markdown rendering the region reports use (#45). `v1` passed `--format markdown`; `v2`'s scenarios were built on 2026-09-06 by a command without the flag, so `v2` measured prose written from a payload the site never sends — nobody chose JSON. The comparison within `v2` is fair, since every model got the same packets, but it measured an input production does not use, and its cost column overstates what the site pays by roughly the input share (as JSON, a county packet is about three times the tokens it is as Markdown). A set with generations is refused even with `--replace`; a draft with none needs `--replace`; the check runs before any packet is built. Rejected: defaulting `--run` to the latest run — the command that creates a run cannot default to an existing one, and read commands defaulting differently from write commands would be their own trap. Costs: `--run` on every invocation, and `make eval` needs `RUN=`. |
 | 104 | Every candidate is sent one sampling setting — temperature 0.0 — and the report names the candidates their provider samples differently or advises otherwise. | Decided on 2026-09-10 for `v3`. DeepSeek ignores temperature while its models reason, so `deepseek-flash` against `deepseek-flash-nothink` varies sampling as well as reasoning; Google recommends 1.0 for Gemini 3 and warns that lower values can cause looping. Accepted rather than designed away: sending each provider its own recommended setting would make every row a different sampling configuration, and the comparison would measure vendor defaults again — the problem #98 fixed for reasoning. `v2` showed no looping from Gemini at 0.0. The tables cannot show any of this, so `_sampling_note` in the report states it, derived from the run: the temperature from the sampling mode each generation records, reasoning from its token counts, and each provider's behaviour from a short table of what it documents. A run neither provider is in renders nothing, so `v1` is unchanged; `v2` gained one paragraph. Rejected: measuring whether a temperature was honoured, which no response reveals. Costs: a mode's temperature is read from config when the report renders, the hazard the rates carry. **Qwen's guidance joined the note on 2026-09-11 (#105).** |
 | 105 | Qwen, through Alibaba Cloud Model Studio's International endpoint, is a fourth hosted provider, benchmarked in `v3` as a contender for the China slot: two pinned snapshots, each with thinking on and off. | The China slot has been DeepSeek's for its jurisdiction, and DeepSeek cannot be pinned: it serves moving aliases, repointed a Flash and a Pro checkpoint without renaming either, and retired two names within a month (#95). V4 Flash also scored below the local Gemma in `v2`. Qwen offers what that slot lacks — dated snapshots, `qwen3.7-flash-2026-07-15` and `qwen3.7-plus-2026-05-26` — without leaving the regime, so if DeepSeek falls below the bar the slot has a measured replacement rather than an empty place. It is not a fourth regime: Alibaba is Chinese, and one policy action against Chinese providers reaches both. A cheap and a mid tier, as for every provider, each at its default and with `enable_thinking: false`, because Qwen 3.5-3.8 think by default and thinking is most of the cost: on one county packet it was 2,268 of Flash's 2,497 output tokens and 2,378 of Plus's 2,796. Both controls were called and measured before being recorded (#99), and every response named exactly the snapshot requested, so the substitution guard applies unchanged. The endpoint speaks the OpenAI shape with DeepSeek's reasoning conventions, so the whole integration is a `_Dialect` entry and a `REASONING_CONTROLS` entry (#78). Singapore because an API key is bound to its region and only Singapore carries the new-account free quota; the cost column prices at list regardless, since that is what the site pays once the quota is gone. Rejected: the Max tier, at $2/$6 per million tokens, priced like candidates Milestone 12 already turned down; the newer `qwen3.8-flash`, which has no dated snapshot yet; the open-weight 27B and 35B models, which fit no 16GB machine locally and offer nothing hosted that Flash and Plus do not. Considered and left for later: Model Studio also serves `deepseek-v4-pro-0813`, the checkpoint `v2` measured, as a pinned snapshot — the only pinned DeepSeek on offer, but a different host makes it a different candidate. Sampling stays at the harness's one setting (#104), and the report's sampling note names every Qwen candidate held below its publisher's guidance, as it names Gemini 3: Qwen gives none for 3.7, which is API-only, and Model Studio's reference gives ranges rather than recommendations, so the note cites the model cards for 3.6 and 3.8, the releases either side — temperature 1.0 when thinking, 0.7 when not — which, unlike Qwen3's, do not warn against greedy decoding. One provider default the pin does not reach: Model Studio applies `presence_penalty` 1.5 to Qwen 3.6-3.8 in non-thinking mode, and 0 otherwise, so the two thinking-off candidates are sampled with a repetition penalty no other candidate gets; recorded rather than overridden, because sending a penalty would change what every default candidate has been measured under. Costs: four candidates add 60 generations and about $4 of judging to `v3`. |
+| 106 | Fair Market Rents are their own source, `hud_fmr`, fetched per state and fiscal year, dated as the fiscal year they are, and kept at county level; `fmr_to_income` sets them against ACS income. | A source is what a reader sees credited beside a figure, so FMRs are not a layer of `hud`, whose name is "USPS ZIP crosswalk and income limits" — CHAS is split out for the same reason (#107). `/fmr/statedata/{state}` answers all 21 counties in one 9KB call, so ten fiscal years are ten requests where the per-county endpoint the source list was sized on would take 210. A fiscal year runs from 1 October: FY2026 took effect on 2025-10-01, so it is dated 2025-10-01 to 2026-09-30, where income limits are dated as calendar years (#38) — a quarter out for FMRs, and enough to pair each rent with income data a year newer than it was set from. `fmr_to_income` joins through the year the fiscal year starts in, so FY2024 meets the ACS vintage ending 2023, and county rent affordability runs every county and year where `rent_to_income` covered 19 counties. County level only: an FMR is set per area, and allocating it to a municipality is what `hud_county_ami` already says HUD does not sanction. Rejected: the nine NJ counties' Small Area FMRs, which are ZIP-level and apply to vouchers there — a later addition, recorded in Known Limitations. Rejected: FY2027, published but not in force until 2026-10-01; `FMR_YEARS` gains it then, the explicit bump `BLS_END_YEAR` gets. Costs: counties sharing an FMR area share a figure — eleven areas across 21 counties — so ranks among them compare areas; and HUD set some NJ areas at the 50th percentile until FY2020 (six counties in FY2017-2018, two in FY2019), so the 10-year and since-2019 windows mix two standards, which the packet caveat says. |
+| 107 | CHAS is its own source, `hud_chas`, at county and municipal level for the 2018-2022 vintage, with municipal refs derived from HUD's MCD directory fetched as a release; it sits beside the ACS burden ratio rather than replacing it. | HUD tabulates cost burden from ACS microdata, so CHAS gives what no ACS table the warehouse reads can: severe burden (over 50% of income) and owner burden. Municipal refs cannot come from config — they are HUD's MCD codes, and HUD publishes the list (`chas/listMCDs/34`, 571 entries) — so the directory is fetched and cached like any release, and `fetch_all` derives the municipal refs from its content; a re-run, and `hip load` rebuilding provenance, therefore touch no network once it is cached. A CHAS row names its municipality by MCD code and names no county, so `stg_hud_chas` resolves state plus MCD code to a GEOID through TIGER, the file `stg_nj_municipal_codes` already reads: exact FIPS, no names. Denominators include households HUD could not compute a burden for, the universe the B25070 ratio uses, so the two read side by side. One vintage: they overlap by four years as ACS ones do, 2019-2023 is not yet published, and the ACS ratio already carries the trend — so CHAS metrics are snapshots ranked by value (#52). The field codes are read from HUD's own dictionary; a third-party mirror labels `A1` as total households, which the data contradicts. Rejected: HUD's bulk CHAS files, national per summary level, where 21 counties and 571 municipalities are 592 small requests. Rejected: replacing `acs_renter_cost_burden`, as the source list proposed — that would trade five vintages of trend for one. Costs: 592 releases, and requests paced to HUD's limit (#111). |
+| 108 | ACS occupancy and tenure are requested under their own layers, `housing_county` and `housing_cousub`, rather than as more variables on the existing request. | The raw cache is keyed by (layer, scope, vintage), not by URL (#10), so a widened request under the old key would have been answered from the cached files that lack the new columns — silently, with a pipeline that ran clean and a vacancy rate that never appeared. Separate layers also give the new rows their own releases, so an income figure's provenance does not move because a tenure table was added. `stg_census_acs_housing` computes vacancy (B25002, vacant over all units) and homeownership (B25003, owner-occupied over occupied) for county and municipality. Rejected: forcing a re-download of the ten existing files, which would have re-minted every ACS release for no change in their numbers. Costs: ten more requests and ten more releases. The latent hazard stays for any source whose request changes under a fixed key; the rule is a new layer when the request changes. |
+| 109 | FHFA's all-transactions index is read from `hpi_master.csv`, already fetched for `fhfa_hpi`, as a second metric — not from FRED's `NJSTHPI`. | `NJSTHPI` is FHFA's all-transactions index for New Jersey, republished by FRED; the master file carries it quarterly from 1975, with its source release already recorded. Fetching it through FRED would put FHFA's numbers under a second source and a second release. It is a separate metric, `fhfa_hpi_all_transactions`, rather than spliced onto the purchase-only series, because the two index different transactions — refinance appraisals are in one — and one is seasonally adjusted and the other is not. Costs: none in fetching; one more state-level metric, which like `fhfa_hpi` cannot be ranked across counties. |
+| 110 | Building permits reach municipalities through the Census region's place file, resolved by its FIPS MCD column. | The source list expected a name match, saying place codes are not MCD FIPS. The Northeast place file carries county and MCD FIPS codes for every permit-issuing place, and in New Jersey every such place is a municipality, so state, county and MCD make the municipal GEOID exactly. Measured on 2026-09-11: 2024's municipal permits sum to the county file's total exactly, 36,596 units. One file per region per year covers nine states, so Milestone 14 needs no new fetches for them. Only the Northeast is mapped in `PLACE_REGIONS`, because it is the only region file that has been read; another state is refused with the fix named, rather than guessed at as a URL. The county file is read by name (`????.parquet`) so the place files beside it, whose columns differ, never reach `stg_census_permits`. Costs: permit counts below county level are small and volatile, which `permits_volatile` already says. |
+| 111 | An adapter can declare `request_interval_s`, and a download answered HTTP 429 waits before retrying; the three HUD adapters pace at 1.1 seconds. | HUD User allows 60 requests a minute per token (`x-ratelimit-limit: 60`). The first municipal CHAS run stopped at release 101, because the retry loop retried a 429 instantly three times — spending every attempt inside the same window. Pacing lives in `SourceAdapter._download`, so a cached release never waits and every adapter can opt in; a 429 honours `Retry-After`, capped at a minute, or waits the minute when none is sent. Every HUD adapter paces, since the three share one token. Rejected: a pause inside the CHAS adapter alone, which the next HUD dataset would have to rediscover. Costs: a fresh CHAS fetch takes about twelve minutes; a cached one takes none. |
 
 ## Module Layout
 
-What exists as of 2026-09-10. Every pipeline package now holds real modules; the
+What exists as of 2026-09-11. Every pipeline package now holds real modules; the
 boundary rule in `tests/test_module_boundaries.py` enforces the import direction between
 them. Planned files are marked with the milestone that adds them.
 
@@ -186,9 +193,9 @@ them. Planned files are marked with the milestone that adds them.
 housing-intelligence/
 ├── .python-version            # pinned patch version (#18)
 ├── config/
-│   ├── sources.yml            # 13 sources: url, cadence, license, adapter name
+│   ├── sources.yml            # 15 sources: url, cadence, license, adapter name
 │   ├── geography.yml          # in-scope states and levels (#14)
-│   ├── metrics.yml            # 23 metrics: label, unit, frequency, direction
+│   ├── metrics.yml            # 31 metrics: label, unit, frequency, direction
 │   └── evaluation.yml         # candidates, scenarios, rubric, judge (#56)
 ├── schemas/
 │   └── packet-v1.json         # published packet contract, generated from code (#43)
@@ -203,13 +210,13 @@ housing-intelligence/
 │   │   ├── registry.py        # which sources have adapters; PLANNED names the rest
 │   │   ├── tiger.py           # Census TIGER/Line: 5 layers (#22)
 │   │   ├── zillow.py          # ZHVI + ZORI over county, city, ZIP
-│   │   ├── census_acs.py      # 5-year estimates at county and cousub (#31)
-│   │   ├── census_permits.py  # Building Permits Survey, county annual
-│   │   ├── fhfa.py            # hpi_master.csv — state level only
+│   │   ├── census_acs.py      # 5-year estimates at county and cousub (#31, #108)
+│   │   ├── census_permits.py  # Building Permits Survey, county and place (#110)
+│   │   ├── fhfa.py            # hpi_master.csv — state level, two flavors (#109)
 │   │   ├── fred.py            # MORTGAGE30US, national
 │   │   ├── bls.py             # LAUS county unemployment
 │   │   ├── irs_migration.py   # SOI county inflow/outflow, reduced to net
-│   │   ├── hud.py             # USPS crosswalk + income limits (#37, #38)
+│   │   ├── hud.py             # crosswalk + income limits, FMR, CHAS (#37, #106, #107)
 │   │   └── nj_modiv.py        # 3.48M NJ parcels via OBJECTID paging (#49, #50)
 │   ├── landing/
 │   │   ├── shapefile.py       # zip → Parquet via ST_Read, geometry to MultiPolygon
@@ -258,7 +265,7 @@ housing-intelligence/
 │   ├── profiles.yml           # duckdb (default) and postgres targets
 │   ├── macros/                # zillow_observations, accepted_range,
 │   │                          #   release_vintage (#53), nj_municipal_name (#51)
-│   └── models/staging/        # 12 staging models + dbt tests
+│   └── models/staging/        # 16 staging models + dbt tests
 ├── web/                       # Next.js 16 + React 19 dashboard
 │   ├── app/page.tsx           # overview: choropleth + ranking table
 │   ├── app/regions/[id]/page.tsx        # region detail: tiles, trends, tables
@@ -278,7 +285,7 @@ housing-intelligence/
 │   ├── validation/            # gate reports per run; gitignored, per-run machine state
 │   ├── regions/<window>/      # Markdown reports, one per region; 5y committed, README-linked
 │   └── evaluation/            # the published model-evaluation report; committed
-├── tests/                     # 403 Python tests; API tests skip without a warehouse
+├── tests/                     # 418 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
@@ -313,8 +320,8 @@ which is why every write path lives there.
 `region_rankings.basis` (#52); `0007` added `region_explanations` (#60); `0008` added
 `regions.name_lsad` (#70); `0009` added `sources.homepage` (#72); `0010` keyed
 `region_explanations` on the model and gave it a `rank` (#91). Measured 2026-09-10, the
-fact table holds 337,552 observations, with 19,574 changes, 19,564 change rankings and
-8,359 value rankings derived from them.
+fact table holds 351,295 observations, with 26,805 changes, 26,790 change rankings and
+11,884 value rankings derived from them.
 `region_identifiers`, empty since Milestone 1, now holds 554 NJ municipal codes under
 scheme `nj_cd_code` — the join MOD-IV was always going to supply (#21, #51).
 The block below was regenerated from the live tables on 2026-09-10 — every column in its
@@ -569,8 +576,10 @@ which is deliberate: the expensive, slow work does not require the database to b
 
 The contract between deterministic analytics and any consumer (#12). Small, fully
 computed, and validated against `schemas/packet-v1.json` before it is written. A county
-packet is roughly 14KB: Mercer's, on 2026-09-10, carried 15 metrics, 15 levels, 8
-sources and 5 caveats.
+packet is roughly 25KB: Mercer's, on 2026-09-11, carried 19 metrics, 22 levels, 10
+sources and 7 caveats — up from 14KB, 15, 15, 8 and 5 before Milestone 21 added its
+sources. Rendered as Markdown for a model, a county packet is about 2,000 tokens, a third
+more than before.
 
 `src/hip/packets/schema.py` holds the Pydantic models that *are* the schema; the JSON
 Schema file is generated from them and committed (#43), and `hip schema` prints it.
@@ -914,13 +923,36 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   Milestone 9), where HUD has no residential
   addresses for the pair. `method` distinguishes them, and an allocation mixing the two
   is silently mixing assumptions.
-- **HUD Fair Market Rents and CHAS are in SPEC but not fetched.** Both were approved as
-  Version 1 sources; only the crosswalk and income limits are wired.
+- ~~**HUD Fair Market Rents and CHAS are in SPEC but not fetched.**~~ Both fetched since
+  Milestone 21 (#106, #107).
+- **Small Area Fair Market Rents are not loaded.** Nine NJ counties are Small Area FMR
+  areas, where vouchers pay against ZIP-level rents; the county FMR shown there is the
+  metro figure, not the one those vouchers use (#106).
+- **The FMR series changes standard at FY2020.** HUD set six NJ counties' FMRs at the
+  50th percentile in FY2017-2018 and two in FY2019, and every area at the 40th since, so
+  a change over the 10-year or since-2019 window partly measures the methodology
+  (#106). The default five-year window is clear of it.
+- **CHAS is one vintage, a year behind ACS.** 2018-2022 describes earlier years than the
+  newest ACS figures beside it, and shows no change over time (#107).
+- **ACS counts seasonal homes as vacant.** `acs_vacancy_rate` follows the Census
+  definition, so a shore town's summer houses read as vacancy, and a few very small
+  municipalities report rates of 0 or 1 from a handful of sampled units.
+- **Municipal permits include Census's imputation.** A place reporting fewer than twelve
+  months has the rest imputed, as in the county totals the place figures sum to (#110).
+  And a municipality that permitted nothing at the start of a window has no percentage
+  change over it: 96 of 562 permitted nothing in 2019, so 466 carry a five-year change.
+- **A reload never deletes an observation its source has stopped publishing.** The
+  loader upserts (#25), so a row a newer release omits stays in the warehouse, citing the
+  source's current release although that file no longer contains it. Measured on
+  2026-09-11: 166 ZORI rows, municipal and ZIP, dated 2020-10 to 2026-06, that Zillow's
+  current files no longer carry. Found while reconciling Milestone 21's load; not caused
+  by it.
 - **BLS history is 20 years and needs a key.** Without `BLS_API_KEY` the adapter falls
   back to API v1: three years of history and 25 queries a day, which is one run for New
   Jersey's 21 counties and too short for Milestone 4's change metrics.
-- **FHFA is state-level only.** No county HPI is published at a reachable URL, so FHFA
-  is the warehouse's only `state`-level metric and cannot participate in county rankings.
+- **FHFA is state-level only.** No county HPI is published at a reachable URL, so
+  FHFA's two indexes are the warehouse's only `state`-level metrics and cannot
+  participate in county rankings.
 - **IRS migration is net returns per county, not flows.** The origin→destination matrix
   stays in Parquet and DuckDB; promoting it needs a two-region fact table.
 - **Municipal Zillow coverage is 403 of 564 (71%), and that is a ceiling, not a bug.**
@@ -942,6 +974,6 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   level.
 - **The Postgres container runs under emulation.** `postgis/postgis:16-3.4` resolves to
   linux/amd64 on this arm64 Mac, so Docker emulates it. Correct but slower than native.
-  The fact tables arrived at Milestone 2 and now hold 337,552 rows, and a warm
+  The fact tables arrived at Milestone 2 and now hold 351,295 rows, and a warm
   `make pipeline` still measured 22 seconds on 2026-08-28, so emulation has not yet been
   worth fixing.

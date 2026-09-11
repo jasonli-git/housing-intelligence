@@ -6,13 +6,13 @@ geography spine, 335,927 observations across 23 metrics from 10 sources spanning
 over the API, displayed by the dashboard, and packaged as versioned analysis packets,
 with 289 Python and 26 dashboard tests passing. All eight pipeline stages run.
 
-**Version 2 is under way — Milestones 10, 11, 12, 19, 22 and 20 have shipped, between
-2026-09-02 and 2026-09-10.** The platform is published: New Jersey is served from a
-public domain with no database and no application server, and its interpretation is
+**Version 2 is under way — Milestones 10, 11, 12, 19, 22, 20 and 21 have shipped,
+between 2026-09-02 and 2026-09-11.** The platform is published: New Jersey is served from
+a public domain with no database and no application server, and its interpretation is
 written by hosted models behind a preference list that ends on this machine. What
-remains is depth in New Jersey — the missing sources, citation binding, a re-benchmark,
-a design language, a three-dimensional map and a consumer entry point; expansion past
-New Jersey was deferred on 2026-09-07. Everything it runs on — the warehouse schema, the
+remains is depth in New Jersey — citation binding, a re-benchmark, a design language, a
+three-dimensional map and a consumer entry point; expansion past New Jersey was deferred
+on 2026-09-07. Everything it runs on — the warehouse schema, the
 analytics layer, the packet contract — is what Version 1 built.
 
 Two milestones ran out of numeric order. Milestone 9 was built before Milestone 5,
@@ -44,7 +44,7 @@ or the dashboard on a clean checkout; its tests pass; and
 
 ## Version 2 Milestones (public hosting and expansion)
 
-**Milestones 10, 11, 12, 19, 22 and 20 closed, between 2026-09-02 and 2026-09-10.**
+**Milestones 10, 11, 12, 19, 22, 20 and 21 closed, between 2026-09-02 and 2026-09-11.**
 Version 2 changes four things and deliberately not a fifth: where the platform runs (a public
 domain rather than `localhost`), how much geography it covers (Northeast, then national
 at county level), what writes the interpretation (a hosted model rather than a local
@@ -67,7 +67,7 @@ that rewrites the fact table has gone wrong.
 | 18 | ⬜ planned | **Design system and identity** — a typeface pairing and a wordmark replacing the system font stack, the interaction and focus states the stylesheet currently declares none of, metric and window chosen by the reader rather than fixed as module constants, a named component layer replacing per-page inline grids, an inline glossary so `ZHVI` and `price_to_ami` are defined where they appear, and caveats placed beside the figure they qualify rather than collected at the foot of the report. Built before 16 and 17 |
 | 19 | ✅ done | **Multi-model interpretation** — every county page carries all five benchmarked models' readings of the same packet, switchable by the reader and each attributed to the model and provider that wrote it. `region_explanations` gains `model_id` in its primary key and a `rank` column carrying preference-list position, because `API_MAY_IMPORT` forbids the API reading config to order them; `/regions/{id}/explanation` keeps its shape and a new `/regions/{id}/explanations` returns all five. Built out of numeric order, before 13-18, because the benchmark data is fresh and the content costs $0.86 to generate today. It is also the reachable subset of Post-Version 2's bring-your-own-model comparison, whose blockers were a missing server and a paid judge — neither of which a pre-generated artifact needs |
 | 20 | ✅ done | **Reasoning effort as a measured variable** — `reasoning_effort` on `CandidateModel` (`default`, `disabled`, `low`), sent in each provider's own shape and recorded on every generation, so a configuration is a candidate rather than a hidden default; `default` sends nothing, leaving every `v2` request byte-identical. One id is one configuration: a resume under a changed setting is refused, two ids for one configuration fail `hip check-config`, and `hip explain` skips a model configured at an effort its benchmark did not measure. `deepseek-flash-nothink` and `gemini-3.7-flash-low` are configured for `v3`, and the evaluation report states the effort behind every figure. Planned as thinking-disabled variants of both; Gemini 3.7 Flash refuses its documented floor, `minimal`, and offers no off switch, so its variant is `low`. Measured on one county packet: thinking off cut DeepSeek V4.1 Flash from 5,693 output tokens to 512 for an answer of the same length, and `low` cut Gemini 3.7 Flash from 2,655 to 565. Runs no benchmark — the variants are measured in `v3` |
-| 21 | ⬜ planned | **New Jersey depth: the sources still missing** — HUD Fair Market Rents, ACS tenure and vacancy (B25003, B25002), FRED `NJSTHPI`, HUD CHAS, and Census Building Permits at place level. Every one uses a key already in `.env`, and all five together are under 10MB against a 2.4GB raw tier. Closes three real gaps: rent affordability rests on 293 rows against price-to-income's 2,026, the warehouse holds no ownership rate at all, and there is no municipal construction signal. Scheduled before 18, 16 and 17 so the design system, the map and the consumer views are built against the full metric set rather than retrofitted to it |
+| 21 | ✅ done | **New Jersey depth: the sources still missing** — HUD Fair Market Rents and HUD CHAS as two new sources on the token already in `.env`, ACS tenure and vacancy (B25003, B25002), FHFA's all-transactions index, and Census Building Permits at place level: eight metrics and 13,638 observations. Every county carries a Fair Market Rent and `fmr_to_income` against it (21 counties, where the Zillow-based ratio reached 19); every county and municipality an ownership and a vacancy rate, the first the warehouse has held; 21 counties and 563 of 564 municipalities CHAS owner, renter and severe cost burden; every municipality a permits series, resolved by FIPS MCD code and summing to the county totals exactly. `NJSTHPI` came from FHFA's own master file, already fetched, rather than FRED; the ACS tables got their own layers because the raw cache keys on the layer, not the URL; and HUD's 60-a-minute limit made download pacing a shared adapter setting (ARCHITECTURE #106–#111). A county packet is about a third larger. |
 | 22 | ✅ done | **DeepSeek migration and substitution detection** — DeepSeek retires models by *routing* them: `deepseek-v4-flash` already returns answers from `deepseek-flash` with HTTP 200, and `deepseek-v4-pro` follows at 04:00 UTC on 2026-09-14. A routed pin never fails, so SPEC's fall-through never fires and a regeneration would store the retired model's name against another model's prose. Every hosted response now has its served model checked against the requested ref, a mismatch is a recorded substitution, and `hip explain` probes hosted tiers so a withdrawn or routed pin genuinely falls through — which, it turned out, it never had. `deepseek-flash` joins as an unbenchmarked candidate; the benchmark itself waits for 21, 13 and 20. Scheduled ahead of 13 because of the vendor date |
 
 The done criterion from Version 1 is unchanged: a milestone counts as done when its
