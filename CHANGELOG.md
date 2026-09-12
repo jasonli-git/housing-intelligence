@@ -3,7 +3,7 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.14.3] — 2026-09-12
 
 ### Changed
 - **The non-commercial box spans the page** (#135), its "Not for commercial use" label
