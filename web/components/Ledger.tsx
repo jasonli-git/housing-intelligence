@@ -145,22 +145,25 @@ export function Ledger({
   return (
     <div className="scroll-x">
       <table className="ledger">
-        <caption className="eyebrow">Latest · change over five years · rank · period</caption>
-        <thead className="visually-hidden">
-          <tr>
-            <th scope="col">Measure</th>
-            <th scope="col">Latest</th>
-            <th scope="col">Change</th>
-            <th scope="col">Rank by change</th>
-            <th scope="col">Period</th>
-          </tr>
-        </thead>
+        <caption className="visually-hidden">
+          Changes over five years, by section: each measure’s latest value, its change,
+          where that change ranks among its peers, and the period it covers
+        </caption>
         {groupRows(metrics).map((section) => (
           <tbody key={section.key}>
-            <tr className="group">
-              <th colSpan={5} scope="colgroup">
-                {section.title}
+            {/* Each section opens with its own header row, aligned with the columns: the
+                section's name over the measures, then what each column holds. A caption
+                above the table named the columns in a line no column sat under. */}
+            <tr className="colheads">
+              <th scope="col">{section.title}</th>
+              <th scope="col" className="num">
+                Latest
               </th>
+              <th scope="col" className="num">
+                5-yr change
+              </th>
+              <th scope="col">Rank</th>
+              <th scope="col">Period</th>
             </tr>
             {section.rows.map((metric) => {
               const notes = placement.inline.get(metric.metric_id);

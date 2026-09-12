@@ -34,8 +34,10 @@ def get_engine() -> Engine:
 
     40 connections against PostgreSQL's default `max_connections` of 100 leaves room for
     psql, dbt, and a second process, while covering a build that fans out much wider
-    than any human ever will. Read-only sessions hold a connection only for the length
-    of one query (#6), so this is headroom for concurrency, not for leaks.
+    than any human ever will. A session holds its connection until the request that
+    opened it ends, so this is headroom for concurrent requests, not a guarantee: a
+    client asking for more than 40 at once waits, and past `pool_timeout` fails. The
+    static build bounds its own fan-out to stay under it (#132).
     """
     return create_engine(
         get_settings().database_url,

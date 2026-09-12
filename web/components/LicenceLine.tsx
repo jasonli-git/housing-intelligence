@@ -4,11 +4,12 @@ import { isRestricted, licenceLine } from "@/lib/sources";
 /**
  * The non-commercial terms at the top right of every page, under the county picker.
  *
- * Moved out of the footer's filled block at Milestone 18: a plain line, but at the top
- * of every page rather than the bottom, which makes it quieter to look at and harder to
- * miss (ARCHITECTURE #128). It names the restricted sources from `GET /sources`, so a new
- * one is covered without anyone editing this, and it is deliberately not print-hidden:
- * the terms travel with a printout.
+ * Out of the footer since Milestone 18 (ARCHITECTURE #128), and boxed in the footer
+ * tag's Non-commercial red after the owner's review on a phone (#133): as plain text the
+ * top of a small screen read as a wall of prose, and a coloured box both breaks it up
+ * and says "terms" before a word is read. It names the restricted sources from
+ * `GET /sources`, so a new one is covered without anyone editing this, and it is
+ * deliberately not print-hidden: the terms travel with a printout.
  */
 export async function LicenceLine() {
   const sources = await api.sources();
@@ -16,8 +17,10 @@ export async function LicenceLine() {
   if (!line) return null;
 
   return (
-    <p className="licence">
-      <strong>Not for commercial use:</strong> {line}
-    </p>
+    <div className="licence">
+      <p className="licence-box">
+        <strong>Not for commercial use:</strong> {line}
+      </p>
+    </div>
   );
 }

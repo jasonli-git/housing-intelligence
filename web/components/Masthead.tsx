@@ -1,11 +1,12 @@
 import Link from "next/link";
 
 import { CountyPicker } from "@/components/CountyPicker";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { api } from "@/lib/api";
 
 /**
  * The bar shared with jasonli.app: `Jason Li` leads home to the gateway, then this
- * site's own wordmark, then a way into any county.
+ * site's own wordmark, then a way into any county and the reader's choice of theme.
  *
  * The trail is set in jasonli.app's type and ink, whatever the page below it, because
  * it is the one element that says these are the same person's sites (ARCHITECTURE
@@ -36,7 +37,10 @@ export async function Masthead() {
             Housing
           </Link>
         </div>
-        {options.length > 0 && <CountyPicker counties={options} />}
+        <div className="bar-tools">
+          {options.length > 0 && <CountyPicker counties={options} />}
+          <ThemeToggle />
+        </div>
       </div>
     </nav>
   );

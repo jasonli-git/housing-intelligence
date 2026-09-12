@@ -3,6 +3,40 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+- **A theme control in the bar** (#134): follow the system, light or dark, as three
+  icon buttons. The choice is remembered in the browser and applied before the page
+  first paints, so it never flashes the other theme.
+
+### Changed
+- **Region-page tables name their columns where the columns are.** Each section opens
+  with its own header row — the section's name over the measures, then Latest, 5-yr
+  change, Rank and Period — in place of a caption line above the table that no column
+  sat under. The current-values tables head their measures column the same way.
+- **The non-commercial terms are a box** bordered in the footer tag's red, at the top of
+  every page and in the report (#133), so a phone's first screen is not a wall of text.
+
+## [0.14.1] — 2026-09-12
+
+The first Milestone 18 deploy shipped sixteen pages built without their data. This
+republishes them and makes that failure impossible to ship silently.
+
+### Fixed
+- **Eleven county reports, two municipal reports and three region pages** read "No
+  report" or "Region not found" after the 0.14.0 deploy. The static build's fan-out
+  exhausted the API's 40 database connections, and the dashboard's fetch layer treated
+  a failed request as a missing one, so the build reported success (#131).
+- **The fetch layer returns null only for a 404.** Any other failure is retried with
+  backoff and then fails the build (#131).
+- **The build holds itself under the API's capacity**: at most five requests in flight
+  per build worker (#132). Measured with 600 build-shaped requests: 116 to 122 pool
+  timeouts at 150 concurrent, none at 30 — and the capped build generated its 2,271
+  pages in 16.7 seconds.
+- **`make check-dist` refuses a page built without its data**, so a tree containing an
+  error page cannot be uploaded.
+
 ## [0.14.0] — 2026-09-12
 
 Milestone 18 — Design system and identity. Every page rebuilt in the design trialled on

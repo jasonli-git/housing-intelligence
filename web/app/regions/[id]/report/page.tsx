@@ -325,7 +325,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             with the rest of the site, and a forwarded PDF is the copy most likely to
             reach someone who never saw the site. */}
         {restricted.length > 0 && (
-          <p className="restriction">
+          <p className="restriction licence-box">
             <strong>Not for commercial use.</strong> {restricted.join(" and ")}{" "}
             {restricted.length === 1 ? "is" : "are"} licensed for non-commercial use with
             attribution. Figures derived from {restricted.length === 1 ? "it" : "them"} —

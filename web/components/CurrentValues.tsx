@@ -29,10 +29,10 @@ export function CurrentValues({
     <div className="values-grid">
       {groupRows(levels).map((section) => (
         <table key={section.key} className="values">
-          <caption className="eyebrow">{section.title}</caption>
           <thead>
-            <tr>
-              <th scope="col">Measure</th>
+            {/* The section's name heads the measures column, as in the ledger. */}
+            <tr className="colheads">
+              <th scope="col">{section.title}</th>
               <th scope="col" className="num">
                 Value
               </th>

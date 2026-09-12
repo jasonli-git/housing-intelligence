@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Public_Sans, Space_Grotesk } from "next/font/google";
 
+import { InlineScript } from "@/components/InlineScript";
 import { LicenceLine } from "@/components/LicenceLine";
 import { Masthead } from "@/components/Masthead";
 import { SourceFooter } from "@/components/SourceFooter";
+import { THEME_SCRIPT } from "@/lib/theme";
 import "./tokens.css";
 import "./globals.css";
 
@@ -33,10 +35,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+    // `suppressHydrationWarning` because the theme script below may set `data-theme` on
+    // this element before React hydrates; the DOM is right and React should keep it.
     <html
       lang="en"
       className={`${publicSans.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable}`}
+      suppressHydrationWarning
     >
+      <head>
+        {/* A stored theme choice, applied before the first paint (#134). */}
+        <InlineScript html={THEME_SCRIPT} />
+      </head>
       <body>
         <Masthead />
         <LicenceLine />

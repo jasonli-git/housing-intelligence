@@ -30,10 +30,10 @@ and every county page carries those five readings, every figure in them bound.
    selected at 3.77/4.00, for about $6. Checklist below under "Run `v3`".
 5. ✅ **Act on `v3`:** reorder, retire, regenerate and deploy, all done 2026-09-11.
    Checklist below under "After `v3`".
-6. **18 → 17 → 16**, per [ROADMAP.md](ROADMAP.md). Milestone 18 done 2026-09-12 — its
-   section is below — and not yet published or deployed: the next `make publish` and
-   `make deploy` put it live. 17 is next. Changed from 18 → 16 → 17 on 2026-09-11: 17
-   before 16, because 16 followed 17 only by number.
+6. **18 → 17 → 16**, per [ROADMAP.md](ROADMAP.md). Milestone 18 done and live
+   2026-09-12 (Pages deployment `89560313`, after 0.14.1 republished the sixteen pages
+   the first deploy shipped broken); its section is below. 17 is next. Changed
+   from 18 → 16 → 17 on 2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
 **Before starting any of it:**
 
@@ -2510,9 +2510,45 @@ Verification
   in the full run (460 passed, 1 failed) and passed three reruns alone. It is in the
   hosted-evaluation code this milestone did not touch, and it is the same intermittent
   failure seen on 2026-09-11. Timing-sensitive; worth fixing before it hides a real one.
-- Note: **`make publish` has not been run.** The export was built with `npm run build`
-  against the live API, which is `make publish`'s web half; the artifact tree still
-  lacks `caveat_scopes` in its summaries until the next publish regenerates it.
+- [x] **Published and deployed 2026-09-12.** `make publish`: `dist/artifacts` 5,910
+      files (108MB), `dist/site` 13,649 files (487MB). `make deploy`: rclone checked all
+      5,910 artifacts and transferred the 1,136 that changed — every region's summary,
+      now carrying `caveat_scopes`, and the manifest — reporting no errors or
+      deletions; Pages deployment `517255c8` uploaded 13,638 files. Checked in a
+      browser: Mercer's page renders with its licence line, the bar's link home, eight
+      defined terms and eight notes, and all three faces loaded from the site itself;
+      `/regions/1` lands on the New Jersey page; Mercer's published summary carries six
+      caveat scopes for its six caveats.
+- [x] **That deploy shipped sixteen error pages, found by the owner the same day.**
+      Eleven county reports (Atlantic, Essex, Bergen, Burlington, Somerset, Sussex,
+      Camden, Cumberland, Warren, Cape May, Union), two municipal reports and three region
+      pages read "No report" or "Region not found". The build's fan-out exhausted the
+      API's 40 connections — 61 requests failed on pool timeouts — and `tryGet` returned
+      null for a 500 as for a 404, so each page rendered its "absent" branch and the build
+      reported success. The post-deploy check had looked at Mercer only. Fixed three ways
+      (ARCHITECTURE #131, #132): the fetch layer retries a failure and then fails the
+      build, keeping null for a 404; it holds each build worker to five requests in
+      flight, under the pool; and `make check-dist` refuses any page carrying either error
+      heading. An async session dependency was tried first, on a deadlock theory, and
+      reverted: the same load failed 116 times against 122. Republished with no pool
+      timeout in the API's log and the pages generated in 16.7s, against 61s in the day's
+      first build; Pages deployment `89560313`. All sixteen pages checked live by their
+      headings.
+- Note: **Check every kind of page after a deploy, not one exemplar.** A failure that
+  lands on some pages is invisible from one of them. `check-dist` now catches this class
+  before upload, but a reader-facing check should still sample counties, municipalities,
+  ZIPs and reports.
+- [x] **After the owner's review, 2026-09-12:** the ledger and current-values tables name
+      their columns in a header row at the top of each section — the section's name over
+      the measures, then Latest, 5-yr change, Rank and Period — replacing a caption line
+      no column sat under, and the page head's "Change over five years" label that the
+      column now carries; and the non-commercial terms became a box in the footer tag's
+      red, at the top of every page and in the report (ARCHITECTURE #133).
+- [x] **A theme control** in the bar, also at the owner's request: system, light or
+      dark as three inline-SVG icon buttons, remembered in `localStorage` and applied by
+      a pre-paint script in `<head>` (ARCHITECTURE #134). jasonli.app lacks one; its
+      TODO and ROADMAP now list matching it as unscheduled, best shipped through its
+      Milestone 4 token package.
 - Note: **`screenshots/` predates Milestone 18**, so the README's pictures show the old
   design. Replace them when the pages are checked by eye.
 - Note: **the county picker does not preselect the county being viewed.** It opens on

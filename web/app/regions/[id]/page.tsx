@@ -161,7 +161,6 @@ export default async function RegionPage({
           </p>
         </div>
         <div className="actions">
-          <span className="window-note">Change over five years</span>
           <Link className="button" href={`/regions/${regionId}/report`}>
             Report
           </Link>

@@ -214,15 +214,72 @@ export type Feature = {
 
 export type FeatureCollection = { type: "FeatureCollection"; features: Feature[] };
 
-/** Returns null when the API is unreachable, so a page renders a message not a crash. */
-async function tryGet<T>(path: string): Promise<T | null> {
-  try {
-    const response = await fetch(`${API_URL}${path}`);
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    return null;
+// How often a failed request is tried before the build gives up, and the first wait.
+const ATTEMPTS = 4;
+const BACKOFF_MS = 500;
+
+/**
+ * GET a path from the API.
+ *
+ * A 404 is an answer — the thing does not exist — and returns null, so a page renders a
+ * message instead of crashing. Any other failure is not an answer, and until 2026-09-12
+ * it was treated as one: a static build hits the API from several workers at once, 61
+ * requests failed with a 500 under that load during `make publish`, this returned null
+ * for them, and eleven county reports shipped reading "No report". So a failure is
+ * retried with backoff, and if it persists this throws, which fails the build instead of
+ * baking an error page into the site. `make check-dist` refuses such a page as well.
+ */
+/**
+ * At most this many requests in flight from one build worker (ARCHITECTURE #132).
+ *
+ * `next build` renders from several worker processes at once — six on the machine this
+ * was sized on — and every page fires several fetches, so unbounded the build asked for
+ * far more than the API's 40 connections (#69) can serve: at 150 build-shaped requests
+ * at once, 116 of 600 timed out waiting for one. Six workers at five each is 30, under
+ * the pool with room left for dbt or psql. A machine with more cores runs more workers,
+ * so the product is what has to stay under 40.
+ */
+const MAX_IN_FLIGHT = 5;
+let inFlight = 0;
+const waiting: (() => void)[] = [];
+
+function acquire(): Promise<void> {
+  if (inFlight < MAX_IN_FLIGHT) {
+    inFlight += 1;
+    return Promise.resolve();
   }
+  return new Promise((resolve) => waiting.push(resolve));
+}
+
+function release(): void {
+  // Hand the slot straight to the next caller, so the count never overshoots.
+  const next = waiting.shift();
+  if (next) next();
+  else inFlight -= 1;
+}
+
+async function tryGet<T>(path: string): Promise<T | null> {
+  let last = "";
+  for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
+    await acquire();
+    try {
+      const response = await fetch(`${API_URL}${path}`);
+      if (response.ok) return (await response.json()) as T;
+      if (response.status === 404) return null;
+      last = `HTTP ${response.status}`;
+    } catch (error) {
+      last = error instanceof Error ? error.message : String(error);
+    } finally {
+      release();
+    }
+    if (attempt < ATTEMPTS) {
+      await new Promise((resolve) => setTimeout(resolve, BACKOFF_MS * 2 ** (attempt - 1)));
+    }
+  }
+  throw new Error(
+    `GET ${API_URL}${path} failed ${ATTEMPTS} times (last: ${last}). A static export ` +
+      `needs every answer: check the API is running (\`make api\`) and its log for errors.`,
+  );
 }
 
 /**

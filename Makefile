@@ -183,6 +183,12 @@ check-dist:  ## Verify dist/ is complete and was built for production
 	@if grep -rl "localhost:8000" dist/site --include="*.html" | head -1 | grep -q .; then \
 	  echo "dist/site contains localhost links — rebuild with:"; \
 	  echo "  NEXT_PUBLIC_ARTIFACT_URL=$(ARTIFACT_URL) make publish"; exit 1; fi
+	@# A page whose data fetch failed during the build still renders — as an error
+	@# message — and still counts as a page: on 2026-09-12 eleven county reports shipped
+	@# reading "No report" from a build that reported success. Refuse any such page.
+	@if grep -rqE '>(No report|Region not found)<' dist/site --include='*.html'; then \
+	  echo "dist/site has pages built without their data (the API failed during the build):"; \
+	  grep -rlE '>(No report|Region not found)<' dist/site --include='*.html' | head -10; exit 1; fi
 	@echo "dist OK: $$(find dist/artifacts -type f | wc -l | tr -d ' ') artifacts, \
 $$(find dist/site -type f | wc -l | tr -d ' ') site files"
 
