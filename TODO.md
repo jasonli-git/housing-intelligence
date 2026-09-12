@@ -2550,6 +2550,10 @@ Verification
       a pre-paint script in `<head>` (ARCHITECTURE #134). jasonli.app lacks one; its
       TODO and ROADMAP now list matching it as unscheduled, best shipped through its
       Milestone 4 token package.
+- [x] **The licence box, again at the owner's request:** across the content width rather
+      than under the county picker, its label in mono capitals and a new text-weight red
+      (`--critical-text`, 5.8:1 light and 6.9:1 dark on the box's tint), the terms beside
+      it on a wide screen and beneath it on a phone (ARCHITECTURE #135).
 - Note: **`screenshots/` predates Milestone 18**, so the README's pictures show the old
   design. Replace them when the pages are checked by eye.
 - Note: **the county picker does not preselect the county being viewed.** It opens on

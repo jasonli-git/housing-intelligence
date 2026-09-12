@@ -326,11 +326,14 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             reach someone who never saw the site. */}
         {restricted.length > 0 && (
           <p className="restriction licence-box">
-            <strong>Not for commercial use.</strong> {restricted.join(" and ")}{" "}
-            {restricted.length === 1 ? "is" : "are"} licensed for non-commercial use with
-            attribution. Figures derived from {restricted.length === 1 ? "it" : "them"} —
-            this report included — carry that restriction onward, and this site cannot grant
-            terms it was not given.
+            <strong className="licence-label">Not for commercial use</strong>
+            <span className="visually-hidden">: </span>
+            <span className="licence-text">
+              {restricted.join(" and ")} {restricted.length === 1 ? "is" : "are"} licensed
+              for non-commercial use with attribution. Figures derived from{" "}
+              {restricted.length === 1 ? "it" : "them"} — this report included — carry that
+              restriction onward, and this site cannot grant terms it was not given.
+            </span>
           </p>
         )}
       </section>

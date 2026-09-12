@@ -19,7 +19,9 @@ export async function LicenceLine() {
   return (
     <div className="licence">
       <p className="licence-box">
-        <strong>Not for commercial use:</strong> {line}
+        <strong className="licence-label">Not for commercial use</strong>
+        <span className="visually-hidden">: </span>
+        <span className="licence-text">{line}</span>
       </p>
     </div>
   );

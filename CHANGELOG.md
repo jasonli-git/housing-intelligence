@@ -3,6 +3,13 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Changed
+- **The non-commercial box spans the page** (#135), its "Not for commercial use" label
+  in mono capitals and a text-weight red, the terms beside it on a wide screen and
+  beneath it on a phone — at the top of every page and in the report.
+
 ## [0.14.2] — 2026-09-12
 
 The owner's review of Milestone 18: column headers where the columns are, the

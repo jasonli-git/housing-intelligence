@@ -152,23 +152,27 @@ main.shell { padding-bottom: 2rem; }
   background: var(--surface-1); color: var(--text-primary); box-shadow: 0 0 0 1px var(--border);
 }
 
-/* The non-commercial terms, top right under the county picker, boxed in the footer
-   tag's Non-commercial red (#128, #133): on a phone, plain text made the top of the
-   page a wall of prose, and a coloured box breaks it and reads as terms before a word
-   is read. Not print-hidden: the terms travel with a printout. The report's own copy
-   uses the same box. */
-.licence {
-  max-width: var(--shell); margin: 0 auto; padding: 0.6rem var(--gutter) 0;
-  display: flex; justify-content: flex-end;
-}
+/* The non-commercial terms, across the page under the bar, boxed in the footer tag's
+   Non-commercial red (#128, #133, #135): on a phone, plain text made the top of the page
+   a wall of prose, and a coloured box breaks it and reads as terms before a word is
+   read. The label is set like the site's other labels, mono capitals, in the text-weight
+   red; the terms follow it on one line where they fit and beneath it where they do not.
+   Not print-hidden: the terms travel with a printout. The report's own copy uses the
+   same box. */
+.licence { max-width: var(--shell); margin: 0 auto; padding: 0.75rem var(--gutter) 0; }
 .licence-box {
-  margin: 0; max-width: 46rem; padding: 0.45rem 0.75rem;
-  border: 1px solid var(--critical); border-radius: 8px;
+  margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 1rem;
+  padding: 0.6rem 0.95rem; border: 1px solid var(--critical); border-radius: 10px;
   background: var(--surface-2);
   background: color-mix(in srgb, var(--critical) 7%, var(--surface-1));
-  font-size: var(--text-note); line-height: 1.45; color: var(--text-secondary);
+  font: 400 var(--text-small)/1.5 var(--font-text); color: var(--text-secondary);
 }
-.licence-box strong { color: var(--text-primary); font-weight: 600; }
+.licence-label {
+  font: 600 var(--text-label)/1.5 var(--font-mono); letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--critical-text); white-space: nowrap;
+}
+.licence-text { flex: 1 1 28rem; min-width: 0; }
+@media print { .licence-label { color: #000000; } }
 
 /* ------------------------------------------------------------- page head --- */
 
