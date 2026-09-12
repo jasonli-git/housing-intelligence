@@ -51,3 +51,6 @@ dist/
 
 # OS
 .DS_Store
+
+# Claude desktop preview config (per machine)
+.claude/launch.json

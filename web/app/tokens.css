@@ -1,0 +1,148 @@
+/*
+ * Design tokens: Housing's visual system as custom properties (Milestone 18).
+ *
+ * Two families live here.
+ *
+ * Housing's own — its palette and its type and space scale. The palette is the dataviz
+ * reference instance, validated before any chart was drawn: the three categorical slots
+ * clear the all-pairs CVD and normal-vision floors in both light and dark, and dark is a
+ * *selected* set of steps for the dark surface, not an automatic inversion. Aqua
+ * (--series-3) measures 2.74:1 on the light surface, below 3:1, so the relief rule
+ * applies: every chart using it ships direct labels and a table view. Milestone 18
+ * changed none of it.
+ *
+ * And the shared bar's — `--jl-*`, hand-copied from jasonli.app's
+ * `src/styles/tokens.css` as of 2026-09-12, so the gateway and this site read as one
+ * ecosystem (ARCHITECTURE #122). They are copies, so they drift the moment either side
+ * changes; jasonli.app's Milestone 4 turns its tokens into a package, and these become an
+ * import then. Until it does, a change to those values there is copied here by hand.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ---------- type (ARCHITECTURE #121) ---------- */
+  --font-display: var(--font-public-sans), "Public Sans", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+  --font-text: var(--font-public-sans), "Public Sans", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, SFMono-Regular,
+    Menlo, monospace;
+
+  --text-body: 15px;
+  --text-small: 13px;
+  --text-note: 12px;
+  --text-label: 11px;
+  --text-h1: clamp(26px, 22px + 0.9vw, 32px);
+  --text-h2: 16px;
+  --weight-display: 700;
+  --track-display: -0.02em;
+  --track-label: 0.12em;
+
+  /* ---------- space ---------- */
+  --shell: 76rem;
+  --gutter: clamp(16px, 4vw, 28px);
+  --gap: 28px;
+
+  /* ---------- colour: Housing ---------- */
+  --surface-1: #fcfcfb;
+  --surface-2: #f4f3f0;
+  --border: #dedcd6;
+  --grid: #e8e6e1;
+  --tick: #d3d0c8;
+
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #77756e;
+
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+
+  /* Sequential blue, for unsigned magnitude. */
+  --seq-100: #cde2fb;
+  --seq-250: #86b6ef;
+  --seq-400: #3987e5;
+  --seq-550: #1c5cab;
+  --seq-700: #0d366b;
+
+  /* Diverging blue -> neutral -> red, for signed change. */
+  --div-neg-2: #1c5cab;
+  --div-neg-1: #86b6ef;
+  --div-mid: #f0efec;
+  --div-pos-1: #ec835a;
+  --div-pos-2: #d03b3b;
+
+  /* The diverging ends at text weight, for the arrow beside a change. */
+  --up: #c4352d;
+  --down: #1c5cab;
+
+  --good: #0ca30c;
+  --critical: #d03b3b;
+  --focus: #0b0b0b;
+
+  /* ---------- the shared bar: jasonli.app's values (#122) ---------- */
+  --jl-font: var(--font-space-grotesk), "Space Grotesk", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+  --jl-text-nav: 15px;
+  --jl-tracking-nav: -0.01em;
+  --jl-weight-medium: 500;
+  --jl-ink: #201f1c;
+  --jl-ink: oklch(0.24 0.006 95);
+  --jl-ink-2: #4e4d49;
+  --jl-ink-2: oklch(0.42 0.006 95);
+  --jl-live: #429c5a;
+  --jl-live: oklch(0.62 0.13 150);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --surface-2: #232322;
+    --border: #35342f;
+    --grid: #2b2b28;
+    --tick: #45443f;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #96958b;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --div-mid: #383835;
+    --up: #ec835a;
+    --down: #86b6ef;
+    --focus: #ffffff;
+    --jl-ink: #efeeec;
+    --jl-ink: oklch(0.95 0.003 95);
+    --jl-ink-2: #acaba7;
+    --jl-ink-2: oklch(0.74 0.005 95);
+    --jl-live: #54c57a;
+    --jl-live: oklch(0.74 0.15 152);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --surface-2: #232322;
+  --border: #35342f;
+  --grid: #2b2b28;
+  --tick: #45443f;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #96958b;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --div-mid: #383835;
+  --up: #ec835a;
+  --down: #86b6ef;
+  --focus: #ffffff;
+  --jl-ink: #efeeec;
+  --jl-ink: oklch(0.95 0.003 95);
+  --jl-ink-2: #acaba7;
+  --jl-ink-2: oklch(0.74 0.005 95);
+  --jl-live: #54c57a;
+  --jl-live: oklch(0.74 0.15 152);
+}

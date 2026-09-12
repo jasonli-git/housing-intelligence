@@ -23,6 +23,8 @@ export type Region = {
   geoid: string;
   level: string;
   name: string;
+  /** TIGER's name with its legal type, "Montgomery township" (ARCHITECTURE #70). */
+  name_lsad?: string;
   state_code: string;
   parent_id: number | null;
 };
@@ -63,6 +65,26 @@ export type Summary = {
   /** Every metric with an observation, including snapshot-only ones like MOD-IV. */
   levels: LevelReading[];
   caveats: string[];
+  /**
+   * `caveats` again, in order, each with the metrics it qualifies — none means the whole
+   * region. What lets a page set a caveat beside its figures (Milestone 18).
+   */
+  caveat_scopes: { text: string; metric_ids: string[] }[];
+};
+
+/** One entry of `GET /metrics`: a metric and how much of the warehouse carries it. */
+export type MetricEntry = {
+  metric_id: string;
+  label: string;
+  unit: string;
+  frequency: string;
+  direction: string;
+  description: string;
+  source_id: string;
+  regions: number;
+  observations: number;
+  first_period: string | null;
+  last_period: string | null;
 };
 
 export type RankedRegion = {
@@ -312,6 +334,8 @@ export const api = {
       `/regions/${id}/explanations?window=${window}`,
     ),
   sources: () => tryGet<SourceEntry[]>(`/sources`),
+  /** The metric catalog, for the New Jersey page's measure picker. */
+  metrics: () => tryGet<MetricEntry[]>(`/metrics`),
 };
 
 /**

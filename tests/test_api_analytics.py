@@ -84,6 +84,25 @@ def test_summary_carries_headlines_and_caveats(analyzed: None) -> None:
     assert any("overlap" in c for c in body["caveats"])
 
 
+def test_summary_scopes_every_caveat_to_figures_the_region_shows(analyzed: None) -> None:
+    """The dashboard sets each caveat beside the figures it qualifies (Milestone 18).
+
+    The scopes are the caveat list again, in its order, each naming the metrics it is
+    about — and only metrics this region actually shows.
+    """
+    mercer = client.get("/regions?level=county&q=Mercer").json()["items"][0]
+    body = client.get(f"/regions/{mercer['region_id']}/summary?window=5y").json()
+
+    assert [s["text"] for s in body["caveat_scopes"]] == body["caveats"]
+    shown = {h["metric_id"] for h in body["headlines"]} | {
+        lv["metric_id"] for lv in body["levels"]
+    }
+    assert all(set(s["metric_ids"]) <= shown for s in body["caveat_scopes"])
+    overlap = next(s for s in body["caveat_scopes"] if "overlap" in s["text"])
+    assert overlap["metric_ids"]
+    assert all(m.startswith("acs_") for m in overlap["metric_ids"])
+
+
 def test_unknown_metric_and_region_are_404(analyzed: None) -> None:
     assert client.get("/rankings?metric_id=not_a_metric").status_code == 404
     assert client.get("/regions/99999999/summary").status_code == 404

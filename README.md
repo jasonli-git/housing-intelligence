@@ -12,7 +12,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status (2026-09-11): v0.13.0, Version 1 complete and Version 2 under way.** New
+> **Status (2026-09-12): v0.14.0, Version 1 complete and Version 2 under way.** New
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
 > **351,295 observations across 31 metrics from 12 public sources, spanning 1971 to
@@ -28,12 +28,14 @@ layer only explains metrics that were already computed.
 >
 >
 > **Version 2 is live.** The platform now publishes itself: `hip publish` records the
-> API's answers as 5,909 static files and the dashboard pre-renders 2,273 pages, served
+> API's answers as 5,909 static files and the dashboard pre-renders 2,271 pages, served
 > with no database and no application server in production. Milestone 10 measured what a
 > state costs on disk (3.4 GB for New Jersey, 40 kB per region of PostGIS geometry);
 > Milestone 11 put the result on the internet; Milestone 12 moved generation to hosted
 > inference behind an ordered preference list that ends on this machine, so no vendor
-> decision can stop it.
+> decision can stop it. Milestone 18 gave the site a design of its own — Public Sans,
+> a bar shared with [jasonli.app](https://jasonli.app), caveats set beside the figures
+> they qualify, and a front page that answers whichever measure the reader picks.
 >
 > See [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md)
 > for what shipped.
@@ -333,7 +335,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 452 Python + 34 dashboard tests; API tests skip without a warehouse
+make test          # 461 Python + 76 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 

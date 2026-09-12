@@ -30,8 +30,10 @@ and every county page carries those five readings, every figure in them bound.
    selected at 3.77/4.00, for about $6. Checklist below under "Run `v3`".
 5. ✅ **Act on `v3`:** reorder, retire, regenerate and deploy, all done 2026-09-11.
    Checklist below under "After `v3`".
-6. Then **18 → 17 → 16**, per [ROADMAP.md](ROADMAP.md). Changed from 18 → 16 → 17 on
-   2026-09-11: 17 before 16, because 16 followed 17 only by number.
+6. **18 → 17 → 16**, per [ROADMAP.md](ROADMAP.md). Milestone 18 done 2026-09-12 — its
+   section is below — and not yet published or deployed: the next `make publish` and
+   `make deploy` put it live. 17 is next. Changed from 18 → 16 → 17 on 2026-09-11: 17
+   before 16, because 16 followed 17 only by number.
 
 **Before starting any of it:**
 
@@ -2402,6 +2404,120 @@ being consumable.
       dominates the verdict JSON. The estimate is low by 15–60%. Corrected in this
       milestone, which is also the one that adds a cost column.
 
+## Milestone 18 — Design system and identity
+
+Started 2026-09-12. **The deliverable:** every page — the New Jersey page, the one region
+template behind all 1,134 county, municipality and ZIP pages, and every region report —
+rebuilt in the design trialled on Mercer and approved that day
+(https://claude.ai/code/artifact/46c3d770-9bf5-4616-bbf2-0e03d6052465), under the shared
+jasonli.app bar and the grouped sources footer, with the interaction states, glossary,
+caveat placement and units the ROADMAP row names. The decisions it builds on are under
+"Decisions deferred to their milestones" below. **Nothing in the analysis packet changes**,
+so no explanation goes stale and nothing is regenerated.
+
+Scope calls taken at the start, each recorded so it is not re-litigated:
+
+- The region page's change window stays **five years, stated rather than offered**: it is
+  the only window published per region (`manifest.json` → `windows: ["5y"]`) and the only
+  one with explanations. The trial's window control was a sketch; a real one means
+  publishing packets and generating explanations per window.
+- **Report** is an action in each region page's header, not in the shared bar: the bar
+  lives in the root layout, which does not know which region it is framing.
+- The rank label stays "rank of N" here — naming each rank's basis is Milestone 17's.
+
+### Tasks
+
+Foundations
+- [x] Type through `next/font/google`, self-hosted at build: Public Sans (display and
+      text), JetBrains Mono (labels), Space Grotesk 500 (the bar's `Jason Li` only). The
+      export carries 12 woff2 files and no page requests Google (ARCHITECTURE #121).
+- [x] `web/app/tokens.css`: Housing's palette unchanged; the bar's values hand-copied from
+      `jasonli/src/styles/tokens.css` with a pointer back; the type and space scale.
+      `globals.css` keeps base, components and print (#122).
+- [x] Interaction states on every link, button and select — hover, `:focus-visible`,
+      `:active` — with colour transitions of 120ms only under
+      `prefers-reduced-motion: no-preference`.
+- [x] A named component layer: no per-page inline grids; inline style only where the
+      value is data (a swatch colour, chart geometry, a rank marker's position).
+
+Shared chrome
+- [x] Ecosystem bar in the root layout: `Jason Li` → `https://jasonli.app`, `/`, the
+      `Housing` wordmark → `/`, and a county picker — a select and a Go button, because a
+      select that navigates on change carries a keyboard reader off at the first arrow.
+- [x] Licence line under the bar at the top right, naming the restricted sources from
+      `GET /sources`; not print-hidden (#128).
+- [x] Footer: sources grouped by institution, a shared licence stated once, each dataset
+      linked with its cadence and a Non-commercial tag where it applies; NOTICE leads the
+      MIT line. Still rendered from `GET /sources`.
+
+Data the design needs — API, additive only
+- [x] `hip.packets.caveats.scoped_caveats()`: each caveat with the metric ids it
+      qualifies (none = the whole region). `caveats_for` returns exactly today's texts
+      in today's order, so packets and their content hashes do not move (#123).
+- [x] `GET /regions/{id}/summary` gains `caveat_scopes`.
+
+Region page — one template for county, municipality and ZIP
+- [x] Header: name, parent, population "as of" its ACS vintage with a term naming the
+      survey years; a Report action (Print lives on the report); the five-year window
+      stated (#125).
+- [x] Ledger of change metrics in groups, each row value, change, rank strip and period;
+      the interpretation panel beside it, its treatment unchanged.
+- [x] Caveats beside figures: one that qualifies a single row sits under that row; one
+      that qualifies several is lettered on each and set out directly under the ledger,
+      with region-wide caveats.
+- [x] Trends: the three series as small multiples in one row, their tables kept.
+- [x] Current values, ranked by value, in sectioned tables, with the basis stated.
+- [x] Units: shares as percentages, multiples with ×; a `ratio` metric classed as neither
+      fails the build rather than rendering wrongly (#124).
+- [x] Glossary: ACS, CHAS, Fair Market Rent, area median income, home value index,
+      observed rent index and MOD-IV defined where they appear, on hover and focus (#130).
+
+Report page
+- [x] The trial's layout: breadcrumbs, standouts, Measures and Current values each with
+      lettered notes under the table, sources grouped by source with their vintages, the
+      restriction in the quiet style, Print and Download Markdown. Print stays
+      first-class.
+
+New Jersey page
+- [x] Reader-chosen measure and window over the published county rankings (5y, 10y,
+      since 2019), a window a measure lacks disabled with the reason; map and ranking
+      table linked, and every county linked to its page (#126).
+- [x] Fold `/regions/1` in: no state page or report is exported, `public/_redirects`
+      sends both URLs to `/`, state breadcrumbs link to `/`, and the statewide figures
+      appear on the New Jersey page with their caveat (#127).
+
+Verification
+- [x] Vitest for every new pure function (76 dashboard tests, from 34); pytest for scoped
+      caveats and the summary (461, one intermittent — see below); `tsc`; `next build`
+      against the live API — 2,271 pages, 13,649 files, 456MB; 22 structural checks on the
+      built HTML of the New Jersey page, a county, a municipality, a ZIP and a report.
+- [x] **A by-eye browser check.** At 1440×900 in dark: the New Jersey page, Mercer, its
+      report and Montgomery; at 375×812 in light: Mercer. It found three faults the
+      structural checks could not: a hidden tooltip still counted toward the ledger's
+      scroll width, giving every municipal ledger a horizontal scrollbar (tooltips are
+      now out of layout until they open, and open leftward at a row's right edge); a
+      standout's "20 / 21" wrapped onto two lines; and a defined term was a button — an
+      atomic box — so a wrapping label broke around it on a phone (now a focusable
+      span). All three fixed and rechecked.
+- [x] Docs update pass.
+
+- Note: **A rank strip drawn as one element per peer tripled the export.** Fine at 21
+  counties; at 564 municipalities it was 564 elements a row, and a municipal page went
+  from 101KB to 506KB. Redrawn as the element's background — ticks up to 30 peers, a
+  track above — so it is one marker whatever the cohort. Found by measuring the export
+  against the last deploy, which is worth doing on every design change.
+- Note: **`test_generations_are_written_as_they_complete_not_in_a_final_pass`** failed once
+  in the full run (460 passed, 1 failed) and passed three reruns alone. It is in the
+  hosted-evaluation code this milestone did not touch, and it is the same intermittent
+  failure seen on 2026-09-11. Timing-sensitive; worth fixing before it hides a real one.
+- Note: **`make publish` has not been run.** The export was built with `npm run build`
+  against the live API, which is `make publish`'s web half; the artifact tree still
+  lacks `caveat_scopes` in its summaries until the next publish regenerates it.
+- Note: **`screenshots/` predates Milestone 18**, so the README's pictures show the old
+  design. Replace them when the pages are checked by eye.
+- Note: **the county picker does not preselect the county being viewed.** It opens on
+  "Choose…" on every page; reading the path would need `usePathname` in the bar.
+
 ## Attribution and licensing
 
 - [x] **Site-wide source footer** (2026-09-05). Was: the landing page's choropleth and
@@ -2495,6 +2611,65 @@ defaulted in the first commit that needs them.
   defaulted. What is *not* open: the palette, the tabular figures, the print
   stylesheet, and the interpretation panel's dashed treatment are all deliberate and
   documented, and Milestone 18 restyles around them rather than over them.
+  **Decided 2026-09-12**, from four pairings trialled on Mercer's figures
+  (https://claude.ai/code/artifact/46c3d770-9bf5-4616-bbf2-0e03d6052465):
+  - Type: Public Sans for headings and text, JetBrains Mono for labels ("Civic").
+    Public Sans is the US Web Design System's face, the world these figures come from.
+    Not chosen: Space Grotesk throughout (no identity of its own), Space Grotesk over
+    IBM Plex Sans, and Atkinson Hyperlegible Next. The wordmark as trialled is `Housing`
+    typeset in Public Sans.
+  - Compatible with jasonli.app's design language without copying it: a shared bar on
+    every page — `Jason Li` linking to `https://jasonli.app`, then the `Housing`
+    wordmark — in jasonli.app's type and ink, with Housing's own type and validated
+    palette below it.
+  - The bar's values (Space Grotesk 15px/500 at -0.01em, the ink ramp, the live dot)
+    are hand-copied from `jasonli/src/styles/tokens.css` now rather than waiting for
+    that repo's shared token package (its Milestone 4). About six values can drift;
+    swap to the package when it ships. That repo's TODO still lists the sequencing as
+    open.
+  - The footer's last line, the MIT line, begins with NOTICE in the SOURCES label's
+    style, as SOURCES begins the first, and links to the `NOTICE` file the site footer
+    already links on every page.
+  - Usability over polish: less scrolling, and no animation beyond short hover and
+    focus colour changes. Mercer's page measured 5.6 screens tall at 1440×900 and 10.5
+    at 390×844, with the interpretation starting 3.9 and 6 screens down. Showpiece
+    design belongs on the StickiesSync and MacSitrep demo pages, not here.
+  - One New Jersey page: `/regions/1`, the state's own region page (two FHFA house
+    price index values, caveats and sources), folds into the landing page, which becomes
+    the New Jersey page with a reader-chosen measure and window. Its statewide figures
+    move there, and links to the state — breadcrumbs, the county picker — point there.
+  - Site footer: sources grouped by institution — each institution named once, a licence
+    its datasets share stated once, every dataset linked to its homepage with its update
+    cadence — still rendered from `GET /sources`, and nothing collapses. The live footer
+    measured 563px at 1440×900 and 1,278px at 390×844.
+  - The non-commercial terms leave the footer's filled block for a plain line at the top
+    right of every page, under the county picker, naming the restricted sources from
+    `GET /sources`; it is not print-hidden. The footer keeps a Non-commercial tag on each
+    restricted dataset and the "cannot grant terms it was not given" clause in its MIT
+    line, and the report keeps its own copy for paper, in the same quiet style.
+  - A figure stated outside a table carries its period on the same line: Mercer's
+    population reads "383,286 people as of 2023", and the term explains that an ACS
+    five-year estimate covers survey years 2019–2023 (published December 2024) and what
+    the change compares it with.
+- Note: **The newest ACS vintage loaded is 2023.** `YEARS` in
+  `src/hip/sources/census_acs.py` runs 2019–2023, hard-coded at Milestone 3 with no bump
+  rule (unlike `BLS_END_YEAR`), so every ACS figure — Mercer's population of 383,286
+  included — is the 2019–2023 five-year estimate. The 2020–2024 release is published:
+  `api.census.gov/data/2024/acs/acs5` describes the dataset and `B01003_001E` (checked
+  2026-09-12; the data endpoints now require the key). Adding 2024 to `YEARS` picks it
+  up, moves every ACS window a year, and marks the county explanations stale, so it is a
+  data-and-regeneration step rather than a design one.
+- Note: **QuickFacts' headline population is a different program.** Mercer's 399,289 is
+  the Population Estimates Program's July 1, 2025 estimate (Vintage 2025), built from
+  births, deaths and migration records forward from the 2020 census; an ACS figure is a
+  survey average over five years. PEP publishes plain files that need no key:
+  `www2.census.gov/programs-surveys/popest/datasets/2020-2025/counties/totals/co-est2025-alldata.csv`
+  (state and counties, 2.07MB, 2026-03-26) and `.../cities/totals/sub-est2025_34.csv`
+  (New Jersey places and minor civil divisions, 157KB, 2026-05-14; not opened). A
+  `census_pep` source would give the headline population as of a date, while ACS stays
+  the denominator for anything divided by population, so no ratio mixes two programs.
+  This and the ACS update above were both agreed on 2026-09-12 and left unscheduled
+  (ROADMAP, Post-Version 2).
 - Note: **`place` versus `cousub` outside the strong-MCD states.** Not a Version 2
   decision — Milestone 14's nine states are all strong-MCD and Milestone 15 stops at
   county level, so nothing in Version 2 needs it. It becomes blocking the first time

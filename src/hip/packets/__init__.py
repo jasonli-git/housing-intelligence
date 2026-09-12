@@ -16,7 +16,7 @@ from hip.packets.assemble import (
     display_label,
     regions_for_level,
 )
-from hip.packets.caveats import caveats_for
+from hip.packets.caveats import ScopedCaveat, caveats_for, scoped_caveats
 from hip.packets.citations import Binding, Citation, bind
 from hip.packets.report import format_change, format_value, render_markdown
 from hip.packets.schema import (
@@ -37,6 +37,7 @@ __all__ = [
     "Citation",
     "Packet",
     "PacketUnavailable",
+    "ScopedCaveat",
     "bind",
     "build_packet",
     "caveats_for",
@@ -48,6 +49,7 @@ __all__ = [
     "published_schema",
     "regions_for_level",
     "render_markdown",
+    "scoped_caveats",
     "schema_text",
     "still_describes",
 ]

@@ -12,6 +12,7 @@ sequence below rather than by set iteration, so two runs produce the same list.
 from __future__ import annotations
 
 from collections.abc import Collection
+from dataclasses import dataclass
 
 # Ratios the platform computes from two published series (ARCHITECTURE #34).
 DERIVED_RATIOS = frozenset(
@@ -114,46 +115,100 @@ def caveats_for(
     Milestone 7 fixed the loader that caused it (#53), so the caller now derives this
     from the fact table rather than from a source's vintage count — the caveat should
     appear only if something regresses.
+
+    The texts of `scoped_caveats`, in its order. This plain list is what the packet
+    carries, so a model reads — and the packet's content hash covers — exactly what it
+    did before scopes existed.
+    """
+    return [
+        caveat.text
+        for caveat in scoped_caveats(
+            level=level,
+            metric_ids=metric_ids,
+            match_methods=match_methods,
+            crosswalk_methods=crosswalk_methods,
+            thin_cohort=thin_cohort,
+            multi_vintage_sources=multi_vintage_sources,
+        )
+    ]
+
+
+@dataclass(frozen=True)
+class ScopedCaveat:
+    """A caveat and the metrics it qualifies.
+
+    `metric_ids` is empty when the caveat is about the region's figures as a whole — how
+    a ZIP's values were allocated, that some were matched by name, that some ranks come
+    from a thinner cohort — rather than about particular metrics. The dashboard sets a
+    scoped caveat beside the figures it names instead of collecting every caveat at the
+    foot of the page (Milestone 18).
+    """
+
+    text: str
+    metric_ids: tuple[str, ...] = ()
+
+
+def scoped_caveats(
+    *,
+    level: str,
+    metric_ids: Collection[str],
+    match_methods: Collection[str] = (),
+    crosswalk_methods: Collection[str] = (),
+    thin_cohort: bool = False,
+    multi_vintage_sources: Collection[str] = (),
+) -> list[ScopedCaveat]:
+    """`caveats_for`, with each caveat's scope: the present metrics it is about.
+
+    One rule sequence serves both, so a caveat cannot appear in the packet and be missing
+    from the dashboard, or the other way round. The order is the order `caveats_for`
+    has always returned.
     """
     present = set(metric_ids)
     methods = set(match_methods)
-    keys: list[str] = []
+    out: list[ScopedCaveat] = []
 
-    if any(m.startswith("acs_") for m in present):
-        keys.append("acs_overlap")
+    def add(key: str, scope: Collection[str]) -> None:
+        out.append(ScopedCaveat(TEXTS[key], tuple(sorted(scope))))
+
+    acs = {m for m in present if m.startswith("acs_")}
+    if acs:
+        add("acs_overlap", acs)
     if present & DERIVED_RATIOS:
-        keys.append("derived_ratio")
-    if "zori_all" in present or "rent_to_income" in present:
-        keys.append("zori_sparse")
+        add("derived_ratio", present & DERIVED_RATIOS)
+    rent = present & {"zori_all", "rent_to_income"}
+    if rent:
+        add("zori_sparse", rent)
     if "permits_total_units" in present and level in {"municipality", "zip", "tract"}:
-        keys.append("permits_volatile")
+        add("permits_volatile", {"permits_total_units"})
     if "mortgage_rate_30y" in present:
-        keys.append("national_series")
-    if present & {"fhfa_hpi", "fhfa_hpi_all_transactions"}:
-        keys.append("fhfa_state_only")
-    if present & {"price_to_ami", "hud_area_median_income", "hud_income_limit_80"}:
-        keys.append("hud_county_ami")
+        add("national_series", {"mortgage_rate_30y"})
+    fhfa = present & {"fhfa_hpi", "fhfa_hpi_all_transactions"}
+    if fhfa:
+        add("fhfa_state_only", fhfa)
+    ami = present & {"price_to_ami", "hud_area_median_income", "hud_income_limit_80"}
+    if ami:
+        add("hud_county_ami", ami)
     if present & FMR_METRICS:
-        keys.append("hud_fmr_area")
+        add("hud_fmr_area", present & FMR_METRICS)
     if present & CHAS_METRICS:
-        keys.append("chas_one_vintage")
-
-    out = [TEXTS[key] for key in keys]
+        add("chas_one_vintage", present & CHAS_METRICS)
 
     if level == "zip":
         text = TEXTS["zip_allocated"]
         if crosswalk_methods:
             named = ", ".join(sorted(set(crosswalk_methods)))
             text += f" Allocation weights for this ZIP: {named}."
-        out.append(text)
+        out.append(ScopedCaveat(text))
     if "name_county" in methods:
-        out.append(TEXTS["name_matched"])
+        out.append(ScopedCaveat(TEXTS["name_matched"]))
     if thin_cohort:
-        out.append(TEXTS["thin_cohort"])
+        out.append(ScopedCaveat(TEXTS["thin_cohort"]))
     if multi_vintage_sources:
         out.append(
-            TEXTS["collapsed_vintage"].format(
-                sources=", ".join(sorted(set(multi_vintage_sources)))
+            ScopedCaveat(
+                TEXTS["collapsed_vintage"].format(
+                    sources=", ".join(sorted(set(multi_vintage_sources)))
+                )
             )
         )
     return out

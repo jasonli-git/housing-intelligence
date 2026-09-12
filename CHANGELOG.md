@@ -3,6 +3,52 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.14.0] — 2026-09-12
+
+Milestone 18 — Design system and identity. Every page rebuilt in the design trialled on
+Mercer County and approved the same day. No packet changed, so no explanation went stale
+and nothing was regenerated.
+
+### Added
+- **A bar shared with jasonli.app** on every page (#122): `Jason Li` leads back to the
+  gateway, then the `Housing` wordmark, then a county picker.
+- **The New Jersey page answers the reader's question** (#126): a measure picker over
+  every published county ranking, sectioned into prices, affordability, incomes and
+  jobs, and homes and people, and a five-year, ten-year or since-2019 window — a window a
+  measure lacks is disabled and says why. Map and ranking table are one view.
+- **An inline glossary** (#130): ACS, CHAS, Fair Market Rent, area median income, the two
+  Zillow indexes and MOD-IV, defined where they appear, on hover and keyboard focus.
+- **`caveat_scopes` on `GET /regions/{id}/summary`** (#123), from
+  `hip.packets.scoped_caveats`: each caveat with the metrics it qualifies. Additive; the
+  packet is unchanged.
+- **`web/public/_redirects`**: `/regions/1` and its report now go to `/` (#127).
+
+### Changed
+- **Type** (#121): Public Sans and JetBrains Mono, self-hosted at build, replace the
+  system font stack. No page asks Google for anything.
+- **The region page**, one template for 21 counties, 564 municipalities and 548 ZIPs: a
+  sectioned ledger of changes, each with a rank strip and its own period, the
+  interpretation beside it with its treatment unchanged, the three trends as small
+  multiples, and current values in sectioned tables. The population says what year it
+  is from.
+- **Caveats sit beside the figures they qualify** (#123): under the one row they concern,
+  or lettered on several and set out under the table, on the region page and the report.
+- **Shares read as percentages, multiples with ×, monthly money per month** (#124) —
+  61.9%, 4.13×, $1,950/mo where the page said 0.62, 4.13 and $1,950.
+- **The report** sections its tables like the region page, folds each source's releases
+  into one row with its vintages, and states the non-commercial terms quietly.
+- **The footer** groups sources by institution, and the non-commercial terms move to a
+  plain line at the top right of every page (#128). NOTICE leads the MIT line.
+- **Interaction states** on every link, button and select — hover, `:focus-visible`,
+  `:active` — with 120ms colour transitions only under `prefers-reduced-motion:
+  no-preference`.
+
+### Notes
+- The export is 456MB at 13,649 files, from 329MB: richer markup on every page. A rank
+  strip drawn as one element per peer had tripled it before it became a background.
+- The Markdown export still prints shares as ratios, because it is also the models'
+  prompt (#124).
+
 ## [0.13.1] — 2026-09-11
 
 Run `v3`, the re-benchmark, and the model order it set. Not a milestone.

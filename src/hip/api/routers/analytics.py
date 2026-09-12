@@ -16,7 +16,7 @@ from sqlalchemy import text
 
 from hip.api.deps import SessionDep
 from hip.api.params import LATEST_WINDOW, RankingBasis, RegionLevel, Window
-from hip.packets import caveats_for
+from hip.packets import scoped_caveats
 
 router = APIRouter(tags=["analytics"])
 
@@ -248,6 +248,18 @@ class Level(BaseModel):
     of: int | None = None
 
 
+class CaveatScope(BaseModel):
+    """One caveat and the metrics it qualifies; an empty list means the whole region.
+
+    The same texts as `Summary.caveats`, in the same order, with the scope the dashboard
+    needs to set each one beside the figures it is about (Milestone 18). The packet keeps
+    its plain list, so nothing a model reads, and nothing a content hash covers, moves.
+    """
+
+    text: str
+    metric_ids: list[str]
+
+
 class Summary(BaseModel):
     region_id: int
     name: str
@@ -256,6 +268,7 @@ class Summary(BaseModel):
     headlines: list[Headline]
     levels: list[Level]
     caveats: list[str]
+    caveat_scopes: list[CaveatScope]
 
 
 @router.get(
@@ -334,7 +347,7 @@ def summary(
         ),
         {"id": region_id},
     ).scalars()
-    caveats = caveats_for(
+    scoped = scoped_caveats(
         level=region["level"],
         # Levels as well as headlines: a metric with no change row still carries its
         # own caveats, and MOD-IV brings several.
@@ -349,5 +362,9 @@ def summary(
         window=window,
         headlines=headlines,
         levels=levels,
-        caveats=caveats,
+        caveats=[caveat.text for caveat in scoped],
+        caveat_scopes=[
+            CaveatScope(text=caveat.text, metric_ids=list(caveat.metric_ids))
+            for caveat in scoped
+        ],
     )

@@ -1,0 +1,7 @@
+# Cloudflare Pages redirects, copied into the export by `next build`. A static export
+# cannot redirect on its own (Next's `redirects` need a server), so the host does it.
+#
+# The state's own region page folded into the New Jersey page at Milestone 18
+# (ARCHITECTURE #127): its figures are on `/` now, and neither page is exported.
+/regions/1         /  301
+/regions/1/report  /  301

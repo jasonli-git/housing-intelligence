@@ -27,6 +27,7 @@ from hip.packets import (
     regions_for_level,
     render_markdown,
     schema_text,
+    scoped_caveats,
 )
 from hip.packets.report import format_change, format_value
 from hip.packets.schema import (
@@ -217,6 +218,58 @@ def test_caveat_order_is_stable() -> None:
         "thin_cohort": True,
     }
     assert caveats_for(**args) == caveats_for(**args)  # type: ignore[arg-type]
+
+
+def test_scoped_caveats_are_the_packets_caveats_with_scopes() -> None:
+    """The packet's list must not move: scoping adds to the texts, never changes them."""
+    args = {
+        "level": "zip",
+        "metric_ids": [
+            "acs_population",
+            "zori_all",
+            "rent_to_income",
+            "price_to_ami",
+            "hud_fmr_2br",
+            "chas_owner_cost_burden",
+            "permits_total_units",
+        ],
+        "match_methods": ["name_county"],
+        "crosswalk_methods": ["area"],
+        "thin_cohort": True,
+        "multi_vintage_sources": ["hud"],
+    }
+    scoped = scoped_caveats(**args)  # type: ignore[arg-type]
+
+    assert [c.text for c in scoped] == caveats_for(**args)  # type: ignore[arg-type]
+
+
+def test_a_caveat_names_the_present_metrics_it_qualifies() -> None:
+    """Scopes are what the dashboard sets each caveat beside (Milestone 18)."""
+    present = ["acs_median_hh_income", "acs_population", "rent_to_income", "zhvi_sfr"]
+    by_text = {
+        c.text: c.metric_ids for c in scoped_caveats(level="county", metric_ids=present)
+    }
+
+    def scope(fragment: str) -> tuple[str, ...]:
+        return next(ids for text, ids in by_text.items() if fragment in text)
+
+    assert scope("overlap") == ("acs_median_hh_income", "acs_population")
+    assert scope("rent index") == ("rent_to_income",)
+    assert scope("computed by this platform") == ("rent_to_income",)
+    # A scope never names a metric the region does not carry.
+    assert all(set(ids) <= set(present) for ids in by_text.values())
+
+
+def test_a_caveat_about_the_whole_region_has_no_scope() -> None:
+    scoped = scoped_caveats(
+        level="zip",
+        metric_ids=["zhvi_sfr"],
+        match_methods=["name_county"],
+        thin_cohort=True,
+    )
+
+    assert len(scoped) == 3
+    assert all(c.metric_ids == () for c in scoped)
 
 
 # --- labels and rendering ---------------------------------------------------------
