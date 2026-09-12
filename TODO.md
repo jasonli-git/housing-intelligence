@@ -9,18 +9,13 @@ Nothing in this section is in progress. It is the order agreed on 2026-09-10 for
 the work back up, and what has to be true before starting. Detail lives in the items it
 points to; this section only sequences them.
 
-**Where things stand.** Milestones 12, 13, 19, 20, 21 and 22 are done. 12 and 19 are
-deployed and verified live; 20 and 22 changed no published byte, so neither needs a
-deploy. 21 changed the warehouse and every packet, and 13 the packet contract and how
-explanations are stored; neither is deployed, deliberately: both reach the site with the
-regeneration after `v3` (step 5). The live site carries data
-through July 2026 and five models' explanations of every county. The
-preference list, set from `v3` on 2026-09-11, is `gemini-3.7-flash-low` →
-`deepseek-flash-nothink` → `qwen3.7-plus` → `gemini-3.1-flash-lite` → `gemma-4-e4b-q4`;
-the warehouse holds all five models' readings, and the site shows the previous five until
-the deploy.
+**Where things stand.** Milestones 12, 13, 19, 20, 21 and 22 are done, and all of them
+are live: 21's data, 13's bound explanations and `v3`'s model order reached the site with
+the deploy on 2026-09-11. The preference list, set from `v3`, is `gemini-3.7-flash-low` →
+`deepseek-flash-nothink` → `qwen3.7-plus` → `gemini-3.1-flash-lite` → `gemma-4-e4b-q4`,
+and every county page carries those five readings, every figure in them bound.
 
-**The agreed sequence** — settled with the user on 2026-09-10; steps 1 to 4 are done, and all of 5 but the deploy:
+**The agreed sequence** — settled with the user on 2026-09-10; steps 1 to 5 are done:
 
 1. ✅ **Milestone 20 — reasoning effort as a measured variable.** Done 2026-09-10; see
    its section below. It configured `deepseek-flash-nothink` and `gemini-3.7-flash-low`
@@ -33,8 +28,7 @@ the deploy.
    final shape, and its report carries a `Bound` column.
 4. ✅ **A fresh benchmark, run `v3`.** Done 2026-09-11: Gemini 3.7 Flash at low thinking
    selected at 3.77/4.00, for about $6. Checklist below under "Run `v3`".
-5. **Act on `v3`:** reorder, retire and regenerate are done (2026-09-11); **the deploy is
-   what remains** — `make publish`, then `make deploy`, with the owner's go-ahead.
+5. ✅ **Act on `v3`:** reorder, retire, regenerate and deploy, all done 2026-09-11.
    Checklist below under "After `v3`".
 6. Then **18 → 17 → 16**, per [ROADMAP.md](ROADMAP.md). Changed from 18 → 16 → 17 on
    2026-09-11: 17 before 16, because 16 followed 17 only by number.
@@ -52,9 +46,9 @@ the deploy.
 - **Top up the Anthropic credit before step 4** — see "Parked / needs user input".
 
 **Dates.** `deepseek-v4-pro` is routed to V4.1 Flash from 04:00 UTC on 2026-09-14. It left
-the list on 2026-09-11 and its warehouse rows were pruned (exported first); its 21
-published readings were written by the real V4 Pro and stay correctly attributed on the
-live site until the deploy.
+the list on 2026-09-11 and its warehouse rows were pruned, exported first to
+`data/explanations-pruned-2026-09-11.jsonl`; the deploy that day took its 21 readings off
+the site, so nothing published is attributed to it once DeepSeek reroutes the name.
 
 ### Run `v3` — the re-benchmark
 
@@ -215,8 +209,13 @@ live site until the deploy.
       figures cited — and none refused once #120 relaxed two rules. The stopped first
       attempt's bound readings were kept, so the second run wrote 76 and found 29
       current; cents of hosted inference
-- [ ] **`make publish`, then `make deploy`.** Verify in a browser, not with `curl`: both
-      origins answer scripts with Cloudflare's bot challenge by design (ARCHITECTURE #94)
+- [x] **`make publish`, then `make deploy`.** Verify in a browser, not with `curl`: both
+      origins answer scripts with Cloudflare's bot challenge by design (ARCHITECTURE #94).
+      Done 2026-09-11: `dist/` held 5,910 artifacts (107MB) and 13,647 site files
+      (356MB); rclone transferred the 3,566 artifacts that changed and deleted none, and
+      Pages deployment `08d81cf8` went live. Checked in a browser: Mercer County lists
+      the five readings in the new order with "All 51 figures checked", and its packet on
+      the artifact origin is 1.2
 
 - Note: **the first regeneration against the new order was stopped** on 2026-09-11 after
   it refused 10 of Gemini 3.7 Flash's first 18 counties. Every rejected figure was a
