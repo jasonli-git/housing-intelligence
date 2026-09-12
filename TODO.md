@@ -31,8 +31,9 @@ and every county page carries those five readings, every figure in them bound.
 5. ✅ **Act on `v3`:** reorder, retire, regenerate and deploy, all done 2026-09-11.
    Checklist below under "After `v3`".
 6. **18 → 17 → 16**, per [ROADMAP.md](ROADMAP.md). Milestone 18 done and live
-   2026-09-12 (Pages deployment `89560313`, after 0.14.1 republished the sixteen pages
-   the first deploy shipped broken); its section is below. 17 is next. Changed
+   2026-09-12: 0.14.1 republished the sixteen pages the first deploy shipped broken, and
+   0.14.2 — the review's column headers, licence box and theme control — is Pages
+   deployment `2c4d2930`. Its section is below. 17 is next. Changed
    from 18 → 16 → 17 on 2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
 **Before starting any of it:**

@@ -3,7 +3,10 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.14.2] — 2026-09-12
+
+The owner's review of Milestone 18: column headers where the columns are, the
+non-commercial terms in a box, and a theme control.
 
 ### Added
 - **A theme control in the bar** (#134): follow the system, light or dark, as three
