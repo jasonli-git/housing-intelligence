@@ -414,6 +414,17 @@ Version 2 table above. What remains unscheduled:
   `census_pep` source for the headline population at state, county and municipal level,
   from two keyless files, with ACS kept as the denominator of every ratio so none mixes
   two programs. Details in [TODO.md](TODO.md).
+- **A per-page print footer carrying the non-commercial terms** — one line at the foot of
+  every printed report page ("Includes Zillow data — not for commercial use ·
+  housing.jasonli.app"), so a single page cut from a saved PDF still carries its terms.
+  Chosen over a diagonal watermark on 2026-09-12: a watermark prints over the report's
+  tables, reads as "draft" or "confidential" rather than as a licence, and marks the
+  whole document when only Zillow's figures and what derives from them are restricted —
+  the rest is public-domain federal data. On paper the report already states the terms
+  twice: the licence box, which is not print-hidden, and its own copy beside the sources
+  table. A repeating footer is print CSS — `position: fixed` under `@media print`, or
+  `@page` margin boxes — and support differs by browser, so it needs checking in
+  Chrome, Safari and Firefox before it ships. Unscheduled.
 - **Scheduled refresh with retry and alerting, replacing manual `make pipeline`** —
   becomes necessary rather than convenient once a published site is expected to reflect
   a monthly cadence. Deferred because a manual run is honest at one state and
