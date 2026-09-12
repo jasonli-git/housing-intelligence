@@ -15,7 +15,7 @@ from collections.abc import Iterator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, text
 from sqlalchemy.orm import Session
 
 from hip.api.main import app
@@ -389,3 +389,86 @@ def test_a_re_download_that_moved_no_figure_is_not_staleness(county_id: int) -> 
     assert served["stale"] is False
     plural = client.get(f"/regions/{county_id}/explanations?window={WINDOW}").json()
     assert plural["explanations"][0]["stale"] is False
+
+
+# --- pruning retired models (after run `v3`) ----------------------------------------
+
+
+def test_prune_removes_models_off_the_list_and_only_in_its_scope(
+    five_models: int,
+) -> None:
+    """A model that leaves the preference list keeps its rows until something deletes
+    them, and `/explanations` serves every stored row — so without this a comparison
+    shows a retired model beside its replacement. Scoped to the run's window."""
+    from hip.eval.explain import prune
+
+    with Session(get_engine()) as session:
+        session.add(
+            RegionExplanation(
+                region_id=five_models,
+                window="since_2019",
+                model_id="deepseek-v4-pro",
+                model_label="DeepSeek V4 Pro",
+                runtime="deepseek",
+                rank=3,
+                body="A reading for another window.",
+                packet_sha256="0" * 64,
+            )
+        )
+        session.commit()
+        removed = prune(
+            session, [five_models], WINDOW, {"gemini-3.7-flash", "gemma-4-e4b-q4"}
+        )
+        session.commit()
+
+    assert removed == {
+        "gemini-3.1-flash-lite": 1,
+        "mistral-small-4": 1,
+        "deepseek-v4-pro": 1,
+    }
+    kept = client.get(f"/regions/{five_models}/explanations?window={WINDOW}").json()
+    assert [e["model_id"] for e in kept["explanations"]] == [
+        "gemini-3.7-flash",
+        "gemma-4-e4b-q4",
+    ]
+    other = client.get(f"/regions/{five_models}/explanations?window=since_2019").json()
+    assert [e["model_id"] for e in other["explanations"]] == ["deepseek-v4-pro"]
+
+
+def test_prune_refuses_to_keep_nothing(county_id: int) -> None:
+    """An empty keep-set would delete every reading in scope."""
+    from hip.eval.explain import prune
+
+    with Session(get_engine()) as session, pytest.raises(ValueError):
+        prune(session, [county_id], WINDOW, set())
+
+
+def test_a_row_without_a_binding_stores_sql_null(county_id: int) -> None:
+    """Not the JSON value `null`, which `IS NULL` does not match. Restoring pre-binding
+    rows wrote JSON nulls until the column set `none_as_null`."""
+    with Session(get_engine()) as session:
+        session.execute(
+            delete(RegionExplanation).where(RegionExplanation.region_id == county_id)
+        )
+        session.add(
+            RegionExplanation(
+                region_id=county_id,
+                window=WINDOW,
+                model_id="gemma-4-e4b-q4",
+                model_label="Gemma 4 E4B",
+                runtime="ollama",
+                rank=0,
+                body=BODY,
+                packet_sha256="0" * 64,
+                binding=None,
+            )
+        )
+        session.commit()
+        is_null = session.execute(
+            text(
+                "SELECT binding IS NULL FROM region_explanations "
+                "WHERE region_id = :r AND model_id = 'gemma-4-e4b-q4'"
+            ),
+            {"r": county_id},
+        ).scalar_one()
+    assert is_null

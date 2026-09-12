@@ -660,6 +660,7 @@ def explain_command(
     force: bool = False,
     unbenchmarked: bool = False,
     all_models: bool = False,
+    prune: bool = False,
 ) -> None:
     """Body of `hip explain`, registered on the root app in cli.py."""
     from hip.eval.selection import NoModelAvailable, resolve
@@ -737,6 +738,8 @@ def explain_command(
             payload_format=payload_format,
             force=force,
         )
+        if prune:
+            _prune(session, evaluation, models, region_ids, window)
 
     code = _summarize(outcomes)
     if code:
@@ -827,6 +830,34 @@ def _explain_each(
                 f"{len(explanation.binding.citations):>3} figures bound  "
                 f"{explanation.body.splitlines()[0][:40]}..."
             )
+
+
+def _prune(
+    session: Session,
+    evaluation: EvaluationConfig,
+    requested: list[str],
+    region_ids: list[int],
+    window: str,
+) -> None:
+    """Remove readings from models neither on the preference list nor asked for now.
+
+    Requested models are kept as well as listed ones, so `--model X --prune` cannot
+    delete the reading it has just written for a model that is not on the list.
+    """
+    from hip.eval.explain import prune
+
+    keep = set(evaluation.generation.preference) | set(requested)
+    removed = prune(session, region_ids, window, keep)
+    session.commit()
+    if not removed:
+        typer.echo("  pruned nothing: every stored reading is from a model being kept")
+        return
+    detail = ", ".join(f"{model} ({count})" for model, count in sorted(removed.items()))
+    typer.secho(
+        f"  pruned {sum(removed.values())} explanation(s) from models no longer on the "
+        f"preference list: {detail}",
+        fg=typer.colors.CYAN,
+    )
 
 
 def _stored_state(

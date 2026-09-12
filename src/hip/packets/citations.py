@@ -19,10 +19,12 @@ The matching is deliberately generous, because a false accusation of fabrication
 more damage than a miss. A stated figure is licensed when it matches:
 
 - a packet value, or that value as a writer rounds it — to one or two decimals, to a
-  whole number, a ratio as a percentage, a large figure in thousands — or any of those
-  within 0.5%, so "about $452,000" quotes 452,500;
-- the size of a negative value where the sentence says which way it went: "a decline of
-  36.66%" quotes -36.66. A bare "36.66%" does not, because it states a rise;
+  whole number, a ratio as a percentage, a share as a whole percentage, a large figure
+  in thousands — or any of those within 0.5%, so "about $452,000" quotes 452,500 and
+  "47% of renters" quotes 0.4750;
+- the size of a negative value: "fell 36.66%", "improved 36.66%" and a bare "36.66%" all
+  quote -36.66. Whether the sentence has the direction right is a claim, and the
+  binding checks figures, not claims;
 - the packet's own text, as a whole token: the "30%" in the label "Renters paying over
   30% of income on housing".
 
@@ -101,7 +103,8 @@ _DESCRIPTOR_AFTER = re.compile(
     re.IGNORECASE,
 )
 
-# A dropped sign is licensed only when the words around the figure carry it.
+# Words that say a value fell. They once had to accompany a dropped sign for it to be
+# licensed; now they only point a figure at a change rather than at a level.
 _DOWNWARD = re.compile(
     r"\b(fell|fall(s|ing|en)?|declin\w*|decreas\w*|drop(s|ped|ping)?|down|lower\w*|"
     r"loss(es)?|lost|shr[ai]nk\w*|shrunk|contract\w*|negative|minus|reduc\w*|slid|"
@@ -349,6 +352,11 @@ def _forms(value: float, *, plain: bool = False) -> tuple[_Form, ...]:
             out.setdefault(form, name)
         if abs(number) >= 1000:
             out.setdefault(round(number / 1000, 1), "thousands")
+        # A share as a whole percentage, the way prose rounds one: 0.4750 as "47%". The
+        # one-decimal form alone is 47.5, which the tolerance cannot reach from 47, so
+        # the first regeneration after `v3` refused correct prose over it.
+        if abs(number) <= 1:
+            out.setdefault(float(round(number * 100)), "percent")
         return out
 
     forms = written(value)
@@ -673,12 +681,12 @@ def _choose(
 ) -> tuple[_Match, int]:
     """The best-supported field for a figure, and how many others tied with it.
 
-    Raises `LookupError` when nothing is usable — no match at all, or only the size of
-    a negative value in a sentence that does not say which way it moved.
+    Raises `LookupError` when nothing matches. The size of a negative value is licensed
+    like any other form — it asked for a direction word until the first regeneration
+    after `v3`, where "improved 42%" for a falling unemployment rate was refused — and
+    only loses a tie, to an outright form, in `_best_form`.
     """
-    usable = [
-        m for m in matches if m.form.name != "magnitude" or _DOWNWARD.search(context.near)
-    ]
+    usable = matches
     if not usable:
         raise LookupError(stated.text)
 
@@ -891,14 +899,28 @@ def _cited_releases(packet: Packet, citations: list[Citation]) -> list[CitedRele
     return releases
 
 
-def describe_unbound(binding: Binding, limit: int = 4) -> str:
-    """The unbound figures as one line: `$612,300 (nearest 452,500), 88.4% (…)`."""
+def describe_unbound(binding: Binding, text: str | None = None, limit: int = 4) -> str:
+    """The unbound figures as one line: `$612,300 (nearest 452,500), 88.4% (…)`.
+
+    With the text they came from, each also shows the words around it, so a false
+    refusal can be diagnosed from the log of the run that made it: generation is not
+    exactly repeatable, and a second call may not reproduce the sentence.
+    """
 
     def number(value: float) -> str:
         return f"{value:,.0f}" if abs(value) >= 1000 else f"{value:g}"
 
+    def excerpt(figure: UnboundFigure) -> str:
+        if text is None:
+            return ""
+        before = text[max(0, figure.start - 40) : figure.start].split("\n")[-1]
+        after = text[figure.end : figure.end + 30].split("\n")[0]
+        return f' in "…{before}{figure.text}{after}…"'
+
     shown = [
-        f"{u.text} (nearest {number(u.nearest)})" if u.nearest is not None else u.text
+        f"{u.text} (nearest {number(u.nearest)}){excerpt(u)}"
+        if u.nearest is not None
+        else f"{u.text}{excerpt(u)}"
         for u in binding.unbound[:limit]
     ]
     more = len(binding.unbound) - limit

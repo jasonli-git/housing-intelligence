@@ -3,6 +3,42 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.13.1] — 2026-09-11
+
+Run `v3`, the re-benchmark, and the model order it set. Not a milestone.
+
+### Added
+- **`reports/evaluation/v3.md`**: eleven configurations of seven models over the packets
+  Milestones 21 and 13 produced — 165 answers, all judged at effort `high`. Gemini 3.7
+  Flash at low thinking is selected at 3.77/4.00; the binding found one unsupported
+  figure in the run, a heading. About $6 in all: $5.63 of judging, under half the $11.70
+  quote, and about $0.35 of generation.
+- **`hip explain --prune`** (#119): deletes the covered regions' stored explanations
+  from models neither on the preference list nor named in the run, and lists what it
+  removed. Until now nothing deleted an explanation, so a model that left the list kept
+  its readings on the site.
+- **Refusal messages quote the words around each unbound figure**, because generation is
+  not exactly repeatable and a second call may not reproduce the sentence.
+
+### Changed
+- **The preference list, from `v3`** (#118): Gemini 3.7 Flash at low thinking, DeepSeek
+  V4.1 Flash with thinking off, Qwen 3.7 Plus, Gemini 3.1 Flash-Lite, then Gemma 4 E4B.
+  Mistral Small 4 leaves — it scored below the local model — and with it the EU tier;
+  DeepSeek V4 Pro leaves as DeepSeek retires it.
+- **Two binding rules relax** (#120): a share written as a whole percentage ("47% of
+  renters" for 0.4750) is a quotation, and the size of a negative value binds without a
+  direction word. The first regeneration against the new order refused 10 of Gemini 3.7
+  Flash's first 18 county explanations over them; `v3`'s results are unchanged.
+- **Every county's explanations regenerated under the new order**: 105 readings from five
+  models, every figure bound — 3,169 citations — and none refused. `hip explain --prune`
+  removed the 63 readings of the three models that left, exported first. The live site
+  changes at the next deploy.
+
+### Fixed
+- **`region_explanations.binding` stores SQL `NULL` for "no binding"**, not the JSON value
+  `null`, which `IS NULL` does not match. The test fixture that restores explanations was
+  writing JSON nulls, so each restored row counted as bound in SQL.
+
 ## [0.13.0] — 2026-09-11
 
 Milestone 13, citation binding. Every figure in a model's explanation is bound to the

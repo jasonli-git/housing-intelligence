@@ -139,7 +139,13 @@ class RegionExplanation(Base):
     body: Mapped[str] = mapped_column(Text, nullable=False)
     packet_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
     content_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    binding: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    # `none_as_null`, or a Python None is stored as the JSON value `null`, which
+    # `binding IS NULL` does not match: a row restored with no binding would count as
+    # bound in any SQL that asks. The test fixture that restores explanations wrote
+    # exactly those until 2026-09-11.
+    binding: Mapped[dict[str, Any] | None] = mapped_column(
+        JSONB(none_as_null=True), nullable=True
+    )
     generated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

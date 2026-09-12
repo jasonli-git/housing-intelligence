@@ -795,6 +795,16 @@ def explain(
             "be used is skipped, and the closing summary says why.",
         ),
     ] = False,
+    prune: Annotated[
+        bool,
+        typer.Option(
+            "--prune",
+            help="After generating, delete the covered regions' stored explanations "
+            "from models that are neither on the preference list nor named in this run, "
+            "and list what was deleted. Without it, a model that leaves the list keeps "
+            "its readings on the site.",
+        ),
+    ] = False,
 ) -> None:
     """Write model explanations into the warehouse for the API to serve.
 
@@ -820,6 +830,10 @@ def explain(
     each requested model came to. Exit status: 0 when every requested model's prose is
     current, 3 when some is but something was skipped, failed or refused, 1 when none
     is.
+
+    `--prune` then deletes, for the regions and window the run covered, every stored
+    explanation from a model neither on the preference list nor named in the run
+    (ARCHITECTURE #119). Nothing else in the platform deletes an explanation.
     """
     explain_command(
         region,
@@ -831,6 +845,7 @@ def explain(
         force,
         unbenchmarked,
         all_models,
+        prune=prune,
     )
 
 

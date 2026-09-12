@@ -242,17 +242,30 @@ def test_a_small_plain_count_is_still_prose(packet: Packet) -> None:
     assert bind("There are 3 points worth noting.", packet).complete
 
 
-def test_the_size_of_a_decline_binds_only_where_the_sentence_says_it_fell(
+def test_the_size_of_a_decline_is_a_figure_whatever_the_sentence_says(
     packet: Packet,
 ) -> None:
-    """ "fell 36.66%" quotes -36.66. A bare "36.66%" states a rise, which the packet
-    does not."""
-    fell = _only("Permits fell 36.66% over the window.", packet)
-    assert fell.field == "metrics[permits_total_units].pct_change"
-    assert fell.packet_value == -36.66
+    """ "fell 36.66%", "improved 36.66%" and a bare "36.66%" all quote -36.66. A
+    direction word was required until the first regeneration after `v3` refused
+    "improved 42%" for a falling unemployment rate: the direction is a claim, and the
+    binding checks figures."""
+    for sentence in (
+        "Permits fell 36.66% over the window.",
+        "Permits improved 36.66% by some reading.",
+        "Permits changed by 36.66% over the window.",
+    ):
+        citation = _only(sentence, packet)
+        assert citation.field == "metrics[permits_total_units].pct_change"
+        assert citation.packet_value == -36.66
 
-    bare = bind("Permits changed by 36.66% over the window.", packet)
-    assert [u.text for u in bare.unbound] == ["36.66%"]
+
+def test_a_share_rounded_to_a_whole_percent_is_a_quotation(packet: Packet) -> None:
+    """0.533 is 53.3% to one decimal, which the tolerance cannot reach from 53. Prose
+    rounds shares to whole percentages, and the first regeneration after `v3` refused
+    correct sentences over it — "47% of renters" for 0.4750."""
+    citation = _only("About 53% of renters are cost-burdened.", packet)
+    assert citation.field == "levels[acs_renter_cost_burden].value"
+    assert citation.packet_value == 0.533
 
 
 def test_a_year_is_licensed_exactly_or_not_at_all(packet: Packet) -> None:
@@ -402,7 +415,10 @@ def test_prose_with_an_invented_figure_is_refused_not_stored(
     with pytest.raises(UnboundFigures) as refused:
         _generate("Home values reached $612,300, up 45.97%.", packet, monkeypatch)
     assert [u.text for u in refused.value.binding.unbound] == ["$612,300"]
-    assert "$612,300" in str(refused.value) and "not stored" in str(refused.value)
+    # The words around the figure travel with the refusal: a second generation may not
+    # reproduce the sentence, so the log of the run that refused it is the evidence.
+    assert 'in "…Home values reached $612,300, up 45.97%.…"' in str(refused.value)
+    assert "not stored" in str(refused.value)
 
 
 def test_publishable_prose_carries_its_binding_and_content_hash(

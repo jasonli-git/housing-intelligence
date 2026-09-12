@@ -10,8 +10,8 @@ with 289 Python and 26 dashboard tests passing. All eight pipeline stages run.
 between 2026-09-02 and 2026-09-11.** The platform is published: New Jersey is served from
 a public domain with no database and no application server, and its interpretation is
 written by hosted models behind a preference list that ends on this machine. What
-remains is depth in New Jersey — a re-benchmark, a design language, a consumer entry
-point and a three-dimensional map; expansion past New Jersey was deferred
+remains is depth in New Jersey — a design language, a consumer entry point and a
+three-dimensional map; expansion past New Jersey was deferred
 on 2026-09-07. Everything it runs on — the warehouse schema, the
 analytics layer, the packet contract — is what Version 1 built.
 
@@ -152,6 +152,9 @@ handling separating them rather than raw capability. Candidates are therefore ch
 price and availability and ranked by the benchmark, never the reverse. Qwen joined the
 `v3` slate on 2026-09-11 as a second contender for the China tier — for its pinned
 snapshots, which DeepSeek does not offer, not as a fourth regime (ARCHITECTURE #105).
+Run `v3` changed the list on 2026-09-11: Mistral Small 4 scored below the local model, so
+the EU tier left, and Qwen's pinned snapshot joined DeepSeek as a second China tier — two
+regimes and the machine, rather than three (ARCHITECTURE #118).
 
 A router such as OpenRouter would supply this breadth through one integration and is
 rejected for a specific reason: `region_explanations` records the model that wrote every

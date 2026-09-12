@@ -398,28 +398,39 @@ cohorts:
 # was verified, and the one thing a pin exists to prevent is a silent substitution.
 generation:
   preference:
-    # Ordered from the `v2` benchmark (2026-09-06), not from reputation. Rubric scores
-    # in brackets; the full table is reports/evaluation/v2.md.
+    # Ordered from the `v3` benchmark (2026-09-11), not from reputation. Rubric scores
+    # in brackets, graded at judge effort `high` and so not comparable with `v2`'s; the
+    # full table is reports/evaluation/v3.md. `hip explain --all` writes one reading per
+    # entry, in this order, and resolves the single preferred reading the same way.
     #
-    # Gemini leads on measurement [3.56] and 3.1 Flash-Lite sits second as a cheap
-    # in-provider step-down [2.98] — within 0.58 of the winner at a fifth the price,
-    # so a cost-driven fallback does not have to cross a jurisdiction. The trade is
-    # that tiers 1 and 2 share a failure domain: one Google policy action drops both,
-    # and the list only crosses to another regime at tier 3. Accepted deliberately —
-    # three regimes are still covered, and the list still ends on this machine.
+    # Every hosted tier sits above the local model because it measured better, except
+    # Flash-Lite (below). Mistral Small 4 [2.68], the EU tier since Milestone 12, left
+    # on 2026-09-11 for the opposite reason: it scored below the local model, so it
+    # should never write before it, and the failover its regime offered is one this
+    # machine now provides better (ARCHITECTURE #118).
     #
-    # DeepSeek is third rather than first, against the original roadmap ordering, for
-    # three measured reasons: it serves no dated snapshot so its checkpoints roll
-    # behind a fixed id (the one tier that can change published prose silently, which
-    # is what SPEC's pinning rule exists to prevent); V4 Pro answered the 1985-income
-    # question it was supposed to decline on 2 of 3 packets; and it is the most
-    # expensive candidate measured, at $18.92 per thousand generations.
-    - gemini-3.7-flash
+    # Gemini 3.7 Flash leads at low thinking [3.77]: its default setting [3.75] scored
+    # no better at nearly twice the cost, and one model at two settings is one reading
+    # twice, not two readings.
+    - gemini-3.7-flash-low
+    # The China slot, held by the better of its two contenders. DeepSeek V4.1 Flash
+    # with thinking off [3.57] beats the same model thinking [2.78 — three answers cut
+    # off by the benchmark's 6,000-token ceiling] and every Qwen configuration. It is an
+    # alias DeepSeek repoints, so the substitution guard (#95) is what stands between a
+    # repoint and prose published under the wrong name.
+    - deepseek-flash-nothink
+    # Qwen 3.7 Plus [3.46], a pinned snapshot, as a second tier in the China regime: a
+    # DeepSeek repoint or retirement falls to a model that cannot change under its
+    # name. On Alibaba's free quota until 2026-12-10; with Free Quota Only on, a lapsed
+    # quota is a failed probe and a fall-through, never a bill.
+    - qwen3.7-plus
+    # Kept at the owner's request on 2026-09-11 [3.10]: a cheap in-provider step-down,
+    # and the fifth reading on every county page. It sits above the local model it
+    # scored 0.03 below — a gap fifteen answers cannot separate — because the list
+    # must end on this machine.
     - gemini-3.1-flash-lite
-    - mistral-small-4
-    - deepseek-v4-pro
-    # Last, and not a token gesture: Gemma 4 E4B scored 2.90, beating three of the six
-    # hosted candidates. The fallback is a working model, not a degraded one.
+    # Last, and a working model rather than a degraded one: Gemma 4 E4B [3.13]
+    # outscored two hosted candidates again.
     - gemma-4-e4b-q4
   # In-flight requests per hosted cohort. Hosted inference is on this milestone for
   # concurrency, but an unbounded fan-out earns 429s that look like model failures,

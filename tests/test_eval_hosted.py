@@ -1524,8 +1524,25 @@ def test_the_repo_config_adds_variants_without_touching_a_benchmarked_candidate(
         base = evaluation.model(base_id)
         assert variant.input_usd_per_mtok == base.input_usd_per_mtok
         assert variant.output_usd_per_mtok == base.output_usd_per_mtok
-    # Unbenchmarked, so neither may write yet.
-    assert not {deepseek.id, gemini.id} & set(evaluation.generation.preference)
+    # Unbenchmarked until `v3`, which measured both; since 2026-09-11 both write
+    # (ARCHITECTURE #118). What must hold now is that every listed model is configured
+    # at the effort `v3` measured it at: `hip explain` skips one that is not (#102), so
+    # an in-place edit here would quietly take a tier off the list.
+    measured_in_v3 = {
+        "gemini-3.7-flash": "default",
+        "gemini-3.7-flash-low": "low",
+        "gemini-3.1-flash-lite": "default",
+        "mistral-small-4": "default",
+        "deepseek-flash": "default",
+        "deepseek-flash-nothink": "disabled",
+        "qwen3.7-flash": "default",
+        "qwen3.7-flash-nothink": "disabled",
+        "qwen3.7-plus": "default",
+        "qwen3.7-plus-nothink": "disabled",
+        "gemma-4-e4b-q4": "default",
+    }
+    for model_id in evaluation.generation.preference:
+        assert evaluation.model(model_id).reasoning_effort == measured_in_v3[model_id]
     # Everything `v2` measured is still configured the way it was measured. An in-place
     # edit here would publish prose from a setting nobody benchmarked.
     measured_in_v2 = {
@@ -2285,4 +2302,33 @@ def test_the_report_holds_qwen_to_the_temperature_its_cards_give_for_each_mode()
     assert (
         "**Qwen3.7 Flash** and **Qwen3.7 Flash (thinking off)** were held to the same "
         "setting regardless." in text
+    )
+
+
+def test_prune_keeps_the_preference_list_and_every_model_named_in_the_run(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--model X --prune` must not delete the reading it has just written for a model
+    that is not on the list."""
+    from hip.eval_cli import _prune
+
+    kept: dict[str, set[str]] = {}
+
+    def prune(session: Any, region_ids: list[int], window: str, keep: set[str]) -> Any:
+        kept["keep"] = set(keep)
+        return {"mistral-small-4": 21, "deepseek-v4-pro": 21}
+
+    monkeypatch.setattr("hip.eval.explain.prune", prune)
+    _prune(
+        SimpleNamespace(commit=lambda: None),  # type: ignore[arg-type]
+        _evaluation(["gemini-test", "gemma-4-e4b-q4"]),
+        ["experimental-model"],
+        [1, 2],
+        "5y",
+    )
+
+    assert kept["keep"] == {"gemini-test", "gemma-4-e4b-q4", "experimental-model"}
+    assert (
+        "pruned 42 explanation(s) from models no longer on the preference list: "
+        "deepseek-v4-pro (21), mistral-small-4 (21)" in capsys.readouterr().out
     )

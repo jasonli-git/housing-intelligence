@@ -15,10 +15,12 @@ deploy. 21 changed the warehouse and every packet, and 13 the packet contract an
 explanations are stored; neither is deployed, deliberately: both reach the site with the
 regeneration after `v3` (step 5). The live site carries data
 through July 2026 and five models' explanations of every county. The
-preference list in `config/evaluation.yml` is `gemini-3.7-flash` →
-`gemini-3.1-flash-lite` → `mistral-small-4` → `deepseek-v4-pro` → `gemma-4-e4b-q4`.
+preference list, set from `v3` on 2026-09-11, is `gemini-3.7-flash-low` →
+`deepseek-flash-nothink` → `qwen3.7-plus` → `gemini-3.1-flash-lite` → `gemma-4-e4b-q4`;
+the warehouse holds all five models' readings, and the site shows the previous five until
+the deploy.
 
-**The agreed sequence** — settled with the user on 2026-09-10; steps 1 to 3 are done:
+**The agreed sequence** — settled with the user on 2026-09-10; steps 1 to 4 are done, and all of 5 but the deploy:
 
 1. ✅ **Milestone 20 — reasoning effort as a measured variable.** Done 2026-09-10; see
    its section below. It configured `deepseek-flash-nothink` and `gemini-3.7-flash-low`
@@ -29,9 +31,11 @@ preference list in `config/evaluation.yml` is `gemini-3.7-flash` →
    Every generation is now bound before it is stored and refused if a figure will not
    bind, packets are at 1.2, and a scenario set keeps its packets — so `v3` measures the
    final shape, and its report carries a `Bound` column.
-4. **A fresh benchmark, run `v3`.** Checklist below under "Run `v3`".
-5. **Act on `v3`:** reorder the preference list, retire the old rows, regenerate every
-   explanation, deploy. Checklist below under "After `v3`".
+4. ✅ **A fresh benchmark, run `v3`.** Done 2026-09-11: Gemini 3.7 Flash at low thinking
+   selected at 3.77/4.00, for about $6. Checklist below under "Run `v3`".
+5. **Act on `v3`:** reorder, retire and regenerate are done (2026-09-11); **the deploy is
+   what remains** — `make publish`, then `make deploy`, with the owner's go-ahead.
+   Checklist below under "After `v3`".
 6. Then **18 → 17 → 16**, per [ROADMAP.md](ROADMAP.md). Changed from 18 → 16 → 17 on
    2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
@@ -47,18 +51,21 @@ preference list in `config/evaluation.yml` is `gemini-3.7-flash` →
   fails before a batch is created.
 - **Top up the Anthropic credit before step 4** — see "Parked / needs user input".
 
-**Dates.** `deepseek-v4-pro` is routed to V4.1 Flash from 04:00 UTC on 2026-09-14. Nothing
-needs doing: Milestone 22's probe makes it fall through on its own, and its 21 published
-explanations were written by the real V4 Pro and stay correctly attributed until step 5.
+**Dates.** `deepseek-v4-pro` is routed to V4.1 Flash from 04:00 UTC on 2026-09-14. It left
+the list on 2026-09-11 and its warehouse rows were pruned (exported first); its 21
+published readings were written by the real V4 Pro and stay correctly attributed on the
+live site until the deploy.
 
 ### Run `v3` — the re-benchmark
 
-- [ ] **A new run, not an extension of `v2`.** 21 changes every packet and `v2`'s scenarios
+- [x] **A new run, not an extension of `v2`.** 21 changes every packet and `v2`'s scenarios
       are frozen from the old ones, so extending it would measure models against data
       the site no longer shows. `hip eval scenarios --run v3` (Markdown by default since
       2026-09-11), then `hip eval run --run v3` with every candidate below named. Once
       anything is generated the scenario set is frozen; before that, `--replace` rebuilds
-      it
+      it. Done 2026-09-11: the same five questions and three counties as `v1` and `v2`
+      (Cumberland, Middlesex, Ocean), Markdown at 2,144-2,238 tokens, every scenario
+      carrying its packet 1.2
 - [x] **Guard the frozen scenario sets before building `v3`'s** — found 2026-09-10, done
       2026-09-11 (ARCHITECTURE #103). `hip eval scenarios` replaced
       `data/eval/<run>/scenarios.jsonl` without asking, and every `hip eval` command
@@ -69,7 +76,7 @@ explanations were written by the real V4 Pro and stay correctly attributed until
       draft needs `--replace`, every `hip eval` command requires `--run`, `make eval`
       requires `RUN=`, and the payload defaults to Markdown. Checked against the real
       runs: `--run v1` and `--run v2 --replace` are both refused, files untouched
-- [ ] **Candidates, eleven — seven decided 2026-09-10, four Qwen added 2026-09-11:**
+- [x] **Candidates, eleven — seven decided 2026-09-10, four Qwen added 2026-09-11:**
       `gemini-3.7-flash`, `gemini-3.7-flash-low`, `gemini-3.1-flash-lite`,
       `mistral-small-4`, `deepseek-flash`, `deepseek-flash-nothink`, `qwen3.7-flash`,
       `qwen3.7-flash-nothink`, `qwen3.7-plus`, `qwen3.7-plus-nothink`, and
@@ -88,7 +95,7 @@ explanations were written by the real V4 Pro and stay correctly attributed until
         --model qwen3.7-flash-nothink --model qwen3.7-plus \
         --model qwen3.7-plus-nothink --model gemma-4-e4b-q4
       ```
-- [ ] **Run `v3` before 2026-12-10, or lose the Qwen candidates.** The four Qwen
+- [x] **Run `v3` before 2026-12-10, or lose the Qwen candidates.** Ran 2026-09-11. The four Qwen
       candidates run on Alibaba's new-account free quota: 1M tokens per model, Singapore
       region only, 90 days from activation. The user activated Model Studio and turned on
       **Free Quota Only** for both snapshots on 2026-09-11, so nothing can be billed —
@@ -132,7 +139,7 @@ explanations were written by the real V4 Pro and stay correctly attributed until
       printed "(json)", and nobody caught it. Nobody decided on JSON. Markdown is the
       default since 2026-09-11 (#103). On `v1`'s Markdown prompts the judge reads 3,362
       tokens per verdict against `v2`'s 5,798
-- [ ] **Quote before spending**: `hip eval cost --run v3` prices the run from its own
+- [x] **Quote before spending**: `hip eval cost --run v3` prices the run from its own
       prompts — a constant-based estimate was wrong twice. Expect roughly $11.50–12.50
       for 165 judgments at effort `high` — `hip eval cost --run v1`, the last Markdown
       run, quotes $7.45 for 105 today, about 7 cents a verdict, and 21's larger packets
@@ -140,14 +147,28 @@ explanations were written by the real V4 Pro and stay correctly attributed until
       county as Markdown, which moves the quote by cents) — plus under $0.50 of generation (`v2`'s recorded tokens,
       repriced for Markdown input; Qwen's share is inside its free quota). The quote
       assumes 5,000 output tokens per verdict at `high`, a planning figure that is most of
-      it — `hip eval judge` now prints what the batch was actually billed
-- [ ] `hip eval judge --run v3`, then `hip eval report --run v3`. Judge every candidate in
+      it — `hip eval judge` now prints what the batch was actually billed. Quoted $11.70
+      on 2026-09-11; billed $5.63, because verdicts averaged about 1,500 output tokens
+- [x] `hip eval judge --run v3`, then `hip eval report --run v3`. Judge every candidate in
       one run: the judge prompt is shared, which is what keeps scores comparable. Graded
-      at effort `high` (ARCHITECTURE #101), so no `v3` score compares with a `v2` one
+      at effort `high` (ARCHITECTURE #101), so no `v3` score compares with a `v2` one.
+      Done 2026-09-11: 165 of 165 generated and judged, none failed; Gemini 3.7 Flash at
+      low thinking selected at 3.77/4.00; the report is `reports/evaluation/v3.md`. The
+      whole run cost about $6
+
+- Note: **DeepSeek V4.1 Flash at its default returned 3 empty answers** — all 6,000
+  benchmark tokens spent reasoning, `finish=length`, as V4 Flash did in `v2`. Judged as
+  they were, with the owner's agreement: the benchmark's one ceiling is what makes rows
+  comparable, and `hip explain` gives DeepSeek 24,000 in production. In Known
+  Limitations.
+- Note: **the binding flagged one figure in the whole run**: Mistral Small 4's heading
+  "Worst end (rank 19 or 20)", with no metric ranked 20. Qwen 3.7 Flash with thinking off
+  declined 1 of 3 unanswerable questions and drew 20 judge flags; turning thinking off
+  helped DeepSeek (2.78 to 3.57) and hurt both Qwen tiers
 
 ### After `v3`
 
-- [ ] **Reorder `generation.preference` from the `v3` result**, still ending at the local
+- [x] **Reorder `generation.preference` from the `v3` result**, still ending at the local
       model. The China slot now has two contenders: `deepseek-flash`, an alias DeepSeek
       repoints, and the Qwen snapshots, which are pinned. Whichever scores better holds
       it, and a Qwen tier that makes the list needs its free quota's end handled —
@@ -156,15 +177,22 @@ explanations were written by the real V4 Pro and stay correctly attributed until
       `gemma-4-e4b-q4`, decide whether the slot stays on the list at
       all — its case has been jurisdictional diversity, and a hosted tier ranked above a
       better local one is backwards on quality. Precedent from `v2`: V4 Flash scored 2.76
-      against Gemma's 2.90
-- [ ] **Retire the rows of models that left the list.** `hip explain` never deletes
+      against Gemma's 2.90. Done 2026-09-11 with the owner (ARCHITECTURE #118):
+      `gemini-3.7-flash-low` → `deepseek-flash-nothink` → `qwen3.7-plus` →
+      `gemini-3.1-flash-lite` → `gemma-4-e4b-q4`. DeepSeek with thinking off holds the
+      China slot and Qwen 3.7 Plus joins as a pinned second tier; Mistral Small 4 left,
+      and with it the EU tier; Flash-Lite stayed at the owner's request
+- [x] **Retire the rows of models that left the list.** `hip explain` never deletes
       explanations for a model that is no longer on the preference list, and
       `/regions/{id}/explanations` returns every stored row — so without this step the
       comparison would show V4 Pro *and* its replacement. There is no command for it yet:
       either a one-off `DELETE FROM region_explanations WHERE model_id =
       'deepseek-v4-pro'`, or, better, a `--prune` on `hip explain` that removes rows whose
       model has left the list. Found 2026-09-10 while planning this step; decide which
-      when it comes up
+      when it comes up. Done 2026-09-11: `--prune` built (ARCHITECTURE #119) and run with
+      the regeneration — 63 rows removed, 21 each for `deepseek-v4-pro`,
+      `gemini-3.7-flash` and `mistral-small-4`, exported first to
+      `data/explanations-pruned-2026-09-11.jsonl`
 - [x] **Decide whether `hip explain --all` must require the benchmark** — decided with
       the user and built 2026-09-11 (ARCHITECTURE #102). No gate that stops the command:
       `--all` and `--model` apply the preference list's benchmark gate per model, a model
@@ -176,15 +204,27 @@ explanations were written by the real V4 Pro and stay correctly attributed until
       the latest *judged* run, so `v3` in progress does not make every model ineligible.
       For the regeneration below: reorder the list first, or every model `v3` did not
       measure is skipped and the run exits 3
-- [ ] **Regenerate every explanation**: `hip explain --level county --all --force`. This
+- [x] **Regenerate every explanation**: `hip explain --level county --all --force`. This
       rewrites all 21 counties for every model on the new list and refreshes their
       ranks. Well under $1 for the hosted models with `deepseek-flash` in V4 Pro's place,
       plus a ~10-minute local Gemma pass. Since Milestone 13 each generation is bound
       before it is stored: a refused one leaves that model's old row in place, stale and
       marked unverified, the summary counts it, and the run exits 3. Read the refusals
-      before deploying — `v3`'s `Bound` column says how many to expect
+      before deploying — `v3`'s `Bound` column says how many to expect. Done
+      2026-09-11: 105 readings, five models by 21 counties, every one bound — 3,169
+      figures cited — and none refused once #120 relaxed two rules. The stopped first
+      attempt's bound readings were kept, so the second run wrote 76 and found 29
+      current; cents of hosted inference
 - [ ] **`make publish`, then `make deploy`.** Verify in a browser, not with `curl`: both
       origins answer scripts with Cloudflare's bot challenge by design (ARCHITECTURE #94)
+
+- Note: **the first regeneration against the new order was stopped** on 2026-09-11 after
+  it refused 10 of Gemini 3.7 Flash's first 18 counties. Every rejected figure was a
+  whole-percent share — "47% of renters" for CHAS's 0.47498 — or, once, a decline's
+  size with no direction word the binding knew; `v3`'s question-and-answer format had
+  never produced either. The two rules were relaxed (ARCHITECTURE #120), re-derived
+  against `v2` and `v3` (both unchanged), and the run started again without `--force`,
+  so the readings it had already bound were kept
 
 ## Milestone 0 — Scaffolding
 

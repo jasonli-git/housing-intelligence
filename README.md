@@ -18,8 +18,8 @@ layer only explains metrics that were already computed.
 > **351,295 observations across 31 metrics from 12 public sources, spanning 1971 to
 > 2026**, plus 26,805 computed changes and 38,674 rankings, served behind a three-page
 > dashboard and packaged as versioned analysis packets. All eight pipeline stages run.
-> The source file and match method are recorded on every value. Fourteen models — eight
-> local, six hosted across three regulatory regimes — have now been evaluated against
+> The source file and match method are recorded on every value. Seventeen models — eight
+> local, nine hosted from four providers — have now been evaluated against
 > standardized scenarios built from those packets, and every county page carries five of
 > them reading the same packet side by side, switchable by the reader and each clearly
 > labeled as interpretation, never as measurement. Since Milestone 13 every figure in
@@ -372,6 +372,7 @@ uv run hip eval cost --run v3         # what judging would cost, without spendin
 uv run hip eval judge --run v3        # rubric grading, billed
 uv run hip eval report --run v3       # reports/evaluation/v3.md
 uv run hip explain --region 11        # write an explanation the API can serve
+uv run hip explain --level county --all --prune   # every listed model; retire the rest
 ```
 
 Every `hip eval` command names its run, and a run's scenario set is frozen once anything
@@ -529,6 +530,14 @@ the same code; packets now cite the release behind the start of every change win
 well as its end; and staleness is decided on what a packet says rather than on when its
 files were fetched, so a re-download that moves no figure re-cites stored prose instead
 of paying a model to rewrite it.
+
+**Run `v3` — the re-benchmark (2026-09-11).** Eleven configurations of seven models,
+including two new Qwen snapshots and thinking-off and low-thinking settings, measured on
+the packets Milestones 21 and 13 produced. Gemini 3.7 Flash at low thinking was selected
+at 3.77/4.00, and no model stated a figure the packet does not carry beyond one heading
+in 91. Five models now write every county's readings, in the order the benchmark set;
+the EU tier left because it scored below the local model, and a model that leaves the
+order has its readings removed with `hip explain --prune`. The whole run cost about $6.
 
 Milestones and their status are in [ROADMAP.md](ROADMAP.md); the current working list and
 known rough edges are in [TODO.md](TODO.md). Work not scheduled for Version 2 is listed at

@@ -23,10 +23,11 @@ Four consequences, all enforced in code rather than left to convention:
 from __future__ import annotations
 
 import logging
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import Literal
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from hip.config import EvaluationConfig
@@ -57,11 +58,13 @@ class UnboundFigures(RuntimeError):
     error — the model answered, and the answer was not publishable.
     """
 
-    def __init__(self, region_id: int, model_id: str, binding: Binding) -> None:
+    def __init__(
+        self, region_id: int, model_id: str, binding: Binding, body: str | None = None
+    ) -> None:
         self.binding = binding
         super().__init__(
             f"region {region_id}: {model_id} stated {len(binding.unbound)} figure(s) "
-            f"the packet does not carry — {describe_unbound(binding)} — not stored"
+            f"the packet does not carry — {describe_unbound(binding, body)} — not stored"
         )
 
 
@@ -193,7 +196,7 @@ def generate(
     body = generation.answer.strip()
     binding = bind(body, packet, payload=payload)
     if not binding.complete:
-        raise UnboundFigures(packet.region.region_id, model_id, binding)
+        raise UnboundFigures(packet.region.region_id, model_id, binding, body)
 
     return Explanation(
         region_id=packet.region.region_id,
@@ -251,6 +254,40 @@ def store(session: Session, explanation: Explanation) -> None:
             binding=explanation.binding.model_dump(mode="json"),
         )
     )
+
+
+def prune(
+    session: Session,
+    region_ids: Sequence[int],
+    window: str,
+    keep: Collection[str],
+) -> dict[str, int]:
+    """Delete these regions' stored explanations for `window` from every model not kept.
+
+    `hip explain` never deletes on its own: writing a model's reading replaces that
+    model's previous one, and a model that leaves the preference list keeps its rows —
+    which `/regions/{id}/explanations` goes on serving beside its replacement's. This is
+    the explicit way out, scoped to what the run covers. Returns the rows removed per
+    model, so the run can say exactly what it deleted.
+    """
+    if not keep:
+        raise ValueError("refusing to prune with nothing to keep")
+    scope = (
+        RegionExplanation.region_id.in_(list(region_ids)),
+        RegionExplanation.window == window,
+        RegionExplanation.model_id.not_in(sorted(keep)),
+    )
+    removed = {
+        model_id: int(count)
+        for model_id, count in session.execute(
+            select(RegionExplanation.model_id, func.count())
+            .where(*scope)
+            .group_by(RegionExplanation.model_id)
+        ).tuples()
+    }
+    if removed:
+        session.execute(delete(RegionExplanation).where(*scope))
+    return removed
 
 
 def explain_region(
