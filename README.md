@@ -12,12 +12,13 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status (2026-09-12): v0.14.0, Version 1 complete and Version 2 under way.** New
+> **Status (2026-09-13): v0.15.0, Version 1 complete and Version 2 under way.** New
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
-> **351,295 observations across 31 metrics from 12 public sources, spanning 1971 to
-> 2026**, plus 26,805 computed changes and 38,674 rankings, served behind a three-page
-> dashboard and packaged as versioned analysis packets. All eight pipeline stages run.
+> **351,974 observations across 32 metrics from 12 public sources, spanning 1971 to
+> 2026**, plus 26,805 computed changes and 39,353 rankings, served behind a dashboard of
+> four page types — the state, 1,134 region pages, their reports, and an affordability
+> page — and packaged as versioned analysis packets. All eight pipeline stages run.
 > The source file and match method are recorded on every value. Seventeen models — eight
 > local, nine hosted from four providers — have now been evaluated against
 > standardized scenarios built from those packets, and every county page carries five of
@@ -36,6 +37,10 @@ layer only explains metrics that were already computed.
 > decision can stop it. Milestone 18 gave the site a design of its own — Public Sans,
 > a bar shared with [jasonli.app](https://jasonli.app), caveats set beside the figures
 > they qualify, and a front page that answers whichever measure the reader picks.
+> Milestone 17 made it answer the questions people bring: a verdict and the monthly cost
+> to own on every region page, a page that takes an income and returns the places within
+> reach, and search — all computed from published figures by fixed rules, none written by
+> a model.
 >
 > See [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md)
 > for what shipped.
@@ -77,7 +82,7 @@ seeded demo data.
 Each is listed with the milestone that delivers it, so this section can be checked
 against [ROADMAP.md](ROADMAP.md) rather than believed.
 
-- **Config-driven source registry** (M0, built) — 15 sources and 31 metrics
+- **Config-driven source registry** (M0, built) — 15 sources and 32 metrics
   defined in YAML with license, cadence, and update frequency. `hip check-config`
   validates them and catches a metric naming an undefined source, or a source whose
   API key is missing, before any fetch is attempted.
@@ -181,6 +186,15 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   unverified. The evaluation counts fabrication with the same code, so a benchmark's
   fabrication rate and the rate at which the site would refuse a model's prose are one
   number.
+- **Answers, not only figures** (M17, built) — every region page opens with a verdict
+  that quotes the ranks it rests on, whether paychecks kept up, and a housing profile;
+  every rank says whether it ranks change or value. A cost-to-own section works out the
+  monthly payment on the typical home at the national rate, the reader's down payment
+  and the typical property tax bill — a new metric from MOD-IV for municipalities and
+  counties — beside the typical rent. `/afford` takes an income and marks every county
+  and municipality within reach at 30% of it; search on the New Jersey page names each
+  result's legal type and county; region pages compare now with any earlier year. All of
+  it is computed from published figures by fixed rules, and says so.
 
 ## Sample output
 
@@ -335,7 +349,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 461 Python + 88 dashboard tests; API tests skip without a warehouse
+make test          # 463 Python + 123 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 

@@ -40,6 +40,7 @@ export const GROUPS: readonly Group[] = [
       "chas_renter_cost_burden",
       "chas_renter_severe_burden",
       "chas_owner_cost_burden",
+      "modiv_median_tax_bill",
       "mortgage_rate_30y",
     ],
   },

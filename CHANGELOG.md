@@ -3,6 +3,46 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.15.0] — 2026-09-13
+
+Milestone 17, the consumer entry point: the site starts answering the questions people
+bring to it. Every answer is computed from published figures by fixed rules; none is
+written by a model.
+
+### Added
+- **A verdict at the top of every region page and report** (#139): where its homes stand
+  on price and how fast they rose, quoting both ranks — "Mercer County is the 8th least
+  expensive of New Jersey's 21 counties … but its value rose faster than most" — with
+  whether paychecks kept up, a housing profile, and a line saying these sentences are
+  computed by fixed rules, not written by AI.
+- **What it costs per month to own** on region pages (#142): the typical home at the
+  national 30-year rate with the reader's down payment (20% by default) and the typical
+  property tax bill, the income at which that is 30% of pay, the typical rent beside it,
+  and what the figure leaves out.
+- **The typical property tax bill** (#141), a new metric from New Jersey's assessment
+  records for 553 municipalities and all 21 counties; counties also gain the other
+  housing-stock figures. The 105 county explanations were regenerated against the new
+  packets, every figure bound.
+- **The tradeoff named** where a place's home prices and tax bill pull apart (#142).
+- **"What can I afford?"** at `/afford` (#144): an income, owning or renting, and every
+  county and municipality marked within reach at 30% of it, on a map and in tables.
+- **Search** on the New Jersey page (#143): counties, municipalities and ZIP codes, each
+  result naming its legal type and county, so Boonton town and Boonton township are two
+  answers.
+- **"Since the year you moved here"** on region pages (#145): then against now for home
+  value, rent and income, for any year the series reach.
+- **"Since 2019" explained** on the New Jersey page when it is chosen (#140).
+
+### Changed
+- **Every rank says what it ranks** (#138): "Rank by change" and "Rank by value" over
+  every table, and each rank in words on hover and to screen readers.
+- **FHFA's state-only note** on the New Jersey page is the definition on "House price
+  index" rather than a paragraph, now saying what the index's number means (#146).
+
+### Fixed
+- **The New Jersey page was wider than a phone**: its measure list could not shrink below
+  its longest option, carrying the page 69px past a 375px screen.
+
 ## [0.14.4] — 2026-09-12
 
 ### Changed

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Fragment } from "react";
 
 import { Glossed } from "@/components/Glossed";
-import { ChangeCell, Marks, NoteRows, TableNotes } from "@/components/Ledger";
+import { ChangeCell, Marks, NoteRows, RankText, TableNotes } from "@/components/Ledger";
 import { PrintButton } from "@/components/PrintButton";
 import { api, artifactUrl, type Packet, regionsWithData } from "@/lib/api";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
@@ -10,7 +10,9 @@ import { formatChange, formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, windowLabel } from "@/lib/periods";
+import { RANK_HEADING, rankWords } from "@/lib/ranks";
 import { isRestricted } from "@/lib/sources";
+import { paychecks, tradeoff, verdict } from "@/lib/verdict";
 
 const WINDOW = "5y";
 
@@ -124,6 +126,16 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   const sources = bySource(packet.sources);
   const sourceNames = new Map(sources.map((s) => [s.source_id, s.name]));
   const restricted = sources.filter(isRestricted).map((s) => s.name);
+  // The region page's answers, printed with the report (Milestone 17).
+  const peers = {
+    name,
+    count: comparisons.peer_count,
+    noun: peerNoun(comparisons.peer_level),
+    scope: scopeName(comparisons.peer_scope),
+  };
+  const lead = verdict(peers, packet.metrics, packet.levels);
+  const paid = paychecks(packet.metrics);
+  const trade = tradeoff(peers, packet.levels);
 
   return (
     <main className="shell report">
@@ -156,6 +168,14 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             Between them the measures reach from {periodLabel(window.start)} to{" "}
             {periodLabel(window.end)}; each covers its own window, given in the table.
           </p>
+          {lead && <p className="verdict">{lead}</p>}
+          {paid && <p className="verdict-more">{paid}</p>}
+          {trade && <p className="verdict-more">{trade}</p>}
+          {lead && (
+            <p className="verdict-source">
+              Computed from the figures in this report by fixed rules, not written by AI.
+            </p>
+          )}
         </div>
         <div className="actions print-hide">
           <PrintButton />
@@ -206,7 +226,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                 <th scope="col" className="num">Latest</th>
                 <th scope="col" className="num">Change</th>
                 <th scope="col" className="num">Per year</th>
-                <th scope="col" className="num">Rank</th>
+                <th scope="col" className="num">{RANK_HEADING.change}</th>
                 <th scope="col">Window</th>
               </tr>
             </thead>
@@ -228,7 +248,17 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                       <td className="num">{formatMetric(m.end_value, m.unit, m.metric_id)}</td>
                       <ChangeCell pct={m.pct_change} className="num" />
                       <td className="num">{m.cagr === null ? "—" : `${m.cagr.toFixed(1)}%/yr`}</td>
-                      <td className="num">{m.rank === null ? "—" : `${m.rank} / ${m.of}`}</td>
+                      <td className="num">
+                        {m.rank === null || m.of === null ? (
+                          "—"
+                        ) : (
+                          <RankText
+                            rank={m.rank}
+                            of={m.of}
+                            words={rankWords(m.rank, m.of, "change", m.direction)}
+                          />
+                        )}
+                      </td>
                       <td className="when">
                         {windowLabel(m.window_start, m.window_end, m.metric_id)}
                       </td>
@@ -242,8 +272,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </div>
         <TableNotes placement={measures} general={placement.general} above="the table above" />
         <p className="table-note">
-          Rank 1 is the better end of the cohort where a measure defines one, and otherwise
-          the largest rise.
+          Ranked by change over five years, not by price or size: rank 1 is the largest
+          rise, or the smallest where lower is better, as for unemployment.
         </p>
       </section>
 
@@ -260,7 +290,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                 <tr>
                   <th scope="col">Measure</th>
                   <th scope="col" className="num">Value</th>
-                  <th scope="col" className="num">Rank</th>
+                  <th scope="col" className="num">{RANK_HEADING.value}</th>
                   <th scope="col">As of</th>
                   <th scope="col">Source</th>
                 </tr>
@@ -280,7 +310,17 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                           <Marks letters={current.marks.get(l.metric_id)} />
                         </td>
                         <td className="num">{formatMetric(l.value, l.unit, l.metric_id)}</td>
-                        <td className="num">{l.rank === null ? "—" : `${l.rank} / ${l.of}`}</td>
+                        <td className="num">
+                          {l.rank === null || l.of === null ? (
+                            "—"
+                          ) : (
+                            <RankText
+                              rank={l.rank}
+                              of={l.of}
+                              words={rankWords(l.rank, l.of, "value", l.direction)}
+                            />
+                          )}
+                        </td>
                         <td className="when">{periodLabel(l.period_end, l.metric_id)}</td>
                         <td>{(l.source_id && sourceNames.get(l.source_id)) ?? l.source_id ?? "—"}</td>
                       </tr>

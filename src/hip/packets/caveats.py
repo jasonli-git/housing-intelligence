@@ -63,6 +63,12 @@ TEXTS: dict[str, str] = {
         "behind the ACS they draw on. One vintage is loaded, so they show no change over "
         "time and describe earlier years than the newest ACS figures beside them."
     ),
+    "modiv_tax_bill": (
+        "The property tax bill is the median of last year's total tax across one- to "
+        "four-family homes in MOD-IV, New Jersey's assessment records. It is the bill as "
+        "levied, before relief paid to individual households such as ANCHOR, and it "
+        "follows each municipality's own assessments rather than a rate on market value."
+    ),
     "permits_volatile": (
         "Permit counts are small numbers below county level, so a large percentage "
         "change can rest on a handful of units and mean little."
@@ -192,6 +198,8 @@ def scoped_caveats(
         add("hud_fmr_area", present & FMR_METRICS)
     if present & CHAS_METRICS:
         add("chas_one_vintage", present & CHAS_METRICS)
+    if "modiv_median_tax_bill" in present:
+        add("modiv_tax_bill", {"modiv_median_tax_bill"})
 
     if level == "zip":
         text = TEXTS["zip_allocated"]

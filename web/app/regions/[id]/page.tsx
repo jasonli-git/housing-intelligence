@@ -1,17 +1,28 @@
 import Link from "next/link";
 
+import { CostToOwn } from "@/components/CostToOwn";
 import { CurrentValues } from "@/components/CurrentValues";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { Definition, Glossed } from "@/components/Glossed";
 import { Ledger, TableNotes } from "@/components/Ledger";
+import { SinceYear } from "@/components/SinceYear";
 import { TrendChart } from "@/components/TrendChart";
-import { api, type PacketLevel, type PacketMetric, type Region, regionsWithData } from "@/lib/api";
+import {
+  api,
+  nationalMortgageRate,
+  type PacketLevel,
+  type PacketMetric,
+  type Region,
+  regionsWithData,
+} from "@/lib/api";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
 import { formatMetric } from "@/lib/format";
 import type { Term } from "@/lib/glossary";
 import { groupRows } from "@/lib/groups";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, surveyYears } from "@/lib/periods";
+import { selectableYears, sinceLine } from "@/lib/since";
+import { housingProfile, paychecks, rankBasisExample, tradeoff, verdict } from "@/lib/verdict";
 
 // The only window published per region, and the only one with explanations
 // (`manifest.json` → `windows`). Stated on the page rather than offered as a control,
@@ -34,6 +45,21 @@ const TREND_METRICS = ["zhvi_sfr", "zori_all", "acs_median_hh_income"];
 export async function generateStaticParams() {
   const regions = await regionsWithData();
   return regions.filter((r) => r.level !== "state").map((r) => ({ id: String(r.region_id) }));
+}
+
+/** The national 30-year rate, labelled for a reader; fetched once per worker (`lib/api.ts`). */
+async function mortgageRate() {
+  const rate = await nationalMortgageRate();
+  return rate ? { value: rate.value, asOf: periodLabel(rate.period_start) } : null;
+}
+
+/** Why a region has no tax bill, in a reader's terms. */
+function noTaxReason(level: string): string {
+  return level === "zip"
+    ? "Property tax is not included: New Jersey’s assessment records give it by " +
+        "municipality and county, not by ZIP code."
+    : "Property tax is not included: this municipality’s assessment records could not " +
+        "be matched to it by name.";
 }
 
 /** What kind of place this is, in the words a reader uses: "Township in Somerset County". */
@@ -87,11 +113,12 @@ export default async function RegionPage({
   // The explanations are fetched alongside the data and are allowed to be absent: the
   // dashboard is fully usable with no AI layer at all, so a missing one renders nothing
   // rather than an error or an empty slot (SPEC: the platform stays useful without it).
-  const [region, packet, summary, explanations] = await Promise.all([
+  const [region, packet, summary, explanations, rate] = await Promise.all([
     api.region(regionId),
     api.packet(regionId, WINDOW),
     api.summary(regionId, WINDOW),
     api.explanations(regionId, WINDOW),
+    mortgageRate(),
   ]);
 
   if (!region || !packet) {
@@ -113,12 +140,43 @@ export default async function RegionPage({
   );
   const trends = series.filter((s) => s.observations.length >= 2);
 
+  // "Since the year you moved here": every year's lines worked out here, so the page
+  // carries a few sentences per year rather than every monthly reading. It opens ten
+  // years back, or at the earliest year the series reach.
+  const sinceSeries = trends.map(({ metricId, observations }) => {
+    const meta = findSeries(packet.metrics, packet.levels, metricId);
+    return { metricId, label: meta?.label ?? metricId, unit: meta?.unit ?? "", points: observations };
+  });
+  const sinceYears = selectableYears(sinceSeries.map((s) => s.points));
+  const sinceInitial =
+    sinceYears.find((year) => year <= (sinceYears[0] ?? 0) - 9) ?? sinceYears.at(-1) ?? 0;
+  const sinceLines = Object.fromEntries(
+    sinceYears.map((year) => [year, sinceSeries.map((s) => sinceLine(s, year))]),
+  );
+
   const name = displayName(region);
   const county = region.ancestors.find((a) => a.level === "county");
   const readings = explanations?.explanations ?? [];
   const population = packet.levels.find((l) => l.metric_id === "acs_population");
   const populationChange = packet.metrics.find((m) => m.metric_id === "acs_population");
   const { peer_count, peer_level, peer_scope } = packet.comparisons;
+
+  // The answers above the tables (Milestone 17), each from figures the tables carry.
+  const peers = { name, count: peer_count, noun: peerNoun(peer_level), scope: scopeName(peer_scope) };
+  const lead = verdict(peers, packet.metrics, packet.levels);
+  const paid = paychecks(packet.metrics);
+  const trade = tradeoff(peers, packet.levels);
+  const profile = housingProfile(packet.levels);
+  const rankExample = rankBasisExample(name, packet.metrics, packet.levels);
+
+  // The cost to own needs a current market value, so it stands on Zillow's index only:
+  // the ACS's owner-reported value is a survey five years old, and a monthly payment on
+  // it would describe a market that has moved on.
+  const level = (metricId: string) => packet.levels.find((l) => l.metric_id === metricId);
+  const dated = (row: PacketLevel | undefined) =>
+    row ? { value: row.value, asOf: periodLabel(row.period_end, row.metric_id) } : null;
+  const home = dated(level("zhvi_sfr"));
+  const taxBill = dated(level("modiv_median_tax_bill"));
 
   // One set per page: each glossary term is marked the first time it appears.
   const defined = new Set<string>();
@@ -159,6 +217,26 @@ export default async function RegionPage({
             {" · "}every figure ranked against {scopeName(peer_scope)}’s {peer_count}{" "}
             {peerNoun(peer_level)}
           </p>
+          {lead && <p className="verdict">{lead}</p>}
+          {paid && <p className="verdict-more">{paid}</p>}
+          {trade && <p className="verdict-more">{trade}</p>}
+          {/* Said outright because the interpretation panel beside it is model-written,
+              and a reader should not have to guess which of the two this is (#139). */}
+          {lead && (
+            <p className="verdict-source">
+              Computed from the figures on this page by fixed rules, not written by AI.
+            </p>
+          )}
+          {profile.length > 0 && (
+            <p className="profile">
+              <span className="eyebrow">The housing</span>
+              {profile.map((item) => (
+                <span key={item.metric_id}>
+                  {item.label} <b>{item.value}</b>
+                </span>
+              ))}
+            </p>
+          )}
         </div>
         <div className="actions">
           <Link className="button" href={`/regions/${regionId}/report`}>
@@ -166,6 +244,16 @@ export default async function RegionPage({
           </Link>
         </div>
       </header>
+
+      {home && rate && (
+        <CostToOwn
+          home={home}
+          rate={rate}
+          tax={taxBill}
+          rent={dated(level("zori_all"))}
+          noTax={taxBill ? null : noTaxReason(region.level)}
+        />
+      )}
 
       <div className={readings.length > 0 ? "split" : undefined}>
         <div>
@@ -180,8 +268,9 @@ export default async function RegionPage({
           <TableNotes placement={changes} general={placement.general} above="the figures above" />
           {packet.metrics.length > 0 && (
             <p className="table-note">
-              Rank 1 is the better end where a measure defines one — the largest rise in
-              income, the smallest in unemployment — and otherwise the largest rise.
+              Ranked by change over five years, not by price or size: rank 1 is the largest
+              rise, or the smallest where lower is better, as for unemployment.
+              {rankExample && ` ${rankExample}`}
             </p>
           )}
         </div>
@@ -191,6 +280,9 @@ export default async function RegionPage({
       {trends.length > 0 && (
         <section className="section" aria-labelledby="trends-heading">
           <h2 id="trends-heading">Trends</h2>
+          {sinceYears.length > 0 && (
+            <SinceYear years={sinceYears} initial={sinceInitial} lines={sinceLines} />
+          )}
           <div className="trends">
             {trends.map(({ metricId, observations }) => {
               const meta = findSeries(packet.metrics, packet.levels, metricId);
@@ -248,9 +340,9 @@ export default async function RegionPage({
           <p className="table-note">
             <Glossed
               text={
-                "Each measure’s latest reading, ranked by value rather than by change. The " +
-                "MOD-IV assessment records and HUD’s CHAS tables are single snapshots, so " +
-                "they appear only here."
+                "Each measure’s latest reading, ranked by value rather than by change: rank 1 " +
+                "is the highest, or the lowest where lower is better. The MOD-IV assessment " +
+                "records and HUD’s CHAS tables are single snapshots, so they appear only here."
               }
               defined={defined}
             />

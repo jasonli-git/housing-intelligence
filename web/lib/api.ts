@@ -438,6 +438,23 @@ export async function regionsWithData(): Promise<Region[]> {
   }
 }
 
+let nationalRate: Promise<{ value: number; period_start: string } | null> | null = null;
+
+/**
+ * The latest national 30-year mortgage rate, fetched once per build worker rather than
+ * once per page: it is one series for the whole country, and every region page and the
+ * affordability page asking for it would be thousands of requests for two numbers.
+ */
+export function nationalMortgageRate(): Promise<{ value: number; period_start: string } | null> {
+  nationalRate ??= (async () => {
+    const nation = (await api.regions("level=nation&limit=1"))?.items[0];
+    if (!nation) return null;
+    const latest = (await api.observations(nation.region_id, "mortgage_rate_30y"))?.observations.at(-1);
+    return latest ? { value: latest.value, period_start: latest.period_start } : null;
+  })();
+  return nationalRate;
+}
+
 /**
  * Origin the published JSON artifacts are served from, for links the browser follows.
  *

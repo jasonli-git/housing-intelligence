@@ -1,12 +1,13 @@
 import { Fragment } from "react";
 
 import { Glossed } from "@/components/Glossed";
-import { Marks, NoteRows } from "@/components/Ledger";
+import { Marks, NoteRows, RankText } from "@/components/Ledger";
 import type { PacketLevel } from "@/lib/api";
 import type { TablePlacement } from "@/lib/caveats";
 import { formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { periodLabel } from "@/lib/periods";
+import { RANK_HEADING, rankWords } from "@/lib/ranks";
 
 /**
  * Every metric's latest reading, ranked by value rather than by change.
@@ -37,7 +38,7 @@ export function CurrentValues({
                 Value
               </th>
               <th scope="col" className="num">
-                Rank
+                {RANK_HEADING.value}
               </th>
               <th scope="col">As of</th>
             </tr>
@@ -54,7 +55,15 @@ export function CurrentValues({
                     </td>
                     <td className="num">{formatMetric(level.value, level.unit, level.metric_id)}</td>
                     <td className="num">
-                      {level.rank === null ? "—" : `${level.rank} / ${level.of}`}
+                      {level.rank === null || level.of === null ? (
+                        "—"
+                      ) : (
+                        <RankText
+                          rank={level.rank}
+                          of={level.of}
+                          words={rankWords(level.rank, level.of, "value", level.direction)}
+                        />
+                      )}
                     </td>
                     <td className="period">{periodLabel(level.period_end, level.metric_id)}</td>
                   </tr>

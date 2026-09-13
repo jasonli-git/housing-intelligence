@@ -57,7 +57,10 @@ th, td { text-align: left; }
 
 /* Scroll rather than compress. Without a floor, `width: 100%` squeezes a wide table into
    a phone and every cell wraps to three lines. */
-.scroll-x { overflow-x: auto; }
+/* Positioned so it contains its absolutely positioned descendants: a visually-hidden span
+   in a wide table's cell (the rank in words, #138) otherwise sits at its place in the table
+   outside this box's clip, and widens the whole page on a phone. */
+.scroll-x { overflow-x: auto; position: relative; }
 .scroll-x > table { min-width: 32rem; }
 
 button, .button {
@@ -217,6 +220,85 @@ details[open] > summary .when-closed { display: none; }
   font-weight: var(--weight-display); letter-spacing: var(--track-display);
 }
 .meta { margin: 0.4rem 0 0; color: var(--text-secondary); font-size: var(--text-small); max-width: 72ch; }
+/* The answers above the tables (Milestone 17): the verdict at reading size and in the
+   primary ink, because it is the page's first answer; the paychecks sentence and the
+   housing profile quieter beneath it. */
+.verdict { margin: 0.8rem 0 0; max-width: 68ch; font-size: var(--text-body); line-height: 1.5; color: var(--text-primary); }
+.verdict-more { margin: 0.35rem 0 0; max-width: 72ch; font-size: var(--text-small); line-height: 1.5; color: var(--text-secondary); }
+.verdict-source { margin: 0.3rem 0 0; font-size: var(--text-note); color: var(--text-muted); }
+.profile {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 1.25rem;
+  margin: 0.65rem 0 0; font-size: var(--text-small); color: var(--text-secondary);
+}
+.profile b { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+/* The note a window carries on the New Jersey page, set under the controls it explains. */
+.window-note { margin: 0 0 0.6rem; max-width: 84ch; font-size: var(--text-note); line-height: 1.5; color: var(--text-secondary); }
+
+/* The cost to own (Milestone 17): the arithmetic as a short ledger of lines, each input
+   beside the line it feeds, and the notes that qualify it to the right on a wide screen. */
+.section.cost { margin-bottom: 2rem; }
+.cost-grid { display: grid; grid-template-columns: minmax(0, 26rem) minmax(0, 1fr); gap: 0.75rem var(--gap); align-items: start; }
+.cost-lines { margin: 0; display: grid; font-size: var(--text-small); }
+.cost-lines > div { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 0.3rem 0; border-bottom: 1px solid var(--grid); }
+.cost-lines dt { color: var(--text-secondary); }
+.cost-lines dd { margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-primary); }
+.cost-lines .src { display: block; font: var(--text-label)/1.4 var(--font-mono); color: var(--text-muted); }
+.cost-lines .total { border-bottom: 1px solid var(--border); }
+.cost-lines .total dt, .cost-lines .total dd { color: var(--text-primary); font-weight: 600; }
+.cost-notes { font-size: var(--text-small); line-height: 1.5; color: var(--text-secondary); max-width: 62ch; }
+.cost-notes p { margin: 0 0 0.5rem; }
+@media (max-width: 800px) { .cost-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Finding a place (Milestone 17): a combobox whose results float over the page, each
+   with what tells it apart — its legal type and county — set quieter beside the name. */
+.place-search { position: relative; display: grid; gap: 0.3rem; width: min(100%, 20rem); }
+.place-search input {
+  font: inherit; font-size: var(--text-small); padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface-1); color: var(--text-primary);
+}
+/* Wider than the box when it needs to be, and anchored to its right edge: the box sits at
+   the page's right, and a result's county must not be cut off. */
+.search-results {
+  position: absolute; top: 100%; right: 0; z-index: 20;
+  width: max-content; min-width: 100%; max-width: min(30rem, calc(100vw - 2rem));
+  margin: 0.25rem 0 0; padding: 0.25rem 0; list-style: none; max-height: 20rem;
+  overflow-y: auto; overflow-x: hidden;
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.14);
+}
+.search-results li {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+  padding: 0.4rem 0.7rem; font-size: var(--text-small); cursor: pointer;
+}
+.search-results li[aria-selected="true"] { background: var(--surface-2); }
+.result-name { color: var(--text-primary); }
+.result-detail { font-size: var(--text-note); color: var(--text-muted); white-space: nowrap; }
+.search-results .search-empty { color: var(--text-muted); cursor: default; }
+
+/* Since the year you moved here (Milestone 17): a year picker and one line per trend,
+   above the charts it reads from. */
+.since { display: grid; gap: 0.5rem; margin: 0 0 1rem; }
+.since .control { justify-self: start; }
+.since-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; font-size: var(--text-small); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.since-label { color: var(--text-primary); font-weight: 600; }
+.since-label::after { content: ":"; }
+
+/* What can I afford (Milestone 17): the three controls in a row, the answer in a sentence
+   under them, then the New Jersey page's map-and-table layout with a two-state map. */
+.afford-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 0.75rem 1.5rem; margin: 0 0 0.9rem; }
+.money-input { display: inline-flex; align-items: baseline; gap: 0.3rem; }
+.money-input input {
+  font: inherit; font-size: var(--text-small); width: 9rem; padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--surface-1);
+  color: var(--text-primary); font-variant-numeric: tabular-nums;
+}
+.afford-summary { margin: 0 0 1rem; max-width: 72ch; font-size: var(--text-body); line-height: 1.5; color: var(--text-primary); }
+.afford-summary b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.ranks tr.within td:first-child { box-shadow: inset 3px 0 0 var(--seq-550); }
+.reach-mark { font: var(--text-label)/1.4 var(--font-mono); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--text-secondary); white-space: nowrap; }
+.ranks.towns .result-detail { margin-left: 0.4rem; }
+.afford-notes { margin-top: 1.25rem; max-width: 84ch; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
 
 /* Two columns — the figures and what a model made of them — stacked on a narrow screen. */
@@ -410,8 +492,15 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 
 .explorer { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--gap); align-items: start; }
 .explorer-section .section-head { margin-bottom: 1rem; }
-.explorer-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; }
-.control { display: flex; align-items: center; gap: 0.5rem; }
+/* min-width 0 down the chain — the controls row, each control, its select — so a control
+   can shrink to a phone's width: a select is otherwise as wide as its longest option, and
+   the New Jersey page's measure list carried the page 69px past a 375px screen. */
+.explorer-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; min-width: 0; max-width: 100%; }
+.control { display: flex; align-items: center; gap: 0.5rem; min-width: 0; max-width: 100%; }
+.control select { min-width: 0; max-width: 100%; }
+/* "Rank by value" is a wider heading than "Rank" was (#138); on a phone it wraps rather
+   than pushing the current-values tables past the screen's edge. */
+.values .colheads th { white-space: normal; }
 .control-label { font: var(--text-label)/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0.04em; }
 .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; padding: 2px; background: var(--surface-2); }
 .seg button { border: 0; background: transparent; color: var(--text-secondary); padding: 0.45rem 0.7rem; border-radius: 6px; }

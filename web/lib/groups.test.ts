@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { GROUPS, groupRows } from "@/lib/groups";
 
-// The metric catalog as `GET /metrics` returned it on 2026-09-12. A metric added to
+// The metric catalog as `GET /metrics` returned it on 2026-09-13. A metric added to
 // `config/metrics.yml` belongs here and in a group; until it is, it renders under
 // "Other measures" rather than disappearing.
 const CATALOG = [
@@ -11,7 +11,8 @@ const CATALOG = [
   "chas_owner_cost_burden", "chas_renter_cost_burden", "chas_renter_severe_burden",
   "fhfa_hpi", "fhfa_hpi_all_transactions", "fmr_to_income", "hud_area_median_income",
   "hud_fmr_2br", "hud_income_limit_80", "modiv_median_assessed_value",
-  "modiv_median_lot_acres", "modiv_median_year_built", "modiv_multifamily_share",
+  "modiv_median_lot_acres", "modiv_median_tax_bill", "modiv_median_year_built",
+  "modiv_multifamily_share",
   "modiv_residential_parcels", "modiv_vacant_land_share", "mortgage_rate_30y",
   "net_migration_returns", "permits_total_units", "price_to_ami", "price_to_income",
   "rent_to_income", "unemployment_rate", "zhvi_sfr", "zori_all",

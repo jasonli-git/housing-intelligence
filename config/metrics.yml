@@ -143,12 +143,14 @@ metrics:
       conventional reference figure in housing policy.
     source_id: hud
 
-  # MOD-IV assessment aggregates. Every one is a municipality-level summary of the
-  # 3.48M-parcel file, computed in DuckDB and promoted as a single value per place
-  # (ARCHITECTURE #16). They describe the housing *stock* — how much of it there is,
-  # how old, on what lots — which nothing else in the warehouse measures.
+  # MOD-IV assessment aggregates. Every one is a summary of the 3.48M-parcel file,
+  # computed in DuckDB and promoted as a single value per place (ARCHITECTURE #16): per
+  # municipality, and since Milestone 17 per county over all of its parcels — every
+  # metric but the assessed value, which municipalities set at their own ratios. They
+  # describe the housing *stock* — how much of it there is, how old, on what lots, what
+  # it is taxed — which nothing else in the warehouse measures.
   #
-  # All six are snapshots: MOD-IV publishes one current composite, so these have a
+  # All seven are snapshots: MOD-IV publishes one current composite, so these have a
   # single period and therefore no change or CAGR. They are ranked by value instead
   # (ARCHITECTURE #52).
   modiv_median_assessed_value:
@@ -211,6 +213,20 @@ metrics:
     description: >-
       Class-4C (apartment) parcels as a share of class-2 plus class-4C. Measures parcels,
       not units, so a single 200-unit building counts once.
+    source_id: nj_modiv
+
+  # Milestone 17: the yearly bill behind the cost to own. Real dollars, unlike an
+  # assessment, so a county figure taken over all of its parcels means something.
+  modiv_median_tax_bill:
+    label: Annual property tax bill, typical home
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median of last year's total property tax (MOD-IV LAST_YR_TX) across class-2 (1-4
+      family residential) parcels carrying a bill. The bill as levied, before relief paid
+      to individual households. Per municipality, and per county over all of its parcels
+      rather than as a median of municipal medians.
     source_id: nj_modiv
 
   price_to_ami:

@@ -8,7 +8,8 @@ import { formatChange, formatMetric } from "@/lib/format";
 import type { Projected } from "@/lib/geo";
 import type { Section } from "@/lib/groups";
 import { windowLabel } from "@/lib/periods";
-import { WINDOWS, type WindowKey } from "@/lib/windows";
+import { rankWords } from "@/lib/ranks";
+import { WINDOWS, type WindowKey, windowNote } from "@/lib/windows";
 
 export type RankRow = {
   id: number;
@@ -137,13 +138,20 @@ export function CountyExplorer({
         </div>
       </div>
 
+      {/* Beside the control it explains, and only when that window is chosen. */}
+      {windowNote(key, measure.metric_id, measure.windows).map((note) => (
+        <p key={note} className="window-note">
+          {note}
+        </p>
+      ))}
+
       <div className="explorer">
         <div>
           <p className="readout" aria-live="polite">
             {focus ? (
               <>
-                <b>{focus.name}</b> · {formatChange(focus.change)} · now {latest(focus.latest)} ·
-                rank {focus.rank} of {focus.of}
+                <b>{focus.name}</b> · {formatChange(focus.change)} · now {latest(focus.latest)} ·{" "}
+                {rankWords(focus.rank, focus.of, "change", measure.direction, phrase)}
               </>
             ) : (
               "Point at a county on the map or in the table to read its figures."
@@ -160,8 +168,9 @@ export function CountyExplorer({
         </div>
         <div>
           <p className="table-note">
-            Rank 1 is the {measure.direction === "lower_is_better" ? "smallest" : "largest"} rise,
-            following the measure’s own direction.
+            Ranked by change {phrase}, not by level: rank 1 is the{" "}
+            {measure.direction === "lower_is_better" ? "smallest" : "largest"} rise, following
+            the measure’s own direction.
             {rows.length < map.shapes.length
               ? ` ${rows.length} of the ${map.shapes.length} counties have this measure.`
               : ""}

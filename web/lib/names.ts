@@ -12,6 +12,16 @@ export function displayName(region: { name: string; level: string }): string {
   return region.name;
 }
 
+/**
+ * A municipality's legal type from TIGER's `name_lsad` — "township" in "Montgomery
+ * township" — or null where the name carries none. It is what tells Boonton town from
+ * Boonton township: four New Jersey pairs share a name and a county.
+ */
+export function legalType(region: { name: string; name_lsad?: string }): string | null {
+  const lsad = region.name_lsad;
+  return lsad?.startsWith(`${region.name} `) ? lsad.slice(region.name.length + 1) : null;
+}
+
 const PLURALS: Record<string, string> = {
   state: "states",
   county: "counties",

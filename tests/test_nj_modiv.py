@@ -176,6 +176,7 @@ MODIV_METRICS = (
     "modiv_median_lot_acres",
     "modiv_vacant_land_share",
     "modiv_multifamily_share",
+    "modiv_median_tax_bill",
 )
 
 
@@ -241,6 +242,57 @@ def test_modiv_resolves_municipalities_by_code_not_by_guessing(
     assert rows["methods"] == 1
     assert rows["method"] == "nj_cd_code"
     assert rows["regions"] > 403, "must beat Zillow's name-matching ceiling"
+
+
+@warehouse
+def test_county_figures_come_from_every_parcel_in_the_county(
+    session: Session, modiv_loaded: None
+) -> None:
+    """A county's MOD-IV figures are taken over its parcels, not over municipal medians.
+
+    The county half of `CD_CODE` resolves by arithmetic, so every coded parcel reaches
+    its county, including those in the municipalities whose names do not match. A county
+    therefore counts at least as many residential parcels as its matched municipalities
+    do between them (Milestone 17).
+    """
+    rows = (
+        session.execute(
+            text(
+                """
+            SELECT c.value AS county,
+                   (SELECT coalesce(sum(m.value), 0)
+                    FROM fact_metric_observation m
+                    JOIN regions mr ON mr.region_id = m.region_id
+                    WHERE mr.parent_id = c.region_id
+                      AND m.metric_id = 'modiv_residential_parcels') AS towns
+            FROM fact_metric_observation c
+            JOIN regions r ON r.region_id = c.region_id
+            WHERE r.level = 'county' AND c.metric_id = 'modiv_residential_parcels'
+            """
+            )
+        )
+        .mappings()
+        .all()
+    )
+
+    assert len(rows) == 21
+    assert all(row["county"] >= row["towns"] for row in rows)
+
+
+@warehouse
+def test_assessed_value_stays_municipal(session: Session, modiv_loaded: None) -> None:
+    """Municipalities assess at their own ratios, so a county median would mix them."""
+    counties = session.execute(
+        text(
+            """
+            SELECT count(*) FROM fact_metric_observation f
+            JOIN regions r ON r.region_id = f.region_id
+            WHERE r.level = 'county' AND f.metric_id = 'modiv_median_assessed_value'
+            """
+        )
+    ).scalar_one()
+
+    assert counties == 0
 
 
 @warehouse

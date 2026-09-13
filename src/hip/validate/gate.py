@@ -48,6 +48,9 @@ VALUE_BOUNDS = {
     "modiv_median_lot_acres": (0.0, 10_000.0),
     "modiv_vacant_land_share": (0.0, 1.0),
     "modiv_multifamily_share": (0.0, 1.0),
+    # Milestone 17. A median yearly bill: the floor is below any real New Jersey median
+    # (Trenton's is about $3,200), the ceiling far above the dearest municipality's.
+    "modiv_median_tax_bill": (100.0, 1_000_000.0),
     # Milestone 21. Rates are shares; the FMR floor is below any real two-bedroom rent,
     # and the all-transactions index shares the purchase-only one's bounds.
     "acs_homeownership_rate": (0.0, 1.0),

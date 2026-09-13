@@ -68,6 +68,19 @@ export const TERMS: readonly Term[] = [
       "smoothed and seasonally adjusted.",
   },
   {
+    // Carries the packet's `fhfa_state_only` caveat on the New Jersey page, in plainer
+    // words, so the note is there for a reader who asks rather than a paragraph for all.
+    key: "fhfa-hpi",
+    title: "House price index",
+    phrases: ["House price index"],
+    definition:
+      "The Federal Housing Finance Agency’s repeat-sales index: how the price of the same " +
+      "homes changes from one sale to the next. An index, not a price — the purchase-only " +
+      "index is 100 in the first quarter of 1991, and the all-transactions index, which " +
+      "adds refinance appraisals, 100 in the first quarter of 1980. FHFA publishes it for " +
+      "New Jersey as a whole, not by county, so counties cannot be compared on it.",
+  },
+  {
     key: "modiv",
     title: "MOD-IV",
     phrases: ["MOD-IV"],

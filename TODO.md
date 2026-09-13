@@ -35,8 +35,11 @@ and every county page carries those five readings, every figure in them bound.
    0.14.2 added the review's column headers, licence box and theme control, and 0.14.3
    — the licence box across the page, its label in mono capitals — is Pages deployment
    `d8e0cbb0`. 0.14.4 — the licence box closed to its label and amber, the sources
-   footer closed to one line — is Pages deployment `e2a07bee`. Its section is below. 17
-   is next, with a note explaining the "Since 2019" window added to its row. Changed
+   footer closed to one line — is Pages deployment `e2a07bee`. Its section is below.
+   **Milestone 17 done 2026-09-13** as 0.15.0, in three slices each reviewed by the
+   owner; its section is below Milestone 18's. Built and not yet deployed: `make publish`
+   then `make deploy` ship it with the regenerated county explanations. 16 is next.
+   Changed
    from 18 → 16 → 17 on 2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
 **Before starting any of it:**
@@ -2570,6 +2573,111 @@ Verification
   design. Replace them when the pages are checked by eye.
 - Note: **the county picker does not preselect the county being viewed.** It opens on
   "Choose…" on every page; reading the path would need `usePathname` in the bar.
+
+## Milestone 17 — Consumer entry point
+
+Started 2026-09-13. **The deliverable:** the ROADMAP row's views, every one computed from
+rank, percentile and data the warehouse holds, with no model — ranks that name their
+basis, a verdict sentence on every region page, the "Since 2019" window explained, the
+tradeoff named, the cost to own month by month, "since the year I moved here", whether
+paychecks are keeping up, what the housing is like, "what can I afford here", and search
+disambiguated by county and legal type. What these views will not answer is recorded in
+ROADMAP.md under the Milestone 17 paragraph.
+
+Decisions taken with the owner at the start, 2026-09-13, recorded so they are not
+re-litigated:
+
+- **Within reach means housing costs at most 30% of gross income** — HUD's cost-burden
+  line, the one the site's CHAS and ACS burden measures already use. Owning is principal
+  and interest on the typical home value at the national 30-year rate, plus a twelfth of
+  the typical tax bill; renting is the observed rent. This replaces the row's first
+  sketch, inverting `price_to_income` and `price_to_ami`, which ignores rates and taxes.
+- **The default down payment is 20%**, the reader's to change. At 20% a conventional loan
+  carries no mortgage insurance, so the default leaves nothing out; below it, mortgage
+  insurance is named as left out.
+- **The property-tax metric enters the packet like every other metric, and the county
+  explanations are regenerated before deploy** — about $1 at the last measured cost of
+  the five-model set. Municipal packets carry no explanations, so only the 105 county
+  readings go stale.
+- **Three slices, each reviewed by the owner before the next.**
+
+### Slice A — reading the figures already on the page (no new data)
+
+- [x] **Ranks name their basis and direction** everywhere a rank is shown: "Rank by
+      change" and "Rank by value" over the ledger, current values and the report's
+      tables; each rank in words on hover and to a screen reader (`web/lib/ranks.ts`);
+      the New Jersey page's readout and note; and the ledger's note setting the region's
+      own home value's two ranks side by side (ARCHITECTURE #138).
+- [x] **A verdict sentence** on every region page and report (`web/lib/verdict.ts`):
+      price from the value rank, pace from the change rank in fifths, both ranks quoted,
+      the cohort named when smaller than the level; the ACS home value where Zillow has
+      none (#139).
+- [x] **Whether paychecks are keeping up**: price-to-income and rent-to-income over their
+      own shared years, a move under 2% called even (#139).
+- [x] **"Since 2019" explained** on the New Jersey page when chosen, with the
+      same-readings note read from the window dates and HUD's method change for Fair
+      Market Rent windows that span fiscal 2020 (#140).
+- [x] **What the housing is like**: year built, lot, homeownership, apartment share and
+      permits, whichever the region has. Counties show homeownership and permits only
+      until Slice B adds county MOD-IV rows.
+- [x] Tests: 112 dashboard tests, 24 of them new (`ranks`, `verdict`, `windows`); `tsc`
+      clean. Checked by eye on Mercer, Princeton, Millstone (no Zillow), ZIP 08540, the
+      report and the New Jersey page.
+- [ ] The owner's review.
+
+### Slice B — the cost to own (a new metric)
+
+- [x] **`modiv_median_tax_bill`**: the median `LAST_YR_TX` over class-2 parcels with a
+      positive bill, per municipality (553) and per county (21) from the parcels rather
+      than a median of medians — config, dbt, gate bounds, a caveat, the page section.
+      Essex $12,238 to Cumberland $4,563; $9,014 statewide (ARCHITECTURE #141).
+- [x] County rows for the other MOD-IV aggregates but the assessed value, which
+      municipalities set at their own ratios, so county pages get the housing profile.
+      Two warehouse tests: every county has rows, and assessed value stays municipal.
+- [x] **Monthly cost to own** and **rent against own** (`web/lib/cost.ts`,
+      `CostToOwn`): Zillow's value at the national rate, the reader's down payment,
+      a twelfth of the tax bill, the income at 30%, rent beside it, and what is left
+      out (#142). No section without a Zillow value; ZIPs show it without tax and say why.
+- [x] **The tradeoff named**: a tax bill in the highest third behind cheaper homes, or
+      the lowest third behind dearer ones — 1 county and 35 municipalities on
+      2026-09-13. Migration left out, with the reason (#142).
+- [x] A line under the verdict saying it is computed by fixed rules, not written by AI
+      (the owner's question on seeing Slice A).
+- [x] Regenerate the county explanations: `hip explain --all` wrote 105 — 21 counties by
+      five models — every figure bound and none refused; 0 of 105 stale afterwards
+      (2026-09-13). The run's log does not report spend; the estimate was about $1.
+- [x] Tests: 463 Python (2 new, county MOD-IV rows) and 123 dashboard (11 new, `cost`
+      and `tradeoff`), `tsc` clean. Checked by eye on Mercer, Prospect Park (tradeoff),
+      ZIP 08540 (no tax) and Prospect Park's report.
+- [ ] The owner's review.
+
+### Slice C — new views
+
+- [x] **"What can I afford here"** at `/afford`, linked from the New Jersey page: an
+      income, own or rent, a down payment; every county and municipality marked within
+      reach at 30% of gross income, on a two-state county map and in tables, 25 towns
+      before "Show all" (`web/lib/afford.ts`, `AffordExplorer`; ARCHITECTURE #144).
+- [x] **Since the year you moved here** above each region page's trend charts: July
+      against July, the ACS by survey end year, missing years said, lines precomputed at
+      build (`web/lib/since.ts`, `SinceYear`; #145).
+- [x] **Search** on the New Jersey page over `search.json`, a static file fetched on first
+      focus, each result with its legal type and county (`web/lib/search.ts`,
+      `PlaceSearch`; #143). The shared national-rate fetch moved to `lib/api.ts`.
+- [x] **FHFA's state-only note** on the New Jersey page became the glossary's "House
+      price index" definition, with the index bases, at the owner's request (#146).
+- [x] Tests: 140 dashboard tests, 17 of them new (`search`, `since`, `afford`); `tsc`
+      clean. Checked by eye: the afford page own and rent, search by keyboard to Boonton
+      township, Mercer's since-year lines.
+- [x] **Phone widths checked at 375px** on every page type, and three overflows fixed:
+      the New Jersey page's measure select (Milestone 18's, as wide as its longest
+      option), the "Rank by value" heading, and the rank-in-words spans (#138), which sat
+      outside their scroll box's clip until `.scroll-x` became their positioning context.
+      Every page now measures 375 wide.
+- [x] The owner's review, then Milestone 17's completion report (2026-09-13, 0.15.0).
+- Note: **the afford page's income opens at $100,000**, a presentation choice: the
+      warehouse holds median incomes per county and municipality but not for the state.
+- Note: **the region report prints the verdict sentences but not the cost to own.** A
+      printed version at the 20% default is a small addition if the owner wants it.
 
 ## Attribution and licensing
 

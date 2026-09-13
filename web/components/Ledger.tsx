@@ -6,6 +6,7 @@ import type { TablePlacement } from "@/lib/caveats";
 import { formatChange, formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { windowLabel } from "@/lib/periods";
+import { RANK_HEADING, rankWords } from "@/lib/ranks";
 
 // A 3px tick and a 1px gap, so 21 counties draw as 21 ticks.
 const TICK = 4;
@@ -16,11 +17,27 @@ const MAX_TICKS = 30;
 const TRACK = 84;
 
 /**
+ * A rank as "9 / 21" to the eye and in words to a screen reader and on hover — "9th of
+ * 21 by change over five years, largest rise first" — because the numbers alone do not
+ * say what was ranked (Milestone 17, `lib/ranks.ts`).
+ */
+export function RankText({ rank, of, words, className }: { rank: number; of: number; words: string; className?: string }) {
+  return (
+    <span className={className} title={words}>
+      <span aria-hidden="true">
+        {rank} / {of}
+      </span>
+      <span className="visually-hidden">{words}</span>
+    </span>
+  );
+}
+
+/**
  * Where a figure sits among its peers. The ticks or the track are the element's
  * background, so it is one marker and one box whatever the cohort; position and width
  * are data, which is why they are inline.
  */
-export function RankStrip({ rank, of }: { rank: number; of: number }) {
+export function RankStrip({ rank, of, words }: { rank: number; of: number; words: string }) {
   const ticks = of <= MAX_TICKS;
   const width = ticks ? of * TICK - 1 : TRACK;
   const left = ticks
@@ -33,9 +50,7 @@ export function RankStrip({ rank, of }: { rank: number; of: number }) {
       <span className={`strip ${ticks ? "ticks" : "track"}`} style={{ width }} aria-hidden="true">
         <i style={{ left }} />
       </span>
-      <span className="rank-n">
-        {rank} / {of}
-      </span>
+      <RankText rank={rank} of={of} words={words} className="rank-n" />
     </>
   );
 }
@@ -162,7 +177,7 @@ export function Ledger({
               <th scope="col" className="num">
                 5-yr change
               </th>
-              <th scope="col">Rank</th>
+              <th scope="col">{RANK_HEADING.change}</th>
               <th scope="col">Period</th>
             </tr>
             {section.rows.map((metric) => {
@@ -180,7 +195,11 @@ export function Ledger({
                     <ChangeCell pct={metric.pct_change} />
                     <td className="rank">
                       {metric.rank !== null && metric.of !== null ? (
-                        <RankStrip rank={metric.rank} of={metric.of} />
+                        <RankStrip
+                          rank={metric.rank}
+                          of={metric.of}
+                          words={rankWords(metric.rank, metric.of, "change", metric.direction)}
+                        />
                       ) : (
                         "—"
                       )}
