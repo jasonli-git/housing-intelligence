@@ -40,7 +40,8 @@ and every county page carries those five readings, every figure in them bound.
    owner; its section is below Milestone 18's. Live 2026-09-13 as Pages deployment
    `edbff905`, with the regenerated county explanations; the owner's review of it
    followed as 0.15.1, deployment `ce9c2ba9`, and the owning-against-renting table
-   as 0.15.2, deployment `5f9915d4`. 16 is next.
+   as 0.15.2, deployment `5f9915d4`; the chart-data trim as 0.15.3, deployment
+   `46912e87`. 16 is next.
    Changed
    from 18 → 16 → 17 on 2026-09-11: 17 before 16, because 16 followed 17 only by number.
 

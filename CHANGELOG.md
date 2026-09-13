@@ -3,6 +3,13 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.15.3] — 2026-09-13
+
+### Fixed
+- **Region pages are about 15 KB lighter** (#148): the trends carried two dates for every
+  reading and used only one. Mercer's page went from 323 KB to 308 KB and the site from
+  634 MB to 600 MB, with nothing on the page changed.
+
 ## [0.15.2] — 2026-09-13
 
 ### Changed
