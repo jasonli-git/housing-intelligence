@@ -245,8 +245,30 @@ details[open] > summary .when-closed { display: none; }
 .cost-lines .src { display: block; font: var(--text-label)/1.4 var(--font-mono); color: var(--text-muted); }
 .cost-lines .total { border-bottom: 1px solid var(--border); }
 .cost-lines .total dt, .cost-lines .total dd { color: var(--text-primary); font-weight: 600; }
-.cost-notes { font-size: var(--text-small); line-height: 1.5; color: var(--text-secondary); max-width: 62ch; }
-.cost-notes p { margin: 0 0 0.5rem; }
+/* Owning against renting as a table (the owner's review of 0.15.1): the two monthly costs
+   and the incomes they take in columns that line up, the difference on its own line. */
+.cost-compare { display: grid; gap: 0.5rem; align-content: start; max-width: 30rem; font-size: var(--text-small); color: var(--text-secondary); }
+.compare { width: 100%; font-variant-numeric: tabular-nums; }
+.compare th, .compare td { padding: 0.35rem 0; border-bottom: 1px solid var(--grid); vertical-align: baseline; }
+.compare th + th, .compare th + td, .compare td + td { padding-left: 1rem; }
+.compare thead th {
+  font: 500 var(--text-label)/1.3 var(--font-mono); letter-spacing: var(--track-label);
+  text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border);
+  vertical-align: bottom;
+}
+.compare .src { display: block; font: var(--text-label)/1.4 var(--font-mono); letter-spacing: 0; text-transform: none; color: var(--text-muted); }
+.compare tbody th { font-weight: 400; text-align: left; color: var(--text-secondary); }
+.compare td { color: var(--text-primary); white-space: nowrap; }
+.compare-gap { margin: 0.15rem 0 0; color: var(--text-primary); }
+.compare-gap b { font-weight: 600; }
+.compare-note { margin: 0; font-size: var(--text-note); line-height: 1.5; color: var(--text-muted); }
+.cost-left-out { margin: 0.75rem 0 0; }
+/* The headings open their definitions against the comparison column's right edge, not
+   the heading's own: "To own" sits mid-table, and a definition anchored to it ran 40px
+   off a 375px screen. `top: auto` keeps it just under the heading it explains. */
+.cost-compare { position: relative; }
+.compare thead .gl { position: static; }
+.compare thead .tip { top: auto; left: auto; right: 0; margin-top: 6px; }
 @media (max-width: 800px) { .cost-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* Finding a place (Milestone 17): a combobox whose results float over the page, each

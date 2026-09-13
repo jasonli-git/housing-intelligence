@@ -2688,6 +2688,14 @@ re-litigated:
       year, charts hidden for a year they have no reading in, and an opening year where
       every chart shows; charts now date readings by their period's end, which fixed an
       ACS axis that began five years early (#148).
+- [x] **Owning against renting as a table, at the owner's request (2026-09-13):** the cost
+      section's rent paragraph became a two-column table — a month, and the income to keep
+      it at 30% of pay, to own and to rent — with the difference on its own line and the
+      "different homes" note under it. It is drawn with dashes where there is no rent
+      figure, so the section keeps its shape; the owning ledger lost its income line,
+      which the table now carries. Each heading — To own, To rent, A month, Income to keep
+      it at 30% of pay — is a definition saying how its figures are worked out and where
+      they come from, filled in with the page's own rate, down payment and dates.
 
 ## Attribution and licensing
 
