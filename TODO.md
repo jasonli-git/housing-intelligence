@@ -38,7 +38,8 @@ and every county page carries those five readings, every figure in them bound.
    footer closed to one line — is Pages deployment `e2a07bee`. Its section is below.
    **Milestone 17 done 2026-09-13** as 0.15.0, in three slices each reviewed by the
    owner; its section is below Milestone 18's. Live 2026-09-13 as Pages deployment
-   `edbff905`, with the regenerated county explanations. 16 is next.
+   `edbff905`, with the regenerated county explanations; the owner's review of it
+   followed as 0.15.1, deployment `ce9c2ba9`. 16 is next.
    Changed
    from 18 → 16 → 17 on 2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
