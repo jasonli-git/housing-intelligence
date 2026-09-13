@@ -35,7 +35,7 @@ and every county page carries those five readings, every figure in them bound.
    0.14.2 added the review's column headers, licence box and theme control, and 0.14.3
    — the licence box across the page, its label in mono capitals — is Pages deployment
    `d8e0cbb0`. 0.14.4 — the licence box closed to its label and amber, the sources
-   footer closed to one line — is built and not yet deployed. Its section is below. 17
+   footer closed to one line — is Pages deployment `e2a07bee`. Its section is below. 17
    is next, with a note explaining the "Since 2019" window added to its row. Changed
    from 18 → 16 → 17 on 2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
