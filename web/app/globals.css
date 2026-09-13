@@ -152,27 +152,57 @@ main.shell { padding-bottom: 2rem; }
   background: var(--surface-1); color: var(--text-primary); box-shadow: 0 0 0 1px var(--border);
 }
 
-/* The non-commercial terms, across the page under the bar, boxed in the footer tag's
-   Non-commercial red (#128, #133, #135): on a phone, plain text made the top of the page
-   a wall of prose, and a coloured box breaks it and reads as terms before a word is
-   read. The label is set like the site's other labels, mono capitals, in the text-weight
-   red; the terms follow it on one line where they fit and beneath it where they do not.
-   Not print-hidden: the terms travel with a printout. The report's own copy uses the
-   same box. */
+/* The non-commercial terms, across the page under the bar (#128, #133, #135, #136).
+   Closed to their label, which is what a reader must not miss; the terms naming the
+   sources open beneath it. Amber, the colour of a condition rather than an error, with
+   the label in mono capitals at text weight. Not print-hidden, and printing opens it:
+   the terms travel with a printout. The report's own copy, kept for paper, uses the same
+   box, always open. */
 .licence { max-width: var(--shell); margin: 0 auto; padding: 0.75rem var(--gutter) 0; }
 .licence-box {
-  margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 1rem;
-  padding: 0.6rem 0.95rem; border: 1px solid var(--critical); border-radius: 10px;
+  margin: 0; border: 1px solid var(--notice); border-radius: 10px;
   background: var(--surface-2);
-  background: color-mix(in srgb, var(--critical) 7%, var(--surface-1));
+  background: color-mix(in srgb, var(--notice) 10%, var(--surface-1));
   font: 400 var(--text-small)/1.5 var(--font-text); color: var(--text-secondary);
 }
+p.licence-box {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 1rem;
+  padding: 0.6rem 0.95rem;
+}
+details.licence-box > summary { padding: 0.55rem 0.95rem; }
+/* Inside the box's rounded border, so the focus ring is drawn inside it too. */
+details.licence-box > summary:focus-visible { outline-offset: -3px; border-radius: 9px; }
+details.licence-box > .licence-text { margin: 0; padding: 0 0.95rem 0.65rem; }
 .licence-label {
   font: 600 var(--text-label)/1.5 var(--font-mono); letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--critical-text); white-space: nowrap;
+  text-transform: uppercase; color: var(--notice-text); white-space: nowrap;
 }
 .licence-text { flex: 1 1 28rem; min-width: 0; }
 @media print { .licence-label { color: #000000; } }
+
+/* A disclosure: a <details> whose summary is a line of the page, ending in a hint that
+   says what opening it gives. Native, so it needs no script and opens from the keyboard
+   and for find-in-page. The chevron turns without animating: the only motion on the
+   site is a colour settling. */
+.disclose {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.9rem;
+  list-style: none; cursor: pointer;
+}
+.disclose::-webkit-details-marker { display: none; }
+.disclose-hint {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 0.45rem;
+  font: 500 var(--text-label)/1.4 var(--font-mono); letter-spacing: var(--track-label);
+  text-transform: uppercase; color: var(--text-muted); white-space: nowrap;
+}
+.disclose-hint::after {
+  content: ""; width: 0.4em; height: 0.4em; margin-bottom: 0.25em;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+}
+details[open] > .disclose .disclose-hint::after { transform: rotate(-135deg); margin: 0.25em 0 0; }
+.disclose:hover .disclose-hint { color: var(--text-primary); }
+details:not([open]) > summary .when-open,
+details[open] > summary .when-closed { display: none; }
 
 /* ------------------------------------------------------------- page head --- */
 
@@ -445,13 +475,29 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 .status-note { font-size: var(--text-note); color: var(--text-muted); }
 
 /* ----------------------------------------------------------------- footer --- */
-/* Every source, its institution and its terms, on every page. A licence condition, so
-   quiet but never hidden: no collapse, no toggle, and it prints (ARCHITECTURE #71,
-   #128). Grouped by institution, which is where the room comes from. */
+/* Every source, its institution and its terms, on every page (ARCHITECTURE #71, #128).
+   Closed to one line naming every institution (#137): attribution is the naming, and the
+   naming never closes. The datasets, their links, cadences and terms open beneath it,
+   and print open. */
 .foot { border-top: 1px solid var(--border); margin-top: 3rem; }
+.foot-sources > .inst-grid { margin-top: 0.8rem; }
+/* A wrapping row rather than inline text: the names are adjacent elements with no space
+   between them, so inline they offer no place to break. The separator trails each name,
+   so a wrapped line ends on one instead of starting with it. */
+.foot-brief {
+  flex: 1 1 24rem; min-width: 0; display: flex; flex-wrap: wrap; row-gap: 0.1rem;
+  font-size: var(--text-note); color: var(--text-secondary);
+}
+.brief-item { white-space: nowrap; }
+.brief-item:not(:last-child)::after { content: "·"; content: "·" / ""; margin: 0 0.5rem; color: var(--text-muted); }
+.foot-brief abbr { text-decoration: none; }
 .foot-inner {
   max-width: var(--shell); margin: 0 auto; padding: 1.1rem var(--gutter) 1.5rem;
-  display: grid; gap: 0.8rem; font-size: 12.5px; color: var(--text-secondary);
+  /* minmax(0, 1fr), not the implicit auto track: the closed summary is one flex line,
+     and an auto track grows to its unwrapped width and carries every row past a
+     phone's edge. */
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8rem;
+  font-size: 12.5px; color: var(--text-secondary);
 }
 .foot-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.9rem; }
 .foot-label, .foot-tab {
@@ -474,7 +520,7 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 .ds-terms { display: block; font-size: 11.5px; color: var(--text-muted); }
 .nc-tag {
   font: 600 9.5px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--text-primary); border: 1px solid var(--critical); border-radius: 3px;
+  color: var(--text-primary); border: 1px solid var(--notice); border-radius: 3px;
   padding: 2px 4px; margin-left: 0.4rem; vertical-align: 1px; white-space: nowrap;
 }
 
@@ -515,6 +561,14 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
   .shell, .foot-inner, .licence { max-width: none; padding-left: 0; padding-right: 0; }
   .licence { display: block; }
   .licence-box { background: none; border-color: #000000; }
+  /* Paper gets what the screen keeps closed: the terms and every dataset. A browser
+     that cannot style ::details-content prints the licence label alone, and a report
+     still carries the full terms in its own box. */
+  .licence-box::details-content, .foot-sources::details-content {
+    content-visibility: visible; display: block;
+  }
+  .disclose-hint, .foot-brief { display: none; }
+  .foot-sources .foot-intro.when-open { display: inline; }
   .print-hide { display: none !important; }
   /* A URL under every link is noise on paper; the sources table already cites them. */
   a { color: inherit; text-decoration: none; }

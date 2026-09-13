@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { byInstitution, isRestricted } from "@/lib/sources";
+import { byInstitution, isRestricted, shortPublisher } from "@/lib/sources";
 
 const NOTICE_URL = "https://github.com/jasonli-git/housing-intelligence/blob/main/NOTICE";
 
@@ -16,11 +16,12 @@ const NOTICE_URL = "https://github.com/jasonli-git/housing-intelligence/blob/mai
  * a source was added — and drift here is a licence problem, not a stale-copy problem.
  *
  * Grouped by institution since Milestone 18 (ARCHITECTURE #128): an institution is named
- * once and a licence its datasets share is stated once, which is where the old footer's
- * height went. Every dataset still links to its publisher and carries how often it
- * updates. Nothing collapses: quiet, but never hidden, and it prints. The
- * non-commercial terms themselves are the licence line at the top of the page; here each
- * restricted dataset carries a tag that points to it.
+ * once and a licence its datasets share is stated once. Closed to one line since #137:
+ * every institution stays named, Zillow with its Non-commercial tag, and the datasets —
+ * each linked to its publisher, with how often it updates and its terms — open beneath
+ * it. What satisfies attribution is the naming, and the naming never closes. Printing
+ * opens the list (globals.css). The non-commercial terms themselves are the licence line
+ * at the top of the page; the tag points to it.
  *
  * Absent rather than wrong when the API cannot be reached: an attribution block listing
  * sources that may not be the ones actually behind the page would be worse than none,
@@ -32,54 +33,80 @@ export async function SourceFooter() {
 
   // `hip_derived` is the platform's own computed metrics, not a third party to credit.
   const external = sources.filter((s) => s.source_id !== "hip_derived");
+  const institutions = byInstitution(external);
 
   return (
     <footer className="foot" aria-labelledby="sources-heading">
       <div className="foot-inner">
-        <div className="foot-head">
-          <h2 className="foot-label" id="sources-heading">
-            Sources
-          </h2>
-          <span className="foot-intro">
-            Every figure on this site comes from one of these, and carries its release and
-            match method in the underlying packet.
-          </span>
-        </div>
-
-        <ul className="inst-grid" aria-label="Sources by institution">
-          {byInstitution(external).map((institution) => (
-            <li className="inst" key={institution.publisher}>
-              <span className="inst-name">{institution.publisher}</span>
-              {institution.license && <span className="inst-terms">{institution.license}</span>}
-              <ul>
-                {institution.sources.map((source) => (
-                  <li key={source.source_id}>
-                    {/* `homepage`, not `url`: for API-fetched sources the canonical root is
-                        the API itself, which returns JSON or a 404 to a reader who clicks it. */}
-                    <a
-                      href={source.homepage}
-                      rel="noreferrer noopener"
-                      target="_blank"
-                      aria-label={`${source.name} (opens ${new URL(source.homepage).host} in a new tab)`}
-                    >
-                      {source.name}
-                      <span className="out" aria-hidden="true">
-                        ↗
-                      </span>
-                    </a>
-                    {source.cadence && <span className="ds-meta">{source.cadence}</span>}
-                    {isRestricted(source) && (
+        <details className="foot-sources">
+          <summary className="foot-head disclose">
+            <h2 className="foot-label" id="sources-heading">
+              Sources
+            </h2>
+            <span className="foot-brief when-closed">
+              {institutions.map((institution) => {
+                const short = shortPublisher(institution.publisher);
+                return (
+                  <span className="brief-item" key={institution.publisher}>
+                    {short === institution.publisher ? (
+                      short
+                    ) : (
+                      <abbr title={institution.publisher}>{short}</abbr>
+                    )}
+                    {institution.sources.some(isRestricted) && (
                       <span className="nc-tag" title="See the licence line at the top of the page">
                         Non-commercial
                       </span>
                     )}
-                    {!institution.license && <span className="ds-terms">{source.license}</span>}
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
+                  </span>
+                );
+              })}
+            </span>
+            <span className="foot-intro when-open">
+              Every figure on this site comes from one of these, and carries its release and
+              match method in the underlying packet.
+            </span>
+            <span className="disclose-hint">
+              <span className="when-closed">All {external.length} datasets</span>
+              <span className="when-open">Hide</span>
+            </span>
+          </summary>
+
+          <ul className="inst-grid" aria-label="Sources by institution">
+            {institutions.map((institution) => (
+              <li className="inst" key={institution.publisher}>
+                <span className="inst-name">{institution.publisher}</span>
+                {institution.license && <span className="inst-terms">{institution.license}</span>}
+                <ul>
+                  {institution.sources.map((source) => (
+                    <li key={source.source_id}>
+                      {/* `homepage`, not `url`: for API-fetched sources the canonical root is
+                          the API itself, which returns JSON or a 404 to a reader who clicks it. */}
+                      <a
+                        href={source.homepage}
+                        rel="noreferrer noopener"
+                        target="_blank"
+                        aria-label={`${source.name} (opens ${new URL(source.homepage).host} in a new tab)`}
+                      >
+                        {source.name}
+                        <span className="out" aria-hidden="true">
+                          ↗
+                        </span>
+                      </a>
+                      {source.cadence && <span className="ds-meta">{source.cadence}</span>}
+                      {isRestricted(source) && (
+                        <span className="nc-tag" title="See the licence line at the top of the page">
+                          Non-commercial
+                        </span>
+                      )}
+                      {!institution.license && <span className="ds-terms">{source.license}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </details>
 
         {/* The last line mirrors the first: NOTICE leads it in the SOURCES label's style. */}
         <div className="foot-head">

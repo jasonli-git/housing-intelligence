@@ -34,7 +34,9 @@ and every county page carries those five readings, every figure in them bound.
    2026-09-12: 0.14.1 republished the sixteen pages the first deploy shipped broken, and
    0.14.2 added the review's column headers, licence box and theme control, and 0.14.3
    — the licence box across the page, its label in mono capitals — is Pages deployment
-   `d8e0cbb0`. Its section is below. 17 is next. Changed
+   `d8e0cbb0`. 0.14.4 — the licence box closed to its label and amber, the sources
+   footer closed to one line — is built and not yet deployed. Its section is below. 17
+   is next, with a note explaining the "Since 2019" window added to its row. Changed
    from 18 → 16 → 17 on 2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
 **Before starting any of it:**
@@ -2555,6 +2557,15 @@ Verification
       than under the county picker, its label in mono capitals and a new text-weight red
       (`--critical-text`, 5.8:1 light and 6.9:1 dark on the box's tint), the terms beside
       it on a wide screen and beneath it on a phone (ARCHITECTURE #135).
+- [x] **The licence box and the footer closed, at the owner's request:** the box opens
+      from its "Not for commercial use" label and is amber rather than red, which read as
+      an error (`--notice`, `--notice-text`; ARCHITECTURE #136); the footer closes to one
+      line naming every institution, Zillow tagged, with its 13 datasets beneath it
+      (#137). Both are native `<details>` and print open.
+- Note: **the print rule that opens them, `::details-content`, was checked in Chromium
+      only.** A browser without it prints the licence label alone and the footer's
+      institutions without their datasets; a report's own terms and sources table are
+      unaffected. Check Safari and Firefox print previews before relying on it.
 - Note: **`screenshots/` predates Milestone 18**, so the README's pictures show the old
   design. Replace them when the pages are checked by eye.
 - Note: **the county picker does not preselect the county being viewed.** It opens on

@@ -41,6 +41,28 @@ export function byInstitution<T extends SourceLike>(sources: T[]): Institution<T
   }));
 }
 
+/**
+ * The name the closed footer gives an institution: the short form its data is known by.
+ *
+ * Presentation, like the section names in `groups.ts`: the registry's `publisher` is the
+ * full name, which the open footer and every report still print, and the closed line has
+ * to fit nine of them. A publisher missing here keeps its full name, so a new source is
+ * only ever left long, never dropped or mislabelled.
+ */
+const SHORT_PUBLISHERS: Record<string, string> = {
+  "U.S. Census Bureau": "Census Bureau",
+  "U.S. Department of Housing and Urban Development": "HUD",
+  "Federal Reserve Bank of St. Louis": "St. Louis Fed",
+  "Federal Housing Finance Agency": "FHFA",
+  "U.S. Bureau of Labor Statistics": "BLS",
+  "New Jersey Division of Taxation": "NJ Division of Taxation",
+  "Internal Revenue Service": "IRS",
+};
+
+export function shortPublisher(publisher: string): string {
+  return SHORT_PUBLISHERS[publisher] ?? publisher;
+}
+
 /** Whether a source's terms forbid commercial use — the line a reader must not miss. */
 export function isRestricted(source: { license: string }): boolean {
   return /non-commercial/i.test(source.license);

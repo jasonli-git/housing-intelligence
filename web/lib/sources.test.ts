@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { byInstitution, isRestricted, licenceLine } from "@/lib/sources";
+import { byInstitution, isRestricted, licenceLine, shortPublisher } from "@/lib/sources";
 
 const PD = "Public domain (U.S. Government work)";
 const NC = "Free for non-commercial use with attribution";
@@ -8,6 +8,17 @@ const NC = "Free for non-commercial use with attribution";
 function source(source_id: string, publisher: string, license = PD) {
   return { source_id, name: source_id, publisher, license, homepage: "https://x", cadence: "annual" };
 }
+
+describe("shortPublisher", () => {
+  it("gives a known institution the name its data goes by", () => {
+    expect(shortPublisher("U.S. Department of Housing and Urban Development")).toBe("HUD");
+  });
+
+  it("leaves an unknown institution its full name rather than dropping it", () => {
+    expect(shortPublisher("Zillow Research")).toBe("Zillow Research");
+    expect(shortPublisher("A New Publisher")).toBe("A New Publisher");
+  });
+});
 
 describe("byInstitution", () => {
   it("groups by publisher in the order each first appears", () => {

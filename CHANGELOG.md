@@ -3,6 +3,16 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.14.4] — 2026-09-12
+
+### Changed
+- **The non-commercial box opens from its label** (#136): "Not for commercial use", with
+  the terms naming the restricted sources one click away, in amber rather than a red that
+  read as an error. Printing opens it.
+- **The sources footer closes to one line** (#137) naming every institution, Zillow with
+  its Non-commercial tag; all 13 datasets, with their links, update cadences and terms,
+  open beneath it, and print open.
+
 ## [0.14.3] — 2026-09-12
 
 ### Changed

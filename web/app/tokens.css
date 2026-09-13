@@ -79,10 +79,12 @@
 
   --good: #0ca30c;
   --critical: #d03b3b;
-  /* --critical is a border and a tint; small text in it falls under 4.5:1 on the
-     licence box's tint. This is the same red at text weight: 5.8:1 on the tint in
-     light, 6.9:1 in dark. */
-  --critical-text: #b3261e;
+  /* Amber, for a condition of use rather than an error: the licence box and the
+     footer's Non-commercial tag (#136). --notice is a border and a tint, 3.2:1 against
+     the page; --notice-text is the same hue at text weight, 5.9:1 on the box's tint in
+     light and 8.9:1 in dark. */
+  --notice: #b8860b;
+  --notice-text: #855000;
   --focus: #0b0b0b;
 
   /* ---------- the shared bar: jasonli.app's values (#122) ---------- */
@@ -116,7 +118,8 @@
     --div-mid: #383835;
     --up: #ec835a;
     --down: #86b6ef;
-    --critical-text: #f28b82;
+    --notice: #d9a13b;
+    --notice-text: #f0c36a;
     --focus: #ffffff;
     --jl-ink: #efeeec;
     --jl-ink: oklch(0.95 0.003 95);
@@ -143,7 +146,8 @@
   --div-mid: #383835;
   --up: #ec835a;
   --down: #86b6ef;
-  --critical-text: #f28b82;
+  --notice: #d9a13b;
+  --notice-text: #f0c36a;
   --focus: #ffffff;
   --jl-ink: #efeeec;
   --jl-ink: oklch(0.95 0.003 95);
