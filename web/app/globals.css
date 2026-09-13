@@ -299,6 +299,22 @@ details[open] > summary .when-closed { display: none; }
 .reach-mark { font: var(--text-label)/1.4 var(--font-mono); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--text-secondary); white-space: nowrap; }
 .ranks.towns .result-detail { margin-left: 0.4rem; }
 .afford-notes { margin-top: 1.25rem; max-width: 84ch; }
+
+/* Reading on request (the owner's review of Milestone 17): the paychecks sentence and an
+   interpretation past its first paragraph open when the reader asks. Their summaries sit
+   inline with their text rather than stretching across the column. */
+.verdict-details { margin: 0.4rem 0 0; font-size: var(--text-small); color: var(--text-secondary); }
+.verdict-details > summary.disclose { justify-content: flex-start; gap: 0.6rem; }
+.verdict-details .disclose-hint { margin-left: 0; }
+.verdict-details-label { color: var(--text-primary); }
+.verdict-details > .verdict-more { margin-top: 0.3rem; }
+.interpretation-more { margin: 0 0 0.7rem; }
+.interpretation-more > summary { margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer; }
+.interpretation-more > summary:hover { color: var(--text-primary); }
+/* The trends' year: a dropdown and a slider over the same years. */
+.since-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
+.since-slider { flex: 1 1 12rem; max-width: 24rem; min-width: 0; accent-color: var(--series-1); }
+.since-range { font: var(--text-label)/1.4 var(--font-mono); color: var(--text-muted); white-space: nowrap; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
 
 /* Two columns — the figures and what a model made of them — stacked on a narrow screen. */

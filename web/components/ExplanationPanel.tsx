@@ -37,7 +37,13 @@ import { describe, matchedBy, period, segment, sourceOf, whatItIs } from "@/lib/
  * binding existed is shown as it always was, with a line saying its figures are
  * unverified — never with an empty list, which would claim there was nothing to check.
  *
- * A client component only because of the switcher's `useState`. With one explanation it
+ * Since the owner's review of Milestone 17 a reading opens at its first paragraph, the
+ * rest a click away: the model picker and the first paragraph say what the panel is and
+ * whether it is worth reading on, and a reading is several paragraphs a reader should
+ * choose. What must not be missed stays open — that the text is a model's, and whether
+ * it is out of date.
+ *
+ * A client component because of the switcher's `useState`. With one explanation it
  * renders exactly what it always did, and the page is a static export either way.
  */
 export function ExplanationPanel({
@@ -57,6 +63,20 @@ export function ExplanationPanel({
   // `?? null` because a response published before Milestone 13 has no field at all,
   // and that text is exactly as unverified as one whose binding is null.
   const binding = current.binding ?? null;
+
+  const paragraphs = segment(current.body, binding?.citations ?? []).map((runs, index) => (
+    <p key={index}>
+      {runs.map((run, at) =>
+        run.citation && binding ? (
+          <span key={at} className="cited" title={describe(run.citation, binding.releases)}>
+            {run.text}
+          </span>
+        ) : (
+          <Fragment key={at}>{run.text}</Fragment>
+        ),
+      )}
+    </p>
+  ));
 
   return (
     <section aria-labelledby={`${groupId}-heading`} className="interpretation">
@@ -95,8 +115,10 @@ export function ExplanationPanel({
               </button>
             ))}
           </div>
+          {/* Worded without "below" or "above": the options wrap onto several lines on a
+              phone, and the note has to read true wherever it lands. */}
           <p className="interpretation-switch-note">
-            Every option below describes the same figures from the same data packet. The
+            Every model here reads the same figures from the same data packet. The
             differences are the models&rsquo;, not the data&rsquo;s.
           </p>
         </>
@@ -109,23 +131,16 @@ export function ExplanationPanel({
         </p>
       )}
 
-      {segment(current.body, binding?.citations ?? []).map((runs, index) => (
-        <p key={index}>
-          {runs.map((run, at) =>
-            run.citation && binding ? (
-              <span
-                key={at}
-                className="cited"
-                title={describe(run.citation, binding.releases)}
-              >
-                {run.text}
-              </span>
-            ) : (
-              <Fragment key={at}>{run.text}</Fragment>
-            ),
-          )}
-        </p>
-      ))}
+      {paragraphs[0]}
+      {paragraphs.length > 1 && (
+        <details className="interpretation-more">
+          <summary>
+            Read the rest ({paragraphs.length - 1} more{" "}
+            {paragraphs.length === 2 ? "paragraph" : "paragraphs"})
+          </summary>
+          {paragraphs.slice(1)}
+        </details>
+      )}
 
       {binding === null ? (
         <p className="interpretation-unverified">

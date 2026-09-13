@@ -29,7 +29,7 @@ layer only explains metrics that were already computed.
 >
 >
 > **Version 2 is live.** The platform now publishes itself: `hip publish` records the
-> API's answers as 5,909 static files and the dashboard pre-renders 2,271 pages, served
+> API's answers as 5,917 static files and the dashboard pre-renders 2,272 pages, served
 > with no database and no application server in production. Milestone 10 measured what a
 > state costs on disk (3.4 GB for New Jersey, 40 kB per region of PostGIS geometry);
 > Milestone 11 put the result on the internet; Milestone 12 moved generation to hosted
@@ -349,7 +349,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 463 Python + 123 dashboard tests; API tests skip without a warehouse
+make test          # 463 Python + 143 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 

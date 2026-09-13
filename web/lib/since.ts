@@ -59,6 +59,18 @@ export function selectableYears(series: Point[][]): number[] {
   return [...years].filter((y) => y < latest).sort((a, b) => b - a);
 }
 
+/**
+ * The year the trends open at: ten years back, or later if a series starts later, so
+ * every chart has a reading on arrival and none is hidden before the reader has chosen
+ * anything. `years` is `selectableYears`' list, newest first.
+ */
+export function openingYear(series: Point[][], years: number[]): number {
+  if (years.length === 0) return 0;
+  const firsts = series.map(firstYear).filter((year): year is number => year !== null);
+  const target = Math.max(years[0] - 9, ...firsts);
+  return [...years].sort((a, b) => a - b).find((year) => year >= target) ?? years[0];
+}
+
 /** The first year a series reaches, for saying why a chosen year has no reading. */
 export function firstYear(points: Point[]): number | null {
   if (points.length === 0) return null;

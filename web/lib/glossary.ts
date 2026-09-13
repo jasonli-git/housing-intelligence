@@ -81,6 +81,18 @@ export const TERMS: readonly Term[] = [
       "New Jersey as a whole, not by county, so counties cannot be compared on it.",
   },
   {
+    // The tables keep the metrics' own labels — "Residential parcels", "Apartment share
+    // of residential parcels" — because renaming a metric changes every packet. The word
+    // is defined where it first appears instead.
+    key: "parcel",
+    title: "Parcel",
+    phrases: ["parcels"],
+    definition:
+      "One property on the tax roll: a lot and whatever stands on it. A one- to four-family " +
+      "home is one parcel, and so is a 200-unit apartment building, so parcels count " +
+      "properties, not homes.",
+  },
+  {
     key: "modiv",
     title: "MOD-IV",
     phrases: ["MOD-IV"],

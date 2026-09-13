@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { firstYear, selectableYears, since, sinceLine } from "@/lib/since";
+import { firstYear, openingYear, selectableYears, since, sinceLine } from "@/lib/since";
 
 const monthly = (year: number, m: number, value: number) => {
   const mm = String(m).padStart(2, "0");
@@ -73,6 +73,24 @@ describe("sinceLine", () => {
     const income = { metricId: "acs_median_hh_income", label: "Income", unit: "usd", points: [annual(2019, 1), annual(2023, 2)] };
 
     expect(sinceLine(income, 2016).text).toBe("no reading for 2016; the series begins in 2019");
+  });
+});
+
+describe("openingYear", () => {
+  const years = Array.from({ length: 26 }, (_, i) => 2025 - i); // 2025 … 2000, newest first
+
+  it("opens where every series has a reading, when that is later than ten years back", () => {
+    // Home values from 2000, rent from 2015, income from 2019: every chart shows at 2019.
+    const series = [[monthly(2000, 1, 1)], [monthly(2015, 1, 1)], [annual(2019, 1)]];
+    expect(openingYear(series, years)).toBe(2019);
+  });
+
+  it("opens ten years back when every series reaches that far", () => {
+    expect(openingYear([[monthly(2000, 1, 1)]], years)).toBe(2016);
+  });
+
+  it("falls back to the newest year when no year is late enough", () => {
+    expect(openingYear([[annual(2030, 1)]], years)).toBe(2025);
   });
 });
 

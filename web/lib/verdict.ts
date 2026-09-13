@@ -164,27 +164,79 @@ export function paychecks(metrics: PacketMetric[]): string | null {
   return sentences.join(" ");
 }
 
-export type ProfileItem = { metric_id: string; label: string; value: string };
+export type ProfileItem = { metric_id: string; label: string; value: string; definition: string };
 
 /**
  * What the housing here is like, from whichever of these the region has: how old its
  * homes are, on what lots, how many are owned or apartments, and whether anything is
- * being built. The MOD-IV figures are municipal, so a county has the last two only.
+ * being built. Each carries a definition shown on hover, focus or tap, because a short
+ * label cannot say what was counted.
+ *
+ * "Apartment buildings", not the metric's "apartment share of residential parcels": a
+ * parcel is tax-roll vocabulary, and what it counts here is buildings. The metric keeps
+ * its label, because renaming it would change every packet and stale every explanation.
  */
 export function housingProfile(levels: PacketLevel[]): ProfileItem[] {
   const find = (id: string) => levels.find((l) => l.metric_id === id);
   const items: ProfileItem[] = [];
 
   const built = find("modiv_median_year_built");
-  if (built) items.push({ metric_id: built.metric_id, label: "Typical home built", value: String(Math.round(built.value)) });
+  if (built) {
+    items.push({
+      metric_id: built.metric_id,
+      label: "Typical home built",
+      value: String(Math.round(built.value)),
+      definition:
+        "The median year one- to four-family homes here were built, among those New " +
+        "Jersey’s property tax records (MOD-IV) give a year for.",
+    });
+  }
   const lot = find("modiv_median_lot_acres");
-  if (lot) items.push({ metric_id: lot.metric_id, label: "Median lot", value: `${lot.value.toFixed(2)} acres` });
+  if (lot) {
+    items.push({
+      metric_id: lot.metric_id,
+      label: "Median lot",
+      value: `${lot.value.toFixed(2)} acres`,
+      definition:
+        "The median lot size of one- to four-family homes here, from the property tax " +
+        "records (MOD-IV). An acre is 43,560 square feet.",
+    });
+  }
   const owned = find("acs_homeownership_rate");
-  if (owned) items.push({ metric_id: owned.metric_id, label: "Households that own", value: formatMetric(owned.value, owned.unit, owned.metric_id) });
+  if (owned) {
+    items.push({
+      metric_id: owned.metric_id,
+      label: "Households that own",
+      value: formatMetric(owned.value, owned.unit, owned.metric_id),
+      definition:
+        "The share of occupied homes lived in by their owners rather than rented out, from " +
+        "the Census Bureau’s American Community Survey five-year estimate.",
+    });
+  }
   const apartments = find("modiv_multifamily_share");
-  if (apartments) items.push({ metric_id: apartments.metric_id, label: "Apartment parcels", value: formatMetric(apartments.value, apartments.unit, apartments.metric_id) });
+  if (apartments) {
+    items.push({
+      metric_id: apartments.metric_id,
+      label: "Apartment buildings",
+      value: formatMetric(apartments.value, apartments.unit, apartments.metric_id),
+      definition:
+        "Apartment buildings as a share of the residential properties on the tax roll — " +
+        "one- to four-family homes and apartment buildings. It counts buildings, not " +
+        "homes: a 200-unit building counts once.",
+    });
+  }
   const permits = find("permits_total_units");
-  if (permits) items.push({ metric_id: permits.metric_id, label: `Homes permitted in ${periodLabel(permits.period_end, permits.metric_id)}`, value: formatMetric(permits.value, permits.unit, permits.metric_id) });
+  if (permits) {
+    items.push({
+      metric_id: permits.metric_id,
+      label: `Homes permitted in ${periodLabel(permits.period_end, permits.metric_id)}`,
+      value: formatMetric(permits.value, permits.unit, permits.metric_id),
+      definition:
+        "New homes authorized by building permits that year, counted in units, from the " +
+        "Census Bureau’s Building Permits Survey. A permit is approval to build, not a " +
+        "finished home.",
+    });
+  }
 
   return items;
 }

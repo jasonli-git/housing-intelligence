@@ -5,8 +5,7 @@ import { CurrentValues } from "@/components/CurrentValues";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { Definition, Glossed } from "@/components/Glossed";
 import { Ledger, TableNotes } from "@/components/Ledger";
-import { SinceYear } from "@/components/SinceYear";
-import { TrendChart } from "@/components/TrendChart";
+import { TrendsExplorer } from "@/components/TrendsExplorer";
 import {
   api,
   nationalMortgageRate,
@@ -21,7 +20,6 @@ import type { Term } from "@/lib/glossary";
 import { groupRows } from "@/lib/groups";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, surveyYears } from "@/lib/periods";
-import { selectableYears, sinceLine } from "@/lib/since";
 import { housingProfile, paychecks, rankBasisExample, tradeoff, verdict } from "@/lib/verdict";
 
 // The only window published per region, and the only one with explanations
@@ -140,20 +138,6 @@ export default async function RegionPage({
   );
   const trends = series.filter((s) => s.observations.length >= 2);
 
-  // "Since the year you moved here": every year's lines worked out here, so the page
-  // carries a few sentences per year rather than every monthly reading. It opens ten
-  // years back, or at the earliest year the series reach.
-  const sinceSeries = trends.map(({ metricId, observations }) => {
-    const meta = findSeries(packet.metrics, packet.levels, metricId);
-    return { metricId, label: meta?.label ?? metricId, unit: meta?.unit ?? "", points: observations };
-  });
-  const sinceYears = selectableYears(sinceSeries.map((s) => s.points));
-  const sinceInitial =
-    sinceYears.find((year) => year <= (sinceYears[0] ?? 0) - 9) ?? sinceYears.at(-1) ?? 0;
-  const sinceLines = Object.fromEntries(
-    sinceYears.map((year) => [year, sinceSeries.map((s) => sinceLine(s, year))]),
-  );
-
   const name = displayName(region);
   const county = region.ancestors.find((a) => a.level === "county");
   const readings = explanations?.explanations ?? [];
@@ -218,10 +202,23 @@ export default async function RegionPage({
             {peerNoun(peer_level)}
           </p>
           {lead && <p className="verdict">{lead}</p>}
-          {paid && <p className="verdict-more">{paid}</p>}
           {trade && <p className="verdict-more">{trade}</p>}
-          {/* Said outright because the interpretation panel beside it is model-written,
-              and a reader should not have to guess which of the two this is (#139). */}
+          {/* On request, after the owner's review: the verdict is the answer, and the
+              paychecks comparison is the reading a reader chooses to go on to. */}
+          {paid && (
+            <details className="verdict-details">
+              <summary className="disclose">
+                <span className="verdict-details-label">Did paychecks keep up?</span>
+                <span className="disclose-hint">
+                  <span className="when-closed">Details</span>
+                  <span className="when-open">Hide</span>
+                </span>
+              </summary>
+              <p className="verdict-more">{paid}</p>
+            </details>
+          )}
+          {/* Said outright, and never folded away, because the interpretation panel beside
+              it is model-written and a reader should not have to guess which this is (#139). */}
           {lead && (
             <p className="verdict-source">
               Computed from the figures on this page by fixed rules, not written by AI.
@@ -232,7 +229,17 @@ export default async function RegionPage({
               <span className="eyebrow">The housing</span>
               {profile.map((item) => (
                 <span key={item.metric_id}>
-                  {item.label} <b>{item.value}</b>
+                  <Definition
+                    term={{
+                      key: `profile-${item.metric_id}`,
+                      title: item.label,
+                      phrases: [],
+                      definition: item.definition,
+                    }}
+                  >
+                    {item.label}
+                  </Definition>{" "}
+                  <b>{item.value}</b>
                 </span>
               ))}
             </p>
@@ -280,22 +287,23 @@ export default async function RegionPage({
       {trends.length > 0 && (
         <section className="section" aria-labelledby="trends-heading">
           <h2 id="trends-heading">Trends</h2>
-          {sinceYears.length > 0 && (
-            <SinceYear years={sinceYears} initial={sinceInitial} lines={sinceLines} />
-          )}
-          <div className="trends">
-            {trends.map(({ metricId, observations }) => {
+          <TrendsExplorer
+            series={trends.map(({ metricId, observations }) => {
               const meta = findSeries(packet.metrics, packet.levels, metricId);
               const unit = meta?.unit ?? "";
-              return (
-                <TrendChart
-                  key={metricId}
-                  points={observations.map((o) => ({ date: o.period_start, value: o.value }))}
-                  title={meta?.label ?? metricId}
-                  unit={unit}
-                  metricId={metricId}
-                >
-                  <details>
+              return {
+                metricId,
+                title: meta?.label ?? metricId,
+                unit,
+                points: observations.map((o) => ({
+                  period_start: o.period_start,
+                  period_end: o.period_end,
+                  value: o.value,
+                })),
+                // Keyed: it rides in a list of series into a client component, and React
+                // asks every element created in a list for a key.
+                table: (
+                  <details key={metricId}>
                     <summary>Values and their sources</summary>
                     <div className="scroll-x">
                       <table>
@@ -315,7 +323,7 @@ export default async function RegionPage({
                             .reverse()
                             .map((o) => (
                               <tr key={o.period_start}>
-                                <td className="nowrap">{o.period_start}</td>
+                                <td className="nowrap">{periodLabel(o.period_end, metricId)}</td>
                                 <td className="num">{formatMetric(o.value, unit, metricId)}</td>
                                 <td>{o.source_id}</td>
                                 <td>{o.match_method}</td>
@@ -325,10 +333,10 @@ export default async function RegionPage({
                       </table>
                     </div>
                   </details>
-                </TrendChart>
-              );
+                ),
+              };
             })}
-          </div>
+          />
         </section>
       )}
 

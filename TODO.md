@@ -37,8 +37,8 @@ and every county page carries those five readings, every figure in them bound.
    `d8e0cbb0`. 0.14.4 — the licence box closed to its label and amber, the sources
    footer closed to one line — is Pages deployment `e2a07bee`. Its section is below.
    **Milestone 17 done 2026-09-13** as 0.15.0, in three slices each reviewed by the
-   owner; its section is below Milestone 18's. Built and not yet deployed: `make publish`
-   then `make deploy` ship it with the regenerated county explanations. 16 is next.
+   owner; its section is below Milestone 18's. Live 2026-09-13 as Pages deployment
+   `edbff905`, with the regenerated county explanations. 16 is next.
    Changed
    from 18 → 16 → 17 on 2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
@@ -2678,6 +2678,15 @@ re-litigated:
       warehouse holds median incomes per county and municipality but not for the state.
 - Note: **the region report prints the verdict sentences but not the cost to own.** A
       printed version at the 20% default is a small addition if the owner wants it.
+- [x] **After 0.15.0, at the owner's request (2026-09-13):** the paychecks sentence and an
+      interpretation past its first paragraph open on request, with the computed-by-rules
+      line and the model disclaimer always visible; the housing profile's labels carry
+      definitions, "Apartment parcels" became "Apartment buildings", and "parcels" is a
+      glossary term in the tables; the model-picker note no longer says "below" (#147).
+      The trends gained a slider beside the dropdown, a marker on each chart at the chosen
+      year, charts hidden for a year they have no reading in, and an opening year where
+      every chart shows; charts now date readings by their period's end, which fixed an
+      ACS axis that began five years early (#148).
 
 ## Attribution and licensing
 

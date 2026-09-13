@@ -3,6 +3,28 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.15.1] — 2026-09-13
+
+The owner's review of 0.15.0: less to read at once, and the trends answer the year you
+pick.
+
+### Changed
+- **Region pages open with the answer and let you choose the depth** (#147): whether
+  paychecks kept up opens on request, and an interpretation shows its model picker and
+  first paragraph with the rest a click away. The line saying the verdict is computed, and
+  the note saying a reading is a language model's, always stay visible.
+- **The housing profile defines its terms** (#147): each label explains what was counted,
+  and "Apartment parcels" now reads "Apartment buildings".
+- **Trends mark the year you pick** (#148): a slider beside the dropdown, a marker on each
+  chart at that year, and a chart hidden while the year is outside its series. They open
+  at a year every chart covers.
+
+### Fixed
+- **Census-survey charts were dated five years early** (#148): an ACS estimate plotted at
+  the start of its five-year span, so the income chart's axis began at 2015 while every
+  table called the same estimates 2019 to 2023.
+- **The interpretation's note said "every option below"** while sitting below the options.
+
 ## [0.15.0] — 2026-09-13
 
 Milestone 17, the consumer entry point: the site starts answering the questions people

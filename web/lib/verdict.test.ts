@@ -176,13 +176,17 @@ describe("housingProfile", () => {
       level("modiv_median_lot_acres", { unit: "acres", value: 0.46 }),
     ];
 
-    expect(housingProfile(levels).map((item) => [item.label, item.value])).toEqual([
+    const profile = housingProfile(levels);
+
+    expect(profile.map((item) => [item.label, item.value])).toEqual([
       ["Typical home built", "1958"],
       ["Median lot", "0.46 acres"],
       ["Households that own", "56.0%"],
-      ["Apartment parcels", "1.2%"],
+      ["Apartment buildings", "1.2%"],
       ["Homes permitted in 2024", "205"],
     ]);
+    // Every item says what was counted, because a short label cannot.
+    expect(profile.every((item) => item.definition.length > 40)).toBe(true);
   });
 
   it("is empty when the region has none of them", () => {
