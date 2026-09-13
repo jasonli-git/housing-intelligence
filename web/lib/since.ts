@@ -12,7 +12,13 @@
 import { formatMetric } from "@/lib/format";
 import { periodLabel } from "@/lib/periods";
 
-export type Point = { period_start: string; period_end: string; value: number };
+/**
+ * A reading as the trends carry it to the browser: its period's end and its value. The
+ * start is left out on purpose — the charts and the lines read only the end, and a
+ * second date on each of several hundred points per page cost about 14 KB a page
+ * (ARCHITECTURE #148).
+ */
+export type Point = { period_end: string; value: number };
 
 export type Since = {
   from: Point;

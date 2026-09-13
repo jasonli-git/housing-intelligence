@@ -425,7 +425,7 @@ The platform has no request-time compute, so production is a set of files rather
 running service. `make publish` builds them; `make deploy` sends them.
 
 ```bash
-make publish   # dist/artifacts (5,917 files, 109 MB) + dist/site (13,657 files, 632 MB)
+make publish   # dist/artifacts (5,917 files, 109 MB) + dist/site (13,657 files, 634 MB)
 make deploy    # artifacts -> object storage, site -> static host
 ```
 

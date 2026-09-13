@@ -39,7 +39,8 @@ and every county page carries those five readings, every figure in them bound.
    **Milestone 17 done 2026-09-13** as 0.15.0, in three slices each reviewed by the
    owner; its section is below Milestone 18's. Live 2026-09-13 as Pages deployment
    `edbff905`, with the regenerated county explanations; the owner's review of it
-   followed as 0.15.1, deployment `ce9c2ba9`. 16 is next.
+   followed as 0.15.1, deployment `ce9c2ba9`, and the owning-against-renting table
+   as 0.15.2, deployment `5f9915d4`. 16 is next.
    Changed
    from 18 → 16 → 17 on 2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
@@ -2696,6 +2697,9 @@ re-litigated:
       which the table now carries. Each heading — To own, To rent, A month, Income to keep
       it at 30% of pay — is a definition saying how its figures are worked out and where
       they come from, filled in with the page's own rate, down payment and dates.
+- [x] **The trends' points carry only their period's end**, the one date the charts and
+      lines read, taking back the page weight 0.15.1 added (#148's correction). Measured at
+      the next `make publish`.
 
 ## Attribution and licensing
 

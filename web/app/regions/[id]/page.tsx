@@ -295,11 +295,8 @@ export default async function RegionPage({
                 metricId,
                 title: meta?.label ?? metricId,
                 unit,
-                points: observations.map((o) => ({
-                  period_start: o.period_start,
-                  period_end: o.period_end,
-                  value: o.value,
-                })),
+                // The end date alone: it is all the charts and the lines read (#148).
+                points: observations.map((o) => ({ period_end: o.period_end, value: o.value })),
                 // Keyed: it rides in a list of series into a client component, and React
                 // asks every element created in a list for a key.
                 table: (

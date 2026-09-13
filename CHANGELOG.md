@@ -3,6 +3,17 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.15.2] — 2026-09-13
+
+### Changed
+- **Owning against renting is a table** in "What it costs per month": a month's cost and
+  the income it takes at 30% of pay, to own and to rent, side by side, with the difference
+  on its own line. Where Zillow publishes no rent, the table keeps its shape with dashes
+  and says why.
+- **The table's headings say how their figures are worked out** — the home value, loan,
+  rate, down payment, tax bill and rent index behind them, with this page's own figures
+  and dates — on hover or tap.
+
 ## [0.15.1] — 2026-09-13
 
 The owner's review of 0.15.0: less to read at once, and the trends answer the year you
