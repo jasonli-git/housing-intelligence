@@ -69,6 +69,7 @@ that rewrites the fact table has gone wrong.
 | 20 | ✅ done | **Reasoning effort as a measured variable** — `reasoning_effort` on `CandidateModel` (`default`, `disabled`, `low`), sent in each provider's own shape and recorded on every generation, so a configuration is a candidate rather than a hidden default; `default` sends nothing, leaving every `v2` request byte-identical. One id is one configuration: a resume under a changed setting is refused, two ids for one configuration fail `hip check-config`, and `hip explain` skips a model configured at an effort its benchmark did not measure. `deepseek-flash-nothink` and `gemini-3.7-flash-low` are configured for `v3`, and the evaluation report states the effort behind every figure. Planned as thinking-disabled variants of both; Gemini 3.7 Flash refuses its documented floor, `minimal`, and offers no off switch, so its variant is `low`. Measured on one county packet: thinking off cut DeepSeek V4.1 Flash from 5,693 output tokens to 512 for an answer of the same length, and `low` cut Gemini 3.7 Flash from 2,655 to 565. Runs no benchmark — the variants are measured in `v3` |
 | 21 | ✅ done | **New Jersey depth: the sources still missing** — HUD Fair Market Rents and HUD CHAS as two new sources on the token already in `.env`, ACS tenure and vacancy (B25003, B25002), FHFA's all-transactions index, and Census Building Permits at place level: eight metrics and 13,638 observations. Every county carries a Fair Market Rent and `fmr_to_income` against it (21 counties, where the Zillow-based ratio reached 19); every county and municipality an ownership and a vacancy rate, the first the warehouse has held; 21 counties and 563 of 564 municipalities CHAS owner, renter and severe cost burden; every municipality a permits series, resolved by FIPS MCD code and summing to the county totals exactly. `NJSTHPI` came from FHFA's own master file, already fetched, rather than FRED; the ACS tables got their own layers because the raw cache keys on the layer, not the URL; and HUD's 60-a-minute limit made download pacing a shared adapter setting (ARCHITECTURE #106–#111). A county packet is about a third larger. |
 | 22 | ✅ done | **DeepSeek migration and substitution detection** — DeepSeek retires models by *routing* them: `deepseek-v4-flash` already returns answers from `deepseek-flash` with HTTP 200, and `deepseek-v4-pro` follows at 04:00 UTC on 2026-09-14. A routed pin never fails, so SPEC's fall-through never fires and a regeneration would store the retired model's name against another model's prose. Every hosted response now has its served model checked against the requested ref, a mismatch is a recorded substitution, and `hip explain` probes hosted tiers so a withdrawn or routed pin genuinely falls through — which, it turned out, it never had. `deepseek-flash` joins as an unbenchmarked candidate; the benchmark itself waits for 21, 13 and 20. Scheduled ahead of 13 because of the vendor date |
+| 23 | ⬜ planned | **Presentation pass** — the owner's three-part review of 0.15.x on 2026-09-14, made one milestone: the site prettier and quicker to read before 16 changes the map. **New Jersey page:** the chosen measure explained in a feature card with a plain definition; the ranking in its own card, county names in text colour rather than link blue; "What can I afford?" as a call to action with its own income box that opens `/afford` filled in, and "can I afford this place?" — a place and an income together — on `/afford`; search that iOS AutoFill does not hijack; a GitHub link in the bar; a larger map, and a footer that reaches the bottom of a short page, at the same page width. **County pages:** a breadcrumb that reads as navigation; short answers to "Did paychecks keep up?", homes and rent separately; the computed-not-AI note as a label at the top of the verdict; the housing profile as stat cards with a line of context each; owning and renting as two cost cards with the difference beneath; a "Where … stands out" section, of change and value standouts both; the page led by its stand-outs, with the tables, current values, trends and full interpretation behind one expander that remembers a reader who opens it — layout B of two mockups, chosen 2026-09-14; the cost cards splitting a payment into money gone and money kept, so rent is set against what owning actually spends; a note on why the years begin in 2000. **Every page:** a plain-English definition for every metric, each ending with why it matters; the New Jersey page, county pages and reports each a little distinct within one design language; footnote marks that jump to their notes; and why owning can cost more a month than renting, explained where the cost cards show it. Tasks in [TODO.md](TODO.md) |
 
 The done criterion from Version 1 is unchanged: a milestone counts as done when its
 capability is reachable through the CLI, the API, or the dashboard on a clean checkout;
@@ -332,6 +333,22 @@ kept their numbers. Three reasons for 17 first:
 The cost is that 17's affordability view is drawn on the two-dimensional map first and
 moved onto the extruded one by 16.
 
+**Milestone 23 goes between 17 and 16, decided 2026-09-14, so the order is now 18, 17, 23,
+16.** It is the owner's review of what 18 and 17 shipped, and three reasons put it before
+the map:
+
+- It works on the pages 16 will not replace. The county pages, the reports and every
+  metric's definition are most of it, and none of that waits on a new map.
+- The New Jersey page's changes — the measure card, the ranking card, the call to action,
+  a larger map — settle what the page around a map should look like, so 16 designs its
+  extruded map into a finished page rather than a changing one.
+- 16 is still the riskiest milestone left and nothing waits on it (above); putting the
+  lower-risk pass first keeps the site improving while that risk is taken later.
+
+The cost is that the New Jersey page's map is enlarged and restyled in 23 and replaced in
+16, so some of 23's map work is short-lived; the card, controls and table around it carry
+over.
+
 ### Decisions this version needs from the user
 
 - **Hosted inference — settled 2026-09-01, [SPEC.md](SPEC.md) amended to v1.1.**
@@ -440,6 +457,18 @@ Version 2 table above. What remains unscheduled:
   table. A repeating footer is print CSS — `position: fixed` under `@media print`, or
   `@page` margin boxes — and support differs by browser, so it needs checking in
   Chrome, Safari and Firefox before it ships. Unscheduled.
+- **Single-family rent for the owning-against-renting comparison** — Zillow publishes a
+  single-family rent index only by metro area; its county, city and ZIP files do not exist
+  (checked 2026-09-14). Where a county's metro fits it, it sets a house against a house:
+  the Trenton metro is Mercer County alone, where single-family rent is $2,925 against
+  $2,606 for all rentals, so owning's money gone ($2,654) is $271 below renting a similar
+  house. Parked in Milestone 23 by the owner's choice, because it needs a metro level the
+  warehouse does not have, covers only part of the state — Trenton, Philadelphia, Atlantic
+  City, Vineland, Ocean City — and fits worst in the New York metro across most of northern
+  New Jersey, where single-family and all rents differ by 1%. Milestone 23 keeps the
+  all-rental figure and says plainly that houses usually rent for more. Revisit if Zillow
+  publishes it by county or town, or if a metro level arrives for another reason.
+  Unscheduled.
 - **"Somewhere like here, but cheaper"** — the places nearest a region on a small, named
   set of measures (rent, median year built, lot size, homeownership) with a lower home
   value. Deterministic, and a natural companion to Milestone 17's views, but "like here"
