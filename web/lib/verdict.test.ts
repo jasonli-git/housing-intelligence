@@ -4,6 +4,7 @@ import type { PacketLevel, PacketMetric } from "@/lib/api";
 import {
   housingProfile,
   pace,
+  paycheckAnswers,
   paychecks,
   rankBasisExample,
   standing,
@@ -166,6 +167,29 @@ describe("paychecks", () => {
   });
 });
 
+describe("paycheckAnswers", () => {
+  const years = { window_start: "2019-12-31", window_end: "2023-12-31", unit: "ratio" };
+
+  it("answers homes and rent apart, by the paychecks rule", () => {
+    const metrics = [
+      metric("price_to_income", { ...years, start_value: 3.423, end_value: 4.126 }),
+      metric("rent_to_income", { ...years, start_value: 0.3, end_value: 0.29 }),
+    ];
+
+    expect(paycheckAnswers(metrics)).toEqual({ homes: "No", rent: "Yes" });
+  });
+
+  it("calls a move under two percent about even, and answers homes alone without rent", () => {
+    expect(
+      paycheckAnswers([metric("price_to_income", { ...years, start_value: 4, end_value: 4.05 })]),
+    ).toEqual({ homes: "About even", rent: null });
+  });
+
+  it("is absent without price-to-income", () => {
+    expect(paycheckAnswers([metric("rent_to_income", years)])).toBeNull();
+  });
+});
+
 describe("housingProfile", () => {
   it("lists what the region has, in a fixed order", () => {
     const levels = [
@@ -187,6 +211,41 @@ describe("housingProfile", () => {
     ]);
     // Every item says what was counted, because a short label cannot.
     expect(profile.every((item) => item.definition.length > 40)).toBe(true);
+  });
+
+  it("places each figure among its peers, and gives people their change", () => {
+    const levels = [
+      level("modiv_median_year_built", { unit: "year", value: 1960, rank: 13, of: 21 }),
+      level("acs_homeownership_rate", { unit: "ratio", value: 0.619, rank: 17, of: 21 }),
+      level("modiv_multifamily_share", { unit: "ratio", value: 0.005, rank: 6, of: 21 }),
+      level("acs_vacancy_rate", { unit: "ratio", value: 0.061, rank: 11, of: 21 }),
+      level("acs_population", {
+        unit: "count",
+        value: 383286,
+        period_start: "2019-01-01",
+        period_end: "2023-12-31",
+      }),
+    ];
+    const metrics = [
+      metric("acs_population", {
+        unit: "count",
+        pct_change: 4.18,
+        window_start: "2018-12-31",
+        window_end: "2023-12-31",
+      }),
+    ];
+
+    const context = Object.fromEntries(
+      housingProfile(levels, metrics).map((item) => [item.label, item.context]),
+    );
+
+    expect(context).toEqual({
+      "Typical home built": "older than most · 13th of 21",
+      "Households that own": "fewer than most · 17th of 21",
+      "Apartment buildings": "more than most · 6th of 21",
+      "Homes standing empty": "near the middle · 11th of 21",
+      People: "up 4.2%, 2018 to 2023",
+    });
   });
 
   it("is empty when the region has none of them", () => {

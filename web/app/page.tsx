@@ -1,8 +1,7 @@
-import Link from "next/link";
-
+import { AffordCta } from "@/components/AffordCta";
 import { CountyExplorer, type Measure } from "@/components/CountyExplorer";
-import { Glossed } from "@/components/Glossed";
-import { PlaceSearch } from "@/components/PlaceSearch";
+import { Kind } from "@/components/Crumbs";
+import { MetricTerm } from "@/components/Glossed";
 import { api } from "@/lib/api";
 import { formatMetric } from "@/lib/format";
 import { project } from "@/lib/geo";
@@ -14,13 +13,14 @@ import { WINDOWS } from "@/lib/windows";
 const DEFAULT_MEASURE = "zhvi_sfr";
 
 // Box the county outlines are projected into. New Jersey is taller than it is wide.
-const MAP_WIDTH = 420;
-const MAP_HEIGHT = 560;
+// Larger since Milestone 23: at 420 wide the page read as zoomed out.
+const MAP_WIDTH = 540;
+const MAP_HEIGHT = 720;
 
-// Metrics whose caveat the glossary already carries, as the definition on their label:
-// "House price index" says, in plainer words, that FHFA publishes no county series. The
-// packet's caveat is unchanged; on this page it is there for a reader who asks.
-const CAVEAT_IN_GLOSSARY: ReadonlySet<string> = new Set(["fhfa_hpi", "fhfa_hpi_all_transactions"]);
+// Metrics whose caveat their definition already carries: both FHFA indexes say they are
+// published for the state only. The packet's caveat is unchanged; on this page it is
+// there for a reader who asks (ARCHITECTURE #146).
+const CAVEAT_IN_DEFINITION: ReadonlySet<string> = new Set(["fhfa_hpi", "fhfa_hpi_all_transactions"]);
 
 /**
  * The New Jersey page: the state's counties, compared on whichever measure and window
@@ -98,25 +98,21 @@ export default async function NewJerseyPage() {
   const levels = statewide?.levels ?? [];
   const statewideNotes = (statewide?.caveat_scopes ?? [])
     .filter((scope) => scope.metric_ids.some((id) => levels.some((l) => l.metric_id === id)))
-    .filter((scope) => !scope.metric_ids.every((id) => CAVEAT_IN_GLOSSARY.has(id)))
+    .filter((scope) => !scope.metric_ids.every((id) => CAVEAT_IN_DEFINITION.has(id)))
     .map((scope) => scope.text);
-  const defined = new Set<string>();
 
   return (
     <main className="shell">
-      <header className="page-head">
+      <header className="page-head" data-kind="state">
         <div>
+          <Kind kind="state" />
           <h1 className="page-title">New Jersey</h1>
-          <p className="meta">
-            The state’s {geo.features.length} counties, compared on the measure and window you
-            choose. Every county links to its own page and report.
-          </p>
           {levels.length > 0 && (
             <p className="statewide">
               <span className="eyebrow">Statewide</span>
               {levels.map((level) => (
                 <span key={level.metric_id}>
-                  <Glossed text={level.label} defined={defined} />{" "}
+                  <MetricTerm metricId={level.metric_id} label={level.label} scope="statewide" />{" "}
                   <b>{formatMetric(level.value, level.unit, level.metric_id)}</b>{" "}
                   ({periodLabel(level.period_end, level.metric_id)})
                 </span>
@@ -129,13 +125,7 @@ export default async function NewJerseyPage() {
             </p>
           ))}
         </div>
-        {/* On the map's page, where the ROADMAP puts search (Milestone 17). */}
-        <div className="actions">
-          <PlaceSearch />
-          <Link className="button" href="/afford">
-            What can I afford?
-          </Link>
-        </div>
+        <AffordCta />
       </header>
 
       {initial ? (

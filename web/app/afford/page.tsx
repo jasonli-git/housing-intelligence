@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AffordExplorer } from "@/components/AffordExplorer";
+import { Crumbs, Kind } from "@/components/Crumbs";
 import type { Place } from "@/lib/afford";
 import { api, nationalMortgageRate, type RankedRegion } from "@/lib/api";
 import { project } from "@/lib/geo";
@@ -94,11 +95,10 @@ export default async function AffordPage() {
 
   return (
     <main className="shell">
-      <header className="page-head">
+      <header className="page-head" data-kind="tool">
         <div>
-          <p className="crumbs">
-            <Link href="/">New Jersey</Link>
-          </p>
+          <Crumbs trail={[{ href: "/", label: "New Jersey" }]} here="What can I afford?" />
+          <Kind kind="tool" />
           <h1 className="page-title">What can I afford?</h1>
           <p className="meta">
             Where the typical home is within reach of a household income — owned or rented —

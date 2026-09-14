@@ -2705,8 +2705,25 @@ re-litigated:
 
 ## Milestone 23 — Presentation pass
 
-Planned 2026-09-14 from the owner's review of 0.15.x, sent in three parts; **nothing is
-built yet**. Queued after 17 and before 16 (ROADMAP). The goal, in the owner's words: make
+Planned 2026-09-14 from the owner's review of 0.15.x, sent in three parts, and **started
+the same day** in three slices, each reviewed by the owner before the next:
+
+- **Slice A, every page:** a definition for every metric (the owner reviews the wording),
+  footnote marks that link to their notes, a kind label and accent per page type, the
+  GitHub link, the breadcrumb, a footer that reaches the bottom of a short page, and search
+  in the shared bar with the iOS AutoFill fix.
+- **Slice B, the New Jersey page and `/afford`:** the measure card, the ranking card, the
+  call to action, a larger map, "can I afford this place?", and the neutral "beyond reach".
+- **Slice C, county pages and reports:** layout B, the paychecks short answers, the
+  computed label, the housing and cost cards, the stand-outs, the year note, the report's
+  cost cards and distinct identity, and the thin pages checked.
+
+**Slice A built 2026-09-14** (ARCHITECTURE #149–#151) and approved by the owner the same
+day. **Slice B built 2026-09-14** (#152–#155) and approved the same day. **Slice C built
+2026-09-14** (#156–#160): 167 dashboard tests, 16 new (`cost`, `verdict`, `standouts`,
+`since`), `tsc` clean; checked by eye on Mercer at 1280px and 375px and in the dark theme,
+its report, ZIP 08540 and Millstone, with nothing wider than the screen; awaiting the
+owner's review, then the milestone's completion (CHANGELOG, README, ROADMAP). Queued after 17 and before 16 (ROADMAP). The goal, in the owner's words: make
 the website prettier and deliver insights faster. The notes are sorted below into tasks;
 quoted wording is the owner's.
 
@@ -2726,72 +2743,79 @@ quoted wording is the owner's.
 
 ### New Jersey page
 
-- [ ] Delete "The state's 21 counties, compared on the measure and window you choose…" and
+- [x] Delete "The state's 21 counties, compared on the measure and window you choose…" and
       "Point at a county on the map or in the table to read its figures."
-- [ ] The line above the controls ("Home value index, single-family, change over five
+- [x] The line above the controls ("Home value index, single-family, change over five
       years, by county…") becomes a feature card — the measure's name, a one-sentence plain
       definition of it, the window and dates — with a little design flair to draw the eye.
-- [ ] "House price index, all transactions" gets its own definition: refinance appraisals
+- [x] "House price index, all transactions" gets its own definition: refinance appraisals
       included, 100 in the first quarter of 1980.
-- [ ] The ranked-by-change table in its own card; county names in text colour rather than
+- [x] The "Since 2019" note inside the measure card, to the right of the definition, set
+      apart as a note (the owner's review of slice B, 2026-09-14): a dashed inset slip
+      labelled "About “Since 2019”", under the definition on a phone.
+- [x] "Since 2019" read "2018 → Jul 2026" for Zillow's measures (found in the same
+      review): a monthly series' December reading is now named by its month, "Dec 2018 →
+      Jul 2026"; the window was always right, only its label was not (#155).
+- [x] The ranked-by-change table in its own card; county names in text colour rather than
       a generic link blue, the whole row lit on hover, a "›" at its end, still keyboard
       reachable.
-- [ ] Search on iOS: AutoFill offers the reader's own ZIP code because the placeholder says
+- [x] Search on iOS: AutoFill offers the reader's own ZIP code because the placeholder says
       "ZIP code", and a value it types in does not open the list, so the reader deletes and
       retypes. Reword the placeholder, turn off autofill, autocorrect and capitalisation on
       the box, and open the list for any value that arrives.
-- [ ] "What can I afford?" distinct from search, which it now reads as the submit button
+- [x] "What can I afford?" distinct from search, which it now reads as the submit button
       for: a call-to-action card with its own income box, opening `/afford` with it filled in.
-- [ ] On `/afford`, "can I afford a specific place?": a place and an income together,
+- [x] On `/afford`, "can I afford a specific place?": a place and an income together,
       answered for that place — monthly cost, share of income, within reach or not — beside
       the map and the lists. The owner's search by location and salary at once.
-- [ ] A GitHub link in the bar, to https://github.com/jasonli-git/housing-intelligence.
-- [ ] One size bigger at the default zoom: at 100% the page looks zoomed out and its
+- [x] A GitHub link in the bar, to https://github.com/jasonli-git/housing-intelligence.
+- [x] One size bigger at the default zoom: at 100% the page looks zoomed out and its
       footer stops short of the bottom of the screen, which county pages do not. A larger map
       and table, and the footer pinned to the bottom of any page shorter than the window. The
       page width stays the same on every page.
 
 ### County pages
 
-- [ ] A breadcrumb that reads as navigation rather than "New Jersey / Somerset County /
+- [x] A breadcrumb that reads as navigation rather than "New Jersey / Somerset County /
       Report" in plain text: mono labels, "›" between them, a back arrow on the first.
-- [ ] "Did paychecks keep up?" with short answers, homes and rent separately — "Homes: No ·
+- [x] "Did paychecks keep up?" with short answers, homes and rent separately — "Homes: No ·
       Rent: Yes" — by the rule the sentence already uses: a ratio up more than 2% is No, down
       more than 2% is Yes, otherwise "About even". Homes alone where there is no rent.
-- [ ] The "Computed from the figures on this page by fixed rules" note as a label at the
+- [x] The "Computed from the figures on this page by fixed rules" note as a label at the
       top of the verdict ("✓ Computed from the data · not AI"), its full sentence as the
       label's definition — the counterpart of the interpretation panel's own label.
-- [ ] "The housing" as stat cards: a big number, a label, and a line of context from ranks
+- [x] "The housing" as stat cards: a big number, a label, and a line of context from ranks
       the packet already carries ("61.9% of households own · 17th of 21"). Add the vacancy
       rate and the five-year population change.
-- [ ] "What it costs per month" as two cards, to own and to rent, each leading with its
+- [x] "What it costs per month" as two cards, to own and to rent, each leading with its
       monthly figure and its lines beneath, the difference in a strip under both; the source
       definitions stay on the card headings. The section most people will turn to first
       should stand out.
-- [ ] Remove "Hover or tap a heading for how its figures are worked out" and any note like
+- [x] Remove "Hover or tap a heading for how its figures are worked out" and any note like
       it.
-- [ ] "Where … County stands out" below the cost cards, as on the report but prettier, with
+- [x] "Where … County stands out" below the cost cards, as on the report but prettier, with
       value standouts (the highest tax bill, the oldest homes) as well as change ones.
-- [ ] Easier viewing for a reader after actionable insight rather than every figure —
+- [x] Easier viewing for a reader after actionable insight rather than every figure —
       **layout B** (decided above): the head, the cost cards, the stand-outs grouped into
       what leads and what lags, and the housing cards, then one expander, closed by default
       and remembered once opened, revealing the ranked tables, the trends, the current
       values and their notes, and the full interpretation, shown whole with no "Read the
       rest" inside it.
-- [ ] A note by the trends' year control on why the years begin in 2000: Zillow's home value
+- [x] A note by the trends' year control on why the years begin in 2000: Zillow's home value
       index begins in January 2000; rent starts in 2015 and income in 2019, so earlier years
       show only the charts that reach them.
 
 ### Every page
 
-- [ ] A definition for every metric, as succinct and plain as possible for a beginner, the
+- [x] A definition for every metric, as succinct and plain as possible for a beginner, the
       existing definitions improved to the same rule, each ending with a sentence on why it
       matters to the reader. One dictionary in `web/lib`, feeding the tables, the New Jersey
       page's measure card and the housing cards.
-- [ ] The New Jersey page, county pages and reports each a little distinct and plainly
+- [x] The New Jersey page, county pages and reports each a little distinct and plainly
       related — a kind label, an accent, a header treatment; nothing dramatic.
-- [ ] Footnote marks ("a", "b", "c") link to their notes, and each note links back.
-- [ ] **Why owning can look costlier than renting, and the calculation that fixes it** —
+- [x] Footnote marks ("a", "b", "c") link to their notes, and the note reached is lit;
+      the browser's Back returns to the row.
+- [x] **Why owning can look costlier than renting, and the calculation that fixes it** —
       the owner's question, 2026-09-14, and a reader's: if you add the home's gain in value,
       amortized per month, "it should cover that 1700 more… but 1700 is a lot, so doesn't
       seem right". Two things in today's comparison mislead; both were checked that day.
@@ -2815,18 +2839,21 @@ quoted wording is the owner's.
     2021 to Jul 2026"). No forecast. Single-family rent, published only by metro, is parked
     in ROADMAP's Post-Version 2 list with its reasons.
   - Still left out of owning, and named on the page: homeowners insurance, upkeep, closing
-    costs, and what the down payment could earn. Today's 6.67% set against 2021's rates is
-    read from the loaded FRED series when this is built.
+    costs, and what the down payment could earn. The past gain sits beside the rate buyers
+    faced when it began, read from the loaded FRED series: 2.87% in Jul 2021 (2.96% over
+    2021 as a whole) against 6.67% in Aug 2026.
 
 ### Proposed in the same review, for the owner to confirm
 
-- [ ] Search in the shared bar in place of the county picker, so every page has it — the
+- [x] Search in the shared bar in place of the county picker, so every page has it — the
       picker only reaches 21 of 1,134 places.
-- [ ] The affordability map's "beyond reach" in a neutral rather than a light blue, which
+- [x] The affordability map's "beyond reach" in a neutral rather than a light blue, which
       reads as one end of a scale with "within reach".
-- [ ] The report carries the cost cards at the 20% default, for paper.
-- [ ] ZIP and town pages checked for sections that go missing without their figures, so a
-      thinner page still looks designed rather than broken.
+- [x] The report carries the cost cards at the 20% default, for paper.
+- [x] ZIP and town pages checked for sections that go missing without their figures, so a
+      thinner page still looks designed rather than broken. Checked 2026-09-14: ZIP 08540
+      has no tax bill, and its cards say "before property tax" and why; Millstone has no
+      Zillow value, and its cost section now says so instead of vanishing.
 
 ## Attribution and licensing
 

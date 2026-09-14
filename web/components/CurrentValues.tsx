@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 
-import { Glossed } from "@/components/Glossed";
+import { MetricTerm } from "@/components/Glossed";
 import { Marks, NoteRows, RankText } from "@/components/Ledger";
 import type { PacketLevel } from "@/lib/api";
 import type { TablePlacement } from "@/lib/caveats";
@@ -15,16 +15,19 @@ import { RANK_HEADING, rankWords } from "@/lib/ranks";
  * Sectioned like the ledger and set as small tables that flow into two columns on a wide
  * screen, so twenty-odd readings take half the height one long table did. A metric with
  * one vintage — the MOD-IV assessment aggregates, HUD's CHAS tables — appears only here,
- * because a change needs two observations.
+ * because a change needs two observations. Every measure's name carries its plain
+ * definition (Milestone 23).
+ *
+ * `defined` is kept for the page's one-set-per-page glossary contract; the metric names
+ * carry their own definitions rather than glossary terms.
  */
 export function CurrentValues({
   levels,
   placement,
-  defined,
 }: {
   levels: PacketLevel[];
   placement: TablePlacement;
-  defined: Set<string>;
+  defined?: Set<string>;
 }) {
   return (
     <div className="values-grid">
@@ -50,7 +53,7 @@ export function CurrentValues({
                 <Fragment key={level.metric_id}>
                   <tr>
                     <td>
-                      <Glossed text={level.label} defined={defined} />
+                      <MetricTerm metricId={level.metric_id} label={level.label} scope="values" />
                       <Marks letters={placement.marks.get(level.metric_id)} />
                     </td>
                     <td className="num">{formatMetric(level.value, level.unit, level.metric_id)}</td>

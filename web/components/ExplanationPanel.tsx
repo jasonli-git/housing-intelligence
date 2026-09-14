@@ -43,13 +43,18 @@ import { describe, matchedBy, period, segment, sourceOf, whatItIs } from "@/lib/
  * choose. What must not be missed stays open — that the text is a model's, and whether
  * it is out of date.
  *
+ * Inside a region page's expander (Milestone 23) it is shown whole, with no "Read the
+ * rest": the reader has already chosen to read on by opening it.
+ *
  * A client component because of the switcher's `useState`. With one explanation it
  * renders exactly what it always did, and the page is a static export either way.
  */
 export function ExplanationPanel({
   explanations,
+  whole = false,
 }: {
   explanations: Explanation[];
+  whole?: boolean;
 }) {
   const groupId = useId();
   const [selected, setSelected] = useState(0);
@@ -131,8 +136,8 @@ export function ExplanationPanel({
         </p>
       )}
 
-      {paragraphs[0]}
-      {paragraphs.length > 1 && (
+      {whole ? paragraphs : paragraphs[0]}
+      {!whole && paragraphs.length > 1 && (
         <details className="interpretation-more">
           <summary>
             Read the rest ({paragraphs.length - 1} more{" "}

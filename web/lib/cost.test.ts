@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { costToOwn, incomeFor, leftOut, monthlyPayment } from "@/lib/cost";
+import {
+  changePerMonth,
+  costToOwn,
+  goneAgainstRent,
+  incomeFor,
+  leftOut,
+  monthlyPayment,
+  monthsBetween,
+} from "@/lib/cost";
 
 describe("monthlyPayment", () => {
   it("matches the standard amortisation figure", () => {
@@ -37,12 +45,58 @@ describe("costToOwn", () => {
 
     expect(cost.tax).toBeNull();
     expect(cost.total).toBeCloseTo(2398.2, 1);
+    expect(cost.gone).toBeCloseTo(2000, 6);
+  });
+
+  it("splits the first payment into interest, gone, and principal, kept", () => {
+    // $400,000 borrowed at 6%: a month's interest is exactly $2,000 of the $2,398.20.
+    const cost = costToOwn({ homeValue: 500_000, ratePct: 6, downPct: 20, annualTax: 12_000 });
+
+    expect(cost.interest).toBeCloseTo(2000, 6);
+    expect(cost.principal).toBeCloseTo(398.2, 1);
+    expect(cost.gone).toBeCloseTo(3000, 6);
+  });
+
+  it("has no interest at a zero rate", () => {
+    const cost = costToOwn({ homeValue: 450_000, ratePct: 0, downPct: 20, annualTax: null });
+
+    expect(cost.interest).toBe(0);
+    expect(cost.principal).toBe(1000);
+  });
+});
+
+describe("goneAgainstRent", () => {
+  it("reads a gap within 5% of the rent as about the same", () => {
+    // Mercer on 2026-09-14: $2,654 gone against $2,606 rent.
+    expect(goneAgainstRent(2654, 2606).kind).toBe("about");
+  });
+
+  it("says which way a wider gap runs", () => {
+    expect(goneAgainstRent(3000, 2600)).toEqual({ kind: "more", gap: 400 });
+    expect(goneAgainstRent(2200, 2600)).toEqual({ kind: "less", gap: -400 });
+  });
+});
+
+describe("monthsBetween and changePerMonth", () => {
+  it("counts whole months between period ends", () => {
+    expect(monthsBetween("2021-07-31", "2026-07-31")).toBe(60);
+    expect(monthsBetween("2018-12-31", "2026-07-31")).toBe(91);
+  });
+
+  it("spreads a change over its months, and nothing over none", () => {
+    expect(changePerMonth(332_000, 451_000, 60)).toBeCloseTo(1983.33, 2);
+    expect(changePerMonth(1, 2, 0)).toBe(0);
   });
 });
 
 describe("leftOut", () => {
   it("names mortgage insurance only below 20% down", () => {
-    expect(leftOut(20)).toEqual(["homeowners insurance", "upkeep", "closing costs"]);
+    expect(leftOut(20)).toEqual([
+      "homeowners insurance",
+      "upkeep",
+      "closing costs",
+      "what the down payment could earn",
+    ]);
     expect(leftOut(10)[0]).toContain("mortgage insurance");
   });
 });

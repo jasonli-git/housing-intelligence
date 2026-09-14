@@ -13,6 +13,8 @@ export type Term = {
   key: string;
   title: string;
   definition: string;
+  /** Why it matters, set on its own line under the definition (Milestone 23). */
+  why?: string;
   /** Exact, case-sensitive phrases that mark the term in running text. */
   phrases: string[];
 };

@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 
-import { Glossed } from "@/components/Glossed";
+import { Glossed, MetricTerm } from "@/components/Glossed";
 import type { PacketMetric } from "@/lib/api";
 import type { TablePlacement } from "@/lib/caveats";
 import { formatChange, formatMetric } from "@/lib/format";
@@ -15,6 +15,9 @@ const TICK = 4;
 // with the region's place marked says the same thing at any cohort size.
 const MAX_TICKS = 30;
 const TRACK = 84;
+// Rows this near a table's foot open their definitions upward, so the scroll box the
+// table sits in does not cut them off.
+const FOOT_ROWS = 3;
 
 /**
  * A rank as "9 / 21" to the eye and in words to a screen reader and on hover — "9th of
@@ -70,13 +73,19 @@ export function ChangeCell({ pct, className }: { pct: number; className?: string
   );
 }
 
-/** The note letters a row carries. */
+/**
+ * The note letters a row carries, each a link to its note (Milestone 23). Letters run
+ * once across a page (`placeCaveats`), so `#note-a` names one note however many tables
+ * mark it.
+ */
 export function Marks({ letters }: { letters: string[] | undefined }) {
   return (
     <>
       {(letters ?? []).map((letter) => (
-        <sup key={letter} className="mk" title={`See note ${letter}`}>
-          {letter}
+        <sup key={letter} className="mk">
+          <a href={`#note-${letter}`} aria-label={`Note ${letter}`}>
+            {letter}
+          </a>
         </sup>
       ))}
     </>
@@ -104,6 +113,7 @@ export function NoteRows({ id, texts, span }: { id: string; texts: string[] | un
 /**
  * The notes set out under a table: the lettered caveats first marked in it, a pointer to
  * any whose text sits under an earlier table, then caveats about the figures as a whole.
+ * Each lettered note carries the id its marks link to.
  */
 export function TableNotes({
   placement,
@@ -119,7 +129,7 @@ export function TableNotes({
   return (
     <ol className="notes" aria-label="Notes to these figures">
       {notes.map((note) => (
-        <li key={note.letter}>
+        <li key={note.letter} id={`note-${note.letter}`}>
           <b>{note.letter}</b>
           <span>{note.text}</span>
         </li>
@@ -146,7 +156,8 @@ export function TableNotes({
 /**
  * A region's changes in one table: each figure's latest value, its change, where that
  * change ranks, and the period it covers, sectioned the same way on every region page.
- * A caveat about one row sits under that row; one about several is lettered.
+ * A caveat about one row sits under that row; one about several is lettered. Every
+ * measure's name carries its plain definition (Milestone 23).
  */
 export function Ledger({
   metrics,
@@ -157,6 +168,8 @@ export function Ledger({
   placement: TablePlacement;
   defined: Set<string>;
 }) {
+  const sections = groupRows(metrics);
+  const atFoot = new Set(sections.flatMap((s) => s.rows.map((r) => r.metric_id)).slice(-FOOT_ROWS));
   return (
     <div className="scroll-x">
       <table className="ledger">
@@ -164,7 +177,7 @@ export function Ledger({
           Changes over five years, by section: each measure’s latest value, its change,
           where that change ranks among its peers, and the period it covers
         </caption>
-        {groupRows(metrics).map((section) => (
+        {sections.map((section) => (
           <tbody key={section.key}>
             {/* Each section opens with its own header row, aligned with the columns: the
                 section's name over the measures, then what each column holds. A caption
@@ -186,7 +199,12 @@ export function Ledger({
                 <Fragment key={metric.metric_id}>
                   <tr className={notes ? "has-note" : undefined}>
                     <td>
-                      <Glossed text={metric.label} defined={defined} />
+                      <MetricTerm
+                        metricId={metric.metric_id}
+                        label={metric.label}
+                        scope="ledger"
+                        up={atFoot.has(metric.metric_id)}
+                      />
                       <Marks letters={placement.marks.get(metric.metric_id)} />
                     </td>
                     <td className="value">

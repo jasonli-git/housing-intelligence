@@ -1,6 +1,25 @@
 import { describe, expect, it } from "vitest";
 
-import { monthlyBudget, type Place, reach } from "@/lib/afford";
+import { checkPlace, monthlyBudget, type Place, reach } from "@/lib/afford";
+
+describe("checkPlace", () => {
+  const options = { income: 120_000, downPct: 20, ratePct: 6 };
+
+  it("answers one place both ways", () => {
+    const result = checkPlace(place(1, { home: 300_000, tax: 6_000, rent: 2_500 }), options);
+
+    expect(result.own?.monthly).toBeCloseTo(1938.92, 1);
+    expect(result.own?.within).toBe(true);
+    expect(result.rent?.within).toBe(true);
+  });
+
+  it("leaves a side empty where the place lacks its figure", () => {
+    const result = checkPlace(place(2, { home: 300_000, rent: 4_000 }), options);
+
+    expect(result.own).toBeNull();
+    expect(result.rent?.within).toBe(false);
+  });
+});
 
 function place(id: number, fields: Partial<Place>): Place {
   return { id, name: `P${id}`, level: "county", detail: null, home: null, tax: null, rent: null, ...fields };

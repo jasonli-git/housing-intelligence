@@ -5,7 +5,8 @@
  * loaded: HUD's Fair Market Rents run by federal fiscal year (a window ending
  * 2026-09-30 is FY2026), FHFA's indexes by calendar quarter, an annual series ends on 31
  * December and is named by its year, and a monthly series — Zillow's indexes — by
- * month. A period is a label, so nothing here does date arithmetic or builds a `Date`,
+ * month, December included: read by its date alone, Zillow's 2018-12-31 reading, where
+ * "Since 2019" starts, showed as "2018". A period is a label, so nothing here does date arithmetic or builds a `Date`,
  * which would shift a 31 December into the next year in any timezone east of UTC.
  */
 
@@ -13,13 +14,19 @@ const MONTHS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
+// Series read month by month, whose December reading is a month like any other. Named by
+// metric rather than by `frequency` in config/metrics.yml, which says how a source
+// publishes: building permits are published monthly but loaded as yearly totals.
+const MONTHLY_PREFIXES = ["zhvi_", "zori_", "unemployment_"];
+
 /** One endpoint of a period, e.g. "2023", "Jul 2026", "FY2026", "Q2 2026". */
 export function periodLabel(date: string, metricId?: string): string {
   const year = date.slice(0, 4);
   const month = Number(date.slice(5, 7));
   if (metricId?.startsWith("hud_fmr")) return `FY${year}`;
   if (metricId?.startsWith("fhfa_")) return `Q${Math.ceil(month / 3)} ${year}`;
-  if (date.slice(5, 10) === "12-31") return year;
+  const monthly = MONTHLY_PREFIXES.some((prefix) => metricId?.startsWith(prefix));
+  if (date.slice(5, 10) === "12-31" && !monthly) return year;
   return `${MONTHS[month - 1]} ${year}`;
 }
 

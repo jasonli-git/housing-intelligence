@@ -85,6 +85,12 @@
      light and 8.9:1 in dark. */
   --notice: #b8860b;
   --notice-text: #855000;
+  /* Money gone in the cost to own (Milestone 23): interest and tax as two warm greys, set
+     apart from --good, which marks the principal a buyer keeps. */
+  --gone-1: #6f685d;
+  --gone-2: #aaa293;
+  /* The report's sheet on screen: a shade off the page, so it reads as paper. */
+  --paper: #ffffff;
   --focus: #0b0b0b;
 
   /* ---------- the shared bar: jasonli.app's values (#122) ---------- */
@@ -120,6 +126,9 @@
     --down: #86b6ef;
     --notice: #d9a13b;
     --notice-text: #f0c36a;
+    --gone-1: #b3aa9a;
+    --gone-2: #6f695f;
+    --paper: #1f1f1e;
     --focus: #ffffff;
     --jl-ink: #efeeec;
     --jl-ink: oklch(0.95 0.003 95);
@@ -148,6 +157,9 @@
   --down: #86b6ef;
   --notice: #d9a13b;
   --notice-text: #f0c36a;
+  --gone-1: #b3aa9a;
+  --gone-2: #6f695f;
+  --paper: #1f1f1e;
   --focus: #ffffff;
   --jl-ink: #efeeec;
   --jl-ink: oklch(0.95 0.003 95);

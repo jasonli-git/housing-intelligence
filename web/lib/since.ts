@@ -83,6 +83,30 @@ export function firstYear(points: Point[]): number | null {
   return Math.min(...points.map((p) => Number(p.period_end.slice(0, 4))));
 }
 
+/**
+ * Why the years reach back as far as they do, where the series begin in different years
+ * (Milestone 23): "Years go back to 2000, where the home values series begins; rent begins
+ * in 2015 and household income in 2019, so earlier years show only the charts that reach
+ * them." Null where every series begins in the same year. `short` is a series as a
+ * sentence names it.
+ */
+export function yearsNote(series: { short: string; points: Point[] }[]): string | null {
+  const firsts = series
+    .map((s) => ({ short: s.short, year: firstYear(s.points) }))
+    .filter((f): f is { short: string; year: number } => f.year !== null)
+    .sort((a, b) => a.year - b.year);
+  if (firsts.length < 2) return null;
+  const earliest = firsts[0];
+  const later = firsts.filter((f) => f.year > earliest.year);
+  if (later.length === 0) return null;
+  const parts = later.map((f, i) => (i === 0 ? `${f.short} begins in ${f.year}` : `${f.short} in ${f.year}`));
+  const joined = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}`;
+  return (
+    `Years go back to ${earliest.year}, where the ${earliest.short} series begins; ${joined}, ` +
+    "so earlier years show only the charts that reach them."
+  );
+}
+
 export type Series = { metricId: string; label: string; unit: string; points: Point[] };
 export type SinceLine = { metricId: string; label: string; text: string };
 

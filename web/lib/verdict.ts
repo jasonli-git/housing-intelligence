@@ -11,8 +11,9 @@
  */
 
 import type { PacketLevel, PacketMetric } from "@/lib/api";
+import { definitionOf } from "@/lib/definitions";
 import { formatMetric } from "@/lib/format";
-import { periodLabel } from "@/lib/periods";
+import { periodLabel, surveyYears } from "@/lib/periods";
 import { ordinal } from "@/lib/ranks";
 
 /**
@@ -164,19 +165,66 @@ export function paychecks(metrics: PacketMetric[]): string | null {
   return sentences.join(" ");
 }
 
-export type ProfileItem = { metric_id: string; label: string; value: string; definition: string };
+export type PaycheckAnswer = "Yes" | "No" | "About even";
+
+const ANSWER: Record<"up" | "down" | "even", PaycheckAnswer> = { up: "No", down: "Yes", even: "About even" };
 
 /**
- * What the housing here is like, from whichever of these the region has: how old its
- * homes are, on what lots, how many are owned or apartments, and whether anything is
- * being built. Each carries a definition shown on hover, focus or tap, because a short
- * label cannot say what was counted.
+ * "Did paychecks keep up?" answered short, homes and rent apart (Milestone 23), by
+ * `paychecks`' own rule: a price-to-income ratio up more than 2% is No, down more than 2%
+ * is Yes, and otherwise about even. Rent is null where the region has no rent-to-income
+ * change; the whole is null without price-to-income, as `paychecks` is.
+ */
+export function paycheckAnswers(
+  metrics: PacketMetric[],
+): { homes: PaycheckAnswer; rent: PaycheckAnswer | null } | null {
+  const price = metrics.find((m) => m.metric_id === "price_to_income");
+  if (!price) return null;
+  const rent = metrics.find((m) => m.metric_id === "rent_to_income");
+  return { homes: ANSWER[outpaced(price)], rent: rent ? ANSWER[outpaced(rent)] : null };
+}
+
+export type ProfileItem = {
+  metric_id: string;
+  label: string;
+  value: string;
+  definition: string;
+  /** Where it sits among the region's peers, or how it moved: "older than most · 13th of 21". */
+  context: string | null;
+};
+
+/**
+ * Where a value sits among the region's peers, in its measure's own words: "older than
+ * most · 13th of 21". The two fifths either side of the middle take `pace`'s "most"; the
+ * fifth between is near the middle. Rank 1 is the largest value except where lower is
+ * better (`lib/ranks.ts`), so the position is read from the largest end either way.
+ */
+function among(row: PacketLevel, more: string, fewer: string): string | null {
+  if (row.rank === null || row.of === null) return null;
+  const p = position(row.rank, row.of);
+  const fromLargest = row.direction === "lower_is_better" ? 1 - p : p;
+  const words = fromLargest <= 0.4 ? more : fromLargest >= 0.6 ? fewer : "near the middle";
+  return `${words} · ${ordinal(row.rank)} of ${row.of}`;
+}
+
+function moved(pct: number): string {
+  if (pct === 0) return "unchanged";
+  return `${pct > 0 ? "up" : "down"} ${Math.abs(pct).toFixed(1)}%`;
+}
+
+/**
+ * What the housing here is like, as the cards under the costs show it: how old its homes
+ * are, on what lots, how many are owned, apartments or standing empty, whether anything is
+ * being built, and how many people live here — from whichever of these the region has.
+ * Each carries a definition shown on hover, focus or tap, because a short label cannot say
+ * what was counted, and a line placing it among its peers from the rank the packet already
+ * carries (Milestone 23, which added the vacancy rate and the population).
  *
  * "Apartment buildings", not the metric's "apartment share of residential parcels": a
  * parcel is tax-roll vocabulary, and what it counts here is buildings. The metric keeps
  * its label, because renaming it would change every packet and stale every explanation.
  */
-export function housingProfile(levels: PacketLevel[]): ProfileItem[] {
+export function housingProfile(levels: PacketLevel[], metrics: PacketMetric[] = []): ProfileItem[] {
   const find = (id: string) => levels.find((l) => l.metric_id === id);
   const items: ProfileItem[] = [];
 
@@ -189,6 +237,7 @@ export function housingProfile(levels: PacketLevel[]): ProfileItem[] {
       definition:
         "The median year one- to four-family homes here were built, among those New " +
         "Jersey’s property tax records (MOD-IV) give a year for.",
+      context: among(built, "newer than most", "older than most"),
     });
   }
   const lot = find("modiv_median_lot_acres");
@@ -200,6 +249,7 @@ export function housingProfile(levels: PacketLevel[]): ProfileItem[] {
       definition:
         "The median lot size of one- to four-family homes here, from the property tax " +
         "records (MOD-IV). An acre is 43,560 square feet.",
+      context: among(lot, "larger than most", "smaller than most"),
     });
   }
   const owned = find("acs_homeownership_rate");
@@ -211,6 +261,7 @@ export function housingProfile(levels: PacketLevel[]): ProfileItem[] {
       definition:
         "The share of occupied homes lived in by their owners rather than rented out, from " +
         "the Census Bureau’s American Community Survey five-year estimate.",
+      context: among(owned, "more than most", "fewer than most"),
     });
   }
   const apartments = find("modiv_multifamily_share");
@@ -223,6 +274,19 @@ export function housingProfile(levels: PacketLevel[]): ProfileItem[] {
         "Apartment buildings as a share of the residential properties on the tax roll — " +
         "one- to four-family homes and apartment buildings. It counts buildings, not " +
         "homes: a 200-unit building counts once.",
+      context: among(apartments, "more than most", "fewer than most"),
+    });
+  }
+  const empty = find("acs_vacancy_rate");
+  if (empty) {
+    items.push({
+      metric_id: empty.metric_id,
+      label: "Homes standing empty",
+      value: formatMetric(empty.value, empty.unit, empty.metric_id),
+      definition:
+        definitionOf(empty.metric_id)?.what ??
+        "The share of all homes standing empty, from the Census Bureau’s American Community Survey.",
+      context: among(empty, "more than most", "fewer than most"),
     });
   }
   const permits = find("permits_total_units");
@@ -235,6 +299,23 @@ export function housingProfile(levels: PacketLevel[]): ProfileItem[] {
         "New homes authorized by building permits that year, counted in units, from the " +
         "Census Bureau’s Building Permits Survey. A permit is approval to build, not a " +
         "finished home.",
+      context: among(permits, "more than most", "fewer than most"),
+    });
+  }
+  const people = find("acs_population");
+  if (people) {
+    const change = metrics.find((m) => m.metric_id === "acs_population");
+    items.push({
+      metric_id: people.metric_id,
+      label: "People",
+      value: formatMetric(people.value, people.unit, people.metric_id),
+      definition:
+        "The Census Bureau’s American Community Survey five-year estimate for the survey " +
+        `years ${surveyYears(people.period_start, people.period_end)}.`,
+      context: change
+        ? `${moved(change.pct_change)}, ${periodLabel(change.window_start, change.metric_id)} to ` +
+          `${periodLabel(change.window_end, change.metric_id)}`
+        : among(people, "more than most", "fewer than most"),
     });
   }
 

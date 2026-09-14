@@ -1,26 +1,32 @@
 import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
+import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { Definition, Glossed } from "@/components/Glossed";
 import { Ledger, TableNotes } from "@/components/Ledger";
+import { MoreExpander } from "@/components/MoreExpander";
+import { StandOuts } from "@/components/StandOuts";
 import { TrendsExplorer } from "@/components/TrendsExplorer";
-import {
-  api,
-  nationalMortgageRate,
-  type PacketLevel,
-  type PacketMetric,
-  type Region,
-  regionsWithData,
-} from "@/lib/api";
+import { api, type PacketLevel, type PacketMetric, type Region, regionsWithData } from "@/lib/api";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
+import { costInputs } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
 import type { Term } from "@/lib/glossary";
 import { groupRows } from "@/lib/groups";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, surveyYears } from "@/lib/periods";
-import { housingProfile, paychecks, rankBasisExample, tradeoff, verdict } from "@/lib/verdict";
+import { standOuts } from "@/lib/standouts";
+import {
+  housingProfile,
+  type PaycheckAnswer,
+  paycheckAnswers,
+  paychecks,
+  rankBasisExample,
+  tradeoff,
+  verdict,
+} from "@/lib/verdict";
 
 // The only window published per region, and the only one with explanations
 // (`manifest.json` → `windows`). Stated on the page rather than offered as a control,
@@ -28,8 +34,29 @@ import { housingProfile, paychecks, rankBasisExample, tradeoff, verdict } from "
 // (ARCHITECTURE #125).
 const WINDOW = "5y";
 
-// The series worth plotting on a region page, in the order a reader wants them.
-const TREND_METRICS = ["zhvi_sfr", "zori_all", "acs_median_hh_income"];
+// The series worth plotting on a region page, in the order a reader wants them, and what
+// a sentence calls each.
+const TREND_METRICS = [
+  { metricId: "zhvi_sfr", short: "home values" },
+  { metricId: "zori_all", short: "rent" },
+  { metricId: "acs_median_hh_income", short: "household income" },
+];
+
+/**
+ * What the computed label means, for a reader who asks. The label is the counterpart of the
+ * interpretation panel's own: said at the top and never folded away, because a reader
+ * should not have to guess which parts of the page a model wrote (#139).
+ */
+const COMPUTED: Term = {
+  key: "computed",
+  title: "Computed from the data, not AI",
+  phrases: [],
+  definition:
+    "The sentences and answers at the top of this page, the costs, the stand-outs and the " +
+    "housing cards are computed from the figures on this page by fixed rules, not written " +
+    "by AI. The interpretation, with the tables, is the one part a language model wrote, " +
+    "and it is labelled so.",
+};
 
 /**
  * Which region pages exist: every region carrying data except the state, whose page
@@ -43,21 +70,6 @@ const TREND_METRICS = ["zhvi_sfr", "zori_all", "acs_median_hh_income"];
 export async function generateStaticParams() {
   const regions = await regionsWithData();
   return regions.filter((r) => r.level !== "state").map((r) => ({ id: String(r.region_id) }));
-}
-
-/** The national 30-year rate, labelled for a reader; fetched once per worker (`lib/api.ts`). */
-async function mortgageRate() {
-  const rate = await nationalMortgageRate();
-  return rate ? { value: rate.value, asOf: periodLabel(rate.period_start) } : null;
-}
-
-/** Why a region has no tax bill, in a reader's terms. */
-function noTaxReason(level: string): string {
-  return level === "zip"
-    ? "Property tax is not included: New Jersey’s assessment records give it by " +
-        "municipality and county, not by ZIP code."
-    : "Property tax is not included: this municipality’s assessment records could not " +
-        "be matched to it by name.";
 }
 
 /** What kind of place this is, in the words a reader uses: "Township in Somerset County". */
@@ -95,10 +107,32 @@ function changeWords(pct: number): string {
   return `${pct > 0 ? "up" : "down"} ${Math.abs(pct).toFixed(1)}%`;
 }
 
+function listed(items: string[]): string {
+  return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+}
+
 function findSeries(metrics: PacketMetric[], levels: PacketLevel[], metricId: string) {
   return metrics.find((m) => m.metric_id === metricId) ?? levels.find((l) => l.metric_id === metricId);
 }
 
+/** One short answer to "Did paychecks keep up?": "Homes No". */
+function Answer({ label, answer }: { label: string; answer: PaycheckAnswer }) {
+  return (
+    <span className="answer" data-answer={answer}>
+      <span className="k">{label}</span>
+      <b>{answer}</b>
+    </span>
+  );
+}
+
+/**
+ * A region page, laid out answer first (Milestone 23, layout B, the owner's choice): the
+ * head and its verdict, what it costs per month, where the region stands out, and what its
+ * housing is like — then one expander holding every table, the trends and the full
+ * interpretation, for the reader who wants the whole picture. The stand-outs lead in place
+ * of the tables because they are the tables' news; the tables are one click away, and
+ * remembered open for a reader who opens them.
+ */
 export default async function RegionPage({
   params,
 }: {
@@ -111,12 +145,11 @@ export default async function RegionPage({
   // The explanations are fetched alongside the data and are allowed to be absent: the
   // dashboard is fully usable with no AI layer at all, so a missing one renders nothing
   // rather than an error or an empty slot (SPEC: the platform stays useful without it).
-  const [region, packet, summary, explanations, rate] = await Promise.all([
+  const [region, packet, summary, explanations] = await Promise.all([
     api.region(regionId),
     api.packet(regionId, WINDOW),
     api.summary(regionId, WINDOW),
     api.explanations(regionId, WINDOW),
-    mortgageRate(),
   ]);
 
   if (!region || !packet) {
@@ -130,12 +163,16 @@ export default async function RegionPage({
     );
   }
 
-  const series = await Promise.all(
-    TREND_METRICS.map(async (metricId) => ({
-      metricId,
-      observations: (await api.observations(regionId, metricId))?.observations ?? [],
-    })),
-  );
+  const [series, cost] = await Promise.all([
+    Promise.all(
+      TREND_METRICS.map(async ({ metricId, short }) => ({
+        metricId,
+        short,
+        observations: (await api.observations(regionId, metricId))?.observations ?? [],
+      })),
+    ),
+    costInputs(region.level, packet.levels, packet.metrics),
+  ]);
   const trends = series.filter((s) => s.observations.length >= 2);
 
   const name = displayName(region);
@@ -149,18 +186,11 @@ export default async function RegionPage({
   const peers = { name, count: peer_count, noun: peerNoun(peer_level), scope: scopeName(peer_scope) };
   const lead = verdict(peers, packet.metrics, packet.levels);
   const paid = paychecks(packet.metrics);
+  const answers = paycheckAnswers(packet.metrics);
   const trade = tradeoff(peers, packet.levels);
-  const profile = housingProfile(packet.levels);
+  const profile = housingProfile(packet.levels, packet.metrics);
+  const standing = standOuts(packet);
   const rankExample = rankBasisExample(name, packet.metrics, packet.levels);
-
-  // The cost to own needs a current market value, so it stands on Zillow's index only:
-  // the ACS's owner-reported value is a survey five years old, and a monthly payment on
-  // it would describe a market that has moved on.
-  const level = (metricId: string) => packet.levels.find((l) => l.metric_id === metricId);
-  const dated = (row: PacketLevel | undefined) =>
-    row ? { value: row.value, asOf: periodLabel(row.period_end, row.metric_id) } : null;
-  const home = dated(level("zhvi_sfr"));
-  const taxBill = dated(level("modiv_median_tax_bill"));
 
   // One set per page: each glossary term is marked the first time it appears.
   const defined = new Set<string>();
@@ -172,19 +202,32 @@ export default async function RegionPage({
   );
   const [changes, values] = placement.tables;
 
+  // What the expander holds, said on it, so a reader knows what one click opens.
+  const contents = [
+    packet.metrics.length > 0 ? `${packet.metrics.length} figures ranked by change` : null,
+    packet.levels.length > 0 ? `${packet.levels.length} current values` : null,
+    trends.length > 0 ? `${trends.length} ${trends.length === 1 ? "chart" : "charts"}` : null,
+    readings.length > 1 ? `${readings.length} models’ readings` : readings.length === 1 ? "a model’s reading" : null,
+  ].filter((part): part is string => part !== null);
+  const moreTitle =
+    readings.length > 0
+      ? "Every table, the trends and the interpretation"
+      : trends.length > 0
+        ? "Every table and the trends"
+        : "Every table";
+
   return (
     <main className="shell">
-      <header className="page-head">
+      <header className="page-head" data-kind={kindOf(region.level)}>
         <div>
-          <p className="crumbs">
-            <Link href="/">New Jersey</Link>
-            {county && (
-              <>
-                {" / "}
-                <Link href={`/regions/${county.region_id}`}>{displayName(county)}</Link>
-              </>
-            )}
-          </p>
+          <Crumbs
+            trail={[
+              { href: "/", label: "New Jersey" },
+              ...(county ? [{ href: `/regions/${county.region_id}`, label: displayName(county) }] : []),
+            ]}
+            here={name}
+          />
+          <Kind kind={kindOf(region.level)} />
           <h1 className="page-title">{name}</h1>
           <p className="meta">
             {placeLine(region)}
@@ -201,14 +244,28 @@ export default async function RegionPage({
             {" · "}every figure ranked against {scopeName(peer_scope)}’s {peer_count}{" "}
             {peerNoun(peer_level)}
           </p>
+          {lead && (
+            <p className="computed-line">
+              <Definition term={COMPUTED}>
+                <span className="computed">
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M3 8.5l3.2 3L13 4.5" />
+                  </svg>
+                  Computed from the data · not AI
+                </span>
+              </Definition>
+            </p>
+          )}
           {lead && <p className="verdict">{lead}</p>}
           {trade && <p className="verdict-more">{trade}</p>}
-          {/* On request, after the owner's review: the verdict is the answer, and the
-              paychecks comparison is the reading a reader chooses to go on to. */}
-          {paid && (
+          {/* The short answers in the line, the sentences behind them a click away: the
+              answer is what a reader came for, the working what some go on to. */}
+          {paid && answers && (
             <details className="verdict-details">
               <summary className="disclose">
                 <span className="verdict-details-label">Did paychecks keep up?</span>
+                <Answer label="Homes" answer={answers.homes} />
+                {answers.rent && <Answer label="Rent" answer={answers.rent} />}
                 <span className="disclose-hint">
                   <span className="when-closed">Details</span>
                   <span className="when-open">Hide</span>
@@ -216,33 +273,6 @@ export default async function RegionPage({
               </summary>
               <p className="verdict-more">{paid}</p>
             </details>
-          )}
-          {/* Said outright, and never folded away, because the interpretation panel beside
-              it is model-written and a reader should not have to guess which this is (#139). */}
-          {lead && (
-            <p className="verdict-source">
-              Computed from the figures on this page by fixed rules, not written by AI.
-            </p>
-          )}
-          {profile.length > 0 && (
-            <p className="profile">
-              <span className="eyebrow">The housing</span>
-              {profile.map((item) => (
-                <span key={item.metric_id}>
-                  <Definition
-                    term={{
-                      key: `profile-${item.metric_id}`,
-                      title: item.label,
-                      phrases: [],
-                      definition: item.definition,
-                    }}
-                  >
-                    {item.label}
-                  </Definition>{" "}
-                  <b>{item.value}</b>
-                </span>
-              ))}
-            </p>
           )}
         </div>
         <div className="actions">
@@ -252,18 +282,54 @@ export default async function RegionPage({
         </div>
       </header>
 
-      {home && rate && (
-        <CostToOwn
-          home={home}
-          rate={rate}
-          tax={taxBill}
-          rent={dated(level("zori_all"))}
-          noTax={taxBill ? null : noTaxReason(region.level)}
-        />
+      {cost ? (
+        <CostToOwn {...cost} />
+      ) : (
+        // Said rather than left out, so a thinner page reads as designed, not broken: the
+        // section a reader looks for first says why it is empty here.
+        !packet.levels.some((l) => l.metric_id === "zhvi_sfr") && (
+          <section className="section cost" aria-labelledby="cost-heading">
+            <h2 id="cost-heading">What it costs per month</h2>
+            <p className="cost-missing">
+              Zillow publishes no home value for {name}, so no monthly cost to own or rent is
+              worked out here. The owner-reported value in the tables is a survey five years
+              old, too old to price a mortgage on.
+            </p>
+          </section>
+        )
       )}
 
-      <div className={readings.length > 0 ? "split" : undefined}>
-        <div>
+      <StandOuts name={name} peers={`${scopeName(peer_scope)}’s ${peer_count} ${peerNoun(peer_level)}`} items={standing} />
+
+      {profile.length > 0 && (
+        <section className="section" aria-labelledby="housing-heading">
+          <h2 id="housing-heading">The housing here</h2>
+          <ul className="tiles">
+            {profile.map((item) => (
+              <li key={item.metric_id} className="tile">
+                <b>{item.value}</b>
+                <span className="tile-label">
+                  <Definition
+                    term={{
+                      key: `profile-${item.metric_id}`,
+                      title: item.label,
+                      phrases: [],
+                      definition: item.definition,
+                    }}
+                  >
+                    {item.label}
+                  </Definition>
+                </span>
+                {item.context && <span className="tile-context">{item.context}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <MoreExpander title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>
+        <section className="section" aria-labelledby="ledger-heading">
+          <h2 id="ledger-heading">Every figure, ranked by change over five years</h2>
           {packet.metrics.length > 0 ? (
             <Ledger metrics={packet.metrics} placement={changes} defined={defined} />
           ) : (
@@ -280,82 +346,89 @@ export default async function RegionPage({
               {rankExample && ` ${rankExample}`}
             </p>
           )}
-        </div>
-        <ExplanationPanel explanations={readings} />
-      </div>
-
-      {trends.length > 0 && (
-        <section className="section" aria-labelledby="trends-heading">
-          <h2 id="trends-heading">Trends</h2>
-          <TrendsExplorer
-            series={trends.map(({ metricId, observations }) => {
-              const meta = findSeries(packet.metrics, packet.levels, metricId);
-              const unit = meta?.unit ?? "";
-              return {
-                metricId,
-                title: meta?.label ?? metricId,
-                unit,
-                // The end date alone: it is all the charts and the lines read (#148).
-                points: observations.map((o) => ({ period_end: o.period_end, value: o.value })),
-                // Keyed: it rides in a list of series into a client component, and React
-                // asks every element created in a list for a key.
-                table: (
-                  <details key={metricId}>
-                    <summary>Values and their sources</summary>
-                    <div className="scroll-x">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th scope="col">Period</th>
-                            <th scope="col" className="num">
-                              Value
-                            </th>
-                            <th scope="col">Source</th>
-                            <th scope="col">Matched by</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {observations
-                            .slice(-24)
-                            .reverse()
-                            .map((o) => (
-                              <tr key={o.period_start}>
-                                <td className="nowrap">{periodLabel(o.period_end, metricId)}</td>
-                                <td className="num">{formatMetric(o.value, unit, metricId)}</td>
-                                <td>{o.source_id}</td>
-                                <td>{o.match_method}</td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </details>
-                ),
-              };
-            })}
-          />
         </section>
-      )}
 
-      {packet.levels.length > 0 && (
-        <section className="section" aria-labelledby="values-heading">
-          <div className="section-head">
-            <h2 id="values-heading">Current values</h2>
-          </div>
-          <p className="table-note">
-            <Glossed
-              text={
-                "Each measure’s latest reading, ranked by value rather than by change: rank 1 " +
-                "is the highest, or the lowest where lower is better. The MOD-IV assessment " +
-                "records and HUD’s CHAS tables are single snapshots, so they appear only here."
-              }
-              defined={defined}
+        {trends.length > 0 && (
+          <section className="section" aria-labelledby="trends-heading">
+            <h2 id="trends-heading">Trends</h2>
+            <TrendsExplorer
+              series={trends.map(({ metricId, short, observations }) => {
+                const meta = findSeries(packet.metrics, packet.levels, metricId);
+                const unit = meta?.unit ?? "";
+                return {
+                  metricId,
+                  title: meta?.label ?? metricId,
+                  short,
+                  unit,
+                  // The end date alone: it is all the charts and the lines read (#148).
+                  points: observations.map((o) => ({ period_end: o.period_end, value: o.value })),
+                  // Keyed: it rides in a list of series into a client component, and React
+                  // asks every element created in a list for a key.
+                  table: (
+                    <details key={metricId}>
+                      <summary>Values and their sources</summary>
+                      <div className="scroll-x">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th scope="col">Period</th>
+                              <th scope="col" className="num">
+                                Value
+                              </th>
+                              <th scope="col">Source</th>
+                              <th scope="col">Matched by</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {observations
+                              .slice(-24)
+                              .reverse()
+                              .map((o) => (
+                                <tr key={o.period_start}>
+                                  <td className="nowrap">{periodLabel(o.period_end, metricId)}</td>
+                                  <td className="num">{formatMetric(o.value, unit, metricId)}</td>
+                                  <td>{o.source_id}</td>
+                                  <td>{o.match_method}</td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </details>
+                  ),
+                };
+              })}
             />
-          </p>
-          <CurrentValues levels={packet.levels} placement={values} defined={defined} />
-          <TableNotes placement={values} above="the figures above" />
-        </section>
-      )}
+          </section>
+        )}
+
+        {packet.levels.length > 0 && (
+          <section className="section" aria-labelledby="values-heading">
+            <div className="section-head">
+              <h2 id="values-heading">Current values</h2>
+            </div>
+            <p className="table-note">
+              <Glossed
+                text={
+                  "Each measure’s latest reading, ranked by value rather than by change: rank 1 " +
+                  "is the highest, or the lowest where lower is better. The MOD-IV assessment " +
+                  "records and HUD’s CHAS tables are single snapshots, so they appear only here."
+                }
+                defined={defined}
+              />
+            </p>
+            <CurrentValues levels={packet.levels} placement={values} defined={defined} />
+            <TableNotes placement={values} above="the figures above" />
+          </section>
+        )}
+
+        {/* Whole, with no "Read the rest": opening the expander was the choice to read on. */}
+        {readings.length > 0 && (
+          <div className="section">
+            <ExplanationPanel explanations={readings} whole />
+          </div>
+        )}
+      </MoreExpander>
     </main>
   );
 }

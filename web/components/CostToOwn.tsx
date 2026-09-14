@@ -3,12 +3,27 @@
 import { useId, useState } from "react";
 
 import { Definition } from "@/components/Glossed";
-import { costToOwn, DEFAULT_DOWN, DOWN_PAYMENTS, incomeFor, leftOut } from "@/lib/cost";
+import { costToOwn, DEFAULT_DOWN, DOWN_PAYMENTS, goneAgainstRent, incomeFor, leftOut } from "@/lib/cost";
 import { formatValue } from "@/lib/format";
 import type { Term } from "@/lib/glossary";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
 export type Dated = { value: number; asOf: string };
+
+/** The typical home's change in value over the page's window, spread over its months. */
+export type Gain = { perMonth: number; from: string; to: string };
+
+export type CostProps = {
+  home: Dated;
+  rate: Dated;
+  tax: Dated | null;
+  rent: Dated | null;
+  /** Why the tax bill is missing, when it is. */
+  noTax: string | null;
+  gain: Gain | null;
+  /** The national rate when the gain began. */
+  rateThen: Dated | null;
+};
 
 function money(value: number): string {
   return formatValue(value, "usd");
@@ -22,27 +37,29 @@ function term(key: string, title: string, definition: string): Term {
   return { key, title, phrases: [], definition };
 }
 
+function share(part: number, whole: number): string {
+  return `${whole > 0 ? (part / whole) * 100 : 0}%`;
+}
+
 /**
- * What it costs per month to own the typical home here, and how that compares with the
- * typical rent (Milestone 17).
+ * What it costs per month to own the typical home here, and to rent one (Milestone 17),
+ * as two cards since Milestone 23: the section most readers turn to first, so the one
+ * place a region page raises its voice.
  *
- * The one control is the down payment, 20% unless the reader changes it; everything else
- * is a published figure, printed beside the line it feeds. Owning is worked through as a
- * ledger of lines; owning against renting is a small table, so the two monthly costs and
- * the incomes they take sit in columns a reader can compare at a glance — a sentence hid
- * four numbers in a paragraph (the owner's review of 0.15.1). The table is drawn even
- * where Zillow publishes no rent, with dashes and a line saying so, so the section keeps
- * its shape from one place to the next.
+ * Owning leads with its monthly payment and splits it, on a bar and in words, into money
+ * gone — interest and tax — and money kept, the principal that pays the loan down and
+ * stays the buyer's. Rent is set against money gone rather than the whole payment:
+ * counting the part a buyer keeps as cost made owning read hundreds of dollars dearer than
+ * renting (the owner's review, 2026-09-14). The strip under both says which is dearer by
+ * that count, says plainly that a house usually rents for more than Zillow's all-rental
+ * figure, sets the past five years' gain in value beside it as the past, and names what is
+ * left out.
  *
- * Each of the table's headings is a definition saying how its figures are worked out and
- * where they come from, filled in with this page's own rate, down payment and dates, so
- * the method sits one hover or tap from the number rather than in a paragraph beside it.
- *
- * The note under the table says the two indexes describe different homes, because
- * Zillow's rent covers every kind of rental and its home value only single-family houses —
- * a gap between them is partly that. Rendered on the server at the default and
- * re-computed in the browser on change, so the page reads correctly with no script and
- * prints at 20%.
+ * The cards' headings keep their definitions — how each figure is worked out and where it
+ * comes from, filled in with this page's rate, down payment and dates. The one control is
+ * the down payment, 20% unless the reader changes it; the report prints the cards at 20%
+ * with no control. Rendered on the server at the default and re-computed in the browser
+ * on change, so the page reads correctly with no script.
  */
 export function CostToOwn({
   home,
@@ -50,14 +67,10 @@ export function CostToOwn({
   tax,
   rent,
   noTax,
-}: {
-  home: Dated;
-  rate: Dated;
-  tax: Dated | null;
-  rent: Dated | null;
-  /** Why the tax bill is missing, when it is. */
-  noTax: string | null;
-}) {
+  gain,
+  rateThen,
+  control = true,
+}: CostProps & { control?: boolean }) {
   const [down, setDown] = useState<number>(DEFAULT_DOWN);
   const id = useId();
   const cost = costToOwn({
@@ -67,7 +80,16 @@ export function CostToOwn({
     annualTax: tax?.value ?? null,
   });
   const beforeTax = cost.tax === null;
-  const gap = rent ? cost.total - rent.value : null;
+  // Whole dollars that add up: money gone is its parts, and the key's parts are the payment,
+  // where rounding each figure on its own left them a dollar apart.
+  const shown = {
+    total: Math.round(cost.total),
+    interest: Math.round(cost.interest),
+    tax: cost.tax === null ? 0 : Math.round(cost.tax),
+  };
+  const shownGone = shown.interest + shown.tax;
+  const shownKept = shown.total - shownGone;
+  const against = rent ? goneAgainstRent(cost.gone, rent.value) : null;
 
   const terms = {
     own: term(
@@ -93,12 +115,14 @@ export function CostToOwn({
             `tenants already in place pay.`
         : "Zillow publishes no rent index for this place, so there is no typical rent to compare.",
     ),
-    month: term(
-      "cost-month",
-      "A month",
-      "What the typical home costs each month. Owning: the loan’s principal and interest " +
-        "plus a twelfth of the yearly tax bill, as worked through beside this table. Renting: " +
-        "the typical asking rent.",
+    gone: term(
+      "cost-gone",
+      "Money gone each month",
+      `The part of a month of owning that does not come back: the loan’s interest` +
+        (tax ? " and a twelfth of the yearly property tax bill." : "; property tax is not included here.") +
+        " The rest of the payment, principal, pays the loan down and stays the owner’s as " +
+        "equity in the home. These are the first month’s figures: each month after, a little " +
+        "more of the same payment is principal.",
     ),
     income: term(
       "cost-income",
@@ -112,123 +136,184 @@ export function CostToOwn({
     <section className="section cost" aria-labelledby={`${id}-heading`}>
       <div className="section-head">
         <h2 id={`${id}-heading`}>What it costs per month</h2>
-        <label className="control">
-          <span className="control-label">Down payment</span>
-          <select value={down} onChange={(event) => setDown(Number(event.target.value))}>
-            {DOWN_PAYMENTS.map((pct) => (
-              <option key={pct} value={pct}>
-                {pct}%
-              </option>
-            ))}
-          </select>
-        </label>
+        {control ? (
+          <label className="control">
+            <span className="control-label">Down payment</span>
+            <select value={down} onChange={(event) => setDown(Number(event.target.value))}>
+              {DOWN_PAYMENTS.map((pct) => (
+                <option key={pct} value={pct}>
+                  {pct}%
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <span className="control-label">{down}% down payment</span>
+        )}
       </div>
 
-      <div className="cost-grid">
-        <dl className="cost-lines" aria-live="polite">
-          <div>
-            <dt>
-              Typical single-family home <span className="src">Zillow, {home.asOf}</span>
-            </dt>
-            <dd>{money(home.value)}</dd>
-          </div>
-          <div>
-            <dt>Down payment, {down}%</dt>
-            <dd>{money(cost.down)}</dd>
-          </div>
-          <div>
-            <dt>
-              Mortgage, 30-year fixed at {rate.value.toFixed(2)}%{" "}
-              <span className="src">national average, {rate.asOf}</span>
-            </dt>
-            <dd>{money(cost.mortgage)}/mo</dd>
-          </div>
-          <div>
-            <dt>
-              Property tax
-              {tax && (
-                <>
-                  , a typical bill of {money(tax.value)} a year{" "}
-                  <span className="src">MOD-IV, {tax.asOf}</span>
-                </>
+      <div className="cost-cards">
+        <article className="cost-card">
+          <h3 className="cost-card-label">
+            <Definition term={terms.own}>To own the typical single-family home</Definition>
+          </h3>
+          <p className="cost-figure" aria-live="polite">
+            <b>{money(shown.total)}</b>
+            <span>a month{beforeTax ? ", before property tax" : ", to the lender and the town"}</span>
+          </p>
+          <div className="gone-kept">
+            <div
+              className="gone-kept-bar"
+              role="img"
+              aria-label={
+                `Of ${money(shown.total)}: interest ${money(shown.interest)}` +
+                (cost.tax === null ? "" : `, property tax ${money(shown.tax)}`) +
+                `, and ${money(shownKept)} paid into the home`
+              }
+            >
+              <i style={{ width: share(cost.interest, cost.total), background: "var(--gone-1)" }} />
+              {cost.tax !== null && <i style={{ width: share(cost.tax, cost.total), background: "var(--gone-2)" }} />}
+              <i style={{ width: share(cost.principal, cost.total), background: "var(--good)" }} />
+            </div>
+            <p className="gone-kept-key" aria-hidden="true">
+              <span>
+                <i style={{ background: "var(--gone-1)" }} />
+                Interest {money(shown.interest)}
+              </span>
+              {cost.tax !== null && (
+                <span>
+                  <i style={{ background: "var(--gone-2)" }} />
+                  Property tax {money(shown.tax)}
+                </span>
               )}
-            </dt>
-            <dd>{cost.tax === null ? "not included" : `${money(cost.tax)}/mo`}</dd>
+              <span className="kept">
+                <i style={{ background: "var(--good)" }} />
+                Paid into your home {money(shownKept)}
+              </span>
+            </p>
           </div>
-          <div className="total">
-            <dt>To own the typical home{beforeTax ? ", before property tax" : ""}</dt>
-            <dd>{money(cost.total)}/mo</dd>
-          </div>
-        </dl>
+          <dl className="cost-lines">
+            <div className="sum">
+              <dt>
+                <Definition term={terms.gone}>Money gone each month</Definition>
+              </dt>
+              <dd>{money(shownGone)}</dd>
+            </div>
+            <div>
+              <dt>
+                Typical single-family home <small className="src">Zillow, {home.asOf}</small>
+              </dt>
+              <dd>{money(home.value)}</dd>
+            </div>
+            <div>
+              <dt>
+                Down payment, {down}% <small className="src">money a renter could invest instead</small>
+              </dt>
+              <dd>{money(cost.down)}</dd>
+            </div>
+            <div>
+              <dt>
+                Mortgage, 30-year fixed at {rate.value.toFixed(2)}%{" "}
+                <small className="src">national average, {rate.asOf}</small>
+              </dt>
+              <dd>{money(cost.mortgage)}/mo</dd>
+            </div>
+            <div>
+              <dt>
+                Property tax{tax && `, ${money(tax.value)} a year`}
+                {tax && <small className="src">MOD-IV, {tax.asOf}</small>}
+              </dt>
+              <dd>{cost.tax === null ? "not included" : `${money(shown.tax)}/mo`}</dd>
+            </div>
+            <div>
+              <dt>
+                <Definition term={terms.income}>Income to keep it at 30% of pay</Definition>
+              </dt>
+              <dd>{money(cost.incomeNeeded)} a year</dd>
+            </div>
+          </dl>
+        </article>
 
-        <div className="cost-compare">
-          <table className="compare" aria-live="polite">
-            <caption className="visually-hidden">Owning the typical home against renting it</caption>
-            <thead>
-              <tr>
-                <th scope="col">
-                  <span className="visually-hidden">Measure</span>
-                </th>
-                <th scope="col" className="num">
-                  <Definition term={terms.own}>To own</Definition>
-                  <span className="src">{beforeTax ? "before property tax" : `${down}% down`}</span>
-                </th>
-                <th scope="col" className="num">
-                  <Definition term={terms.rent}>To rent</Definition>
-                  <span className="src">{rent ? `Zillow, ${rent.asOf}` : "no figure"}</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row">
-                  <Definition term={terms.month}>A month</Definition>
-                </th>
-                <td className="num">{money(cost.total)}</td>
-                <td className="num">{rent ? money(rent.value) : "—"}</td>
-              </tr>
-              <tr>
-                <th scope="row">
-                  <Definition term={terms.income}>Income to keep it at 30% of pay</Definition>
-                </th>
-                <td className="num">{money(cost.incomeNeeded)}</td>
-                <td className="num">{rent ? money(incomeFor(rent.value)) : "—"}</td>
-              </tr>
-            </tbody>
-          </table>
-          {rent && gap !== null ? (
+        <article className="cost-card">
+          <h3 className="cost-card-label">
+            <Definition term={terms.rent}>To rent the typical home</Definition>
+          </h3>
+          {rent ? (
             <>
-              <p className="compare-gap">
-                {Math.abs(gap) < 50 ? (
-                  "Owning and renting cost about the same a month"
-                ) : (
-                  <>
-                    Owning costs <b>{money(Math.abs(gap))}</b> {gap > 0 ? "more" : "less"} a month
-                    than renting
-                  </>
-                )}
-                {beforeTax ? ", before property tax." : "."}
+              <p className="cost-figure">
+                <b>{money(rent.value)}</b>
+                <span>a month, all of it gone</span>
               </p>
-              <p className="compare-note">
-                Zillow’s rent covers every kind of rental home, mostly apartments; its home value
-                covers only single-family houses, so the two describe different homes.
-              </p>
+              <dl className="cost-lines">
+                <div className="sum">
+                  <dt>Money gone each month</dt>
+                  <dd>{money(rent.value)}</dd>
+                </div>
+                <div>
+                  <dt>
+                    Typical rent, any kind of rental home{" "}
+                    <small className="src">Zillow, {rent.asOf} · mostly apartments</small>
+                  </dt>
+                  <dd>{money(rent.value)}/mo</dd>
+                </div>
+                <div>
+                  <dt>Income to keep it at 30% of pay</dt>
+                  <dd>{money(incomeFor(rent.value))} a year</dd>
+                </div>
+              </dl>
             </>
           ) : (
-            <p className="compare-note">
-              No rent figure for this place: Zillow publishes its rent index for fewer places
-              than its home values.
+            <p className="cost-missing">
+              No rent figure for this place: Zillow publishes its rent index for fewer places than
+              its home values.
             </p>
           )}
-          {noTax && <p className="compare-note">{noTax}</p>}
-          <p className="compare-note">Hover or tap a heading for how its figures are worked out.</p>
-        </div>
+        </article>
       </div>
 
-      <p className="muted cost-left-out">
-        Left out: {listed(leftOut(down))}. Computed from the figures shown by fixed rules; not a
-        quote, and not written by AI.
-      </p>
+      <div className="cost-strip">
+        {rent && against && (
+          <p className="cost-strip-big" aria-live="polite">
+            Counting only money that’s gone{beforeTax ? ", and before property tax" : ""},{" "}
+            {against.kind === "about" ? (
+              <>
+                owning costs <b>about the same as renting</b>
+              </>
+            ) : (
+              <>
+                owning costs{" "}
+                <b>
+                  {money(Math.abs(against.gap))} a month {against.kind}
+                </b>{" "}
+                than renting
+              </>
+            )}{" "}
+            — {money(shownGone)} against {money(rent.value)} — and the first payment also puts{" "}
+            {money(shownKept)} into the home.
+          </p>
+        )}
+        {rent && (
+          <p className="cost-strip-small">
+            A house usually rents for more than this: Zillow’s rent covers every kind of rental
+            home, mostly apartments, while its home value covers single-family houses only.
+          </p>
+        )}
+        {gain && (
+          <p className="cost-strip-small">
+            Over the last five years the typical home here {gain.perMonth >= 0 ? "gained" : "lost"} about{" "}
+            {money(Math.abs(gain.perMonth))} a month in value ({gain.from} to {gain.to}) — what
+            happened, not a promise
+            {rateThen
+              ? `. Buyers then borrowed at ${rateThen.value.toFixed(2)}% (${rateThen.asOf}), against ${rate.value.toFixed(2)}% now.`
+              : "."}
+          </p>
+        )}
+        {noTax && <p className="cost-strip-small">{noTax}</p>}
+        <p className="cost-strip-small">
+          Left out of owning: {listed(leftOut(down))}. Computed from the figures shown by fixed
+          rules; not a quote, and not written by AI.
+        </p>
+      </div>
     </section>
   );
 }

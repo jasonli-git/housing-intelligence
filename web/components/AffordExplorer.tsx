@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { type KeyboardEvent, useId, useState } from "react";
+import { type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
 
-import { type Mode, monthlyBudget, type Place, type Reached, reach } from "@/lib/afford";
-import { DEFAULT_DOWN, DOWN_PAYMENTS, leftOut } from "@/lib/cost";
+import { PlacePicker } from "@/components/PlacePicker";
+import { checkPlace, type Mode, monthlyBudget, type Place, type Reached, reach } from "@/lib/afford";
+import { DEFAULT_DOWN, DOWN_PAYMENTS, incomeFor, leftOut } from "@/lib/cost";
 import { formatValue } from "@/lib/format";
 import type { Projected } from "@/lib/geo";
+import type { SearchEntry } from "@/lib/search";
 
 const DEFAULT_INCOME = "100000";
 // The municipalities listed before "Show all": enough to answer, short enough to scan.
@@ -33,13 +35,15 @@ function listed(items: string[]): string {
  * Within reach or not, and nothing between. The New Jersey page's choropleth shades by
  * quantile, which is right for ranking a measure and wrong here: a county a few dollars
  * over the line would share a colour with one a few dollars under it. Two states and a
- * third for "no figure", as Milestone 16's highlight-and-mute proposes.
+ * third for "no figure", as Milestone 16's highlight-and-mute proposes — "beyond reach" in
+ * a neutral since Milestone 23, because a light blue read as one end of a scale with the
+ * dark blue of "within reach".
  */
 function ReachMap({ map, rows }: { map: Projected; rows: Map<number, Reached> }) {
   const fill = (id: number) => {
     const row = rows.get(id);
     if (!row) return "var(--surface-2)";
-    return row.within ? "var(--seq-550)" : "var(--seq-100)";
+    return row.within ? "var(--seq-550)" : "var(--tick)";
   };
   return (
     <figure className="map">
@@ -68,7 +72,7 @@ function ReachMap({ map, rows }: { map: Projected; rows: Map<number, Reached> })
           within reach
         </span>
         <span>
-          <i className="swatch" style={{ background: "var(--seq-100)" }} />
+          <i className="swatch" style={{ background: "var(--tick)" }} />
           beyond reach
         </span>
         <span>
@@ -80,10 +84,42 @@ function ReachMap({ map, rows }: { map: Projected; rows: Map<number, Reached> })
   );
 }
 
+/** One side of "can I afford this place?": its monthly cost, its share of income, the verdict. */
+function CheckCell({ label, row, missing }: { label: string; row: Reached | null; missing: string }) {
+  if (!row) {
+    return (
+      <div className="check-cell">
+        <span className="label">{label}</span>
+        <p className="check-missing">{missing}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="check-cell">
+      <span className="label">{label}</span>
+      <b className="check-figure">
+        {money(row.monthly)}
+        <span>/mo</span>
+      </b>
+      <span className="check-share">
+        {share(row.share)} of your income{" "}
+        <span className={row.within ? "status within" : "status beyond"}>
+          {row.within ? "Within reach" : "Beyond reach"}
+        </span>
+      </span>
+      <span className="check-need">It takes {money(incomeFor(row.monthly))} a year to keep it at 30%.</span>
+    </div>
+  );
+}
+
 /**
  * The affordability page's controls and answers: an income, owning or renting, a down
  * payment, and every county and municipality marked within reach or not (Milestone 17).
  * All of it is computed in the browser from figures the page carries.
+ *
+ * Since Milestone 23 it also answers for one place — "can I afford this place?", a place
+ * and an income together — and reads `?income=` and `?place=` from its address when it
+ * loads, so the New Jersey page's call to action and a region page can open it filled in.
  */
 export function AffordExplorer({
   map,
@@ -102,7 +138,24 @@ export function AffordExplorer({
   const [mode, setMode] = useState<Mode>("own");
   const [down, setDown] = useState<number>(DEFAULT_DOWN);
   const [allTowns, setAllTowns] = useState(false);
+  const [picked, setPicked] = useState<number | null>(null);
   const id = useId();
+
+  const places = useMemo(() => [...counties, ...towns], [counties, towns]);
+  const entries: SearchEntry[] = useMemo(
+    () => places.map((p) => ({ id: p.id, name: p.name, detail: p.detail ?? "County", level: p.level })),
+    [places],
+  );
+
+  // An income or a place passed in the address, read once on arrival. A static page has
+  // no server to read it, and reading it here keeps the page renderable without it.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const income = params.get("income")?.replace(/[^0-9]/g, "");
+    if (income) setIncomeText(income);
+    const place = Number(params.get("place"));
+    if (place && places.some((p) => p.id === place)) setPicked(place);
+  }, [places]);
 
   const income = Number(incomeText.replace(/[^0-9.]/g, "")) || 0;
   const options = { mode, income, downPct: down, ratePct: rate.value };
@@ -112,6 +165,9 @@ export function AffordExplorer({
   const countiesWithin = countyRows.filter((row) => row.within).length;
   const shownTowns = allTowns ? townsWithin : townsWithin.slice(0, FIRST_TOWNS);
   const home = mode === "own" ? "owning the typical single-family home" : "renting the typical home";
+  const pickedPlace = picked === null ? null : (places.find((p) => p.id === picked) ?? null);
+  const check =
+    pickedPlace && income > 0 ? checkPlace(pickedPlace, { income, downPct: down, ratePct: rate.value }) : null;
 
   function onModeKeys(event: KeyboardEvent<HTMLDivElement>) {
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
@@ -169,6 +225,55 @@ export function AffordExplorer({
           </label>
         )}
       </div>
+
+      <section className="check" aria-labelledby={`${id}-check`}>
+        <div className="check-head">
+          <h2 id={`${id}-check`} className="check-title">
+            Can I afford a specific place?
+          </h2>
+          <PlacePicker
+            key={picked ?? "none"}
+            className="place-search"
+            entries={entries}
+            onPick={(entry) => setPicked(entry.id)}
+            label="A town or county to check"
+            placeholder="Type a town or county"
+            name="check-place"
+            initialQuery={pickedPlace?.name ?? ""}
+            keepPicked
+          />
+        </div>
+        {pickedPlace && check ? (
+          <>
+            <p className="check-place">
+              <Link href={`/regions/${pickedPlace.id}`}>{pickedPlace.name}</Link>
+              {pickedPlace.detail && <span>{pickedPlace.detail}</span>}
+            </p>
+            <div className="check-grid">
+              <CheckCell
+                label="To own the typical single-family home"
+                row={check.own}
+                missing={
+                  pickedPlace.home === null
+                    ? "Zillow has no home value here, so the cost to own is not worked out."
+                    : "There is no property tax figure here, so the cost to own is not worked out."
+                }
+              />
+              <CheckCell
+                label="To rent the typical home"
+                row={check.rent}
+                missing="Zillow publishes no rent figure here."
+              />
+            </div>
+          </>
+        ) : (
+          <p className="check-missing">
+            {income > 0
+              ? "Pick a town or county to see what its typical home costs at this income, owned and rented."
+              : "Enter an income above, then pick a place."}
+          </p>
+        )}
+      </section>
 
       <p className="afford-summary" id={`${id}-summary`} aria-live="polite">
         {income > 0 ? (

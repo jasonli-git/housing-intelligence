@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { firstYear, openingYear, selectableYears, since, sinceLine } from "@/lib/since";
+import { firstYear, openingYear, selectableYears, since, sinceLine, yearsNote } from "@/lib/since";
 
 const monthly = (year: number, m: number, value: number) => {
   const mm = String(m).padStart(2, "0");
@@ -98,5 +98,31 @@ describe("firstYear", () => {
   it("is the earliest year a series reaches", () => {
     expect(firstYear([annual(2023, 1), annual(2019, 1)])).toBe(2019);
     expect(firstYear([])).toBeNull();
+  });
+});
+
+describe("yearsNote", () => {
+  const points = (...years: number[]) => years.map((y) => ({ period_end: `${y}-07-31`, value: 1 }));
+
+  it("says where the years begin and which series start later", () => {
+    expect(
+      yearsNote([
+        { short: "home values", points: points(2000, 2026) },
+        { short: "rent", points: points(2015, 2026) },
+        { short: "household income", points: points(2019, 2023) },
+      ]),
+    ).toBe(
+      "Years go back to 2000, where the home values series begins; rent begins in 2015 and " +
+        "household income in 2019, so earlier years show only the charts that reach them.",
+    );
+  });
+
+  it("is absent when every series begins in the same year", () => {
+    expect(
+      yearsNote([
+        { short: "rent", points: points(2019, 2026) },
+        { short: "household income", points: points(2019, 2025) },
+      ]),
+    ).toBeNull();
   });
 });

@@ -4,11 +4,13 @@ import { type ReactNode, useId, useState } from "react";
 
 import { TrendChart } from "@/components/TrendChart";
 import { periodLabel } from "@/lib/periods";
-import { openingYear, type Point, selectableYears, since, sinceLine } from "@/lib/since";
+import { openingYear, type Point, selectableYears, since, sinceLine, yearsNote } from "@/lib/since";
 
 export type TrendSeries = {
   metricId: string;
   title: string;
+  /** The series as a sentence names it: "home values". */
+  short: string;
   unit: string;
   points: Point[];
   /** The values table, rendered on the server and passed through to the chart. */
@@ -37,6 +39,7 @@ export function TrendsExplorer({ series }: { series: TrendSeries[] }) {
 
   const readings = series.map((s) => ({ s, reading: years.length > 0 ? since(s.points, year) : null }));
   const charts = years.length > 0 ? readings.filter((r) => r.reading !== null) : readings;
+  const note = yearsNote(series);
 
   return (
     <>
@@ -68,6 +71,8 @@ export function TrendsExplorer({ series }: { series: TrendSeries[] }) {
               {ascending[0]}–{ascending.at(-1)}
             </span>
           </div>
+          {/* By the control it explains: why the years reach back to one series' start. */}
+          {note && <p className="since-note">{note}</p>}
           <ul className="since-lines" aria-live="polite">
             {series.map((s) => {
               const line = sinceLine({ metricId: s.metricId, label: s.title, unit: s.unit, points: s.points }, year);

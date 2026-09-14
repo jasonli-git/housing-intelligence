@@ -438,21 +438,37 @@ export async function regionsWithData(): Promise<Region[]> {
   }
 }
 
-let nationalRate: Promise<{ value: number; period_start: string } | null> | null = null;
+let nationalRates: Promise<Observation[] | null> | null = null;
 
 /**
- * The latest national 30-year mortgage rate, fetched once per build worker rather than
- * once per page: it is one series for the whole country, and every region page and the
- * affordability page asking for it would be thousands of requests for two numbers.
+ * The national 30-year mortgage rate's readings, fetched once per build worker rather
+ * than once per page: it is one series for the whole country, and every region page and
+ * the affordability page asking for it would be thousands of requests for one series.
  */
-export function nationalMortgageRate(): Promise<{ value: number; period_start: string } | null> {
-  nationalRate ??= (async () => {
+function nationalRateSeries(): Promise<Observation[] | null> {
+  nationalRates ??= (async () => {
     const nation = (await api.regions("level=nation&limit=1"))?.items[0];
     if (!nation) return null;
-    const latest = (await api.observations(nation.region_id, "mortgage_rate_30y"))?.observations.at(-1);
-    return latest ? { value: latest.value, period_start: latest.period_start } : null;
+    return (await api.observations(nation.region_id, "mortgage_rate_30y"))?.observations ?? null;
   })();
-  return nationalRate;
+  return nationalRates;
+}
+
+/** The latest national 30-year mortgage rate. */
+export async function nationalMortgageRate(): Promise<{ value: number; period_start: string } | null> {
+  const latest = (await nationalRateSeries())?.at(-1);
+  return latest ? { value: latest.value, period_start: latest.period_start } : null;
+}
+
+/**
+ * The national rate in one month, "2021-07", or null where the series has no reading then:
+ * the rate buyers faced when a past rise in value began (Milestone 23).
+ */
+export async function nationalMortgageRateIn(
+  month: string,
+): Promise<{ value: number; period_start: string } | null> {
+  const reading = (await nationalRateSeries())?.find((o) => o.period_start.slice(0, 7) === month);
+  return reading ? { value: reading.value, period_start: reading.period_start } : null;
 }
 
 /**

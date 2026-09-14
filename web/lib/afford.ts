@@ -60,3 +60,16 @@ export function reach(
     })
     .sort((a, b) => a.monthly - b.monthly);
 }
+
+/**
+ * One place, owned and rented, at one income (Milestone 23's "can I afford this place?").
+ * Either side is null where the place lacks a figure that side needs, by `reach`'s rule.
+ */
+export function checkPlace(
+  place: Place,
+  options: { income: number; downPct: number; ratePct: number },
+): { own: Reached | null; rent: Reached | null } {
+  const [own] = reach([place], { ...options, mode: "own" });
+  const [rent] = reach([place], { ...options, mode: "rent" });
+  return { own: own ?? null, rent: rent ?? null };
+}

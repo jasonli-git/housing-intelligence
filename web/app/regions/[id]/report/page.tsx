@@ -1,32 +1,25 @@
 import Link from "next/link";
 import { Fragment } from "react";
 
-import { Glossed } from "@/components/Glossed";
+import { CostToOwn } from "@/components/CostToOwn";
+import { Crumbs, Kind } from "@/components/Crumbs";
+import { MetricTerm } from "@/components/Glossed";
 import { ChangeCell, Marks, NoteRows, RankText, TableNotes } from "@/components/Ledger";
 import { PrintButton } from "@/components/PrintButton";
+import { StandOuts } from "@/components/StandOuts";
 import { api, artifactUrl, type Packet, regionsWithData } from "@/lib/api";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
-import { formatChange, formatMetric } from "@/lib/format";
+import { costInputs } from "@/lib/costInputs";
+import { formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, windowLabel } from "@/lib/periods";
 import { RANK_HEADING, rankWords } from "@/lib/ranks";
 import { isRestricted } from "@/lib/sources";
+import { standOuts } from "@/lib/standouts";
 import { paychecks, tradeoff, verdict } from "@/lib/verdict";
 
 const WINDOW = "5y";
-
-/**
- * Which end of its cohort a highlight sits at, in words its metric can support: `best`
- * and `worst` only where the metric's direction defines a good end. A neutral metric —
- * home value, a Fair Market Rent, a homeownership or vacancy rate — ranks largest first
- * with no judgement attached. Mirrors `_end` in `hip/packets/report.py`.
- */
-function rankEnd(position: string, direction: string | undefined): string {
-  const leading = position === "leading";
-  if (direction === "neutral") return leading ? "top" : "bottom";
-  return leading ? "best" : "worst";
-}
 
 /** IRS migration vintages are tax-year pairs: "1718" is 2017–18. */
 function vintage(sourceId: string, value: string): string {
@@ -88,6 +81,10 @@ export async function generateStaticParams() {
  * Caveats are lettered on the rows they qualify and set out under each table, which is
  * where "beside the figure" lands on paper (#123). The scopes come from the summary; the
  * packet stays the authority on which caveats appear.
+ *
+ * Since Milestone 23 it prints the region page's cost cards at the 20% default, with no
+ * control, and the same stand-out cards; on screen it is set as a sheet of paper, the
+ * report's own look among the page types (globals.css).
  */
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -111,8 +108,6 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
   const { region, window, comparisons } = packet;
   const name = displayName(region);
-  const defined = new Set<string>();
-  const directions = new Map(packet.metrics.map((m) => [m.metric_id, m.direction]));
   const measureSections = groupRows(packet.metrics);
   const levelSections = groupRows(packet.levels);
   const placement = placeCaveats(
@@ -136,25 +131,23 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   const lead = verdict(peers, packet.metrics, packet.levels);
   const paid = paychecks(packet.metrics);
   const trade = tradeoff(peers, packet.levels);
+  const cost = await costInputs(region.level, packet.levels, packet.metrics);
 
   return (
     <main className="shell report">
-      <header className="page-head">
+      <header className="page-head" data-kind="report">
         <div>
-          <p className="crumbs print-hide">
-            <Link href="/">New Jersey</Link>
-            {region.parent && region.parent.level !== "state" && (
-              <>
-                {" / "}
-                <Link href={`/regions/${region.parent.region_id}`}>
-                  {displayName(region.parent)}
-                </Link>
-              </>
-            )}
-            {" / "}
-            <Link href={`/regions/${regionId}`}>{name}</Link>
-            {" / Report"}
-          </p>
+          <Crumbs
+            trail={[
+              { href: "/", label: "New Jersey" },
+              ...(region.parent && region.parent.level !== "state"
+                ? [{ href: `/regions/${region.parent.region_id}`, label: displayName(region.parent) }]
+                : []),
+              { href: `/regions/${regionId}`, label: name },
+            ]}
+            here="Report"
+          />
+          <Kind kind="report" />
           <h1 className="page-title">{region.label} — housing report</h1>
           <p className="meta">
             {packet.metrics.length} measures over the five-year change window, each ranked
@@ -197,23 +190,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </div>
       </header>
 
-      {packet.highlights.length > 0 && (
-        <section className="section">
-          <h2>Where {name} stands out</h2>
-          <ul className="standouts">
-            {packet.highlights.map((h) => (
-              <li key={h.metric_id}>
-                <span className="r">
-                  {h.rank} / {h.of}
-                  <small>{rankEnd(h.position, directions.get(h.metric_id))} end</small>
-                </span>
-                <span className="what">{h.label}</span>
-                <span className="how">{formatChange(h.pct_change)} over its window</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {cost && <CostToOwn {...cost} control={false} />}
+
+      <StandOuts
+        name={name}
+        peers={`${scopeName(comparisons.peer_scope)}’s ${comparisons.peer_count} ${peerNoun(comparisons.peer_level)}`}
+        items={standOuts(packet)}
+      />
 
       <section className="section">
         <h2>Measures</h2>
@@ -241,7 +224,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                   <Fragment key={m.metric_id}>
                     <tr className={measures.inline.has(m.metric_id) ? "has-note" : undefined}>
                       <td>
-                        <Glossed text={m.label} defined={defined} />
+                        <MetricTerm metricId={m.metric_id} label={m.label} scope="report-measures" />
                         <Marks letters={measures.marks.get(m.metric_id)} />
                       </td>
                       <td className="num">{formatMetric(m.start_value, m.unit, m.metric_id)}</td>
@@ -306,7 +289,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                     <Fragment key={l.metric_id}>
                       <tr className={current.inline.has(l.metric_id) ? "has-note" : undefined}>
                         <td>
-                          <Glossed text={l.label} defined={defined} />
+                          <MetricTerm metricId={l.metric_id} label={l.label} scope="report-values" />
                           <Marks letters={current.marks.get(l.metric_id)} />
                         </td>
                         <td className="num">{formatMetric(l.value, l.unit, l.metric_id)}</td>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type KeyboardEvent, useState } from "react";
 
 import { Choropleth } from "@/components/Choropleth";
+import { definitionOf } from "@/lib/definitions";
 import { formatChange, formatMetric } from "@/lib/format";
 import type { Projected } from "@/lib/geo";
 import type { Section } from "@/lib/groups";
@@ -40,6 +41,11 @@ export type Measure = {
  * Map and table are one view: pointing at a county in either outlines it on the map and
  * reads its figures above it. Keyboard readers move through the table, which links
  * every county; the map's own links are kept out of the tab order.
+ *
+ * Since Milestone 23 the measure is introduced in a card with the controls that change
+ * it — its name, what it is and why it matters (`lib/definitions.ts`), and the window —
+ * and the ranking sits in a card of its own, the county names in text colour rather than
+ * a generic link blue, each row ending in "›".
  */
 export function CountyExplorer({
   map,
@@ -65,6 +71,9 @@ export function CountyExplorer({
   const values = new Map(rows.map((row) => [row.id, row.change]));
   const phrase = WINDOWS.find((w) => w.key === key)!.phrase;
   const focus = hovered === null ? null : (rows.find((row) => row.id === hovered) ?? null);
+  const definition = definitionOf(measure.metric_id);
+  const notes = windowNote(key, measure.metric_id, measure.windows);
+  const windowName = WINDOWS.find((w) => w.key === key)!.label;
   const latest = (value: number | null) =>
     value === null ? "—" : formatMetric(value, measure.unit, measure.metric_id);
 
@@ -88,13 +97,34 @@ export function CountyExplorer({
 
   return (
     <section className="explorer-section" aria-labelledby="explorer-heading">
-      <div className="section-head">
-        <p className="meta" id="explorer-heading">
-          {measure.label}, change {phrase}, by county
-          {current.start && current.end
-            ? ` · ${windowLabel(current.start, current.end, measure.metric_id)}`
-            : ""}
-        </p>
+      <div className="measure-card">
+        <div className="measure-intro">
+          <div>
+            <p className="measure-eyebrow">On the map</p>
+            <h2 className="measure-name" id="explorer-heading">
+              {measure.label}
+            </h2>
+            {definition && (
+              <p className="measure-def">
+                {definition.what} <span className="measure-why">{definition.why}</span>
+              </p>
+            )}
+            <p className="measure-window">
+              Change {phrase}, by county
+              {current.start && current.end ? ` · ${windowLabel(current.start, current.end, measure.metric_id)}` : ""}
+            </p>
+          </div>
+          {/* What a reader needs to read the chosen window, beside the measure it qualifies
+              and only while that window is chosen; set apart as a note, not more definition. */}
+          {notes.length > 0 && (
+            <aside className="window-aside" aria-label={`About “${windowName}”`}>
+              <p className="window-aside-label">About “{windowName}”</p>
+              {notes.map((note) => (
+                <p key={note}>{note}</p>
+              ))}
+            </aside>
+          )}
+        </div>
         <div className="explorer-controls">
           <label className="control">
             <span className="control-label">Measure</span>
@@ -138,23 +168,16 @@ export function CountyExplorer({
         </div>
       </div>
 
-      {/* Beside the control it explains, and only when that window is chosen. */}
-      {windowNote(key, measure.metric_id, measure.windows).map((note) => (
-        <p key={note} className="window-note">
-          {note}
-        </p>
-      ))}
-
       <div className="explorer">
         <div>
+          {/* Empty until a county is pointed at; the line keeps its height so the map
+              does not jump when it fills. */}
           <p className="readout" aria-live="polite">
-            {focus ? (
+            {focus && (
               <>
                 <b>{focus.name}</b> · {formatChange(focus.change)} · now {latest(focus.latest)} ·{" "}
                 {rankWords(focus.rank, focus.of, "change", measure.direction, phrase)}
               </>
-            ) : (
-              "Point at a county on the map or in the table to read its figures."
             )}
           </p>
           <Choropleth
@@ -166,7 +189,7 @@ export function CountyExplorer({
             onHover={setHovered}
           />
         </div>
-        <div>
+        <div className="rank-card">
           <p className="table-note">
             Ranked by change {phrase}, not by level: rank 1 is the{" "}
             {measure.direction === "lower_is_better" ? "smallest" : "largest"} rise, following
@@ -188,6 +211,9 @@ export function CountyExplorer({
                   </th>
                   <th scope="col" className="num">
                     Latest
+                  </th>
+                  <th scope="col" className="go">
+                    <span className="visually-hidden">Open</span>
                   </th>
                 </tr>
               </thead>
@@ -211,6 +237,13 @@ export function CountyExplorer({
                     </td>
                     <td className="num">{formatChange(row.change)}</td>
                     <td className="num">{latest(row.latest)}</td>
+                    <td className="go">
+                      {/* A second way in at the row's end, out of the tab order: the name
+                          is the keyboard's link. */}
+                      <Link href={`/regions/${row.id}`} tabIndex={-1} aria-hidden="true">
+                        ›
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -349,7 +349,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 463 Python + 143 dashboard tests; API tests skip without a warehouse
+make test          # 463 Python + 167 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
