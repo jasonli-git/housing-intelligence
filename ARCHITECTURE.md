@@ -324,21 +324,36 @@ housing-intelligence/
 │   ├── app/layout.tsx         # fonts (#121), the shared bar, licence line, footer
 │   ├── app/tokens.css         # palette, type, space; the bar's jasonli.app values (#122)
 │   ├── app/globals.css        # base rules, the named component layer, print
-│   ├── app/page.tsx           # New Jersey: measure and window chosen by the reader (#126)
-│   ├── app/regions/[id]/page.tsx        # region: ledger, interpretation, trends, values
-│   ├── app/regions/[id]/report/page.tsx # print-ready report from the packet (#45)
-│   ├── components/            # Masthead, CountyPicker, LicenceLine, SourceFooter, Ledger,
-│   │                          #   CurrentValues, CountyExplorer, Choropleth, TrendChart,
-│   │                          #   ExplanationPanel, Glossed, PrintButton
-│   ├── lib/api.ts             # server-side fetchers + packet types
+│   ├── app/page.tsx           # New Jersey: the measure card, map and ranking (#126, #152)
+│   ├── app/afford/page.tsx    # what can I afford; can I afford this place (#144, #153)
+│   ├── app/search.json/route.ts         # the search index, written at build (#143)
+│   ├── app/regions/[id]/page.tsx        # region, answers first, one expander (#156)
+│   ├── app/regions/[id]/report/page.tsx # print-ready report from the packet (#45, #160)
+│   ├── components/            # Masthead, PlaceSearch, PlacePicker, ThemeToggle, Crumbs,
+│   │                          #   LicenceLine, SourceFooter, InlineScript, CountyExplorer,
+│   │                          #   Choropleth, AffordCta, AffordExplorer, CostToOwn,
+│   │                          #   StandOuts, MoreExpander, Ledger, CurrentValues,
+│   │                          #   TrendsExplorer, TrendChart, ExplanationPanel, Glossed,
+│   │                          #   PrintButton
+│   ├── lib/api.ts             # server-side fetchers + packet types; the national rate
 │   ├── lib/format.ts          # value formatting (#41); shares and multiples (#124)
 │   ├── lib/caveats.ts         # where each caveat sits on a page (#123)
 │   ├── lib/groups.ts          # the four page sections (#129)
+│   ├── lib/definitions.ts     # a plain definition and why it matters, per metric (#149)
 │   ├── lib/glossary.ts        # terms defined where they appear (#130)
-│   ├── lib/periods.ts         # a period in its source's own terms
+│   ├── lib/periods.ts         # a period in its source's own terms (#155)
+│   ├── lib/ranks.ts           # a rank in words: its basis and which end is first (#138)
+│   ├── lib/verdict.ts         # the head's answers and the housing cards (#139, #159)
+│   ├── lib/cost.ts            # the cost to own; money gone and kept (#142, #157)
+│   ├── lib/costInputs.ts      # the cost cards' inputs, read from a packet (#157)
+│   ├── lib/standouts.ts       # change and value stand-outs (#158)
+│   ├── lib/afford.ts          # within reach at 30% of income (#144, #153)
+│   ├── lib/search.ts          # places matched by name, type and county (#143)
+│   ├── lib/since.ts           # then against now; where the years begin (#145, #160)
 │   ├── lib/sources.ts         # the footer's institutions and the licence line (#128)
+│   ├── lib/theme.ts           # light, dark or the system's
 │   ├── lib/geo.ts             # county outlines projected on the server (#126)
-│   ├── lib/windows.ts         # the New Jersey page's change windows
+│   ├── lib/windows.ts         # the New Jersey page's change windows (#140)
 │   ├── lib/names.ts           # how a region is named to a reader
 │   ├── lib/citations.ts       # a model's prose read against its binding (#112)
 │   ├── lib/scale.ts           # ramp and breaks — pure and tested (#48)
@@ -354,7 +369,7 @@ housing-intelligence/
 │   ├── validation/            # gate reports per run; gitignored, per-run machine state
 │   ├── regions/<window>/      # Markdown reports, one per region; 5y committed, README-linked
 │   └── evaluation/            # the published model-evaluation report; committed
-├── tests/                     # 452 Python tests; API tests skip without a warehouse
+├── tests/                     # 463 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
@@ -1037,10 +1052,10 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **A change window is the nearest observation within 400 days of the target**, not an
   exact date. Sources have different frequencies, so an exact match would drop every
   annual metric. Beyond 400 days the row is omitted rather than stretched.
-- **The dashboard covers three pages.** An overview map with county rankings, a region
-  detail page, and a print-ready region report. There is no side-by-side region
-  comparison UI yet, even though `/compare` exists to serve one, and no municipality or
-  ZIP choropleth — only county.
+- **The dashboard has four page types.** The New Jersey page with its county map and
+  rankings, a region page, its print-ready report, and the affordability page. There is
+  no side-by-side region comparison UI yet, even though `/compare` exists to serve one,
+  and no municipality or ZIP choropleth — only county.
 - **The map has no basemap, pan, or zoom.** A deliberate consequence of #39: boundaries
   render without roads or labels underneath, so a region is identified by shape and
   tooltip rather than by context.
@@ -1105,3 +1120,14 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   The fact tables arrived at Milestone 2 and now hold 351,295 rows, and a warm
   `make pipeline` still measured 22 seconds on 2026-08-28, so emulation has not yet been
   worth fixing.
+- **Money gone is the first month's.** Interest is highest in a loan's first month, so the
+  cost cards' money gone is the dearest month of the loan rather than its average, and
+  "about the same as renting" is a gap within 5% of the rent — a judgement about two
+  indexes' error, not a measured one (#157).
+- **The rent the cost cards compare is every kind of rental.** Zillow publishes its
+  single-family rent index only by metro area, so a house is set against a rent that is
+  mostly apartments; the page says houses usually rent for more (#157, ROADMAP's
+  Post-Version 2 list).
+- **The value stand-outs restate the packet's rule in TypeScript.** `web/lib/standouts.ts`
+  copies `HIGHLIGHT_DEPTH` and `MIN_COHORT` from `hip/packets/assemble.py`; a change to
+  either must be made in both (#158).

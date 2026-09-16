@@ -3,17 +3,18 @@
 Working list for the current milestone. Longer-horizon items live in
 [ROADMAP.md](ROADMAP.md).
 
-## Resume here — state as of 2026-09-11
+## Resume here — state as of 2026-09-16
 
 Nothing in this section is in progress. It is the order agreed on 2026-09-10 for picking
 the work back up, and what has to be true before starting. Detail lives in the items it
 points to; this section only sequences them.
 
-**Where things stand.** Milestones 12, 13, 19, 20, 21 and 22 are done, and all of them
-are live: 21's data, 13's bound explanations and `v3`'s model order reached the site with
-the deploy on 2026-09-11. The preference list, set from `v3`, is `gemini-3.7-flash-low` →
-`deepseek-flash-nothink` → `qwen3.7-plus` → `gemini-3.1-flash-lite` → `gemma-4-e4b-q4`,
-and every county page carries those five readings, every figure in them bound.
+**Where things stand.** Milestones 12, 13, 19, 20, 21, 22, 18 and 17 are done and live; 23
+is done and reaches the site with the next deploy. Of the first six: 21's data, 13's bound
+explanations and `v3`'s model order reached the site with the deploy on 2026-09-11. The
+preference list, set from `v3`, is `gemini-3.7-flash-low` → `deepseek-flash-nothink` →
+`qwen3.7-plus` → `gemini-3.1-flash-lite` → `gemma-4-e4b-q4`, and every county page carries
+those five readings, every figure in them bound.
 
 **The agreed sequence** — settled with the user on 2026-09-10; steps 1 to 5 are done:
 
@@ -30,7 +31,7 @@ and every county page carries those five readings, every figure in them bound.
    selected at 3.77/4.00, for about $6. Checklist below under "Run `v3`".
 5. ✅ **Act on `v3`:** reorder, retire, regenerate and deploy, all done 2026-09-11.
    Checklist below under "After `v3`".
-6. **18 → 17 → 16**, per [ROADMAP.md](ROADMAP.md). Milestone 18 done and live
+6. **18 → 17 → 23 → 16**, per [ROADMAP.md](ROADMAP.md). Milestone 18 done and live
    2026-09-12: 0.14.1 republished the sixteen pages the first deploy shipped broken, and
    0.14.2 added the review's column headers, licence box and theme control, and 0.14.3
    — the licence box across the page, its label in mono capitals — is Pages deployment
@@ -41,8 +42,9 @@ and every county page carries those five readings, every figure in them bound.
    `edbff905`, with the regenerated county explanations; the owner's review of it
    followed as 0.15.1, deployment `ce9c2ba9`, and the owning-against-renting table
    as 0.15.2, deployment `5f9915d4`; the chart-data trim as 0.15.3, deployment
-   `46912e87`. **Milestone 23, the presentation pass, is next** — planned 2026-09-14
-   from the owner's review, with mockups of two county-page layouts first — then 16.
+   `46912e87`. **Milestone 23, the presentation pass, done 2026-09-16** as 0.16.0 —
+   planned 2026-09-14 from the owner's review and built in three slices, each reviewed by
+   the owner; its section is below Milestone 17's. Not yet deployed. **16 is next.**
    Changed
    from 18 → 16 → 17 on 2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
@@ -2722,8 +2724,9 @@ the same day** in three slices, each reviewed by the owner before the next:
 day. **Slice B built 2026-09-14** (#152–#155) and approved the same day. **Slice C built
 2026-09-14** (#156–#160): 167 dashboard tests, 16 new (`cost`, `verdict`, `standouts`,
 `since`), `tsc` clean; checked by eye on Mercer at 1280px and 375px and in the dark theme,
-its report, ZIP 08540 and Millstone, with nothing wider than the screen; awaiting the
-owner's review, then the milestone's completion (CHANGELOG, README, ROADMAP). Queued after 17 and before 16 (ROADMAP). The goal, in the owner's words: make
+its report, ZIP 08540 and Millstone, with nothing wider than the screen; approved by the
+owner. **Milestone 23 complete 2026-09-16** as 0.16.0 (CHANGELOG). Built after 17 and
+before 16 (ROADMAP). The goal, in the owner's words: make
 the website prettier and deliver insights faster. The notes are sorted below into tasks;
 quoted wording is the owner's.
 

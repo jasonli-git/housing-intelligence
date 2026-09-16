@@ -12,7 +12,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status (2026-09-13): v0.15.0, Version 1 complete and Version 2 under way.** New
+> **Status (2026-09-16): v0.16.0, Version 1 complete and Version 2 under way.** New
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
 > **351,974 observations across 32 metrics from 12 public sources, spanning 1971 to
@@ -40,7 +40,10 @@ layer only explains metrics that were already computed.
 > Milestone 17 made it answer the questions people bring: a verdict and the monthly cost
 > to own on every region page, a page that takes an income and returns the places within
 > reach, and search — all computed from published figures by fixed rules, none written by
-> a model.
+> a model. Milestone 23 made it quicker to read: region pages lead with what a home costs
+> a month, where the region stands out and what its housing is like, with every table one
+> click away; every metric carries a plain definition; and `/afford` answers for one place
+> at a time.
 >
 > See [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md)
 > for what shipped.
@@ -195,6 +198,13 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   and municipality within reach at 30% of it; search on the New Jersey page names each
   result's legal type and county; region pages compare now with any earlier year. All of
   it is computed from published figures by fixed rules, and says so.
+- **Answers first, tables one click away** (M23, built) — region pages open with the
+  verdict, the monthly cost to own and to rent with the payment split into money gone and
+  money kept, where the region stands out by change and by value, and its housing as
+  cards, then one expander holding every table, the trends and the interpretation. Every
+  metric has a plain definition and a line on why it matters; search sits in the bar on
+  every page; `/afford` answers whether one place is within reach of an income; the report
+  prints the cost cards and reads as a sheet of paper.
 
 ## Sample output
 

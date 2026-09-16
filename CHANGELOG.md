@@ -3,6 +3,63 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.16.0] — 2026-09-16
+
+Milestone 23, the presentation pass: the owner's three-part review of 0.15.x, built in
+three slices, each reviewed before the next. The site is prettier and answers sooner;
+every answer is still computed from published figures by fixed rules, and no packet
+changed.
+
+### Added
+- **A plain definition for every metric** (#149), each ending with why it matters, on the
+  metric's name wherever a table, the report or the New Jersey page shows it.
+- **Footnote marks that jump to their notes** (#149); the note reached is lit, and Back
+  returns to the row.
+- **Search in the bar on every page** (#150), in place of the county picker, worded so iOS
+  AutoFill no longer takes it over, with a GitHub link beside it.
+- **"Can I afford a specific place?"** on `/afford` (#153): a town or county and an income,
+  answered owned and rented. The New Jersey page's "What can I afford?" is a card with its
+  own income box that opens `/afford` filled in.
+- **"Where … stands out"** on region pages and reports (#158): cards for what leads and what
+  lags by change, and what is highest or lowest by current value.
+- **The housing here** as cards (#159), each placing its figure among the region's peers —
+  "older than most · 13th of 21" — with the vacancy rate and the population added.
+- **Money gone and money kept** in the cost to own (#157): the payment split into interest
+  and tax, which are spent, and principal, which the buyer keeps; rent set against money
+  gone; and the past five years' gain in value beside the rate buyers faced when it began.
+- **Short answers to "Did paychecks keep up?"** (#159) — Homes and Rent, each Yes, No or
+  About even — with the sentences behind them a click away.
+- **A note on why the trends' years begin where they do** (#160).
+
+### Changed
+- **Region pages lead with the answers** (#156) — layout B, the owner's choice of two
+  mockups: the verdict, the cost cards, the stand-outs and the housing cards, then one
+  expander holding every table, the trends and the interpretation, shown whole. The
+  expander remembers, in the reader's own browser, whether it was left open.
+- **What it costs per month is two cards**, to own and to rent, with the comparison
+  beneath them (#157). Mercer now reads about the same — $2,654 gone against $2,606 rent —
+  where 0.15.2 said owning cost $364 more.
+- **The computed-not-AI note is a label** at the top of the verdict, its full sentence on
+  hover or tap (#159).
+- **The New Jersey page explains its measure** in a card that holds its definition, its
+  controls and the "Since 2019" note (#152); the ranking has a card of its own with names
+  in text colour, and the map and table are a size larger at the same page width.
+- **Each page type is a little distinct** (#151): a kind label, an accent rule and a
+  breadcrumb of pills, and the report set as a sheet of paper on screen (#160). A short
+  page keeps its footer at the bottom of the window.
+- **The report prints the cost cards** at 20% down, and the same stand-out cards (#160).
+- **"Beyond reach" is grey** on the affordability map (#154).
+
+### Removed
+- The county picker, the "Hover or tap a heading…" note under the costs, and the two lines
+  on the New Jersey page that described the page.
+
+### Fixed
+- **"Since 2019" read "2018 → Jul 2026"** for Zillow's measures (#155): a monthly series'
+  December reading is now named by its month, "Dec 2018".
+- **A region without a Zillow value** says why it has no monthly cost (#160), where the
+  section used to vanish.
+
 ## [0.15.3] — 2026-09-13
 
 ### Fixed
