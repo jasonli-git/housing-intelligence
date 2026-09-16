@@ -9,12 +9,12 @@ Nothing in this section is in progress. It is the order agreed on 2026-09-10 for
 the work back up, and what has to be true before starting. Detail lives in the items it
 points to; this section only sequences them.
 
-**Where things stand.** Milestones 12, 13, 19, 20, 21, 22, 18 and 17 are done and live; 23
-is done and reaches the site with the next deploy. Of the first six: 21's data, 13's bound
-explanations and `v3`'s model order reached the site with the deploy on 2026-09-11. The
-preference list, set from `v3`, is `gemini-3.7-flash-low` → `deepseek-flash-nothink` →
-`qwen3.7-plus` → `gemini-3.1-flash-lite` → `gemma-4-e4b-q4`, and every county page carries
-those five readings, every figure in them bound.
+**Where things stand.** Milestones 12, 13, 19, 20, 21, 22, 18, 17 and 23 are done and
+live. Of the first six: 21's data, 13's bound explanations and `v3`'s model order reached
+the site with the deploy on 2026-09-11. The preference list, set from `v3`, is
+`gemini-3.7-flash-low` → `deepseek-flash-nothink` → `qwen3.7-plus` →
+`gemini-3.1-flash-lite` → `gemma-4-e4b-q4`, and every county page carries those five
+readings, every figure in them bound.
 
 **The agreed sequence** — settled with the user on 2026-09-10; steps 1 to 5 are done:
 
@@ -44,7 +44,8 @@ those five readings, every figure in them bound.
    as 0.15.2, deployment `5f9915d4`; the chart-data trim as 0.15.3, deployment
    `46912e87`. **Milestone 23, the presentation pass, done 2026-09-16** as 0.16.0 —
    planned 2026-09-14 from the owner's review and built in three slices, each reviewed by
-   the owner; its section is below Milestone 17's. Not yet deployed. **16 is next.**
+   the owner; its section is below Milestone 17's. Live 2026-09-16 as Pages deployment
+   `a65be0ab`. **16 is next.**
    Changed
    from 18 → 16 → 17 on 2026-09-11: 17 before 16, because 16 followed 17 only by number.
 
@@ -2725,8 +2726,19 @@ day. **Slice B built 2026-09-14** (#152–#155) and approved the same day. **Sli
 2026-09-14** (#156–#160): 167 dashboard tests, 16 new (`cost`, `verdict`, `standouts`,
 `since`), `tsc` clean; checked by eye on Mercer at 1280px and 375px and in the dark theme,
 its report, ZIP 08540 and Millstone, with nothing wider than the screen; approved by the
-owner. **Milestone 23 complete 2026-09-16** as 0.16.0 (CHANGELOG). Built after 17 and
-before 16 (ROADMAP). The goal, in the owner's words: make
+owner. **Milestone 23 complete 2026-09-16** as 0.16.0 (CHANGELOG), and live the same day
+as Pages deployment `a65be0ab`: `dist/` held 5,917 artifacts (109MB) and 13,657 site files
+(742MB); rclone transferred one changed artifact, since no packet changed. Checked in a
+browser on the live site: Mercer's cost cards, stand-outs, housing cards and expander, the
+New Jersey page's cards, `/afford` opened on Princeton at $150,000, and Mercer's report.
+Built after 17 and before 16 (ROADMAP).
+
+- Note: **the site grew from 600MB to 742MB**, and Mercer's page from 308KB to 387KB.
+  About 40KB of Mercer's growth is the metric definitions (#149): 68 on the page, each
+  carried twice, in the markup and in the data Next embeds for the browser. The largest
+  single piece of that embedded data, the five interpretations (74KB), predates the
+  milestone. Worth a look before 16 adds a map to the New Jersey page: definitions could
+  be sent once per metric rather than once per appearance. The goal, in the owner's words: make
 the website prettier and deliver insights faster. The notes are sorted below into tasks;
 quoted wording is the owner's.
 

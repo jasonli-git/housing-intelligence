@@ -7,14 +7,13 @@ over the API, displayed by the dashboard, and packaged as versioned analysis pac
 with 289 Python and 26 dashboard tests passing. All eight pipeline stages run.
 
 **Version 2 is under way — Milestones 10, 11, 12, 19, 22, 20, 21, 13, 18, 17 and 23 have
-shipped, between 2026-09-02 and 2026-09-16** (23 reaches the site with the next deploy).
-The platform is published: New Jersey is served from a public domain with no database and
-no application server, and its interpretation is written by hosted models behind a
-preference list that ends on this machine. Since 18, 17 and 23 it has a design language
-of its own and answers the questions people bring. What remains planned is the
-three-dimensional map of New Jersey (16); expansion past New Jersey was deferred on
-2026-09-07. Everything it runs on — the warehouse schema, the
-analytics layer, the packet contract — is what Version 1 built.
+shipped, between 2026-09-02 and 2026-09-16.** The platform is published: New Jersey is
+served from a public domain with no database and no application server, and its
+interpretation is written by hosted models behind a preference list that ends on this
+machine. Since 18, 17 and 23 it has a design language of its own and answers the questions
+people bring. What remains planned is the three-dimensional map of New Jersey (16);
+expansion past New Jersey was deferred on 2026-09-07. Everything it runs on — the
+warehouse schema, the analytics layer, the packet contract — is what Version 1 built.
 
 Two milestones ran out of numeric order. Milestone 9 was built before Milestone 5,
 because it corrects numbers the dashboard displays and fixing them afterwards would have
