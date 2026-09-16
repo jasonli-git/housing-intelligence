@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 
-import { Glossed, MetricTerm } from "@/components/Glossed";
+import { Glossed } from "@/components/Glossed";
+import { MetricTerm } from "@/components/MetricTerm";
 import type { PacketMetric } from "@/lib/api";
 import type { TablePlacement } from "@/lib/caveats";
 import { formatChange, formatMetric } from "@/lib/format";

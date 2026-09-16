@@ -1,7 +1,7 @@
 import { AffordCta } from "@/components/AffordCta";
 import { CountyExplorer, type Measure } from "@/components/CountyExplorer";
 import { Kind } from "@/components/Crumbs";
-import { MetricTerm } from "@/components/Glossed";
+import { MetricTerm } from "@/components/MetricTerm";
 import { api } from "@/lib/api";
 import { formatMetric } from "@/lib/format";
 import { project } from "@/lib/geo";

@@ -3,8 +3,8 @@ import { Fragment } from "react";
 
 import { CostToOwn } from "@/components/CostToOwn";
 import { Crumbs, Kind } from "@/components/Crumbs";
-import { MetricTerm } from "@/components/Glossed";
 import { ChangeCell, Marks, NoteRows, RankText, TableNotes } from "@/components/Ledger";
+import { MetricTerm } from "@/components/MetricTerm";
 import { PrintButton } from "@/components/PrintButton";
 import { StandOuts } from "@/components/StandOuts";
 import { api, artifactUrl, type Packet, regionsWithData } from "@/lib/api";

@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 
-import { Definition } from "@/components/Glossed";
+import { Definition } from "@/components/Definition";
 import { costToOwn, DEFAULT_DOWN, DOWN_PAYMENTS, goneAgainstRent, incomeFor, leftOut } from "@/lib/cost";
 import { formatValue } from "@/lib/format";
 import type { Term } from "@/lib/glossary";

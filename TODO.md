@@ -2738,7 +2738,14 @@ Built after 17 and before 16 (ROADMAP).
   carried twice, in the markup and in the data Next embeds for the browser. The largest
   single piece of that embedded data, the five interpretations (74KB), predates the
   milestone. Worth a look before 16 adds a map to the New Jersey page: definitions could
-  be sent once per metric rather than once per appearance. The goal, in the owner's words: make
+  be sent once per metric rather than once per appearance.
+- [x] **The definitions' page weight trimmed** before 16, 2026-09-16 (#161, 0.16.1).
+      `MetricTerm` still renders on the server, but goes into Next's payload — which a
+      static export stores four times per page — as its props, with the text read from
+      the dictionary in the page's script. The site went from 742MB to 652MB, Mercer's page
+      and its payload files from 1,056KB to 933KB. 167 dashboard tests and `tsc` clean;
+      Mercer checked on the dev server with all 68 definitions and no console errors;
+      `make check-dist` passed. Not yet deployed. The goal, in the owner's words: make
 the website prettier and deliver insights faster. The notes are sorted below into tasks;
 quoted wording is the owner's.
 

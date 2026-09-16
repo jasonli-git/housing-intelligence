@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 
-import { MetricTerm } from "@/components/Glossed";
 import { Marks, NoteRows, RankText } from "@/components/Ledger";
+import { MetricTerm } from "@/components/MetricTerm";
 import type { PacketLevel } from "@/lib/api";
 import type { TablePlacement } from "@/lib/caveats";
 import { formatMetric } from "@/lib/format";

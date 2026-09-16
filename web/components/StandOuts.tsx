@@ -1,4 +1,4 @@
-import { MetricTerm } from "@/components/Glossed";
+import { MetricTerm } from "@/components/MetricTerm";
 import type { StandOut, StandOutGroup } from "@/lib/standouts";
 
 const GROUPS: { key: StandOutGroup; title: string; sub: string }[] = [

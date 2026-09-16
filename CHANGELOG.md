@@ -3,6 +3,15 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.16.1] — 2026-09-16
+
+### Fixed
+- **Pages no longer store each definition four times** (#161): a metric's definition is
+  kept in the page's markup only, not again in the three copies of the page's data that
+  Next keeps for moving between pages. The site went from 742 MB to 652 MB, and Mercer
+  County's page with those copies from 1,056 KB to 933 KB. Every definition still opens on
+  hover, focus or tap, with no script.
+
 ## [0.16.0] — 2026-09-16
 
 Milestone 23, the presentation pass: the owner's three-part review of 0.15.x, built in
