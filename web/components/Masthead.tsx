@@ -36,6 +36,9 @@ export function Masthead() {
           </Link>
         </div>
         <div className="bar-tools">
+          <Link className="bar-afford" href="/afford">
+            Affordability
+          </Link>
           <PlaceSearch />
           <ThemeToggle />
           <a

@@ -169,7 +169,7 @@ export function CountyExplorer({
       </div>
 
       <div className="explorer">
-        <div>
+        <div className="map-panel">
           {/* Empty until a county is pointed at; the line keeps its height so the map
               does not jump when it fills. */}
           <p className="readout" aria-live="polite">
