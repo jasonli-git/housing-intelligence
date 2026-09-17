@@ -1,0 +1,923 @@
+/*
+ * Quiet Utility — the presentation layer for the Codex front-end mockup.
+ *
+ * The visual hierarchy comes from space, typography, and a few broad surfaces rather
+ * than framed modules. Housing remains a working public-data tool: controls stay close
+ * to the question they change, the map is the dominant object, and tables remain
+ * first-class rather than being hidden behind decorative dashboard chrome.
+ */
+
+/* ---------------------------------------------------------------- foundation --- */
+
+body {
+  background: var(--surface-1);
+  color: var(--text-primary);
+  letter-spacing: -0.006em;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--series-1) 22%, transparent);
+}
+
+main.shell {
+  padding-bottom: clamp(3rem, 7vw, 6rem);
+}
+
+h2 {
+  font-size: clamp(20px, 18px + 0.35vw, 24px);
+  letter-spacing: -0.02em;
+}
+
+a {
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+
+button,
+.button {
+  min-height: 38px;
+  padding: 0.62rem 0.9rem;
+  border-radius: 10px;
+  background: var(--surface-card);
+}
+
+select,
+.place-search input,
+.money-input input {
+  min-height: 40px;
+  border-radius: 10px;
+  background-color: var(--surface-card);
+  box-shadow: 0 1px 1px rgb(0 0 0 / 0.025);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button,
+  .button,
+  .bar-afford,
+  .bar-icon,
+  .seg button,
+  .ranks tr {
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease,
+      box-shadow 160ms ease;
+  }
+}
+
+/* --------------------------------------------------------------- application bar --- */
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--surface-card) 88%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(1.45);
+  backdrop-filter: blur(22px) saturate(1.45);
+}
+
+.bar-inner {
+  min-height: 64px;
+  padding-block: 0.7rem;
+  gap: 1rem 1.5rem;
+}
+
+.bar-trail {
+  gap: 0.7rem;
+}
+
+.bar-home,
+.wordmark {
+  color: var(--text-primary);
+}
+
+.bar-sep {
+  color: var(--tick);
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--series-3);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--series-3) 12%, transparent);
+}
+
+.bar-tools {
+  gap: 0.5rem;
+}
+
+.bar .place-search {
+  flex-basis: 17rem;
+}
+
+.bar .place-search input {
+  height: 38px;
+  padding-inline: 0.8rem;
+  background: color-mix(in srgb, var(--surface-1) 74%, var(--surface-card));
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.bar .place-search input:focus {
+  background: var(--surface-card);
+}
+
+.bar-afford {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0.5rem 0.78rem;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--surface-1) 82%, var(--surface-card));
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.bar-afford:hover {
+  color: var(--text-primary);
+  background: var(--grid);
+  text-decoration: none;
+}
+
+.bar-icon {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+}
+
+.bar-icon:hover {
+  background: var(--surface-1);
+}
+
+.theme {
+  border: 0;
+  border-radius: 11px;
+  padding: 2px;
+  background: var(--surface-1);
+}
+
+.theme button {
+  min-height: 32px;
+  border-radius: 9px;
+}
+
+.theme button[aria-checked="true"] {
+  background: var(--surface-card);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
+}
+
+/* ------------------------------------------------------------ licence / location --- */
+
+.licence {
+  padding-top: 0.72rem;
+  padding-bottom: 0.15rem;
+}
+
+.licence-box {
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.licence-label {
+  color: var(--text-muted);
+}
+
+.licence-box .disclose-hint {
+  color: var(--text-muted);
+}
+
+.crumbs ol {
+  gap: 0.45rem;
+  letter-spacing: 0.08em;
+}
+
+.crumbs a {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.crumbs a:hover {
+  background: transparent;
+  color: var(--series-1);
+}
+
+/* ------------------------------------------------------------------ page heads --- */
+
+.page-head {
+  position: relative;
+  align-items: end;
+  gap: 1.5rem 3rem;
+  margin-top: clamp(1.4rem, 3vw, 2.6rem);
+  padding: clamp(2rem, 5vw, 4.5rem) 0 clamp(2rem, 4vw, 3.5rem);
+  border: 0;
+  background: transparent;
+}
+
+.page-head::before,
+.page-head::after {
+  content: none;
+}
+
+.page-head > div:first-child {
+  min-width: min(100%, 34rem);
+  flex: 1 1 38rem;
+}
+
+.page-head[data-kind="state"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 20rem);
+  align-items: end;
+  gap: 2rem;
+}
+
+.page-title {
+  max-width: 18ch;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+}
+
+.kind {
+  margin-bottom: 0.75rem;
+  gap: 0.55rem;
+  color: var(--text-muted);
+}
+
+.kind::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.meta {
+  margin-top: 0.75rem;
+  max-width: 66ch;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.statewide {
+  margin-top: 1.1rem;
+  gap: 0.55rem 1.4rem;
+  line-height: 1.55;
+}
+
+.statewide .eyebrow {
+  flex-basis: 100%;
+}
+
+.verdict {
+  margin-top: 1rem;
+  max-width: 64ch;
+  font-size: clamp(16px, 15px + 0.2vw, 18px);
+  line-height: 1.62;
+}
+
+.verdict-more {
+  line-height: 1.6;
+}
+
+/* One quiet secondary action, not a competing product card. */
+.afford-cta {
+  flex: 0 1 22rem;
+  max-width: 22rem;
+  gap: 0.55rem;
+  padding: 1.2rem 1.3rem;
+  border: 0;
+  border-radius: 20px;
+  background: var(--surface-card);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.055);
+}
+
+.afford-cta-title {
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.afford-cta-sub {
+  line-height: 1.5;
+}
+
+.afford-cta .money-input {
+  flex: 1 1 8rem;
+}
+
+.afford-cta .money-input input {
+  width: 100%;
+  background: var(--surface-1);
+  border-color: transparent;
+}
+
+.afford-cta .button {
+  border-color: var(--series-1);
+  background: var(--series-1);
+  color: #ffffff;
+  border-radius: 10px;
+}
+
+.afford-cta .button:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--series-1) 88%, #000000);
+}
+
+/* --------------------------------------------------------------- measure workspace --- */
+
+.explorer-section {
+  padding-top: 0.25rem;
+}
+
+.measure-card {
+  gap: 1.35rem;
+  margin: 0;
+  padding: clamp(1.5rem, 3vw, 2.4rem) 0 1.5rem;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.measure-eyebrow {
+  margin-bottom: 0.55rem;
+  color: var(--text-muted);
+}
+
+.measure-name {
+  max-width: 28ch;
+  font-size: clamp(26px, 22px + 1vw, 36px);
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+}
+
+.measure-def {
+  margin-top: 0.7rem;
+  max-width: 72ch;
+  font-size: 14px;
+  line-height: 1.62;
+  color: var(--text-secondary);
+}
+
+.measure-why {
+  color: var(--text-muted);
+}
+
+.measure-window {
+  margin-top: 0.8rem;
+  color: var(--text-muted);
+}
+
+.measure-card .explorer-controls {
+  width: fit-content;
+  max-width: 100%;
+  gap: 0.8rem 1.4rem;
+  padding: 0.65rem;
+  border: 0;
+  border-radius: 15px;
+  background: var(--surface-card);
+  box-shadow: 0 3px 16px rgb(0 0 0 / 0.045);
+}
+
+.control {
+  gap: 0.6rem;
+}
+
+.control-label {
+  padding-left: 0.25rem;
+  color: var(--text-muted);
+}
+
+.control select {
+  border-color: transparent;
+  background-color: var(--surface-1);
+  box-shadow: none;
+}
+
+.seg {
+  border: 0;
+  border-radius: 11px;
+  padding: 3px;
+  background: var(--surface-1);
+}
+
+.seg button {
+  min-height: 34px;
+  padding: 0.48rem 0.72rem;
+  border-radius: 9px;
+}
+
+.seg button[aria-checked="true"] {
+  background: var(--surface-card);
+  box-shadow: 0 1px 5px rgb(0 0 0 / 0.11);
+}
+
+.window-aside {
+  padding: 0 0 0 1rem;
+  border: 0;
+  border-left: 2px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.window-aside-label::before {
+  background: var(--text-muted);
+  color: var(--surface-card);
+}
+
+/*
+ * Map first: the workspace is one broad surface, not two competing cards. The map owns
+ * the larger column and may grow beyond its original 540px cap; the ranking is separated
+ * by one quiet rule.
+ */
+.explorer {
+  grid-template-columns: minmax(0, 1.35fr) minmax(21rem, 0.65fr);
+  gap: 0;
+  align-items: stretch;
+  overflow: hidden;
+  border: 0;
+  border-radius: 24px;
+  background: var(--surface-card);
+  box-shadow: 0 12px 42px rgb(0 0 0 / 0.055);
+}
+
+.map-panel {
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+/* The affordability view uses the same workspace without a map-panel wrapper. */
+.explorer > .map {
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.explorer > .scroll-x {
+  min-width: 0;
+  padding: clamp(1.5rem, 2.5vw, 2rem);
+  border-left: 1px solid var(--grid);
+}
+
+.map {
+  gap: 0.8rem;
+}
+
+.map svg {
+  width: min(100%, 640px);
+  max-width: 640px;
+  justify-self: center;
+}
+
+.readout {
+  min-height: 3.4rem;
+  padding: 0.7rem 0;
+  line-height: 1.55;
+}
+
+.legend {
+  gap: 0.45rem 1rem;
+}
+
+.swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+.rank-card {
+  min-width: 0;
+  padding: clamp(1.5rem, 2.5vw, 2rem);
+  border: 0;
+  border-left: 1px solid var(--grid);
+  border-radius: 0;
+  background: transparent;
+}
+
+.rank-card .table-note {
+  margin-bottom: 1.1rem;
+  line-height: 1.55;
+}
+
+.ranks {
+  font-size: 14px;
+}
+
+.ranks th {
+  padding-bottom: 0.65rem;
+}
+
+.ranks td {
+  padding-block: 0.62rem;
+}
+
+.ranks tr.on td,
+.ranks tr:hover td {
+  background: color-mix(in srgb, var(--series-1) 6%, var(--surface-card));
+}
+
+.ranks tr.on td:first-child {
+  box-shadow: inset 2px 0 0 var(--series-1);
+}
+
+/* ------------------------------------------------------------- region information --- */
+
+.section {
+  margin-top: clamp(2.8rem, 6vw, 5rem);
+}
+
+.section-head {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-sub {
+  line-height: 1.5;
+}
+
+.cost-cards {
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.cost-card {
+  gap: 1rem;
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  border: 0;
+  border-radius: 22px;
+  background: var(--surface-card);
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.045);
+}
+
+.cost-card::before,
+.cost-card::after {
+  content: none;
+}
+
+.cost-card-label {
+  color: var(--text-muted);
+}
+
+.cost-figure b {
+  font-size: clamp(38px, 3.8vw, 54px);
+  letter-spacing: -0.05em;
+}
+
+.gone-kept-bar {
+  height: 9px;
+  border-radius: 999px;
+}
+
+.cost-strip {
+  margin-top: 1rem;
+  padding: 1rem 0;
+  border: 0;
+  border-radius: 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+}
+
+.standout-group {
+  margin-top: 1.25rem;
+}
+
+.standouts {
+  gap: 0;
+  border-top: 1px solid var(--grid);
+}
+
+.standout {
+  min-height: 0;
+  padding: 1rem clamp(0.75rem, 1.8vw, 1.35rem);
+  border: 0;
+  border-right: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+  border-radius: 0;
+  background: transparent;
+}
+
+.standout:last-child {
+  border-right-color: transparent;
+}
+
+.standout-figure {
+  margin-top: 0.2rem;
+  font-size: 28px;
+}
+
+.tiles {
+  gap: 0;
+  border-top: 1px solid var(--grid);
+}
+
+.tile {
+  min-height: 9rem;
+  padding: 1.1rem 1rem;
+  border-top: 0;
+  border-right: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+}
+
+.tile > b {
+  font-size: 30px;
+}
+
+.more {
+  margin-top: 3.5rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface-card);
+}
+
+.more > summary {
+  padding: 1.2rem 1.4rem;
+}
+
+.more-body {
+  padding: 0 clamp(1rem, 3vw, 2rem) 2rem;
+}
+
+.interpretation {
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--series-1) 5%, var(--surface-card));
+}
+
+.trend svg {
+  overflow: visible;
+}
+
+/* -------------------------------------------------------------- affordability tool --- */
+
+.afford-controls {
+  gap: 1rem 1.5rem;
+  margin-bottom: 1.4rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 18px;
+  background: var(--surface-card);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.045);
+}
+
+.afford-summary {
+  margin-bottom: 1.4rem;
+  font-size: 17px;
+  line-height: 1.62;
+}
+
+.check {
+  gap: 1rem;
+  margin-bottom: 1.6rem;
+  padding: 1.25rem 1.35rem;
+  border: 0;
+  border-radius: 20px;
+  background: var(--surface-card);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.04);
+}
+
+.check-cell {
+  padding: 0.9rem 1rem;
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface-1);
+}
+
+.status {
+  padding: 3px 8px;
+}
+
+/* --------------------------------------------------------------- reports / footer --- */
+
+@media screen {
+  .report {
+    margin-top: 2rem;
+    padding: clamp(1.4rem, 5vw, 4rem);
+    border: 0;
+    border-radius: 24px;
+    background: var(--paper);
+    box-shadow: 0 12px 46px rgb(0 0 0 / 0.06);
+  }
+
+  .report > .page-head {
+    margin-top: 0;
+    padding-top: 0;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+.foot {
+  margin-top: 0;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.foot-inner {
+  padding-top: 1.6rem;
+  padding-bottom: 2rem;
+}
+
+.foot-label,
+.foot-tab,
+.foot-intro,
+.foot-brief,
+.foot a {
+  color: inherit;
+}
+
+.foot-tab:hover,
+.foot a:hover {
+  color: var(--text-primary);
+}
+
+.inst {
+  border-top-color: var(--grid);
+}
+
+/* ---------------------------------------------------------------- responsive --- */
+
+@media (max-width: 900px) {
+  .page-head[data-kind="state"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .explorer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .map-panel {
+    padding-inline: clamp(1rem, 7vw, 4.5rem);
+  }
+
+  .map svg {
+    width: min(100%, 660px);
+    max-width: 660px;
+  }
+
+  .rank-card {
+    border-top: 1px solid var(--grid);
+    border-left: 0;
+  }
+
+  .explorer > .scroll-x {
+    border-top: 1px solid var(--grid);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .bar {
+    position: relative;
+  }
+
+  .bar-inner {
+    min-height: 56px;
+  }
+
+  .bar-afford {
+    order: 2;
+  }
+
+  .bar-tools {
+    order: 3;
+  }
+
+  .page-head {
+    display: grid;
+    margin-top: 0.8rem;
+    padding-top: 2.25rem;
+  }
+
+  .afford-cta {
+    width: 100%;
+    max-width: none;
+  }
+
+  .measure-intro {
+    gap: 1.25rem;
+  }
+
+  .measure-card .explorer-controls {
+    width: 100%;
+    padding: 0.8rem;
+  }
+
+  .explorer-controls,
+  .control {
+    align-items: stretch;
+  }
+
+  .control {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+  }
+
+  .control select,
+  .seg {
+    flex: 1 1 auto;
+  }
+
+  .map-panel {
+    padding: 1.2rem;
+  }
+
+  .readout {
+    min-height: 4.2rem;
+  }
+
+  .rank-card {
+    padding: 1.25rem;
+  }
+
+  .standouts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .standout {
+    border-right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .bar-afford {
+    display: none;
+  }
+
+  .page-title {
+    font-size: clamp(38px, 12vw, 48px);
+  }
+
+  .afford-cta-row {
+    align-items: stretch;
+  }
+
+  .afford-cta .button {
+    justify-content: center;
+  }
+
+  .explorer {
+    margin-inline: calc(var(--gutter) * -0.35);
+    border-radius: 18px;
+  }
+
+  .tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tile {
+    min-height: 0;
+    border-right: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------- print --- */
+
+@media print {
+  :root {
+    --surface-card: #ffffff;
+    --surface-ink: #ffffff;
+    --surface-ink-2: #ffffff;
+    --text-on-ink: #000000;
+    --shadow: none;
+  }
+
+  body,
+  .foot {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .page-head,
+  .measure-card,
+  .explorer,
+  .cost-card,
+  .standout,
+  .tile,
+  .more,
+  .report,
+  .afford-controls,
+  .check {
+    box-shadow: none !important;
+  }
+
+  .explorer {
+    border: 1px solid #999999;
+    border-radius: 0;
+  }
+
+  .page-head {
+    padding-block: 0 1rem;
+  }
+
+  .foot *,
+  .foot a {
+    color: #000000 !important;
+  }
+}

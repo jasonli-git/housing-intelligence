@@ -3,13 +3,11 @@
  *
  * Two families live here.
  *
- * Housing's own — its palette and its type and space scale. The palette is the dataviz
- * reference instance, validated before any chart was drawn: the three categorical slots
- * clear the all-pairs CVD and normal-vision floors in both light and dark, and dark is a
- * *selected* set of steps for the dark surface, not an automatic inversion. Aqua
- * (--series-3) measures 2.74:1 on the light surface, below 3:1, so the relief rule
- * applies: every chart using it ships direct labels and a table view. Milestone 18
- * changed none of it.
+ * Housing's own — its palette and its type and space scale. The interface uses quiet
+ * neutral surfaces so the maps, figures, and controls carry the visual hierarchy. Chart
+ * colours remain semantic tokens rather than one-off component values, and still pair
+ * with direct labels and a table view. Dark mode is selected for its own surface rather
+ * than produced by automatic inversion.
  *
  * And the shared bar's — `--jl-*`, hand-copied from jasonli.app's
  * `src/styles/tokens.css` as of 2026-09-12, so the gateway and this site read as one
@@ -29,69 +27,74 @@
   --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, SFMono-Regular,
     Menlo, monospace;
 
-  --text-body: 15px;
+  --text-body: 16px;
   --text-small: 13px;
   --text-note: 12px;
   --text-label: 11px;
-  --text-h1: clamp(26px, 22px + 0.9vw, 32px);
-  --text-h2: 16px;
+  --text-h1: clamp(40px, 32px + 1.8vw, 56px);
+  --text-h2: 19px;
   --weight-display: 700;
   --track-display: -0.02em;
   --track-label: 0.12em;
 
   /* ---------- space ---------- */
-  --shell: 76rem;
+  --shell: 82rem;
   --gutter: clamp(16px, 4vw, 28px);
   --gap: 28px;
 
   /* ---------- colour: Housing ---------- */
-  --surface-1: #fcfcfb;
-  --surface-2: #f4f3f0;
-  --border: #dedcd6;
-  --grid: #e8e6e1;
-  --tick: #d3d0c8;
+  --surface-1: #f5f5f7;
+  --surface-2: #ffffff;
+  --surface-card: #ffffff;
+  --surface-ink: #1d1d1f;
+  --surface-ink-2: #eef3f8;
+  --border: #d8d8dd;
+  --grid: #e9e9ed;
+  --tick: #b8b8be;
 
-  --text-primary: #0b0b0b;
-  --text-secondary: #52514e;
-  --text-muted: #77756e;
+  --text-primary: #1d1d1f;
+  --text-secondary: #515154;
+  --text-muted: #7a7a80;
+  --text-on-ink: #ffffff;
 
-  --series-1: #2a78d6;
-  --series-2: #eb6834;
-  --series-3: #1baf7a;
+  --series-1: #0071e3;
+  --series-2: #cf5a45;
+  --series-3: #167f69;
 
   /* Sequential blue, for unsigned magnitude. */
-  --seq-100: #cde2fb;
-  --seq-250: #86b6ef;
-  --seq-400: #3987e5;
-  --seq-550: #1c5cab;
-  --seq-700: #0d366b;
+  --seq-100: #dce9ff;
+  --seq-250: #abcaff;
+  --seq-400: #669cf1;
+  --seq-550: #2864c4;
+  --seq-700: #153a73;
 
   /* Diverging blue -> neutral -> red, for signed change. */
-  --div-neg-2: #1c5cab;
-  --div-neg-1: #86b6ef;
-  --div-mid: #f0efec;
-  --div-pos-1: #ec835a;
-  --div-pos-2: #d03b3b;
+  --div-neg-2: #2259ad;
+  --div-neg-1: #94b9ef;
+  --div-mid: #e8e4da;
+  --div-pos-1: #ef977d;
+  --div-pos-2: #c84239;
 
   /* The diverging ends at text weight, for the arrow beside a change. */
-  --up: #c4352d;
-  --down: #1c5cab;
+  --up: #c84239;
+  --down: #2259ad;
 
-  --good: #0ca30c;
-  --critical: #d03b3b;
+  --good: #087f50;
+  --critical: #c84239;
   /* Amber, for a condition of use rather than an error: the licence box and the
      footer's Non-commercial tag (#136). --notice is a border and a tint, 3.2:1 against
      the page; --notice-text is the same hue at text weight, 5.9:1 on the box's tint in
      light and 8.9:1 in dark. */
-  --notice: #b8860b;
-  --notice-text: #855000;
+  --notice: #a86f00;
+  --notice-text: #775000;
   /* Money gone in the cost to own (Milestone 23): interest and tax as two warm greys, set
      apart from --good, which marks the principal a buyer keeps. */
   --gone-1: #6f685d;
   --gone-2: #aaa293;
   /* The report's sheet on screen: a shade off the page, so it reads as paper. */
   --paper: #ffffff;
-  --focus: #0b0b0b;
+  --focus: #0071e3;
+  --shadow: #1d1d1f;
 
   /* ---------- the shared bar: jasonli.app's values (#122) ---------- */
   --jl-font: var(--font-space-grotesk), "Space Grotesk", ui-sans-serif, system-ui,
@@ -110,26 +113,31 @@
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
-    --surface-1: #1a1a19;
-    --surface-2: #232322;
-    --border: #35342f;
-    --grid: #2b2b28;
-    --tick: #45443f;
-    --text-primary: #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted: #96958b;
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --series-3: #199e70;
-    --div-mid: #383835;
-    --up: #ec835a;
-    --down: #86b6ef;
+    --surface-1: #111113;
+    --surface-2: #1c1c1e;
+    --surface-card: #242426;
+    --surface-ink: #f5f5f7;
+    --surface-ink-2: #202b36;
+    --border: #3a3a3c;
+    --grid: #2c2c2e;
+    --tick: #5a5a60;
+    --text-primary: #f5f5f7;
+    --text-secondary: #c7c7cc;
+    --text-muted: #8e8e93;
+    --text-on-ink: #1d1d1f;
+    --series-1: #5ea8ff;
+    --series-2: #ff856f;
+    --series-3: #51c7aa;
+    --div-mid: #343438;
+    --up: #ff8a70;
+    --down: #94b9ef;
     --notice: #d9a13b;
     --notice-text: #f0c36a;
     --gone-1: #b3aa9a;
     --gone-2: #6f695f;
-    --paper: #1f1f1e;
-    --focus: #ffffff;
+    --paper: #1c1c1e;
+    --focus: #78b5ff;
+    --shadow: #000000;
     --jl-ink: #efeeec;
     --jl-ink: oklch(0.95 0.003 95);
     --jl-ink-2: #acaba7;
@@ -141,26 +149,31 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --surface-1: #1a1a19;
-  --surface-2: #232322;
-  --border: #35342f;
-  --grid: #2b2b28;
-  --tick: #45443f;
-  --text-primary: #ffffff;
-  --text-secondary: #c3c2b7;
-  --text-muted: #96958b;
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --series-3: #199e70;
-  --div-mid: #383835;
-  --up: #ec835a;
-  --down: #86b6ef;
+  --surface-1: #111113;
+  --surface-2: #1c1c1e;
+  --surface-card: #242426;
+  --surface-ink: #f5f5f7;
+  --surface-ink-2: #202b36;
+  --border: #3a3a3c;
+  --grid: #2c2c2e;
+  --tick: #5a5a60;
+  --text-primary: #f5f5f7;
+  --text-secondary: #c7c7cc;
+  --text-muted: #8e8e93;
+  --text-on-ink: #1d1d1f;
+  --series-1: #5ea8ff;
+  --series-2: #ff856f;
+  --series-3: #51c7aa;
+  --div-mid: #343438;
+  --up: #ff8a70;
+  --down: #94b9ef;
   --notice: #d9a13b;
   --notice-text: #f0c36a;
   --gone-1: #b3aa9a;
   --gone-2: #6f695f;
-  --paper: #1f1f1e;
-  --focus: #ffffff;
+  --paper: #1c1c1e;
+  --focus: #78b5ff;
+  --shadow: #000000;
   --jl-ink: #efeeec;
   --jl-ink: oklch(0.95 0.003 95);
   --jl-ink-2: #acaba7;

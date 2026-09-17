@@ -8,6 +8,7 @@ import { SourceFooter } from "@/components/SourceFooter";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./tokens.css";
 import "./globals.css";
+import "./redesign.css";
 
 // Self-hosted at build time: next/font downloads each face once and serves it from this
 // site, so a reader's browser never asks Google for anything (ARCHITECTURE #121).
