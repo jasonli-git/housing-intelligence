@@ -148,7 +148,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             here="Report"
           />
           <Kind kind="report" />
-          <h1 className="page-title">{region.label} — housing report</h1>
+          {/* A no-break space before the dash, so a wrapped title never starts a line with it. */}
+          <h1 className="page-title">{region.label}&nbsp;— housing report</h1>
           <p className="meta">
             {packet.metrics.length} measures over the five-year change window, each ranked
             against {scopeName(comparisons.peer_scope)}’s {comparisons.peer_count}{" "}

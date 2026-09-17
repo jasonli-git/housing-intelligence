@@ -1,10 +1,17 @@
 /*
- * Quiet Utility — the presentation layer for the Codex front-end mockup.
+ * Quiet utility — the presentation layer over the component rules in globals.css
+ * (ARCHITECTURE #162), loaded after them so its rules win.
  *
  * The visual hierarchy comes from space, typography, and a few broad surfaces rather
  * than framed modules. Housing remains a working public-data tool: controls stay close
  * to the question they change, the map is the dominant object, and tables remain
  * first-class rather than being hidden behind decorative dashboard chrome.
+ *
+ * Four details of Milestone 23 stay, on the owner's word (2026-09-17): the accent rule
+ * over each page type's head, the licence notice's amber — now the colour of its label
+ * rather than a box — the shaded "Since 2019" note and the breadcrumb's pills. The
+ * affordability tool keeps a little of its own warmth, too. This layer leaves those to
+ * globals.css, or restates them for its own surfaces.
  */
 
 /* ---------------------------------------------------------------- foundation --- */
@@ -179,6 +186,8 @@ select,
   padding-bottom: 0.15rem;
 }
 
+/* The licence notice is a line of text, not a box, and its label keeps the notice's amber
+   (#136) as the colour of the words: a condition of use, told apart without a bubble. */
 .licence-box {
   max-width: none;
   padding: 0;
@@ -189,7 +198,7 @@ select,
 }
 
 .licence-label {
-  color: var(--text-muted);
+  color: var(--notice-text);
 }
 
 .licence-box .disclose-hint {
@@ -201,26 +210,19 @@ select,
   letter-spacing: 0.08em;
 }
 
-.crumbs a {
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.crumbs a:hover {
-  background: transparent;
-  color: var(--series-1);
-}
+/* The links keep their pills (globals.css, #151), so the trail reads as navigation. */
 
 /* ------------------------------------------------------------------ page heads --- */
 
+/* The accent rule over the head stays (globals.css, #151) — the page type's colour, the
+   one place it shows — with a short gap above it, so the answer is not pushed down the
+   screen. */
 .page-head {
   position: relative;
   align-items: end;
   gap: 1.5rem 3rem;
-  margin-top: clamp(1.4rem, 3vw, 2.6rem);
-  padding: clamp(2rem, 5vw, 4.5rem) 0 clamp(2rem, 4vw, 3.5rem);
-  border: 0;
+  margin-top: clamp(0.5rem, 1.5vw, 1rem);
+  padding: clamp(1.5rem, 3.5vw, 2.75rem) 0 clamp(2rem, 4vw, 3.5rem);
   background: transparent;
 }
 
@@ -245,6 +247,12 @@ select,
   max-width: 18ch;
   line-height: 1.02;
   letter-spacing: -0.045em;
+}
+
+/* "Mercer County, NJ — housing report" is one title: the report's sheet sets its width,
+   and the dash stays with the name before it (a no-break space in the page). */
+.report .page-title {
+  max-width: none;
 }
 
 .kind {
@@ -287,6 +295,21 @@ select,
   line-height: 1.6;
 }
 
+/*
+ * The affordability tool keeps a little of its own warmth (the owner, 2026-09-17): the
+ * panels on its own page take a faint wash of the tool's orange and a hairline of it at
+ * the edge — between Milestone 23's orange cards and the plain white ones, so the tool
+ * feels a little apart from the pages that report figures. The call to action on the New
+ * Jersey page stays a plain card: white here, the card's dark grey in dark.
+ */
+.afford-controls,
+.check {
+  background: var(--tool-wash);
+  box-shadow:
+    0 6px 24px rgb(0 0 0 / 0.045),
+    inset 0 0 0 1px color-mix(in srgb, var(--series-2) 20%, transparent);
+}
+
 /* One quiet secondary action, not a competing product card. */
 .afford-cta {
   flex: 0 1 22rem;
@@ -312,22 +335,23 @@ select,
   flex: 1 1 8rem;
 }
 
+/* The income box stays the surface every other field is — white in light, the card's dark
+   grey in dark — so it reads as something to type in, not as part of the panel. */
 .afford-cta .money-input input {
   width: 100%;
-  background: var(--surface-1);
-  border-color: transparent;
 }
 
+/* The action colour, not the series colour: dark's series blue is too light for white. */
 .afford-cta .button {
-  border-color: var(--series-1);
-  background: var(--series-1);
-  color: #ffffff;
+  border-color: var(--action);
+  background: var(--action);
+  color: var(--on-action);
   border-radius: 10px;
 }
 
 .afford-cta .button:hover {
   opacity: 1;
-  background: color-mix(in srgb, var(--series-1) 88%, #000000);
+  background: color-mix(in srgb, var(--action) 88%, #000000);
 }
 
 /* --------------------------------------------------------------- measure workspace --- */
@@ -420,26 +444,21 @@ select,
   box-shadow: 0 1px 5px rgb(0 0 0 / 0.11);
 }
 
+/* The "Since 2019" note stays a shaded, labelled slip (#152), so it reads as a note on the
+   window rather than more definition; tinted here, because the card around it is now the
+   page itself. */
 .window-aside {
-  padding: 0 0 0 1rem;
-  border: 0;
-  border-left: 2px solid var(--border);
-  border-radius: 0;
-  background: transparent;
-}
-
-.window-aside-label::before {
-  background: var(--text-muted);
-  color: var(--surface-card);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--series-1) 6%, var(--surface-card));
 }
 
 /*
  * Map first: the workspace is one broad surface, not two competing cards. The map owns
  * the larger column and may grow beyond its original 540px cap; the ranking is separated
- * by one quiet rule.
+ * by one quiet rule, in a column wide enough for its table.
  */
 .explorer {
-  grid-template-columns: minmax(0, 1.35fr) minmax(21rem, 0.65fr);
+  grid-template-columns: minmax(0, 1fr) minmax(26rem, 0.75fr);
   gap: 0;
   align-items: stretch;
   overflow: hidden;
@@ -464,6 +483,15 @@ select,
   min-width: 0;
   padding: clamp(1.5rem, 2.5vw, 2rem);
   border-left: 1px solid var(--grid);
+}
+
+/* Side by side, the ranking's and the affordability list's tables fit their column rather
+   than scroll inside it: at 32rem they scrolled sideways with no scrollbar on a Mac, and
+   "Latest" was never seen. Stacked, they keep their width and scroll as before. */
+@media (min-width: 901px) {
+  .explorer .scroll-x > table {
+    min-width: 0;
+  }
 }
 
 .map {
@@ -662,8 +690,6 @@ select,
   margin-bottom: 1.4rem;
   padding: 1.1rem 1.2rem;
   border-radius: 18px;
-  background: var(--surface-card);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.045);
 }
 
 .afford-summary {
@@ -678,19 +704,23 @@ select,
   padding: 1.25rem 1.35rem;
   border: 0;
   border-radius: 20px;
-  background: var(--surface-card);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.04);
 }
 
+/* White answers on the warm panel, so the two figures are what the eye lands on. */
 .check-cell {
   padding: 0.9rem 1rem;
   border: 0;
   border-radius: 14px;
-  background: var(--surface-1);
+  background: var(--surface-card);
 }
 
 .status {
   padding: 3px 8px;
+}
+
+/* "Within reach" on the map's own blue, whose light and dark steps need different ink. */
+.status.within {
+  color: var(--on-seq-550);
 }
 
 /* --------------------------------------------------------------- reports / footer --- */
@@ -708,7 +738,7 @@ select,
   .report > .page-head {
     margin-top: 0;
     padding-top: 0;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 3px double var(--border);
   }
 }
 
@@ -791,8 +821,8 @@ select,
 
   .page-head {
     display: grid;
-    margin-top: 0.8rem;
-    padding-top: 2.25rem;
+    margin-top: 0.5rem;
+    padding-top: 1.5rem;
   }
 
   .afford-cta {
@@ -882,10 +912,8 @@ select,
 @media print {
   :root {
     --surface-card: #ffffff;
-    --surface-ink: #ffffff;
-    --surface-ink-2: #ffffff;
-    --text-on-ink: #000000;
-    --shadow: none;
+    --nodata: #eeeeee;
+    --tool-wash: #ffffff;
   }
 
   body,

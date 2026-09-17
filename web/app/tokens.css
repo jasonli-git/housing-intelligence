@@ -4,10 +4,14 @@
  * Two families live here.
  *
  * Housing's own — its palette and its type and space scale. The interface uses quiet
- * neutral surfaces so the maps, figures, and controls carry the visual hierarchy. Chart
- * colours remain semantic tokens rather than one-off component values, and still pair
- * with direct labels and a table view. Dark mode is selected for its own surface rather
- * than produced by automatic inversion.
+ * neutral surfaces so the maps, figures and controls carry the visual hierarchy ("Quiet
+ * utility", ARCHITECTURE #162). The chart colours are validated, not eyeballed: on
+ * 2026-09-17 the sequential ramp and each diverging arm passed the ordinal checks (one
+ * hue, monotone lightness, visible steps, the light end at 2:1 or more on the chart card),
+ * and the three categorical slots the categorical ones (lightness band, chroma floor,
+ * adjacent colour-blind separation, normal-vision floor, 3:1 on the card), in light and in
+ * dark. Dark is a *selected* set of steps, not an inversion: the sequential and diverging
+ * ramps flip their anchor there, so a larger magnitude reads lighter on the dark card.
  *
  * And the shared bar's — `--jl-*`, hand-copied from jasonli.app's
  * `src/styles/tokens.css` as of 2026-09-12, so the gateway and this site read as one
@@ -46,34 +50,39 @@
   --surface-1: #f5f5f7;
   --surface-2: #ffffff;
   --surface-card: #ffffff;
-  --surface-ink: #1d1d1f;
-  --surface-ink-2: #eef3f8;
   --border: #d8d8dd;
   --grid: #e9e9ed;
   --tick: #b8b8be;
 
   --text-primary: #1d1d1f;
   --text-secondary: #515154;
-  --text-muted: #7a7a80;
-  --text-on-ink: #ffffff;
+  /* 4.7:1 on the page and 5.1:1 on a card: the small labels it colours need 4.5:1. */
+  --text-muted: #6e6e73;
 
   --series-1: #0071e3;
-  --series-2: #cf5a45;
-  --series-3: #167f69;
+  --series-2: #e07227;
+  --series-3: #00866a;
 
   /* Sequential blue, for unsigned magnitude. */
-  --seq-100: #dce9ff;
-  --seq-250: #abcaff;
-  --seq-400: #669cf1;
-  --seq-550: #2864c4;
-  --seq-700: #153a73;
+  --seq-100: #9cb7e6;
+  --seq-250: #7396d8;
+  --seq-400: #4b76c8;
+  --seq-550: #2d58aa;
+  --seq-700: #1c3b77;
+  /* Text on --seq-550, the affordability map's "within reach": white here, dark in dark. */
+  --on-seq-550: #ffffff;
 
   /* Diverging blue -> neutral -> red, for signed change. */
-  --div-neg-2: #2259ad;
-  --div-neg-1: #94b9ef;
-  --div-mid: #e8e4da;
-  --div-pos-1: #ef977d;
-  --div-pos-2: #c84239;
+  --div-neg-2: #335aa6;
+  --div-neg-1: #86a5de;
+  --div-mid: #e1dfdb;
+  --div-pos-1: #df907e;
+  --div-pos-2: #b63c2e;
+
+  /* A map region with no figure: a neutral apart from every ramp step and from the card. */
+  --nodata: #e6e6ea;
+  /* The affordability tool's panels: a faint wash of its orange (#162). */
+  --tool-wash: #fdf7f2;
 
   /* The diverging ends at text weight, for the arrow beside a change. */
   --up: #c84239;
@@ -82,9 +91,10 @@
   --good: #087f50;
   --critical: #c84239;
   /* Amber, for a condition of use rather than an error: the licence box and the
-     footer's Non-commercial tag (#136). --notice is a border and a tint, 3.2:1 against
-     the page; --notice-text is the same hue at text weight, 5.9:1 on the box's tint in
-     light and 8.9:1 in dark. */
+     footer's Non-commercial tag (#136). --notice is a border and a tint, 3.9:1 against
+     the page; --notice-text is the same hue at text weight — the licence line's label,
+     6.6:1 on the page in light and 11.4:1 in dark, and 5.9:1 and 9.9:1 on a tinted box
+     (measured 2026-09-17). */
   --notice: #a86f00;
   --notice-text: #775000;
   /* Money gone in the cost to own (Milestone 23): interest and tax as two warm greys, set
@@ -94,7 +104,9 @@
   /* The report's sheet on screen: a shade off the page, so it reads as paper. */
   --paper: #ffffff;
   --focus: #0071e3;
-  --shadow: #1d1d1f;
+  /* A filled action button and its label: 4.7:1 here, 4.9:1 on dark's own blue. */
+  --action: #0071e3;
+  --on-action: #ffffff;
 
   /* ---------- the shared bar: jasonli.app's values (#122) ---------- */
   --jl-font: var(--font-space-grotesk), "Space Grotesk", ui-sans-serif, system-ui,
@@ -116,19 +128,29 @@
     --surface-1: #111113;
     --surface-2: #1c1c1e;
     --surface-card: #242426;
-    --surface-ink: #f5f5f7;
-    --surface-ink-2: #202b36;
     --border: #3a3a3c;
     --grid: #2c2c2e;
     --tick: #5a5a60;
     --text-primary: #f5f5f7;
     --text-secondary: #c7c7cc;
     --text-muted: #8e8e93;
-    --text-on-ink: #1d1d1f;
-    --series-1: #5ea8ff;
-    --series-2: #ff856f;
-    --series-3: #51c7aa;
-    --div-mid: #343438;
+    --series-1: #4e91ea;
+    --series-2: #df6e4b;
+    --series-3: #2ea98a;
+    --seq-100: #355a9f;
+    --seq-250: #4c75c3;
+    --seq-400: #6b93dd;
+    --seq-550: #8eb1f1;
+    --seq-700: #bad2fd;
+    --on-seq-550: #111113;
+    --div-neg-2: #8eb1f1;
+    --div-neg-1: #5073b5;
+    --div-mid: #41403c;
+    --div-pos-1: #b65d49;
+    --div-pos-2: #f29a85;
+    --nodata: #313134;
+    --tool-wash: #2b2727;
+    --action: #1f6fd1;
     --up: #ff8a70;
     --down: #94b9ef;
     --notice: #d9a13b;
@@ -137,7 +159,6 @@
     --gone-2: #6f695f;
     --paper: #1c1c1e;
     --focus: #78b5ff;
-    --shadow: #000000;
     --jl-ink: #efeeec;
     --jl-ink: oklch(0.95 0.003 95);
     --jl-ink-2: #acaba7;
@@ -152,19 +173,29 @@
   --surface-1: #111113;
   --surface-2: #1c1c1e;
   --surface-card: #242426;
-  --surface-ink: #f5f5f7;
-  --surface-ink-2: #202b36;
   --border: #3a3a3c;
   --grid: #2c2c2e;
   --tick: #5a5a60;
   --text-primary: #f5f5f7;
   --text-secondary: #c7c7cc;
   --text-muted: #8e8e93;
-  --text-on-ink: #1d1d1f;
-  --series-1: #5ea8ff;
-  --series-2: #ff856f;
-  --series-3: #51c7aa;
-  --div-mid: #343438;
+  --series-1: #4e91ea;
+  --series-2: #df6e4b;
+  --series-3: #2ea98a;
+  --seq-100: #355a9f;
+  --seq-250: #4c75c3;
+  --seq-400: #6b93dd;
+  --seq-550: #8eb1f1;
+  --seq-700: #bad2fd;
+  --on-seq-550: #111113;
+  --div-neg-2: #8eb1f1;
+  --div-neg-1: #5073b5;
+  --div-mid: #41403c;
+  --div-pos-1: #b65d49;
+  --div-pos-2: #f29a85;
+  --nodata: #313134;
+  --tool-wash: #2b2727;
+  --action: #1f6fd1;
   --up: #ff8a70;
   --down: #94b9ef;
   --notice: #d9a13b;
@@ -173,7 +204,6 @@
   --gone-2: #6f695f;
   --paper: #1c1c1e;
   --focus: #78b5ff;
-  --shadow: #000000;
   --jl-ink: #efeeec;
   --jl-ink: oklch(0.95 0.003 95);
   --jl-ink-2: #acaba7;

@@ -53,7 +53,7 @@ export function Choropleth({ map, values, title, format, active = null, onHover 
   const breaks = observed.length > 4 ? quantileBreaks(observed) : [];
 
   const fillFor = (value: number | undefined) =>
-    value === undefined || breaks.length === 0 ? "var(--surface-2)" : ramp[classIndex(value, breaks)];
+    value === undefined || breaks.length === 0 ? "var(--nodata)" : ramp[classIndex(value, breaks)];
 
   // Legend labels come from the same breaks the fills use, so they cannot drift apart.
   const steps: [string, string][] =
@@ -109,7 +109,7 @@ export function Choropleth({ map, values, title, format, active = null, onHover 
         ))}
         {values.size < map.shapes.length && (
           <span>
-            <i className="swatch" style={{ background: "var(--surface-2)" }} />
+            <i className="swatch" style={{ background: "var(--nodata)" }} />
             no data
           </span>
         )}

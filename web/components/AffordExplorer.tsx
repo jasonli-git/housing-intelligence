@@ -42,7 +42,7 @@ function listed(items: string[]): string {
 function ReachMap({ map, rows }: { map: Projected; rows: Map<number, Reached> }) {
   const fill = (id: number) => {
     const row = rows.get(id);
-    if (!row) return "var(--surface-2)";
+    if (!row) return "var(--nodata)";
     return row.within ? "var(--seq-550)" : "var(--tick)";
   };
   return (
@@ -76,7 +76,7 @@ function ReachMap({ map, rows }: { map: Projected; rows: Map<number, Reached> })
           beyond reach
         </span>
         <span>
-          <i className="swatch" style={{ background: "var(--surface-2)" }} />
+          <i className="swatch" style={{ background: "var(--nodata)" }} />
           no figure
         </span>
       </div>
