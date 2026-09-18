@@ -9,6 +9,8 @@ export type MapLayers = {
   nation: Outline[];
   county: Outline[];
   municipality: Outline[];
+  /** The towns simplified harder, for when the whole state is on screen (`MapFile`). */
+  municipalityWide: Outline[];
 };
 
 /**
@@ -49,6 +51,7 @@ export function useMapFile(): {
             nation: unpack(file.nation.outlines),
             county: unpack(file.county.outlines),
             municipality: unpack(file.municipality.outlines),
+            municipalityWide: unpack(file.municipalityWide.outlines),
           }
         : null,
     [file],

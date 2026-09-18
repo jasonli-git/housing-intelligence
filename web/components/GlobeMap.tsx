@@ -4,14 +4,24 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 
 import { rampFor } from "@/lib/groups";
-import { type Camera, type Outline, at, fit, scene, view } from "@/lib/globe";
+import {
+  type Camera,
+  type Outline,
+  at,
+  fit,
+  prism,
+  scene,
+  view,
+} from "@/lib/globe";
 import { type MapFile, readingsFor } from "@/lib/mapdata";
+import { paint as paintInto } from "@/lib/paint";
 import type { MapLayers } from "@/components/useMapFile";
 import {
   classIndex,
@@ -141,6 +151,22 @@ function detailFor(scale: number, nj: number): DetailLevel {
   return scale < nj * 1.15 ? "county" : "municipality";
 }
 
+/**
+ * Which copy of the towns to draw: the hard-simplified one while the whole state is in
+ * frame, the full one once the reader is close enough for the detail to show.
+ *
+ * All 564 are on screen at the wide end, where culling saves nothing and a town is a few
+ * dozen pixels across — 15,364 points there instead of 41,609, for a difference nobody
+ * can see. Past this the reader is close in, most of the state is off screen, and the
+ * fine layer is cheap again because most of it is culled.
+ */
+function townLayer(
+  scale: number,
+  nj: number,
+): "municipality" | "municipalityWide" {
+  return scale < nj * 3 ? "municipalityWide" : "municipality";
+}
+
 export function GlobeMap({
   width,
   height,
@@ -181,6 +207,15 @@ export function GlobeMap({
     at: number;
   } | null>(null);
   const glide = useRef<number | null>(null);
+  // Pointer movement waiting to be applied, and the frame that will apply it.
+  const pending = useRef({ dx: 0, dy: 0 });
+  const queued = useRef<number | null>(null);
+  const world = useRef<SVGGElement>(null);
+  const groundRef = useRef<SVGGElement>(null);
+  const detailRef = useRef<SVGGElement>(null);
+  const lifted = useRef<SVGGElement>(null);
+  // Bumped when a drag or a flight ends, to make the crosshair look again.
+  const [settled, setSettled] = useState(0);
   const flight = useRef<number | null>(null);
   // The camera the callbacks read synchronously. State drives the render; a flight has
   // to know where it is starting from at the moment the button is pressed. Not `at`,
@@ -219,12 +254,19 @@ export function GlobeMap({
     [file, metric, windowKey],
   );
   const readings = basis.values;
+  // The outlines for the level in view, chosen once. The crosshair must test the very
+  // shapes that were drawn, or it can name a town whose edge is somewhere else.
+  const inView = useMemo(() => {
+    if (!layers) return [];
+    if (level !== "municipality" || !camera || !framings) return layers[level];
+    return layers[townLayer(camera.scale, framings.county.scale)];
+  }, [layers, level, camera, framings]);
   const show = basis.kind === "change" ? formatChange : format;
 
   const drawn = useMemo(() => {
     if (!layers || !camera) return null;
     const v = view(camera);
-    const detail = layers[level];
+    const detail = inView;
     // Across the range on screen, not from zero: a change crosses zero, so there is no
     // zero to rise from. Rising from zero was right while every region was a block and
     // two could be compared side by side; only one rises now, so the range is the
@@ -240,78 +282,206 @@ export function GlobeMap({
       if (value === undefined || span <= 0) return 0;
       return ((value - lowest) / span) * height * MAX_LIFT;
     };
-    const target = active === null ? 0 : probe(active);
-    const lift = (id: number | string) => (id === active ? rise : 0);
     return {
       ground: scene(v, layers.nation, () => 0),
-      detail: scene(v, detail, lift),
+      // Flat, all of them. The one raised region is a memo of its own below, so easing
+      // the rise no longer re-projects 41,609 points sixty times a second.
+      detail: scene(v, detail, () => 0),
+      probe,
       lowest,
       highest,
-      target,
       v,
     };
-  }, [layers, camera, level, readings, height, active, rise]);
+  }, [layers, camera, level, readings, height, inView]);
+
+  // What the rise is easing towards, and the single raised prism it produces. Split from
+  // the scene above so that the only thing recomputed per frame of the ease is one
+  // region's geometry.
+  const target = drawn && active !== null ? drawn.probe(active) : 0;
+  const raised = useMemo(() => {
+    if (!drawn || !layers || !camera || active === null || rise <= 0)
+      return null;
+    const outline = inView.find((o) => o.id === active);
+    return outline ? prism(drawn.v, outline, rise) : null;
+  }, [drawn, layers, camera, level, active, rise]);
 
   // Ease the rise towards whatever the scene last asked for. An exponential approach
   // rather than a fixed duration: a new target part-way through is picked up from where
   // the old one got to, which is what makes sweeping the crosshair feel continuous
   // instead of restarting. Readers who have asked for less motion get the target at
   // once, as everything else on the site does.
-  const target = drawn?.target ?? 0;
   useEffect(() => {
+    risen.current.to = target;
     const still =
       typeof globalThis.matchMedia === "function" &&
       globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (still) {
+      risen.current.at = target;
       setRise(target);
       return;
     }
-    risen.current.to = target;
+    // Already easing: the loop reads its target from the ref, so a new one steers it
+    // from wherever it has got to. Tearing the loop down and starting another would
+    // restart the motion, which is the thing the easing exists to avoid.
     if (settling.current !== null) return;
     const step = () => {
-      setRise((current) => {
-        const wanted = risen.current.to;
-        // A slow approach: the owner found the rise too quick to feel like an
-        // answer. About a second to settle, and still interruptible.
-        const next = current + (wanted - current) * 0.022;
-        if (Math.abs(wanted - next) < 0.25) {
-          settling.current = null;
-          return wanted;
-        }
-        settling.current = requestAnimationFrame(step);
-        return next;
-      });
+      const wanted = risen.current.to;
+      // A slow approach; the owner found the rise too quick to feel like an answer.
+      const next = risen.current.at + (wanted - risen.current.at) * 0.022;
+      const done = Math.abs(wanted - next) < 0.25;
+      risen.current.at = done ? wanted : next;
+      // Scheduled out here, never inside the state updater. An updater must be pure —
+      // React calls it twice in development to prove it, and a `requestAnimationFrame`
+      // in there doubled the loop every frame until React gave up on the subtree with
+      // "Maximum update depth exceeded" and stopped responding to anything at all.
+      settling.current = done ? null : requestAnimationFrame(step);
+      setRise(risen.current.at);
     };
     settling.current = requestAnimationFrame(step);
-    return () => {
-      if (settling.current !== null) cancelAnimationFrame(settling.current);
-      settling.current = null;
-    };
   }, [target]);
 
+  // Stopping the loop belongs to unmount, not to every change of target.
+  useEffect(
+    () => () => {
+      if (settling.current !== null) cancelAnimationFrame(settling.current);
+      settling.current = null;
+    },
+    [],
+  );
+
+  // Put the regions in the document before the browser paints, so the map and whatever
+  // React is rendering around it can never be a frame out of step.
+  useLayoutEffect(() => {
+    if (!drawn) return;
+    if (groundRef.current) {
+      paintInto(
+        groundRef.current,
+        drawn.ground.map((shape) => ({
+          id: shape.id,
+          d: shape.base,
+          fill: null,
+          className: shape.id === "NJ" ? "with-figures" : "",
+        })),
+      );
+    }
+    if (detailRef.current) {
+      paintInto(
+        detailRef.current,
+        drawn.detail.map((shape) => {
+          const fill = fillFor(shape.id);
+          // No figure here: it joins the ground rather than becoming a dark class of its
+          // own, which left the state looking moth-eaten at municipal zoom.
+          if (fill === null) {
+            return {
+              id: shape.id,
+              d: shape.base,
+              fill: null,
+              className: "globe-absent",
+            };
+          }
+          return {
+            id: shape.id,
+            d: shape.top,
+            fill,
+            className: shape.id === active ? "globe-region on" : "globe-region",
+          };
+        }),
+      );
+    }
+  });
+
   // The region under the middle of the frame, which is what the crosshair marks.
+  // Recomputed when the map settles, not on every frame of a drag. The hit test walks
+  // the level a second time — the same rotation and clipping the scene just did — and
+  // the readout it feeds is unreadable while the map is moving. `settled` is what makes
+  // it look again once the hand comes off.
+  /**
+   * The drawn regions as `Path2D`, for hit testing without touching the DOM.
+   *
+   * Built once per camera, so a slide — where the camera does not move — tests against
+   * geometry it already has. `isPointInPath` is the browser's own geometry engine: no
+   * layout, no elements, and no dependence on where the page happens to be scrolled,
+   * which is what ruled out `elementFromPoint` (it sees only the visible viewport, and
+   * this map is 850 pixels tall).
+   */
+  const hitAreas = useMemo(() => {
+    if (!drawn || typeof document === "undefined") return null;
+    const ctx = document.createElement("canvas").getContext("2d");
+    if (!ctx) return null;
+    return {
+      ctx,
+      shapes: drawn.detail.map((shape) => ({
+        id: shape.id,
+        path: new Path2D(shape.base),
+      })),
+      ground: drawn.ground.map((shape) => ({
+        id: shape.id,
+        path: new Path2D(shape.base),
+      })),
+    };
+  }, [drawn]);
+
+  /**
+   * What the crosshair holds, given how far the map has been slid under it.
+   *
+   * The camera has not moved during a slide, so the crosshair has effectively travelled
+   * the other way across fixed geometry. Testing that directly is what lets the focus
+   * follow the hand instead of waiting for it to stop.
+   */
+  // Read through a ref, not captured: a frame scheduled before the camera committed
+  // would otherwise test last camera's geometry, and answer for the wrong place. That
+  // is what made a long drag report one town while landing on another.
+  const areas = useRef(hitAreas);
+  areas.current = hitAreas;
+  const atLevel = useRef(level);
+  atLevel.current = level;
+
+  const pickAt = useCallback(
+    (dx: number, dy: number): { id: number | string; level: Level } | null => {
+      const hitAreas = areas.current;
+      if (!hitAreas) return null;
+      const x = width / 2 - dx;
+      const y = height / 2 - dy;
+      for (let i = hitAreas.shapes.length - 1; i >= 0; i -= 1) {
+        const { id, path } = hitAreas.shapes[i];
+        if (hitAreas.ctx.isPointInPath(path, x, y))
+          return { id, level: atLevel.current };
+      }
+      for (let i = hitAreas.ground.length - 1; i >= 0; i -= 1) {
+        const { id, path } = hitAreas.ground[i];
+        if (hitAreas.ctx.isPointInPath(path, x, y))
+          return { id, level: "state" };
+      }
+      return null;
+    },
+    [width, height],
+  );
+
+  const held = useRef<Focus | null>(null);
   const centre = useMemo((): Focus | null => {
     if (!layers || !camera || !drawn) return null;
     const middle: [number, number] = [width / 2, height / 2];
     // New Jersey first, then the ground: a reader over Ohio gets Ohio rather than
     // nothing, and a reader over New Jersey gets the county, not the state beneath it.
-    const inState = at(drawn.v, layers[level], middle);
+    const inState = at(drawn.v, inView, middle);
     if (inState) {
       const value = readings?.[String(inState.id)];
-      return {
+      held.current = {
         id: inState.id,
         name: inState.name,
         level,
         value: value ?? null,
       };
+      return held.current;
     }
     const onGround = at(drawn.v, layers.nation, middle);
     // A backdrop state has no reading by definition, which is not the same as a New
     // Jersey town whose measure is unpublished; the level tells them apart.
-    return onGround
+    held.current = onGround
       ? { id: onGround.id, name: onGround.name, level: "state", value: null }
       : null;
-  }, [layers, camera, drawn, level, width, height, readings]);
+    return held.current;
+  }, [layers, camera, drawn, level, width, height, readings, settled, inView]);
 
   // Held in a ref, not a dependency: the page passes a fresh closure on every render,
   // and depending on it here would fire this effect every render and set state in a loop.
@@ -334,7 +504,7 @@ export function GlobeMap({
         observed: [] as number[],
       };
     const observed = sortedValues(
-      layers[level]
+      inView
         .map((outline) => readings?.[String(outline.id)])
         .filter((value): value is number => value !== undefined),
     );
@@ -344,7 +514,7 @@ export function GlobeMap({
       breaks: observed.length > 4 ? quantileBreaks(observed) : [],
       observed,
     };
-  }, [layers, level, readings, metric]);
+  }, [inView, readings, metric]);
 
   /**
    * A region's fill, or null when it has no figure and is drawn as ground.
@@ -363,6 +533,32 @@ export function GlobeMap({
     if (mute && id !== active) return "var(--mute)";
     return ramp.palette[classIndex(value, ramp.breaks)];
   };
+
+  /**
+   * Apply pointer movement at most once a frame.
+   *
+   * A trackpad or a high-refresh screen delivers pointer events faster than the browser
+   * paints — up to 120 a second — and the map was re-projecting the whole level for
+   * every one of them. Measured at municipal zoom before this: 550 path rewrites per
+   * pointer event. Collecting the deltas and spending them once per frame does the same
+   * pan for a fraction of the work, and the map moves exactly as far.
+   */
+  const nudge = useCallback(
+    (dx: number, dy: number) => {
+      pending.current.dx += dx;
+      pending.current.dy += dy;
+      if (queued.current !== null) return;
+      queued.current = requestAnimationFrame(() => {
+        queued.current = null;
+        const { dx: x, dy: y } = pending.current;
+        pending.current = { dx: 0, dy: 0 };
+        if (x !== 0 || y !== 0) move(x, y);
+      });
+    },
+    // `move` is stable, and naming it here keeps the dependency honest.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const move = useCallback((dx: number, dy: number) => {
     setCamera((current) => {
@@ -523,8 +719,8 @@ export function GlobeMap({
             so the page still answers — it just cannot be flown over. */}
         <noscript>
           <p className="meta">
-            The map needs JavaScript to draw. The ranking beside it carries the same
-            figures, and every place links to its own page.
+            The map needs JavaScript to draw. The ranking beside it carries the
+            same figures, and every place links to its own page.
           </p>
         </noscript>
       </div>
@@ -532,21 +728,26 @@ export function GlobeMap({
   }
 
   const shown = level === "county" ? "counties" : "municipalities";
-  const drawnHere = layers ? layers[level].length : 0;
+  const drawnHere = inView.length;
   // The focus treatment runs only while something is held and the reader has not asked
   // for less motion; drawing it while dragging would blur 564 paths every frame.
   // Whether the map should be pulling focus. The layers it drives are always in the
   // document and change only their opacity and blur, so CSS carries them in and out —
   // an instant vignette reads as a light switch, where a lens takes a moment to find
   // its subject.
-  const focusing =
-    active !== null && drag.current === null && flight.current === null;
+  // A drag no longer suspends it: the crosshair is live through a slide, so the focus
+  // can follow it. A flight still does, because the camera is crossing the country and
+  // there is nothing to focus on until it lands.
+  const focusing = active !== null && flight.current === null;
   // Independent of `focusing`: the raised region and its shadow belong to the rise,
-  // which has its own easing, and should not wait on the focus to arrive.
+  // which has its own easing, and should not wait on the focus to arrive. `raised` is
+  // the eased prism; before the rise has started there is nothing to draw over the top,
+  // and the flat copy in the scene below is already correct.
   const sharp =
-    active === null
+    raised ??
+    (active === null
       ? null
-      : (drawn.detail.find((shape) => shape.id === active) ?? null);
+      : (drawn.detail.find((shape) => shape.id === active) ?? null));
   const sharpFill = sharp
     ? (fillFor(sharp.id) ?? "var(--nodata)")
     : "var(--nodata)";
@@ -600,7 +801,7 @@ export function GlobeMap({
             const dx = (event.clientX - drag.current.x) * perPixel;
             const dy = (event.clientY - drag.current.y) * perPixel;
             const dt = Math.max(1, event.timeStamp - drag.current.at);
-            move(dx, dy);
+            nudge(dx, dy);
             // Velocity is smoothed, not raw: one jittery sample at the moment of
             // release would throw the glide in a direction the hand never went.
             drag.current = {
@@ -616,6 +817,7 @@ export function GlobeMap({
             drag.current = null;
             event.currentTarget.releasePointerCapture(event.pointerId);
             coast(thrown);
+            setSettled((n) => n + 1);
           }}
           onPointerCancel={() => {
             drag.current = null;
@@ -700,54 +902,25 @@ export function GlobeMap({
             </mask>
           </defs>
 
-          <g className="globe-ground">
-            {drawn.ground.map((shape) => (
-              <path
-                key={shape.id}
-                d={shape.base}
-                className={shape.id === "NJ" ? "with-figures" : undefined}
-              />
-            ))}
-          </g>
-          <g
-            id="globe-detail-layer"
-            className={focusing ? "globe-detail soft" : "globe-detail"}
-          >
-            {drawn.detail.map((shape) => {
-              const fill = fillFor(shape.id);
-              if (fill === null) {
-                // No figure here: it joins the ground rather than becoming a dark class
-                // of its own, which left the state looking moth-eaten at municipal zoom.
-                return (
-                  <path
-                    key={shape.id}
-                    className="globe-absent"
-                    d={shape.base}
-                  />
-                );
-              }
-              const on = shape.id === active;
-              return (
-                <g
-                  key={shape.id}
-                  className={on ? "globe-region on" : "globe-region"}
-                >
-                  {shape.walls && (
-                    <path className="wall" d={shape.walls} fill={fill} />
-                  )}
-                  <path className="top" d={shape.top} fill={fill} />
-                </g>
-              );
-            })}
-          </g>
-          {/* The same paths again, blurred harder and masked so they only show towards
+          <g ref={world}>
+            {/* Both layers are filled by `lib/paint.ts` rather than by React. A region
+                is a `d` and a colour — no state, no events, nothing React's diffing buys
+                anything for — and building 564 of them through it was most of a frame. */}
+            <g ref={groundRef} className="globe-ground" />
+            <g
+              ref={detailRef}
+              id="globe-detail-layer"
+              className={focusing ? "globe-detail soft" : "globe-detail"}
+            />
+            {/* The same paths again, blurred harder and masked so they only show towards
               the edge — the far half of a depth of field. `use` instances the layer, so
               this costs one element rather than another 564. */}
-          <use
-            href="#globe-detail-layer"
-            className={focusing ? "globe-detail-far on" : "globe-detail-far"}
-            mask="url(#globe-edge)"
-          />
+            <use
+              href="#globe-detail-layer"
+              className={focusing ? "globe-detail-far on" : "globe-detail-far"}
+              mask="url(#globe-edge)"
+            />
+          </g>
           {/* A vignette that closes in on whatever the crosshair holds. The ground
               around it keeps its color and its shape, only quieter, so the comparison
               the whole site is built on is still there to read. */}
@@ -762,14 +935,18 @@ export function GlobeMap({
           {/* The focused region drawn again, over the softened rest and the vignette,
               so it alone stays sharp and at full color. Twice is cheaper than excluding
               it from a filtered group, and it keeps the painter's order. */}
-          {sharp && (
-            <g className="globe-region on globe-sharp">
-              {sharp.walls && (
-                <path className="wall" d={sharp.walls} fill={sharpFill} />
-              )}
-              <path className="top" d={sharp.top} fill={sharpFill} />
-            </g>
-          )}
+          {/* In its own group, so a pan slides it with the ground it stands on while
+              the vignette and the crosshair stay pinned to the frame. */}
+          <g ref={lifted}>
+            {sharp && (
+              <g className="globe-region on globe-sharp">
+                {sharp.walls && (
+                  <path className="wall" d={sharp.walls} fill={sharpFill} />
+                )}
+                <path className="top" d={sharp.top} fill={sharpFill} />
+              </g>
+            )}
+          </g>
           {/* The crosshair. Fixed at the middle of the frame: the reader moves the map
             under it rather than pointing at a place, which is what makes the map
             readable on a touch screen with no hover. */}

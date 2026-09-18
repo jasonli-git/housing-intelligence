@@ -86,7 +86,15 @@ export function TownRanks({
               </th>
               <th scope="col">Municipality</th>
               <th scope="col" className="num">
-                {measure.label}
+                {/* The basis, not the measure's name: the column holds percentages when
+                    the map is drawing change, and a header reading "Home value index"
+                    over "+79.6%" names the wrong quantity. The note above says which
+                    measure and which window. */}
+                <abbr title={measure.basis}>
+                  {measure.basis.startsWith("change")
+                    ? "Change"
+                    : measure.label}
+                </abbr>
               </th>
               <th scope="col" className="go">
                 <span className="visually-hidden">Open</span>

@@ -412,7 +412,11 @@ export const api = {
     ),
   packet: (id: number, window: string) =>
     tryGet<Packet>(`/regions/${id}/packet?window=${window}`),
-  geo: (level: string) => tryGet<FeatureCollection>(`/geo/${level}?state=NJ`),
+  geo: (level: string, simplify?: number) =>
+    tryGet<FeatureCollection>(
+      `/geo/${level}?state=NJ` +
+        (simplify === undefined ? "" : `&simplify=${simplify}`),
+    ),
   /**
    * Every state's outline, drawn as context on the map.
    *

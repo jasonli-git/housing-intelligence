@@ -3268,6 +3268,153 @@ not now, so the record shows what was asked and when.
       and 21 counties drawn, the legend reading "change over five years", "Jump into
       Mercer County" offered, and the crosshair off by default.
 
+## The map at municipal zoom — diagnosed and fixed 2026-09-18
+
+The owner reported the map lagging badly once it reached municipalities, on desktop and
+on phone. **The first finding was that it was not lag: it was dead.** The console carried
+"Maximum update depth exceeded", and none of the camera controls responded — United
+States, New Jersey, zoom in and zoom out all left the geometry byte-identical. React had
+bailed out of the subtree.
+
+### The freeze
+
+`requestAnimationFrame` and a ref mutation were being called **inside the `setRise`
+updater**. An updater has to be pure; React calls it twice in development precisely to
+surface this, so every tick scheduled two frames, each of which scheduled two more. The
+loop doubled until React gave up. It was worse at municipal zoom only because each wasted
+render cost more there — the symptom looked like slowness, and was not.
+
+- [x] The easing loop now schedules its next frame **outside** the updater, reads its
+      target from a ref, and `setRise` receives a plain number. A new target mid-flight
+      steers the running loop instead of tearing it down and starting another, which is
+      what "interruptible" was supposed to mean. Cleanup moved to unmount, where it
+      belongs — cancelling on every target change was killing the loop mid-ease.
+
+### Then the real performance work, measured
+
+Measured at municipal zoom with `PerformanceObserver` on long tasks and a
+`MutationObserver` counting `d` rewrites, over a 40-event drag.
+
+| | Before | After |
+|---|---|---|
+| Long tasks, whole state | 4 (51–64ms) | 1 (69ms, at the level switch) |
+| Long tasks, zoomed in | — | **0** |
+| Path rewrites per pointer event | 550 | 69 |
+| Regions projected when zoomed in | 564 | 126–139 |
+
+- [x] **Only the raised region depends on the rise.** It was inside the 564-region memo,
+      so every frame of a one-second ease re-projected all 41,609 points to move one
+      block. The scene is now flat and memoised without `rise`; the probe is a memo of
+      its own over a single outline.
+- [x] **Pointer movement is spent once a frame.** A trackpad delivers up to 120 events a
+      second and each one was doing a full projection. The deltas are collected and
+      applied on the next frame, which pans exactly as far for a fraction of the work.
+- [x] **Regions outside the frame are skipped before they are projected** (`inFrame` in
+      `lib/globe.ts`). Each outline's bounding cap — a direction and an angle — is
+      computed once and cached in a `WeakMap`, so rejecting a region costs one rotation
+      rather than the seventy-odd its points carry. This is what takes zoomed-in drags to
+      zero long tasks: 126 of 564 towns are on screen, and the other 438 are no longer
+      touched. Deliberately generous — it rejects only what certainly cannot be seen,
+      because a region wrongly kept costs one region's work and a region wrongly dropped
+      is a hole in the map.
+- [x] **The crosshair's hit test is not run mid-drag.** It walks the level a second time,
+      repeating the rotation and clipping the scene just did, to feed a readout nobody
+      can read while the map is moving. The last answer stands until the hand comes off.
+
+### The crosshair had to follow the slide — 2026-09-18
+
+Sliding the drawn geometry instead of re-projecting it bought the smoothness, but the
+owner found what it cost: the region under the crosshair only updated when the drag
+ended, because the hit test had been deferred to the release. The focus is the indicator
+— the crosshair mark is off by default — so a focus that waits for the hand to stop is a
+map that does not answer while you are looking.
+
+- [x] **Hit tested with `Path2D` and `isPointInPath`.** The drawn regions are turned into
+      `Path2D` once per camera; during a slide the camera has not moved, so the crosshair
+      has effectively travelled the other way across fixed geometry and can be tested
+      where it now sits. The browser's own geometry engine does it: no layout, no walk of
+      the outlines, and none of the work that made this wait for the release.
+      - **Rejected: `document.elementFromPoint`.** It looked ideal — the browser's hit
+        test, accounting for the transform automatically — and it fails for a reason
+        worth writing down: it sees only the visible viewport, and this map is 850 pixels
+        tall, so its own centre is often scrolled off screen. Measured: an empty element
+        stack and a crosshair frozen on the last town.
+      - The geometry is read through a **ref**, not captured in the closure. A frame
+        scheduled before a mid-drag commit would otherwise test the previous camera's
+        geometry and name the wrong place.
+- [x] **The focus no longer waits for the hand.** A drag used to suspend it; only a
+      flight does now, where the camera is crossing the country and there is nothing to
+      focus on until it lands.
+- [x] **A slide is committed to the camera every 36 frame units** (`SLIDE_BUDGET`), not
+      only on release. A translation only resembles the rotation a pan really is, and the
+      gap grows with distance; committing periodically bounds it instead of letting one
+      long drag accumulate it.
+
+**A caveat on the measurements above.** They were taken by driving synthetic pointer
+events through the automated browser, whose pane throttles `requestAnimationFrame` when
+it is not on screen — with it hidden, the slide's frame never runs, nothing paints, and
+the whole drag lands at once on release. Every figure quoted here was taken with the pane
+visible, and the intermittent results that are not were that throttling rather than the
+map. **The remaining question — whether a long drag ever leaves the readout a town behind
+what is drawn — needs a real drag on real hardware, not a synthetic one.**
+
+### Still lagging, and the second round — 2026-09-18
+
+The owner reported it still heavy, worst on `/afford`, with about half a gigabyte of
+memory, a hot CPU and an idle GPU. That last pair is the diagnosis: none of the work was
+reaching the GPU.
+
+**Two things it was not.** Turning every filter off — both blurs, the vignette, the grain
+and the shadows — made a drag *slower*, 73ms against 64ms. Rewriting all 564 path
+attributes and forcing layout is 2.1ms of a 64ms frame. Neither the filters nor the DOM
+were the cost.
+
+**What it was.** The other ~60ms is JavaScript: re-projecting 41,609 points, clipping
+them, building **half a megabyte of new path strings**, and having React reconcile 1,100
+elements — every frame. 15 to 27MB of garbage per short drag, which is the memory the
+owner saw. Per-update timing during a drag on `/afford`: **87, 66, 47, 47, 45ms**, then
+settling around 30. `/afford` is worst because it pins the map to municipalities, so all
+564 are always in frame and the culling never fires.
+
+- [x] **A — a pan slides what is drawn instead of drawing it again.** One `transform` on
+      two groups, written straight to the DOM, so the projection, the string building and
+      the React render are all skipped. Used at municipal zoom only, which is both where
+      it is needed and where it is honest: panning a globe is a rotation and a
+      translation only resembles one, but over a few hundredths of a degree the two are
+      within a pixel, and the camera is corrected the moment the hand comes off. Zoomed
+      out the map re-projects live, because there are 52 outlines rather than 564.
+- [x] **B — a second, harder-simplified copy of the towns** (`municipalityWide`), drawn
+      while the whole state is in frame: **15,364 points against 41,609**, at 0.001
+      degrees, where a town is a few dozen pixels across and nobody can see the
+      difference. Past three times the state framing the reader is close enough for the
+      detail to matter, and by then most of the state is off screen and the fine layer is
+      cheap because it is culled. One set of outlines feeds the scene, the crosshair, the
+      ramp and the rise, so the map can never test a shape it did not draw.
+      `map.json` goes from 761KB to 898KB raw, 264KB to 311KB gzipped.
+
+**Measured after, on `/afford`:**
+
+| | Before | After |
+|---|---|---|
+| Per update during a drag | 87, 66, 47, 47, 45ms | flat 33ms — the measurement floor |
+| Heap across one drag | +15 to +27MB | **−5MB** (reclaimed, not churned) |
+
+Flat 33.3ms is two animation frames, which is as low as the measurement can see; the
+variance is gone, which is what "smooth" is. The remaining long task is at the level
+switch, where 564 prisms are built for the first time.
+
+### What is left, and why it is acceptable
+
+One 69ms hitch remains, at the moment the map crosses from 21 counties to 564
+municipalities — the frame where 554 prisms are built for the first time. It is a single
+hitch on a transition, not continuous lag, and removing it would mean either a coarser
+second geometry for the town layer (another copy in `map.json`) or progressive rendering.
+Neither is worth its complexity until someone reports it.
+
+- [ ] **Note:** the same measurement found `/map.json` fetched two or three times per
+      page load in development. That is React's StrictMode double-invoking effects and
+      does not happen in the build, but it is worth confirming once on the live site.
+
 ## Paid sources, and live listings — asked 2026-09-18
 
 Two questions from the owner, answered here rather than in [ROADMAP.md](ROADMAP.md),

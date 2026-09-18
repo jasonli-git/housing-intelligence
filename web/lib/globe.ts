@@ -236,10 +236,95 @@ export function scene(
 ): Prism[] {
   const drawn: Prism[] = [];
   for (const outline of outlines) {
+    if (!inFrame(v, outline)) continue;
     const shape = prism(v, outline, lift(outline.id));
     if (shape) drawn.push(shape);
   }
   return drawn.sort((a, b) => a.lift - b.lift || a.depth - b.depth);
+}
+
+/**
+ * The smallest cap on the sphere that covers an outline: a direction and an angle.
+ *
+ * Cached per outline, because it depends on the ground and not on the camera. It is what
+ * lets a frame skip a region without touching its points — one rotation against the
+ * seventy-odd a municipality carries. At municipal zoom most of the state is off screen,
+ * which is exactly where the map was slowest.
+ */
+const caps = new WeakMap<Outline, { v: Vec3; sin: number }>();
+
+function capOf(outline: Outline): { v: Vec3; sin: number } {
+  const known = caps.get(outline);
+  if (known) return known;
+  let sx = 0;
+  let sy = 0;
+  let sz = 0;
+  let n = 0;
+  for (const flat of outline.rings) {
+    for (let i = 0; i < flat.length; i += 2) {
+      const phi = flat[i + 1] * DEG;
+      const lambda = flat[i] * DEG;
+      sx += Math.cos(phi) * Math.sin(lambda);
+      sy += Math.sin(phi);
+      sz += Math.cos(phi) * Math.cos(lambda);
+      n += 1;
+    }
+  }
+  const length = Math.hypot(sx, sy, sz) || 1;
+  const centre: Vec3 = [sx / length, sy / length, sz / length];
+  // The widest chord from that centre to any point, which bounds the cap. Chord rather
+  // than angle: it needs no trigonometry and is monotonic in the angle.
+  let far = 0;
+  for (const flat of outline.rings) {
+    for (let i = 0; i < flat.length; i += 2) {
+      const phi = flat[i + 1] * DEG;
+      const lambda = flat[i] * DEG;
+      const x = Math.cos(phi) * Math.sin(lambda);
+      const y = Math.sin(phi);
+      const z = Math.cos(phi) * Math.cos(lambda);
+      far = Math.max(
+        far,
+        Math.hypot(x - centre[0], y - centre[1], z - centre[2]),
+      );
+    }
+  }
+  const cap = { v: centre, sin: far };
+  caps.set(outline, cap);
+  return cap;
+}
+
+/**
+ * Whether an outline could put anything inside the frame.
+ *
+ * Deliberately generous: it rejects only what certainly cannot be seen. A region wrongly
+ * kept costs one region's work; a region wrongly dropped is a hole in the map.
+ */
+function inFrame(v: View, outline: Outline): boolean {
+  const cap = capOf(outline);
+  const [x, y, z] = rotateVec(v.camera, cap.v);
+  // Behind the globe by more than its own extent: nothing of it can come round the limb.
+  if (z < -cap.sin) return false;
+  const reach = v.camera.scale * cap.sin;
+  const [sx, sy] = screen(v, [x, y, z]);
+  return (
+    sx + reach >= 0 &&
+    sx - reach <= v.camera.width &&
+    sy + reach >= 0 &&
+    sy - reach <= v.camera.height
+  );
+}
+
+/** The camera's rotation applied to a point already on the unit sphere. */
+function rotateVec(camera: Camera, [x, y, z]: Vec3): Vec3 {
+  const beta = camera.lat * DEG;
+  const cosB = Math.cos(beta);
+  const sinB = Math.sin(beta);
+  const lambda = -camera.lon * DEG;
+  const cosL = Math.cos(lambda);
+  const sinL = Math.sin(lambda);
+  const rx = x * cosL + z * sinL;
+  const rz = -x * sinL + z * cosL;
+  return [rx, y * cosB - rz * sinB, y * sinB + rz * cosB];
 }
 
 /** Whether a screen point falls inside a ring, by ray casting. */
@@ -269,6 +354,7 @@ export function at(
 ): Outline | null {
   for (let i = outlines.length - 1; i >= 0; i -= 1) {
     const outline = outlines[i];
+    if (!inFrame(v, outline)) continue;
     for (const flat of outline.rings) {
       const rotated: Vec3[] = [];
       for (let k = 0; k < flat.length; k += 2) {

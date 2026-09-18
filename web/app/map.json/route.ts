@@ -17,15 +17,18 @@ import { WINDOWS } from "@/lib/windows";
 export const dynamic = "force-static";
 
 export async function GET() {
-  const [backdrop, counties, towns, catalog, townRegions] = await Promise.all([
-    api.backdrop(),
-    api.geo("county"),
-    api.geo("municipality"),
-    api.metrics(),
-    // For the parent county alone: two Washington townships share a name *and* a legal
-    // type, so only the county separates them, and `/geo` carries no parent (#70, #143).
-    api.regions("level=municipality&state=NJ&limit=1000"),
-  ]);
+  const [backdrop, counties, towns, wideTowns, catalog, townRegions] =
+    await Promise.all([
+      api.backdrop(),
+      api.geo("county"),
+      api.geo("municipality"),
+      // The same towns at 0.001 degrees, for the whole-state view (`municipalityWide`).
+      api.geo("municipality", 0.001),
+      api.metrics(),
+      // For the parent county alone: two Washington townships share a name *and* a legal
+      // type, so only the county separates them, and `/geo` carries no parent (#70, #143).
+      api.regions("level=municipality&state=NJ&limit=1000"),
+    ]);
 
   const values: MapFile["values"] = {};
   const changes: MapFile["changes"] = {};
@@ -86,6 +89,14 @@ export async function GET() {
     ]),
   );
 
+  // Both town layers carry the same names, so they are labelled the same way.
+  const named = (collection: typeof towns) =>
+    (collection ? pack(collection, "region_id") : []).map((outline) => {
+      const county = countyName.get(parentOf.get(Number(outline.id)) ?? -1);
+      const label = outline.label ?? outline.name;
+      return county ? { ...outline, label: `${label}, ${county}` } : outline;
+    });
+
   const file: MapFile = {
     precision: PRECISION,
     nation: { noun: "state", outlines: backdrop ? pack(backdrop, "code") : [] },
@@ -93,14 +104,8 @@ export async function GET() {
       noun: "county",
       outlines: counties ? pack(counties, "region_id") : [],
     },
-    municipality: {
-      noun: "municipality",
-      outlines: (towns ? pack(towns, "region_id") : []).map((outline) => {
-        const county = countyName.get(parentOf.get(Number(outline.id)) ?? -1);
-        const named = outline.label ?? outline.name;
-        return county ? { ...outline, label: `${named}, ${county}` } : outline;
-      }),
-    },
+    municipality: { noun: "municipality", outlines: named(towns) },
+    municipalityWide: { noun: "municipality", outlines: named(wideTowns) },
     values,
     changes,
   };

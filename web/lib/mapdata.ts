@@ -56,6 +56,16 @@ export type MapFile = {
   nation: MapLayer;
   county: MapLayer;
   municipality: MapLayer;
+  /**
+   * The municipalities again, simplified far harder, for when the whole state is in
+   * frame and all 564 are on screen at once.
+   *
+   * At 0.001 degrees they are 15,364 points against the fine layer's 41,609 — 37% of the
+   * work for a difference nobody can see at that zoom, where a town is a few dozen
+   * pixels across. Once the reader zooms in far enough for the detail to matter, most of
+   * the state is off screen and the fine layer is cheap again because it is culled.
+   */
+  municipalityWide: MapLayer;
   /** metric_id -> region_id -> its latest value. Absent regions have no figure. */
   values: Record<string, Record<string, number>>;
   /**
