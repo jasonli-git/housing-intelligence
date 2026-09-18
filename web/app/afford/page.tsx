@@ -5,25 +5,24 @@ import { AffordExplorer } from "@/components/AffordExplorer";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import type { Place } from "@/lib/afford";
 import { api, nationalMortgageRate, type RankedRegion } from "@/lib/api";
-import { project } from "@/lib/geo";
 import { displayName } from "@/lib/names";
 import { periodLabel } from "@/lib/periods";
 import { searchEntries } from "@/lib/search";
 
 export const metadata: Metadata = {
   title: "What can I afford? — Housing",
-  description: "The New Jersey counties and municipalities where the typical home is within reach of an income.",
+  description:
+    "The New Jersey counties and municipalities where the typical home is within reach of an income.",
 };
-
-// The same box the New Jersey page projects its map into.
-const MAP_WIDTH = 420;
-const MAP_HEIGHT = 560;
 
 /**
  * A metric's latest value per region at one level, from its value ranking. The window is
  * required by the endpoint and ignored for `basis=value`, which has no span.
  */
-async function latest(metricId: string, level: string): Promise<Map<number, RankedRegion>> {
+async function latest(
+  metricId: string,
+  level: string,
+): Promise<Map<number, RankedRegion>> {
   const ranking = await api.rankings(metricId, level, "5y", 1000, "value");
   return new Map((ranking?.items ?? []).map((item) => [item.region_id, item]));
 }
@@ -33,12 +32,13 @@ async function latest(metricId: string, level: string): Promise<Map<number, Rank
  *
  * Every county's and municipality's typical home value, rent and tax bill ride in the
  * page — about 600 places, small enough to answer every change in the browser with no
- * request, and on one page rather than 1,134. The map is the New Jersey page's county
- * map, as the ROADMAP planned: Milestone 16's map carries it to municipalities.
+ * request, and on one page rather than 1,134. The map is the New Jersey page's globe,
+ * held at municipal level and painted in three states rather than by quantile — the
+ * carry the ROADMAP planned and #144 deferred to Milestone 16.
  */
 export default async function AffordPage() {
-  const [geo, counties, towns, catalog, rate, ...series] = await Promise.all([
-    api.geo("county"),
+  // No geometry fetched here any more: the map asks for `map.json` itself (#163).
+  const [counties, towns, catalog, rate, ...series] = await Promise.all([
     api.regions("level=county&state=NJ&limit=50"),
     api.regions("level=municipality&state=NJ&limit=1000"),
     api.metrics(),
@@ -52,20 +52,25 @@ export default async function AffordPage() {
   ]);
   const [homeC, taxC, rentC, homeM, taxM, rentM] = series;
 
-  if (!geo || !counties || !towns || !rate) {
+  if (!counties || !towns || !rate) {
     return (
       <main className="shell">
         <h1 className="page-title">What can I afford?</h1>
         <p className="meta">
-          The API is unreachable, so there is nothing to show. <Link href="/">Back to New Jersey</Link>.
+          The API is unreachable, so there is nothing to show.{" "}
+          <Link href="/">Back to New Jersey</Link>.
         </p>
       </main>
     );
   }
 
-  const value = (map: Map<number, RankedRegion>, id: number) => map.get(id)?.value ?? null;
+  const value = (map: Map<number, RankedRegion>, id: number) =>
+    map.get(id)?.value ?? null;
   const details = new Map(
-    searchEntries([...counties.items, ...towns.items]).map((entry) => [entry.id, entry.detail]),
+    searchEntries([...counties.items, ...towns.items]).map((entry) => [
+      entry.id,
+      entry.detail,
+    ]),
   );
   const countyPlaces: Place[] = counties.items.map((c) => ({
     id: c.region_id,
@@ -97,17 +102,20 @@ export default async function AffordPage() {
     <main className="shell">
       <header className="page-head" data-kind="tool">
         <div>
-          <Crumbs trail={[{ href: "/", label: "New Jersey" }]} here="What can I afford?" />
+          <Crumbs
+            trail={[{ href: "/", label: "New Jersey" }]}
+            here="What can I afford?"
+          />
           <Kind kind="tool" />
           <h1 className="page-title">What can I afford?</h1>
           <p className="meta">
-            Where the typical home is within reach of a household income — owned or rented —
-            if housing takes at most 30% of it, the line HUD uses for cost burden.
+            Where the typical home is within reach of a household income — owned
+            or rented — if housing takes at most 30% of it, the line HUD uses
+            for cost burden.
           </p>
         </div>
       </header>
       <AffordExplorer
-        map={project(geo.features, MAP_WIDTH, MAP_HEIGHT)}
         counties={countyPlaces}
         towns={townPlaces}
         rate={{ value: rate.value, asOf: periodLabel(rate.period_start) }}

@@ -25,6 +25,7 @@ import pytest
 
 from hip.config import GeographyScope
 from hip.duck import duckdb_session
+from hip.geography.backdrop import state_outlines
 from hip.geography.crosswalk import (
     CROSSWALK_TABLE,
     apply_hud_weights,
@@ -441,3 +442,72 @@ def test_states_and_zips_fall_back_to_their_bare_name(
     ).fetchall()
     assert rows
     assert all(name == lsad for name, lsad in rows)
+
+
+# --- The map's backdrop ------------------------------------------------------------
+#
+# `state_outlines` is the readable half of the backdrop load: what it selects, what it
+# drops, and how far it simplifies. Writing the rows is covered by
+# `tests/test_api_regions.py`, against the real warehouse.
+
+
+@pytest.fixture
+def backdrop_parquet(tmp_path: Path) -> Path:
+    """Four states' worth of TIGER columns: two in scope, two territories."""
+    root = tmp_path / "parquet"
+    base = root / "census_tiger" / VINTAGE
+    # A ragged edge, so a simplification tolerance has something to remove: the top of
+    # the box is drawn with four intermediate points a hundredth of a degree apart.
+    ragged = (
+        "POLYGON((-75 39, -74 39, -74 40, -74.25 39.99, "
+        "-74.5 40, -74.75 39.99, -75 40, -75 39))"
+    )
+    with duckdb_session(spatial=True) as con:
+        _write(
+            con,
+            base / "state.parquet",
+            f"""
+            SELECT 'NJ' AS STUSPS, 'New Jersey' AS NAME,
+                   ST_AsWKB(ST_Multi(ST_GeomFromText('{ragged}'))) AS geom_wkb
+            UNION ALL
+            SELECT 'PR', 'Puerto Rico',
+                   ST_AsWKB(ST_Multi(ST_GeomFromText('{_box(-67, 17, -65, 19)}')))
+            UNION ALL
+            SELECT 'GU', 'Guam',
+                   ST_AsWKB(ST_Multi(ST_GeomFromText('{_box(144, 13, 145, 14)}')))
+            UNION ALL
+            SELECT 'AS', 'American Samoa',
+                   ST_AsWKB(ST_Multi(ST_GeomFromText('{_box(-171, -15, -170, -14)}')))
+            """,
+        )
+    return root
+
+
+def test_backdrop_keeps_the_states_and_puerto_rico(backdrop_parquet: Path) -> None:
+    """Milestone 15 names the 50 states, DC and PR as national coverage, so those are
+    the outlines drawn. The Pacific territories are outside every published plan."""
+    with duckdb_session(spatial=True) as con:
+        rows = state_outlines(con, parquet_dir=backdrop_parquet, vintage=VINTAGE)
+
+    assert [code for code, _, _ in rows] == ["NJ", "PR"]
+
+
+def test_backdrop_simplifies_what_it_reads(backdrop_parquet: Path) -> None:
+    """The backdrop is drawn at continental zoom, where survey detail costs bytes and
+    shows nothing. Without this the 52 outlines are 449KB rather than 145KB."""
+    with duckdb_session(spatial=True) as con:
+        rows = state_outlines(con, parquet_dir=backdrop_parquet, vintage=VINTAGE)
+        nj = next(geom for code, _, geom in rows if code == "NJ")
+        points = con.execute("SELECT ST_NPoints(ST_GeomFromWKB(?))", [nj]).fetchone()
+    assert points is not None
+    # Eight points in, five out: the four hundredths-of-a-degree wobbles collapse into
+    # the straight edge they sit on.
+    assert points[0] == 5
+
+
+def test_backdrop_says_what_to_run_when_the_parquet_is_missing(tmp_path: Path) -> None:
+    with (
+        duckdb_session(spatial=True) as con,
+        pytest.raises(FileNotFoundError, match="hip acquire"),
+    ):
+        state_outlines(con, parquet_dir=tmp_path, vintage=VINTAGE)

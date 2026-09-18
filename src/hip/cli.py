@@ -37,6 +37,7 @@ from hip.duck import duckdb_session
 from hip.eval_cli import app as eval_app
 from hip.eval_cli import explain_command
 from hip.footprint import as_dict, human_bytes, measure
+from hip.geography.backdrop import load_backdrop
 from hip.geography.crosswalk import apply_hud_weights, build_crosswalk
 from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
@@ -572,6 +573,19 @@ def load(
     identifiers = load_region_identifiers(get_engine(), settings.duckdb_path)
     if identifiers:
         typer.echo(f"identifiers   {identifiers:>8,} nj_cd_code")
+
+    # The map's context layer: every state's outline, from the same landed TIGER file
+    # the spine came from. Here rather than in a command of its own because it is the
+    # same stage — geometry from Parquet into Postgres — and loading it beside the
+    # regions keeps the two from drifting to different TIGER vintages (migration 0012).
+    with duckdb_session(spatial=True) as con:
+        backdrop = load_backdrop(
+            get_engine(),
+            con,
+            parquet_dir=settings.parquet_dir,
+            vintage=vintage or TigerAdapter.default_vintage,
+        )
+    typer.echo(f"backdrop      {backdrop.total:>8,} state outlines (map context only)")
 
     # Facts, if any have been staged. A geography-only load stays valid.
     with duckdb_session(settings.duckdb_path) as con:

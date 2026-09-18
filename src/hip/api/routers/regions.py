@@ -170,6 +170,37 @@ def get_region(region_id: int, session: SessionDep) -> RegionDetail:
     )
 
 
+# Declared before `/geo/{level}`: FastAPI matches routes in declaration order, and
+# "backdrop" would otherwise be tried as a RegionLevel and 422.
+@router.get("/geo/backdrop", summary="State outlines drawn as map context")
+def get_backdrop(session: SessionDep) -> dict[str, Any]:
+    """Every state's outline, for a map that shows more ground than the warehouse holds.
+
+    These are not regions and carry no data (`map_backdrop`, migration 0012). The
+    platform covers New Jersey; a map of New Jersey alone cannot be panned, so the other
+    51 outlines are here as context and nothing else. Each feature is keyed by its USPS
+    code rather than a region_id, because no region answers to it.
+    """
+    rows = session.execute(
+        text(
+            """
+            SELECT code, name, ST_AsGeoJSON(geom) AS geojson
+            FROM map_backdrop WHERE level = 'state' ORDER BY code
+            """
+        )
+    ).mappings()
+    features = [
+        {
+            "type": "Feature",
+            "id": row["code"],
+            "geometry": json.loads(row["geojson"]),
+            "properties": {"code": row["code"], "name": row["name"], "level": "state"},
+        }
+        for row in rows
+    ]
+    return {"type": "FeatureCollection", "features": features}
+
+
 @router.get("/geo/{level}", summary="GeoJSON boundaries for a level")
 def get_geometry(
     level: RegionLevel,
@@ -192,7 +223,7 @@ def get_geometry(
     rows = session.execute(
         text(
             f"""
-            SELECT region_id, geoid, name, state_code,
+            SELECT region_id, geoid, name, name_lsad, state_code,
                    ST_AsGeoJSON({geometry}) AS geojson
             FROM regions WHERE {where}
             ORDER BY geoid
@@ -210,6 +241,10 @@ def get_geometry(
                 "region_id": row["region_id"],
                 "geoid": row["geoid"],
                 "name": row["name"],
+                # The name carrying its legal status. Six New Jersey municipalities are
+                # called Washington, and a list of 564 of them needs to tell them apart
+                # (#70); a map's readout is better off with the bare name, so both ride.
+                "name_lsad": row["name_lsad"],
                 "state_code": row["state_code"],
                 "level": level,
             },

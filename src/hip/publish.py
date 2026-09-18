@@ -195,6 +195,9 @@ def _plan(
 
     for level in ("state", "county", "municipality", "zip"):
         yield f"/geo/{level}?state=NJ", f"geo/{level}.json"
+    # The map's context layer — every state's outline, no data attached. Not a level,
+    # so it sits beside them rather than in the loop (migration 0012).
+    yield "/geo/backdrop", "geo/backdrop.json"
 
     for region_id in region_ids:
         yield f"/regions/{region_id}", f"regions/{region_id}.json"

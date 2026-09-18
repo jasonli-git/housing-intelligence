@@ -12,7 +12,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status (2026-09-16): v0.16.0, Version 1 complete and Version 2 under way.** New
+> **Status (2026-09-18): v0.18.0, Version 1 and Version 2 both complete.** New
 > Jersey's geography, its housing and economic context, and its **property tax roll**
 > are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
 > **351,974 observations across 32 metrics from 12 public sources, spanning 1971 to
@@ -25,7 +25,10 @@ layer only explains metrics that were already computed.
 > them reading the same packet side by side, switchable by the reader and each clearly
 > labeled as interpretation, never as measurement. Since Milestone 13 every figure in
 > that prose is traced to the packet field and source release behind it before it is
-> stored, and prose stating a figure the packet does not carry is refused.
+> stored, and prose stating a figure the packet does not carry is refused. Since
+> Milestone 16 all of it is read off a navigable globe of the United States, drawn by
+> hand as SVG with no map library: every state is on it so the map can be panned, only
+> New Jersey carries figures, and the map says so.
 >
 >
 > **Version 2 is live.** The platform now publishes itself: `hip publish` records the
@@ -43,7 +46,9 @@ layer only explains metrics that were already computed.
 > a model. Milestone 23 made it quicker to read: region pages lead with what a home costs
 > a month, where the region stands out and what its housing is like, with every table one
 > click away; every metric carries a plain definition; and `/afford` answers for one place
-> at a time.
+> at a time. A redesign, "Quiet utility", followed on 2026-09-17: quieter surfaces, larger
+> type, and the map as the front page's main object, with every chart colour validated in
+> both themes.
 >
 > See [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md)
 > for what shipped.
@@ -359,7 +364,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 463 Python + 167 dashboard tests; API tests skip without a warehouse
+make test          # 468 Python + 197 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 

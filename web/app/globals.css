@@ -1,7 +1,7 @@
 /*
  * Base rules and the component layer (Milestone 18). Tokens live in `tokens.css`; this
  * file only uses them. Every layout a page needs has a name here, so no page carries an
- * inline grid: inline style is left for values that are data — a swatch's colour, a
+ * inline grid: inline style is left for values that are data — a swatch's color, a
  * chart's geometry, a rank marker's position.
  */
 
@@ -30,7 +30,7 @@ a:hover { text-decoration-thickness: 2px; }
 /* Focus is drawn for the keyboard, not for every click. */
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 3px; }
 
-/* The only motion on the site: a colour settling on hover, short enough to read as
+/* The only motion on the site: a color settling on hover, short enough to read as
    response rather than animation, and none at all for a reader who asked for less. */
 @media (prefers-reduced-motion: no-preference) {
   a, button, select, summary, .term {
@@ -153,7 +153,7 @@ main.shell { padding-bottom: 2rem; }
 
 /* The non-commercial terms, across the page under the bar (#128, #133, #135, #136).
    Closed to their label, which is what a reader must not miss; the terms naming the
-   sources open beneath it. Amber, the colour of a condition rather than an error, with
+   sources open beneath it. Amber, the color of a condition rather than an error, with
    the label in mono capitals at text weight. Not print-hidden, and printing opens it:
    the terms travel with a printout. The report's own copy, kept for paper, uses the same
    box, always open. */
@@ -183,7 +183,7 @@ details.licence-box > .licence-text { margin: 0; padding: 0 0.95rem 0.65rem; }
 /* A disclosure: a <details> whose summary is a line of the page, ending in a hint that
    says what opening it gives. Native, so it needs no script and opens from the keyboard
    and for find-in-page. The chevron turns without animating: the only motion on the
-   site is a colour settling. */
+   site is a color settling. */
 .disclose {
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.9rem;
   list-style: none; cursor: pointer;
@@ -301,7 +301,7 @@ details[open] > summary .when-closed { display: none; }
 
 /* The kind of page: a small label in the page's accent, and the accent as a rule over the
    head — the state's blue, a region's teal, the report's ink, the tool's orange. Related
-   by one form, told apart by one colour. */
+   by one form, told apart by one color. */
 .page-head { --kind: var(--series-1); border-top: 2px solid var(--kind); }
 .page-head[data-kind="county"],
 .page-head[data-kind="municipality"],
@@ -437,7 +437,7 @@ body > main { flex: 1 0 auto; width: 100%; }
 .computed-line + .verdict { margin-top: 0.5rem; }
 
 /* "Did paychecks keep up?" answered short, homes and rent apart, the sentences behind the
-   answers beneath. No in amber, the site's colour for a caution; Yes tinted green. */
+   answers beneath. No in amber, the site's color for a caution; Yes tinted green. */
 .verdict-details > summary.disclose { align-items: center; }
 .answer {
   display: inline-flex; align-items: baseline; gap: 0.4rem; padding: 2px 9px; border-radius: 999px;
@@ -699,7 +699,7 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 }
 /* The model switcher. Five answers to one question, so it reads as a choice rather
    than as navigation, and the selected option is marked by weight and border rather
-   than by colour alone — the panel already spends its colour budget on holding
+   than by color alone — the panel already spends its color budget on holding
    interpretation apart from measurement. */
 .interpretation-switch { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; margin-bottom: 0.5rem; }
 .interpretation-switch-label { font-size: 0.75rem; color: var(--text-muted); margin-right: 0.15rem; }
@@ -791,6 +791,156 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
 .swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08); }
 .scale-note { margin: 0; font-size: var(--text-note); color: var(--text-muted); }
+
+/* The globe (Milestone 16). Drawn by hand from our own outlines — no map library, so
+   these are ordinary SVG elements that print and sit in the accessibility tree. */
+.globe { margin: 0; display: grid; gap: 0.7rem; }
+/* The positioning context the floating controls sit in. */
+.globe-stage { position: relative; display: grid; }
+.globe-frame {
+  width: 100%; max-width: 640px; height: auto; display: block; justify-self: center;
+  /* The water the land sits on. A tint away from the card rather than a chart blue —
+     the ramps need the card's contrast budget to themselves. */
+  background: var(--sea); border-radius: 12px;
+  /* The reader drags the map under a fixed crosshair, so the browser must not claim the
+     gesture for scrolling first. */
+  touch-action: none; cursor: grab; user-select: none;
+}
+.globe-frame:active { cursor: grabbing; }
+/* Ground: the 51 states with no figures. A flat neutral, never a step of the ramp — a
+   state shaded like data would claim a measurement the warehouse does not hold. */
+/* Ground states, on paper rather than in a void: the grain is real noise on one layer,
+   and the darker hairline reads as a coast where land meets water. */
+.globe-ground path { fill: url(#globe-ground-fill); stroke: var(--tick); stroke-width: 0.6; stroke-linejoin: round; }
+.globe-ground { filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.16)); }
+/* The one state that carries figures, so a reader at national zoom can see where the
+   data is before they have found it. */
+.globe-ground .with-figures { fill: var(--surface-2); stroke: var(--text-muted); stroke-width: 1.25; }
+.globe-region .top { stroke: var(--surface-1); stroke-width: 0.75; stroke-linejoin: round; }
+/* Walls are the same color as the top, one shade down: a block reads as one solid
+   thing lit from above rather than as two shapes that happen to touch. */
+.globe-region .wall { filter: brightness(0.78); stroke: none; }
+.globe-region.on .top { stroke: var(--text-primary); stroke-width: 2; }
+/* A region with no figure for the chosen measure: ground, not a class of its own. It
+   takes the backdrop's fill and its softer edge, so it recedes instead of reading as
+   the dark end of the ramp. */
+.globe-absent { fill: url(#globe-ground-fill); stroke: var(--tick); stroke-width: 0.5; stroke-linejoin: round; }
+.globe-coverage { display: flex; align-items: center; gap: 0.4rem; color: var(--text-muted); }
+.globe-crosshair circle { fill: none; stroke: var(--text-primary); stroke-width: 1.5; opacity: 0.8; }
+.globe-crosshair line { stroke: var(--text-primary); stroke-width: 1.5; opacity: 0.8; }
+/* The map's own controls, floating on it rather than under it. Glass: the map reads
+   through them, so they belong to it instead of interrupting it, and the blur keeps the
+   labels legible over whatever colour is beneath. Built from the site's own tokens —
+   the card surface, the border, the label type — so it is our material rather than a
+   borrowed one. Where backdrop-filter is missing the same rules leave a solid card,
+   which is the fallback we want rather than a transparent one. */
+.globe-controls {
+  position: absolute;
+  bottom: 14px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-card) 72%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid color-mix(in srgb, var(--border) 64%, transparent);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.10),
+    0 10px 28px rgb(0 0 0 / 0.12);
+}
+.globe-controls-jumps { left: 14px; }
+.globe-controls-zoom { right: 14px; }
+/* The shortcut the crosshair earns. Centred between the two pills, and a button rather
+   than a container, so it is one target. */
+.globe-controls-dive {
+  left: 50%;
+  /* A row above the other two, not between them: centred, they collide as soon as a
+     county's name is long or the frame is narrow. */
+  bottom: 64px;
+  transform: translateX(-50%);
+  max-width: min(60%, 20rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  font: var(--text-label)/1 var(--font-mono);
+  color: var(--text-primary);
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+}
+.globe-controls-dive:hover { background: color-mix(in srgb, var(--surface-card) 88%, transparent); }
+/* Everything but the region under the crosshair, softened. One flat blur on the layer,
+   shaped by the gradient drawn over it — SVG cannot vary a blur radius across a shape.
+   Light enough to read the shapes and the colors through: the comparison is the
+   product, so the surroundings are quietened, never removed. */
+/* The near half of the depth of field. The far half is the same paths again through
+   `globe-detail-far`, masked to the edge, because SVG cannot vary a blur radius across
+   a shape. Together they go from almost sharp at the crosshair to plainly out of focus
+   at the frame's edge, while the shapes and colors stay readable — rank against
+   neighbours is this platform's product, so the surroundings are quietened, not removed.
+
+   All three layers stay in the document and are carried in and out by CSS, so the focus
+   arrives the way a lens finds its subject rather than the way a light switch works. The
+   far layer and the vignette move only their opacity, which the compositor can do on its
+   own; only the near blur is re-rendered, and it is the small one. */
+.globe-detail { transition: filter 620ms ease, opacity 620ms ease; }
+.globe-detail.soft { filter: blur(1.1px) saturate(0.9); opacity: 0.94; }
+.globe-detail-far { filter: blur(5.5px) saturate(0.72); opacity: 0; transition: opacity 620ms ease; pointer-events: none; }
+.globe-detail-far.on { opacity: 1; }
+.globe-vignette { pointer-events: none; opacity: 0; transition: opacity 620ms ease; }
+.globe-vignette.on { opacity: 1; }
+/* The raised region, and the shadow that sells the lift. The offset is fixed rather
+   than tied to the rise: a shadow that grows with the figure would be a second, quieter
+   encoding of the same number, and one is enough. */
+.globe-sharp { filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.38)) drop-shadow(0 12px 16px rgb(0 0 0 / 0.42)); }
+.globe-sharp .top { stroke: var(--text-primary); stroke-width: 2; }
+@media (prefers-reduced-motion: reduce) {
+  .globe-detail { transition: none; }
+  .globe-detail.soft { filter: none; opacity: 1; }
+  .globe-detail-far, .globe-vignette { display: none; }
+}
+.globe-divider { width: 1px; align-self: stretch; margin-block: 5px; background: color-mix(in srgb, var(--border) 60%, transparent); }
+.globe-controls button {
+  font: var(--text-label)/1 var(--font-mono);
+  color: var(--text-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.44rem 0.72rem;
+  cursor: pointer;
+}
+.globe-controls button:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+}
+.globe-controls button:active { background: color-mix(in srgb, var(--text-primary) 14%, transparent); }
+.globe-zoom button, .globe-controls-zoom button { min-width: 2.1rem; font-size: 1rem; }
+.globe-icon { display: inline-flex; align-items: center; justify-content: center; padding: 0.36rem 0.5rem; }
+.globe-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
+.globe-icon[aria-pressed="true"] { color: var(--text-primary); background: color-mix(in srgb, var(--text-primary) 12%, transparent); }
+.globe-legend { display: grid; gap: 0.35rem; font-size: var(--text-note); color: var(--text-secondary); }
+.globe-legend p { margin: 0; }
+.globe-legend b { color: var(--text-primary); font-weight: 600; }
+.globe-ramp { display: flex; flex-wrap: wrap; gap: 0.3rem 0.8rem; align-items: center; font-variant-numeric: tabular-nums; }
+.globe-ramp span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.globe-note { color: var(--text-muted); }
+/* Holds the map's height while `map.json` is on its way, so the page does not jump. */
+.map-loading { width: 100%; }
+
+/* On paper the map is a picture, so everything that exists to be interacted with goes:
+   the floating controls, the crosshair, and the focus treatment — a blur and a vignette
+   that a printer would render as a smudge and a grey wash. What prints is the map flat,
+   sharp and whole, beside the ranking that carries its figures. */
+@media print {
+  .globe-controls, .globe-crosshair, .globe-vignette, .globe-detail-far { display: none; }
+  .globe-detail.soft { filter: none; opacity: 1; }
+  .globe-sharp { filter: none; }
+  .globe-frame { background: none; border: 1px solid var(--border); }
+  .globe-ground path, .globe-absent { fill: #ffffff; stroke: #999999; }
+}
 .ranks { font-size: var(--text-body); min-width: 22rem; }
 .ranks th { padding: 0 0 0.4rem; border-bottom: 1px solid var(--border); }
 .ranks td { padding: 0.42rem 0; border-bottom: 1px solid var(--grid); }
@@ -798,7 +948,7 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 .ranks .pos { width: 2.2em; color: var(--text-muted); }
 .ranks tr.on td { background: color-mix(in srgb, var(--text-primary) 6%, var(--surface-2)); }
 .ranks tr.on td:first-child { box-shadow: inset 2px 0 0 var(--text-primary); }
-/* Place names in the text colour, not a generic link blue (Milestone 23): the row is
+/* Place names in the text color, not a generic link blue (Milestone 23): the row is
    what reads as the way in, lit on hover and ending in "›". */
 .ranks a { color: var(--text-primary); text-decoration: none; font-weight: 500; }
 .ranks tr:hover a, .ranks a:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
@@ -918,7 +1068,7 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 /* ------------------------------------------------------------------ print --- */
 /*
  * Print is a first-class output here: the region report is meant to be saved as a PDF
- * from the browser rather than rendered by a PDF library. Colours are pinned to black
+ * from the browser rather than rendered by a PDF library. Colors are pinned to black
  * on white because a printer has one surface regardless of the reader's theme, and the
  * table borders are what carry structure once the fills are gone.
  */

@@ -8,7 +8,7 @@
  * first-class rather than being hidden behind decorative dashboard chrome.
  *
  * Four details of Milestone 23 stay, on the owner's word (2026-09-17): the accent rule
- * over each page type's head, the licence notice's amber — now the colour of its label
+ * over each page type's head, the licence notice's amber — now the color of its label
  * rather than a box — the shaded "Since 2019" note and the breadcrumb's pills. The
  * affordability tool keeps a little of its own warmth, too. This layer leaves those to
  * globals.css, or restates them for its own surfaces.
@@ -114,6 +114,32 @@ select,
   gap: 0.5rem;
 }
 
+/* The trailing icons are borderless, so their 38px boxes reach the content edge while
+   their 16px glyphs sit short of it — which reads as the GitHub mark falling off the
+   page. Inset the cluster so the glyph lands inside where a bordered control's edge
+   would be. Desktop only: on a phone the tools wrap to their own row and already have
+   the gutter to themselves. */
+@media (min-width: 761px) {
+  .bar-tools {
+    padding-inline-end: 1.25rem;
+  }
+}
+
+/* Nothing in the bar may push the row wider than the page. The search box is the one
+   part with slack, so it gives up width first and the icons keep theirs — before this,
+   a narrow-enough window sent the GitHub mark off the right edge with the whole
+   document scrolling sideways to reach it. */
+.bar-inner,
+.bar-tools,
+.bar-trail {
+  min-width: 0;
+}
+
+.bar .place-search {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
 .bar .place-search {
   flex-basis: 17rem;
 }
@@ -187,7 +213,7 @@ select,
 }
 
 /* The licence notice is a line of text, not a box, and its label keeps the notice's amber
-   (#136) as the colour of the words: a condition of use, told apart without a bubble. */
+   (#136) as the color of the words: a condition of use, told apart without a bubble. */
 .licence-box {
   max-width: none;
   padding: 0;
@@ -214,7 +240,7 @@ select,
 
 /* ------------------------------------------------------------------ page heads --- */
 
-/* The accent rule over the head stays (globals.css, #151) — the page type's colour, the
+/* The accent rule over the head stays (globals.css, #151) — the page type's color, the
    one place it shows — with a short gap above it, so the answer is not pushed down the
    screen. */
 .page-head {
@@ -341,7 +367,7 @@ select,
   width: 100%;
 }
 
-/* The action colour, not the series colour: dark's series blue is too light for white. */
+/* The action color, not the series color: dark's series blue is too light for white. */
 .afford-cta .button {
   border-color: var(--action);
   background: var(--action);

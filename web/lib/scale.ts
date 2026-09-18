@@ -2,7 +2,7 @@
  * The arithmetic behind the map and the charts, separated from the components that
  * draw with it.
  *
- * Not a refactor for tidiness: the choropleth once shipped as a single flat colour
+ * Not a refactor for tidiness: the choropleth once shipped as a single flat color
  * because a diverging ramp was centred on zero while every value was positive, and
  * nothing could catch that without being able to call the classifier directly. These
  * functions are pure, so `lib/scale.test.ts` exercises them without a DOM.

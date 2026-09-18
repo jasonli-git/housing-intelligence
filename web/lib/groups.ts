@@ -72,23 +72,61 @@ export const GROUPS: readonly Group[] = [
   },
 ];
 
-export const OTHER: Omit<Group, "metrics"> = { key: "other", title: "Other measures" };
+export const OTHER: Omit<Group, "metrics"> = {
+  key: "other",
+  title: "Other measures",
+};
 
 export type Section<T> = { key: string; title: string; rows: T[] };
 
 /** Rows sorted into sections in page order; an empty section is left out. */
-export function groupRows<T extends { metric_id: string }>(rows: T[]): Section<T>[] {
-  const sections: Section<T>[] = GROUPS.map((g) => ({ key: g.key, title: g.title, rows: [] }));
+export function groupRows<T extends { metric_id: string }>(
+  rows: T[],
+): Section<T>[] {
+  const sections: Section<T>[] = GROUPS.map((g) => ({
+    key: g.key,
+    title: g.title,
+    rows: [],
+  }));
   const other: Section<T> = { ...OTHER, rows: [] };
   const position = new Map<string, [number, number]>();
-  GROUPS.forEach((g, gi) => g.metrics.forEach((m, mi) => position.set(m, [gi, mi])));
+  GROUPS.forEach((g, gi) =>
+    g.metrics.forEach((m, mi) => position.set(m, [gi, mi])),
+  );
 
   for (const row of rows) {
     const at = position.get(row.metric_id);
     (at ? sections[at[0]] : other).rows.push(row);
   }
   for (const section of sections) {
-    section.rows.sort((a, b) => position.get(a.metric_id)![1] - position.get(b.metric_id)![1]);
+    section.rows.sort(
+      (a, b) => position.get(a.metric_id)![1] - position.get(b.metric_id)![1],
+    );
   }
   return [...sections, other].filter((s) => s.rows.length > 0);
+}
+
+/**
+ * The sequential ramp a measure's map is drawn in, by the group it belongs to.
+ *
+ * Hue says what kind of question the map is answering — a price, an affordability
+ * ratio, an income, the housing stock — while lightness goes on meaning magnitude, as a
+ * sequential ramp must. The two never compete, because a reader sees one measure at a
+ * time: within a map the hue is constant and only the lightness moves.
+ *
+ * Deliberately one hue per *group*, not per metric. A shade of its own for each of the
+ * 29 measures would carry no information the label does not already give — nobody sees
+ * two measures at once — while leaving a reader unable to tell whether a color
+ * difference means "a different measure" or "a different figure", which is the one thing
+ * the ramp exists to say. It would also need 29 ramps validated in two themes to buy it.
+ *
+ * "Other measures" falls back to the plain blue, so an unlisted metric is drawn rather
+ * than dropped — the same guard `groupRows` gives it.
+ */
+export function rampFor(metricId: string): string[] {
+  const group = GROUPS.find((g) => g.metrics.includes(metricId));
+  const name = group ? group.key : "prices";
+  return ["100", "250", "400", "550", "700"].map(
+    (step) => `var(--seq-${name}-${step})`,
+  );
 }

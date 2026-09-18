@@ -3,6 +3,77 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.18.0] — 2026-09-18
+
+**Milestone 16 — the three-dimensional map, rescoped on the day it started into a
+navigable globe of the United States.** New Jersey is drawn on a sphere seen from far
+off: the ground in the middle of the frame is square to the viewer and the earth's curve
+falls away evenly around it, strong across the country and invisible over one town.
+
+### Added
+
+- **A globe you can pan and zoom across the whole country**, hand-written as SVG with no
+  map library (ARCHITECTURE #163). Detail follows the zoom — 52 state outlines, New
+  Jersey's 21 counties, its 564 municipalities.
+- **Every state's outline**, in `map_backdrop` and served at `GET /geo/backdrop` (#164).
+  Nothing was downloaded for it: TIGER publishes its `state` layer nationally, so
+  Milestone 1 already had all 56. They carry no observations and join to nothing.
+- **A sequential ramp per measure group** — blue for prices, orange for affordability,
+  green for incomes, violet for the housing stock. Eight ramps generated in OKLCH and
+  validated in both themes (#166).
+- **The probe**: the region under the crosshair rises with its own figure, eased in, with
+  a focus that closes around it like a lens (#166, #167).
+- **"Jump into ___ County"**, which frames what the crosshair holds and opens the level
+  beneath it, and a crosshair the reader can show or hide.
+- **`map.json`**, every outline and every measure in one file fetched on use rather than
+  carried in the page (#163, #167).
+- `/afford` on the same globe, held at municipal level and painted within reach, beyond
+  reach or no figure — the carry #144 deferred to this milestone (#168).
+
+### Changed
+
+- **The window control now moves the map**, not only the ranking beside it. It did not
+  before: the map coloured by each measure's latest level while the table ranked change,
+  so 5 years and 10 years drew identical maps (#167).
+- The ranking beside the map follows the level the map is drawing, reading the same
+  figures from the same file (#165).
+- `name_lsad` added to `GET /geo/{level}`, so a list of 564 towns can tell six
+  Washingtons apart.
+- The shared bar's trailing icons are inset, and its search box gives up width first.
+- "Colour" is "color" throughout `web/`.
+
+### Removed
+
+- `web/components/Choropleth.tsx`, replaced by the globe.
+- The height channel across the map, and the camera tilt with it (#166).
+
+## [0.17.0] — 2026-09-17
+
+"Quiet utility", the owner's redesign of the site's surface (#162), reviewed and merged
+between Milestones 23 and 16. No figure, packet or page structure changed.
+
+### Changed
+- **A quieter look**: neutral surfaces, larger type, a wider page, and the map as the
+  biggest object on the New Jersey page. The bar stays at the top of the window as you
+  scroll and carries an "Affordability" link.
+- **A new palette**, validated in both themes. The map's ramps gained dark-mode steps, so
+  the deepest counties no longer sink into the dark card, and the colours that mark each
+  page type pass the colour-blind check.
+- **The licence notice** is a line of text with an amber label rather than a box.
+- **The affordability tool** keeps a faint wash of its own orange on its page, so it feels
+  a little apart from the pages that report figures.
+
+### Fixed
+- **The ranking and the affordability list** fit beside the map again (#162): each had
+  scrolled sideways inside a column narrower than the table, with no scrollbar on a Mac,
+  so "Latest" and "Within reach" were never seen.
+- **Counties with no figure** are visible on both maps; they had been filled with the same
+  white as the card they sit on.
+- **Dark mode's "See where" button** reads at 4.9:1, where white on its blue was 2.5:1.
+- **Small grey labels** read at 4.7:1 on the page and 5.1:1 on a card, over the 4.5:1 they
+  need; they were 3.9:1.
+- **The report's title** keeps its dash with the name before it.
+
 ## [0.16.1] — 2026-09-16
 
 ### Fixed

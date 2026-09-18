@@ -175,3 +175,23 @@ class RegionCrosswalk(Base):
         CheckConstraint("weight > 0 AND weight <= 1", name="ck_crosswalk_weight_range"),
         Index("ix_crosswalk_to", "to_region_id"),
     )
+
+
+class MapBackdrop(Base):
+    """An outline drawn as context on the map. Not a region (migration 0012).
+
+    A region has observations, a parent, identifiers and a place in the counts the site
+    quotes. These have a shape and nothing else, so they sit apart from `regions` and
+    join to nothing — which is the whole point of the separation.
+    """
+
+    __tablename__ = "map_backdrop"
+
+    # Deliberately not `region_level`: reusing that enum would invite the join this
+    # table exists to prevent.
+    level: Mapped[str] = mapped_column(Text, primary_key=True)
+    code: Mapped[str] = mapped_column(Text, primary_key=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    geom: Mapped[object] = mapped_column(
+        Geometry("MULTIPOLYGON", srid=GEOM_SRID), nullable=False
+    )

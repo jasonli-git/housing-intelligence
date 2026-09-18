@@ -17,6 +17,9 @@ client = TestClient(app)
 
 NJ_COUNTIES = 21
 NJ_MUNICIPALITIES = 564
+# The 50 states, DC and Puerto Rico. The Pacific and Caribbean territories are not
+# drawn (`hip.geography.backdrop.EXCLUDED_CODES`).
+BACKDROP_STATES = 52
 
 pytestmark = pytest.mark.skipif(
     not probe().migrated,
@@ -132,6 +135,26 @@ def test_simplification_shrinks_the_payload(loaded: None) -> None:
 
 def test_invalid_level_is_rejected(loaded: None) -> None:
     assert client.get("/geo/planet").status_code == 422
+
+
+def test_backdrop_draws_every_state(loaded: None) -> None:
+    """The map shows more ground than the warehouse holds, so the outlines come from a
+    table of their own and are keyed by USPS code, not by region_id."""
+    body = client.get("/geo/backdrop").json()
+
+    assert body["type"] == "FeatureCollection"
+    assert len(body["features"]) == BACKDROP_STATES
+    codes = {feature["properties"]["code"] for feature in body["features"]}
+    assert {"NJ", "AK", "HI", "DC", "PR"} <= codes
+    assert not codes & {"AS", "GU", "MP", "VI"}
+
+
+def test_backdrop_is_not_in_the_region_spine(loaded: None) -> None:
+    """Ohio has a shape and nothing else. If it ever reaches `regions` it reaches
+    `/regions`, search, and the counts the site quotes (migration 0012)."""
+    states = client.get("/regions?level=state&limit=100").json()
+
+    assert [item["state_code"] for item in states["items"]] == ["NJ"]
 
 
 def test_has_data_partitions_the_spine() -> None:

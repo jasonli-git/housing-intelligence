@@ -50,7 +50,7 @@ function Icon({ theme }: { theme: Theme }) {
  */
 export function ThemeToggle() {
   // What the server rendered, and what a first visit is. The effect below corrects it
-  // to a stored choice; the page's colours are already right by then.
+  // to a stored choice; the page's colors are already right by then.
   const [theme, setTheme] = useState<Theme>("system");
 
   useEffect(() => {

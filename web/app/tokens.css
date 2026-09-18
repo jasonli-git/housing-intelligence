@@ -5,11 +5,11 @@
  *
  * Housing's own — its palette and its type and space scale. The interface uses quiet
  * neutral surfaces so the maps, figures and controls carry the visual hierarchy ("Quiet
- * utility", ARCHITECTURE #162). The chart colours are validated, not eyeballed: on
+ * utility", ARCHITECTURE #162). The chart colors are validated, not eyeballed: on
  * 2026-09-17 the sequential ramp and each diverging arm passed the ordinal checks (one
  * hue, monotone lightness, visible steps, the light end at 2:1 or more on the chart card),
  * and the three categorical slots the categorical ones (lightness band, chroma floor,
- * adjacent colour-blind separation, normal-vision floor, 3:1 on the card), in light and in
+ * adjacent color-blind separation, normal-vision floor, 3:1 on the card), in light and in
  * dark. Dark is a *selected* set of steps, not an inversion: the sequential and diverging
  * ramps flip their anchor there, so a larger magnitude reads lighter on the dark card.
  *
@@ -46,7 +46,7 @@
   --gutter: clamp(16px, 4vw, 28px);
   --gap: 28px;
 
-  /* ---------- colour: Housing ---------- */
+  /* ---------- color: Housing ---------- */
   --surface-1: #f5f5f7;
   --surface-2: #ffffff;
   --surface-card: #ffffff;
@@ -56,7 +56,7 @@
 
   --text-primary: #1d1d1f;
   --text-secondary: #515154;
-  /* 4.7:1 on the page and 5.1:1 on a card: the small labels it colours need 4.5:1. */
+  /* 4.7:1 on the page and 5.1:1 on a card: the small labels it colors need 4.5:1. */
   --text-muted: #6e6e73;
 
   --series-1: #0071e3;
@@ -69,6 +69,34 @@
   --seq-400: #4b76c8;
   --seq-550: #2d58aa;
   --seq-700: #1c3b77;
+  /* Sequential by measure group (Milestone 16): one hue a group, light to dark, so the
+     map says what *kind* of question it is answering as well as how much. Generated in
+     OKLCH and checked as sequential ramps rather than categorical ones — monotonic
+     lightness, one hue throughout (under 12 degrees of drift), and the faintest step
+     clearing the card at 2.05:1. The hues follow the identity the site already has:
+     the series blue for prices, the affordability tool's orange, a green for money
+     coming in, and a violet of its own for the housing stock. */
+  --seq-prices-100: #94b7ec;
+  --seq-prices-250: #6b99df;
+  --seq-prices-400: #437bcd;
+  --seq-prices-550: #1f5cb2;
+  --seq-prices-700: #083d84;
+  --seq-affordability-100: #e4a885;
+  --seq-affordability-250: #d08352;
+  --seq-affordability-400: #ba5f19;
+  --seq-affordability-550: #9d3e00;
+  --seq-affordability-700: #732400;
+  --seq-incomes-100: #7fc3a1;
+  --seq-incomes-250: #4aae82;
+  --seq-incomes-400: #009461;
+  --seq-incomes-550: #007743;
+  --seq-incomes-700: #00542a;
+  --seq-housing-100: #c8a9e1;
+  --seq-housing-250: #ae84cd;
+  --seq-housing-400: #9561b9;
+  --seq-housing-550: #79419d;
+  --seq-housing-700: #562773;
+
   /* Text on --seq-550, the affordability map's "within reach": white here, dark in dark. */
   --on-seq-550: #ffffff;
 
@@ -81,6 +109,15 @@
 
   /* A map region with no figure: a neutral apart from every ramp step and from the card. */
   --nodata: #e6e6ea;
+  /* What an unselected region drops to while another is chosen (Milestone 16). Grey
+     rather than a pale blue: the ramp's lowest step is #9cb7e6, and a mute a reader
+     can mistake for "the smallest value here" is worse than no mute (ROADMAP). It is
+     also darker than --nodata, which means "no figure" and has to stay its own thing. */
+  --mute: #c9c9d0;
+  /* What the map's ground sits on. A tint away from the card rather than a blue: the
+     map is a piece of the earth, not a nautical chart, and the ramps need the card's
+     contrast budget to themselves. */
+  --sea: #eef1f5;
   /* The affordability tool's panels: a faint wash of its orange (#162). */
   --tool-wash: #fdf7f2;
 
@@ -142,6 +179,26 @@
     --seq-400: #6b93dd;
     --seq-550: #8eb1f1;
     --seq-700: #bad2fd;
+    --seq-prices-100: #285493;
+    --seq-prices-250: #376cba;
+    --seq-prices-400: #528ade;
+    --seq-prices-550: #77abf7;
+    --seq-prices-700: #a6ceff;
+    --seq-affordability-100: #884105;
+    --seq-affordability-250: #a85207;
+    --seq-affordability-400: #cb6f2d;
+    --seq-affordability-550: #e7915b;
+    --seq-affordability-700: #febb93;
+    --seq-incomes-100: #00653e;
+    --seq-incomes-250: #008454;
+    --seq-incomes-400: #00a470;
+    --seq-incomes-550: #52c291;
+    --seq-incomes-700: #92e0b9;
+    --seq-housing-100: #6c4387;
+    --seq-housing-250: #8554a7;
+    --seq-housing-400: #a570c9;
+    --seq-housing-550: #c192e4;
+    --seq-housing-700: #dfbbfb;
     --on-seq-550: #111113;
     --div-neg-2: #8eb1f1;
     --div-neg-1: #5073b5;
@@ -149,6 +206,8 @@
     --div-pos-1: #b65d49;
     --div-pos-2: #f29a85;
     --nodata: #313134;
+    --mute: #4a4a50;
+    --sea: #1a1c20;
     --tool-wash: #2b2727;
     --action: #1f6fd1;
     --up: #ff8a70;

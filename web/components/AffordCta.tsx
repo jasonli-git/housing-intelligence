@@ -2,7 +2,7 @@
  * "What can I afford?" as a call to action of its own (Milestone 23): an income box that
  * opens the affordability page with the income filled in. It had been a button beside
  * search, which read as search's own submit button; its own card, in the affordability
- * tool's orange, sets it apart by form and by colour.
+ * tool's orange, sets it apart by form and by color.
  *
  * A plain GET form, so it works with no script: `/afford?income=…` is read by the page
  * when it loads.

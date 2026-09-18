@@ -209,10 +209,32 @@ export type Feature = {
   type: "Feature";
   id: number;
   geometry: { type: string; coordinates: number[][][] | number[][][][] };
-  properties: { region_id: number; geoid: string; name: string; level: string };
+  properties: {
+    region_id: number;
+    geoid: string;
+    name: string;
+    /** TIGER's NAMELSAD — what tells "Boonton town" from "Boonton township" (#70). */
+    name_lsad: string;
+    level: string;
+  };
 };
 
-export type FeatureCollection = { type: "FeatureCollection"; features: Feature[] };
+export type FeatureCollection = {
+  type: "FeatureCollection";
+  features: Feature[];
+};
+
+/** A backdrop feature is keyed by its USPS code, because no region answers to it. */
+export type BackdropFeature = {
+  type: "Feature";
+  geometry: { type: string; coordinates: number[][][] | number[][][][] };
+  properties: { code: string; name: string; level: string };
+};
+
+export type BackdropCollection = {
+  type: "FeatureCollection";
+  features: BackdropFeature[];
+};
 
 // How often a failed request is tried before the build gives up, and the first wait.
 const ATTEMPTS = 4;
@@ -273,7 +295,9 @@ async function tryGet<T>(path: string): Promise<T | null> {
       release();
     }
     if (attempt < ATTEMPTS) {
-      await new Promise((resolve) => setTimeout(resolve, BACKOFF_MS * 2 ** (attempt - 1)));
+      await new Promise((resolve) =>
+        setTimeout(resolve, BACKOFF_MS * 2 ** (attempt - 1)),
+      );
     }
   }
   throw new Error(
@@ -355,7 +379,8 @@ export type Explanation = {
 export const api = {
   regions: (query: string) =>
     tryGet<{ total: number; items: Region[] }>(`/regions?${query}`),
-  region: (id: number) => tryGet<Region & { ancestors: Region[] }>(`/regions/${id}`),
+  region: (id: number) =>
+    tryGet<Region & { ancestors: Region[] }>(`/regions/${id}`),
   summary: (id: number, window: string) =>
     tryGet<Summary>(`/regions/${id}/summary?window=${window}`),
   rankings: (
@@ -369,6 +394,18 @@ export const api = {
       `/rankings?metric_id=${metricId}&level=${level}&window=${window}` +
         `&limit=${limit}&basis=${basis}`,
     ),
+  /**
+   * A metric's most recent value for every region at a level, ranked.
+   *
+   * Separate from `rankings` because a value ranking has no window: the endpoint's
+   * `window` is a five-way literal with no "latest" in it and rejects the word, while
+   * the storage keys value rankings under exactly that sentinel. `hip publish` splits
+   * them for the same reason.
+   */
+  values: (metricId: string, level: string, limit = 1000) =>
+    tryGet<Ranking>(
+      `/rankings?metric_id=${metricId}&level=${level}&limit=${limit}&basis=value`,
+    ),
   observations: (id: number, metricId: string) =>
     tryGet<{ observations: Observation[] }>(
       `/regions/${id}/metrics?metric_id=${metricId}`,
@@ -376,6 +413,14 @@ export const api = {
   packet: (id: number, window: string) =>
     tryGet<Packet>(`/regions/${id}/packet?window=${window}`),
   geo: (level: string) => tryGet<FeatureCollection>(`/geo/${level}?state=NJ`),
+  /**
+   * Every state's outline, drawn as context on the map.
+   *
+   * Not `geo(level)`: these are not regions and carry no `region_id`, which is the whole
+   * reason they live in a table of their own (migration 0012). The platform covers New
+   * Jersey; a map of New Jersey alone cannot be panned.
+   */
+  backdrop: () => tryGet<BackdropCollection>(`/geo/backdrop`),
   explanation: (id: number, window: string) =>
     tryGet<Explanation>(`/regions/${id}/explanation?window=${window}`),
   /**
@@ -449,15 +494,23 @@ function nationalRateSeries(): Promise<Observation[] | null> {
   nationalRates ??= (async () => {
     const nation = (await api.regions("level=nation&limit=1"))?.items[0];
     if (!nation) return null;
-    return (await api.observations(nation.region_id, "mortgage_rate_30y"))?.observations ?? null;
+    return (
+      (await api.observations(nation.region_id, "mortgage_rate_30y"))
+        ?.observations ?? null
+    );
   })();
   return nationalRates;
 }
 
 /** The latest national 30-year mortgage rate. */
-export async function nationalMortgageRate(): Promise<{ value: number; period_start: string } | null> {
+export async function nationalMortgageRate(): Promise<{
+  value: number;
+  period_start: string;
+} | null> {
   const latest = (await nationalRateSeries())?.at(-1);
-  return latest ? { value: latest.value, period_start: latest.period_start } : null;
+  return latest
+    ? { value: latest.value, period_start: latest.period_start }
+    : null;
 }
 
 /**
@@ -467,8 +520,12 @@ export async function nationalMortgageRate(): Promise<{ value: number; period_st
 export async function nationalMortgageRateIn(
   month: string,
 ): Promise<{ value: number; period_start: string } | null> {
-  const reading = (await nationalRateSeries())?.find((o) => o.period_start.slice(0, 7) === month);
-  return reading ? { value: reading.value, period_start: reading.period_start } : null;
+  const reading = (await nationalRateSeries())?.find(
+    (o) => o.period_start.slice(0, 7) === month,
+  );
+  return reading
+    ? { value: reading.value, period_start: reading.period_start }
+    : null;
 }
 
 /**
@@ -478,8 +535,7 @@ export async function nationalMortgageRateIn(
  * HTML to a static host with a file-count limit, artifacts to object storage without
  * one. In development both default to the same local API.
  */
-export const artifactUrl =
-  process.env.NEXT_PUBLIC_ARTIFACT_URL ?? API_URL;
+export const artifactUrl = process.env.NEXT_PUBLIC_ARTIFACT_URL ?? API_URL;
 
 /** A source and the terms it was published under, for the site-wide attribution. */
 export type SourceEntry = {

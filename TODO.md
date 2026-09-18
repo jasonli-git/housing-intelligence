@@ -2877,6 +2877,363 @@ quoted wording is the owner's.
       has no tax bill, and its cards say "before property tax" and why; Millstone has no
       Zillow value, and its cost section now says so instead of vanishing.
 
+## Quiet utility — the owner's redesign (merged 2026-09-17)
+
+PR #2, designed outside the milestone sequence and merged into `main` between 23 and 16
+(ARCHITECTURE #162). Reviewed before the merge: 167 dashboard tests and `tsc` clean,
+checked by eye at 1280px and 375px in both themes.
+
+- [x] Five faults fixed: the ranking and the affordability list scrolling out of sight in a
+      column narrower than their table; white on dark mode's series blue at 2.5:1; the
+      muted ink at 3.9:1; the report's title breaking before its dash; and "no figure"
+      counties filled with the same white as the card they are drawn on.
+- [x] Chart colours validated in both themes, and the ramps given dark-mode steps that flip
+      their anchor.
+- [x] Kept from Milestone 23 at the owner's word: the page-type accent rules and the
+      report's double rule, the licence notice's amber as the colour of its label, the
+      shaded "Since 2019" note, and the breadcrumb's pills. The affordability tool keeps a
+      wash of its orange on its own page; its call to action on the New Jersey page stays a
+      plain card, white in light and dark grey in dark.
+- [x] **Published and deployed 2026-09-17** as 0.17.0, Pages deployment `4d6eb70c`:
+      `dist/` held 5,917 artifacts (109MB) and 13,657 site files (653MB); rclone
+      transferred one changed artifact, since no packet changed. Checked on the live site
+      in the dark theme: the New Jersey page's ranking fits beside the map, the call to
+      action is a plain card, the licence label is amber, and `/afford` opens on Princeton
+      at $150,000 with its warm panels.
+- [ ] **Fold `redesign.css` into `globals.css`**, so each component has one set of rules
+      rather than two whose winner depends on file order (#162's cost). Mechanical and
+      large — worth its own review, before 16 adds a map to the New Jersey page.
+- [ ] **The README's screenshots predate the redesign** and Milestone 23: all eight show
+      the old pages. Retake them from the live site.
+- [ ] A lone card on its own row — Mercer's seventh housing card — keeps a full row's
+      borders, so it reads as unfinished.
+
+## Milestone 16 — Three-dimensional map, New Jersey
+
+Started 2026-09-17. Rescoped that day by the owner, beyond the row in
+[ROADMAP.md](ROADMAP.md): the map is a **navigable globe of the United States**, not a
+fixed frame around New Jersey. The roadmap row is updated at the close of the milestone,
+not now, so the record shows what was asked and when.
+
+**What the owner asked for, 2026-09-17:**
+
+- Built by hand, no map library. The roadmap assumed this milestone would reverse
+  ARCHITECTURE #39 and bring in MapLibre; measuring the geometry first showed the
+  reversal is not needed (below), and the owner chose to keep #39 standing.
+- Scroll and pan a map of the whole United States, every state drawn. Only New Jersey
+  carries detail for now — the other 49 states have no observations in the warehouse and
+  are drawn as context.
+- The entity under the centre of the view highlights itself as the reader moves, at
+  whichever level the zoom is showing — state, county, municipality.
+- Buttons to jump back out to New Jersey and to the whole country.
+- Rendered on the curve of the earth: a piece of a sphere, not a flat plane. Gently —
+  a globe seen from far off, not a fisheye.
+
+**What was measured before choosing, 2026-09-17:**
+
+- The municipal outlines are 41,609 points across 564 towns (median 49 a town, max 472);
+  the county outlines 10,300 across 21. Small enough to re-project in the browser on
+  every frame, which is what makes a hand-written renderer viable at all.
+- MapLibre 6.10.0 is 300KB gzipped of JavaScript (148 + 146 + 6) and 10KB of CSS, and
+  would have put the map in a canvas that a screen reader, a printer and a reader with
+  no JavaScript all see nothing in.
+- #39 rejected MapLibre because it "needs a tile source, and a keyed provider is a
+  dependency": a GeoJSON source and an empty style need neither, so that reason no
+  longer applies. It is kept for the reasons that do — weight, and the canvas.
+- Municipal coverage is the real constraint, not the renderer: `zhvi_sfr` reaches 388 of
+  564 towns, `price_to_income` 387, `zori_all` 224, `rent_to_income` 66, while the ACS,
+  CHAS and MOD-IV metrics reach 551-564. A prism of no height reads as "the cheapest
+  town in the state", so a town with no figure has to be drawn as absent, not as zero.
+- Every state's outline is already on this machine: TIGER publishes the `state` layer
+  nationally, so Milestone 1 downloaded all 56 and landed them at
+  `data/parquet/census_tiger/2025/state.parquet`. No new source, no new licence, and the
+  footer already names Census. Simplified to 0.02 degrees the 52 states and DC are 5,810
+  points and 145KB of GeoJSON.
+
+**Found while building, 2026-09-17:**
+
+- **A block's height has to shrink with the map.** Lifting by a share of the frame made
+  New Jersey a tower standing off the continent at national zoom. Height belongs to the
+  ground, so it scales with the camera, capped at the state's own framing.
+- **The wheel must not be taken from the page.** Zooming on a bare wheel swallowed the
+  scroll of a reader trying to get past a 720-pixel map — found by doing it. It now needs
+  Cmd or Ctrl, and the buttons do the rest.
+- **The national framing leaves out Alaska, Hawaii and Puerto Rico, while still drawing
+  them.** Hawaii to Puerto Rico is 95 degrees of longitude against the contiguous states'
+  58, and framing on all of it puts the lower 48 at 279 pixels per sphere radius instead
+  of 584 — half size, to hold three outlines in the corners. They are a pan away.
+- **A square block at the centre of the view shows exactly one wall.** Its east and west
+  walls are edge-on and its north wall is behind it. Two tests asserted two and were
+  wrong, not the code.
+
+**Decided while planning, 2026-09-17:**
+
+- **Orthographic projection.** Longitude and latitude become a point on a unit sphere,
+  the sphere turns under the view, and the view looks at it from infinitely far away.
+  The curvature then comes out of the geometry rather than being drawn on: strong across
+  a continent, invisible over one town, with nothing to tune. It also removes the
+  antimeridian entirely — rotation happens in three dimensions, so Alaska's Aleutians
+  need no special case.
+- **Prisms rise along the surface normal**, away from the centre of the earth, so a town
+  at the edge of the view leans outward as it would on a real globe.
+- **Three levels of detail by zoom:** the nation (52 state outlines, flat), New Jersey
+  (21 counties, extruded), and its towns (564, extruded).
+- **The backdrop is its own table, not rows in `regions`.** Ohio has no observations, no
+  parent chain and no identifiers; putting it in `regions` would put it in `/regions`,
+  in search, and in the denominators of counts the docs quote. `map_backdrop` holds
+  geometry drawn as context and nothing else.
+- **It is served by the API like every other artifact** (#67): a new `GET /geo/backdrop`,
+  published to `geo/backdrop.json`. The alternative — `hip publish` writing a file no
+  endpoint serves — would be the first artifact that is not a replay of the API.
+
+### Slice A — the globe (done 2026-09-17)
+
+- [x] Migration `0012`: `map_backdrop` (level, code, name, geom), with its own comment
+      saying it is context and carries no observations.
+- [x] Loader from the landed TIGER state Parquet: 52 states and DC, territories dropped,
+      simplified at 0.02 degrees. `hip.geography.backdrop`, run from `hip load` rather
+      than a command of its own — the same stage, and loading it beside the regions keeps
+      the two from drifting to different TIGER vintages. Loaded: 52 outlines, 5,810
+      points.
+- [x] `GET /geo/backdrop`, declared before `/geo/{level}` so "backdrop" is not tried as a
+      region level, and the line in `publish._plan` that writes `geo/backdrop.json`.
+- [x] `web/lib/globe.ts` — lon/lat to sphere, rotation, orthographic projection, horizon
+      clipping, extrusion along the normal, wall selection, depth order, and framing.
+      Pure, with 20 Vitest tests, as `lib/scale.ts` is (#48).
+- [x] `web/app/map.json/route.ts` — all three levels and every measure in one
+      fetched-on-use file, never in the page payload (#161, #143). Measured: 393KB of
+      outlines and 136KB of measures, 197KB gzipped together.
+- [x] `GlobeMap`: pan, zoom, the detail switch, the centre crosshair and its readout, and
+      the jump buttons.
+
+### Slice B — two channels
+
+- [x] The height measure and the colour measure chosen separately, and a legend that
+      names what each encodes — the roadmap's condition, since a two-channel map does not
+      explain itself. Height defaults to the home value index and colour to price to
+      income: a magnitude and a ratio, because two magnitudes say one thing twice. Done
+      inside slice A in the end — the colour channel had been the county ranking's change
+      figures, which key on county ids, so every one of the 564 towns fell to "no figure"
+      the moment the reader zoomed in. A level drawn colourless is not a slice boundary,
+      it is a half-built page.
+- [x] Selection as highlight-and-mute: the chosen region keeps its colour and gains a
+      contrasting outline, every other drops to `--mute`, a grey the ramp's lowest step
+      cannot be mistaken for (ROADMAP). **Only on a deliberate choice** — a row pointed
+      at in the ranking. The crosshair rests on something the whole time the map is open,
+      so muting on it would have meant a map that is never a choropleth. Checked: 386 of
+      387 towns muted, and 20 of 21 counties.
+- [x] Towns with no figure drawn as ground rather than as a dark class of their own, and
+      counted in words under the map: "177 of the 564 municipalities have no home value
+      to household income published, so they are drawn as ground rather than as a
+      measurement." The fill has three states now, not two — a step of the ramp, the
+      mute, or no region at all.
+- [x] The ranking table beside the map follows the level the map is showing
+      (`TownRanks`). There is no published municipal ranking on this page and there
+      should not be — 564 towns across 29 measures and six windows is a page of its own —
+      so the table lists what the map draws, from the same `map.json`, ranked by the
+      height measure with its own direction and 25 rows before "Show all 388". Its two
+      value columns are headed "Height" and "Colour", which the two controls beside the
+      map name; at four columns in a 330px card the measures' own labels wrapped to three
+      lines each.
+
+**Fallen out of the three, 2026-09-17:**
+
+- [x] `name_lsad` added to `/geo/{level}`, and carried into `map.json` as `label` when it
+      differs from the bare name, with the parent county appended for municipalities. A
+      list of 564 towns cannot say "Washington" six times, and two Washington *townships*
+      are separated only by their county (#70, #143). The map's readout keeps the bare
+      name.
+- [x] The New Jersey page no longer projects anything. It passed 21 ready-made SVG paths
+      to the explorer, which the globe does not use; it now passes the frame and the
+      county count.
+- [x] `web/components/Choropleth.tsx` deleted — nothing imported it once the globe landed.
+      `/afford` draws its own two-state map and is untouched until slice C.
+- [x] `pack`/`unpack` round-tripped in `lib/mapdata.test.ts`: a silent delta-encoding bug
+      would corrupt every outline on the site, and nothing else would have caught it.
+
+### The owner's review of the map, 2026-09-18
+
+- [x] **The bar's trailing icons inset by 11px on desktop.** They are borderless, so
+      their 38px boxes reached the content edge while their 16px glyphs sat 11px short
+      of it, and the GitHub mark read as falling off the page. Nothing was clipped —
+      measured at 1024, 1180 and 1440 — but the optics were wrong. Mobile untouched: the
+      tools wrap to their own row there and already have the gutter.
+- [x] **"Colour" is "Color" everywhere in `web/`** — the label the owner sees, and the
+      identifiers and comments behind it, so the two cannot drift. `src/` and the docs
+      keep their own voice.
+- [x] **Height is gone as a channel across the map.** The owner's call: reading a
+      magnitude off a block's height while reading a ratio off its color asks a reader
+      to hold two encodings at once, and the blocks hide each other. Colour carries the
+      measure; the two selects collapse back to one, and `TownRanks` to one column.
+- [x] **What is left of height is the probe.** The region under the crosshair — or
+      pointed at in the ranking — rises in proportion to its own figure, with the full
+      rise named in the legend. Sweeping the crosshair reads like running a hand over
+      the surface, and nothing is ever hidden behind anything.
+- [x] **The tilt is gone, so the centre is flat and the curve is centred.** The camera
+      looks square at whatever it is centred on: the ground in the middle of the frame is
+      undistorted and the curve falls away evenly in every direction, which is what
+      standing over a point on a globe looks like. The 34-degree lean existed only so
+      extruded blocks would show their walls, and nothing is extruded across the map any
+      more.
+      - Two consequences, both handled: the rise is now straight up the screen rather
+        than along the surface normal, because square to the ground that normal points at
+        the camera and projects to nothing — a stated convention, not a projection; and
+        north and south of the centre now sit at *identical* depth, so the painter's
+        order sorts anything raised last rather than trusting depth alone. A test caught
+        the second.
+- [x] **The map's controls moved inside it**, floating bottom-left and bottom-right as
+      two glass pills: the site's own card surface at 72%, a blurred backdrop, a hairline
+      border and a soft shadow, with a divider between the buttons. Built from the
+      existing tokens so it is our material rather than a borrowed one, and where
+      `backdrop-filter` is missing the same rules leave a solid card.
+- [x] **A sequential ramp per measure group** (#166): the series blue for prices, the
+      affordability tool's orange, a green for incomes, a violet for the housing stock.
+      Generated in OKLCH and checked as *sequential* ramps rather than categorical ones —
+      the bundled validator says as much in its own footer — so: monotonic lightness, one
+      hue throughout (under 12 degrees of drift), and the faintest step clearing the card
+      at 2.05:1, in both themes. Eight ramps, all passing.
+      - **Not a shade per metric**, which the owner asked about. It would carry no
+        information the label does not already give — nobody sees two measures at once —
+        while leaving a reader unable to tell whether a color difference means "a
+        different measure" or "a different figure", which is the one thing the ramp
+        exists to say. And it would need 29 ramps validated in two themes to buy that.
+
+### The owner's second review of the map, 2026-09-18
+
+- [x] **The bar's tools inset further, and the row made unable to overflow.** The inset
+      went from 11px to 1.25rem, and the search box — the one part with slack — now
+      shrinks first, so nothing can push the GitHub mark off the right edge and make the
+      document scroll sideways to reach it. I could not reproduce the overflow at 860,
+      1024, 1180, 1280 or 1440; the shrink rule is the fix that holds whatever the width.
+- [x] **Confirmed, and it was not true: the window buttons did not move the map.** They
+      changed the ranking and left the map identical, because the map colored by each
+      measure's *latest level* while the table ranked change. Measured before changing
+      anything: switching 5 years to 10 years left every fill byte-identical. A control
+      that moves half the view is a control that lies.
+      - Fixed by carrying change into `map.json`: metric, then window, then region.
+        Rounded to a tenth of a percent — the precision the page prints — which is what
+        keeps it to 125KB raw and 29KB gzipped rather than four times that. The map, the
+        ranking beside it and the readout above it now all read from `readingsFor`, so
+        they cannot quote different quantities; a measure with no change published for a
+        window falls back to its level, and the legend says which it is showing.
+      - The probe's rise now spans the range on screen rather than rising from zero,
+        because a change crosses zero and there is no zero to rise from. Rising from zero
+        was right while every region was a block and two could be compared; only one
+        rises now, so the range is the expressive thing to spend the height on, and the
+        legend names both ends.
+- [x] **A focus treatment around whatever the crosshair holds**: the rest of the level
+      takes a flat 1.2px blur and a gentle desaturation, shaped by a radial gradient to
+      the page's own surface, and the held region is drawn again over the top, sharp and
+      at full color. Light enough to read the shapes and colors through — the comparison
+      is this platform's product, so the surroundings are quietened, never removed. Off
+      while dragging (blurring 564 paths a frame is not free) and off under
+      `prefers-reduced-motion`.
+- [x] **"Jump into ___ County"**, a third control that frames whatever the crosshair
+      holds and opens the level beneath it — the country to its counties, a county to its
+      towns. A row above the other two pills, because centred between them they collide
+      on a long county name. Absent over a municipality, which is the finest level the
+      warehouse holds.
+- [x] **The rise is eased rather than snapped.** An exponential approach rather than a
+      fixed duration, so a new target part-way through is picked up from where the last
+      one got to — which is what makes sweeping the crosshair feel continuous instead of
+      restarting.
+- [x] **The drag coasts to a stop.** Velocity is smoothed over the last few pointer
+      samples, so one jittery reading at the moment of release cannot throw the glide in
+      a direction the hand never went; friction per frame rather than a fixed distance,
+      so a flick travels further than a nudge. Any jump or zoom cancels it, or it fights
+      the reader. Both this and the eased rise are off under `prefers-reduced-motion`.
+- [x] **The map's art style — the three cheap things, kept in the site's own language.**
+      The land now sits on water (`--sea`, a tint away from the card rather than a chart
+      blue, because the ramps need the card's contrast budget to themselves); the ground
+      states carry paper grain, which is real noise on one layer rather than a tiled dot
+      that would read as a grid; and the raised region throws a soft shadow, at a fixed
+      offset rather than one growing with the figure — a shadow that grew would be a
+      second, quieter encoding of a number the height already carries. Not done, and
+      recorded as rejected: any textured or hand-drawn *fill*, which eats the contrast
+      headroom the five ramp steps were validated with.
+- [x] **The focus is a depth of field now, not one flat blur.** The same paths again
+      through a `use`, blurred harder and masked to the edge, so focus falls off from
+      almost sharp at the crosshair to plainly soft at the frame's edge. `use` instances
+      the layer, so it costs one element rather than another 564.
+- [x] **The crosshair mark is the reader's to show, and off by default.** A crosshair
+      icon in the zoom pill toggles it, `aria-pressed` and all. The focus treatment
+      already says what the map is holding; a permanent reticle over a map of somebody's
+      home town reads like a gunsight.
+- [x] **The rise is about three times slower** — the owner found it too quick to feel
+      like an answer. Still an exponential approach, so it stays interruptible.
+- [x] **The coast is a tenth gentler off an ordinary drag and carries off a hard flick**
+      (over 26 pixels a frame keeps its speed and takes lighter friction). The difference
+      between nudging a globe and spinning one.
+- [x] **"Jump into …" is offered over counties only.** A municipality has nothing
+      beneath it, and a backdrop state has no counties loaded — "Jump into Missouri"
+      would have landed the reader on empty ground, while New Jersey, the one state that
+      does have them, already has a button of its own.
+
+### The owner's third review of the map, 2026-09-18
+
+- [x] **The shadow under the raised region is two shadows.** One tight and dark for the
+      contact, one wide and soft for the height; at a single 6px offset it was there and
+      invisible.
+- [x] **The vignette a tenth stronger** at both stops, and **the rise a fifth slower
+      again** (0.055 to 0.044 a frame, about a second and a half to settle).
+- [x] **Every camera control flies rather than cuts** — the two jumps, "Jump into …" and
+      both zoom buttons. A cut leaves the reader to work out where they have landed; a
+      flight carries their eye with it, which is the whole reason a globe is navigated
+      rather than paged.
+      - The scale is interpolated on a **log**, so each frame changes it by the same
+        ratio. A linear scale races at one end and crawls at the other, and that is the
+        single thing that makes a fly-to feel wrong.
+      - The duration grows with the distance travelled, capped at 1,150ms, so a nudge is
+        quick and a hop across the country takes its time; eased in and out, so the eye
+        is given time to leave and time to arrive. Any drag, jump or zoom cancels a
+        flight in progress, and `prefers-reduced-motion` gets the destination at once.
+      - The camera is mirrored into a ref, because a flight has to know where it is
+        starting from at the instant the button is pressed, and state is a render behind.
+      - The focus treatment is held off while a flight is in the air, as it is while
+        dragging.
+- [x] **The focus itself eases in and out**, so it reads as a lens finding its subject
+      rather than a light switch. All three layers — the near blur, the masked far blur
+      and the vignette — stay in the document and are carried by a 620ms CSS transition;
+      only the near blur is re-rendered, and the other two move opacity alone, which the
+      compositor handles on its own. The raised region is deliberately *not* gated on the
+      focus: its rise has its own easing and should not wait for the focus to arrive.
+      Measured coming up: 0.07, 0.45, 0.76, 0.90, 0.98, 1.00.
+
+### Slice C — the rest of the site (done 2026-09-18)
+
+- [x] **`/afford` onto the globe**, held at municipal level, which #144 deferred to this
+      milestone. This page is about places a reader could live, so 564 towns is the
+      answer where 21 counties was a summary.
+      - The map needed one thing it did not have: a fill of the caller's own. `/afford`
+        paints three states — within reach, beyond reach, no figure — where a quantile
+        ramp would give a town a few dollars over the line the same color as one a few
+        dollars under it. `GlobeMap` takes `paint`, `legend`, `pin` and `describe`; when
+        `paint` is supplied the ramp and its coverage line step aside.
+      - The paint reads the same rows the lists are built from, so the map and the two
+        tables can never disagree about whether a place is within reach.
+      - The page stopped fetching county geometry: the map asks for `map.json` itself.
+- [x] **What a reader without JavaScript gets**, said plainly where the map would be:
+      the map needs script to draw, and the ranking beside it — server-rendered, every
+      figure, every place linked — carries the same answer. The page still answers; it
+      just cannot be flown over.
+- [x] **What a printer gets**: the map flat, sharp and whole. The floating controls, the
+      crosshair, the far blur and the vignette are all interaction, and a printer would
+      render the last two as a smudge and a grey wash; ground and no-figure regions go to
+      white on a grey hairline so they do not eat toner.
+- [x] **What a screen reader gets**, unchanged and still true: the map is one `img` with
+      a label saying what it shows, and every figure in it is in the table beside it.
+- [x] **Docs, publish, deploy.** ARCHITECTURE #163-#168, the module layout and three
+      corrected Known Limitations; CHANGELOG 0.18.0; the ROADMAP's row 16 rewritten to
+      what was actually built and Version 2 marked complete; README status, the globe
+      sentence, and the test counts (468 Python, 197 dashboard).
+- [x] **Published and deployed 2026-09-18** as 0.18.0, Pages deployment `6de3da5d`:
+      5,918 artifacts (109MB) and 13,658 site files (652MB), `check-dist` clean. The two
+      new files are `geo/backdrop.json` (142KB, every state's outline) and `map.json`
+      (761KB raw, 264KB gzipped — three layers of outlines, 29 measures and their change
+      over three windows). Checked live on https://housing.jasonli.app: 52 ground states
+      and 21 counties drawn, the legend reading "change over five years", "Jump into
+      Mercer County" offered, and the crosshair off by default.
+
 ## Attribution and licensing
 
 - [x] **Site-wide source footer** (2026-09-05). Was: the landing page's choropleth and
