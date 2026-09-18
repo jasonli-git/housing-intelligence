@@ -3,6 +3,28 @@
 Working list for the current milestone. Longer-horizon items live in
 [ROADMAP.md](ROADMAP.md).
 
+## Resume here — state as of 2026-09-18
+
+**Milestone 16 shipped on 2026-09-18 as 0.18.0, and with it Version 2 is complete.**
+Nothing is in progress. Versions 3, 4 and 5 were scheduled on 2026-09-18 from the
+owner's draft — see [ROADMAP.md](ROADMAP.md) for the tables and the reasoning. The next
+milestone is **24, fresher figures**, and it leads Version 3 for a specific reason: it
+moves every ACS window by a year and regenerates every county explanation, so anything
+built on those figures first would be rework.
+
+**One new standing rule, from the source register (ROADMAP):** a milestone proposing a
+new metric names the register row it comes from, or adds one. The register also holds
+the rejected sources and why, so Niche, Redfin, ZTRAX, FBI crime data and metro-level
+single-family rent do not get re-proposed.
+
+**Two questions answered on 2026-09-18** — the five cheapest paid sources, and whether
+live listings are feasible — are below, under "Paid sources, and live listings".
+
+**Before starting anything:** Docker has to be running for Postgres (`make db-up`), and
+`make setup-eval` rather than `make setup` whenever the evaluation harness is needed.
+
+---
+
 ## Resume here — state as of 2026-09-16
 
 Nothing in this section is in progress. It is the order agreed on 2026-09-10 for picking
@@ -1510,7 +1532,7 @@ cost column has to state which rate it used or it is not reproducible.
       `If-Modified-Since` / `If-None-Match` on refs whose vintage is `current`, with a
       304 treated as a cache hit — which keeps content-addressing intact. Deferred out
       of Milestone 12 deliberately: it belongs with **scheduled refresh with retry and
-      alerting**, already queued under Post-Version 2, and that milestone is where a
+      alerting**, now Milestone 29, and that milestone is where a
       monthly cadence stops being manual.
 
 - Note: **Float non-associativity was moving the derived vintage on every run, found
@@ -3245,6 +3267,75 @@ not now, so the record shows what was asked and when.
       over three windows). Checked live on https://housing.jasonli.app: 52 ground states
       and 21 counties drawn, the legend reading "change over five years", "Jump into
       Mercer County" offered, and the crosshair off by default.
+
+## Paid sources, and live listings — asked 2026-09-18
+
+Two questions from the owner, answered here rather than in [ROADMAP.md](ROADMAP.md),
+which carries the register and the verdicts but not the working.
+
+### The five cheapest paid sources relevant to this platform
+
+Ranked by price, not by usefulness. **The verdict on all five is the same, and it is not
+about money.**
+
+| | Source | Roughly | What it would add | Worth it? |
+|---|---|---|---|---|
+| 1 | **Rentcast** | ~$50–100/mo | Rental estimates and listings by address; would fill the single-family rent gap the metro problem blocks | **No.** Estimates, not observations — the platform already has one modelled rent index and does not need a second. Its terms are an API licence, so nothing derived could be republished |
+| 2 | **Estated / BatchData** | ~$99–300/mo | Property records, deeds, owner history | **No.** MOD-IV is the same data for New Jersey, free, open public record, already landed since Milestone 7, and already scheduled into M25 |
+| 3 | **GreatSchools** | low hundreds/yr | School ratings | **No.** NCES Common Core and EDGE give the boundaries and the underlying measures, and NJ DOE publishes performance. M32 uses those |
+| 4 | **ATTOM Data** | ~$300+/mo, enterprise above | Deeds, mortgages, AVM, nationally | **No for New Jersey.** Its value is breadth, and breadth is an expansion question — unscheduled — not a data-licensing one. Redistribution forbidden |
+| 5 | **CoreLogic / Black Knight** | four figures a month | The industry reference for transactions and AVMs | **No.** Enterprise terms, and the platform would not be permitted to publish anything derived from it |
+
+**The binding constraint is redistribution, not price.** This platform publishes static
+artifacts to object storage with no server in production (ARCHITECTURE #67, Milestone
+11). A source whose terms forbid redistribution cannot be published at all — only
+consulted — so buying one forces an architecture change first: a server-side proxy, or a
+key the visitor supplies. That is a bigger decision than any subscription, and it
+unpicks the property Milestone 11 was built to get.
+
+**The free alternative is better than any of them, for this state.** The one thing the
+warehouse genuinely lacks is a *transaction* price — Zillow is a model, ACS is
+self-reported, MOD-IV assessments are pre-equalization. The licence-clean answer is
+MOD-IV's own `SALE_PRICE`, `SALES_CODE` and `DEED_DATE`, landed since Milestone 7 and
+scheduled into M25. Checking Redfin's terms is what surfaced this: the national
+convenience source is unusable, and the state's own public record was already on disk.
+
+### Live listings — feasible, and it should not be built here
+
+**Technically:** yes. Listings reach a site through an MLS's IDX feed over the RESO Web
+API. New Jersey is covered by several MLSs, each with its own agreement.
+
+**Three reasons it does not belong in this platform**, in order of how hard they are to
+get around:
+
+1. **The display rules are incompatible with static publication.** IDX agreements
+   require listings to be refreshed on a short cycle, removed promptly once delisted,
+   shown with per-listing attribution and disclaimers, and not commingled with other
+   data without permission. A site rebuilt by hand and served from object storage cannot
+   promise "gone within the hour". This is not a difficulty — it is a direct conflict
+   with the architecture, and Milestone 29's scheduled refresh does not fix it, because
+   the requirement is revocation, not cadence.
+2. **Access is brokerage-gated.** An IDX feed needs a licensed broker or a broker
+   sponsor and a signed agreement per MLS. That is a business arrangement, not a
+   dependency.
+3. **It is a different kind of claim.** Everything the site publishes is a measured
+   aggregate traceable to a source release. A listing is an advertisement for one
+   property, governed by fair-housing display rules, and would be the only content on
+   the site that is neither measured nor traceable to a statistical release.
+
+**What is feasible and keeps the promise:**
+
+- **Link out.** Each region page can carry a "homes for sale here" link to a portal's
+  search scoped to that municipality. Costs nothing, breaches nothing, and is honest
+  about who holds the listings. Worth doing whenever a region page is next touched.
+- **Closed sales, not active inventory.** M25's MOD-IV sale prices answer "what did
+  houses actually sell for here" — the durable question — without a feed.
+- **Aggregate market activity** (days on market, inventory, new listings) genuinely does
+  need a licensed feed. Unscheduled, and it should stay that way unless the site stops
+  being static.
+- If listings are ever wanted, they belong in a **separate service** with its own broker
+  sponsorship and its own refresh, partitioned from the warehouse whose whole promise is
+  provenance.
 
 ## Attribution and licensing
 
