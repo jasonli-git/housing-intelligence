@@ -10,6 +10,16 @@ Claude is the lead architect for official milestones and owns reconciliation of 
 
 Before modifying code, always inspect the current Git branch.
 
+Before creating or switching any branch:
+
+- Run `git status --short`.
+- If the output is not empty, stop and tell me which staged, modified, and untracked files are present.
+- Explain that uncommitted changes belong to the working tree and can follow a branch checkout.
+- Do not create or switch branches until I explicitly choose how to handle the existing work: commit it on the current branch, stash it, or cancel the branch change.
+- Never interpret approval to create or switch a branch as approval to carry uncommitted work onto that branch.
+- Do not discard, stash, move, or commit existing work without explicit approval.
+- After the chosen action is complete, run `git status --short` again and proceed only when the working tree is clean.
+
 If currently on `main`:
 
 - Do not begin implementation.
