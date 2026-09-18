@@ -795,8 +795,11 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 /* The globe (Milestone 16). Drawn by hand from our own outlines — no map library, so
    these are ordinary SVG elements that print and sit in the accessibility tree. */
 .globe { margin: 0; display: grid; gap: 0.7rem; }
-/* The positioning context the floating controls sit in. */
-.globe-stage { position: relative; display: grid; }
+/* The positioning context the floating controls sit in, and the thing they size
+   themselves against. A container query, not a media query: the map's width follows the
+   page's columns, not the window's — beside a ranking at 1000px it is narrower than it
+   is alone at 700px — so asking the window would move the controls at the wrong moments. */
+.globe-stage { position: relative; display: grid; container-type: inline-size; }
 .globe-frame {
   width: 100%; max-width: 640px; height: auto; display: block; justify-self: center;
   /* The water the land sits on. A tint away from the card rather than a chart blue —
@@ -872,6 +875,14 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
   cursor: pointer;
 }
 .globe-controls-dive:hover { background: color-mix(in srgb, var(--surface-card) 88%, transparent); }
+/* Too narrow to hold the jumps and the zoom on one line: on a phone they overlapped by
+   47px, with the zoom drawn over "New Jersey". The zoom goes to the top corner, where
+   nothing else sits, rather than shrinking two pills until neither is a comfortable
+   target. */
+@container (max-width: 400px) {
+  .globe-controls-zoom { top: 12px; bottom: auto; }
+  .globe-controls-dive { bottom: 70px; max-width: calc(100% - 28px); }
+}
 /* Everything but the region under the crosshair, softened. One flat blur on the layer,
    shaped by the gradient drawn over it — SVG cannot vary a blur radius across a shape.
    Light enough to read the shapes and the colors through: the comparison is the

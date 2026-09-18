@@ -2877,6 +2877,18 @@ quoted wording is the owner's.
       has no tax bill, and its cards say "before property tax" and why; Millstone has no
       Zillow value, and its cost section now says so instead of vanishing.
 
+### After the deploy — 2026-09-18
+
+- [x] **The map's controls overlapped on a phone.** The owner found it: at 375px the
+      zoom pill was drawn over "New Jersey", a 47px overlap on a 315px-wide map. The zoom
+      moves to the top corner below 400px, where nothing else sits, rather than shrinking
+      two pills until neither is a comfortable target.
+      - A **container** query, not a media query. The map's width follows the page's
+        columns, not the window's — beside a ranking at 1000px it is narrower than it is
+        alone at 700px — so asking the window would have moved the controls at the wrong
+        moments and still left the overlap at some widths. Checked on both pages that use
+        the map, and on desktop, where nothing moved.
+
 ## Quiet utility — the owner's redesign (merged 2026-09-17)
 
 PR #2, designed outside the milestone sequence and merged into `main` between 23 and 16
