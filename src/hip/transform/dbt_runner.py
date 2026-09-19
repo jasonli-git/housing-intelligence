@@ -28,6 +28,7 @@ ZILLOW_MODELS = ("stg_zillow_zhvi", "stg_zillow_zori")
 KEYED_MODELS = (
     "stg_census_acs",
     "stg_census_acs_housing",
+    "stg_census_pep",
     "stg_fhfa_hpi",
     "stg_census_permits",
     "stg_census_permits_place",

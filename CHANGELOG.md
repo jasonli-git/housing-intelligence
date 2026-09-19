@@ -3,6 +3,38 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.19.0] — 2026-09-19
+
+**Milestone 24 — fresher figures.** Every ACS window moves forward a year, and headline
+population gains a second source that is never mixed with the first.
+
+### Added
+
+- `census_pep`, the Census Population Estimates Program, as a source: two keyless CSV
+  files giving a July-1 population estimate at state, county and municipal level.
+  3,516 observations across 1 state, 21 counties and 564 municipalities, resolved by
+  exact GEOID with no name matching — 564 of 564 and 21 of 21 matched, none left over.
+- `pep_population` as a metric, with validation bounds on arrival.
+- `vintages(end_year)` in `hip.sources.census_acs`, and `ACS_END_YEAR` in
+  `hip.sources.registry` beside `BLS_END_YEAR`.
+
+### Changed
+
+- ACS moves from the 2019–2023 vintage window to 2020–2024. Mercer County's population
+  reads 385,864 against the previous 383,286; PEP Vintage 2025 reads 399,289 for the
+  same county, which is the size of the staleness the milestone was scheduled to close.
+- `AcsAdapter` takes `end_year` explicitly rather than reading a module-level list, so
+  a re-run fetches the vintages the first run recorded.
+
+### Fixed
+
+- Four `ruff` E501 violations, one of which had reached `main` in 0.18.x.
+
+### Known
+
+- The 105 stored county explanations are stale: every packet changed. Regeneration was
+  deliberately deferred and is tracked in `TODO.md`.
+
 ## [0.18.0] — 2026-09-18
 
 **Milestone 16 — the three-dimensional map, rescoped on the day it started into a

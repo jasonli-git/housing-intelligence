@@ -8,48 +8,18 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — Milestone 24, fresher figures, started 2026-09-19
+## Now — Milestone 24 complete, awaiting review, as of 2026-09-19
 
-**Deliverable** ([ROADMAP.md](ROADMAP.md)): the 2020–2024 ACS behind an explicit bump
-rule, and the Census Population Estimates Program as a second, separate source for
-headline population. ACS stays the denominator of every ratio, so no ratio mixes two
-programs. Regenerates the county explanations, which is why it leads Version 3.
+**Milestone 24, fresher figures, is built, run and verified.** What it shipped is in
+[CHANGELOG.md](CHANGELOG.md) 0.19.0, its decisions are ARCHITECTURE #176–#178, and its
+status is in [ROADMAP.md](ROADMAP.md). Nothing else is in progress.
 
-**Why it is worth doing, measured 2026-09-19.** Mercer County reads 383,286 from the
-loaded ACS 2019–2023. The 2020–2024 vintage gives 385,864, and PEP Vintage 2025 gives
-399,289. The ACS bump closes about 2,600 of a roughly 16,000 gap; the rest is the
-difference between a five-year survey average and a point-in-time estimate, which is
-why PEP is added beside ACS rather than replacing it.
-
-**Prerequisites verified 2026-09-19:** `api.census.gov/data/2024/acs/acs5` answers 200
-with the key. Both PEP files are reachable and keyless —
-`co-est2025-alldata.csv` (2,071,735 bytes, 2026-03-26) and `sub-est2025_34.csv`
-(157,538 bytes, 2026-05-14).
-
-### Tasks
-
-- [ ] **Give ACS an explicit bump rule.** `YEARS` in `src/hip/sources/census_acs.py` has
-      been hard-coded since Milestone 3. Move the control to `ACS_END_YEAR` in
-      `src/hip/sources/registry.py`, beside `BLS_END_YEAR`, and pass it to the adapter
-      the way `BlsAdapter` takes `end_year` — explicit rather than read from the clock,
-      so a run stays reproducible. The adapter derives its five vintages from it.
-- [ ] **Bump to `ACS_END_YEAR = 2024`**, which moves every ACS window forward a year.
-- [ ] **Add `census_pep` as a source.** Two keyless files: the national county file for
-      `state` and `county`, and `sub-est2025_34.csv` for New Jersey's municipalities.
-      Dated vintage, not `current`, so it does not inherit the caching defect below.
-- [ ] **Wire PEP through the pipeline** — `config/sources.yml`, `config/metrics.yml`,
-      a dbt staging model, and the registry.
-- [ ] **Keep ACS the denominator.** PEP supplies a headline population only; no computed
-      ratio may read it, so no ratio mixes a survey average with a point-in-time
-      estimate. Pin it with a test rather than a comment.
-- [ ] **Adapter tests for both**, following `tests/test_nj_modiv.py`'s `MockTransport`
-      pattern — no network. This also chips at the open adapter-coverage item below.
-- [ ] **Re-run the pipeline and regenerate the county explanations.** Needs Docker and
-      Postgres up, network, and hosted inference; costs real money. Gated on the owner.
-- [ ] **Update pass and spec drift check** before the completion report.
+**One step of the deliverable was deliberately not run:** the 105 stored county
+explanations are stale because every packet changed, and regenerating them costs money
+against hosted inference. Deferred by the owner on 2026-09-19; the item is in `Open`.
 
 **To resume:** `make db-up` for Postgres, and `make setup-eval` rather than `make setup`
-if the evaluation harness is needed.
+when the evaluation harness is needed.
 
 ## Open
 
@@ -239,9 +209,13 @@ first raised, not where it must be done.
 
 - [ ] **`make publish` assembling both halves into one directory.** (M11) Its done
       criterion is a reachable public URL.
-- [ ] **The 21 stored explanations are stale until regenerated.** (pre-M12 review) Every
-      packet changed at Milestone 21, and nothing new ships until the regeneration after
-      `v3`. The live site is static and unchanged until then.
+- [ ] **The 105 stored explanations are stale until regenerated.** (pre-M12 review,
+      renewed by M24) Every packet changed at Milestone 21 and again on 2026-09-19, when
+      Milestone 24 moved every ACS window forward a year and added `pep_population`.
+      Regeneration was deferred deliberately: it runs against hosted inference and costs
+      real money — roughly $0.86 for the five-model set over 21 counties, measured at
+      Milestone 19. The live site is static and unchanged until it runs. `hip explain
+      --level county` is the command; the staleness gate will regenerate only what moved.
 - [ ] **`reports/evaluation/v1.md` is as rendered at Milestone 8.** (M13) A re-render
       would change its title and add Milestone 20's Effort columns without changing a
       figure, so it was left alone and reverted once. Already in ARCHITECTURE's Known
@@ -272,6 +246,13 @@ first raised, not where it must be done.
 
 ### Housekeeping
 
+- [ ] **Nothing runs `ruff` automatically.** `make lint` exists and is run by hand, so
+      a violation reaches `main` whenever someone runs `make test` and stops there —
+      which happened on 2026-09-19, when the README features check landed in 0.18.x with
+      an E501 and was only caught by the next milestone. Options considered and not
+      chosen yet: a test that shells out to `ruff check`, which couples the suite to a
+      linter version; or CI, which the repository does not have. Recorded rather than
+      decided.
 - [ ] **`hip check-config` exits 1 on a clean checkout** because three source API keys
       are unset. (M0) Correct behaviour, but it means `check-config` cannot be wired into
       `make lint` or CI until the keys exist.
