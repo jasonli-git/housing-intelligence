@@ -171,6 +171,13 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   and municipality within reach at 30% of it; search on the New Jersey page names each
   result's legal type and county; region pages compare now with any earlier year. All of
   it is computed from published figures by fixed rules, and says so.
+- **Measured build cost, and storage that can move** (M10, built) — `hip footprint`
+  reports bytes per storage tier, per warehouse table and per state, including the
+  Postgres size that lives inside Docker's disk image where `du` cannot see it. Seven
+  per-stage scenarios extend the existing `mac-sitrep` profile rather than adding a
+  second timing harness that would put rival numbers in one README. `HIP_DATA_DIR`,
+  `HIP_REPORTS_DIR` and `HIP_PGDATA` are independent settings with `~` expansion, so
+  the data, the reports and the database can each be moved to another disk.
 - **Published as static files** (M11, built) — `hip publish` replays the API's own ASGI
   app and records its answers as 5,917 static artifacts; the dashboard pre-renders 2,272
   pages. Production runs with no database and no application server. Replaying the app
