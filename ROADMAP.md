@@ -618,6 +618,14 @@ and the three entries below are one chain: nothing after the first can start bef
   states.** Milestone 15 avoids it by stopping at county; the strong-MCD states (WI, MI,
   MN, ND, SD) extend Milestone 14 with no geography change at all.
 
+**Documentation images wait on automated deployment**, decided 2026-09-19
+(ARCHITECTURE #175). README screenshots are to be captured from the finished static
+export at deploy time rather than committed to the repository, which cannot be built
+until deployment itself runs without a laptop open — the same prerequisite Milestone 29
+carries for scheduled refresh. Until then the Screenshots section stays empty and
+retakes are a manual `npm run screenshot:poc`. The investigation behind the decision,
+including the costed alternatives, is `agent-handoffs/screenshot-automation.md`.
+
 **Parcel and MOD-IV coverage does not generalize**, recorded when these were deferred:
 there is no free national parcel layer, and each state publishes assessments in its own
 format under its own licence. The second constraint, the file cap, is measured below.

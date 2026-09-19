@@ -209,6 +209,23 @@ first raised, not where it must be done.
       If one is wanted as a portfolio artifact it needs a deliberate `git add -f` of a
       single file, not a change to `.gitignore`.
 
+### Documentation upkeep
+
+- [ ] **Nothing detects a stale `README.md` Features list.** Found 2026-09-19: the list
+      named M0–M9, M13, M17, M21 and M23 while M11, M12, M16, M18, M19 and M20 had all
+      shipped — including M16's globe, the most recent milestone and the platform's main
+      visual object. `ROADMAP.md` already records which milestones shipped, so a test can
+      assert that every milestone marked shipped appears in the Features list and fail
+      when one does not. It cannot write the prose — that is editorial — but it can
+      refuse to let a shipped milestone go undescribed. Same shape as
+      `tests/test_module_boundaries.py`, which parses source rather than trusting it.
+- [ ] **Which README figures are mechanically derivable has never been settled.** The
+      status counts (regions, observations, metrics, sources), the Tech Stack, the
+      evaluation table and the resource and storage figures all have a queryable or
+      file-based source; the status narrative, the Features descriptions and the setup
+      prose do not. Deciding the boundary is what makes any "regenerate on deploy" work
+      scopeable, and ARCHITECTURE #175 settles only the images half.
+
 ### Housekeeping
 
 - [ ] **`hip check-config` exits 1 on a clean checkout** because three source API keys
