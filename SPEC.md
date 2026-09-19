@@ -1,5 +1,5 @@
 # Housing Intelligence Platform Specifications
-## Product Specification v1.1
+## Product Specification v1.2
 
 ### Vision
 
@@ -188,6 +188,18 @@ Examples include:
 * model evaluation
 
 Modules should communicate through stable interfaces and should be replaceable without affecting the rest of the application.
+
+#### 11. Measured and modeled values are never interchangeable.
+
+Every figure the platform shows is one of four things — observed, calculated, estimated, or forecast — and which one it is should always be visible to the reader.
+
+Observed values come from a source release. Calculated values are derived from observed ones by a stated rule. Estimated and forecast values are modeled, and modeling is a different kind of claim.
+
+The platform may or may not offer projected or forecast figures; that is a scoping question, not a principle. What this principle fixes is the condition on offering them at all. Any modeled figure should carry conspicuous labeling, an "as of" date, its methodology, evidence that the method was validated, its uncertainty, and a path back to the observed figures underneath it. A modeled value presented as though it were measured is a defect regardless of how accurate it turns out to be.
+
+AI may help a reader interpret evidence, but it is not the foundation of trust. Trust comes from transparent sources, reproducible calculations, visible dates, explicit limitations, and an unambiguous separation between what was measured and what was modeled.
+
+This extends principle 5, which orders computation before interpretation, to say that the *result* carries its own kind forward — and it is why citation binding refuses prose stating a figure the packet does not carry.
 
 ---
 
@@ -648,3 +660,32 @@ identity per row, and the existing packet hash.
 
 **Reason:** A property being lost should be written down as a cost rather than
 discovered later. The mitigations are what keep the loss bounded.
+
+---
+
+### Amendments in v1.2
+
+Recorded 2026-09-19. The sections above are the current specification; this section
+says what changed and why, as the v1.1 and v1.0 sections do.
+
+#### 1. Measured and modeled values are never interchangeable (principle 11)
+
+**Previous idea:** Not addressed. Every figure the platform published was observed or
+calculated, so the distinction between measured and modeled never had to be stated —
+principle 5 ordered computation before interpretation, and principle 9 required models
+to be evaluated, but neither said what a *modeled figure* owes a reader.
+
+**Current version:** A new principle 11. Every figure is observed, calculated,
+estimated or forecast, and which one is always visible. Modeled figures, if offered,
+carry labeling, an "as of" date, methodology, validation evidence, uncertainty, and a
+path back to the observed figures beneath them. Trust rests on provenance rather than
+on the AI layer.
+
+**Reason:** Promoted on 2026-09-19 from the Director Note "Accessible, comprehensive,
+and current housing data" at the owner's explicit direction. That note explores adding
+current-projected and future-forecast modes; **those remain exploratory and are not
+promoted here.** What is promoted is the constraint that would govern them, which the
+platform already honors implicitly — citation binding refuses prose stating a figure
+the packet does not carry, and every observation records its source release and match
+method. Writing the principle down means a future projected mode inherits the
+obligation rather than negotiating it.
