@@ -54,3 +54,6 @@ dist/
 
 # Claude desktop preview config (per machine)
 .claude/launch.json
+
+# Claude local permission grants (per machine)
+.claude/settings.local.json

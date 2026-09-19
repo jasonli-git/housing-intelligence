@@ -53,8 +53,11 @@ Once assigned a branch:
 - Work only on that branch.
 - Do not create additional branches unless explicitly asked.
 - Never merge into `main` without explicit user approval.
-- Never force-push.
-- Never rewrite published Git history.
+- Never force-push `main`, or any branch another agent or person has work
+  based on. Rebasing your own unmerged task branch onto an updated `main` is
+  normal and allowed — push it with `--force-with-lease`, never a bare
+  `--force`.
+- Never rewrite history that has already merged into `main`.
 - Never create tags or releases unless explicitly requested.
 
 ## Commits
