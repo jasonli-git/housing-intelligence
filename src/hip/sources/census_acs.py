@@ -42,8 +42,14 @@ BURDEN_PARTS = ("B25070_001E", "B25070_007E", "B25070_008E", "B25070_009E", "B25
 # the new columns, silently. Separate layers also give these rows their own release.
 HOUSING_VARIABLES = ("B25002_001E", "B25002_003E", "B25003_001E", "B25003_002E")
 
-# Five ACS vintages. Each covers five years, so this spans 2015-2023 of sample.
-YEARS = (2023, 2022, 2021, 2020, 2019)
+# How many consecutive 5-year vintages to fetch. Five vintages span nine years of
+# sample, because consecutive vintages overlap by four.
+VINTAGE_COUNT = 5
+
+
+def vintages(end_year: int) -> tuple[int, ...]:
+    """The five vintages ending at ``end_year``, newest first."""
+    return tuple(range(end_year, end_year - VINTAGE_COUNT, -1))
 
 LEVELS = {"county": "county:*", "cousub": "county%20subdivision:*"}
 
@@ -52,11 +58,29 @@ class AcsAdapter(SourceAdapter):
     """Income, rent, population, home value, renter cost burden, occupancy, and tenure."""
 
     source_id: ClassVar[str] = "census_acs"
-    default_vintage: ClassVar[str] = "2023"
     landing_format: ClassVar[str] = "json"
 
-    def __init__(self, states: list[str]) -> None:
+    def __init__(self, states: list[str], *, end_year: int) -> None:
+        """``end_year`` is the newest 5-year vintage to fetch.
+
+        Passed in rather than read from the clock, for the same reason
+        :class:`~hip.sources.bls.BlsAdapter` takes one: a re-run fetches the vintages
+        the first run recorded, so a release is reproducible. It lives as
+        ``ACS_END_YEAR`` in :mod:`hip.sources.registry`; bump it when a vintage
+        publishes. It was hard-coded here from Milestone 3 until Milestone 24.
+        """
         self.states = states
+        self.end_year = end_year
+
+    # `SourceAdapter` models `default_vintage` as a ClassVar, which is true of every
+    # adapter whose releases share one vintage — BLS is `current`, Zillow is `current`.
+    # It is not true here: each ACS vintage is its own release, so the default follows
+    # the injected `end_year`. Overriding a writeable class attribute with a read-only
+    # property is what the ignore covers. Narrowing the base to suit one adapter would
+    # mean re-annotating all twelve, which is not this milestone's trade.
+    @property
+    def default_vintage(self) -> str:  # type: ignore[override]
+        return str(self.end_year)
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         key = os.environ.get("CENSUS_API_KEY")
@@ -70,7 +94,7 @@ class AcsAdapter(SourceAdapter):
             "": ",".join(["NAME", *VARIABLES, *BURDEN_PARTS]),
             "housing_": ",".join(["NAME", *HOUSING_VARIABLES]),
         }
-        years = [int(vintage)] if vintage else list(YEARS)
+        years = [int(vintage)] if vintage else list(vintages(self.end_year))
         refs = []
         for year in years:
             for prefix, variables in requests.items():

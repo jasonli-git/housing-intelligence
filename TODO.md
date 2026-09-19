@@ -8,23 +8,48 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — nothing in progress, as of 2026-09-18
+## Now — Milestone 24, fresher figures, started 2026-09-19
 
-**Milestone 16 shipped on 2026-09-18 as 0.18.0, and with it Version 2 is complete.**
-Versions 3, 4 and 5 were scheduled on 2026-09-18 from the owner's draft — see
-[ROADMAP.md](ROADMAP.md) for the tables and the reasoning.
+**Deliverable** ([ROADMAP.md](ROADMAP.md)): the 2020–2024 ACS behind an explicit bump
+rule, and the Census Population Estimates Program as a second, separate source for
+headline population. ACS stays the denominator of every ratio, so no ratio mixes two
+programs. Regenerates the county explanations, which is why it leads Version 3.
 
-The next milestone is **24, fresher figures**, and it leads Version 3 for a specific
-reason: it moves every ACS window by a year and regenerates every county explanation, so
-anything built on those figures first would be rework.
+**Why it is worth doing, measured 2026-09-19.** Mercer County reads 383,286 from the
+loaded ACS 2019–2023. The 2020–2024 vintage gives 385,864, and PEP Vintage 2025 gives
+399,289. The ACS bump closes about 2,600 of a roughly 16,000 gap; the rest is the
+difference between a five-year survey average and a point-in-time estimate, which is
+why PEP is added beside ACS rather than replacing it.
 
-**Standing rule, from the source register (ROADMAP):** a milestone proposing a new
-metric names the register row it comes from, or adds one. The register also holds the
-rejected sources and why, so Niche, Redfin, ZTRAX, FBI crime data and metro-level
-single-family rent do not get re-proposed.
+**Prerequisites verified 2026-09-19:** `api.census.gov/data/2024/acs/acs5` answers 200
+with the key. Both PEP files are reachable and keyless —
+`co-est2025-alldata.csv` (2,071,735 bytes, 2026-03-26) and `sub-est2025_34.csv`
+(157,538 bytes, 2026-05-14).
 
-**Before starting anything:** Docker has to be running for Postgres (`make db-up`), and
-`make setup-eval` rather than `make setup` whenever the evaluation harness is needed.
+### Tasks
+
+- [ ] **Give ACS an explicit bump rule.** `YEARS` in `src/hip/sources/census_acs.py` has
+      been hard-coded since Milestone 3. Move the control to `ACS_END_YEAR` in
+      `src/hip/sources/registry.py`, beside `BLS_END_YEAR`, and pass it to the adapter
+      the way `BlsAdapter` takes `end_year` — explicit rather than read from the clock,
+      so a run stays reproducible. The adapter derives its five vintages from it.
+- [ ] **Bump to `ACS_END_YEAR = 2024`**, which moves every ACS window forward a year.
+- [ ] **Add `census_pep` as a source.** Two keyless files: the national county file for
+      `state` and `county`, and `sub-est2025_34.csv` for New Jersey's municipalities.
+      Dated vintage, not `current`, so it does not inherit the caching defect below.
+- [ ] **Wire PEP through the pipeline** — `config/sources.yml`, `config/metrics.yml`,
+      a dbt staging model, and the registry.
+- [ ] **Keep ACS the denominator.** PEP supplies a headline population only; no computed
+      ratio may read it, so no ratio mixes a survey average with a point-in-time
+      estimate. Pin it with a test rather than a comment.
+- [ ] **Adapter tests for both**, following `tests/test_nj_modiv.py`'s `MockTransport`
+      pattern — no network. This also chips at the open adapter-coverage item below.
+- [ ] **Re-run the pipeline and regenerate the county explanations.** Needs Docker and
+      Postgres up, network, and hosted inference; costs real money. Gated on the owner.
+- [ ] **Update pass and spec drift check** before the completion report.
+
+**To resume:** `make db-up` for Postgres, and `make setup-eval` rather than `make setup`
+if the evaluation harness is needed.
 
 ## Open
 

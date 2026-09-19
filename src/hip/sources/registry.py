@@ -26,6 +26,11 @@ from hip.sources.zillow import ZhviAdapter, ZoriAdapter
 # reproducible; bump it when a new year completes.
 BLS_END_YEAR = 2025
 
+# The newest ACS 5-year vintage to fetch; the adapter takes the four before it too.
+# Explicit for the same reason `BLS_END_YEAR` is, and bumped the same way. Hard-coded
+# inside the adapter from Milestone 3 until Milestone 24 moved the control here.
+ACS_END_YEAR = 2024
+
 # `njgin_parcels` stays planned: the MOD-IV composite layer already carries parcel
 # geometry alongside the assessment attributes, so a separate geometry source would
 # fetch the same shapes twice. It is kept here because a parcel map layer (post-V1)
@@ -96,7 +101,7 @@ def build_adapter(source_id: str, scope: GeographyScope) -> SourceAdapter:
     if source_id == MigrationAdapter.source_id:
         return MigrationAdapter()
     if source_id == AcsAdapter.source_id:
-        return AcsAdapter(states=scope.states)
+        return AcsAdapter(states=scope.states, end_year=ACS_END_YEAR)
     if source_id == FredAdapter.source_id:
         return FredAdapter()
     if source_id == BlsAdapter.source_id:

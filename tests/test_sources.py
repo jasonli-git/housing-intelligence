@@ -412,12 +412,52 @@ def test_acs_housing_tables_are_their_own_layers(monkeypatch: pytest.MonkeyPatch
     from hip.sources.census_acs import HOUSING_VARIABLES, AcsAdapter
 
     monkeypatch.setenv("CENSUS_API_KEY", "census-test")
-    refs = AcsAdapter(states=["NJ"]).refs(vintage="2023")
+    refs = AcsAdapter(states=["NJ"], end_year=2024).refs(vintage="2023")
 
     by_layer = {r.layer: r for r in refs}
     assert set(by_layer) == {"county", "cousub", "housing_county", "housing_cousub"}
     assert "B25002" not in by_layer["county"].url, "the cached request is unchanged"
     assert all(v in by_layer["housing_cousub"].url for v in HOUSING_VARIABLES)
+
+
+def test_acs_vintages_follow_the_bump_constant_not_a_hard_coded_list() -> None:
+    """Milestone 24. The vintage list was hard-coded in the adapter from Milestone 3,
+    so a new ACS release needed an edit inside the source rather than a bump beside
+    `BLS_END_YEAR`. The window is derived; only the end year is a decision."""
+    from hip.sources.census_acs import VINTAGE_COUNT, vintages
+
+    assert vintages(2024) == (2024, 2023, 2022, 2021, 2020)
+    assert len(vintages(2024)) == VINTAGE_COUNT
+    # Consecutive 5-year vintages overlap by four, so five of them span nine years.
+    assert max(vintages(2030)) - min(vintages(2030)) + 5 == 9
+
+
+def test_acs_end_year_is_injected_so_a_rerun_fetches_what_the_first_run_recorded(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The reason `BlsAdapter` takes `end_year` rather than reading the clock: a
+    release has to be reproducible. ACS gets the same treatment in Milestone 24."""
+    from hip.sources.census_acs import AcsAdapter
+
+    monkeypatch.setenv("CENSUS_API_KEY", "census-test")
+    refs = AcsAdapter(states=["NJ"], end_year=2024).refs()
+
+    fetched = {r.vintage for r in refs}
+    assert fetched == {"2024", "2023", "2022", "2021", "2020"}
+    assert all(f"/{r.vintage}/acs/acs5" in r.url for r in refs), "vintage reaches the URL"
+    # An older adapter still fetches the older window, whatever the constant now says.
+    assert {r.vintage for r in AcsAdapter(states=["NJ"], end_year=2023).refs()} == {
+        "2023", "2022", "2021", "2020", "2019",
+    }
+
+
+def test_the_registry_is_where_vintages_are_bumped() -> None:
+    """Both bump constants live together, so someone refreshing a year finds them in
+    one place rather than inside two adapters."""
+    from hip.sources import registry
+
+    assert registry.ACS_END_YEAR == 2024
+    assert isinstance(registry.BLS_END_YEAR, int)
 
 
 def test_permits_add_the_region_place_file_for_every_year() -> None:
