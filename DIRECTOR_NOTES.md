@@ -210,3 +210,29 @@ This Director Note should inform future roadmap planning, but it does not itself
 add these features to the roadmap or approve them for implementation.
 
 Do not implement yet.
+
+---
+
+## Decision: measured and modeled values are never interchangeable
+
+**Status:** Approved direction
+**Recorded:** 2026-09-19
+
+Promotes one principle out of the note above, at the owner's explicit direction. The
+note itself is left as written.
+
+`SPEC.md` gains **principle 11** and moves to v1.2: every figure is observed,
+calculated, estimated or forecast, and which one is always visible; a modeled figure
+carries labeling, an "as of" date, methodology, validation evidence, uncertainty, and a
+path back to the observed figures beneath it; and trust rests on provenance rather than
+on the AI layer.
+
+**What was not promoted.** The note's current-projected and future-forecast modes stay
+exploratory. Principle 11 fixes the condition such modes would have to meet, not a
+decision to build them — whether the platform offers modeled figures at all remains a
+scoping question for v3 and beyond.
+
+**Also still open from the note above:** the source and licensing audit, the
+existing-source freshness audit, cost-breakdown completeness, the two presentation
+questions, and the 6.67% versus 6.95% mortgage-rate discrepancy, which is a checkable
+data-freshness question rather than a direction.
