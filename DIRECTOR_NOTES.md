@@ -43,6 +43,7 @@ Do not implement yet.
 
 ---
 
+
 ## Decision: documentation images follow the deployed site
 
 **Status:** Approved direction
@@ -63,3 +64,149 @@ Screenshots section stays empty and retakes are a manual `npm run screenshot:poc
 of their figures are mechanically derivable at all. The Features list is prose and
 cannot write itself; a staleness *check* against `ROADMAP.md` is tracked in `TODO.md`
 instead.
+
+---
+
+## Accessible, comprehensive, and current housing data
+
+**Status:** Exploratory — not approved for implementation
+**Recorded:** 2026-09-19
+
+The long-term ambition is to reduce dependence on expensive, fragmented, or
+gate-walled institutions for housing data. The platform should make useful
+housing information as inexpensive, accurate, precise, accessible, and
+trustworthy as responsibly possible. In other words, this platform should aim
+to be better than a Google search for housing questions: not merely returning a
+convenient number, but providing a timely, sourced, comparable, and explainable
+answer whose underlying evidence can be inspected.
+
+The original specification approached completeness from the ground up: build a
+large-scale analytics platform around the most complete feasible public
+datasets. Explore adding a complementary top-down perspective:
+
+- What information does an ordinary person actually want when trying to
+  understand housing?
+- Which additional data and functionality would help answer those questions?
+- How can those answers remain grounded in traceable evidence rather than
+  requiring users to trust a chatbot?
+
+### Data-source exploration
+
+Conduct a broader source and licensing audit that considers:
+
+- Untapped public datasets, open-data portals, and free APIs.
+- The [New Jersey DCA Data Hub](https://datahub.dca.nj.gov/search?tags=housing).
+- Providers identified through resources such as the
+  [Ficstar real-estate data-provider overview](https://www.ficstar.com/best-real-estate-data-providers).
+- Paid sources costing no more than approximately $10 per month, prioritized
+  by their likely usefulness and impact.
+- Free, legally reusable, and operationally sustainable web sources when no API
+  or affordable provider exists.
+- Alternatives to the Zillow Research data currently in use, particularly
+  sources whose licensing would permit a feasible path toward a commercial
+  product.
+- Whether outreach to government agencies, universities, nonprofits, industry
+  organizations, or other institutions could produce better access, bulk
+  releases, partnerships, or otherwise unavailable data.
+
+Licensing, commercial reuse, geographic coverage, update frequency,
+reliability, and provenance should be evaluated alongside the contents of each
+source.
+
+### Existing-source freshness
+
+Audit current sources to determine:
+
+- Which datasets have newer releases available.
+- Which acquisition processes need scheduled refreshes.
+- Which metrics appear current but are actually tied to an older source
+  release.
+- Which datasets or metrics cannot be refreshed through their original source.
+
+For metrics that cannot be refreshed, explore a repeatable and documented
+alternative to manually searching for newer figures one at a time.
+
+### Possible temporal modes
+
+Explore whether the website could distinguish among different levels of
+temporal certainty:
+
+- **Firm data:** Observed metrics from the latest successfully acquired and
+  validated source releases. Firm mode should also be capable of incorporating
+  frequently refreshed, authoritative inputs when they are reliably available,
+  such as current mortgage rates. For example, the website currently cites a
+  6.67% mortgage rate, while a contemporaneous Google result reportedly
+  displayed 6.95%. That discrepancy should be verified and used to examine
+  whether the source, refresh cadence, or displayed “as of” date needs
+  improvement; Google should not automatically be treated as the authoritative
+  source.
+- **Current — projected:** Clearly labeled estimates of current-month metrics
+  and rankings derived from the latest firm data and other defensible signals.
+- **Future — forecast:** Possible forward-looking estimates of where metrics
+  may move. This mode is optional and should be omitted if it cannot be
+  validated, explained, and presented responsibly.
+
+Observed, projected, and forecast values must never appear interchangeable. Any
+projected mode would need conspicuous labeling, an “as of” date, methodology,
+validation evidence, uncertainty, and a clear path back to the underlying firm
+observations.
+
+AI may help users interpret evidence, but it should not be the foundation of
+trust. Trust should come from transparent sources, reproducible calculations,
+visible dates, explicit limitations, and an unambiguous separation between
+measured and modeled values.
+
+### Cost-breakdown comprehensiveness
+
+Explore whether the platform’s housing cost breakdowns omit costs that could be
+reliably sourced, estimated, or calculated.
+
+Consider adding relevant costs such as taxes and other recurring or
+transaction-related expenses when the necessary inputs and methodology are
+dependable. The audit should cover both costs already modeled and plausible
+missing costs.
+
+Additional cost figures should only be included when the platform can explain:
+
+- The source or calculation.
+- The date and geographic scope of the underlying data.
+- Whether the value is observed, calculated, estimated, or based on a
+  user-supplied assumption.
+- The limitations or uncertainty associated with the figure.
+
+The goal is a more complete real-world cost picture without introducing false
+precision.
+
+### Open presentation questions
+
+- The statewide house-price-index values, such as `442.7` and `967.6`, already
+  have definitions but may not communicate their scale or baseline at a glance.
+  Explore adding a compact baseline or interpretation cue beside each value
+  rather than replacing the existing definition. No presentation change has
+  been decided.
+- The sentence “every figure ranked against New Jersey’s 21 counties” consumes
+  an additional line, but removing it could make the comparison set unclear.
+  Consider incorporating the context directly into each rank treatment—for
+  example, **“Rank 4 of 21 NJ counties”**—or finding another compact
+  presentation that preserves the meaning without requiring a separate line.
+
+### Roadmap and release scope
+
+Many of the directions in this note will probably need to be researched,
+scoped, prioritized, scheduled, and integrated across multiple releases.
+Consider them candidates for **v3 and beyond**, rather than commitments for the
+current roadmap.
+
+Before any item is scheduled, evaluate its:
+
+- Usefulness to ordinary users.
+- Data availability, licensing, and commercial-use constraints.
+- Accuracy and validation requirements.
+- Refresh and long-term maintenance burden.
+- Implementation complexity and operating cost.
+- Fit with the platform’s trust and provenance principles.
+
+This Director Note should inform future roadmap planning, but it does not itself
+add these features to the roadmap or approve them for implementation.
+
+Do not implement yet.
