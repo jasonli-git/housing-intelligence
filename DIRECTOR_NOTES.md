@@ -40,3 +40,26 @@ How much of this can actually be generated or verified on each push to `main`,
 and by what mechanism. Several items above are conditional on that answer.
 
 Do not implement yet.
+
+---
+
+## Decision: documentation images follow the deployed site
+
+**Status:** Approved direction
+**Recorded:** 2026-09-19
+
+Settles the screenshot half of the note above. The note itself is left as written.
+
+README images will represent the **deployed site**, captured from the finished static
+export at deploy time and never committed to the repository. A bot-opened PR carrying
+regenerated images and a ruleset bypass for CI were both considered and rejected — see
+ARCHITECTURE #175 for the rationale and `agent-handoffs/screenshot-automation.md` for
+the costed investigation.
+
+**Blocked on automated deployment**, which does not exist yet. Until it does the
+Screenshots section stays empty and retakes are a manual `npm run screenshot:poc`.
+
+**Still open from the note above:** whether the non-image sections regenerate, and which
+of their figures are mechanically derivable at all. The Features list is prose and
+cannot write itself; a staleness *check* against `ROADMAP.md` is tracked in `TODO.md`
+instead.
