@@ -210,6 +210,17 @@ first raised, not where it must be done.
 
 - [ ] **`make publish` assembling both halves into one directory.** (M11) Its done
       criterion is a reachable public URL.
+- [ ] **Nothing verifies a deploy after it lands.** Found 2026-09-19 deploying Milestone
+      24. `make check-dist` validates the *build* — manifest present, index present, no
+      `localhost:8000` baked into any page — and `make deploy` then runs `rclone sync`
+      followed by `wrangler pages deploy` with nothing checking the result. A successful
+      R2 sync followed by a failed Pages upload would leave the artifacts ahead of the
+      site and report nothing. The live check after this deploy was done by hand.
+      A `make check-live` should fetch the deployed site and assert: the production
+      domain answers 200; the artifact origin answers 200; a known figure that just
+      changed is actually present; and — per the Milestone 18 note — it samples a county,
+      a municipality, a ZIP and a report rather than one exemplar, because a failure that
+      lands on some page types is invisible from one of them.
 - [ ] **`hip explain` does not report what a run cost.** Found 2026-09-19 regenerating
       Milestone 24's readings: the command prints characters and figures bound per
       region but never a billed total, so the only way to know what a regeneration cost

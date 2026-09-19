@@ -236,3 +236,44 @@ scoping question for v3 and beyond.
 existing-source freshness audit, cost-breakdown completeness, the two presentation
 questions, and the 6.67% versus 6.95% mortgage-rate discrepancy, which is a checkable
 data-freshness question rather than a direction.
+
+---
+
+## Batch pricing for regeneration, not for benchmarks
+
+**Status:** Possible direction — not approved for implementation
+**Recorded:** 2026-09-19
+
+Explore routing `hip explain` through each provider's batch API, while leaving the
+evaluation harness on synchronous calls.
+
+The reasoning is a split, not a preference:
+
+- **Regeneration has no reader waiting.** `hip explain` runs as a background job before
+  a publish, so a batch turnaround measured in hours costs nothing. It currently makes
+  one synchronous request per (region, model) at list price — 105 of them for New
+  Jersey's counties.
+- **Benchmarks measure the wait.** `hip eval run` records `tokens_per_second` and TTFT
+  per generation and reports them per model. A batch submission has neither, so batching
+  would empty columns that model selection reads. `reports/evaluation/v3.md` already
+  notes that a hosted `tok/s` is "a latency number wearing a throughput label"; under
+  batch it would be a queue number wearing the same label.
+- **Judging already batches**, through Anthropic's Batch API at a flat 50%, and should
+  stay there.
+
+Worth establishing before building:
+
+- Whether each provider in the preference list offers a batch API at all, what discount,
+  and what turnaround.
+- What a partial batch failure means for a publish — whether a run completes with gaps
+  or blocks.
+- Whether the local tier (`gemma-4-e4b-q4`) stays synchronous, since it cannot batch,
+  and what a mixed-mode run costs in complexity.
+- Whether a batch path changes which model writes a given region, which would change
+  published prose for reasons unrelated to the figures.
+
+**Scale is what decides this.** At 21 counties and five models a run is under a dollar
+and takes about 45 minutes, so the saving is noise. The Milestone 19 estimate for full
+New Jersey municipal coverage is roughly $42 per refresh, where half is material.
+
+Do not implement yet.
