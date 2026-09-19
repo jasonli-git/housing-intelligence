@@ -55,6 +55,19 @@ first raised, not where it must be done.
       a conditional request — `If-Modified-Since` / `If-None-Match`, 304 treated as a
       cache hit — which keeps content-addressing intact. **Deliberately deferred to
       Milestone 29**, scheduled refresh with retry and alerting.
+- [ ] **`mortgage_rate_30y` is the `@current` ref that will rot first, and most
+      visibly.** Found 2026-09-19 while checking a reported 6.67% against 6.95%
+      elsewhere. The figure was correct — `FredAdapter` requests `&frequency=m`, so the
+      platform stores monthly averages, and August 2026 was the latest complete month
+      for data fetched 2026-09-06. The two numbers measure different things: a monthly
+      average against a current weekly PMMS reading. But `FredAdapter.default_vintage`
+      is `current`, so it inherits the caching defect above, and FRED's is the only
+      weekly-published series among the twelve sources. When September's average lands
+      in October a plain `hip acquire` will not pick it up, and the cost-to-own section
+      will keep showing `Aug 2026` — correctly labelled and quietly months behind. It is
+      the figure a reader is most likely to check against another source, so it is where
+      the caching defect becomes visible first. Fix it with the conditional request
+      above rather than separately.
 - [ ] **The validation gate has no range bounds for the two HUD metrics.**
       (pre-M12 review) `hud_area_median_income` and `hud_income_limit_80` are absent from
       `VALUE_BOUNDS` ([gate.py](src/hip/validate/gate.py)), so the one metric family

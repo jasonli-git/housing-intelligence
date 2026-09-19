@@ -304,7 +304,7 @@ export function CostToOwn({
             {money(Math.abs(gain.perMonth))} a month in value ({gain.from} to {gain.to}) — what
             happened, not a promise
             {rateThen
-              ? `. Buyers then borrowed at ${rateThen.value.toFixed(2)}% (${rateThen.asOf}), against ${rate.value.toFixed(2)}% now.`
+              ? `. Buyers then borrowed at ${rateThen.value.toFixed(2)}% (${rateThen.asOf}), against ${rate.value.toFixed(2)}% (${rate.asOf}).`
               : "."}
           </p>
         )}
