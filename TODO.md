@@ -14,9 +14,10 @@ into `Now` / `Open` / `Parked`. They are recoverable with
 [CHANGELOG.md](CHANGELOG.md) 0.19.0, its decisions are ARCHITECTURE #176–#178, and its
 status is in [ROADMAP.md](ROADMAP.md). Nothing else is in progress.
 
-**One step of the deliverable was deliberately not run:** the 105 stored county
-explanations are stale because every packet changed, and regenerating them costs money
-against hosted inference. Deferred by the owner on 2026-09-19; the item is in `Open`.
+**The deliverable is complete.** All 105 county explanations were regenerated on
+2026-09-19 against the new ACS window and the new population figure — 21 each from five
+models, none skipped. What the run did not report is what it cost, which is now an item
+in `Open`.
 
 **To resume:** `make db-up` for Postgres, and `make setup-eval` rather than `make setup`
 when the evaluation harness is needed.
@@ -209,13 +210,21 @@ first raised, not where it must be done.
 
 - [ ] **`make publish` assembling both halves into one directory.** (M11) Its done
       criterion is a reachable public URL.
-- [ ] **The 105 stored explanations are stale until regenerated.** (pre-M12 review,
-      renewed by M24) Every packet changed at Milestone 21 and again on 2026-09-19, when
-      Milestone 24 moved every ACS window forward a year and added `pep_population`.
-      Regeneration was deferred deliberately: it runs against hosted inference and costs
-      real money — roughly $0.86 for the five-model set over 21 counties, measured at
-      Milestone 19. The live site is static and unchanged until it runs. `hip explain
-      --level county` is the command; the staleness gate will regenerate only what moved.
+- [ ] **`hip explain` does not report what a run cost.** Found 2026-09-19 regenerating
+      Milestone 24's readings: the command prints characters and figures bound per
+      region but never a billed total, so the only way to know what a regeneration cost
+      is the provider console. `hip eval judge` already prints what it was billed — the
+      same treatment here would make a regeneration's cost checkable against the
+      estimate `hip eval cost` gives.
+- [ ] **Generation does not use any provider's batch pricing.** Raised 2026-09-19.
+      `hip eval judge` submits through Anthropic's Batch API for a flat 50%; `hip
+      explain` calls each provider's synchronous chat endpoint once per (region, model)
+      at list price. Defensible at 21 counties and five models, where a run is under a
+      dollar and finishes in about 45 minutes. It stops being noise at scale: the
+      Milestone 19 estimate for full New Jersey municipal coverage is roughly $42 a
+      refresh. Batching would need a per-provider path in `HostedRunner` with its own
+      polling and partial-failure handling, and the local tier cannot batch at all —
+      so this is a scale decision, not a cleanup.
 - [ ] **`reports/evaluation/v1.md` is as rendered at Milestone 8.** (M13) A re-render
       would change its title and add Milestone 20's Effort columns without changing a
       figure, so it was left alone and reverted once. Already in ARCHITECTURE's Known

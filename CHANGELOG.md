@@ -30,10 +30,12 @@ population gains a second source that is never mixed with the first.
 
 - Four `ruff` E501 violations, one of which had reached `main` in 0.18.x.
 
-### Known
+### Regenerated
 
-- The 105 stored county explanations are stale: every packet changed. Regeneration was
-  deliberately deferred and is tracked in `TODO.md`.
+- All 105 county explanations, 21 each from `gemini-3.7-flash-low`,
+  `deepseek-flash-nothink`, `qwen3.7-plus`, `gemini-3.1-flash-lite` and the local
+  `gemma-4-e4b-q4`. Every packet had changed, so every reading was rewritten against
+  the new ACS window and the new population figure. No model was skipped.
 
 ## [0.18.0] — 2026-09-18
 
