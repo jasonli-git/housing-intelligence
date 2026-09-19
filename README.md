@@ -12,46 +12,28 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status (2026-09-18): v0.18.0, Version 1 and Version 2 both complete.** New
-> Jersey's geography, its housing and economic context, and its **property tax roll**
-> are loaded, queryable, visible, and exportable — 3,365 regions, **3.48M parcels**, and
-> **351,974 observations across 32 metrics from 12 public sources, spanning 1971 to
-> 2026**, plus 26,805 computed changes and 39,353 rankings, served behind a dashboard of
-> four page types — the state, 1,134 region pages, their reports, and an affordability
-> page — and packaged as versioned analysis packets. All eight pipeline stages run.
-> The source file and match method are recorded on every value. Seventeen models — eight
-> local, nine hosted from four providers — have now been evaluated against
-> standardized scenarios built from those packets, and every county page carries five of
-> them reading the same packet side by side, switchable by the reader and each clearly
-> labeled as interpretation, never as measurement. Since Milestone 13 every figure in
-> that prose is traced to the packet field and source release behind it before it is
-> stored, and prose stating a figure the packet does not carry is refused. Since
-> Milestone 16 all of it is read off a navigable globe of the United States, drawn by
-> hand as SVG with no map library: every state is on it so the map can be panned, only
-> New Jersey carries figures, and the map says so.
+> **Status — v0.18.0, 2026-09-18. Versions 1 and 2 complete; nothing in progress.**
 >
+> **Built and deployed.** New Jersey's geography, housing, economic context and property
+> tax roll are loaded, queryable and public: 3,365 regions, 3.48M parcels, and 351,974
+> observations across 32 metrics from 12 public sources spanning 1971 to 2026, plus
+> 26,805 computed changes and 39,353 rankings. Every value carries its source file and
+> match method. All eight pipeline stages run. The site publishes itself — 5,917 static
+> artifacts and 2,272 pre-rendered pages, served with no database and no application
+> server — across four page types: the state, 1,134 region pages, their reports, and an
+> affordability page.
 >
-> **Version 2 is live.** The platform now publishes itself: `hip publish` records the
-> API's answers as 5,917 static files and the dashboard pre-renders 2,272 pages, served
-> with no database and no application server in production. Milestone 10 measured what a
-> state costs on disk (3.4 GB for New Jersey, 40 kB per region of PostGIS geometry);
-> Milestone 11 put the result on the internet; Milestone 12 moved generation to hosted
-> inference behind an ordered preference list that ends on this machine, so no vendor
-> decision can stop it. Milestone 18 gave the site a design of its own — Public Sans,
-> a bar shared with [jasonli.app](https://jasonli.app), caveats set beside the figures
-> they qualify, and a front page that answers whichever measure the reader picks.
-> Milestone 17 made it answer the questions people bring: a verdict and the monthly cost
-> to own on every region page, a page that takes an income and returns the places within
-> reach, and search — all computed from published figures by fixed rules, none written by
-> a model. Milestone 23 made it quicker to read: region pages lead with what a home costs
-> a month, where the region stands out and what its housing is like, with every table one
-> click away; every metric carries a plain definition; and `/afford` answers for one place
-> at a time. A redesign, "Quiet utility", followed on 2026-09-17: quieter surfaces, larger
-> type, and the map as the front page's main object, with every chart colour validated in
-> both themes.
+> **Latest.** Milestone 16 closed Version 2 on 2026-09-18 by putting the whole platform
+> on a navigable globe of the United States, drawn by hand as SVG with no map library.
+> Before it, Milestone 23 made region pages lead with what a home costs a month rather
+> than with tables, and the "Quiet utility" redesign on 2026-09-17 gave them quieter
+> surfaces and larger type. Interpretation is a measured layer, not a claim: seventeen
+> models have been evaluated against standardized scenarios, five write every county's
+> readings side by side, and since Milestone 13 any figure the packet does not carry is
+> refused before it is stored.
 >
-> See [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md)
-> for what shipped.
+> Next is Milestone 24, fresher figures. See [ROADMAP.md](ROADMAP.md) for what is
+> planned and [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
@@ -203,6 +185,33 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   and municipality within reach at 30% of it; search on the New Jersey page names each
   result's legal type and county; region pages compare now with any earlier year. All of
   it is computed from published figures by fixed rules, and says so.
+- **Published as static files** (M11, built) — `hip publish` replays the API's own ASGI
+  app and records its answers as 5,917 static artifacts; the dashboard pre-renders 2,272
+  pages. Production runs with no database and no application server. Replaying the app
+  rather than re-querying the warehouse is what makes the bytes on disk the same bytes
+  the API serves.
+- **Hosted inference behind a preference list** (M12, built) — generation runs against
+  hosted providers in a configured order that ends on this machine, so no vendor decision
+  can stop it. Every candidate is pinned, and `hip eval models --probe` calls each one
+  because a listed model is not always a callable one.
+- **Substitution detection** (M22, built) — a provider answering with a different model
+  than the one requested is caught at runtime and recorded, since not every provider
+  offers a pinnable checkpoint.
+- **Five models reading the same packet** (M19, built) — every county page carries five
+  interpretations side by side, switchable by the reader, each labeled with the model
+  that wrote it. The reachable subset of bring-your-own-model comparison, since
+  pre-generated explanations need no server.
+- **Reasoning effort as a measured variable** (M20, built) — effort is configured per
+  candidate and recorded with every generation, so a model's cost and quality are
+  compared at a stated setting rather than at whatever the provider defaults to.
+- **A design of its own** (M18, built) — Public Sans and JetBrains Mono, a bar shared
+  with [jasonli.app](https://jasonli.app), caveats set beside the figures they qualify,
+  tabular figures, a print stylesheet, and a palette validated for colour-vision
+  deficiency in both light and dark themes.
+- **A hand-drawn globe** (M16, built) — every region read off a navigable globe of the
+  United States, drawn as SVG with no map library. Every state is on it so the map can be
+  panned; only New Jersey carries figures, and the map says so. Two channels — height and
+  colour — are explained in its own legend.
 - **Answers first, tables one click away** (M23, built) — region pages open with the
   verdict, the monthly cost to own and to rent with the payment split into money gone and
   money kept, where the region stands out by change and by value, and its housing as
@@ -215,16 +224,18 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
 
 `reports/` is machine-local output, but two sets are published so the claims above can be
 read without building the warehouse first: the
-[21 county reports](reports/regions/5y/) and the
-[model-evaluation report](reports/evaluation/v1.md). Both stay rebuildable — the commands
-below overwrite them — and the excerpts here link to the full text.
+[21 county reports](reports/regions/5y/) and the model-evaluation reports for
+[`v1`](reports/evaluation/v1.md), [`v2`](reports/evaluation/v2.md) and
+[`v3`](reports/evaluation/v3.md). All stay rebuildable — the commands below overwrite
+them — and the excerpts here link to the full text.
 
-**The excerpts below are dated, and the linked files are the live version.** Figures were
-published on 2026-08-14 and are copied here by hand, so a source release that revises
-history will move the numbers in the linked report without moving the ones quoted here.
-The two kinds of excerpt age differently: the region report is pipeline output and
-changes whenever a source publishes, while the evaluation is a record of one experiment
-against packets as they stood on that date, and does not change when data refreshes.
+**The region-report excerpt below is dated, and the linked file is the live version.**
+Its figures were published on 2026-08-14 and are copied here by hand, so a source release
+that revises history will move the numbers in the linked report without moving the ones
+quoted here. The two kinds of output age differently: a region report is pipeline output
+and changes whenever a source publishes, while each evaluation run is a record of one
+experiment against packets as they stood on its own date, and does not change when data
+refreshes.
 
 ### Region report — Bergen County, 5y window, as published 2026-08-14
 
@@ -263,50 +274,31 @@ Rank 1 is the better end of the cohort as the metric defines better, not always 
 largest rise. The [full report](reports/regions/5y/34003.md) adds the remaining nine
 metrics, a current-values table ranked by value, and the caveats that qualify each figure.
 
-### Model evaluation — run `v1`, 2026-08-14
+### Model evaluation — three runs, and what changed between them
 
-Written by `uv run hip eval report` to
-[`reports/evaluation/v1.md`](reports/evaluation/v1.md). 120 generations from 8 models over
-5 scenarios and 3 regions.
+Every run is written by `uv run hip eval report` from artifacts in `data/eval/`, and
+every figure below recomputes from them. The full reports carry the per-model tables,
+the anchor pair that makes cross-runtime comparison legitimate, throughput and peak
+memory, and the criteria each score was graded against.
 
-**Selected: Gemma 4 E4B** (`gemma-4-e4b-q4`, gguf cohort, Q4_K_M) — rubric score
-3.21/4.00, 0.0% of stated figures unsupported, 28.6 tok/s. Chosen on measured performance
-on this task, not on benchmark reputation, and only from among models that cleared the
-deterministic bar first: any model fabricating more than 5% of its figures is ineligible
-however well it reads.
+| Run | Date | Scope | Selected | Score | Unsupported figures |
+|---|---|---|---|---:|---:|
+| [`v1`](reports/evaluation/v1.md) | 2026-08-14 | 120 generations, 8 local models | Gemma 4 E4B (Q4_K_M, local) | 3.21/4.00 | 0.0% |
+| [`v2`](reports/evaluation/v2.md) | 2026-09-06 | 105 generations, 7 models, hosted providers enter | Gemini 3.7 Flash (hosted) | 3.56/4.00 | 0.0% |
+| [`v3`](reports/evaluation/v3.md) | 2026-09-11 | 165 generations, 11 models, reasoning effort measured | Gemini 3.7 Flash, low thinking | 3.77/4.00 | 0.0% |
 
-Deterministic checks — counted, not graded. Every figure a model stated is matched
-against the packet it was given; no language model is involved:
+**The story the three runs tell.** `v1` asked which model this machine could run, and
+answered with a 4-billion-parameter local one — chosen on measured performance, not
+reputation. `v2` opened the question to hosted providers and the score moved 3.21 to
+3.56 while throughput went from 28.6 to 387.4 tokens a second, which is what made
+regenerating a whole state affordable. `v3` stopped treating reasoning as a property of
+a model and started treating it as a setting: the same Gemini tier at *low* thinking
+scored higher than at its default, 3.77 against 3.56, and the run cost about $6.
 
-| Model | Cohort | Answers | Figures | Unsupported | Empty | Errors | Refusal |
-|---|---|---:|---:|---:|---:|---:|---:|
-| Gemma 4 E4B | gguf | 15 | 77 | 0.0% | 0 | 0 | 3/3 |
-| Nemotron 3 Nano 4B | gguf | 15 | 64 | 0.0% | 2 | 0 | 3/3 |
-| Gemma 4 E4B | mlx | 15 | 0 | 0.0% | 0 | 15 | — |
-| Gemma 4 12B (QAT) | gguf | 15 | 48 | 0.0% | 6 | 0 | 3/3 |
-| Qwen3.5 9B | mlx | 15 | 2660 | 0.1% | 0 | 0 | 0/3 |
-| Qwen3 8B | mlx | 15 | 72 | 2.8% | 1 | 0 | 3/3 |
-| Qwen3 8B | gguf | 15 | 89 | 4.5% | 0 | 0 | 3/3 |
-| Phi-4 mini reasoning | mlx | 15 | 462 | 6.1% | 5 | 0 | 0/3 |
-
-Rubric scores, graded by `claude-opus-5` against the criteria in
-`config/evaluation.yml`. Final answers only — reasoning tokens are measured as cost,
-never graded as quality:
-
-| Model | Weighted | Factual accuracy | Grounding | Caveat handling | Clarity | Flagged |
-|---|---:|---:|---:|---:|---:|---:|
-| Gemma 4 E4B | 3.21 | 3.8 | 3.5 | 2.5 | 3.5 | 0 |
-| Qwen3 8B (gguf) | 3.05 | 3.5 | 3.3 | 2.2 | 3.5 | 5 |
-| Qwen3 8B (mlx) | 2.91 | 3.3 | 3.3 | 2.0 | 3.2 | 4 |
-| Nemotron 3 Nano 4B | 2.51 | 3.4 | 2.9 | 1.4 | 2.3 | 1 |
-| Gemma 4 12B (QAT) | 2.10 | 2.4 | 2.4 | 1.5 | 2.3 | 0 |
-| Qwen3.5 9B | 1.58 | 1.9 | 2.3 | 1.7 | 0.5 | 9 |
-| Phi-4 mini reasoning | 1.34 | 1.5 | 1.7 | 1.1 | 0.8 | 16 |
-
-The [full report](reports/evaluation/v1.md) adds the matched anchor pair that makes the
-cross-runtime comparison legitimate, the completeness and instruction-following columns,
-throughput and peak memory, and the artifacts in `data/eval/v1/` that every figure
-recomputes from.
+**What did not move is the point.** No selected model has ever stated a figure its packet
+did not carry. The deterministic bar comes first and is counted, not graded — any model
+fabricating more than 5% of its figures is ineligible however well it reads — and the
+rubric only orders the models that clear it.
 
 ## Tech Stack
 
