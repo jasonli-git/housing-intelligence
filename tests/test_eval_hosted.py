@@ -869,7 +869,16 @@ def test_generations_are_written_as_they_complete_not_in_a_final_pass(
 ) -> None:
     """`store` promises a resumable run. A cohort collected in memory and written at the
     end loses everything if the process dies partway, which is when resumability is
-    worth having."""
+    worth having.
+
+    The last scenario waits for that evidence rather than sampling for it. `pool.map`
+    hands a freed worker the next scenario the moment an earlier `generate` *returns*,
+    while the append happens on the main thread once it consumes that future — so a
+    plain observation races the writer and read zero about 16% of the time. Waiting
+    keeps the property under test intact: if the writes were batched into a final pass
+    there would be nothing to wait for, the deadline would expire, and the assertion
+    below would still fail.
+    """
     from hip.eval.runner import run_evaluation
     from hip.eval.store import run_dir
 
@@ -878,11 +887,19 @@ def test_generations_are_written_as_they_complete_not_in_a_final_pass(
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
     monkeypatch.setattr("hip.eval.store.get_settings", lambda: _settings_at(tmp_path))
 
+    last_scenario_id = scenarios[-1].scenario_id
     seen_on_disk: list[int] = []
+
+    def _lines(path: pathlib.Path) -> int:
+        return len(path.read_text().splitlines()) if path.exists() else 0
 
     def generate(self, model, scenario, prompt, sampling, limits, mode, repeat, seed):  # type: ignore[no-untyped-def]
         path = run_dir("vstream") / "generations.jsonl"
-        seen_on_disk.append(len(path.read_text().splitlines()) if path.exists() else 0)
+        if scenario.scenario_id == last_scenario_id:
+            deadline = time.monotonic() + 10.0
+            while _lines(path) == 0 and time.monotonic() < deadline:
+                time.sleep(0.005)
+        seen_on_disk.append(_lines(path))
         return _priced_generation_for(scenario, model.id, "hosted")
 
     monkeypatch.setattr(HostedRunner, "generate", generate)
