@@ -412,12 +412,114 @@ def test_acs_housing_tables_are_their_own_layers(monkeypatch: pytest.MonkeyPatch
     from hip.sources.census_acs import HOUSING_VARIABLES, AcsAdapter
 
     monkeypatch.setenv("CENSUS_API_KEY", "census-test")
-    refs = AcsAdapter(states=["NJ"]).refs(vintage="2023")
+    refs = AcsAdapter(states=["NJ"], end_year=2024).refs(vintage="2023")
 
     by_layer = {r.layer: r for r in refs}
     assert set(by_layer) == {"county", "cousub", "housing_county", "housing_cousub"}
     assert "B25002" not in by_layer["county"].url, "the cached request is unchanged"
     assert all(v in by_layer["housing_cousub"].url for v in HOUSING_VARIABLES)
+
+
+def test_acs_vintages_follow_the_bump_constant_not_a_hard_coded_list() -> None:
+    """Milestone 24. The vintage list was hard-coded in the adapter from Milestone 3,
+    so a new ACS release needed an edit inside the source rather than a bump beside
+    `BLS_END_YEAR`. The window is derived; only the end year is a decision."""
+    from hip.sources.census_acs import VINTAGE_COUNT, vintages
+
+    assert vintages(2024) == (2024, 2023, 2022, 2021, 2020)
+    assert len(vintages(2024)) == VINTAGE_COUNT
+    # Consecutive 5-year vintages overlap by four, so five of them span nine years.
+    assert max(vintages(2030)) - min(vintages(2030)) + 5 == 9
+
+
+def test_acs_end_year_is_injected_so_a_rerun_fetches_what_the_first_run_recorded(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The reason `BlsAdapter` takes `end_year` rather than reading the clock: a
+    release has to be reproducible. ACS gets the same treatment in Milestone 24."""
+    from hip.sources.census_acs import AcsAdapter
+
+    monkeypatch.setenv("CENSUS_API_KEY", "census-test")
+    refs = AcsAdapter(states=["NJ"], end_year=2024).refs()
+
+    fetched = {r.vintage for r in refs}
+    assert fetched == {"2024", "2023", "2022", "2021", "2020"}
+    assert all(f"/{r.vintage}/acs/acs5" in r.url for r in refs), "vintage reaches the URL"
+    # An older adapter still fetches the older window, whatever the constant now says.
+    assert {r.vintage for r in AcsAdapter(states=["NJ"], end_year=2023).refs()} == {
+        "2023",
+        "2022",
+        "2021",
+        "2020",
+        "2019",
+    }
+
+
+def test_the_registry_is_where_vintages_are_bumped() -> None:
+    """Both bump constants live together, so someone refreshing a year finds them in
+    one place rather than inside two adapters."""
+    from hip.sources import registry
+
+    assert registry.ACS_END_YEAR == 2024
+    assert isinstance(registry.BLS_END_YEAR, int)
+
+
+def test_pep_fetches_one_national_county_file_and_one_sub_county_file_per_state() -> None:
+    """Census publishes the county totals nationally and the sub-county totals per
+    state, so the ref set is not symmetric and is not a bug."""
+    from hip.sources.census_pep import PepAdapter
+
+    refs = PepAdapter(states=["NJ"]).refs()
+
+    by_layer = {r.layer: r for r in refs}
+    assert set(by_layer) == {"county", "cousub"}
+    assert by_layer["county"].scope is None, "the county file is national"
+    assert by_layer["cousub"].scope == "NJ"
+    assert by_layer["county"].url.endswith("co-est2025-alldata.csv")
+    assert by_layer["cousub"].url.endswith("sub-est2025_34.csv")
+    # The directory encodes the span the vintage covers, from the decennial census.
+    assert all("/2020-2025/" in r.url for r in refs)
+
+
+def test_pep_vintage_is_dated_so_it_does_not_inherit_the_current_ref_defect() -> None:
+    """A PEP vintage is immutable once published — the 2025 vintage is superseded by
+    2026 rather than rewritten — so the content-addressed cache is right to answer from
+    disk. Sources whose vintage is literally `current` have the opposite problem, which
+    is the open conditional-request item in TODO.md."""
+    from hip.sources.census_pep import PepAdapter
+
+    assert PepAdapter.default_vintage == "2025"
+    assert all(r.vintage == "2025" for r in PepAdapter(states=["NJ"]).refs())
+    older = PepAdapter(states=["NJ"]).refs(vintage="2024")
+    assert all(r.vintage == "2024" for r in older)
+    assert all("/2020-2024/" in r.url for r in older)
+
+
+def test_pep_needs_no_api_key() -> None:
+    """Both files are plain CSV over HTTPS. ACS needs a key and fails loudly without
+    one; PEP must not acquire that dependency by accident."""
+    from hip.sources.census_pep import PepAdapter
+
+    refs = PepAdapter(states=["NJ"]).refs()
+    assert all("key=" not in r.url for r in refs)
+
+
+def test_acs_stays_the_denominator_and_pep_feeds_no_computed_ratio() -> None:
+    """The milestone's one rule. A ratio mixing a five-year survey average with a
+    point-in-time estimate would be neither, so `pep_population` is a headline figure
+    and nothing else. Pinned here rather than left to a comment."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    compute = root / "src" / "hip" / "analytics" / "compute.py"
+    body = compute.read_text()
+    assert "acs_population" in body or "acs_median_hh_income" in body, (
+        "the ACS inputs moved; this test is asserting against the wrong file"
+    )
+    assert "pep_population" not in body, (
+        "pep_population reached the derived-metric computation. It is a point-in-time "
+        "estimate and ACS is a five-year average; a ratio over both is neither."
+    )
 
 
 def test_permits_add_the_region_place_file_for_every_year() -> None:

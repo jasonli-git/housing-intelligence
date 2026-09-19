@@ -57,7 +57,9 @@ def _features_described() -> set[int]:
 def test_every_shipped_milestone_is_described_in_the_readme_features_list() -> None:
     shipped = _roadmap_shipped()
     described = _features_described()
-    assert shipped, "parsed no shipped milestones from ROADMAP.md — the table format moved"
+    assert shipped, (
+        "parsed no shipped milestones from ROADMAP.md — the table format moved"
+    )
 
     missing = sorted(shipped - described)
     assert not missing, (

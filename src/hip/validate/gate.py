@@ -29,6 +29,10 @@ VALUE_BOUNDS = {
     "acs_median_hh_income": (5_000.0, 500_000.0),
     "acs_median_gross_rent": (200.0, 10_000.0),
     "acs_population": (0.0, 50_000_000.0),
+    # Same shape as the ACS figure it sits beside; the two differ in method, not in
+    # plausible range. Bounded on arrival rather than later, because the one metric
+    # family that reached the warehouse unbounded is still an open item in TODO.md.
+    "pep_population": (0.0, 50_000_000.0),
     "acs_median_home_value": (10_000.0, 10_000_000.0),
     "acs_renter_cost_burden": (0.0, 1.0),
     "permits_total_units": (0.0, 1_000_000.0),

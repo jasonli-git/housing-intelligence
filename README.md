@@ -23,7 +23,10 @@ layer only explains metrics that were already computed.
 > server — across four page types: the state, 1,134 region pages, their reports, and an
 > affordability page.
 >
-> **Latest.** Milestone 16 closed Version 2 on 2026-09-18 by putting the whole platform
+> **Latest.** Milestone 24 opened Version 3 on 2026-09-19 with fresher figures: every
+> ACS window moved forward a year behind an explicit bump constant, and the Census
+> Population Estimates Program joined as a second population source that is deliberately
+> never mixed with ACS in a ratio. Before it, Milestone 16 closed Version 2 on 2026-09-18 by putting the whole platform
 > on a navigable globe of the United States, drawn by hand as SVG with no map library.
 > Before it, Milestone 23 made region pages lead with what a home costs a month rather
 > than with tables, and the "Quiet utility" redesign on 2026-09-17 gave them quieter
@@ -178,6 +181,13 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   second timing harness that would put rival numbers in one README. `HIP_DATA_DIR`,
   `HIP_REPORTS_DIR` and `HIP_PGDATA` are independent settings with `~` expansion, so
   the data, the reports and the database can each be moved to another disk.
+- **Two population figures that are never mixed** (M24, built) — `census_pep` carries
+  the headline population at state, county and municipal level from the Census
+  Population Estimates Program, a July-1 point estimate; `acs_population` stays the
+  5-year survey average and the denominator of every computed ratio. Mercer County reads
+  385,864 from ACS 2020–2024 and 399,289 from PEP Vintage 2025 — two honest answers to
+  two different questions, and a test stops a ratio being computed over one of each.
+  ACS vintages now follow `ACS_END_YEAR` rather than a list hard-coded since Milestone 3.
 - **Published as static files** (M11, built) — `hip publish` replays the API's own ASGI
   app and records its answers as 5,917 static artifacts; the dashboard pre-renders 2,272
   pages. Production runs with no database and no application server. Replaying the app

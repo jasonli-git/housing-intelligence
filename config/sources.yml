@@ -60,6 +60,20 @@ sources:
       Consecutive 5-year vintages overlap by four years, so year-over-year change is
       not an independent measurement.
 
+  census_pep:
+    name: Population Estimates Program, Vintage 2025
+    publisher: U.S. Census Bureau
+    license: Public domain (U.S. Government work)
+    url: https://www2.census.gov/programs-surveys/popest/datasets
+    homepage: https://www.census.gov/programs-surveys/popest.html
+    cadence: annual
+    adapter: hip.sources.census_pep:PepAdapter
+    notes: >-
+      Headline population as of July 1, carried forward from the 2020 census by births,
+      deaths and migration. A different program from ACS, whose 5-year estimates average
+      five years of sample. ACS remains the denominator of every ratio, so no ratio
+      mixes the two.
+
   census_permits:
     name: Building Permits Survey
     publisher: U.S. Census Bureau

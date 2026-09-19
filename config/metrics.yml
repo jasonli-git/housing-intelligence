@@ -46,6 +46,17 @@ metrics:
     description: ACS 5-year estimate, table B01003.
     source_id: census_acs
 
+  pep_population:
+    label: Population estimate
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Census Population Estimates Program, as of July 1. A point-in-time estimate, not a
+      survey average — acs_population is the 5-year ACS figure and remains the
+      denominator of every computed ratio.
+    source_id: census_pep
+
   acs_median_home_value:
     label: Median owner-occupied home value
     unit: usd
