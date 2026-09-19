@@ -40,32 +40,18 @@ Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 
 ## Screenshots
 
-All eight are the running application against a fully loaded warehouse — no mockups, no
-seeded demo data.
-
-![Overview: NJ county choropleth and ranking table](screenshots/dashboard.png)
-*The overview — a county choropleth of five-year home-value change beside the ranking table it is drawn from, both served by the same query.*
-
-![County detail page with 15 metric tiles](screenshots/metrics.png)
-*A county detail page: 15 metric tiles, each carrying its five-year change and its rank among the 21 NJ counties.*
-
-![Home value index trend with the underlying values and sources](screenshots/hvi+sources.png)
-*Every trend chart opens into the values behind it, with the source release and the geography match method on each row.*
-
-![Observed rent index and median household income trends](screenshots/ori+mhi.png)
-*Series are drawn over whatever history the source actually publishes — 138 monthly rent observations here, 5 annual income ones.*
-
-![Current values table ranked by value](screenshots/cv.png)
-*Current values ranked by value rather than by change, which is the only way snapshot sources like MOD-IV become visible at all.*
-
-![Model interpretation panel and computed caveats](screenshots/interp+caveats.png)
-*The selected model's interpretation, styled to be unmistakable as commentary and followed by the caveats the platform computes for itself. Captured 2026-08-14, when that model was Gemma 4 E4B running locally; the panel's shape is the durable part, not the runtime behind it.*
-
-![Print-ready region report](screenshots/report_snippet.png)
-*The print-ready region report, rendered from the same packet the API serves — this is Bergen County, published in full at [`reports/regions/5y/34003.md`](reports/regions/5y/34003.md).*
-
-![OpenAPI documentation at /docs](screenshots/api.png)
-*The read-only API documents itself — OpenAPI 3.1 at `/docs`, every endpoint runnable from the page.*
+> **Work in progress — the screenshots have been removed for now.**
+>
+> All eight predated the "Quiet utility" redesign of 2026-09-17 and Milestones 18, 23
+> and 16, so they showed pages the site no longer has. Rather than leave pictures that
+> misrepresent the product, the section is empty until they are retaken.
+>
+> Retaking them is a manual step with tooling that now exists:
+> `npm run screenshot:poc` in `web/` captures a page headlessly at a given viewport.
+> See [`agent-handoffs/screenshot-automation.md`](agent-handoffs/screenshot-automation.md)
+> for why capture is not automated per push, and `TODO.md` for the open item.
+>
+> Until then, the live site is the current view of the product.
 
 ## Features
 
