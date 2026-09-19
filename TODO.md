@@ -105,10 +105,14 @@ first raised, not where it must be done.
       ([explanations.py:31](src/hip/api/routers/explanations.py:31)). The disclaimer is a
       straight edit. The judge prompt is not: changing it changes scores, so hosted
       candidates cannot be compared against the stored `v1` judgments.
-- [ ] **`test_generations_are_written_as_they_complete_not_in_a_final_pass` is
-      intermittent.** (M18) In `tests/test_eval_hosted.py`. Failed once in a full run
-      (460 passed, 1 failed) and passed three reruns alone; same intermittent failure
-      seen 2026-09-11. Timing-sensitive — worth fixing before it hides a real one.
+- [x] **`test_generations_are_written_as_they_complete_not_in_a_final_pass` was
+      intermittent.** (M18) Seen 2026-09-11, during the M18 run, and again 2026-09-19.
+      **Fixed 2026-09-19:** reproduced at 4 failures in 25 runs, then made deterministic.
+      The race was in the test, not the runner — `pool.map` hands a freed worker the next
+      scenario the moment an earlier `generate` returns, while the append happens on the
+      main thread once it consumes that future, so sampling the file raced the writer.
+      The last scenario now waits for the evidence instead of sampling for it. 0 failures
+      in 50 runs, and a mutation to a final-pass write still fails it.
 - [ ] **Move `import_gguf.sh` and `kvbench.sh` into the repo (`scripts/`).** (M8 prep)
       Still outstanding, and `import_gguf.sh` is now known to produce passthrough
       templates (ARCHITECTURE #62), so it needs the template fix before it is committed.
