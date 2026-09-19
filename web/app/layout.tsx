@@ -3,6 +3,7 @@ import { JetBrains_Mono, Public_Sans, Space_Grotesk } from "next/font/google";
 
 import { InlineScript } from "@/components/InlineScript";
 import { LicenceLine } from "@/components/LicenceLine";
+import { FrameMeter } from "@/components/FrameMeter";
 import { Masthead } from "@/components/Masthead";
 import { SourceFooter } from "@/components/SourceFooter";
 import { THEME_SCRIPT } from "@/lib/theme";
@@ -48,6 +49,8 @@ export default function RootLayout({
         <InlineScript html={THEME_SCRIPT} />
       </head>
       <body>
+        {/* Off unless `?perf` is in the address; renders nothing otherwise. */}
+        <FrameMeter />
         <Masthead />
         <LicenceLine />
         {children}

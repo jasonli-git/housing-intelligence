@@ -24,10 +24,26 @@ export type Painted = {
 };
 
 /**
+ * Make sure `group` already holds `count` paths, so a later paint has none to build.
+ *
+ * Called on an idle callback once the outlines have arrived. Crossing from 21 counties
+ * to 564 municipalities otherwise builds 543 elements on the one frame the reader is
+ * watching a zoom land, and that frame has a whole level's geometry to project as well.
+ * Building them early costs nothing anyone can see.
+ */
+export function reserve(group: SVGGElement, count: number): void {
+  for (let i = group.childNodes.length; i < count; i += 1) {
+    group.appendChild(document.createElementNS(SVG, "path"));
+  }
+}
+
+/**
  * Bring `group`'s children into line with `shapes`, reusing what is already there.
  *
- * Returns nothing: the group is the output. Children beyond the list are removed rather
- * than hidden, so the DOM never carries regions the camera has left behind.
+ * Returns nothing: the group is the output. Children beyond the list are emptied rather
+ * than removed: an empty `d` draws nothing, and keeping the node means the pool survives
+ * a zoom out, so coming back to a finer level builds nothing either. What the reader
+ * sees is the same as deleting them, and `reserve` above is the same idea ahead of time.
  */
 export function paint(group: SVGGElement, shapes: Painted[]): void {
   const children = group.childNodes;
@@ -49,7 +65,10 @@ export function paint(group: SVGGElement, shapes: Painted[]): void {
       node.setAttribute("class", shape.className);
     }
   }
-  while (children.length > shapes.length) {
-    group.removeChild(group.lastChild!);
+  for (let i = shapes.length; i < children.length; i += 1) {
+    const spare = children[i] as SVGPathElement;
+    if (spare.nodeName === "path" && spare.getAttribute("d") !== "") {
+      spare.setAttribute("d", "");
+    }
   }
 }

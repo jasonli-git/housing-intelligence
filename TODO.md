@@ -3321,6 +3321,42 @@ Measured at municipal zoom with `PerformanceObserver` on long tasks and a
       repeating the rotation and clipping the scene just did, to feed a readout nobody
       can read while the map is moving. The last answer stands until the hand comes off.
 
+### The jitter, and option D — 2026-09-18
+
+The owner: "so jittery when you drag around, like it chaotically jumps around." **The
+slide caused it, and option D removed the need for the slide, so both went together.**
+
+**Why it jittered.** A slide past its budget committed to the camera mid-drag, and the
+commit did three things in one frame: reset the accumulated shift, strip the transform,
+and ask React for a new camera. The first two happen at once; the third does not. For the
+frame or two in between, the map was drawn at the *old* camera with *no* transform — it
+snapped back to where the drag began, then jumped forward when React caught up. Every 36
+frame units. Chaotic is the right word.
+
+- [x] **Option D: the regions go into the document by hand** (`web/lib/paint.ts`), not
+      through React. A region has no state, no events and nothing whose shape React's
+      diffing helps with — it is a `d` and a colour. Elements are reused, so the browser
+      keeps its parsed geometry for every outline that has not changed, and only
+      attributes that actually differ are written: reading before writing matters,
+      because a no-op `setAttribute` still dirties style and layout, and on most frames
+      most regions are unchanged. Painted in a layout effect, so the map and whatever
+      React renders around it can never be a frame out of step.
+- [x] **The transform slide is gone entirely**, and with it `SLIDE_BUDGET`, the
+      mid-drag commit, the `underway` state, the `Path2D` hit test and the `held`
+      fallback. The camera now moves every frame again and the projection is exact, so
+      there is no approximation to drift, no commit to jump at, and the crosshair is
+      simply derived from the camera as it always was. **Roughly 120 lines removed for a
+      faster map** — the earlier work had been buying speed with complexity, and the
+      complexity was the thing making it feel wrong.
+
+**Measured after, on `/afford` with all 564 towns drawn:** zero long tasks, a median
+repaint gap of 33ms, heap reclaiming 6MB across a drag rather than churning 27, and the
+crosshair tracking five regions with the last one during the drag matching the one after
+release. The earlier inconsistencies were the slide; they are not reproducible now.
+
+**The measurement caveat below still stands** and is why this wants a real drag on real
+hardware before it is called done.
+
 ### The crosshair had to follow the slide — 2026-09-18
 
 Sliding the drawn geometry instead of re-projecting it bought the smoothness, but the
@@ -3402,6 +3438,329 @@ settling around 30. `/afford` is worst because it pins the map to municipalities
 Flat 33.3ms is two animation frames, which is as low as the measurement can see; the
 variance is gone, which is what "smooth" is. The remaining long task is at the level
 switch, where 564 prisms are built for the first time.
+
+### The third round: it was never the geometry — 2026-09-18
+
+The owner reported county zoom still laggy, reports worse, the CPU hot and the GPU cold,
+and asked whether GPU acceleration is a separate option from E or implied by it.
+
+**Two rounds of measurement had been aimed at the wrong half.** The whole projection —
+rotating 41,609 points, clipping them to the horizon and building the path strings —
+measures **4.9ms in Node and 5.0ms in the browser**, and forcing style, layout and path
+parsing on top of it adds **0.7ms**. The hit test behind the crosshair, which looked like
+a second full projection pass, is **0.68ms**, because the bounding-cap cull and the early
+return do their job. Nothing on the main thread accounted for a 33ms frame.
+
+**What did.** Two blurred layers, each a full-frame offscreen surface the CPU rasterises
+and then convolves: the near layer at 1.1px, and the far layer — the same 564 paths again
+through `<use>` — at 5.5px. About five megapixels of Gaussian per frame at device
+resolution. #167 had this off during a drag and said why; making the crosshair live
+through a drag took the suspension with it, and that is the regression. The comment above
+`focusing` still described the protection that had been removed, which is what found it.
+
+- [x] **The blur is off while the camera is moving** — a `moving` state raised on pointer
+      down and lowered when the glide stops. The crosshair stays live, so the owner's
+      earlier ask is untouched, and the vignette stays too: it is one gradient's opacity
+      and the compositor carries it alone.
+- [x] **The focus transitions moved onto the focused state**, so the blur eases in over
+      620ms and drops the instant the map is grabbed. Declared on `.globe-detail` itself,
+      a symmetrical transition would have gone on convolving a shrinking blur for a
+      further 620ms into the drag — the whole cost, exactly when the budget is gone.
+- [x] **A flat region no longer projects or serialises its top face twice.** At lift zero
+      the top is the base point for point; every region but the raised one was mapping
+      its screen points twice and running `toFixed` over them twice. `scene` on the 564
+      fine outlines: **10.39ms → 5.49ms**, measured before and after against `git show
+      HEAD:web/lib/globe.ts`.
+
+**On the owner's question.** GPU acceleration is a separate option from E, and only half
+implied by it. Canvas (E) is GPU-backed raster, so the fills would move off the CPU, but
+every projection stays on it and the accessibility, print and no-script guarantees of #163
+and #168 are given back unless a second SVG renderer is kept for them. True GPU work is
+option **F, WebGL**: triangulate the rings once, upload once, and let a vertex shader do
+the rotation, at which point the per-frame CPU cost is about nothing. It is also a
+rewrite — earcut triangulation, strokes expanded into quads, and the same guarantees
+surrendered. 564 polygons is not the scale that justifies either; MapLibre reaches for
+WebGL because it draws millions of features.
+
+**The owner reported it "a bit better", so the two remaining notes were taken.**
+
+- [x] **The shadows come off with the blur** (`.globe-moving`). `.globe-ground` carries a
+      `drop-shadow` and `.globe-sharp` two more; a `drop-shadow` on a group is the same
+      full-frame offscreen surface and alpha convolution the blurs were, and the ground's
+      re-ran every frame because the ground is repainted every frame. Three more passes
+      gone. A drag frame now runs no full-frame filter at all.
+- [x] **Whole-pixel coordinates while the camera moves** (`coarse` on `scene` and
+      `prism`). Turning a float into a decimal string is the most expensive thing the
+      module does, and the rounding is not the cost — the fraction is: 3.7ms at a tenth of
+      a pixel, 1.3ms at whole pixels, with every rounding method inside noise of the
+      others. Full precision returns when the hand comes off, which is the only time
+      anyone can study an edge, and the crosshair never reads the strings so it is exact
+      throughout. Rejected the half-pixel `scale(0.5)` group that would buy the same speed
+      at finer precision: it scales every stroke width and filter radius beneath it.
+
+**`scene` over the 564 fine municipal outlines, across this session:**
+
+| | median |
+|---|---|
+| At the start | 10.39ms |
+| Top face no longer built twice | 5.49ms |
+| Whole pixels while moving | **2.90ms** |
+
+- [ ] **Note:** the controls' `backdrop-filter` and the app bar's were checked and left.
+      A backdrop filter costs the area of the element, not the frame: two pills of roughly
+      200×34 against the map's 900×850, which is two orders of magnitude apart. Not worth
+      making the glass blink.
+- [ ] **Not reproduced:** the owner reports reports being worse than the map. No report
+      page renders a `GlobeMap` — `/regions/[id]` and `/regions/[id]/report` have no map
+      at all — so whatever is slow there is a different problem and needs its own look.
+
+### Why `/afford` stayed sloppy — 2026-09-18
+
+Everything else came good and `/afford` did not. It is not the map, and it is not the
+affordability arithmetic: `reach` over all 564 towns, the filters, the slice and the
+585-entry index together measure **0.040ms**.
+
+**It was the crosshair re-rendering the page sixty times a second.** `centre` is a fresh
+object every time the camera moves, and the effect that reports it keyed on that object's
+identity, so `onView` fired every frame even while the crosshair sat on one town. Both
+explorers answer it with `setCentre`, so every frame re-rendered the whole page — on
+`/afford` that is two tables, a form, a search box and two `aria-live` regions, against
+the New Jersey page's one ranking. Same bug on both pages, far more to re-render on one.
+
+- [x] **The focus is reported only when it changes** — compared by id, level and value
+      rather than by object identity. A drag across a single town now re-renders nothing;
+      crossing into the next one re-renders once.
+
+- [ ] **Note:** if a crossing still hitches with "Show all" open, the town table's rows
+      are the thing to memoise — 585 rows rebuilt on each crossing. Left until it is felt,
+      because the crossings are a few a second, not sixty.
+
+### F3 — the map stops repainting while you pan it — 2026-09-18
+
+The owner picked F3 after `/afford` stayed slow. The premise: every cost measured so far
+is per-repaint, so the answer is not a faster repaint but far fewer of them.
+
+**The map is now drawn larger than the window that shows it.** `PAD = 110` frame units on
+every side, `.globe-stage` clips. A gesture writes one `translate3d` to the two sliding
+groups and nothing else; the browser moves a surface it has already rasterised. The camera
+commits at four fifths of the margin and when the hand comes off.
+
+- [x] **The over-drawn canvas.** The camera is `width + 220 × height + 220`; its middle is
+      still the middle of the window, which is where the crosshair is. `framedOn` fits the
+      scale to the *window*, or the map would sit back from the frame by the margin it
+      draws into. The sea, the rounded corner and the grab cursor moved to the stage,
+      which now needs an explicit `aspect-ratio` because the map inside it is absolutely
+      positioned.
+- [x] **The commit order, which is the whole lesson of the first attempt.** Repaint at the
+      new camera, clear the transform, then set the state — in that order, in one frame.
+      The version that jittered cleared the transform and asked React for the camera in
+      the same breath, and React answers a render later. Painting imperatively (#169's
+      groundwork, `lib/paint.ts`) is what makes a synchronous commit possible at all.
+- [x] **The crosshair still follows the drag.** Between commits the painted layer is off
+      its camera, so the hit test runs against the slid camera instead — 0.68ms, and the
+      only work a slide frame does besides the transform.
+- [x] **Gated on drift.** A translate is not a rotation. Measured against the true
+      projection at the moment before a commit, the worst point in the window is:
+
+| Framing | scale | worst drift |
+|---|---|---|
+| Municipal | 9,000 | 2.45px |
+| The state | 10,458 | ~2.2px |
+| County | 3,000 | 3.30px |
+| The country | 600 | **6.57px** |
+
+      So the slide runs at municipal level framed at least as close as the whole state,
+      and every other zoom re-projects — which it can afford, because that is where the
+      outlines are either few or too small to cost anything to rasterise.
+
+**Measured on `/afford`, a thirty-frame drag at the default framing:**
+
+| | Before | After |
+|---|---|---|
+| Path rewrites | 16,920 | **1,149** |
+| Frames that repainted | 30 | **1** |
+| Regions the crosshair named | — | 7 |
+
+- [ ] **Note:** frame timing still cannot be measured from here — the automated browser
+      runs its page hidden, so nothing paints and every rAF gap reads 33.3ms whatever the
+      map is doing. The path-rewrite count is the honest measure: it is what the browser
+      has to parse and rasterise, and it fell by 93%.
+- [ ] **Note:** canvas and WebGL were both on the table for this and neither was needed.
+      The expensive thing was how often the map repainted, not what drew it. Worth
+      remembering before either is proposed again.
+
+### F3 finished, and a stopwatch — 2026-09-18
+
+Still laggy on `/afford`. Two corrections to the record and two changes.
+
+**Correction one: the slide was moving the wrong kind of element.** The transform went on
+a group inside the SVG. A transform on an HTML element with `will-change` gets its own
+compositor surface; a transform on an SVG group is very often painted with its parent
+instead — so the slide skipped the projection and then repainted anyway, which is most of
+what F3 was supposed to avoid. The map now lives in a wrapping `div` that the gesture
+moves, with the vignette, the crosshair and the pointer handlers split out into a still
+overlay `svg` above it. Verified: a 25px cursor move moves the wrapper exactly 25px.
+
+**Correction two: "33.3ms" was never real.** Every frame-gap figure in this file from the
+last four rounds came from a harness that waited on two `requestAnimationFrame`s per
+sample, which reports two frames as one gap. The browser here was painting at 60fps the
+whole time. The DOM-write counts were sound; the frame gaps were an artefact of the
+measurement.
+
+- [x] **The slide moves an HTML wrapper** (`.globe-slide`, `wear`), with the frame's
+      furniture in a still `.globe-still` overlay that owns the gesture.
+- [x] **The glass comes off the controls while the map moves.** Not about the size of the
+      blur, which is why the area argument two rounds ago was wrong: a `backdrop-filter`
+      has to read back whatever is painted beneath it, and a layer something else keeps
+      reading is a layer the browser cannot hand to the compositor and leave alone. Two
+      pills are enough to undo the slide they sit on.
+- [x] **A frame meter** (`components/FrameMeter.tsx`), off unless `?perf` is in the
+      address. Reports frame gaps, long tasks and input latency — a map that drops frames
+      and a map that answers the hand late feel identical and have nothing else in common.
+
+**Measured here, dev build, a 90-frame drag on `/afford`:** median **16.7ms**, p95 17.3ms,
+worst 17.7ms, **zero** frames over 20ms, **zero** long tasks.
+
+- [ ] **Note:** that is at `devicePixelRatio` 1 and 476px wide. A Retina Mac at the map's
+      full 640px is about **seven times the device pixels** to rasterise and composite,
+      and this is the first measurement that has ever been sensitive to that. It is the
+      most likely reason the map measures clean here and does not feel clean there, and
+      the meter is what will settle it.
+- [ ] **Note:** the dev server is not representative — StrictMode renders every component
+      twice and nothing is minified. Test the built site.
+
+### The owner's first real numbers — 2026-09-18
+
+`frames 861 · median 17.0ms · p95 88.0ms · worst 137.0ms · long tasks 0 · slowest input
+128.0ms · 1x · 8 cores`
+
+Three things fall out of that line. **Most frames are fine** — the median is 17.0ms, which
+is 60fps. **The main thread is never the problem**: zero long tasks means nothing blocked
+it for 50ms, yet frames reached 137ms, so the time is going to raster and composite, not
+to JavaScript. And **the display is 1x**, which kills the Retina theory outright.
+
+**The meter was also asking the wrong question**, and that is the honest reading of an 861
+frame sample: it counted every frame since the page loaded, so the map's first municipal
+render and every level switch landed in the same p95 as the drag. It now separates frames
+where a hand was on something from everything else.
+
+- [x] **The meter splits hand-on frames from idle** (`STILL_BUSY`), and reports the map's
+      width, so the next reading says whether the drag is slow or the loading is.
+- [x] **The map layer is out of hit testing** (`pointer-events: none` on `.globe-slide`).
+      Every real pointer move makes the browser work out what is under the cursor, and a
+      trackpad sends those up to 120 times a second against 564 filled outlines. Nothing
+      in the layer needs a pointer — the gesture is the overlay's and the crosshair is
+      arithmetic. Not demonstrated as the cause: `elementFromPoint` is below the timer's
+      resolution here. Kept because it is correct regardless, and because synthetic events
+      never pay this cost, which is exactly the blind spot of every measurement so far.
+- [x] **A flight now counts as motion.** This is the find. Every zoom — a button, a
+      ⌘-scroll, "Jump into", "United States" — runs `flyTo` for up to 1.15 seconds, and
+      `moving` was false throughout it. So a zoom re-projected 564 outlines at **full
+      precision** sixty times a second while both drop-shadows ran and the controls read
+      the map back through their glass: the single most expensive animation in the
+      application, on the most-used control. Five full-frame passes that every other kind
+      of motion had already been taught to drop.
+
+- [ ] **Note:** still not reproduced here. An 800-frame wandering drag with 27 commits
+      measures median 16.7ms, p95 17.7ms, worst 33.4ms, zero frames over 40ms. The gap
+      between that and the owner's machine is real and unexplained, and the split meter is
+      the next evidence.
+
+### The second reading, and a regression of my own — 2026-09-18
+
+`HAND-ON 1313f median 17.0ms p95 71.0ms worst 141.0ms | idle 135f median 17.0ms p95
+110.0ms worst 126.0ms | long tasks 0 | slowest input 504.0ms | 1x | 8 cores | map 613px`
+
+"A lot better now. But the map looks worse."
+
+- [x] **Whole-pixel coordinates withdrawn.** My regression, and the owner saw it before I
+      did. The map is 613px wide against a 420-unit frame, so one frame unit is **1.46 CSS
+      pixels**: integer frame units snap every vertex to a pixel and a half. And once
+      flights counted as motion, that rounding was on screen for every zoom rather than
+      only mid-drag, which is why it became visible exactly when the lag got better. It
+      bought 2.4ms a frame of a budget the same reading proves is not short of main-thread
+      time — zero long tasks. Full precision everywhere again.
+
+**What the numbers still say.** The median is 17.0ms on both lines, so most frames are
+fine. `idle` p95 110ms is loading and level switches, which is the 69ms first-municipal-
+render hitch already recorded below, now measured on real hardware and worse than
+estimated. `HAND-ON` p95 71ms includes zooms, because a flight lands inside the 300ms
+window that counts a frame as felt.
+
+### Scheduling the map's performance perpetually — 2026-09-18
+
+The owner expects the map's scope to keep growing and asked how to schedule the same
+revisit across V3, V4 and beyond.
+
+- [x] **Written as a recurring gate, not a milestone** (ROADMAP, "The map's standing
+      check"). It appears as a `MAP` row in every version's table so it carries a status,
+      and the procedure — three fixed scenarios, five budgets, measured on a production
+      build on the owner's machine with `?perf` — is written once rather than three times.
+      Three of the five budgets are red today and are recorded that way.
+
+- [x] **The carried debt is named in V3's gate row**, at the owner's direction, scheduled
+      at the *end* of V3 rather than the start: `HAND-ON` p95 71ms against a 50ms budget,
+      `idle` p95 110ms against 80ms, and the **504ms slowest input** as the named first
+      task of that run.
+- [x] **`FrameMeter` records which event stalled**, not just how long it took. A slow
+      input is not a slow frame — nothing need have blocked the main thread — so the name
+      of the interaction is most of the investigation, and without it the V3 run would
+      start from the same number and no more.
+
+- [ ] **Open, for the end of V3:** the 504ms input. Likeliest candidates are a click that
+      forces a large re-render and relayout — the town table's "Show all" is 585 rows — or
+      a first interaction landing while the map is still doing its one-time work.
+- [ ] **Note:** `components/FrameMeter.tsx` is now part of a documented contract. It is
+      behind `?perf` and renders nothing otherwise, but it is not dead code and should not
+      be swept up as such.
+
+### The map answers the search — 2026-09-18
+
+- [x] **Searching a place on `/afford` carries the map to it** (`frameOn` on `GlobeMap`).
+      The question on that page is where a reader could live; answering "can I afford
+      Montclair?" while leaving the map over somewhere else makes them go and find it.
+      The flight fires once per id, not once per render, because `/afford` re-renders
+      whenever the crosshair moves and re-framing on each of those would fight the reader
+      for the camera. A place chosen before the outlines arrive is honoured when they
+      land, which is what makes `?place=` work on a cold load.
+      Verified: searching Montclair leaves 59 towns in frame instead of 564, and the
+      crosshair reads Montclair.
+
+### The level switch, and zoom buttons you can spam — 2026-09-18
+
+- [x] **The zoom buttons compound.** `zoom` stepped from the live camera, so a second
+      press a few frames into a flight stepped from almost where the first press had
+      started: spamming barely moved the map and the reader had to wait out each flight.
+      It now steps from `aim` — where the running flight is *going* — so every press is a
+      whole step. Verified: five presses two frames apart land on exactly the same scale
+      as five presses a second and a half apart, 121 against 121.
+- [x] **The one-time costs are paid on an idle callback**, not on the frame a zoom lands.
+      Two of them, both measured: the bounding caps are 2.9ms over the 564 fine outlines
+      (`warm`, and `capOf` memoises them per outline), and the 543 path elements a switch
+      from counties to municipalities would otherwise build (`reserve`). `paint` now
+      empties surplus nodes rather than removing them, so the pool survives a zoom out and
+      coming back builds nothing either.
+
+**Honest about this one:** the level switch could not be reproduced here at anything like
+the owner's 110–141ms. The caps are 2.9ms, a whole cold scene over 564 outlines is 8.1ms,
+and a zoom across the threshold measures a median of 16.7ms with a worst frame of 33.4ms.
+So this removes the one-time work that was found and measured, rather than a proven
+hitch. The earlier "69ms" in this file was taken with the double-`requestAnimationFrame`
+harness and should not be trusted.
+
+- [ ] **Still the next lead if it persists: the level switch, which happens mid-flight.** Crossing county to
+      municipality swaps `inView` from 21 outlines to 564, rebuilds every prism for the
+      first time, and recomputes the ramp's quantiles over 564 values — on one frame, in
+      the middle of a zoom the reader is watching. It is the best remaining explanation
+      for both a 141ms hand-on frame and a 110ms idle p95, and unlike everything else this
+      week it has never been touched.
+- [ ] **Unexplained: `slowest input 504ms`.** A single event took half a second to be
+      answered with no long task anywhere. Worth its own look before anything else is
+      optimised.
+- [ ] **Note:** two visual changes are deliberate and may be what "looks worse" means, in
+      which case say so: the depth of field and both drop-shadows drop for the length of
+      any motion, and the controls' glass goes solid for it. Both now fire on zooms too,
+      where before they only fired on drags.
 
 ### What is left, and why it is acceptable
 

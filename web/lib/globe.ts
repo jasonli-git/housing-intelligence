@@ -189,12 +189,15 @@ export function prism(v: View, outline: Outline, lift: number): Prism | null {
     anyVisible = true;
 
     const base = visible.map((point) => screen(v, point));
-    const top = visible.map((point) => screen(v, point, lift));
     baseRings.push(base);
-    topRings.push(top);
     for (const point of visible) depth = Math.max(depth, point[2]);
 
     if (lift === 0) continue;
+    // Only built when there is a lift. At lift zero the top is the base, point for
+    // point, and projecting it again was a second array and a second path string per
+    // ring for every flat region on the map — which is all of them but one.
+    const top = visible.map((point) => screen(v, point, lift));
+    topRings.push(top);
     const facing = Math.sign(twiceArea(base));
     for (let i = 0; i < visible.length; i += 1) {
       const j = (i + 1) % visible.length;
@@ -205,13 +208,16 @@ export function prism(v: View, outline: Outline, lift: number): Prism | null {
   }
 
   if (!anyVisible) return null;
+  // Built once and shared when the region is flat: `top` and `base` are then the same
+  // string, and `toFixed` over forty thousand coordinates is the map's largest single
+  // cost. Sharing it is also what the consumers already assume.
+  const ground = baseRings.map(path).join(" ");
   return {
     id: outline.id,
     name: outline.name,
     lift,
-    base: baseRings.map(path).join(" "),
-    top:
-      lift === 0 ? baseRings.map(path).join(" ") : topRings.map(path).join(" "),
+    base: ground,
+    top: lift === 0 ? ground : topRings.map(path).join(" "),
     walls: quads.join(" "),
     depth,
   };
@@ -291,6 +297,21 @@ function capOf(outline: Outline): { v: Vec3; sin: number } {
   const cap = { v: centre, sin: far };
   caps.set(outline, cap);
   return cap;
+}
+
+/**
+ * Work out every outline's bounding cap now, rather than on the frame that needs it.
+ *
+ * `capOf` is memoised per outline and costs one pass of trigonometry over all its
+ * points; over the 564 fine municipal outlines that is 2.9ms, and it falls due the first
+ * time the camera reaches that level — which is the frame a zoom lands on, already the
+ * busiest in the map's life. Called from an idle callback once the outlines arrive.
+ *
+ * The view is only somewhere to measure from; the caps do not depend on the camera,
+ * which is the whole reason they can be cached.
+ */
+export function warm(v: View, outlines: Outline[]): void {
+  for (const outline of outlines) inFrame(v, outline);
 }
 
 /**

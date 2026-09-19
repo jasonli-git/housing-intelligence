@@ -348,6 +348,10 @@ export function AffordExplorer({
               </p>
             }
             active={picked}
+            // Searching a place moves the map to it: the question on this page is where
+            // a reader could live, and answering "can I afford Montclair?" while leaving
+            // the map over somewhere else makes them find it themselves.
+            frameOn={picked}
             mute={false}
             onView={(state) => setCentre(state.focus)}
           />

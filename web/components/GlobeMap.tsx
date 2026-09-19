@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type CSSProperties,
   type ReactNode,
   useCallback,
   useEffect,
@@ -19,9 +20,10 @@ import {
   prism,
   scene,
   view,
+  warm,
 } from "@/lib/globe";
 import { type MapFile, readingsFor } from "@/lib/mapdata";
-import { paint as paintInto } from "@/lib/paint";
+import { paint as paintInto, reserve } from "@/lib/paint";
 import type { MapLayers } from "@/components/useMapFile";
 import {
   classIndex,
@@ -68,6 +70,40 @@ const OFF_THE_CONTINENT: ReadonlySet<string> = new Set(["AK", "HI", "PR"]);
 
 /** The tallest the probe rises, as a share of the frame, with the whole state in view. */
 const MAX_LIFT = 0.13;
+
+/**
+ * How far past the visible window the map is drawn, in frame units.
+ *
+ * A pan slides the already-painted layer under a stage that clips it, rather than
+ * projecting 41,609 points again; this margin is the strip that has been painted before
+ * it is needed, so the reader never sees the empty edge the slide is dragging in. The
+ * camera is therefore a little larger than the window in every direction, and the middle
+ * of the camera is still the middle of the window — which is where the crosshair is.
+ *
+ * Big enough to carry a fast flick for a few frames, small enough that the extra ground
+ * is a fifth of the picture rather than half of it.
+ */
+const PAD = 110;
+
+/** The camera a pan of `dx, dy` frame units arrives at. Pure, so the slide and its
+ * commit cannot disagree about where the map ended up. */
+function shifted(cam: Camera, dx: number, dy: number): Camera {
+  const cosLat = Math.max(Math.cos((cam.lat * Math.PI) / 180), 0.2);
+  const lon = cam.lon - ((dx / cam.scale) * 180) / Math.PI / cosLat;
+  const lat = cam.lat + ((dy / cam.scale) * 180) / Math.PI;
+  // Past the poles the rotation stops being a pan and starts being a tumble.
+  return { ...cam, lon, lat: Math.max(-80, Math.min(80, lat)) };
+}
+
+/** A camera framing these outlines in the visible window, drawn PAD past it on each side. */
+function framedOn(
+  outlines: Outline[],
+  box: { width: number; height: number; padding?: number },
+): Camera {
+  // The scale is fitted to the window, not to the padded canvas, or the map would sit
+  // back from the frame by the margin it draws into.
+  return { ...fit(outlines, box), width: box.width + PAD * 2, height: box.height + PAD * 2 };
+}
 
 const DIVERGING = [
   "var(--div-neg-2)",
@@ -134,6 +170,12 @@ type Props = {
   legend?: ReactNode;
   /** Hold the map at one level instead of letting the zoom choose it. */
   pin?: DetailLevel;
+  /**
+   * A region to carry the camera to. The map flies there whenever this changes to a new
+   * id, and ignores it otherwise — so a page can answer a reader's search by moving the
+   * map, without the map moving again every time the page re-renders around it.
+   */
+  frameOn?: number | string | null;
   /** What the map is showing, for the label a screen reader reads. */
   describe?: string;
 };
@@ -185,6 +227,7 @@ export function GlobeMap({
   paint,
   legend,
   pin,
+  frameOn = null,
   describe,
 }: Props) {
   const [camera, setCamera] = useState<Camera | null>(null);
@@ -210,12 +253,18 @@ export function GlobeMap({
   // Pointer movement waiting to be applied, and the frame that will apply it.
   const pending = useRef({ dx: 0, dy: 0 });
   const queued = useRef<number | null>(null);
-  const world = useRef<SVGGElement>(null);
   const groundRef = useRef<SVGGElement>(null);
   const detailRef = useRef<SVGGElement>(null);
-  const lifted = useRef<SVGGElement>(null);
+  /** Repaint at a camera, now, in this frame. Reassigned every render, below. */
+  const repaint = useRef<(cam: Camera) => void>(() => {});
+  /** Look again at what the crosshair is over. Reassigned every render, below. */
+  const look = useRef<() => void>(() => {});
   // Bumped when a drag or a flight ends, to make the crosshair look again.
   const [settled, setSettled] = useState(0);
+  // Whether the camera is moving under the reader's hand — the drag and the glide that
+  // follows it. State rather than a ref because the depth of field reads it: see
+  // `focusing` below for why the blur cannot run while the map is moving.
+  const [moving, setMoving] = useState(false);
   const flight = useRef<number | null>(null);
   // The camera the callbacks read synchronously. State drives the render; a flight has
   // to know where it is starting from at the moment the button is pressed. Not `at`,
@@ -223,16 +272,20 @@ export function GlobeMap({
   const standing = useRef<Camera | null>(null);
 
   // The two framings every jump and every threshold is measured against.
+  // The painted canvas: the window plus the margin the slide draws into.
+  const fw = width + PAD * 2;
+  const fh = height + PAD * 2;
+
   const framings = useMemo(() => {
     if (!layers) return null;
     return {
-      nation: fit(
+      nation: framedOn(
         layers.nation.filter(
           (outline) => !OFF_THE_CONTINENT.has(String(outline.id)),
         ),
         { width, height, padding: NATION_PADDING },
       ),
-      county: fit(layers.county, { width, height }),
+      county: framedOn(layers.county, { width, height }),
     };
   }, [layers, width, height]);
 
@@ -262,37 +315,65 @@ export function GlobeMap({
     return layers[townLayer(camera.scale, framings.county.scale)];
   }, [layers, level, camera, framings]);
   const show = basis.kind === "change" ? formatChange : format;
+  // Read by the pan callbacks, which must not depend on it: see `slideBy`.
+  //
+  // Municipal level, framed at least as close as the whole state: that is where 564
+  // outlines are on screen at a size worth rasterising, and it is also where a translate
+  // is closest to the rotation it stands in for. The state framing is scale 10,458, and
+  // the drift at the moment before a commit is about 2.2px there — a half of one percent
+  // of the frame — against 6.6px with the country in view, which is why zooming out past
+  // the state hands the pan back to the projection.
+  const sliding = useRef(false);
+  sliding.current =
+    level === "municipality" &&
+    Boolean(camera && framings && camera.scale >= framings.county.scale);
 
-  const drawn = useMemo(() => {
-    if (!layers || !camera) return null;
-    const v = view(camera);
-    const detail = inView;
-    // Across the range on screen, not from zero: a change crosses zero, so there is no
-    // zero to rise from. Rising from zero was right while every region was a block and
-    // two could be compared side by side; only one rises now, so the range is the
-    // expressive thing to spend the height on, and the legend names both ends.
-    const seen = detail
-      .map((outline) => readings?.[String(outline.id)])
-      .filter((value): value is number => value !== undefined);
-    const lowest = seen.length > 0 ? Math.min(...seen) : 0;
-    const highest = seen.length > 0 ? Math.max(...seen) : 0;
-    const span = highest - lowest;
-    const probe = (id: number | string) => {
-      const value = readings?.[String(id)];
-      if (value === undefined || span <= 0) return 0;
-      return ((value - lowest) / span) * height * MAX_LIFT;
-    };
-    return {
-      ground: scene(v, layers.nation, () => 0),
-      // Flat, all of them. The one raised region is a memo of its own below, so easing
-      // the rise no longer re-projects 41,609 points sixty times a second.
-      detail: scene(v, detail, () => 0),
-      probe,
-      lowest,
-      highest,
-      v,
-    };
-  }, [layers, camera, level, readings, height, inView]);
+  /**
+   * Everything the map draws, at a given camera.
+   *
+   * A function rather than only a memo, because a slide has to be able to repaint at a
+   * camera React has not been told about yet — see `commit`. The memo below is this
+   * same call for the camera React does know about.
+   */
+  const build = useCallback(
+    (cam: Camera) => {
+      if (!layers) return null;
+      const v = view(cam);
+      const detail = inView;
+      // Across the range on screen, not from zero: a change crosses zero, so there is no
+      // zero to rise from. Rising from zero was right while every region was a block and
+      // two could be compared side by side; only one rises now, so the range is the
+      // expressive thing to spend the height on, and the legend names both ends.
+      const seen = detail
+        .map((outline) => readings?.[String(outline.id)])
+        .filter((value): value is number => value !== undefined);
+      const lowest = seen.length > 0 ? Math.min(...seen) : 0;
+      const highest = seen.length > 0 ? Math.max(...seen) : 0;
+      const span = highest - lowest;
+      const probe = (id: number | string) => {
+        const value = readings?.[String(id)];
+        if (value === undefined || span <= 0) return 0;
+        return ((value - lowest) / span) * height * MAX_LIFT;
+      };
+      return {
+        ground: scene(v, layers.nation, () => 0),
+        // Flat, all of them. The one raised region is a memo of its own below, so easing
+        // the rise no longer re-projects 41,609 points sixty times a second.
+        //
+        detail: scene(v, detail, () => 0),
+        probe,
+        lowest,
+        highest,
+        v,
+      };
+    },
+    [layers, readings, height, inView],
+  );
+
+  const drawn = useMemo(
+    () => (camera ? build(camera) : null),
+    [build, camera],
+  );
 
   // What the rise is easing towards, and the single raised prism it produces. Split from
   // the scene above so that the only thing recomputed per frame of the ease is one
@@ -349,147 +430,170 @@ export function GlobeMap({
     [],
   );
 
-  // Put the regions in the document before the browser paints, so the map and whatever
-  // React is rendering around it can never be a frame out of step.
-  useLayoutEffect(() => {
-    if (!drawn) return;
-    if (groundRef.current) {
-      paintInto(
-        groundRef.current,
-        drawn.ground.map((shape) => ({
+  /** The two painted layers, as `lib/paint.ts` wants them. */
+  const painting = (built: NonNullable<ReturnType<typeof build>>) => ({
+    ground: built.ground.map((shape) => ({
+      id: shape.id,
+      d: shape.base,
+      fill: null,
+      className: shape.id === "NJ" ? "with-figures" : "",
+    })),
+    detail: built.detail.map((shape) => {
+      const fill = fillFor(shape.id);
+      // No figure here: it joins the ground rather than becoming a dark class of its
+      // own, which left the state looking moth-eaten at municipal zoom.
+      if (fill === null) {
+        return {
           id: shape.id,
           d: shape.base,
           fill: null,
-          className: shape.id === "NJ" ? "with-figures" : "",
-        })),
+          className: "globe-absent",
+        };
+      }
+      return {
+        id: shape.id,
+        d: shape.top,
+        fill,
+        className: shape.id === active ? "globe-region on" : "globe-region",
+      };
+    }),
+  });
+
+  const put = (built: NonNullable<ReturnType<typeof build>>) => {
+    const next = painting(built);
+    if (groundRef.current) paintInto(groundRef.current, next.ground);
+    if (detailRef.current) paintInto(detailRef.current, next.detail);
+  };
+
+  // Reassigned every render so the slide always paints with the current colors and the
+  // current level, without any of that being a dependency of the callbacks that pan.
+  repaint.current = (cam: Camera) => {
+    const built = build(cam);
+    if (built) put(built);
+  };
+
+  // Build the paths the finest level will need, and touch every outline's bounding cap,
+  // while nobody is waiting. Both are one-time costs that otherwise land on the single
+  // frame a zoom crosses into municipalities — the frame that already has a whole level
+  // of geometry to project. The caps are the larger of the two at 2.9ms, and `capOf`
+  // holds them in a `WeakMap` keyed on the outline, so touching them here is all it
+  // takes; `reserve` does the same for the elements.
+  useEffect(() => {
+    if (!layers || !camera) return;
+    const idle =
+      globalThis.requestIdleCallback ??
+      ((run: () => void) => globalThis.setTimeout(run, 200));
+    const token = idle(() => {
+      const deepest = Math.max(
+        layers.municipality.length,
+        layers.municipalityWide.length,
+        layers.county.length,
       );
-    }
-    if (detailRef.current) {
-      paintInto(
-        detailRef.current,
-        drawn.detail.map((shape) => {
-          const fill = fillFor(shape.id);
-          // No figure here: it joins the ground rather than becoming a dark class of its
-          // own, which left the state looking moth-eaten at municipal zoom.
-          if (fill === null) {
-            return {
-              id: shape.id,
-              d: shape.base,
-              fill: null,
-              className: "globe-absent",
-            };
-          }
-          return {
-            id: shape.id,
-            d: shape.top,
-            fill,
-            className: shape.id === active ? "globe-region on" : "globe-region",
-          };
-        }),
-      );
-    }
+      if (detailRef.current) reserve(detailRef.current, deepest);
+      if (groundRef.current) reserve(groundRef.current, layers.nation.length);
+      const probe = view(camera);
+      for (const level of [
+        layers.municipality,
+        layers.municipalityWide,
+        layers.county,
+        layers.nation,
+      ]) {
+        warm(probe, level);
+      }
+    });
+    return () => {
+      if (globalThis.cancelIdleCallback) globalThis.cancelIdleCallback(token);
+      else globalThis.clearTimeout(token);
+    };
+    // Once per set of outlines. The camera only supplies a frame to measure against.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layers]);
+
+  // Put the regions in the document before the browser paints, so the map and whatever
+  // React is rendering around it can never be a frame out of step. After a commit this
+  // finds every attribute already correct and writes nothing.
+  useLayoutEffect(() => {
+    if (drawn) put(drawn);
   });
 
   // The region under the middle of the frame, which is what the crosshair marks.
-  // Recomputed when the map settles, not on every frame of a drag. The hit test walks
-  // the level a second time — the same rotation and clipping the scene just did — and
-  // the readout it feeds is unreadable while the map is moving. `settled` is what makes
-  // it look again once the hand comes off.
-  /**
-   * The drawn regions as `Path2D`, for hit testing without touching the DOM.
-   *
-   * Built once per camera, so a slide — where the camera does not move — tests against
-   * geometry it already has. `isPointInPath` is the browser's own geometry engine: no
-   * layout, no elements, and no dependence on where the page happens to be scrolled,
-   * which is what ruled out `elementFromPoint` (it sees only the visible viewport, and
-   * this map is 850 pixels tall).
-   */
-  const hitAreas = useMemo(() => {
-    if (!drawn || typeof document === "undefined") return null;
-    const ctx = document.createElement("canvas").getContext("2d");
-    if (!ctx) return null;
-    return {
-      ctx,
-      shapes: drawn.detail.map((shape) => ({
-        id: shape.id,
-        path: new Path2D(shape.base),
-      })),
-      ground: drawn.ground.map((shape) => ({
-        id: shape.id,
-        path: new Path2D(shape.base),
-      })),
-    };
-  }, [drawn]);
-
-  /**
-   * What the crosshair holds, given how far the map has been slid under it.
-   *
-   * The camera has not moved during a slide, so the crosshair has effectively travelled
-   * the other way across fixed geometry. Testing that directly is what lets the focus
-   * follow the hand instead of waiting for it to stop.
-   */
-  // Read through a ref, not captured: a frame scheduled before the camera committed
-  // would otherwise test last camera's geometry, and answer for the wrong place. That
-  // is what made a long drag report one town while landing on another.
-  const areas = useRef(hitAreas);
-  areas.current = hitAreas;
-  const atLevel = useRef(level);
-  atLevel.current = level;
-
-  const pickAt = useCallback(
-    (dx: number, dy: number): { id: number | string; level: Level } | null => {
-      const hitAreas = areas.current;
-      if (!hitAreas) return null;
-      const x = width / 2 - dx;
-      const y = height / 2 - dy;
-      for (let i = hitAreas.shapes.length - 1; i >= 0; i -= 1) {
-        const { id, path } = hitAreas.shapes[i];
-        if (hitAreas.ctx.isPointInPath(path, x, y))
-          return { id, level: atLevel.current };
+  //
+  // New Jersey first, then the ground: a reader over Ohio gets Ohio rather than nothing,
+  // and a reader over New Jersey gets the county, not the state beneath it. A backdrop
+  // state has no reading by definition, which is not the same as a New Jersey town whose
+  // measure is unpublished; the level tells them apart.
+  const holding = useCallback(
+    (v: ReturnType<typeof view>): Focus | null => {
+      if (!layers) return null;
+      const middle: [number, number] = [fw / 2, fh / 2];
+      const inState = at(v, inView, middle);
+      if (inState) {
+        const value = readings?.[String(inState.id)];
+        return {
+          id: inState.id,
+          name: inState.name,
+          level,
+          value: value ?? null,
+        };
       }
-      for (let i = hitAreas.ground.length - 1; i >= 0; i -= 1) {
-        const { id, path } = hitAreas.ground[i];
-        if (hitAreas.ctx.isPointInPath(path, x, y))
-          return { id, level: "state" };
-      }
-      return null;
+      const onGround = at(v, layers.nation, middle);
+      return onGround
+        ? { id: onGround.id, name: onGround.name, level: "state", value: null }
+        : null;
     },
-    [width, height],
+    [layers, inView, readings, level, fw, fh],
   );
 
-  const held = useRef<Focus | null>(null);
-  const centre = useMemo((): Focus | null => {
-    if (!layers || !camera || !drawn) return null;
-    const middle: [number, number] = [width / 2, height / 2];
-    // New Jersey first, then the ground: a reader over Ohio gets Ohio rather than
-    // nothing, and a reader over New Jersey gets the county, not the state beneath it.
-    const inState = at(drawn.v, inView, middle);
-    if (inState) {
-      const value = readings?.[String(inState.id)];
-      held.current = {
-        id: inState.id,
-        name: inState.name,
-        level,
-        value: value ?? null,
-      };
-      return held.current;
-    }
-    const onGround = at(drawn.v, layers.nation, middle);
-    // A backdrop state has no reading by definition, which is not the same as a New
-    // Jersey town whose measure is unpublished; the level tells them apart.
-    held.current = onGround
-      ? { id: onGround.id, name: onGround.name, level: "state", value: null }
-      : null;
-    return held.current;
-  }, [layers, camera, drawn, level, width, height, readings, settled, inView]);
+  const centre = useMemo(
+    () => (camera && drawn ? holding(drawn.v) : null),
+    // `settled` is not read here; it is what makes the map look again once it stops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [camera, drawn, holding, settled],
+  );
+
+  // What the crosshair is over while the layer is slid off its camera.
+  //
+  // Between commits `drawn` is the camera the layer was painted at, not the one the
+  // reader is looking at, so the crosshair has to ask for itself. This is the only work
+  // a slide frame does besides writing the transform — one hit test, 0.68ms over 564
+  // outlines — and it is what keeps the promise that the readout follows the drag
+  // rather than waiting for the hand to come off.
+  const [live, setLive] = useState<Focus | null>(null);
+  look.current = () => {
+    if (!standing.current) return;
+    const next = holding(
+      view(shifted(standing.current, shift.current.x, shift.current.y)),
+    );
+    setLive((was) =>
+      was && next && was.id === next.id && was.level === next.level ? was : next,
+    );
+  };
+  const focus = moving ? (live ?? centre) : centre;
 
   // Held in a ref, not a dependency: the page passes a fresh closure on every render,
   // and depending on it here would fire this effect every render and set state in a loop.
   const report = useRef(onView);
   report.current = onView;
+  // Only when the answer actually changes. `centre` is a fresh object every time the
+  // camera moves, so reporting on its identity told the page sixty times a second that
+  // the crosshair was still on the same town — and every one of those set state in the
+  // page, which re-rendered whatever it hangs off the focus. On `/afford` that is two
+  // tables and a form; a drag across a single town now re-renders none of it, and
+  // crossing into the next one re-renders it once.
+  const told = useRef<Focus | null>(null);
   useEffect(() => {
-    report.current?.({ level, focus: centre });
-  }, [centre, level]);
+    const before = told.current;
+    const same =
+      before === focus ||
+      (before !== null &&
+        focus !== null &&
+        before.id === focus.id &&
+        before.level === focus.level &&
+        before.value === focus.value);
+    if (same) return;
+    told.current = focus;
+    report.current?.({ level, focus });
+  }, [focus, level]);
 
   // Over the level on screen, not over a fixed set: 21 counties and 564 towns spread
   // differently, and quintiles of the counties would put most towns in one class.
@@ -543,6 +647,104 @@ export function GlobeMap({
    * pointer event. Collecting the deltas and spending them once per frame does the same
    * pan for a fraction of the work, and the map moves exactly as far.
    */
+  const slideBox = useRef<HTMLDivElement>(null);
+  /** How far the painted layer has been slid from the camera it was drawn at. */
+  const shift = useRef({ x: 0, y: 0 });
+
+  /**
+   * Move the painted layer, without repainting it.
+   *
+   * Written to the nodes rather than through React on purpose. The earlier version of
+   * this asked React for the new camera at the same moment it cleared the transform —
+   * and React delivers a render later, so for a frame or two the map was drawn at the
+   * camera it had just left with the transform already gone, snapping back to the start
+   * of the drag and then jumping forward. Nothing here waits for a render.
+   */
+  const wear = useCallback((x: number, y: number) => {
+    const box = slideBox.current;
+    if (!box) return;
+    if (x === 0 && y === 0) {
+      box.style.transform = "";
+      return;
+    }
+    // The shift is in frame units; the element moves in CSS pixels, and the map is drawn
+    // to whatever width the column gives it. One frame unit is the stage's own width over
+    // the window's.
+    const per = box.clientWidth > 0 ? box.clientWidth / width : 1;
+    box.style.transform = `translate3d(${x * per}px, ${y * per}px, 0)`;
+  }, [width]);
+
+  /**
+   * Take the slide off and put the camera where it had reached.
+   *
+   * The repaint, the cleared transform and the state update all happen here, in this
+   * order, in one frame: the layer is already showing the new camera before the browser
+   * paints, so React's render arrives to a picture that is already correct and
+   * `lib/paint.ts` finds nothing to write.
+   */
+  const commit = useCallback(() => {
+    const { x, y } = shift.current;
+    if (!standing.current || (x === 0 && y === 0)) return;
+    const next = shifted(standing.current, x, y);
+    shift.current = { x: 0, y: 0 };
+    standing.current = next;
+    repaint.current(next);
+    wear(0, 0);
+    setCamera(next);
+  }, [wear]);
+
+  /**
+   * A pan: slide what is painted, and repaint only when the margin runs out.
+   *
+   * This is the whole point of the over-drawn canvas. A frame of a drag used to
+   * re-project 41,609 points, build half a megabyte of path data and hand it to the
+   * browser to rasterise; it now writes one transform, which the compositor applies to
+   * a surface it has already got. The margin is what makes it honest — there is real
+   * ground painted out there to slide in, not empty frame.
+   *
+   * Sliding is not rotating, and over a large enough pan the two visibly differ, which
+   * is what the budget is for: at four fifths of the margin the camera commits and the
+   * map is projected properly again.
+   */
+  /** The camera a pan arrives at, through React, for the zooms that do not slide. */
+  const move = useCallback((dx: number, dy: number) => {
+    setCamera((current) => (current ? shifted(current, dx, dy) : current));
+  }, []);
+
+  const slideBy = useCallback(
+    (x: number, y: number) => {
+      // Only where the map is both heavy and nearly flat. A translate is not a rotation,
+      // and the gap between them grows as the frame covers more of the globe: measured
+      // against the true projection at the moment before a commit, the worst point in
+      // the window is 2.45px out at municipal zoom, 3.3px at county and 6px with the
+      // country in frame. The first is a fifth of a percent of the frame and is corrected
+      // at every commit; the last would be a visible squash. `sliding` above is the
+      // gate, and every zoom outside it re-projects the way it always did.
+      if (!sliding.current) {
+        move(x, y);
+        look.current();
+        return;
+      }
+      shift.current = { x: shift.current.x + x, y: shift.current.y + y };
+      if (Math.hypot(shift.current.x, shift.current.y) > PAD * 0.8) {
+        commit();
+        return;
+      }
+      wear(shift.current.x, shift.current.y);
+      look.current();
+    },
+    [commit, wear, move],
+  );
+
+  /**
+   * Deltas collected and spent once a frame.
+   *
+   * A trackpad or a high-refresh screen delivers pointer events faster than the browser
+   * paints — up to 120 a second — and the map was re-projecting the whole level for
+   * every one of them. Measured at municipal zoom before this: 550 path rewrites per
+   * pointer event. Collecting the deltas and spending them once per frame does the same
+   * pan for a fraction of the work, and the map moves exactly as far.
+   */
   const nudge = useCallback(
     (dx: number, dy: number) => {
       pending.current.dx += dx;
@@ -552,25 +754,11 @@ export function GlobeMap({
         queued.current = null;
         const { dx: x, dy: y } = pending.current;
         pending.current = { dx: 0, dy: 0 };
-        if (x !== 0 || y !== 0) move(x, y);
+        if (x !== 0 || y !== 0) slideBy(x, y);
       });
     },
-    // `move` is stable, and naming it here keeps the dependency honest.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [slideBy, commit],
   );
-
-  const move = useCallback((dx: number, dy: number) => {
-    setCamera((current) => {
-      if (!current) return current;
-      const perRadian = current.scale;
-      const cosLat = Math.max(Math.cos((current.lat * Math.PI) / 180), 0.2);
-      const lon = current.lon - ((dx / perRadian) * 180) / Math.PI / cosLat;
-      const lat = current.lat + ((dy / perRadian) * 180) / Math.PI;
-      // Past the poles the rotation stops being a pan and starts being a tumble.
-      return { ...current, lon, lat: Math.max(-80, Math.min(80, lat)) };
-    });
-  }, []);
 
   /**
    * Carry on moving after the hand lets go, slowing to a stop.
@@ -606,14 +794,16 @@ export function GlobeMap({
         vy *= friction;
         if (Math.hypot(vx, vy) < 0.2) {
           glide.current = null;
+          commit();
+          setMoving(false);
           return;
         }
-        move(vx, vy);
+        slideBy(vx, vy);
         glide.current = requestAnimationFrame(step);
       };
       glide.current = requestAnimationFrame(step);
     },
-    [move],
+    [slideBy],
   );
 
   /**
@@ -635,6 +825,17 @@ export function GlobeMap({
    * that makes a fly-to feel wrong. The duration grows with how far it travels, so a
    * nudge is quick and a hop across the country takes its time.
    */
+  /**
+   * Where the camera is headed, while it is still on its way.
+   *
+   * A zoom steps from here rather than from the live position, so the buttons can be
+   * pressed as fast as a reader likes: each press is another whole step. Reading the
+   * live camera instead meant a second press a few frames in stepped from almost where
+   * the first press started, so spamming the button barely moved the map and the reader
+   * had to wait out each flight to get anywhere.
+   */
+  const aim = useRef<Camera | null>(null);
+
   const flyTo = useCallback((to: Camera) => {
     if (glide.current !== null) cancelAnimationFrame(glide.current);
     glide.current = null;
@@ -646,14 +847,24 @@ export function GlobeMap({
       typeof globalThis.matchMedia === "function" &&
       globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!from || still) {
+      aim.current = null;
       setCamera(to);
       return;
     }
+    aim.current = to;
 
     const turns = Math.hypot(to.lon - from.lon, to.lat - from.lat) / 40;
     const zooms = Math.abs(Math.log(to.scale / from.scale)) / Math.log(8);
     const span = Math.min(1150, 420 + Math.max(turns, zooms) * 520);
     const started = performance.now();
+    // A flight is motion, and until now it was the only motion that did not say so: it
+    // re-projected 564 outlines at full precision sixty times a second for up to 1.15
+    // seconds, with both drop-shadows still running and the controls still reading the
+    // map back through their glass. Every press of a zoom button paid for all of it.
+    // The crosshair reverts to the settled reading, which recomputes each frame from the
+    // camera the flight is actually at; `live` belongs to a slide and would be stale.
+    setMoving(true);
+    setLive(null);
 
     const step = (now: number) => {
       const through = Math.min(1, (now - started) / span);
@@ -669,6 +880,10 @@ export function GlobeMap({
         scale: from.scale * Math.pow(to.scale / from.scale, eased),
       });
       flight.current = through < 1 ? requestAnimationFrame(step) : null;
+      if (flight.current === null) {
+        aim.current = null;
+        setMoving(false);
+      }
     };
     flight.current = requestAnimationFrame(step);
   }, []);
@@ -683,14 +898,37 @@ export function GlobeMap({
    */
   const dive = useCallback(
     (outline: Outline) => {
-      flyTo(fit([outline], { width, height, padding: 0.62 }));
+      flyTo(framedOn([outline], { width, height, padding: 0.62 }));
     },
     [flyTo, width, height],
   );
 
+  /**
+   * Carry the camera to a region the page has asked for.
+   *
+   * Keyed on the id rather than on the outline, and remembered, so the flight happens
+   * once per choice: `/afford` re-renders on every crosshair move, and re-framing on
+   * each of those would fight the reader for the camera. A place chosen before the
+   * outlines arrive is honoured when they do, which is what makes `?place=` in the
+   * address work on a cold load.
+   */
+  const framed = useRef<number | string | null>(null);
+  useEffect(() => {
+    if (frameOn === null || !layers) return;
+    if (framed.current === frameOn) return;
+    const outline =
+      layers.municipality.find((one) => one.id === frameOn) ??
+      layers.county.find((one) => one.id === frameOn);
+    if (!outline) return;
+    framed.current = frameOn;
+    flyTo(framedOn([outline], { width, height, padding: 0.62 }));
+  }, [frameOn, layers, flyTo, width, height]);
+
   const zoom = useCallback(
     (factor: number) => {
-      const current = standing.current;
+      // The slide is off the camera's books until it commits, and this reads the camera.
+      commit();
+      const current = aim.current ?? standing.current;
       if (!current || !framings) return;
       const lowest = framings.nation.scale * 0.85;
       const highest = framings.county.scale * 22;
@@ -699,7 +937,7 @@ export function GlobeMap({
         scale: Math.max(lowest, Math.min(highest, current.scale * factor)),
       });
     },
-    [flyTo, framings],
+    [flyTo, framings, commit],
   );
 
   if (failed) {
@@ -738,7 +976,18 @@ export function GlobeMap({
   // A drag no longer suspends it: the crosshair is live through a slide, so the focus
   // can follow it. A flight still does, because the camera is crossing the country and
   // there is nothing to focus on until it lands.
-  const focusing = active !== null && flight.current === null;
+  const attending = active !== null && flight.current === null;
+  // The depth of field, separately, because it is the map's largest cost and it is
+  // worthless while the map is moving.
+  //
+  // Each blurred layer is a full-frame offscreen surface the CPU has to rasterise and
+  // then convolve: the near layer at 1.1px, and the far layer — which is the same 564
+  // paths again through `<use>` — at 5.5px. Five megapixels of Gaussian per frame, for
+  // a focus effect on a picture that is sliding under the reader's hand and cannot be
+  // read anyway. The original code suspended it during a drag for exactly this reason;
+  // making the crosshair live through a drag took the suspension with it, which is when
+  // the municipal zoom became unusable. The crosshair stays live, the blur does not.
+  const focusing = attending && !moving;
   // Independent of `focusing`: the raised region and its shadow belong to the rise,
   // which has its own easing, and should not wait on the focus to arrive. `raised` is
   // the eased prism; before the rise has started there is nothing to draw over the top,
@@ -758,78 +1007,38 @@ export function GlobeMap({
   // Missouri" would land the reader on empty ground — while New Jersey, the one state
   // that does have them, already has a button of its own.
   const diveTo =
-    centre && centre.level === "county" && layers
-      ? (layers.county.find((outline) => outline.id === centre.id) ?? null)
+    focus && focus.level === "county" && layers
+      ? (layers.county.find((outline) => outline.id === focus.id) ?? null)
       : null;
   const withFigures = ramp.observed.length;
 
   return (
-    <figure className="globe">
+    <figure className={moving ? "globe globe-moving" : "globe"}>
       {/* The frame and its controls are one object: the controls float over the map
           rather than sitting under it, so the map is the whole panel and the buttons
           are where a reader's hand already is. */}
-      <div className="globe-stage">
-        <svg
-          ref={frame}
-          viewBox={`0 0 ${width} ${height}`}
-          className="globe-frame"
-          role="img"
-          aria-label={
-            describe ??
-            `New Jersey on a map of the United States, showing ${shown} colored by ` +
-              `${metricLabel}. The one under the crosshair rises with its own figure. ` +
-              `The ranking beside the map carries the same figures.`
-          }
-          onPointerDown={(event) => {
-            if (glide.current !== null) cancelAnimationFrame(glide.current);
-            glide.current = null;
-            drag.current = {
-              x: event.clientX,
-              y: event.clientY,
-              vx: 0,
-              vy: 0,
-              at: event.timeStamp,
-            };
-            event.currentTarget.setPointerCapture(event.pointerId);
-          }}
-          onPointerMove={(event) => {
-            if (!drag.current) return;
-            const box = event.currentTarget.getBoundingClientRect();
-            // The SVG is scaled to its box, so a pixel on screen is not a unit in the
-            // viewBox. Without this the map drifts from the cursor on a narrow screen.
-            const perPixel = width / box.width;
-            const dx = (event.clientX - drag.current.x) * perPixel;
-            const dy = (event.clientY - drag.current.y) * perPixel;
-            const dt = Math.max(1, event.timeStamp - drag.current.at);
-            nudge(dx, dy);
-            // Velocity is smoothed, not raw: one jittery sample at the moment of
-            // release would throw the glide in a direction the hand never went.
-            drag.current = {
-              x: event.clientX,
-              y: event.clientY,
-              vx: drag.current.vx * 0.7 + (dx / dt) * 0.3,
-              vy: drag.current.vy * 0.7 + (dy / dt) * 0.3,
-              at: event.timeStamp,
-            };
-          }}
-          onPointerUp={(event) => {
-            const thrown = drag.current;
-            drag.current = null;
-            event.currentTarget.releasePointerCapture(event.pointerId);
-            coast(thrown);
-            setSettled((n) => n + 1);
-          }}
-          onPointerCancel={() => {
-            drag.current = null;
-          }}
-          onWheel={(event) => {
-            // Only with a modifier held. A bare wheel over the map is the reader scrolling
-            // the page past it, and swallowing that traps them on a tall map.
-            if (!event.ctrlKey && !event.metaKey) return;
-            event.preventDefault();
-            zoom(Math.pow(0.999, -event.deltaY));
-          }}
-        >
+      <div
+        className="globe-stage"
+        style={
+          {
+            "--globe-aspect": `${width} / ${height}`,
+            "--globe-over-x": fw / width,
+            "--globe-over-y": fh / height,
+          } as CSSProperties
+        }
+      >
+        {/* The map, drawn PAD past the window on every side and moved as one element.
+            An HTML wrapper rather than a group inside the SVG: a transform on an HTML
+            element with `will-change` gets its own compositor surface, where an SVG
+            group is very often painted with its parent instead — which would have made
+            the slide skip the projection and then repaint anyway. */}
+        <div className="globe-slide" ref={slideBox}>
+          <svg
+            ref={frame}
+            viewBox={`0 0 ${fw} ${fh}`}
+            className="globe-frame"
+            aria-hidden="true"
+          >
           {/* The ground: every state, always, so panning off New Jersey shows a country
             rather than nothing. They carry no figures and are not colored as if they do. */}
           <defs>
@@ -858,30 +1067,7 @@ export function GlobeMap({
                 opacity="0.06"
               />
             </pattern>
-            {/* Clear over the middle of the frame, closing to the page's own surface at
-                the edge. */}
-            <radialGradient id="globe-fade" cx="50%" cy="50%" r="60%">
-              <stop
-                offset="0%"
-                stopColor="var(--surface-card)"
-                stopOpacity="0"
-              />
-              <stop
-                offset="34%"
-                stopColor="var(--surface-card)"
-                stopOpacity="0"
-              />
-              <stop
-                offset="70%"
-                stopColor="var(--surface-card)"
-                stopOpacity="0.46"
-              />
-              <stop
-                offset="100%"
-                stopColor="var(--surface-card)"
-                stopOpacity="0.86"
-              />
-            </radialGradient>
+
             {/* And the same shape as a mask, so a second, heavier blur of the very same
                 paths shows only towards the edge. SVG cannot vary a blur radius across a
                 shape, so the depth of field is two blurs with one fading in over the
@@ -892,17 +1078,11 @@ export function GlobeMap({
               <stop offset="100%" stopColor="#ffffff" />
             </radialGradient>
             <mask id="globe-edge">
-              <rect
-                x={0}
-                y={0}
-                width={width}
-                height={height}
-                fill="url(#globe-far)"
-              />
+              <rect x={0} y={0} width={fw} height={fh} fill="url(#globe-far)" />
             </mask>
           </defs>
 
-          <g ref={world}>
+          <g>
             {/* Both layers are filled by `lib/paint.ts` rather than by React. A region
                 is a `d` and a colour — no state, no events, nothing React's diffing buys
                 anything for — and building 564 of them through it was most of a frame. */}
@@ -921,23 +1101,12 @@ export function GlobeMap({
               mask="url(#globe-edge)"
             />
           </g>
-          {/* A vignette that closes in on whatever the crosshair holds. The ground
-              around it keeps its color and its shape, only quieter, so the comparison
-              the whole site is built on is still there to read. */}
-          <rect
-            className={focusing ? "globe-vignette on" : "globe-vignette"}
-            x={0}
-            y={0}
-            width={width}
-            height={height}
-            fill="url(#globe-fade)"
-          />
           {/* The focused region drawn again, over the softened rest and the vignette,
               so it alone stays sharp and at full color. Twice is cheaper than excluding
               it from a filtered group, and it keeps the painter's order. */}
-          {/* In its own group, so a pan slides it with the ground it stands on while
-              the vignette and the crosshair stay pinned to the frame. */}
-          <g ref={lifted}>
+          {/* In its own group, so it keeps the painter's order above the layers it is
+              drawn over. It slides with them, being inside the same wrapper. */}
+          <g>
             {sharp && (
               <g className="globe-region on globe-sharp">
                 {sharp.walls && (
@@ -947,36 +1116,129 @@ export function GlobeMap({
               </g>
             )}
           </g>
+          </svg>
+        </div>
+
+        {/* The frame the map moves under: the vignette, the crosshair, and the gesture
+            itself. Still, so a pan does not drag the reticle off the middle, and on top,
+            so it is the surface a pointer lands on. */}
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className="globe-still"
+          role="img"
+          aria-label={
+            describe ??
+            `New Jersey on a map of the United States, showing ${shown} colored by ` +
+              `${metricLabel}. The one under the crosshair rises with its own figure. ` +
+              `The ranking beside the map carries the same figures.`
+          }
+          onPointerDown={(event) => {
+            if (glide.current !== null) cancelAnimationFrame(glide.current);
+            glide.current = null;
+            drag.current = {
+              x: event.clientX,
+              y: event.clientY,
+              vx: 0,
+              vy: 0,
+              at: event.timeStamp,
+            };
+            setMoving(true);
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={(event) => {
+            if (!drag.current) return;
+            const box = event.currentTarget.getBoundingClientRect();
+            // The SVG is scaled to its box, so a pixel on screen is not a unit in the
+            // viewBox. Without this the map drifts from the cursor on a narrow screen.
+            const perPixel = width / box.width;
+            const dx = (event.clientX - drag.current.x) * perPixel;
+            const dy = (event.clientY - drag.current.y) * perPixel;
+            const dt = Math.max(1, event.timeStamp - drag.current.at);
+            nudge(dx, dy);
+            // Velocity is smoothed, not raw: one jittery sample at the moment of
+            // release would throw the glide in a direction the hand never went.
+            drag.current = {
+              x: event.clientX,
+              y: event.clientY,
+              vx: drag.current.vx * 0.7 + (dx / dt) * 0.3,
+              vy: drag.current.vy * 0.7 + (dy / dt) * 0.3,
+              at: event.timeStamp,
+            };
+          }}
+          onPointerUp={(event) => {
+            const thrown = drag.current;
+            drag.current = null;
+            event.currentTarget.releasePointerCapture(event.pointerId);
+            coast(thrown);
+            // `coast` sets the glide synchronously if it starts one, so this is the
+            // moment it is known whether the map is still moving. A drag that ends
+            // without a throw commits here; one that glides commits when it stops.
+            if (glide.current === null) {
+              commit();
+              setMoving(false);
+            }
+            setSettled((n) => n + 1);
+          }}
+          onPointerCancel={() => {
+            drag.current = null;
+            commit();
+            setMoving(false);
+          }}
+          onWheel={(event) => {
+            // Only with a modifier held. A bare wheel over the map is the reader scrolling
+            // the page past it, and swallowing that traps them on a tall map.
+            if (!event.ctrlKey && !event.metaKey) return;
+            event.preventDefault();
+            zoom(Math.pow(0.999, -event.deltaY));
+          }}
+        >
+          <defs>
+              {/* Clear over the middle of the frame, closing to the page's own surface at
+                  the edge. */}
+              <radialGradient id="globe-fade" cx="50%" cy="50%" r="60%">
+                <stop
+                  offset="0%"
+                  stopColor="var(--surface-card)"
+                  stopOpacity="0"
+                />
+                <stop
+                  offset="34%"
+                  stopColor="var(--surface-card)"
+                  stopOpacity="0"
+                />
+                <stop
+                  offset="70%"
+                  stopColor="var(--surface-card)"
+                  stopOpacity="0.46"
+                />
+                <stop
+                  offset="100%"
+                  stopColor="var(--surface-card)"
+                  stopOpacity="0.86"
+                />
+              </radialGradient>
+          </defs>
+          {/* A vignette that closes in on whatever the crosshair holds. The ground
+              around it keeps its color and its shape, only quieter, so the comparison
+              the whole site is built on is still there to read. */}
+          <rect
+            className={attending ? "globe-vignette on" : "globe-vignette"}
+            x={0}
+            y={0}
+            width={width}
+            height={height}
+            fill="url(#globe-fade)"
+          />
           {/* The crosshair. Fixed at the middle of the frame: the reader moves the map
             under it rather than pointing at a place, which is what makes the map
             readable on a touch screen with no hover. */}
           {crosshair && (
             <g className="globe-crosshair" aria-hidden="true">
               <circle cx={width / 2} cy={height / 2} r={9} />
-              <line
-                x1={width / 2 - 16}
-                y1={height / 2}
-                x2={width / 2 - 11}
-                y2={height / 2}
-              />
-              <line
-                x1={width / 2 + 11}
-                y1={height / 2}
-                x2={width / 2 + 16}
-                y2={height / 2}
-              />
-              <line
-                x1={width / 2}
-                y1={height / 2 - 16}
-                x2={width / 2}
-                y2={height / 2 - 11}
-              />
-              <line
-                x1={width / 2}
-                y1={height / 2 + 11}
-                x2={width / 2}
-                y2={height / 2 + 16}
-              />
+              <line x1={width / 2 - 16} y1={height / 2} x2={width / 2 - 11} y2={height / 2} />
+              <line x1={width / 2 + 11} y1={height / 2} x2={width / 2 + 16} y2={height / 2} />
+              <line x1={width / 2} y1={height / 2 - 16} x2={width / 2} y2={height / 2 - 11} />
+              <line x1={width / 2} y1={height / 2 + 11} x2={width / 2} y2={height / 2 + 16} />
             </g>
           )}
         </svg>
@@ -990,14 +1252,14 @@ export function GlobeMap({
             New Jersey
           </button>
         </div>
-        {centre && diveTo && (
+        {focus && diveTo && (
           <button
             type="button"
             className="globe-controls globe-controls-dive"
             onClick={() => dive(diveTo)}
           >
-            Jump into {centre.name}
-            {centre.level === "county" ? " County" : ""}
+            Jump into {focus.name}
+            {focus.level === "county" ? " County" : ""}
           </button>
         )}
         <div className="globe-controls globe-controls-zoom">

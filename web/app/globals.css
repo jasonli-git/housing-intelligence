@@ -799,9 +799,14 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
    themselves against. A container query, not a media query: the map's width follows the
    page's columns, not the window's — beside a ranking at 1000px it is narrower than it
    is alone at 700px — so asking the window would move the controls at the wrong moments. */
-.globe-stage { position: relative; display: grid; container-type: inline-size; }
-.globe-frame {
-  width: 100%; max-width: 640px; height: auto; display: block; justify-self: center;
+/* The stage is the window; the map inside it is drawn larger than the window and
+   clipped, so a pan can slide ground that is already painted into view instead of
+   projecting it again (`PAD` in `GlobeMap`). The sea, the corner and the cursor belong
+   to the window, which is why they moved here off the map itself. */
+.globe-stage {
+  position: relative; container-type: inline-size; overflow: hidden;
+  width: 100%; max-width: 640px; margin-inline: auto;
+  aspect-ratio: var(--globe-aspect);
   /* The water the land sits on. A tint away from the card rather than a chart blue —
      the ramps need the card's contrast budget to themselves. */
   background: var(--sea); border-radius: 12px;
@@ -809,7 +814,35 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
      gesture for scrolling first. */
   touch-action: none; cursor: grab; user-select: none;
 }
-.globe-frame:active { cursor: grabbing; }
+.globe-stage:active { cursor: grabbing; }
+.globe-frame {
+  position: absolute; left: 50%; top: 50%; display: block;
+  width: calc(100% * var(--globe-over-x));
+  height: calc(100% * var(--globe-over-y));
+  transform: translate(-50%, -50%);
+}
+/* What a pan moves: an HTML element, so the browser gives it its own compositor surface
+   and slides a texture it has already rasterised instead of painting 564 outlines again.
+   A transform on a group inside the SVG is very often painted with its parent instead,
+   which would skip the projection and then repaint anyway. `transform` is written
+   straight to the node during a gesture and cleared when the camera commits (`wear`). */
+.globe-slide {
+  position: absolute; inset: 0; will-change: transform;
+  /* Invisible to hit testing, and this is not a nicety. Every real pointer move makes
+     the browser work out what is under the cursor, and a trackpad sends those at up to
+     120 a second; with 564 filled outlines in the layer that is a geometric containment
+     test against each of them, per event, walked from the top of the paint order down.
+     Nothing in here needs a pointer: the gesture belongs to `.globe-still` above, and
+     the crosshair is arithmetic in `lib/globe.ts` rather than a DOM hit test — that was
+     the point of taking `Path2D` out. Synthetic events do not pay this cost, which is
+     why four rounds of automated measurement never saw it. */
+  pointer-events: none;
+}
+/* The frame the map moves under, and the surface the gesture lands on. */
+.globe-still {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+  touch-action: none; user-select: none;
+}
 /* Ground: the 51 states with no figures. A flat neutral, never a step of the ramp — a
    state shaded like data would claim a measurement the warehouse does not hold. */
 /* Ground states, on paper rather than in a void: the grain is real noise on one layer,
@@ -897,16 +930,43 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
    arrives the way a lens finds its subject rather than the way a light switch works. The
    far layer and the vignette move only their opacity, which the compositor can do on its
    own; only the near blur is re-rendered, and it is the small one. */
-.globe-detail { transition: filter 620ms ease, opacity 620ms ease; }
-.globe-detail.soft { filter: blur(1.1px) saturate(0.9); opacity: 0.94; }
-.globe-detail-far { filter: blur(5.5px) saturate(0.72); opacity: 0; transition: opacity 620ms ease; pointer-events: none; }
-.globe-detail-far.on { opacity: 1; }
+/* The transitions sit on the focused state, not the resting one, so the focus eases in
+   over 620ms and drops the instant the map is grabbed. A symmetrical transition would
+   keep convolving a shrinking blur for a further 620ms into the drag — paying the whole
+   cost precisely when the frame budget is gone. */
+.globe-detail { transition: none; }
+.globe-detail.soft { filter: blur(1.1px) saturate(0.9); opacity: 0.94; transition: filter 620ms ease, opacity 620ms ease; }
+.globe-detail-far { filter: blur(5.5px) saturate(0.72); opacity: 0; pointer-events: none; }
+.globe-detail-far.on { opacity: 1; transition: opacity 620ms ease; }
+/* The gesture belongs to the overlay itself, not to the gradient filling it. */
 .globe-vignette { pointer-events: none; opacity: 0; transition: opacity 620ms ease; }
+.globe-crosshair { pointer-events: none; }
 .globe-vignette.on { opacity: 1; }
 /* The raised region, and the shadow that sells the lift. The offset is fixed rather
    than tied to the rise: a shadow that grows with the figure would be a second, quieter
    encoding of the same number, and one is enough. */
 .globe-sharp { filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.38)) drop-shadow(0 12px 16px rgb(0 0 0 / 0.42)); }
+/* The shadows come off with the blur while the camera moves, for the same reason and at
+   the same scale: a `drop-shadow` on a group is a full-frame offscreen surface and a
+   convolution of its alpha, and the ground's is re-run every frame because the ground is
+   repainted every frame. Three shadow passes here — one on the ground, two on the raised
+   region — against a depth cue nobody can read off a sliding map. They return on release
+   with no transition, which is correct: a shadow that fades in reads as a light coming
+   up, where this one is simply the map at rest again. */
+.globe-moving .globe-ground,
+.globe-moving .globe-sharp { filter: none; }
+/* The glass comes off the controls while the map moves, and this one is not about the
+   size of the blur. A `backdrop-filter` has to read back whatever is painted underneath
+   it, so a pill sitting over a moving map re-samples that map every frame — and a layer
+   that something else keeps reading is a layer the browser cannot simply hand to the
+   compositor and leave alone. Two small pills are enough to undo the slide they sit on.
+   Solid for the length of the gesture, which is also the fallback these rules already
+   carry for browsers without `backdrop-filter`. */
+.globe-moving .globe-controls {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--surface-card);
+}
 .globe-sharp .top { stroke: var(--text-primary); stroke-width: 2; }
 @media (prefers-reduced-motion: reduce) {
   .globe-detail { transition: none; }
@@ -949,7 +1009,7 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
   .globe-controls, .globe-crosshair, .globe-vignette, .globe-detail-far { display: none; }
   .globe-detail.soft { filter: none; opacity: 1; }
   .globe-sharp { filter: none; }
-  .globe-frame { background: none; border: 1px solid var(--border); }
+  .globe-stage { background: none; border: 1px solid var(--border); }
   .globe-ground path, .globe-absent { fill: #ffffff; stroke: #999999; }
 }
 .ranks { font-size: var(--text-body); min-width: 22rem; }
@@ -1121,3 +1181,21 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
   tr, li { break-inside: avoid; }
   h1, h2 { break-after: avoid; }
 }
+
+/* The frame meter (`components/FrameMeter.tsx`), shown only with `?perf` in the address.
+   Fixed to the corner and out of the way of the map it is measuring. */
+.frame-meter {
+  position: fixed; right: 12px; bottom: 12px; z-index: 90;
+  display: grid; gap: 2px; padding: 8px 10px; border-radius: 10px;
+  background: var(--surface-card); border: 1px solid var(--border);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+  font: var(--text-meta)/1.45 var(--font-mono, monospace); color: var(--text-primary);
+  max-width: 22rem;
+}
+.frame-meter b { font-family: var(--font-sans, sans-serif); }
+.frame-meter-acts { display: flex; gap: 6px; margin-top: 4px; }
+.frame-meter button {
+  font: inherit; padding: 2px 8px; border-radius: 999px; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border); color: inherit;
+}
+@media print { .frame-meter { display: none; } }

@@ -417,6 +417,7 @@ change is rework.
 | 27 | ⬜ planned | **"Somewhere like here, but cheaper"** — the places nearest a region on a small, named set of measures with a lower home value. Deterministic. The page names the measures it matched on, because "like here" is a choice the platform makes on the reader's behalf and an unnamed one is not checkable |
 | 28 | ⬜ planned | **Provenance pass** — a record-type line per source (survey estimates, tax assessment records, administrative counts, a modelled index) as a field in `config/sources.yml` and the `sources` table, shown in the footer; a per-page print footer carrying the non-commercial terms, so a single page cut from a saved PDF still carries them; and the model-comparison dashboard, whose data has sat in `data/eval/v1` since Milestone 8 |
 | 29 | ⬜ planned | **Scheduled refresh** with retry and alerting, replacing a manual `make pipeline`. Necessary rather than convenient once a published site is expected to reflect a monthly cadence. `hip explain` already exits 0, 3 or 1 for all, some or none of the prose current, and the numbers should deploy whichever it is (ARCHITECTURE #102) |
+| MAP | ⬜ planned | **The map's standing check**, plus the debt V2 hands it — the recurring gate defined in [The map's standing check](#the-maps-standing-check). Not a feature, and not a new number: it is the same check every version. V3's run additionally has to clear the three budgets that were red when the gate was written, and **the 504ms input is the named first task**: a single event took half a second to answer with no long task anywhere, which is a defect of a different shape from a slow frame and has never been looked at |
 
 ## Version 4 Milestones (relationships, history and risk)
 
@@ -429,6 +430,7 @@ one does not. These are facts the warehouse can derive and cite, not predictions
 | 31 | ⬜ planned | **Historical persistence facts** — the descriptive answer to "is this pressure temporary or persistent?", which is the question a forecast would be asked. How far a region's price-to-income sits above its own long-run range, and how long past episodes that far above it lasted. Constrained by history: FHFA reaches back decades, the income side does not, and a range is only as long as its shorter series — which the fact has to say |
 | 32 | ⬜ planned | **Neighbourhood context from licensed sources** — walkability and transit access from EPA's Smart Location Database, school district boundaries from NCES EDGE with NJ DOE performance, flood risk from FEMA's National Flood Hazard Layer, municipal crime from NJ State Police UCR, health and environment from CDC PLACES. **Components, cited — never a composite score.** A single "7.8/10 neighbourhood grade" is exactly the output whose provenance cannot be traced, on a site whose whole claim is that every figure names its release. Replaces the scraped-aggregator idea the owner raised on 2026-09-18; see the source register for why |
 | 33 | ⬜ planned | **Migration-driven demand** — IRS county-to-county flows, already loaded, read as demand pressure rather than as a standalone count |
+| MAP | ⬜ planned | **The map's standing check** — the recurring gate defined in [The map's standing check](#the-maps-standing-check). Not a feature, and not a new number: it is the same check every version, run before that version closes |
 
 ## Version 5 Milestones (what the platform is willing to claim)
 
@@ -442,6 +444,97 @@ Milestones 14 and 15 to unscheduled — see "Still unscheduled" below.
 |---|--------|-------------|
 | 34 | ⬜ planned | **Affordability forecasting**, behind the four conditions already recorded: it beats a no-change and a straight-line baseline on held-out history or it does not publish; its confidence is an interval whose coverage the backtest measured, never a label, because a model reading "confidence: high" will say it more strongly than it should; it states the lag it inherits, since ACS 5-year estimates overlap by four years and a projection compounds that; and "temporary or persistent" is computed by the module, never concluded by a model. It produces evidence — direction, magnitude, horizon, interval, assumptions — for the interpretation layer to read beside Milestone 31's history. **Needs its own accuracy evaluation**, the way the interpretation layer got one |
 | 35 | ⬜ planned | **Bring-your-own-model comparison** — a visitor points the platform at a model of their own and sees it answer the same scenarios, scored the same way. The scenarios, the figure-checking, the rubric and the `ModelRunner` protocol all exist; what is missing is a place to run it, since the site is static, and a judge, which is a paid call the visitor would supply a key for. The deterministic half needs neither and is the honest place to start — fabrication rate against a real packet is a complete answer on its own |
+| MAP | ⬜ planned | **The map's standing check** — the recurring gate defined in [The map's standing check](#the-maps-standing-check). Not a feature, and not a new number: it is the same check every version, run before that version closes |
+
+## The map's standing check
+
+**A gate, not a milestone, and deliberately so.** A milestone is a slice of capability
+that ships once; this is a condition a version has to meet before it closes, and it is
+the *same* condition every time. Giving it a number each version would imply three
+different pieces of work, and would leave the procedure to be rewritten — and to drift —
+three times. It sits in each version's table as `MAP` so that it carries a status and
+cannot be quietly skipped, and it is written out once, here.
+
+**Why it recurs.** The map's cost scales with what is on screen, not with the size of the
+codebase, and almost every planned version puts more on screen: Milestone 25 and 26 add
+measures to colour by, Milestone 32 adds whole layers of neighbourhood context, and the
+two unscheduled expansions would multiply the outlines by twenty. Work that was
+comfortable at 564 municipalities and four measure groups is not automatically
+comfortable after any of those. None of this is caught by the test suite, because none of
+it is a wrong answer — it is a right answer delivered too late.
+
+### Run it on the owner's machine, on the built site
+
+Not in development, and not from an automated browser. Both of those lie, and the record
+of how they lied is in ARCHITECTURE #169 through #172: a development build renders every
+component twice and minifies nothing, and the automated browser this project uses cannot
+be trusted for frame timing — four rounds of map optimisation in September 2026 were
+aimed at the wrong half of the problem because of it. The defect that finally mattered,
+a zoom running at full cost for a second at a time, was found by the owner's own reading
+and by nothing else.
+
+```
+make publish && make deploy      # or a local production build
+open "<the site>/afford?perf"
+```
+
+`?perf` shows `components/FrameMeter.tsx`, which separates frames where a hand was on
+something from everything else. **That component is part of this contract and is not to
+be removed as dead code.**
+
+### The three scenarios, fixed so readings compare
+
+| | What to do | Which numbers it exercises |
+|---|---|---|
+| **Drag** | Ten seconds of dragging on `/afford`, at the framing the page opens at | `HAND-ON` — the slide, the commits, the crosshair |
+| **Zoom** | Five steps in and five out, crossing county into municipalities | `HAND-ON` and `idle` — flights, and the level switch |
+| **Cold** | Load `/afford` fresh with an empty cache | `idle` — the first render of 564 outlines |
+
+### The budgets
+
+| Reading | Budget | 2026-09-18 |
+|---|---|---|
+| `HAND-ON` median | ≤ 20ms | 17.0ms ✅ |
+| `HAND-ON` p95 | ≤ 50ms | 71.0ms ❌ |
+| `idle` p95 | ≤ 80ms | 110.0ms ❌ |
+| slowest input | ≤ 200ms | 504.0ms ❌ |
+| long tasks | 0 | 0 ✅ |
+
+**Three of those five are red today, and that is the point of writing them down.** The map
+is usable and the owner has said so; it is not within the budget this project wants to
+hold it to, and an unexplained half-second input is a defect nobody has looked at yet.
+A version closing red is a decision to be taken in the open, not a number to be moved.
+
+### Debt a version carries in
+
+A run that misses a budget does not stop a version closing — that is the owner's call —
+but the miss is carried forward by name, into the next version's row, until it is cleared
+or consciously written off. A budget quietly dropped between versions is the failure mode
+this whole section exists to prevent.
+
+**Carried into V3, from the run of 2026-09-18:** `HAND-ON` p95 at 71ms against 50ms,
+`idle` p95 at 110ms against 80ms, and the **504ms slowest input**. The last is the one to
+start with. It is not a slow frame — no task blocked the main thread at all — so it is a
+different defect, and the likeliest candidates are a click that forces a large re-render
+and relayout (the town table's "Show all" is 585 rows), or the first interaction landing
+while the map is still doing its one-time work. `FrameMeter` now records which event it
+was, so the investigation starts with a name rather than a number.
+
+### Within a version, not only at the end
+
+Any milestone that adds a **layer**, a **level**, or a **measure group** to the map runs
+the drag scenario before it is called done — the check at the version boundary is a
+backstop, not the only time anyone looks. On present plans that is Milestone 26, 32, and
+either expansion if it is ever scheduled.
+
+### The record
+
+Append one row per run. Never rewrite a row: a budget that was missed and then met is two
+rows, and the pair is the useful thing.
+
+| Date | Version | Drag p95 | Idle p95 | Slowest input | Verdict |
+|---|---|---|---|---|---|
+| 2026-09-18 | V2, after the map's performance work | 71.0ms | 110.0ms | 504.0ms | ❌ three budgets missed; carried into V3 |
 
 ## Source register
 

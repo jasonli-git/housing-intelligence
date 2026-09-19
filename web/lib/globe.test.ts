@@ -11,6 +11,7 @@ import {
   scene,
   screen,
   view,
+  warm,
 } from "@/lib/globe";
 
 const FRAME = { width: 600, height: 600 };
@@ -113,6 +114,26 @@ describe("prisms", () => {
       expect(lifted[0]).toBeCloseTo(ground[0], 6);
       expect(ground[1] - lifted[1]).toBeCloseTo(100, 6);
     }
+  });
+
+  it("warms every outline's cap without changing what is drawn", () => {
+    const v = view({ lon: -74.5, lat: 40.2, scale: 900, width: 400, height: 400 });
+    const here: Outline = {
+      id: 1,
+      name: "Here",
+      rings: [[-74.51, 40.19, -74.49, 40.19, -74.49, 40.21, -74.51, 40.21]],
+    };
+    const away: Outline = {
+      id: 2,
+      name: "Away",
+      rings: [[100, 10, 101, 10, 101, 11, 100, 11]],
+    };
+    const cold = scene(v, [here, away], () => 0);
+    warm(v, [here, away]);
+    const warmed = scene(v, [here, away], () => 0);
+    expect(warmed.map((s) => s.base)).toEqual(cold.map((s) => s.base));
+    // The one on the far side of the globe is culled either way.
+    expect(warmed).toHaveLength(1);
   });
 
   it("draws walls only when there is height, and the top is the base until then", () => {
