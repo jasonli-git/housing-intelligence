@@ -211,7 +211,8 @@ first raised, not where it must be done.
 
 ### Documentation upkeep
 
-- [ ] **Nothing detects a stale `README.md` Features list.** Found 2026-09-19: the list
+- [x] **Nothing detects a stale `README.md` Features list.** Found 2026-09-19, closed
+      the same day by `tests/test_doc_consistency.py`: the list
       named M0–M9, M13, M17, M21 and M23 while M11, M12, M16, M18, M19 and M20 had all
       shipped — including M16's globe, the most recent milestone and the platform's main
       visual object. `ROADMAP.md` already records which milestones shipped, so a test can
@@ -219,6 +220,7 @@ first raised, not where it must be done.
       when one does not. It cannot write the prose — that is editorial — but it can
       refuse to let a shipped milestone go undescribed. Same shape as
       `tests/test_module_boundaries.py`, which parses source rather than trusting it.
+      **Done.** The check found M10 undescribed on its first run; that entry is written.
 - [ ] **Which README figures are mechanically derivable has never been settled.** The
       status counts (regions, observations, metrics, sources), the Tech Stack, the
       evaluation table and the resource and storage figures all have a queryable or
