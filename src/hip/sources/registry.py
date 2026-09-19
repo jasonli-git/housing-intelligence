@@ -11,6 +11,7 @@ from hip.config import GeographyScope
 from hip.sources.base import SourceAdapter
 from hip.sources.bls import BlsAdapter
 from hip.sources.census_acs import AcsAdapter
+from hip.sources.census_pep import PepAdapter
 from hip.sources.census_permits import PermitsAdapter
 from hip.sources.fhfa import HpiAdapter
 from hip.sources.fred import FredAdapter
@@ -47,6 +48,7 @@ IMPLEMENTED: tuple[str, ...] = (
     PermitsAdapter.source_id,
     MigrationAdapter.source_id,
     AcsAdapter.source_id,
+    PepAdapter.source_id,
     FredAdapter.source_id,
     BlsAdapter.source_id,
     HudAdapter.source_id,
@@ -64,6 +66,7 @@ METRIC_SOURCES: tuple[str, ...] = (
     PermitsAdapter.source_id,
     MigrationAdapter.source_id,
     AcsAdapter.source_id,
+    PepAdapter.source_id,
     FredAdapter.source_id,
     BlsAdapter.source_id,
     HudAdapter.source_id,
@@ -102,6 +105,8 @@ def build_adapter(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return MigrationAdapter()
     if source_id == AcsAdapter.source_id:
         return AcsAdapter(states=scope.states, end_year=ACS_END_YEAR)
+    if source_id == PepAdapter.source_id:
+        return PepAdapter(states=scope.states)
     if source_id == FredAdapter.source_id:
         return FredAdapter()
     if source_id == BlsAdapter.source_id:

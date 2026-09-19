@@ -51,6 +51,7 @@ def vintages(end_year: int) -> tuple[int, ...]:
     """The five vintages ending at ``end_year``, newest first."""
     return tuple(range(end_year, end_year - VINTAGE_COUNT, -1))
 
+
 LEVELS = {"county": "county:*", "cousub": "county%20subdivision:*"}
 
 
