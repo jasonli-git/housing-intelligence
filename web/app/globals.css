@@ -258,6 +258,7 @@ details[open] > summary .when-closed { display: none; }
 .cost-lines .src { display: block; font: var(--text-label)/1.4 var(--font-mono); color: var(--text-muted); }
 .cost-lines .sum dt, .cost-lines .sum dd { color: var(--text-primary); font-weight: 600; }
 .cost-missing { margin: 0; font-size: var(--text-small); line-height: 1.5; color: var(--text-muted); }
+.cost-basis { margin: -.2rem 0 .4rem; font-size: var(--text-small); line-height: 1.45; color: var(--text-muted); }
 /* The comparison under both cards, and what qualifies it. */
 .cost-strip { display: grid; gap: 0.4rem; margin-top: 14px; padding: 0.9rem 1.1rem; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); }
 .cost-strip-big { margin: 0; font-size: var(--text-body); line-height: 1.5; color: var(--text-primary); text-wrap: pretty; }

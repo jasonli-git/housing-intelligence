@@ -13,8 +13,21 @@ export type Dated = { value: number; asOf: string };
 /** The typical home's change in value over the page's window, spread over its months. */
 export type Gain = { perMonth: number; from: string; to: string };
 
+/**
+ * The price the owning card is worked out from, and what may be said about it.
+ *
+ * Two different claims, deliberately not one type with a flag. `index` is Zillow's model
+ * of what a typical home here *is worth*, so the card can speak of "the typical home".
+ * `transactions` is the median of what actually *sold* over a stated window, which
+ * describes the homes that changed hands rather than the housing stock — so the card
+ * speaks of a purchase at a stated price, and names the window.
+ */
+export type HomePrice =
+  | ({ basis: "index" } & Dated)
+  | ({ basis: "transactions"; from: string; to: string } & Dated);
+
 export type CostProps = {
-  home: Dated;
+  home: HomePrice;
   rate: Dated;
   tax: Dated | null;
   rent: Dated | null;
@@ -95,13 +108,21 @@ export function CostToOwn({
     own: term(
       "cost-own",
       "To own",
-      `The typical single-family home’s value (Zillow Home Value Index, ${home.asOf}), less a ` +
-        `${down}% down payment, borrowed over 30 years at ${rate.value.toFixed(2)}% — the ` +
-        `national average fixed rate (Freddie Mac’s survey, via FRED, ${rate.asOf}). A month ` +
-        `is that loan’s principal and interest` +
+      (home.basis === "index"
+        ? `The typical single-family home’s value (Zillow Home Value Index, ${home.asOf})`
+        : `A purchase at ${money(home.value)} — the middle price of qualifying residential ` +
+          `sales here from ${home.from} to ${home.to}, from New Jersey’s SR1A sales file. ` +
+          `That is the middle of what sold in that window, not a valuation of the typical ` +
+          `home on any one date, and the homes that sell are not a cross-section of the ` +
+          `homes that exist`) +
+        `, less a ${down}% down payment, borrowed over 30 years at ${rate.value.toFixed(2)}% — ` +
+        `the national average fixed rate (Freddie Mac’s survey, via FRED, ${rate.asOf}). A ` +
+        `month is that loan’s principal and interest` +
         (tax
-          ? `, plus a twelfth of the typical yearly property tax bill (${money(tax.value)}, ` +
-            `from New Jersey’s MOD-IV assessment records, ${tax.asOf}).`
+          ? `, plus a twelfth of the typical yearly property tax bill for this area ` +
+            `(${money(tax.value)}, from New Jersey’s MOD-IV assessment records, ${tax.asOf}). ` +
+            `That bill is the area’s median, not this price’s tax: it is read from the ` +
+            `assessment records, never worked out from the price above.`
           : `; property tax is not included here.`) +
         ` Left out: ${listed(leftOut(down))}.`,
     ),
@@ -155,8 +176,20 @@ export function CostToOwn({
       <div className="cost-cards">
         <article className="cost-card">
           <h3 className="cost-card-label">
-            <Definition term={terms.own}>To own the typical single-family home</Definition>
+            <Definition term={terms.own}>
+              {home.basis === "index"
+                ? "To own the typical single-family home"
+                : `Estimated monthly cost at a ${money(home.value)} purchase price`}
+            </Definition>
           </h3>
+          {home.basis === "transactions" && (
+            // The window, on the card rather than only in the definition. A reader who
+            // never opens the definition still has to be told that this price is the
+            // middle of what sold over a span, not a valuation on a date.
+            <p className="cost-basis">
+              Based on qualifying residential sales here, {home.from} to {home.to}.
+            </p>
+          )}
           <p className="cost-figure" aria-live="polite">
             <b>{money(shown.total)}</b>
             <span>a month{beforeTax ? ", before property tax" : ", to the lender and the town"}</span>
@@ -201,7 +234,12 @@ export function CostToOwn({
             </div>
             <div>
               <dt>
-                Typical single-family home <small className="src">Zillow, {home.asOf}</small>
+                {home.basis === "index" ? "Typical single-family home" : "Purchase price"}{" "}
+                <small className="src">
+                  {home.basis === "index"
+                    ? `Zillow, ${home.asOf}`
+                    : `NJ SR1A sales, ${home.from} to ${home.to}`}
+                </small>
               </dt>
               <dd>{money(home.value)}</dd>
             </div>

@@ -10,23 +10,21 @@ into `Now` / `Open` / `Parked`. They are recoverable with
 
 ## Now — nothing in progress, as of 2026-09-20
 
-**Milestone 25, transactions and market value, is complete and open as a pull request.**
-Not merged, and not deployed — the warehouse and the local site carry it, the published
-site does not.
+**Milestone 25 is merged.** What it shipped is in [CHANGELOG.md](CHANGELOG.md) 0.20.0,
+its decisions are ARCHITECTURE #179–#186.
 
-What it shipped is in [CHANGELOG.md](CHANGELOG.md) 0.20.0, its decisions are
-ARCHITECTURE #179–#186, and its status is in [ROADMAP.md](ROADMAP.md).
+**The cost-to-own fallback is open as a pull request**, not merged: the owner's decision
+of 2026-09-20 on the question Milestone 25 left open, recorded as ARCHITECTURE #187 and
+CHANGELOG 0.20.1. 163 municipalities that had no monthly cost now have one, priced from
+recorded sales and labelled as a purchase at a stated price rather than as "the typical
+home".
 
-**Three things about it are worth knowing before the next piece of work.** The
-transaction half does not come from MOD-IV, because MOD-IV cannot supply it at any
-authentication level (#179) — the roadmap's premise was wrong, not merely hard. The
-effective tax rate is ingested rather than derived, and the Director's Ratio is a check
-on it rather than its input (#180). And the CD-code crosswalk is finally complete at
-564 of 564, which moved ten municipalities' MOD-IV figures as well (#184).
+**Neither is deployed.** The published site is still on 0.19.0. A deploy would be the
+first use of `make check-live`, which landed in PR #23 and has never run against a real
+deploy.
 
 **To resume:** `make db-up` for Postgres, and `make setup-eval` rather than `make setup`
-when the evaluation harness is needed. A deploy of this milestone would be the first use
-of `make check-live`, which landed in PR #23 and has never run against a real deploy.
+when the evaluation harness is needed.
 
 ## Open
 
@@ -203,6 +201,16 @@ first raised, not where it must be done.
 
 ### Frontend and presentation
 
+- [ ] **Let a reader enter their own purchase price, with the published figure
+      prefilled.** (owner's preference, 2026-09-20, stated alongside the ARCHITECTURE
+      #187 decision — a direction, not an approved requirement.) The cost card already
+      takes one input, the down payment, and now states a purchase price explicitly
+      rather than implying "the typical home" — which is most of the way to a field a
+      reader can overwrite with the price of a listing they are actually looking at. The
+      value is that the card stops being about a town and starts being about a decision,
+      while the assumptions behind it stay visible. Unscoped: what happens to the rank
+      and the comparison strip when the price is no longer the published one, and whether
+      an entered price should persist across regions. **Not scheduled.**
 - [ ] **Fold `redesign.css` into `globals.css`**, so each component has one set of rules
       rather than two whose winner depends on file order (#162's cost). (Quiet utility)
       Mechanical and large — worth its own review.
@@ -305,21 +313,17 @@ first raised, not where it must be done.
 
 ### Open decisions — not scheduled, not decided
 
-- [ ] **Should a transaction price ever price the mortgage?** (M25, found 2026-09-20)
-      `costInputs` prices the cost-to-own panel off `zhvi_sfr`, and where Zillow
-      publishes no value the panel is replaced by a sentence saying so. Parsippany-Troy
-      Hills is the case that makes this concrete: 56,397 people, no Zillow figure, and
-      the page tells a reader its owner-reported value is "a survey five years old, too
-      old to price a mortgage on" — while the tables now carry a $630,000 median of
-      deeds signed through June 2026 directly above that sentence. The transaction price
-      is the freshest and most concrete figure on the page and the panel is declining to
-      use it. Against: the two are not interchangeable — a median of what *sold* is not
-      a median of what *exists*, and the measured gap is real (the effective rate
-      applied to the sale price overshoots the MOD-IV tax bill by a median 24%), so
-      swapping one in where the other is missing would make two regions' monthly costs
-      mean different things. Any fallback would have to say on the panel which figure it
-      used. **Not decided** — this is a methodology choice about the site's headline
-      number, not an implementation detail.
+- [ ] **How should a cross-region comparison handle two price sources?** (M25, opened
+      2026-09-20 by the decision in ARCHITECTURE #187) The cost card may now be priced
+      from Zillow's index or from a transaction median depending on the region, but
+      `price_to_income` and `price_to_ami` are still computed from Zillow alone — so 176
+      municipalities have a monthly cost and no price-to-income, and any attempt to give
+      them one would rank a town measured on deeds against a neighbour measured on an
+      index. The owner's condition was explicit: keep the fallback out of cross-region
+      rankings until the comparison handles the difference. Options are to publish two
+      separately-labelled ratio families, to rank only within a price source, or to leave
+      the gap and say so on the page. `tests/test_nj_sr1a.py` fails if the input is added
+      before this is settled. **Not decided.**
 - [ ] **Should a change of model force regeneration?** (deferred to M12) The preference
       list can fall through mid-run, so some regions may carry prose from one model and
       some from another. `region_explanations` stores `model_id`, `model_label` and
