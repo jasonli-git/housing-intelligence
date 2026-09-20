@@ -22,7 +22,7 @@ import duckdb
 import typer
 from sqlalchemy.orm import Session
 
-from hip import __version__
+from hip import __version__, refresh
 from hip.analytics.compute import rebuild
 from hip.config import (
     ConfigError,
@@ -60,6 +60,7 @@ from hip.packets import (
     schema_text,
 )
 from hip.publish import publish as run_publish
+from hip.refresh import AcquireReport
 from hip.sources.base import Release, SourceAdapter
 from hip.sources.registry import (
     IMPLEMENTED,
@@ -262,20 +263,54 @@ def acquire(
         bool, typer.Option("--force", help="Re-download even if cached.")
     ] = False,
 ) -> None:
-    """Download source releases to data/raw/, content-addressed and immutable."""
+    """Download source releases to data/raw/, content-addressed and immutable.
+
+    One publisher's bad day no longer ends the run: a ref that fails is reported and the
+    rest continue, and the command exits 1 if anything failed. Before this a single
+    `SourceError` propagated out of `fetch_all` and took every remaining source with it,
+    which is what a HUD 429 did to a full run on 2026-09-06.
+    """
     settings = get_settings()
-    total = 0
-    for adapter in _adapters(source):
-        for release in adapter.fetch_all(
-            raw_dir=settings.raw_dir, vintage=vintage, force=force
-        ):
-            origin = "cached" if release.from_cache else "downloaded"
-            typer.echo(
-                f"{adapter.source_id:<14} {release.ref.key:<18} {origin:<10} "
-                f"{release.size_bytes / 1e6:>8.1f} MB  {release.sha256[:12]}"
+    report = AcquireReport()
+    for adapter, outcome in refresh.acquire(
+        _adapters(source), raw_dir=settings.raw_dir, vintage=vintage, force=force
+    ):
+        if isinstance(outcome, refresh.RefFailure):
+            report.failures.append(outcome)
+            typer.secho(
+                f"{outcome.source_id:<14} {outcome.key:<18} failed     {outcome.error}",
+                fg=typer.colors.YELLOW,
+                err=True,
             )
-            total += release.size_bytes
-    typer.secho(f"{total / 1e6:.1f} MB in data/raw/", fg=typer.colors.GREEN)
+            continue
+        release = outcome
+        report.releases.append(release)
+        if not release.from_cache:
+            origin = "downloaded"
+        elif release.revalidated_at:
+            # Asked, and told nothing changed. Kept distinct from a cache hit nobody
+            # checked, because only one of the two is evidence the platform is current.
+            origin = "unchanged"
+        else:
+            origin = "cached"
+        typer.echo(
+            f"{adapter.source_id:<14} {release.ref.key:<18} {origin:<10} "
+            f"{release.size_bytes / 1e6:>8.1f} MB  {release.sha256[:12]}"
+        )
+
+    moved = len(report.downloaded)
+    typer.echo(
+        f"{len(report.revalidated):>4} unchanged   {moved:>4} downloaded   "
+        f"{len(report.unchecked):>4} not checked"
+    )
+    typer.secho(f"{report.total_bytes / 1e6:.1f} MB in data/raw/", fg=typer.colors.GREEN)
+    if report.failures:
+        typer.secho(
+            f"{len(report.failures)} ref(s) failed; the rest completed",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=1)
 
 
 @app.command()

@@ -29,6 +29,7 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Iterator
+from datetime import timedelta
 from pathlib import Path
 from typing import ClassVar
 
@@ -240,6 +241,10 @@ class HudChasAdapter(SourceAdapter):
     source_id: ClassVar[str] = "hud_chas"
     default_vintage: ClassVar[str] = CHAS_VINTAGE
     landing_format: ClassVar[str] = "json"
+    # 571 municipal calls paced at HUD's 60-a-minute limit — about ten minutes, and the
+    # source of the 429 that stopped Milestone 21's first run. CHAS is published in
+    # multi-year releases, so a month between unvalidatable re-fetches is generous.
+    revalidate_after: ClassVar[timedelta] = timedelta(days=30)
     request_interval_s: ClassVar[float] = HUD_REQUEST_INTERVAL_S
 
     def __init__(self, states: list[str], county_fips: list[str]) -> None:
