@@ -19,6 +19,10 @@ export const GROUPS: readonly Group[] = [
     title: "Prices",
     metrics: [
       "zhvi_sfr",
+      // Beside the index on purpose. One is modelled, one is what buyers actually
+      // paid, and SPEC principle 11 turns on a reader being able to see which is
+      // which — adjacent is where that comparison is unavoidable.
+      "sr1a_median_sale_price",
       "acs_median_home_value",
       "modiv_median_assessed_value",
       "zori_all",
@@ -41,6 +45,11 @@ export const GROUPS: readonly Group[] = [
       "chas_renter_severe_burden",
       "chas_owner_cost_burden",
       "modiv_median_tax_bill",
+      "nj_effective_tax_rate",
+      "nj_general_tax_rate",
+      // Not an affordability measure, but the figure that explains why the two rates
+      // above differ, and a reader looking at them is exactly who needs it.
+      "nj_director_ratio",
       "mortgage_rate_30y",
     ],
   },

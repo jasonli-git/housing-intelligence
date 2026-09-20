@@ -22,6 +22,10 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "Zillow’s estimate of what a typical single-family house here is worth: one in the middle of the local market, not the cheapest or the dearest.",
     why: "It is the closest thing to “what a house costs here”, the figure a buyer’s budget starts from.",
   },
+  sr1a_median_sale_price: {
+    what: "The price of the middle home actually sold here over the last three years. New Jersey sets aside sales that are not open-market \u2014 inheritances, sales between relatives, sheriff\u2019s sales \u2014 and counts only the rest.",
+    why: "It is what buyers really paid, not an estimate of what homes are worth.",
+  },
   acs_median_home_value: {
     what: "What the middle homeowner says their home is worth, as owners told the Census Bureau’s survey. It covers every kind of owned home.",
     why: "An older, self-reported view of prices: useful where Zillow has no figure, and as a check on it.",
@@ -87,6 +91,18 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
   modiv_median_tax_bill: {
     what: "What the middle one- to four-family home paid in property tax last year, before any relief a household may claim.",
     why: "New Jersey’s property taxes are among the highest in the country, so this can matter as much as the price.",
+  },
+  nj_effective_tax_rate: {
+    what: "Property tax per $100 of what a home is actually worth on the market, as New Jersey publishes it.",
+    why: "The one property tax figure that can be compared between towns, because it is measured against market value rather than each town\u2019s own assessment.",
+  },
+  nj_general_tax_rate: {
+    what: "Property tax per $100 of the value the town has assessed \u2014 the rate printed on a tax bill.",
+    why: "It is the rate you are charged, but it cannot be compared between towns: a town that assesses homes at half their worth needs twice the rate to raise the same money.",
+  },
+  nj_director_ratio: {
+    what: "How close the town\u2019s assessments are to market value, as a percentage. 100 means they match; 60 means homes are on the books at about 60% of what they would sell for.",
+    why: "It shows how out of date a town\u2019s assessments are: the further from 100, the longer since it revalued.",
   },
   mortgage_rate_30y: {
     what: "The average interest rate on a 30-year fixed-rate home loan across the country, from Freddie Mac’s weekly survey, averaged by month.",
