@@ -208,9 +208,12 @@ first raised, not where it must be done.
       rather than implying "the typical home" — which is most of the way to a field a
       reader can overwrite with the price of a listing they are actually looking at. The
       value is that the card stops being about a town and starts being about a decision,
-      while the assumptions behind it stay visible. Unscoped: what happens to the rank
-      and the comparison strip when the price is no longer the published one, and whether
-      an entered price should persist across regions. **Not scheduled.**
+      while the assumptions behind it stay visible. **The boundary, from the owner
+      2026-09-20:** an entered price changes that reader's payment scenario only, and
+      never the town's published figures or its rankings — which settles most of what
+      was unscoped here. Still open: whether an entered price persists across regions,
+      and what the comparison strip says once the price is not the published one.
+      **Not scheduled.**
 - [ ] **Fold `redesign.css` into `globals.css`**, so each component has one set of rules
       rather than two whose winner depends on file order (#162's cost). (Quiet utility)
       Mechanical and large — worth its own review.
@@ -249,6 +252,22 @@ first raised, not where it must be done.
       whatever is slow there is a different problem and needs its own look.
 
 ### Publication
+
+- [ ] **`make check-live` samples one municipality, and never the interesting ones.**
+      (found 2026-09-20, on its first use validating a real release) It verified the
+      0.20.1 deploy by fetching Aberdeen, which is priced from Zillow like most places —
+      so neither the transaction fallback nor the no-price case was exercised, and both
+      were checked by hand afterwards. A sample drawn from the head of the search index
+      finds the common path every time by construction. It should instead pin one region
+      per *shape* the page can take, named explicitly rather than sampled: a Zillow-priced
+      card, a transaction-priced card, and a region with neither.
+- [ ] **Nothing stops `/afford` from acquiring a second price source.** (found
+      2026-09-20) The comparison page reads `latest("zhvi_sfr", …)` directly rather than
+      going through the warehouse ratios, so the test that keeps the transaction median
+      out of `price_to_income` does not protect it — a map mixing Zillow-priced and
+      deed-priced towns would render without failing anything. Verified Zillow-only on
+      2026-09-20 by reading `web/app/afford/page.tsx`; that is a fact about today, not a
+      guard.
 
 - [ ] **`make publish` assembling both halves into one directory.** (M11) Its done
       criterion is a reachable public URL.
@@ -316,13 +335,18 @@ first raised, not where it must be done.
 - [ ] **How should a cross-region comparison handle two price sources?** (M25, opened
       2026-09-20 by the decision in ARCHITECTURE #187) The cost card may now be priced
       from Zillow's index or from a transaction median depending on the region, but
-      `price_to_income` and `price_to_ami` are still computed from Zillow alone — so 176
+      `price_to_income` and `price_to_ami` are still computed from Zillow alone — so 163
       municipalities have a monthly cost and no price-to-income, and any attempt to give
       them one would rank a town measured on deeds against a neighbour measured on an
       index. The owner's condition was explicit: keep the fallback out of cross-region
       rankings until the comparison handles the difference. Options are to publish two
       separately-labelled ratio families, to rank only within a price source, or to leave
-      the gap and say so on the page. `tests/test_nj_sr1a.py` fails if the input is added
+      the gap and say so on the page. **Leaning**, relayed by the owner 2026-09-20: two
+      families, and eventually a transaction-based price-to-income computed for *every*
+      qualifying town including those Zillow covers, so a reader compares one measure
+      across the whole state rather than a different one per town — with the Zillow-based
+      measure kept alongside it. That is a larger change than closing the gap, and it is
+      schedulable separately from the cards that are now live. `tests/test_nj_sr1a.py` fails if the input is added
       before this is settled. **Not decided.**
 - [ ] **Should a change of model force regeneration?** (deferred to M12) The preference
       list can fall through mid-run, so some regions may carry prose from one model and
