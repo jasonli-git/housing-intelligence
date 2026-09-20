@@ -8,7 +8,7 @@ import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { Glossed } from "@/components/Glossed";
 import { Ledger, TableNotes } from "@/components/Ledger";
 import { MoreExpander } from "@/components/MoreExpander";
-import { StandOuts } from "@/components/StandOuts";
+import { RegionStandOuts } from "@/components/RegionStandOuts";
 import { TrendsExplorer } from "@/components/TrendsExplorer";
 import { api, type PacketLevel, type PacketMetric, type Region, regionsWithData } from "@/lib/api";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
@@ -283,6 +283,34 @@ export default async function RegionPage({
         </div>
       </header>
 
+      {profile.length > 0 && (
+        <section className="housing-band" aria-labelledby="housing-heading">
+          <div className="housing-band-head">
+            <h2 id="housing-heading">The housing here</h2>
+          </div>
+          <ul className="housing-band-items">
+            {profile.map((item) => (
+              <li key={item.metric_id} className="housing-band-item">
+                <b>{item.value}</b>
+                <span className="housing-band-label">
+                  <Definition
+                    term={{
+                      key: `profile-${item.metric_id}`,
+                      title: item.label,
+                      phrases: [],
+                      definition: item.definition,
+                    }}
+                  >
+                    {item.label}
+                  </Definition>
+                </span>
+                {item.context && <span className="housing-band-context">{item.context}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {cost ? (
         <CostToOwn {...cost} />
       ) : (
@@ -301,33 +329,11 @@ export default async function RegionPage({
         )
       )}
 
-      <StandOuts name={name} peers={`${scopeName(peer_scope)}’s ${peer_count} ${peerNoun(peer_level)}`} items={standing} />
-
-      {profile.length > 0 && (
-        <section className="section" aria-labelledby="housing-heading">
-          <h2 id="housing-heading">The housing here</h2>
-          <ul className="tiles">
-            {profile.map((item) => (
-              <li key={item.metric_id} className="tile">
-                <b>{item.value}</b>
-                <span className="tile-label">
-                  <Definition
-                    term={{
-                      key: `profile-${item.metric_id}`,
-                      title: item.label,
-                      phrases: [],
-                      definition: item.definition,
-                    }}
-                  >
-                    {item.label}
-                  </Definition>
-                </span>
-                {item.context && <span className="tile-context">{item.context}</span>}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <RegionStandOuts
+        name={name}
+        peers={`${scopeName(peer_scope)}’s ${peer_count} ${peerNoun(peer_level)}`}
+        items={standing}
+      />
 
       <MoreExpander title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>
         <section className="section" aria-labelledby="ledger-heading">

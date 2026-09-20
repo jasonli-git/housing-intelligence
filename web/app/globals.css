@@ -473,7 +473,129 @@ body > main { flex: 1 0 auto; width: 100%; }
 .standout .gl { position: static; }
 .standout .tip { left: 0.75rem; right: 0.75rem; width: auto; top: auto; margin-top: 6px; }
 
-/* The housing here: a number, a label, and where it sits among its peers. */
+/* Region pages give each family of stand-outs its own Apple-like horizontal shelf. Three
+   cards fit a wide screen, two fit a tablet, and a phone leaves the next card peeking in
+   as the cue to swipe. The report keeps the compact `.standouts` grid above. Orange and
+   blue follow the requested leading/lagging distinction; current-value extremes are
+   graphite because highest and lowest are not inherently good or bad. */
+.standout-deck { margin-top: 1.15rem; }
+.standout-deck-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.65rem 1rem;
+  margin: 0 0 0.55rem;
+}
+.standout-deck-label {
+  margin: 0; font: 600 var(--text-label)/1.3 var(--font-mono); letter-spacing: var(--track-label);
+  text-transform: uppercase; color: var(--text-secondary);
+}
+.standout-deck-label span {
+  margin-left: 0.35rem; font-weight: 400; letter-spacing: 0.02em;
+  text-transform: none; color: var(--text-muted);
+}
+.standout-nav { display: flex; gap: 0.4rem; }
+.standout-arrow {
+  width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 50%;
+  background: var(--surface-2); color: var(--text-primary); box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
+}
+.standout-arrow svg {
+  width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.region-standout-rail {
+  display: grid; grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 32px) / 3);
+  gap: 16px; list-style: none; margin: 0; padding: 0.2rem 0.1rem 0.7rem;
+  overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: inline mandatory;
+  scrollbar-width: none;
+}
+.region-standout-rail::-webkit-scrollbar { display: none; }
+.region-standout-card {
+  position: relative; display: grid; align-content: start; gap: 0.45rem; min-width: 0;
+  min-height: 15rem; padding: 1.25rem 1.3rem; border: 0; border-radius: 24px;
+  scroll-snap-align: start; color: #ffffff;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.14);
+}
+.region-standout-rail[data-group="leads"] .region-standout-card {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--series-2) 60%, #6b2700), #6b2c0d);
+}
+.region-standout-rail[data-group="lags"] .region-standout-card {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--series-1) 82%, #00396f), #07366e);
+}
+.region-standout-rail[data-group="value"] .region-standout-card {
+  background: linear-gradient(145deg, #404047, #25262b);
+}
+.region-standout-rank {
+  font: 600 var(--text-label)/1.2 var(--font-mono); letter-spacing: 0.11em;
+  text-transform: uppercase; white-space: nowrap; color: #ffffff;
+}
+.region-standout-what { max-width: 22rem; font-size: 15px; line-height: 1.35; font-weight: 600; }
+.region-standout-figure {
+  margin-top: 0.3rem; font: 700 clamp(32px, 3vw, 44px)/1 var(--font-display);
+  letter-spacing: -0.035em; font-variant-numeric: tabular-nums;
+}
+.region-standout-detail {
+  align-self: end; margin-top: auto; padding-top: 1.1rem; font-size: var(--text-small);
+  line-height: 1.45; color: #ffffff; font-variant-numeric: tabular-nums;
+}
+.region-standout-card .term { text-decoration-color: rgb(255 255 255 / 0.55); }
+.region-standout-card .term:hover,
+.region-standout-card .term:focus-visible { text-decoration-color: #ffffff; }
+.region-standout-card .gl { position: static; }
+.region-standout-card .tip {
+  left: 1rem; right: 1rem; width: auto; top: auto; margin-top: 6px;
+  background: var(--surface-1); color: var(--text-secondary);
+}
+
+@media (max-width: 900px) {
+  .region-standout-rail { grid-auto-columns: calc((100% - 16px) / 2); }
+}
+@media (max-width: 600px) {
+  .standout-deck-label span { display: block; margin: 0.15rem 0 0; }
+  .region-standout-rail { grid-auto-columns: 86%; }
+  .region-standout-card { min-height: 14rem; border-radius: 20px; }
+}
+
+/* The housing profile is a restrained, screen-wide band above the cost section. It keeps
+   every useful fact but lowers the scale and contrast so the cost cards remain the page's
+   visual centre. */
+.housing-band {
+  display: grid; grid-template-columns: minmax(8.5rem, 0.8fr) minmax(0, 5.2fr);
+  align-items: stretch; gap: 0.75rem; margin-top: 1.4rem; padding: 0.8rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--series-3) 16%, var(--border)); border-radius: 14px;
+  background: color-mix(in srgb, var(--series-3) 4%, var(--surface-2));
+}
+.housing-band-head { display: flex; align-items: center; padding-right: 0.75rem; }
+.housing-band-head h2 { margin: 0; font-size: 16px; line-height: 1.25; }
+.housing-band-items {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(7.25rem, 1fr));
+  list-style: none; margin: 0; padding: 0;
+}
+.housing-band-item {
+  position: relative; display: grid; align-content: center; gap: 1px; min-width: 0;
+  padding: 0.2rem 0.8rem; border-left: 1px solid var(--grid);
+}
+.housing-band-item > b {
+  font: 700 20px/1.15 var(--font-display); letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums; color: var(--text-primary);
+}
+.housing-band-label { font-size: var(--text-note); line-height: 1.35; color: var(--text-primary); }
+.housing-band-context { font-size: 10px; line-height: 1.35; color: var(--text-muted); }
+.housing-band-item .gl { position: static; }
+.housing-band-item .tip { left: 0.6rem; right: 0.6rem; width: auto; top: auto; margin-top: 6px; }
+.housing-band + .section.cost { margin-top: 1.6rem; }
+
+@media (max-width: 800px) {
+  .housing-band { grid-template-columns: minmax(0, 1fr); }
+  .housing-band-head { padding: 0 0 0.55rem; border-bottom: 1px solid var(--grid); }
+  .housing-band-item:first-child { border-left: 0; }
+}
+@media (max-width: 520px) {
+  .housing-band-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .housing-band-item { padding: 0.5rem 0.65rem; }
+  .housing-band-item:nth-child(odd) { border-left: 0; }
+  .housing-band-item:nth-child(n + 3) { border-top: 1px solid var(--grid); }
+}
+
+/* The housing here on reports: a number, a label, and where it sits among its peers. */
 .tiles { list-style: none; margin: 0.9rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 12.5rem), 1fr)); gap: 18px 16px; }
 .tile { position: relative; display: grid; gap: 3px; align-content: start; padding: 10px 2px 0; border-top: 2px solid var(--text-primary); }
 .tile > b { font: 700 26px/1.1 var(--font-display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text-primary); }
