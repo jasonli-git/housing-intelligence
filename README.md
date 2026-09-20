@@ -12,12 +12,12 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.18.0, 2026-09-18. Versions 1 and 2 complete; nothing in progress.**
+> **Status — v0.20.0, 2026-09-20. Versions 1 and 2 complete; nothing in progress.**
 >
-> **Built and deployed.** New Jersey's geography, housing, economic context and property
-> tax roll are loaded, queryable and public: 3,365 regions, 3.48M parcels, and 351,974
-> observations across 32 metrics from 12 public sources spanning 1971 to 2026, plus
-> 26,805 computed changes and 39,353 rankings. Every value carries its source file and
+> **Built and deployed.** New Jersey's geography, housing, economic context, property
+> tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
+> parcels, 1.4M deeds, and 409,135 observations across 37 metrics from 16 public sources
+> spanning 1971 to 2026, plus 38,192 computed changes and 53,658 rankings. Every value carries its source file and
 > match method. All eight pipeline stages run. The site publishes itself — 5,917 static
 > artifacts and 2,272 pre-rendered pages, served with no database and no application
 > server — across four page types: the state, 1,134 region pages, their reports, and an
@@ -181,6 +181,19 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   second timing harness that would put rival numbers in one README. `HIP_DATA_DIR`,
   `HIP_REPORTS_DIR` and `HIP_PGDATA` are independent settings with `~` expansion, so
   the data, the reports and the database can each be moved to another disk.
+- **What buyers actually paid, and the tax rate you can compare** (M25, built) — two
+  New Jersey sources the platform had never read. `nj_sr1a` is the state's SR1A Sales
+  File: 1.4M recorded deeds carrying the Division of Taxation's own usable/non-usable
+  determination, so `sr1a_median_sale_price` excludes inheritances, sales between
+  relatives and sheriff's sales because the state says to, not because a threshold here
+  guessed. It is the first **transaction** price on a page that already carried a
+  modelled index and a self-reported survey value — Burlington County reads $375,000
+  transacted, $426,786 modelled and $354,000 self-reported, each with its own period.
+  `nj_tax_rates` supplies the **effective tax rate**, ingested from the state rather
+  than derived, which is the figure ARCHITECTURE #141 wanted and rejected for lack of
+  exactly these inputs; the Director's Ratio lands beside it as a check. The milestone
+  also completed the CD-code crosswalk to 564 of 564, so ten municipalities including
+  Parsippany-Troy Hills gained every municipal figure they had been missing.
 - **Two population figures that are never mixed** (M24, built) — `census_pep` carries
   the headline population at state, county and municipal level from the Census
   Population Estimates Program, a July-1 point estimate; `acs_population` stays the

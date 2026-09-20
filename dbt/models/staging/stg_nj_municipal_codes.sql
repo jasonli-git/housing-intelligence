@@ -37,9 +37,56 @@ candidates as (
     join census_muni c
       on c.countyfp = m.countyfp
      and (c.key_with_form = m.name_key or c.key_bare = m.name_key)
+),
+
+resolved as (
+    select cd_code, geoid
+    from candidates
+    where cd_code in (select cd_code from candidates group by 1 having count(*) = 1)
+      and geoid in (select geoid from candidates group by 1 having count(*) = 1)
+),
+
+-- The ten MOD-IV cannot spell, resolved one at a time rather than by rule.
+--
+-- `MUN_NAME` is a fixed-width field and these ten overflow it: "UPPER SADDLE RIV",
+-- "PARSIPPANY TR HLS", "SOUTH ORANGE VILLAGE TW". One is not truncated at all --
+-- MOD-IV writes "ORANGE CITY TWP" where Census writes "City of Orange township",
+-- which is a different word order. No normalisation rule covers both without also
+-- matching places it should not, and inventing one is what ARCHITECTURE #27 and #28
+-- rejected after "township" stripping merged Boonton with Boonton Township.
+--
+-- This is the other way to be exact: not a rule that guesses, but a list that is
+-- checked. Each row was verified on 2026-09-19 against TIGER by county -- the county
+-- half of the CD code is arithmetic, so the county is known independently of the name
+-- -- and each candidate was the only municipality of that name in that county and was
+-- unclaimed by the name match. `tests/test_nj_municipal_codes.py` re-checks all three
+-- properties, so a bad row fails rather than silently attributing one town's figures
+-- to another.
+--
+-- Until this existed, these ten had no GEOID and therefore no municipal figures at
+-- all -- including Parsippany-Troy Hills, the state's 18th largest municipality.
+aliases(cd_code, geoid) as (
+    values
+        ('0263', '3400375140'),  -- UPPER SADDLE RIV BORO -> Upper Saddle River borough
+        ('0703', '3401309250'),  -- CALDWELL BORO TWP     -> Caldwell borough
+        ('0706', '3401321840'),  -- ESSEX FELLS TWP       -> Essex Fells borough
+        ('0715', '3401352620'),  -- NORTH CALDWELL TWP    -> North Caldwell borough
+        ('0717', '3401313045'),  -- ORANGE CITY TWP       -> City of Orange township
+        ('0719', '3401369274'),  -- SOUTH ORANGE VILLAGE TW -> South Orange Village twp
+        ('1429', '3402756460'),  -- PARSIPPANY TR HLS TWP -> Parsippany-Troy Hills twp
+        ('1526', '3402959910'),  -- PT PLEASANT BEACH BORO -> Point Pleasant Beach boro
+        ('1705', '3403341640'),  -- LOWER ALLOWAY CREEK TWP -> Lower Alloways Creek twp
+        ('1815', '3403557300')   -- PEAPACK GLADSTONE BORO -> Peapack and Gladstone boro
+),
+
+combined as (
+    select cd_code, geoid from resolved
+    union all
+    -- An alias never overrides the name match; it only fills a gap the match left.
+    select cd_code, geoid from aliases
+    where cd_code not in (select cd_code from resolved)
+      and geoid not in (select geoid from resolved)
 )
 
 select cd_code as identifier, geoid, 'nj_cd_code' as scheme
-from candidates
-where cd_code in (select cd_code from candidates group by 1 having count(*) = 1)
-  and geoid in (select geoid from candidates group by 1 having count(*) = 1)
+from combined

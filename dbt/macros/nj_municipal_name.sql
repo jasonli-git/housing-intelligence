@@ -20,10 +20,12 @@
     Township at Milestone 2 (ARCHITECTURE #27, #28). The form is carried through and
     matched, which is precisely why this source resolves where Zillow could not.
 
-    Nor does it guess at truncation. Ten municipalities remain unmatched because MOD-IV
-    cut the name to fit — "UPPER SADDLE RIV", "PARSIPPANY TR HLS", "SOUTH ORANGE
+    Nor does it guess at truncation. Ten municipalities are unreachable here because
+    MOD-IV cut the name to fit — "UPPER SADDLE RIV", "PARSIPPANY TR HLS", "SOUTH ORANGE
     VILLAGE TW" — and inventing a rule per place is exactly the guessing #27 rejects.
-    They are reported rather than resolved.
+    They are resolved instead by the explicit alias list in `stg_nj_municipal_codes`,
+    which is checked against TIGER by `tests/test_nj_municipal_codes.py` rather than
+    trusted: a list that is verified is not the same thing as a rule that guesses.
 #}
 {% macro nj_municipal_name(column) %}
     regexp_replace(upper(

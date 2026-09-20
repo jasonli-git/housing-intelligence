@@ -166,6 +166,10 @@ class SourceAdapter(ABC):
     # plain single-header CSV. Census Building Permits ships two header rows, which
     # collapse into one unusable column unless both are skipped.
     csv_read_options: ClassVar[str] = ""
+    # Field layout for a fixed-width source: (name, one-based start, length). Pure
+    # publisher knowledge, like `csv_read_options`, so it sits beside it rather than
+    # behind a method. Empty for every source that is not fixed-width.
+    fixed_width_fields: ClassVar[tuple[tuple[str, int, int], ...]] = ()
     # Seconds to leave between this adapter's downloads; cached releases never wait.
     # Zero for publishers that state no limit. HUD User answers 429 past 60 requests a
     # minute (`x-ratelimit-limit: 60`), which 571 municipal CHAS calls reach in about
@@ -207,6 +211,17 @@ class SourceAdapter(ABC):
         """
         raise NotImplementedError(
             f"{cls.__name__} lands JSON but does not implement to_records()"
+        )
+
+    def landing_sheet(self, ref: ReleaseRef) -> str:
+        """Which worksheet a release lands from, for sources published as workbooks.
+
+        Only called when ``landing_format == "xlsx"``. Same division as `to_records`:
+        a publisher's sheet names are the adapter's knowledge, and landing asks rather
+        than branching on source id.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} lands xlsx but does not implement landing_sheet()"
         )
 
     def fetch_all(

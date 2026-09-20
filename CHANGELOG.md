@@ -3,6 +3,55 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.20.0] — 2026-09-20
+
+**Milestone 25 — transactions and market value.** What buyers actually paid, and the
+one property tax rate that can be compared between towns. Both from New Jersey, both
+keyless, and neither from the source the roadmap expected.
+
+### Added
+
+- `nj_sr1a`, the **SR1A Sales File**, as a source: every recorded NJ deed with the
+  Division of Taxation's own usable/non-usable determination. Seven archives, 2020
+  through a year-to-date 2026 file, 1,398,840 deeds, no duplicates across files.
+- `sr1a_median_sale_price` — the median verified price of usable class-2 sales over the
+  three years ending in the period shown, per municipality, county and state. The
+  platform's first **transaction** price, beside Zillow's modelled index and the ACS's
+  self-reported value. Statewide it runs $385,000 for the window ending 2022 to
+  $520,000 for the one ending June 2026.
+- `nj_tax_rates` as a source, and three metrics from it: `nj_effective_tax_rate`,
+  `nj_general_tax_rate` and `nj_director_ratio`, 1997–2025 and 2002–2025, per
+  municipality. The effective rate is the figure ARCHITECTURE #141 wanted and rejected
+  for lack of inputs the warehouse did not hold.
+- Two landing formats, `fixed_width` and `xlsx`, and the `fixed_width_fields` and
+  `landing_sheet` hooks that let an adapter declare a layout without landing learning
+  anything about the source.
+- `tests/test_nj_sr1a.py`, `tests/test_nj_tax_rates.py` and
+  `tests/test_nj_municipal_codes.py` — 21 tests, including a cross-source check that
+  the effective rate applied to the typical sale price reproduces the typical tax bill
+  within a measured and one-sided band.
+- Reader-facing definitions and page placement for all four metrics.
+
+### Changed
+
+- **The CD-code crosswalk is complete: 564 of 564.** Ten municipalities whose names
+  MOD-IV truncates are resolved by an explicit list verified against TIGER, rather than
+  by a rule that guesses (#184).
+- `stg_nj_modiv` reads that crosswalk instead of re-deriving the same name match, which
+  deletes 40 lines and closes a gap where `modiv_median_tax_bill` covered 554
+  municipalities while a tax rate on the same page covered 564. Each MOD-IV municipal
+  metric gains ten municipalities, among them Parsippany-Troy Hills.
+- 405,906 observations, against 356,861 before the milestone.
+
+### Fixed
+
+- A published tax rate of `0.000` was loaded as a rate rather than treated as a missing
+  year. All 16 belong to CD 1114 before it was constituted.
+- Hand-keyed deed dates put sales as far ahead as 2028 and opened a rolling window
+  ending there. A deed cannot be signed after the archive that reports it.
+- Rolling windows reaching back before the oldest archive were published from the
+  late-recorded deeds alone, a biased sample reported as fact.
+
 ## [0.19.0] — 2026-09-19
 
 **Milestone 24 — fresher figures.** Every ACS window moves forward a year, and headline

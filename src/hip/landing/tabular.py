@@ -8,11 +8,19 @@ dbt's job at the `stage` stage; keeping landing dumb is what makes it re-runnabl
 from __future__ import annotations
 
 import json
+import tempfile
+import zipfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 from hip.duck import duckdb_session
 from hip.landing.shapefile import LandedTable
 from hip.sources.base import Release, SourceAdapter
+
+# How much of a worksheet to ask for. Wider and taller than any sheet these sources
+# publish, because `read_xlsx` silently under-reads when left to infer the range.
+XLSX_RANGE = "A1:BZ900"
 
 
 def parquet_path(release: Release, parquet_dir: Path) -> Path:
@@ -183,6 +191,151 @@ def land_json(
                 f"TO '{out}' (FORMAT PARQUET, COMPRESSION ZSTD)"
             )
             staging.unlink()
+            record_landed(release, out)
+        result = con.execute(
+            "SELECT count(*) FROM read_parquet(?)", [str(out)]
+        ).fetchone()
+
+    return LandedTable(
+        source_id=release.ref.source_id,
+        layer=release.ref.layer,
+        vintage=release.ref.vintage,
+        scope=release.ref.scope,
+        path=out,
+        row_count=int(result[0]) if result else 0,
+    )
+
+
+def _sql_literal(value: str) -> str:
+    """Quote a string for interpolation into SQL, doubling embedded apostrophes.
+
+    DuckDB's table functions take their arguments positionally rather than as bound
+    parameters, so a sheet name has to be interpolated. One of the three sheets this
+    is used for is literally named `Director's Ratio History`, which terminates the
+    string mid-name and produces a parser error at `s`.
+    """
+    return "'" + value.replace("'", "''") + "'"
+
+
+def land_fixed_width(
+    release: Release,
+    adapter: type[SourceAdapter],
+    *,
+    parquet_dir: Path,
+    overwrite: bool = False,
+) -> LandedTable:
+    """Slice a fixed-width file into columns, unzipping it first if it is archived.
+
+    The adapter owns the layout — `fixed_width_fields` gives (name, start, length) —
+    exactly as it owns `to_records` for JSON. Landing stays dumb: it reads each record
+    as one string and takes substrings at the offsets it is given, with no idea what
+    any of them mean.
+
+    Only the declared fields are sliced, and that is a privacy boundary rather than an
+    optimisation. NJ's SR1A record devotes 178 of its 663 bytes to the names, street
+    addresses and ZIP codes of both parties to every transaction, and no aggregate needs
+    them. What the adapter does not declare never reaches Parquet.
+
+    The record is read whole because DuckDB has no fixed-width reader: `read_csv` with a
+    delimiter that cannot occur in the data yields one VARCHAR column per line, which is
+    what `substr` then cuts up. `\\x1f` is the ASCII unit separator, which a file of
+    printable fixed-width records does not contain.
+    """
+    fields = adapter.fixed_width_fields
+    if not fields:
+        raise ValueError(
+            f"{adapter.__name__} lands fixed-width but declares no fixed_width_fields"
+        )
+
+    out = parquet_path(release, parquet_dir)
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    with duckdb_session() as con:
+        if needs_landing(release, out, overwrite):
+            columns = ",\n                    ".join(
+                f"trim(substr(line, {start}, {length})) AS {name}"
+                for name, start, length in fields
+            )
+            with _unzipped(release.path) as source:
+                con.execute(
+                    f"""
+                    COPY (
+                        SELECT {columns}
+                        FROM read_csv('{source}', columns={{'line': 'VARCHAR'}},
+                                      delim='\x1f', header=false,
+                                      quote='', escape='', encoding='latin-1')
+                    ) TO '{out}' (FORMAT PARQUET, COMPRESSION ZSTD)
+                    """
+                )
+            record_landed(release, out)
+        result = con.execute(
+            "SELECT count(*) FROM read_parquet(?)", [str(out)]
+        ).fetchone()
+
+    return LandedTable(
+        source_id=release.ref.source_id,
+        layer=release.ref.layer,
+        vintage=release.ref.vintage,
+        scope=release.ref.scope,
+        path=out,
+        row_count=int(result[0]) if result else 0,
+    )
+
+
+@contextmanager
+def _unzipped(path: Path) -> Iterator[Path]:
+    """The file itself, or its single member extracted to a temporary directory.
+
+    Extracted rather than streamed because DuckDB reads a path, and decompressed to
+    disk rather than memory because one SR1A year is 113MB. The temporary copy is
+    removed on the way out; `data/raw/` keeps the archive as published.
+    """
+    if not zipfile.is_zipfile(path):
+        yield path
+        return
+    with zipfile.ZipFile(path) as archive:
+        members = [m for m in archive.namelist() if not m.endswith("/")]
+        if len(members) != 1:
+            raise ValueError(f"{path.name}: expected one member, found {len(members)}")
+        with tempfile.TemporaryDirectory(prefix="hip-land-") as tmp:
+            yield Path(archive.extract(members[0], path=tmp))
+
+
+def land_xlsx(
+    release: Release,
+    sheet: str,
+    *,
+    parquet_dir: Path,
+    overwrite: bool = False,
+) -> LandedTable:
+    """Transcode one worksheet to Parquet, every cell as text.
+
+    `all_varchar=true` because these workbooks put four header rows above the data and
+    a typed read would have to reconcile them with the values below; the staging model
+    finds its own header row and casts there. Landing preserves the grid.
+
+    `range` is not optional. Without it `read_xlsx` inferred a used-range that dropped
+    the three identifier columns and all 567 data rows from NJ's effective-rate sheet,
+    returning 3 rows by 29 columns and no error (measured 2026-09-19). An over-wide
+    range is padded with nulls, which the staging model filters, so asking for more
+    than exists is the safe direction to be wrong in.
+    """
+    out = parquet_path(release, parquet_dir)
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    with duckdb_session() as con:
+        if needs_landing(release, out, overwrite):
+            con.execute("INSTALL excel; LOAD excel;")
+            con.execute(
+                f"""
+                COPY (
+                    SELECT * FROM read_xlsx('{release.path}',
+                                            sheet={_sql_literal(sheet)},
+                                            range='{XLSX_RANGE}',
+                                            header=false, all_varchar=true)
+                ) TO '{out}' (FORMAT PARQUET, COMPRESSION ZSTD)
+                """
+            )
             record_landed(release, out)
         result = con.execute(
             "SELECT count(*) FROM read_parquet(?)", [str(out)]

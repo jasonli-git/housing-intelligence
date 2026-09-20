@@ -42,7 +42,14 @@ from hip.geography.crosswalk import apply_hud_weights, build_crosswalk
 from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
 from hip.landing.shapefile import land_shapefile
-from hip.landing.tabular import land_csv, land_json, land_ndjson, parquet_path
+from hip.landing.tabular import (
+    land_csv,
+    land_fixed_width,
+    land_json,
+    land_ndjson,
+    land_xlsx,
+    parquet_path,
+)
 from hip.packets import (
     SCHEMA_PATH,
     Packet,
@@ -295,6 +302,20 @@ def land(
             elif adapter.landing_format == "ndjson":
                 table = land_ndjson(
                     release, parquet_dir=settings.parquet_dir, overwrite=overwrite
+                )
+            elif adapter.landing_format == "fixed_width":
+                table = land_fixed_width(
+                    release,
+                    type(adapter),
+                    parquet_dir=settings.parquet_dir,
+                    overwrite=overwrite,
+                )
+            elif adapter.landing_format == "xlsx":
+                table = land_xlsx(
+                    release,
+                    adapter.landing_sheet(release.ref),
+                    parquet_dir=settings.parquet_dir,
+                    overwrite=overwrite,
                 )
             elif adapter.landing_format == "json":
                 table = land_json(

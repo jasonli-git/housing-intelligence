@@ -33,6 +33,16 @@ VALUE_BOUNDS = {
     # plausible range. Bounded on arrival rather than later, because the one metric
     # family that reached the warehouse unbounded is still an open item in TODO.md.
     "pep_population": (0.0, 50_000_000.0),
+    "sr1a_median_sale_price": (10_000.0, 20_000_000.0),
+    # Rates are per $100 of value. The ceiling looks absurd and is real: Winfield
+    # Township assesses at a small fraction of market value and its published general
+    # rate reached 229.192 in 2017. The effective rate, which is against market value,
+    # stays inside a tenth of that.
+    "nj_general_tax_rate": (0.0, 300.0),
+    "nj_effective_tax_rate": (0.0, 30.0),
+    # A percentage, but not bounded by 100: a municipality whose assessments predate a
+    # market fall can be assessed above market. Observed range 7.02 to 194.17.
+    "nj_director_ratio": (0.0, 300.0),
     "acs_median_home_value": (10_000.0, 10_000_000.0),
     "acs_renter_cost_burden": (0.0, 1.0),
     "permits_total_units": (0.0, 1_000_000.0),

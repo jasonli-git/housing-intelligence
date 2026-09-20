@@ -8,24 +8,25 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — nothing in progress, as of 2026-09-19
+## Now — nothing in progress, as of 2026-09-20
 
-**Milestone 24, fresher figures, shipped and deployed on 2026-09-19.** It is merged,
-published to R2 and Cloudflare Pages, and verified live at `housing.jasonli.app`.
-Ten metrics moved twelve months fresher and `pep_population` arrived seventeen months
-ahead of them.
+**Milestone 25, transactions and market value, is complete and open as a pull request.**
+Not merged, and not deployed — the warehouse and the local site carry it, the published
+site does not.
 
-**Milestone 24 detail.** What it shipped is in
-[CHANGELOG.md](CHANGELOG.md) 0.19.0, its decisions are ARCHITECTURE #176–#178, and its
-status is in [ROADMAP.md](ROADMAP.md). Nothing else is in progress.
+What it shipped is in [CHANGELOG.md](CHANGELOG.md) 0.20.0, its decisions are
+ARCHITECTURE #179–#186, and its status is in [ROADMAP.md](ROADMAP.md).
 
-**The deliverable is complete.** All 105 county explanations were regenerated on
-2026-09-19 against the new ACS window and the new population figure — 21 each from five
-models, none skipped. What the run did not report is what it cost, which is now an item
-in `Open`.
+**Three things about it are worth knowing before the next piece of work.** The
+transaction half does not come from MOD-IV, because MOD-IV cannot supply it at any
+authentication level (#179) — the roadmap's premise was wrong, not merely hard. The
+effective tax rate is ingested rather than derived, and the Director's Ratio is a check
+on it rather than its input (#180). And the CD-code crosswalk is finally complete at
+564 of 564, which moved ten municipalities' MOD-IV figures as well (#184).
 
 **To resume:** `make db-up` for Postgres, and `make setup-eval` rather than `make setup`
-when the evaluation harness is needed.
+when the evaluation harness is needed. A deploy of this milestone would be the first use
+of `make check-live`, which landed in PR #23 and has never run against a real deploy.
 
 ## Open
 
@@ -94,6 +95,34 @@ first raised, not where it must be done.
       `ST_Transform` reprojects vertices without densifying edges. Negligible for real
       TIGER geometry, which is vertex-dense; it only shows up in synthetic test fixtures.
       Revisit if a source ever supplies coarse polygons.
+
+- [ ] **The SR1A year-to-date file is a `@current` ref wearing a dated vintage.**
+      (M25, found 2026-09-19) `2026ytd` is republished as the year fills — the file on
+      disk holds deeds through 2026-06-30 — but it is content-addressed under a vintage
+      string that never changes, so `hip acquire` answers from cache and the newest
+      transaction price silently stops moving. Same defect as the `@current` refs above
+      and the same fix, a conditional request; it belongs in the **Milestone 29** work,
+      not beside it. Until then a refresh needs `--force`, which re-downloads all seven
+      archives rather than the one that moved.
+- [ ] **A county has a tax bill but no tax rate.** (M25, #181) `nj_effective_tax_rate`
+      is municipal only, because a county rate is a levy-weighted average and the
+      weights — equalized valuations per municipality — are in the Table of Equalized
+      Valuations PDF rather than the workbooks this milestone ingests. Either parse that
+      PDF as a fourth layer of `nj_tax_rates`, or state on a county page why the rate
+      stops at municipalities. Doing neither leaves an asymmetry a reader will notice
+      before we do.
+- [ ] **SR1A carries four fields the aggregates ignore.** (M25) `assessed_value_total`,
+      `sales_ratio`, `year_built` and `living_space` are landed and unused. `living_space`
+      is the one that matters: a price per square foot on *transactions* is not derivable
+      from anything else the warehouse holds, and it is the figure that makes two towns'
+      medians comparable when their housing stock differs. Check the field's fill rate
+      before scoping it — the median is meaningless if half the deeds leave it blank.
+- [ ] **`web/lib/groups.test.ts` pins a hand-copied metric catalog.** (M25, found
+      2026-09-20) The comment says a new metric "shows up there as a failure to
+      classify", but the catalog is a literal list snapshotted from `GET /metrics`, so
+      four new metrics went unclassified without failing anything — they would have
+      rendered under "Other measures" silently. Derive the list from
+      `config/metrics.yml` or from a recorded API response, so the guard guards.
 
 ### Evaluation harness
 
@@ -215,17 +244,6 @@ first raised, not where it must be done.
 
 - [ ] **`make publish` assembling both halves into one directory.** (M11) Its done
       criterion is a reachable public URL.
-- [ ] **Nothing verifies a deploy after it lands.** Found 2026-09-19 deploying Milestone
-      24. `make check-dist` validates the *build* — manifest present, index present, no
-      `localhost:8000` baked into any page — and `make deploy` then runs `rclone sync`
-      followed by `wrangler pages deploy` with nothing checking the result. A successful
-      R2 sync followed by a failed Pages upload would leave the artifacts ahead of the
-      site and report nothing. The live check after this deploy was done by hand.
-      A `make check-live` should fetch the deployed site and assert: the production
-      domain answers 200; the artifact origin answers 200; a known figure that just
-      changed is actually present; and — per the Milestone 18 note — it samples a county,
-      a municipality, a ZIP and a report rather than one exemplar, because a failure that
-      lands on some page types is invisible from one of them.
 - [ ] **`hip explain` does not report what a run cost.** Found 2026-09-19 regenerating
       Milestone 24's readings: the command prints characters and figures bound per
       region but never a billed total, so the only way to know what a regeneration cost
@@ -287,6 +305,21 @@ first raised, not where it must be done.
 
 ### Open decisions — not scheduled, not decided
 
+- [ ] **Should a transaction price ever price the mortgage?** (M25, found 2026-09-20)
+      `costInputs` prices the cost-to-own panel off `zhvi_sfr`, and where Zillow
+      publishes no value the panel is replaced by a sentence saying so. Parsippany-Troy
+      Hills is the case that makes this concrete: 56,397 people, no Zillow figure, and
+      the page tells a reader its owner-reported value is "a survey five years old, too
+      old to price a mortgage on" — while the tables now carry a $630,000 median of
+      deeds signed through June 2026 directly above that sentence. The transaction price
+      is the freshest and most concrete figure on the page and the panel is declining to
+      use it. Against: the two are not interchangeable — a median of what *sold* is not
+      a median of what *exists*, and the measured gap is real (the effective rate
+      applied to the sale price overshoots the MOD-IV tax bill by a median 24%), so
+      swapping one in where the other is missing would make two regions' monthly costs
+      mean different things. Any fallback would have to say on the panel which figure it
+      used. **Not decided** — this is a methodology choice about the site's headline
+      number, not an implementation detail.
 - [ ] **Should a change of model force regeneration?** (deferred to M12) The preference
       list can fall through mid-run, so some regions may carry prose from one model and
       some from another. `region_explanations` stores `model_id`, `model_label` and

@@ -18,6 +18,8 @@ from hip.sources.fred import FredAdapter
 from hip.sources.hud import HudAdapter, HudChasAdapter, HudFmrAdapter
 from hip.sources.irs_migration import MigrationAdapter
 from hip.sources.nj_modiv import ModivAdapter
+from hip.sources.nj_sr1a import Sr1aAdapter
+from hip.sources.nj_tax_rates import NjTaxRatesAdapter
 from hip.sources.tiger import TigerAdapter
 from hip.sources.zillow import ZhviAdapter, ZoriAdapter
 
@@ -31,6 +33,11 @@ BLS_END_YEAR = 2025
 # Explicit for the same reason `BLS_END_YEAR` is, and bumped the same way. Hard-coded
 # inside the adapter from Milestone 3 until Milestone 24 moved the control here.
 ACS_END_YEAR = 2024
+
+# The newest edition of NJ's rate and ratio workbooks. It names the worksheet as well as
+# the vintage — `General Tax Rates 1997-2025` — so a stale value fails loudly on read
+# rather than landing the wrong year. Bumped the same way as the two above.
+NJ_TAX_END_YEAR = 2025
 
 # `njgin_parcels` stays planned: the MOD-IV composite layer already carries parcel
 # geometry alongside the assessment attributes, so a separate geometry source would
@@ -55,6 +62,8 @@ IMPLEMENTED: tuple[str, ...] = (
     HudFmrAdapter.source_id,
     HudChasAdapter.source_id,
     ModivAdapter.source_id,
+    Sr1aAdapter.source_id,
+    NjTaxRatesAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -73,6 +82,8 @@ METRIC_SOURCES: tuple[str, ...] = (
     HudFmrAdapter.source_id,
     HudChasAdapter.source_id,
     ModivAdapter.source_id,
+    Sr1aAdapter.source_id,
+    NjTaxRatesAdapter.source_id,
 )
 
 
@@ -119,6 +130,10 @@ def build_adapter(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return HudChasAdapter(states=scope.states, county_fips=_county_fips(scope))
     if source_id == ModivAdapter.source_id:
         return ModivAdapter()
+    if source_id == Sr1aAdapter.source_id:
+        return Sr1aAdapter()
+    if source_id == NjTaxRatesAdapter.source_id:
+        return NjTaxRatesAdapter(end_year=NJ_TAX_END_YEAR)
     if (milestone := PLANNED.get(source_id)) is not None:
         raise UnknownSourceError(
             f"'{source_id}' has no adapter yet — it ships in Milestone {milestone}. "

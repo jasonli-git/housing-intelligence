@@ -175,6 +175,35 @@ sources:
       Assessed values are not market values; ratios vary by municipality and
       revaluation year. Stays in Parquet/DuckDB per ARCHITECTURE #16.
 
+  nj_sr1a:
+    name: SR1A sales file
+    publisher: New Jersey Division of Taxation
+    license: Open public record
+    url: https://www.nj.gov/treasury/taxation/lpt/statdata.shtml
+    cadence: annual
+    adapter: hip.sources.nj_sr1a:Sr1aAdapter
+    notes: >-
+      Every recorded NJ deed with the state's own usable/non-usable determination for
+      sales-ratio purposes. The platform lands 15 of the 663 bytes: the names, street
+      addresses and ZIP codes of both parties are deliberately not transcoded.
+      One closed archive per year, plus a year-to-date file for the year in progress
+      that is republished without a fixed interval -- so unlike the closed years it is
+      not immutable, and the content-addressed cache will not re-fetch it without
+      --force until conditional requests land in Milestone 29.
+
+  nj_tax_rates:
+    name: General and effective tax rates, and the Director's Ratio
+    publisher: New Jersey Division of Taxation
+    license: Open public record
+    url: https://www.nj.gov/treasury/taxation/lpt/statdata.shtml
+    cadence: annual
+    adapter: hip.sources.nj_tax_rates:NjTaxRatesAdapter
+    notes: >-
+      The effective rate is the state's published figure, not one derived here; the
+      Director's Ratio is landed beside it as a check rather than as an input. Rates are
+      per $100 of value. Municipality level only -- a county rate needs levy weights
+      these workbooks do not carry.
+
   njgin_parcels:
     name: NJ statewide parcel boundaries
     publisher: NJ Office of GIS (NJGIN)
