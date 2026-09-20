@@ -8,24 +8,84 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — nothing in progress, as of 2026-09-19
+## Now — Milestone 25, MOD-IV transactions and market value, as of 2026-09-19
 
-**Milestone 24, fresher figures, shipped and deployed on 2026-09-19.** It is merged,
-published to R2 and Cloudflare Pages, and verified live at `housing.jasonli.app`.
-Ten metrics moved twelve months fresher and `pep_population` arrived seventeen months
-ahead of them.
+**Deliverable.** New Jersey's own transaction prices and its own effective tax rate,
+both per municipality and per county, from two state files the platform has never read.
+Together they close ARCHITECTURE #141, which wanted an effective rate against market
+value and rejected it for lack of "sale prices or equalization ratios the warehouse does
+not hold". Both now exist and are keyless.
 
-**Milestone 24 detail.** What it shipped is in
-[CHANGELOG.md](CHANGELOG.md) 0.19.0, its decisions are ARCHITECTURE #176–#178, and its
-status is in [ROADMAP.md](ROADMAP.md). Nothing else is in progress.
+**The source changed during scoping, and the milestone is better for it.** ROADMAP
+Milestone 25 assumed the transaction half came from MOD-IV's `SALE_PRICE`, `SALES_CODE`
+and `DEED_DATE`, filtered to market transfers by sales code. It cannot: `SALES_CODE` is
+MOD-IV field 27 `SALES-PRICE-CODE`, which records *how a sale was investigated*
+(A=Actual, F=Field, Q=Questionnaire), not whether it is usable. The usability field is
+MOD-IV field 38 `SALE-SR1A-UN-CODE`, and NJ's ArcGIS publication does not expose it —
+confirmed 2026-09-19 by listing all 45 fields of `Parcels_Composite_NJ_WM`, which is
+reachable without a token and carries the identical five sale fields. Re-acquiring MOD-IV
+could not have obtained it at any authentication level.
 
-**The deliverable is complete.** All 105 county explanations were regenerated on
-2026-09-19 against the new ACS window and the new population figure — 21 each from five
-models, none skipped. What the run did not report is what it cost, which is now an item
-in `Open`.
+New Jersey publishes the usable-sale determination in a different file entirely: the
+**SR1A Sales File**, 663-byte fixed-width records at
+`nj.gov/treasury/taxation/lpt/statdata/`, one archive per year 2020-2025 plus a
+year-to-date 2026 file. It carries `U-N-TYPE` (U/N), `SR-NU-CODE` (the 33 non-usable
+categories), both `REPORTED-SALES-PRICE` and `VERIFIED-SALES-PRICE`, `SALES-RATIO`,
+`PROPERTY-CLASS` and `DEED-DATE`, keyed on `COUNTY-CODE` + `DISTRICT-CODE`. That is the
+NJ CD code, so it joins through `region_identifiers` with no name matching.
 
-**To resume:** `make db-up` for Postgres, and `make setup-eval` rather than `make setup`
-when the evaluation harness is needed.
+Measured 2026-09-19 on `YTDSR1A2026.txt` (11MB zipped, 113MB raw, 169,935 records,
+published 2026-08-12): 69,135 usable and 100,800 non-usable; 145,022 class-2. Usable
+class-2 median verified price is $525,000 across 37,403 deeds dated 2025 and $550,000
+across 28,404 dated 2026 — continuing the MOD-IV series of $434,500 (2022), $455,000
+(2023) and $500,000 (2024) without a filter anyone had to invent.
+
+**To resume:** `make db-up` for Postgres. The scratch parse and both workbooks are under
+the session scratchpad, not the repo; re-download rather than trusting them.
+
+### Tasks
+
+- [ ] **`nj_sr1a` source adapter** — one release per year, 2020-2025 plus year-to-date
+      2026. Zipped fixed-width, so the lander needs to unzip; check whether
+      `landing_format` already covers this or needs a new value.
+- [ ] **`nj_tax_rates` source adapter** — `lpt/GTRhistory.xlsx` (General and Effective
+      Tax Rates by county and municipality, 1997-2025, two sheets, 567 rows each) and
+      `lpt/tev/DirRatios.xlsx` (Director's Ratio History, 2002-2025). Both keyed on CD
+      code. Both serve `Last-Modified`.
+- [ ] **`stg_nj_sr1a`** — usable class-2 deeds to a median verified sale price per
+      municipality and per county, aggregated from deeds rather than from municipal
+      medians, the way `stg_nj_modiv` does it for the tax bill.
+- [ ] **`stg_nj_tax_rates`** — unpivot the year columns of all three sheets into
+      `general_tax_rate`, `effective_tax_rate` and `director_ratio`.
+- [ ] **Validate effective against general × ratio.** The state publishes all three, so
+      the identity is checkable rather than assumed. Absecon 2025: general 3.517 and the
+      2024 ratio 68.62 give 2.4134 against a published effective of 2.4103 — within
+      0.13%, but Atlantic City is 1.9% out on the same arithmetic. Establish which
+      year's ratio the published effective rate actually uses before publishing either.
+- [ ] **Decide the fate of the 10 truncated municipalities.** `stg_nj_municipal_codes`
+      resolves 554 of 564 CD codes; the 10 failures are MOD-IV name truncations
+      ("UPPER SADDLE RIV", "PARSIPPANY TR HLS", "SOUTH ORANGE VILLAGE TW") that
+      ARCHITECTURE #27/#28 and the `nj_municipal_name` docstring deliberately refuse to
+      guess at. Both new sources are keyed on CD code and cover all 564, so leaving them
+      unmatched caps two brand-new headline metrics at 554. An explicit hand-verified
+      alias table of exactly 10 entries is an auditable exception list rather than the
+      guessing rule #27 rejected — but it is an architecture decision, not a detail.
+      Measured cost of not fixing it: 2,215 SR1A rows in the YTD file alone.
+- [ ] **Three dissolved municipalities in the workbooks.** 567 rows, not 564: Pine
+      Valley Boro (0429, merged into Pine Hill 2022) and Princeton Boro and Princeton
+      Twp (1109/1110, merged 2013). All null from their merger year forward. They must
+      not become regions, and must not be counted as match failures.
+- [ ] **Metrics, bounds and config** — `config/metrics.yml` entries, `VALUE_BOUNDS` in
+      `src/hip/validate/gate.py`, and both new staging models in `KEYED_MODELS`
+      (`src/hip/transform/dbt_runner.py`). The `KEYED_MODELS` omission is what made
+      `stg_census_pep` load zero rows at Milestone 24 while every test passed.
+- [ ] **Tests** covering the fixed-width parse, the usable/non-usable split, the CD-code
+      join, and the dissolved-municipality exclusion.
+- [ ] **A verified price is a fourth kind of figure.** SPEC principle 11 says every
+      figure is observed, calculated, estimated or forecast and which one is always
+      visible. A median verified sale price is *observed* where Zillow's ZHVI is
+      modelled and the ACS's value is self-reported, and the packet will carry all
+      three. Check what the frontend does with three prices that disagree honestly.
 
 ## Open
 
