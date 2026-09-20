@@ -22,6 +22,8 @@ from hip.sources.base import Release, ReleaseRef
 from hip.sources.nj_sr1a import FIELDS, RECORD_BYTES, Sr1aAdapter, vintages
 from hip.warehouse.db import get_engine, probe
 
+ROOT = Path(__file__).resolve().parents[1]
+
 
 def _record(**values: str) -> str:
     """One 663-byte SR1A record with the named fields set and the rest blank."""
@@ -182,3 +184,26 @@ def test_no_window_claims_a_period_the_deeds_do_not_reach() -> None:
             """)
         ).scalar_one()
     assert beyond == 0
+
+
+def test_no_derived_ratio_is_computed_from_the_transaction_median() -> None:
+    """The owner's condition on the cost-to-own fallback, 2026-09-20.
+
+    A transaction median may price a mortgage on the page it belongs to, but must stay out
+    of cross-region affordability comparisons until those explicitly handle two price
+    sources: `price_to_income` computed from Zillow for one town and from deeds for its
+    neighbour would rank the two against a yardstick that changes between them. This reads
+    the ratio table in `hip.analytics.compute` rather than the warehouse, so it fails when
+    someone adds the input, not only after a pipeline run.
+    """
+    source = (ROOT / "src/hip/analytics/compute.py").read_text()
+    head = "for metric_id, numerator, denominator, multiplier in ("
+    block = source[source.index(head) :]
+    block = block[: block.index("):")]
+    assert "zhvi_sfr" in block, "the ratio table moved; this reads the wrong text"
+    assert "sr1a_median_sale_price" not in block, (
+        "a derived ratio is computed from sr1a_median_sale_price. That figure is a "
+        "median of what sold, not of what exists, so a ratio mixing it with Zillow's "
+        "index across regions compares them on different yardsticks. Needs an explicit "
+        "methodology decision first — see TODO.md, Open decisions."
+    )

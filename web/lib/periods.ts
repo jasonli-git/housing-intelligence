@@ -30,6 +30,17 @@ export function periodLabel(date: string, metricId?: string): string {
   return `${MONTHS[month - 1]} ${year}`;
 }
 
+/**
+ * One endpoint at month precision, always: "Jun 2026", "Dec 2025".
+ *
+ * `periodLabel` shortens a 31 December date to its year alone, which is right for an
+ * annual figure and wrong for one end of a span — "Jan 2023 to 2025" reads as though the
+ * two ends were measured differently. A window says both ends the same way.
+ */
+export function monthLabel(date: string): string {
+  return `${MONTHS[Number(date.slice(5, 7)) - 1]} ${date.slice(0, 4)}`;
+}
+
 /** A change window, e.g. "2019 → 2023" or "Jul 2021 → Jul 2026". */
 export function windowLabel(start: string, end: string, metricId?: string): string {
   return `${periodLabel(start, metricId)} → ${periodLabel(end, metricId)}`;

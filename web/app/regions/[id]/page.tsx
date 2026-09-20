@@ -12,7 +12,7 @@ import { StandOuts } from "@/components/StandOuts";
 import { TrendsExplorer } from "@/components/TrendsExplorer";
 import { api, type PacketLevel, type PacketMetric, type Region, regionsWithData } from "@/lib/api";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
-import { costInputs } from "@/lib/costInputs";
+import { costInputs, homePrice } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
 import type { Term } from "@/lib/glossary";
 import { groupRows } from "@/lib/groups";
@@ -288,13 +288,14 @@ export default async function RegionPage({
       ) : (
         // Said rather than left out, so a thinner page reads as designed, not broken: the
         // section a reader looks for first says why it is empty here.
-        !packet.levels.some((l) => l.metric_id === "zhvi_sfr") && (
+        homePrice(packet.levels) === null && (
           <section className="section cost" aria-labelledby="cost-heading">
             <h2 id="cost-heading">What it costs per month</h2>
             <p className="cost-missing">
-              Zillow publishes no home value for {name}, so no monthly cost to own or rent is
-              worked out here. The owner-reported value in the tables is a survey five years
-              old, too old to price a mortgage on.
+              No monthly cost is worked out for {name}. Zillow publishes no home value here,
+              and there are too few recent qualifying sales to stand a purchase price on. The
+              owner-reported value in the tables is a survey five years old, too old to price a
+              mortgage on.
             </p>
           </section>
         )

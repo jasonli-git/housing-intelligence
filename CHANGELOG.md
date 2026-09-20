@@ -3,6 +3,35 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.20.1] — 2026-09-20
+
+**A cost card where there was none.** 163 municipalities gain a monthly cost, priced from
+recorded sales rather than from an index that does not cover them.
+
+### Added
+
+- The cost-to-own card falls back to `sr1a_median_sale_price` where Zillow publishes no
+  home value, restated as **"Estimated monthly cost at a $630,000 purchase price"** with
+  the sales window named under it. The owner's decision of 2026-09-20 (ARCHITECTURE
+  #187). 176 of 564 municipalities have no Zillow figure; 163 now have a cost card and
+  13 still say why they do not.
+- `MAX_SALE_AGE_MONTHS`, an 18-month freshness limit on that fallback, so a transaction
+  median that stops being republished drops out rather than pricing a mortgage on a
+  market that has moved.
+- `monthLabel` in `lib/periods`, which says both ends of a window the same way —
+  `periodLabel` shortens a 31 December date to its year, and "Jan 2023 to 2025" reads as
+  though the two ends were measured differently.
+- `lib/costInputs.test.ts`, and a test that reads the derived-ratio table in
+  `hip.analytics.compute` to keep the transaction median out of cross-region
+  affordability comparisons.
+
+### Changed
+
+- The missing-cost explanation now names both sources, because Zillow's absence is no
+  longer sufficient reason for an empty card.
+- The property tax line says the bill is the area's median rather than this price's tax.
+  It is read from MOD-IV and never derived from the sale price.
+
 ## [0.20.0] — 2026-09-20
 
 **Milestone 25 — transactions and market value.** What buyers actually paid, and the
