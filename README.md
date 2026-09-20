@@ -2,9 +2,10 @@
 
 A local-first analytics platform that turns fragmented public housing data into a
 queryable warehouse of housing intelligence, starting with New Jersey. It pulls parcel
-and MOD-IV records, Zillow ZHVI and ZORI, Census ACS and Building Permits, FHFA HPI,
-FRED, BLS, IRS migration data, and HUD's income limits, Fair Market Rents and CHAS
-tables through one staged pipeline, resolves everything to a shared geography spine, and
+and MOD-IV records, New Jersey's SR1A deed file and its published tax rates, Zillow ZHVI
+and ZORI, Census ACS, Population Estimates and Building Permits, FHFA HPI, FRED, BLS,
+IRS migration data, and HUD's income limits, Fair Market Rents and CHAS tables through
+one staged pipeline, resolves everything to a shared geography spine, and
 computes the facts — value growth, rent growth, affordability change, construction
 activity, county rankings — before anything is displayed. It is built for someone who
 wants to ask where affordability is worsening fastest in New Jersey and get a defensible
@@ -19,26 +20,26 @@ layer only explains metrics that were already computed.
 > parcels, 1.4M deeds, and 410,587 observations across 37 metrics from 16 public sources
 > spanning 1971 to 2026, plus 38,226 computed changes and 53,714 rankings. Every source
 > is asked on each refresh whether anything has moved, and a figure that changes is
-> recorded rather than overwritten. Every value carries its source file and
-> match method. All eight pipeline stages run. The site publishes itself — 5,917 static
-> artifacts and 2,272 pre-rendered pages, served with no database and no application
-> server — across four page types: the state, 1,134 region pages, their reports, and an
-> affordability page.
+> recorded rather than overwritten — 313,536 such revisions so far. Every value carries
+> its source file and match method. All eight pipeline stages run. The site publishes
+> itself — 5,955 static artifacts and 2,274 pre-rendered pages, served with no database
+> and no application server — across four page types: the state, 1,135 region pages,
+> their reports, and an affordability page.
 >
-> **Latest.** Milestone 24 opened Version 3 on 2026-09-19 with fresher figures: every
-> ACS window moved forward a year behind an explicit bump constant, and the Census
-> Population Estimates Program joined as a second population source that is deliberately
-> never mixed with ACS in a ratio. Before it, Milestone 16 closed Version 2 on 2026-09-18 by putting the whole platform
-> on a navigable globe of the United States, drawn by hand as SVG with no map library.
-> Before it, Milestone 23 made region pages lead with what a home costs a month rather
-> than with tables, and the "Quiet utility" redesign on 2026-09-17 gave them quieter
-> surfaces and larger type. Interpretation is a measured layer, not a claim: seventeen
-> models have been evaluated against standardized scenarios, five write every county's
-> readings side by side, and since Milestone 13 any figure the packet does not carry is
-> refused before it is stored.
+> **Latest.** Milestone 29 shipped on 2026-09-20: the platform now asks each publisher
+> whether anything has moved instead of answering from its own cache forever. It found
+> that the deployed site was a Zillow release behind, that MOD-IV had gone behind a
+> token, and that Zillow had restated 294,469 of its own published figures — all of
+> which had been invisible. Before it, Milestone 25 added New Jersey's recorded sale
+> prices and the one property tax rate that is comparable between towns, and Milestone
+> 24 moved every ACS window forward a year and added a second population source that is
+> never mixed with the first in a ratio. Interpretation is a measured layer, not a
+> claim: seventeen models have been evaluated against standardized scenarios, five write
+> every county's readings side by side, and since Milestone 13 any figure the packet
+> does not carry is refused before it is stored.
 >
-> Next is Milestone 24, fresher figures. See [ROADMAP.md](ROADMAP.md) for what is
-> planned and [CHANGELOG.md](CHANGELOG.md) for what shipped.
+> Next is Milestone 26. See [ROADMAP.md](ROADMAP.md) for what is planned and
+> [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
@@ -534,7 +535,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.13.0 — **Version 1 is complete; Version 2 is under way.**
+v0.21.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -542,12 +543,21 @@ reports, the NJ parcel and MOD-IV layer, and the evaluated local-model explanati
 The AI layer is optional throughout — with no explanations generated, every page and
 endpoint still works.
 
-Version 2 moves it off `localhost` and makes New Jersey excellent before it goes anywhere
+Version 2 moved it off `localhost` and made New Jersey excellent before going anywhere
 else: static publication on a public domain, hosted inference in place of local
 generation, citation binding, deeper New Jersey sources, a three-dimensional map of its
 564 municipalities, a consumer entry point, and a design system. Expansion to the
-Northeast and to every US county was deferred past Version 2 on 2026-09-07. Eleven
-milestones, eight shipped.
+Northeast and to every US county was deferred past Version 2 on 2026-09-07.
+
+Version 3 is depth on what is already held, and nearly every item was a column, a file or
+a vintage already on this machine and unused. Three of its six milestones have shipped —
+**24** fresher figures, **25** recorded sale prices and a comparable tax rate, **29**
+scheduled refresh, brought forward out of order once the site was public and had started
+to decay. **26**, **27** and **28** remain, with the map's standing check.
+
+The notes below are a running commentary on individual milestones rather than a complete
+list; [CHANGELOG.md](CHANGELOG.md) is the full record and [ROADMAP.md](ROADMAP.md) has
+every milestone's status.
 
 **Milestone 10 — build cost and data placement (2026-09-02).** `hip footprint` reports
 bytes per storage tier, per warehouse table, and per state, including the Postgres size
@@ -628,9 +638,11 @@ known rough edges are in [TODO.md](TODO.md). Work not scheduled for Version 2 is
 the end of the roadmap.
 
 > **Some figures in Resource Requirements below may be out of date.** They were
-> generated from `v0.9.0` on 2026-08-28; 26 releases have shipped since, through
-> `0.18.0`. Re-measuring is not yet automated. Treat the numbers as indicative
-> until they are refreshed.
+> generated from `v0.9.0` on 2026-08-28; 29 releases have shipped since, through
+> `0.21.0`, and the pipeline has gained sources and a revision table. Re-measuring
+> needs a `mac-sitrep` run and is not yet automated. Treat the numbers as indicative
+> until they are refreshed. **The Storage Footprint below is current** — it is measured
+> by `hip footprint`, which is a command this repository owns.
 
 <!-- sitrep:requirements:start -->
 <!-- generated by sitrep — do not edit by hand -->
@@ -659,44 +671,51 @@ Measured on Mac16,10 · Apple M4 · 16 GB · 10 cores · macOS 26.6.2 (25G83).
 
 <!-- sitrep:requirements:end -->
 
-The figures above are a **warm** run: `hip acquire` returns cached releases without
-touching the network unless `--force`, so nothing is downloaded during a profiled
-`make pipeline`. Cold-run cost is not measured.
+The figures above are a **warm** run, and Milestone 29 changed what that means.
+`hip acquire` no longer answers every cached release without asking: a ref whose vintage
+is `current` or a year-to-date file is revalidated against the publisher, so a warm run
+now makes a handful of conditional requests — seven, as of 2026-09-20 — and downloads
+nothing when they all answer 304. Cold-run cost is not measured.
 
 ### Storage Footprint
-
-> **Some figures below may be out of date.** Measured 2026-09-02 against the
-> data loaded at that time; milestones shipped since have added sources and
-> layers that are not reflected here. Re-measuring is not yet automated. Treat
-> the numbers as indicative until they are refreshed.
 
 What the platform still occupies after a run, which is the number that multiplies when
 geography expands. `mac-sitrep` measures I/O volume during a run; this measures what is
 left behind. Postgres is included because it lives inside Docker's disk image, where
 neither sitrep nor `du data/` can see it.
 
-Measured 2026-09-02 with `uv run hip footprint`, New Jersey loaded:
+Measured 2026-09-20 with `uv run hip footprint`, New Jersey loaded:
 
 | Tier | Size |
 |---|---|
-| raw | 2.1 GB |
-| parquet | 898.5 MB |
-| duckdb | 80.8 MB |
-| packets | 6.9 MB |
-| **filesystem** | **3.1 GB** |
-| postgres | 339.3 MB |
-| **total** | **3.4 GB** |
+| raw | 2.5 GB |
+| parquet | 932.9 MB |
+| duckdb | 85.2 MB |
+| packets | 7.2 MB |
+| **filesystem** | **3.5 GB** |
+| postgres | 368.4 MB |
+| **total** | **3.8 GB** |
 
-Inside Postgres, the two tables that scale with geography:
+Inside Postgres, the three tables that scale:
 
 | Table | Size | Rows |
 |---|---|---|
-| `fact_metric_observation` | 170.9 MB | 335,927 |
-| `regions` | 135.3 MB | 3,366 |
+| `fact_metric_observation` | 179.4 MB | 410,587 |
+| `regions` | 86.0 MB | 3,366 |
+| `fact_revision` | 56.1 MB | 313,536 |
 
-`regions` is 40 kB per row because it carries PostGIS geometry, so it grows with region
-count rather than with observation count — the reason a state's cost is dominated by how
-finely it is subdivided rather than by how much history it has.
+`regions` carries PostGIS geometry, so it grows with region count rather than with
+observation count — the reason a state's cost is dominated by how finely it is
+subdivided rather than by how much history it has.
+
+`fact_revision` is new in Milestone 29 and is the one table that grows without any
+geography being added: it records a row each time a publisher restates a figure it has
+already published, and Zillow's first restatement under it produced 294,469 of them. Its
+growth is a function of refresh cadence, not of coverage.
+
+**`raw` grows the same way**, for the same reason: every refresh writes a new
+content-addressed copy beside the old one. `make prune-raw` shows what nothing points at
+any more and `ARGS=--apply` removes it — a single run on 2026-09-20 recovered 1.4 GB.
 
 New Jersey holds 3,365 regions and 335,263 observations; the `US` nation-level row
 accounts for the remaining 664.
