@@ -14,12 +14,15 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Annotated
 
 import duckdb
 import typer
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from hip import __version__, refresh
@@ -311,6 +314,143 @@ def acquire(
             err=True,
         )
         raise typer.Exit(code=1)
+
+
+@app.command(name="prune-raw")
+def prune_raw(
+    apply: Annotated[
+        bool,
+        typer.Option("--apply", help="Actually delete. Shows what it would do first."),
+    ] = False,
+) -> None:
+    """Remove raw releases nothing points at any more.
+
+    Shows what it would delete and stops, unless `--apply` is given: this removes files
+    the platform cannot re-derive, and a content-addressed tier is only safe to prune
+    against a list of what is still referenced.
+
+    Keeps whatever each source index currently points at, and **every release a fact
+    cites** — a warehouse row names the release its value came from, and deleting that
+    file would leave a published figure whose provenance points at nothing.
+    """
+    settings = get_settings()
+    with Session(get_engine()) as session:
+        cited = {
+            row[0]
+            for row in session.execute(
+                text(
+                    "SELECT DISTINCT sr.file_sha256 FROM source_releases sr "
+                    "JOIN fact_metric_observation f ON f.release_id = sr.release_id"
+                )
+            ).all()
+            if row[0]
+        }
+    typer.echo(f"{len(cited):,} release(s) cited by facts — these are never removed")
+
+    found = refresh.superseded_releases(settings.raw_dir, cited)
+    if not found:
+        typer.secho(
+            "nothing superseded; data/raw/ holds only what is referenced",
+            fg=typer.colors.GREEN,
+        )
+        return
+
+    by_source: dict[str, list[refresh.Superseded]] = {}
+    for item in found:
+        by_source.setdefault(item.source_id, []).append(item)
+    for source_id, items in sorted(by_source.items()):
+        size = sum(i.size_bytes for i in items)
+        typer.echo(f"  {source_id:<16}{len(items):>3} dir(s)  {size / 1e6:>9,.1f} MB")
+    total = sum(i.size_bytes for i in found)
+
+    if not apply:
+        typer.secho(
+            f"would remove {len(found)} director(ies), {total / 1e6:,.1f} MB — "
+            f"re-run with --apply",
+            fg=typer.colors.YELLOW,
+        )
+        return
+
+    for item in found:
+        shutil.rmtree(item.path)
+    typer.secho(
+        f"removed {len(found)} director(ies), {total / 1e6:,.1f} MB",
+        fg=typer.colors.GREEN,
+    )
+
+
+@app.command(name="refresh")
+def refresh_command(
+    source: Annotated[
+        str | None, typer.Option("--source", "-s", help="Source id; default all.")
+    ] = None,
+    force: Annotated[
+        bool,
+        typer.Option("--force", help="Re-download and rebuild even if nothing moved."),
+    ] = False,
+) -> None:
+    """Acquire every source and rebuild the warehouse, for a scheduler to run.
+
+    Exits 0 when everything is current, 3 when the pipeline completed with some source
+    unreachable, and 1 when the pipeline itself failed — the same three-way split
+    `hip explain` uses, because the answer a cron job needs is not pass/fail. Fifteen
+    sources moving while one publisher is down is a successful refresh whose numbers
+    should still deploy (ARCHITECTURE #102).
+
+    **Stops early when nothing moved**, which is the common case and the point: if no
+    publisher has anything new, rebuilding the warehouse and re-rendering 13,659 pages
+    produces byte-identical output at the cost of several minutes. A run that only
+    revalidates costs sixteen conditional requests.
+    """
+    settings = get_settings()
+    adapters = _adapters(source)
+
+    report = AcquireReport()
+    for _, outcome in refresh.acquire(adapters, raw_dir=settings.raw_dir, force=force):
+        if isinstance(outcome, refresh.RefFailure):
+            report.failures.append(outcome)
+            typer.secho(
+                f"  failed   {outcome.source_id}/{outcome.key}: {outcome.error}",
+                fg=typer.colors.YELLOW,
+                err=True,
+            )
+        else:
+            report.releases.append(outcome)
+
+    typer.echo(
+        f"{len(report.downloaded):>4} moved   {len(report.revalidated):>4} unchanged   "
+        f"{len(report.unchecked):>4} not checked   {len(report.failures):>4} failed"
+    )
+
+    if not report.downloaded and not force:
+        typer.secho(
+            "nothing moved upstream; the warehouse already reflects every source",
+            fg=typer.colors.GREEN,
+        )
+        raise typer.Exit(
+            code=refresh.exit_code(report, pipeline_ran=False, pipeline_ok=True)
+        )
+
+    for name in refresh.STAGES:
+        typer.secho(f"-- {name}", fg=typer.colors.BLUE)
+        result = subprocess.run([sys.executable, "-m", "hip.cli", name], check=False)
+        if result.returncode != 0:
+            typer.secho(
+                f"{name} failed ({result.returncode}); refresh stopped",
+                fg=typer.colors.RED,
+                err=True,
+            )
+            raise typer.Exit(
+                code=refresh.exit_code(report, pipeline_ran=True, pipeline_ok=False)
+            )
+
+    code = refresh.exit_code(report, pipeline_ran=True, pipeline_ok=True)
+    typer.secho(
+        f"refresh complete ({len(report.downloaded)} refs moved)"
+        + (f"; {len(report.failures)} source(s) unreachable" if report.failures else ""),
+        fg=typer.colors.GREEN if code == 0 else typer.colors.YELLOW,
+    )
+    raise typer.Exit(code=code)
 
 
 @app.command()
