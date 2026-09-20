@@ -8,9 +8,14 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — Milestone 24 complete, awaiting review, as of 2026-09-19
+## Now — nothing in progress, as of 2026-09-19
 
-**Milestone 24, fresher figures, is built, run and verified.** What it shipped is in
+**Milestone 24, fresher figures, shipped and deployed on 2026-09-19.** It is merged,
+published to R2 and Cloudflare Pages, and verified live at `housing.jasonli.app`.
+Ten metrics moved twelve months fresher and `pep_population` arrived seventeen months
+ahead of them.
+
+**Milestone 24 detail.** What it shipped is in
 [CHANGELOG.md](CHANGELOG.md) 0.19.0, its decisions are ARCHITECTURE #176–#178, and its
 status is in [ROADMAP.md](ROADMAP.md). Nothing else is in progress.
 
@@ -336,22 +341,23 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
-- [ ] **Top up the Anthropic credit before run `v3` — to at least $15.** About $3.47
-      remained after `v2`'s judging batch — a count from quoted batch costs, not a
-      console reading, so check the console. `v3` needs roughly $11.50–12.50 at the
-      judge's new effort, `high`, for 165 verdicts since the four Qwen candidates joined
-      on 2026-09-11 (it was $8–10 for 105). `hip eval cost --run v3` quotes it before
-      anything is spent, and `hip eval judge` prints what was actually billed. The credit
-      is read only by `hip eval judge`, so nothing else waits on it.
-- [ ] **32 manifests and their files under `data/raw/` still contain live API keys.**
-      (pre-M12 review) #76 stops new ones being written; it deliberately does not rewrite
-      the immutable content-addressed tree that already exists. `data/` is gitignored and
-      nothing published ever carried a key, so this is local hygiene rather than
-      exposure — but the keys are also in an August chat transcript, which is the
-      stronger reason to rotate. To clear the tree, delete the three sources and
-      re-acquire.
-- [ ] **Rotate the Qwen (DashScope) key when convenient.** Pasted into chat on
-      2026-09-11 and written into `.env`.
-- [ ] **Rotate the DeepSeek, Gemini and Mistral keys if the 2026-09-06 transcript is ever
-      shared.** All three were pasted into chat to be written into `.env`, the same
-      situation as the Census, FRED, BLS and Anthropic keys.
+- [ ] **Rotate the keys that were pasted into chat, then clear them from
+      `data/raw/`.** In that order — scrubbing the cache while the keys are still live
+      and still in a transcript is motion without effect.
+
+      **Rotate (yours; these cannot be done here).** Each in its own provider console:
+      **Qwen/DashScope**, pasted 2026-09-11. **DeepSeek**, **Gemini** and **Mistral**,
+      pasted 2026-09-06. **Census**, **FRED**, **BLS** and **Anthropic**, pasted in
+      earlier sessions. Update `.env` after each.
+
+      **Then clear the cache (mine).** 68 manifests under `data/raw/` carry a live key
+      in their recorded `url` — 42 `bls`, 24 `census_acs`, 2 `fred`. ARCHITECTURE #76
+      stopped new ones being written but deliberately did not rewrite the immutable
+      content-addressed tree. Deleting those three source trees and re-acquiring rewrites
+      them without keys, at about 2.6 MB and 63 requests. Worth doing after rotation, not
+      before.
+
+      **Scope, measured 2026-09-19.** `data/` is gitignored, HUD's bearer token is not
+      recorded (manifests hold `url` only, and nothing matches bearer/authorization/
+      token), and **no published artifact has ever carried a key** — checked against
+      `dist/artifacts`. The chat transcripts are the real exposure; the cache is hygiene.
