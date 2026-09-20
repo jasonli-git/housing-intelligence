@@ -405,9 +405,15 @@ its *depth*, and almost every item is a column, a file or a vintage already on t
 machine and unused. Nothing here needs a new key, a new geography level, or a decision
 about what the platform is willing to claim.
 
-**Order matters once:** Milestone 24 moves every ACS window by a year and regenerates
-every county explanation, so it goes first. Building a view on a figure that is about to
-change is rework.
+**Order mattered once, and then again for a different reason.** Milestone 24 moved every
+ACS window by a year and regenerated every county explanation, so it went first —
+building a view on a figure about to change is rework. Milestone 29 was then brought
+forward ahead of 26–28 on 2026-09-20, after the site was public: measured that day,
+Zillow had republished while the warehouse held a copy ten days old, and the platform
+had no way to notice. Every remaining milestone adds more surface that decays, so the
+milestone that stops the decay went before them.
+
+**Shipped: 24, 25, 29. Remaining: 26, 27, 28, and the map's standing check.**
 
 | M | Status | Deliverable |
 |---|--------|-------------|

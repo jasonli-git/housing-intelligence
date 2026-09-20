@@ -855,13 +855,21 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   year-over-year change from ACS is not an independent measurement. Change metrics
   computed over ACS use five-year gaps by default; shorter windows are available and
   carry a caveat.
-- **Zillow indexes are revised retroactively.** A new ZHVI release can change values for
-  periods already loaded. Because releases are immutable (#10) the revision is visible as
-  a new `release_id`, but the current fact row is overwritten by the newer release — the
-  warehouse shows current-best history, not what was published at the time.
-- **MOD-IV assessed values are not market values.** Assessment ratios vary by
-  municipality and revaluation year. Any parcel-derived value metric is an approximation
-  until equalization ratios are applied, which is not in Version 1.
+- **Zillow indexes are revised retroactively, and the revision is now recorded** (#194).
+  A new ZHVI release can change values for periods already loaded, and the current fact
+  row is still overwritten — the warehouse shows current-best history, not what was
+  published at the time. Since Milestone 29 the *fact that it moved* is kept in
+  `fact_revision`, naming the release on each side. Zillow's first release under it
+  restated 294,469 observations at a median 1.06%, every one of which had previously been
+  overwritten in silence. What is still absent is a way for a reader to see that history:
+  the table records, nothing presents it.
+- **MOD-IV assessed values are not market values**, and since Milestone 25 the platform
+  says so with numbers rather than only in prose. Assessment ratios vary by municipality
+  and revaluation year, so any parcel-derived value metric remains an approximation of
+  the tax roll. What changed is that the equalization ratio is now loaded as
+  `nj_director_ratio` and the state's own market-basis rate as `nj_effective_tax_rate`
+  (#180), so a reader can see how far a town's assessments sit from market value instead
+  of having to be warned that they do.
 - **ZIP-level metrics are allocated, not observed** (see the schema section).
 - **Parcel data is not queryable through the API** (#16). All 3.48M NJ parcels exist in
   Parquet and DuckDB; only six municipality-level aggregates reach Postgres. There is no
@@ -869,14 +877,18 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **Parcel geometry is not downloaded** (#49). The REST path fetches attributes only, so
   the parcel polygons a map layer would need are absent — `njgin_parcels` stays a planned
   source for exactly that reason.
-- **MOD-IV covers 554 of 564 municipalities** (#51). The ten misses are names MOD-IV
-  truncated to fit a fixed-width field — Upper Saddle River, Parsippany-Troy Hills, South
-  Orange Village, Peapack-Gladstone, Lower Alloways Creek, Point Pleasant Beach, Orange,
-  Caldwell, North Caldwell, Essex Fells. Resolving them means a rule per place, which is
-  the guessing #27 rejects.
+- ~~**MOD-IV covers 554 of 564 municipalities** (#51)~~ — **resolved at Milestone 25**
+  (#184). The ten misses were names MOD-IV truncated to fit a fixed-width field, plus one
+  written in a different word order. They are now carried by an explicit list verified
+  against TIGER by county rather than by a rule that guesses, which is what #27 rejected;
+  coverage is 564 of 564 and each MOD-IV municipal metric gained ten municipalities,
+  Parsippany-Troy Hills among them.
 - **An assessment is not a market value.** Ratios drift between revaluations and vary by
   municipality, so `modiv_median_assessed_value` tracks the tax roll rather than what
-  houses sell for. Equalization ratios would fix this and are not loaded.
+  houses sell for. Milestone 25 loaded the equalization ratios this entry said would fix
+  it, and added `sr1a_median_sale_price` — what buyers actually paid — beside it, so the
+  gap is now visible rather than merely stated. The assessed figure is still an assessed
+  figure and is labelled as one.
 - **A warm Next cache can publish a stale page**, found 2026-09-05. The incremental cache is keyed
   on source, not on data fetched during the build, so a component whose markup is
   unchanged but whose API response has gained a field is served from cache — which is
@@ -898,7 +910,10 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   page alongside the HTML. Milestone 18's markup — sectioned tables, notes, definitions,
   the grouped footer — took it to 456MB at 13,649 files on 2026-09-12, a third more; a
   rank strip drawn as one element per peer had tripled it, at 564 elements a row on a
-  municipal page, before it was redrawn as a background. Pre-rendering therefore breaks on file count before storage or
+  municipal page, before it was redrawn as a background. Re-measured 2026-09-20 after
+  Milestones 25 and 29 added four metrics: **126MB across 5,955 artifacts and 729MB
+  across 13,671 export files.** Storage grew by three fifths while file count moved by
+  22, which is the point of this entry — the ceiling is files, and files track regions. Pre-rendering therefore breaks on file count before storage or
   bandwidth become a question, and it breaks at Northeast scale rather than national —
   roughly 123,000 export files for nine states, against a 100,000-file paid ceiling.
   Beyond that, region pages have to render in the browser from the published artifacts
