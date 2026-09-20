@@ -104,11 +104,11 @@ def test_the_report_separates_being_told_unchanged_from_never_asking(
     """
     adapter = Flaky(failing="")
     first = refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
-    assert len(first.downloaded) == 3
+    assert len(first.fetched) == 3
     assert first.revalidated == [] and first.unchecked == []
 
     second = refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
-    assert second.downloaded == []
+    assert second.fetched == []
     assert len(second.unchecked) == 3, "a dated vintage should not be revalidated"
     assert second.revalidated == []
     assert second.total_bytes == first.total_bytes
@@ -120,7 +120,7 @@ def test_force_is_still_force(tmp_path: Path) -> None:
     refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
     again = refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path, force=True))
 
-    assert len(again.downloaded) == 3
+    assert len(again.fetched) == 3
 
 
 @pytest.mark.parametrize("failing", ["a", "b", "c"])
@@ -225,3 +225,166 @@ def test_it_reports_size_so_a_caller_can_show_the_cost(tmp_path: Path) -> None:
     found = refresh.superseded_releases(tmp_path, cited=set())
     assert len(found) == 1 and found[0].size_bytes >= 1024
     assert found[0].path.exists(), "superseded_releases must not delete anything itself"
+
+
+# --- Regressions for the review of PR #27 (2026-09-20) -----------------------------
+#
+# Acquisition was tested; the end-to-end guarantees around it were not, and five of
+# them did not hold. Each test below is named for the false claim it stops.
+
+
+def test_an_unreachable_publisher_is_not_reported_as_unchanged(tmp_path: Path) -> None:
+    """The first version merged "told unchanged" with "could not ask", so an outage
+    counted as a confirmed cache hit, recorded no failure, and exited 0."""
+
+    class Flaps(Flaky):
+        def __init__(self) -> None:
+            super().__init__(failing="")
+            self.reachable = True
+
+        def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+            return [
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer="a",
+                    vintage="current",
+                    url="https://example.invalid/a.csv",
+                )
+            ]
+
+        def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
+            destination.write_bytes(b"col\n1\n")
+            self._last_validators = {"etag": '"v1"'}
+
+        def _revalidate(self, release):  # type: ignore[no-untyped-def]
+            return None if not self.reachable else True
+
+    adapter = Flaps()
+    refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+
+    adapter.reachable = False
+    report = refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+
+    assert len(report.unreachable) == 1
+    assert report.revalidated == [], "an outage counted as confirmed unchanged"
+    assert not report.ok
+    assert (
+        refresh.exit_code(report, pipeline_ran=True, pipeline_ok=True)
+        == refresh.EXIT_PARTIAL
+    ), "an outage exited 0"
+
+
+def test_child_refs_are_acquired_by_the_resilient_path(tmp_path: Path) -> None:
+    """Expansion lived in an overridden `fetch_all`, which this loop bypasses — so it
+    silently stopped acquiring HUD's 571 municipal CHAS files, and the acquire log said
+    22 hud_chas refs where there should have been 593."""
+
+    class Directory(Flaky):
+        def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+            return [
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer="mcds",
+                    vintage="2025",
+                    url="https://example.invalid/mcds.json",
+                )
+            ]
+
+        def child_refs(self, release, vintage=None):  # type: ignore[no-untyped-def]
+            if release.ref.layer != "mcds":
+                return []
+            return [
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer=f"mcd_{n}",
+                    vintage="2025",
+                    url=f"https://example.invalid/{n}.json",
+                )
+                for n in (1, 2)
+            ]
+
+    report = refresh.collect(refresh.acquire([Directory(failing="")], raw_dir=tmp_path))
+
+    assert [r.ref.layer for r in report.releases] == ["mcds", "mcd_1", "mcd_2"]
+
+
+def test_a_child_that_fails_does_not_take_its_siblings(tmp_path: Path) -> None:
+    class Directory(Flaky):
+        def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+            return [
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer="mcds",
+                    vintage="2025",
+                    url="https://example.invalid/mcds.json",
+                )
+            ]
+
+        def child_refs(self, release, vintage=None):  # type: ignore[no-untyped-def]
+            if release.ref.layer != "mcds":
+                return []
+            return [
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer=f"mcd_{n}",
+                    vintage="2025",
+                    url=f"https://example.invalid/{n}.json",
+                )
+                for n in (1, 2, 3)
+            ]
+
+    report = refresh.collect(
+        refresh.acquire([Directory(failing="mcd_2")], raw_dir=tmp_path)
+    )
+
+    assert [r.ref.layer for r in report.releases] == ["mcds", "mcd_1", "mcd_3"]
+    assert [f.key for f in report.failures] == ["mcd_2@2025"]
+
+
+def test_identical_bytes_are_not_a_change(tmp_path: Path) -> None:
+    """A source with no validator is re-fetched on age alone and usually returns exactly
+    what it returned last time. That is a transfer, not a reason to rebuild everything."""
+    adapter = Flaky(failing="")
+    first = refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+    state = refresh.RefreshState()
+    state.write(tmp_path, first.shas)
+
+    again = refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path, force=True))
+
+    assert len(again.fetched) == 3, "expected a re-transfer, which is the premise"
+    assert refresh.RefreshState.read(tmp_path).changed(again.shas) == [], (
+        "identical bytes reported as an upstream change"
+    )
+
+
+def test_a_failed_pipeline_is_not_recorded_as_processed(tmp_path: Path) -> None:
+    """The false all-clear. `fetch` records a download the moment the bytes land, so a
+    run whose pipeline then failed left everything looking cached — and the next run
+    exited 0 saying the warehouse already reflected every source. It did not."""
+    adapter = Flaky(failing="")
+    report = refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+
+    # The pipeline failed, so nothing is written. This is the whole fix.
+    state = refresh.RefreshState.read(tmp_path)
+    assert state.completed_at is None
+    assert state.changed(report.shas) == sorted(report.shas), (
+        "a run that never completed looked already-processed"
+    )
+
+    # The retry sees the same cached bytes and must still rebuild.
+    retry = refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+    assert retry.fetched == [], "the premise: nothing to re-download"
+    assert refresh.RefreshState.read(tmp_path).changed(retry.shas) != []
+
+    # Only a completed run licenses the skip.
+    refresh.RefreshState().write(tmp_path, retry.shas)
+    assert refresh.RefreshState.read(tmp_path).changed(retry.shas) == []
+
+
+def test_unreadable_state_forces_a_rebuild(tmp_path: Path) -> None:
+    """Not knowing what was processed has to mean "process it", never "skip it"."""
+    adapter = Flaky(failing="")
+    report = refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+    (tmp_path / refresh.STATE_FILE).write_text("{ truncated")
+
+    assert refresh.RefreshState.read(tmp_path).changed(report.shas) != []

@@ -8,6 +8,36 @@ All notable changes to the Housing Intelligence Platform. Format loosely follows
 **Milestone 29 — scheduled refresh.** The platform asks publishers whether anything has
 moved, instead of assuming it has not.
 
+### Fixed before release
+
+A review of the milestone branch found that acquisition was tested while several
+end-to-end guarantees around it were not. All seven findings were real. All were
+reproduced independently before being changed (ARCHITECTURE #195–#200).
+
+- **A failed pipeline reported success on the next run.** `fetch` records a download the
+  moment the bytes land, so a run whose later stages failed left everything looking
+  cached and the retry exited 0 saying the warehouse already reflected every source.
+  A refresh now skips only when what is on disk matches what was last *processed*,
+  recorded after every stage succeeds.
+- **An unreachable publisher was reported as confirmed unchanged**, recorded no failure
+  and exited 0. It is now a distinct outcome and makes the run partial.
+- **Downstream stages re-fetched their own inputs**, so the one unreachable source
+  acquisition had carried on past aborted the very next stage — and a publisher
+  republishing mid-run could stage values from one release and cite another. Stages
+  after acquisition now read the pinned cache and never fetch.
+- **HUD's 571 municipal CHAS refs stopped being acquired.** Their expansion lived in an
+  overridden `fetch_all` that the resilient path bypasses; the first full run acquired
+  22 `hud_chas` refs where there should have been 588. Declared by `child_refs`, which
+  both paths call.
+- **Revision provenance was being deleted.** 2,936 revision rows already pointed at
+  derived releases the analytics cleanup had removed, and `prune-raw` was offering six
+  Zillow releases totalling 245MB that revisions still referenced. Both now retain a
+  release referenced by either side of a revision.
+- **Re-downloading identical bytes counted as an upstream change**, triggering a full
+  rebuild for a source that had not moved.
+- **`make refresh` cannot carry the exit codes** a scheduler needs — `make` collapses
+  any failure to 2. README now schedules `uv run hip refresh` directly.
+
 ### Added
 
 - **Conditional revalidation.** A ref whose vintage names one release is answered from

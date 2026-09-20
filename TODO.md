@@ -8,24 +8,29 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — nothing in progress, as of 2026-09-20
+## Now — Milestone 29 in review, as of 2026-09-20
 
-**Milestone 29 shipped and is open as a pull request**, not merged and not deployed.
-What it shipped is in [CHANGELOG.md](CHANGELOG.md) 0.21.0 and its decisions are
-ARCHITECTURE #188–#194.
+**Milestone 29 is open as [PR #27](https://github.com/jasonli-git/housing-intelligence/pull/27)**,
+with the review fixes on `fix/m29-refresh-guarantees`. Not merged, not deployed.
 
-**The live site is 0.20.1 and its numbers are now behind the warehouse.** The refresh
-picked up 28 stale refs and re-acquired MOD-IV in full, so a deploy of this milestone
-changes published figures — most visibly the mortgage rate on every cost card, and
-294,469 restated Zillow values. That is the first deploy where `make check-live` has
-something real to catch.
+**A review of the branch found seven real defects**, all reproduced independently before
+being changed and all now fixed with regression tests: a failed pipeline reported success
+on the next run; an unreachable publisher was reported as confirmed unchanged; downstream
+stages re-fetched their own inputs and broke the partial refresh; HUD's 571 municipal
+files silently stopped being acquired; revision provenance was being deleted by two
+different cleanups; identical bytes counted as an upstream change; and `make refresh`
+cannot carry the exit codes a scheduler needs. ARCHITECTURE #195–#200.
 
-**Six items in `Open` closed with it** and were removed rather than ticked: the
-`@current` caching defect, the mortgage rate that would rot first, SR1A's year-to-date
-file, the census-permits abort, raw-release pruning and revision tracking.
+**Verified end to end after the fixes.** A full refresh completed and recorded 802 refs,
+including the 566 municipal CHAS refs that had gone missing; a second run answered in
+**2.7 seconds** with seven confirmed 304s and correctly declined to rebuild.
 
-**To resume:** `make db-up` for Postgres. `make refresh` is the command now; `make
-pipeline` still works and always re-runs everything.
+**The live site is 0.20.1 and its numbers are behind the warehouse.** A deploy changes
+published figures — the mortgage rate on every cost card, and 294,469 restated Zillow
+values.
+
+**To resume:** `make db-up` for Postgres. `uv run hip refresh` is the command a scheduler
+runs; `make refresh` is for running it by hand.
 
 ## Open
 
@@ -33,6 +38,18 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
+
+- [ ] **2,936 revision rows have an `old_release_id` that no longer resolves.**
+      (M29, found in review 2026-09-20) They predate the retention fix in ARCHITECTURE
+      #199: `_prune_orphan_derived_releases` had already deleted the `hip_derived`
+      releases they pointed at before anything protected them. New orphans are now
+      prevented — a full `analyze` under the fix created none — but these cannot be
+      recovered, because the rows they referenced are gone. All 2,936 are derived
+      metrics (2,435 `price_to_income`, 396 `rent_to_income`, 105 `price_to_ami`), where
+      the pointer named the analyze run rather than a publisher's file, so what is lost
+      is which *computation* produced the earlier value and not which source did. Decide
+      whether to null the dangling ids — an unresolvable integer reads as a working
+      reference — or leave them and say so where they are served.
 
 - [ ] **The validation gate has no range bounds for the two HUD metrics.**
       (pre-M12 review) `hud_area_median_income` and `hud_income_limit_80` are absent from

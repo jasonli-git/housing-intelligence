@@ -462,11 +462,16 @@ refresh whose numbers should still deploy. One source failing no longer ends the
 entry. A daily run is enough for a platform whose fastest source publishes weekly —
 
 ```cron
-0 6 * * *  cd /path/to/housing-intelligence && make refresh >> /tmp/hip-refresh.log 2>&1
+0 6 * * *  cd /path/to/housing-intelligence && uv run hip refresh >> /tmp/hip-refresh.log 2>&1
 ```
 
 — and on macOS a `launchd` agent with `StartCalendarInterval` is the equivalent. Deploy
-on exit 0 or 3; investigate on 1. `make prune-raw` shows which superseded downloads are
+on exit 0 or 3; investigate on 1.
+
+**Schedule the command, not `make refresh`.** `make` collapses any failing recipe to its
+own exit status 2, so scheduling the make target throws away the distinction above: a run
+that completed with one publisher down and a run whose pipeline broke both arrive as 2.
+`make refresh` is for running it by hand. `make prune-raw` shows which superseded downloads are
 safe to delete and needs `--apply` to do it, because a cadence makes `data/raw/` grow
 without bound: one refresh took it from 264MB of superseded copies to 511MB.
 

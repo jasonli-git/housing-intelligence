@@ -91,10 +91,11 @@ pipeline:  ## Full pipeline: acquire -> land -> stage -> geocode -> validate -> 
 	uv run hip analyze
 	uv run hip pack --report
 
-refresh:  ## Ask every publisher what moved, and rebuild only if something did
-	@# Exits 0 current, 3 completed with a source unreachable, 1 pipeline failed.
-	@# Stops before the pipeline when nothing moved, which is the common case: a run
-	@# that only revalidates costs sixteen conditional requests and a few seconds.
+refresh:  ## Ask every publisher what changed, and rebuild only if something did
+	@# For interactive use. **Do not schedule this one**: make collapses any failing
+	@# recipe to its own exit 2, so a scheduler reading it cannot tell "completed with a
+	@# publisher down" (3) from "the pipeline broke" (1). Schedule `uv run hip refresh`
+	@# directly, which is what README documents.
 	uv run hip refresh
 
 prune-raw:  ## Show raw releases nothing points at (add ARGS=--apply to delete)

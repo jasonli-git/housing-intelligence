@@ -28,9 +28,7 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import Iterator
 from datetime import timedelta
-from pathlib import Path
 from typing import ClassVar
 
 from hip.config import ConfigError, fips_for
@@ -280,14 +278,18 @@ class HudChasAdapter(SourceAdapter):
         ]
         return refs
 
-    def fetch_all(
-        self, *, raw_dir: Path, vintage: str | None = None, force: bool = False
-    ) -> Iterator[Release]:
-        for release in super().fetch_all(raw_dir=raw_dir, vintage=vintage, force=force):
-            yield release
-            if release.ref.layer == "mcds":
-                for ref in self.municipal_refs(release, vintage):
-                    yield self.fetch(ref, raw_dir=raw_dir, force=force)
+    def child_refs(
+        self, release: Release, vintage: str | None = None
+    ) -> list[ReleaseRef]:
+        """The 571 municipal refs, which only exist once the directory is on disk.
+
+        Was an override of `fetch_all`, which meant the resilient acquisition path in
+        `hip.refresh` — which drives `refs()` and `fetch()` directly so it can carry on
+        past a failure — never saw them at all.
+        """
+        if release.ref.layer != "mcds":
+            return []
+        return self.municipal_refs(release, vintage)
 
     def municipal_refs(self, directory: Release, vintage: str | None) -> list[ReleaseRef]:
         """One ref per MCD in a fetched directory."""

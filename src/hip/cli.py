@@ -64,7 +64,7 @@ from hip.packets import (
 )
 from hip.publish import publish as run_publish
 from hip.refresh import AcquireReport
-from hip.sources.base import Release, SourceAdapter
+from hip.sources.base import Release, SourceAdapter, SourceError, redact
 from hip.sources.registry import (
     IMPLEMENTED,
     METRIC_SOURCES,
@@ -91,6 +91,8 @@ from hip.warehouse.load import (
     load_region_identifiers,
 )
 from hip.warehouse.load import load_geography as load_warehouse_geography
+
+logger = logging.getLogger(__name__)
 
 app = typer.Typer(
     name="hip",
@@ -243,6 +245,23 @@ def publish_command(
     typer.secho(f"published to {root}", fg=typer.colors.GREEN)
 
 
+def _cached_releases(
+    adapter: SourceAdapter, raw_dir: Path, vintage: str | None
+) -> list[Release]:
+    """A source's releases as acquisition left them, or none if it has none.
+
+    Provenance is rebuilt from the cache rather than re-fetched, for the same two
+    reasons `land` is: the release set stays pinned for the whole run, and a source that
+    could not be acquired does not take the load down with it. A source with nothing
+    cached contributes no provenance rows, which is correct — it contributed no facts.
+    """
+    try:
+        return list(adapter.fetch_all(raw_dir=raw_dir, vintage=vintage, cached_only=True))
+    except (SourceError, OSError) as exc:
+        logger.warning("%s: no cached releases (%s)", adapter.source_id, redact(str(exc)))
+        return []
+
+
 def _adapters(source: str | None) -> list[SourceAdapter]:
     """Resolve --source to adapters, defaulting to everything implemented."""
     scope = load_geography()
@@ -290,10 +309,12 @@ def acquire(
         report.releases.append(release)
         if not release.from_cache:
             origin = "downloaded"
-        elif release.revalidated_at:
+        elif release.revalidation == "confirmed":
             # Asked, and told nothing changed. Kept distinct from a cache hit nobody
             # checked, because only one of the two is evidence the platform is current.
             origin = "unchanged"
+        elif release.revalidation == "unreachable":
+            origin = "unreachable"
         else:
             origin = "cached"
         typer.echo(
@@ -301,10 +322,10 @@ def acquire(
             f"{release.size_bytes / 1e6:>8.1f} MB  {release.sha256[:12]}"
         )
 
-    moved = len(report.downloaded)
     typer.echo(
-        f"{len(report.revalidated):>4} unchanged   {moved:>4} downloaded   "
-        f"{len(report.unchecked):>4} not checked"
+        f"{len(report.revalidated):>4} unchanged   {len(report.fetched):>4} fetched   "
+        f"{len(report.unchecked):>4} not checked   "
+        f"{len(report.unreachable):>4} unreachable"
     )
     typer.secho(f"{report.total_bytes / 1e6:.1f} MB in data/raw/", fg=typer.colors.GREEN)
     if report.failures:
@@ -339,8 +360,17 @@ def prune_raw(
             row[0]
             for row in session.execute(
                 text(
+                    # Both sides of a revision, not only current observations. A
+                    # revision names the release a figure moved *from*, and that
+                    # release is by definition no longer cited by any observation —
+                    # so citing observations alone offered four Zillow files totalling
+                    # 232MB for deletion while `fact_revision` still pointed at them.
                     "SELECT DISTINCT sr.file_sha256 FROM source_releases sr "
-                    "JOIN fact_metric_observation f ON f.release_id = sr.release_id"
+                    "WHERE EXISTS (SELECT 1 FROM fact_metric_observation f "
+                    "              WHERE f.release_id = sr.release_id) "
+                    "   OR EXISTS (SELECT 1 FROM fact_revision r "
+                    "              WHERE r.old_release_id = sr.release_id "
+                    "                 OR r.new_release_id = sr.release_id)"
                 )
             ).all()
             if row[0]
@@ -418,25 +448,37 @@ def refresh_command(
             report.releases.append(outcome)
 
     typer.echo(
-        f"{len(report.downloaded):>4} moved   {len(report.revalidated):>4} unchanged   "
-        f"{len(report.unchecked):>4} not checked   {len(report.failures):>4} failed"
+        f"{len(report.fetched):>4} fetched   {len(report.revalidated):>4} unchanged   "
+        f"{len(report.unchecked):>4} not checked   "
+        f"{len(report.unreachable):>4} unreachable   {len(report.failures):>4} failed"
     )
 
-    if not report.downloaded and not force:
+    # What is on disk now, against what the warehouse was last built from. Not "did we
+    # transfer bytes": a source with no validator is re-fetched on age alone and usually
+    # returns identical content, and a run whose pipeline failed leaves the raw index
+    # updated and the state file untouched — so this is also what stops a failed run
+    # from reporting a clean skip on its next attempt.
+    state = refresh.RefreshState.read(settings.raw_dir)
+    changed = state.changed(report.shas)
+
+    if not changed and not force:
         typer.secho(
-            "nothing moved upstream; the warehouse already reflects every source",
+            f"nothing changed since the last completed refresh "
+            f"({state.completed_at or 'never'}); the warehouse already reflects it",
             fg=typer.colors.GREEN,
         )
         raise typer.Exit(
             code=refresh.exit_code(report, pipeline_ran=False, pipeline_ok=True)
         )
 
+    typer.echo(f"{len(changed)} ref(s) differ from the last completed refresh")
     for name in refresh.STAGES:
         typer.secho(f"-- {name}", fg=typer.colors.BLUE)
         result = subprocess.run([sys.executable, "-m", "hip.cli", name], check=False)
         if result.returncode != 0:
             typer.secho(
-                f"{name} failed ({result.returncode}); refresh stopped",
+                f"{name} failed ({result.returncode}); refresh stopped. The next run "
+                f"will not skip: nothing has been recorded as processed.",
                 fg=typer.colors.RED,
                 err=True,
             )
@@ -444,10 +486,18 @@ def refresh_command(
                 code=refresh.exit_code(report, pipeline_ran=True, pipeline_ok=False)
             )
 
+    # Only now. Every stage succeeded, so what is on disk is what the warehouse holds.
+    state.write(settings.raw_dir, report.shas)
+
     code = refresh.exit_code(report, pipeline_ran=True, pipeline_ok=True)
+    notes = []
+    if report.failures:
+        notes.append(f"{len(report.failures)} ref(s) failed")
+    if report.unreachable:
+        notes.append(f"{len(report.unreachable)} publisher(s) unreachable")
     typer.secho(
-        f"refresh complete ({len(report.downloaded)} refs moved)"
-        + (f"; {len(report.failures)} source(s) unreachable" if report.failures else ""),
+        f"refresh complete ({len(changed)} ref(s) changed)"
+        + ("; " + ", ".join(notes) if notes else ""),
         fg=typer.colors.GREEN if code == 0 else typer.colors.YELLOW,
     )
     raise typer.Exit(code=code)
@@ -463,10 +513,36 @@ def land(
         bool, typer.Option("--overwrite", help="Re-transcode even if Parquet exists.")
     ] = False,
 ) -> None:
-    """Transcode raw downloads to typed Parquet under data/parquet/."""
+    """Transcode raw downloads to typed Parquet under data/parquet/.
+
+    Reads only what `hip acquire` already put on disk — no network, and no second round
+    of conditional requests. That pins the run's release set: a mutable publisher
+    republishing between this stage and `load` would otherwise stage values read from
+    one release and cite another.
+
+    A source with nothing in the cache is reported and skipped rather than ending the
+    run, so a refresh in which one publisher was unreachable still lands the other
+    fifteen. Before this it re-fetched strictly and the advertised partial refresh
+    exited 1 instead.
+    """
     settings = get_settings()
+    skipped: list[str] = []
     for adapter in _adapters(source):
-        for release in adapter.fetch_all(raw_dir=settings.raw_dir, vintage=vintage):
+        try:
+            staged = list(
+                adapter.fetch_all(
+                    raw_dir=settings.raw_dir, vintage=vintage, cached_only=True
+                )
+            )
+        except (SourceError, OSError) as exc:
+            skipped.append(adapter.source_id)
+            typer.secho(
+                f"{adapter.source_id:<14} skipped    {redact(str(exc))}",
+                fg=typer.colors.YELLOW,
+                err=True,
+            )
+            continue
+        for release in staged:
             if adapter.landing_format == "shapefile":
                 table = land_shapefile(
                     release,
@@ -510,6 +586,13 @@ def land(
                 f"{adapter.source_id:<14} {release.ref.key:<18} "
                 f"{table.row_count:>8,} rows  {table.path.name}"
             )
+    if skipped:
+        typer.secho(
+            f"{len(skipped)} source(s) not in the cache and skipped: "
+            f"{', '.join(skipped)}",
+            fg=typer.colors.YELLOW,
+            err=True,
+        )
 
 
 @app.command()
@@ -736,7 +819,7 @@ def load(
                 file_sha256=release.sha256,
                 row_count=_landed_rows(con, release, settings.parquet_dir),
             )
-            for release in adapter.fetch_all(raw_dir=settings.raw_dir, vintage=vintage)
+            for release in _cached_releases(adapter, settings.raw_dir, vintage)
         ]
 
     result = load_warehouse_geography(
@@ -823,7 +906,7 @@ def load(
                     file_sha256=release.sha256,
                     row_count=_landed_rows(con, release, settings.parquet_dir),
                 )
-                for release in metric_adapter.fetch_all(raw_dir=settings.raw_dir)
+                for release in _cached_releases(metric_adapter, settings.raw_dir, None)
             ]
 
     facts = load_facts(

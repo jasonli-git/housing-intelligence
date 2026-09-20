@@ -23,7 +23,7 @@ from collections.abc import Iterator
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, Literal
 from urllib.parse import urlsplit
 
 import httpx
@@ -135,9 +135,15 @@ class Release:
     # many API calls, which has no single response to validate against.
     last_modified: str | None = None
     etag: str | None = None
-    # Set when a conditional request returned 304: the bytes are unchanged and the
-    # publisher has said so, which is different from never having asked.
+    # Set only when a conditional request returned 304: the publisher was reached and
+    # said the bytes are unchanged.
     revalidated_at: datetime | None = None
+    # Whether the publisher was reached, when one was asked. "unreachable" keeps the
+    # cached bytes — that is the right thing to serve — but it is emphatically not
+    # "unchanged": nobody knows whether it changed. Conflating the two let an outage
+    # report as a confirmed cache hit and exit 0, which is the defect this field exists
+    # to make impossible to express.
+    revalidation: Literal["confirmed", "unreachable", "not_asked"] = "not_asked"
 
     @property
     def validators(self) -> dict[str, str]:
@@ -275,8 +281,32 @@ class SourceAdapter(ABC):
             f"{type(self).__name__} lands xlsx but does not implement landing_sheet()"
         )
 
+    def child_refs(
+        self, release: Release, vintage: str | None = None
+    ) -> list[ReleaseRef]:
+        """Refs that only exist once `release` has been fetched.
+
+        Some sources publish a directory and then one file per entry in it: HUD's CHAS
+        layer lists New Jersey's municipalities in a file, and the 571 municipal refs
+        can only be named after that file is on disk.
+
+        This is a hook rather than an override of `fetch_all` because acquisition now
+        has two callers. `fetch_all` is the strict one; `hip.refresh.acquire` is the
+        resilient one, and it drives `refs()` and `fetch()` directly so it can carry on
+        past a failure. When the expansion lived inside an overridden `fetch_all`, the
+        resilient path silently skipped every municipal CHAS file — 22 hud_chas refs
+        acquired where there should have been 593, and nothing said so. Declared here,
+        both paths get it.
+        """
+        return []
+
     def fetch_all(
-        self, *, raw_dir: Path, vintage: str | None = None, force: bool = False
+        self,
+        *,
+        raw_dir: Path,
+        vintage: str | None = None,
+        force: bool = False,
+        cached_only: bool = False,
     ) -> Iterator[Release]:
         """Fetch every ref for a vintage, yielding as each completes.
 
@@ -284,9 +314,23 @@ class SourceAdapter(ABC):
         download instead of going silent for two minutes.
         """
         for ref in self.refs(vintage):
-            yield self.fetch(ref, raw_dir=raw_dir, force=force)
+            release = self.fetch(
+                ref, raw_dir=raw_dir, force=force, cached_only=cached_only
+            )
+            yield release
+            for child in self.child_refs(release, vintage):
+                yield self.fetch(
+                    child, raw_dir=raw_dir, force=force, cached_only=cached_only
+                )
 
-    def fetch(self, ref: ReleaseRef, *, raw_dir: Path, force: bool = False) -> Release:
+    def fetch(
+        self,
+        ref: ReleaseRef,
+        *,
+        raw_dir: Path,
+        force: bool = False,
+        cached_only: bool = False,
+    ) -> Release:
         """Download one release, or answer from cache when nothing upstream has moved.
 
         A pinned vintage is answered from disk without a request: it names one release
@@ -303,6 +347,22 @@ class SourceAdapter(ABC):
         earned a 429 from HUD doing it.
         """
         index = _read_index(raw_dir, ref.source_id)
+
+        if cached_only:
+            # Answer from disk or fail; never touch the network. The stages after
+            # acquisition run in this mode so that a run's release set is *pinned*: a
+            # mutable publisher republishing between `land` and `load` would otherwise
+            # stage values from one release and cite another, and every downstream stage
+            # would pay for a second round of conditional requests to learn what
+            # acquisition already knows.
+            cached = index.get(ref.key)
+            release = self._from_cache(ref, raw_dir, cached) if cached else None
+            if release is None:
+                raise SourceError(
+                    f"{ref.source_id}/{ref.key}: not in the local cache, and this stage "
+                    f"does not fetch. Run `hip acquire` first."
+                )
+            return release
 
         if not force and (cached_sha := index.get(ref.key)):
             release = self._from_cache(ref, raw_dir, cached_sha)
@@ -324,10 +384,20 @@ class SourceAdapter(ABC):
                     # time.
                     if self._age(release) < self.revalidate_after:
                         return release
-                elif self._revalidate(release) is not False:
-                    # Unchanged, or the publisher could not be reached — either way the
-                    # bytes on disk stand. `_revalidate` has already said which.
-                    return replace(release, revalidated_at=datetime.now(UTC))
+                else:
+                    answer = self._revalidate(release)
+                    if answer is True:
+                        return replace(
+                            release,
+                            revalidated_at=datetime.now(UTC),
+                            revalidation="confirmed",
+                        )
+                    if answer is None:
+                        # Reached nobody. The cached bytes still stand — discarding
+                        # good data because a publisher is down would be worse — but
+                        # this is an *unknown*, not a confirmed cache hit, and the run
+                        # has to be able to say so.
+                        return replace(release, revalidation="unreachable")
 
         with tempfile.TemporaryDirectory(prefix="hip-acquire-") as tmp:
             staged = Path(tmp) / self.filename(ref)
