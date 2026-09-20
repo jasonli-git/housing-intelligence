@@ -3,7 +3,7 @@
 
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline publish \
-        check-dist deploy api web \
+        check-dist check-live deploy api web \
         test test-py test-web lint format check-config dbt-debug eval clean
 
 SITE_PACKAGES = $(wildcard .venv/lib/python*/site-packages)
@@ -140,6 +140,7 @@ dbt-debug:  ## Verify dbt can reach both targets
 R2_BUCKET     ?= housing-artifacts
 R2_REMOTE     ?= r2
 PAGES_PROJECT ?= housing-intelligence
+SITE_URL      ?= https://housing.jasonli.app
 ARTIFACT_URL  ?= https://housing-data.jasonli.app
 
 publish:  ## Build both halves of the deployable site into dist/
@@ -191,6 +192,9 @@ check-dist:  ## Verify dist/ is complete and was built for production
 	  grep -rlE '>(No report|Region not found)<' dist/site --include='*.html' | head -10; exit 1; fi
 	@echo "dist OK: $$(find dist/artifacts -type f | wc -l | tr -d ' ') artifacts, \
 $$(find dist/site -type f | wc -l | tr -d ' ') site files"
+
+check-live: check-dist  ## Verify the deployed site and artifacts match dist/
+	cd web && SITE_URL='$(SITE_URL)' ARTIFACT_URL='$(ARTIFACT_URL)' node scripts/check-live.mjs
 
 deploy: check-dist  ## Upload artifacts to R2 and the site to Pages
 	rclone sync dist/artifacts $(R2_REMOTE):$(R2_BUCKET) --progress --checksum
