@@ -8,84 +8,25 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — Milestone 25, MOD-IV transactions and market value, as of 2026-09-19
+## Now — nothing in progress, as of 2026-09-20
 
-**Deliverable.** New Jersey's own transaction prices and its own effective tax rate,
-both per municipality and per county, from two state files the platform has never read.
-Together they close ARCHITECTURE #141, which wanted an effective rate against market
-value and rejected it for lack of "sale prices or equalization ratios the warehouse does
-not hold". Both now exist and are keyless.
+**Milestone 25, transactions and market value, is complete and open as a pull request.**
+Not merged, and not deployed — the warehouse and the local site carry it, the published
+site does not.
 
-**The source changed during scoping, and the milestone is better for it.** ROADMAP
-Milestone 25 assumed the transaction half came from MOD-IV's `SALE_PRICE`, `SALES_CODE`
-and `DEED_DATE`, filtered to market transfers by sales code. It cannot: `SALES_CODE` is
-MOD-IV field 27 `SALES-PRICE-CODE`, which records *how a sale was investigated*
-(A=Actual, F=Field, Q=Questionnaire), not whether it is usable. The usability field is
-MOD-IV field 38 `SALE-SR1A-UN-CODE`, and NJ's ArcGIS publication does not expose it —
-confirmed 2026-09-19 by listing all 45 fields of `Parcels_Composite_NJ_WM`, which is
-reachable without a token and carries the identical five sale fields. Re-acquiring MOD-IV
-could not have obtained it at any authentication level.
+What it shipped is in [CHANGELOG.md](CHANGELOG.md) 0.20.0, its decisions are
+ARCHITECTURE #179–#186, and its status is in [ROADMAP.md](ROADMAP.md).
 
-New Jersey publishes the usable-sale determination in a different file entirely: the
-**SR1A Sales File**, 663-byte fixed-width records at
-`nj.gov/treasury/taxation/lpt/statdata/`, one archive per year 2020-2025 plus a
-year-to-date 2026 file. It carries `U-N-TYPE` (U/N), `SR-NU-CODE` (the 33 non-usable
-categories), both `REPORTED-SALES-PRICE` and `VERIFIED-SALES-PRICE`, `SALES-RATIO`,
-`PROPERTY-CLASS` and `DEED-DATE`, keyed on `COUNTY-CODE` + `DISTRICT-CODE`. That is the
-NJ CD code, so it joins through `region_identifiers` with no name matching.
+**Three things about it are worth knowing before the next piece of work.** The
+transaction half does not come from MOD-IV, because MOD-IV cannot supply it at any
+authentication level (#179) — the roadmap's premise was wrong, not merely hard. The
+effective tax rate is ingested rather than derived, and the Director's Ratio is a check
+on it rather than its input (#180). And the CD-code crosswalk is finally complete at
+564 of 564, which moved ten municipalities' MOD-IV figures as well (#184).
 
-Measured 2026-09-19 on `YTDSR1A2026.txt` (11MB zipped, 113MB raw, 169,935 records,
-published 2026-08-12): 69,135 usable and 100,800 non-usable; 145,022 class-2. Usable
-class-2 median verified price is $525,000 across 37,403 deeds dated 2025 and $550,000
-across 28,404 dated 2026 — continuing the MOD-IV series of $434,500 (2022), $455,000
-(2023) and $500,000 (2024) without a filter anyone had to invent.
-
-**To resume:** `make db-up` for Postgres. The scratch parse and both workbooks are under
-the session scratchpad, not the repo; re-download rather than trusting them.
-
-### Tasks
-
-- [ ] **`nj_sr1a` source adapter** — one release per year, 2020-2025 plus year-to-date
-      2026. Zipped fixed-width, so the lander needs to unzip; check whether
-      `landing_format` already covers this or needs a new value.
-- [ ] **`nj_tax_rates` source adapter** — `lpt/GTRhistory.xlsx` (General and Effective
-      Tax Rates by county and municipality, 1997-2025, two sheets, 567 rows each) and
-      `lpt/tev/DirRatios.xlsx` (Director's Ratio History, 2002-2025). Both keyed on CD
-      code. Both serve `Last-Modified`.
-- [ ] **`stg_nj_sr1a`** — usable class-2 deeds to a median verified sale price per
-      municipality and per county, aggregated from deeds rather than from municipal
-      medians, the way `stg_nj_modiv` does it for the tax bill.
-- [ ] **`stg_nj_tax_rates`** — unpivot the year columns of all three sheets into
-      `general_tax_rate`, `effective_tax_rate` and `director_ratio`.
-- [ ] **Validate effective against general × ratio.** The state publishes all three, so
-      the identity is checkable rather than assumed. Absecon 2025: general 3.517 and the
-      2024 ratio 68.62 give 2.4134 against a published effective of 2.4103 — within
-      0.13%, but Atlantic City is 1.9% out on the same arithmetic. Establish which
-      year's ratio the published effective rate actually uses before publishing either.
-- [ ] **Decide the fate of the 10 truncated municipalities.** `stg_nj_municipal_codes`
-      resolves 554 of 564 CD codes; the 10 failures are MOD-IV name truncations
-      ("UPPER SADDLE RIV", "PARSIPPANY TR HLS", "SOUTH ORANGE VILLAGE TW") that
-      ARCHITECTURE #27/#28 and the `nj_municipal_name` docstring deliberately refuse to
-      guess at. Both new sources are keyed on CD code and cover all 564, so leaving them
-      unmatched caps two brand-new headline metrics at 554. An explicit hand-verified
-      alias table of exactly 10 entries is an auditable exception list rather than the
-      guessing rule #27 rejected — but it is an architecture decision, not a detail.
-      Measured cost of not fixing it: 2,215 SR1A rows in the YTD file alone.
-- [ ] **Three dissolved municipalities in the workbooks.** 567 rows, not 564: Pine
-      Valley Boro (0429, merged into Pine Hill 2022) and Princeton Boro and Princeton
-      Twp (1109/1110, merged 2013). All null from their merger year forward. They must
-      not become regions, and must not be counted as match failures.
-- [ ] **Metrics, bounds and config** — `config/metrics.yml` entries, `VALUE_BOUNDS` in
-      `src/hip/validate/gate.py`, and both new staging models in `KEYED_MODELS`
-      (`src/hip/transform/dbt_runner.py`). The `KEYED_MODELS` omission is what made
-      `stg_census_pep` load zero rows at Milestone 24 while every test passed.
-- [ ] **Tests** covering the fixed-width parse, the usable/non-usable split, the CD-code
-      join, and the dissolved-municipality exclusion.
-- [ ] **A verified price is a fourth kind of figure.** SPEC principle 11 says every
-      figure is observed, calculated, estimated or forecast and which one is always
-      visible. A median verified sale price is *observed* where Zillow's ZHVI is
-      modelled and the ACS's value is self-reported, and the packet will carry all
-      three. Check what the frontend does with three prices that disagree honestly.
+**To resume:** `make db-up` for Postgres, and `make setup-eval` rather than `make setup`
+when the evaluation harness is needed. A deploy of this milestone would be the first use
+of `make check-live`, which landed in PR #23 and has never run against a real deploy.
 
 ## Open
 
@@ -154,6 +95,34 @@ first raised, not where it must be done.
       `ST_Transform` reprojects vertices without densifying edges. Negligible for real
       TIGER geometry, which is vertex-dense; it only shows up in synthetic test fixtures.
       Revisit if a source ever supplies coarse polygons.
+
+- [ ] **The SR1A year-to-date file is a `@current` ref wearing a dated vintage.**
+      (M25, found 2026-09-19) `2026ytd` is republished as the year fills — the file on
+      disk holds deeds through 2026-06-30 — but it is content-addressed under a vintage
+      string that never changes, so `hip acquire` answers from cache and the newest
+      transaction price silently stops moving. Same defect as the `@current` refs above
+      and the same fix, a conditional request; it belongs in the **Milestone 29** work,
+      not beside it. Until then a refresh needs `--force`, which re-downloads all seven
+      archives rather than the one that moved.
+- [ ] **A county has a tax bill but no tax rate.** (M25, #181) `nj_effective_tax_rate`
+      is municipal only, because a county rate is a levy-weighted average and the
+      weights — equalized valuations per municipality — are in the Table of Equalized
+      Valuations PDF rather than the workbooks this milestone ingests. Either parse that
+      PDF as a fourth layer of `nj_tax_rates`, or state on a county page why the rate
+      stops at municipalities. Doing neither leaves an asymmetry a reader will notice
+      before we do.
+- [ ] **SR1A carries four fields the aggregates ignore.** (M25) `assessed_value_total`,
+      `sales_ratio`, `year_built` and `living_space` are landed and unused. `living_space`
+      is the one that matters: a price per square foot on *transactions* is not derivable
+      from anything else the warehouse holds, and it is the figure that makes two towns'
+      medians comparable when their housing stock differs. Check the field's fill rate
+      before scoping it — the median is meaningless if half the deeds leave it blank.
+- [ ] **`web/lib/groups.test.ts` pins a hand-copied metric catalog.** (M25, found
+      2026-09-20) The comment says a new metric "shows up there as a failure to
+      classify", but the catalog is a literal list snapshotted from `GET /metrics`, so
+      four new metrics went unclassified without failing anything — they would have
+      rendered under "Other measures" silently. Derive the list from
+      `config/metrics.yml` or from a recorded API response, so the guard guards.
 
 ### Evaluation harness
 
@@ -275,17 +244,6 @@ first raised, not where it must be done.
 
 - [ ] **`make publish` assembling both halves into one directory.** (M11) Its done
       criterion is a reachable public URL.
-- [ ] **Nothing verifies a deploy after it lands.** Found 2026-09-19 deploying Milestone
-      24. `make check-dist` validates the *build* — manifest present, index present, no
-      `localhost:8000` baked into any page — and `make deploy` then runs `rclone sync`
-      followed by `wrangler pages deploy` with nothing checking the result. A successful
-      R2 sync followed by a failed Pages upload would leave the artifacts ahead of the
-      site and report nothing. The live check after this deploy was done by hand.
-      A `make check-live` should fetch the deployed site and assert: the production
-      domain answers 200; the artifact origin answers 200; a known figure that just
-      changed is actually present; and — per the Milestone 18 note — it samples a county,
-      a municipality, a ZIP and a report rather than one exemplar, because a failure that
-      lands on some page types is invisible from one of them.
 - [ ] **`hip explain` does not report what a run cost.** Found 2026-09-19 regenerating
       Milestone 24's readings: the command prints characters and figures bound per
       region but never a billed total, so the only way to know what a regeneration cost
@@ -347,6 +305,21 @@ first raised, not where it must be done.
 
 ### Open decisions — not scheduled, not decided
 
+- [ ] **Should a transaction price ever price the mortgage?** (M25, found 2026-09-20)
+      `costInputs` prices the cost-to-own panel off `zhvi_sfr`, and where Zillow
+      publishes no value the panel is replaced by a sentence saying so. Parsippany-Troy
+      Hills is the case that makes this concrete: 56,397 people, no Zillow figure, and
+      the page tells a reader its owner-reported value is "a survey five years old, too
+      old to price a mortgage on" — while the tables now carry a $630,000 median of
+      deeds signed through June 2026 directly above that sentence. The transaction price
+      is the freshest and most concrete figure on the page and the panel is declining to
+      use it. Against: the two are not interchangeable — a median of what *sold* is not
+      a median of what *exists*, and the measured gap is real (the effective rate
+      applied to the sale price overshoots the MOD-IV tax bill by a median 24%), so
+      swapping one in where the other is missing would make two regions' monthly costs
+      mean different things. Any fallback would have to say on the panel which figure it
+      used. **Not decided** — this is a methodology choice about the site's headline
+      number, not an implementation detail.
 - [ ] **Should a change of model force regeneration?** (deferred to M12) The preference
       list can fall through mid-run, so some regions may carry prose from one model and
       some from another. `region_explanations` stores `model_id`, `model_label` and
