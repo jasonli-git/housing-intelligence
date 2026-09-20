@@ -10,12 +10,13 @@
 - Styled Leading cards orange, Lagging cards with the site's ranking blue, and Highest
   and lowest cards neutral graphite.
 - Moved The housing here above What it costs per month and restyled it as a compact,
-  low-contrast horizontal summary band.
+  low-contrast, fixed-height horizontal summary band with its own paging arrows.
 - Kept report pages on the existing compact, non-interactive stand-out grid.
 
 ## Files/modules affected
 
 - `web/components/RegionStandOuts.tsx`
+- `web/components/HousingBand.tsx`
 - `web/components/StandOuts.tsx`
 - `web/app/regions/[id]/page.tsx`
 - `web/app/globals.css`
@@ -25,14 +26,19 @@
 - The interactive region treatment is a separate client component instead of a mode on
   the report component. This prevents the experiment's markup, controls, and client-side
   behavior from leaking into report pages.
-- A wide screen shows three cards, a tablet shows two, and a phone shows 86% of one card
-  so the next card remains visible as a scrolling cue.
+- Stand-out cards use a fixed narrow width and a slightly taller-than-wide proportion,
+  reducing their footprint by roughly half while leaving the next card visible as a
+  scrolling cue.
 - Carousel controls are hidden when a row fits without scrolling and disabled at the
   corresponding edge when it overflows.
 - Graphite is intentionally neutral for current-value extremes: being highest or lowest
   is not consistently favorable or unfavorable across metrics.
 - The housing band uses a faint region-accent wash and smaller typography so it remains
   distinct without competing with the larger cost cards immediately below it.
+- The housing band has a fixed eight-rem height. Its narrow title column owns the paging
+  arrows, and the fact area measures how many items fit at each viewport width.
+- Housing facts are paged in place rather than placed in an overflow container so their
+  definition tooltips are not clipped by the fixed-height banner.
 
 ## Assumptions
 
@@ -65,7 +71,12 @@
   - County `/regions/8`: housing band precedes costs; stand-out arrows scroll and disable
     correctly at both ends in light and dark themes.
   - County `/regions/5`: all three card colors/groups render, including blue Lagging.
+    At the 639px preview the banner remained 128px tall before and after paging, its title
+    column measured 104px, and stand-out cards measured 172px by 192px. Controls disappear
+    when a row fully fits.
   - Municipality `/regions/415` and ZIP `/regions/2842`: no horizontal page overflow at
     the mobile viewport; data-thin pages continue to omit absent stand-out groups cleanly.
+  - At a 375px page width, the revised Atlantic County layout also had no horizontal page
+    overflow; stand-out cards retained the 172px by 192px proportion.
   - Report `/regions/8/report`: the existing static grid remains and has no carousel
     controls.

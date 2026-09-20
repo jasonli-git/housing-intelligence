@@ -6,6 +6,7 @@ import { CurrentValues } from "@/components/CurrentValues";
 import { Definition } from "@/components/Definition";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { Glossed } from "@/components/Glossed";
+import { HousingBand } from "@/components/HousingBand";
 import { Ledger, TableNotes } from "@/components/Ledger";
 import { MoreExpander } from "@/components/MoreExpander";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
@@ -283,33 +284,7 @@ export default async function RegionPage({
         </div>
       </header>
 
-      {profile.length > 0 && (
-        <section className="housing-band" aria-labelledby="housing-heading">
-          <div className="housing-band-head">
-            <h2 id="housing-heading">The housing here</h2>
-          </div>
-          <ul className="housing-band-items">
-            {profile.map((item) => (
-              <li key={item.metric_id} className="housing-band-item">
-                <b>{item.value}</b>
-                <span className="housing-band-label">
-                  <Definition
-                    term={{
-                      key: `profile-${item.metric_id}`,
-                      title: item.label,
-                      phrases: [],
-                      definition: item.definition,
-                    }}
-                  >
-                    {item.label}
-                  </Definition>
-                </span>
-                {item.context && <span className="housing-band-context">{item.context}</span>}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <HousingBand items={profile} />
 
       {cost ? (
         <CostToOwn {...cost} />

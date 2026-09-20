@@ -88,28 +88,30 @@ function StandOutRow({
         <h3 className="standout-deck-label">
           {title} <span>{sub}</span>
         </h3>
-        <div className="standout-nav" hidden={!position.overflow}>
-          <button
-            type="button"
-            className="standout-arrow"
-            aria-label={`Show earlier ${title.toLowerCase()} measures`}
-            aria-controls={railId}
-            disabled={position.atStart}
-            onClick={() => move(-1)}
-          >
-            <Arrow direction="left" />
-          </button>
-          <button
-            type="button"
-            className="standout-arrow"
-            aria-label={`Show later ${title.toLowerCase()} measures`}
-            aria-controls={railId}
-            disabled={position.atEnd}
-            onClick={() => move(1)}
-          >
-            <Arrow direction="right" />
-          </button>
-        </div>
+        {position.overflow && (
+          <div className="standout-nav">
+            <button
+              type="button"
+              className="standout-arrow"
+              aria-label={`Show earlier ${title.toLowerCase()} measures`}
+              aria-controls={railId}
+              disabled={position.atStart}
+              onClick={() => move(-1)}
+            >
+              <Arrow direction="left" />
+            </button>
+            <button
+              type="button"
+              className="standout-arrow"
+              aria-label={`Show later ${title.toLowerCase()} measures`}
+              aria-controls={railId}
+              disabled={position.atEnd}
+              onClick={() => move(1)}
+            >
+              <Arrow direction="right" />
+            </button>
+          </div>
+        )}
       </div>
       <ul
         ref={rail}
