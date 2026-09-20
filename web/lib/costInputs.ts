@@ -14,8 +14,10 @@
  * around them. So the card stops describing "the typical home" and describes a purchase at
  * a stated price instead, names the window the sales come from, and drops the figures that
  * only Zillow can support. Measured 2026-09-20: 176 of New Jersey's 564 municipalities have
- * no Zillow figure and had no cost card at all, 163 of them while carrying a median of
- * deeds signed within the last year. Thirteen still have neither and still say so.
+ * no Zillow figure and had no cost card at all, 163 of them while carrying a transaction
+ * median whose window ends June 2026. That window reaches back to January 2024, so it is
+ * the window's end that is recent and not every deed in it — which is why the card names
+ * both ends. Thirteen still have neither and still say so.
  *
  * The ACS's owner-reported value is still not a candidate: a survey five years old would
  * price a mortgage on a market that has moved on.
@@ -37,8 +39,17 @@ import { monthLabel, periodLabel } from "@/lib/periods";
  * The window already ends at the newest deed the source holds, so this bounds how long
  * that may sit. Eighteen months is two publication cycles of the year-to-date file plus
  * slack: a figure that has missed two is not describing the market a reader is buying in,
- * and silence is better than a stale price presented as a current one. Zillow's index is
- * monthly and needs no such guard.
+ * and silence is better than a stale price presented as a current one.
+ *
+ * **Checked when the site is built, not while it is read.** A static export evaluates this
+ * once per publish, so a card already on the CDN does not withdraw itself the day its
+ * window turns 18 months old — only the next publish drops it. Scheduled refresh
+ * (Milestone 29) is what makes the limit bite on a cadence.
+ *
+ * No equivalent guard sits on Zillow's index, which is a gap rather than a judgement that
+ * it needs none: Zillow publishes monthly, but `hip acquire` never re-checks a `@current`
+ * ref, so the warehouse can hold a month-old observation indefinitely (TODO.md). A limit
+ * there would want that fixed first, or it would drop good regions for a fetching bug.
  */
 export const MAX_SALE_AGE_MONTHS = 18;
 

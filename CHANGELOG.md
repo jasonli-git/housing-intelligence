@@ -17,7 +17,9 @@ recorded sales rather than from an index that does not cover them.
   13 still say why they do not.
 - `MAX_SALE_AGE_MONTHS`, an 18-month freshness limit on that fallback, so a transaction
   median that stops being republished drops out rather than pricing a mortgage on a
-  market that has moved.
+  market that has moved. Evaluated at publication, not while a page is read: a card
+  already deployed does not withdraw itself when its window ages past the limit, and
+  only the next publish drops it.
 - `monthLabel` in `lib/periods`, which says both ends of a window the same way —
   `periodLabel` shortens a 31 December date to its year, and "Jan 2023 to 2025" reads as
   though the two ends were measured differently.
