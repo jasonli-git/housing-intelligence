@@ -430,6 +430,33 @@ requested model's prose is current, 3 when some is, and 1 when none is. Local co
 run one model at a time because two do not fit in 16GB; hosted cohorts fan out, which is
 the reason hosted inference is on the roadmap at all.
 
+**Keeping it current.** `make refresh` asks every publisher whether anything has moved
+and rebuilds only if something did. A ref whose vintage names one release — ACS 2024,
+SR1A's closed years — is answered from disk without a request. A ref whose vintage is
+`current` or a year-to-date file is revalidated with `If-Modified-Since` / `If-None-Match`,
+and a 304 is a cache hit, so a run where nothing moved costs a handful of conditional
+requests and a few seconds rather than re-downloading 245MB. Publishers that send no
+validator at all — FHFA, and the JSON APIs behind Census, FRED, BLS and HUD — fall back
+to age, re-fetched after a week (a month for MOD-IV and HUD CHAS, where a re-fetch is
+1,741 and 571 requests).
+
+It exits **0** when everything is current, **3** when the pipeline completed with some
+source unreachable, and **1** when the pipeline itself failed — the split a scheduler
+needs, because fifteen sources moving while one publisher is down is a successful
+refresh whose numbers should still deploy. One source failing no longer ends the run.
+
+**Scheduling is yours to install**, deliberately: nothing here writes a cron or launchd
+entry. A daily run is enough for a platform whose fastest source publishes weekly —
+
+```cron
+0 6 * * *  cd /path/to/housing-intelligence && make refresh >> /tmp/hip-refresh.log 2>&1
+```
+
+— and on macOS a `launchd` agent with `StartCalendarInterval` is the equivalent. Deploy
+on exit 0 or 3; investigate on 1. `make prune-raw` shows which superseded downloads are
+safe to delete and needs `--apply` to do it, because a cadence makes `data/raw/` grow
+without bound: one refresh took it from 264MB of superseded copies to 511MB.
+
 `make` on its own lists every target. With the warehouse down, the API and dashboard
 still run and report the degraded state rather than failing.
 

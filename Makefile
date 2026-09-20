@@ -2,7 +2,7 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline publish \
+.PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish \
         check-dist check-live deploy api web \
         test test-py test-web lint format check-config dbt-debug eval clean
 
@@ -90,6 +90,15 @@ pipeline:  ## Full pipeline: acquire -> land -> stage -> geocode -> validate -> 
 	uv run hip load
 	uv run hip analyze
 	uv run hip pack --report
+
+refresh:  ## Ask every publisher what moved, and rebuild only if something did
+	@# Exits 0 current, 3 completed with a source unreachable, 1 pipeline failed.
+	@# Stops before the pipeline when nothing moved, which is the common case: a run
+	@# that only revalidates costs sixteen conditional requests and a few seconds.
+	uv run hip refresh
+
+prune-raw:  ## Show raw releases nothing points at (add ARGS=--apply to delete)
+	uv run hip prune-raw $(ARGS)
 
 api:  ## Run the API on http://localhost:8000 (docs at /docs)
 	uv run uvicorn hip.api.main:app --reload --port 8000
