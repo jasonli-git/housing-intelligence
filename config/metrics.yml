@@ -240,6 +240,65 @@ metrics:
       rather than as a median of municipal medians.
     source_id: nj_modiv
 
+  # Milestone 25: what buyers actually paid, as opposed to what a model or an owner
+  # says a home is worth. The three coexist on purpose (SPEC principle 11).
+  sr1a_median_sale_price:
+    label: Typical sale price, recent transactions
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median verified price of usable class-2 (1-4 family residential) sales over the
+      three years ending in the period shown, from NJ's SR1A sales file. Usable is the
+      Division of Taxation's own determination -- inheritances, transfers between
+      relatives, sheriff's sales and 30 other non-usable categories are excluded by the
+      state, not by a threshold chosen here. An observed transaction price, unlike
+      zhvi_all_homes (modelled) and acs_median_home_value (self-reported). Three years
+      because a single year leaves 103 of 564 municipalities below 20 sales. Suppressed
+      below 20 sales in the window. Counties and the state are taken over their deeds,
+      not as a median of municipal medians.
+    source_id: nj_sr1a
+
+  # Milestone 25: the rate ARCHITECTURE #141 wanted and could not compute.
+  nj_effective_tax_rate:
+    label: Effective property tax rate
+    unit: rate_per_100
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Tax per $100 of *market* value, as published by the NJ Division of Taxation.
+      Comparable across municipalities, which the general rate is not, because it
+      restates the levy against equalized rather than assessed value. Ingested, never
+      derived -- see nj_director_ratio.
+    source_id: nj_tax_rates
+
+  nj_general_tax_rate:
+    label: General property tax rate
+    unit: rate_per_100
+    frequency: annual
+    direction: neutral
+    description: >-
+      Tax per $100 of *assessed* value, as published. Not comparable between
+      municipalities: each assesses at its own ratio, so a high general rate can mean a
+      low assessment rather than a heavy levy. Winfield Township's 2025 rate of 23.411
+      against a state median of 2.974 is the clearest case. Use nj_effective_tax_rate to
+      compare places; this is here because it is the rate that appears on a tax bill.
+    source_id: nj_tax_rates
+
+  nj_director_ratio:
+    label: Director's Ratio (assessment to market value)
+    unit: percent
+    frequency: annual
+    direction: neutral
+    description: >-
+      Assessed value as a percentage of market value, from the Table of Equalized
+      Valuations. Landed as the check on the published effective rate rather than as its
+      input: pairing a general rate with the prior year's ratio reproduces the published
+      effective rate to within 0.5% for only 53% of municipality-years. Also the measure
+      of how stale a municipality's assessments are -- a ratio far from 100 means a
+      revaluation is overdue.
+    source_id: nj_tax_rates
+
   price_to_ami:
     label: Home value to area median income
     unit: ratio
