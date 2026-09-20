@@ -38,6 +38,13 @@ def figure() -> tuple[int, str, object]:
 
 
 def _revisions(session: Session, key: tuple[int, str, object]) -> list[tuple]:
+    """Every revision recorded for one figure, oldest first.
+
+    Tests compare *before and after* rather than against an empty table: a real refresh
+    has already written 313,536 rows here, and whichever figure the fixture picks may
+    well be one of the 294,469 Zillow restated. Asserting an absolute count passed only
+    on a warehouse this feature had never run against.
+    """
     return list(
         session.execute(
             text(
@@ -60,6 +67,7 @@ def test_a_changed_value_is_recorded_with_both_sides(figure) -> None:  # type: i
             ),
             {"r": figure[0], "m": figure[1], "p": figure[2]},
         ).scalar_one()
+        existing = len(_revisions(session, figure))
 
         session.execute(
             text(
@@ -70,9 +78,9 @@ def test_a_changed_value_is_recorded_with_both_sides(figure) -> None:  # type: i
         )
 
         recorded = _revisions(session, figure)
-        assert len(recorded) == 1
-        assert recorded[0][0] == pytest.approx(before)
-        assert recorded[0][1] == pytest.approx(before + 1234.5)
+        assert len(recorded) == existing + 1
+        assert recorded[-1][0] == pytest.approx(before)
+        assert recorded[-1][1] == pytest.approx(before + 1234.5)
         session.rollback()
 
 
@@ -80,6 +88,7 @@ def test_an_unchanged_re_run_records_nothing(figure) -> None:  # type: ignore[no
     """The common case, and it has to stay cheap: a refresh over data that has not moved
     upserts every row and must write no revisions at all."""
     with Session(get_engine()) as session:
+        before = _revisions(session, figure)
         session.execute(
             text(
                 "UPDATE fact_metric_observation SET value = value, "
@@ -88,7 +97,7 @@ def test_an_unchanged_re_run_records_nothing(figure) -> None:  # type: ignore[no
             ),
             {"r": figure[0], "m": figure[1], "p": figure[2]},
         )
-        assert _revisions(session, figure) == []
+        assert _revisions(session, figure) == before, "an unchanged upsert wrote a row"
         session.rollback()
 
 
@@ -122,6 +131,6 @@ def test_every_revision_names_the_release_on_both_sides(figure) -> None:  # type
             ),
             {"r": figure[0], "m": figure[1], "p": figure[2]},
         )
-        old_release, new_release = _revisions(session, figure)[0][2:4]
+        old_release, new_release = _revisions(session, figure)[-1][2:4]
         assert old_release is not None and new_release is not None
         session.rollback()

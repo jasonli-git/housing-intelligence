@@ -12,12 +12,14 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.20.0, 2026-09-20. Versions 1 and 2 complete; nothing in progress.**
+> **Status — v0.21.0, 2026-09-20. Versions 1 and 2 complete; nothing in progress.**
 >
 > **Built and deployed.** New Jersey's geography, housing, economic context, property
 > tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
-> parcels, 1.4M deeds, and 409,135 observations across 37 metrics from 16 public sources
-> spanning 1971 to 2026, plus 38,192 computed changes and 53,658 rankings. Every value carries its source file and
+> parcels, 1.4M deeds, and 410,587 observations across 37 metrics from 16 public sources
+> spanning 1971 to 2026, plus 38,226 computed changes and 53,714 rankings. Every source
+> is asked on each refresh whether anything has moved, and a figure that changes is
+> recorded rather than overwritten. Every value carries its source file and
 > match method. All eight pipeline stages run. The site publishes itself — 5,917 static
 > artifacts and 2,272 pre-rendered pages, served with no database and no application
 > server — across four page types: the state, 1,134 region pages, their reports, and an
@@ -181,6 +183,17 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   second timing harness that would put rival numbers in one README. `HIP_DATA_DIR`,
   `HIP_REPORTS_DIR` and `HIP_PGDATA` are independent settings with `~` expansion, so
   the data, the reports and the database can each be moved to another disk.
+- **It notices when the data moves** (M29, built) — the platform used to answer every
+  source from its own cache forever. On 2026-09-20, with the site already live, Zillow
+  had republished on the 16th and the warehouse held the 6th, and a full pipeline run
+  reported "172 cached, 0 downloaded" without asking anyone. Now a vintage that names
+  one release is answered from disk, and everything else is revalidated with a
+  conditional request where a 304 costs nothing — so `make refresh` asks sixteen
+  publishers what changed in a few seconds and rebuilds only if something did. One
+  publisher failing no longer ends the run, which is how the first refresh discovered
+  that MOD-IV had gone behind a token and kept going. And a published figure that
+  changes is now recorded in `fact_revision` instead of silently overwritten: that first
+  run caught **313,536** revisions, 294,469 of them Zillow restating its own history.
 - **What buyers actually paid, and the tax rate you can compare** (M25, built) — two
   New Jersey sources the platform had never read. `nj_sr1a` is the state's SR1A Sales
   File: 1.4M recorded deeds carrying the Division of Taxation's own usable/non-usable

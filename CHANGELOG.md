@@ -3,6 +3,43 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.21.0] — 2026-09-20
+
+**Milestone 29 — scheduled refresh.** The platform asks publishers whether anything has
+moved, instead of assuming it has not.
+
+### Added
+
+- **Conditional revalidation.** A ref whose vintage names one release is answered from
+  disk; a `current` or `<year>ytd` ref is checked with `If-Modified-Since` /
+  `If-None-Match`, and a 304 is a cache hit. Measured on Zillow: three conditional GETs,
+  three 304s, 1.6 seconds against re-downloading 231MB.
+- `revalidate_after`, a bounded age for mutable refs whose publisher sends no validator
+  at all — FHFA, and the JSON APIs behind Census, FRED, BLS and HUD. A week by default,
+  a month on MOD-IV and HUD CHAS where a re-fetch is 1,741 and 571 requests.
+- `hip refresh`, exiting 0 current, 3 completed with a source unreachable, 1 pipeline
+  failed — and stopping before the pipeline when nothing moved.
+- `hip prune-raw`, which keeps whatever each index points at and **every release a fact
+  cites**, and needs `--apply`. One refresh took `data/raw/` from 264MB of superseded
+  copies to 511MB.
+- `fact_revision` and a trigger: a published figure that changes now leaves a record,
+  naming the release on both sides. The first refresh under it recorded **313,536**
+  revisions, 294,469 of them Zillow restating its own published history at a median
+  1.06%, all of which the loader had previously overwritten in silence.
+- `make refresh` and `make prune-raw`, and a README section on scheduling them — with a
+  cron line and a pointer to launchd, not a timer installed on anyone's machine.
+
+### Changed
+
+- **MOD-IV is acquired from `Parcels_Composite_NJ_WM`.** The layer Milestone 7 used went
+  behind a token and every request answered `Token Required`; nothing could have noticed,
+  because a cached ref was never re-fetched. The composite is reachable without a token
+  and is the same data — 45 fields against 45, 3,481,240 rows, OBJECTID dense from 1.
+- One failed ref no longer ends the run. Resilience and reporting moved to
+  `hip/refresh.py`, above the adapters, which is where retry already lived.
+- 410,587 observations, and 28 refs refreshed that had been frozen behind the cache —
+  among them `MORTGAGE30US`, which prices the cost-to-own card.
+
 ## [0.20.1] — 2026-09-20
 
 **A cost card where there was none.** 163 municipalities gain a monthly cost, priced from

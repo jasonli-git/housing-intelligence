@@ -8,63 +8,24 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — Milestone 29, scheduled refresh, as of 2026-09-20
+## Now — nothing in progress, as of 2026-09-20
 
-**Deliverable.** The platform stops decaying silently. Today a `make pipeline` reports
-"172 cached, 0 downloaded" and republishes figures fetched weeks ago, because `fetch`
-([base.py:240](src/hip/sources/base.py:240)) short-circuits on a local index keyed by
-`ref.key` and never asks the publisher whether anything moved. Measured 2026-09-20, with
-0.20.1 already live: Zillow republished ZHVI and ZORI on **2026-09-16** and the warehouse
-holds **2026-09-06**, so the deployed site is one release behind and nothing will ever
-notice.
+**Milestone 29 shipped and is open as a pull request**, not merged and not deployed.
+What it shipped is in [CHANGELOG.md](CHANGELOG.md) 0.21.0 and its decisions are
+ARCHITECTURE #188–#194.
 
-**Why this milestone came forward, out of roadmap order.** Versions 3's remaining
-milestones each add more surface that goes stale, and this one is what the owner's
-approved Director Note of 2026-09-19 — README images follow the deployed site — is
-blocked on. It also absorbs six items that were separately tracked in `Open`.
+**The live site is 0.20.1 and its numbers are now behind the warehouse.** The refresh
+picked up 28 stale refs and re-acquired MOD-IV in full, so a deploy of this milestone
+changes published figures — most visibly the mortgage rate on every cost card, and
+294,469 restated Zillow values. That is the first deploy where `make check-live` has
+something real to catch.
 
-**Scope.** Refresh correctness first, cadence second. A scheduler that runs a pipeline
-which cannot tell what changed is worse than no scheduler.
+**Six items in `Open` closed with it** and were removed rather than ticked: the
+`@current` caching defect, the mortgage rate that would rot first, SR1A's year-to-date
+file, the census-permits abort, raw-release pruning and revision tracking.
 
-### Tasks
-
-- [ ] **Conditional revalidation.** Record `Last-Modified` and `ETag` in the manifest at
-      fetch time; revalidate a mutable ref with `If-Modified-Since` / `If-None-Match`;
-      treat 304 as a cache hit that keeps the existing content-addressed copy. One
-      request either way, so a no-op refresh costs 64 conditional GETs rather than
-      re-downloading 245MB. `--force` stays as the escape hatch it already is.
-- [ ] **Say which refs are mutable, rather than guessing per call site.** A dated vintage
-      names one immutable release and never needs revalidating; `current` names whatever
-      is newest, and `<year>ytd` names a year still filling. Derive it on `ReleaseRef`
-      from the vintage, so the rule is stated once and testable, and so SR1A's `2026ytd`
-      is covered by the same rule rather than a special case.
-- [ ] **A failed ref must not take the run down.** `fetch_all` is a plain generator with
-      no per-ref handling, so one `SourceError` ends every remaining source — which is
-      also why `census_permits.py:38`'s docstring is currently false. A refresh that
-      aborts on one publisher's 404 is not a refresh. Collect failures, carry on, and
-      report them.
-- [ ] **A refresh report**: per source, what was revalidated, what moved, what failed and
-      why. This is the substrate alerting needs, and the thing that would have made the
-      Zillow gap visible in September rather than in a measurement.
-- [ ] **`hip refresh`** — acquire through publish in one command, exiting on a stated
-      code so a scheduler can act on it. `hip explain` already exits 0, 3 or 1 for all,
-      some or none of the prose current, and the numbers should deploy whichever it is
-      (ARCHITECTURE #102).
-- [ ] **Retention for superseded raw releases.** The raw tier is immutable by design, so
-      every refresh leaves both copies: 264MB on 2026-09-11, most of it three earlier
-      Zillow files at ~76MB each. Unbounded once a cadence exists. The rule has to keep
-      every release a fact cites.
-- [ ] **Record that a figure moved.** `fact_metric_observation` is keyed on
-      `(region_id, metric_id, period_start)` and the loader upserts, so a publisher
-      revising a past month silently replaces it. Refresh is what turns this from
-      theoretical into monthly. Record the revision; a view on it is not this milestone.
-- [ ] **Scheduling is documented, not installed.** Deliver the command and a recipe; do
-      not write a launchd or cron entry onto the owner's machine unasked.
-
-**Not in scope:** alert delivery to anywhere off this machine, and any UI for revisions.
-
-**To resume:** `make db-up` for Postgres. The live site is 0.20.1 and current as of the
-2026-09-20 deploy.
+**To resume:** `make db-up` for Postgres. `make refresh` is the command now; `make
+pipeline` still works and always re-runs everything.
 
 ## Open
 
@@ -73,59 +34,10 @@ first raised, not where it must be done.
 
 ### Correctness and data integrity
 
-- [ ] **A missing Census permits year aborts the whole `hip acquire`.** (pre-M12 review)
-      The adapter docstring says a year whose file does not exist yet "fails its own
-      fetch and leaves the others alone"
-      ([census_permits.py:38](src/hip/sources/census_permits.py:38)), but `fetch_all` is
-      a plain generator with no per-ref exception handling, so the `SourceError`
-      propagates and takes every remaining source with it. Dormant until
-      `default_vintage` is bumped ahead of publication. Either make the docstring true
-      by catching per ref, or correct the docstring — the current pairing is the worst of
-      the two, because it invites someone to rely on behaviour that is not there.
-      Demonstrated live on 2026-09-06 by the HUD 429 described under `@current` refs
-      below. **Milestone 29 owns this** (see `Now`).
-- [ ] **`hip acquire` never re-checks a `@current` ref.** (M12, found 2026-09-06)
-      `fetch` ([base.py:200](src/hip/sources/base.py:200)) short-circuits on a local
-      index keyed by `ref.key`, so once a ref is cached it is never re-fetched. Correct
-      for a dated vintage, wrong for refs whose vintage is literally `current` — Zillow
-      replaces those monthly at a stable URL. Measured: a full `make pipeline` reported
-      172 cached, 0 downloaded, and recomputed from bytes fetched on 2026-08-11 while
-      Zillow's own URL reported `Last-Modified: 2026-08-16`. `--force` re-downloads all
-      172 rather than the seven that moved, and earned a `429` from HUD doing it. Fix is
-      a conditional request — `If-Modified-Since` / `If-None-Match`, 304 treated as a
-      cache hit — which keeps content-addressing intact. **Deliberately deferred to
-      Milestone 29**, scheduled refresh with retry and alerting. **Milestone 29 owns this** (see `Now`).
-- [ ] **`mortgage_rate_30y` is the `@current` ref that will rot first, and most
-      visibly.** Found 2026-09-19 while checking a reported 6.67% against 6.95%
-      elsewhere. The figure was correct — `FredAdapter` requests `&frequency=m`, so the
-      platform stores monthly averages, and August 2026 was the latest complete month
-      for data fetched 2026-09-06. The two numbers measure different things: a monthly
-      average against a current weekly PMMS reading. But `FredAdapter.default_vintage`
-      is `current`, so it inherits the caching defect above, and FRED's is the only
-      weekly-published series among the twelve sources. When September's average lands
-      in October a plain `hip acquire` will not pick it up, and the cost-to-own section
-      will keep showing `Aug 2026` — correctly labelled and quietly months behind. It is
-      the figure a reader is most likely to check against another source, so it is where
-      the caching defect becomes visible first. Fix it with the conditional request
-      above rather than separately. **Milestone 29 owns this** (see `Now`).
 - [ ] **The validation gate has no range bounds for the two HUD metrics.**
       (pre-M12 review) `hud_area_median_income` and `hud_income_limit_80` are absent from
       `VALUE_BOUNDS` ([gate.py](src/hip/validate/gate.py)), so the one metric family
       feeding `price_to_ami` passes unchecked. Every other loaded metric has bounds.
-- [ ] **Revision tracking — what the platform currently throws away.** (M19, raised
-      2026-09-07) Zillow revises published months retroactively and the warehouse cannot
-      see it: `fact_metric_observation` is keyed on
-      `(region_id, metric_id, period_start)` and the loader upserts, so a revised June
-      silently replaces the old June with no record that the figure moved. The only trace
-      is the superseded file in `data/raw/`, which nothing reads and the prune below
-      would eventually delete. **Milestone 29 owns this** (see `Now`).
-- [ ] **Nothing prunes superseded raw releases, and a refresh cadence makes that
-      unbounded.** (M19, measured 2026-09-06) The raw tier is content-addressed and
-      immutable by design (ARCHITECTURE #10), so a refresh leaves both copies on disk:
-      31 superseded copies and 264MB on 2026-09-11, most of it three earlier Zillow ZHVI
-      files at ~76MB a release. `hip analyze` prunes unreferenced `hip_derived` releases;
-      there is no equivalent for downloaded files. A retention rule has to keep every
-      release a fact cites. **Milestone 29 owns this** (see `Now`).
 - [ ] **`hip load` re-fetches every source's refs just to rebuild provenance.** (M3)
       That is `acquire`-level work inside `load` — harmless while cached, wrong in
       principle. The loader should read the manifests instead.
@@ -133,15 +45,6 @@ first raised, not where it must be done.
       `ST_Transform` reprojects vertices without densifying edges. Negligible for real
       TIGER geometry, which is vertex-dense; it only shows up in synthetic test fixtures.
       Revisit if a source ever supplies coarse polygons.
-
-- [ ] **The SR1A year-to-date file is a `@current` ref wearing a dated vintage.**
-      (M25, found 2026-09-19) `2026ytd` is republished as the year fills — the file on
-      disk holds deeds through 2026-06-30 — but it is content-addressed under a vintage
-      string that never changes, so `hip acquire` answers from cache and the newest
-      transaction price silently stops moving. Same defect as the `@current` refs above
-      and the same fix, a conditional request; it belongs in the **Milestone 29** work,
-      not beside it. Until then a refresh needs `--force`, which re-downloads all seven
-      archives rather than the one that moved. **Milestone 29 owns this** (see `Now`).
 - [ ] **A county has a tax bill but no tax rate.** (M25, #181) `nj_effective_tax_rate`
       is municipal only, because a county rate is a levy-weighted average and the
       weights — equalized valuations per municipality — are in the Table of Equalized
