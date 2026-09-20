@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -34,9 +35,23 @@ from hip.sources.base import ReleaseRef, SourceAdapter, SourceError
 
 logger = logging.getLogger(__name__)
 
+# `Parcels_Composite_NJ_WM`, not `Parcels_MODIV_NJ_WM`, since 2026-09-20.
+#
+# The layer Milestone 7 used went behind a token: every request now answers
+# `{"code": 499, "message": "Token Required"}`, which Milestone 29's first full refresh
+# found the moment it started asking publishers whether anything had moved. The source
+# had been unrefreshable for some unknown time and nothing could have noticed, because
+# a cached ref was never re-fetched.
+#
+# The composite publication is reachable without a token and is the same data: 45 fields
+# against 45, all 17 this adapter requests present, 3,481,240 rows with OBJECTID dense
+# from 1 — so the windowed paging below holds unchanged — and `maxRecordCount` 2000,
+# which is what `WINDOW` is set to. Checked 2026-09-20. It is also the layer Milestone 25
+# listed field by field to establish that NJ's ArcGIS publication carries no SR1A
+# usability code at any token level (ARCHITECTURE #179).
 LAYER_URL = (
     "https://services2.arcgis.com/XVOqAjTOJ5P6ngMu/arcgis/rest/services"
-    "/Parcels_MODIV_NJ_WM/FeatureServer/0"
+    "/Parcels_Composite_NJ_WM/FeatureServer/0"
 )
 
 # The service caps a page at 2000 rows. OBJECTID is dense (max id == row count), so a
@@ -87,6 +102,11 @@ class ModivAdapter(SourceAdapter):
     # the same situation as Zillow (ARCHITECTURE #10).
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "ndjson"
+    # 1,741 paged requests and about 32 minutes, assembled from many responses so there
+    # is no validator to check cheaply. A week's default would re-run that weekly for a
+    # source counties republish annually; a month bounds the staleness at a month, which
+    # is inside the cadence of the data itself.
+    revalidate_after: ClassVar[timedelta] = timedelta(days=30)
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         return [

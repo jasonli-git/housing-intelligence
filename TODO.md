@@ -8,23 +8,29 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — nothing in progress, as of 2026-09-20
+## Now — Milestone 29 in review, as of 2026-09-20
 
-**Milestone 25 is merged.** What it shipped is in [CHANGELOG.md](CHANGELOG.md) 0.20.0,
-its decisions are ARCHITECTURE #179–#186.
+**Milestone 29 is open as [PR #27](https://github.com/jasonli-git/housing-intelligence/pull/27)**,
+with the review fixes on `fix/m29-refresh-guarantees`. Not merged, not deployed.
 
-**The cost-to-own fallback is open as a pull request**, not merged: the owner's decision
-of 2026-09-20 on the question Milestone 25 left open, recorded as ARCHITECTURE #187 and
-CHANGELOG 0.20.1. 163 municipalities that had no monthly cost now have one, priced from
-recorded sales and labelled as a purchase at a stated price rather than as "the typical
-home".
+**A review of the branch found seven real defects**, all reproduced independently before
+being changed and all now fixed with regression tests: a failed pipeline reported success
+on the next run; an unreachable publisher was reported as confirmed unchanged; downstream
+stages re-fetched their own inputs and broke the partial refresh; HUD's 571 municipal
+files silently stopped being acquired; revision provenance was being deleted by two
+different cleanups; identical bytes counted as an upstream change; and `make refresh`
+cannot carry the exit codes a scheduler needs. ARCHITECTURE #195–#200.
 
-**Neither is deployed.** The published site is still on 0.19.0. A deploy would be the
-first use of `make check-live`, which landed in PR #23 and has never run against a real
-deploy.
+**Verified end to end after the fixes.** A full refresh completed and recorded 802 refs,
+including the 566 municipal CHAS refs that had gone missing; a second run answered in
+**2.7 seconds** with seven confirmed 304s and correctly declined to rebuild.
 
-**To resume:** `make db-up` for Postgres, and `make setup-eval` rather than `make setup`
-when the evaluation harness is needed.
+**The live site is 0.20.1 and its numbers are behind the warehouse.** A deploy changes
+published figures — the mortgage rate on every cost card, and 294,469 restated Zillow
+values.
+
+**To resume:** `make db-up` for Postgres. `uv run hip refresh` is the command a scheduler
+runs; `make refresh` is for running it by hand.
 
 ## Open
 
@@ -33,59 +39,22 @@ first raised, not where it must be done.
 
 ### Correctness and data integrity
 
-- [ ] **A missing Census permits year aborts the whole `hip acquire`.** (pre-M12 review)
-      The adapter docstring says a year whose file does not exist yet "fails its own
-      fetch and leaves the others alone"
-      ([census_permits.py:38](src/hip/sources/census_permits.py:38)), but `fetch_all` is
-      a plain generator with no per-ref exception handling, so the `SourceError`
-      propagates and takes every remaining source with it. Dormant until
-      `default_vintage` is bumped ahead of publication. Either make the docstring true
-      by catching per ref, or correct the docstring — the current pairing is the worst of
-      the two, because it invites someone to rely on behaviour that is not there.
-      Demonstrated live on 2026-09-06 by the HUD 429 described under `@current` refs
-      below.
-- [ ] **`hip acquire` never re-checks a `@current` ref.** (M12, found 2026-09-06)
-      `fetch` ([base.py:200](src/hip/sources/base.py:200)) short-circuits on a local
-      index keyed by `ref.key`, so once a ref is cached it is never re-fetched. Correct
-      for a dated vintage, wrong for refs whose vintage is literally `current` — Zillow
-      replaces those monthly at a stable URL. Measured: a full `make pipeline` reported
-      172 cached, 0 downloaded, and recomputed from bytes fetched on 2026-08-11 while
-      Zillow's own URL reported `Last-Modified: 2026-08-16`. `--force` re-downloads all
-      172 rather than the seven that moved, and earned a `429` from HUD doing it. Fix is
-      a conditional request — `If-Modified-Since` / `If-None-Match`, 304 treated as a
-      cache hit — which keeps content-addressing intact. **Deliberately deferred to
-      Milestone 29**, scheduled refresh with retry and alerting.
-- [ ] **`mortgage_rate_30y` is the `@current` ref that will rot first, and most
-      visibly.** Found 2026-09-19 while checking a reported 6.67% against 6.95%
-      elsewhere. The figure was correct — `FredAdapter` requests `&frequency=m`, so the
-      platform stores monthly averages, and August 2026 was the latest complete month
-      for data fetched 2026-09-06. The two numbers measure different things: a monthly
-      average against a current weekly PMMS reading. But `FredAdapter.default_vintage`
-      is `current`, so it inherits the caching defect above, and FRED's is the only
-      weekly-published series among the twelve sources. When September's average lands
-      in October a plain `hip acquire` will not pick it up, and the cost-to-own section
-      will keep showing `Aug 2026` — correctly labelled and quietly months behind. It is
-      the figure a reader is most likely to check against another source, so it is where
-      the caching defect becomes visible first. Fix it with the conditional request
-      above rather than separately.
+- [ ] **2,936 revision rows have an `old_release_id` that no longer resolves.**
+      (M29, found in review 2026-09-20) They predate the retention fix in ARCHITECTURE
+      #199: `_prune_orphan_derived_releases` had already deleted the `hip_derived`
+      releases they pointed at before anything protected them. New orphans are now
+      prevented — a full `analyze` under the fix created none — but these cannot be
+      recovered, because the rows they referenced are gone. All 2,936 are derived
+      metrics (2,435 `price_to_income`, 396 `rent_to_income`, 105 `price_to_ami`), where
+      the pointer named the analyze run rather than a publisher's file, so what is lost
+      is which *computation* produced the earlier value and not which source did. Decide
+      whether to null the dangling ids — an unresolvable integer reads as a working
+      reference — or leave them and say so where they are served.
+
 - [ ] **The validation gate has no range bounds for the two HUD metrics.**
       (pre-M12 review) `hud_area_median_income` and `hud_income_limit_80` are absent from
       `VALUE_BOUNDS` ([gate.py](src/hip/validate/gate.py)), so the one metric family
       feeding `price_to_ami` passes unchecked. Every other loaded metric has bounds.
-- [ ] **Revision tracking — what the platform currently throws away.** (M19, raised
-      2026-09-07) Zillow revises published months retroactively and the warehouse cannot
-      see it: `fact_metric_observation` is keyed on
-      `(region_id, metric_id, period_start)` and the loader upserts, so a revised June
-      silently replaces the old June with no record that the figure moved. The only trace
-      is the superseded file in `data/raw/`, which nothing reads and the prune below
-      would eventually delete.
-- [ ] **Nothing prunes superseded raw releases, and a refresh cadence makes that
-      unbounded.** (M19, measured 2026-09-06) The raw tier is content-addressed and
-      immutable by design (ARCHITECTURE #10), so a refresh leaves both copies on disk:
-      31 superseded copies and 264MB on 2026-09-11, most of it three earlier Zillow ZHVI
-      files at ~76MB a release. `hip analyze` prunes unreferenced `hip_derived` releases;
-      there is no equivalent for downloaded files. A retention rule has to keep every
-      release a fact cites.
 - [ ] **`hip load` re-fetches every source's refs just to rebuild provenance.** (M3)
       That is `acquire`-level work inside `load` — harmless while cached, wrong in
       principle. The loader should read the manifests instead.
@@ -93,15 +62,6 @@ first raised, not where it must be done.
       `ST_Transform` reprojects vertices without densifying edges. Negligible for real
       TIGER geometry, which is vertex-dense; it only shows up in synthetic test fixtures.
       Revisit if a source ever supplies coarse polygons.
-
-- [ ] **The SR1A year-to-date file is a `@current` ref wearing a dated vintage.**
-      (M25, found 2026-09-19) `2026ytd` is republished as the year fills — the file on
-      disk holds deeds through 2026-06-30 — but it is content-addressed under a vintage
-      string that never changes, so `hip acquire` answers from cache and the newest
-      transaction price silently stops moving. Same defect as the `@current` refs above
-      and the same fix, a conditional request; it belongs in the **Milestone 29** work,
-      not beside it. Until then a refresh needs `--force`, which re-downloads all seven
-      archives rather than the one that moved.
 - [ ] **A county has a tax bill but no tax rate.** (M25, #181) `nj_effective_tax_rate`
       is municipal only, because a county rate is a levy-weighted average and the
       weights — equalized valuations per municipality — are in the Table of Equalized
@@ -411,12 +371,14 @@ first raised, not where it must be done.
       pasted 2026-09-06. **Census**, **FRED**, **BLS** and **Anthropic**, pasted in
       earlier sessions. Update `.env` after each.
 
-      **Then clear the cache (mine).** 68 manifests under `data/raw/` carry a live key
-      in their recorded `url` — 42 `bls`, 24 `census_acs`, 2 `fred`. ARCHITECTURE #76
-      stopped new ones being written but deliberately did not rewrite the immutable
-      content-addressed tree. Deleting those three source trees and re-acquiring rewrites
-      them without keys, at about 2.6 MB and 63 requests. Worth doing after rotation, not
-      before.
+      **Then clear the cache (mine).** **22 manifests** under `data/raw/` still carry a
+      live key in their recorded `url` — 21 `bls`, 1 `fred`. Re-measured 2026-09-20: the
+      earlier figure of 68 counted every manifest across the three sources, but 46 of
+      them have already rewritten themselves clean on a later fetch, `census_acs` among
+      them at 24 of 24. ARCHITECTURE #76 stopped new ones being written and deliberately
+      did not rewrite the immutable content-addressed tree, so the remainder are the ones
+      not re-acquired since. Deleting those source trees and re-acquiring rewrites them
+      without keys. Worth doing after rotation, not before.
 
       **Scope, measured 2026-09-19.** `data/` is gitignored, HUD's bearer token is not
       recorded (manifests hold `url` only, and nothing matches bearer/authorization/

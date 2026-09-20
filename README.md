@@ -12,12 +12,14 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.20.0, 2026-09-20. Versions 1 and 2 complete; nothing in progress.**
+> **Status — v0.21.0, 2026-09-20. Versions 1 and 2 complete; nothing in progress.**
 >
 > **Built and deployed.** New Jersey's geography, housing, economic context, property
 > tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
-> parcels, 1.4M deeds, and 409,135 observations across 37 metrics from 16 public sources
-> spanning 1971 to 2026, plus 38,192 computed changes and 53,658 rankings. Every value carries its source file and
+> parcels, 1.4M deeds, and 410,587 observations across 37 metrics from 16 public sources
+> spanning 1971 to 2026, plus 38,226 computed changes and 53,714 rankings. Every source
+> is asked on each refresh whether anything has moved, and a figure that changes is
+> recorded rather than overwritten. Every value carries its source file and
 > match method. All eight pipeline stages run. The site publishes itself — 5,917 static
 > artifacts and 2,272 pre-rendered pages, served with no database and no application
 > server — across four page types: the state, 1,134 region pages, their reports, and an
@@ -181,6 +183,17 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   second timing harness that would put rival numbers in one README. `HIP_DATA_DIR`,
   `HIP_REPORTS_DIR` and `HIP_PGDATA` are independent settings with `~` expansion, so
   the data, the reports and the database can each be moved to another disk.
+- **It notices when the data moves** (M29, built) — the platform used to answer every
+  source from its own cache forever. On 2026-09-20, with the site already live, Zillow
+  had republished on the 16th and the warehouse held the 6th, and a full pipeline run
+  reported "172 cached, 0 downloaded" without asking anyone. Now a vintage that names
+  one release is answered from disk, and everything else is revalidated with a
+  conditional request where a 304 costs nothing — so `make refresh` asks sixteen
+  publishers what changed in a few seconds and rebuilds only if something did. One
+  publisher failing no longer ends the run, which is how the first refresh discovered
+  that MOD-IV had gone behind a token and kept going. And a published figure that
+  changes is now recorded in `fact_revision` instead of silently overwritten: that first
+  run caught **313,536** revisions, 294,469 of them Zillow restating its own history.
 - **What buyers actually paid, and the tax rate you can compare** (M25, built) — two
   New Jersey sources the platform had never read. `nj_sr1a` is the state's SR1A Sales
   File: 1.4M recorded deeds carrying the Division of Taxation's own usable/non-usable
@@ -429,6 +442,38 @@ used is skipped and named in the closing summary, and the exit status is 0 when 
 requested model's prose is current, 3 when some is, and 1 when none is. Local cohorts
 run one model at a time because two do not fit in 16GB; hosted cohorts fan out, which is
 the reason hosted inference is on the roadmap at all.
+
+**Keeping it current.** `make refresh` asks every publisher whether anything has moved
+and rebuilds only if something did. A ref whose vintage names one release — ACS 2024,
+SR1A's closed years — is answered from disk without a request. A ref whose vintage is
+`current` or a year-to-date file is revalidated with `If-Modified-Since` / `If-None-Match`,
+and a 304 is a cache hit, so a run where nothing moved costs a handful of conditional
+requests and a few seconds rather than re-downloading 245MB. Publishers that send no
+validator at all — FHFA, and the JSON APIs behind Census, FRED, BLS and HUD — fall back
+to age, re-fetched after a week (a month for MOD-IV and HUD CHAS, where a re-fetch is
+1,741 and 571 requests).
+
+It exits **0** when everything is current, **3** when the pipeline completed with some
+source unreachable, and **1** when the pipeline itself failed — the split a scheduler
+needs, because fifteen sources moving while one publisher is down is a successful
+refresh whose numbers should still deploy. One source failing no longer ends the run.
+
+**Scheduling is yours to install**, deliberately: nothing here writes a cron or launchd
+entry. A daily run is enough for a platform whose fastest source publishes weekly —
+
+```cron
+0 6 * * *  cd /path/to/housing-intelligence && uv run hip refresh >> /tmp/hip-refresh.log 2>&1
+```
+
+— and on macOS a `launchd` agent with `StartCalendarInterval` is the equivalent. Deploy
+on exit 0 or 3; investigate on 1.
+
+**Schedule the command, not `make refresh`.** `make` collapses any failing recipe to its
+own exit status 2, so scheduling the make target throws away the distinction above: a run
+that completed with one publisher down and a run whose pipeline broke both arrive as 2.
+`make refresh` is for running it by hand. `make prune-raw` shows which superseded downloads are
+safe to delete and needs `--apply` to do it, because a cadence makes `data/raw/` grow
+without bound: one refresh took it from 264MB of superseded copies to 511MB.
 
 `make` on its own lists every target. With the warehouse down, the API and dashboard
 still run and report the degraded state rather than failing.

@@ -28,8 +28,7 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import Iterator
-from pathlib import Path
+from datetime import timedelta
 from typing import ClassVar
 
 from hip.config import ConfigError, fips_for
@@ -240,6 +239,10 @@ class HudChasAdapter(SourceAdapter):
     source_id: ClassVar[str] = "hud_chas"
     default_vintage: ClassVar[str] = CHAS_VINTAGE
     landing_format: ClassVar[str] = "json"
+    # 571 municipal calls paced at HUD's 60-a-minute limit — about ten minutes, and the
+    # source of the 429 that stopped Milestone 21's first run. CHAS is published in
+    # multi-year releases, so a month between unvalidatable re-fetches is generous.
+    revalidate_after: ClassVar[timedelta] = timedelta(days=30)
     request_interval_s: ClassVar[float] = HUD_REQUEST_INTERVAL_S
 
     def __init__(self, states: list[str], county_fips: list[str]) -> None:
@@ -275,14 +278,18 @@ class HudChasAdapter(SourceAdapter):
         ]
         return refs
 
-    def fetch_all(
-        self, *, raw_dir: Path, vintage: str | None = None, force: bool = False
-    ) -> Iterator[Release]:
-        for release in super().fetch_all(raw_dir=raw_dir, vintage=vintage, force=force):
-            yield release
-            if release.ref.layer == "mcds":
-                for ref in self.municipal_refs(release, vintage):
-                    yield self.fetch(ref, raw_dir=raw_dir, force=force)
+    def child_refs(
+        self, release: Release, vintage: str | None = None
+    ) -> list[ReleaseRef]:
+        """The 571 municipal refs, which only exist once the directory is on disk.
+
+        Was an override of `fetch_all`, which meant the resilient acquisition path in
+        `hip.refresh` — which drives `refs()` and `fetch()` directly so it can carry on
+        past a failure — never saw them at all.
+        """
+        if release.ref.layer != "mcds":
+            return []
+        return self.municipal_refs(release, vintage)
 
     def municipal_refs(self, directory: Release, vintage: str | None) -> list[ReleaseRef]:
         """One ref per MCD in a fetched directory."""

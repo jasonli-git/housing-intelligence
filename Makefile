@@ -2,7 +2,7 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline publish \
+.PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish \
         check-dist check-live deploy api web \
         test test-py test-web lint format check-config dbt-debug eval clean
 
@@ -90,6 +90,16 @@ pipeline:  ## Full pipeline: acquire -> land -> stage -> geocode -> validate -> 
 	uv run hip load
 	uv run hip analyze
 	uv run hip pack --report
+
+refresh:  ## Ask every publisher what changed, and rebuild only if something did
+	@# For interactive use. **Do not schedule this one**: make collapses any failing
+	@# recipe to its own exit 2, so a scheduler reading it cannot tell "completed with a
+	@# publisher down" (3) from "the pipeline broke" (1). Schedule `uv run hip refresh`
+	@# directly, which is what README documents.
+	uv run hip refresh
+
+prune-raw:  ## Show raw releases nothing points at (add ARGS=--apply to delete)
+	uv run hip prune-raw $(ARGS)
 
 api:  ## Run the API on http://localhost:8000 (docs at /docs)
 	uv run uvicorn hip.api.main:app --reload --port 8000

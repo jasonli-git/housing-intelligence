@@ -253,6 +253,13 @@ def _prune_orphan_derived_releases(conn: object) -> int:
 
     Scoped to `hip_derived` and to genuinely unreferenced rows, so this can never drop
     provenance a fact depends on — and it is the only DELETE in the analytics rebuild.
+
+    **"Referenced" includes `fact_revision`**, which Milestone 29 added and this missed
+    on its first pass. A revision row names the release on each side of a figure that
+    moved, and that is the whole point of recording it; deleting the release left the
+    numbers with nothing to trace them to. Measured on the first refresh under the new
+    table: 2,936 revision rows already pointed at `old_release_id` values this delete
+    had removed — every derived metric, 2,435 of them `price_to_income`.
     """
     return int(
         conn.execute(  # type: ignore[attr-defined]
@@ -263,6 +270,11 @@ def _prune_orphan_derived_releases(conn: object) -> int:
                   AND NOT EXISTS (
                       SELECT 1 FROM fact_metric_observation f
                       WHERE f.release_id = sr.release_id
+                  )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM fact_revision r
+                      WHERE r.old_release_id = sr.release_id
+                         OR r.new_release_id = sr.release_id
                   )
                 """
             )

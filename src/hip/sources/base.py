@@ -13,19 +13,22 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 import shutil
 import tempfile
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import asdict, dataclass, replace
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, Literal
 from urllib.parse import urlsplit
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 CHUNK_BYTES = 1 << 20
 _TIMEOUT = httpx.Timeout(30.0, read=300.0)
@@ -96,6 +99,26 @@ class ReleaseRef:
             return f"{self.layer}:{self.scope}@{self.vintage}"
         return f"{self.layer}@{self.vintage}"
 
+    @property
+    def mutable(self) -> bool:
+        """Whether the publisher may replace this release's bytes at the same URL.
+
+        A dated vintage names one release — ACS 2024, PEP 2025, SR1A's closed years —
+        and the content-addressed cache is right to answer from disk forever. Two
+        vintage spellings do not name a release at all:
+
+        * ``current`` names *whatever is newest*, which Zillow, FRED, FHFA, BLS, HUD
+          and MOD-IV all replace in place;
+        * ``<year>ytd`` names a year still filling, which is SR1A's year-to-date file.
+
+        Those have to be revalidated or they freeze silently. Derived from the vintage
+        rather than declared per adapter, because the vintage string is already the
+        thing that says whether a release is pinned — and deriving it means SR1A's
+        ``2026ytd`` was covered the day it was written, without anyone remembering to
+        set a flag.
+        """
+        return self.vintage == "current" or self.vintage.endswith("ytd")
+
 
 @dataclass(frozen=True)
 class Release:
@@ -107,6 +130,30 @@ class Release:
     size_bytes: int
     fetched_at: datetime
     from_cache: bool = False
+    # What the publisher said identifies this version of the file, for the conditional
+    # request that asks whether it has changed. Absent for a release assembled from
+    # many API calls, which has no single response to validate against.
+    last_modified: str | None = None
+    etag: str | None = None
+    # Set only when a conditional request returned 304: the publisher was reached and
+    # said the bytes are unchanged.
+    revalidated_at: datetime | None = None
+    # Whether the publisher was reached, when one was asked. "unreachable" keeps the
+    # cached bytes — that is the right thing to serve — but it is emphatically not
+    # "unchanged": nobody knows whether it changed. Conflating the two let an outage
+    # report as a confirmed cache hit and exit 0, which is the defect this field exists
+    # to make impossible to express.
+    revalidation: Literal["confirmed", "unreachable", "not_asked"] = "not_asked"
+
+    @property
+    def validators(self) -> dict[str, str]:
+        """The request headers that ask "has this changed since I last looked?"."""
+        headers = {}
+        if self.etag:
+            headers["If-None-Match"] = self.etag
+        if self.last_modified:
+            headers["If-Modified-Since"] = self.last_modified
+        return headers
 
     @property
     def dir(self) -> Path:
@@ -177,6 +224,16 @@ class SourceAdapter(ABC):
     request_interval_s: ClassVar[float] = 0.0
     # When this adapter last sent a request, for `request_interval_s`.
     _last_request_at: float | None = None
+    # The validators from this adapter's most recent download, for `fetch` to record.
+    # An adapter overriding `_fetch_bytes` leaves this None and is re-fetched in full.
+    _last_validators: dict[str, str] | None = None
+    # How long a mutable release may be answered from disk when the publisher offers no
+    # validator to check it against. A week: long enough that a daily run costs nothing
+    # on a monthly-published source, short enough that the site is never more than a
+    # week behind a publisher that gave us no way to ask. Raise it on an adapter whose
+    # refs are expensive — HUD's CHAS layer is 571 requests — and it has no effect at
+    # all on a source that does send validators, which is checked every run for free.
+    revalidate_after: ClassVar[timedelta] = timedelta(days=7)
 
     @abstractmethod
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
@@ -224,8 +281,32 @@ class SourceAdapter(ABC):
             f"{type(self).__name__} lands xlsx but does not implement landing_sheet()"
         )
 
+    def child_refs(
+        self, release: Release, vintage: str | None = None
+    ) -> list[ReleaseRef]:
+        """Refs that only exist once `release` has been fetched.
+
+        Some sources publish a directory and then one file per entry in it: HUD's CHAS
+        layer lists New Jersey's municipalities in a file, and the 571 municipal refs
+        can only be named after that file is on disk.
+
+        This is a hook rather than an override of `fetch_all` because acquisition now
+        has two callers. `fetch_all` is the strict one; `hip.refresh.acquire` is the
+        resilient one, and it drives `refs()` and `fetch()` directly so it can carry on
+        past a failure. When the expansion lived inside an overridden `fetch_all`, the
+        resilient path silently skipped every municipal CHAS file — 22 hud_chas refs
+        acquired where there should have been 593, and nothing said so. Declared here,
+        both paths get it.
+        """
+        return []
+
     def fetch_all(
-        self, *, raw_dir: Path, vintage: str | None = None, force: bool = False
+        self,
+        *,
+        raw_dir: Path,
+        vintage: str | None = None,
+        force: bool = False,
+        cached_only: bool = False,
     ) -> Iterator[Release]:
         """Fetch every ref for a vintage, yielding as each completes.
 
@@ -233,16 +314,90 @@ class SourceAdapter(ABC):
         download instead of going silent for two minutes.
         """
         for ref in self.refs(vintage):
-            yield self.fetch(ref, raw_dir=raw_dir, force=force)
+            release = self.fetch(
+                ref, raw_dir=raw_dir, force=force, cached_only=cached_only
+            )
+            yield release
+            for child in self.child_refs(release, vintage):
+                yield self.fetch(
+                    child, raw_dir=raw_dir, force=force, cached_only=cached_only
+                )
 
-    def fetch(self, ref: ReleaseRef, *, raw_dir: Path, force: bool = False) -> Release:
-        """Download one release, or return a cached copy without touching the network."""
+    def fetch(
+        self,
+        ref: ReleaseRef,
+        *,
+        raw_dir: Path,
+        force: bool = False,
+        cached_only: bool = False,
+    ) -> Release:
+        """Download one release, or answer from cache when nothing upstream has moved.
+
+        A pinned vintage is answered from disk without a request: it names one release
+        and that release cannot change. A mutable ref — `current`, or a year-to-date
+        file — is *revalidated*, because answering it from disk unconditionally is what
+        froze the platform. Measured 2026-09-20: the deployed site served Zillow data
+        fetched 2026-09-06 while Zillow had republished on 2026-09-16, and a full
+        `make pipeline` reported "172 cached, 0 downloaded" without asking anyone.
+
+        A 304 is a cache hit, so the common case still costs no transfer and the
+        content-addressed copy on disk is kept exactly as it was. Only a publisher
+        saying "changed" causes a download, which is the difference between this and
+        `--force`: that re-downloads all 172 refs to find the seven that moved, and
+        earned a 429 from HUD doing it.
+        """
         index = _read_index(raw_dir, ref.source_id)
+
+        if cached_only:
+            # Answer from disk or fail; never touch the network. The stages after
+            # acquisition run in this mode so that a run's release set is *pinned*: a
+            # mutable publisher republishing between `land` and `load` would otherwise
+            # stage values from one release and cite another, and every downstream stage
+            # would pay for a second round of conditional requests to learn what
+            # acquisition already knows.
+            cached = index.get(ref.key)
+            release = self._from_cache(ref, raw_dir, cached) if cached else None
+            if release is None:
+                raise SourceError(
+                    f"{ref.source_id}/{ref.key}: not in the local cache, and this stage "
+                    f"does not fetch. Run `hip acquire` first."
+                )
+            return release
 
         if not force and (cached_sha := index.get(ref.key)):
             release = self._from_cache(ref, raw_dir, cached_sha)
             if release is not None:
-                return release
+                if not ref.mutable:
+                    return release
+                if not release.validators:
+                    # Nothing to ask with, so fall back to age. Some publishers send no
+                    # validators at all — FHFA sends neither, and the JSON APIs behind
+                    # Census, FRED, BLS and HUD send nothing useful — and every manifest
+                    # written before validators were recorded is in the same state.
+                    #
+                    # Re-fetching those unconditionally would be worse than the defect
+                    # it fixes: HUD's 571 municipal CHAS calls would run on every
+                    # `hip acquire` and earn the 429 that stopped Milestone 21's first
+                    # run. Keeping them forever is the freeze. So a mutable ref that
+                    # cannot be checked is re-fetched once it is older than
+                    # `revalidate_after`, which bounds staleness without asking every
+                    # time.
+                    if self._age(release) < self.revalidate_after:
+                        return release
+                else:
+                    answer = self._revalidate(release)
+                    if answer is True:
+                        return replace(
+                            release,
+                            revalidated_at=datetime.now(UTC),
+                            revalidation="confirmed",
+                        )
+                    if answer is None:
+                        # Reached nobody. The cached bytes still stand — discarding
+                        # good data because a publisher is down would be worse — but
+                        # this is an *unknown*, not a confirmed cache hit, and the run
+                        # has to be able to say so.
+                        return replace(release, revalidation="unreachable")
 
         with tempfile.TemporaryDirectory(prefix="hip-acquire-") as tmp:
             staged = Path(tmp) / self.filename(ref)
@@ -256,12 +411,15 @@ class SourceAdapter(ABC):
                 destination.mkdir(parents=True, exist_ok=True)
                 shutil.move(str(staged), final)
 
+        validators = self._last_validators or {}
         release = Release(
             ref=ref,
             path=final,
             sha256=sha,
             size_bytes=size,
             fetched_at=datetime.now(UTC),
+            last_modified=validators.get("last-modified"),
+            etag=validators.get("etag"),
         )
         self._write_manifest(release)
         index[ref.key] = sha
@@ -284,6 +442,11 @@ class SourceAdapter(ABC):
             size_bytes=data["size_bytes"],
             fetched_at=datetime.fromisoformat(data["fetched_at"]),
             from_cache=True,
+            # Absent from every manifest written before this existed, which is why the
+            # first refresh after it lands re-downloads a mutable ref once and records
+            # them. After that the check is free.
+            last_modified=data.get("last_modified"),
+            etag=data.get("etag"),
         )
 
     def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
@@ -291,6 +454,13 @@ class SourceAdapter(ABC):
 
         Subclasses replace this, not ``_download`` — retry and error wrapping live one
         level up so every adapter inherits them rather than reimplementing them.
+
+        This implementation also records the response's `Last-Modified` and `ETag` on
+        the instance, which `fetch` writes into the manifest so a later run can ask the
+        publisher whether anything moved. An adapter that overrides this and assembles
+        a release from many requests simply leaves them unset — there is no single
+        response to validate against, and such a release is re-fetched every time
+        rather than pretending it can be checked cheaply.
         """
         with httpx.stream(
             "GET",
@@ -300,9 +470,61 @@ class SourceAdapter(ABC):
             headers=self.headers,
         ) as response:
             response.raise_for_status()
+            self._last_validators = {
+                name: value
+                for name in ("last-modified", "etag")
+                if (value := response.headers.get(name))
+            }
             with destination.open("wb") as handle:
                 for chunk in response.iter_bytes(CHUNK_BYTES):
                     handle.write(chunk)
+
+    @staticmethod
+    def _age(release: Release) -> timedelta:
+        """How long since this release was fetched."""
+        return datetime.now(UTC) - release.fetched_at
+
+    def _revalidate(self, release: Release) -> bool | None:
+        """Ask the publisher whether a cached release's bytes have changed.
+
+        Returns True for unchanged, False for changed, and None for "could not tell",
+        which means the publisher could not be reached. None is deliberately not False:
+        a refresh that cannot reach a publisher should keep serving what it has rather
+        than discard a good cached copy, and should say so rather than quietly
+        re-downloading.
+
+        Only called once there is something to ask with. A cached release carrying no
+        validators is re-fetched instead — see `fetch`.
+
+        The conditional request is a GET, not a HEAD, because 304 is specified for GET
+        and some publishers answer a conditional HEAD with 200 regardless. Nothing is
+        transferred either way: on 304 there is no body, and on 200 the stream is
+        closed before it is read, so the cost of finding out is a connection rather
+        than the 76MB Zillow file behind it.
+        """
+        if not (validators := release.validators):
+            return None
+        try:
+            self._pace()
+            with httpx.stream(
+                "GET",
+                release.ref.url,
+                timeout=_TIMEOUT,
+                follow_redirects=True,
+                headers={**self.headers, **validators},
+            ) as response:
+                if response.status_code == 304:
+                    return True
+                response.raise_for_status()
+                return False
+        except (httpx.HTTPError, OSError) as exc:
+            logger.warning(
+                "%s/%s: could not revalidate (%s); keeping the cached copy",
+                release.ref.source_id,
+                release.ref.key,
+                type(exc).__name__,
+            )
+            return None
 
     def _pace(self) -> None:
         """Wait out `request_interval_s` since this adapter's previous request."""
@@ -355,6 +577,10 @@ class SourceAdapter(ABC):
             "sha256": release.sha256,
             "size_bytes": release.size_bytes,
             "fetched_at": release.fetched_at.isoformat(),
+            # What a later run sends back to ask whether this has changed. Omitted
+            # rather than written null when the publisher offered neither.
+            **({"last_modified": release.last_modified} if release.last_modified else {}),
+            **({"etag": release.etag} if release.etag else {}),
         }
         (release.dir / "manifest.json").write_text(
             json.dumps(manifest, indent=2, sort_keys=True) + "\n"
