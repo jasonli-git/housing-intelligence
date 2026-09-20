@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
-import { MetricTerm } from "@/components/MetricTerm";
+import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
+import { CarouselProgress, useAutoCarousel } from "@/components/useAutoCarousel";
 import type { StandOut, StandOutGroup } from "@/lib/standouts";
 
 const GROUPS: { key: StandOutGroup; title: string; sub: string }[] = [
@@ -10,18 +11,6 @@ const GROUPS: { key: StandOutGroup; title: string; sub: string }[] = [
   { key: "lags", title: "Lagging", sub: "by change over five years" },
   { key: "value", title: "Highest and lowest", sub: "by current value" },
 ];
-
-type ScrollPosition = {
-  overflow: boolean;
-  atStart: boolean;
-  atEnd: boolean;
-};
-
-const INITIAL_POSITION: ScrollPosition = {
-  overflow: false,
-  atStart: true,
-  atEnd: true,
-};
 
 function Arrow({ direction }: { direction: "left" | "right" }) {
   return (
@@ -44,59 +33,72 @@ function StandOutRow({
 }) {
   const rail = useRef<HTMLUListElement>(null);
   const railId = useId();
-  const [position, setPosition] = useState<ScrollPosition>(INITIAL_POSITION);
+  const [overflow, setOverflow] = useState(false);
 
-  const readPosition = useCallback(() => {
+  const readOverflow = useCallback(() => {
     const node = rail.current;
     if (!node) return;
-    const end = Math.max(0, node.scrollWidth - node.clientWidth);
-    setPosition({
-      overflow: end > 2,
-      atStart: node.scrollLeft <= 2,
-      atEnd: node.scrollLeft >= end - 2,
-    });
+    const next = node.scrollWidth - node.clientWidth > 2;
+    setOverflow((current) => current === next ? current : next);
   }, []);
 
   useEffect(() => {
     const node = rail.current;
     if (!node) return;
 
-    readPosition();
-    node.addEventListener("scroll", readPosition, { passive: true });
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(readPosition);
+    readOverflow();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(readOverflow);
     observer?.observe(node);
 
     return () => {
-      node.removeEventListener("scroll", readPosition);
       observer?.disconnect();
     };
-  }, [items.length, readPosition]);
+  }, [items.length, readOverflow]);
 
-  const move = (direction: -1 | 1) => {
+  const move = useCallback((direction: -1 | 1, wrap = false) => {
     const node = rail.current;
     if (!node) return;
+    const end = Math.max(0, node.scrollWidth - node.clientWidth);
     const card = node.querySelector<HTMLElement>(".region-standout-card");
     const gap = Number.parseFloat(getComputedStyle(node).columnGap) || 16;
     const distance = (card?.getBoundingClientRect().width ?? node.clientWidth * 0.85) + gap;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    node.scrollBy({ left: direction * distance, behavior: reduceMotion ? "auto" : "smooth" });
+    const behavior = reduceMotion ? "auto" : "smooth";
+    if (wrap && direction === 1 && node.scrollLeft >= end - 2) {
+      node.scrollTo({ left: 0, behavior });
+    } else if (wrap && direction === -1 && node.scrollLeft <= 2) {
+      node.scrollTo({ left: end, behavior });
+    } else {
+      node.scrollBy({ left: direction * distance, behavior });
+    }
+  }, []);
+
+  const autoAdvance = useCallback(() => move(1, true), [move]);
+  const autoplay = useAutoCarousel(overflow, autoAdvance);
+  const moveManually = (direction: -1 | 1) => {
+    move(direction, true);
+    autoplay.restart();
   };
 
   return (
-    <div className="standout-deck">
+    <div
+      ref={autoplay.rootRef}
+      className="standout-deck"
+      data-group={group}
+      {...autoplay.interactionProps}
+    >
       <div className="standout-deck-head">
         <h3 className="standout-deck-label">
           {title} <span>{sub}</span>
         </h3>
-        {position.overflow && (
+        {overflow && (
           <div className="standout-nav">
             <button
               type="button"
               className="standout-arrow"
               aria-label={`Show earlier ${title.toLowerCase()} measures`}
               aria-controls={railId}
-              disabled={position.atStart}
-              onClick={() => move(-1)}
+              onClick={() => moveManually(-1)}
             >
               <Arrow direction="left" />
             </button>
@@ -105,8 +107,7 @@ function StandOutRow({
               className="standout-arrow"
               aria-label={`Show later ${title.toLowerCase()} measures`}
               aria-controls={railId}
-              disabled={position.atEnd}
-              onClick={() => move(1)}
+              onClick={() => moveManually(1)}
             >
               <Arrow direction="right" />
             </button>
@@ -119,19 +120,26 @@ function StandOutRow({
         className="region-standout-rail"
         data-group={group}
         aria-label={`${title}, ${sub}`}
-        tabIndex={position.overflow ? 0 : undefined}
+        tabIndex={overflow ? 0 : undefined}
       >
         {items.map((item) => (
           <li key={item.metric_id} className="region-standout-card">
             <span className="region-standout-rank">{item.rank}</span>
             <span className="region-standout-what">
-              <MetricTerm metricId={item.metric_id} label={item.label} scope={`region-standout-${group}`} />
+              <FloatingMetricTerm metricId={item.metric_id} label={item.label} />
             </span>
             <span className="region-standout-figure">{item.figure}</span>
             {item.detail && <span className="region-standout-detail">{item.detail}</span>}
           </li>
         ))}
       </ul>
+      {overflow && !autoplay.reduceMotion && (
+        <CarouselProgress
+          cycle={autoplay.cycle}
+          paused={autoplay.paused}
+          className="standout-progress"
+        />
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { Definition } from "@/components/Definition";
+import { CarouselProgress, useAutoCarousel } from "@/components/useAutoCarousel";
 import type { ProfileItem } from "@/lib/verdict";
 
 function Arrow({ direction }: { direction: "left" | "right" }) {
@@ -11,6 +12,16 @@ function Arrow({ direction }: { direction: "left" | "right" }) {
       <path d={direction === "left" ? "M12.5 4.5 7 10l5.5 5.5" : "M7.5 4.5 13 10l-5.5 5.5"} />
     </svg>
   );
+}
+
+function splitContext(context: string | null) {
+  if (!context) return { words: null, rank: null };
+  const ranked = context.match(/^(.*) · (\d+)(?:st|nd|rd|th) of (\d+)$/);
+  if (!ranked) return { words: context, rank: null };
+  return {
+    words: ranked[1],
+    rank: { value: ranked[2], of: ranked[3] },
+  };
 }
 
 /**
@@ -44,15 +55,28 @@ export function HousingBand({ items }: { items: ProfileItem[] }) {
 
   const maxStart = Math.max(0, items.length - capacity);
   const step = Math.max(1, capacity - 1);
-  const move = (direction: -1 | 1) => {
-    setStart((current) => Math.min(maxStart, Math.max(0, current + direction * step)));
-  };
   const visible = items.slice(start, start + capacity);
   const paged = items.length > capacity;
+  const advance = useCallback(() => {
+    setStart((current) => current >= maxStart ? 0 : Math.min(maxStart, current + step));
+  }, [maxStart, step]);
+  const autoplay = useAutoCarousel(paged, advance);
+  const move = (direction: -1 | 1) => {
+    setStart((current) => {
+      if (direction === 1) return current >= maxStart ? 0 : Math.min(maxStart, current + step);
+      return current <= 0 ? maxStart : Math.max(0, current - step);
+    });
+    autoplay.restart();
+  };
 
   if (items.length === 0) return null;
   return (
-    <section className="housing-band" aria-labelledby="housing-heading">
+    <section
+      ref={autoplay.rootRef}
+      className="housing-band"
+      aria-labelledby="housing-heading"
+      {...autoplay.interactionProps}
+    >
       <div className="housing-band-head">
         <h2 id="housing-heading">The housing here</h2>
         {paged && (
@@ -62,7 +86,6 @@ export function HousingBand({ items }: { items: ProfileItem[] }) {
               className="housing-band-arrow"
               aria-label="Show earlier housing facts"
               aria-controls={listId}
-              disabled={start === 0}
               onClick={() => move(-1)}
             >
               <Arrow direction="left" />
@@ -72,7 +95,6 @@ export function HousingBand({ items }: { items: ProfileItem[] }) {
               className="housing-band-arrow"
               aria-label="Show later housing facts"
               aria-controls={listId}
-              disabled={start === maxStart}
               onClick={() => move(1)}
             >
               <Arrow direction="right" />
@@ -85,27 +107,47 @@ export function HousingBand({ items }: { items: ProfileItem[] }) {
         id={listId}
         className="housing-band-items"
         aria-label="Housing profile"
-        aria-live="polite"
       >
-        {visible.map((item) => (
-          <li key={item.metric_id} className="housing-band-item">
-            <b>{item.value}</b>
-            <span className="housing-band-label">
-              <Definition
-                term={{
-                  key: `profile-${item.metric_id}`,
-                  title: item.label,
-                  phrases: [],
-                  definition: item.definition,
-                }}
-              >
-                {item.label}
-              </Definition>
-            </span>
-            {item.context && <span className="housing-band-context">{item.context}</span>}
-          </li>
-        ))}
+        {visible.map((item) => {
+          const context = splitContext(item.context);
+          return (
+            <li
+              key={item.metric_id}
+              className={`housing-band-item${context.rank ? " has-rank" : ""}`}
+            >
+              {context.rank && (
+                <span
+                  className="housing-band-rank"
+                  aria-label={`Rank ${context.rank.value} of ${context.rank.of}`}
+                >
+                  {context.rank.value}/{context.rank.of}
+                </span>
+              )}
+              <b>{item.value}</b>
+              <span className="housing-band-label">
+                <Definition
+                  term={{
+                    key: `profile-${item.metric_id}`,
+                    title: item.label,
+                    phrases: [],
+                    definition: item.definition,
+                  }}
+                >
+                  {item.label}
+                </Definition>
+              </span>
+              {context.words && <span className="housing-band-context">{context.words}</span>}
+            </li>
+          );
+        })}
       </ul>
+      {paged && !autoplay.reduceMotion && (
+        <CarouselProgress
+          cycle={autoplay.cycle}
+          paused={autoplay.paused}
+          className="housing-band-progress"
+        />
+      )}
     </section>
   );
 }
