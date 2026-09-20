@@ -31,53 +31,18 @@ with parcels as (
     where CD_CODE is not null and CD_CODE <> ''
 ),
 
--- Census municipalities, under both published names. NAMELSAD carries the legal form
--- ("Egg Harbor township"); NAME does not ("Egg Harbor"), and for a handful of places
--- the legal form is part of the name itself ("Egg Harbor City city"). Matching against
--- either covers both without inventing a third spelling.
-census_muni as (
-    select
-        GEOID as geoid,
-        COUNTYFP as countyfp,
-        {{ nj_municipal_name('NAMELSAD') }} as key_with_form,
-        {{ nj_municipal_name('NAME') }} as key_bare
-    from read_parquet('{{ var("parquet_dir") }}/census_tiger/*/cousub_NJ.parquet')
-    -- 'County subdivisions not defined' -- water and unassigned area, filtered on the
-    -- same key the region loader uses.
-    where COUSUBFP <> '00000'
-),
-
-modiv_muni as (
-    select distinct
-        CD_CODE as cd_code,
-        lpad((2 * substr(CD_CODE, 1, 2)::int - 1)::varchar, 3, '0') as countyfp,
-        {{ nj_municipal_name('MUN_NAME') }} as name_key
-    from read_parquet('{{ var("parquet_dir") }}/nj_modiv/*/statewide.parquet')
-    where CD_CODE is not null and CD_CODE <> '' and MUN_NAME is not null
-),
-
-candidates as (
-    select distinct m.cd_code, c.geoid
-    from modiv_muni m
-    join census_muni c
-      on c.countyfp = m.countyfp
-     and (c.key_with_form = m.name_key or c.key_bare = m.name_key)
-),
-
--- One CD_CODE to one GEOID, or nothing. A code matching two municipalities, or two
--- codes matching one municipality, is rejected on both sides (ARCHITECTURE #28).
--- Neither side currently rejects anything: all 554 matches are one-to-one. The check
--- stays because "currently unambiguous" is not the same as "cannot become ambiguous",
--- and a silent duplicate here would put one town's assessments on another.
+-- CD code to GEOID, from the one model that owns that mapping. This used to re-derive
+-- the name match here, which meant two implementations of the same join and only one of
+-- them carrying the ten aliases that complete it -- so `modiv_median_tax_bill` covered
+-- 554 municipalities while a tax *rate* on the same page covered 564.
 matched as (
-    select cd_code, geoid from candidates
-    where cd_code in (select cd_code from candidates group by 1 having count(*) = 1)
-      and geoid in (select geoid from candidates group by 1 having count(*) = 1)
+    select identifier as cd_code, geoid from {{ ref('stg_nj_municipal_codes') }}
 ),
 
 -- Each parcel under every region it belongs to. A municipality takes the parcels its
--- name match resolves; a county takes every coded parcel in it, by the arithmetic above,
--- including those in the municipalities whose names do not match. A county's figures
+-- CD code resolves; a county takes every coded parcel in it, by arithmetic on the
+-- county half of the code, so a county never depended on the municipal match even
+-- while ten of those matches were missing. A county's figures
 -- are therefore taken over its parcels -- never a median of municipal medians, which is
 -- a different and meaningless number (Milestone 17). '34' is New Jersey's state FIPS,
 -- the only state MOD-IV covers.
