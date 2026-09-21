@@ -473,7 +473,205 @@ body > main { flex: 1 0 auto; width: 100%; }
 .standout .gl { position: static; }
 .standout .tip { left: 0.75rem; right: 0.75rem; width: auto; top: auto; margin-top: 6px; }
 
-/* The housing here: a number, a label, and where it sits among its peers. */
+/* A quiet timer shared by the auto-advancing region-page shelves. It restarts whenever
+   the visible group changes; the component pauses it with the carousel itself while a
+   reader is hovering, focusing a control, or looking elsewhere. */
+.carousel-progress {
+  display: block; height: 1px; overflow: hidden; border-radius: 999px;
+  background: color-mix(in srgb, var(--carousel-progress-color) 8%, transparent);
+}
+.carousel-progress-fill {
+  display: block; width: 100%; height: 100%; border-radius: inherit;
+  background: color-mix(in srgb, var(--carousel-progress-color) 34%, transparent);
+  transform: scaleX(0); transform-origin: left;
+  animation-name: carousel-progress-fill; animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes carousel-progress-fill { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .carousel-progress { display: none; } }
+
+/* Region pages give each family of stand-outs its own Apple-like horizontal shelf. The
+   cards are deliberately narrow and slightly taller than wide: roughly half the footprint
+   of the first experiment, with the next card as the cue to swipe. The report keeps the
+   compact `.standouts` grid above. Orange and blue follow the requested leading/lagging
+   distinction; current-value extremes are graphite because highest and lowest are not
+   inherently good or bad. */
+.standout-deck {
+  --carousel-progress-color: var(--text-muted);
+  margin-top: 1.15rem;
+}
+.standout-deck[data-group="leads"] { --carousel-progress-color: var(--series-2); }
+.standout-deck[data-group="lags"] { --carousel-progress-color: var(--series-1); }
+.standout-deck-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.65rem 1rem;
+  margin: 0 0 0.55rem;
+}
+.standout-deck-label {
+  margin: 0; font: 600 var(--text-label)/1.3 var(--font-mono); letter-spacing: var(--track-label);
+  text-transform: uppercase; color: var(--text-secondary);
+}
+.standout-deck-label span {
+  margin-left: 0.35rem; font-weight: 400; letter-spacing: 0.02em;
+  text-transform: none; color: var(--text-muted);
+}
+.standout-nav { display: flex; gap: 0.4rem; }
+.standout-arrow {
+  width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: 50%;
+  background: var(--surface-2); color: var(--text-primary); box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
+}
+.standout-arrow svg {
+  width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.region-standout-rail {
+  display: grid; grid-auto-flow: column;
+  grid-auto-columns: 10.75rem;
+  gap: 12px; list-style: none; margin: 0; padding: 0.2rem 0.1rem 0.55rem;
+  overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: inline mandatory;
+  scrollbar-width: none;
+}
+.region-standout-rail::-webkit-scrollbar { display: none; }
+.region-standout-card {
+  position: relative; display: grid; align-content: start; gap: 0.3rem; min-width: 0;
+  min-height: 12rem; padding: 0.9rem 1rem; border: 0; border-radius: 18px;
+  scroll-snap-align: start; color: #ffffff;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.14);
+}
+.region-standout-rail[data-group="leads"] .region-standout-card {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--series-2) 60%, #6b2700), #6b2c0d);
+}
+.region-standout-rail[data-group="lags"] .region-standout-card {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--series-1) 82%, #00396f), #07366e);
+}
+.region-standout-rail[data-group="value"] .region-standout-card {
+  background: linear-gradient(145deg, #404047, #25262b);
+}
+.region-standout-rank {
+  font: 600 var(--text-label)/1.2 var(--font-mono); letter-spacing: 0.11em;
+  text-transform: uppercase; white-space: nowrap; color: #ffffff;
+}
+.region-standout-what { font-size: var(--text-small); line-height: 1.3; font-weight: 600; }
+.region-standout-figure {
+  margin-top: 0.2rem; font: 700 clamp(26px, 2.25vw, 32px)/1 var(--font-display);
+  letter-spacing: -0.035em; font-variant-numeric: tabular-nums;
+}
+.region-standout-detail {
+  align-self: end; margin-top: auto; padding-top: 0.6rem; font-size: var(--text-note);
+  line-height: 1.45; color: #ffffff; font-variant-numeric: tabular-nums;
+}
+.region-standout-card .term { text-decoration-color: rgb(255 255 255 / 0.55); }
+.region-standout-card .term:hover,
+.region-standout-card .term:focus-visible { text-decoration-color: #ffffff; }
+.region-standout-card .gl { position: static; }
+.region-standout-card .tip {
+  left: 1rem; right: 1rem; width: auto; top: auto; margin-top: 6px;
+  background: var(--surface-1); color: var(--text-secondary);
+}
+.standout-progress { margin: 0.05rem 0.1rem 0; }
+
+@media (max-width: 600px) {
+  .standout-deck-label span { display: block; margin: 0.15rem 0 0; }
+}
+
+/* The housing profile is a fixed-height, screen-wide band above the cost section. A narrow
+   title-and-arrows rail leaves almost all of the width to the facts. The client component
+   pages as many facts as fit rather than clipping a tooltip inside an overflow container.
+   Its soft wash and Space Grotesk figures make it feel like one composed editorial banner,
+   while a restrained directional reveal distinguishes its paging from the card shelves. */
+.housing-band {
+  --carousel-progress-color: var(--series-3);
+  position: relative; isolation: isolate; display: grid; grid-template-columns: 7rem minmax(0, 1fr); height: 6.75rem;
+  align-items: stretch; gap: 0.5rem; margin-top: 1.4rem; padding: 0.5rem 0.75rem 0.7rem;
+  overflow: hidden; border: 1px solid color-mix(in srgb, var(--series-3) 28%, var(--border)); border-radius: 16px;
+  background: linear-gradient(105deg,
+    color-mix(in srgb, var(--series-3) 13%, var(--surface-card)),
+    color-mix(in srgb, var(--series-3) 3%, var(--surface-2)) 62%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--series-3) 12%, transparent),
+    0 8px 26px rgb(0 0 0 / 0.045);
+}
+.housing-band::before {
+  content: ""; position: absolute; z-index: 0; width: 17rem; height: 17rem;
+  top: -11rem; left: 3rem; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--series-3) 18%, transparent), transparent 68%);
+}
+.housing-band-head {
+  position: relative; z-index: 1; display: grid; align-content: center; gap: 0.35rem;
+  padding-right: 0.7rem; border-right: 1px solid color-mix(in srgb, var(--series-3) 18%, var(--grid));
+}
+.housing-band-head::before {
+  content: "Profile"; font: 600 8px/1 var(--font-mono); letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--series-3);
+}
+.housing-band-head h2 {
+  margin: 0; font: 650 17px/1.05 var(--jl-font); letter-spacing: -0.035em;
+}
+.housing-band-nav { display: flex; gap: 0.3rem; }
+.housing-band-arrow {
+  width: 27px; height: 27px; padding: 0; justify-content: center; border-radius: 50%;
+  border-color: color-mix(in srgb, var(--series-3) 26%, var(--border));
+  background: color-mix(in srgb, var(--series-3) 9%, var(--surface-card)); color: var(--text-primary);
+}
+.housing-band-arrow svg {
+  width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.housing-band-items {
+  position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  min-width: 0; list-style: none; margin: 0; padding: 0;
+}
+.housing-band-item {
+  position: relative; display: grid; align-content: center; gap: 1px; min-width: 0;
+  padding: 0.15rem 0.65rem; border-left: 1px solid var(--grid);
+}
+.housing-band-item:first-child { border-left: 0; }
+.housing-band-item > b {
+  font: 650 22px/1.05 var(--jl-font); letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums; color: var(--text-primary);
+}
+.housing-band-item.has-rank > b { padding-right: 4rem; }
+.housing-band-label { font-size: var(--text-note); line-height: 1.35; color: var(--text-primary); }
+.housing-band-context { font-size: 10px; line-height: 1.35; color: var(--text-muted); }
+.housing-band-rank {
+  position: absolute; top: 0.15rem; right: 0.45rem;
+  color: var(--series-3); font: 700 14px/1 var(--font-mono); letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.housing-band-item .gl { position: static; }
+.housing-band-item .tip { left: 0.6rem; right: 0.6rem; width: auto; top: auto; margin-top: 6px; }
+.housing-band-progress {
+  position: absolute; z-index: 1; left: 0.75rem; right: 0.75rem; bottom: 0.35rem;
+}
+.housing-band + .section.cost { margin-top: 1.6rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .housing-band-item {
+    animation: housing-fact-forward 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .housing-band-item:nth-child(2) { animation-delay: 45ms; }
+  .housing-band-item:nth-child(3) { animation-delay: 90ms; }
+  .housing-band-item:nth-child(4) { animation-delay: 135ms; }
+  .housing-band-item:nth-child(5) { animation-delay: 180ms; }
+  .housing-band-items[data-direction="backward"] .housing-band-item {
+    animation-name: housing-fact-backward;
+  }
+}
+@keyframes housing-fact-forward {
+  from { opacity: 0; transform: translate3d(14px, 0, 0); }
+}
+@keyframes housing-fact-backward {
+  from { opacity: 0; transform: translate3d(-14px, 0, 0); }
+}
+
+@media (max-width: 520px) {
+  .housing-band { grid-template-columns: 5.75rem minmax(0, 1fr); height: 7rem; padding-inline: 0.65rem; }
+  .housing-band-head { padding-right: 0.4rem; }
+  .housing-band-head h2 { font-size: 15px; }
+  .housing-band-items { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
+  .housing-band-progress { left: 0.65rem; right: 0.65rem; }
+}
+
+/* The housing here on reports: a number, a label, and where it sits among its peers. */
 .tiles { list-style: none; margin: 0.9rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 12.5rem), 1fr)); gap: 18px 16px; }
 .tile { position: relative; display: grid; gap: 3px; align-content: start; padding: 10px 2px 0; border-top: 2px solid var(--text-primary); }
 .tile > b { font: 700 26px/1.1 var(--font-display); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--text-primary); }
@@ -669,6 +867,18 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 .term:hover + .tip, .term:focus + .tip { display: block; }
 /* A term at the right of a row opens leftward, so it stays over the table. */
 .period .tip, .num .tip { left: auto; right: 0; }
+
+/* Definitions in the experimental horizontal cards are portalled into the page layer:
+   a horizontal scroll container clips every descendant, regardless of z-index. */
+.floating-tip {
+  position: fixed; z-index: 1000; display: block; max-height: calc(100vh - 2rem);
+  overflow: auto; padding: 0.55rem 0.7rem; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--surface-1); color: var(--text-secondary);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.2);
+  font: 400 var(--text-note)/1.5 var(--font-text); letter-spacing: 0;
+  text-transform: none; white-space: normal; text-align: left;
+}
+.floating-tip strong { color: var(--text-primary); font-weight: 600; }
 
 /* --------------------------------------------------------- interpretation --- */
 /* The only text on the dashboard a model wrote rather than the pipeline computed. It is
@@ -1173,7 +1383,7 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
   .print-hide { display: none !important; }
   /* A URL under every link is noise on paper; the sources table already cites them. */
   a { color: inherit; text-decoration: none; }
-  .tip { display: none; }
+  .tip, .floating-tip, .carousel-progress { display: none; }
   .term { text-decoration: none; }
   .scroll-x { overflow-x: visible; }
   .scroll-x > table { min-width: 0; }

@@ -10,9 +10,9 @@ const GROUPS: { key: StandOutGroup; title: string; sub: string }[] = [
 /**
  * "Where … stands out" (Milestone 23): the stand-outs as cards, grouped into what leads,
  * what lags and what is highest or lowest — each with its rank, the measure, the figure
- * it stands out on and the readings behind it (`lib/standouts.ts`). On a region page they
- * come before the tables, which open beneath them (layout B); the report prints the same
- * cards. Absent where nothing stands out.
+ * it stands out on and the readings behind it (`lib/standouts.ts`). This compact, static
+ * version is kept for reports; region pages use the larger interactive treatment in
+ * `RegionStandOuts`. Absent where nothing stands out.
  */
 export function StandOuts({ name, peers, items }: { name: string; peers: string; items: StandOut[] }) {
   if (items.length === 0) return null;

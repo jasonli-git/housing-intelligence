@@ -262,6 +262,68 @@ select,
   flex: 1 1 38rem;
 }
 
+/* Population is the compact orientation figure in a region head. It occupies the open
+   corner beside the breadcrumb/kind on a phone, rather than adding another row or being
+   repeated in both the metadata sentence and The housing here. */
+.region-head-main {
+  position: relative;
+}
+
+.region-head-main > .crumbs {
+  padding-right: 10.5rem;
+}
+
+.population-summary {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: max-content;
+  min-width: 8.75rem;
+  max-width: 10rem;
+  gap: 0.15rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid color-mix(in srgb, var(--series-3) 72%, var(--border));
+  border-radius: 10px;
+  background: var(--surface-2);
+  text-align: right;
+}
+
+.population-summary-label {
+  font: 600 8px/1.2 var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--series-3);
+}
+
+.population-summary strong {
+  font: 650 21px/1.05 var(--jl-font);
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.population-summary-context {
+  font-size: 9px;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.population-summary .gl {
+  position: static;
+}
+
+.population-summary .tip {
+  top: calc(100% + 6px);
+  right: 0;
+  left: auto;
+  width: min(18rem, calc(100vw - 2rem));
+  text-align: left;
+}
+
 .page-head[data-kind="state"] {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 20rem);
@@ -639,6 +701,105 @@ select,
   background: transparent;
 }
 
+/* Region pages turn the long cost explanation into one answer and a small evidence strip.
+   Reports keep the original paragraph treatment through CostToOwn's non-control branch. */
+.cost-evidence {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+
+.cost-evidence-answer {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 1rem 0;
+}
+
+.cost-evidence-label {
+  margin: 0;
+  font: 600 var(--text-label)/1.3 var(--font-mono);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cost-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  border-top: 1px solid var(--grid);
+}
+
+.cost-evidence-item {
+  padding: 0.85rem 1rem;
+  border-left: 1px solid var(--grid);
+}
+
+.cost-evidence-item:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.cost-evidence-item > p:last-child {
+  margin: 0.3rem 0 0;
+  font-size: var(--text-small);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* Like the state's "About Since 2019" slip, omitted costs get their own tinted,
+   dashed note instead of reading as one more equal-weight paragraph. Amber marks a
+   limitation in the estimate without making it look like an error. */
+.cost-evidence-omissions {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+  margin: 0.75rem 0 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px dashed color-mix(in srgb, var(--notice) 42%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--notice) 7%, var(--surface-card));
+}
+
+.cost-evidence-omissions .cost-evidence-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--notice-text);
+}
+
+.cost-evidence-omissions-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--notice-text);
+  color: var(--surface-card);
+  font: 700 10px/1 var(--font-display);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.cost-evidence-omissions > p:last-child {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.cost-evidence-method {
+  margin: 0;
+  padding: 0.65rem 0 0.7rem;
+  border-top: 1px solid var(--grid);
+  font-size: var(--text-note);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
 .standout-group {
   margin-top: 1.25rem;
 }
@@ -694,6 +855,23 @@ select,
 
 .more > summary {
   padding: 1.2rem 1.4rem;
+  background: var(--series-3);
+}
+
+.more > summary .more-title {
+  color: var(--surface-1);
+}
+
+.more > summary .more-sub {
+  color: color-mix(in srgb, var(--surface-1) 78%, transparent);
+}
+
+.more > summary .more-chev {
+  border-color: var(--surface-1);
+}
+
+.more[open] > summary {
+  border-bottom-color: color-mix(in srgb, var(--surface-1) 28%, transparent);
 }
 
 .more-body {
@@ -868,6 +1046,30 @@ select,
   .explorer-controls,
   .control {
     align-items: stretch;
+  }
+
+  .cost-evidence-answer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3rem;
+  }
+
+  .cost-evidence-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cost-evidence-item,
+  .cost-evidence-item:first-child {
+    padding: 0.8rem 0;
+    border-left: 0;
+  }
+
+  .cost-evidence-item + .cost-evidence-item {
+    border-top: 1px solid var(--grid);
+  }
+
+  .cost-evidence-omissions {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3rem;
   }
 
   .control {
