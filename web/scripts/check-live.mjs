@@ -2,11 +2,15 @@ import { createHash } from "node:crypto";
 import { access, readFile } from "node:fs/promises";
 import { isDeepStrictEqual } from "node:util";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { createServer } from "node:http";
+import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const root = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
 const dist = process.env.CHECK_LIVE_DIST
   ? path.resolve(root, process.env.CHECK_LIVE_DIST)
   : path.join(root, "dist");
@@ -26,10 +30,14 @@ function baseUrl(name, fallback) {
   try {
     parsed = new URL(value);
   } catch {
-    throw new Error(`${name} must be an absolute URL, received ${JSON.stringify(value)}`);
+    throw new Error(
+      `${name} must be an absolute URL, received ${JSON.stringify(value)}`,
+    );
   }
   if (!/^https?:$/.test(parsed.protocol)) {
-    throw new Error(`${name} must use http or https, received ${parsed.protocol}`);
+    throw new Error(
+      `${name} must use http or https, received ${parsed.protocol}`,
+    );
   }
   return parsed;
 }
@@ -38,13 +46,18 @@ function timeoutMs(value) {
   if (value === undefined) return 45_000;
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new Error(`CHECK_LIVE_TIMEOUT_MS must be a positive integer, received ${value}`);
+    throw new Error(
+      `CHECK_LIVE_TIMEOUT_MS must be a positive integer, received ${value}`,
+    );
   }
   return parsed;
 }
 
 function liveUrl(base, route) {
-  return new URL(route.replace(/^\/+/, ""), `${base.toString().replace(/\/+$/, "")}/`).toString();
+  return new URL(
+    route.replace(/^\/+/, ""),
+    `${base.toString().replace(/\/+$/, "")}/`,
+  ).toString();
 }
 
 function routeFile(route) {
@@ -54,21 +67,93 @@ function routeFile(route) {
   return path.join(siteDir, ...parts, filename);
 }
 
+// The publish tree is served over HTTP rather than opened as a file, and that is not a
+// detail. A static export references its scripts by absolute path (`/_next/static/...`),
+// which under `file://` resolves to the filesystem root and never loads — so the local
+// side rendered server HTML while the deployed side hydrated. That was invisible while
+// no page needed JavaScript to reach its final content, and stopped being invisible on
+// 2026-09-21: the region redesign sizes its housing band from the measured container, so
+// the local render showed three facts against the deployed six, and `check-live` failed
+// a deploy that was in fact correct. Comparing a hydrated page with an unhydrated one is
+// not a comparison.
+let localServer;
+let localOrigin;
+
+async function startLocalServer() {
+  const types = new Map([
+    [".html", "text/html; charset=utf-8"],
+    [".js", "text/javascript; charset=utf-8"],
+    [".css", "text/css; charset=utf-8"],
+    [".json", "application/json; charset=utf-8"],
+    [".txt", "text/plain; charset=utf-8"],
+    [".svg", "image/svg+xml"],
+    [".woff2", "font/woff2"],
+    [".ico", "image/x-icon"],
+    [".png", "image/png"],
+  ]);
+  localServer = createServer(async (request, response) => {
+    const requested = decodeURIComponent(
+      new URL(request.url, "http://localhost").pathname,
+    );
+    // Resolve inside siteDir, and refuse anything that escapes it.
+    const candidate = path.resolve(siteDir, `.${requested}`);
+    if (candidate !== siteDir && !candidate.startsWith(siteDir + path.sep)) {
+      response.writeHead(403).end();
+      return;
+    }
+    for (const attempt of [
+      candidate,
+      `${candidate}.html`,
+      path.join(candidate, "index.html"),
+    ]) {
+      try {
+        const body = await readFile(attempt);
+        response.writeHead(200, {
+          "content-type":
+            types.get(path.extname(attempt)) ?? "application/octet-stream",
+        });
+        response.end(body);
+        return;
+      } catch {
+        // try the next spelling
+      }
+    }
+    response.writeHead(404).end();
+  });
+  await new Promise((resolve) => localServer.listen(0, "127.0.0.1", resolve));
+  localOrigin = `http://127.0.0.1:${localServer.address().port}`;
+}
+
+async function stopLocalServer() {
+  if (localServer) await new Promise((resolve) => localServer.close(resolve));
+  localServer = undefined;
+}
+
+function localUrl(route) {
+  return `${localOrigin}${route === "/" ? "/index.html" : route}`;
+}
+
 function normalize(value) {
   return value.replace(/\s+/g, " ").trim();
 }
 
 async function marker(page) {
-  const heading = normalize((await page.locator("h1").first().textContent()) ?? "");
+  const heading = normalize(
+    (await page.locator("h1").first().textContent()) ?? "",
+  );
   const metaNode = page.locator("p.meta").first();
   const meta = (await metaNode.count())
     ? await metaNode.evaluate((node) => {
         const copy = node.cloneNode(true);
-        copy.querySelectorAll("[role=tooltip]").forEach((tooltip) => tooltip.remove());
+        copy
+          .querySelectorAll("[role=tooltip]")
+          .forEach((tooltip) => tooltip.remove());
         return copy.textContent ?? "";
       })
     : "";
-  const content = normalize((await page.locator("main").first().textContent()) ?? "");
+  const content = normalize(
+    (await page.locator("main").first().textContent()) ?? "",
+  );
   const contentSha256 = createHash("sha256").update(content).digest("hex");
   return { heading, meta: normalize(meta), contentSha256 };
 }
@@ -76,23 +161,33 @@ async function marker(page) {
 async function localMarker(page, route) {
   const file = routeFile(route);
   await access(file);
-  await page.goto(pathToFileURL(file).toString(), { waitUntil: "domcontentloaded", timeout });
+  await page.goto(localUrl(route), { waitUntil: "domcontentloaded", timeout });
   return marker(page);
 }
 
 async function liveMarker(page, route, expected) {
   let navigationStatus;
   const rememberStatus = (response) => {
-    if (response.frame() === page.mainFrame() && response.request().isNavigationRequest()) {
+    if (
+      response.frame() === page.mainFrame() &&
+      response.request().isNavigationRequest()
+    ) {
       navigationStatus = response.status();
     }
   };
   page.on("response", rememberStatus);
   try {
-    await page.goto(liveUrl(siteUrl, route), { waitUntil: "domcontentloaded", timeout });
-    await page.getByRole("heading", { name: expected.heading, exact: true }).waitFor({ timeout });
+    await page.goto(liveUrl(siteUrl, route), {
+      waitUntil: "domcontentloaded",
+      timeout,
+    });
+    await page
+      .getByRole("heading", { name: expected.heading, exact: true })
+      .waitFor({ timeout });
     if (navigationStatus !== 200) {
-      throw new Error(`${route} returned HTTP ${navigationStatus ?? "unknown"}`);
+      throw new Error(
+        `${route} returned HTTP ${navigationStatus ?? "unknown"}`,
+      );
     }
     return marker(page);
   } finally {
@@ -137,7 +232,10 @@ async function checkManifest(page) {
   const expected = JSON.parse(await readFile(manifestPath, "utf8"));
   let navigationStatus;
   const rememberStatus = (response) => {
-    if (response.frame() === page.mainFrame() && response.request().isNavigationRequest()) {
+    if (
+      response.frame() === page.mainFrame() &&
+      response.request().isNavigationRequest()
+    ) {
       navigationStatus = response.status();
     }
   };
@@ -151,7 +249,10 @@ async function checkManifest(page) {
       () => {
         try {
           const parsed = JSON.parse(document.body.textContent ?? "");
-          return typeof parsed.generated_at === "string" && Array.isArray(parsed.artifacts);
+          return (
+            typeof parsed.generated_at === "string" &&
+            Array.isArray(parsed.artifacts)
+          );
         } catch {
           return false;
         }
@@ -160,7 +261,9 @@ async function checkManifest(page) {
       { timeout },
     );
     if (navigationStatus !== 200) {
-      throw new Error(`artifact manifest returned HTTP ${navigationStatus ?? "unknown"}`);
+      throw new Error(
+        `artifact manifest returned HTTP ${navigationStatus ?? "unknown"}`,
+      );
     }
     const actual = JSON.parse(await page.locator("body").textContent());
     if (!isDeepStrictEqual(actual, expected)) {
@@ -191,6 +294,7 @@ async function run() {
   }
 
   try {
+    await startLocalServer();
     const page = await browser.newPage();
     page.setDefaultTimeout(timeout);
     await checkManifest(page);
@@ -199,12 +303,17 @@ async function run() {
       const expected = await localMarker(page, sample.route);
       const actual = await liveMarker(page, sample.route, expected);
       assertMarker(sample.route, expected, actual);
-      console.log(`ok ${sample.label.padEnd(10)} ${sample.route} · ${actual.heading}`);
+      console.log(
+        `ok ${sample.label.padEnd(10)} ${sample.route} · ${actual.heading}`,
+      );
     }
 
-    console.log(`live OK: ${siteUrl.origin} and ${artifactUrl.origin} match ${dist}`);
+    console.log(
+      `live OK: ${siteUrl.origin} and ${artifactUrl.origin} match ${dist}`,
+    );
   } finally {
     await browser.close();
+    await stopLocalServer();
   }
 }
 
