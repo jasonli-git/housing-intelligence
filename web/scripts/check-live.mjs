@@ -295,7 +295,11 @@ async function run() {
 
   try {
     await startLocalServer();
-    const page = await browser.newPage();
+    // The region carousels rotate every twelve seconds, which would make a text hash
+    // depend on how long each fetch took. `prefers-reduced-motion` is the project's own
+    // switch for that — `useAutoCarousel` stops advancing under it — so the check asks
+    // for it rather than racing the timer. It changes motion, never content.
+    const page = await browser.newPage({ reducedMotion: "reduce" });
     page.setDefaultTimeout(timeout);
     await checkManifest(page);
 
