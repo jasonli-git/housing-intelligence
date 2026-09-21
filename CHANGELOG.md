@@ -3,6 +3,32 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.21.1] — 2026-09-21
+
+**Region page card redesign**, merged from an experiment branch at the owner's direction.
+
+### Added
+
+- Three auto-advancing card shelves for leading, lagging and current-value extremes, with
+  manual arrows, scroll snapping, touch scrolling and a quiet progress hairline. They
+  pause on hover, on focus, when off screen, when the tab is hidden, and are disabled
+  entirely under `prefers-reduced-motion`.
+- A paged housing profile band, moved above the monthly cost cards.
+- Population promoted to a header card, removed from the metadata sentence and the
+  housing band so it appears once.
+- The cost explanation recast as labelled evidence — **Not included** first, then monthly
+  cash, the comparison caveat and five-year context.
+
+### Changed
+
+- Report pages keep the static grid and the original cost prose, through separate
+  components rather than a mode flag (ARCHITECTURE #201).
+- **`check-live` now serves the publish tree over HTTP** rather than opening it as a
+  file. A static export cannot load its scripts from `file://`, so the local side was
+  comparing server HTML against a hydrated deployed page — which this redesign exposed by
+  making page content depend on a measured container: 3 housing facts locally against 6
+  deployed, and a failed check on a correct deploy (#202).
+
 ## [0.21.0] — 2026-09-20
 
 **Milestone 29 — scheduled refresh.** The platform asks publishers whether anything has

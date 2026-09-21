@@ -8,31 +8,24 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — nothing in progress, as of 2026-09-20
+## Now — nothing in progress, as of 2026-09-21
 
-**Milestone 29 is merged and deployed.** The live site is 0.21.0: decisions ARCHITECTURE
-#188–#200, changelog 0.21.0.
+**The region page card redesign is merged and deployed** at the owner's direction —
+CHANGELOG 0.21.1, ARCHITECTURE #201. Three auto-advancing shelves, a paged housing band
+above the cost cards, population in a header card, and the cost explanation as labelled
+evidence. Report pages are untouched.
 
-**The prose was stale the moment it deployed, and has been regenerated.** The refresh
-restated 294,469 Zillow values and moved the mortgage rate from August to September, so
-all 105 county explanations were describing figures that had since changed — the content
-hash said 105 of 105 stale. Regenerated across all five models on 2026-09-20, verified
-105 of 105 current, republished and deployed.
+**It broke `make check-live`, and the check was wrong rather than the deploy.** The
+publish tree was being opened as a file, where a static export cannot load its scripts,
+so the local side compared server HTML against a hydrated deployed page. Nothing needed
+JavaScript to reach its final content until this redesign, which sizes its housing band
+from the measured container — 3 facts locally against 6 deployed. `check-live` now serves
+the tree over HTTP and passes (#202).
 
-**Two things that came out of this deploy, both now in `Open`:**
+**Open as a pull request:** that fix, plus the documentation for both.
 
-- `hip refresh` stops at `analyze`. It does not `pack`, `explain`, `publish` or
-  `deploy`, so a scheduled run keeps the warehouse current and lets the *site* drift —
-  which is the shape of the problem Milestone 29 set out to fix, one layer up.
-- The screenshots Director Note is still blocked. It waits on automated *deployment*,
-  and Milestone 29 built automated *refresh*.
-
-**The raw-cache key cleanup finished as a side effect** of `prune-raw --apply`:
-0 manifests now carry a live key, against 22 before. Rotating the keys themselves is
-still open and still the owner's.
-
-**To resume:** `make db-up` for Postgres, `make setup-eval` when the evaluation harness
-is needed. A scheduler runs `uv run hip refresh`, never `make refresh`.
+**To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
+`make refresh`.
 
 ## Open
 
@@ -163,6 +156,23 @@ first raised, not where it must be done.
 
 ### Frontend and presentation
 
+- [ ] **15 municipality pages priced from deeds show a caveat about Zillow's home
+      value.** (M25/#187, found 2026-09-21 while reviewing the region redesign) Where
+      Zillow publishes no home value, the cost card is priced from SR1A transactions —
+      but the comparison caveat beside it still reads "Zillow's rent covers every kind of
+      rental home, mostly apartments, while **its home value** covers single-family
+      houses only". There is no Zillow home value on those pages. Verified live on
+      Howell, Randolph, Wall and 12 others; it predates the redesign, which only moved
+      the sentence. The rent half is still true and still worth saying, so this needs the
+      sentence split rather than removed.
+- [ ] **No component tests cover the region page's interactive behaviour.** (#201,
+      declared by Codex in its handoff) Auto-advance, arrow wrapping, the progress
+      hairline, floating definitions, responsive paging and report isolation were checked
+      in a browser and are held by nothing. The project has no harness for interactive
+      React; adding one is the prerequisite, and the report-isolation boundary is the
+      piece most worth pinning, since a regression there would put client behaviour into
+      printed reports.
+
 - [ ] **Let a reader enter their own purchase price, with the published figure
       prefilled.** (owner's preference, 2026-09-20, stated alongside the ARCHITECTURE
       #187 decision — a direction, not an approved requirement.) The cost card already
@@ -228,6 +238,9 @@ first raised, not where it must be done.
       automated refresh.
 
 - [ ] **`make check-live` samples one municipality, and never the interesting ones.**
+      **Still open, and now also proven to matter:** on 2026-09-21 it passed a deploy
+      whose transaction-fallback and no-price pages were again checked by hand. Its
+      `file://` defect was fixed the same day (ARCHITECTURE #202); the sampling was not.
       (found 2026-09-20, on its first use validating a real release) It verified the
       0.20.1 deploy by fetching Aberdeen, which is priced from Zillow like most places —
       so neither the transaction fallback nor the no-price case was exercised, and both
