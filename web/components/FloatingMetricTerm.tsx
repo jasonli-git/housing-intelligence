@@ -7,14 +7,25 @@ import { definitionOf } from "@/lib/definitions";
 
 type Position = Pick<CSSProperties, "left" | "top" | "width">;
 
+type FloatingMetricTermProps = {
+  metricId: string;
+  label: string;
+  /** Optional presentation-specific wording in place of the shared metric dictionary. */
+  definition?: string;
+  /** `null` deliberately omits the dictionary's Why it matters line. */
+  why?: string | null;
+};
+
 /**
- * A definition for a metric inside a scrolling card rail. The ordinary adjacent tooltip
- * is intentionally CSS-only, but a scroll container must clip it. Rendering this one in
- * the document layer lets the complete definition sit above the rail without changing
- * definitions on reports or in tables.
+ * A definition for a metric inside a clipped interactive surface. The ordinary adjacent
+ * tooltip is intentionally CSS-only, but an overflow container must clip it. Rendering
+ * this one in the document layer lets the complete definition sit above the surface without
+ * changing definitions on reports or in tables.
  */
-export function FloatingMetricTerm({ metricId, label }: { metricId: string; label: string }) {
-  const definition = definitionOf(metricId);
+export function FloatingMetricTerm({ metricId, label, definition, why }: FloatingMetricTermProps) {
+  const shared = definitionOf(metricId);
+  const what = definition ?? shared?.what;
+  const whyItMatters = why === undefined ? shared?.why : why;
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
   const tooltip = useRef<HTMLSpanElement>(null);
@@ -50,7 +61,7 @@ export function FloatingMetricTerm({ metricId, label }: { metricId: string; labe
     };
   }, [open, place]);
 
-  if (!definition) return <>{label}</>;
+  if (!what) return <>{label}</>;
 
   return (
     <>
@@ -76,10 +87,10 @@ export function FloatingMetricTerm({ metricId, label }: { metricId: string; labe
       </span>
       {open && typeof document !== "undefined" && createPortal(
         <span ref={tooltip} role="tooltip" id={id} className="floating-tip" style={position}>
-          <strong>{label}.</strong> {definition.what}
-          {definition.why && (
+          <strong>{label}.</strong> {what}
+          {whyItMatters && (
             <span className="tip-why">
-              <b>Why it matters:</b> {definition.why}
+              <b>Why it matters:</b> {whyItMatters}
             </span>
           )}
         </span>,

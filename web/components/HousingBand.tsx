@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
-import { Definition } from "@/components/Definition";
+import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { CarouselProgress, useAutoCarousel } from "@/components/useAutoCarousel";
 import type { ProfileItem } from "@/lib/verdict";
 
@@ -25,8 +25,8 @@ function splitContext(context: string | null) {
 }
 
 /**
- * A fixed-height, paged summary of the region's housing profile. Paging rather than an
- * overflow clip keeps each definition tooltip free to open outside the band.
+ * A fixed-height, paged summary of the region's housing profile. The band clips its visual
+ * treatment to its rounded frame, so definitions render in the document layer above it.
  */
 export function HousingBand({ items }: { items: ProfileItem[] }) {
   const list = useRef<HTMLUListElement>(null);
@@ -129,16 +129,12 @@ export function HousingBand({ items }: { items: ProfileItem[] }) {
               )}
               <b>{item.value}</b>
               <span className="housing-band-label">
-                <Definition
-                  term={{
-                    key: `profile-${item.metric_id}`,
-                    title: item.label,
-                    phrases: [],
-                    definition: item.definition,
-                  }}
-                >
-                  {item.label}
-                </Definition>
+                <FloatingMetricTerm
+                  metricId={item.metric_id}
+                  label={item.label}
+                  definition={item.definition}
+                  why={null}
+                />
               </span>
               {context.words && <span className="housing-band-context">{context.words}</span>}
             </li>
