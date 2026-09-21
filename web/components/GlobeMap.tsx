@@ -128,6 +128,8 @@ export type Focus = {
 };
 
 type Props = {
+  /** The NJ landing experiment uses crisp boundaries instead of depth-of-field blur. */
+  appearance?: "classic" | "atlas";
   width: number;
   height: number;
   /** `map.json` and its unpacked outlines, owned by the explorer (`useMapFile`). */
@@ -210,6 +212,7 @@ function townLayer(
 }
 
 export function GlobeMap({
+  appearance = "classic",
   width,
   height,
   file,
@@ -509,13 +512,6 @@ export function GlobeMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layers]);
 
-  // Put the regions in the document before the browser paints, so the map and whatever
-  // React is rendering around it can never be a frame out of step. After a commit this
-  // finds every attribute already correct and writes nothing.
-  useLayoutEffect(() => {
-    if (drawn) put(drawn);
-  });
-
   // The region under the middle of the frame, which is what the crosshair marks.
   //
   // New Jersey first, then the ground: a reader over Ohio gets Ohio rather than nothing,
@@ -638,6 +634,15 @@ export function GlobeMap({
     return ramp.palette[classIndex(value, ramp.breaks)];
   };
 
+  // Paint only when geometry or its styling changes. The old unbounded layout effect
+  // scanned every path's attributes on EVERY frame of the isolated probe animation.
+  // `rise`, `live` and control state do not change the ground/detail layers at all.
+  useLayoutEffect(() => {
+    if (drawn) put(drawn);
+    // put/painting/fillFor are render-local closures; these are all their inputs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawn, active, mute, paint, ramp]);
+
   /**
    * Apply pointer movement at most once a frame.
    *
@@ -759,6 +764,23 @@ export function GlobeMap({
     },
     [slideBy, commit],
   );
+
+  // A pointer can be released before its queued frame runs. Spend that last movement
+  // before committing, otherwise a late callback can leave an uncommitted slide behind.
+  const flush = useCallback(() => {
+    if (queued.current !== null) cancelAnimationFrame(queued.current);
+    queued.current = null;
+    const { dx, dy } = pending.current;
+    pending.current = { dx: 0, dy: 0 };
+    if (dx || dy) slideBy(dx, dy);
+  }, [slideBy]);
+
+  useEffect(() => () => {
+    for (const loop of [queued, glide, flight]) {
+      if (loop.current !== null) cancelAnimationFrame(loop.current);
+      loop.current = null;
+    }
+  }, []);
 
   /**
    * Carry on moving after the hand lets go, slowing to a stop.
@@ -987,7 +1009,7 @@ export function GlobeMap({
   // read anyway. The original code suspended it during a drag for exactly this reason;
   // making the crosshair live through a drag took the suspension with it, which is when
   // the municipal zoom became unusable. The crosshair stays live, the blur does not.
-  const focusing = attending && !moving;
+  const focusing = appearance === "classic" && attending && !moving;
   // Independent of `focusing`: the raised region and its shadow belong to the rise,
   // which has its own easing, and should not wait on the focus to arrive. `raised` is
   // the eased prism; before the rise has started there is nothing to draw over the top,
@@ -1095,11 +1117,11 @@ export function GlobeMap({
             {/* The same paths again, blurred harder and masked so they only show towards
               the edge — the far half of a depth of field. `use` instances the layer, so
               this costs one element rather than another 564. */}
-            <use
+            {appearance === "classic" && <use
               href="#globe-detail-layer"
               className={focusing ? "globe-detail-far on" : "globe-detail-far"}
               mask="url(#globe-edge)"
-            />
+            />}
           </g>
           {/* The focused region drawn again, over the softened rest and the vignette,
               so it alone stays sharp and at full color. Twice is cheaper than excluding
@@ -1133,6 +1155,11 @@ export function GlobeMap({
               `The ranking beside the map carries the same figures.`
           }
           onPointerDown={(event) => {
+            // Taking the map in hand interrupts an in-progress zoom instead of letting
+            // two independent camera writers fight over the gesture.
+            if (flight.current !== null) cancelAnimationFrame(flight.current);
+            flight.current = null;
+            aim.current = null;
             if (glide.current !== null) cancelAnimationFrame(glide.current);
             glide.current = null;
             drag.current = {
@@ -1166,6 +1193,7 @@ export function GlobeMap({
             };
           }}
           onPointerUp={(event) => {
+            flush();
             const thrown = drag.current;
             drag.current = null;
             event.currentTarget.releasePointerCapture(event.pointerId);
@@ -1180,6 +1208,7 @@ export function GlobeMap({
             setSettled((n) => n + 1);
           }}
           onPointerCancel={() => {
+            flush();
             drag.current = null;
             commit();
             setMoving(false);
@@ -1221,14 +1250,14 @@ export function GlobeMap({
           {/* A vignette that closes in on whatever the crosshair holds. The ground
               around it keeps its color and its shape, only quieter, so the comparison
               the whole site is built on is still there to read. */}
-          <rect
+          {appearance === "classic" && <rect
             className={attending ? "globe-vignette on" : "globe-vignette"}
             x={0}
             y={0}
             width={width}
             height={height}
             fill="url(#globe-fade)"
-          />
+          />}
           {/* The crosshair. Fixed at the middle of the frame: the reader moves the map
             under it rather than pointing at a place, which is what makes the map
             readable on a touch screen with no hover. */}
@@ -1243,6 +1272,7 @@ export function GlobeMap({
           )}
         </svg>
 
+        {appearance === "atlas" && <span className="globe-level-label">{level === "county" ? "County view" : "Municipality view"}</span>}
         <div className="globe-controls globe-controls-jumps">
           <button type="button" onClick={() => flyTo(framings.nation)}>
             United States

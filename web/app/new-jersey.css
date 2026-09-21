@@ -1,0 +1,89 @@
+/* Experimental NJ landing page. Scoped so local profiles and reports retain their layout. */
+.nj-page { --atlas-blue: light-dark(#2368a0, #86bce8); --sea: light-dark(#eef1f5, #1a1c20); }
+.nj-page .nj-head { display: block; padding-block: 1.7rem 1.3rem; }
+.nj-page .nj-head > .region-head-main { flex: 1 1 100%; width: 100%; max-width: none; }
+.nj-head .page-title { font-size: clamp(48px, 6vw, 78px); letter-spacing: -0.065em; margin-top: 0.65rem; }
+.nj-head .population-summary { border-left-color: var(--atlas-blue); }
+.nj-head .population-summary-label { color: var(--atlas-blue); }
+.nj-intro { margin: 0.8rem 0 0; font-size: clamp(19px, 2vw, 25px); letter-spacing: -0.035em; color: var(--text-primary); }
+.nj-deck { max-width: 65ch; margin: 0.6rem 0 0; color: var(--text-secondary); line-height: 1.6; font-size: 14px; }
+.nj-jump-links { display: flex; flex-wrap: wrap; gap: 0.6rem 1.5rem; margin-top: 1rem; font-size: 12px; }
+.nj-jump-links a { color: var(--text-secondary); text-decoration: none; border-bottom: 1px solid var(--border); padding-block: 0.3rem; }
+.nj-jump-links a:hover { color: var(--atlas-blue); border-color: currentColor; }
+.nj-page .housing-band-blue { --series-3: var(--atlas-blue); margin-top: 0; height: 7.25rem; }
+.nj-page .housing-band-blue .housing-band-items { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
+.nj-page .housing-band-blue .housing-band-item > b { font-size: clamp(24px, 2.4vw, 32px); }
+.nj-page .housing-band-blue .housing-band-context { font-size: 10px; margin-top: 4px; }
+.nj-source-notes:empty { display: none; }
+.nj-page .measure-card { border-top: 0; padding-block: 2rem 1.25rem; gap: 1rem; }
+.nj-page .measure-name { font-size: clamp(23px, 2.5vw, 30px); }
+.nj-page .measure-def { font-size: 12px; max-width: 88ch; margin-top: 0.45rem; }
+.nj-page .measure-window { margin-top: 0.5rem; }
+.nj-page .measure-card .explorer-controls { width: 100%; box-sizing: border-box; box-shadow: none; border: 1px solid var(--border); padding: 0.8rem 1rem; justify-content: space-between; }
+.nj-measure-shortcuts { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.nj-measure-shortcuts button { border-radius: 99px; font-size: 11px; padding: 0.4rem 0.75rem; background: transparent; color: var(--text-secondary); }
+.nj-measure-shortcuts button[aria-pressed="true"] { color: var(--atlas-blue); background: color-mix(in srgb, var(--atlas-blue) 9%, var(--surface-card)); border-color: color-mix(in srgb, var(--atlas-blue) 35%, var(--border)); }
+.nj-page .explorer { grid-template-columns: minmax(0, 1.3fr) minmax(22rem, 0.8fr); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 6px 28px rgb(0 0 0 / 0.035); }
+.nj-page .map-panel { padding: 1.2rem; }
+.nj-page .readout { margin: 0 0 0.8rem; min-height: 3.5rem; padding: 0.8rem 1rem; border-radius: 12px; background: var(--surface-2); font-size: 12px; }
+.nj-page .rank-card { padding: 1.3rem 1rem; }
+.nj-rank-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.6rem; }
+.nj-rank-head h3 { font-size: 18px; margin: 0; letter-spacing: -0.03em; }
+.nj-rank-head > span { color: var(--text-muted); font: 10px var(--font-mono); }
+.nj-page .rank-card .table-note { font-size: 11px; margin-bottom: 0.8rem; }
+.nj-page .ranks { font-size: 12px; }
+.nj-page .ranks td { padding-block: 0.6rem; }
+.nj-page .ranks .pos { color: var(--text-muted); }
+.nj-page .ranks tr.on td { background: color-mix(in srgb, var(--atlas-blue) 11%, var(--surface-card)); }
+.nj-page .ranks tbody a { text-decoration: none; }
+.nj-page .globe-stage { max-width: none; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--atlas-blue) 10%, var(--border)); background: linear-gradient(145deg, color-mix(in srgb, var(--atlas-blue) 9%, var(--surface-card)), var(--sea)); }
+.nj-page .globe-ground, .nj-page .globe-sharp { filter: none; }
+.nj-page .globe-ground path, .nj-page .globe-absent { fill: var(--nodata); stroke: color-mix(in srgb, var(--text-muted) 45%, var(--surface-card)); stroke-width: 0.5; }
+.nj-page .globe-detail path { stroke: var(--surface-card); stroke-width: 0.65; stroke-linejoin: round; }
+.nj-page .globe-sharp .top { stroke: var(--text-primary); stroke-width: 1.25; }
+.nj-page .globe-sharp .wall { filter: brightness(0.7); }
+.nj-page .globe-controls { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--surface-card); border-color: var(--border); box-shadow: 0 2px 6px rgb(0 0 0 / 0.07); }
+.nj-page .globe-controls button { min-width: 34px; min-height: 34px; }
+.nj-page .globe-level-label { position: absolute; left: 15px; top: 15px; z-index: 1; pointer-events: none; padding: 0.45rem 0.65rem; border-radius: 7px; background: var(--surface-card); color: var(--text-secondary); font: 10px var(--font-mono); }
+.housing-band-print { display: none; }
+.nj-page .globe-legend { margin-top: 0.9rem; }
+.nj-page .globe-note { font-size: 10px; line-height: 1.6; }
+.nj-page .globe-ramp { font-size: 10px; }
+.nj-next { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; padding-block: 2.5rem; }
+.nj-next h2 { font-size: 24px; letter-spacing: -0.04em; margin: 0.5rem 0; }
+.nj-next > div > p:last-child { color: var(--text-secondary); font-size: 13px; line-height: 1.6; max-width: 52ch; }
+.nj-next .afford-cta { width: 100%; max-width: none; box-sizing: border-box; }
+@media (min-width: 1001px) {
+  .nj-page .nj-head > .region-head-main { display: grid; grid-template-columns: 1fr 1.1fr 11rem; column-gap: 2rem; align-items: start; }
+  .nj-head .kind { grid-column: 1; grid-row: 1; }
+  .nj-head .page-title { grid-column: 1; grid-row: 2 / 5; font-size: clamp(48px, 5vw, 70px); }
+  .nj-head .nj-intro { grid-column: 2; grid-row: 1 / 3; font-size: 20px; margin: 0; }
+  .nj-head .nj-deck { grid-column: 2; grid-row: 3; font-size: 12px; }
+  .nj-head .nj-jump-links { grid-column: 2; grid-row: 4; font-size: 11px; margin-top: 0.6rem; }
+}
+@media (max-width: 1000px) {
+  .nj-page .explorer { grid-template-columns: minmax(0, 1fr); }
+  .nj-page .rank-card { border-left: 0; border-top: 1px solid var(--border); }
+  .nj-page .globe-stage { max-width: 620px; }
+}
+@media (max-width: 520px) {
+  .nj-page .nj-head { padding-top: 1.2rem; }
+  .nj-head .page-title { margin-top: 3.5rem; font-size: 52px; }
+  .nj-head .population-summary { top: -0.2rem; }
+  .nj-page .housing-band-blue { height: 7.75rem; }
+  .nj-page .housing-band-blue .housing-band-item { padding-inline: 0.55rem; }
+  .nj-page .housing-band-blue .housing-band-context { font-size: 9px; }
+  .nj-page .measure-card .explorer-controls { padding: 0.7rem; }
+  .nj-page .control, .nj-page .control select { min-width: 0; width: 100%; }
+  .nj-page .map-panel { padding: 0.65rem; }
+  .nj-next { grid-template-columns: 1fr; gap: 1rem; }
+  .nj-page .rank-card .scroll-x > table { min-width: 0; }
+}
+@media print {
+  .nj-page .nj-jump-links, .nj-measure-shortcuts, .nj-next { display: none; }
+  .nj-page .explorer { display: block; box-shadow: none; }
+  .nj-page .housing-band-blue { height: auto; overflow: visible; background: none; }
+  .nj-page .housing-band-blue .housing-band-items, .nj-page .housing-band-blue .housing-band-nav { display: none; }
+  .nj-page .housing-band-print { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; list-style: none; padding: 0; }
+  .housing-band-print li > * { display: block; }
+}

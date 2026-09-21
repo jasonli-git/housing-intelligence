@@ -149,6 +149,16 @@ export function CountyExplorer({
   return (
     <section className="explorer-section" aria-labelledby="explorer-heading">
       <div className="measure-card">
+        <div className="nj-measure-shortcuts" aria-label="Popular measures">
+          {[
+            ["zhvi_sfr", "Home values"],
+            ["zori_all", "Rents"],
+            ["price_to_income", "Affordability"],
+            ["permits_total_units", "New housing"],
+          ].filter(([id]) => measures.some((measure) => measure.metric_id === id)).map(([id, label]) => (
+            <button key={id} type="button" aria-pressed={measure.metric_id === id} onClick={() => setMetricId(id)}>{label}</button>
+          ))}
+        </div>
         <div className="measure-intro">
           <div>
             <p className="measure-eyebrow">On the map</p>
@@ -274,6 +284,7 @@ export function CountyExplorer({
             )}
           </p>
           <GlobeMap
+            appearance="atlas"
             width={frame.width}
             height={frame.height}
             metric={measure.metric_id}
@@ -293,6 +304,10 @@ export function CountyExplorer({
           />
         </div>
         <div className="rank-card">
+          <div className="nj-rank-head">
+            <h3>{level === "municipality" ? "Municipalities" : "County comparison"}</h3>
+            <span>{level === "municipality" ? "In this view" : `${rows.length} of ${counties} counties`}</span>
+          </div>
           {level === "municipality" && file ? (
             // The map is drawing towns, so the ranking lists towns: there is no
             // published municipal ranking on this page, and the map's own figures

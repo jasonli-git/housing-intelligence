@@ -1,12 +1,16 @@
 import { AffordCta } from "@/components/AffordCta";
 import { CountyExplorer, type Measure } from "@/components/CountyExplorer";
 import { Kind } from "@/components/Crumbs";
-import { MetricTerm } from "@/components/MetricTerm";
+import { HousingBand } from "@/components/HousingBand";
+import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { api } from "@/lib/api";
 import { formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { periodLabel } from "@/lib/periods";
 import { WINDOWS } from "@/lib/windows";
+import { definitionOf } from "@/lib/definitions";
+import { stateProfile } from "@/lib/stateProfile";
+import "./new-jersey.css";
 
 // The figure most readers arrive for. It is where the page opens, not a limit on it.
 const DEFAULT_MEASURE = "zhvi_sfr";
@@ -16,7 +20,7 @@ const DEFAULT_MEASURE = "zhvi_sfr";
 // themselves arrive from `map.json` in the browser, so this is the frame and nothing
 // else — the page no longer projects anything.
 const MAP_WIDTH = 540;
-const MAP_HEIGHT = 720;
+const MAP_HEIGHT = 580;
 
 // Metrics whose caveat their definition already carries: both FHFA indexes say they are
 // published for the state only. The packet's caveat is unchanged; on this page it is
@@ -107,6 +111,8 @@ export default async function NewJerseyPage() {
     ? DEFAULT_MEASURE
     : measures[0]?.metric_id;
   const levels = statewide?.levels ?? [];
+  const population = levels.find((level) => level.metric_id === "pep_population")
+    ?? levels.find((level) => level.metric_id === "acs_population");
   const statewideNotes = (statewide?.caveat_scopes ?? [])
     .filter((scope) =>
       scope.metric_ids.some((id) => levels.some((l) => l.metric_id === id)),
@@ -117,37 +123,41 @@ export default async function NewJerseyPage() {
     .map((scope) => scope.text);
 
   return (
-    <main className="shell">
-      <header className="page-head" data-kind="state">
-        <div>
+    <main className="shell nj-page">
+      <header className="page-head nj-head" data-kind="state">
+        <div className="region-head-main">
+          {population && (
+            <aside className="population-summary" aria-label="Population">
+              <span className="population-summary-label">Population</span>
+              <strong>{formatMetric(population.value, population.unit, population.metric_id)}</strong>
+              <span className="population-summary-context">
+                <FloatingMetricTerm
+                  metricId={population.metric_id}
+                  label={`${periodLabel(population.period_end, population.metric_id)} estimate`}
+                  definition={definitionOf(population.metric_id)?.what ?? population.label}
+                  why={null}
+                />
+              </span>
+            </aside>
+          )}
           <Kind kind="state" />
           <h1 className="page-title">New Jersey</h1>
-          {levels.length > 0 && (
-            <p className="statewide">
-              <span className="eyebrow">Statewide</span>
-              {levels.map((level) => (
-                <span key={level.metric_id}>
-                  <MetricTerm
-                    metricId={level.metric_id}
-                    label={level.label}
-                    scope="statewide"
-                  />{" "}
-                  <b>
-                    {formatMetric(level.value, level.unit, level.metric_id)}
-                  </b>{" "}
-                  ({periodLabel(level.period_end, level.metric_id)})
-                </span>
-              ))}
-            </p>
-          )}
+          <p className="nj-intro">The statewide picture. The local differences.</p>
+          <p className="nj-deck">Explore housing costs, incomes and change across New Jersey. Start with a measure, then find your place on the map.</p>
+          <nav className="nj-jump-links" aria-label="Explore New Jersey">
+            <a href="#explorer-heading">Explore the map <span aria-hidden="true">↘</span></a>
+            <a href="#nj-afford">Start with your budget <span aria-hidden="true">↗</span></a>
+          </nav>
+        </div>
+      </header>
+      <HousingBand items={stateProfile(levels)} title="Across the state" tone="blue" />
+      <div className="nj-source-notes">
           {statewideNotes.map((text) => (
             <p key={text} className="table-note">
               {text}
             </p>
           ))}
-        </div>
-        <AffordCta />
-      </header>
+      </div>
 
       {initial ? (
         <CountyExplorer
@@ -159,6 +169,14 @@ export default async function NewJerseyPage() {
       ) : (
         <p className="meta">No county rankings are published yet.</p>
       )}
+      <section className="nj-next" id="nj-afford" aria-label="Explore affordability">
+        <div>
+          <p className="eyebrow">From the map to your next move</p>
+          <h2>What does this mean for you?</h2>
+          <p>A statewide average is a starting point. Compare the places that fit your income, then open a local profile for the costs and trade-offs.</p>
+        </div>
+        <AffordCta />
+      </section>
     </main>
   );
 }

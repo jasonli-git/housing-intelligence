@@ -28,9 +28,14 @@ function splitContext(context: string | null) {
  * A fixed-height, paged summary of the region's housing profile. The band clips its visual
  * treatment to its rounded frame, so definitions render in the document layer above it.
  */
-export function HousingBand({ items }: { items: ProfileItem[] }) {
+export function HousingBand({ items, title = "The housing here", tone = "default" }: {
+  items: ProfileItem[];
+  title?: string;
+  tone?: "default" | "blue";
+}) {
   const list = useRef<HTMLUListElement>(null);
   const listId = useId();
+  const headingId = useId();
   // Three is a safe server-rendered first page. ResizeObserver expands or contracts it
   // to the space actually available once the browser knows the band's width.
   const [capacity, setCapacity] = useState(Math.min(3, items.length));
@@ -40,10 +45,10 @@ export function HousingBand({ items }: { items: ProfileItem[] }) {
   const measure = useCallback(() => {
     const node = list.current;
     if (!node) return;
-    const next = Math.min(items.length, Math.max(1, Math.floor(node.clientWidth / 144)));
+    const next = Math.min(items.length, Math.max(1, Math.floor(node.clientWidth / (tone === "blue" ? 190 : 144))));
     setCapacity(next);
     setStart((current) => Math.min(current, Math.max(0, items.length - next)));
-  }, [items.length]);
+  }, [items.length, tone]);
 
   useEffect(() => {
     measure();
@@ -76,12 +81,12 @@ export function HousingBand({ items }: { items: ProfileItem[] }) {
   return (
     <section
       ref={autoplay.rootRef}
-      className="housing-band"
-      aria-labelledby="housing-heading"
+      className={`housing-band${tone === "blue" ? " housing-band-blue" : ""}`}
+      aria-labelledby={headingId}
       {...autoplay.interactionProps}
     >
       <div className="housing-band-head">
-        <h2 id="housing-heading">The housing here</h2>
+        <h2 id={headingId}>{title}</h2>
         {paged && (
           <div className="housing-band-nav">
             <button
@@ -141,6 +146,11 @@ export function HousingBand({ items }: { items: ProfileItem[] }) {
           );
         })}
       </ul>
+      {tone === "blue" && (
+        <ul className="housing-band-print" aria-label="Statewide profile">
+          {items.map((item) => <li key={item.metric_id}><b>{item.value}</b><span>{item.label}</span><small>{item.context}</small></li>)}
+        </ul>
+      )}
       {paged && !autoplay.reduceMotion && (
         <CarouselProgress
           cycle={autoplay.cycle}
