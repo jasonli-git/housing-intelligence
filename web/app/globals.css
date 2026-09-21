@@ -575,7 +575,8 @@ body > main { flex: 1 0 auto; width: 100%; }
 
 /* The housing profile is a fixed-height, screen-wide band above the cost section. A narrow
    title-and-arrows rail leaves almost all of the width to the facts. The client component
-   pages as many facts as fit rather than clipping a tooltip inside an overflow container.
+   pages as many facts as fit, while definitions render in the page layer so the rounded
+   fixed-height frame cannot clip them.
    Its soft wash and Space Grotesk figures make it feel like one composed editorial banner,
    while a restrained directional reveal distinguishes its paging from the card shelves. */
 .housing-band {
@@ -638,7 +639,6 @@ body > main { flex: 1 0 auto; width: 100%; }
   font-variant-numeric: tabular-nums;
 }
 .housing-band-item .gl { position: static; }
-.housing-band-item .tip { left: 0.6rem; right: 0.6rem; width: auto; top: auto; margin-top: 6px; }
 .housing-band-progress {
   position: absolute; z-index: 1; left: 0.75rem; right: 0.75rem; bottom: 0.35rem;
 }
