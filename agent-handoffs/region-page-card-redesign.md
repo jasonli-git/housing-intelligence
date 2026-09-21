@@ -11,14 +11,17 @@
   and lowest cards neutral graphite.
 - Moved The housing here above What it costs per month and restyled it as a compact,
   low-contrast, fixed-height horizontal summary band with its own paging arrows.
+- Promoted population to a compact upper-right header card beneath the region rule, with
+  its ACS estimate year and five-year change. Removed the duplicate population count from
+  the metadata sentence and the People item from The housing here.
 - Recast housing ranks as larger corner labels (`6/21`) while keeping the plain-language
   comparison (`newer than most`) in the reading line.
 - Restyled The housing here with a layered teal wash, a small Profile eyebrow, Space Grotesk
   figures, and direction-aware staggered transitions unique to that banner.
 - Reorganized the long cost explanation into a labelled evidence strip on interactive region
-  pages: Monthly cash, Comparison caveat, Five-year context, and a distinct amber Not included
-  note modelled on the statewide About Since 2019 note. The fixed-rules disclaimer is a quiet
-  footer; no content or qualification was removed.
+  pages: a distinct amber Not included note modelled on the statewide About Since 2019 note
+  now comes first, followed by Monthly cash, Comparison caveat, and Five-year context. The
+  fixed-rules disclaimer is a quiet footer; no content or qualification was removed.
 - Filled the header of the Every table, the trends and the interpretation expander with the
   region teal while leaving its expanded tables, charts, and interpretation on their existing
   neutral surface.
@@ -55,6 +58,12 @@
   is not consistently favorable or unfavorable across metrics.
 - The housing band uses a faint region-accent wash and smaller typography so it remains
   distinct without competing with the larger cost cards immediately below it.
+- Population is filtered from the region-page banner at the rendering boundary rather than
+  removed from `housingProfile`. The shared data-to-copy helper and its tests remain intact,
+  while the header card becomes the region page's single population presentation.
+- The population card keeps the existing ACS definition and change context. On a phone it
+  occupies the open corner beside the breadcrumb and page-kind label; long breadcrumbs wrap
+  into their reserved left column instead of colliding with the card.
 - Housing facts remount only within the region-page banner when its page changes, which lets
   forward and backward moves use short, opposite-direction reveals. Motion remains absent for
   readers who request reduced motion.
@@ -70,6 +79,8 @@
   report-isolation boundary.
 - The omissions note uses the existing amber caution token rather than teal or green: insurance,
   upkeep, closing costs, and opportunity cost are limitations of the estimate, not favorable data.
+- Moving the omissions note changes only the interactive region-page evidence strip. Reports
+  continue to use their existing prose order through `control={false}`.
 
 ## Assumptions
 
@@ -118,5 +129,12 @@
     and retained its progress line; stand-out cards retained the 172px by 192px proportion.
   - The amber Not included slip remained readable at 375px, and the teal details header kept
     the expanded body neutral in dark mode.
+  - Somerset County `/regions/12`: the new population card measured 140px by 69px at the
+    375px viewport, ended 11px before the title began, and its ACS definition opened fully
+    within the viewport. Population no longer appeared in either the metadata sentence or
+    The housing here; Not included was the first item in the cost evidence strip.
+  - Municipality `/regions/415`: its three-part breadcrumb wrapped beside the population card
+    without colliding with it. Both tested phone pages had a 360px document width and a 360px
+    scroll width, so neither introduced horizontal overflow.
   - Report `/regions/5/report`: the cost explanation remains in its original paragraph layout,
     the existing static stand-out grid remains, and there are no carousel controls.

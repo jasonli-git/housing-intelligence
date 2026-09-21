@@ -347,6 +347,13 @@ export function CostToOwn({
 
       {control ? (
         <div className="cost-strip cost-evidence">
+          <aside className="cost-evidence-omissions" aria-label="Costs not included">
+            <p className="cost-evidence-label">
+              <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
+              Not included
+            </p>
+            <p>{listed(leftOut(down))}.</p>
+          </aside>
           {cashComparison && (
             <div className="cost-evidence-answer">
               <p className="cost-evidence-label">Monthly cash</p>
@@ -375,13 +382,6 @@ export function CostToOwn({
               </div>
             )}
           </div>
-          <aside className="cost-evidence-omissions" aria-label="Costs not included">
-            <p className="cost-evidence-label">
-              <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
-              Not included
-            </p>
-            <p>{listed(leftOut(down))}.</p>
-          </aside>
           <p className="cost-evidence-method">
             Computed from the figures shown by fixed rules; not a quote, and not written by AI.
           </p>
