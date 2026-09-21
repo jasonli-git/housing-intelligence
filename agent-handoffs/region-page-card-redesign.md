@@ -4,15 +4,24 @@
 
 - Replaced the county, municipality, and ZIP region page's static stand-out grid with
   three independently scrollable shelves: Leading, Lagging, and Highest and lowest.
-- Added circular previous/next controls and six-second auto-advance with a progress line
+- Added circular previous/next controls and twelve-second auto-advance with a quiet hairline timer
   for every overflowing shelf. The shelves also support touch/trackpad scrolling,
   keyboard focus, scroll snapping, and reduced-motion preferences.
 - Styled Leading cards orange, Lagging cards with the site's ranking blue, and Highest
   and lowest cards neutral graphite.
 - Moved The housing here above What it costs per month and restyled it as a compact,
   low-contrast, fixed-height horizontal summary band with its own paging arrows.
-- Recast housing ranks as compact circular badges (`6/21`) while keeping the plain-language
+- Recast housing ranks as larger corner labels (`6/21`) while keeping the plain-language
   comparison (`newer than most`) in the reading line.
+- Restyled The housing here with a layered teal wash, a small Profile eyebrow, Space Grotesk
+  figures, and direction-aware staggered transitions unique to that banner.
+- Reorganized the long cost explanation into a labelled evidence strip on interactive region
+  pages: Monthly cash, Comparison caveat, Five-year context, and a distinct amber Not included
+  note modelled on the statewide About Since 2019 note. The fixed-rules disclaimer is a quiet
+  footer; no content or qualification was removed.
+- Filled the header of the Every table, the trends and the interpretation expander with the
+  region teal while leaving its expanded tables, charts, and interpretation on their existing
+  neutral surface.
 - Moved stand-out definitions into a floating page layer so the scroll rail cannot clip
   long definitions.
 - Kept report pages on the existing compact, non-interactive stand-out grid.
@@ -23,9 +32,11 @@
 - `web/components/HousingBand.tsx`
 - `web/components/FloatingMetricTerm.tsx`
 - `web/components/useAutoCarousel.tsx`
+- `web/components/CostToOwn.tsx`
 - `web/components/StandOuts.tsx`
 - `web/app/regions/[id]/page.tsx`
 - `web/app/globals.css`
+- `web/app/redesign.css`
 
 ## Architectural or implementation decisions
 
@@ -36,7 +47,7 @@
   reducing their footprint by roughly half while leaving the next card visible as a
   scrolling cue.
 - Carousel controls and progress are hidden when a row fits without scrolling. Overflowing
-  carousels advance every six seconds and wrap at either end, whether advanced by the timer
+  carousels advance every twelve seconds and wrap at either end, whether advanced by the timer
   or an arrow.
 - Auto-advance runs only while a carousel is in view, pauses on hover or focus, pauses while
   the page is hidden, and is disabled when the reader requests reduced motion.
@@ -44,6 +55,9 @@
   is not consistently favorable or unfavorable across metrics.
 - The housing band uses a faint region-accent wash and smaller typography so it remains
   distinct without competing with the larger cost cards immediately below it.
+- Housing facts remount only within the region-page banner when its page changes, which lets
+  forward and backward moves use short, opposite-direction reveals. Motion remains absent for
+  readers who request reduced motion.
 - The housing band has a fixed 6.75-rem desktop height and seven-rem mobile height. Its
   narrow title column owns the paging arrows, and the fact area measures how many items fit
   at each viewport width.
@@ -51,6 +65,11 @@
   definition tooltips are not clipped by the fixed-height banner.
 - Stand-out definitions use a region-page-only client tooltip rendered under `document.body`.
   The general CSS-only definition component and all report/table definitions remain intact.
+- `CostToOwn` selects the evidence-strip presentation only when its interactive controls are
+  present. Reports pass `control={false}` and retain the original prose, preserving the explicit
+  report-isolation boundary.
+- The omissions note uses the existing amber caution token rather than teal or green: insurance,
+  upkeep, closing costs, and opportunity cost are limitations of the estimate, not favorable data.
 
 ## Assumptions
 
@@ -79,19 +98,25 @@
 - `cd web && npm run build`
   - Production static export passed; 2,276 pages generated.
   - The existing warning that `NEXT_PUBLIC_ARTIFACT_URL` was unset remained.
+  - The first sandboxed attempt could not reach the already-running host API on port 8000; the
+    same build passed once run with local-API access.
 - Browser checks against the local API and Next development server:
   - County `/regions/8`: housing band precedes costs; stand-out arrows scroll correctly in
     light and dark themes.
   - County `/regions/5`: all three card colors/groups render, including blue Lagging.
     At a 700px viewport the banner remained 108px tall while it automatically advanced
     from `1974 / 0.19 acres / 68.7%` to `68.7% / 0.3% / 17.1%`; the progress line reset for
-    the new page. A Lagging shelf advanced and wrapped to its beginning after six seconds.
+    the new page. A current-value shelf stayed in place after 6.5 seconds and advanced after
+    the twelve-second interval. Its computed timer was one pixel high, with an 8%-strength
+    track and a 34%-strength fill.
   - The longest tested stand-out definition rendered to 161px high, extended 49px below the
     scroll rail, and remained fully visible rather than being clipped.
   - Municipality `/regions/415` and ZIP `/regions/2842`: no horizontal page overflow at
     the mobile viewport; data-thin pages continue to omit absent stand-out groups cleanly.
   - At a 375px page width, the revised Atlantic County layout also had no horizontal page
-    overflow. The banner measured 112px high, showed one fact with its circular rank badge,
+    overflow. The banner measured 112px high, showed one fact with its larger corner rank,
     and retained its progress line; stand-out cards retained the 172px by 192px proportion.
-  - Report `/regions/8/report`: the existing static grid remains and has no carousel
-    controls.
+  - The amber Not included slip remained readable at 375px, and the teal details header kept
+    the expanded body neutral in dark mode.
+  - Report `/regions/5/report`: the cost explanation remains in its original paragraph layout,
+    the existing static stand-out grid remains, and there are no carousel controls.

@@ -103,6 +103,42 @@ export function CostToOwn({
   const shownGone = shown.interest + shown.tax;
   const shownKept = shown.total - shownGone;
   const against = rent ? goneAgainstRent(cost.gone, rent.value) : null;
+  const cashComparison = rent && against && (
+    <>
+      Counting only money that’s gone{beforeTax ? ", and before property tax" : ""},{" "}
+      {against.kind === "about" ? (
+        <>
+          owning costs <b>about the same as renting</b>
+        </>
+      ) : (
+        <>
+          owning costs{" "}
+          <b>
+            {money(Math.abs(against.gap))} a month {against.kind}
+          </b>{" "}
+          than renting
+        </>
+      )}{" "}
+      — {money(shownGone)} against {money(rent.value)} — and the first payment also puts{" "}
+      {money(shownKept)} into the home.
+    </>
+  );
+  const rentalCaveat = rent && (
+    <>
+      A house usually rents for more than this: Zillow’s rent covers every kind of rental
+      home, mostly apartments, while its home value covers single-family houses only.
+    </>
+  );
+  const history = gain && (
+    <>
+      Over the last five years the typical home here {gain.perMonth >= 0 ? "gained" : "lost"} about{" "}
+      {money(Math.abs(gain.perMonth))} a month in value ({gain.from} to {gain.to}) — what
+      happened, not a promise
+      {rateThen
+        ? `. Buyers then borrowed at ${rateThen.value.toFixed(2)}% (${rateThen.asOf}), against ${rate.value.toFixed(2)}% (${rate.asOf}).`
+        : "."}
+    </>
+  );
 
   const terms = {
     own: term(
@@ -309,49 +345,63 @@ export function CostToOwn({
         </article>
       </div>
 
-      <div className="cost-strip">
-        {rent && against && (
-          <p className="cost-strip-big" aria-live="polite">
-            Counting only money that’s gone{beforeTax ? ", and before property tax" : ""},{" "}
-            {against.kind === "about" ? (
-              <>
-                owning costs <b>about the same as renting</b>
-              </>
-            ) : (
-              <>
-                owning costs{" "}
-                <b>
-                  {money(Math.abs(against.gap))} a month {against.kind}
-                </b>{" "}
-                than renting
-              </>
-            )}{" "}
-            — {money(shownGone)} against {money(rent.value)} — and the first payment also puts{" "}
-            {money(shownKept)} into the home.
+      {control ? (
+        <div className="cost-strip cost-evidence">
+          {cashComparison && (
+            <div className="cost-evidence-answer">
+              <p className="cost-evidence-label">Monthly cash</p>
+              <p className="cost-strip-big" aria-live="polite">
+                {cashComparison}
+              </p>
+            </div>
+          )}
+          <div className="cost-evidence-grid">
+            {rentalCaveat && (
+              <div className="cost-evidence-item">
+                <p className="cost-evidence-label">Comparison caveat</p>
+                <p>{rentalCaveat}</p>
+              </div>
+            )}
+            {history && (
+              <div className="cost-evidence-item">
+                <p className="cost-evidence-label">Five-year context</p>
+                <p>{history}</p>
+              </div>
+            )}
+            {noTax && (
+              <div className="cost-evidence-item">
+                <p className="cost-evidence-label">Tax caveat</p>
+                <p>{noTax}</p>
+              </div>
+            )}
+          </div>
+          <aside className="cost-evidence-omissions" aria-label="Costs not included">
+            <p className="cost-evidence-label">
+              <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
+              Not included
+            </p>
+            <p>{listed(leftOut(down))}.</p>
+          </aside>
+          <p className="cost-evidence-method">
+            Computed from the figures shown by fixed rules; not a quote, and not written by AI.
           </p>
-        )}
-        {rent && (
+        </div>
+      ) : (
+        <div className="cost-strip">
+          {cashComparison && (
+            <p className="cost-strip-big" aria-live="polite">
+              {cashComparison}
+            </p>
+          )}
+          {rentalCaveat && <p className="cost-strip-small">{rentalCaveat}</p>}
+          {history && <p className="cost-strip-small">{history}</p>}
+          {noTax && <p className="cost-strip-small">{noTax}</p>}
           <p className="cost-strip-small">
-            A house usually rents for more than this: Zillow’s rent covers every kind of rental
-            home, mostly apartments, while its home value covers single-family houses only.
+            Left out of owning: {listed(leftOut(down))}. Computed from the figures shown by fixed
+            rules; not a quote, and not written by AI.
           </p>
-        )}
-        {gain && (
-          <p className="cost-strip-small">
-            Over the last five years the typical home here {gain.perMonth >= 0 ? "gained" : "lost"} about{" "}
-            {money(Math.abs(gain.perMonth))} a month in value ({gain.from} to {gain.to}) — what
-            happened, not a promise
-            {rateThen
-              ? `. Buyers then borrowed at ${rateThen.value.toFixed(2)}% (${rateThen.asOf}), against ${rate.value.toFixed(2)}% (${rate.asOf}).`
-              : "."}
-          </p>
-        )}
-        {noTax && <p className="cost-strip-small">{noTax}</p>}
-        <p className="cost-strip-small">
-          Left out of owning: {listed(leftOut(down))}. Computed from the figures shown by fixed
-          rules; not a quote, and not written by AI.
-        </p>
-      </div>
+        </div>
+      )}
     </section>
   );
 }

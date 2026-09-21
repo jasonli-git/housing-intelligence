@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 
-export const AUTO_CAROUSEL_MS = 6000;
+export const AUTO_CAROUSEL_MS = 12000;
 
 /**
  * Shared timing for the experimental region-page carousels. It only advances while the

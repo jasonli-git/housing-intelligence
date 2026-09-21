@@ -477,12 +477,13 @@ body > main { flex: 1 0 auto; width: 100%; }
    the visible group changes; the component pauses it with the carousel itself while a
    reader is hovering, focusing a control, or looking elsewhere. */
 .carousel-progress {
-  display: block; height: 2px; overflow: hidden; border-radius: 999px;
-  background: color-mix(in srgb, var(--carousel-progress-color) 14%, transparent);
+  display: block; height: 1px; overflow: hidden; border-radius: 999px;
+  background: color-mix(in srgb, var(--carousel-progress-color) 8%, transparent);
 }
 .carousel-progress-fill {
   display: block; width: 100%; height: 100%; border-radius: inherit;
-  background: var(--carousel-progress-color); transform: scaleX(0); transform-origin: left;
+  background: color-mix(in srgb, var(--carousel-progress-color) 34%, transparent);
+  transform: scaleX(0); transform-origin: left;
   animation-name: carousel-progress-fill; animation-timing-function: linear;
   animation-fill-mode: forwards;
 }
@@ -574,61 +575,98 @@ body > main { flex: 1 0 auto; width: 100%; }
 
 /* The housing profile is a fixed-height, screen-wide band above the cost section. A narrow
    title-and-arrows rail leaves almost all of the width to the facts. The client component
-   pages as many facts as fit rather than clipping a tooltip inside an overflow container. */
+   pages as many facts as fit rather than clipping a tooltip inside an overflow container.
+   Its soft wash and Space Grotesk figures make it feel like one composed editorial banner,
+   while a restrained directional reveal distinguishes its paging from the card shelves. */
 .housing-band {
   --carousel-progress-color: var(--series-3);
-  position: relative; display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); height: 6.75rem;
+  position: relative; isolation: isolate; display: grid; grid-template-columns: 7rem minmax(0, 1fr); height: 6.75rem;
   align-items: stretch; gap: 0.5rem; margin-top: 1.4rem; padding: 0.5rem 0.75rem 0.7rem;
-  border: 1px solid color-mix(in srgb, var(--series-3) 16%, var(--border)); border-radius: 14px;
-  background: color-mix(in srgb, var(--series-3) 4%, var(--surface-2));
+  overflow: hidden; border: 1px solid color-mix(in srgb, var(--series-3) 28%, var(--border)); border-radius: 16px;
+  background: linear-gradient(105deg,
+    color-mix(in srgb, var(--series-3) 13%, var(--surface-card)),
+    color-mix(in srgb, var(--series-3) 3%, var(--surface-2)) 62%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--series-3) 12%, transparent),
+    0 8px 26px rgb(0 0 0 / 0.045);
+}
+.housing-band::before {
+  content: ""; position: absolute; z-index: 0; width: 17rem; height: 17rem;
+  top: -11rem; left: 3rem; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--series-3) 18%, transparent), transparent 68%);
 }
 .housing-band-head {
-  display: grid; align-content: center; gap: 0.35rem; padding-right: 0.55rem;
+  position: relative; z-index: 1; display: grid; align-content: center; gap: 0.35rem;
+  padding-right: 0.7rem; border-right: 1px solid color-mix(in srgb, var(--series-3) 18%, var(--grid));
 }
-.housing-band-head h2 { margin: 0; font-size: 15px; line-height: 1.2; }
+.housing-band-head::before {
+  content: "Profile"; font: 600 8px/1 var(--font-mono); letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--series-3);
+}
+.housing-band-head h2 {
+  margin: 0; font: 650 17px/1.05 var(--jl-font); letter-spacing: -0.035em;
+}
 .housing-band-nav { display: flex; gap: 0.3rem; }
 .housing-band-arrow {
   width: 27px; height: 27px; padding: 0; justify-content: center; border-radius: 50%;
-  background: var(--surface-1); color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--series-3) 26%, var(--border));
+  background: color-mix(in srgb, var(--series-3) 9%, var(--surface-card)); color: var(--text-primary);
 }
 .housing-band-arrow svg {
   width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8;
   stroke-linecap: round; stroke-linejoin: round;
 }
 .housing-band-items {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   min-width: 0; list-style: none; margin: 0; padding: 0;
 }
 .housing-band-item {
   position: relative; display: grid; align-content: center; gap: 1px; min-width: 0;
   padding: 0.15rem 0.65rem; border-left: 1px solid var(--grid);
 }
+.housing-band-item:first-child { border-left: 0; }
 .housing-band-item > b {
-  font: 700 20px/1.15 var(--font-display); letter-spacing: -0.02em;
+  font: 650 22px/1.05 var(--jl-font); letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums; color: var(--text-primary);
 }
-.housing-band-item.has-rank > b { padding-right: 2rem; }
+.housing-band-item.has-rank > b { padding-right: 2.7rem; }
 .housing-band-label { font-size: var(--text-note); line-height: 1.35; color: var(--text-primary); }
 .housing-band-context { font-size: 10px; line-height: 1.35; color: var(--text-muted); }
 .housing-band-rank {
-  position: absolute; top: 0.15rem; right: 0.45rem; display: inline-flex;
-  align-items: center; justify-content: center; width: 29px; height: 29px;
-  border: 1px solid color-mix(in srgb, var(--series-3) 30%, var(--border));
-  border-radius: 50%; background: color-mix(in srgb, var(--series-3) 11%, var(--surface-1));
-  color: var(--text-secondary); font: 650 9px/1 var(--font-mono); letter-spacing: -0.03em;
+  position: absolute; top: 0.2rem; right: 0.5rem;
+  color: var(--series-3); font: 700 11px/1 var(--font-mono); letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
 }
 .housing-band-item .gl { position: static; }
 .housing-band-item .tip { left: 0.6rem; right: 0.6rem; width: auto; top: auto; margin-top: 6px; }
 .housing-band-progress {
-  position: absolute; left: 0.75rem; right: 0.75rem; bottom: 0.35rem;
+  position: absolute; z-index: 1; left: 0.75rem; right: 0.75rem; bottom: 0.35rem;
 }
 .housing-band + .section.cost { margin-top: 1.6rem; }
 
+@media (prefers-reduced-motion: no-preference) {
+  .housing-band-item {
+    animation: housing-fact-forward 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .housing-band-item:nth-child(2) { animation-delay: 45ms; }
+  .housing-band-item:nth-child(3) { animation-delay: 90ms; }
+  .housing-band-item:nth-child(4) { animation-delay: 135ms; }
+  .housing-band-item:nth-child(5) { animation-delay: 180ms; }
+  .housing-band-items[data-direction="backward"] .housing-band-item {
+    animation-name: housing-fact-backward;
+  }
+}
+@keyframes housing-fact-forward {
+  from { opacity: 0; transform: translate3d(14px, 0, 0); }
+}
+@keyframes housing-fact-backward {
+  from { opacity: 0; transform: translate3d(-14px, 0, 0); }
+}
+
 @media (max-width: 520px) {
-  .housing-band { grid-template-columns: 5.5rem minmax(0, 1fr); height: 7rem; padding-inline: 0.65rem; }
+  .housing-band { grid-template-columns: 5.75rem minmax(0, 1fr); height: 7rem; padding-inline: 0.65rem; }
   .housing-band-head { padding-right: 0.4rem; }
-  .housing-band-head h2 { font-size: 13px; }
+  .housing-band-head h2 { font-size: 15px; }
   .housing-band-items { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
   .housing-band-progress { left: 0.65rem; right: 0.65rem; }
 }

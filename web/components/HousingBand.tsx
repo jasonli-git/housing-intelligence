@@ -35,6 +35,7 @@ export function HousingBand({ items }: { items: ProfileItem[] }) {
   // to the space actually available once the browser knows the band's width.
   const [capacity, setCapacity] = useState(Math.min(3, items.length));
   const [start, setStart] = useState(0);
+  const [direction, setDirection] = useState<"forward" | "backward">("forward");
 
   const measure = useCallback(() => {
     const node = list.current;
@@ -58,10 +59,12 @@ export function HousingBand({ items }: { items: ProfileItem[] }) {
   const visible = items.slice(start, start + capacity);
   const paged = items.length > capacity;
   const advance = useCallback(() => {
+    setDirection("forward");
     setStart((current) => current >= maxStart ? 0 : Math.min(maxStart, current + step));
   }, [maxStart, step]);
   const autoplay = useAutoCarousel(paged, advance);
   const move = (direction: -1 | 1) => {
+    setDirection(direction === 1 ? "forward" : "backward");
     setStart((current) => {
       if (direction === 1) return current >= maxStart ? 0 : Math.min(maxStart, current + step);
       return current <= 0 ? maxStart : Math.max(0, current - step);
@@ -107,12 +110,13 @@ export function HousingBand({ items }: { items: ProfileItem[] }) {
         id={listId}
         className="housing-band-items"
         aria-label="Housing profile"
+        data-direction={direction}
       >
         {visible.map((item) => {
           const context = splitContext(item.context);
           return (
             <li
-              key={item.metric_id}
+              key={`${start}-${item.metric_id}`}
               className={`housing-band-item${context.rank ? " has-rank" : ""}`}
             >
               {context.rank && (
