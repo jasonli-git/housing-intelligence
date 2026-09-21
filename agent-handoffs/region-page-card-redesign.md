@@ -15,7 +15,8 @@
   its ACS estimate year and five-year change. Removed the duplicate population count from
   the metadata sentence and the People item from The housing here.
 - Recast housing ranks as larger corner labels (`6/21`) while keeping the plain-language
-  comparison (`newer than most`) in the reading line.
+  comparison (`newer than most`) in the reading line. A later visual pass increased those
+  labels again so the rank reads as a primary fact rather than fine print.
 - Restyled The housing here with a layered teal wash, a small Profile eyebrow, Space Grotesk
   figures, and direction-aware staggered transitions unique to that banner.
 - Reorganized the long cost explanation into a labelled evidence strip on interactive region
@@ -64,6 +65,9 @@
 - The population card keeps the existing ACS definition and change context. On a phone it
   occupies the open corner beside the breadcrumb and page-kind label; long breadcrumbs wrap
   into their reserved left column instead of colliding with the card.
+- The population card uses a neutral surface and a narrow teal edge instead of the housing
+  banner's full teal wash. The shared accent keeps them related without making the card look
+  like a miniature version of the banner.
 - Housing facts remount only within the region-page banner when its page changes, which lets
   forward and backward moves use short, opposite-direction reveals. Motion remains absent for
   readers who request reduced motion.
@@ -136,5 +140,9 @@
   - Municipality `/regions/415`: its three-part breadcrumb wrapped beside the population card
     without colliding with it. Both tested phone pages had a 360px document width and a 360px
     scroll width, so neither introduced horizontal overflow.
+  - Follow-up polish at 375px: housing ranks computed at 14px. Aberdeen's longest first-page
+    rank (`276/562`) occupied 53px, cleared the value below it, and preserved the 360px document
+    and scroll widths. Somerset's neutral population card remained in the same header footprint
+    while reading separately from the teal-washed housing banner.
   - Report `/regions/5/report`: the cost explanation remains in its original paragraph layout,
     the existing static stand-out grid remains, and there are no carousel controls.

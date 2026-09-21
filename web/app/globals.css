@@ -629,12 +629,12 @@ body > main { flex: 1 0 auto; width: 100%; }
   font: 650 22px/1.05 var(--jl-font); letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums; color: var(--text-primary);
 }
-.housing-band-item.has-rank > b { padding-right: 2.7rem; }
+.housing-band-item.has-rank > b { padding-right: 4rem; }
 .housing-band-label { font-size: var(--text-note); line-height: 1.35; color: var(--text-primary); }
 .housing-band-context { font-size: 10px; line-height: 1.35; color: var(--text-muted); }
 .housing-band-rank {
-  position: absolute; top: 0.2rem; right: 0.5rem;
-  color: var(--series-3); font: 700 11px/1 var(--font-mono); letter-spacing: -0.04em;
+  position: absolute; top: 0.15rem; right: 0.45rem;
+  color: var(--series-3); font: 700 14px/1 var(--font-mono); letter-spacing: -0.06em;
   font-variant-numeric: tabular-nums;
 }
 .housing-band-item .gl { position: static; }
