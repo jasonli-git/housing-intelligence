@@ -3,6 +3,22 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.21.2] — 2026-09-21
+
+### Fixed
+
+- **Housing profile definitions were clipped by the band.** The banner uses `overflow:
+  hidden` for its rounded frame, so its tooltips — absolutely positioned descendants —
+  were cut off at the edge whatever their z-index. They now render in the document layer
+  through the same floating path the stand-out cards already use. Verified on the
+  deployed site: portaled to `<body>`, 92px tall, fully on screen.
+- **`check-live` read its two sides at different moments.** The live read waited for a
+  heading and the local read did not, so one page had hydrated and the other had not —
+  which failed a correct deploy twice with identical hashes. Both now wait for `load` and
+  for the housing band to have rendered, and the check runs under
+  `prefers-reduced-motion` so a twelve-second carousel cannot make the result depend on
+  how long a fetch took (ARCHITECTURE #203).
+
 ## [0.21.1] — 2026-09-21
 
 **Region page card redesign**, merged from an experiment branch at the owner's direction.

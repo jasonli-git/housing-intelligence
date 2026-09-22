@@ -10,19 +10,17 @@ into `Now` / `Open` / `Parked`. They are recoverable with
 
 ## Now — nothing in progress, as of 2026-09-21
 
-**The region page card redesign is merged and deployed** at the owner's direction —
-CHANGELOG 0.21.1, ARCHITECTURE #201. Three auto-advancing shelves, a paged housing band
-above the cost cards, population in a header card, and the cost explanation as labelled
-evidence. Report pages are untouched.
+**The region card redesign and its follow-up fix are merged and deployed.** CHANGELOG
+0.21.1 and 0.21.2; ARCHITECTURE #201–#203. Housing profile definitions now open in the
+document layer instead of being clipped by the band.
 
-**It broke `make check-live`, and the check was wrong rather than the deploy.** The
-publish tree was being opened as a file, where a static export cannot load its scripts,
-so the local side compared server HTML against a hydrated deployed page. Nothing needed
-JavaScript to reach its final content until this redesign, which sizes its housing band
-from the measured container — 3 facts locally against 6 deployed. `check-live` now serves
-the tree over HTTP and passes (#202).
+**`check-live` failed the deploy twice and was wrong both times**, for two different
+reasons — the publish tree was opened as a file where its scripts cannot load (#202), and
+then the two sides were read at different moments in the page's life (#203). Both fixed;
+the gate passes. The lesson is one line: once a page's text depends on its client code,
+a comparison of that text has to fix *when* it is read, not only *what*.
 
-**Open as a pull request:** that fix, plus the documentation for both.
+**Open as a pull request:** the second `check-live` fix and its documentation.
 
 **To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
