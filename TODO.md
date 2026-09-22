@@ -8,21 +8,17 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — nothing in progress, as of 2026-09-21
+## Now — nothing in progress, as of 2026-09-22
 
-**The region card redesign and its follow-up fix are merged and deployed.** CHANGELOG
-0.21.1 and 0.21.2; ARCHITECTURE #201–#203. Housing profile definitions now open in the
-document layer instead of being clipped by the band.
+**The New Jersey splash page and map explorer are merged, not yet deployed.** CHANGELOG
+0.21.3; ARCHITECTURE #204–#205. The homepage, county pages, and `/afford` now share one
+URL-backed affordability workspace and one profile-ticker/map primitive; `HousingBand.tsx`
+is retired. A review round found and fixed five regressions before merge: a dropped cost
+disclosure, a broken masthead link, a map rise-animation replay on measure change, a
+keyboard-focus clipping bug in the profile ticker, and a `?mode=afford` deep-link flash.
 
-**`check-live` failed the deploy twice and was wrong both times**, for two different
-reasons — the publish tree was opened as a file where its scripts cannot load (#202), and
-then the two sides were read at different moments in the page's life (#203). Both fixed;
-the gate passes. The lesson is one line: once a page's text depends on its client code,
-a comparison of that text has to fix *when* it is read, not only *what*.
-
-**Open as a pull request:** the second `check-live` fix and its documentation.
-
-**To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
+**To resume:** `make publish && make deploy` to ship it, then `make check-live`
+(ARCHITECTURE #202–#203). `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
 
 ## Open

@@ -3,6 +3,44 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.21.3] — 2026-09-22
+
+**New Jersey splash page and map explorer**, merged from an experiment branch at the
+owner's direction.
+
+### Added
+
+- The homepage is reorganized around a compact statewide introduction, a shared profile
+  banner, a population card, map exploration, and an in-place affordability workspace —
+  reachable from a masthead switch or the durable `/afford` route.
+- County pages gain the same affordability switch, scoped to that county and its
+  municipalities.
+- A crisp "atlas" map appearance for the homepage and county explorer, with a Natural
+  Earth world backdrop, in place of the shared map's prior blurred-layer treatment
+  there. `/afford` and region pages keep the classic presentation.
+- Two accessible rank plots — five-year change and current value — on the region page's
+  details expansion.
+
+### Changed
+
+- `HousingBand.tsx` is retired. One `ProfileTicker` is now the shared, continuous-scroll
+  profile carousel across the homepage, county pages, and municipality/ZIP region pages
+  (ARCHITECTURE #205).
+- `GlobeMap`'s repaint work is bounded to geometry/style changes, and a measure change no
+  longer resets the focused region's height to zero (ARCHITECTURE #205).
+- Affordability eligibility and mode state are a typed, URL-backed capability
+  (ARCHITECTURE #204) rather than DOM-attribute sniffing.
+
+### Fixed before release
+
+A review of the branch found five regressions, all fixed before merge: the cost card's
+"not a lender quote" disclosure was dropped with no replacement; the masthead's
+Affordability control lost standard link behavior (modifier/middle-click, pre-hydration
+activation) on every page but the homepage and county pages; a measure change replayed
+the map's rise animation on an already-focused county; keyboard-focusing a profile
+ticker item could leave it clipped; and a `?mode=afford` deep link flashed the wrong
+workspace before correcting.
+
 ## [0.21.2] — 2026-09-21
 
 ### Fixed
