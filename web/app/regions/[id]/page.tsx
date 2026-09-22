@@ -1,18 +1,23 @@
 import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
+import { ComputedBadge } from "@/components/ComputedBadge";
+import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
 import { Definition } from "@/components/Definition";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { Glossed } from "@/components/Glossed";
-import { HousingBand } from "@/components/HousingBand";
+import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Ledger, TableNotes } from "@/components/Ledger";
 import { MoreExpander } from "@/components/MoreExpander";
+import { Masthead } from "@/components/Masthead";
+import { RankOverview } from "@/components/RankOverview";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
 import { TrendsExplorer } from "@/components/TrendsExplorer";
 import { api, type PacketLevel, type PacketMetric, type Region, regionsWithData } from "@/lib/api";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
+import { affordData, affordabilityForCounty } from "@/lib/affordData";
 import { costInputs, homePrice } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
 import type { Term } from "@/lib/glossary";
@@ -43,22 +48,6 @@ const TREND_METRICS = [
   { metricId: "zori_all", short: "rent" },
   { metricId: "acs_median_hh_income", short: "household income" },
 ];
-
-/**
- * What the computed label means, for a reader who asks. The label is the counterpart of the
- * interpretation panel's own: said at the top and never folded away, because a reader
- * should not have to guess which parts of the page a model wrote (#139).
- */
-const COMPUTED: Term = {
-  key: "computed",
-  title: "Computed from the data, not AI",
-  phrases: [],
-  definition:
-    "The sentences and answers at the top of this page, the costs, the stand-outs and the " +
-    "housing cards are computed from the figures on this page by fixed rules, not written " +
-    "by AI. The interpretation, with the tables, is the one part a language model wrote, " +
-    "and it is labelled so.",
-};
 
 /**
  * Which region pages exist: every region carrying data except the state, whose page
@@ -156,16 +145,19 @@ export default async function RegionPage({
 
   if (!region || !packet) {
     return (
-      <main className="shell">
-        <h1 className="page-title">Region not found</h1>
-        <p className="meta">
-          No region {id}, or the API is unreachable. <Link href="/">Back to New Jersey</Link>.
-        </p>
-      </main>
+      <>
+        <Masthead affordability={{ kind: "route" }} />
+        <main className="shell">
+          <h1 className="page-title">Region not found</h1>
+          <p className="meta">
+            No region {id}, or the API is unreachable. <Link href="/">Back to New Jersey</Link>.
+          </p>
+        </main>
+      </>
     );
   }
 
-  const [series, cost] = await Promise.all([
+  const [series, cost, affordability] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -174,6 +166,9 @@ export default async function RegionPage({
       })),
     ),
     costInputs(region.level, packet.levels, packet.metrics),
+    region.level === "county"
+      ? affordData().then((data) => data ? affordabilityForCounty(data, regionId) : null)
+      : Promise.resolve(null),
   ]);
   const trends = series.filter((s) => s.observations.length >= 2);
 
@@ -197,6 +192,9 @@ export default async function RegionPage({
   );
   const standing = standOuts(packet);
   const rankExample = rankBasisExample(name, packet.metrics, packet.levels);
+  const rankChartCount =
+    Number(packet.metrics.some((row) => row.rank !== null && row.of !== null && row.of > 1)) +
+    Number(packet.levels.some((row) => row.rank !== null && row.of !== null && row.of > 1));
 
   // One set per page: each glossary term is marked the first time it appears.
   const defined = new Set<string>();
@@ -212,7 +210,9 @@ export default async function RegionPage({
   const contents = [
     packet.metrics.length > 0 ? `${packet.metrics.length} figures ranked by change` : null,
     packet.levels.length > 0 ? `${packet.levels.length} current values` : null,
-    trends.length > 0 ? `${trends.length} ${trends.length === 1 ? "chart" : "charts"}` : null,
+    trends.length + rankChartCount > 0
+      ? `${trends.length + rankChartCount} ${trends.length + rankChartCount === 1 ? "chart" : "charts"}`
+      : null,
     readings.length > 1 ? `${readings.length} models’ readings` : readings.length === 1 ? "a model’s reading" : null,
   ].filter((part): part is string => part !== null);
   const moreTitle =
@@ -221,9 +221,19 @@ export default async function RegionPage({
       : trends.length > 0
         ? "Every table and the trends"
         : "Every table";
+  const affordabilityControl = region.level === "county"
+    ? { kind: "local" as const, fallbackHref: `/afford?place=${regionId}` }
+    : region.level === "zip"
+      ? {
+          kind: "disabled" as const,
+          reason: "Affordability mode is not available for ZIP code profiles",
+        }
+      : { kind: "route" as const };
 
   return (
-    <main className="shell">
+    <>
+      <Masthead affordability={affordabilityControl} />
+      <main className="shell">
       <header className="page-head" data-kind={kindOf(region.level)}>
         <div className="region-head-main">
           <Crumbs
@@ -248,24 +258,15 @@ export default async function RegionPage({
             </aside>
           )}
           <Kind kind={kindOf(region.level)} />
-          <h1 className="page-title">{name}</h1>
+          <div className="page-title-row">
+            <h1 className="page-title">{name}</h1>
+            <ComputedBadge />
+          </div>
           <p className="meta">
             {placeLine(region)}
             {" · "}every figure ranked against {scopeName(peer_scope)}’s {peer_count}{" "}
             {peerNoun(peer_level)}
           </p>
-          {lead && (
-            <p className="computed-line">
-              <Definition term={COMPUTED}>
-                <span className="computed">
-                  <svg viewBox="0 0 16 16" aria-hidden="true">
-                    <path d="M3 8.5l3.2 3L13 4.5" />
-                  </svg>
-                  Computed from the data · not AI
-                </span>
-              </Definition>
-            </p>
-          )}
           {lead && <p className="verdict">{lead}</p>}
           {trade && <p className="verdict-more">{trade}</p>}
           {/* The short answers in the line, the sentences behind them a click away: the
@@ -286,13 +287,33 @@ export default async function RegionPage({
           )}
         </div>
         <div className="actions">
-          <Link className="button" href={`/regions/${regionId}/report`}>
-            Report
+          <Link className="button report-action" href={`/regions/${regionId}/report`}>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M5.5 2.75h6l3 3v11.5h-9Z" />
+              <path d="M11.5 2.75v3h3M8 9h4M8 12h4" />
+            </svg>
+            <span className="report-action-copy">
+              <strong>Open full report</strong>
+              <small>Print-ready detail</small>
+            </span>
+            <span className="report-action-arrow" aria-hidden="true">→</span>
           </Link>
         </div>
       </header>
 
-      <HousingBand items={profile} />
+      <ProfileTicker
+        items={profile}
+        title="Housing here"
+        ariaLabel={`${name} housing profile`}
+        className="region-profile-ticker"
+        peerLabel={peerNoun(peer_level)}
+      />
+
+      {region.level === "county" && (
+        <CountyModeWorkspace countyId={regionId} countyName={name} afford={affordability} />
+      )}
+
+      <div className="region-standard-content">
 
       {cost ? (
         <CostToOwn {...cost} />
@@ -319,6 +340,12 @@ export default async function RegionPage({
       />
 
       <MoreExpander title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>
+        <RankOverview
+          changes={packet.metrics}
+          values={packet.levels}
+          peerLabel={peerNoun(peer_level)}
+        />
+
         <section className="section" aria-labelledby="ledger-heading">
           <h2 id="ledger-heading">Every figure, ranked by change over five years</h2>
           {packet.metrics.length > 0 ? (
@@ -420,6 +447,8 @@ export default async function RegionPage({
           </div>
         )}
       </MoreExpander>
-    </main>
+      </div>
+      </main>
+    </>
   );
 }

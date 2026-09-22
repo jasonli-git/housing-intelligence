@@ -40,9 +40,12 @@ export async function SourceFooter() {
       <div className="foot-inner">
         <details className="foot-sources">
           <summary className="foot-head disclose">
-            <h2 className="foot-label" id="sources-heading">
-              Sources
-            </h2>
+            <span className="foot-title-block">
+              <span className="foot-kicker">Data provenance</span>
+              <h2 className="foot-label" id="sources-heading">
+                Sources
+              </h2>
+            </span>
             <span className="foot-brief when-closed">
               {institutions.map((institution) => {
                 const short = shortPublisher(institution.publisher);
@@ -108,21 +111,26 @@ export async function SourceFooter() {
           </ul>
         </details>
 
-        {/* The last line mirrors the first: NOTICE leads it in the SOURCES label's style. */}
-        <div className="foot-head">
-          <a
-            className="foot-tab"
-            href={NOTICE_URL}
-            rel="noreferrer noopener"
-            target="_blank"
-            title="The full terms for the site's code and data, on GitHub"
-          >
-            Notice
-          </a>
-          <span className="foot-intro">
-            Analysis and code are MIT licensed; the data is not ours to relicense, and this
-            site cannot grant terms it was not given.
-          </span>
+        <div className="foot-notice">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M10 2.5 16 5v4.4c0 3.8-2.3 6.6-6 8.1-3.7-1.5-6-4.3-6-8.1V5Z" />
+            <path d="M7.2 10.1 9.1 12l3.8-4" />
+          </svg>
+          <div className="foot-notice-copy">
+            <a
+              className="foot-tab"
+              href={NOTICE_URL}
+              rel="noreferrer noopener"
+              target="_blank"
+              title="The full terms for the site's code and data, on GitHub"
+            >
+              Notice <span aria-hidden="true">↗</span>
+            </a>
+            <span className="foot-intro">
+              Analysis and code are MIT licensed; the data is not ours to relicense, and this
+              site cannot grant terms it was not given.
+            </span>
+          </div>
         </div>
       </div>
     </footer>

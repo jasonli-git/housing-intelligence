@@ -1,12 +1,19 @@
-import { AffordCta } from "@/components/AffordCta";
-import { CountyExplorer, type Measure } from "@/components/CountyExplorer";
+import { type Measure } from "@/components/CountyExplorer";
+import { ComputedBadge } from "@/components/ComputedBadge";
+import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Kind } from "@/components/Crumbs";
-import { MetricTerm } from "@/components/MetricTerm";
+import { StateProfileTicker } from "@/components/StateProfileTicker";
+import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
+import { Masthead } from "@/components/Masthead";
 import { api } from "@/lib/api";
 import { formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { periodLabel } from "@/lib/periods";
 import { WINDOWS } from "@/lib/windows";
+import { definitionOf } from "@/lib/definitions";
+import { stateProfile } from "@/lib/stateProfile";
+import { affordData } from "@/lib/affordData";
+import "./new-jersey.css";
 
 // The figure most readers arrive for. It is where the page opens, not a limit on it.
 const DEFAULT_MEASURE = "zhvi_sfr";
@@ -16,7 +23,7 @@ const DEFAULT_MEASURE = "zhvi_sfr";
 // themselves arrive from `map.json` in the browser, so this is the frame and nothing
 // else — the page no longer projects anything.
 const MAP_WIDTH = 540;
-const MAP_HEIGHT = 720;
+const MAP_HEIGHT = 580;
 
 // Metrics whose caveat their definition already carries: both FHFA indexes say they are
 // published for the state only. The packet's caveat is unchanged; on this page it is
@@ -40,24 +47,28 @@ const CAVEAT_IN_DEFINITION: ReadonlySet<string> = new Set([
  * this page's payload (#163).
  */
 export default async function NewJerseyPage() {
-  const [geo, catalog, states] = await Promise.all([
+  const [geo, catalog, states, affordability] = await Promise.all([
     api.geo("county"),
     api.metrics(),
     api.regions("level=state&state=NJ&limit=1"),
+    affordData(),
   ]);
   const state = states?.items[0] ?? null;
   const statewide = state ? await api.summary(state.region_id, "5y") : null;
 
   if (!geo || !catalog) {
     return (
-      <main className="shell">
-        <h1 className="page-title">New Jersey</h1>
-        <p className="meta">
-          The API is unreachable, so there is nothing to show. Start it with{" "}
-          <code>make api</code>, and check the warehouse is loaded with{" "}
-          <code>make pipeline</code>.
-        </p>
-      </main>
+      <>
+        <Masthead affordability={{ kind: "local" }} />
+        <main className="shell">
+          <h1 className="page-title">New Jersey</h1>
+          <p className="meta">
+            The API is unreachable, so there is nothing to show. Start it with{" "}
+            <code>make api</code>, and check the warehouse is loaded with{" "}
+            <code>make pipeline</code>.
+          </p>
+        </main>
+      </>
     );
   }
 
@@ -107,6 +118,8 @@ export default async function NewJerseyPage() {
     ? DEFAULT_MEASURE
     : measures[0]?.metric_id;
   const levels = statewide?.levels ?? [];
+  const population = levels.find((level) => level.metric_id === "pep_population")
+    ?? levels.find((level) => level.metric_id === "acs_population");
   const statewideNotes = (statewide?.caveat_scopes ?? [])
     .filter((scope) =>
       scope.metric_ids.some((id) => levels.some((l) => l.metric_id === id)),
@@ -117,48 +130,53 @@ export default async function NewJerseyPage() {
     .map((scope) => scope.text);
 
   return (
-    <main className="shell">
-      <header className="page-head" data-kind="state">
-        <div>
-          <Kind kind="state" />
-          <h1 className="page-title">New Jersey</h1>
-          {levels.length > 0 && (
-            <p className="statewide">
-              <span className="eyebrow">Statewide</span>
-              {levels.map((level) => (
-                <span key={level.metric_id}>
-                  <MetricTerm
-                    metricId={level.metric_id}
-                    label={level.label}
-                    scope="statewide"
-                  />{" "}
-                  <b>
-                    {formatMetric(level.value, level.unit, level.metric_id)}
-                  </b>{" "}
-                  ({periodLabel(level.period_end, level.metric_id)})
-                </span>
-              ))}
-            </p>
+    <>
+      <Masthead affordability={{ kind: "local" }} />
+      <main className="shell nj-page">
+      <header className="page-head nj-head" data-kind="state">
+        <div className="region-head-main">
+          {population && (
+            <aside className="population-summary" aria-label="Population">
+              <span className="population-summary-label">Population</span>
+              <strong>{formatMetric(population.value, population.unit, population.metric_id)}</strong>
+              <span className="population-summary-context">
+                <FloatingMetricTerm
+                  metricId={population.metric_id}
+                  label={`${periodLabel(population.period_end, population.metric_id)} estimate`}
+                  definition={definitionOf(population.metric_id)?.what ?? population.label}
+                  why={null}
+                />
+              </span>
+            </aside>
           )}
+          <Kind kind="state" />
+          <div className="page-title-row">
+            <h1 className="page-title">New Jersey</h1>
+            <ComputedBadge />
+          </div>
+        </div>
+      </header>
+      <StateProfileTicker items={stateProfile(levels)} />
+      <div className="nj-source-notes">
           {statewideNotes.map((text) => (
             <p key={text} className="table-note">
               {text}
             </p>
           ))}
-        </div>
-        <AffordCta />
-      </header>
+      </div>
 
       {initial ? (
-        <CountyExplorer
+        <StateModeWorkspace
           frame={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
           counties={geo.features.length}
           sections={sections}
           initial={initial}
+          afford={affordability}
         />
       ) : (
         <p className="meta">No county rankings are published yet.</p>
       )}
-    </main>
+      </main>
+    </>
   );
 }

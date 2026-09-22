@@ -12,6 +12,11 @@
 
 export type RankBasis = "change" | "value";
 
+/** Rank 1 at zero, the final rank at one; a cohort of one sits in the middle. */
+export function rankPosition(rank: number, of: number): number {
+  return of > 1 ? (rank - 1) / (of - 1) : 0.5;
+}
+
 /** The column heading over each kind of rank. */
 export const RANK_HEADING: Record<RankBasis, string> = {
   change: "Rank by change",

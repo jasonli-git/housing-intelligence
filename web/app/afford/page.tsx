@@ -3,29 +3,14 @@ import Link from "next/link";
 
 import { AffordExplorer } from "@/components/AffordExplorer";
 import { Crumbs, Kind } from "@/components/Crumbs";
-import type { Place } from "@/lib/afford";
-import { api, nationalMortgageRate, type RankedRegion } from "@/lib/api";
-import { displayName } from "@/lib/names";
-import { periodLabel } from "@/lib/periods";
-import { searchEntries } from "@/lib/search";
+import { Masthead } from "@/components/Masthead";
+import { affordData } from "@/lib/affordData";
 
 export const metadata: Metadata = {
   title: "What can I afford? — Housing",
   description:
     "The New Jersey counties and municipalities where the typical home is within reach of an income.",
 };
-
-/**
- * A metric's latest value per region at one level, from its value ranking. The window is
- * required by the endpoint and ignored for `basis=value`, which has no span.
- */
-async function latest(
-  metricId: string,
-  level: string,
-): Promise<Map<number, RankedRegion>> {
-  const ranking = await api.rankings(metricId, level, "5y", 1000, "value");
-  return new Map((ranking?.items ?? []).map((item) => [item.region_id, item]));
-}
 
 /**
  * "What can I afford here" (Milestone 17): an income in, the places within reach out.
@@ -38,68 +23,26 @@ async function latest(
  */
 export default async function AffordPage() {
   // No geometry fetched here any more: the map asks for `map.json` itself (#163).
-  const [counties, towns, catalog, rate, ...series] = await Promise.all([
-    api.regions("level=county&state=NJ&limit=50"),
-    api.regions("level=municipality&state=NJ&limit=1000"),
-    api.metrics(),
-    nationalMortgageRate(),
-    latest("zhvi_sfr", "county"),
-    latest("modiv_median_tax_bill", "county"),
-    latest("zori_all", "county"),
-    latest("zhvi_sfr", "municipality"),
-    latest("modiv_median_tax_bill", "municipality"),
-    latest("zori_all", "municipality"),
-  ]);
-  const [homeC, taxC, rentC, homeM, taxM, rentM] = series;
-
-  if (!counties || !towns || !rate) {
+  const data = await affordData();
+  if (!data) {
     return (
-      <main className="shell">
-        <h1 className="page-title">What can I afford?</h1>
-        <p className="meta">
-          The API is unreachable, so there is nothing to show.{" "}
-          <Link href="/">Back to New Jersey</Link>.
-        </p>
-      </main>
+      <>
+        <Masthead affordability={{ kind: "route", active: true }} />
+        <main className="shell">
+          <h1 className="page-title">What can I afford?</h1>
+          <p className="meta">
+            The API is unreachable, so there is nothing to show.{" "}
+            <Link href="/">Back to New Jersey</Link>.
+          </p>
+        </main>
+      </>
     );
   }
 
-  const value = (map: Map<number, RankedRegion>, id: number) =>
-    map.get(id)?.value ?? null;
-  const details = new Map(
-    searchEntries([...counties.items, ...towns.items]).map((entry) => [
-      entry.id,
-      entry.detail,
-    ]),
-  );
-  const countyPlaces: Place[] = counties.items.map((c) => ({
-    id: c.region_id,
-    name: displayName(c),
-    level: "county",
-    detail: null,
-    home: value(homeC, c.region_id),
-    tax: value(taxC, c.region_id),
-    rent: value(rentC, c.region_id),
-  }));
-  const townPlaces: Place[] = towns.items
-    .map((t): Place => ({
-      id: t.region_id,
-      name: t.name,
-      level: "municipality",
-      detail: details.get(t.region_id) ?? null,
-      home: value(homeM, t.region_id),
-      tax: value(taxM, t.region_id),
-      rent: value(rentM, t.region_id),
-    }))
-    .filter((p) => p.home !== null || p.rent !== null);
-
-  const lastPeriod = (metricId: string) => {
-    const period = catalog?.find((m) => m.metric_id === metricId)?.last_period;
-    return period ? periodLabel(period, metricId) : "latest";
-  };
-
   return (
-    <main className="shell">
+    <>
+      <Masthead affordability={{ kind: "route", active: true }} />
+      <main className="shell">
       <header className="page-head" data-kind="tool">
         <div>
           <Crumbs
@@ -116,15 +59,9 @@ export default async function AffordPage() {
         </div>
       </header>
       <AffordExplorer
-        counties={countyPlaces}
-        towns={townPlaces}
-        rate={{ value: rate.value, asOf: periodLabel(rate.period_start) }}
-        asOf={{
-          home: lastPeriod("zhvi_sfr"),
-          rent: lastPeriod("zori_all"),
-          tax: lastPeriod("modiv_median_tax_bill"),
-        }}
+        {...data}
       />
-    </main>
+      </main>
+    </>
   );
 }

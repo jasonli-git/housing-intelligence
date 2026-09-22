@@ -25,6 +25,7 @@ import {
 import { type MapFile, readingsFor } from "@/lib/mapdata";
 import { paint as paintInto, reserve } from "@/lib/paint";
 import type { MapLayers } from "@/components/useMapFile";
+import { WORLD_LAND } from "@/lib/worldLand";
 import {
   classIndex,
   quantileBreaks,
@@ -128,6 +129,8 @@ export type Focus = {
 };
 
 type Props = {
+  /** The NJ landing experiment uses crisp boundaries instead of depth-of-field blur. */
+  appearance?: "classic" | "atlas";
   width: number;
   height: number;
   /** `map.json` and its unpacked outlines, owned by the explorer (`useMapFile`). */
@@ -210,6 +213,7 @@ function townLayer(
 }
 
 export function GlobeMap({
+  appearance = "classic",
   width,
   height,
   file,
@@ -231,15 +235,13 @@ export function GlobeMap({
   describe,
 }: Props) {
   const [camera, setCamera] = useState<Camera | null>(null);
-  // The probe's rise, eased towards its target rather than snapped to it. A block that
-  // appears at full height the instant the crosshair crosses a line reads as a glitch;
-  // coming up over a few frames reads as the map answering.
-  const [rise, setRise] = useState(0);
+  // The probe's rise belongs to one region. Keeping the id beside the height prevents a
+  // newly focused shape inheriting the old shape's lift for one frame.
+  const [lift, setLift] = useState<{ id: number | string | null; value: number }>({ id: null, value: 0 });
   // The crosshair mark itself, off until asked for. The focus treatment already says
   // what the map is holding, and a permanent reticle over a map of somebody's home town
   // reads like a gunsight; the readers who want the exact point can turn it on.
   const [crosshair, setCrosshair] = useState(false);
-  const risen = useRef({ at: 0, to: 0 });
   const settling = useRef<number | null>(null);
   const frame = useRef<SVGSVGElement>(null);
   const drag = useRef<{
@@ -278,6 +280,7 @@ export function GlobeMap({
 
   const framings = useMemo(() => {
     if (!layers) return null;
+    const county = framedOn(layers.county, { width, height });
     return {
       nation: framedOn(
         layers.nation.filter(
@@ -285,7 +288,9 @@ export function GlobeMap({
         ),
         { width, height, padding: NATION_PADDING },
       ),
-      county: framedOn(layers.county, { width, height }),
+      // Centre a little south of the geometric fit. New Jersey then sits higher in the
+      // frame, clear of the county-entry control without changing its scale.
+      county: { ...county, lat: county.lat - 0.28 },
     };
   }, [layers, width, height]);
 
@@ -328,51 +333,58 @@ export function GlobeMap({
     level === "municipality" &&
     Boolean(camera && framings && camera.scale >= framings.county.scale);
 
-  /**
-   * Everything the map draws, at a given camera.
-   *
-   * A function rather than only a memo, because a slide has to be able to repaint at a
-   * camera React has not been told about yet — see `commit`. The memo below is this
-   * same call for the camera React does know about.
-   */
-  const build = useCallback(
+  /** Projected geometry is independent of the selected measure and its colors. */
+  const project = useCallback(
     (cam: Camera) => {
       if (!layers) return null;
       const v = view(cam);
-      const detail = inView;
-      // Across the range on screen, not from zero: a change crosses zero, so there is no
-      // zero to rise from. Rising from zero was right while every region was a block and
-      // two could be compared side by side; only one rises now, so the range is the
-      // expressive thing to spend the height on, and the legend names both ends.
-      const seen = detail
-        .map((outline) => readings?.[String(outline.id)])
-        .filter((value): value is number => value !== undefined);
-      const lowest = seen.length > 0 ? Math.min(...seen) : 0;
-      const highest = seen.length > 0 ? Math.max(...seen) : 0;
-      const span = highest - lowest;
-      const probe = (id: number | string) => {
-        const value = readings?.[String(id)];
-        if (value === undefined || span <= 0) return 0;
-        return ((value - lowest) / span) * height * MAX_LIFT;
-      };
       return {
+        // World land is part of the atlas treatment. Classic affordability maps already
+        // use the nation layer as their ground and should not project 127 invisible extras.
+        world: appearance === "atlas" ? scene(v, WORLD_LAND, () => 0) : [],
         ground: scene(v, layers.nation, () => 0),
         // Flat, all of them. The one raised region is a memo of its own below, so easing
         // the rise no longer re-projects 41,609 points sixty times a second.
-        //
-        detail: scene(v, detail, () => 0),
-        probe,
-        lowest,
-        highest,
+        detail: scene(v, inView, () => 0),
         v,
       };
     },
-    [layers, readings, height, inView],
+    [appearance, layers, inView],
   );
 
+  // Across the range on screen, not from zero: a change crosses zero, so there is no
+  // zero to rise from. This scale changes with the measure without re-projecting land.
+  const liftScale = useMemo(() => {
+    const seen = inView
+      .map((outline) => readings?.[String(outline.id)])
+      .filter((value): value is number => value !== undefined);
+    const lowest = seen.length > 0 ? Math.min(...seen) : 0;
+    const highest = seen.length > 0 ? Math.max(...seen) : 0;
+    const span = highest - lowest;
+    return {
+      lowest,
+      highest,
+      probe: (id: number | string) => {
+        const value = readings?.[String(id)];
+        if (value === undefined || span <= 0) return 0;
+        return ((value - lowest) / span) * height * MAX_LIFT;
+      },
+    };
+  }, [height, inView, readings]);
+
+  const projected = useMemo(() => (camera ? project(camera) : null), [camera, project]);
   const drawn = useMemo(
-    () => (camera ? build(camera) : null),
-    [build, camera],
+    () => (projected ? { ...projected, ...liftScale } : null),
+    [projected, liftScale],
+  );
+
+  /** A slide can repaint a camera React has not been told about yet — see `commit`. */
+  const build = useCallback(
+    (cam: Camera) => {
+      const geometry = project(cam);
+      return geometry ? { ...geometry, ...liftScale } : null;
+    },
+    [project, liftScale],
   );
 
   // What the rise is easing towards, and the single raised prism it produces. Split from
@@ -380,65 +392,65 @@ export function GlobeMap({
   // region's geometry.
   const target = drawn && active !== null ? drawn.probe(active) : 0;
   const raised = useMemo(() => {
-    if (!drawn || !layers || !camera || active === null || rise <= 0)
+    if (!drawn || !layers || !camera || active === null || lift.id !== active || lift.value <= 0)
       return null;
     const outline = inView.find((o) => o.id === active);
-    return outline ? prism(drawn.v, outline, rise) : null;
-  }, [drawn, layers, camera, level, active, rise]);
+    return outline ? prism(drawn.v, outline, lift.value) : null;
+  }, [drawn, layers, camera, level, active, lift]);
 
-  // Ease the rise towards whatever the scene last asked for. An exponential approach
-  // rather than a fixed duration: a new target part-way through is picked up from where
-  // the old one got to, which is what makes sweeping the crosshair feel continuous
-  // instead of restarting. Readers who have asked for less motion get the target at
-  // once, as everything else on the site does.
-  useEffect(() => {
-    risen.current.to = target;
+  // A newly focused entity rises from the surface. If only the measure changes, the
+  // same entity eases from its current height to its new target instead of snapping to
+  // zero and replaying the entrance animation.
+  useLayoutEffect(() => {
+    if (settling.current !== null) cancelAnimationFrame(settling.current);
+    settling.current = null;
     const still =
       typeof globalThis.matchMedia === "function" &&
       globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (still) {
-      risen.current.at = target;
-      setRise(target);
+    if (active === null || target <= 0) {
+      setLift({ id: active, value: 0 });
       return;
     }
-    // Already easing: the loop reads its target from the ref, so a new one steers it
-    // from wherever it has got to. Tearing the loop down and starting another would
-    // restart the motion, which is the thing the easing exists to avoid.
-    if (settling.current !== null) return;
-    const step = () => {
-      const wanted = risen.current.to;
-      // A slow approach; the owner found the rise too quick to feel like an answer.
-      const next = risen.current.at + (wanted - risen.current.at) * 0.022;
-      const done = Math.abs(wanted - next) < 0.25;
-      risen.current.at = done ? wanted : next;
-      // Scheduled out here, never inside the state updater. An updater must be pure —
-      // React calls it twice in development to prove it, and a `requestAnimationFrame`
-      // in there doubled the loop every frame until React gave up on the subtree with
-      // "Maximum update depth exceeded" and stopped responding to anything at all.
-      settling.current = done ? null : requestAnimationFrame(step);
-      setRise(risen.current.at);
+    if (still) {
+      setLift({ id: active, value: target });
+      return;
+    }
+    const from = lift.id === active ? lift.value : 0;
+    if (from === target) return;
+    if (lift.id !== active) setLift({ id: active, value: 0 });
+    const began = performance.now();
+    const duration = 380;
+    const step = (now: number) => {
+      const progress = Math.min(1, (now - began) / duration);
+      const eased = 1 - (1 - progress) ** 3;
+      setLift({ id: active, value: from + (target - from) * eased });
+      settling.current = progress < 1 ? requestAnimationFrame(step) : null;
     };
     settling.current = requestAnimationFrame(step);
-  }, [target]);
-
-  // Stopping the loop belongs to unmount, not to every change of target.
-  useEffect(
-    () => () => {
+    return () => {
       if (settling.current !== null) cancelAnimationFrame(settling.current);
       settling.current = null;
-    },
-    [],
-  );
+    };
+  }, [active, target]);
 
-  /** The two painted layers, as `lib/paint.ts` wants them. */
-  const painting = (built: NonNullable<ReturnType<typeof build>>) => ({
-    ground: built.ground.map((shape) => ({
+  /** The ground layer never depends on the active region, ramp or custom paint. */
+  const groundPainting = (built: NonNullable<ReturnType<typeof build>>) => [
+    ...built.world.map((shape) => ({
+      id: shape.id,
+      d: shape.base,
+      fill: null,
+      className: "globe-world-land",
+    })),
+    ...built.ground.map((shape) => ({
       id: shape.id,
       d: shape.base,
       fill: null,
       className: shape.id === "NJ" ? "with-figures" : "",
     })),
-    detail: built.detail.map((shape) => {
+  ];
+
+  const detailPainting = (built: NonNullable<ReturnType<typeof build>>) =>
+    built.detail.map((shape) => {
       const fill = fillFor(shape.id);
       // No figure here: it joins the ground rather than becoming a dark class of its
       // own, which left the state looking moth-eaten at municipal zoom.
@@ -456,13 +468,11 @@ export function GlobeMap({
         fill,
         className: shape.id === active ? "globe-region on" : "globe-region",
       };
-    }),
-  });
+    });
 
   const put = (built: NonNullable<ReturnType<typeof build>>) => {
-    const next = painting(built);
-    if (groundRef.current) paintInto(groundRef.current, next.ground);
-    if (detailRef.current) paintInto(detailRef.current, next.detail);
+    if (groundRef.current) paintInto(groundRef.current, groundPainting(built));
+    if (detailRef.current) paintInto(detailRef.current, detailPainting(built));
   };
 
   // Reassigned every render so the slide always paints with the current colors and the
@@ -490,9 +500,11 @@ export function GlobeMap({
         layers.county.length,
       );
       if (detailRef.current) reserve(detailRef.current, deepest);
-      if (groundRef.current) reserve(groundRef.current, layers.nation.length);
+      const world = appearance === "atlas" ? WORLD_LAND : [];
+      if (groundRef.current) reserve(groundRef.current, world.length + layers.nation.length);
       const probe = view(camera);
       for (const level of [
+        world,
         layers.municipality,
         layers.municipalityWide,
         layers.county,
@@ -507,14 +519,7 @@ export function GlobeMap({
     };
     // Once per set of outlines. The camera only supplies a frame to measure against.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layers]);
-
-  // Put the regions in the document before the browser paints, so the map and whatever
-  // React is rendering around it can never be a frame out of step. After a commit this
-  // finds every attribute already correct and writes nothing.
-  useLayoutEffect(() => {
-    if (drawn) put(drawn);
-  });
+  }, [layers, appearance]);
 
   // The region under the middle of the frame, which is what the crosshair marks.
   //
@@ -638,6 +643,24 @@ export function GlobeMap({
     return ramp.palette[classIndex(value, ramp.breaks)];
   };
 
+  // Ground changes only with projected geometry. Measure, hover and affordability paint
+  // changes update the detail layer alone, so the enlarged world backdrop is not rebuilt.
+  useLayoutEffect(() => {
+    if (drawn && groundRef.current) {
+      paintInto(groundRef.current, groundPainting(drawn));
+    }
+    // groundPainting is render-local; projected geometry is its only input.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projected]);
+
+  useLayoutEffect(() => {
+    if (drawn && detailRef.current) {
+      paintInto(detailRef.current, detailPainting(drawn));
+    }
+    // detailPainting/fillFor are render-local closures; these are all their inputs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projected, active, mute, paint, ramp]);
+
   /**
    * Apply pointer movement at most once a frame.
    *
@@ -650,6 +673,7 @@ export function GlobeMap({
   const slideBox = useRef<HTMLDivElement>(null);
   /** How far the painted layer has been slid from the camera it was drawn at. */
   const shift = useRef({ x: 0, y: 0 });
+  const press = useRef<{ x: number; y: number; moved: boolean } | null>(null);
 
   /**
    * Move the painted layer, without repainting it.
@@ -759,6 +783,23 @@ export function GlobeMap({
     },
     [slideBy, commit],
   );
+
+  // A pointer can be released before its queued frame runs. Spend that last movement
+  // before committing, otherwise a late callback can leave an uncommitted slide behind.
+  const flush = useCallback(() => {
+    if (queued.current !== null) cancelAnimationFrame(queued.current);
+    queued.current = null;
+    const { dx, dy } = pending.current;
+    pending.current = { dx: 0, dy: 0 };
+    if (dx || dy) slideBy(dx, dy);
+  }, [slideBy]);
+
+  useEffect(() => () => {
+    for (const loop of [queued, glide, flight]) {
+      if (loop.current !== null) cancelAnimationFrame(loop.current);
+      loop.current = null;
+    }
+  }, []);
 
   /**
    * Carry on moving after the hand lets go, slowing to a stop.
@@ -987,7 +1028,7 @@ export function GlobeMap({
   // read anyway. The original code suspended it during a drag for exactly this reason;
   // making the crosshair live through a drag took the suspension with it, which is when
   // the municipal zoom became unusable. The crosshair stays live, the blur does not.
-  const focusing = attending && !moving;
+  const focusing = appearance === "classic" && attending && !moving;
   // Independent of `focusing`: the raised region and its shadow belong to the rise,
   // which has its own easing, and should not wait on the focus to arrive. `raised` is
   // the eased prism; before the rise has started there is nothing to draw over the top,
@@ -1009,6 +1050,22 @@ export function GlobeMap({
   const diveTo =
     focus && focus.level === "county" && layers
       ? (layers.county.find((outline) => outline.id === focus.id) ?? null)
+      : null;
+  // The inverse shortcut is only for the unpinned state explorer. Affordability pins a
+  // deliberate result level; giving that map a control which silently abandons the
+  // result would make the two tools disagree about what its camera means.
+  const exitCounty =
+    !pin && focus?.level === "municipality" && layers
+      ? (() => {
+          const town = layers.municipality.find(
+            (outline) => outline.id === focus.id,
+          );
+          return town?.parent === undefined
+            ? null
+            : (layers.county.find(
+                (outline) => outline.id === town.parent,
+              ) ?? null);
+        })()
       : null;
   const withFigures = ramp.observed.length;
 
@@ -1095,11 +1152,11 @@ export function GlobeMap({
             {/* The same paths again, blurred harder and masked so they only show towards
               the edge — the far half of a depth of field. `use` instances the layer, so
               this costs one element rather than another 564. */}
-            <use
+            {appearance === "classic" && <use
               href="#globe-detail-layer"
               className={focusing ? "globe-detail-far on" : "globe-detail-far"}
               mask="url(#globe-edge)"
-            />
+            />}
           </g>
           {/* The focused region drawn again, over the softened rest and the vignette,
               so it alone stays sharp and at full color. Twice is cheaper than excluding
@@ -1133,6 +1190,13 @@ export function GlobeMap({
               `The ranking beside the map carries the same figures.`
           }
           onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            press.current = { x: event.clientX, y: event.clientY, moved: false };
+            // Taking the map in hand interrupts an in-progress zoom instead of letting
+            // two independent camera writers fight over the gesture.
+            if (flight.current !== null) cancelAnimationFrame(flight.current);
+            flight.current = null;
+            aim.current = null;
             if (glide.current !== null) cancelAnimationFrame(glide.current);
             glide.current = null;
             drag.current = {
@@ -1147,6 +1211,7 @@ export function GlobeMap({
           }}
           onPointerMove={(event) => {
             if (!drag.current) return;
+            if (press.current && Math.hypot(event.clientX - press.current.x, event.clientY - press.current.y) > 6) press.current.moved = true;
             const box = event.currentTarget.getBoundingClientRect();
             // The SVG is scaled to its box, so a pixel on screen is not a unit in the
             // viewBox. Without this the map drifts from the cursor on a narrow screen.
@@ -1166,9 +1231,33 @@ export function GlobeMap({
             };
           }}
           onPointerUp={(event) => {
+            if (!drag.current) return;
+            flush();
             const thrown = drag.current;
             drag.current = null;
             event.currentTarget.releasePointerCapture(event.pointerId);
+            const tapped = press.current;
+            press.current = null;
+            if (appearance === "atlas" && level === "county" && tapped && !tapped.moved && standing.current && layers) {
+              const box = event.currentTarget.getBoundingClientRect();
+              const point: [number, number] = [
+                (event.clientX - box.left) * width / box.width + PAD,
+                (event.clientY - box.top) * height / box.height + PAD,
+              ];
+              // The lifted top is above its geographic footprint; tapping it should
+              // enter that county, not its neighbour underneath the raised shape.
+              const top = event.currentTarget.parentElement?.querySelector<SVGPathElement>(".globe-sharp .top");
+              const matrix = top?.getScreenCTM();
+              const onTop = top && matrix && top.isPointInFill(new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse()));
+              const hit = (onTop ? layers.county.find((outline) => outline.id === sharp?.id) : null)
+                ?? at(view(shifted(standing.current, shift.current.x, shift.current.y)), layers.county, point);
+              if (hit) {
+                commit();
+                setMoving(false);
+                dive(hit);
+                return;
+              }
+            }
             coast(thrown);
             // `coast` sets the glide synchronously if it starts one, so this is the
             // moment it is known whether the map is still moving. A drag that ends
@@ -1180,6 +1269,8 @@ export function GlobeMap({
             setSettled((n) => n + 1);
           }}
           onPointerCancel={() => {
+            press.current = null;
+            flush();
             drag.current = null;
             commit();
             setMoving(false);
@@ -1221,28 +1312,29 @@ export function GlobeMap({
           {/* A vignette that closes in on whatever the crosshair holds. The ground
               around it keeps its color and its shape, only quieter, so the comparison
               the whole site is built on is still there to read. */}
-          <rect
+          {appearance === "classic" && <rect
             className={attending ? "globe-vignette on" : "globe-vignette"}
             x={0}
             y={0}
             width={width}
             height={height}
             fill="url(#globe-fade)"
-          />
+          />}
           {/* The crosshair. Fixed at the middle of the frame: the reader moves the map
             under it rather than pointing at a place, which is what makes the map
             readable on a touch screen with no hover. */}
           {crosshair && (
             <g className="globe-crosshair" aria-hidden="true">
-              <circle cx={width / 2} cy={height / 2} r={9} />
-              <line x1={width / 2 - 16} y1={height / 2} x2={width / 2 - 11} y2={height / 2} />
-              <line x1={width / 2 + 11} y1={height / 2} x2={width / 2 + 16} y2={height / 2} />
-              <line x1={width / 2} y1={height / 2 - 16} x2={width / 2} y2={height / 2 - 11} />
-              <line x1={width / 2} y1={height / 2 + 11} x2={width / 2} y2={height / 2 + 16} />
+              <circle cx={width / 2} cy={height / 2} r={5.5} />
+              <line x1={width / 2 - 12} y1={height / 2} x2={width / 2 - 8} y2={height / 2} />
+              <line x1={width / 2 + 8} y1={height / 2} x2={width / 2 + 12} y2={height / 2} />
+              <line x1={width / 2} y1={height / 2 - 12} x2={width / 2} y2={height / 2 - 8} />
+              <line x1={width / 2} y1={height / 2 + 8} x2={width / 2} y2={height / 2 + 12} />
             </g>
           )}
         </svg>
 
+        {appearance === "atlas" && <span className="globe-level-label">{level === "county" ? "County view" : "Municipality view"}</span>}
         <div className="globe-controls globe-controls-jumps">
           <button type="button" onClick={() => flyTo(framings.nation)}>
             United States
@@ -1260,6 +1352,17 @@ export function GlobeMap({
           >
             Jump into {focus.name}
             {focus.level === "county" ? " County" : ""}
+            {appearance === "atlas" && <span aria-hidden="true"> ↗</span>}
+          </button>
+        )}
+        {exitCounty && (
+          <button
+            type="button"
+            className="globe-controls globe-controls-dive globe-controls-exit"
+            onClick={() => flyTo(framings.county)}
+          >
+            Jump out of {exitCounty.name} County
+            {appearance === "atlas" && <span aria-hidden="true"> ↙</span>}
           </button>
         )}
         <div className="globe-controls globe-controls-zoom">
@@ -1284,8 +1387,8 @@ export function GlobeMap({
             onClick={() => setCrosshair((shown) => !shown)}
           >
             <svg viewBox="0 0 16 16" aria-hidden="true">
-              <circle cx="8" cy="8" r="3.4" />
-              <path d="M8 0.6V3.4M8 12.6V15.4M0.6 8H3.4M12.6 8H15.4" />
+              <circle cx="8" cy="8" r="2.5" />
+              <path d="M8 1.8V4.2M8 11.8V14.2M1.8 8H4.2M11.8 8H14.2" />
             </svg>
           </button>
         </div>
@@ -1339,6 +1442,7 @@ export function GlobeMap({
           not as a measurement. Drag to move the map under the crosshair, which
           reads whatever is beneath it; zoom with the buttons, or hold{" "}
           {"\u2318"} or Ctrl and scroll.
+          {appearance === "atlas" && " Click or tap a county to explore its municipalities."}
         </p>
       </figcaption>
     </figure>

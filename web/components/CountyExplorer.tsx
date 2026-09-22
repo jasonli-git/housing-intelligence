@@ -183,6 +183,29 @@ export function CountyExplorer({
           )}
         </div>
         <div className="explorer-controls">
+          <label className="control quick-measure">
+            <span className="control-label">Quick view</span>
+            <select
+              aria-label="Quick view"
+              value={[
+                "zhvi_sfr",
+                "zori_all",
+                "price_to_income",
+                "permits_total_units",
+              ].includes(measure.metric_id) ? measure.metric_id : ""}
+              onChange={(event) => setMetricId(event.target.value)}
+            >
+              <option value="" disabled>Popular measures</option>
+              {[
+                ["zhvi_sfr", "Home values"],
+                ["zori_all", "Rents"],
+                ["price_to_income", "Affordability"],
+                ["permits_total_units", "New housing"],
+              ].filter(([id]) => measures.some((candidate) => candidate.metric_id === id)).map(([id, label]) => (
+                <option key={id} value={id}>{label}</option>
+              ))}
+            </select>
+          </label>
           <label className="control">
             <span className="control-label">Measure</span>
             <select
@@ -274,6 +297,7 @@ export function CountyExplorer({
             )}
           </p>
           <GlobeMap
+            appearance="atlas"
             width={frame.width}
             height={frame.height}
             metric={measure.metric_id}
@@ -293,6 +317,10 @@ export function CountyExplorer({
           />
         </div>
         <div className="rank-card">
+          <div className="nj-rank-head">
+            <h3>{level === "municipality" ? "Municipalities" : "County comparison"}</h3>
+            <span>{level === "municipality" ? "In this view" : `${rows.length} of ${counties} counties`}</span>
+          </div>
           {level === "municipality" && file ? (
             // The map is drawing towns, so the ranking lists towns: there is no
             // published municipal ranking on this page, and the map's own figures
@@ -314,16 +342,6 @@ export function CountyExplorer({
             />
           ) : (
             <>
-              <p className="table-note">
-                Ranked by change {phrase}, not by level: rank 1 is the{" "}
-                {measure.direction === "lower_is_better"
-                  ? "smallest"
-                  : "largest"}{" "}
-                rise, following the measure’s own direction.
-                {rows.length < counties
-                  ? ` ${rows.length} of the ${counties} counties have this measure.`
-                  : ""}
-              </p>
               <div className="scroll-x">
                 <table className="ranks">
                   <thead>

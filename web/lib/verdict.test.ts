@@ -240,11 +240,11 @@ describe("housingProfile", () => {
     );
 
     expect(context).toEqual({
-      "Typical home built": "older than most · 13th of 21",
-      "Households that own": "fewer than most · 17th of 21",
-      "Apartment buildings": "more than most · 6th of 21",
-      "Homes standing empty": "near the middle · 11th of 21",
-      People: "up 4.2%, 2018 to 2023",
+      "Typical home built": { words: "older than most", rank: { value: 13, of: 21 } },
+      "Households that own": { words: "fewer than most", rank: { value: 17, of: 21 } },
+      "Apartment buildings": { words: "more than most", rank: { value: 6, of: 21 } },
+      "Homes standing empty": { words: "near the middle", rank: { value: 11, of: 21 } },
+      People: { words: "up 4.2%, 2018 to 2023", rank: null },
     });
   });
 

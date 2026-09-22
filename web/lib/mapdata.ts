@@ -34,6 +34,8 @@ export type PackedOutline = {
   id: number | string;
   /** The bare name, which is what the map's readout wants: "Washington". */
   name: string;
+  /** Parent county for a municipality. Absent on counties and backdrop states. */
+  parent?: number;
   /**
    * The name that identifies, for a list: "Washington township, Warren". Absent when the
    * bare name already identifies. Six New Jersey municipalities are called Washington and
@@ -151,6 +153,7 @@ export function unpack(outlines: PackedOutline[]): Outline[] {
   return outlines.map((outline) => ({
     id: outline.id,
     name: outline.name,
+    ...(outline.parent === undefined ? {} : { parent: outline.parent }),
     rings: outline.rings.map((ring) => {
       const flat: number[] = new Array(ring.length);
       let lon = 0;

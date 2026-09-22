@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
+import { Fragment, type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
 
 import { PlacePicker } from "@/components/PlacePicker";
 import {
@@ -23,8 +23,8 @@ const DEFAULT_INCOME = "100000";
 const FIRST_TOWNS = 25;
 
 // The box the map is drawn in, as the New Jersey page's is.
-const MAP_WIDTH = 420;
-const MAP_HEIGHT = 560;
+const MAP_WIDTH = 540;
+const MAP_HEIGHT = 580;
 
 const MODES: { key: Mode; label: string }[] = [
   { key: "own", label: "Own" },
@@ -104,17 +104,23 @@ export function AffordExplorer({
   towns,
   rate,
   asOf,
+  appearance = "classic",
+  scope,
 }: {
   counties: Place[];
   towns: Place[];
   rate: { value: number; asOf: string };
   asOf: { home: string; rent: string; tax: string };
+  appearance?: "classic" | "atlas";
+  scope?: { countyId: number; countyName: string };
 }) {
   const [incomeText, setIncomeText] = useState(DEFAULT_INCOME);
   const [mode, setMode] = useState<Mode>("own");
   const [down, setDown] = useState<number>(DEFAULT_DOWN);
   const [allTowns, setAllTowns] = useState(false);
-  const [picked, setPicked] = useState<number | null>(null);
+  // A county profile has already answered "which place?". Start its local affordability
+  // mode with that county selected instead of asking the reader to type it again.
+  const [picked, setPicked] = useState<number | null>(scope?.countyId ?? null);
   const id = useId();
   const { file, layers, failed } = useMapFile();
   const [centre, setCentre] = useState<Focus | null>(null);
@@ -148,6 +154,7 @@ export function AffordExplorer({
   const townsWithin = townRows.filter((row) => row.within);
   const countiesWithin = countyRows.filter((row) => row.within).length;
   const shownTowns = allTowns ? townsWithin : townsWithin.slice(0, FIRST_TOWNS);
+  const comparisonRows = scope ? townRows : countyRows;
   const home =
     mode === "own"
       ? "owning the typical single-family home"
@@ -302,7 +309,10 @@ export function AffordExplorer({
 
       <p className="afford-summary" id={`${id}-summary`} aria-live="polite">
         {income > 0 ? (
-          <>
+          scope ? <>
+            30% of {money(income)} a year is <b>{money(monthlyBudget(income))} a month</b>. At that, {home} is
+            within reach in <b>{townsWithin.length}</b> of {townRows.length} municipalities in {scope.countyName}.
+          </> : <>
             30% of {money(income)} a year is{" "}
             <b>{money(monthlyBudget(income))} a month</b>. At that, {home} is
             within reach in <b>{countiesWithin}</b> of {countyRows.length}{" "}
@@ -322,6 +332,7 @@ export function AffordExplorer({
               Milestone 16 (#144). Painted in three states rather than by quantile — a town
               a few dollars over the line must not share a color with one a few under. */}
           <GlobeMap
+            appearance={appearance}
             width={MAP_WIDTH}
             height={MAP_HEIGHT}
             file={file}
@@ -351,7 +362,7 @@ export function AffordExplorer({
             // Searching a place moves the map to it: the question on this page is where
             // a reader could live, and answering "can I afford Montclair?" while leaving
             // the map over somewhere else makes them find it themselves.
-            frameOn={picked}
+            frameOn={picked ?? scope?.countyId ?? null}
             mute={false}
             onView={(state) => setCentre(state.focus)}
           />
@@ -365,7 +376,7 @@ export function AffordExplorer({
           <table className="ranks">
             <thead>
               <tr>
-                <th scope="col">County</th>
+                <th scope="col">{scope ? "Municipality" : "County"}</th>
                 <th scope="col" className="num">
                   A month
                 </th>
@@ -378,29 +389,34 @@ export function AffordExplorer({
               </tr>
             </thead>
             <tbody>
-              {countyRows.map((row) => (
-                <tr
-                  key={row.place.id}
-                  className={row.within ? "within" : undefined}
-                >
-                  <td>
-                    <Link href={`/regions/${row.place.id}`}>
-                      {row.place.name}
-                    </Link>
-                  </td>
-                  <td className="num">{money(row.monthly)}</td>
-                  <td className="num">{share(row.share)}</td>
-                  <td className="reach-mark">
-                    {row.within ? "within reach" : ""}
-                  </td>
-                </tr>
-              ))}
+              {([true, false] as const).map((within) => {
+                const group = comparisonRows.filter((row) => row.within === within);
+                if (!group.length) return null;
+                return (
+                  <Fragment key={String(within)}>
+                    <tr className="afford-group-row"><th colSpan={4} scope="rowgroup">{scope
+                      ? within ? "Municipalities within reach" : "Other municipalities"
+                      : within ? "Counties within reach" : "Other counties"}</th></tr>
+                    {group.map((row) => (
+                      <tr
+                        key={row.place.id}
+                        className={row.within ? "within" : !scope ? "afford-secondary" : undefined}
+                      >
+                        <td><Link href={`/regions/${row.place.id}`}>{row.place.name}</Link></td>
+                        <td className="num">{money(row.monthly)}</td>
+                        <td className="num">{share(row.share)}</td>
+                        <td className="reach-mark">{row.within ? "within reach" : ""}</td>
+                      </tr>
+                    ))}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
-      {income > 0 && (
+      {income > 0 && !scope && (
         <section className="section" aria-labelledby={`${id}-towns`}>
           <h2 id={`${id}-towns`}>Municipalities within reach</h2>
           {townsWithin.length === 0 ? (

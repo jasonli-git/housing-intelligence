@@ -15,6 +15,8 @@ export type Place = {
   id: number;
   name: string;
   level: "county" | "municipality";
+  /** County containing this place; null on the county rows themselves. */
+  parentId?: number | null;
   /** What tells a municipality apart in a list — "Township in Morris County". */
   detail: string | null;
   home: number | null;
