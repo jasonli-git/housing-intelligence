@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { rankPosition } from "@/components/RankOverview";
+import { rankPosition } from "@/lib/ranks";
 
 describe("rank overview", () => {
   it("normalizes different cohort sizes to the same rank-one-to-last axis", () => {

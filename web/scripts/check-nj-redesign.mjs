@@ -24,9 +24,11 @@ try {
   await page.waitForTimeout(4500);
   await page.evaluate(() => {
     window.pathReads = 0;
+    window.groundReads = 0;
     const get = Element.prototype.getAttribute;
     Element.prototype.getAttribute = function (name) {
       if (this.matches(".globe-detail path, .globe-ground path")) window.pathReads++;
+      if (this.matches(".globe-ground path")) window.groundReads++;
       return get.call(this, name);
     };
   });
@@ -43,6 +45,22 @@ try {
     await page.waitForTimeout(160);
     const laterY = await rising.evaluate((node) => node.getBBox().y);
     assert.ok(laterY < earlyY, "A newly hovered region should make one progressive rise from the map");
+    await page.waitForTimeout(300);
+    await page.evaluate(() => { window.groundReads = 0; });
+    await page.getByRole("combobox", { name: "Quick view", exact: true }).selectOption("zori_all");
+    await page.waitForTimeout(35);
+    const raisedAfterMeasure = await page.locator(".globe-sharp .top").evaluate((node) => node.getBBox().y);
+    const flatAfterMeasure = await page.locator(".globe-detail .on").evaluate((node) => node.getBBox().y);
+    assert.ok(
+      raisedAfterMeasure < flatAfterMeasure - 1,
+      "Changing measure over the same county must not reset its lift to the surface",
+    );
+    assert.equal(
+      await page.evaluate(() => window.groundReads),
+      0,
+      "Changing measure must not inspect or repaint the ground/world layer",
+    );
+    await page.getByRole("combobox", { name: "Quick view", exact: true }).selectOption("zhvi_sfr");
   }
   await page.mouse.move(0, 0);
   await page.waitForTimeout(1000);
@@ -166,6 +184,7 @@ try {
     await page.setViewportSize({ width: 1440, height: 1000 });
     const lineBefore = await page.locator(".nj-head").evaluate((node) => getComputedStyle(node).borderTopColor);
     const modeSwitch = page.getByRole("switch", { name: "Affordability" });
+    assert.equal(await modeSwitch.getAttribute("href"), "/afford", "State affordability control keeps a real fallback link");
     await modeSwitch.click();
     await page.locator(".nj-afford-mode").waitFor();
     assert.equal(await page.locator(".mode-panel").evaluate((node) => getComputedStyle(node).animationName), "none", "Reduced motion disables the mode transition");
@@ -188,6 +207,13 @@ try {
     await page.waitForTimeout(100);
     await page.screenshot({ path: `/tmp/nj-${label}-dark.png`, fullPage: true });
     await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto(`${origin}/?mode=afford`, { waitUntil: "domcontentloaded" });
+    assert.equal(
+      await page.locator("html").getAttribute("data-housing-mode"),
+      "afford",
+      "The pre-paint marker must recognize a directly loaded affordability URL",
+    );
+    await page.locator(".nj-afford-mode").waitFor();
     await page.goto(`${origin}/regions/12`, { waitUntil: "networkidle" });
     await page.setViewportSize({ width: 1440, height: 1000 });
     assert.equal(await page.locator(".page-title-row .title-computed").count(), 1, "County title carries the computed-data badge");
@@ -215,6 +241,7 @@ try {
       ),
       "Cost breakdowns should not repeat the removed computed-data disclaimer",
     );
+    await page.getByText("Calculated estimate · not a lender quote", { exact: true }).waitFor();
     const sources = page.locator(".foot-sources");
     const notice = page.locator(".foot-notice");
     await sources.waitFor();
@@ -231,10 +258,24 @@ try {
     const countyTicker = page.locator(".region-profile-ticker");
     await countyTicker.waitFor();
     assert.ok(await countyTicker.getByRole("button", { name: "Pause housing here ticker" }).isVisible());
+    const focusedMetric = countyTicker.locator(".state-ticker-group:not([aria-hidden='true']) .term").last();
+    await focusedMetric.focus();
+    await page.waitForTimeout(80);
+    assert.equal(await countyTicker.getAttribute("data-stopped"), "true", "Keyboard focus exposes the static ticker strip");
+    const focusedMetricBox = await focusedMetric.boundingBox();
+    const tickerWindowBox = await countyTicker.locator(".state-ticker-window").boundingBox();
+    assert.ok(
+      focusedMetricBox && tickerWindowBox &&
+        focusedMetricBox.x >= tickerWindowBox.x &&
+        focusedMetricBox.x + focusedMetricBox.width <= tickerWindowBox.x + tickerWindowBox.width + 1,
+      "The keyboard-focused metric must be scrolled into the visible ticker window",
+    );
+    await focusedMetric.evaluate((node) => node.blur());
     const countyRank = countyTicker.locator(".profile-rank").first();
     await countyRank.waitFor();
     assert.equal(await countyRank.locator("em").textContent(), "counties", "County profile ranks must name their denominator");
     const countySwitch = page.getByRole("switch", { name: "Affordability" });
+    assert.equal(await countySwitch.getAttribute("href"), "/afford?place=12", "County fallback link preserves its selected place");
     await countySwitch.click();
     await page.locator(".region-afford-mode").waitFor();
     assert.notEqual(await page.locator(".region-afford-mode .mode-panel").evaluate((node) => getComputedStyle(node).animationName), "none", "County mode should transition");
@@ -245,6 +286,9 @@ try {
     assert.equal(await page.locator(".region-standard-content").evaluate((node) => getComputedStyle(node).display), "none");
     await countySwitch.click();
     await page.locator(".region-standard-content .cost").waitFor();
+    await page.goto(`${origin}/regions/12?mode=afford`, { waitUntil: "domcontentloaded" });
+    assert.equal(await page.locator("html").getAttribute("data-housing-mode"), "afford");
+    await page.locator(".region-afford-mode").waitFor();
     await page.goto(`${origin}/regions/15`, { waitUntil: "networkidle" });
     const cardsFit = await page.locator(".region-standout-card").evaluateAll((cards) =>
       cards.every((card) => card.scrollWidth <= card.clientWidth + 1),
@@ -271,6 +315,14 @@ try {
       }),
       "Local profile figures should use the same lower visual balance",
     );
+    const municipalityMode = page.getByRole("switch", { name: "Affordability" });
+    assert.equal(await municipalityMode.evaluate((node) => node.tagName), "A", "Municipality affordability control must be a link");
+    assert.equal(await municipalityMode.getAttribute("href"), "/afford");
+    await page.goto(`${origin}/regions/12/report`, { waitUntil: "networkidle" });
+    const reportMode = page.getByRole("switch", { name: "Affordability" });
+    assert.equal(await reportMode.evaluate((node) => node.tagName), "A", "Report affordability control must be a link");
+    assert.equal(await reportMode.getAttribute("href"), "/afford");
+    await page.getByText("Calculated estimate · not a lender quote", { exact: true }).waitFor();
     await page.goto(`${origin}/regions/2842`, { waitUntil: "networkidle" });
     assert.equal(await page.locator(".page-title-row .title-computed").count(), 1, "ZIP title carries the computed-data badge");
     await assertBadgeBelowTitle(page, ".page-title-row");
@@ -280,12 +332,14 @@ try {
     const zipUrl = page.url();
     await zipSwitch.evaluate((node) => node.click());
     assert.equal(page.url(), zipUrl, "Unavailable ZIP affordability switch must not navigate");
+    await page.goto(`${origin}/afford`, { waitUntil: "networkidle" });
+    assert.equal(await page.locator(".globe-world-land").count(), 0, "Classic affordability map must not paint atlas-only world land");
     for (const route of ["/regions/12", "/regions/2842", "/afford"]) {
       await page.goto(`${origin}${route}`, { waitUntil: "networkidle" });
       await page.setViewportSize({ width: 375, height: 900 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Regression overflow on ${route}`);
     }
-    console.log("PASS: instant ticker resume, stacked shared title badges, bounded computed-data definitions, edge-aligned county population, full-report action, streamlined cost copy, modern functional source footer, shared local profile tickers with named rank cohorts, balanced profile banners, contained stand-out cards, two added rank plots, compact one-row selectors, precise reticle, world land, state and county affordability modes, compact other-county rows, county preselection, disabled ZIP mode, grouped local reach, transitions, color switch, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes");
+    console.log("PASS: link-safe typed affordability controls, direct-mode pre-paint gating, continuous measure-change lift, isolated ground rendering, keyboard-visible profile facts, concise cost quote disclosure, instant ticker resume, stacked shared title badges, bounded computed-data definitions, edge-aligned county population, full-report action, streamlined cost copy, modern functional source footer, shared local profile tickers with named rank cohorts, balanced profile banners, contained stand-out cards, two added rank plots, compact one-row selectors, precise reticle, atlas-only world land, state and county affordability modes, compact other-county rows, county preselection, disabled ZIP mode, grouped local reach, transitions, color switch, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes");
   }
   console.log(JSON.stringify({ errors }));
   if (errors.length) process.exitCode = 1;

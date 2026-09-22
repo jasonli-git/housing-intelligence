@@ -5,6 +5,7 @@ import { CostToOwn } from "@/components/CostToOwn";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { ChangeCell, Marks, NoteRows, RankText, TableNotes } from "@/components/Ledger";
 import { MetricTerm } from "@/components/MetricTerm";
+import { Masthead } from "@/components/Masthead";
 import { PrintButton } from "@/components/PrintButton";
 import { StandOuts } from "@/components/StandOuts";
 import { api, artifactUrl, type Packet, regionsWithData } from "@/lib/api";
@@ -96,13 +97,16 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
   if (!packet) {
     return (
-      <main className="shell report">
-        <h1 className="page-title">No report</h1>
-        <p className="meta">
-          Region {id} has no analytics for the {WINDOW} window, or the API is unreachable.{" "}
-          <Link href={`/regions/${id}`}>Back to the region</Link>.
-        </p>
-      </main>
+      <>
+        <Masthead affordability={{ kind: "route" }} />
+        <main className="shell report">
+          <h1 className="page-title">No report</h1>
+          <p className="meta">
+            Region {id} has no analytics for the {WINDOW} window, or the API is unreachable.{" "}
+            <Link href={`/regions/${id}`}>Back to the region</Link>.
+          </p>
+        </main>
+      </>
     );
   }
 
@@ -134,7 +138,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   const cost = await costInputs(region.level, packet.levels, packet.metrics);
 
   return (
-    <main className="shell report">
+    <>
+      <Masthead affordability={{ kind: "route" }} />
+      <main className="shell report">
       <header className="page-head" data-kind="report">
         <div>
           <Crumbs
@@ -367,6 +373,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         (GEOID {region.geoid}). Every figure is read from the housing warehouse and produced
         by the sources above, subject to the notes. Nothing in this report is model-generated.
       </footer>
-    </main>
+      </main>
+    </>
   );
 }

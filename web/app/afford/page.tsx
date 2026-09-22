@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { AffordExplorer } from "@/components/AffordExplorer";
 import { Crumbs, Kind } from "@/components/Crumbs";
+import { Masthead } from "@/components/Masthead";
 import { affordData } from "@/lib/affordData";
 
 export const metadata: Metadata = {
@@ -25,18 +26,23 @@ export default async function AffordPage() {
   const data = await affordData();
   if (!data) {
     return (
-      <main className="shell">
-        <h1 className="page-title">What can I afford?</h1>
-        <p className="meta">
-          The API is unreachable, so there is nothing to show.{" "}
-          <Link href="/">Back to New Jersey</Link>.
-        </p>
-      </main>
+      <>
+        <Masthead affordability={{ kind: "route", active: true }} />
+        <main className="shell">
+          <h1 className="page-title">What can I afford?</h1>
+          <p className="meta">
+            The API is unreachable, so there is nothing to show.{" "}
+            <Link href="/">Back to New Jersey</Link>.
+          </p>
+        </main>
+      </>
     );
   }
 
   return (
-    <main className="shell">
+    <>
+      <Masthead affordability={{ kind: "route", active: true }} />
+      <main className="shell">
       <header className="page-head" data-kind="tool">
         <div>
           <Crumbs
@@ -55,6 +61,7 @@ export default async function AffordPage() {
       <AffordExplorer
         {...data}
       />
-    </main>
+      </main>
+    </>
   );
 }

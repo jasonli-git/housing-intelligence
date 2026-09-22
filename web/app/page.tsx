@@ -4,6 +4,7 @@ import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Kind } from "@/components/Crumbs";
 import { StateProfileTicker } from "@/components/StateProfileTicker";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
+import { Masthead } from "@/components/Masthead";
 import { api } from "@/lib/api";
 import { formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
@@ -57,14 +58,17 @@ export default async function NewJerseyPage() {
 
   if (!geo || !catalog) {
     return (
-      <main className="shell">
-        <h1 className="page-title">New Jersey</h1>
-        <p className="meta">
-          The API is unreachable, so there is nothing to show. Start it with{" "}
-          <code>make api</code>, and check the warehouse is loaded with{" "}
-          <code>make pipeline</code>.
-        </p>
-      </main>
+      <>
+        <Masthead affordability={{ kind: "local" }} />
+        <main className="shell">
+          <h1 className="page-title">New Jersey</h1>
+          <p className="meta">
+            The API is unreachable, so there is nothing to show. Start it with{" "}
+            <code>make api</code>, and check the warehouse is loaded with{" "}
+            <code>make pipeline</code>.
+          </p>
+        </main>
+      </>
     );
   }
 
@@ -126,7 +130,9 @@ export default async function NewJerseyPage() {
     .map((scope) => scope.text);
 
   return (
-    <main className="shell nj-page">
+    <>
+      <Masthead affordability={{ kind: "local" }} />
+      <main className="shell nj-page">
       <header className="page-head nj-head" data-kind="state">
         <div className="region-head-main">
           {population && (
@@ -170,6 +176,7 @@ export default async function NewJerseyPage() {
       ) : (
         <p className="meta">No county rankings are published yet.</p>
       )}
-    </main>
+      </main>
+    </>
   );
 }

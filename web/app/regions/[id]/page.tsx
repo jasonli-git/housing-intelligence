@@ -11,6 +11,7 @@ import { Glossed } from "@/components/Glossed";
 import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Ledger, TableNotes } from "@/components/Ledger";
 import { MoreExpander } from "@/components/MoreExpander";
+import { Masthead } from "@/components/Masthead";
 import { RankOverview } from "@/components/RankOverview";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
 import { TrendsExplorer } from "@/components/TrendsExplorer";
@@ -144,12 +145,15 @@ export default async function RegionPage({
 
   if (!region || !packet) {
     return (
-      <main className="shell">
-        <h1 className="page-title">Region not found</h1>
-        <p className="meta">
-          No region {id}, or the API is unreachable. <Link href="/">Back to New Jersey</Link>.
-        </p>
-      </main>
+      <>
+        <Masthead affordability={{ kind: "route" }} />
+        <main className="shell">
+          <h1 className="page-title">Region not found</h1>
+          <p className="meta">
+            No region {id}, or the API is unreachable. <Link href="/">Back to New Jersey</Link>.
+          </p>
+        </main>
+      </>
     );
   }
 
@@ -217,9 +221,19 @@ export default async function RegionPage({
       : trends.length > 0
         ? "Every table and the trends"
         : "Every table";
+  const affordabilityControl = region.level === "county"
+    ? { kind: "local" as const, fallbackHref: `/afford?place=${regionId}` }
+    : region.level === "zip"
+      ? {
+          kind: "disabled" as const,
+          reason: "Affordability mode is not available for ZIP code profiles",
+        }
+      : { kind: "route" as const };
 
   return (
-    <main className="shell" data-affordability-disabled={region.level === "zip" || undefined}>
+    <>
+      <Masthead affordability={affordabilityControl} />
+      <main className="shell">
       <header className="page-head" data-kind={kindOf(region.level)}>
         <div className="region-head-main">
           <Crumbs
@@ -434,6 +448,7 @@ export default async function RegionPage({
         )}
       </MoreExpander>
       </div>
-    </main>
+      </main>
+    </>
   );
 }

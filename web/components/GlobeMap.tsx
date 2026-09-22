@@ -333,52 +333,58 @@ export function GlobeMap({
     level === "municipality" &&
     Boolean(camera && framings && camera.scale >= framings.county.scale);
 
-  /**
-   * Everything the map draws, at a given camera.
-   *
-   * A function rather than only a memo, because a slide has to be able to repaint at a
-   * camera React has not been told about yet — see `commit`. The memo below is this
-   * same call for the camera React does know about.
-   */
-  const build = useCallback(
+  /** Projected geometry is independent of the selected measure and its colors. */
+  const project = useCallback(
     (cam: Camera) => {
       if (!layers) return null;
       const v = view(cam);
-      const detail = inView;
-      // Across the range on screen, not from zero: a change crosses zero, so there is no
-      // zero to rise from. Rising from zero was right while every region was a block and
-      // two could be compared side by side; only one rises now, so the range is the
-      // expressive thing to spend the height on, and the legend names both ends.
-      const seen = detail
-        .map((outline) => readings?.[String(outline.id)])
-        .filter((value): value is number => value !== undefined);
-      const lowest = seen.length > 0 ? Math.min(...seen) : 0;
-      const highest = seen.length > 0 ? Math.max(...seen) : 0;
-      const span = highest - lowest;
-      const probe = (id: number | string) => {
-        const value = readings?.[String(id)];
-        if (value === undefined || span <= 0) return 0;
-        return ((value - lowest) / span) * height * MAX_LIFT;
-      };
       return {
-        world: scene(v, WORLD_LAND, () => 0),
+        // World land is part of the atlas treatment. Classic affordability maps already
+        // use the nation layer as their ground and should not project 127 invisible extras.
+        world: appearance === "atlas" ? scene(v, WORLD_LAND, () => 0) : [],
         ground: scene(v, layers.nation, () => 0),
         // Flat, all of them. The one raised region is a memo of its own below, so easing
         // the rise no longer re-projects 41,609 points sixty times a second.
-        //
-        detail: scene(v, detail, () => 0),
-        probe,
-        lowest,
-        highest,
+        detail: scene(v, inView, () => 0),
         v,
       };
     },
-    [layers, readings, height, inView],
+    [appearance, layers, inView],
   );
 
+  // Across the range on screen, not from zero: a change crosses zero, so there is no
+  // zero to rise from. This scale changes with the measure without re-projecting land.
+  const liftScale = useMemo(() => {
+    const seen = inView
+      .map((outline) => readings?.[String(outline.id)])
+      .filter((value): value is number => value !== undefined);
+    const lowest = seen.length > 0 ? Math.min(...seen) : 0;
+    const highest = seen.length > 0 ? Math.max(...seen) : 0;
+    const span = highest - lowest;
+    return {
+      lowest,
+      highest,
+      probe: (id: number | string) => {
+        const value = readings?.[String(id)];
+        if (value === undefined || span <= 0) return 0;
+        return ((value - lowest) / span) * height * MAX_LIFT;
+      },
+    };
+  }, [height, inView, readings]);
+
+  const projected = useMemo(() => (camera ? project(camera) : null), [camera, project]);
   const drawn = useMemo(
-    () => (camera ? build(camera) : null),
-    [build, camera],
+    () => (projected ? { ...projected, ...liftScale } : null),
+    [projected, liftScale],
+  );
+
+  /** A slide can repaint a camera React has not been told about yet — see `commit`. */
+  const build = useCallback(
+    (cam: Camera) => {
+      const geometry = project(cam);
+      return geometry ? { ...geometry, ...liftScale } : null;
+    },
+    [project, liftScale],
   );
 
   // What the rise is easing towards, and the single raised prism it produces. Split from
@@ -392,9 +398,9 @@ export function GlobeMap({
     return outline ? prism(drawn.v, outline, lift.value) : null;
   }, [drawn, layers, camera, level, active, lift]);
 
-  // Each newly focused entity makes one complete, fixed-duration rise from the surface.
-  // The prior exponential ease reused the previous entity's partial height, which read
-  // as an instant jump followed by a second slow rise when the pointer crossed a line.
+  // A newly focused entity rises from the surface. If only the measure changes, the
+  // same entity eases from its current height to its new target instead of snapping to
+  // zero and replaying the entrance animation.
   useLayoutEffect(() => {
     if (settling.current !== null) cancelAnimationFrame(settling.current);
     settling.current = null;
@@ -409,13 +415,15 @@ export function GlobeMap({
       setLift({ id: active, value: target });
       return;
     }
-    setLift({ id: active, value: 0 });
+    const from = lift.id === active ? lift.value : 0;
+    if (from === target) return;
+    if (lift.id !== active) setLift({ id: active, value: 0 });
     const began = performance.now();
     const duration = 380;
     const step = (now: number) => {
       const progress = Math.min(1, (now - began) / duration);
       const eased = 1 - (1 - progress) ** 3;
-      setLift({ id: active, value: target * eased });
+      setLift({ id: active, value: from + (target - from) * eased });
       settling.current = progress < 1 ? requestAnimationFrame(step) : null;
     };
     settling.current = requestAnimationFrame(step);
@@ -425,20 +433,24 @@ export function GlobeMap({
     };
   }, [active, target]);
 
-  /** The two painted layers, as `lib/paint.ts` wants them. */
-  const painting = (built: NonNullable<ReturnType<typeof build>>) => ({
-    ground: [...built.world.map((shape) => ({
+  /** The ground layer never depends on the active region, ramp or custom paint. */
+  const groundPainting = (built: NonNullable<ReturnType<typeof build>>) => [
+    ...built.world.map((shape) => ({
       id: shape.id,
       d: shape.base,
       fill: null,
       className: "globe-world-land",
-    })), ...built.ground.map((shape) => ({
+    })),
+    ...built.ground.map((shape) => ({
       id: shape.id,
       d: shape.base,
       fill: null,
       className: shape.id === "NJ" ? "with-figures" : "",
-    }))],
-    detail: built.detail.map((shape) => {
+    })),
+  ];
+
+  const detailPainting = (built: NonNullable<ReturnType<typeof build>>) =>
+    built.detail.map((shape) => {
       const fill = fillFor(shape.id);
       // No figure here: it joins the ground rather than becoming a dark class of its
       // own, which left the state looking moth-eaten at municipal zoom.
@@ -456,13 +468,11 @@ export function GlobeMap({
         fill,
         className: shape.id === active ? "globe-region on" : "globe-region",
       };
-    }),
-  });
+    });
 
   const put = (built: NonNullable<ReturnType<typeof build>>) => {
-    const next = painting(built);
-    if (groundRef.current) paintInto(groundRef.current, next.ground);
-    if (detailRef.current) paintInto(detailRef.current, next.detail);
+    if (groundRef.current) paintInto(groundRef.current, groundPainting(built));
+    if (detailRef.current) paintInto(detailRef.current, detailPainting(built));
   };
 
   // Reassigned every render so the slide always paints with the current colors and the
@@ -490,10 +500,11 @@ export function GlobeMap({
         layers.county.length,
       );
       if (detailRef.current) reserve(detailRef.current, deepest);
-      if (groundRef.current) reserve(groundRef.current, WORLD_LAND.length + layers.nation.length);
+      const world = appearance === "atlas" ? WORLD_LAND : [];
+      if (groundRef.current) reserve(groundRef.current, world.length + layers.nation.length);
       const probe = view(camera);
       for (const level of [
-        WORLD_LAND,
+        world,
         layers.municipality,
         layers.municipalityWide,
         layers.county,
@@ -508,7 +519,7 @@ export function GlobeMap({
     };
     // Once per set of outlines. The camera only supplies a frame to measure against.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layers]);
+  }, [layers, appearance]);
 
   // The region under the middle of the frame, which is what the crosshair marks.
   //
@@ -632,14 +643,23 @@ export function GlobeMap({
     return ramp.palette[classIndex(value, ramp.breaks)];
   };
 
-  // Paint only when geometry or its styling changes. The old unbounded layout effect
-  // scanned every path's attributes on EVERY frame of the isolated probe animation.
-  // `rise`, `live` and control state do not change the ground/detail layers at all.
+  // Ground changes only with projected geometry. Measure, hover and affordability paint
+  // changes update the detail layer alone, so the enlarged world backdrop is not rebuilt.
   useLayoutEffect(() => {
-    if (drawn) put(drawn);
-    // put/painting/fillFor are render-local closures; these are all their inputs.
+    if (drawn && groundRef.current) {
+      paintInto(groundRef.current, groundPainting(drawn));
+    }
+    // groundPainting is render-local; projected geometry is its only input.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [drawn, active, mute, paint, ramp]);
+  }, [projected]);
+
+  useLayoutEffect(() => {
+    if (drawn && detailRef.current) {
+      paintInto(detailRef.current, detailPainting(drawn));
+    }
+    // detailPainting/fillFor are render-local closures; these are all their inputs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projected, active, mute, paint, ramp]);
 
   /**
    * Apply pointer movement at most once a frame.

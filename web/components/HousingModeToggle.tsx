@@ -1,71 +1,69 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import { usePathname } from "next/navigation";
 
-export const HOUSING_MODE_EVENT = "housing:mode";
+import { pushHousingMode, useHousingMode } from "@/components/useHousingMode";
 
-function affordabilityFromLocation() {
-  const localMode = window.location.pathname === "/" || Boolean(
-    document.querySelector("[data-affordability-scope='county']"),
-  );
-  return window.location.pathname === "/afford" || (
-    localMode && new URLSearchParams(window.location.search).get("mode") === "afford"
-  );
-}
+export type AffordabilityControl =
+  | { kind: "local"; fallbackHref?: string }
+  | { kind: "route"; active?: boolean }
+  | { kind: "disabled"; reason: string };
 
-/** Global mode switch: local on the NJ page, a direct route everywhere else. */
-export function HousingModeToggle() {
+/**
+ * Global affordability control. It is a real link wherever navigation is possible, so
+ * it works before hydration and preserves new-tab/modifier-click behavior. Local state
+ * and county workspaces intercept only an ordinary primary click.
+ */
+export function HousingModeToggle({ control }: { control: AffordabilityControl }) {
   const pathname = usePathname();
-  const [afford, setAfford] = useState(false);
-  const [disabled, setDisabled] = useState(false);
+  const mode = useHousingMode(control.kind === "route" && control.active ? "afford" : "state");
+  const afford = control.kind === "disabled" ? false : mode === "afford";
 
-  useEffect(() => {
-    const read = () => {
-      const unavailable = Boolean(document.querySelector("[data-affordability-disabled='true']"));
-      setDisabled(unavailable);
-      setAfford(unavailable ? false : affordabilityFromLocation());
-    };
-    const custom = (event: Event) => setAfford((event as CustomEvent<string>).detail === "afford");
-    read();
-    window.addEventListener("popstate", read);
-    window.addEventListener(HOUSING_MODE_EVENT, custom);
-    return () => {
-      window.removeEventListener("popstate", read);
-      window.removeEventListener(HOUSING_MODE_EVENT, custom);
-    };
-  }, [pathname]);
-
-  const change = () => {
-    if (disabled) return;
-    const localMode = window.location.pathname === "/" || Boolean(
-      document.querySelector("[data-affordability-scope='county']"),
+  if (control.kind === "disabled") {
+    return (
+      <button
+        className="bar-mode"
+        type="button"
+        role="switch"
+        aria-checked="false"
+        aria-disabled="true"
+        title={control.reason}
+      >
+        <span>Affordability</span>
+        <span className="bar-mode-track" aria-hidden="true"><span /></span>
+      </button>
     );
-    if (!localMode) {
-      window.location.assign(afford ? "/" : "/?mode=afford");
-      return;
-    }
-    const next = !afford;
-    const url = new URL(window.location.href);
-    if (next) url.searchParams.set("mode", "afford");
-    else url.searchParams.delete("mode");
-    window.history.pushState({}, "", `${url.pathname}${url.search}${url.hash}`);
-    setAfford(next);
-    window.dispatchEvent(new CustomEvent(HOUSING_MODE_EVENT, { detail: next ? "afford" : "state" }));
+  }
+
+  const href = afford
+    ? (pathname === "/afford" ? "/" : pathname)
+    : control.kind === "local"
+      ? (control.fallbackHref ?? "/afford")
+      : "/afford";
+  const activate = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (control.kind !== "local") return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    pushHousingMode(afford ? "state" : "afford");
+  };
+  const key = (event: KeyboardEvent<HTMLAnchorElement>) => {
+    if (event.key !== " ") return;
+    event.preventDefault();
+    event.currentTarget.click();
   };
 
   return (
-    <button
+    <a
       className="bar-mode"
-      type="button"
+      href={href}
       role="switch"
       aria-checked={afford}
-      aria-disabled={disabled}
-      title={disabled ? "Affordability mode is not available for ZIP code profiles" : undefined}
-      onClick={change}
+      onClick={activate}
+      onKeyDown={key}
     >
       <span>Affordability</span>
       <span className="bar-mode-track" aria-hidden="true"><span /></span>
-    </button>
+    </a>
   );
 }

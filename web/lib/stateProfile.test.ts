@@ -15,15 +15,15 @@ describe("statewide profile", () => {
   it("retains both indexes and their distinct baselines and dates without inventing ranks", () => {
     const items = stateProfile([level("fhfa_hpi"), level("fhfa_hpi_all_transactions", 967.6)]);
     expect(items.map((item) => item.value)).toEqual(["442.7", "967.6"]);
-    expect(items[0].context).toBe("Q2 2026 · 1991 Q1 = 100");
-    expect(items[1].context).toBe("Q2 2026 · 1980 Q1 = 100");
+    expect(items[0].context).toEqual({ words: "Q2 2026 · 1991 Q1 = 100", rank: null });
+    expect(items[1].context).toEqual({ words: "Q2 2026 · 1980 Q1 = 100", rank: null });
     expect(items[0].definition).toContain("An index, not a price");
   });
   it("preserves other published levels and handles missing data without placeholder figures", () => {
     expect(stateProfile([])).toEqual([]);
     const item = stateProfile([{ ...level("sr1a_median_sale_price", 520000), unit: "usd" }])[0];
     expect(item.value).toBe("$520,000");
-    expect(item.context).toBe("Jun 2026");
+    expect(item.context).toEqual({ words: "Jun 2026", rank: null });
     expect(item.definition).toContain("open-market");
   });
 });

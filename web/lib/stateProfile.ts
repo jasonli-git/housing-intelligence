@@ -15,7 +15,10 @@ export function stateProfile(levels: Pick<PacketLevel, "metric_id" | "label" | "
       label: level.label,
       value: formatMetric(level.value, level.unit, level.metric_id),
       definition: definition ? `${definition.what} ${definition.why}` : level.label,
-      context: [periodLabel(level.period_end, level.metric_id), base].filter(Boolean).join(" · "),
+      context: {
+        words: [periodLabel(level.period_end, level.metric_id), base].filter(Boolean).join(" · "),
+        rank: null,
+      },
     };
   });
 }

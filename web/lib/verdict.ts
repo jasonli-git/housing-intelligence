@@ -14,7 +14,7 @@ import type { PacketLevel, PacketMetric } from "@/lib/api";
 import { definitionOf } from "@/lib/definitions";
 import { formatMetric } from "@/lib/format";
 import { periodLabel, surveyYears } from "@/lib/periods";
-import { ordinal } from "@/lib/ranks";
+import { ordinal, rankPosition } from "@/lib/ranks";
 
 /**
  * The home values a verdict can stand on, in order of preference. Zillow's index is the
@@ -57,14 +57,9 @@ export function standing(rank: number, of: number): string {
     : `the ${ordinal(of - rank + 1)} least expensive`;
 }
 
-/** Position 0 is rank 1 and 1 is last; a cohort of one sits in the middle. */
-function position(rank: number, of: number): number {
-  return of > 1 ? (rank - 1) / (of - 1) : 0.5;
-}
-
 /** How a change rank compares, in fifths: "faster than most", "at about the typical pace". */
 export function pace(rank: number, of: number): string {
-  const p = position(rank, of);
+  const p = rankPosition(rank, of);
   if (p <= 0.2) return "faster than almost all";
   if (p <= 0.4) return "faster than most";
   if (p < 0.6) return "at about the typical pace";
@@ -102,7 +97,7 @@ export function verdict(peers: Peers, metrics: PacketMetric[], levels: PacketLev
       } else if (pct < 0) {
         sentence += `, and its value fell ${Math.abs(pct).toFixed(1)}% over five years (${quoted})`;
       } else {
-        const p = position(change.rank, change.of);
+        const p = rankPosition(change.rank, change.of);
         const dear = level.rank <= Math.ceil(level.of / 2);
         const contrast = (dear && p >= 0.6) || (!dear && p <= 0.4);
         sentence +=
@@ -189,8 +184,11 @@ export type ProfileItem = {
   label: string;
   value: string;
   definition: string;
-  /** Where it sits among the region's peers, or how it moved: "older than most · 13th of 21". */
-  context: string | null;
+  /** Plain-language context plus an optional typed rank; never parsed back out of prose. */
+  context: {
+    words: string;
+    rank: { value: number; of: number } | null;
+  } | null;
 };
 
 /**
@@ -199,12 +197,12 @@ export type ProfileItem = {
  * fifth between is near the middle. Rank 1 is the largest value except where lower is
  * better (`lib/ranks.ts`), so the position is read from the largest end either way.
  */
-function among(row: PacketLevel, more: string, fewer: string): string | null {
+function among(row: PacketLevel, more: string, fewer: string): ProfileItem["context"] {
   if (row.rank === null || row.of === null) return null;
-  const p = position(row.rank, row.of);
+  const p = rankPosition(row.rank, row.of);
   const fromLargest = row.direction === "lower_is_better" ? 1 - p : p;
   const words = fromLargest <= 0.4 ? more : fromLargest >= 0.6 ? fewer : "near the middle";
-  return `${words} · ${ordinal(row.rank)} of ${row.of}`;
+  return { words, rank: { value: row.rank, of: row.of } };
 }
 
 function moved(pct: number): string {
@@ -313,8 +311,12 @@ export function housingProfile(levels: PacketLevel[], metrics: PacketMetric[] = 
         "The Census Bureau’s American Community Survey five-year estimate for the survey " +
         `years ${surveyYears(people.period_start, people.period_end)}.`,
       context: change
-        ? `${moved(change.pct_change)}, ${periodLabel(change.window_start, change.metric_id)} to ` +
-          `${periodLabel(change.window_end, change.metric_id)}`
+        ? {
+            words:
+              `${moved(change.pct_change)}, ${periodLabel(change.window_start, change.metric_id)} to ` +
+              `${periodLabel(change.window_end, change.metric_id)}`,
+            rank: null,
+          }
         : among(people, "more than most", "fewer than most"),
     });
   }
@@ -358,8 +360,8 @@ export function tradeoff(peers: Peers, levels: PacketLevel[]): string | null {
   const tax = ranked(levels, "modiv_median_tax_bill");
   if (!home || !tax) return null;
 
-  const price = position(home.rank, home.of);
-  const taxAt = position(tax.rank, tax.of);
+  const price = rankPosition(home.rank, home.of);
+  const taxAt = rankPosition(tax.rank, tax.of);
   const bill = formatMetric(tax.value, tax.unit, tax.metric_id);
   if (price > 0.5 && taxAt <= 1 / 3) {
     const nth = tax.rank === 1 ? "the highest" : `the ${ordinal(tax.rank)} highest`;

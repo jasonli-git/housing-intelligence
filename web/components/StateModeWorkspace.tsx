@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AffordExplorer } from "@/components/AffordExplorer";
 import { CountyExplorer, type Measure } from "@/components/CountyExplorer";
-import { HOUSING_MODE_EVENT } from "@/components/HousingModeToggle";
+import { useHousingMode } from "@/components/useHousingMode";
 import type { AffordData } from "@/lib/affordData";
 import type { Section } from "@/lib/groups";
 
@@ -14,18 +13,7 @@ export function StateModeWorkspace({ frame, counties, sections, initial, afford 
   initial: string;
   afford: AffordData | null;
 }) {
-  const [mode, setMode] = useState<"state" | "afford">("state");
-  useEffect(() => {
-    const read = () => setMode(new URLSearchParams(window.location.search).get("mode") === "afford" ? "afford" : "state");
-    const custom = (event: Event) => setMode((event as CustomEvent<string>).detail === "afford" ? "afford" : "state");
-    read();
-    window.addEventListener("popstate", read);
-    window.addEventListener(HOUSING_MODE_EVENT, custom);
-    return () => {
-      window.removeEventListener("popstate", read);
-      window.removeEventListener(HOUSING_MODE_EVENT, custom);
-    };
-  }, []);
+  const mode = useHousingMode();
 
   return (
     <div className={mode === "afford" ? "nj-mode nj-afford-mode" : "nj-mode"} data-mode={mode}>

@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 
 import { Glossed } from "@/components/Glossed";
 import { MetricTerm } from "@/components/MetricTerm";
@@ -7,7 +7,7 @@ import type { TablePlacement } from "@/lib/caveats";
 import { formatChange, formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { windowLabel } from "@/lib/periods";
-import { RANK_HEADING, rankWords } from "@/lib/ranks";
+import { RANK_HEADING, rankPosition, rankWords } from "@/lib/ranks";
 
 // A 3px tick and a 1px gap, so 21 counties draw as 21 ticks.
 const TICK = 4;
@@ -25,12 +25,16 @@ const FOOT_ROWS = 3;
  * 21 by change over five years, largest rise first" — because the numbers alone do not
  * say what was ranked (Milestone 17, `lib/ranks.ts`).
  */
-export function RankText({ rank, of, words, className }: { rank: number; of: number; words: string; className?: string }) {
+export function RankText({ rank, of, words, className, visual }: {
+  rank: number;
+  of: number;
+  words: string;
+  className?: string;
+  visual?: ReactNode;
+}) {
   return (
     <span className={className} title={words}>
-      <span aria-hidden="true">
-        {rank} / {of}
-      </span>
+      {visual ?? <span aria-hidden="true">{rank} / {of}</span>}
       <span className="visually-hidden">{words}</span>
     </span>
   );
@@ -47,7 +51,7 @@ export function RankStrip({ rank, of, words }: { rank: number; of: number; words
   const left = ticks
     ? (rank - 1) * TICK
     : of > 1
-      ? Math.round(((rank - 1) / (of - 1)) * (TRACK - 3))
+      ? Math.round(rankPosition(rank, of) * (TRACK - 3))
       : 0;
   return (
     <>

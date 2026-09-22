@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
+import { RankText } from "@/components/Ledger";
 import { useAutoCarousel } from "@/components/useAutoCarousel";
 import type { ProfileItem } from "@/lib/verdict";
 
@@ -17,16 +18,6 @@ function MotionIcon({ playing, reduced }: { playing: boolean; reduced: boolean }
       )}
     </svg>
   );
-}
-
-function profileContext(context: string | null) {
-  if (!context) return { words: null, rank: null };
-  const ranked = context.match(/^(.*) · (\d+)(?:st|nd|rd|th) of (\d+)$/);
-  if (!ranked) return { words: context, rank: null };
-  return {
-    words: ranked[1],
-    rank: { value: ranked[2], of: ranked[3] },
-  };
 }
 
 /** A visual loop, not a live feed: dates travel with every published observation. */
@@ -53,13 +44,21 @@ export function ProfileTicker({
       ref={motion.rootRef}
       className={`state-ticker ${className}`.trim()}
       aria-label={ariaLabel}
-      data-stopped={stopped || motion.reduceMotion}
+      data-stopped={stopped || motion.reduceMotion || (motion.focused && !manualPlaying)}
       onMouseEnter={motion.interactionProps.onMouseEnter}
       onMouseLeave={(event) => {
         setManualPlaying(false);
         motion.interactionProps.onMouseLeave(event);
       }}
-      onFocusCapture={motion.interactionProps.onFocusCapture}
+      onFocusCapture={(event) => {
+        const target = event.target as HTMLElement;
+        if (!target.closest(".state-ticker-head button")) {
+          setManualPlaying(false);
+          const item = target.closest("li");
+          if (item) requestAnimationFrame(() => item.scrollIntoView({ block: "nearest", inline: "nearest" }));
+        }
+        motion.interactionProps.onFocusCapture(event);
+      }}
       onBlurCapture={(event) => {
         setManualPlaying(false);
         motion.interactionProps.onBlurCapture(event);
@@ -91,21 +90,26 @@ export function ProfileTicker({
           {[false, true].map((duplicate) => (
             <ul key={String(duplicate)} className="state-ticker-group" aria-hidden={duplicate || undefined}>
               {items.map((item) => {
-                const context = profileContext(item.context);
+                const context = item.context;
                 return (
                   <li key={item.metric_id}>
                     <b>{item.value}</b>
                     {duplicate ? <span>{item.label}</span> : <FloatingMetricTerm metricId={item.metric_id} label={item.label} definition={item.definition} why={null} />}
                     <span className="state-ticker-meta">
-                      {context.words && <small>{context.words}</small>}
-                      {context.rank && peerLabel && (
-                        <span
+                      {context?.words && <small>{context.words}</small>}
+                      {context?.rank && peerLabel && (
+                        <RankText
                           className="profile-rank"
-                          aria-label={`Rank ${context.rank.value} of ${context.rank.of} ${peerLabel}`}
-                        >
-                          <strong>{context.rank.value}/{context.rank.of}</strong>
-                          <em>{peerLabel}</em>
-                        </span>
+                          rank={context.rank.value}
+                          of={context.rank.of}
+                          words={`Rank ${context.rank.value} of ${context.rank.of} ${peerLabel}`}
+                          visual={(
+                            <span className="profile-rank-visual" aria-hidden="true">
+                              <strong>{context.rank.value}/{context.rank.of}</strong>
+                              <em>{peerLabel}</em>
+                            </span>
+                          )}
+                        />
                       )}
                     </span>
                   </li>

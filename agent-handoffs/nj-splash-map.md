@@ -1,5 +1,16 @@
 # New Jersey splash page and map experiment
 
+## PR #33 review fixes
+
+- Restored the cost panel's essential quote boundary without restoring the paragraph the director asked to remove: `Calculated estimate · not a lender quote` now sits directly beneath the ownership figure in interactive and report views. The shared computed-data badge continues to carry the separate not-AI explanation.
+- Replaced the JavaScript-only affordability button with a real link whenever affordability is available. Ordinary clicks still switch the New Jersey/county workspace in place; modifier, middle, pre-hydration and no-JavaScript activation follow the durable `/afford` route. County fallbacks include `?place=<county id>`. ZIP profiles retain an explicitly disabled button. The route's capability is now passed as a typed `Masthead` prop rather than rediscovered from DOM attributes.
+- Consolidated the three copied URL/event mode listeners into `useHousingMode`, backed by `useSyncExternalStore`. A head script marks direct `?mode=afford` loads before first paint, hiding the static-export state workspace until hydration supplies the matching affordability tree. State and county mode controllers now share this one subscription.
+- Changed the map lift so a new entity still rises from the surface, while a measure change over the same entity eases from its current height to the new target instead of resetting to zero. Browser coverage pins both behaviors.
+- Made keyboard focus expose the ticker's unclipped static strip and scroll the focused metric into view. Explicit Play still resumes motion immediately while its control is focused; focusing an actual metric prioritizes readability.
+- Split projected map geometry from measure scale/color work. World land is now atlas-only; classic `/afford` neither projects nor warms it. Ground/world and detail use separate paint effects, so hover, mute, ramp and custom-paint changes no longer scan the ground layer.
+- Moved normalized rank position into `lib/ranks.ts`, reused it in verdicts, ledger tracks and rank plots, and replaced the profile ticker's ordinal-string regex with a typed `{ words, rank }` context. The ticker now renders its badge through the shared `RankText` primitive.
+- Canonical-document reconciliation requested by the review remains with Claude under the repository working agreement; no canonical document was modified in these fixes.
+
 ## Review refinement: shared header, cost copy and footer polish
 
 - Re-anchored the shared `Computed from the data · not AI` definition to the badge's left edge. Its existing width cap remains, so the definition now stays inside both desktop and mobile viewports instead of extending beyond the page when the badge sits beneath a left-aligned title.
@@ -84,6 +95,8 @@
 - `web/lib/stateProfile.ts`, `web/lib/stateProfile.test.ts`: presentation adapter and three tests.
 - `web/components/RankOverview.tsx`, `web/lib/rankOverview.test.ts`: two accessible normalized rank plots and rank-position coverage.
 - `web/components/CostToOwn.tsx`, `web/components/SourceFooter.tsx`: streamlined cost evidence and the refreshed shared provenance/licensing footer.
+- `web/components/HousingModeToggle.tsx`, `web/components/useHousingMode.ts`, `web/lib/housingMode.ts`, route pages and `web/app/not-found.tsx`: typed, link-safe affordability capabilities and shared URL mode state while preserving common masthead/licence coverage.
+- `web/lib/ranks.ts`, `web/lib/verdict.ts`, `web/components/Ledger.tsx`, `web/components/StateProfileTicker.tsx`: shared rank positioning and typed profile context.
 - `web/scripts/check-nj-redesign.mjs`: repeatable headless browser checks and a narrowly scoped DOM-work counter.
 
 ## Architectural or implementation decisions
@@ -102,17 +115,18 @@
 
 ## New TODOs / limitations
 
+- Claude still needs to decide and perform any canonical `ARCHITECTURE.md` / `CHANGELOG.md` reconciliation before merge; Codex did not alter canonical documentation.
 - The visible, human-operated production performance gate remains outstanding. Review `/?perf` and `/afford?perf` with the documented drag/zoom sequence before claiming lag is resolved. Automated work counts are not frame-time measurements.
-- In the same 900 ms isolated county-rise probe, the development baseline made 5,280 path attribute reads versus 102 in the final production preview with worldwide land. This measures eliminated DOM inspection, not a claimed percentage improvement in overall speed.
+- In the same 900 ms isolated county-rise probe, the development baseline made 5,280 path attribute reads versus 63 after the PR review fixes. This measures eliminated DOM inspection, not a claimed percentage improvement in overall speed.
 - Local build warns that `NEXT_PUBLIC_ARTIFACT_URL` is unset and download links use localhost:8000. This preview is not a deployment artifact.
 - Local interactive preview is available at localhost:3000. Nothing is deployed.
 
 ## Verification
 
 - `cd web && npm run typecheck`: passed.
-- `cd web && npm test -- --run`: 27 files, 210 tests passed, including normalized rank positions, municipality-parent preservation, three statewide profile tests and one world-coverage test.
+- `cd web && npm test -- --run`: 28 files, 213 tests passed, including housing-mode URL derivation, normalized rank positions, municipality-parent preservation, three statewide profile tests and one world-coverage test.
 - `cd web && npm run build`: passed with local-API access; 2,276 static pages generated, with the local artifact-URL warning described above. The first sandboxed attempt could not reach the already-running API at localhost:8000 and was rerun with localhost access.
-- `cd web && CHECK_URL=http://localhost:3000 CHECK_LABEL=after node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths; immediate ticker resume, shared state/county/municipality profile treatment, named local rank cohorts, contained stand-out cards, two added rank plots, badges stacked below state/county/municipality/ZIP titles, balanced profile content, compact secondary county rows, one-row selector placement, smaller reticle, worldwide land, state and county affordability switching, county preselection, disabled ZIP mode, reduced-motion and animated transitions, county-scoped municipality results, progressive rise, definition bounds, right-edge population alignment, the full-report action, streamlined cost copy, functional source disclosure, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes.
+- `cd web && CHECK_URL=http://localhost:3000 CHECK_LABEL=review-fixes node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths plus link-safe state/county/municipality/report controls, disabled ZIP behavior, direct affordability URL pre-paint state, keyboard-visible ticker facts, the concise quote disclaimer in interactive/report views, non-resetting measure-change lift, zero ground-path reads on a measure change, atlas-only world land, and every earlier responsive/map/profile/footer interaction. The isolated rise probe recorded 63 SVG attribute reads.
 - Inspected production desktop, mobile, and dark-mode screenshots plus the revised county header, open definition and collapsed Sources/Notice footer in the local browser.
 - `git diff --check`: passed.
 - Backend tests not run: backend and data pipeline unchanged. No deployment or merge performed.

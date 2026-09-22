@@ -86,6 +86,7 @@ export function useAutoCarousel(enabled: boolean, onAdvance: () => void) {
     rootRef: setNode,
     cycle,
     paused,
+    focused,
     reduceMotion,
     restart,
     interactionProps: { onMouseEnter, onMouseLeave, onFocusCapture, onBlurCapture },

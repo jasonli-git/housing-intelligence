@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { JetBrains_Mono, Public_Sans, Space_Grotesk } from "next/font/google";
 
 import { InlineScript } from "@/components/InlineScript";
-import { LicenceLine } from "@/components/LicenceLine";
 import { FrameMeter } from "@/components/FrameMeter";
-import { Masthead } from "@/components/Masthead";
 import { SourceFooter } from "@/components/SourceFooter";
+import { HOUSING_MODE_SCRIPT } from "@/lib/housingMode";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./tokens.css";
 import "./globals.css";
@@ -47,12 +46,11 @@ export default function RootLayout({
       <head>
         {/* A stored theme choice, applied before the first paint (#134). */}
         <InlineScript html={THEME_SCRIPT} />
+        <InlineScript html={HOUSING_MODE_SCRIPT} />
       </head>
       <body>
         {/* Off unless `?perf` is in the address; renders nothing otherwise. */}
         <FrameMeter />
-        <Masthead />
-        <LicenceLine />
         {children}
         {/* In the root layout so it cannot be forgotten on a page: attribution is a
             condition of Zillow's licence, and the pages most likely to be linked

@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import { AffordExplorer } from "@/components/AffordExplorer";
-import { HOUSING_MODE_EVENT } from "@/components/HousingModeToggle";
+import { useHousingMode } from "@/components/useHousingMode";
 import type { AffordData } from "@/lib/affordData";
 
 /** The county profile stays put; only the material below its profile ticker changes mode. */
@@ -16,24 +14,11 @@ export function CountyModeWorkspace({
   countyName: string;
   afford: AffordData | null;
 }) {
-  const [mode, setMode] = useState<"state" | "afford">("state");
-
-  useEffect(() => {
-    const read = () => setMode(new URLSearchParams(window.location.search).get("mode") === "afford" ? "afford" : "state");
-    const custom = (event: Event) => setMode((event as CustomEvent<string>).detail === "afford" ? "afford" : "state");
-    read();
-    window.addEventListener("popstate", read);
-    window.addEventListener(HOUSING_MODE_EVENT, custom);
-    return () => {
-      window.removeEventListener("popstate", read);
-      window.removeEventListener(HOUSING_MODE_EVENT, custom);
-    };
-  }, []);
+  const mode = useHousingMode();
 
   return (
     <div
       className={mode === "afford" ? "county-mode-controller region-afford-mode" : "county-mode-controller"}
-      data-affordability-scope="county"
       data-mode={mode}
     >
       {mode === "afford" && (

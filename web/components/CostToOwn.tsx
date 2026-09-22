@@ -230,6 +230,7 @@ export function CostToOwn({
             <b>{money(shown.total)}</b>
             <span>a month{beforeTax ? ", before property tax" : ", to the lender and the town"}</span>
           </p>
+          <p className="cost-estimate-note">Calculated estimate · not a lender quote</p>
           <div className="gone-kept">
             <div
               className="gone-kept-bar"

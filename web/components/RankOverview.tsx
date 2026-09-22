@@ -1,5 +1,6 @@
 import type { PacketLevel, PacketMetric } from "@/lib/api";
 import { groupRows } from "@/lib/groups";
+import { rankPosition } from "@/lib/ranks";
 
 type Rankable = {
   metric_id: string;
@@ -12,11 +13,6 @@ type Ranked = Omit<Rankable, "rank" | "of"> & { rank: number; of: number };
 
 function hasRank(row: Rankable): row is Ranked {
   return row.rank !== null && row.of !== null && row.of > 1;
-}
-
-/** Rank 1 at zero, the final rank at one, independent of cohort size. */
-export function rankPosition(rank: number, of: number): number {
-  return of > 1 ? (rank - 1) / (of - 1) : 0.5;
 }
 
 function RankPlot({
