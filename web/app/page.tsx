@@ -1,7 +1,7 @@
 import { AffordCta } from "@/components/AffordCta";
 import { CountyExplorer, type Measure } from "@/components/CountyExplorer";
 import { Kind } from "@/components/Crumbs";
-import { HousingBand } from "@/components/HousingBand";
+import { StateProfileTicker } from "@/components/StateProfileTicker";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { api } from "@/lib/api";
 import { formatMetric } from "@/lib/format";
@@ -142,15 +142,13 @@ export default async function NewJerseyPage() {
           )}
           <Kind kind="state" />
           <h1 className="page-title">New Jersey</h1>
-          <p className="nj-intro">The statewide picture. The local differences.</p>
-          <p className="nj-deck">Explore housing costs, incomes and change across New Jersey. Start with a measure, then find your place on the map.</p>
           <nav className="nj-jump-links" aria-label="Explore New Jersey">
             <a href="#explorer-heading">Explore the map <span aria-hidden="true">↘</span></a>
             <a href="#nj-afford">Start with your budget <span aria-hidden="true">↗</span></a>
           </nav>
         </div>
       </header>
-      <HousingBand items={stateProfile(levels)} title="Across the state" tone="blue" />
+      <StateProfileTicker items={stateProfile(levels)} />
       <div className="nj-source-notes">
           {statewideNotes.map((text) => (
             <p key={text} className="table-note">

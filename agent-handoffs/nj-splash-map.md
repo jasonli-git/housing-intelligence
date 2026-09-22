@@ -1,5 +1,13 @@
 # New Jersey splash page and map experiment
 
+## Review refinement: map and continuous profile
+
+- Removed the two introductory sentences, retaining the map/budget links.
+- Replaced the statewide paged banner with `StateProfileTicker.tsx`: a continuous CSS-transform loop (42 seconds for the current three metrics), pause button, hover pause, keyboard-accessible original facts, offscreen/hidden-page pause, and static wrapping for reduced motion/print. The visual duplicate is hidden from assistive technology and contains no focusable controls. Pause or keyboard focus exposes the original facts in a scrollable strip. County banners remain unchanged.
+- Replaced white map seams/selection outline with fine blue-black borders, shaded raised walls, a cooler backdrop, frosted white-on-dark view badge, and a distinct blue county-entry button. Metric fill colors and their legend remain unchanged. Blur is limited to the small view badge, not the full map.
+- County click/tap now uses geographic hit testing, with a separate raised-top hit test so the lifted county wins over the county below it. Movement exceeding six screen pixels is treated as dragging, not clicking. Existing keyboard-accessible county-entry button remains available. This navigation is atlas-only.
+- Updated the browser check for continuous movement, hover/pause, reduced-motion readability, and raised-county tap navigation. Production checks passed with no browser errors and no horizontal overflow at 375/768/1440px. Rise probe remains 96 attribute reads. 207 tests, typecheck, and production build passed; the same local artifact-URL warning remains. Reviewed light, dark, and mobile screenshots. Human frame-time gate remains open.
+
 ## What changed
 
 - Reorganized the New Jersey landing page around a compact statewide introduction, blue profile banner, separate population card, map exploration, and a next-step affordability form.

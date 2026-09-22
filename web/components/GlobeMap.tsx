@@ -655,6 +655,7 @@ export function GlobeMap({
   const slideBox = useRef<HTMLDivElement>(null);
   /** How far the painted layer has been slid from the camera it was drawn at. */
   const shift = useRef({ x: 0, y: 0 });
+  const press = useRef<{ x: number; y: number; moved: boolean } | null>(null);
 
   /**
    * Move the painted layer, without repainting it.
@@ -1155,6 +1156,8 @@ export function GlobeMap({
               `The ranking beside the map carries the same figures.`
           }
           onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            press.current = { x: event.clientX, y: event.clientY, moved: false };
             // Taking the map in hand interrupts an in-progress zoom instead of letting
             // two independent camera writers fight over the gesture.
             if (flight.current !== null) cancelAnimationFrame(flight.current);
@@ -1174,6 +1177,7 @@ export function GlobeMap({
           }}
           onPointerMove={(event) => {
             if (!drag.current) return;
+            if (press.current && Math.hypot(event.clientX - press.current.x, event.clientY - press.current.y) > 6) press.current.moved = true;
             const box = event.currentTarget.getBoundingClientRect();
             // The SVG is scaled to its box, so a pixel on screen is not a unit in the
             // viewBox. Without this the map drifts from the cursor on a narrow screen.
@@ -1193,10 +1197,33 @@ export function GlobeMap({
             };
           }}
           onPointerUp={(event) => {
+            if (!drag.current) return;
             flush();
             const thrown = drag.current;
             drag.current = null;
             event.currentTarget.releasePointerCapture(event.pointerId);
+            const tapped = press.current;
+            press.current = null;
+            if (appearance === "atlas" && level === "county" && tapped && !tapped.moved && standing.current && layers) {
+              const box = event.currentTarget.getBoundingClientRect();
+              const point: [number, number] = [
+                (event.clientX - box.left) * width / box.width + PAD,
+                (event.clientY - box.top) * height / box.height + PAD,
+              ];
+              // The lifted top is above its geographic footprint; tapping it should
+              // enter that county, not its neighbour underneath the raised shape.
+              const top = event.currentTarget.parentElement?.querySelector<SVGPathElement>(".globe-sharp .top");
+              const matrix = top?.getScreenCTM();
+              const onTop = top && matrix && top.isPointInFill(new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse()));
+              const hit = (onTop ? layers.county.find((outline) => outline.id === sharp?.id) : null)
+                ?? at(view(shifted(standing.current, shift.current.x, shift.current.y)), layers.county, point);
+              if (hit) {
+                commit();
+                setMoving(false);
+                dive(hit);
+                return;
+              }
+            }
             coast(thrown);
             // `coast` sets the glide synchronously if it starts one, so this is the
             // moment it is known whether the map is still moving. A drag that ends
@@ -1208,6 +1235,7 @@ export function GlobeMap({
             setSettled((n) => n + 1);
           }}
           onPointerCancel={() => {
+            press.current = null;
             flush();
             drag.current = null;
             commit();
@@ -1290,6 +1318,7 @@ export function GlobeMap({
           >
             Jump into {focus.name}
             {focus.level === "county" ? " County" : ""}
+            {appearance === "atlas" && <span aria-hidden="true"> ↗</span>}
           </button>
         )}
         <div className="globe-controls globe-controls-zoom">
@@ -1369,6 +1398,7 @@ export function GlobeMap({
           not as a measurement. Drag to move the map under the crosshair, which
           reads whatever is beneath it; zoom with the buttons, or hold{" "}
           {"\u2318"} or Ctrl and scroll.
+          {appearance === "atlas" && " Click or tap a county to explore its municipalities."}
         </p>
       </figcaption>
     </figure>
