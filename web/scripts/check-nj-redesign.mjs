@@ -187,6 +187,9 @@ try {
     const countyTicker = page.locator(".region-profile-ticker");
     await countyTicker.waitFor();
     assert.ok(await countyTicker.getByRole("button", { name: "Pause housing here ticker" }).isVisible());
+    const countyRank = countyTicker.locator(".profile-rank").first();
+    await countyRank.waitFor();
+    assert.equal(await countyRank.locator("em").textContent(), "counties", "County profile ranks must name their denominator");
     const countySwitch = page.getByRole("switch", { name: "Affordability" });
     await countySwitch.click();
     await page.locator(".region-afford-mode").waitFor();
@@ -198,13 +201,27 @@ try {
     assert.equal(await page.locator(".region-standard-content").evaluate((node) => getComputedStyle(node).display), "none");
     await countySwitch.click();
     await page.locator(".region-standard-content .cost").waitFor();
+    await page.goto(`${origin}/regions/15`, { waitUntil: "networkidle" });
+    const cardsFit = await page.locator(".region-standout-card").evaluateAll((cards) =>
+      cards.every((card) => card.scrollWidth <= card.clientWidth + 1),
+    );
+    assert.ok(cardsFit, "Stand-out metrics must stay inside their cards");
+    const more = page.locator("details.more");
+    if (!(await more.evaluate((node) => node.open))) await more.locator(":scope > summary").click();
+    await page.locator(".rank-plot").first().waitFor();
+    assert.equal(await page.locator(".rank-plot").count(), 2, "The expander should add change and current-value rank plots");
+    assert.ok(await page.locator(".rank-plot-dot").count() > 20, "Rank plots should visualize the table's ranked measures");
     await page.goto(`${origin}/regions/415`, { waitUntil: "networkidle" });
     assert.equal(await page.locator(".page-title-row .title-computed").count(), 1, "Municipality title carries the computed-data badge");
     await assertBadgeBelowTitle(page, ".page-title-row");
-    const localProfileItem = page.locator(".housing-band-item").first();
-    await localProfileItem.waitFor();
+    const localTicker = page.locator(".region-profile-ticker");
+    await localTicker.waitFor();
+    assert.ok(await localTicker.getByRole("button", { name: "Pause housing here ticker" }).isVisible(), "Municipality profile should use the shared state-style ticker");
+    const localRank = localTicker.locator(".profile-rank").first();
+    await localRank.waitFor();
+    assert.equal(await localRank.locator("em").textContent(), "municipalities", "Municipality profile ranks must name their denominator");
     assert.ok(
-      await localProfileItem.evaluate((node) => {
+      await localTicker.locator(".state-ticker-group li").first().evaluate((node) => {
         const style = getComputedStyle(node);
         return Number.parseFloat(style.paddingTop) > Number.parseFloat(style.paddingBottom);
       }),
@@ -224,7 +241,7 @@ try {
       await page.setViewportSize({ width: 375, height: 900 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Regression overflow on ${route}`);
     }
-    console.log("PASS: instant ticker resume, stacked shared title badges, balanced profile banners, compact one-row selectors, precise reticle, world land, state and county affordability modes, compact other-county rows, county preselection, disabled ZIP mode, grouped local reach, transitions, color switch, tooltip bounds, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes");
+    console.log("PASS: instant ticker resume, stacked shared title badges, shared local profile tickers with named rank cohorts, balanced profile banners, contained stand-out cards, two added rank plots, compact one-row selectors, precise reticle, world land, state and county affordability modes, compact other-county rows, county preselection, disabled ZIP mode, grouped local reach, transitions, color switch, tooltip bounds, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes");
   }
   console.log(JSON.stringify({ errors }));
   if (errors.length) process.exitCode = 1;

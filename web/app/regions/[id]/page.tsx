@@ -8,10 +8,10 @@ import { CurrentValues } from "@/components/CurrentValues";
 import { Definition } from "@/components/Definition";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { Glossed } from "@/components/Glossed";
-import { HousingBand } from "@/components/HousingBand";
 import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Ledger, TableNotes } from "@/components/Ledger";
 import { MoreExpander } from "@/components/MoreExpander";
+import { RankOverview } from "@/components/RankOverview";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
 import { TrendsExplorer } from "@/components/TrendsExplorer";
 import { api, type PacketLevel, type PacketMetric, type Region, regionsWithData } from "@/lib/api";
@@ -188,6 +188,9 @@ export default async function RegionPage({
   );
   const standing = standOuts(packet);
   const rankExample = rankBasisExample(name, packet.metrics, packet.levels);
+  const rankChartCount =
+    Number(packet.metrics.some((row) => row.rank !== null && row.of !== null && row.of > 1)) +
+    Number(packet.levels.some((row) => row.rank !== null && row.of !== null && row.of > 1));
 
   // One set per page: each glossary term is marked the first time it appears.
   const defined = new Set<string>();
@@ -203,7 +206,9 @@ export default async function RegionPage({
   const contents = [
     packet.metrics.length > 0 ? `${packet.metrics.length} figures ranked by change` : null,
     packet.levels.length > 0 ? `${packet.levels.length} current values` : null,
-    trends.length > 0 ? `${trends.length} ${trends.length === 1 ? "chart" : "charts"}` : null,
+    trends.length + rankChartCount > 0
+      ? `${trends.length + rankChartCount} ${trends.length + rankChartCount === 1 ? "chart" : "charts"}`
+      : null,
     readings.length > 1 ? `${readings.length} models’ readings` : readings.length === 1 ? "a model’s reading" : null,
   ].filter((part): part is string => part !== null);
   const moreTitle =
@@ -274,16 +279,13 @@ export default async function RegionPage({
         </div>
       </header>
 
-      {region.level === "county" ? (
-        <ProfileTicker
-          items={profile}
-          title="Housing here"
-          ariaLabel={`${name} housing profile`}
-          className="region-profile-ticker"
-        />
-      ) : (
-        <HousingBand items={profile} />
-      )}
+      <ProfileTicker
+        items={profile}
+        title="Housing here"
+        ariaLabel={`${name} housing profile`}
+        className="region-profile-ticker"
+        peerLabel={peerNoun(peer_level)}
+      />
 
       {region.level === "county" && (
         <CountyModeWorkspace countyId={regionId} countyName={name} afford={affordability} />
@@ -316,6 +318,12 @@ export default async function RegionPage({
       />
 
       <MoreExpander title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>
+        <RankOverview
+          changes={packet.metrics}
+          values={packet.levels}
+          peerLabel={peerNoun(peer_level)}
+        />
+
         <section className="section" aria-labelledby="ledger-heading">
           <h2 id="ledger-heading">Every figure, ranked by change over five years</h2>
           {packet.metrics.length > 0 ? (

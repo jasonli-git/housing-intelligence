@@ -537,6 +537,7 @@ body > main { flex: 1 0 auto; width: 100%; }
   scroll-snap-align: start; color: #ffffff;
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.14);
 }
+.region-standout-card > * { min-width: 0; max-width: 100%; }
 .region-standout-rail[data-group="leads"] .region-standout-card {
   background: linear-gradient(145deg, color-mix(in srgb, var(--series-2) 60%, #6b2700), #6b2c0d);
 }
@@ -552,12 +553,13 @@ body > main { flex: 1 0 auto; width: 100%; }
 }
 .region-standout-what { font-size: var(--text-small); line-height: 1.3; font-weight: 600; }
 .region-standout-figure {
-  margin-top: 0.2rem; font: 700 clamp(26px, 2.25vw, 32px)/1 var(--font-display);
-  letter-spacing: -0.035em; font-variant-numeric: tabular-nums;
+  margin-top: 0.2rem; font: 700 clamp(21px, 1.9vw, 28px)/1 var(--font-display);
+  letter-spacing: -0.045em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
 }
 .region-standout-detail {
   align-self: end; margin-top: auto; padding-top: 0.6rem; font-size: var(--text-note);
   line-height: 1.45; color: #ffffff; font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 .region-standout-card .term { text-decoration-color: rgb(255 255 255 / 0.55); }
 .region-standout-card .term:hover,
@@ -571,104 +573,6 @@ body > main { flex: 1 0 auto; width: 100%; }
 
 @media (max-width: 600px) {
   .standout-deck-label span { display: block; margin: 0.15rem 0 0; }
-}
-
-/* The housing profile is a fixed-height, screen-wide band above the cost section. A narrow
-   title-and-arrows rail leaves almost all of the width to the facts. The client component
-   pages as many facts as fit, while definitions render in the page layer so the rounded
-   fixed-height frame cannot clip them.
-   Its soft wash and Space Grotesk figures make it feel like one composed editorial banner,
-   while a restrained directional reveal distinguishes its paging from the card shelves. */
-.housing-band {
-  --carousel-progress-color: var(--series-3);
-  position: relative; isolation: isolate; display: grid; grid-template-columns: 7rem minmax(0, 1fr); height: 6.75rem;
-  align-items: stretch; gap: 0.5rem; margin-top: 1.4rem; padding: 0.5rem 0.75rem 0.7rem;
-  overflow: hidden; border: 1px solid color-mix(in srgb, var(--series-3) 28%, var(--border)); border-radius: 16px;
-  background: linear-gradient(105deg,
-    color-mix(in srgb, var(--series-3) 13%, var(--surface-card)),
-    color-mix(in srgb, var(--series-3) 3%, var(--surface-2)) 62%);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--series-3) 12%, transparent),
-    0 8px 26px rgb(0 0 0 / 0.045);
-}
-.housing-band::before {
-  content: ""; position: absolute; z-index: 0; width: 17rem; height: 17rem;
-  top: -11rem; left: 3rem; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle,
-    color-mix(in srgb, var(--series-3) 18%, transparent), transparent 68%);
-}
-.housing-band-head {
-  position: relative; z-index: 1; display: grid; align-content: center; gap: 0.35rem;
-  padding-right: 0.7rem; border-right: 1px solid color-mix(in srgb, var(--series-3) 18%, var(--grid));
-}
-.housing-band-head::before {
-  content: "Profile"; font: 600 8px/1 var(--font-mono); letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--series-3);
-}
-.housing-band-head h2 {
-  margin: 0; font: 650 17px/1.05 var(--jl-font); letter-spacing: -0.035em;
-}
-.housing-band-nav { display: flex; gap: 0.3rem; }
-.housing-band-arrow {
-  width: 27px; height: 27px; padding: 0; justify-content: center; border-radius: 50%;
-  border-color: color-mix(in srgb, var(--series-3) 26%, var(--border));
-  background: color-mix(in srgb, var(--series-3) 9%, var(--surface-card)); color: var(--text-primary);
-}
-.housing-band-arrow svg {
-  width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8;
-  stroke-linecap: round; stroke-linejoin: round;
-}
-.housing-band-items {
-  position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-  min-width: 0; list-style: none; margin: 0; padding: 0;
-}
-.housing-band-item {
-  position: relative; display: grid; align-content: center; gap: 1px; min-width: 0;
-  padding: 0.45rem 0.65rem 0; border-left: 1px solid var(--grid);
-}
-.housing-band-item:first-child { border-left: 0; }
-.housing-band-item > b {
-  font: 650 22px/1.05 var(--jl-font); letter-spacing: -0.04em;
-  font-variant-numeric: tabular-nums; color: var(--text-primary);
-}
-.housing-band-item.has-rank > b { padding-right: 4rem; }
-.housing-band-label { font-size: var(--text-note); line-height: 1.35; color: var(--text-primary); }
-.housing-band-context { font-size: 10px; line-height: 1.35; color: var(--text-muted); }
-.housing-band-rank {
-  position: absolute; top: 0.15rem; right: 0.45rem;
-  color: var(--series-3); font: 700 14px/1 var(--font-mono); letter-spacing: -0.06em;
-  font-variant-numeric: tabular-nums;
-}
-.housing-band-item .gl { position: static; }
-.housing-band-progress {
-  position: absolute; z-index: 1; left: 0.75rem; right: 0.75rem; bottom: 0.35rem;
-}
-.housing-band + .section.cost { margin-top: 1.6rem; }
-
-@media (prefers-reduced-motion: no-preference) {
-  .housing-band-item {
-    animation: housing-fact-forward 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-  .housing-band-item:nth-child(2) { animation-delay: 45ms; }
-  .housing-band-item:nth-child(3) { animation-delay: 90ms; }
-  .housing-band-item:nth-child(4) { animation-delay: 135ms; }
-  .housing-band-item:nth-child(5) { animation-delay: 180ms; }
-  .housing-band-items[data-direction="backward"] .housing-band-item {
-    animation-name: housing-fact-backward;
-  }
-}
-@keyframes housing-fact-forward {
-  from { opacity: 0; transform: translate3d(14px, 0, 0); }
-}
-@keyframes housing-fact-backward {
-  from { opacity: 0; transform: translate3d(-14px, 0, 0); }
-}
-
-@media (max-width: 520px) {
-  .housing-band { grid-template-columns: 5.75rem minmax(0, 1fr); height: 7rem; padding-inline: 0.65rem; }
-  .housing-band-head { padding-right: 0.4rem; }
-  .housing-band-head h2 { font-size: 15px; }
-  .housing-band-items { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
-  .housing-band-progress { left: 0.65rem; right: 0.65rem; }
 }
 
 /* The housing here on reports: a number, a label, and where it sits among its peers. */
@@ -964,6 +868,36 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 .trend .scroll-x > table { min-width: 0; }
 .trend table { font-size: var(--text-note); }
 .trend th, .trend td { padding: 0.25rem 0.5rem 0.25rem 0; border-bottom: 1px solid var(--grid); }
+
+/* Two compact rank distributions before the full tables. Unlike a line chart, these
+   answer a cross-sectional question: whether this place repeatedly sits near one end of
+   its peer groups. Every dot is the exact rank the tables carry, normalized only so a
+   cohort of 18 and one of 21 can share an axis without pretending their coverage matches. */
+.rank-overview-intro { max-width: 76ch; margin: 0.35rem 0 1rem; color: var(--text-secondary); font-size: var(--text-small); }
+.rank-plots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); }
+.rank-plot { min-width: 0; margin: 0; padding: 1rem; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-2); }
+.rank-plot figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: 0.8rem; }
+.rank-plot figcaption strong { font-size: var(--text-small); }
+.rank-plot figcaption span { color: var(--text-muted); font: var(--text-label)/1.2 var(--font-mono); white-space: nowrap; }
+.rank-plot > p { margin: 0.2rem 0 0.55rem; color: var(--text-muted); font-size: var(--text-note); }
+.rank-plot-scroll { overflow-x: auto; }
+.rank-plot svg { display: block; width: 100%; min-width: 32rem; height: auto; }
+.rank-plot text { font-family: var(--font-mono); }
+.rank-plot-end { fill: var(--text-muted); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.rank-plot-label { fill: var(--text-secondary); font-size: 11px; }
+.rank-plot-track { stroke: var(--grid); stroke-width: 4; stroke-linecap: round; }
+.rank-plot-middle { stroke: var(--border); stroke-width: 1; }
+.rank-plot-dot { fill: var(--series-1); stroke: var(--surface-2); stroke-width: 2; cursor: help; }
+.rank-plot-dot-prices { fill: var(--series-1); }
+.rank-plot-dot-affordability { fill: var(--series-2); }
+.rank-plot-dot-incomes { fill: var(--series-3); }
+.rank-plot-dot-housing { fill: var(--good); }
+.rank-plot-dot-other { fill: var(--text-secondary); }
+.rank-plot-dot:focus-visible { outline: none; stroke: var(--focus); stroke-width: 4; }
+
+@media (max-width: 760px) {
+  .rank-plots { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* --------------------------------------------------------- current values --- */
 

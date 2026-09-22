@@ -19,17 +19,30 @@ function MotionIcon({ playing, reduced }: { playing: boolean; reduced: boolean }
   );
 }
 
+function profileContext(context: string | null) {
+  if (!context) return { words: null, rank: null };
+  const ranked = context.match(/^(.*) · (\d+)(?:st|nd|rd|th) of (\d+)$/);
+  if (!ranked) return { words: context, rank: null };
+  return {
+    words: ranked[1],
+    rank: { value: ranked[2], of: ranked[3] },
+  };
+}
+
 /** A visual loop, not a live feed: dates travel with every published observation. */
 export function ProfileTicker({
   items,
   title,
   ariaLabel,
   className = "",
+  peerLabel,
 }: {
   items: ProfileItem[];
   title: string;
   ariaLabel: string;
   className?: string;
+  /** What the rank denominator counts: counties, municipalities or ZIP codes. */
+  peerLabel?: string;
 }) {
   const [stopped, setStopped] = useState(false);
   const [manualPlaying, setManualPlaying] = useState(false);
@@ -77,11 +90,27 @@ export function ProfileTicker({
         <div className="state-ticker-track" style={{ animationDuration: `${Math.max(30, items.length * 14)}s`, animationPlayState: stopped || (motion.paused && !manualPlaying) ? "paused" : "running" }}>
           {[false, true].map((duplicate) => (
             <ul key={String(duplicate)} className="state-ticker-group" aria-hidden={duplicate || undefined}>
-              {items.map((item) => <li key={item.metric_id}>
-                <b>{item.value}</b>
-                {duplicate ? <span>{item.label}</span> : <FloatingMetricTerm metricId={item.metric_id} label={item.label} definition={item.definition} why={null} />}
-                <small>{item.context}</small>
-              </li>)}
+              {items.map((item) => {
+                const context = profileContext(item.context);
+                return (
+                  <li key={item.metric_id}>
+                    <b>{item.value}</b>
+                    {duplicate ? <span>{item.label}</span> : <FloatingMetricTerm metricId={item.metric_id} label={item.label} definition={item.definition} why={null} />}
+                    <span className="state-ticker-meta">
+                      {context.words && <small>{context.words}</small>}
+                      {context.rank && peerLabel && (
+                        <span
+                          className="profile-rank"
+                          aria-label={`Rank ${context.rank.value} of ${context.rank.of} ${peerLabel}`}
+                        >
+                          <strong>{context.rank.value}/{context.rank.of}</strong>
+                          <em>{peerLabel}</em>
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           ))}
         </div>

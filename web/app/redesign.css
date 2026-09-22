@@ -503,6 +503,16 @@ select,
 .state-ticker-group b { font-size: 24px; font-weight: 550; line-height: 1; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
 .state-ticker-group li > span, .state-ticker-group .metric-term { font-size: 12px; }
 .state-ticker-group small { font-size: 9px; margin-top: 3px; color: var(--text-muted); }
+.state-ticker-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.55rem; min-width: 0; margin-top: 3px; }
+.state-ticker-meta > small { min-width: 0; margin: 0; }
+.profile-rank {
+  display: inline-flex; flex: 0 0 auto; align-items: baseline; gap: 0.32rem;
+  padding: 2px 6px; border: 1px solid color-mix(in srgb, var(--profile-accent) 30%, var(--border));
+  border-radius: 999px; background: color-mix(in srgb, var(--profile-accent) 8%, var(--surface-card));
+  color: var(--text-primary); white-space: nowrap;
+}
+.profile-rank strong { font: 700 11px/1 var(--font-mono); letter-spacing: -0.04em; }
+.profile-rank em { font: 600 8px/1 var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; color: var(--profile-accent); font-style: normal; }
 @keyframes state-conveyor { to { transform: translateX(-50%); } }
 .state-ticker[data-stopped="true"] .state-ticker-track { animation: none; width: auto; }
 .state-ticker[data-stopped="true"] .state-ticker-window { overflow-x: auto; }

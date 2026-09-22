@@ -1,5 +1,13 @@
 # New Jersey splash page and map experiment
 
+## Review refinement: unified profiles, contained cards and added rank plots
+
+- Replaced the separate paged municipality/ZIP profile with the same continuous `ProfileTicker` used by New Jersey and counties, then removed the obsolete `HousingBand` implementation and its CSS. State remains blue; every local profile keeps the established green treatment, shared compact height, pause/play behavior, definitions, reduced-motion behavior and print fallback.
+- Pulled local profile ranks out of the small prose line into a quiet explicit badge: `13/21 COUNTIES`, `87/564 MUNICIPALITIES`, or the equivalent current cohort. The nearby plain-language cue such as “older than most” remains, and the accessible label reads the full “Rank 13 of 21 counties.” Statewide metrics correctly carry no invented ranks.
+- Prevented long stand-out values and source details from exceeding their narrow cards by bounding every child, reducing the value type slightly, and allowing emergency wrapping for genuinely long unbroken content. The card dimensions, three shelves, colors and autoplay are unchanged.
+- Added two non-line charts at the top of the existing expansion: five-year change rank and current-value rank. Each grouped dot plot visualizes every ranked measure from the tables below on a normalized rank-1-to-last axis, preserves each metric’s actual cohort in its tooltip/accessible label, and explicitly warns that rank 1 follows the metric’s direction rather than always meaning “better.” No tables or analytical calculations changed.
+- Updated the expansion summary’s chart count and browser coverage for card containment, shared county/municipality tickers, named rank denominators, both rank plots and responsive overflow.
+
 ## Review refinement: title hierarchy, reverse navigation and banner balance
 
 - Stacked the shared `Computed from the data · not AI` badge beneath the New Jersey, county, municipality and ZIP title instead of letting it compete with the place name on the same line. The same definition and mobile-bounded tooltip remain.
@@ -58,7 +66,7 @@
 ## Files/modules affected
 
 - `web/app/page.tsx`, `web/app/new-jersey.css`: landing composition and scoped visual treatment.
-- `web/components/HousingBand.tsx`: optional title/blue tone, statewide sizing and print presentation; existing local-profile defaults retained.
+- `web/components/StateProfileTicker.tsx`: one shared continuous state/local profile ticker, including explicit local rank-cohort badges. The superseded `web/components/HousingBand.tsx` was removed.
 - `web/components/CountyExplorer.tsx`: measure shortcuts, comparison heading, atlas opt-in.
 - `web/components/GlobeMap.tsx`: optional atlas presentation and shared paint/gesture lifecycle improvements.
 - `web/app/map.json/route.ts`, `web/lib/mapdata.ts`, `web/lib/globe.ts`: optional municipality parent-county identity used by reverse map navigation.
@@ -66,6 +74,7 @@
 - `web/app/regions/[id]/page.tsx`, `web/app/page.tsx`, `web/components/ComputedBadge.tsx`, `web/components/StateProfileTicker.tsx`, `web/app/redesign.css`: shared title provenance, county profile conveyor, local mode composition, shared transitions, and fixed play/pause presentation.
 - `web/lib/worldLand.ts`, `web/lib/world-land.json`: documented, static Natural Earth world backdrop.
 - `web/lib/stateProfile.ts`, `web/lib/stateProfile.test.ts`: presentation adapter and three tests.
+- `web/components/RankOverview.tsx`, `web/lib/rankOverview.test.ts`: two accessible normalized rank plots and rank-position coverage.
 - `web/scripts/check-nj-redesign.mjs`: repeatable headless browser checks and a narrowly scoped DOM-work counter.
 
 ## Architectural or implementation decisions
@@ -92,9 +101,9 @@
 ## Verification
 
 - `cd web && npm run typecheck`: passed.
-- `cd web && npm test -- --run`: 26 files, 209 tests passed, including municipality-parent preservation, three statewide profile tests and one world-coverage test.
+- `cd web && npm test -- --run`: 27 files, 210 tests passed, including normalized rank positions, municipality-parent preservation, three statewide profile tests and one world-coverage test.
 - `cd web && npm run build`: passed with local-API access; 2,276 static pages generated, with the local artifact-URL warning described above. The first sandboxed attempt could not reach the already-running API at localhost:8000 and was rerun with localhost access.
-- `cd web && CHECK_URL=http://localhost:3000 CHECK_LABEL=after node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths; immediate ticker resume, badges stacked below state/county/municipality/ZIP titles, balanced profile content, compact secondary county rows, one-row selector placement, smaller reticle, worldwide land, state and county affordability switching, county preselection, disabled ZIP mode, reduced-motion and animated transitions, county-scoped municipality results, progressive rise, definition bounds, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes.
+- `cd web && CHECK_URL=http://localhost:3000 CHECK_LABEL=after node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths; immediate ticker resume, shared state/county/municipality profile treatment, named local rank cohorts, contained stand-out cards, two added rank plots, badges stacked below state/county/municipality/ZIP titles, balanced profile content, compact secondary county rows, one-row selector placement, smaller reticle, worldwide land, state and county affordability switching, county preselection, disabled ZIP mode, reduced-motion and animated transitions, county-scoped municipality results, progressive rise, definition bounds, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes.
 - Inspected production desktop, mobile, and dark-mode screenshots.
 - `git diff --check`: passed.
 - Backend tests not run: backend and data pipeline unchanged. No deployment or merge performed.

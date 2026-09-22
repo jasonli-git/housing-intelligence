@@ -7,10 +7,6 @@
 .nj-head .population-summary { border-left-color: var(--atlas-blue); }
 .nj-head .population-summary-label { color: var(--atlas-blue); }
 .nj-page:has(.nj-afford-mode) .nj-head { --kind: var(--series-2); }
-.nj-page .housing-band-blue { --series-3: var(--atlas-blue); margin-top: 0; height: 7.25rem; }
-.nj-page .housing-band-blue .housing-band-items { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
-.nj-page .housing-band-blue .housing-band-item > b { font-size: clamp(24px, 2.4vw, 32px); }
-.nj-page .housing-band-blue .housing-band-context { font-size: 10px; margin-top: 4px; }
 .nj-source-notes:empty { display: none; }
 .nj-page .measure-card { border-top: 0; padding-block: 2rem 1.25rem; gap: 1rem; }
 .nj-page .measure-name { font-size: clamp(23px, 2.5vw, 30px); }
@@ -44,7 +40,6 @@
 .nj-page .globe-controls { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--surface-card); border-color: var(--border); box-shadow: 0 2px 6px rgb(0 0 0 / 0.07); }
 .nj-page .globe-controls button { min-width: 34px; min-height: 34px; }
 .nj-page .globe-level-label { position: absolute; left: 18px; top: 17px; z-index: 2; pointer-events: none; color: light-dark(#183750, #f4f9ff); font: 650 10px/1 var(--font-display); letter-spacing: 0.16em; text-transform: uppercase; }
-.housing-band-print { display: none; }
 .nj-page .globe-stage { background: radial-gradient(ellipse at 40% 25%, light-dark(#fbfcfd, #27313d), light-dark(#dde5ed, #141d28)); }
 .nj-page .globe-ground path, .nj-page .globe-absent { fill: light-dark(#e2e7ec, #29333e); stroke: light-dark(#c9d1d9, #3b4652); stroke-width: 0.6; }
 .nj-page .globe-ground .globe-world-land { fill: light-dark(#d5dce3, #222d38); stroke: light-dark(#bec8d1, #35414d); stroke-width: 0.45; }
@@ -80,9 +75,6 @@
   .nj-head .page-title-row { margin-top: 3.5rem; }
   .nj-head .page-title { font-size: 52px; }
   .nj-head .population-summary { top: -0.2rem; }
-  .nj-page .housing-band-blue { height: 7.75rem; }
-  .nj-page .housing-band-blue .housing-band-item { padding-inline: 0.55rem; }
-  .nj-page .housing-band-blue .housing-band-context { font-size: 9px; }
   .nj-page .measure-card .explorer-controls { padding: 0.7rem; }
   .nj-page .measure-card .explorer-controls { flex-wrap: wrap; }
   .nj-page .control, .nj-page .control select { min-width: 0; width: 100%; }
@@ -92,8 +84,4 @@
 @media print {
   .nj-page .quick-measure, .nj-page .nj-afford-intro { display: none; }
   .nj-page .explorer { display: block; box-shadow: none; }
-  .nj-page .housing-band-blue { height: auto; overflow: visible; background: none; }
-  .nj-page .housing-band-blue .housing-band-items, .nj-page .housing-band-blue .housing-band-nav { display: none; }
-  .nj-page .housing-band-print { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; list-style: none; padding: 0; }
-  .housing-band-print li > * { display: block; }
 }
