@@ -24,7 +24,8 @@ layer only explains metrics that were already computed.
 > its source file and match method. All eight pipeline stages run. The site publishes
 > itself — 5,955 static artifacts and 2,274 pre-rendered pages, served with no database
 > and no application server — across four page types: the state, 1,135 region pages,
-> their reports, and an affordability page.
+> their reports, and an affordability workspace, reachable in place from the state and
+> county pages or at its own address.
 >
 > **Latest.** Milestone 29 shipped on 2026-09-20: the platform now asks each publisher
 > whether anything has moved instead of answering from its own cache forever. It found
