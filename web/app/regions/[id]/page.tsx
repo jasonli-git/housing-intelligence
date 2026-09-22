@@ -1,18 +1,21 @@
 import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
+import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
 import { Definition } from "@/components/Definition";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { Glossed } from "@/components/Glossed";
 import { HousingBand } from "@/components/HousingBand";
+import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Ledger, TableNotes } from "@/components/Ledger";
 import { MoreExpander } from "@/components/MoreExpander";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
 import { TrendsExplorer } from "@/components/TrendsExplorer";
 import { api, type PacketLevel, type PacketMetric, type Region, regionsWithData } from "@/lib/api";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
+import { affordData, affordabilityForCounty } from "@/lib/affordData";
 import { costInputs, homePrice } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
 import type { Term } from "@/lib/glossary";
@@ -165,7 +168,7 @@ export default async function RegionPage({
     );
   }
 
-  const [series, cost] = await Promise.all([
+  const [series, cost, affordability] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -174,6 +177,9 @@ export default async function RegionPage({
       })),
     ),
     costInputs(region.level, packet.levels, packet.metrics),
+    region.level === "county"
+      ? affordData().then((data) => data ? affordabilityForCounty(data, regionId) : null)
+      : Promise.resolve(null),
   ]);
   const trends = series.filter((s) => s.observations.length >= 2);
 
@@ -292,7 +298,22 @@ export default async function RegionPage({
         </div>
       </header>
 
-      <HousingBand items={profile} />
+      {region.level === "county" ? (
+        <ProfileTicker
+          items={profile}
+          title="Housing here"
+          ariaLabel={`${name} housing profile`}
+          className="region-profile-ticker"
+        />
+      ) : (
+        <HousingBand items={profile} />
+      )}
+
+      {region.level === "county" && (
+        <CountyModeWorkspace countyId={regionId} countyName={name} afford={affordability} />
+      )}
+
+      <div className="region-standard-content">
 
       {cost ? (
         <CostToOwn {...cost} />
@@ -420,6 +441,7 @@ export default async function RegionPage({
           </div>
         )}
       </MoreExpander>
+      </div>
     </main>
   );
 }

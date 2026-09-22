@@ -235,15 +235,13 @@ export function GlobeMap({
   describe,
 }: Props) {
   const [camera, setCamera] = useState<Camera | null>(null);
-  // The probe's rise, eased towards its target rather than snapped to it. A block that
-  // appears at full height the instant the crosshair crosses a line reads as a glitch;
-  // coming up over a few frames reads as the map answering.
-  const [rise, setRise] = useState(0);
+  // The probe's rise belongs to one region. Keeping the id beside the height prevents a
+  // newly focused shape inheriting the old shape's lift for one frame.
+  const [lift, setLift] = useState<{ id: number | string | null; value: number }>({ id: null, value: 0 });
   // The crosshair mark itself, off until asked for. The focus treatment already says
   // what the map is holding, and a permanent reticle over a map of somebody's home town
   // reads like a gunsight; the readers who want the exact point can turn it on.
   const [crosshair, setCrosshair] = useState(false);
-  const risen = useRef({ at: 0, to: 0 });
   const settling = useRef<number | null>(null);
   const frame = useRef<SVGSVGElement>(null);
   const drag = useRef<{
@@ -388,55 +386,44 @@ export function GlobeMap({
   // region's geometry.
   const target = drawn && active !== null ? drawn.probe(active) : 0;
   const raised = useMemo(() => {
-    if (!drawn || !layers || !camera || active === null || rise <= 0)
+    if (!drawn || !layers || !camera || active === null || lift.id !== active || lift.value <= 0)
       return null;
     const outline = inView.find((o) => o.id === active);
-    return outline ? prism(drawn.v, outline, rise) : null;
-  }, [drawn, layers, camera, level, active, rise]);
+    return outline ? prism(drawn.v, outline, lift.value) : null;
+  }, [drawn, layers, camera, level, active, lift]);
 
-  // Ease the rise towards whatever the scene last asked for. An exponential approach
-  // rather than a fixed duration: a new target part-way through is picked up from where
-  // the old one got to, which is what makes sweeping the crosshair feel continuous
-  // instead of restarting. Readers who have asked for less motion get the target at
-  // once, as everything else on the site does.
-  useEffect(() => {
-    risen.current.to = target;
+  // Each newly focused entity makes one complete, fixed-duration rise from the surface.
+  // The prior exponential ease reused the previous entity's partial height, which read
+  // as an instant jump followed by a second slow rise when the pointer crossed a line.
+  useLayoutEffect(() => {
+    if (settling.current !== null) cancelAnimationFrame(settling.current);
+    settling.current = null;
     const still =
       typeof globalThis.matchMedia === "function" &&
       globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (still) {
-      risen.current.at = target;
-      setRise(target);
+    if (active === null || target <= 0) {
+      setLift({ id: active, value: 0 });
       return;
     }
-    // Already easing: the loop reads its target from the ref, so a new one steers it
-    // from wherever it has got to. Tearing the loop down and starting another would
-    // restart the motion, which is the thing the easing exists to avoid.
-    if (settling.current !== null) return;
-    const step = () => {
-      const wanted = risen.current.to;
-      // A slow approach; the owner found the rise too quick to feel like an answer.
-      const next = risen.current.at + (wanted - risen.current.at) * 0.022;
-      const done = Math.abs(wanted - next) < 0.25;
-      risen.current.at = done ? wanted : next;
-      // Scheduled out here, never inside the state updater. An updater must be pure —
-      // React calls it twice in development to prove it, and a `requestAnimationFrame`
-      // in there doubled the loop every frame until React gave up on the subtree with
-      // "Maximum update depth exceeded" and stopped responding to anything at all.
-      settling.current = done ? null : requestAnimationFrame(step);
-      setRise(risen.current.at);
+    if (still) {
+      setLift({ id: active, value: target });
+      return;
+    }
+    setLift({ id: active, value: 0 });
+    const began = performance.now();
+    const duration = 380;
+    const step = (now: number) => {
+      const progress = Math.min(1, (now - began) / duration);
+      const eased = 1 - (1 - progress) ** 3;
+      setLift({ id: active, value: target * eased });
+      settling.current = progress < 1 ? requestAnimationFrame(step) : null;
     };
     settling.current = requestAnimationFrame(step);
-  }, [target]);
-
-  // Stopping the loop belongs to unmount, not to every change of target.
-  useEffect(
-    () => () => {
+    return () => {
       if (settling.current !== null) cancelAnimationFrame(settling.current);
       settling.current = null;
-    },
-    [],
-  );
+    };
+  }, [active, target]);
 
   /** The two painted layers, as `lib/paint.ts` wants them. */
   const painting = (built: NonNullable<ReturnType<typeof build>>) => ({

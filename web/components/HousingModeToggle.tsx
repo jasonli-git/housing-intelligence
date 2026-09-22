@@ -5,7 +5,12 @@ import { useEffect, useState } from "react";
 export const HOUSING_MODE_EVENT = "housing:mode";
 
 function affordabilityFromLocation() {
-  return window.location.pathname === "/afford" || new URLSearchParams(window.location.search).get("mode") === "afford";
+  const localMode = window.location.pathname === "/" || Boolean(
+    document.querySelector("[data-affordability-scope='county']"),
+  );
+  return window.location.pathname === "/afford" || (
+    localMode && new URLSearchParams(window.location.search).get("mode") === "afford"
+  );
 }
 
 /** Global mode switch: local on the NJ page, a direct route everywhere else. */
@@ -25,8 +30,10 @@ export function HousingModeToggle() {
   }, []);
 
   const change = () => {
-    const onHome = window.location.pathname === "/";
-    if (!onHome) {
+    const localMode = window.location.pathname === "/" || Boolean(
+      document.querySelector("[data-affordability-scope='county']"),
+    );
+    if (!localMode) {
       window.location.assign(afford ? "/" : "/?mode=afford");
       return;
     }
@@ -46,4 +53,3 @@ export function HousingModeToggle() {
     </button>
   );
 }
-

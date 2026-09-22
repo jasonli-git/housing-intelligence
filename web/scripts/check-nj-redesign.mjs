@@ -25,6 +25,16 @@ try {
   await page.waitForTimeout(900);
   console.log(JSON.stringify({ label, pathAttributeReadsDuringRise: await page.evaluate(() => window.pathReads) }));
   if (label !== "before") assert.ok(await page.evaluate(() => window.pathReads < 500), "Probe-only frames must not repaint the entire scene");
+  if (label !== "before") {
+    await page.locator(".ranks tbody tr").nth(1).hover();
+    const rising = page.locator(".globe-sharp .top");
+    await rising.waitFor({ state: "attached" });
+    await page.waitForTimeout(25);
+    const earlyY = await rising.evaluate((node) => node.getBBox().y);
+    await page.waitForTimeout(160);
+    const laterY = await rising.evaluate((node) => node.getBBox().y);
+    assert.ok(laterY < earlyY, "A newly hovered region should make one progressive rise from the map");
+  }
   await page.mouse.move(0, 0);
   await page.waitForTimeout(1000);
   await page.screenshot({ path: `/tmp/nj-${label}-desktop.png`, fullPage: true });
@@ -53,6 +63,10 @@ try {
     assert.equal(await track.evaluate((node) => getComputedStyle(node).transform), pausedTransform, "Hover pauses ticker");
     await ticker.getByRole("button", { name: "Pause statewide ticker" }).click();
     assert.equal(await track.evaluate((node) => getComputedStyle(node).animationName), "none");
+    const play = ticker.getByRole("button", { name: "Play statewide ticker" });
+    await play.waitFor();
+    assert.ok(await play.locator("svg").isVisible(), "Play icon must remain visible after pausing");
+    await play.click();
     await page.setViewportSize({ width: 375, height: 900 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     const band = ticker;
@@ -73,6 +87,9 @@ try {
     assert.ok(fits, "Profile copy must not be clipped");
     await page.getByRole("button", { name: "Rents", exact: true }).click();
     await page.getByRole("heading", { name: "Observed rent index, all homes", exact: true }).waitFor();
+    const controlsBox = await page.locator(".explorer-controls").boundingBox();
+    const onMapBox = await page.locator(".measure-eyebrow").boundingBox();
+    assert.ok(controlsBox && onMapBox && controlsBox.y < onMapBox.y, "Measure shortcuts and controls should precede On the map");
     await page.getByRole("button", { name: "Zoom in", exact: true }).click();
     await page.getByRole("heading", { name: "Municipalities", exact: true }).waitFor();
     const map = await page.locator(".globe-still").boundingBox();
@@ -106,6 +123,7 @@ try {
     const modeSwitch = page.getByRole("switch", { name: "Affordability" });
     await modeSwitch.click();
     await page.locator(".nj-afford-mode").waitFor();
+    assert.equal(await page.locator(".mode-panel").evaluate((node) => getComputedStyle(node).animationName), "none", "Reduced motion disables the mode transition");
     assert.equal(await page.locator(".nj-mode .explorer").count(), 1, "Both modes use one map-and-table footprint");
     await page.getByRole("heading", { name: "What does this mean for you?", exact: true }).waitFor();
     await page.getByText("Counties within reach", { exact: true }).waitFor();
@@ -118,12 +136,28 @@ try {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(100);
     await page.screenshot({ path: `/tmp/nj-${label}-dark.png`, fullPage: true });
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.goto(`${origin}/regions/12`, { waitUntil: "networkidle" });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    const countyTicker = page.locator(".region-profile-ticker");
+    await countyTicker.waitFor();
+    assert.ok(await countyTicker.getByRole("button", { name: "Pause housing here ticker" }).isVisible());
+    const countySwitch = page.getByRole("switch", { name: "Affordability" });
+    await countySwitch.click();
+    await page.locator(".region-afford-mode").waitFor();
+    assert.notEqual(await page.locator(".region-afford-mode .mode-panel").evaluate((node) => getComputedStyle(node).animationName), "none", "County mode should transition");
+    await page.locator(".county-afford-intro h2").waitFor();
+    await page.getByText("Other municipalities", { exact: true }).waitFor();
+    await page.getByRole("columnheader", { name: "Municipality", exact: true }).waitFor();
+    assert.equal(await page.locator(".region-standard-content").evaluate((node) => getComputedStyle(node).display), "none");
+    await countySwitch.click();
+    await page.locator(".region-standard-content .cost").waitFor();
     for (const route of ["/regions/12", "/afford"]) {
       await page.goto(`${origin}${route}`, { waitUntil: "networkidle" });
       await page.setViewportSize({ width: 375, height: 900 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Regression overflow on ${route}`);
     }
-    console.log("PASS: compact ticker, icon pause, world land, merged affordability mode, grouped county reach, color switch, tooltip bounds, shortcuts, municipality zoom, county tap, drag commit, reset, dark mode, county/afford regression routes");
+    console.log("PASS: compact ticker, persistent play icon, world land, merged state and county affordability modes, grouped local reach, transitions, control order, color switch, tooltip bounds, shortcuts, municipality zoom, county tap, drag commit, reset, dark mode, county/afford regression routes");
   }
   console.log(JSON.stringify({ errors }));
   if (errors.length) process.exitCode = 1;

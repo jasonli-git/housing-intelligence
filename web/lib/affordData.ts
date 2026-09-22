@@ -36,11 +36,11 @@ export async function affordData(): Promise<AffordData | null> {
   const value = (map: Map<number, RankedRegion>, id: number) => map.get(id)?.value ?? null;
   const details = new Map(searchEntries([...counties.items, ...towns.items]).map((entry) => [entry.id, entry.detail]));
   const countyPlaces: Place[] = counties.items.map((county) => ({
-    id: county.region_id, name: displayName(county), level: "county", detail: null,
+    id: county.region_id, name: displayName(county), level: "county", parentId: null, detail: null,
     home: value(homeC, county.region_id), tax: value(taxC, county.region_id), rent: value(rentC, county.region_id),
   }));
   const townPlaces: Place[] = towns.items.map((town): Place => ({
-    id: town.region_id, name: town.name, level: "municipality", detail: details.get(town.region_id) ?? null,
+    id: town.region_id, name: town.name, level: "municipality", parentId: town.parent_id, detail: details.get(town.region_id) ?? null,
     home: value(homeM, town.region_id), tax: value(taxM, town.region_id), rent: value(rentM, town.region_id),
   })).filter((place) => place.home !== null || place.rent !== null);
   const lastPeriod = (metricId: string) => {
@@ -57,3 +57,11 @@ export async function affordData(): Promise<AffordData | null> {
   };
 }
 
+/** The statewide payload pared down for one county profile's local affordability mode. */
+export function affordabilityForCounty(data: AffordData, countyId: number): AffordData {
+  return {
+    ...data,
+    counties: data.counties.filter((place) => place.id === countyId),
+    towns: data.towns.filter((place) => place.parentId === countyId),
+  };
+}

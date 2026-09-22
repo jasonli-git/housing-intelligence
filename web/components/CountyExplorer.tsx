@@ -149,16 +149,6 @@ export function CountyExplorer({
   return (
     <section className="explorer-section" aria-labelledby="explorer-heading">
       <div className="measure-card">
-        <div className="nj-measure-shortcuts" aria-label="Popular measures">
-          {[
-            ["zhvi_sfr", "Home values"],
-            ["zori_all", "Rents"],
-            ["price_to_income", "Affordability"],
-            ["permits_total_units", "New housing"],
-          ].filter(([id]) => measures.some((measure) => measure.metric_id === id)).map(([id, label]) => (
-            <button key={id} type="button" aria-pressed={measure.metric_id === id} onClick={() => setMetricId(id)}>{label}</button>
-          ))}
-        </div>
         <div className="measure-intro">
           <div>
             <p className="measure-eyebrow">On the map</p>
@@ -193,6 +183,16 @@ export function CountyExplorer({
           )}
         </div>
         <div className="explorer-controls">
+          <div className="nj-measure-shortcuts" aria-label="Popular measures">
+            {[
+              ["zhvi_sfr", "Home values"],
+              ["zori_all", "Rents"],
+              ["price_to_income", "Affordability"],
+              ["permits_total_units", "New housing"],
+            ].filter(([id]) => measures.some((candidate) => candidate.metric_id === id)).map(([id, label]) => (
+              <button key={id} type="button" aria-pressed={measure.metric_id === id} onClick={() => setMetricId(id)}>{label}</button>
+            ))}
+          </div>
           <label className="control">
             <span className="control-label">Measure</span>
             <select

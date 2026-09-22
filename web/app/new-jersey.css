@@ -50,35 +50,6 @@
 .nj-page .globe-controls-dive { background: #185785; color: #fff; border: 1px solid #3879a7; border-radius: 12px; padding: 0.8rem 1rem; box-shadow: 0 5px 16px rgb(14 50 80 / 22%); font-family: var(--font-sans); font-weight: 600; }
 .nj-page .globe-controls-dive:hover { background: #10476f; }
 .nj-page .globe-controls-dive span { margin-left: 0.5rem; color: #b9ddf8; }
-.state-ticker { display: flex; min-width: 0; border: 1px solid color-mix(in srgb, var(--atlas-blue) 30%, var(--border)); border-radius: 16px; background: linear-gradient(115deg, color-mix(in srgb, var(--atlas-blue) 12%, var(--surface-card)), var(--surface-card)); overflow: hidden; }
-.state-ticker-head { flex: 0 0 94px; padding: 0.62rem 0.8rem; z-index: 1; border-right: 1px solid var(--border); }
-.state-ticker-head > span { font: 9px var(--font-mono); letter-spacing: 0.15em; color: var(--atlas-blue); }
-.state-ticker-head h2 { font-size: 12px; line-height: 1.12; margin: 0.18rem 0 0.3rem; }
-.state-ticker-head button { display: grid; place-items: center; width: 24px; height: 24px; min-height: 24px; padding: 0; border-radius: 50%; color: var(--atlas-blue); background: transparent; }
-.state-ticker-head button svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.state-ticker-window { min-width: 0; flex: 1; overflow: hidden; }
-.state-ticker-track { display: flex; width: max-content; animation: state-conveyor linear infinite; }
-.state-ticker-group { display: flex; list-style: none; margin: 0; padding: 0; }
-.state-ticker-group li { width: 280px; box-sizing: border-box; padding: 0.65rem 1.4rem; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid var(--border); }
-.state-ticker-group b { font-size: 24px; font-weight: 550; line-height: 1; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
-.state-ticker-group li > span, .state-ticker-group .metric-term { font-size: 12px; }
-.state-ticker-group small { font-size: 9px; margin-top: 3px; color: var(--text-muted); }
-@keyframes state-conveyor { to { transform: translateX(-50%); } }
-.state-ticker[data-stopped="true"] .state-ticker-track, .state-ticker:focus-within .state-ticker-track { animation: none; width: auto; }
-.state-ticker[data-stopped="true"] .state-ticker-window, .state-ticker:focus-within .state-ticker-window { overflow-x: auto; }
-.state-ticker[data-stopped="true"] [aria-hidden="true"], .state-ticker:focus-within [aria-hidden="true"] { display: none; }
-@media (max-width: 520px) {
-  .state-ticker-head { flex-basis: 72px; padding: 0.55rem; }
-  .state-ticker-group li { width: 220px; padding: 0.6rem 0.9rem; }
-}
-@media (prefers-reduced-motion: reduce), print {
-  .state-ticker-track { animation: none !important; width: auto; }
-  .state-ticker-window { overflow: visible !important; }
-  .state-ticker-group { flex-wrap: wrap; }
-  .state-ticker-group { flex: 1; }
-  .state-ticker-group li { width: auto; flex: 1 1 220px; }
-  .state-ticker-group[aria-hidden="true"], .state-ticker-head button { display: none; }
-}
 .nj-page .globe-legend { margin-top: 0.9rem; }
 .nj-page .globe-note { font-size: 10px; line-height: 1.6; }
 .nj-page .globe-ramp { font-size: 10px; }

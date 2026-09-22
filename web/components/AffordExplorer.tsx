@@ -105,12 +105,14 @@ export function AffordExplorer({
   rate,
   asOf,
   appearance = "classic",
+  scope,
 }: {
   counties: Place[];
   towns: Place[];
   rate: { value: number; asOf: string };
   asOf: { home: string; rent: string; tax: string };
   appearance?: "classic" | "atlas";
+  scope?: { countyId: number; countyName: string };
 }) {
   const [incomeText, setIncomeText] = useState(DEFAULT_INCOME);
   const [mode, setMode] = useState<Mode>("own");
@@ -150,6 +152,7 @@ export function AffordExplorer({
   const townsWithin = townRows.filter((row) => row.within);
   const countiesWithin = countyRows.filter((row) => row.within).length;
   const shownTowns = allTowns ? townsWithin : townsWithin.slice(0, FIRST_TOWNS);
+  const comparisonRows = scope ? townRows : countyRows;
   const home =
     mode === "own"
       ? "owning the typical single-family home"
@@ -304,7 +307,10 @@ export function AffordExplorer({
 
       <p className="afford-summary" id={`${id}-summary`} aria-live="polite">
         {income > 0 ? (
-          <>
+          scope ? <>
+            30% of {money(income)} a year is <b>{money(monthlyBudget(income))} a month</b>. At that, {home} is
+            within reach in <b>{townsWithin.length}</b> of {townRows.length} municipalities in {scope.countyName}.
+          </> : <>
             30% of {money(income)} a year is{" "}
             <b>{money(monthlyBudget(income))} a month</b>. At that, {home} is
             within reach in <b>{countiesWithin}</b> of {countyRows.length}{" "}
@@ -354,7 +360,7 @@ export function AffordExplorer({
             // Searching a place moves the map to it: the question on this page is where
             // a reader could live, and answering "can I afford Montclair?" while leaving
             // the map over somewhere else makes them find it themselves.
-            frameOn={picked}
+            frameOn={picked ?? scope?.countyId ?? null}
             mute={false}
             onView={(state) => setCentre(state.focus)}
           />
@@ -368,7 +374,7 @@ export function AffordExplorer({
           <table className="ranks">
             <thead>
               <tr>
-                <th scope="col">County</th>
+                <th scope="col">{scope ? "Municipality" : "County"}</th>
                 <th scope="col" className="num">
                   A month
                 </th>
@@ -382,11 +388,13 @@ export function AffordExplorer({
             </thead>
             <tbody>
               {([true, false] as const).map((within) => {
-                const group = countyRows.filter((row) => row.within === within);
+                const group = comparisonRows.filter((row) => row.within === within);
                 if (!group.length) return null;
                 return (
                   <Fragment key={String(within)}>
-                    <tr className="afford-group-row"><th colSpan={4} scope="rowgroup">{within ? "Counties within reach" : "Other counties"}</th></tr>
+                    <tr className="afford-group-row"><th colSpan={4} scope="rowgroup">{scope
+                      ? within ? "Municipalities within reach" : "Other municipalities"
+                      : within ? "Counties within reach" : "Other counties"}</th></tr>
                     {group.map((row) => (
                       <tr key={row.place.id} className={row.within ? "within" : undefined}>
                         <td><Link href={`/regions/${row.place.id}`}>{row.place.name}</Link></td>
@@ -403,7 +411,7 @@ export function AffordExplorer({
         </div>
       </div>
 
-      {income > 0 && (
+      {income > 0 && !scope && (
         <section className="section" aria-labelledby={`${id}-towns`}>
           <h2 id={`${id}-towns`}>Municipalities within reach</h2>
           {townsWithin.length === 0 ? (

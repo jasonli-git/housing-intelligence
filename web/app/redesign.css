@@ -465,6 +465,63 @@ select,
 
 /* --------------------------------------------------------------- measure workspace --- */
 
+/* Shared profile conveyor: blue statewide, the established housing green locally. */
+.state-ticker {
+  --profile-accent: var(--series-3);
+  display: flex;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--profile-accent) 30%, var(--border));
+  border-radius: 16px;
+  background: linear-gradient(115deg, color-mix(in srgb, var(--profile-accent) 12%, var(--surface-card)), var(--surface-card));
+  overflow: hidden;
+}
+.nj-page .state-ticker { --profile-accent: var(--atlas-blue); }
+.region-profile-ticker { margin-bottom: 0.6rem; }
+.state-ticker-head { flex: 0 0 94px; padding: 0.62rem 0.8rem; z-index: 1; border-right: 1px solid var(--border); }
+.state-ticker-head > span { font: 9px var(--font-mono); letter-spacing: 0.15em; color: var(--profile-accent); }
+.state-ticker-head h2 { font-size: 12px; line-height: 1.12; margin: 0.18rem 0 0.3rem; }
+.state-ticker-head button { display: grid; place-items: center; width: 24px; height: 24px; min-height: 24px; padding: 0; border-radius: 50%; color: var(--profile-accent); background: transparent; }
+.state-ticker-head button svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.state-ticker-head button svg .play { fill: currentColor; stroke: none; }
+.state-ticker-window { min-width: 0; flex: 1; overflow: hidden; }
+.state-ticker-track { display: flex; width: max-content; animation: state-conveyor linear infinite; }
+.state-ticker-group { display: flex; list-style: none; margin: 0; padding: 0; }
+.state-ticker-group li { width: 280px; box-sizing: border-box; padding: 0.65rem 1.4rem; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid var(--border); }
+.state-ticker-group b { font-size: 24px; font-weight: 550; line-height: 1; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.state-ticker-group li > span, .state-ticker-group .metric-term { font-size: 12px; }
+.state-ticker-group small { font-size: 9px; margin-top: 3px; color: var(--text-muted); }
+@keyframes state-conveyor { to { transform: translateX(-50%); } }
+.state-ticker[data-stopped="true"] .state-ticker-track, .state-ticker:focus-within .state-ticker-track { animation: none; width: auto; }
+.state-ticker[data-stopped="true"] .state-ticker-window, .state-ticker:focus-within .state-ticker-window { overflow-x: auto; }
+/* Limit this to the duplicate group: the SVG control is aria-hidden too. */
+.state-ticker[data-stopped="true"] .state-ticker-group[aria-hidden="true"], .state-ticker:focus-within .state-ticker-group[aria-hidden="true"] { display: none; }
+
+.mode-panel { animation: mode-arrive 190ms cubic-bezier(0.22, 0.75, 0.3, 1) both; }
+.region-standard-content { animation: mode-arrive 190ms cubic-bezier(0.22, 0.75, 0.3, 1) both; }
+.shell:has(.region-afford-mode) > .page-head { --kind: var(--series-2); }
+.shell:has(.region-afford-mode) > .region-standard-content { display: none; }
+.county-afford-intro { max-width: 65ch; padding: 1.55rem 0 0.9rem; }
+.county-afford-intro h2 { margin: 0.35rem 0; font-size: clamp(25px, 3vw, 34px); letter-spacing: -0.045em; }
+.county-afford-intro > p:last-child { color: var(--text-secondary); line-height: 1.55; }
+@keyframes mode-arrive {
+  from { opacity: 0.22; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 520px) {
+  .state-ticker-head { flex-basis: 72px; padding: 0.55rem; }
+  .state-ticker-group li { width: 220px; padding: 0.6rem 0.9rem; }
+}
+
+@media (prefers-reduced-motion: reduce), print {
+  .state-ticker-track { animation: none !important; width: auto; }
+  .state-ticker-window { overflow: visible !important; }
+  .state-ticker-group { flex: 1; flex-wrap: wrap; }
+  .state-ticker-group li { width: auto; flex: 1 1 220px; }
+  .state-ticker-group[aria-hidden="true"], .state-ticker-head button { display: none; }
+  .mode-panel, .region-standard-content { animation: none; }
+}
+
 .explorer-section {
   padding-top: 0.25rem;
 }
@@ -479,6 +536,9 @@ select,
   background: transparent;
   box-shadow: none;
 }
+
+.nj-page .measure-card .explorer-controls { order: -1; }
+.nj-page .measure-card .nj-measure-shortcuts { flex: 1 0 100%; }
 
 .measure-eyebrow {
   margin-bottom: 0.55rem;
