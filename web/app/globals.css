@@ -113,7 +113,7 @@ main.shell { padding-bottom: 2rem; }
 .bar { border-bottom: 1px solid var(--border); }
 .bar-inner {
   max-width: var(--shell); margin: 0 auto; padding: 0 var(--gutter);
-  min-height: 52px; display: flex; align-items: center; justify-content: space-between;
+  min-height: 52px; display: flex; align-items: center;
   gap: 1rem; flex-wrap: wrap;
 }
 .bar-trail { display: flex; align-items: baseline; gap: 0.6rem; }
@@ -267,8 +267,10 @@ details[open] > summary .when-closed { display: none; }
 
 /* --------------------------------------------------- Milestone 23, every page --- */
 
-/* The bar's tools: search, then the theme and the code, each a compact control of one
-   height. On a phone they wrap under the trail. */
+/* The bar's tools: theme and the code stay beside the trail at every width (#204: they
+   are what collided with search on a phone when all four tools wrapped as one group).
+   Search and the affordability switch are the pair that wraps to its own row below. */
+.bar-controls { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; }
 .bar-tools { display: flex; align-items: center; gap: 0.6rem; }
 /* A width of its own rather than a share of the tools row: the row is sized by its
    contents, so a percentage of it resolved in a circle and wrapped the row early. */

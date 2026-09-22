@@ -1172,15 +1172,6 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
     min-height: 56px;
   }
 
-  .bar-afford,
-  .bar-mode {
-    order: 2;
-  }
-
-  .bar-tools {
-    order: 3;
-  }
-
   .page-head {
     display: grid;
     margin-top: 0.5rem;
