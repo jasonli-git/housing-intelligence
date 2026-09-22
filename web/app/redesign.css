@@ -285,6 +285,13 @@ select,
   flex: 1 1 38rem;
 }
 
+.page-head > .region-head-main { flex-basis: 100%; }
+.page-head > .actions {
+  position: absolute;
+  right: 0;
+  bottom: clamp(2rem, 4vw, 3.5rem);
+}
+
 /* Population is the compact orientation figure in a region head. It occupies the open
    corner beside the breadcrumb/kind on a phone, rather than adding another row or being
    repeated in both the metadata sentence and The housing here. */
@@ -369,7 +376,23 @@ select,
 
 .page-title-row .title-computed { flex: 0 0 auto; margin: 0; }
 .page-title-row .computed { padding-block: 3px; font-size: 9px; }
-.page-title-row .title-computed .tip { right: 0; left: auto; width: min(20rem, calc(100vw - 2rem)); }
+.page-title-row .title-computed .tip { right: auto; left: 0; width: min(20rem, calc(100vw - 2rem)); }
+
+.report-action {
+  gap: 0.7rem; min-width: 12.5rem; padding: 0.72rem 0.78rem; border-radius: 12px;
+  border-color: color-mix(in srgb, var(--series-3) 30%, var(--border));
+  background: color-mix(in srgb, var(--series-3) 8%, var(--surface-card));
+  box-shadow: 0 3px 14px rgb(0 0 0 / 0.045);
+}
+.report-action:hover { background: color-mix(in srgb, var(--series-3) 13%, var(--surface-card)); }
+.report-action > svg {
+  width: 19px; height: 19px; flex: none; fill: none; stroke: var(--series-3);
+  stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+}
+.report-action-copy { display: grid; gap: 0.15rem; text-align: left; }
+.report-action-copy strong { font-size: 12px; line-height: 1.1; font-weight: 650; }
+.report-action-copy small { color: var(--text-muted); font: 8px/1.2 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.report-action-arrow { margin-left: auto; color: var(--series-3); font-size: 15px; }
 
 /* "Mercer County, NJ — housing report" is one title: the report's sheet sets its width,
    and the dash stays with the name before it (a no-break space in the page). */
@@ -892,15 +915,6 @@ select,
   color: var(--text-secondary);
 }
 
-.cost-evidence-method {
-  margin: 0;
-  padding: 0.65rem 0 0.7rem;
-  border-top: 1px solid var(--grid);
-  font-size: var(--text-note);
-  line-height: 1.45;
-  color: var(--text-muted);
-}
-
 .standout-group {
   margin-top: 1.25rem;
 }
@@ -1048,16 +1062,27 @@ select,
 }
 
 .foot {
-  margin-top: 0;
-  border-top: 1px solid var(--border);
-  background: transparent;
+  margin-top: clamp(3.5rem, 7vw, 6rem);
+  border-top: 0;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--series-3) 4%, var(--surface-2)) 34%);
   color: var(--text-secondary);
 }
 
-.foot-inner {
-  padding-top: 1.6rem;
-  padding-bottom: 2rem;
+.foot-inner { gap: 0.9rem; padding-top: 2rem; padding-bottom: 2.4rem; }
+
+.foot-sources {
+  overflow: hidden; border: 1px solid var(--border); border-radius: 18px;
+  background: color-mix(in srgb, var(--surface-card) 92%, transparent);
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.04);
 }
+.foot-sources > summary { min-height: 4.4rem; padding: 0.9rem 1.05rem; align-items: center; }
+.foot-sources[open] > summary { border-bottom: 1px solid var(--grid); }
+.foot-title-block { display: grid; flex: 0 0 auto; gap: 0.12rem; min-width: 6.5rem; }
+.foot-kicker {
+  font: 600 8px/1 var(--font-mono); letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--series-3);
+}
+.foot-sources > .inst-grid { margin: 0; padding: 1rem; }
 
 .foot-label,
 .foot-tab,
@@ -1073,8 +1098,21 @@ select,
 }
 
 .inst {
-  border-top-color: var(--grid);
+  padding: 0.8rem 0.85rem; border: 1px solid var(--grid); border-radius: 12px;
+  background: var(--surface-1);
 }
+
+.foot-notice {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0.75rem;
+  padding: 0.85rem 1rem; border: 1px solid color-mix(in srgb, var(--notice) 28%, var(--border));
+  border-radius: 14px; background: color-mix(in srgb, var(--notice) 5%, var(--surface-card));
+}
+.foot-notice > svg {
+  width: 19px; height: 19px; fill: none; stroke: var(--notice-text); stroke-width: 1.5;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.foot-notice-copy { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.75rem; }
+.foot-notice .foot-tab { color: var(--text-primary); font-weight: 650; }
 
 /* ---------------------------------------------------------------- responsive --- */
 
@@ -1130,6 +1168,8 @@ select,
     margin-top: 0.5rem;
     padding-top: 1.5rem;
   }
+
+  .page-head > .actions { position: static; justify-self: start; }
 
   .afford-cta {
     width: 100%;

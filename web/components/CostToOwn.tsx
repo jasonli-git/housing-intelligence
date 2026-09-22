@@ -382,9 +382,6 @@ export function CostToOwn({
               </div>
             )}
           </div>
-          <p className="cost-evidence-method">
-            Computed from the figures shown by fixed rules; not a quote, and not written by AI.
-          </p>
         </div>
       ) : (
         <div className="cost-strip">
@@ -397,8 +394,7 @@ export function CostToOwn({
           {history && <p className="cost-strip-small">{history}</p>}
           {noTax && <p className="cost-strip-small">{noTax}</p>}
           <p className="cost-strip-small">
-            Left out of owning: {listed(leftOut(down))}. Computed from the figures shown by fixed
-            rules; not a quote, and not written by AI.
+            Left out of owning: {listed(leftOut(down))}.
           </p>
         </div>
       )}

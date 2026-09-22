@@ -56,6 +56,14 @@ try {
     if (width === 375) await page.screenshot({ path: `/tmp/nj-${label}-mobile.png`, fullPage: true });
   }
   if (label !== "before") {
+    await page.locator(".nj-head .title-computed .term").focus();
+    const desktopComputedTip = await page.locator(".nj-head .title-computed .tip").boundingBox();
+    assert.ok(
+      desktopComputedTip && desktopComputedTip.x >= 0 && desktopComputedTip.x + desktopComputedTip.width <= 1440,
+      "Computed-data definition must fit the desktop viewport",
+    );
+    await page.keyboard.press("Escape");
+    await page.locator(".nj-head .title-computed .term").evaluate((node) => node.blur());
     const ticker = page.locator(".state-ticker");
     const track = ticker.locator(".state-ticker-track");
     assert.ok((await ticker.boundingBox()).height <= 100, "State profile should stay compact");
@@ -184,6 +192,42 @@ try {
     await page.setViewportSize({ width: 1440, height: 1000 });
     assert.equal(await page.locator(".page-title-row .title-computed").count(), 1, "County title carries the computed-data badge");
     await assertBadgeBelowTitle(page, ".page-title-row");
+    await page.locator(".page-title-row .title-computed .term").focus();
+    const countyComputedTip = await page.locator(".page-title-row .title-computed .tip").boundingBox();
+    assert.ok(
+      countyComputedTip && countyComputedTip.x >= 0 && countyComputedTip.x + countyComputedTip.width <= 1440,
+      "County computed-data definition must fit the viewport",
+    );
+    await page.keyboard.press("Escape");
+    await page.locator(".page-title-row .title-computed .term").evaluate((node) => node.blur());
+    const countyHead = await page.locator(".page-head").boundingBox();
+    const countyPopulation = await page.locator(".population-summary").boundingBox();
+    assert.ok(
+      countyHead && countyPopulation && Math.abs(countyPopulation.x + countyPopulation.width - (countyHead.x + countyHead.width)) <= 2,
+      "County population card should align to the page header's right edge",
+    );
+    const reportAction = page.getByRole("link", { name: /Open full report/ });
+    await reportAction.waitFor();
+    assert.ok(await reportAction.locator("svg").isVisible(), "The full-report action should carry a document icon");
+    assert.ok(
+      await page.locator("body").evaluate((node) =>
+        !node.textContent?.includes("Computed from the figures shown by fixed rules; not a quote, and not written by AI."),
+      ),
+      "Cost breakdowns should not repeat the removed computed-data disclaimer",
+    );
+    const sources = page.locator(".foot-sources");
+    const notice = page.locator(".foot-notice");
+    await sources.waitFor();
+    await notice.waitFor();
+    assert.ok(
+      await sources.evaluate((node) => Number.parseFloat(getComputedStyle(node).borderRadius) >= 16),
+      "Sources should use the refreshed disclosure card",
+    );
+    await sources.locator(":scope > summary").click();
+    await sources.locator(".inst").first().waitFor();
+    assert.ok(await sources.evaluate((node) => node.open), "Sources disclosure should still expand");
+    await sources.locator(":scope > summary").click();
+    assert.ok(!(await sources.evaluate((node) => node.open)), "Sources disclosure should still collapse");
     const countyTicker = page.locator(".region-profile-ticker");
     await countyTicker.waitFor();
     assert.ok(await countyTicker.getByRole("button", { name: "Pause housing here ticker" }).isVisible());
@@ -241,7 +285,7 @@ try {
       await page.setViewportSize({ width: 375, height: 900 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Regression overflow on ${route}`);
     }
-    console.log("PASS: instant ticker resume, stacked shared title badges, shared local profile tickers with named rank cohorts, balanced profile banners, contained stand-out cards, two added rank plots, compact one-row selectors, precise reticle, world land, state and county affordability modes, compact other-county rows, county preselection, disabled ZIP mode, grouped local reach, transitions, color switch, tooltip bounds, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes");
+    console.log("PASS: instant ticker resume, stacked shared title badges, bounded computed-data definitions, edge-aligned county population, full-report action, streamlined cost copy, modern functional source footer, shared local profile tickers with named rank cohorts, balanced profile banners, contained stand-out cards, two added rank plots, compact one-row selectors, precise reticle, world land, state and county affordability modes, compact other-county rows, county preselection, disabled ZIP mode, grouped local reach, transitions, color switch, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes");
   }
   console.log(JSON.stringify({ errors }));
   if (errors.length) process.exitCode = 1;

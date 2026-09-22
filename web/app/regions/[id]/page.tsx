@@ -273,8 +273,16 @@ export default async function RegionPage({
           )}
         </div>
         <div className="actions">
-          <Link className="button" href={`/regions/${regionId}/report`}>
-            Report
+          <Link className="button report-action" href={`/regions/${regionId}/report`}>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M5.5 2.75h6l3 3v11.5h-9Z" />
+              <path d="M11.5 2.75v3h3M8 9h4M8 12h4" />
+            </svg>
+            <span className="report-action-copy">
+              <strong>Open full report</strong>
+              <small>Print-ready detail</small>
+            </span>
+            <span className="report-action-arrow" aria-hidden="true">→</span>
           </Link>
         </div>
       </header>

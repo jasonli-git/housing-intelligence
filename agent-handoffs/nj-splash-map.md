@@ -1,5 +1,13 @@
 # New Jersey splash page and map experiment
 
+## Review refinement: shared header, cost copy and footer polish
+
+- Re-anchored the shared `Computed from the data · not AI` definition to the badge's left edge. Its existing width cap remains, so the definition now stays inside both desktop and mobile viewports instead of extending beyond the page when the badge sits beneath a left-aligned title.
+- Removed the redundant “Computed from the figures shown by fixed rules; not a quote, and not written by AI” sentence from both interactive and report-style cost breakdowns. The shared title badge, source detail, calculation inputs, omissions and other methodology copy remain intact.
+- Recast the generic `Report` button as an explicit `Open full report` document destination with a document icon and `Print-ready detail` cue. It now sits independently at the lower-right of the region header, allowing the population card to align with the shell's actual right edge while preserving the mobile stacked layout.
+- Modernized the shared page ending without changing its information or behavior: Sources is now a restrained provenance disclosure card, expanded institutions become small source cards, and Notice is a separate quiet licensing panel. The source names, restricted-data tag, dataset links, update cadence, terms, external Notice link, native disclosure behavior and print expansion all remain.
+- Extended browser QA to assert definition bounds, population alignment, the document action, absence of the removed cost sentence, refreshed footer treatment, and working source expand/collapse behavior.
+
 ## Review refinement: unified profiles, contained cards and added rank plots
 
 - Replaced the separate paged municipality/ZIP profile with the same continuous `ProfileTicker` used by New Jersey and counties, then removed the obsolete `HousingBand` implementation and its CSS. State remains blue; every local profile keeps the established green treatment, shared compact height, pause/play behavior, definitions, reduced-motion behavior and print fallback.
@@ -75,6 +83,7 @@
 - `web/lib/worldLand.ts`, `web/lib/world-land.json`: documented, static Natural Earth world backdrop.
 - `web/lib/stateProfile.ts`, `web/lib/stateProfile.test.ts`: presentation adapter and three tests.
 - `web/components/RankOverview.tsx`, `web/lib/rankOverview.test.ts`: two accessible normalized rank plots and rank-position coverage.
+- `web/components/CostToOwn.tsx`, `web/components/SourceFooter.tsx`: streamlined cost evidence and the refreshed shared provenance/licensing footer.
 - `web/scripts/check-nj-redesign.mjs`: repeatable headless browser checks and a narrowly scoped DOM-work counter.
 
 ## Architectural or implementation decisions
@@ -103,7 +112,7 @@
 - `cd web && npm run typecheck`: passed.
 - `cd web && npm test -- --run`: 27 files, 210 tests passed, including normalized rank positions, municipality-parent preservation, three statewide profile tests and one world-coverage test.
 - `cd web && npm run build`: passed with local-API access; 2,276 static pages generated, with the local artifact-URL warning described above. The first sandboxed attempt could not reach the already-running API at localhost:8000 and was rerun with localhost access.
-- `cd web && CHECK_URL=http://localhost:3000 CHECK_LABEL=after node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths; immediate ticker resume, shared state/county/municipality profile treatment, named local rank cohorts, contained stand-out cards, two added rank plots, badges stacked below state/county/municipality/ZIP titles, balanced profile content, compact secondary county rows, one-row selector placement, smaller reticle, worldwide land, state and county affordability switching, county preselection, disabled ZIP mode, reduced-motion and animated transitions, county-scoped municipality results, progressive rise, definition bounds, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes.
-- Inspected production desktop, mobile, and dark-mode screenshots.
+- `cd web && CHECK_URL=http://localhost:3000 CHECK_LABEL=after node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths; immediate ticker resume, shared state/county/municipality profile treatment, named local rank cohorts, contained stand-out cards, two added rank plots, badges stacked below state/county/municipality/ZIP titles, balanced profile content, compact secondary county rows, one-row selector placement, smaller reticle, worldwide land, state and county affordability switching, county preselection, disabled ZIP mode, reduced-motion and animated transitions, county-scoped municipality results, progressive rise, definition bounds, right-edge population alignment, the full-report action, streamlined cost copy, functional source disclosure, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes.
+- Inspected production desktop, mobile, and dark-mode screenshots plus the revised county header, open definition and collapsed Sources/Notice footer in the local browser.
 - `git diff --check`: passed.
 - Backend tests not run: backend and data pipeline unchanged. No deployment or merge performed.
