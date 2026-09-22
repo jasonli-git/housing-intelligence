@@ -10,15 +10,19 @@ into `Now` / `Open` / `Parked`. They are recoverable with
 
 ## Now — nothing in progress, as of 2026-09-22
 
-**The New Jersey splash page and map explorer are merged, not yet deployed.** CHANGELOG
+**The New Jersey splash page and map explorer are merged and deployed.** CHANGELOG
 0.21.3; ARCHITECTURE #204–#205. The homepage, county pages, and `/afford` now share one
 URL-backed affordability workspace and one profile-ticker/map primitive; `HousingBand.tsx`
 is retired. A review round found and fixed five regressions before merge: a dropped cost
 disclosure, a broken masthead link, a map rise-animation replay on measure change, a
 keyboard-focus clipping bug in the profile ticker, and a `?mode=afford` deep-link flash.
 
-**To resume:** `make publish && make deploy` to ship it, then `make check-live`
-(ARCHITECTURE #202–#203). `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
+**Its own follow-up fix is merged and deployed too.** The masthead's four tools collided
+into one wrapped group on a phone, with the theme toggle overlapping search. CHANGELOG
+0.21.4: theme and the GitHub link now hold the wordmark's row at every width; search and
+the affordability switch wrap to their own row.
+
+**To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
 
 ## Open
