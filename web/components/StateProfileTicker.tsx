@@ -32,6 +32,7 @@ export function ProfileTicker({
   className?: string;
 }) {
   const [stopped, setStopped] = useState(false);
+  const [manualPlaying, setManualPlaying] = useState(false);
   const motion = useAutoCarousel(false, () => {});
   if (!items.length) return null;
   return (
@@ -40,11 +41,28 @@ export function ProfileTicker({
       className={`state-ticker ${className}`.trim()}
       aria-label={ariaLabel}
       data-stopped={stopped || motion.reduceMotion}
-      {...motion.interactionProps}
+      onMouseEnter={motion.interactionProps.onMouseEnter}
+      onMouseLeave={(event) => {
+        setManualPlaying(false);
+        motion.interactionProps.onMouseLeave(event);
+      }}
+      onFocusCapture={motion.interactionProps.onFocusCapture}
+      onBlurCapture={(event) => {
+        setManualPlaying(false);
+        motion.interactionProps.onBlurCapture(event);
+      }}
     >
       <div className="state-ticker-head">
         <span>PROFILE</span><h2>{title}</h2>
-        <button type="button" onClick={() => setStopped(!stopped)} aria-pressed={stopped}
+        <button type="button" onClick={() => {
+          if (stopped) {
+            setStopped(false);
+            setManualPlaying(true);
+          } else {
+            setStopped(true);
+            setManualPlaying(false);
+          }
+        }} aria-pressed={stopped}
           disabled={motion.reduceMotion} title={motion.reduceMotion ? "Motion reduced" : stopped ? "Play" : "Pause"}
           aria-label={motion.reduceMotion
             ? `${title} ticker is still because reduced motion is enabled`
@@ -56,7 +74,7 @@ export function ProfileTicker({
         </button>
       </div>
       <div className="state-ticker-window">
-        <div className="state-ticker-track" style={{ animationDuration: `${Math.max(30, items.length * 14)}s`, animationPlayState: motion.paused || stopped ? "paused" : "running" }}>
+        <div className="state-ticker-track" style={{ animationDuration: `${Math.max(30, items.length * 14)}s`, animationPlayState: stopped || (motion.paused && !manualPlaying) ? "paused" : "running" }}>
           {[false, true].map((duplicate) => (
             <ul key={String(duplicate)} className="state-ticker-group" aria-hidden={duplicate || undefined}>
               {items.map((item) => <li key={item.metric_id}>

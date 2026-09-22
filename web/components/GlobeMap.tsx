@@ -1289,11 +1289,11 @@ export function GlobeMap({
             readable on a touch screen with no hover. */}
           {crosshair && (
             <g className="globe-crosshair" aria-hidden="true">
-              <circle cx={width / 2} cy={height / 2} r={9} />
-              <line x1={width / 2 - 16} y1={height / 2} x2={width / 2 - 11} y2={height / 2} />
-              <line x1={width / 2 + 11} y1={height / 2} x2={width / 2 + 16} y2={height / 2} />
-              <line x1={width / 2} y1={height / 2 - 16} x2={width / 2} y2={height / 2 - 11} />
-              <line x1={width / 2} y1={height / 2 + 11} x2={width / 2} y2={height / 2 + 16} />
+              <circle cx={width / 2} cy={height / 2} r={5.5} />
+              <line x1={width / 2 - 12} y1={height / 2} x2={width / 2 - 8} y2={height / 2} />
+              <line x1={width / 2 + 8} y1={height / 2} x2={width / 2 + 12} y2={height / 2} />
+              <line x1={width / 2} y1={height / 2 - 12} x2={width / 2} y2={height / 2 - 8} />
+              <line x1={width / 2} y1={height / 2 + 8} x2={width / 2} y2={height / 2 + 12} />
             </g>
           )}
         </svg>
@@ -1341,8 +1341,8 @@ export function GlobeMap({
             onClick={() => setCrosshair((shown) => !shown)}
           >
             <svg viewBox="0 0 16 16" aria-hidden="true">
-              <circle cx="8" cy="8" r="3.4" />
-              <path d="M8 0.6V3.4M8 12.6V15.4M0.6 8H3.4M12.6 8H15.4" />
+              <circle cx="8" cy="8" r="2.5" />
+              <path d="M8 1.8V4.2M8 11.8V14.2M1.8 8H4.2M11.8 8H14.2" />
             </svg>
           </button>
         </div>

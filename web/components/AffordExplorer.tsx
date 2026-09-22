@@ -118,7 +118,9 @@ export function AffordExplorer({
   const [mode, setMode] = useState<Mode>("own");
   const [down, setDown] = useState<number>(DEFAULT_DOWN);
   const [allTowns, setAllTowns] = useState(false);
-  const [picked, setPicked] = useState<number | null>(null);
+  // A county profile has already answered "which place?". Start its local affordability
+  // mode with that county selected instead of asking the reader to type it again.
+  const [picked, setPicked] = useState<number | null>(scope?.countyId ?? null);
   const id = useId();
   const { file, layers, failed } = useMapFile();
   const [centre, setCentre] = useState<Focus | null>(null);

@@ -2,7 +2,8 @@
 .nj-page { --atlas-blue: light-dark(#2368a0, #86bce8); --sea: light-dark(#eef1f5, #1a1c20); }
 .nj-page .nj-head { display: block; padding-block: 1.7rem 1.3rem; }
 .nj-page .nj-head > .region-head-main { flex: 1 1 100%; width: 100%; max-width: none; }
-.nj-head .page-title { font-size: clamp(48px, 6vw, 78px); letter-spacing: -0.065em; margin-top: 0.65rem; }
+.nj-head .page-title-row { margin-top: 0.65rem; }
+.nj-head .page-title { font-size: clamp(48px, 6vw, 78px); letter-spacing: -0.065em; }
 .nj-head .population-summary { border-left-color: var(--atlas-blue); }
 .nj-head .population-summary-label { color: var(--atlas-blue); }
 .nj-page:has(.nj-afford-mode) .nj-head { --kind: var(--series-2); }
@@ -15,10 +16,9 @@
 .nj-page .measure-name { font-size: clamp(23px, 2.5vw, 30px); }
 .nj-page .measure-def { font-size: 12px; max-width: 88ch; margin-top: 0.45rem; }
 .nj-page .measure-window { margin-top: 0.5rem; }
-.nj-page .measure-card .explorer-controls { width: 100%; box-sizing: border-box; box-shadow: none; border: 1px solid var(--border); padding: 0.8rem 1rem; justify-content: space-between; }
-.nj-measure-shortcuts { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.nj-measure-shortcuts button { border-radius: 99px; font-size: 11px; padding: 0.4rem 0.75rem; background: transparent; color: var(--text-secondary); }
-.nj-measure-shortcuts button[aria-pressed="true"] { color: var(--atlas-blue); background: color-mix(in srgb, var(--atlas-blue) 9%, var(--surface-card)); border-color: color-mix(in srgb, var(--atlas-blue) 35%, var(--border)); }
+.nj-page .measure-card .explorer-controls { width: 100%; box-sizing: border-box; box-shadow: none; border: 1px solid var(--border); padding: 0.8rem 1rem; justify-content: space-between; flex-wrap: nowrap; align-items: end; }
+.nj-page .quick-measure { flex: 0 1 11rem; min-width: 8rem; }
+.nj-page .quick-measure select { width: 100%; }
 .nj-page .explorer { grid-template-columns: minmax(0, 1.3fr) minmax(22rem, 0.8fr); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 6px 28px rgb(0 0 0 / 0.035); }
 .nj-page .map-panel { padding: 1.2rem; }
 .nj-page .readout { margin: 0 0 0.8rem; min-height: 3.5rem; padding: 0.8rem 1rem; border-radius: 12px; background: var(--surface-2); font-size: 12px; }
@@ -65,7 +65,8 @@
 @media (min-width: 1001px) {
   .nj-page .nj-head > .region-head-main { display: grid; grid-template-columns: 1fr 1.1fr 11rem; column-gap: 2rem; align-items: start; }
   .nj-head .kind { grid-column: 1; grid-row: 1; }
-  .nj-head .page-title { grid-column: 1; grid-row: 2 / 5; font-size: clamp(48px, 5vw, 70px); }
+  .nj-head .page-title-row { grid-column: 1 / 3; grid-row: 2 / 5; flex-wrap: nowrap; }
+  .nj-head .page-title { font-size: clamp(48px, 5vw, 70px); }
 }
 @media (max-width: 1000px) {
   .nj-page .explorer { grid-template-columns: minmax(0, 1fr); }
@@ -74,18 +75,20 @@
 }
 @media (max-width: 520px) {
   .nj-page .nj-head { padding-top: 1.2rem; }
-  .nj-head .page-title { margin-top: 3.5rem; font-size: 52px; }
+  .nj-head .page-title-row { margin-top: 3.5rem; }
+  .nj-head .page-title { font-size: 52px; }
   .nj-head .population-summary { top: -0.2rem; }
   .nj-page .housing-band-blue { height: 7.75rem; }
   .nj-page .housing-band-blue .housing-band-item { padding-inline: 0.55rem; }
   .nj-page .housing-band-blue .housing-band-context { font-size: 9px; }
   .nj-page .measure-card .explorer-controls { padding: 0.7rem; }
+  .nj-page .measure-card .explorer-controls { flex-wrap: wrap; }
   .nj-page .control, .nj-page .control select { min-width: 0; width: 100%; }
   .nj-page .map-panel { padding: 0.65rem; }
   .nj-page .rank-card .scroll-x > table { min-width: 0; }
 }
 @media print {
-  .nj-page .nj-measure-shortcuts, .nj-page .nj-afford-intro { display: none; }
+  .nj-page .quick-measure, .nj-page .nj-afford-intro { display: none; }
   .nj-page .explorer { display: block; box-shadow: none; }
   .nj-page .housing-band-blue { height: auto; overflow: visible; background: none; }
   .nj-page .housing-band-blue .housing-band-items, .nj-page .housing-band-blue .housing-band-nav { display: none; }

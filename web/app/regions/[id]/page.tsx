@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
+import { ComputedBadge } from "@/components/ComputedBadge";
 import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
@@ -46,22 +47,6 @@ const TREND_METRICS = [
   { metricId: "zori_all", short: "rent" },
   { metricId: "acs_median_hh_income", short: "household income" },
 ];
-
-/**
- * What the computed label means, for a reader who asks. The label is the counterpart of the
- * interpretation panel's own: said at the top and never folded away, because a reader
- * should not have to guess which parts of the page a model wrote (#139).
- */
-const COMPUTED: Term = {
-  key: "computed",
-  title: "Computed from the data, not AI",
-  phrases: [],
-  definition:
-    "The sentences and answers at the top of this page, the costs, the stand-outs and the " +
-    "housing cards are computed from the figures on this page by fixed rules, not written " +
-    "by AI. The interpretation, with the tables, is the one part a language model wrote, " +
-    "and it is labelled so.",
-};
 
 /**
  * Which region pages exist: every region carrying data except the state, whose page
@@ -229,7 +214,7 @@ export default async function RegionPage({
         : "Every table";
 
   return (
-    <main className="shell">
+    <main className="shell" data-affordability-disabled={region.level === "zip" || undefined}>
       <header className="page-head" data-kind={kindOf(region.level)}>
         <div className="region-head-main">
           <Crumbs
@@ -254,24 +239,15 @@ export default async function RegionPage({
             </aside>
           )}
           <Kind kind={kindOf(region.level)} />
-          <h1 className="page-title">{name}</h1>
+          <div className="page-title-row">
+            <h1 className="page-title">{name}</h1>
+            <ComputedBadge />
+          </div>
           <p className="meta">
             {placeLine(region)}
             {" · "}every figure ranked against {scopeName(peer_scope)}’s {peer_count}{" "}
             {peerNoun(peer_level)}
           </p>
-          {lead && (
-            <p className="computed-line">
-              <Definition term={COMPUTED}>
-                <span className="computed">
-                  <svg viewBox="0 0 16 16" aria-hidden="true">
-                    <path d="M3 8.5l3.2 3L13 4.5" />
-                  </svg>
-                  Computed from the data · not AI
-                </span>
-              </Definition>
-            </p>
-          )}
           {lead && <p className="verdict">{lead}</p>}
           {trade && <p className="verdict-more">{trade}</p>}
           {/* The short answers in the line, the sentences behind them a click away: the

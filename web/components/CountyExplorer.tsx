@@ -183,16 +183,29 @@ export function CountyExplorer({
           )}
         </div>
         <div className="explorer-controls">
-          <div className="nj-measure-shortcuts" aria-label="Popular measures">
-            {[
-              ["zhvi_sfr", "Home values"],
-              ["zori_all", "Rents"],
-              ["price_to_income", "Affordability"],
-              ["permits_total_units", "New housing"],
-            ].filter(([id]) => measures.some((candidate) => candidate.metric_id === id)).map(([id, label]) => (
-              <button key={id} type="button" aria-pressed={measure.metric_id === id} onClick={() => setMetricId(id)}>{label}</button>
-            ))}
-          </div>
+          <label className="control quick-measure">
+            <span className="control-label">Quick view</span>
+            <select
+              aria-label="Quick view"
+              value={[
+                "zhvi_sfr",
+                "zori_all",
+                "price_to_income",
+                "permits_total_units",
+              ].includes(measure.metric_id) ? measure.metric_id : ""}
+              onChange={(event) => setMetricId(event.target.value)}
+            >
+              <option value="" disabled>Popular measures</option>
+              {[
+                ["zhvi_sfr", "Home values"],
+                ["zori_all", "Rents"],
+                ["price_to_income", "Affordability"],
+                ["permits_total_units", "New housing"],
+              ].filter(([id]) => measures.some((candidate) => candidate.metric_id === id)).map(([id, label]) => (
+                <option key={id} value={id}>{label}</option>
+              ))}
+            </select>
+          </label>
           <label className="control">
             <span className="control-label">Measure</span>
             <select

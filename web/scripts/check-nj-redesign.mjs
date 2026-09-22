@@ -67,13 +67,17 @@ try {
     await play.waitFor();
     assert.ok(await play.locator("svg").isVisible(), "Play icon must remain visible after pausing");
     await play.click();
+    await page.waitForTimeout(40);
+    const resumedTransform = await track.evaluate((node) => getComputedStyle(node).transform);
+    await page.waitForTimeout(220);
+    assert.notEqual(await track.evaluate((node) => getComputedStyle(node).transform), resumedTransform, "Play should resume immediately while the pointer and focus remain on the ticker");
     await page.setViewportSize({ width: 375, height: 900 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     const band = ticker;
     const facts = band.locator(".state-ticker-group").first();
     assert.equal(await page.locator(".population-summary").count(), 1);
     await facts.getByText("House price index", { exact: true }).focus();
-    const tip = page.getByRole("tooltip");
+    const tip = page.locator(".floating-tip");
     await tip.waitFor();
     const box = await tip.boundingBox();
     assert.ok(box && box.x >= 0 && box.x + box.width <= 375 && box.y >= 0 && box.y + box.height <= 900, "Definition must fit the viewport");
@@ -85,11 +89,20 @@ try {
       return [...node.children].every((child) => child.getBoundingClientRect().bottom <= frame.bottom);
     });
     assert.ok(fits, "Profile copy must not be clipped");
-    await page.getByRole("button", { name: "Rents", exact: true }).click();
+    assert.equal(await page.locator(".nj-head .title-computed").count(), 1, "State title carries the computed-data badge");
+    await page.locator(".nj-head .title-computed .term").focus();
+    const computedTip = page.locator(".nj-head .title-computed .tip");
+    const computedBox = await computedTip.boundingBox();
+    assert.ok(computedBox && computedBox.x >= 0 && computedBox.x + computedBox.width <= 375, "Computed-data definition must fit the mobile viewport");
+    await page.keyboard.press("Escape");
+    await page.getByRole("combobox", { name: "Quick view", exact: true }).selectOption("zori_all");
     await page.getByRole("heading", { name: "Observed rent index, all homes", exact: true }).waitFor();
     const controlsBox = await page.locator(".explorer-controls").boundingBox();
     const onMapBox = await page.locator(".measure-eyebrow").boundingBox();
-    assert.ok(controlsBox && onMapBox && controlsBox.y < onMapBox.y, "Measure shortcuts and controls should precede On the map");
+    const explorerBox = await page.locator(".explorer").boundingBox();
+    assert.ok(controlsBox && onMapBox && explorerBox && controlsBox.y > onMapBox.y && controlsBox.y + controlsBox.height <= explorerBox.y, "The one-row controls should sit between the measure introduction and map card");
+    await page.getByRole("button", { name: "Show the crosshair", exact: true }).click();
+    assert.equal(await page.locator(".globe-crosshair circle").getAttribute("r"), "5.5", "Map reticle should use the smaller precise target");
     await page.getByRole("button", { name: "Zoom in", exact: true }).click();
     await page.getByRole("heading", { name: "Municipalities", exact: true }).waitFor();
     const map = await page.locator(".globe-still").boundingBox();
@@ -139,6 +152,7 @@ try {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto(`${origin}/regions/12`, { waitUntil: "networkidle" });
     await page.setViewportSize({ width: 1440, height: 1000 });
+    assert.equal(await page.locator(".page-title-row .title-computed").count(), 1, "County title carries the computed-data badge");
     const countyTicker = page.locator(".region-profile-ticker");
     await countyTicker.waitFor();
     assert.ok(await countyTicker.getByRole("button", { name: "Pause housing here ticker" }).isVisible());
@@ -147,17 +161,28 @@ try {
     await page.locator(".region-afford-mode").waitFor();
     assert.notEqual(await page.locator(".region-afford-mode .mode-panel").evaluate((node) => getComputedStyle(node).animationName), "none", "County mode should transition");
     await page.locator(".county-afford-intro h2").waitFor();
+    await page.locator(".check-place").getByRole("link", { name: "Somerset County", exact: true }).waitFor();
     await page.getByText("Other municipalities", { exact: true }).waitFor();
     await page.getByRole("columnheader", { name: "Municipality", exact: true }).waitFor();
     assert.equal(await page.locator(".region-standard-content").evaluate((node) => getComputedStyle(node).display), "none");
     await countySwitch.click();
     await page.locator(".region-standard-content .cost").waitFor();
-    for (const route of ["/regions/12", "/afford"]) {
+    await page.goto(`${origin}/regions/415`, { waitUntil: "networkidle" });
+    assert.equal(await page.locator(".page-title-row .title-computed").count(), 1, "Municipality title carries the computed-data badge");
+    await page.goto(`${origin}/regions/2842`, { waitUntil: "networkidle" });
+    assert.equal(await page.locator(".page-title-row .title-computed").count(), 1, "ZIP title carries the computed-data badge");
+    const zipSwitch = page.getByRole("switch", { name: "Affordability" });
+    await zipSwitch.waitFor();
+    assert.equal(await zipSwitch.getAttribute("aria-disabled"), "true", "ZIP affordability switch should be visibly unavailable");
+    const zipUrl = page.url();
+    await zipSwitch.evaluate((node) => node.click());
+    assert.equal(page.url(), zipUrl, "Unavailable ZIP affordability switch must not navigate");
+    for (const route of ["/regions/12", "/regions/2842", "/afford"]) {
       await page.goto(`${origin}${route}`, { waitUntil: "networkidle" });
       await page.setViewportSize({ width: 375, height: 900 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Regression overflow on ${route}`);
     }
-    console.log("PASS: compact ticker, persistent play icon, world land, merged state and county affordability modes, grouped local reach, transitions, control order, color switch, tooltip bounds, shortcuts, municipality zoom, county tap, drag commit, reset, dark mode, county/afford regression routes");
+    console.log("PASS: instant ticker resume, shared title badges, compact one-row selectors, precise reticle, world land, state and county affordability modes, county preselection, disabled ZIP mode, grouped local reach, transitions, color switch, tooltip bounds, municipality zoom, county tap, drag commit, reset, dark mode, and responsive regression routes");
   }
   console.log(JSON.stringify({ errors }));
   if (errors.length) process.exitCode = 1;

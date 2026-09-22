@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export const HOUSING_MODE_EVENT = "housing:mode";
 
@@ -15,10 +16,16 @@ function affordabilityFromLocation() {
 
 /** Global mode switch: local on the NJ page, a direct route everywhere else. */
 export function HousingModeToggle() {
+  const pathname = usePathname();
   const [afford, setAfford] = useState(false);
+  const [disabled, setDisabled] = useState(false);
 
   useEffect(() => {
-    const read = () => setAfford(affordabilityFromLocation());
+    const read = () => {
+      const unavailable = Boolean(document.querySelector("[data-affordability-disabled='true']"));
+      setDisabled(unavailable);
+      setAfford(unavailable ? false : affordabilityFromLocation());
+    };
     const custom = (event: Event) => setAfford((event as CustomEvent<string>).detail === "afford");
     read();
     window.addEventListener("popstate", read);
@@ -27,9 +34,10 @@ export function HousingModeToggle() {
       window.removeEventListener("popstate", read);
       window.removeEventListener(HOUSING_MODE_EVENT, custom);
     };
-  }, []);
+  }, [pathname]);
 
   const change = () => {
+    if (disabled) return;
     const localMode = window.location.pathname === "/" || Boolean(
       document.querySelector("[data-affordability-scope='county']"),
     );
@@ -47,7 +55,15 @@ export function HousingModeToggle() {
   };
 
   return (
-    <button className="bar-mode" type="button" role="switch" aria-checked={afford} onClick={change}>
+    <button
+      className="bar-mode"
+      type="button"
+      role="switch"
+      aria-checked={afford}
+      aria-disabled={disabled}
+      title={disabled ? "Affordability mode is not available for ZIP code profiles" : undefined}
+      onClick={change}
+    >
       <span>Affordability</span>
       <span className="bar-mode-track" aria-hidden="true"><span /></span>
     </button>

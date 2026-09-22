@@ -1,5 +1,15 @@
 # New Jersey splash page and map experiment
 
+## Review refinement: compact controls, provenance and local defaults
+
+- Restored the original state workspace order: measure introduction first, the controls immediately above the map card. Replaced the four shortcut pills with one `Quick view` select beside the complete Measure select and Change segmented control, keeping a single-row desktop card rather than adding height.
+- Made Play an explicit interaction override for the profile conveyor. It resumes immediately even while the pointer and keyboard focus remain over the control; leaving or blurring returns hover/focus pause behavior. The paused duplicate-group treatment no longer accidentally controls ordinary focus.
+- County affordability now initializes the specific-place answer with the county the reader is already viewing. The buy and rent results are present as soon as the mode transition completes, while the local municipality comparison remains unchanged.
+- ZIP profiles now mark affordability as unavailable. The shared masthead switch remains focusable for its explanation but is visually dimmed, reports `aria-disabled`, and cannot change mode or navigate. State, county and municipality behavior is unchanged.
+- Added one shared `ComputedBadge` and placed it beside the main New Jersey, county, municipality and ZIP titles. Its definition covers figures, rankings, costs, profiles, summaries and maps across all four page levels, while still identifying the labelled expanded interpretation as the language-model-written exception.
+- Reduced the optional visible map reticle from a 9px to a 5.5px radius and tightened its four marks and toolbar icon for more precise aiming. The geographic focus calculation itself is unchanged.
+- Browser QA now checks immediate ticker movement after Play while still hovered/focused, state/county/municipality/ZIP badges, control placement, county preselection, disabled ZIP behavior, the smaller reticle and the existing responsive/map behavior.
+
 ## Review refinement: county affordability and interaction polish
 
 - Extended the masthead affordability switch to county profiles. The county identity and profile ticker stay fixed; the material below them changes to a county-scoped affordability workspace containing only that county and its municipalities. Municipality and ZIP profiles still route the global switch to the statewide affordability experience.
@@ -44,7 +54,7 @@
 - `web/components/CountyExplorer.tsx`: measure shortcuts, comparison heading, atlas opt-in.
 - `web/components/GlobeMap.tsx`: optional atlas presentation and shared paint/gesture lifecycle improvements.
 - `web/components/HousingModeToggle.tsx`, `web/components/StateModeWorkspace.tsx`, `web/components/CountyModeWorkspace.tsx`, `web/components/AffordExplorer.tsx`, `web/lib/afford.ts`, `web/lib/affordData.ts`: state/county mode navigation, scoped workspaces, shared affordability payload, and grouped results.
-- `web/app/regions/[id]/page.tsx`, `web/components/StateProfileTicker.tsx`, `web/app/redesign.css`: county profile conveyor, local mode composition, shared transitions, and fixed play/pause presentation.
+- `web/app/regions/[id]/page.tsx`, `web/app/page.tsx`, `web/components/ComputedBadge.tsx`, `web/components/StateProfileTicker.tsx`, `web/app/redesign.css`: shared title provenance, county profile conveyor, local mode composition, shared transitions, and fixed play/pause presentation.
 - `web/lib/worldLand.ts`, `web/lib/world-land.json`: documented, static Natural Earth world backdrop.
 - `web/lib/stateProfile.ts`, `web/lib/stateProfile.test.ts`: presentation adapter and three tests.
 - `web/scripts/check-nj-redesign.mjs`: repeatable headless browser checks and a narrowly scoped DOM-work counter.
@@ -75,7 +85,7 @@
 - `cd web && npm run typecheck`: passed.
 - `cd web && npm test`: 26 files, 208 tests passed, including three statewide profile tests and one world-coverage test.
 - `cd web && npm run build`: passed; 2,276 static pages generated, with the local artifact-URL warning described above.
-- `cd web && CHECK_URL=http://localhost:3000 CHECK_LABEL=after node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths; persistent play icon, worldwide land, state and county affordability switching, reduced-motion and animated transitions, county-scoped municipality results, control ordering, progressive rise, definition bounds, measure shortcut, municipality zoom, county tap, drag commit, reset, dark mode, and county/affordability regression routes.
+- `cd web && CHECK_URL=http://localhost:3000 CHECK_LABEL=after node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths; immediate ticker resume, state/county/municipality/ZIP title badges, one-row selector placement, smaller reticle, worldwide land, state and county affordability switching, county preselection, disabled ZIP mode, reduced-motion and animated transitions, county-scoped municipality results, progressive rise, definition bounds, municipality zoom, county tap, drag commit, reset, dark mode, and responsive regression routes.
 - Inspected production desktop, mobile, and dark-mode screenshots.
 - `git diff --check`: passed.
 - Backend tests not run: backend and data pipeline unchanged. No deployment or merge performed.

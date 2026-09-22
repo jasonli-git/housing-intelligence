@@ -1,4 +1,5 @@
 import { type Measure } from "@/components/CountyExplorer";
+import { ComputedBadge } from "@/components/ComputedBadge";
 import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Kind } from "@/components/Crumbs";
 import { StateProfileTicker } from "@/components/StateProfileTicker";
@@ -143,7 +144,10 @@ export default async function NewJerseyPage() {
             </aside>
           )}
           <Kind kind="state" />
-          <h1 className="page-title">New Jersey</h1>
+          <div className="page-title-row">
+            <h1 className="page-title">New Jersey</h1>
+            <ComputedBadge />
+          </div>
         </div>
       </header>
       <StateProfileTicker items={stateProfile(levels)} />
