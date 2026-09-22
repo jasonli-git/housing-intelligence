@@ -1031,6 +1031,22 @@ export function GlobeMap({
     focus && focus.level === "county" && layers
       ? (layers.county.find((outline) => outline.id === focus.id) ?? null)
       : null;
+  // The inverse shortcut is only for the unpinned state explorer. Affordability pins a
+  // deliberate result level; giving that map a control which silently abandons the
+  // result would make the two tools disagree about what its camera means.
+  const exitCounty =
+    !pin && focus?.level === "municipality" && layers
+      ? (() => {
+          const town = layers.municipality.find(
+            (outline) => outline.id === focus.id,
+          );
+          return town?.parent === undefined
+            ? null
+            : (layers.county.find(
+                (outline) => outline.id === town.parent,
+              ) ?? null);
+        })()
+      : null;
   const withFigures = ramp.observed.length;
 
   return (
@@ -1317,6 +1333,16 @@ export function GlobeMap({
             Jump into {focus.name}
             {focus.level === "county" ? " County" : ""}
             {appearance === "atlas" && <span aria-hidden="true"> ↗</span>}
+          </button>
+        )}
+        {exitCounty && (
+          <button
+            type="button"
+            className="globe-controls globe-controls-dive globe-controls-exit"
+            onClick={() => flyTo(framings.county)}
+          >
+            Jump out of {exitCounty.name} County
+            {appearance === "atlas" && <span aria-hidden="true"> ↙</span>}
           </button>
         )}
         <div className="globe-controls globe-controls-zoom">

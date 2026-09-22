@@ -3,6 +3,15 @@
 import { chromium } from "playwright";
 import assert from "node:assert/strict";
 
+async function assertBadgeBelowTitle(page, scope) {
+  const title = await page.locator(`${scope} .page-title`).boundingBox();
+  const badge = await page.locator(`${scope} .title-computed`).boundingBox();
+  assert.ok(
+    title && badge && badge.y >= title.y + title.height - 1,
+    "Computed-data badge should sit below the page title",
+  );
+}
+
 const browser = await chromium.launch({ headless: true });
 const origin = process.env.CHECK_URL ?? "http://localhost:3000";
 const label = process.env.CHECK_LABEL ?? "after";
@@ -84,12 +93,21 @@ try {
     await page.keyboard.press("Escape");
     await facts.getByText("House price index, all transactions", { exact: true }).waitFor();
     await facts.getByText("Typical sale price, recent transactions", { exact: true }).waitFor();
+    const tickerPadding = await facts.locator("li").first().evaluate((node) => {
+      const style = getComputedStyle(node);
+      return {
+        top: Number.parseFloat(style.paddingTop),
+        bottom: Number.parseFloat(style.paddingBottom),
+      };
+    });
+    assert.ok(tickerPadding.top > tickerPadding.bottom, "Profile figures should sit lower within the same-height ticker");
     const fits = await facts.locator("li").first().evaluate((node) => {
       const frame = node.closest(".state-ticker").getBoundingClientRect();
       return [...node.children].every((child) => child.getBoundingClientRect().bottom <= frame.bottom);
     });
     assert.ok(fits, "Profile copy must not be clipped");
     assert.equal(await page.locator(".nj-head .title-computed").count(), 1, "State title carries the computed-data badge");
+    await assertBadgeBelowTitle(page, ".nj-head .page-title-row");
     await page.locator(".nj-head .title-computed .term").focus();
     const computedTip = page.locator(".nj-head .title-computed .tip");
     const computedBox = await computedTip.boundingBox();
@@ -103,6 +121,12 @@ try {
     assert.ok(controlsBox && onMapBox && explorerBox && controlsBox.y > onMapBox.y && controlsBox.y + controlsBox.height <= explorerBox.y, "The one-row controls should sit between the measure introduction and map card");
     await page.getByRole("button", { name: "Show the crosshair", exact: true }).click();
     assert.equal(await page.locator(".globe-crosshair circle").getAttribute("r"), "5.5", "Map reticle should use the smaller precise target");
+    await page.getByRole("button", { name: "Zoom in", exact: true }).click();
+    await page.getByRole("heading", { name: "Municipalities", exact: true }).waitFor();
+    const jumpOut = page.getByRole("button", { name: /Jump out of .+ County/ });
+    await jumpOut.waitFor();
+    await jumpOut.click();
+    await page.getByRole("heading", { name: "County comparison", exact: true }).waitFor();
     await page.getByRole("button", { name: "Zoom in", exact: true }).click();
     await page.getByRole("heading", { name: "Municipalities", exact: true }).waitFor();
     const map = await page.locator(".globe-still").boundingBox();
@@ -141,6 +165,12 @@ try {
     await page.getByRole("heading", { name: "What does this mean for you?", exact: true }).waitFor();
     await page.getByText("Counties within reach", { exact: true }).waitFor();
     await page.getByText("Other counties", { exact: true }).waitFor();
+    const secondaryRow = page.locator(".afford-secondary td").first();
+    await secondaryRow.waitFor();
+    assert.ok(
+      await secondaryRow.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize) < 14),
+      "Other counties should be slightly smaller than the primary affordability rows",
+    );
     assert.notEqual(await page.locator(".nj-head").evaluate((node) => getComputedStyle(node).borderTopColor), lineBefore, "Affordability mode changes the state rule");
     await page.screenshot({ path: `/tmp/nj-${label}-afford.png`, fullPage: true });
     await modeSwitch.click();
@@ -153,6 +183,7 @@ try {
     await page.goto(`${origin}/regions/12`, { waitUntil: "networkidle" });
     await page.setViewportSize({ width: 1440, height: 1000 });
     assert.equal(await page.locator(".page-title-row .title-computed").count(), 1, "County title carries the computed-data badge");
+    await assertBadgeBelowTitle(page, ".page-title-row");
     const countyTicker = page.locator(".region-profile-ticker");
     await countyTicker.waitFor();
     assert.ok(await countyTicker.getByRole("button", { name: "Pause housing here ticker" }).isVisible());
@@ -169,8 +200,19 @@ try {
     await page.locator(".region-standard-content .cost").waitFor();
     await page.goto(`${origin}/regions/415`, { waitUntil: "networkidle" });
     assert.equal(await page.locator(".page-title-row .title-computed").count(), 1, "Municipality title carries the computed-data badge");
+    await assertBadgeBelowTitle(page, ".page-title-row");
+    const localProfileItem = page.locator(".housing-band-item").first();
+    await localProfileItem.waitFor();
+    assert.ok(
+      await localProfileItem.evaluate((node) => {
+        const style = getComputedStyle(node);
+        return Number.parseFloat(style.paddingTop) > Number.parseFloat(style.paddingBottom);
+      }),
+      "Local profile figures should use the same lower visual balance",
+    );
     await page.goto(`${origin}/regions/2842`, { waitUntil: "networkidle" });
     assert.equal(await page.locator(".page-title-row .title-computed").count(), 1, "ZIP title carries the computed-data badge");
+    await assertBadgeBelowTitle(page, ".page-title-row");
     const zipSwitch = page.getByRole("switch", { name: "Affordability" });
     await zipSwitch.waitFor();
     assert.equal(await zipSwitch.getAttribute("aria-disabled"), "true", "ZIP affordability switch should be visibly unavailable");
@@ -182,7 +224,7 @@ try {
       await page.setViewportSize({ width: 375, height: 900 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Regression overflow on ${route}`);
     }
-    console.log("PASS: instant ticker resume, shared title badges, compact one-row selectors, precise reticle, world land, state and county affordability modes, county preselection, disabled ZIP mode, grouped local reach, transitions, color switch, tooltip bounds, municipality zoom, county tap, drag commit, reset, dark mode, and responsive regression routes");
+    console.log("PASS: instant ticker resume, stacked shared title badges, balanced profile banners, compact one-row selectors, precise reticle, world land, state and county affordability modes, compact other-county rows, county preselection, disabled ZIP mode, grouped local reach, transitions, color switch, tooltip bounds, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes");
   }
   console.log(JSON.stringify({ errors }));
   if (errors.length) process.exitCode = 1;

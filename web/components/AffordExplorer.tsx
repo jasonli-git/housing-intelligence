@@ -398,7 +398,10 @@ export function AffordExplorer({
                       ? within ? "Municipalities within reach" : "Other municipalities"
                       : within ? "Counties within reach" : "Other counties"}</th></tr>
                     {group.map((row) => (
-                      <tr key={row.place.id} className={row.within ? "within" : undefined}>
+                      <tr
+                        key={row.place.id}
+                        className={row.within ? "within" : !scope ? "afford-secondary" : undefined}
+                      >
                         <td><Link href={`/regions/${row.place.id}`}>{row.place.name}</Link></td>
                         <td className="num">{money(row.monthly)}</td>
                         <td className="num">{share(row.share)}</td>

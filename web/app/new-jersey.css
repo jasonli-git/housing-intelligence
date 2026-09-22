@@ -30,6 +30,8 @@
 .nj-page .ranks { font-size: 14px; }
 .nj-page .ranks th { font-size: 12px; }
 .nj-page .ranks td { padding-block: 0.72rem; }
+.nj-page .afford .ranks tr.afford-secondary td { padding-block: 0.62rem; font-size: 13px; color: var(--text-secondary); }
+.nj-page .afford .ranks tr.afford-secondary a { color: inherit; }
 .nj-page .ranks .pos { color: var(--text-muted); }
 .nj-page .ranks tr.on td { background: color-mix(in srgb, var(--atlas-blue) 11%, var(--surface-card)); }
 .nj-page .ranks tbody a { text-decoration: none; }
@@ -65,7 +67,7 @@
 @media (min-width: 1001px) {
   .nj-page .nj-head > .region-head-main { display: grid; grid-template-columns: 1fr 1.1fr 11rem; column-gap: 2rem; align-items: start; }
   .nj-head .kind { grid-column: 1; grid-row: 1; }
-  .nj-head .page-title-row { grid-column: 1 / 3; grid-row: 2 / 5; flex-wrap: nowrap; }
+  .nj-head .page-title-row { grid-column: 1 / 3; grid-row: 2 / 5; }
   .nj-head .page-title { font-size: clamp(48px, 5vw, 70px); }
 }
 @media (max-width: 1000px) {

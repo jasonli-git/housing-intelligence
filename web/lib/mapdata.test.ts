@@ -66,6 +66,16 @@ describe("packing the map's outlines", () => {
     expect(packed.label).toBe("Washington township");
   });
 
+  it("carries a municipality's parent county through unpacking", () => {
+    const [packed] = pack(
+      collection({ region_id: 7, name: "Somewhere" }, NJ),
+      "region_id",
+    );
+    const [outline] = unpack([{ ...packed, parent: 4 }]);
+
+    expect(outline.parent).toBe(4);
+  });
+
   it("carries no second name when the first already identifies", () => {
     const [packed] = pack(
       collection({ region_id: 7, name: "Mercer", name_lsad: "Mercer" }, NJ),

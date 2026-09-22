@@ -623,7 +623,7 @@ body > main { flex: 1 0 auto; width: 100%; }
 }
 .housing-band-item {
   position: relative; display: grid; align-content: center; gap: 1px; min-width: 0;
-  padding: 0.15rem 0.65rem; border-left: 1px solid var(--grid);
+  padding: 0.45rem 0.65rem 0; border-left: 1px solid var(--grid);
 }
 .housing-band-item:first-child { border-left: 0; }
 .housing-band-item > b {

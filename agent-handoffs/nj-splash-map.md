@@ -1,5 +1,13 @@
 # New Jersey splash page and map experiment
 
+## Review refinement: title hierarchy, reverse navigation and banner balance
+
+- Stacked the shared `Computed from the data · not AI` badge beneath the New Jersey, county, municipality and ZIP title instead of letting it compete with the place name on the same line. The same definition and mobile-bounded tooltip remain.
+- Added the inverse of the county-entry shortcut at municipality zoom: `Jump out of <County> County` returns the unpinned state explorer to its statewide county framing. Municipality outlines now carry their already-known parent county ID through `map.json`; this adds no lookup or geographic dependency. Pinned affordability maps intentionally omit the control.
+- Reduced only the statewide affordability table's `Other counties` rows from 14px to 13px with slightly tighter vertical padding. Counties within reach remain the primary size, and county-scoped municipality tables are unchanged.
+- Rebalanced both profile-banner implementations without increasing their height: continuous state/county ticker facts have equal total vertical padding shifted toward the top, and municipality/ZIP paged facts use the same lower visual placement. Existing clipping, reduced-motion and fixed-height behavior remain.
+- Browser QA now verifies the badge is physically below every applicable title, the secondary affordability rows are smaller, both banner implementations have the intended vertical balance, and municipality view can jump back to county view.
+
 ## Review refinement: compact controls, provenance and local defaults
 
 - Restored the original state workspace order: measure introduction first, the controls immediately above the map card. Replaced the four shortcut pills with one `Quick view` select beside the complete Measure select and Change segmented control, keeping a single-row desktop card rather than adding height.
@@ -53,6 +61,7 @@
 - `web/components/HousingBand.tsx`: optional title/blue tone, statewide sizing and print presentation; existing local-profile defaults retained.
 - `web/components/CountyExplorer.tsx`: measure shortcuts, comparison heading, atlas opt-in.
 - `web/components/GlobeMap.tsx`: optional atlas presentation and shared paint/gesture lifecycle improvements.
+- `web/app/map.json/route.ts`, `web/lib/mapdata.ts`, `web/lib/globe.ts`: optional municipality parent-county identity used by reverse map navigation.
 - `web/components/HousingModeToggle.tsx`, `web/components/StateModeWorkspace.tsx`, `web/components/CountyModeWorkspace.tsx`, `web/components/AffordExplorer.tsx`, `web/lib/afford.ts`, `web/lib/affordData.ts`: state/county mode navigation, scoped workspaces, shared affordability payload, and grouped results.
 - `web/app/regions/[id]/page.tsx`, `web/app/page.tsx`, `web/components/ComputedBadge.tsx`, `web/components/StateProfileTicker.tsx`, `web/app/redesign.css`: shared title provenance, county profile conveyor, local mode composition, shared transitions, and fixed play/pause presentation.
 - `web/lib/worldLand.ts`, `web/lib/world-land.json`: documented, static Natural Earth world backdrop.
@@ -83,9 +92,9 @@
 ## Verification
 
 - `cd web && npm run typecheck`: passed.
-- `cd web && npm test`: 26 files, 208 tests passed, including three statewide profile tests and one world-coverage test.
-- `cd web && npm run build`: passed; 2,276 static pages generated, with the local artifact-URL warning described above.
-- `cd web && CHECK_URL=http://localhost:3000 CHECK_LABEL=after node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths; immediate ticker resume, state/county/municipality/ZIP title badges, one-row selector placement, smaller reticle, worldwide land, state and county affordability switching, county preselection, disabled ZIP mode, reduced-motion and animated transitions, county-scoped municipality results, progressive rise, definition bounds, municipality zoom, county tap, drag commit, reset, dark mode, and responsive regression routes.
+- `cd web && npm test -- --run`: 26 files, 209 tests passed, including municipality-parent preservation, three statewide profile tests and one world-coverage test.
+- `cd web && npm run build`: passed with local-API access; 2,276 static pages generated, with the local artifact-URL warning described above. The first sandboxed attempt could not reach the already-running API at localhost:8000 and was rerun with localhost access.
+- `cd web && CHECK_URL=http://localhost:3000 CHECK_LABEL=after node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths; immediate ticker resume, badges stacked below state/county/municipality/ZIP titles, balanced profile content, compact secondary county rows, one-row selector placement, smaller reticle, worldwide land, state and county affordability switching, county preselection, disabled ZIP mode, reduced-motion and animated transitions, county-scoped municipality results, progressive rise, definition bounds, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes.
 - Inspected production desktop, mobile, and dark-mode screenshots.
 - `git diff --check`: passed.
 - Backend tests not run: backend and data pipeline unchanged. No deployment or merge performed.

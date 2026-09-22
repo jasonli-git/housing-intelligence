@@ -92,9 +92,14 @@ export async function GET() {
   // Both town layers carry the same names, so they are labelled the same way.
   const named = (collection: typeof towns) =>
     (collection ? pack(collection, "region_id") : []).map((outline) => {
-      const county = countyName.get(parentOf.get(Number(outline.id)) ?? -1);
+      const parent = parentOf.get(Number(outline.id));
+      const county = typeof parent === "number" ? countyName.get(parent) : undefined;
       const label = outline.label ?? outline.name;
-      return county ? { ...outline, label: `${label}, ${county}` } : outline;
+      return {
+        ...outline,
+        ...(typeof parent === "number" ? { parent } : {}),
+        ...(county ? { label: `${label}, ${county}` } : {}),
+      };
     });
 
   const file: MapFile = {

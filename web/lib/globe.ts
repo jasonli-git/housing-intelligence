@@ -138,6 +138,8 @@ function path(points: [number, number][]): string {
 export type Outline = {
   id: number | string;
   name: string;
+  /** Parent county for a municipality. Absent at every other map level. */
+  parent?: number;
   /** Each ring flat: `[lon, lat, lon, lat, ...]`. Flat because it halves the JSON. */
   rings: number[][];
 };
