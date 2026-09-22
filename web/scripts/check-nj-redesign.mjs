@@ -39,6 +39,8 @@ try {
   if (label !== "before") {
     const ticker = page.locator(".state-ticker");
     const track = ticker.locator(".state-ticker-track");
+    assert.ok((await ticker.boundingBox()).height <= 100, "State profile should stay compact");
+    assert.ok(await page.locator(".globe-world-land[d]:not([d=''])").count() > 0, "World land should be drawn behind the US");
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.mouse.move(0, 0);
     const startTransform = await track.evaluate((node) => getComputedStyle(node).transform);
@@ -100,6 +102,18 @@ try {
     await page.getByRole("heading", { name: "Municipalities", exact: true }).waitFor();
     await page.getByRole("button", { name: "New Jersey", exact: true }).click();
     await page.setViewportSize({ width: 1440, height: 1000 });
+    const lineBefore = await page.locator(".nj-head").evaluate((node) => getComputedStyle(node).borderTopColor);
+    const modeSwitch = page.getByRole("switch", { name: "Affordability" });
+    await modeSwitch.click();
+    await page.locator(".nj-afford-mode").waitFor();
+    assert.equal(await page.locator(".nj-mode .explorer").count(), 1, "Both modes use one map-and-table footprint");
+    await page.getByRole("heading", { name: "What does this mean for you?", exact: true }).waitFor();
+    await page.getByText("Counties within reach", { exact: true }).waitFor();
+    await page.getByText("Other counties", { exact: true }).waitFor();
+    assert.notEqual(await page.locator(".nj-head").evaluate((node) => getComputedStyle(node).borderTopColor), lineBefore, "Affordability mode changes the state rule");
+    await page.screenshot({ path: `/tmp/nj-${label}-afford.png`, fullPage: true });
+    await modeSwitch.click();
+    await page.getByRole("heading", { name: "County comparison", exact: true }).waitFor();
     await page.getByRole("radio", { name: "Dark theme", exact: true }).click();
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(100);
@@ -109,7 +123,7 @@ try {
       await page.setViewportSize({ width: 375, height: 900 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Regression overflow on ${route}`);
     }
-    console.log("PASS: continuous ticker, hover/pause, reduced motion, tooltip bounds, text bounds, shortcuts, municipality zoom, county tap, drag commit, reset, dark mode, county/afford regression routes");
+    console.log("PASS: compact ticker, icon pause, world land, merged affordability mode, grouped county reach, color switch, tooltip bounds, shortcuts, municipality zoom, county tap, drag commit, reset, dark mode, county/afford regression routes");
   }
   console.log(JSON.stringify({ errors }));
   if (errors.length) process.exitCode = 1;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
+import { Fragment, type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
 
 import { PlacePicker } from "@/components/PlacePicker";
 import {
@@ -23,8 +23,8 @@ const DEFAULT_INCOME = "100000";
 const FIRST_TOWNS = 25;
 
 // The box the map is drawn in, as the New Jersey page's is.
-const MAP_WIDTH = 420;
-const MAP_HEIGHT = 560;
+const MAP_WIDTH = 540;
+const MAP_HEIGHT = 580;
 
 const MODES: { key: Mode; label: string }[] = [
   { key: "own", label: "Own" },
@@ -104,11 +104,13 @@ export function AffordExplorer({
   towns,
   rate,
   asOf,
+  appearance = "classic",
 }: {
   counties: Place[];
   towns: Place[];
   rate: { value: number; asOf: string };
   asOf: { home: string; rent: string; tax: string };
+  appearance?: "classic" | "atlas";
 }) {
   const [incomeText, setIncomeText] = useState(DEFAULT_INCOME);
   const [mode, setMode] = useState<Mode>("own");
@@ -322,6 +324,7 @@ export function AffordExplorer({
               Milestone 16 (#144). Painted in three states rather than by quantile — a town
               a few dollars over the line must not share a color with one a few under. */}
           <GlobeMap
+            appearance={appearance}
             width={MAP_WIDTH}
             height={MAP_HEIGHT}
             file={file}
@@ -378,23 +381,23 @@ export function AffordExplorer({
               </tr>
             </thead>
             <tbody>
-              {countyRows.map((row) => (
-                <tr
-                  key={row.place.id}
-                  className={row.within ? "within" : undefined}
-                >
-                  <td>
-                    <Link href={`/regions/${row.place.id}`}>
-                      {row.place.name}
-                    </Link>
-                  </td>
-                  <td className="num">{money(row.monthly)}</td>
-                  <td className="num">{share(row.share)}</td>
-                  <td className="reach-mark">
-                    {row.within ? "within reach" : ""}
-                  </td>
-                </tr>
-              ))}
+              {([true, false] as const).map((within) => {
+                const group = countyRows.filter((row) => row.within === within);
+                if (!group.length) return null;
+                return (
+                  <Fragment key={String(within)}>
+                    <tr className="afford-group-row"><th colSpan={4} scope="rowgroup">{within ? "Counties within reach" : "Other counties"}</th></tr>
+                    {group.map((row) => (
+                      <tr key={row.place.id} className={row.within ? "within" : undefined}>
+                        <td><Link href={`/regions/${row.place.id}`}>{row.place.name}</Link></td>
+                        <td className="num">{money(row.monthly)}</td>
+                        <td className="num">{share(row.share)}</td>
+                        <td className="reach-mark">{row.within ? "within reach" : ""}</td>
+                      </tr>
+                    ))}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

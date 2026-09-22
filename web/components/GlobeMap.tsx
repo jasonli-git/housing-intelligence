@@ -25,6 +25,7 @@ import {
 import { type MapFile, readingsFor } from "@/lib/mapdata";
 import { paint as paintInto, reserve } from "@/lib/paint";
 import type { MapLayers } from "@/components/useMapFile";
+import { WORLD_LAND } from "@/lib/worldLand";
 import {
   classIndex,
   quantileBreaks,
@@ -281,6 +282,7 @@ export function GlobeMap({
 
   const framings = useMemo(() => {
     if (!layers) return null;
+    const county = framedOn(layers.county, { width, height });
     return {
       nation: framedOn(
         layers.nation.filter(
@@ -288,7 +290,9 @@ export function GlobeMap({
         ),
         { width, height, padding: NATION_PADDING },
       ),
-      county: framedOn(layers.county, { width, height }),
+      // Centre a little south of the geometric fit. New Jersey then sits higher in the
+      // frame, clear of the county-entry control without changing its scale.
+      county: { ...county, lat: county.lat - 0.28 },
     };
   }, [layers, width, height]);
 
@@ -359,6 +363,7 @@ export function GlobeMap({
         return ((value - lowest) / span) * height * MAX_LIFT;
       };
       return {
+        world: scene(v, WORLD_LAND, () => 0),
         ground: scene(v, layers.nation, () => 0),
         // Flat, all of them. The one raised region is a memo of its own below, so easing
         // the rise no longer re-projects 41,609 points sixty times a second.
@@ -435,12 +440,17 @@ export function GlobeMap({
 
   /** The two painted layers, as `lib/paint.ts` wants them. */
   const painting = (built: NonNullable<ReturnType<typeof build>>) => ({
-    ground: built.ground.map((shape) => ({
+    ground: [...built.world.map((shape) => ({
+      id: shape.id,
+      d: shape.base,
+      fill: null,
+      className: "globe-world-land",
+    })), ...built.ground.map((shape) => ({
       id: shape.id,
       d: shape.base,
       fill: null,
       className: shape.id === "NJ" ? "with-figures" : "",
-    })),
+    }))],
     detail: built.detail.map((shape) => {
       const fill = fillFor(shape.id);
       // No figure here: it joins the ground rather than becoming a dark class of its
@@ -493,9 +503,10 @@ export function GlobeMap({
         layers.county.length,
       );
       if (detailRef.current) reserve(detailRef.current, deepest);
-      if (groundRef.current) reserve(groundRef.current, layers.nation.length);
+      if (groundRef.current) reserve(groundRef.current, WORLD_LAND.length + layers.nation.length);
       const probe = view(camera);
       for (const level of [
+        WORLD_LAND,
         layers.municipality,
         layers.municipalityWide,
         layers.county,

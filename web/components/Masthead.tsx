@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { PlaceSearch } from "@/components/PlaceSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { HousingModeToggle } from "@/components/HousingModeToggle";
 
 const REPOSITORY = "https://github.com/jasonli-git/housing-intelligence";
 
@@ -36,9 +37,7 @@ export function Masthead() {
           </Link>
         </div>
         <div className="bar-tools">
-          <Link className="bar-afford" href="/afford">
-            Affordability
-          </Link>
+          <HousingModeToggle />
           <PlaceSearch />
           <ThemeToggle />
           <a

@@ -1,5 +1,5 @@
-import { AffordCta } from "@/components/AffordCta";
-import { CountyExplorer, type Measure } from "@/components/CountyExplorer";
+import { type Measure } from "@/components/CountyExplorer";
+import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Kind } from "@/components/Crumbs";
 import { StateProfileTicker } from "@/components/StateProfileTicker";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
@@ -10,6 +10,7 @@ import { periodLabel } from "@/lib/periods";
 import { WINDOWS } from "@/lib/windows";
 import { definitionOf } from "@/lib/definitions";
 import { stateProfile } from "@/lib/stateProfile";
+import { affordData } from "@/lib/affordData";
 import "./new-jersey.css";
 
 // The figure most readers arrive for. It is where the page opens, not a limit on it.
@@ -44,10 +45,11 @@ const CAVEAT_IN_DEFINITION: ReadonlySet<string> = new Set([
  * this page's payload (#163).
  */
 export default async function NewJerseyPage() {
-  const [geo, catalog, states] = await Promise.all([
+  const [geo, catalog, states, affordability] = await Promise.all([
     api.geo("county"),
     api.metrics(),
     api.regions("level=state&state=NJ&limit=1"),
+    affordData(),
   ]);
   const state = states?.items[0] ?? null;
   const statewide = state ? await api.summary(state.region_id, "5y") : null;
@@ -142,10 +144,6 @@ export default async function NewJerseyPage() {
           )}
           <Kind kind="state" />
           <h1 className="page-title">New Jersey</h1>
-          <nav className="nj-jump-links" aria-label="Explore New Jersey">
-            <a href="#explorer-heading">Explore the map <span aria-hidden="true">↘</span></a>
-            <a href="#nj-afford">Start with your budget <span aria-hidden="true">↗</span></a>
-          </nav>
         </div>
       </header>
       <StateProfileTicker items={stateProfile(levels)} />
@@ -158,23 +156,16 @@ export default async function NewJerseyPage() {
       </div>
 
       {initial ? (
-        <CountyExplorer
+        <StateModeWorkspace
           frame={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
           counties={geo.features.length}
           sections={sections}
           initial={initial}
+          afford={affordability}
         />
       ) : (
         <p className="meta">No county rankings are published yet.</p>
       )}
-      <section className="nj-next" id="nj-afford" aria-label="Explore affordability">
-        <div>
-          <p className="eyebrow">From the map to your next move</p>
-          <h2>What does this mean for you?</h2>
-          <p>A statewide average is a starting point. Compare the places that fit your income, then open a local profile for the costs and trade-offs.</p>
-        </div>
-        <AffordCta />
-      </section>
     </main>
   );
 }

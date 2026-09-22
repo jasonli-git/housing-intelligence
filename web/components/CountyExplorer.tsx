@@ -329,16 +329,6 @@ export function CountyExplorer({
             />
           ) : (
             <>
-              <p className="table-note">
-                Ranked by change {phrase}, not by level: rank 1 is the{" "}
-                {measure.direction === "lower_is_better"
-                  ? "smallest"
-                  : "largest"}{" "}
-                rise, following the measure’s own direction.
-                {rows.length < counties
-                  ? ` ${rows.length} of the ${counties} counties have this measure.`
-                  : ""}
-              </p>
               <div className="scroll-x">
                 <table className="ranks">
                   <thead>

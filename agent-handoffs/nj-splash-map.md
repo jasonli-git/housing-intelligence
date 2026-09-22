@@ -1,12 +1,24 @@
 # New Jersey splash page and map experiment
 
+## Review refinement: unified state and affordability modes
+
+- Replaced the masthead affordability pill with an accessible switch. On the New Jersey page it updates `?mode=afford`, responds to browser back/forward, and swaps the workspace in place; from another page it opens the merged mode. The durable `/afford` page remains available and shares its server-side data builder with the homepage.
+- Affordability takes over everything below the statewide ticker. Its income/mode/down-payment controls, specific-place search, explanation, and result summary precede the same map-and-table footprint used by the state explorer. The right side groups counties within reach first and all other counties below. Both modes render the shared `GlobeMap`; switching modes intentionally changes its question and level rather than preserving an incompatible county camera.
+- The state rule and mode switch turn the existing tool orange in affordability mode. The former bottom call-to-action is removed, and the two loose map/budget links are no longer needed.
+- Enlarged the county tables and removed the explanatory sentence beginning “Ranked by change…”. Coverage remains visible in the comparison header.
+- Shortened the moving statewide profile to about 82px on desktop and replaced the text pause control with pause/play icons. Hover, focus, explicit pause, reduced motion, print, definitions, and assistive-technology behavior remain.
+- Added a 64KB delta-packed Natural Earth 1:110m land silhouette (v4.0.0, public domain) below the existing state layer. It adds the other continents and major islands without treating them as housing-data regions or adding a runtime request. The source is documented in `worldLand.ts`.
+- Shifted the default New Jersey framing 0.28 degrees south so the state lands higher in the frame, clear of the county-entry action.
+- Replaced the view badge with uppercase display text over a small transparent blurred corner. The corner is the only added blur. The raised selection, seams, metric colors, and blue county-entry action are otherwise unchanged from the prior review.
+- Browser verification now covers the compact/icon ticker, worldwide land, merged mode and history state, orange rule, grouped affordability table, single visible map/table footprint, mobile width, and the earlier map interactions. The production rise probe records 102 SVG attribute reads after adding the world shapes, versus the original 5,280; this is still a DOM-work count, not an FPS claim.
+
 ## Review refinement: map and continuous profile
 
-- Removed the two introductory sentences, retaining the map/budget links.
+- Removed the two introductory sentences; the later merged-mode refinement also removes the now-redundant map/budget links.
 - Replaced the statewide paged banner with `StateProfileTicker.tsx`: a continuous CSS-transform loop (42 seconds for the current three metrics), pause button, hover pause, keyboard-accessible original facts, offscreen/hidden-page pause, and static wrapping for reduced motion/print. The visual duplicate is hidden from assistive technology and contains no focusable controls. Pause or keyboard focus exposes the original facts in a scrollable strip. County banners remain unchanged.
 - Replaced white map seams/selection outline with fine blue-black borders, shaded raised walls, a cooler backdrop, frosted white-on-dark view badge, and a distinct blue county-entry button. Metric fill colors and their legend remain unchanged. Blur is limited to the small view badge, not the full map.
 - County click/tap now uses geographic hit testing, with a separate raised-top hit test so the lifted county wins over the county below it. Movement exceeding six screen pixels is treated as dragging, not clicking. Existing keyboard-accessible county-entry button remains available. This navigation is atlas-only.
-- Updated the browser check for continuous movement, hover/pause, reduced-motion readability, and raised-county tap navigation. Production checks passed with no browser errors and no horizontal overflow at 375/768/1440px. Rise probe remains 96 attribute reads. 207 tests, typecheck, and production build passed; the same local artifact-URL warning remains. Reviewed light, dark, and mobile screenshots. Human frame-time gate remains open.
+- Updated the browser check for continuous movement, hover/pause, reduced-motion readability, and raised-county tap navigation. Production checks passed with no browser errors and no horizontal overflow at 375/768/1440px. The last pre-world-land rise probe was 96 attribute reads. Typecheck and production build passed; the same local artifact-URL warning remains. Reviewed light, dark, and mobile screenshots. Human frame-time gate remains open.
 
 ## What changed
 
@@ -22,14 +34,16 @@
 - `web/components/HousingBand.tsx`: optional title/blue tone, statewide sizing and print presentation; existing local-profile defaults retained.
 - `web/components/CountyExplorer.tsx`: measure shortcuts, comparison heading, atlas opt-in.
 - `web/components/GlobeMap.tsx`: optional atlas presentation and shared paint/gesture lifecycle improvements.
+- `web/components/HousingModeToggle.tsx`, `web/components/StateModeWorkspace.tsx`, `web/components/AffordExplorer.tsx`, `web/lib/affordData.ts`: merged-mode navigation, workspace, shared affordability payload, and grouped results.
+- `web/lib/worldLand.ts`, `web/lib/world-land.json`: documented, static Natural Earth world backdrop.
 - `web/lib/stateProfile.ts`, `web/lib/stateProfile.test.ts`: presentation adapter and three tests.
 - `web/scripts/check-nj-redesign.mjs`: repeatable headless browser checks and a narrowly scoped DOM-work counter.
 
 ## Architectural or implementation decisions
 
-- No dependencies, data sources, calculations, ranking definitions, or canonical documentation changed.
-- Atlas appearance is opt-in; the affordability page retains classic map presentation. Shared rendering/gesture fixes apply to both map consumers.
-- Reused existing profile primitives rather than introducing a second carousel implementation. Kept complete definitions in the existing floating definition interaction.
+- No dependencies, housing-data sources, calculations, ranking definitions, or canonical documentation changed. Natural Earth is visual context only and carries no analytical values.
+- Atlas appearance is opt-in on the merged homepage modes; the durable affordability URL retains classic presentation. Shared rendering/gesture fixes and the world backdrop apply to both map consumers.
+- Kept complete definitions in the existing floating definition interaction. The statewide conveyor is separate from county profile paging because its movement and accessibility fallback are intentionally different.
 - Scoped landing styles to the NJ page. County, municipality, ZIP, and report layouts are not redesigned.
 - Branch `experiment/nj-splash-map` started from `origin/main`, not the unrelated local check-live branch.
 
@@ -42,16 +56,16 @@
 ## New TODOs / limitations
 
 - The visible, human-operated production performance gate remains outstanding. Review `/?perf` and `/afford?perf` with the documented drag/zoom sequence before claiming lag is resolved. Automated work counts are not frame-time measurements.
-- In the same 900 ms isolated county-rise probe, the development baseline made 5,280 path attribute reads versus 96 after the change. The production preview also recorded 96. This measures eliminated DOM inspection, not a claimed percentage improvement in overall speed.
+- In the same 900 ms isolated county-rise probe, the development baseline made 5,280 path attribute reads versus 102 in the final production preview with worldwide land. This measures eliminated DOM inspection, not a claimed percentage improvement in overall speed.
 - Local build warns that `NEXT_PUBLIC_ARTIFACT_URL` is unset and download links use localhost:8000. This preview is not a deployment artifact.
 - Local production preview is served at localhost:3001 using a temporary static server outside the repository. Nothing is deployed.
 
 ## Verification
 
 - `cd web && npm run typecheck`: passed.
-- `cd web && npm test`: 25 files, 207 tests passed, including three new statewide profile tests.
+- `cd web && npm test`: 26 files, 208 tests passed, including three statewide profile tests and one world-coverage test.
 - `cd web && npm run build`: passed; 2,276 static pages generated, with the local artifact-URL warning described above.
-- `cd web && CHECK_URL=http://localhost:3001 CHECK_LABEL=production node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths; profile paging, definition bounds, text bounds, measure shortcut, municipality zoom, drag commit, reset, dark mode, and county/affordability regression routes.
+- `cd web && CHECK_URL=http://localhost:3001 CHECK_LABEL=merged node scripts/check-nj-redesign.mjs`: passed; no browser page errors. Checked 375/768/1440 px document widths; compact/icon ticker, worldwide land, state/affordability switching, definition bounds, grouped county results, measure shortcut, municipality zoom, drag commit, reset, dark mode, and county/affordability regression routes.
 - Inspected production desktop, mobile, and dark-mode screenshots.
 - `git diff --check`: passed.
 - Backend tests not run: backend and data pipeline unchanged. No deployment or merge performed.
