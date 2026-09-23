@@ -41,9 +41,12 @@ layer only explains metrics that were already computed.
 > readings side by side, and since Milestone 13 any figure the packet does not carry is
 > refused before it is stored.
 >
-> Next is Milestone 26 (Milestone 29 shipped ahead of it — see ROADMAP.md). See
-> [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md) for what
-> shipped.
+> **Next.** The roadmap was restructured on 2026-09-23 around current, complete data:
+> Version 3 now covers release freshness, a refresh that reaches the site, survey
+> uncertainty, the full cost of owning, and new public sources from flood risk to
+> evictions, and Version 4 holds anything modelled. Next is Milestone 26, current
+> releases. See [ROADMAP.md](ROADMAP.md) for what is planned and
+> [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
@@ -539,7 +542,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.21.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.21.4 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -553,11 +556,15 @@ generation, citation binding, deeper New Jersey sources, a three-dimensional map
 564 municipalities, a consumer entry point, and a design system. Expansion to the
 Northeast and to every US county was deferred past Version 2 on 2026-09-07.
 
-Version 3 is depth on what is already held, and nearly every item was a column, a file or
-a vintage already on this machine and unused. Three of its six milestones have shipped —
-**24** fresher figures, **25** recorded sale prices and a comparable tax rate, **29**
-scheduled refresh, brought forward out of order once the site was public and had started
-to decay. **26**, **27** and **28** remain, with the map's standing check.
+Version 3 began as depth on what is already held. On 2026-09-23 it absorbed Version 4
+and the Director Note on accessible, comprehensive and current housing data, and became
+the version that makes the platform current, as complete as public data allows, and
+honest about both. Three of its milestones have shipped — **24** fresher figures, **25**
+recorded sale prices and a comparable tax rate, **29** scheduled refresh, brought forward
+out of order once the site was public and had started to decay. **26** through **50**
+remain, with the map's and the completeness standing checks; Version 4 holds nowcasts, a
+local price model study and forecasting. Between milestones, the New Jersey landing page
+and region pages were redesigned (0.21.1 and 0.21.3).
 
 The notes below are a running commentary on individual milestones rather than a complete
 list; [CHANGELOG.md](CHANGELOG.md) is the full record and [ROADMAP.md](ROADMAP.md) has

@@ -8,7 +8,8 @@ with 289 Python and 26 dashboard tests passing. All eight pipeline stages run.
 
 **Version 2 is complete — Milestones 10, 11, 12, 19, 22, 20, 21, 13, 18, 17, 23 and 16
 have shipped, between 2026-09-02 and 2026-09-18; 14 and 15 stay unscheduled.
-Versions 3, 4 and 5 were scheduled on 2026-09-18 and are below.** The
+Versions 3 and 4 are below — scheduled on 2026-09-18 as three versions, and restructured
+into two on 2026-09-23.** The
 platform is published: New Jersey is served from a public domain with no database and no
 application server, and its interpretation is written by hosted models behind a preference
 list that ends on this machine. Since 18, 17 and 23 it has a design language of its own
@@ -207,15 +208,15 @@ visitor will ask stay out of Milestone 17, recorded so they are not re-proposed 
 additions to it:
 
 - *Will prices go up?* A forecast, which the next paragraph keeps out of Version 2. The
-  historical persistence facts, now Milestone 31, are the descriptive answer.
+  historical persistence facts, now Milestone 50, are the descriptive answer.
 - *Is it a good investment, or should I buy?* Advice. The platform publishes the figures
   a decision is made from, not the decision — which is why rent against own is a
   comparison of monthly costs with its omissions named, and why "whether the price
   rises" is one of them.
 - *Schools, commutes and crime.* Each needs a new source family with its own licence,
   geography and cadence, and none of them is housing data; each would be a milestone,
-  not an answer inside one. All three, with flood risk, are now Milestone 32 — from
-  licensed sources, as components rather than a composite score.
+  not an answer inside one. All three, with flood risk, are now Milestones 39, 43 and
+  45 — from licensed sources, as components rather than a composite score.
 
 **Affordability forecasting stays out of Version 2, and cost is not the reason.**
 Extrapolating a CAGR is arithmetic; it would be nearly free. The objection is that it
@@ -395,76 +396,139 @@ later.
   portfolio piece is within that; monetizing the result is not.
 - **Cloudflare Pages caps files per site.** Written before Milestone 11 as a question for
   it to answer; measured on 2026-09-18 and answered under "The file cap, measured" below,
-  where it belongs — it constrains expansion and nothing in Versions 3, 4 or 5.
+  where it belongs — it constrains expansion and nothing in Versions 3 or 4.
 
-## Version 3 Milestones (depth on what is already held)
+## Version 3 Milestones (current, complete, and checkable)
 
-**Scheduled 2026-09-18, from the owner's draft.** Version 2 finished the *reach* of the
-platform — where it runs, what writes its prose, what it looks like. Version 3 finishes
-its *depth*, and almost every item is a column, a file or a vintage already on this
-machine and unused. Nothing here needs a new key, a new geography level, or a decision
-about what the platform is willing to claim.
+**Scheduled 2026-09-18 from the owner's draft; restructured 2026-09-23.** Version 2
+finished the *reach* of the platform — where it runs, what writes its prose, what it looks
+like. Version 3 was scheduled to finish its *depth*, on data already held. On 2026-09-23
+the owner folded Version 4 into it and turned the Director Note *Accessible, comprehensive,
+and current housing data* into milestones, after a research report on that note — its
+sources, freshness, costs, licensing and presentation — was checked against the code.
+Version 3 is now the version that makes the platform current, as complete as public data
+allows, and honest about both. That is a larger promise than the original one: Milestones
+38–46 add sources, some of them needing a key or the publisher's permission.
 
-**Order mattered once, and then again for a different reason.** Milestone 24 moved every
-ACS window by a year and regenerated every county explanation, so it went first —
-building a view on a figure about to change is rework. Milestone 29 was then brought
-forward ahead of 26–28 on 2026-09-20, after the site was public: measured that day,
-Zillow had republished while the warehouse held a copy ten days old, and the platform
-had no way to notice. Every remaining milestone adds more surface that decays, so the
-milestone that stops the decay went before them.
+**Why this order.** Milestone 24 went first because it moved every ACS window, and
+building on a figure about to change is rework. Milestone 29 was brought forward on
+2026-09-20, after the site was public: Zillow had republished while the warehouse held a
+copy ten days old, and nothing could notice. The rest follows the same logic:
 
-**Shipped: 24, 25, 29. Remaining: 26, 27, 28, and the map's standing check.**
+- **Reliability first (26–28).** Nothing new is worth adding to a site that cannot say how
+  fresh its figures are or get a refresh onto the page, and every later milestone adds
+  more surface that decays.
+- **Then the readings, the licence pass and the commercial decision (30–32), before any
+  new source**, so every source after them lands with its licence class and record type
+  from the start, and the commercial answer can shape which sources are chosen.
+- **Then the housing decision itself (33–37)**: cost, household-sized answers and what
+  the sales and tax records already held can say.
+- **Then context (38–46)**, one new source family per milestone, each naming its row in
+  the [source register](#source-register).
+- **Then the pages that assemble it (47)**, which need everything before them.
+- **Last, the old Version 4 (48–50)**: facts that are still computed and sourced, which
+  the interpretation layer can narrate and a forecast would be asked to beat.
+
+**Shipped: 24, 25, 29. Next: 26.**
 
 | M | Status | Deliverable |
 |---|--------|-------------|
 | 24 | ✅ done | **Fresher figures** — ACS moved to the 2020–2024 vintage behind `ACS_END_YEAR` in `src/hip/sources/registry.py`, beside `BLS_END_YEAR`, so the vintage list stops being hard-coded as it had been since Milestone 3; and the Census Population Estimates Program as `census_pep`, two keyless files, for headline population at state, county and municipal level. ACS remains the denominator of every computed ratio, pinned by a test. Measured on Mercer County: 383,286 on the old ACS vintage, 385,864 on the new one, 399,289 from PEP Vintage 2025. 3,516 PEP observations loaded across 1 state, 21 counties and 564 municipalities. The county explanations are stale pending a regeneration the owner deferred |
 | 25 | ✅ done | **MOD-IV transactions and market value** — New Jersey's own transaction prices and its own effective tax rate, closing the **effective tax rate against market value** that ARCHITECTURE #141 wanted and rejected for lack of "sale prices or equalization ratios the warehouse does not hold". Neither turned out to be a MOD-IV column. The transaction half is the **SR1A Sales File** — 1.4M deeds across seven archives, carrying the state's own usable/non-usable determination — because MOD-IV's `SALES_CODE` records how a sale was *investigated*, not whether it is usable, and the usability field is absent from every field of NJ's ArcGIS publication at any token level (#179). The tax half is the state's published **General and Effective Tax Rates**, ingested rather than derived and validated against the **Director's Ratio** (#180). `sr1a_median_sale_price` is a rolling three-year median of verified prices on usable class-2 sales, per municipality, county and state; the three tax metrics are municipal. 48,975 new observations. The milestone also completed the CD-code crosswalk with ten verified aliases and gave MOD-IV the same one, so each of its municipal metrics gained ten municipalities (#184) |
-| 26 | ⬜ planned | **Where an income really stands here** — two HUD answers to the same question. **"Would I count as low-income here?"**: an income checked against HUD's limits for the reader's household size. Only the four-person 80% limit is stored (`hud_income_limit_80`), so this begins by checking whether the landed HUD file carries the other sizes. It says where an income sits against HUD's line, never who qualifies for a program, which is eligibility advice and depends on each program's own rules. **And housing *plus transport*, from HUD's Location Affordability Index** (added at the owner's direction, 2026-09-18): the standard critique of a housing-only affordability line is that a cheap house down a long commute is not cheap, and `/afford`'s 30%-of-income rule makes exactly that omission today. LAI is public domain and modelled per household type at block-group level, so it needs aggregating to municipality and a plain statement that it is a model of a typical household, not this reader's commute — which is the same caveat the 30% line already carries, applied to the half of the cost it has been leaving out |
-| 27 | ⬜ planned | **"Somewhere like here, but cheaper"** — the places nearest a region on a small, named set of measures with a lower home value. Deterministic. The page names the measures it matched on, because "like here" is a choice the platform makes on the reader's behalf and an unnamed one is not checkable |
-| 28 | ⬜ planned | **Provenance pass** — a record-type line per source (survey estimates, tax assessment records, administrative counts, a modelled index) as a field in `config/sources.yml` and the `sources` table, shown in the footer; a per-page print footer carrying the non-commercial terms, so a single page cut from a saved PDF still carries them; and the model-comparison dashboard, whose data has sat in `data/eval/v1` since Milestone 8 |
+| 26 | ⬜ planned | **Current releases** — every adapter discovers its newest release instead of requesting a hard-coded year: BLS through 2026 (`BLS_END_YEAR` is 2025), the 2025 annual Building Permits file (`default_vintage` is 2024), IRS migration for 2022–23 with a note on its changed matching method (`default_vintage` is `2122`), and HUD income limits for FY2026 (`IL_YEARS` ends at 2024). A release carries its **publication date and its effective date separately**, so a FY2027 standard never becomes operative before it takes effect. **The mortgage rate:** Freddie Mac's weekly 30-year benchmark for today's cost card, the monthly average kept for history, and an incomplete month labelled provisional rather than dated as if observed — the 6.67% against 6.95% question the Director Note raised, since `MORTGAGE30US` is fetched at `frequency=m`. FHFA's county and ZIP indexes are retested rather than taken as unreachable; MOD-IV's assessment year, SR1A's deed, recording and publication dates, and each NJ tax-rate product are audited separately. **Every source gets a recorded fallback** — another publisher, another route, a request to the agency, or its last figure kept and labelled historical — and a written procedure for the day a source stops answering, the case MOD-IV's token wall (#191) was handled without. **In its own section, with its own acceptance line: the models.** Qwen 3.7 Plus leaves the preference list (its free quota is spent), and readings from any model no longer on the list are retired at the next regeneration, pinned by a test. Gemma 4 E4B gets one copy that LM Studio and the project can share, `import_gguf.sh` enters the repo with its template fixed, and the MLX build is retested on a current `mlx-lm` — 0.31.3 could not load it at all. Peak memory falls by at least 1GB, cheapest first: the 12,288-token context to 8,192, which no generation needs more than; a quantized KV cache; and a smaller quantization only if the free figure check on the standard scenarios shows no loss |
+| 27 | ⬜ planned | **Refresh reaches the reader** — `hip refresh` continues past `analyze` through `pack`, `publish`, `deploy` and `check-live`, inside boundaries decided as the milestone's **first task**: where it runs (this Mac under launchd, or a cloud runner — only the second unblocks the automated screenshots ARCHITECTURE #175 waits on), and what may run without asking (regenerating readings is billed; a deploy is public). A **public freshness page** per source: the period observed, when the publisher released it, when it was acquired, when it was last checked, the site version carrying it, the next expected release, and a status — current, delayed, unreachable, superseded, discontinued or historical — because *checked today* must never read as *measured today*. A **what changed since the last release** page, from the `fact_revision` rows Milestone 29 records and does not yet present. `check-live` pins one region per page shape instead of sampling the common path. A **report a problem with this figure** link on every figure, opening a GitHub issue pre-filled with its source and release. And the first run of [the completeness standing check](#the-completeness-standing-check) |
+| 28 | ⬜ planned | **Figures that read right at a glance** — margins of error for every ACS figure, requested beside each estimate and carried to the page, and ranks that stop implying differences the error cannot support: a region whose interval overlaps its neighbours' reads *near the middle*, not a precise place. The renter cost-burden denominator stops counting households whose burden the Census could not compute (`B25070_011E`), or is labelled as the custom denominator it is. Every rank names its real cohort — *6 / 21 NJ counties*, *42 / 551 municipalities with data* — so the standalone *every figure ranked against New Jersey's 21 counties* line can go; and an index value leads with a common-period change and carries its baseline beneath it (*442.7 — about 4.4× its 1991 Q1 level*). Both presentation questions in the Director Note of 2026-09-19 |
 | 29 | ✅ done | **Scheduled refresh** — the platform stops decaying silently. A pinned vintage is answered from disk; a `current` or year-to-date ref is revalidated with `If-Modified-Since`/`If-None-Match` and a 304 is a cache hit (#188); a publisher offering no validator falls back to a bounded age (#189). A failed ref is reported and the run continues, and the report separates *asked and told unchanged* from *never asked* — the distinction the old "172 cached" hid (#190). `hip refresh` exits 0, 3 or 1 and stops before the pipeline when nothing moved (#192); `hip prune-raw` keeps every release a fact cites and removes the rest (#193); `fact_revision` records a figure that changes (#194). **Brought forward ahead of 26–28 on 2026-09-20**, measured with 0.20.1 already live: Zillow had republished on 2026-09-16 while the warehouse held 2026-09-06. The first full run under it refreshed 28 stale refs — among them `MORTGAGE30US`, which sits on the cost card — found `nj_modiv` behind a token and carried on past it (#191), and recorded **313,536 revisions**, 294,469 of them Zillow restating its own published history at a median 1.06% |
+| 30 | ⬜ planned | **Readings for every reader** — **one analyst reading per region**, the interpretation as it is today, written by Gemini 3.7 Flash with the existing fallback list behind it, in place of four models' readings side by side; and **one consumer reading**, a single generation giving a bottom line and short answers to fixed questions — *is it getting harder to afford here, rent or buy, what's changing, what should I check before moving* — with at most a couple of figures each, no source names and no jargon, under the same citation binding. The consumer model is chosen by generating both formats with DeepSeek, Gemini and Flash-Lite on three counties and reading them, not by guess, and has its own fallback list ending on this machine. **Batch pricing for every hosted model on the analyst list**, starting from the open questions in the batch-pricing Director Note: which providers offer a batch API and at what discount, what a partly failed batch means for a publish, and how failover works when failures return hours later. A provider without one runs synchronously and says so in the run report, which also states what the run cost. Two generations per region instead of four, before any discount. Milestone 47 reuses the fixed-question answers |
+| 31 | ⬜ planned | **Licence and provenance pass** — principle 11 on every figure: whether it is an administrative observation, a calculation, a survey estimate, a modelled index or a scenario, visible where it is read. A record-type line and a **licence class** per source in `config/sources.yml` and the `sources` table, and the licence **propagates**: a figure derived from a restricted source inherits the restriction, and so does any download of it. A **download this page's data** option with the licence and a citation line attached, wherever the licence allows. A per-page print footer carrying the non-commercial terms, so a single page cut from a saved PDF still carries them. Every source's terms re-read — FRED's series carry their originators' rights, Freddie Mac syndicates its survey under its own policy, and Realtor.com's research terms have never been read. A written scraping policy: bulk downloads, then documented APIs, then services meant for reuse, then permission-based extraction; never listing portals, and never a bypassed control. And the model-comparison dashboard, whose data has sat in `data/eval/v1` since Milestone 8. *(Old 28, extended.)* |
+| 32 | ⬜ planned | **Commercial viability study** — ends in a **go or no-go**, like Milestone 52. A licence table for every source — display, download, derived figures, commercial use — built on Milestone 31's pass; which headline figures survive with every restricted source removed; where the owner's request to Zillow for a written determination stands; and what paid data would actually cost, per vendor rather than by category, with RentCast tested on its free allowance under a hard request budget and no subscription. **Go** means a change to `SPEC.md`, which is the owner's decision, and a milestone to build a commercially cleared variant of the site. **No-go** is recorded in ARCHITECTURE.md with what would have to change for a later go. `SPEC.md` says nothing about commercial use today; principle 4 says only that public data comes first |
+| 33 | ⬜ planned | **The full cost of owning** — four views instead of one total: monthly cash, upfront cash, the cost of owning excluding principal, and long-horizon scenarios. Homeowners and flood insurance, mortgage insurance below 20% down, HOA fees, a maintenance reserve, utilities (never counted twice where a rent already includes them), closing costs, moving and first repairs, and selling costs only where a holding period is set. The reader can enter a purchase price with the published figure prefilled, a tax bill, an insurance quote, a rate and a rent; what a reader enters changes their scenario, never the town's published figures or its rankings. A total missing a component says *partial estimate* beside the number. Renting's own costs beside owning's, tax relief and assistance as links with a review date and never an automatic subtraction, and no individual tax bill from price × effective rate (#187) |
+| 34 | ⬜ planned | **ACS depth and direct ZIP coverage** — rent by bedroom count and its distribution, owner costs with and without a mortgage, severe cost burden, units in structure (`B25024`), year built (`B25034`), bedrooms and crowding, plumbing and kitchen completeness, vacancy by reason, heating fuel, vehicles available, commute mode and time, household composition and disability — each with its margin of error from the start. ZCTA data fetched directly, filtered to New Jersey's, and labelled ZCTA, never ZIP: since 2020 the ACS no longer nests ZCTAs within states, which is why Milestone 3 skipped them |
+| 35 | ⬜ planned | **Household-sized answers** — HUD income limits for the reader's household size (only the four-person 80% limit is stored today, so this begins by checking what the landed file carries), saying where an income sits against HUD's line and never who qualifies for a programme, which is eligibility advice. And a rent evidence panel by bedroom count — Zillow's ZORI, ACS gross rent, HUD Fair Market Rents, HUD Small Area Fair Market Rents by ZIP, and the reader's own rent — each labelled for what it measures: listing movement, what occupants pay, or an administrative benchmark. *(Old 26's income half; its transport half is 43.)* |
+| 36 | ⬜ planned | **How homes change hands** — more out of SR1A and MOD-IV, both already held: sale counts, price quartiles and sample sizes, fresher windows where a sample allows, the age mix of what sold, sale-to-assessment ratios, price per square foot only where living area is filled in, revaluation context, and a reconciliation of the municipal identifiers still unmatched. Guardrails, each pinned by a test: property classes stay separate, a parcel is not a dwelling unit, a county median is never a median of town medians, and a rising median is labelled as possibly a change in *which* homes sold |
+| 37 | ⬜ planned | **Property tax: what you'd actually pay** — a reader looks up a block and lot, or an address, and sees that property's assessed value and last tax from MOD-IV, the town's revaluation history and whether one is due, and how its assessment compares with the town's — data already held, answering a question a search engine cannot. Owner names are never landed or shown, the boundary SR1A already keeps (#183). Served as per-municipality files from object storage and never as pages: 3.48M parcels as pages would be 174 times the free file cap |
+| 38 | ⬜ planned | **Approved vs built** — NJ's Construction Reporter: certificates of occupancy, demolitions and net additions by building type and size, beside the permits already held, with proposed, approved, permitted and completed kept as separate stages. Recent state records are checked for coverage and revision before they are trusted. Answers *is this area adding housing, or only approving it* |
+| 39 | ⬜ planned | **Flood and environmental exposure** — FEMA's National Flood Hazard Layer with NJDEP's climate-adjusted flood layers, contaminated sites and drinking-water context, kept as separate components. Never *safe from flooding* outside a mapped zone, and a municipality's flooded share of land is not a household's risk. Links into Milestone 33's conditional flood-insurance line. *(Old 32's flood row.)* |
+| 40 | ⬜ planned | **Affordable housing and assistance** — three questions kept apart: what towns are obligated to provide (DCA's fourth-round figures), what has been completed (municipal reporting on units and trust funds), and where someone can apply today (housing authorities and programme administrators, with application and waiting-list links). HUD LIHTC properties and HUD's assisted-housing inventories, with bedroom and accessibility fields where supplied and restrictions nearing expiry. The National Housing Preservation Database only under its licence |
+| 41 | ⬜ planned | **Accessibility audit** — the site against WCAG 2.2 AA, with fixes and a check that keeps it there. The carousels, the map, the floating definitions and the mode switch have only ever been checked in part. A Spanish edition is a separate go / no-go, unscheduled |
+| 42 | ⬜ planned | **Evictions** — eviction filings and warrants of removal by ZIP from DCA's Municipal Housing Profile, with *a filing is not an eviction*, *a warrant is not an executed removal* and repeat filings stated where they are read. **Gated on DCA** supplying the underlying tables, a data dictionary, an update calendar and reuse terms — the owner's request, not a scrape of the rendered dashboard. If the gate is not met the milestone parks, and does not hold up the ones after it |
+| 43 | ⬜ planned | **Getting around** — **first task: whether HUD's Location Affordability Index is used at all.** Confirm the data years its current version rests on, then drop it, keep it with those years stated, or propose a current transport-cost estimate as Version 4 work. Then Census LODES for where residents work, ACS commute mode and time (Milestone 34), and NJ TRANSIT service; EPA's Smart Location Database only with its vintage stated. Aggregated to municipality — see the file cap trap below. *(Old 26's transport half and old 32's EPA row.)* |
+| 44 | ⬜ planned | **Somewhere like here, but cheaper** — the places nearest a region on a small, named set of measures with a lower home value. Deterministic. The page names the measures it matched on, because "like here" is a choice the platform makes on the reader's behalf and an unnamed one is not checkable. Now with side-by-side comparison on comparable measures, and a commute limit once Milestone 43 exists. *(Old 27.)* |
+| 45 | ⬜ planned | **Schools and community context** — NJ DOE performance with district boundaries (a district is not an assignment to a school), FCC broadband availability (availability is not measured speed, and its location Fabric carries separate licensing), NJ State Police crime data with its reporting coverage audited (no report is not zero crime), CDC PLACES for health and environment, and DOE's LEAD tool for energy burden. **Components, cited — never a composite score.** A single "7.8/10 neighbourhood grade" is exactly the output whose provenance cannot be traced, on a site whose whole claim is that every figure names its release. *(Old 32's remaining rows.)* |
+| 46 | ⬜ planned | **Mortgage lending** — HMDA: origination volumes, loan types and terms, reported rates and costs, denial patterns, and borrower-income and loan-size distributions. *What financing has actually been used here*, never *what rate you would qualify for*; its privacy modifications and reporting exclusions stated where it is read |
+| 47 | ⬜ planned | **Decision guides** — pages that take a question and assemble the answer from Milestones 33–46: *can I afford to buy here, should I rent or buy, what should I check before an offer*. Every answer shows its source, period, geography, calculation and limitation, and links to the official next step. Reuses Milestone 30's fixed-question answers. This is the Director Note's *better than a Google search*, and it comes late because it assembles everything before it |
+| 48 | ⬜ planned | **Migration-driven demand** — IRS county-to-county flows, already loaded, read as demand pressure rather than as a standalone count. *(Old 33.)* |
+| 49 | ⬜ planned | **Relationship facts** — a section of the packet drawn from a closed set of relation types ("values rose 30% while incomes rose 12%, so price-to-income moved from 3.1 to 3.8"), which Milestone 13's citation binding extends to, so a model can narrate only a relationship that exists as a fact. With it, a check in the evaluation for causal wording — "because", "driven by", "due to" — not backed by a relationship fact. **Not** four chained model calls, one per interpretive function: that multiplies cost and latency, and an unsupported claim from one step becomes evidence for the next, where the evaluation can no longer see where it came from. *(Old 30.)* |
+| 50 | ⬜ planned | **Historical persistence facts** — the descriptive answer to "is this pressure temporary or persistent?", which is the question a forecast would be asked. How far a region's price-to-income sits above its own long-run range, and how long past episodes that far above it lasted. Constrained by history: FHFA reaches back decades, the income side does not, and a range is only as long as its shorter series — which the fact has to say. *(Old 31.)* |
 | MAP | ⬜ planned | **The map's standing check**, plus the debt V2 hands it — the recurring gate defined in [The map's standing check](#the-maps-standing-check). Not a feature, and not a new number: it is the same check every version. V3's run additionally has to clear the three budgets that were red when the gate was written, and **the 504ms input is the named first task**: a single event took half a second to answer with no long task anywhere, which is a defect of a different shape from a slow frame and has never been looked at |
+| COMPLETE | ⬜ planned | **The completeness standing check** — the second recurring gate, defined in [The completeness standing check](#the-completeness-standing-check): first run in Milestone 27, re-run at every milestone's close, reported in its completion report |
 
-## Version 4 Milestones (relationships, history and risk)
+### Decisions Version 3 needs from the owner
 
-Everything here is still **computed and sourced** — the line Version 5 crosses and this
-one does not. These are facts the warehouse can derive and cite, not predictions.
+- **Milestone 27:** where the refresh runs — this Mac or a cloud runner — and what it may
+  do without asking.
+- **Milestone 30:** the consumer reading's model, after the three-county side-by-side.
+- **Milestone 32:** go or no-go on a commercial path, and whether a go changes `SPEC.md`.
+- **Milestone 43:** whether HUD's Location Affordability Index is used.
+
+**Outreach only the owner can send, worth starting now** because replies take weeks:
+DCA's data team (gates 42; helps 38 and 40), Zillow for a written licence determination
+(32), NJ's Division of Taxation and Office of GIS for stable bulk endpoints and revision
+notices (26, 36, 37), NJHMFA and housing authorities for affordable-housing inventories and
+application links (40), and Rutgers CUPR for a methodology review (Version 4).
+
+### Renumbered 2026-09-23
+
+Milestones not yet built were renumbered in build order when Version 3 absorbed Version 4
+and Version 5 became Version 4. `CHANGELOG.md`, `ARCHITECTURE.md` decision rows and
+`DIRECTOR_NOTES.md` entries written before that date use the old numbers and are left as
+written; this table resolves them.
+
+| Old | Now |
+|---|---|
+| 26 — Where an income really stands here | 35 (income limits) and 43 (transport) |
+| 27 — Somewhere like here, but cheaper | 44 |
+| 28 — Provenance pass | 31 |
+| 30 — Relationship facts | 49 |
+| 31 — Historical persistence facts | 50 |
+| 32 — Neighbourhood context | 39 (flood), 43 (EPA), 45 (the rest) |
+| 33 — Migration-driven demand | 48 |
+| 34 — Affordability forecasting | 53 |
+| 35 — Bring-your-own-model comparison | unscheduled |
+
+14 and 15 keep their numbers; see [Still unscheduled](#still-unscheduled).
+
+## Version 4 Milestones (what the platform is willing to claim)
+
+Was Version 5 until 2026-09-23. Every milestone here would publish a figure that is
+modelled rather than measured, so each has to meet principle 11 — labelled, dated, with
+its method, its validation, its uncertainty and a path back to the observations beneath
+it — and each may end with nothing published. There is no global *current* or *future*
+mode switch: a figure says what kind it is where it is read. The open model harness that
+sat here went to unscheduled on 2026-09-23, and expansion sat here until 2026-09-18, when
+the owner returned Milestones 14 and 15 to unscheduled.
 
 | M | Status | Deliverable |
 |---|--------|-------------|
-| 30 | ⬜ planned | **Relationship facts** — a section of the packet drawn from a closed set of relation types ("values rose 30% while incomes rose 12%, so price-to-income moved from 3.1 to 3.8"), which Milestone 13's citation binding extends to, so a model can narrate only a relationship that exists as a fact. With it, a check in the evaluation for causal wording — "because", "driven by", "due to" — not backed by a relationship fact. **Not** four chained model calls, one per interpretive function: that multiplies cost and latency, and an unsupported claim from one step becomes evidence for the next, where the evaluation can no longer see where it came from |
-| 31 | ⬜ planned | **Historical persistence facts** — the descriptive answer to "is this pressure temporary or persistent?", which is the question a forecast would be asked. How far a region's price-to-income sits above its own long-run range, and how long past episodes that far above it lasted. Constrained by history: FHFA reaches back decades, the income side does not, and a range is only as long as its shorter series — which the fact has to say |
-| 32 | ⬜ planned | **Neighbourhood context from licensed sources** — walkability and transit access from EPA's Smart Location Database, school district boundaries from NCES EDGE with NJ DOE performance, flood risk from FEMA's National Flood Hazard Layer, municipal crime from NJ State Police UCR, health and environment from CDC PLACES. **Components, cited — never a composite score.** A single "7.8/10 neighbourhood grade" is exactly the output whose provenance cannot be traced, on a site whose whole claim is that every figure names its release. Replaces the scraped-aggregator idea the owner raised on 2026-09-18; see the source register for why |
-| 33 | ⬜ planned | **Migration-driven demand** — IRS county-to-county flows, already loaded, read as demand pressure rather than as a standalone count |
-| MAP | ⬜ planned | **The map's standing check** — the recurring gate defined in [The map's standing check](#the-maps-standing-check). Not a feature, and not a new number: it is the same check every version, run before that version closes |
-
-## Version 5 Milestones (what the platform is willing to claim)
-
-Two milestones, both about the limits of the promise rather than about features.
-Forecasting would be the platform's first output that is neither measured nor traceable
-to a source release; the open harness would be the first thing it runs that it does not
-control. Expansion was in this version until 2026-09-18, when the owner returned
-Milestones 14 and 15 to unscheduled — see "Still unscheduled" below.
-
-| M | Status | Deliverable |
-|---|--------|-------------|
-| 34 | ⬜ planned | **Affordability forecasting**, behind the four conditions already recorded: it beats a no-change and a straight-line baseline on held-out history or it does not publish; its confidence is an interval whose coverage the backtest measured, never a label, because a model reading "confidence: high" will say it more strongly than it should; it states the lag it inherits, since ACS 5-year estimates overlap by four years and a projection compounds that; and "temporary or persistent" is computed by the module, never concluded by a model. It produces evidence — direction, magnitude, horizon, interval, assumptions — for the interpretation layer to read beside Milestone 31's history. **Needs its own accuracy evaluation**, the way the interpretation layer got one |
-| 35 | ⬜ planned | **Bring-your-own-model comparison** — a visitor points the platform at a model of their own and sees it answer the same scenarios, scored the same way. The scenarios, the figure-checking, the rubric and the `ModelRunner` protocol all exist; what is missing is a place to run it, since the site is static, and a judge, which is a paid call the visitor would supply a key for. The deterministic half needs neither and is the honest place to start — fabrication rate against a real packet is a complete answer on its own |
+| 51 | ⬜ planned | **Selected nowcasts** — estimates of the current, incompletely observed period for a small number of delayed metrics, each validated against what was later published, labelled *nowcast* with its as-of date and uncertainty, and withheld where the evidence is weak. Never a uniform inflation of old figures, which erases real differences between places behind convincing decimals, and **no projected rankings**: ranking uncertain estimates manufactures precision |
+| 52 | ⬜ planned | **Local price model study** — ends in a **go or no-go**. Whether SR1A can support a home-value index of the platform's own, repeat-sales or hedonic: the first answer to *what homes here are worth*, rather than *what sold*, that does not depend on Zillow. Needs stable property matching, enough repeat sales, a treatment of renovations, and out-of-sample testing. A no is a complete answer |
+| 53 | ⬜ planned | **Affordability forecasting**, behind the four conditions already recorded: it beats a no-change and a straight-line baseline on held-out history or it does not publish; its confidence is an interval whose coverage the backtest measured, never a label, because a model reading "confidence: high" will say it more strongly than it should; it states the lag it inherits, since ACS 5-year estimates overlap by four years and a projection compounds that; and "temporary or persistent" is computed by the module, never concluded by a model. It produces evidence — direction, magnitude, horizon, interval, assumptions — for the interpretation layer to read beside Milestone 50's history. **Needs its own accuracy evaluation**, the way the interpretation layer got one. Backtests run on the figures as they stood at each forecast date, not as since revised — which `fact_revision` (Milestone 29) makes possible — broken down by geography and horizon, with a rule for withholding a forecast where the evidence is weak, and scenarios (*what if rates rise a point?*) before predictions. *(Old 34.)* |
 | MAP | ⬜ planned | **The map's standing check** — the recurring gate defined in [The map's standing check](#the-maps-standing-check). Not a feature, and not a new number: it is the same check every version, run before that version closes |
 
 ## The map's standing check
 
 **A gate, not a milestone, and deliberately so.** A milestone is a slice of capability
 that ships once; this is a condition a version has to meet before it closes, and it is
-the *same* condition every time. Giving it a number each version would imply three
-different pieces of work, and would leave the procedure to be rewritten — and to drift —
-three times. It sits in each version's table as `MAP` so that it carries a status and
-cannot be quietly skipped, and it is written out once, here.
+the *same* condition every time. Giving it a number each version would imply a different
+piece of work each time, and would leave the procedure to be rewritten — and to drift —
+with every version. It sits in each version's table as `MAP` so that it carries a status
+and cannot be quietly skipped, and it is written out once, here.
 
 **Why it recurs.** The map's cost scales with what is on screen, not with the size of the
-codebase, and almost every planned version puts more on screen: Milestone 25 and 26 add
-measures to colour by, Milestone 32 adds whole layers of neighbourhood context, and the
-two unscheduled expansions would multiply the outlines by twenty. Work that was
+codebase, and almost every planned version puts more on screen: Milestone 25 added
+measures to colour by and Milestones 34–46 add more, Milestones 39, 43 and 45 add whole
+layers of context, and the two unscheduled expansions would multiply the outlines by
+twenty. Work that was
 comfortable at 564 municipalities and four measure groups is not automatically
 comfortable after any of those. None of this is caught by the test suite, because none of
 it is a wrong answer — it is a right answer delivered too late.
@@ -530,8 +594,9 @@ was, so the investigation starts with a name rather than a number.
 
 Any milestone that adds a **layer**, a **level**, or a **measure group** to the map runs
 the drag scenario before it is called done — the check at the version boundary is a
-backstop, not the only time anyone looks. On present plans that is Milestone 26, 32, and
-either expansion if it is ever scheduled.
+backstop, not the only time anyone looks. On present plans that is every one of
+Milestones 34–46 that puts a measure or a layer on the map, and either expansion if it
+is ever scheduled.
 
 ### The record
 
@@ -541,6 +606,37 @@ rows, and the pair is the useful thing.
 | Date | Version | Drag p95 | Idle p95 | Slowest input | Verdict |
 |---|---|---|---|---|---|
 | 2026-09-18 | V2, after the map's performance work | 71.0ms | 110.0ms | 504.0ms | ❌ three budgets missed; carried into V3 |
+
+## The completeness standing check
+
+**Why this exists.** A platform can look more complete by filling cells — a neighbouring
+geography's figure, an old observation, a model shown as a measurement — and become less
+truthful doing it. Completeness needs a definition that does not reward that, measured
+the same way every time. Decided 2026-09-23 with Version 3's restructure. Like the map's
+check it is a gate rather than a milestone, carried in each version's table as
+`COMPLETE`.
+
+**Six dimensions, per source and per metric:**
+
+| Dimension | What is measured |
+|---|---|
+| Geographic | the share of municipalities, ZIPs and population a metric covers |
+| Temporal | the newest release available, acquired and published — three dates, not one |
+| Subject | whether price, rent, financing, taxes, stock, supply, assistance, hazards and access are each held |
+| Statistical quality | sample counts, margins of error, suppression and match quality |
+| Usability | which of a fixed list of reader questions the site answers, and which it says it cannot |
+| Reuse rights | whether the licence allows display, download, derived figures and commercial use |
+
+**When.** First in Milestone 27, then at every milestone's close, with the change reported
+in its completion report. **A blank that stays blank is not a regression; a blank filled
+by a proxy the page does not name is.**
+
+### The record
+
+Append one row per run, never rewriting one. The first is Milestone 27's.
+
+| Date | After | Summary |
+|---|---|---|
 
 ## Source register
 
@@ -556,49 +652,72 @@ a new metric. This table is the standing answer, and the rule that goes with it:
 The rejected rows matter as much as the rest: they stop a source being re-proposed every
 few months, and three of them below were re-proposed at least once already.
 
-**In use — 13 sources.** Census TIGER, ACS, Building Permits; Zillow ZHVI and ZORI; FHFA
-HPI; FRED; BLS; HUD (crosswalk, income limits), HUD FMR, HUD CHAS; IRS migration; NJ
-MOD-IV. Terms are in `config/sources.yml` and rendered in the site footer.
+**In use — 16 sources.** Census TIGER, ACS, Population Estimates, Building Permits;
+Zillow ZHVI and ZORI; FHFA HPI; FRED; BLS; HUD (crosswalk, income limits), HUD FMR, HUD
+CHAS; IRS migration; NJ MOD-IV, the SR1A Sales File and NJ's published tax rates. Terms
+are in `config/sources.yml` and rendered in the site footer. *(Corrected 2026-09-23: this
+line still said 13 after Milestones 24 and 25 had added three.)*
 
-**Free and licence-clean, not yet held.** Every row is public domain or an open state
-record unless noted.
+**Free, not yet held.** Every row is public domain or an open state record unless the row
+says otherwise. Rows scheduled on 2026-09-23 come from the research behind Version 3's
+restructure, and each milestone's first task confirms its source against the publisher.
 
 | Source | What it adds | Where |
 |---|---|---|
-| Census Population Estimates (PEP) | Fresher headline population | M24 |
-| NJ Table of Equalized Valuations | Assessed → market value | M25 |
-| EPA Smart Location Database | Walkability, transit access, density | M32 |
-| NCES Common Core / EDGE + NJ DOE | School districts and performance | M32 |
-| FEMA National Flood Hazard Layer | Flood risk — *the highest consumer value on this list* | M32 |
-| NJ State Police UCR | Municipal crime, the licence-clean route | M32 |
-| CDC PLACES | Health and environment by tract | M32 |
-| HUD Location Affordability Index | Housing **plus transport** cost — the standard critique of housing-only affordability | M26 |
-| Census LEHD / LODES | Where people work against where they live | Unscheduled |
+| FHFA county and ZIP HPI | Local price trends that do not depend on Zillow — once judged unreachable, to be retested | M26 |
+| Freddie Mac PMMS, weekly | Today's mortgage benchmark: FRED's `MORTGAGE30US` at its native weekly frequency | M26 |
+| HUD Small Area Fair Market Rents | ZIP-level rent benchmarks by bedroom | M35 |
+| NJ Table of Equalized Valuations | Equalized valuation per municipality — the weights a county tax rate needs | M37 |
+| NJ Construction Reporter | Certificates of occupancy, demolitions, net additions | M38 |
+| FEMA National Flood Hazard Layer | Flood risk — *the highest consumer value on this list* | M39 |
+| NJDEP flood and climate layers, contaminated sites, drinking water | The future flood picture FEMA's maps do not capture, and environmental context | M39 |
+| NJ DCA affordable-housing reporting | Obligations, completed units and trust funds | M40 |
+| HUD LIHTC and assisted-housing inventories, incl. Picture of Subsidized Households | Where subsidised housing is | M40 |
+| NJ DCA Municipal Housing Profile | Eviction filings and warrants by ZIP — **reuse terms to be confirmed with DCA** | M42, gated |
+| Census LEHD / LODES | Where people work against where they live | M43 |
+| NJ TRANSIT GTFS | Transit service — **developer terms to be read** | M43 |
+| EPA Smart Location Database | Walkability, transit access, density — **vintage to be stated** | M43 |
+| HUD Location Affordability Index | Housing **plus transport** cost — **data years to be confirmed; may be dropped** | M43 decides |
+| NCES Common Core / EDGE + NJ DOE | School districts and performance | M45 |
+| NJ State Police UCR | Municipal crime, the licence-clean route | M45 |
+| CDC PLACES | Health and environment by tract | M45 |
+| FCC Broadband Data Collection | Broadband availability — **its location Fabric is licensed separately** | M45 |
+| DOE LEAD | Household energy burden | M45 |
+| HMDA (CFPB) | Mortgage originations, loan types, rates and denials | M46 |
 | BEA regional income | Per-capita income beside the ACS | Unscheduled |
-| HUD Picture of Subsidized Households | Assisted housing counts | Unscheduled |
 | USDA Food Access Atlas, CDC/ATSDR SVI, Census CBP | Context measures | Unscheduled |
 | Zillow's other cuts | Bottom- and top-tier ZHVI, new construction | Unscheduled; sized in TODO, storage is the constraint |
+| Zoning and redevelopment plans, rental registration and inspection aggregates, parks, healthcare access, utility tariffs, sewer and septic service, accessible housing | Candidates that need jurisdiction-by-jurisdiction access and coverage checks | Unscheduled; not integration-ready |
+
+**Permission-dependent — usable only on the publisher's written terms.**
+
+| Source | Standing |
+|---|---|
+| **Realtor.com research data** | Free county and ZIP market data, inventory included. Its terms could not be read on 2026-09-18 — the browser used then refused the domain. **Unverified, not rejected**; Milestone 31 reads them |
+| **Zillow, commercial use** | Research data is licensed for non-commercial use with attribution. A written determination for this platform's actual uses is the owner's request, and Milestone 32 waits on it |
+| **National Housing Preservation Database** | Free access, but interactive property-level reuse needs a licence. Milestone 40 uses it only under one |
+| **RentCast** | A paid API whose terms reportedly allow storage and some display and redistribution, subject to restrictions — not yet read here. Milestone 32 tests it on its free allowance only |
 
 **Rejected, with the reason.**
 
 | Source | Why not |
 |---|---|
-| **Niche** | No public API and terms that forbid scraping. A score built on it would be the first figure on the site that cannot name a licensable source, on a page whose footer names every publisher and its terms. Raised 2026-09-18, answered by M32 |
+| **Niche** | No public API and terms that forbid scraping. A score built on it would be the first figure on the site that cannot name a licensable source, on a page whose footer names every publisher and its terms. Raised 2026-09-18, answered by the old M32, now Milestone 45 |
 | **Redfin Data Center** | Checked 2026-09-18: the Data Center pages state no redistribution grant, and Redfin's Terms of Use §2.3.3 forbid reproducing, redistributing and creating derivative works, §2.3.4 grants no right to reproduce, and §2.9.4 forbids displaying or distributing information from the Services, naming "data mining" and re-organising expressly. Attractive because it publishes real sale prices; not usable on a public site |
 | **Zillow ZTRAX** | The old free research route to deed-level transactions. Discontinued 2023 |
 | **FBI Crime Data Explorer** | Public domain, but reported per *agency* rather than per geography, with patchy participation. Mapping agencies to municipalities would invent precision the source does not have. NJ State Police UCR is the honest route for this state |
 | **Single-family rent (Zillow)** | Published by metro only (checked 2026-09-14). Needs a `metro` level — a `region_level` change touching a table every fact row references — to cover part of one state, and fits worst across northern New Jersey, where most people live and where single-family and all rents differ by 1%. **Trigger: Zillow publishes it by county or town, or a metro level arrives for another reason.** Milestone 23 keeps the all-rental figure and says plainly that houses usually rent for more |
-| **Realtor.com research data** | Free and county-level, but its terms could not be read on 2026-09-18 — the browser used here refuses the domain. **Unverified, not rejected.** Someone has to read them before it moves |
 
-**The paid tier is empty, and the reason is not money.** The platform publishes static
-artifacts to object storage; a source whose terms forbid redistribution cannot be
-published at all, only consulted. Every paid property-data vendor works that way, so
-buying one would force an architecture change — a server-side proxy, or a key per
-visitor — before the price is even the question. The five cheapest relevant options and
-what each would actually buy are set out in [TODO.md](TODO.md); the short version is
-that for **New Jersey** every one of them is covered free by MOD-IV, NCES, FEMA, EPA or
-NJ State Police, and the one thing money could genuinely buy — live MLS listings — is
-blocked by display rules rather than by cost (also in TODO.md).
+**The paid tier, reconsidered 2026-09-23.** This paragraph used to say that every paid
+property-data vendor forbids redistribution, citing a comparison of the five cheapest in
+TODO.md. That comparison left TODO.md when it was restructured on 2026-09-19 — recover it
+with `git show b7ccd98^:TODO.md` — and the claim was broader than its evidence. What still
+holds is the constraint behind it: the platform publishes static artifacts, so a source
+whose terms forbid redistribution can only be consulted, never published, and a
+server-side proxy changes where a request is made without granting any right the terms
+withhold. Whether any vendor clears that bar is Milestone 32's question, answered per
+vendor with a free-allowance test and a hard budget. Live MLS listings stay blocked by
+display rules rather than by cost.
 
 ## Still unscheduled
 
@@ -624,10 +743,26 @@ and the three entries below are one chain: nothing after the first can start bef
   states.** Milestone 15 avoids it by stopping at county; the strong-MCD states (WI, MI,
   MN, ND, SD) extend Milestone 14 with no geography change at all.
 
+**Returned or raised on 2026-09-23, with the reason each waits:**
+
+- **Bring-your-own-model comparison** (the old Milestone 35) — a visitor points the
+  platform at a model of their own and sees it answer the same scenarios, scored the same
+  way. The scenarios, the figure-checking, the rubric and the `ModelRunner` protocol all
+  exist; what is missing is a place to run it, since the site is static, and a judge,
+  which is a paid call the visitor would supply a key for. The deterministic half needs
+  neither and is the honest place to start. **Trigger: the owner schedules it.**
+- **A Spanish edition** — a go / no-go study first: every definition, label and generated
+  reading would need a translation kept in step with the English, so it is a standing
+  cost rather than a one-off. **Trigger: the owner schedules the study.**
+- **Alerts** — *tell me when this changes*. The site is static, so it needs a server and
+  a mailing list the platform does not have. **Trigger: the platform gains a server for
+  another reason.**
+
 **Documentation images wait on automated deployment**, decided 2026-09-19
 (ARCHITECTURE #175). README screenshots are to be captured from the finished static
 export at deploy time rather than committed to the repository, which cannot be built
-until deployment itself runs without a laptop open — the same prerequisite Milestone 29
+until deployment itself runs without a laptop open. Milestone 27 decides where the refresh
+runs, and only a runner off this machine unblocks this — the same prerequisite Milestone 29
 carries for scheduled refresh. Until then the Screenshots section stays empty and
 retakes are a manual `npm run screenshot:poc`. The investigation behind the decision,
 including the costed alternatives, is `agent-handoffs/screenshot-automation.md`.
@@ -639,8 +774,8 @@ format under its own licence. The second constraint, the file cap, is measured b
 ### The file cap, measured
 
 Counted on 2026-09-18 against Cloudflare's published limits and this repository's own
-`dist/`. It bites on expansion and **on nothing in Versions 3, 4 or 5**, none of which
-adds a region.
+`dist/`. It bites on expansion and **on nothing in Versions 3 or 4**, neither of which
+adds a region — so long as the two traps below are avoided.
 
 - **Free plan: 20,000 files per site. Paid plans: 100,000**, and the higher limit is not
   automatic — it needs `PAGES_WRANGLER_MAJOR_VERSION=4` set in the Pages project.
@@ -674,11 +809,13 @@ no file cap**, so only the site half counts; and upload time scales with file co
 13,658 files take about 37 seconds, and 82,000 would take five to seven minutes per
 deploy.
 
-**A trap worth naming before Version 4.** Milestone 32's neighbourhood sources — CDC
-PLACES, EPA's Smart Location Database — are published per census tract and block group,
-and New Jersey has 2,181 tracts. Giving tracts their own pages would add 21,810 files and
-breach the free cap **without expanding a single state**. Aggregate them to municipality;
-the warehouse already holds tracts as regions without publishing pages for them.
+**Two traps worth naming in Version 3.** Milestones 43 and 45 read sources published per
+census tract and block group — CDC PLACES, EPA's Smart Location Database, LODES — and New
+Jersey has 2,181 tracts. Giving tracts their own pages would add 21,810 files and breach
+the free cap **without expanding a single state**. Aggregate them to municipality; the
+warehouse already holds tracts as regions without publishing pages for them. Milestone
+37 is the same trap far larger: 3,481,240 parcels as pages would be 174 times the free
+cap, so its lookup is served as per-municipality files from R2, which has none.
 
 - **Parcel-level API endpoints and a parcel map layer**, which need the parcel geometry
   Milestone 7 deliberately did not download.
