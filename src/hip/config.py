@@ -181,6 +181,10 @@ class Source(BaseModel):
     adapter: str
     api_key_env: str | None = None
     notes: str | None = None
+    # What to do the day this source stops answering (Milestone 26). Required, so a new
+    # source cannot be added without one: MOD-IV's layer disappeared in September 2026
+    # and the route around it was found under pressure rather than read off a list.
+    fallback: str = Field(min_length=1)
 
 
 class Metric(BaseModel):

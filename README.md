@@ -452,8 +452,13 @@ run one model at a time because two do not fit in 16GB; hosted cohorts fan out, 
 the reason hosted inference is on the roadmap at all.
 
 **Keeping it current.** `make refresh` asks every publisher whether anything has moved
-and rebuilds only if something did. A ref whose vintage names one release — ACS 2024,
-SR1A's closed years — is answered from disk without a request. A ref whose vintage is
+and rebuilds only if something did. It first asks each source with dated releases
+whether a **newer** one exists — the next year's permits file, the next HUD fiscal year,
+the next ACS vintage — and records the answer beside the cache, so nothing waits for
+someone to bump a constant (Milestone 26). A release published but not yet in force, such
+as next fiscal year's Fair Market Rents before 1 October, is reported and held. A ref
+whose vintage names one release — ACS 2024, SR1A's closed years — is answered from disk
+without a request. A ref whose vintage is
 `current` or a year-to-date file is revalidated with `If-Modified-Since` / `If-None-Match`,
 and a 304 is a cache hit, so a run where nothing moved costs a handful of conditional
 requests and a few seconds rather than re-downloading 245MB. Publishers that send no
@@ -482,6 +487,23 @@ that completed with one publisher down and a run whose pipeline broke both arriv
 `make refresh` is for running it by hand. `make prune-raw` shows which superseded downloads are
 safe to delete and needs `--apply` to do it, because a cadence makes `data/raw/` grow
 without bound: one refresh took it from 264MB of superseded copies to 511MB.
+
+**When a source stops answering.** A refresh exits **3** and names it — `failed` or
+`unreachable` in the output. Then:
+
+1. **Wait a day.** Most outages are the publisher's and pass; the cached release keeps
+   being served, and the site stays consistent.
+2. **If it persists, or the answer changed shape** — a 404 where a file was, a login
+   where there was none, a renamed sheet — read the source's `fallback` in
+   `config/sources.yml`. Every source has one; `hip check-config` refuses a source
+   without.
+3. **Take the fallback route if it carries the same data**, compare one release against
+   what is cached, and switch the adapter. Record why in ARCHITECTURE.md, as #191 did for
+   MOD-IV.
+4. **If there is no route, keep the last release** and say so: it stays cited as what it
+   is, and is labelled historical rather than presented as current.
+5. **Check the publisher's own notice channel** where there is one — NJOGIS announces
+   service changes on the NJ Geospatial Forum listserv before making them.
 
 `make` on its own lists every target. With the warehouse down, the API and dashboard
 still run and report the degraded state rather than failing.
