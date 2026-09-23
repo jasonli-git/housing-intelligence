@@ -56,6 +56,7 @@ const SHORT_PUBLISHERS: Record<string, string> = {
   "Federal Housing Finance Agency": "FHFA",
   "U.S. Bureau of Labor Statistics": "BLS",
   "New Jersey Division of Taxation": "NJ Division of Taxation",
+  "NJ Office of Information Technology, Office of GIS (NJOGIS)": "NJOGIS",
   "Internal Revenue Service": "IRS",
 };
 
