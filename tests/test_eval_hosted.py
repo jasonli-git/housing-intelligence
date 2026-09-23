@@ -2349,3 +2349,42 @@ def test_prune_keeps_the_preference_list_and_every_model_named_in_the_run(
         "pruned 42 explanation(s) from models no longer on the preference list: "
         "deepseek-v4-pro (21), mistral-small-4 (21)" in capsys.readouterr().out
     )
+
+
+def test_regenerating_the_whole_list_retires_a_model_that_left_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`--all` prunes without being asked (Milestone 26).
+
+    Qwen 3.7 Plus left the preference list on 2026-09-23. Retirement used to need
+    `--prune`, so a regeneration that forgot it would have gone on serving Qwen's
+    readings beside the four models still writing.
+    """
+    import contextlib
+
+    from hip.eval_cli import explain_command
+
+    pruned: list[tuple[list[str], list[int]]] = []
+
+    @contextlib.contextmanager
+    def session(engine: Any) -> Any:
+        yield SimpleNamespace(commit=lambda: None)
+
+    evaluation = _evaluation(["gemini-test", "gemma-4-e4b-q4"])
+    monkeypatch.setattr("hip.eval_cli.load_evaluation", lambda: evaluation)
+    monkeypatch.setattr("hip.eval_cli._unusable", lambda *args, **kwargs: {})
+    monkeypatch.setattr("hip.eval_cli.get_engine", lambda: None)
+    monkeypatch.setattr("hip.eval_cli.Session", session)
+    monkeypatch.setattr("hip.packets.regions_for_level", lambda *args: [1, 2])
+    monkeypatch.setattr("hip.eval_cli._explain_each", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "hip.eval_cli._prune",
+        lambda session, evaluation, models, region_ids, window: pruned.append(
+            (models, region_ids)
+        ),
+    )
+    monkeypatch.setattr("hip.eval_cli._summarize", lambda outcomes: 0)
+
+    explain_command(None, None, "5y", "county", "markdown", None, all_models=True)
+
+    assert pruned == [(["gemini-test", "gemma-4-e4b-q4"], [1, 2])]

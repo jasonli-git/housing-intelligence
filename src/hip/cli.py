@@ -1123,8 +1123,8 @@ def explain(
             "--prune",
             help="After generating, delete the covered regions' stored explanations "
             "from models that are neither on the preference list nor named in this run, "
-            "and list what was deleted. Without it, a model that leaves the list keeps "
-            "its readings on the site.",
+            "and list what was deleted. Implied by --all, which regenerates the whole "
+            "list and so retires any model that has left it.",
         ),
     ] = False,
 ) -> None:

@@ -738,7 +738,11 @@ def explain_command(
             payload_format=payload_format,
             force=force,
         )
-        if prune:
+        # `--all` regenerates the whole preference list, so it also retires any model
+        # that has left it (Milestone 26). Before this, retirement was opt-in, and a
+        # model dropped from the list — Qwen 3.7 Plus, when its free quota ran out —
+        # would have gone on being served beside its replacements indefinitely.
+        if prune or all_models:
             _prune(session, evaluation, models, region_ids, window)
 
     code = _summarize(outcomes)
