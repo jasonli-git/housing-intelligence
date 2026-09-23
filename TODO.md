@@ -8,20 +8,42 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — nothing in progress, as of 2026-09-23
+## Now — Milestone 26, current releases (started 2026-09-23)
 
-**The roadmap was restructured on 2026-09-23.** Version 3 absorbed Version 4 and the
-Director Note *Accessible, comprehensive, and current housing data*; Version 5 became
-Version 4; unbuilt milestones were renumbered in build order (ROADMAP.md, "Renumbered
-2026-09-23", maps old numbers to new). Everything shipped is deployed — CHANGELOG 0.21.4
-is the latest release.
+Branch `milestone/m26-current-releases`. Deliverable and scope: ROADMAP.md, Milestone 26.
 
-**Next is Milestone 26 — current releases**, which also retires Qwen from regeneration
-and fixes Gemma's memory and sharing, in a section of its own.
+**Part 1 — releases stay current**
 
-**Outreach only the owner can send, worth starting now:** DCA's data team (gates
-Milestone 42), Zillow for a written licence determination (32), NJ Taxation and the
-Office of GIS (26, 36, 37), NJHMFA and housing authorities (40), Rutgers CUPR (Version 4).
+- [ ] **Release discovery.** Acquisition probes each dated-vintage publisher for its
+      newest release and records it beside the cache (`data/raw/<source>/releases.json`);
+      later stages read that record offline, so a run's release set stays pinned (#197).
+      Covers Building Permits (2024 → 2025), IRS migration (2122 → newer), HUD income
+      limits (2024 → FY2026), HUD FMR, HUD CHAS, ACS, PEP, NJ tax rates, SR1A's closed
+      years and BLS's end year. An unreachable probe keeps the recorded release and makes
+      the run partial, as an unreachable revalidation does.
+- [ ] **Publication date and effective date, kept apart.** A HUD Fair Market Rent year
+      is not used before 1 October of the year before it; FY2027 must stay out until
+      2026-10-01.
+- [ ] **The mortgage rate.** Freddie Mac's weekly benchmark for today's cost card;
+      monthly averages kept for history; a month still in progress labelled provisional.
+- [ ] **FHFA county and ZIP series retested**, and the result recorded either way.
+- [ ] **Audits:** MOD-IV's assessment year against the period its figures carry; SR1A's
+      deed, recording and publication dates; each NJ tax-rate product's newest year.
+- [ ] **A recorded fallback for every source**, enforced by `hip check-config`, and a
+      written procedure for the day a source stops answering.
+- [x] **MOD-IV's next publication:** February 2027, per NJOGIS by email (2026-09-23),
+      kept as an internal note in `config/sources.yml`.
+- [ ] **Doc corrections:** ARCHITECTURE #191 (the old MOD-IV layer was retired, not put
+      behind a token) and the source register's ZTRAX row.
+
+**Part 2 — the models, in its own section**
+
+- [ ] **Qwen 3.7 Plus leaves the preference list**, and readings of any model no longer
+      on it are retired at the next regeneration, pinned by a test.
+- [ ] **Gemma 4 E4B — waiting on the owner.** One copy shared by LM Studio and the
+      project, `import_gguf.sh` committed, the MLX build retested, and peak memory down at
+      least 1GB. Needs a baseline measured on the owner's Mac and an MLX download of a
+      few GB; **nothing here starts without the owner's go-ahead** (2026-09-23).
 
 **To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.

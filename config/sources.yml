@@ -175,7 +175,9 @@ sources:
     adapter: hip.sources.nj_modiv:ModivAdapter
     notes: >-
       Assessed values are not market values; ratios vary by municipality and
-      revaluation year. Stays in Parquet/DuckDB per ARCHITECTURE #16.
+      revaluation year. Stays in Parquet/DuckDB per ARCHITECTURE #16. Next publication
+      (the 2025 tax year) expected February 2027, per NJOGIS by email on 2026-09-23;
+      no published schedule states it.
 
   nj_sr1a:
     name: SR1A sales file
