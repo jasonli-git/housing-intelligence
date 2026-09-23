@@ -277,3 +277,50 @@ and takes about 45 minutes, so the saving is noise. The Milestone 19 estimate fo
 New Jersey municipal coverage is roughly $42 per refresh, where half is material.
 
 Do not implement yet.
+
+---
+
+## Decision: current, complete housing data becomes Version 3
+
+**Status:** Approved direction
+**Recorded:** 2026-09-23
+
+Promotes *Accessible, comprehensive, and current housing data* into the roadmap, at the
+owner's explicit direction, after a research report from Codex on that note — sources,
+freshness, costs, licensing and presentation — was checked against the code. The note
+itself is left as written. ROADMAP.md, Versions 3 and 4, carries the milestones; the
+report is [`agent-handoffs/data-completeness-research.md`](agent-handoffs/data-completeness-research.md).
+
+**What changed in the roadmap:**
+
+- Version 3 absorbs Version 4 and the note's directions as Milestones 26–50; Version 5
+  becomes Version 4; unbuilt milestones are renumbered in build order.
+- Freshness and publication come first: release discovery and a weekly mortgage
+  benchmark (26), a refresh that reaches the site with a public freshness page (27), and
+  survey uncertainty with both presentation questions (28).
+- Cost completeness is Milestone 33; new public sources arrive one family per milestone
+  (35–46); decision guides assemble them (47).
+- The paid-data and Zillow-alternative questions become a go / no-go study (32), not a
+  purchase.
+- *Current — projected* becomes selected, validated nowcasts and *future — forecast*
+  stays the forecasting milestone, both in Version 4 and both bound by principle 11.
+  There is no global mode switch.
+- *Data complete* gets a measured definition: the completeness standing check.
+
+**Also decided in the same review:**
+
+- Interpretations are split by audience (30): one analyst reading per region from
+  Gemini 3.7 Flash and its fallbacks, in place of several models side by side, and one
+  consumer reading — a bottom line and fixed questions — from a model chosen after a
+  three-county comparison.
+- Batch pricing for every hosted model on the analyst list, promoted from *Batch pricing
+  for regeneration, not for benchmarks*. The rest of that note stays open.
+- Qwen 3.7 Plus leaves regeneration, its free quota spent; its readings disappear at the
+  next regeneration (26).
+- Bring-your-own-model comparison returns to unscheduled.
+- Where the refresh runs and what it may do unattended are decided at the start of
+  Milestone 27; whether HUD's Location Affordability Index is used, at the start of 43.
+
+**Not promoted:** a paid subscription (32 decides), a Spanish edition and alerts (both
+unscheduled), and the institutional outreach, which is the owner's to send.
+*README audit and documentation auto-maintenance* stays open.

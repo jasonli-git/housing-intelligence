@@ -1086,7 +1086,7 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   with `Received 126 parameters not in model` — the E4B MatFormer architecture is not
   supported. All 15 of its generations are recorded as errors rather than dropped, and
   it costs one of the two anchor pairs, so the cross-runtime comparison rests on
-  Qwen3-8B alone.
+  Qwen3-8B alone. Retested on a current `mlx-lm` in Milestone 26.
 - **Three candidates do not converge within a 6,000-token budget.** `phi-4-mini-mlx`
   hits the cap on 15 of 15 (a visible doubt loop: *"Wait, perhaps the window is 6
   years…"*), `qwen35-9b-mlx` on 13 of 15 (re-enumerating the same caveats, individual
@@ -1170,7 +1170,8 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   Jersey's 21 counties and too short for Milestone 4's change metrics.
 - **FHFA is state-level only.** No county HPI is published at a reachable URL, so
   FHFA's two indexes are the warehouse's only `state`-level metrics and cannot
-  participate in county rankings.
+  participate in county rankings. Milestone 26 retests the county and ZIP series
+  rather than taking this as permanent.
 - **IRS migration is net returns per county, not flows.** The origin→destination matrix
   stays in Parquet and DuckDB; promoting it needs a two-region fact table.
 - **Municipal Zillow coverage is 403 of 564 (71%), and that is a ceiling, not a bug.**

@@ -8,22 +8,26 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — nothing in progress, as of 2026-09-22
+## Now — nothing in progress, as of 2026-09-23
 
-**The New Jersey splash page and map explorer are merged and deployed.** CHANGELOG
-0.21.3; ARCHITECTURE #204–#205. The homepage, county pages, and `/afford` now share one
-URL-backed affordability workspace and one profile-ticker/map primitive; `HousingBand.tsx`
-is retired. A review round found and fixed five regressions before merge: a dropped cost
-disclosure, a broken masthead link, a map rise-animation replay on measure change, a
-keyboard-focus clipping bug in the profile ticker, and a `?mode=afford` deep-link flash.
+**The roadmap was restructured on 2026-09-23.** Version 3 absorbed Version 4 and the
+Director Note *Accessible, comprehensive, and current housing data*; Version 5 became
+Version 4; unbuilt milestones were renumbered in build order (ROADMAP.md, "Renumbered
+2026-09-23", maps old numbers to new). Everything shipped is deployed — CHANGELOG 0.21.4
+is the latest release.
 
-**Its own follow-up fix is merged and deployed too.** The masthead's four tools collided
-into one wrapped group on a phone, with the theme toggle overlapping search. CHANGELOG
-0.21.4: theme and the GitHub link now hold the wordmark's row at every width; search and
-the affordability switch wrap to their own row.
+**Next is Milestone 26 — current releases**, which also retires Qwen from regeneration
+and fixes Gemma's memory and sharing, in a section of its own.
+
+**Outreach only the owner can send, worth starting now:** DCA's data team (gates
+Milestone 42), Zillow for a written licence determination (32), NJ Taxation and the
+Office of GIS (26, 36, 37), NJHMFA and housing authorities (40), Rutgers CUPR (Version 4).
 
 **To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
+
+Open items a planned milestone now covers say so with **Scheduled: Milestone N**. They
+stay here until that milestone starts and takes them into `Now`.
 
 ## Open
 
@@ -62,12 +66,14 @@ first raised, not where it must be done.
       PDF as a fourth layer of `nj_tax_rates`, or state on a county page why the rate
       stops at municipalities. Doing neither leaves an asymmetry a reader will notice
       before we do.
+      **Scheduled: Milestone 37.**
 - [ ] **SR1A carries four fields the aggregates ignore.** (M25) `assessed_value_total`,
       `sales_ratio`, `year_built` and `living_space` are landed and unused. `living_space`
       is the one that matters: a price per square foot on *transactions* is not derivable
       from anything else the warehouse holds, and it is the figure that makes two towns'
       medians comparable when their housing stock differs. Check the field's fill rate
       before scoping it — the median is meaningless if half the deeds leave it blank.
+      **Scheduled: Milestone 36.**
 - [ ] **`web/lib/groups.test.ts` pins a hand-copied metric catalog.** (M25, found
       2026-09-20) The comment says a new metric "shows up there as a failure to
       classify", but the catalog is a literal list snapshotted from `GET /metrics`, so
@@ -99,6 +105,7 @@ first raised, not where it must be done.
       ([explanations.py:31](src/hip/api/routers/explanations.py:31)). The disclaimer is a
       straight edit. The judge prompt is not: changing it changes scores, so hosted
       candidates cannot be compared against the stored `v1` judgments.
+      **The disclaimer half is scheduled: Milestone 30.**
 - [x] **`test_generations_are_written_as_they_complete_not_in_a_final_pass` was
       intermittent.** (M18) Seen 2026-09-11, during the M18 run, and again 2026-09-19.
       **Fixed 2026-09-19:** reproduced at 4 failures in 25 runs, then made deterministic.
@@ -111,6 +118,7 @@ first raised, not where it must be done.
       Still outstanding, and `import_gguf.sh` is now known to produce passthrough
       templates (ARCHITECTURE #62), so it needs the template fix before it is committed.
       They live in a `/private/tmp` scratchpad that does not survive a reboot.
+      **Scheduled: Milestone 26.**
 
 ### Test coverage
 
@@ -183,7 +191,7 @@ first raised, not where it must be done.
       never the town's published figures or its rankings — which settles most of what
       was unscoped here. Still open: whether an entered price persists across regions,
       and what the comparison strip says once the price is not the published one.
-      **Not scheduled.**
+      **Scheduled: Milestone 33.**
 - [ ] **Fold `redesign.css` into `globals.css`**, so each component has one set of rules
       rather than two whose winner depends on file order (#162's cost). (Quiet utility)
       Mechanical and large — worth its own review.
@@ -203,6 +211,7 @@ first raised, not where it must be done.
       (`agent-handoffs/screenshot-automation.md`) built a working capture command and
       recommended against automating it per push — retaking them is now a manual step
       with tooling that exists.
+      **Unblocked only if Milestone 27 runs the refresh off this machine.**
 
 ### Map performance — open leads, for the end of V3
 
@@ -234,6 +243,7 @@ first raised, not where it must be done.
       per run, and `deploy` publishes to the internet. This is also what the approved
       screenshots Director Note is blocked on, which is automated *deployment* and not
       automated refresh.
+      **Scheduled: Milestone 27.**
 
 - [ ] **`make check-live` samples one municipality, and never the interesting ones.**
       **Still open, and now also proven to matter:** on 2026-09-21 it passed a deploy
@@ -246,6 +256,7 @@ first raised, not where it must be done.
       finds the common path every time by construction. It should instead pin one region
       per *shape* the page can take, named explicitly rather than sampled: a Zillow-priced
       card, a transaction-priced card, and a region with neither.
+      **Scheduled: Milestone 27.**
 - [ ] **Nothing stops `/afford` from acquiring a second price source.** (found
       2026-09-20) The comparison page reads `latest("zhvi_sfr", …)` directly rather than
       going through the warehouse ratios, so the test that keeps the transaction median
@@ -262,6 +273,7 @@ first raised, not where it must be done.
       is the provider console. `hip eval judge` already prints what it was billed — the
       same treatment here would make a regeneration's cost checkable against the
       estimate `hip eval cost` gives.
+      **Scheduled: Milestone 30.**
 - [ ] **Generation does not use any provider's batch pricing.** Raised 2026-09-19.
       `hip eval judge` submits through Anthropic's Batch API for a flat 50%; `hip
       explain` calls each provider's synchronous chat endpoint once per (region, model)
@@ -271,6 +283,7 @@ first raised, not where it must be done.
       refresh. Batching would need a per-provider path in `HostedRunner` with its own
       polling and partial-failure handling, and the local tier cannot batch at all —
       so this is a scale decision, not a cleanup.
+      **Scheduled for the analyst reading: Milestone 30.**
 - [ ] **`reports/evaluation/v1.md` is as rendered at Milestone 8.** (M13) A re-render
       would change its title and add Milestone 20's Effort columns without changing a
       figure, so it was left alone and reverted once. Already in ARCHITECTURE's Known
@@ -370,6 +383,7 @@ first raised, not where it must be done.
       remain.** Same `CENSUS_API_KEY`, same adapter. Note the raw cache keys on the
       layer, so a table needs a new layer (ARCHITECTURE #108) — "a `metrics.yml` entry
       and a column" turned out wrong.
+      **Scheduled: Milestone 34.**
 - [ ] **FRED housing series** — `NJSTHPI` landed in Milestone 21 from FHFA's master file
       rather than FRED (ARCHITECTURE #109); **the three national series remain**: `HOUST`
       (housing starts), `RRVRUSQ156N` (rental vacancy), `MSPUS` (national median sale
@@ -379,9 +393,11 @@ first raised, not where it must be done.
       same adapter, already anticipated.
 - [ ] **LEHD LODES** — jobs by workplace and residence per census block, supporting
       jobs-housing balance and commute-shed analysis. Large but static files.
+      **Scheduled: Milestone 43.**
 - [ ] **ACS ZIP-level data is not fetched.** (M3) Since 2020 ACS no longer nests ZCTAs
       within states, so a ZIP pull means downloading all ~33,000 nationally per vintage
       for the 598 that matter.
+      **Scheduled: Milestone 34.**
 - [ ] **Municipal coverage is 403/564 (71%) under Zillow name matching** — a ceiling, not
       a bug. (M2, updated at M7) MOD-IV landed and `region_identifiers` holds 554 NJ
       codes, so a crosswalk exists, but routing Zillow through it still needs a
