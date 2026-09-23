@@ -268,6 +268,25 @@ def _write_index(raw_dir: Path, source_id: str, index: dict[str, str]) -> None:
     path.write_text(json.dumps(index, indent=2, sort_keys=True) + "\n")
 
 
+def _asked_differently(manifest: dict[str, object], ref: ReleaseRef) -> bool:
+    """Whether a manifest shows `ref`'s bytes were fetched with another request.
+
+    Only a manifest written for `ref` itself can say. Two refs whose answers are
+    byte-identical share one directory and one manifest, which names whichever wrote
+    last — HUD answers `[]` for two New Jersey towns — so its URL says nothing about the
+    other ref's request, and reading it as if it did would re-download both on every
+    run, each overwriting the other's record. The credential is redacted on both sides,
+    so rotating a key is not a new request.
+    """
+    recorded = manifest.get("url")
+    own = (manifest.get("layer"), manifest.get("scope"), manifest.get("vintage")) == (
+        ref.layer,
+        ref.scope,
+        ref.vintage,
+    )
+    return own and isinstance(recorded, str) and redact(recorded) != redact(ref.url)
+
+
 class SourceAdapter(ABC):
     """One public data source.
 
@@ -556,7 +575,15 @@ class SourceAdapter(ABC):
             return release
 
         if not force and (cached_sha := index.get(ref.key)):
-            release = self._from_cache(ref, raw_dir, cached_sha)
+            # The index is keyed by what a release *is*, not by the request that
+            # fetched it, and the two can part. BLS asks for the twenty years ending at
+            # the newest one discovery found, so when 2026 was found the key stayed
+            # `34001@current` while the request became `endyear=2026` — and the copy
+            # fetched on 2026-09-20, carrying no validator and younger than
+            # `revalidate_after`, answered it. The refresh that discovered 2026 loaded
+            # none of it. Cached bytes answer only the request they were fetched with,
+            # for a pinned vintage as much as a mutable one.
+            release = self._from_cache(ref, raw_dir, cached_sha, same_request=True)
             if release is not None:
                 if not ref.mutable:
                     return release
@@ -617,14 +644,22 @@ class SourceAdapter(ABC):
         _write_index(raw_dir, ref.source_id, index)
         return release
 
-    def _from_cache(self, ref: ReleaseRef, raw_dir: Path, sha: str) -> Release | None:
-        """Rebuild a Release from a previous fetch, or None if the file is gone."""
+    def _from_cache(
+        self, ref: ReleaseRef, raw_dir: Path, sha: str, *, same_request: bool = False
+    ) -> Release | None:
+        """Rebuild a Release from a previous fetch, or None if the file is gone.
+
+        With `same_request`, also None when `ref` was fetched with a different request
+        than it makes now — see `fetch`.
+        """
         manifest = raw_dir / ref.source_id / sha[:16] / "manifest.json"
         if not manifest.exists():
             return None
         data = json.loads(manifest.read_text())
         path = manifest.parent / data["filename"]
         if not path.exists():
+            return None
+        if same_request and _asked_differently(data, ref):
             return None
         return Release(
             ref=ref,

@@ -34,6 +34,7 @@ class Publisher(SourceAdapter):
         self, *, vintage: str = "current", validators: dict[str, str] | None = None
     ):
         self.vintage = vintage
+        self.url = "https://example.invalid/demo.csv"
         self.validators = validators if validators is not None else {"etag": '"v1"'}
         self.conditional: list[dict[str, str]] = []
         self.downloads = 0
@@ -46,7 +47,7 @@ class Publisher(SourceAdapter):
                 source_id=self.source_id,
                 layer="demo",
                 vintage=vintage or self.vintage,
-                url="https://example.invalid/demo.csv",
+                url=self.url,
             )
         ]
 
@@ -215,6 +216,61 @@ def test_validators_survive_a_round_trip_through_the_manifest(tmp_path: Path) ->
 
     assert reread.downloads == 0, "did not read the validator back from the manifest"
     assert reread.conditional == [{"if-modified-since": "Wed, 16 Sep 2026 02:06:41 GMT"}]
+
+
+@pytest.mark.parametrize("vintage", ["current", "2025"])
+def test_a_changed_request_is_not_answered_by_the_old_copy(
+    tmp_path: Path, vintage: str
+) -> None:
+    """The BLS freeze: the key stayed `34001@current` while the request moved a year.
+
+    No validator and a young copy — exactly the state in which age alone kept the old
+    window, so the refresh that discovered 2026 loaded none of it.
+    """
+    adapter = Publisher(vintage=vintage, validators={})
+    adapter.url = "https://example.invalid/demo.csv?startyear=2006&endyear=2025"
+    _fetch(adapter, tmp_path)
+
+    adapter.url = "https://example.invalid/demo.csv?startyear=2007&endyear=2026"
+    _fetch(adapter, tmp_path)
+    _fetch(adapter, tmp_path)
+
+    assert adapter.downloads == 2, "answered the new request from the old copy"
+
+
+def test_a_rotated_key_is_not_a_new_request(tmp_path: Path) -> None:
+    """The manifest records the URL redacted, so only the redacted URLs are compared."""
+    adapter = Publisher(validators={})
+    adapter.url = "https://example.invalid/demo.csv?registrationkey=old&endyear=2026"
+    _fetch(adapter, tmp_path)
+
+    adapter.url = "https://example.invalid/demo.csv?registrationkey=new&endyear=2026"
+    _fetch(adapter, tmp_path)
+
+    assert adapter.downloads == 1
+
+
+def test_identical_answers_to_two_refs_do_not_evict_each_other(tmp_path: Path) -> None:
+    """HUD answers `[]` for two towns: one directory, one manifest, naming only one.
+
+    Reading that manifest's URL as the other town's request would re-download both on
+    every run, each overwriting the record the other is compared against.
+    """
+    adapter = Publisher(vintage="2025")
+    towns = [
+        ReleaseRef(
+            source_id="demo",
+            layer=f"mcd_{town}",
+            vintage="2025",
+            url=f"https://example.invalid/chas?entityId={town}",
+        )
+        for town in ("58920", "60915")
+    ]
+    for _ in range(3):
+        for ref in towns:
+            adapter.fetch(ref, raw_dir=tmp_path)
+
+    assert adapter.downloads == 2
 
 
 def test_a_source_error_still_names_the_source_and_layer() -> None:
