@@ -29,12 +29,20 @@ DERIVED_RELEASES = text(
     "SELECT release_id FROM source_releases WHERE source_id = 'hip_derived' "
     "ORDER BY release_id"
 )
+# "Referenced" includes `fact_revision` (ARCHITECTURE #199): a release the facts have
+# moved past still traces a revision's old or new value. Counting only facts made this
+# fail the first time derived figures moved after a refresh — Milestone 26's, on
+# 2026-09-23 — over a release the rebuild keeps on purpose.
 ORPHANS = text(
     """
     SELECT count(*) FROM source_releases sr
     WHERE sr.source_id = 'hip_derived'
       AND NOT EXISTS (
           SELECT 1 FROM fact_metric_observation f WHERE f.release_id = sr.release_id
+      )
+      AND NOT EXISTS (
+          SELECT 1 FROM fact_revision r
+          WHERE r.old_release_id = sr.release_id OR r.new_release_id = sr.release_id
       )
     """
 )
