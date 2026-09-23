@@ -7,8 +7,10 @@ tells a caller "not yet, that ships in Milestone N" instead of failing on an imp
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from hip.config import GeographyScope
-from hip.sources.base import SourceAdapter
+from hip.sources.base import SourceAdapter, read_discovery
 from hip.sources.bls import BlsAdapter
 from hip.sources.census_acs import AcsAdapter
 from hip.sources.census_pep import PepAdapter
@@ -25,18 +27,20 @@ from hip.sources.zillow import ZhviAdapter, ZoriAdapter
 
 # source_id -> the milestone that delivers its adapter. Sources absent from this map
 # and absent from the builders below are simply unknown.
-# The most recent full year of BLS data. Passed to the adapter explicitly so a run is
-# reproducible; bump it when a new year completes.
+# Floors: the newest year each of these sources was known to have when it was written.
+# Since Milestone 26 they are no longer bumped by hand. Acquisition *discovers* the
+# newest release (`SourceAdapter.discover`) and records it beside the cache; these are
+# what an adapter answers with before discovery has ever run, and discovery never moves
+# below them. They were the reason BLS stopped at 2025 while BLS held data through July
+# 2026 — a constant nobody had bumped.
 BLS_END_YEAR = 2025
 
-# The newest ACS 5-year vintage to fetch; the adapter takes the four before it too.
-# Explicit for the same reason `BLS_END_YEAR` is, and bumped the same way. Hard-coded
-# inside the adapter from Milestone 3 until Milestone 24 moved the control here.
+# The ACS adapter takes the four vintages before its newest too. Hard-coded inside the
+# adapter from Milestone 3 until Milestone 24 moved the control here.
 ACS_END_YEAR = 2024
 
-# The newest edition of NJ's rate and ratio workbooks. It names the worksheet as well as
-# the vintage — `General Tax Rates 1997-2025` — so a stale value fails loudly on read
-# rather than landing the wrong year. Bumped the same way as the two above.
+# NJ's rate and ratio workbooks. The year also names the worksheet —
+# `General Tax Rates 1997-2025` — so a stale value fails loudly on read.
 NJ_TAX_END_YEAR = 2025
 
 # `njgin_parcels` stays planned: the MOD-IV composite layer already carries parcel
@@ -101,7 +105,23 @@ class UnknownSourceError(Exception):
     """Named source has no adapter. Message says whether it is planned or unknown."""
 
 
-def build_adapter(source_id: str, scope: GeographyScope) -> SourceAdapter:
+def build_adapter(
+    source_id: str, scope: GeographyScope, *, raw_dir: Path | None = None
+) -> SourceAdapter:
+    """An adapter for `source_id`, answering with its recorded newest release.
+
+    `raw_dir` is where acquisition records what it discovered. Every stage passes it, so
+    the stages after acquisition build their refs from the same newest release
+    acquisition fetched — offline, and without asking the publisher again (#197). A
+    caller that omits it gets the adapter's floor, which is what tests want.
+    """
+    adapter = _construct(source_id, scope)
+    if raw_dir is not None and (recorded := read_discovery(raw_dir, source_id)):
+        adapter.newest = recorded.newest
+    return adapter
+
+
+def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     if source_id == TigerAdapter.source_id:
         return TigerAdapter(states=scope.states)
     if source_id == ZhviAdapter.source_id:

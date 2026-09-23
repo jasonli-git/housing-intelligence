@@ -69,6 +69,11 @@ TEXTS: dict[str, str] = {
         "levied, before relief paid to individual households such as ANCHOR, and it "
         "follows each municipality's own assessments rather than a rate on market value."
     ),
+    "irs_matching_2023": (
+        "IRS migration counts from the 2022-2023 pair onward match returns across years "
+        "by an updated method that includes about 5 percent more returns, so a change "
+        "spanning 2022-2023 is partly the method rather than more people moving."
+    ),
     "permits_volatile": (
         "Permit counts are small numbers below county level, so a large percentage "
         "change can rest on a handful of units and mean little."
@@ -200,6 +205,8 @@ def scoped_caveats(
         add("chas_one_vintage", present & CHAS_METRICS)
     if "modiv_median_tax_bill" in present:
         add("modiv_tax_bill", {"modiv_median_tax_bill"})
+    if "net_migration_returns" in present:
+        add("irs_matching_2023", {"net_migration_returns"})
 
     if level == "zip":
         text = TEXTS["zip_allocated"]

@@ -43,16 +43,19 @@ the MOD-IV name truncations ARCHITECTURE #27 and #28 declined to guess at, cover
 
 from __future__ import annotations
 
+from datetime import UTC, date, datetime
+from email.utils import parsedate_to_datetime
 from typing import ClassVar
 
-from hip.sources.base import ReleaseRef, SourceAdapter
+from hip.sources.base import Discovery, ReleaseRef, SourceAdapter
 
 BASE_URL = "https://www.nj.gov/treasury/taxation/lpt/statdata"
 
 # The oldest archive the Division publishes. Older years are not offered at all.
 SERIES_START = 2020
-# The newest complete year. The year after it is published as a year-to-date file
-# under a different name, which `refs` adds separately.
+# The floor: the newest complete year known when this was written. The year after it
+# is published as a year-to-date file under a different name, which `refs` adds
+# separately. A newer one is discovered — see `Sr1aAdapter.discover`.
 LAST_COMPLETE_YEAR = 2025
 
 # A record is 663 bytes plus a CRLF. Checked against the published layout and against
@@ -85,23 +88,26 @@ FIELDS: tuple[tuple[str, int, int], ...] = (
 )
 
 
-def vintages() -> tuple[str, ...]:
-    """Every vintage the publisher offers, oldest first.
+def vintages(ytd_year: int = LAST_COMPLETE_YEAR + 1) -> tuple[str, ...]:
+    """Every vintage the publisher offers, oldest first, given the year still open.
 
-    The current year is a year-to-date extract rather than a closed year, and its
-    vintage says so. A `2026ytd` release is republished as the year fills — the
-    2026-08-12 file holds deeds through July — so unlike a closed year it is not
-    immutable, and the content-addressed cache will answer from disk until someone
-    passes `--force`. That is the same defect as the `@current` refs in TODO.md,
-    deferred to Milestone 29; naming the vintage `2026ytd` at least means every
-    observation drawn from it says which kind of file it came from.
+    **An archive year is New Jersey's sales-ratio year, not a calendar year:** deeds
+    *recorded* from 1 July of the year before through 30 June of the named year.
+    Measured 2026-09-23 on every archive held: `2025` spans recordings from July 2024 to
+    June 2025, and `2026ytd` from July 2025 to June 2026 — all twelve months, despite the
+    name. The windows `stg_nj_sr1a` builds are on deed dates and clamp to the newest
+    deed, so this changes what an archive *is* rather than what the median says.
+
+    The open year is a year-to-date extract and its vintage says so: `2026ytd` is
+    republished as the year fills, so it is revalidated (#188) where a closed year is
+    answered from disk.
     """
-    closed = tuple(str(y) for y in range(SERIES_START, LAST_COMPLETE_YEAR + 1))
-    return (*closed, f"{LAST_COMPLETE_YEAR + 1}ytd")
+    closed = tuple(str(y) for y in range(SERIES_START, ytd_year))
+    return (*closed, f"{ytd_year}ytd")
 
 
 class Sr1aAdapter(SourceAdapter):
-    """One archive per year of recorded New Jersey deeds."""
+    """One archive per sales-ratio year of recorded New Jersey deeds (July to June)."""
 
     source_id: ClassVar[str] = "nj_sr1a"
     default_vintage: ClassVar[str] = f"{LAST_COMPLETE_YEAR + 1}ytd"
@@ -117,7 +123,7 @@ class Sr1aAdapter(SourceAdapter):
         single digits. The window the metric actually uses is a modelling decision in
         `stg_nj_sr1a`, not an acquisition one.
         """
-        wanted = (vintage,) if vintage else vintages()
+        wanted = (vintage,) if vintage else vintages(self.ytd_year)
         return [
             ReleaseRef(
                 source_id=self.source_id,
@@ -127,6 +133,54 @@ class Sr1aAdapter(SourceAdapter):
             )
             for v in wanted
         ]
+
+    @property
+    def ytd_year(self) -> int:
+        """The year still open: from the recorded `newest` (`2026ytd`), else the floor."""
+        return int((self.newest or self.default_vintage).removesuffix("ytd"))
+
+    def discover(self, today: date) -> Discovery:
+        """Whether the open year has closed, which takes two things, not one.
+
+        The obvious signal is wrong. `Sales2026.zip` already existed on 2026-09-23 — but
+        it was a snapshot of the 2026 year-to-date file taken on 2025-10-30: 41,768
+        deeds recorded July to October 2025, where the year-to-date file held 169,935
+        through June 2026. Treating "the closed archive exists" as "the year is closed"
+        would have replaced a complete year with a third of one.
+
+        So the open year advances only when the *next* year-to-date file exists — the
+        Division has moved on — **and** the closed archive was last changed after its
+        year ended on 30 June. Until both hold, the newer year waits as `pending`, and
+        the platform keeps reading the year-to-date file, which is the complete one.
+        """
+        open_year = self.ytd_year
+        next_ytd, _ = self._probe(f"{BASE_URL}/YTDSR1A{open_year + 1}.zip")
+        if next_ytd is None:
+            return self._discovered(f"{open_year}ytd", reached=False)
+        if not next_ytd:
+            return self._discovered(f"{open_year}ytd", reached=True)
+        closed, modified = self._probe(f"{BASE_URL}/Sales{open_year}.zip")
+        if closed is None:
+            return self._discovered(f"{open_year}ytd", reached=False)
+        year_end = datetime(open_year, 6, 30, 23, 59, 59, tzinfo=UTC)
+        final = (
+            bool(closed)
+            and modified is not None
+            and (parsedate_to_datetime(modified) > year_end)
+        )
+        if final:
+            return self._discovered(
+                f"{open_year + 1}ytd", reached=True, published=modified
+            )
+        return self._discovered(
+            f"{open_year}ytd",
+            reached=True,
+            pending=f"{open_year + 1}ytd",
+            pending_reason=(
+                f"the closed {open_year} archive has not been republished since its "
+                f"year ended on {year_end.date().isoformat()}"
+            ),
+        )
 
     @staticmethod
     def _archive(vintage: str) -> str:

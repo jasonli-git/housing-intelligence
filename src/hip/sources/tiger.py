@@ -27,6 +27,10 @@ class TigerAdapter(SourceAdapter):
     """Fetches the five TIGER layers that make up the geography spine."""
 
     source_id: ClassVar[str] = "census_tiger"
+    # Pinned on purpose, and the one dated source Milestone 26 does not discover: a new
+    # TIGER vintage redraws the region spine every fact row is keyed to, so moving to
+    # it is a decision to take and check by hand, not one a scheduled refresh should
+    # make on its own. TIGER2026 answered 404 on 2026-09-23.
     default_vintage: ClassVar[str] = "2025"
     landing_format: ClassVar[str] = "shapefile"
 

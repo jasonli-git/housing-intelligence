@@ -28,28 +28,47 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import ClassVar
 
 from hip.config import ConfigError, fips_for
-from hip.sources.base import Release, ReleaseRef, SourceAdapter
+from hip.sources.base import Discovery, Release, ReleaseRef, SourceAdapter
 
 BASE_URL = "https://www.huduser.gov/hudapi/public"
 
 # HUD crosswalk type codes. Only the two that reach our region levels are used.
 CROSSWALK_TYPES = {"zip_county": 2, "zip_countysub": 11}
 
-# Income limit vintages. HUD revises annually; five covers the change windows.
-IL_YEARS = (2024, 2023, 2022, 2021, 2020)
+# Income limits: the newest fiscal year known to exist when this was written, and how
+# many years back from the newest to fetch. HUD revises annually; five covers the change
+# windows. The newest is discovered (Milestone 26): FY2025 and FY2026 were published while
+# the platform went on requesting FY2024.
+IL_FLOOR = 2024
+IL_YEAR_COUNT = 5
 
 # HUD publishes limits for 1-8 person households. Four-person is the conventional
 # reference figure and the one policy documents quote.
 HOUSEHOLD_SIZE = "p4"
 
-# Fair Market Rent fiscal years, newest first. The API refuses FY2016 ("Invalid year"),
-# and FY2027 — published, but in force only from 2026-10-01 — is added once it starts,
-# the same explicit bump `BLS_END_YEAR` gets. Ten years covers every change window.
-FMR_YEARS = tuple(range(2026, 2016, -1))
+# Fair Market Rents: the newest fiscal year in force when this was written, and how many
+# years back to fetch. The API refuses FY2016 ("Invalid year"), which ten years from
+# FY2026 reaches exactly. A newer fiscal year is discovered, and used only once in force.
+FMR_FLOOR = 2026
+FMR_YEAR_COUNT = 10
+
+
+def fmr_in_force_from(fiscal_year: int) -> date:
+    """The day a fiscal year's Fair Market Rents take effect: 1 October before it.
+
+    HUD publishes them weeks earlier — FY2027's were answering by 2026-09-23 — and a
+    figure published but not yet in force must not stand in for the one that is.
+    """
+    return date(fiscal_year - 1, 10, 1)
+
+
+def _years(newest: int, count: int) -> list[int]:
+    return list(range(newest, newest - count, -1))
+
 
 # The CHAS vintage: HUD's tabulation of ACS 2018-2022, the latest it has published as of
 # 2026-09-11 — 2019-2023 answers empty. Pinned rather than left to the API's default, so
@@ -116,10 +135,28 @@ class HudAdapter(SourceAdapter):
                 vintage=str(year),
                 url=f"{BASE_URL}/il/data/{fips}99999?year={year}",
             )
-            for year in IL_YEARS
+            for year in _years(int(self.newest or IL_FLOOR), IL_YEAR_COUNT)
             for fips in self.county_fips
         ]
         return refs
+
+    def discover(self, today: date) -> Discovery:
+        """The newest income-limit year HUD answers for this state's first county.
+
+        One county stands for all: HUD publishes a fiscal year's limits for every area
+        at once, and asking 21 times would spend a third of the token's minute. The
+        crosswalk half of this source is `current` and revalidated on age instead.
+        """
+        probe_fips = self.county_fips[0]
+
+        def exists(year: int) -> tuple[bool | None, str | None]:
+            return self._probe(
+                f"{BASE_URL}/il/data/{probe_fips}99999?year={year}", method="GET"
+            )
+
+        start = int(self.newest or IL_FLOOR)
+        year, published, reached = self._probe_forward(start, exists)
+        return self._discovered(str(year), reached=reached, published=published)
 
     @classmethod
     def to_records(cls, payload: object, ref: ReleaseRef) -> list[dict[str, object]]:
@@ -177,7 +214,7 @@ class HudFmrAdapter(SourceAdapter):
     """
 
     source_id: ClassVar[str] = "hud_fmr"
-    default_vintage: ClassVar[str] = str(FMR_YEARS[0])
+    default_vintage: ClassVar[str] = str(FMR_FLOOR)
     landing_format: ClassVar[str] = "json"
     request_interval_s: ClassVar[float] = HUD_REQUEST_INTERVAL_S
 
@@ -186,7 +223,8 @@ class HudFmrAdapter(SourceAdapter):
         self.headers = _headers()
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
-        years = [int(vintage)] if vintage else list(FMR_YEARS)
+        newest = int(self.newest or FMR_FLOOR)
+        years = [int(vintage)] if vintage else _years(newest, FMR_YEAR_COUNT)
         return [
             ReleaseRef(
                 source_id=self.source_id,
@@ -198,6 +236,40 @@ class HudFmrAdapter(SourceAdapter):
             for year in years
             for state in self.states
         ]
+
+    def discover(self, today: date) -> Discovery:
+        """The newest fiscal year *in force*; a newer published one waits as pending.
+
+        Published and in force are different days for this source and only this one
+        here: HUD releases a fiscal year's rents in late summer for 1 October. Using the
+        published year as soon as it appears would show next year's standard as this
+        year's for several weeks, on the one figure the voucher program pays against.
+        """
+        state = self.states[0]
+
+        def exists(year: int) -> tuple[bool | None, str | None]:
+            return self._probe(
+                f"{BASE_URL}/fmr/statedata/{state}?year={year}", method="GET"
+            )
+
+        start = int(self.newest or FMR_FLOOR)
+        published_year, published, reached = self._probe_forward(start, exists)
+        in_force = max(
+            (
+                y
+                for y in range(start, published_year + 1)
+                if fmr_in_force_from(y) <= today
+            ),
+            default=start,
+        )
+        pending = published_year if published_year > in_force else None
+        return self._discovered(
+            str(in_force),
+            reached=reached,
+            published=published if pending is None else None,
+            pending=str(pending) if pending else None,
+            pending_from=fmr_in_force_from(pending) if pending else None,
+        )
 
     @classmethod
     def to_records(cls, payload: object, ref: ReleaseRef) -> list[dict[str, object]]:
@@ -252,7 +324,7 @@ class HudChasAdapter(SourceAdapter):
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         """County refs and each state's MCD directory; municipal refs follow from it."""
-        year = vintage or self.default_vintage
+        year = vintage or self.newest or self.default_vintage
         refs = [
             ReleaseRef(
                 source_id=self.source_id,
@@ -278,6 +350,33 @@ class HudChasAdapter(SourceAdapter):
         ]
         return refs
 
+    def discover(self, today: date) -> Discovery:
+        """The newest CHAS span HUD has tabulated, probed on the first county.
+
+        HUD answers an untabulated span with `[]` and a 200, not an error, so existence
+        is read from the body: 2019-2023 and 2020-2024 both answered empty on 2026-09-23.
+        Spans move a year at a time (`2018-2022` → `2019-2023`).
+        """
+        fips = self.county_fips[0]
+
+        def exists(first: int) -> tuple[bool | None, str | None]:
+            span = f"{first}-{first + 4}"
+            response = self._ask(
+                f"{BASE_URL}/chas?type={CHAS_COUNTY}&year={span}"
+                f"&stateId={int(fips[:2])}&entityId={int(fips[2:])}"
+            )
+            if response is None or not response.is_success:
+                return None, None
+            try:
+                rows = response.json()
+            except ValueError:
+                return None, None
+            return (isinstance(rows, list) and len(rows) > 0), None
+
+        start = int((self.newest or self.default_vintage)[:4])
+        first, _, reached = self._probe_forward(start, exists)
+        return self._discovered(f"{first}-{first + 4}", reached=reached)
+
     def child_refs(
         self, release: Release, vintage: str | None = None
     ) -> list[ReleaseRef]:
@@ -293,7 +392,7 @@ class HudChasAdapter(SourceAdapter):
 
     def municipal_refs(self, directory: Release, vintage: str | None) -> list[ReleaseRef]:
         """One ref per MCD in a fetched directory."""
-        year = vintage or self.default_vintage
+        year = vintage or self.newest or self.default_vintage
         entries = json.loads(directory.path.read_text())
         if not isinstance(entries, list):
             raise ValueError(f"hud_chas/{directory.ref.key}: directory is not a list")

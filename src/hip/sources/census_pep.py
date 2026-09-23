@@ -31,10 +31,11 @@ item in TODO.md.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import ClassVar
 
 from hip.config import fips_for
-from hip.sources.base import ReleaseRef, SourceAdapter
+from hip.sources.base import Discovery, ReleaseRef, SourceAdapter
 
 BASE_URL = "https://www2.census.gov/programs-surveys/popest/datasets"
 
@@ -55,6 +56,8 @@ class PepAdapter(SourceAdapter):
     """Headline population at state, county and municipal level."""
 
     source_id: ClassVar[str] = "census_pep"
+    # The floor: the newest vintage known to exist when this was written. A newer one
+    # is discovered — Census publishes the next vintage each winter.
     default_vintage: ClassVar[str] = "2025"
     landing_format: ClassVar[str] = "csv"
 
@@ -68,7 +71,7 @@ class PepAdapter(SourceAdapter):
         that way — 2.1MB for all 3,144 counties, against no per-state cut at all. The
         sub-county files are published per state and fetched per state.
         """
-        year = vintage or self.default_vintage
+        year = vintage or self.newest or self.default_vintage
         span = f"{SERIES_START}-{year}"
         refs = [
             ReleaseRef(
@@ -91,3 +94,19 @@ class PepAdapter(SourceAdapter):
             for state in self.states
         )
         return refs
+
+    def discover(self, today: date) -> Discovery:
+        """The newest vintage whose national county file exists.
+
+        Each vintage lives in a folder named for its own span (`2020-2025`), so the
+        next one is a new path, not a replaced file.
+        """
+
+        def exists(year: int) -> tuple[bool | None, str | None]:
+            return self._probe(
+                f"{BASE_URL}/{SERIES_START}-{year}/counties/totals/co-est{year}-alldata.csv"
+            )
+
+        start = int(self.newest or self.default_vintage)
+        year, published, reached = self._probe_forward(start, exists)
+        return self._discovered(str(year), reached=reached, published=published)

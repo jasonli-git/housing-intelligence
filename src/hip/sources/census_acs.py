@@ -16,10 +16,11 @@ states, so a ZIP-level pull means downloading all ~33,000 nationally per year fo
 from __future__ import annotations
 
 import os
+from datetime import date
 from typing import ClassVar
 
 from hip.config import ConfigError, fips_for
-from hip.sources.base import ReleaseRef, SourceAdapter
+from hip.sources.base import Discovery, ReleaseRef, SourceAdapter
 
 BASE_URL = "https://api.census.gov/data"
 
@@ -62,13 +63,13 @@ class AcsAdapter(SourceAdapter):
     landing_format: ClassVar[str] = "json"
 
     def __init__(self, states: list[str], *, end_year: int) -> None:
-        """``end_year`` is the newest 5-year vintage to fetch.
+        """``end_year`` is the floor: the newest 5-year vintage known to exist.
 
-        Passed in rather than read from the clock, for the same reason
-        :class:`~hip.sources.bls.BlsAdapter` takes one: a re-run fetches the vintages
-        the first run recorded, so a release is reproducible. It lives as
-        ``ACS_END_YEAR`` in :mod:`hip.sources.registry`; bump it when a vintage
-        publishes. It was hard-coded here from Milestone 3 until Milestone 24.
+        Passed in rather than read from the clock, so a re-run fetches the vintages the
+        first run recorded. It lives as ``ACS_END_YEAR`` in :mod:`hip.sources.registry`.
+        Since Milestone 26 a newer vintage is *discovered* — `newest` — rather than
+        waiting for someone to bump the constant; the floor is what answers before
+        discovery has ever run. It was hard-coded here from Milestone 3 until 24.
         """
         self.states = states
         self.end_year = end_year
@@ -81,7 +82,25 @@ class AcsAdapter(SourceAdapter):
     # mean re-annotating all twelve, which is not this milestone's trade.
     @property
     def default_vintage(self) -> str:  # type: ignore[override]
-        return str(self.end_year)
+        return str(self.latest)
+
+    @property
+    def latest(self) -> int:
+        """The newest vintage to fetch: the discovered one, else the floor."""
+        return int(self.newest) if self.newest else self.end_year
+
+    def discover(self, today: date) -> Discovery:
+        """The newest 5-year vintage the API serves.
+
+        The dataset's metadata document answers 404 until Census releases the vintage
+        (2025 answered 404 on 2026-09-23), so no key is spent asking.
+        """
+
+        def exists(year: int) -> tuple[bool | None, str | None]:
+            return self._probe(f"{BASE_URL}/{year}/acs/acs5.json", method="GET")
+
+        year, published, reached = self._probe_forward(self.latest, exists)
+        return self._discovered(str(year), reached=reached, published=published)
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         key = os.environ.get("CENSUS_API_KEY")
@@ -95,7 +114,7 @@ class AcsAdapter(SourceAdapter):
             "": ",".join(["NAME", *VARIABLES, *BURDEN_PARTS]),
             "housing_": ",".join(["NAME", *HOUSING_VARIABLES]),
         }
-        years = [int(vintage)] if vintage else list(vintages(self.end_year))
+        years = [int(vintage)] if vintage else list(vintages(self.latest))
         refs = []
         for year in years:
             for prefix, variables in requests.items():

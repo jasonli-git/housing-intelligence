@@ -14,9 +14,10 @@ the adapter says so when it falls back.
 from __future__ import annotations
 
 import os
+from datetime import date
 from typing import ClassVar
 
-from hip.sources.base import ReleaseRef, SourceAdapter
+from hip.sources.base import Discovery, ReleaseRef, SourceAdapter
 
 BASE_V1 = "https://api.bls.gov/publicAPI/v1/timeseries/data"
 BASE_V2 = "https://api.bls.gov/publicAPI/v2/timeseries/data"
@@ -46,11 +47,47 @@ class BlsAdapter(SourceAdapter):
     def __init__(self, county_fips: list[str], *, end_year: int) -> None:
         """``county_fips`` comes from the loaded regions, never hard-coded.
 
-        ``end_year`` is passed in rather than read from the clock, so a run is
-        reproducible and tests are not time-dependent.
+        ``end_year`` is the floor — a year known to have data — passed in rather than
+        read from the clock, so tests are not time-dependent. The year actually fetched
+        through is `latest`: the discovered one once acquisition has asked.
         """
         self.county_fips = county_fips
         self.end_year = end_year
+
+    @property
+    def latest(self) -> int:
+        """The newest year to request: discovered, else the floor."""
+        return int(self.newest) if self.newest else self.end_year
+
+    def discover(self, today: date) -> Discovery:
+        """The newest year BLS has data for, asked of the first county's series.
+
+        Without this the request stopped at `BLS_END_YEAR`: on 2026-09-23 BLS held
+        county unemployment through July 2026 and the platform asked for none of it.
+        One query of the 500 a day a key allows.
+        """
+        key = os.environ.get("BLS_API_KEY")
+        if not key:
+            # v1 without a key covers three years ending now; there is no range to
+            # choose, so nothing to discover.
+            return self._discovered(str(self.latest), reached=True)
+        response = self._ask(
+            f"{BASE_V2}/{series_id(self.county_fips[0])}?registrationkey={key}"
+            f"&startyear={today.year - 1}&endyear={today.year}"
+        )
+        if response is None or not response.is_success:
+            return self._discovered(str(self.latest), reached=False)
+        try:
+            payload = response.json()
+            years = {
+                int(point["year"])
+                for series in payload["Results"]["series"]
+                for point in series["data"]
+            }
+        except (ValueError, KeyError, TypeError):
+            return self._discovered(str(self.latest), reached=False)
+        newest = max(years | {self.latest})
+        return self._discovered(str(newest), reached=True)
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         key = os.environ.get("BLS_API_KEY")
@@ -59,8 +96,8 @@ class BlsAdapter(SourceAdapter):
         if key:
             query = (
                 f"?registrationkey={key}"
-                f"&startyear={self.end_year - HISTORY_YEARS + 1}"
-                f"&endyear={self.end_year}"
+                f"&startyear={self.latest - HISTORY_YEARS + 1}"
+                f"&endyear={self.latest}"
             )
         return [
             ReleaseRef(

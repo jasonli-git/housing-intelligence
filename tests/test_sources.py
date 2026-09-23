@@ -278,12 +278,13 @@ def test_fmr_is_one_release_per_state_and_fiscal_year(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """`statedata` answers every county at once: ten calls, not 210."""
-    from hip.sources.hud import FMR_YEARS, HudFmrAdapter
+    from hip.sources.hud import FMR_FLOOR, FMR_YEAR_COUNT, HudFmrAdapter
 
     _hud(monkeypatch)
     refs = HudFmrAdapter(states=["NJ"]).refs()
 
-    assert [r.vintage for r in refs] == [str(y) for y in FMR_YEARS]
+    expected = range(FMR_FLOOR, FMR_FLOOR - FMR_YEAR_COUNT, -1)
+    assert [r.vintage for r in refs] == [str(y) for y in expected]
     assert refs[0].url.endswith("/fmr/statedata/NJ?year=2026")
     assert len({r.key for r in refs}) == len(refs)
     assert "2016" not in {r.vintage for r in refs}, "the API refuses FY2016"

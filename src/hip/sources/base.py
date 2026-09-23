@@ -19,9 +19,9 @@ import shutil
 import tempfile
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import asdict, dataclass, replace
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import ClassVar, Literal
 from urllib.parse import urlsplit
@@ -160,6 +160,84 @@ class Release:
         return self.path.parent
 
 
+@dataclass(frozen=True)
+class Discovery:
+    """What acquisition learned about the newest release a publisher offers.
+
+    Recorded beside the raw cache, in `data/raw/<source_id>/releases.json`, because the
+    stages after acquisition rebuild each source's refs offline (#197). If they probed
+    for themselves, a publisher releasing between `acquire` and `load` would hand the
+    load a vintage acquisition never fetched. So acquisition asks once, writes down the
+    answer, and every later stage reads it.
+
+    `newest` is the newest release *in force*. A release that is published but not yet
+    in force — HUD publishes a fiscal year's Fair Market Rents weeks before 1 October —
+    is `pending`, with the day it starts, so it can be reported without being used.
+    """
+
+    source_id: str
+    newest: str
+    checked_at: datetime
+    # "unreachable": a probe could not reach the publisher, so `newest` is the last
+    # recorded answer rather than a fresh one — the distinction `Release.revalidation`
+    # keeps, for the same reason: an outage must not read as "nothing new".
+    outcome: Literal["confirmed", "unreachable"] = "confirmed"
+    # When the publisher last changed the newest release's file, if it says. Distinct
+    # from the period the release describes and from when it takes effect.
+    published: str | None = None
+    pending: str | None = None
+    pending_from: date | None = None
+    # Why a pending release is waiting, when it is not simply a start date.
+    pending_reason: str | None = None
+
+
+def _discovery_path(raw_dir: Path, source_id: str) -> Path:
+    return raw_dir / source_id / "releases.json"
+
+
+def read_discovery(raw_dir: Path, source_id: str) -> Discovery | None:
+    """The newest release acquisition last recorded for a source, or None."""
+    path = _discovery_path(raw_dir, source_id)
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text())
+        return Discovery(
+            source_id=data["source_id"],
+            newest=data["newest"],
+            checked_at=datetime.fromisoformat(data["checked_at"]),
+            outcome=data.get("outcome", "confirmed"),
+            published=data.get("published"),
+            pending=data.get("pending"),
+            pending_from=(
+                date.fromisoformat(data["pending_from"])
+                if data.get("pending_from")
+                else None
+            ),
+            pending_reason=data.get("pending_reason"),
+        )
+    except (json.JSONDecodeError, KeyError, ValueError):
+        # A damaged record costs a fresh probe, not a crash — and until then the
+        # adapter answers with its floor, which is a release known to exist.
+        return None
+
+
+def write_discovery(raw_dir: Path, discovery: Discovery) -> None:
+    """Record what acquisition found. An unreachable probe keeps the last good record."""
+    if discovery.outcome == "unreachable":
+        return
+    path = _discovery_path(raw_dir, discovery.source_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        **asdict(discovery),
+        "checked_at": discovery.checked_at.isoformat(),
+        "pending_from": discovery.pending_from.isoformat()
+        if discovery.pending_from
+        else None,
+    }
+    path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
+
+
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -234,10 +312,123 @@ class SourceAdapter(ABC):
     # refs are expensive — HUD's CHAS layer is 571 requests — and it has no effect at
     # all on a source that does send validators, which is checked every run for free.
     revalidate_after: ClassVar[timedelta] = timedelta(days=7)
+    # The newest release in force, as acquisition last recorded it (`Discovery`). None
+    # until something is recorded, when an adapter answers with its own floor — a
+    # release known to exist when the adapter was written. Set from the record by
+    # `hip.sources.registry.build_adapter`, and by `discover` itself during acquisition.
+    newest: str | None = None
+    # A transport for discovery probes, so tests drive the real probing logic against a
+    # stub publisher rather than mocking the decision out. None means the network.
+    probe_transport: httpx.BaseTransport | None = None
 
     @abstractmethod
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         """The releases this source offers for a vintage, without fetching them."""
+
+    def discover(self, today: date) -> Discovery | None:
+        """Ask the publisher for releases newer than the newest recorded one.
+
+        None for a source with nothing to discover: one whose vintage is `current`,
+        where the publisher replaces the file in place and revalidation (#188) already
+        notices, or one pinned on purpose. Every source whose releases are *dated* —
+        a year, a fiscal year, a survey vintage — overrides this, because a dated vintage
+        is answered from disk forever and so is never re-asked: without discovery,
+        `hip refresh` could revalidate every file it already had and still never learn
+        that a newer year had been published. Measured 2026-09-23: Building Permits had
+        published 2025, IRS migration 2022–23 and HUD income limits FY2026, and the
+        platform requested none of them.
+
+        `today` is passed in rather than read from the clock, so a probe's answer about
+        what is *in force* is reproducible in a test.
+        """
+        return None
+
+    def _discovered(
+        self,
+        newest: str,
+        *,
+        reached: bool,
+        published: str | None = None,
+        pending: str | None = None,
+        pending_from: date | None = None,
+        pending_reason: str | None = None,
+    ) -> Discovery:
+        """A `Discovery` for this source, stamped now."""
+        return Discovery(
+            source_id=self.source_id,
+            newest=newest,
+            checked_at=datetime.now(UTC),
+            outcome="confirmed" if reached else "unreachable",
+            published=published,
+            pending=pending,
+            pending_from=pending_from,
+            pending_reason=pending_reason,
+        )
+
+    def _probe(self, url: str, *, method: str = "HEAD") -> tuple[bool | None, str | None]:
+        """Whether `url` names a published release, and when it last changed.
+
+        True for a 2xx, False for the answers publishers give for a release that does
+        not exist yet — 404 from a file host, 400 "Invalid year" from HUD's API, 410 —
+        and None for anything else, which means the publisher could not be asked. None is
+        not False for the same reason it is not in `_revalidate`: "could not tell" must
+        not read as "nothing newer".
+        """
+        response = self._ask(url, method=method)
+        if response is None:
+            return None, None
+        if response.is_success:
+            return True, response.headers.get("last-modified")
+        if response.status_code in (400, 404, 410):
+            return False, None
+        return None, None
+
+    def _ask(self, url: str, *, method: str = "GET") -> httpx.Response | None:
+        """One paced request for discovery, or None when the publisher cannot be reached.
+
+        The body is read, so a source whose answer is in the content — HUD's CHAS
+        endpoint says "not published" with an empty list and a 200 — can decide from it.
+        Discovery asks small things: a HEAD, a JSON stub, one short workbook.
+        """
+        self._pace()
+        try:
+            with httpx.Client(
+                transport=self.probe_transport,
+                timeout=_TIMEOUT,
+                follow_redirects=True,
+                headers=self.headers,
+            ) as client:
+                return client.request(method, url)
+        except (httpx.HTTPError, OSError) as exc:
+            logger.warning(
+                "%s: could not probe %s (%s)",
+                self.source_id,
+                redact(url),
+                type(exc).__name__,
+            )
+            return None
+
+    def _probe_forward(
+        self, start: int, exists: Callable[[int], tuple[bool | None, str | None]]
+    ) -> tuple[int, str | None, bool]:
+        """The newest year at or after `start` that `exists`, probing upward.
+
+        `start` is a release already known to exist, so probing begins at the year
+        after it and stops at the first absence. Returns that year, when the publisher
+        last changed it (if it said, and if a newer year was found), and whether every
+        answer was actually received. Three years ahead is the ceiling: no publisher
+        here releases faster than yearly, and an unbounded loop against a host that
+        answers 200 for anything would never end.
+        """
+        newest, published = start, None
+        for year in range(start + 1, start + 4):
+            found, modified = exists(year)
+            if found is None:
+                return newest, published, False
+            if not found:
+                break
+            newest, published = year, modified
+        return newest, published, True
 
     @classmethod
     def filename(cls, ref: ReleaseRef) -> str:

@@ -30,16 +30,21 @@ Pine Hill in 2022, and Princeton Borough (1109) and Princeton Township (1110) me
 into Princeton in 2013. Each is present for its historical years and null from its
 merger forward. They are not regions and must not be counted as match failures.
 
-The sheet names in `GTRhistory.xlsx` carry the end year, so bumping `end_year` moves
-both the sheet and the vintage. A stale year fails loudly — DuckDB's error names the
-sheet that does exist — which is the intended behaviour at this seam.
+The sheet names in `GTRhistory.xlsx` carry the end year, and since Milestone 26 that is
+how a new edition is found: the workbook is republished in place under the same name, so
+`discover` reads the year out of its sheet names and the vintage moves with it. A stale
+year still fails loudly on read — DuckDB's error names the sheet that does exist.
 """
 
 from __future__ import annotations
 
+import io
+import re
+import zipfile
+from datetime import date
 from typing import ClassVar
 
-from hip.sources.base import ReleaseRef, SourceAdapter
+from hip.sources.base import Discovery, ReleaseRef, SourceAdapter
 
 BASE_URL = "https://www.nj.gov/treasury/taxation/lpt"
 
@@ -67,28 +72,67 @@ class NjTaxRatesAdapter(SourceAdapter):
     landing_format: ClassVar[str] = "xlsx"
 
     def __init__(self, *, end_year: int) -> None:
+        """``end_year`` is the floor; `latest` is the discovered edition once known."""
         self.end_year = end_year
 
     @property
+    def latest(self) -> int:
+        """The newest edition: from the workbook's sheet names, else the floor."""
+        return int(self.newest) if self.newest else self.end_year
+
+    @property
     def default_vintage(self) -> str:  # type: ignore[override]
-        """The vintage follows `end_year`, the way `census_acs` follows `ACS_END_YEAR`.
+        """The vintage follows `latest`, the way `census_acs` follows its end year.
 
         A `ClassVar` on the base class and a property here, for the same reason PEP and
         ACS do it: the value is per-instance because the registry owns the year, and the
         protocol declares it per-class because most sources have a fixed one.
         """
-        return str(self.end_year)
+        return str(self.latest)
+
+    def discover(self, today: date) -> Discovery:
+        """The edition named by `GTRhistory.xlsx`'s own sheets.
+
+        The workbook is republished in place under one name, so neither its URL nor a
+        HEAD can say which year it holds — and because the vintage is dated, the cached
+        copy was never asked about again. The year is in the sheet names
+        (`General Tax Rates 1997-2025`), so discovery reads them from the workbook's
+        index: 389KB, and no spreadsheet library.
+        """
+        response = self._ask(f"{BASE_URL}/GTRhistory.xlsx")
+        if response is None or not response.is_success:
+            return self._discovered(str(self.latest), reached=False)
+        try:
+            with zipfile.ZipFile(io.BytesIO(response.content)) as book:
+                index = book.read("xl/workbook.xml").decode()
+        except (zipfile.BadZipFile, KeyError, UnicodeDecodeError):
+            return self._discovered(str(self.latest), reached=False)
+        # Both rate sheets must carry the year: one landed without the other would
+        # publish an effective rate against the previous year's general rate.
+        general = set(re.findall(rf"General Tax Rates {SERIES_START}-(\d{{4}})", index))
+        effective = set(
+            re.findall(rf"Effective Tax Rates {SERIES_START}-(\d{{4}})", index)
+        )
+        both = {int(y) for y in general & effective}
+        if not both:
+            # Renamed sheets: nothing in the workbook says which year it holds.
+            return self._discovered(str(self.latest), reached=False)
+        return self._discovered(
+            str(max(both | {self.latest})),
+            reached=True,
+            published=response.headers.get("last-modified"),
+        )
 
     def landing_sheet(self, ref: ReleaseRef) -> str:
         """The worksheet a layer lives in.
 
         The rate sheets carry the end year in their name, so this moves with
-        `end_year` and a stale value fails loudly rather than landing the wrong year.
+        `latest` and a stale value fails loudly rather than landing the wrong year.
         """
         if ref.layer == "director_ratio":
             return "Director's Ratio History"
         form = "General" if ref.layer == "general" else "Effective"
-        return f"{form} Tax Rates {SERIES_START}-{self.end_year}"
+        return f"{form} Tax Rates {SERIES_START}-{ref.vintage}"
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         """One release per sheet, two of them from the same workbook.
