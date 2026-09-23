@@ -26,7 +26,7 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 RegionLevel = Literal["state", "county", "municipality", "zip", "tract", "parcel"]
-Cadence = Literal["monthly", "quarterly", "annual", "irregular"]
+Cadence = Literal["weekly", "monthly", "quarterly", "annual", "irregular"]
 Direction = Literal["higher_is_better", "lower_is_better", "neutral"]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

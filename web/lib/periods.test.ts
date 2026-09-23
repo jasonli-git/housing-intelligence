@@ -54,3 +54,13 @@ describe("surveyYears", () => {
     expect(surveyYears("2019-01-01", "2023-12-31")).toBe("2019–2023");
   });
 });
+
+describe("periodLabel for a weekly benchmark", () => {
+  it("names the day, because a week's reading is not the month's", () => {
+    expect(periodLabel("2026-09-17", "mortgage_rate_30y_weekly")).toBe("Sep 17, 2026");
+  });
+
+  it("leaves the monthly average named by its month", () => {
+    expect(periodLabel("2026-08-01", "mortgage_rate_30y")).toBe("Aug 2026");
+  });
+});

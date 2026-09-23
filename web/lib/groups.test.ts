@@ -30,6 +30,7 @@ const CATALOG = [
   "modiv_residential_parcels",
   "modiv_vacant_land_share",
   "mortgage_rate_30y",
+  "mortgage_rate_30y_weekly",
   "net_migration_returns",
   "nj_director_ratio",
   "nj_effective_tax_rate",

@@ -19,10 +19,17 @@ const MONTHS = [
 // publishes: building permits are published monthly but loaded as yearly totals.
 const MONTHLY_PREFIXES = ["zhvi_", "zori_", "unemployment_"];
 
-/** One endpoint of a period, e.g. "2023", "Jul 2026", "FY2026", "Q2 2026". */
+// Series read week by week, whose reading is a day: Freddie Mac's weekly benchmark is
+// "Sep 17, 2026", and "Sep 2026" would claim the month (Milestone 26).
+const WEEKLY_METRICS = new Set(["mortgage_rate_30y_weekly"]);
+
+/** One endpoint of a period, e.g. "2023", "Jul 2026", "FY2026", "Q2 2026", "Sep 17, 2026". */
 export function periodLabel(date: string, metricId?: string): string {
   const year = date.slice(0, 4);
   const month = Number(date.slice(5, 7));
+  if (metricId && WEEKLY_METRICS.has(metricId)) {
+    return `${MONTHS[month - 1]} ${Number(date.slice(8, 10))}, ${year}`;
+  }
   if (metricId?.startsWith("hud_fmr")) return `FY${year}`;
   if (metricId?.startsWith("fhfa_")) return `Q${Math.ceil(month / 3)} ${year}`;
   const monthly = MONTHLY_PREFIXES.some((prefix) => metricId?.startsWith(prefix));

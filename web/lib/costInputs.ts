@@ -109,7 +109,7 @@ export async function costInputs(
 
   return {
     home,
-    rate: { value: latest.value, asOf: periodLabel(latest.period_start) },
+    rate: { value: latest.value, asOf: periodLabel(latest.period_start, latest.metric_id) },
     tax,
     rent: dated(find("zori_all")),
     noTax: tax ? null : noTaxReason(level),

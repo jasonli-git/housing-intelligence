@@ -94,7 +94,19 @@ metrics:
     unit: percent
     frequency: monthly
     direction: lower_is_better
-    description: FRED series MORTGAGE30US, monthly average. National, not regional.
+    description: >-
+      FRED series MORTGAGE30US, monthly average. National, not regional. A month still
+      in progress is dated through the last week observed rather than its last day.
+    source_id: fred
+
+  mortgage_rate_30y_weekly:
+    label: 30-year fixed mortgage rate, weekly benchmark
+    unit: percent
+    frequency: weekly
+    direction: lower_is_better
+    description: >-
+      Freddie Mac's weekly survey benchmark (FRED MORTGAGE30US, not averaged). National,
+      not regional. Prices today's cost card; the monthly average carries the history.
     source_id: fred
 
   unemployment_rate:

@@ -51,6 +51,7 @@ export const GROUPS: readonly Group[] = [
       // above differ, and a reader looking at them is exactly who needs it.
       "nj_director_ratio",
       "mortgage_rate_30y",
+      "mortgage_rate_30y_weekly",
     ],
   },
   {

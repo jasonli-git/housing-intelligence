@@ -152,7 +152,8 @@ export function CostToOwn({
           `home on any one date, and the homes that sell are not a cross-section of the ` +
           `homes that exist`) +
         `, less a ${down}% down payment, borrowed over 30 years at ${rate.value.toFixed(2)}% — ` +
-        `the national average fixed rate (Freddie Mac’s survey, via FRED, ${rate.asOf}). A ` +
+        `the national benchmark for a 30-year fixed loan (Freddie Mac’s weekly survey, via ` +
+        `FRED, ${rate.asOf}), not a quote for any borrower. A ` +
         `month is that loan’s principal and interest` +
         (tax
           ? `, plus a twelfth of the typical yearly property tax bill for this area ` +
@@ -289,7 +290,7 @@ export function CostToOwn({
             <div>
               <dt>
                 Mortgage, 30-year fixed at {rate.value.toFixed(2)}%{" "}
-                <small className="src">national average, {rate.asOf}</small>
+                <small className="src">national weekly benchmark, {rate.asOf}</small>
               </dt>
               <dd>{money(cost.mortgage)}/mo</dd>
             </div>

@@ -48,6 +48,7 @@ VALUE_BOUNDS = {
     "permits_total_units": (0.0, 1_000_000.0),
     "fhfa_hpi": (1.0, 10_000.0),
     "mortgage_rate_30y": (0.5, 25.0),
+    "mortgage_rate_30y_weekly": (0.5, 25.0),
     "unemployment_rate": (0.0, 60.0),
     # Net migration is a signed difference and can legitimately be large and negative.
     "net_migration_returns": (-1_000_000.0, 1_000_000.0),

@@ -5,6 +5,13 @@ regional breakdown. It lands at the `nation` level against a synthetic US region
 (ARCHITECTURE #30) rather than being attached to New Jersey, because recording a
 national rate as a state measurement is the kind of quiet inaccuracy this platform
 exists to refuse.
+
+**Two frequencies of one series** (Milestone 26). Freddie Mac publishes the rate weekly;
+the platform had only ever asked FRED for monthly averages. So on 2026-09-23 the cost card
+priced a mortgage at August's 6.67% while Freddie Mac's benchmark for the week of
+September 17 was 6.95% — two different windows, not two contradictory sources. The weekly
+benchmark now prices today's card; the monthly averages stay for history, where "the rate
+buyers faced in July 2021" is a month.
 """
 
 from __future__ import annotations
@@ -17,12 +24,17 @@ from hip.sources.base import ReleaseRef, SourceAdapter
 
 BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 
-# series id -> metric_id.
-SERIES: dict[str, str] = {"MORTGAGE30US": "mortgage_rate_30y"}
+# release layer -> (FRED series id, the `frequency` to ask FRED for, or None for the
+# series' own). The layer is the series id for the monthly average, which is what every
+# release before Milestone 26 was recorded under, so its provenance continues unbroken.
+SERIES: dict[str, tuple[str, str | None]] = {
+    "MORTGAGE30US": ("MORTGAGE30US", "m"),
+    "MORTGAGE30US_weekly": ("MORTGAGE30US", None),
+}
 
 
 class FredAdapter(SourceAdapter):
-    """National macro series, monthly."""
+    """National macro series: the 30-year rate, weekly and as monthly averages."""
 
     source_id: ClassVar[str] = "fred"
     default_vintage: ClassVar[str] = "current"
@@ -38,14 +50,15 @@ class FredAdapter(SourceAdapter):
         return [
             ReleaseRef(
                 source_id=self.source_id,
-                layer=series_id,
+                layer=layer,
                 vintage=vintage or self.default_vintage,
                 url=(
                     f"{BASE_URL}?series_id={series_id}&file_type=json"
-                    f"&frequency=m&api_key={key}"
+                    + (f"&frequency={frequency}" if frequency else "")
+                    + f"&api_key={key}"
                 ),
             )
-            for series_id in SERIES
+            for layer, (series_id, frequency) in SERIES.items()
         ]
 
     @classmethod

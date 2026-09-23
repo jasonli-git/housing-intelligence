@@ -612,3 +612,17 @@ def test_a_rate_limited_download_waits_before_retrying(
 
     assert adapter.downloads == 2
     assert slept == [60.0], "no Retry-After, so the whole minute"
+
+
+def test_fred_asks_for_the_weekly_benchmark_and_the_monthly_history(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two windows of one series: the week that prices today, the months behind it."""
+    from hip.sources.fred import FredAdapter
+
+    monkeypatch.setenv("FRED_API_KEY", "k")
+    refs = {r.layer: r.url for r in FredAdapter().refs()}
+
+    assert "frequency=m" in refs["MORTGAGE30US"], "history stays monthly"
+    assert "frequency" not in refs["MORTGAGE30US_weekly"], "the series' own, weekly"
+    assert all("series_id=MORTGAGE30US&" in url for url in refs.values())

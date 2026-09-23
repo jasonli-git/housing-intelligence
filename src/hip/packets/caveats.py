@@ -191,8 +191,9 @@ def scoped_caveats(
         add("zori_sparse", rent)
     if "permits_total_units" in present and level in {"municipality", "zip", "tract"}:
         add("permits_volatile", {"permits_total_units"})
-    if "mortgage_rate_30y" in present:
-        add("national_series", {"mortgage_rate_30y"})
+    rates = present & {"mortgage_rate_30y", "mortgage_rate_30y_weekly"}
+    if rates:
+        add("national_series", rates)
     fhfa = present & {"fhfa_hpi", "fhfa_hpi_all_transactions"}
     if fhfa:
         add("fhfa_state_only", fhfa)
