@@ -79,8 +79,9 @@ export const TERMS: readonly Term[] = [
       "The Federal Housing Finance Agency’s repeat-sales index: how the price of the same " +
       "homes changes from one sale to the next. An index, not a price — the purchase-only " +
       "index is 100 in the first quarter of 1991, and the all-transactions index, which " +
-      "adds refinance appraisals, 100 in the first quarter of 1980. FHFA publishes it for " +
-      "New Jersey as a whole, not by county, so counties cannot be compared on it.",
+      "adds refinance appraisals, 100 in the first quarter of 1980. The figures here are " +
+      "for New Jersey as a whole: FHFA's county indexes are not loaded yet, so counties " +
+      "cannot be compared on it.",
   },
   {
     // The tables keep the metrics' own labels — "Residential parcels", "Apartment share

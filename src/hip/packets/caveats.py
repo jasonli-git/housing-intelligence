@@ -47,8 +47,10 @@ TEXTS: dict[str, str] = {
         "region and describes the country, not this place."
     ),
     "fhfa_state_only": (
-        "FHFA's house price indexes are published at state level only; no county series "
-        "is available at a reachable URL, so they cannot be compared across counties."
+        "FHFA's house price indexes here are its state-level series. FHFA also publishes "
+        "developmental county and ZIP indexes, which this platform does not yet load, so "
+        "these figures describe New Jersey as a whole and cannot be compared across "
+        "counties."
     ),
     "hud_fmr_area": (
         "Fair Market Rents are HUD's rent standard for a whole FMR area, set once per "

@@ -529,9 +529,15 @@ def test_chas_figures_name_their_single_vintage() -> None:
 
 
 def test_both_fhfa_indexes_carry_the_state_only_caveat() -> None:
+    """State-level series, and not a claim that no county series exists.
+
+    It said "no county series is available at a reachable URL" until 2026-09-23, when
+    FHFA's county file downloaded at the first attempt: all 21 counties, 1975-2025.
+    """
     for metric in ("fhfa_hpi", "fhfa_hpi_all_transactions"):
         caveats = caveats_for(level="state", metric_ids=[metric])
-        assert any("state level only" in c for c in caveats), metric
+        assert any("state-level series" in c for c in caveats), metric
+        assert not any("reachable URL" in c for c in caveats), metric
 
 
 def test_a_neutral_metric_is_never_called_the_best_or_worst_end() -> None:
