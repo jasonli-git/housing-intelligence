@@ -3,6 +3,16 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.21.4] — 2026-09-22
+
+### Fixed
+
+- **The masthead's tools collided on a phone.** All four controls — search, the
+  affordability switch, the theme toggle, and the GitHub link — wrapped as one group
+  under the wordmark, and the theme toggle overlapped the search box. Theme and the
+  GitHub link now stay on the wordmark's row at every width; search and the
+  affordability switch are the pair that wraps to its own row below.
+
 ## [0.21.3] — 2026-09-22
 
 **New Jersey splash page and map explorer**, merged from an experiment branch at the

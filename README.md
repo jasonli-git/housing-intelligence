@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.21.0, 2026-09-20. Versions 1 and 2 complete; nothing in progress.**
+> **Status — v0.21.4, 2026-09-22. Versions 1 and 2 complete; nothing in progress.**
 >
 > **Built and deployed.** New Jersey's geography, housing, economic context, property
 > tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
@@ -22,25 +22,28 @@ layer only explains metrics that were already computed.
 > is asked on each refresh whether anything has moved, and a figure that changes is
 > recorded rather than overwritten — 313,536 such revisions so far. Every value carries
 > its source file and match method. All eight pipeline stages run. The site publishes
-> itself — 5,955 static artifacts and 2,274 pre-rendered pages, served with no database
+> itself — 5,955 static artifacts and 2,276 pre-rendered pages, served with no database
 > and no application server — across four page types: the state, 1,135 region pages,
 > their reports, and an affordability workspace, reachable in place from the state and
 > county pages or at its own address.
 >
-> **Latest.** Milestone 29 shipped on 2026-09-20: the platform now asks each publisher
+> **Latest.** The New Jersey landing page and map explorer were redesigned on
+> 2026-09-22: the homepage, county pages, and `/afford` now share one URL-backed
+> affordability workspace and one profile/map primitive, with a review round fixing five
+> regressions — including a dropped cost-quote disclosure and a broken masthead link —
+> before merge. A same-day follow-up fixed the masthead's tools colliding on a phone.
+> Before that, Milestone 29 shipped on 2026-09-20: the platform now asks each publisher
 > whether anything has moved instead of answering from its own cache forever. It found
 > that the deployed site was a Zillow release behind, that MOD-IV had gone behind a
 > token, and that Zillow had restated 294,469 of its own published figures — all of
-> which had been invisible. Before it, Milestone 25 added New Jersey's recorded sale
-> prices and the one property tax rate that is comparable between towns, and Milestone
-> 24 moved every ACS window forward a year and added a second population source that is
-> never mixed with the first in a ratio. Interpretation is a measured layer, not a
-> claim: seventeen models have been evaluated against standardized scenarios, five write
-> every county's readings side by side, and since Milestone 13 any figure the packet
-> does not carry is refused before it is stored.
+> which had been invisible. Interpretation is a measured layer, not a claim: seventeen
+> models have been evaluated against standardized scenarios, five write every county's
+> readings side by side, and since Milestone 13 any figure the packet does not carry is
+> refused before it is stored.
 >
-> Next is Milestone 26. See [ROADMAP.md](ROADMAP.md) for what is planned and
-> [CHANGELOG.md](CHANGELOG.md) for what shipped.
+> Next is Milestone 26 (Milestone 29 shipped ahead of it — see ROADMAP.md). See
+> [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md) for what
+> shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
