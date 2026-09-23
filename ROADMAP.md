@@ -405,8 +405,8 @@ finished the *reach* of the platform — where it runs, what writes its prose, w
 like. Version 3 was scheduled to finish its *depth*, on data already held. On 2026-09-23
 the owner folded Version 4 into it and turned the Director Note *Accessible, comprehensive,
 and current housing data* into milestones, after a research report on that note — its
-sources, freshness, costs, licensing and presentation — was checked against the code.
-Version 3 is now the version that makes the platform current, as complete as public data
+sources, freshness, costs, licensing and presentation — was checked against the code
+([`agent-handoffs/data-completeness-research.md`](agent-handoffs/data-completeness-research.md)). Version 3 is now the version that makes the platform current, as complete as public data
 allows, and honest about both. That is a larger promise than the original one: Milestones
 38–46 add sources, some of them needing a key or the publisher's permission.
 
@@ -660,7 +660,8 @@ line still said 13 after Milestones 24 and 25 had added three.)*
 
 **Free, not yet held.** Every row is public domain or an open state record unless the row
 says otherwise. Rows scheduled on 2026-09-23 come from the research behind Version 3's
-restructure, and each milestone's first task confirms its source against the publisher.
+restructure ([`agent-handoffs/data-completeness-research.md`](agent-handoffs/data-completeness-research.md)), and each milestone's first task confirms its source against the
+publisher.
 
 | Source | What it adds | Where |
 |---|---|---|

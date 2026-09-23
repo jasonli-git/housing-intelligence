@@ -288,7 +288,8 @@ Do not implement yet.
 Promotes *Accessible, comprehensive, and current housing data* into the roadmap, at the
 owner's explicit direction, after a research report from Codex on that note — sources,
 freshness, costs, licensing and presentation — was checked against the code. The note
-itself is left as written. ROADMAP.md, Versions 3 and 4, carries the milestones.
+itself is left as written. ROADMAP.md, Versions 3 and 4, carries the milestones; the
+report is [`agent-handoffs/data-completeness-research.md`](agent-handoffs/data-completeness-research.md).
 
 **What changed in the roadmap:**
 
