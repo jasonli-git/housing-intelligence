@@ -387,3 +387,63 @@ def test_an_unreachable_discovery_makes_the_refresh_partial(tmp_path: Path) -> N
 
     assert report.undiscovered
     assert exit_code(report, pipeline_ran=True, pipeline_ok=True) == 3
+
+
+# ----------------------------------------------------------------------- MOD-IV ---
+
+
+def _metadata(*steps: tuple[str, str]) -> str:
+    body = "".join(
+        f"<prcStep><stepDesc>{text}</stepDesc><stepDateTm>{when}T00:00:00</stepDateTm>"
+        "</prcStep>"
+        for when, text in steps
+    )
+    return f"<metadata><dqInfo>{body}</dqInfo></metadata>"
+
+
+def test_the_modiv_tax_year_is_read_from_the_newest_join() -> None:
+    """The layer has no tax-year field; NJOGIS's processing history is the record."""
+    from hip.sources.nj_modiv import ModivAdapter
+
+    history = _metadata(
+        (
+            "2024-11-18",
+            "re-generated with a join to the MOD-IV data for the 2023 tax year",
+        ),
+        (
+            "2025-09-11",
+            "re-generated with a join to the MOD-IV data for the 2024 tax year",
+        ),
+        ("2026-06-04", "NJOGIS obtained updated Parcel data for Morris County"),
+    )
+    adapter = ModivAdapter()
+    adapter.probe_transport = _publisher(
+        {"metadata.xml": httpx.Response(200, text=history)}
+    )
+
+    found = adapter.discover(TODAY)
+
+    assert found.newest == "2024"
+    assert found.published == "2025-09-11", "a parcel-shape update is not a new tax year"
+
+
+def test_a_reworded_history_is_not_a_tax_year() -> None:
+    from hip.sources.nj_modiv import ModivAdapter
+
+    adapter = ModivAdapter()
+    adapter.probe_transport = _publisher(
+        {"metadata.xml": httpx.Response(200, text=_metadata(("2025-09-11", "updated")))}
+    )
+
+    assert adapter.discover(TODAY).outcome == "unreachable"
+
+
+def test_staging_receives_the_recorded_tax_year(tmp_path: Path) -> None:
+    from hip.transform.dbt_runner import _modiv_tax_year
+
+    assert _modiv_tax_year(tmp_path) is None, "no record: staging keeps the old dating"
+    write_discovery(
+        tmp_path,
+        Discovery("nj_modiv", "2024", datetime(2026, 9, 23, tzinfo=UTC)),
+    )
+    assert _modiv_tax_year(tmp_path) == 2024

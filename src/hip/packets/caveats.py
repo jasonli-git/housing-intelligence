@@ -66,10 +66,11 @@ TEXTS: dict[str, str] = {
         "time and describe earlier years than the newest ACS figures beside them."
     ),
     "modiv_tax_bill": (
-        "The property tax bill is the median of last year's total tax across one- to "
-        "four-family homes in MOD-IV, New Jersey's assessment records. It is the bill as "
-        "levied, before relief paid to individual households such as ANCHOR, and it "
-        "follows each municipality's own assessments rather than a rate on market value."
+        "The property tax bill is the median total tax across one- to four-family homes "
+        "in MOD-IV, New Jersey's assessment records, for the tax year its period names — "
+        "the year NJOGIS last joined its parcel map to. It is the bill as levied, before "
+        "relief paid to individual households such as ANCHOR, and it follows each "
+        "municipality's own assessments rather than a rate on market value."
     ),
     "irs_matching_2023": (
         "IRS migration counts from the 2022-2023 pair onward match returns across years "

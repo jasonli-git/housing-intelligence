@@ -25,13 +25,14 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import timedelta
+import re
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, ClassVar
 
 import httpx
 
-from hip.sources.base import ReleaseRef, SourceAdapter, SourceError
+from hip.sources.base import Discovery, ReleaseRef, SourceAdapter, SourceError
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,13 @@ FIELDS = (
 
 _PAGE_RETRIES = 3
 
+# The layer's metadata record: its processing history names the MOD-IV tax year each
+# statewide join used, which nothing in the data itself does.
+METADATA_URL = (
+    "https://www.arcgis.com/sharing/rest/content/items/"
+    "533599bbfbaa4748bf39faf1375a8a9c/info/metadata/metadata.xml"
+)
+
 
 class ModivAdapter(SourceAdapter):
     """One statewide release, assembled from paged queries into a single NDJSON file.
@@ -117,6 +125,35 @@ class ModivAdapter(SourceAdapter):
                 url=f"{LAYER_URL}/query",
             )
         ]
+
+    def discover(self, today: date) -> Discovery:
+        """The MOD-IV tax year the composite was last joined to, from NJOGIS's metadata.
+
+        The vintage stays `current` — one layer, republished in place — so this does
+        not choose what to fetch. It records *which tax year* the fetched values are,
+        which the layer itself never says: it has no tax-year field, and the only date
+        in it, `PCL_PBDATE`, is when a county last republished its parcel *shapes*.
+        Staging dated every MOD-IV figure by that, so a 2024 tax bill read as "Jun
+        2026" in one town and "Oct 2023" in another (found 2026-09-23). NJOGIS states
+        the year in the layer's processing history — "re-generated with a join to the
+        MOD-IV data for the 2024 tax year", 2025-09-11 — and that sentence is the
+        source of record for it. Confirmed against the data: `LAST_YR_TX` equals the
+        assessed value times each town's 2024 general rate (median ratio 1.000).
+        """
+        response = self._ask(METADATA_URL)
+        if response is None or not response.is_success:
+            return self._discovered(self.newest or "unknown", reached=False)
+        joins = []
+        for step in re.findall(r"<prcStep>(.*?)</prcStep>", response.text, re.S):
+            year = re.search(r"MOD-IV data for the (\d{4}) tax year", step)
+            when = re.search(r"<stepDateTm>(\d{4}-\d{2}-\d{2})", step)
+            if year:
+                joins.append((when.group(1) if when else "", year.group(1)))
+        if not joins:
+            # A reworded history: nothing here can say which year the values are.
+            return self._discovered(self.newest or "unknown", reached=False)
+        joined_on, tax_year = max(joins)
+        return self._discovered(tax_year, reached=True, published=joined_on or None)
 
     @classmethod
     def filename(cls, ref: ReleaseRef) -> str:

@@ -89,7 +89,7 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     why: "Owners can be squeezed too; this shows how many are stretched by what they pay.",
   },
   modiv_median_tax_bill: {
-    what: "What the middle one- to four-family home paid in property tax last year, before any relief a household may claim.",
+    what: "What the middle one- to four-family home paid in property tax in the tax year shown, before any relief a household may claim.",
     why: "New Jersey’s property taxes are among the highest in the country, so this can matter as much as the price.",
   },
   nj_effective_tax_rate: {
