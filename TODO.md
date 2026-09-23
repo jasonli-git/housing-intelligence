@@ -8,42 +8,13 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — Milestone 26, current releases (started 2026-09-23)
+## Now — Milestone 26 in review (2026-09-23)
 
-Branch `milestone/m26-current-releases`. Deliverable and scope: ROADMAP.md, Milestone 26.
-
-**Part 1 — releases stay current**
-
-- [ ] **Release discovery.** Acquisition probes each dated-vintage publisher for its
-      newest release and records it beside the cache (`data/raw/<source>/releases.json`);
-      later stages read that record offline, so a run's release set stays pinned (#197).
-      Covers Building Permits (2024 → 2025), IRS migration (2122 → newer), HUD income
-      limits (2024 → FY2026), HUD FMR, HUD CHAS, ACS, PEP, NJ tax rates, SR1A's closed
-      years and BLS's end year. An unreachable probe keeps the recorded release and makes
-      the run partial, as an unreachable revalidation does.
-- [ ] **Publication date and effective date, kept apart.** A HUD Fair Market Rent year
-      is not used before 1 October of the year before it; FY2027 must stay out until
-      2026-10-01.
-- [ ] **The mortgage rate.** Freddie Mac's weekly benchmark for today's cost card;
-      monthly averages kept for history; a month still in progress labelled provisional.
-- [ ] **FHFA county and ZIP series retested**, and the result recorded either way.
-- [ ] **Audits:** MOD-IV's assessment year against the period its figures carry; SR1A's
-      deed, recording and publication dates; each NJ tax-rate product's newest year.
-- [ ] **A recorded fallback for every source**, enforced by `hip check-config`, and a
-      written procedure for the day a source stops answering.
-- [x] **MOD-IV's next publication:** February 2027, per NJOGIS by email (2026-09-23),
-      kept as an internal note in `config/sources.yml`.
-- [ ] **Doc corrections:** ARCHITECTURE #191 (the old MOD-IV layer was retired, not put
-      behind a token) and the source register's ZTRAX row.
-
-**Part 2 — the models, in its own section**
-
-- [ ] **Qwen 3.7 Plus leaves the preference list**, and readings of any model no longer
-      on it are retired at the next regeneration, pinned by a test.
-- [ ] **Gemma 4 E4B — waiting on the owner.** One copy shared by LM Studio and the
-      project, `import_gguf.sh` committed, the MLX build retested, and peak memory down at
-      least 1GB. Needs a baseline measured on the owner's Mac and an MLX download of a
-      few GB; **nothing here starts without the owner's go-ahead** (2026-09-23).
+Branch `milestone/m26-current-releases`, in a pull request into `main` awaiting the
+owner's review. What it shipped is in CHANGELOG 0.22.0 and its decisions are ARCHITECTURE
+#206–#214. Its Gemma half is carried under `Parked`. Nothing else starts until the merge
+is approved; after it comes Milestone 27, whose first task decides where a refresh runs
+and what it may do unattended.
 
 **To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
@@ -69,6 +40,16 @@ first raised, not where it must be done.
       is which *computation* produced the earlier value and not which source did. Decide
       whether to null the dangling ids — an unresolvable integer reads as a working
       reference — or leave them and say so where they are served.
+
+- [ ] **HUD income limits are dated by calendar year, so the newest ends in the
+      future.** (found 2026-09-23, verifying Milestone 26) `stg_hud_income_limits`
+      dates each year 1 January to 31 December, so FY2026's limits run to 2026-12-31 —
+      a date not yet reached — and `price_to_ami` inherits it; the county reports now
+      say their metrics "reach to 2026-12-31". The site labels the period "2026", as HUD
+      names it, so no page misreads. But the dates also claim FY2026 applied from
+      January, when a year's limits apply from the effective date in HUD's annual notice
+      (not checked here). Dating by effective date, as Fair Market Rents are (#106), is
+      the fix to weigh; it moves every AMI ratio's window.
 
 - [ ] **The validation gate has no range bounds for the two HUD metrics.**
       (pre-M12 review) `hud_area_median_income` and `hud_income_limit_80` are absent from
@@ -136,11 +117,6 @@ first raised, not where it must be done.
       main thread once it consumes that future, so sampling the file raced the writer.
       The last scenario now waits for the evidence instead of sampling for it. 0 failures
       in 50 runs, and a mutation to a final-pass write still fails it.
-- [ ] **Move `import_gguf.sh` and `kvbench.sh` into the repo (`scripts/`).** (M8 prep)
-      Still outstanding, and `import_gguf.sh` is now known to produce passthrough
-      templates (ARCHITECTURE #62), so it needs the template fix before it is committed.
-      They live in a `/private/tmp` scratchpad that does not survive a reboot.
-      **Scheduled: Milestone 26.**
 
 ### Test coverage
 
@@ -430,6 +406,22 @@ first raised, not where it must be done.
       map layer would be an enormous download.
 
 ## Parked / needs user input
+
+- [ ] **Gemma 4 E4B — waiting on the owner's go-ahead.** (Milestone 26's models
+      section, carried 2026-09-23) One copy that LM Studio and the project share;
+      `import_gguf.sh` and `kvbench.sh` moved into `scripts/` from a `/private/tmp`
+      scratchpad that does not survive a reboot (first raised at M8 prep), the first with
+      its passthrough-template defect fixed (ARCHITECTURE #62); the MLX build retested on a
+      current `mlx-lm` (0.31.3 could not load it), and peak memory down at least 1GB,
+      cheapest first: the 12,288-token context to 8,192, a quantized KV cache, and a
+      smaller quantization only if the figure check on the standard scenarios shows no
+      loss. Needs a baseline measured on the owner's Mac and an MLX download of a few
+      GB. **Nothing here starts without the owner.**
+- [ ] **Regenerating the county readings is the owner's call.** All 105 — five models ×
+      21 counties — are stale against Milestone 26's refresh, because every county
+      packet changed (checked 2026-09-23 with `still_describes`). A regeneration is
+      billed, and `hip explain --all` would also retire Qwen 3.7 Plus's 21 readings
+      (#213), leaving 84. Not run, because it spends money.
 
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.
