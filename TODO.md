@@ -8,20 +8,12 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — nothing in progress, as of 2026-09-23
+## Now — Milestone 26 in review (2026-09-23)
 
-**The roadmap was restructured on 2026-09-23.** Version 3 absorbed Version 4 and the
-Director Note *Accessible, comprehensive, and current housing data*; Version 5 became
-Version 4; unbuilt milestones were renumbered in build order (ROADMAP.md, "Renumbered
-2026-09-23", maps old numbers to new). Everything shipped is deployed — CHANGELOG 0.21.4
-is the latest release.
-
-**Next is Milestone 26 — current releases**, which also retires Qwen from regeneration
-and fixes Gemma's memory and sharing, in a section of its own.
-
-**Outreach only the owner can send, worth starting now:** DCA's data team (gates
-Milestone 42), Zillow for a written licence determination (32), NJ Taxation and the
-Office of GIS (26, 36, 37), NJHMFA and housing authorities (40), Rutgers CUPR (Version 4).
+Branch `milestone/m26-current-releases`, in a pull request into `main` awaiting the
+owner's review. What it shipped is in CHANGELOG 0.22.0 and its decisions are ARCHITECTURE
+#206–#215. Nothing else starts until the merge is approved; after it comes Milestone 27,
+whose first task decides where a refresh runs and what it may do unattended.
 
 **To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
@@ -47,6 +39,16 @@ first raised, not where it must be done.
       is which *computation* produced the earlier value and not which source did. Decide
       whether to null the dangling ids — an unresolvable integer reads as a working
       reference — or leave them and say so where they are served.
+
+- [ ] **HUD income limits are dated by calendar year, so the newest ends in the
+      future.** (found 2026-09-23, verifying Milestone 26) `stg_hud_income_limits`
+      dates each year 1 January to 31 December, so FY2026's limits run to 2026-12-31 —
+      a date not yet reached — and `price_to_ami` inherits it; the county reports now
+      say their metrics "reach to 2026-12-31". The site labels the period "2026", as HUD
+      names it, so no page misreads. But the dates also claim FY2026 applied from
+      January, when a year's limits apply from the effective date in HUD's annual notice
+      (not checked here). Dating by effective date, as Fair Market Rents are (#106), is
+      the fix to weigh; it moves every AMI ratio's window.
 
 - [ ] **The validation gate has no range bounds for the two HUD metrics.**
       (pre-M12 review) `hud_area_median_income` and `hud_income_limit_80` are absent from
@@ -114,11 +116,14 @@ first raised, not where it must be done.
       main thread once it consumes that future, so sampling the file raced the writer.
       The last scenario now waits for the evidence instead of sampling for it. 0 failures
       in 50 runs, and a mutation to a final-pass write still fails it.
-- [ ] **Move `import_gguf.sh` and `kvbench.sh` into the repo (`scripts/`).** (M8 prep)
-      Still outstanding, and `import_gguf.sh` is now known to produce passthrough
-      templates (ARCHITECTURE #62), so it needs the template fix before it is committed.
-      They live in a `/private/tmp` scratchpad that does not survive a reboot.
-      **Scheduled: Milestone 26.**
+
+- [ ] **`import_gguf.sh` was lost, so nothing in the repo rebuilds the local models.**
+      (M8 prep; found lost 2026-09-23) It and `kvbench.sh` lived in a `/private/tmp`
+      scratchpad and did not survive a reboot around 2026-09-15. The four
+      `bench-*` models in Ollama still work, so this matters only when one is next
+      imported — and then the script has to be rewritten with the passthrough-template
+      defect fixed (ARCHITECTURE #62). `kvbench.sh` is not needed: the KV-cache question it
+      served was settled without a change (#215).
 
 ### Test coverage
 
@@ -408,6 +413,12 @@ first raised, not where it must be done.
       map layer would be an enormous download.
 
 ## Parked / needs user input
+
+- [ ] **Regenerating the county readings is the owner's call.** All 105 — five models ×
+      21 counties — are stale against Milestone 26's refresh, because every county
+      packet changed (checked 2026-09-23 with `still_describes`). A regeneration is
+      billed, and `hip explain --all` would also retire Qwen 3.7 Plus's 21 readings
+      (#213), leaving 84. Not run, because it spends money.
 
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.

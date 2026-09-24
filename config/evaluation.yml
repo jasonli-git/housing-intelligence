@@ -47,8 +47,9 @@ limits:
   # buys more loop rather than more answer. Their still hitting 6000 is a firmer
   # finding than hitting 3000: it rules out the budget as the explanation.
   #
-  # Safe to raise without touching context_tokens: the prompt is ~1,900 tokens, so
-  # 1,900 + 6,000 still sits well inside the 12,288 window.
+  # Safe to raise without touching context_tokens: the prompt was ~1,900 tokens when this
+  # was set and is 4,305–4,500 since Milestone 26's packets (run `m26-mem-baseline`), so
+  # 4,500 + 6,000 still sits inside the 12,288 window.
   max_output_tokens: 6000
   # Ollama unloads immediately after each generation. 16GB of unified memory cannot hold
   # two of these at once, and a resident model pushes the next one into swap.
@@ -419,15 +420,16 @@ generation:
     # alias DeepSeek repoints, so the substitution guard (#95) is what stands between a
     # repoint and prose published under the wrong name.
     - deepseek-flash-nothink
-    # Qwen 3.7 Plus [3.46], a pinned snapshot, as a second tier in the China regime: a
-    # DeepSeek repoint or retirement falls to a model that cannot change under its
-    # name. On Alibaba's free quota until 2026-12-10; with Free Quota Only on, a lapsed
-    # quota is a failed probe and a fall-through, never a bill.
-    - qwen3.7-plus
+    # Qwen 3.7 Plus [3.46] held a second tier in the China regime until 2026-09-23, when
+    # the owner retired it: its free quota was spent. It stays a benchmarked candidate
+    # above, so its scores keep their meaning; it is simply no longer asked to write.
+    # `hip explain --all` retires its stored readings on the next run (Milestone 26),
+    # and a DeepSeek repoint or retirement now falls straight to Flash-Lite.
+    #
     # Kept at the owner's request on 2026-09-11 [3.10]: a cheap in-provider step-down,
-    # and the fifth reading on every county page. It sits above the local model it
-    # scored 0.03 below — a gap fifteen answers cannot separate — because the list
-    # must end on this machine.
+    # and a reading on every county page. It sits above the local model it scored 0.03
+    # below — a gap fifteen answers cannot separate — because the list must end on
+    # this machine.
     - gemini-3.1-flash-lite
     # Last, and a working model rather than a degraded one: Gemma 4 E4B [3.13]
     # outscored two hosted candidates again.

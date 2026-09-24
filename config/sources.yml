@@ -2,6 +2,11 @@
 # Milestone 2 and later. `url` is the publisher's stable landing or API root — the exact
 # file URL for a given vintage is the adapter's job, because publishers rename files.
 # Nothing here is fetched until `hip acquire` runs.
+#
+# `fallback` (Milestone 26, required) is what to do the day a source stops answering: a
+# second publisher, another route to the same data, or keeping the last release labelled
+# historical. Internal: it is never loaded into the warehouse or shown on the site. The
+# procedure it plugs into is README's "When a source stops answering".
 
 sources:
   hip_derived:
@@ -11,6 +16,8 @@ sources:
     url: https://github.com/jasonli-git/housing-intelligence
     cadence: irregular
     adapter: none
+    fallback: >-
+      Not fetched: computed from the sources below, so it falls back with them.
     notes: >-
       Not fetched. Metrics the platform computes from other sources — affordability
       ratios today — are written as ordinary facts under this source so every value
@@ -23,6 +30,9 @@ sources:
     url: https://www2.census.gov/geo/tiger
     cadence: annual
     adapter: hip.sources.tiger:TigerAdapter
+    fallback: >-
+      Census TIGERweb and the cartographic boundary files carry the same geography.
+      Pinned on purpose: a new vintage is moved to by hand.
     notes: >-
       The geometry behind every region. GEOIDs here are the join keys ACS, Building
       Permits, and the Zillow crosswalks use, so the largest sources need no geographic
@@ -35,6 +45,10 @@ sources:
     url: https://www.zillow.com/research/data/
     cadence: monthly
     adapter: hip.sources.zillow:ZhviAdapter
+    fallback: >-
+      No free equivalent. The cost card already falls back to the SR1A transaction
+      median (#187); FHFA's county index (reachable, retested 2026-09-23) carries price
+      trends. Otherwise keep the last release, labelled historical.
     notes: >-
       Smoothed, seasonally adjusted index revised retroactively; a new release can
       change history already loaded. See Known Limitations in ARCHITECTURE.md.
@@ -46,6 +60,10 @@ sources:
     url: https://www.zillow.com/research/data/
     cadence: monthly
     adapter: hip.sources.zillow:ZoriAdapter
+    fallback: >-
+      No free equivalent for asking rents. ACS gross rent and HUD Fair Market Rents
+      describe rent differently and are labelled as such. Otherwise keep the last
+      release, labelled historical.
 
   census_acs:
     name: American Community Survey, 5-year estimates
@@ -55,6 +73,9 @@ sources:
     homepage: https://www.census.gov/programs-surveys/acs
     cadence: annual
     adapter: hip.sources.census_acs:AcsAdapter
+    fallback: >-
+      The ACS Summary File at www2.census.gov/programs-surveys/acs/summary_file carries
+      the same tables without the API.
     api_key_env: CENSUS_API_KEY
     notes: >-
       Consecutive 5-year vintages overlap by four years, so year-over-year change is
@@ -68,6 +89,9 @@ sources:
     homepage: https://www.census.gov/programs-surveys/popest.html
     cadence: annual
     adapter: hip.sources.census_pep:PepAdapter
+    fallback: >-
+      FRED republishes county resident population (e.g. NJATLA2POP). Municipal estimates
+      have no second route: keep the last vintage, labelled historical.
     notes: >-
       Headline population as of July 1, carried forward from the 2020 census by births,
       deaths and migration. A different program from ACS, whose 5-year estimates average
@@ -81,6 +105,9 @@ sources:
     url: https://www.census.gov/construction/bps/
     cadence: monthly
     adapter: hip.sources.census_permits:PermitsAdapter
+    fallback: >-
+      NJ DCA publishes housing units authorized by permit per municipality (DCA Data
+      Hub, Building Permit Data).
 
   fhfa_hpi:
     name: House Price Index
@@ -89,6 +116,8 @@ sources:
     url: https://www.fhfa.gov/data/hpi
     cadence: quarterly
     adapter: hip.sources.fhfa:HpiAdapter
+    fallback: >-
+      FRED republishes FHFA's New Jersey series (NJSTHPI).
 
   fred:
     name: Federal Reserve Economic Data
@@ -98,6 +127,9 @@ sources:
     homepage: https://fred.stlouisfed.org/
     cadence: monthly
     adapter: hip.sources.fred:FredAdapter
+    fallback: >-
+      Freddie Mac publishes the PMMS history directly (freddiemac.com/pmms,
+      historicalweeklydata.xlsx).
     api_key_env: FRED_API_KEY
     notes: No anonymous access; a key is required for every request.
 
@@ -109,6 +141,8 @@ sources:
     homepage: https://www.bls.gov/lau/
     cadence: monthly
     adapter: hip.sources.bls:BlsAdapter
+    fallback: >-
+      FRED republishes county unemployment rates (e.g. NJATLA2URN).
     api_key_env: BLS_API_KEY
     notes: Anonymous tier works but is rate-limited to 25 queries per day.
 
@@ -120,6 +154,9 @@ sources:
     homepage: https://www.huduser.gov/portal/datasets/usps_crosswalk.html
     cadence: quarterly
     adapter: hip.sources.hud:HudAdapter
+    fallback: >-
+      HUD User publishes the crosswalk and income limits as file downloads
+      (huduser.gov/portal/datasets/usps_crosswalk.html, il.html).
     api_key_env: HUD_API_TOKEN
     notes: >-
       Residential-address ratios for allocating ZIP data, and the income limits housing
@@ -133,6 +170,9 @@ sources:
     homepage: https://www.huduser.gov/portal/datasets/fmr.html
     cadence: annual
     adapter: hip.sources.hud:HudFmrAdapter
+    fallback: >-
+      HUD User publishes Fair Market Rents as file downloads
+      (huduser.gov/portal/datasets/fmr.html).
     api_key_env: HUD_API_TOKEN
     notes: >-
       HUD's gross rent standard per FMR area — a metro area or a nonmetro county — set
@@ -150,6 +190,8 @@ sources:
     homepage: https://www.huduser.gov/portal/datasets/cp.html
     cadence: annual
     adapter: hip.sources.hud:HudChasAdapter
+    fallback: >-
+      HUD User publishes CHAS as bulk downloads (huduser.gov/portal/datasets/cp.html).
     api_key_env: HUD_API_TOKEN
     notes: >-
       HUD's custom tabulation of ACS 5-year microdata: households by tenure, income
@@ -163,6 +205,8 @@ sources:
     url: https://www.irs.gov/statistics/soi-tax-stats-migration-data
     cadence: annual
     adapter: hip.sources.irs_migration:MigrationAdapter
+    fallback: >-
+      No second publisher. Keep the last pair, labelled historical, and ask IRS SOI.
 
   nj_modiv:
     # The Division of Taxation compiles MOD-IV; NJOGIS distributes it and asks every
@@ -173,9 +217,15 @@ sources:
     url: https://njogis-newjersey.opendata.arcgis.com/datasets/102a9bf3c6da4ca3b9b31f831a1e9f72
     cadence: annual
     adapter: hip.sources.nj_modiv:ModivAdapter
+    fallback: >-
+      NJOGIS publishes the same composite as a statewide download (NJGIN Open Data,
+      Parcels and MOD-IV Composite). Its service changes are announced on the NJ
+      Geospatial Forum listserv first.
     notes: >-
       Assessed values are not market values; ratios vary by municipality and
-      revaluation year. Stays in Parquet/DuckDB per ARCHITECTURE #16.
+      revaluation year. Stays in Parquet/DuckDB per ARCHITECTURE #16. Next publication
+      (the 2025 tax year) expected February 2027, per NJOGIS by email on 2026-09-23;
+      no published schedule states it.
 
   nj_sr1a:
     name: SR1A sales file
@@ -184,6 +234,9 @@ sources:
     url: https://www.nj.gov/treasury/taxation/lpt/statdata.shtml
     cadence: annual
     adapter: hip.sources.nj_sr1a:Sr1aAdapter
+    fallback: >-
+      No second publisher. Keep the last archive, labelled historical, and ask the
+      Division of Taxation.
     notes: >-
       Every recorded NJ deed with the state's own usable/non-usable determination for
       sales-ratio purposes. The platform lands 15 of the 663 bytes: the names, street
@@ -200,6 +253,9 @@ sources:
     url: https://www.nj.gov/treasury/taxation/lpt/statdata.shtml
     cadence: annual
     adapter: hip.sources.nj_tax_rates:NjTaxRatesAdapter
+    fallback: >-
+      The Division of Taxation's statistics page carries each year's rates; otherwise
+      keep the last edition, labelled historical.
     notes: >-
       The effective rate is the state's published figure, not one derived here; the
       Director's Ratio is landed beside it as a check rather than as an input. Rates are
@@ -213,4 +269,6 @@ sources:
     url: https://njogis-newjersey.opendata.arcgis.com/
     cadence: annual
     adapter: hip.sources.nj_modiv:ParcelGeometryAdapter
+    fallback: >-
+      Not fetched: the MOD-IV composite carries parcel geometry already.
     notes: Roughly 3.5M parcels statewide; never loaded row-wise into Postgres.

@@ -264,11 +264,12 @@ def prune(
 ) -> dict[str, int]:
     """Delete these regions' stored explanations for `window` from every model not kept.
 
-    `hip explain` never deletes on its own: writing a model's reading replaces that
-    model's previous one, and a model that leaves the preference list keeps its rows —
-    which `/regions/{id}/explanations` goes on serving beside its replacement's. This is
-    the explicit way out, scoped to what the run covers. Returns the rows removed per
-    model, so the run can say exactly what it deleted.
+    Writing a model's reading replaces only that model's previous one, so a model that
+    leaves the preference list would keep its rows — and `/regions/{id}/explanations`
+    would go on serving them beside its replacements'. This removes them, scoped to what
+    the run covers: `hip explain --all` calls it on every run (Milestone 26), and
+    `--prune` does for a run that names its models. Returns the rows removed per model,
+    so the run can say exactly what it deleted.
     """
     if not keep:
         raise ValueError("refusing to prune with nothing to keep")

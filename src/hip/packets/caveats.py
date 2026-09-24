@@ -47,8 +47,10 @@ TEXTS: dict[str, str] = {
         "region and describes the country, not this place."
     ),
     "fhfa_state_only": (
-        "FHFA's house price indexes are published at state level only; no county series "
-        "is available at a reachable URL, so they cannot be compared across counties."
+        "FHFA's house price indexes here are its state-level series. FHFA also publishes "
+        "developmental county and ZIP indexes, which this platform does not yet load, so "
+        "these figures describe New Jersey as a whole and cannot be compared across "
+        "counties."
     ),
     "hud_fmr_area": (
         "Fair Market Rents are HUD's rent standard for a whole FMR area, set once per "
@@ -64,10 +66,16 @@ TEXTS: dict[str, str] = {
         "time and describe earlier years than the newest ACS figures beside them."
     ),
     "modiv_tax_bill": (
-        "The property tax bill is the median of last year's total tax across one- to "
-        "four-family homes in MOD-IV, New Jersey's assessment records. It is the bill as "
-        "levied, before relief paid to individual households such as ANCHOR, and it "
-        "follows each municipality's own assessments rather than a rate on market value."
+        "The property tax bill is the median total tax across one- to four-family homes "
+        "in MOD-IV, New Jersey's assessment records, for the tax year its period names — "
+        "the year NJOGIS last joined its parcel map to. It is the bill as levied, before "
+        "relief paid to individual households such as ANCHOR, and it follows each "
+        "municipality's own assessments rather than a rate on market value."
+    ),
+    "irs_matching_2023": (
+        "IRS migration counts from the 2022-2023 pair onward match returns across years "
+        "by an updated method that includes about 5 percent more returns, so a change "
+        "spanning 2022-2023 is partly the method rather than more people moving."
     ),
     "permits_volatile": (
         "Permit counts are small numbers below county level, so a large percentage "
@@ -186,8 +194,9 @@ def scoped_caveats(
         add("zori_sparse", rent)
     if "permits_total_units" in present and level in {"municipality", "zip", "tract"}:
         add("permits_volatile", {"permits_total_units"})
-    if "mortgage_rate_30y" in present:
-        add("national_series", {"mortgage_rate_30y"})
+    rates = present & {"mortgage_rate_30y", "mortgage_rate_30y_weekly"}
+    if rates:
+        add("national_series", rates)
     fhfa = present & {"fhfa_hpi", "fhfa_hpi_all_transactions"}
     if fhfa:
         add("fhfa_state_only", fhfa)
@@ -200,6 +209,8 @@ def scoped_caveats(
         add("chas_one_vintage", present & CHAS_METRICS)
     if "modiv_median_tax_bill" in present:
         add("modiv_tax_bill", {"modiv_median_tax_bill"})
+    if "net_migration_returns" in present:
+        add("irs_matching_2023", {"net_migration_returns"})
 
     if level == "zip":
         text = TEXTS["zip_allocated"]

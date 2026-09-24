@@ -121,11 +121,24 @@ select
     metric_id,
     geoid,
     level,
-    -- A snapshot, not a span: start and end are the same published date. Change
-    -- metrics need two observations and MOD-IV publishes one composite, which is why
-    -- these metrics are ranked by value rather than by change.
+    -- The tax year NJOGIS joined the composite to (Milestone 26), read from its
+    -- metadata at acquisition. Every value here is that year's: assessments, class,
+    -- and `LAST_YR_TX`, which equals each parcel's assessed value times its town's
+    -- general rate for that year. Until 2026-09-23 these were dated by `PCL_PBDATE`,
+    -- when a county last republished its parcel *shapes* — so a 2024 tax bill read
+    -- "Jun 2026" in one town and "Oct 2023" in another. Parcel shapes republished
+    -- after the join change a lot's acreage slightly and nothing else.
+    --
+    -- Without a recorded tax year (discovery has never run) the publication date
+    -- stands, which is how this was dated before. Change metrics need two tax years;
+    -- until a second is loaded these are ranked by value rather than by change.
+    {% if var('modiv_tax_year', none) %}
+    make_date({{ var('modiv_tax_year') }}, 1, 1) as period_start,
+    make_date({{ var('modiv_tax_year') }}, 12, 31) as period_end,
+    {% else %}
     published as period_start,
     published as period_end,
+    {% endif %}
     value::double as value,
     'nj_cd_code' as match_method,
     -- One statewide composite is all the publisher offers (see the adapter).

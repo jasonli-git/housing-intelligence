@@ -21,10 +21,18 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
-from hip.sources.base import Release, ReleaseRef, SourceAdapter, SourceError, redact
+from hip.sources.base import (
+    Discovery,
+    Release,
+    ReleaseRef,
+    SourceAdapter,
+    SourceError,
+    redact,
+    write_discovery,
+)
 
 
 @dataclass(frozen=True)
@@ -48,6 +56,26 @@ class AcquireReport:
 
     releases: list[Release] = field(default_factory=list)
     failures: list[RefFailure] = field(default_factory=list)
+    discoveries: list[Discovery] = field(default_factory=list)
+
+    def add(self, outcome: Release | RefFailure | Discovery) -> None:
+        """File one outcome of `acquire` under its kind."""
+        if isinstance(outcome, RefFailure):
+            self.failures.append(outcome)
+        elif isinstance(outcome, Discovery):
+            self.discoveries.append(outcome)
+        else:
+            self.releases.append(outcome)
+
+    @property
+    def undiscovered(self) -> list[Discovery]:
+        """Sources whose publisher could not be asked for a newer release.
+
+        The recorded release still stands, so the run can complete — but "we could not
+        ask" is not "there is nothing newer", and the run is partial, as it is for an
+        unreachable revalidation.
+        """
+        return [d for d in self.discoveries if d.outcome == "unreachable"]
 
     @property
     def fetched(self) -> list[Release]:
@@ -95,7 +123,7 @@ class AcquireReport:
     @property
     def ok(self) -> bool:
         """Nothing failed, and nothing was left in an unknown state."""
-        return not self.failures and not self.unreachable
+        return not self.failures and not self.unreachable and not self.undiscovered
 
 
 def acquire(
@@ -104,7 +132,8 @@ def acquire(
     raw_dir: Path,
     vintage: str | None = None,
     force: bool = False,
-) -> Iterator[tuple[SourceAdapter, Release | RefFailure]]:
+    today: date | None = None,
+) -> Iterator[tuple[SourceAdapter, Release | RefFailure | Discovery]]:
     """Fetch every ref of every adapter, yielding each outcome as it happens.
 
     Yields rather than returning so a caller can print progress against a 245MB
@@ -113,8 +142,26 @@ def acquire(
     Both loops are guarded. `refs()` is not always pure — `HudChasAdapter` derives its
     municipal refs from a release it fetches — so a publisher can fail before a single
     ref exists, and that must be reported as a failure rather than raised.
+
+    **Discovery comes first** (Milestone 26). A source with dated releases is asked for
+    anything newer than it has recorded; the answer is written beside the cache and set
+    on the adapter, so the refs that follow — and every later stage, which reads the
+    record — use it. Skipped when a vintage is named, because naming one is asking for
+    exactly that release.
     """
+    today = today or datetime.now(UTC).date()
     for adapter in adapters:
+        if vintage is None:
+            try:
+                discovery = adapter.discover(today)
+            except (SourceError, OSError, ValueError) as exc:
+                yield adapter, RefFailure.of(adapter.source_id, "discover()", exc)
+                discovery = None
+            if discovery is not None:
+                write_discovery(raw_dir, discovery)
+                if discovery.outcome == "confirmed":
+                    adapter.newest = discovery.newest
+                yield adapter, discovery
         try:
             refs = adapter.refs(vintage)
         except (SourceError, OSError) as exc:
@@ -147,15 +194,12 @@ def acquire(
 
 
 def collect(
-    outcomes: Iterable[tuple[SourceAdapter, Release | RefFailure]],
+    outcomes: Iterable[tuple[SourceAdapter, Release | RefFailure | Discovery]],
 ) -> AcquireReport:
     """Drain `acquire` into a report. Separate so a caller can print as it drains."""
     report = AcquireReport()
     for _, outcome in outcomes:
-        if isinstance(outcome, RefFailure):
-            report.failures.append(outcome)
-        else:
-            report.releases.append(outcome)
+        report.add(outcome)
     return report
 
 
@@ -193,7 +237,7 @@ def exit_code(report: AcquireReport, *, pipeline_ran: bool, pipeline_ok: bool) -
     """
     if pipeline_ran and not pipeline_ok:
         return EXIT_FAILED
-    if report.failures or report.unreachable:
+    if report.failures or report.unreachable or report.undiscovered:
         # An unreachable publisher is partial, not clean. The cached bytes were served,
         # which is right, but nobody knows whether they are current — and a run that
         # reports 0 for that is how an outage becomes invisible.

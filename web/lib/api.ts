@@ -487,34 +487,46 @@ export async function regionsWithData(): Promise<Region[]> {
   }
 }
 
-let nationalRates: Promise<Observation[] | null> | null = null;
+const nationalRates = new Map<string, Promise<Observation[] | null>>();
 
 /**
- * The national 30-year mortgage rate's readings, fetched once per build worker rather
- * than once per page: it is one series for the whole country, and every region page and
- * the affordability page asking for it would be thousands of requests for one series.
+ * One of the national 30-year mortgage rate's series, fetched once per build worker
+ * rather than once per page: it is one series for the whole country, and every region
+ * page and the affordability page asking for it would be thousands of requests.
  */
-function nationalRateSeries(): Promise<Observation[] | null> {
-  nationalRates ??= (async () => {
-    const nation = (await api.regions("level=nation&limit=1"))?.items[0];
-    if (!nation) return null;
-    return (
-      (await api.observations(nation.region_id, "mortgage_rate_30y"))
-        ?.observations ?? null
-    );
-  })();
-  return nationalRates;
+function nationalRateSeries(metricId: string): Promise<Observation[] | null> {
+  let series = nationalRates.get(metricId);
+  if (!series) {
+    series = (async () => {
+      const nation = (await api.regions("level=nation&limit=1"))?.items[0];
+      if (!nation) return null;
+      return (await api.observations(nation.region_id, metricId))?.observations ?? null;
+    })();
+    nationalRates.set(metricId, series);
+  }
+  return series;
 }
 
-/** The latest national 30-year mortgage rate. */
+/**
+ * Today's national 30-year rate: Freddie Mac's latest weekly benchmark (Milestone 26).
+ *
+ * The monthly average was used until then, which priced September 2026's cards at
+ * August's 6.67% while that week's benchmark was 6.95%. Falls back to the monthly
+ * series only where no weekly reading has been loaded, so a warehouse built before the
+ * weekly series existed still prices a card rather than printing none.
+ */
 export async function nationalMortgageRate(): Promise<{
   value: number;
   period_start: string;
+  metric_id: string;
 } | null> {
-  const latest = (await nationalRateSeries())?.at(-1);
-  return latest
-    ? { value: latest.value, period_start: latest.period_start }
-    : null;
+  for (const metricId of ["mortgage_rate_30y_weekly", "mortgage_rate_30y"]) {
+    const latest = (await nationalRateSeries(metricId))?.at(-1);
+    if (latest) {
+      return { value: latest.value, period_start: latest.period_start, metric_id: metricId };
+    }
+  }
+  return null;
 }
 
 /**
@@ -524,7 +536,7 @@ export async function nationalMortgageRate(): Promise<{
 export async function nationalMortgageRateIn(
   month: string,
 ): Promise<{ value: number; period_start: string } | null> {
-  const reading = (await nationalRateSeries())?.find(
+  const reading = (await nationalRateSeries("mortgage_rate_30y"))?.find(
     (o) => o.period_start.slice(0, 7) === month,
   );
   return reading

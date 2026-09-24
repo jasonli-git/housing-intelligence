@@ -278,12 +278,13 @@ def test_fmr_is_one_release_per_state_and_fiscal_year(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """`statedata` answers every county at once: ten calls, not 210."""
-    from hip.sources.hud import FMR_YEARS, HudFmrAdapter
+    from hip.sources.hud import FMR_FLOOR, FMR_YEAR_COUNT, HudFmrAdapter
 
     _hud(monkeypatch)
     refs = HudFmrAdapter(states=["NJ"]).refs()
 
-    assert [r.vintage for r in refs] == [str(y) for y in FMR_YEARS]
+    expected = range(FMR_FLOOR, FMR_FLOOR - FMR_YEAR_COUNT, -1)
+    assert [r.vintage for r in refs] == [str(y) for y in expected]
     assert refs[0].url.endswith("/fmr/statedata/NJ?year=2026")
     assert len({r.key for r in refs}) == len(refs)
     assert "2016" not in {r.vintage for r in refs}, "the API refuses FY2016"
@@ -611,3 +612,17 @@ def test_a_rate_limited_download_waits_before_retrying(
 
     assert adapter.downloads == 2
     assert slept == [60.0], "no Retry-After, so the whole minute"
+
+
+def test_fred_asks_for_the_weekly_benchmark_and_the_monthly_history(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two windows of one series: the week that prices today, the months behind it."""
+    from hip.sources.fred import FredAdapter
+
+    monkeypatch.setenv("FRED_API_KEY", "k")
+    refs = {r.layer: r.url for r in FredAdapter().refs()}
+
+    assert "frequency=m" in refs["MORTGAGE30US"], "history stays monthly"
+    assert "frequency" not in refs["MORTGAGE30US_weekly"], "the series' own, weekly"
+    assert all("series_id=MORTGAGE30US&" in url for url in refs.values())

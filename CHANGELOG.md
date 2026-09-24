@@ -3,6 +3,68 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.22.0] — 2026-09-23
+
+**Milestone 26 — current releases.** Each dated source finds its own newest release,
+instead of waiting for someone to bump a constant.
+
+### Added
+
+- **Release discovery.** Acquisition asks each dated publisher for anything newer than
+  the release on record (`SourceAdapter.discover`) and writes the answer to
+  `data/raw/<source>/releases.json`, which later stages read without probing. The first
+  run found BLS data through July 2026, the 2025 Building Permits file, IRS migration for
+  2022–23, and HUD income limits for FY2025 and FY2026. None had been requested, because
+  each newest year was a hard-coded constant (ARCHITECTURE #206). If a publisher can't be
+  reached, the release on record stands and the refresh is marked partial.
+- **Pending releases.** A release published before it takes effect is recorded as
+  pending, with its start date: HUD's FY2027 Fair Market Rents are held until 2026-10-01.
+- **Freddie Mac's weekly 30-year benchmark**, `mortgage_rate_30y_weekly`, fetched from
+  FRED at its native frequency. The cost card now uses it: 6.95% for the week of
+  2026-09-17, replacing the monthly figure of 6.67% (ARCHITECTURE #207).
+- **A fallback for every source** in `config/sources.yml`, required by
+  `hip check-config`. README also gains a procedure for the day a source stops answering
+  (ARCHITECTURE #211). Internal only.
+- A packet caveat on IRS migration's 2022–23 matching change, which counts about 5% more
+  returns than the method before it.
+
+### Changed
+
+- **MOD-IV figures are dated by their tax year**, 2024, which is read from NJOGIS's
+  metadata. They were dated by the day a county last republished its parcel shapes.
+  Migration 0014 removes the 4,067 figures with the old dates, and they reload with the
+  corrected ones (ARCHITECTURE #208).
+- **A month in progress ends on its last observed week.** September 2026's monthly
+  mortgage rate now covers 1–17 September, not the whole month.
+- **Qwen 3.7 Plus leaves the preference list** because its free quota is spent. It
+  stays a benchmarked candidate.
+- `hip explain --all` now retires readings from any model no longer on the list, so
+  Qwen's readings go at the next regeneration. `--model` runs still need `--prune`
+  (ARCHITECTURE #213).
+
+### Fixed
+
+- **A cached release answered a request it had not been fetched with.** Discovery moved
+  BLS's request to end at 2026, but the cache is keyed by release, not by request. It
+  served the copy fetched three days earlier, and the refresh loaded no 2026 figures. A
+  cached copy now answers only its own request (ARCHITECTURE #214).
+- **FHFA's caveat and glossary said no county index was reachable.** One is: all 21
+  counties from 1975 to 2025 (ARCHITECTURE #210). The figures shown are still the state
+  series.
+- The tax-bill definition and caveat now name the tax year.
+- Two ARCHITECTURE records corrected: SR1A's archive year runs July to June (#209), and
+  the old MOD-IV layer was retired, not put behind a token (#212).
+
+### Not in this release
+
+- Any change to Gemma 4 E4B, the local model. The milestone's models section measured it
+  instead (ARCHITECTURE #215). LM Studio and the project already share one copy of it;
+  every MLX build is larger than the file in use; and a run of the 15 standard scenarios
+  swapped out 184MB. Capping Docker Desktop's memory at 4GB brought swap down about
+  0.9GB, so the planned memory trims were dropped and the project stays on Ollama.
+- The county explanations are out of date against this refresh until they are
+  regenerated. Regeneration is billed and is the owner's call.
+
 ## [0.21.4] — 2026-09-22
 
 ### Fixed

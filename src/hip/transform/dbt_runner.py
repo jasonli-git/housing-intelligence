@@ -87,7 +87,19 @@ def dbt_vars(
         # `regions` keys on. FHFA is the only one today.
         "state_fips_pairs": [[s, fips_for(s)] for s in scope.states],
         "zillow_vintage": vintage,
+        # The MOD-IV tax year acquisition read from NJOGIS's metadata (Milestone 26).
+        # None before discovery has run, when staging keeps the parcel-publication date.
+        "modiv_tax_year": _modiv_tax_year(settings.raw_dir),
     }
+
+
+def _modiv_tax_year(raw_dir: Path) -> int | None:
+    from hip.sources.base import read_discovery
+
+    recorded = read_discovery(raw_dir, "nj_modiv")
+    if recorded is None or not recorded.newest.isdigit():
+        return None
+    return int(recorded.newest)
 
 
 def run_dbt(

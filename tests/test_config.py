@@ -28,6 +28,7 @@ sources:
     url: ${DEMO_URL:-https://example.invalid}
     cadence: annual
     adapter: hip.sources.demo:Adapter
+    fallback: Keep the last release, labelled historical.
 """
 
 MINIMAL_METRICS = """
@@ -250,3 +251,14 @@ def test_storage_tiers_follow_data_dir(tmp_path: Path) -> None:
         settings.packets_dir,
     ):
         assert str(path).startswith(str(tmp_path / "d"))
+
+
+def test_a_source_without_a_fallback_is_refused(tmp_path: Path) -> None:
+    """Every source says what to do the day it stops answering (Milestone 26)."""
+    no_fallback = MINIMAL_SOURCES.replace(
+        "    fallback: Keep the last release, labelled historical.\n", ""
+    )
+    config_dir = _write(tmp_path, no_fallback, MINIMAL_METRICS, MINIMAL_GEOGRAPHY)
+
+    with pytest.raises(ConfigError, match="fallback"):
+        load_sources(config_dir)

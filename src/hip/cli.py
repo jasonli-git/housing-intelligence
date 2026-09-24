@@ -64,7 +64,7 @@ from hip.packets import (
 )
 from hip.publish import publish as run_publish
 from hip.refresh import AcquireReport
-from hip.sources.base import Release, SourceAdapter, SourceError, redact
+from hip.sources.base import Discovery, Release, SourceAdapter, SourceError, redact
 from hip.sources.registry import (
     IMPLEMENTED,
     METRIC_SOURCES,
@@ -265,12 +265,34 @@ def _cached_releases(
 def _adapters(source: str | None) -> list[SourceAdapter]:
     """Resolve --source to adapters, defaulting to everything implemented."""
     scope = load_geography()
+    raw_dir = get_settings().raw_dir
     names = [source] if source else list(IMPLEMENTED)
     try:
-        return [build_adapter(name, scope) for name in names]
+        return [build_adapter(name, scope, raw_dir=raw_dir) for name in names]
     except UnknownSourceError as exc:
         typer.secho(str(exc), fg=typer.colors.YELLOW, err=True)
         raise typer.Exit(code=1) from exc
+
+
+def _echo_discovery(discovery: Discovery) -> None:
+    """One line per source that was asked for a newer release."""
+    if discovery.outcome == "unreachable":
+        typer.secho(
+            f"{discovery.source_id:<14} {'newest':<18} unreachable  could not ask; "
+            f"keeping {discovery.newest}",
+            fg=typer.colors.YELLOW,
+            err=True,
+        )
+        return
+    line = f"{discovery.source_id:<14} {'newest':<18} {discovery.newest}"
+    if discovery.pending:
+        when = (
+            f"from {discovery.pending_from.isoformat()}"
+            if discovery.pending_from
+            else f"until {discovery.pending_reason}"
+        )
+        line += f"; {discovery.pending} waits {when}"
+    typer.echo(line)
 
 
 @app.command()
@@ -297,6 +319,10 @@ def acquire(
     for adapter, outcome in refresh.acquire(
         _adapters(source), raw_dir=settings.raw_dir, vintage=vintage, force=force
     ):
+        if isinstance(outcome, Discovery):
+            report.discoveries.append(outcome)
+            _echo_discovery(outcome)
+            continue
         if isinstance(outcome, refresh.RefFailure):
             report.failures.append(outcome)
             typer.secho(
@@ -325,7 +351,7 @@ def acquire(
     typer.echo(
         f"{len(report.revalidated):>4} unchanged   {len(report.fetched):>4} fetched   "
         f"{len(report.unchecked):>4} not checked   "
-        f"{len(report.unreachable):>4} unreachable"
+        f"{len(report.unreachable) + len(report.undiscovered):>4} unreachable"
     )
     typer.secho(f"{report.total_bytes / 1e6:.1f} MB in data/raw/", fg=typer.colors.GREEN)
     if report.failures:
@@ -437,20 +463,21 @@ def refresh_command(
 
     report = AcquireReport()
     for _, outcome in refresh.acquire(adapters, raw_dir=settings.raw_dir, force=force):
+        report.add(outcome)
         if isinstance(outcome, refresh.RefFailure):
-            report.failures.append(outcome)
             typer.secho(
                 f"  failed   {outcome.source_id}/{outcome.key}: {outcome.error}",
                 fg=typer.colors.YELLOW,
                 err=True,
             )
-        else:
-            report.releases.append(outcome)
+        elif isinstance(outcome, Discovery):
+            _echo_discovery(outcome)
 
     typer.echo(
         f"{len(report.fetched):>4} fetched   {len(report.revalidated):>4} unchanged   "
         f"{len(report.unchecked):>4} not checked   "
-        f"{len(report.unreachable):>4} unreachable   {len(report.failures):>4} failed"
+        f"{len(report.unreachable) + len(report.undiscovered):>4} unreachable   "
+        f"{len(report.failures):>4} failed"
     )
 
     # What is on disk now, against what the warehouse was last built from. Not "did we
@@ -895,7 +922,9 @@ def load(
                 cadence=definition.cadence,
             )
         )
-        metric_adapter: SourceAdapter = build_adapter(source_id, scope)
+        metric_adapter: SourceAdapter = build_adapter(
+            source_id, scope, raw_dir=settings.raw_dir
+        )
         with duckdb_session() as con:
             fact_provenance += [
                 ReleaseProvenance(
@@ -1094,8 +1123,8 @@ def explain(
             "--prune",
             help="After generating, delete the covered regions' stored explanations "
             "from models that are neither on the preference list nor named in this run, "
-            "and list what was deleted. Without it, a model that leaves the list keeps "
-            "its readings on the site.",
+            "and list what was deleted. Implied by --all, which regenerates the whole "
+            "list and so retires any model that has left it.",
         ),
     ] = False,
 ) -> None:

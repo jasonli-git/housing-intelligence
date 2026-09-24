@@ -13,40 +13,38 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.21.4, 2026-09-22. Versions 1 and 2 complete; nothing in progress.**
+> **Status — v0.22.0, 2026-09-23. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, housing, economic context, property
 > tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
-> parcels, 1.4M deeds, and 410,587 observations across 37 metrics from 16 public sources
-> spanning 1971 to 2026, plus 38,226 computed changes and 53,714 rankings. Every source
-> is asked on each refresh whether anything has moved, and a figure that changes is
-> recorded rather than overwritten — 313,536 such revisions so far. Every value carries
-> its source file and match method. All eight pipeline stages run. The site publishes
-> itself — 5,955 static artifacts and 2,276 pre-rendered pages, served with no database
-> and no application server — across four page types: the state, 1,135 region pages,
-> their reports, and an affordability workspace, reachable in place from the state and
-> county pages or at its own address.
+> parcels, 1.4M deeds, and 414,359 observations across 38 metrics from 16 public sources
+> spanning 1971 to 2026, plus 38,270 computed changes and 53,753 rankings. On each
+> refresh, every source is asked whether anything has moved and every dated source
+> whether a newer release exists. A figure that changes is recorded rather than
+> overwritten: 313,536 such revisions so far. Every value carries its source file and
+> match method. All eight pipeline stages run. The site publishes itself — 5,955 static
+> artifacts and 2,276 pre-rendered pages, served with no database and no application
+> server — across four page types: the state, 1,135 region pages, their reports, and an
+> affordability workspace, reachable in place from the state and county pages or at its
+> own address.
 >
-> **Latest.** The New Jersey landing page and map explorer were redesigned on
-> 2026-09-22: the homepage, county pages, and `/afford` now share one URL-backed
-> affordability workspace and one profile/map primitive, with a review round fixing five
-> regressions — including a dropped cost-quote disclosure and a broken masthead link —
-> before merge. A same-day follow-up fixed the masthead's tools colliding on a phone.
-> Before that, Milestone 29 shipped on 2026-09-20: the platform now asks each publisher
-> whether anything has moved instead of answering from its own cache forever. It found
-> that the deployed site was a Zillow release behind, that MOD-IV had gone behind a
-> token, and that Zillow had restated 294,469 of its own published figures — all of
-> which had been invisible. Interpretation is a measured layer, not a claim: seventeen
-> models have been evaluated against standardized scenarios, five write every county's
-> readings side by side, and since Milestone 13 any figure the packet does not carry is
-> refused before it is stored.
+> **Latest.** Milestone 26 shipped on 2026-09-23: each dated source now finds its own
+> newest release instead of waiting for someone to bump a constant. Its first run loaded
+> figures published months earlier and never requested: BLS unemployment through July
+> 2026, the 2025 building permits, IRS migration for 2022–23, and HUD income limits for
+> FY2025 and FY2026. The cost card is priced at Freddie Mac's weekly benchmark (6.95%
+> for the week of 2026-09-17, where the monthly figure had read 6.67%). MOD-IV figures
+> are dated by their tax year, and every source records a fallback. The New Jersey
+> landing page and map explorer were redesigned the day before. Interpretation is a
+> measured layer, not a claim: seventeen models have been evaluated against standardized
+> scenarios, and every county page shows their readings side by side, five now and four
+> after the next regeneration retires Qwen 3.7 Plus. Since Milestone 13, any figure the
+> packet does not carry is refused before it is stored.
 >
-> **Next.** The roadmap was restructured on 2026-09-23 around current, complete data:
-> Version 3 now covers release freshness, a refresh that reaches the site, survey
-> uncertainty, the full cost of owning, and new public sources from flood risk to
-> evictions, and Version 4 holds anything modelled. Next is Milestone 26, current
-> releases. See [ROADMAP.md](ROADMAP.md) for what is planned and
-> [CHANGELOG.md](CHANGELOG.md) for what shipped.
+> **Next.** Milestone 27: `hip refresh` carries a refresh through to the published site,
+> within limits its first task decides — where it runs, and what may run without asking.
+> See [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md) for
+> what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
@@ -202,6 +200,17 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   that MOD-IV had gone behind a token and kept going. And a published figure that
   changes is now recorded in `fact_revision` instead of silently overwritten: that first
   run caught **313,536** revisions, 294,469 of them Zillow restating its own history.
+- **It finds new releases on its own** (M26, built) — Milestone 29 asked whether a file
+  had changed, but nothing asked whether a *newer* one existed: each dated source's
+  newest year was a constant someone had to bump. By 2026-09-23 that had left BLS
+  unemployment through July 2026, the 2025 building permits, IRS migration for 2022–23
+  and two years of HUD income limits unrequested for months. Each dated source now
+  discovers its newest release at acquisition and records it in
+  `data/raw/<source>/releases.json`, and a release published before it takes effect —
+  HUD's FY2027 Fair Market Rents — waits for its start date. The cost card is priced at
+  Freddie Mac's weekly 30-year benchmark instead of a monthly average, MOD-IV figures
+  carry the tax year they describe, and every source in `config/sources.yml` names a
+  fallback for the day it stops answering.
 - **What buyers actually paid, and the tax rate you can compare** (M25, built) — two
   New Jersey sources the platform had never read. `nj_sr1a` is the state's SR1A Sales
   File: 1.4M recorded deeds carrying the Division of Taxation's own usable/non-usable
@@ -221,7 +230,8 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   5-year survey average and the denominator of every computed ratio. Mercer County reads
   385,864 from ACS 2020–2024 and 399,289 from PEP Vintage 2025 — two honest answers to
   two different questions, and a test stops a ratio being computed over one of each.
-  ACS vintages now follow `ACS_END_YEAR` rather than a list hard-coded since Milestone 3.
+  ACS vintages now follow `ACS_END_YEAR` — since M26 the floor under the newest vintage
+  discovered — rather than a list hard-coded since Milestone 3.
 - **Published as static files** (M11, built) — `hip publish` replays the API's own ASGI
   app and records its answers as 5,917 static artifacts; the dashboard pre-renders 2,272
   pages. Production runs with no database and no application server. Replaying the app
@@ -234,9 +244,10 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
 - **Substitution detection** (M22, built) — a provider answering with a different model
   than the one requested is caught at runtime and recorded, since not every provider
   offers a pinnable checkpoint.
-- **Five models reading the same packet** (M19, built) — every county page carries five
-  interpretations side by side, switchable by the reader, each labeled with the model
-  that wrote it. The reachable subset of bring-your-own-model comparison, since
+- **Several models reading the same packet** (M19, built) — every county page carries
+  one interpretation per listed model side by side, switchable by the reader, each
+  labeled with the model that wrote it: five today, and four once the next regeneration
+  retires Qwen 3.7 Plus's, which left the list in Milestone 26. The reachable subset of bring-your-own-model comparison, since
   pre-generated explanations need no server.
 - **Reasoning effort as a measured variable** (M20, built) — effort is configured per
   candidate and recorded with every generation, so a model's cost and quality are
@@ -393,7 +404,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 468 Python + 197 dashboard tests; API tests skip without a warehouse
+make test          # 571 Python + 215 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -452,8 +463,13 @@ run one model at a time because two do not fit in 16GB; hosted cohorts fan out, 
 the reason hosted inference is on the roadmap at all.
 
 **Keeping it current.** `make refresh` asks every publisher whether anything has moved
-and rebuilds only if something did. A ref whose vintage names one release — ACS 2024,
-SR1A's closed years — is answered from disk without a request. A ref whose vintage is
+and rebuilds only if something did. It first asks each source with dated releases
+whether a **newer** one exists — the next year's permits file, the next HUD fiscal year,
+the next ACS vintage — and records the answer beside the cache, so nothing waits for
+someone to bump a constant (Milestone 26). A release published but not yet in force, such
+as next fiscal year's Fair Market Rents before 1 October, is reported and held. A ref
+whose vintage names one release — ACS 2024, SR1A's closed years — is answered from disk
+without a request. A ref whose vintage is
 `current` or a year-to-date file is revalidated with `If-Modified-Since` / `If-None-Match`,
 and a 304 is a cache hit, so a run where nothing moved costs a handful of conditional
 requests and a few seconds rather than re-downloading 245MB. Publishers that send no
@@ -482,6 +498,23 @@ that completed with one publisher down and a run whose pipeline broke both arriv
 `make refresh` is for running it by hand. `make prune-raw` shows which superseded downloads are
 safe to delete and needs `--apply` to do it, because a cadence makes `data/raw/` grow
 without bound: one refresh took it from 264MB of superseded copies to 511MB.
+
+**When a source stops answering.** A refresh exits **3** and names it — `failed` or
+`unreachable` in the output. Then:
+
+1. **Wait a day.** Most outages are the publisher's and pass; the cached release keeps
+   being served, and the site stays consistent.
+2. **If it persists, or the answer changed shape** — a 404 where a file was, a login
+   where there was none, a renamed sheet — read the source's `fallback` in
+   `config/sources.yml`. Every source has one; `hip check-config` refuses a source
+   without.
+3. **Take the fallback route if it carries the same data**, compare one release against
+   what is cached, and switch the adapter. Record why in ARCHITECTURE.md, as #191 did for
+   MOD-IV.
+4. **If there is no route, keep the last release** and say so: it stays cited as what it
+   is, and is labelled historical rather than presented as current.
+5. **Check the publisher's own notice channel** where there is one — NJOGIS announces
+   service changes on the NJ Geospatial Forum listserv before making them.
 
 `make` on its own lists every target. With the warehouse down, the API and dashboard
 still run and report the degraded state rather than failing.
@@ -542,7 +575,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.21.4 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.22.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -559,12 +592,13 @@ Northeast and to every US county was deferred past Version 2 on 2026-09-07.
 Version 3 began as depth on what is already held. On 2026-09-23 it absorbed Version 4
 and the Director Note on accessible, comprehensive and current housing data, and became
 the version that makes the platform current, as complete as public data allows, and
-honest about both. Three of its milestones have shipped — **24** fresher figures, **25**
-recorded sale prices and a comparable tax rate, **29** scheduled refresh, brought forward
-out of order once the site was public and had started to decay. **26** through **50**
-remain, with the map's and the completeness standing checks; Version 4 holds nowcasts, a
-local price model study and forecasting. Between milestones, the New Jersey landing page
-and region pages were redesigned (0.21.1 and 0.21.3).
+honest about both. Four of its milestones have shipped — **24** fresher figures, **25**
+recorded sale prices and a comparable tax rate, **26** current releases, and **29**
+scheduled refresh, brought forward out of order once the site was public and had
+started to decay. **27** and **28**, and **30** through **50**, remain, with the map's
+and the completeness standing checks; Version 4 holds nowcasts, a local price model study
+and forecasting. Between milestones, the New Jersey landing page and region pages were
+redesigned (0.21.1 and 0.21.3).
 
 The notes below are a running commentary on individual milestones rather than a complete
 list; [CHANGELOG.md](CHANGELOG.md) is the full record and [ROADMAP.md](ROADMAP.md) has

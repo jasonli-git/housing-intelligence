@@ -89,7 +89,7 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     why: "Owners can be squeezed too; this shows how many are stretched by what they pay.",
   },
   modiv_median_tax_bill: {
-    what: "What the middle one- to four-family home paid in property tax last year, before any relief a household may claim.",
+    what: "What the middle one- to four-family home paid in property tax in the tax year shown, before any relief a household may claim.",
     why: "New Jersey’s property taxes are among the highest in the country, so this can matter as much as the price.",
   },
   nj_effective_tax_rate: {
@@ -105,8 +105,12 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     why: "It shows how out of date a town\u2019s assessments are: the further from 100, the longer since it revalued.",
   },
   mortgage_rate_30y: {
-    what: "The average interest rate on a 30-year fixed-rate home loan across the country, from Freddie Mac’s weekly survey, averaged by month.",
+    what: "The average interest rate on a 30-year fixed-rate home loan across the country, from Freddie Mac’s weekly survey, averaged by month. A month still in progress covers only the weeks reported so far.",
     why: "It sets the monthly payment: on the same house, a higher rate can add hundreds of dollars a month.",
+  },
+  mortgage_rate_30y_weekly: {
+    what: "This week’s national benchmark for a 30-year fixed-rate home loan, from Freddie Mac’s weekly survey of lenders. A benchmark, not a rate any one borrower is offered.",
+    why: "It is the rate a mortgage is priced at today; the monthly averages show how it got here.",
   },
 
   // Incomes and jobs
