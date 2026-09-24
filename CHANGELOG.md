@@ -62,8 +62,14 @@ instead of waiting for someone to bump a constant.
   every MLX build is larger than the file in use; and a run of the 15 standard scenarios
   swapped out 184MB. Capping Docker Desktop's memory at 4GB brought swap down about
   0.9GB, so the planned memory trims were dropped and the project stays on Ollama.
-- The county explanations are out of date against this refresh until they are
-  regenerated. Regeneration is billed and is the owner's call.
+
+### Regenerated
+
+- All 84 county explanations, 21 each from `gemini-3.7-flash-low`,
+  `deepseek-flash-nothink`, `gemini-3.1-flash-lite` and the local `gemma-4-e4b-q4`,
+  after the merge on 2026-09-23. Every packet had changed with the new releases.
+  `hip explain --all` retired `qwen3.7-plus`'s 21 readings, so each county page now
+  carries four. No model was skipped.
 
 ## [0.21.4] — 2026-09-22
 

@@ -8,12 +8,12 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — Milestone 26 in review (2026-09-23)
+## Now — between milestones (2026-09-23)
 
-Branch `milestone/m26-current-releases`, in a pull request into `main` awaiting the
-owner's review. What it shipped is in CHANGELOG 0.22.0 and its decisions are ARCHITECTURE
-#206–#215. Nothing else starts until the merge is approved; after it comes Milestone 27,
-whose first task decides where a refresh runs and what it may do unattended.
+Milestone 26 merged and deployed on 2026-09-23, with every county's readings regenerated;
+what it shipped is in CHANGELOG 0.22.0. Milestone 27 is next and has not started: its
+first task decides where a refresh runs and what it may do unattended, and it begins on
+the owner's go-ahead.
 
 **To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
@@ -413,12 +413,6 @@ first raised, not where it must be done.
       map layer would be an enormous download.
 
 ## Parked / needs user input
-
-- [ ] **Regenerating the county readings is the owner's call.** All 105 — five models ×
-      21 counties — are stale against Milestone 26's refresh, because every county
-      packet changed (checked 2026-09-23 with `still_describes`). A regeneration is
-      billed, and `hip explain --all` would also retire Qwen 3.7 Plus's 21 readings
-      (#213), leaving 84. Not run, because it spends money.
 
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.

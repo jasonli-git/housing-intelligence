@@ -18,9 +18,9 @@ scope; this document does not restate it.
 > against `schemas/packet-v1.json`. The API and a three-page dashboard are published as
 > static files, with no database and no application server in production (#67, #68).
 > Interpretation is written by hosted models behind a preference list that ends at a
-> local one (#78, #96, #118): 105 explanations, five models' readings of each of the 21
-> counties (#91) — four from the next regeneration, which retires Qwen 3.7 Plus's
-> (#213) — chosen by evaluation runs `v1`, `v2` and `v3`, with reasoning effort part of
+> local one (#78, #96, #118): 84 explanations, four models' readings of each of the 21
+> counties (#91) since Qwen 3.7 Plus's were retired on 2026-09-23 (#213), chosen by
+> evaluation runs `v1`, `v2` and `v3`, with reasoning effort part of
 > each candidate's configuration since Milestone 20 (#98). Since Milestone 13 every
 > figure in new prose is bound to the packet field and release that licensed it before
 > it is stored, and prose stating a figure the packet does not carry is refused (#112,
