@@ -37,9 +37,8 @@ layer only explains metrics that were already computed.
 > are dated by their tax year, and every source records a fallback. The New Jersey
 > landing page and map explorer were redesigned the day before. Interpretation is a
 > measured layer, not a claim: seventeen models have been evaluated against standardized
-> scenarios, and every county page shows their readings side by side, five now and four
-> after the next regeneration retires Qwen 3.7 Plus. Since Milestone 13, any figure the
-> packet does not carry is refused before it is stored.
+> scenarios, and every county page shows four of their readings side by side. Since
+> Milestone 13, any figure the packet does not carry is refused before it is stored.
 >
 > **Next.** Milestone 27: `hip refresh` carries a refresh through to the published site,
 > within limits its first task decides — where it runs, and what may run without asking.
@@ -233,7 +232,7 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   ACS vintages now follow `ACS_END_YEAR` — since M26 the floor under the newest vintage
   discovered — rather than a list hard-coded since Milestone 3.
 - **Published as static files** (M11, built) — `hip publish` replays the API's own ASGI
-  app and records its answers as 5,917 static artifacts; the dashboard pre-renders 2,272
+  app and records its answers as 5,955 static artifacts; the dashboard pre-renders 2,276
   pages. Production runs with no database and no application server. Replaying the app
   rather than re-querying the warehouse is what makes the bytes on disk the same bytes
   the API serves.
@@ -246,8 +245,8 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   offers a pinnable checkpoint.
 - **Several models reading the same packet** (M19, built) — every county page carries
   one interpretation per listed model side by side, switchable by the reader, each
-  labeled with the model that wrote it: five today, and four once the next regeneration
-  retires Qwen 3.7 Plus's, which left the list in Milestone 26. The reachable subset of bring-your-own-model comparison, since
+  labeled with the model that wrote it: four since Qwen 3.7 Plus left the list in
+  Milestone 26. The reachable subset of bring-your-own-model comparison, since
   pre-generated explanations need no server.
 - **Reasoning effort as a measured variable** (M20, built) — effort is configured per
   candidate and recorded with every generation, so a model's cost and quality are
