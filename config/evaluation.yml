@@ -47,8 +47,9 @@ limits:
   # buys more loop rather than more answer. Their still hitting 6000 is a firmer
   # finding than hitting 3000: it rules out the budget as the explanation.
   #
-  # Safe to raise without touching context_tokens: the prompt is ~1,900 tokens, so
-  # 1,900 + 6,000 still sits well inside the 12,288 window.
+  # Safe to raise without touching context_tokens: the prompt was ~1,900 tokens when this
+  # was set and is 4,305–4,500 since Milestone 26's packets (run `m26-mem-baseline`), so
+  # 4,500 + 6,000 still sits inside the 12,288 window.
   max_output_tokens: 6000
   # Ollama unloads immediately after each generation. 16GB of unified memory cannot hold
   # two of these at once, and a resident model pushes the next one into swap.

@@ -57,9 +57,11 @@ instead of waiting for someone to bump a constant.
 
 ### Not in this release
 
-- The Gemma half of the milestone's models section: a copy LM Studio and the project
-  can share, `import_gguf.sh`, the MLX retest and a 1GB memory cut. It waits on the
-  owner's go-ahead.
+- Any change to Gemma 4 E4B, the local model. The milestone's models section measured it
+  instead (ARCHITECTURE #215). LM Studio and the project already share one copy of it;
+  every MLX build is larger than the file in use; and a run of the 15 standard scenarios
+  swapped out 184MB. Capping Docker Desktop's memory at 4GB brought swap down about
+  0.9GB, so the planned memory trims were dropped and the project stays on Ollama.
 - The county explanations are out of date against this refresh until they are
   regenerated. Regeneration is billed and is the owner's call.
 

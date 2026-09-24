@@ -12,9 +12,8 @@ into `Now` / `Open` / `Parked`. They are recoverable with
 
 Branch `milestone/m26-current-releases`, in a pull request into `main` awaiting the
 owner's review. What it shipped is in CHANGELOG 0.22.0 and its decisions are ARCHITECTURE
-#206–#214. Its Gemma half is carried under `Parked`. Nothing else starts until the merge
-is approved; after it comes Milestone 27, whose first task decides where a refresh runs
-and what it may do unattended.
+#206–#215. Nothing else starts until the merge is approved; after it comes Milestone 27,
+whose first task decides where a refresh runs and what it may do unattended.
 
 **To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
@@ -117,6 +116,14 @@ first raised, not where it must be done.
       main thread once it consumes that future, so sampling the file raced the writer.
       The last scenario now waits for the evidence instead of sampling for it. 0 failures
       in 50 runs, and a mutation to a final-pass write still fails it.
+
+- [ ] **`import_gguf.sh` was lost, so nothing in the repo rebuilds the local models.**
+      (M8 prep; found lost 2026-09-23) It and `kvbench.sh` lived in a `/private/tmp`
+      scratchpad and did not survive a reboot around 2026-09-15. The four
+      `bench-*` models in Ollama still work, so this matters only when one is next
+      imported — and then the script has to be rewritten with the passthrough-template
+      defect fixed (ARCHITECTURE #62). `kvbench.sh` is not needed: the KV-cache question it
+      served was settled without a change (#215).
 
 ### Test coverage
 
@@ -407,16 +414,6 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
-- [ ] **Gemma 4 E4B — waiting on the owner's go-ahead.** (Milestone 26's models
-      section, carried 2026-09-23) One copy that LM Studio and the project share;
-      `import_gguf.sh` and `kvbench.sh` moved into `scripts/` from a `/private/tmp`
-      scratchpad that does not survive a reboot (first raised at M8 prep), the first with
-      its passthrough-template defect fixed (ARCHITECTURE #62); the MLX build retested on a
-      current `mlx-lm` (0.31.3 could not load it), and peak memory down at least 1GB,
-      cheapest first: the 12,288-token context to 8,192, a quantized KV cache, and a
-      smaller quantization only if the figure check on the standard scenarios shows no
-      loss. Needs a baseline measured on the owner's Mac and an MLX download of a few
-      GB. **Nothing here starts without the owner.**
 - [ ] **Regenerating the county readings is the owner's call.** All 105 — five models ×
       21 counties — are stale against Milestone 26's refresh, because every county
       packet changed (checked 2026-09-23 with `still_describes`). A regeneration is
