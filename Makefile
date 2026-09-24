@@ -208,7 +208,12 @@ check-live: check-dist  ## Verify the deployed site and artifacts match dist/
 
 deploy: check-dist  ## Upload artifacts to R2 and the site to Pages
 	rclone sync dist/artifacts $(R2_REMOTE):$(R2_BUCKET) --progress --checksum
-	wrangler pages deploy dist/site --project-name=$(PAGES_PROJECT)
+	@# `--branch` pinned: wrangler otherwise names the deployment after the checked-out git
+	@# branch, and anything but `main` becomes a Preview. On 2026-09-23 a deploy run from a
+	@# docs branch did exactly that — the artifacts above went live, the pages did not, and
+	@# production served old HTML over new artifacts until it was redeployed. The R2 half
+	@# has no preview, so the site half must not have one either.
+	wrangler pages deploy dist/site --project-name=$(PAGES_PROJECT) --branch=main
 
 clean:  ## Remove build artifacts and caches (leaves data/ alone)
 	rm -rf .pytest_cache .mypy_cache .ruff_cache dbt/target dbt/logs web/.next web/out dist
