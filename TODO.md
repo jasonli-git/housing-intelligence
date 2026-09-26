@@ -8,24 +8,50 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — Milestone 27 complete, in review (2026-09-26)
+## Now — Milestone 28, figures that read right at a glance (started 2026-09-26)
 
-Branch `milestone/m27-refresh-reaches-the-reader`, pull request into `main`. Everything in
-ROADMAP's Milestone 27 row is built: [CHANGELOG.md](CHANGELOG.md) 0.23.0 has what
-shipped, [ARCHITECTURE.md](ARCHITECTURE.md) #216–#226 the decisions, and ROADMAP the
-completeness check's first record.
+Branch `milestone/m28-figures-that-read-right`. Deliverable: ROADMAP.md, Milestone 28.
 
-**Waiting on the owner:**
+**Decided with the owner 2026-09-26:**
 
-- **Review and merge.** Nothing from the second half is live: `/freshness`, `/changes`
-  and report-a-problem reach the site with the first deploy after the merge — by hand
-  (`make publish deploy check-live`) or the Friday run.
-- **Check out `main` in this folder after merging.** Both scheduled scripts now run only
-  from a clean `main`, and notify and stop otherwise (#226). The next weekly run is
-  Friday 2026-10-02 at 08:00; the `launchd` agents and the three Shortcuts are live.
+- **Pages now, readings in Milestone 30.** Margins of error and rank ranges reach the
+  pages through the API's summary, the way #123 carried caveat scopes, and the analysis
+  packets stay as they are — so no reading goes stale and nothing is regenerated.
+  Milestone 30 rewrites every reading anyway and takes them in then. Until it does, a
+  reading can quote "9th" beside a page that says "between 5th and 13th".
+- **An uncertain rank reads as a word, with the range beneath:** "Near the middle of 21
+  NJ counties" over "between 5th and 13th". A rank whose range is one place reads as
+  it does today, "3rd of 21 NJ counties".
 
-**To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
-`make refresh`.
+**Tasks**
+
+- [ ] **Request the margins.** The ACS adapter asks for each estimate's `M` variable
+      beside its `E`, and `B25070_011` (renters whose burden was not computed).
+- [ ] **Carry a margin with each observation:** a nullable `margin_of_error` on
+      `fact_metric_observation` (migration 0016), through staging, matching and load.
+      Medians and population as published; the three shares by the Census's
+      approximation formulas; the Census's special codes read, never stored as numbers.
+- [ ] **Renter cost burden stops counting households whose burden was not computed**
+      (`B25070_011E`) in its denominator — the universe CHAS already uses.
+- [ ] **Margins through the derived figures:** the three affordability ratios that
+      divide by ACS income, and every change (`fact_metric_change`).
+- [ ] **Rank ranges:** the ranks a region could plausibly hold, from the Census's test
+      for a significant difference at 90%, stored beside each rank.
+- [ ] **The pages:** "± $2,140" beside each surveyed figure; the rank word and range;
+      every rank naming its cohort ("6 of 21 NJ counties", "42 of 551 municipalities
+      with data") and the standalone cohort line gone; an index value leading with a
+      common-period change over its baseline ("442.7 — about 4.4× its 1991 Q1 level").
+- [ ] **`/changes` tells a recomputation from a re-release:** the burden fix revises
+      figures from the same ACS edition, which must not read as the Census revising them.
+- [ ] Docs, the completeness check's second run, gates, PR.
+
+**Known going in:** HUD's CHAS figures come from HUD's API, which publishes no margins
+(135 columns, none a margin), so their ranks stay single places and say why.
+
+**While this branch is checked out,** Friday's scheduled run refuses the checkout (#226)
+and sends a notice; nothing refreshes until the branch merges or `main` is checked out.
+
+**To resume:** `make db-up` for Postgres.
 
 Open items a planned milestone now covers say so with **Scheduled: Milestone N**. They
 stay here until that milestone starts and takes them into `Now`.
