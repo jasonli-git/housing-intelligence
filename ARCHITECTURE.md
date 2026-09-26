@@ -24,7 +24,7 @@ scope; this document does not restate it.
 > each candidate's configuration since Milestone 20 (#98). Since Milestone 13 every
 > figure in new prose is bound to the packet field and release that licensed it before
 > it is stored, and prose stating a figure the packet does not carry is refused (#112,
-> #113). 571 Python tests and 215 dashboard tests pass (2026-09-23). Nothing in the pipeline or the API depends on a model being
+> #113). 619 Python tests and 243 dashboard tests pass (2026-09-26). Nothing in the pipeline or the API depends on a model being
 > present: with no explanations stored, every page and endpoint still works.
 
 ## System Shape
@@ -458,7 +458,7 @@ housing-intelligence/
 │   ├── evaluation/            # the published model-evaluation report; committed
 │   └── completeness/          # one report per standing-check run; committed (#225)
 ├── scripts/                   # scheduled_refresh.py, regenerate_now.py, launchd/ (#216–#219)
-├── tests/                     # 571 Python tests; API tests skip without a warehouse
+├── tests/                     # 619 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
