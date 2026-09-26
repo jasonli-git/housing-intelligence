@@ -1086,6 +1086,7 @@ def analyze() -> None:
     typer.echo(f"{'change rows':<20} {result.changes:>9,}")
     typer.echo(f"{'change rankings':<20} {result.rankings:>9,}")
     typer.echo(f"{'value rankings':<20} {result.value_rankings:>9,}")
+    typer.echo(f"{'with rank ranges':<20} {result.rank_ranges:>9,}")
     if result.pruned_releases:
         # Derived releases left behind by runs before #73, which minted one per run.
         typer.echo(

@@ -126,3 +126,130 @@ def test_the_rebuild_leaves_no_unreferenced_derived_releases() -> None:
 
     with get_engine().connect() as conn:
         assert int(conn.execute(ORPHANS).scalar_one()) == 0
+
+
+# ------------------------------------------------------ margins of error (M28) ---
+
+
+def _rows(sql: str, **params: object) -> list[dict[str, object]]:
+    with Session(get_engine()) as session:
+        return [dict(r) for r in session.execute(text(sql), params).mappings()]
+
+
+def test_rank_ranges_follow_the_census_test_for_a_significant_difference() -> None:
+    """Recomputed in Python for one group, from the stored values and margins: a region
+    moves ahead of another only where |difference| > sqrt(m1^2 + m2^2)."""
+    rows = _rows(
+        """
+        SELECT rr.region_id, rr.value, rr.rank, rr.rank_best, rr.rank_worst, rr."of",
+               (SELECT f.margin_of_error FROM fact_metric_observation f
+                WHERE f.region_id = rr.region_id AND f.metric_id = rr.metric_id
+                ORDER BY f.period_end DESC LIMIT 1) AS margin
+        FROM region_rankings rr
+        WHERE rr.metric_id = 'acs_median_hh_income' AND rr.level = 'county'
+          AND rr.basis = 'value'
+        """
+    )
+    if not rows:
+        pytest.skip("no ACS income rankings")
+    for a in rows:
+        better = worse = 0
+        for b in rows:
+            if b["region_id"] == a["region_id"]:
+                continue
+            gap = (float(a["margin"]) ** 2 + float(b["margin"]) ** 2) ** 0.5  # type: ignore[arg-type]
+            # Higher income is the better end for this metric.
+            better += float(b["value"]) - float(a["value"]) > gap  # type: ignore[arg-type]
+            worse += float(a["value"]) - float(b["value"]) > gap  # type: ignore[arg-type]
+        assert (a["rank_best"], a["rank_worst"]) == (1 + better, int(a["of"]) - worse)  # type: ignore[call-overload]
+        assert a["rank_best"] <= a["rank"] <= a["rank_worst"]  # type: ignore[operator]
+
+
+def test_only_ranks_built_on_margins_get_a_range() -> None:
+    rows = _rows(
+        """
+        SELECT m.source_id,
+               count(*) FILTER (WHERE rr.rank_best IS NOT NULL) AS ranged,
+               count(*) AS ranks
+        FROM region_rankings rr JOIN metrics m USING (metric_id)
+        GROUP BY 1
+        """
+    )
+    by_source = {r["source_id"]: r for r in rows}
+    if "census_acs" not in by_source:
+        pytest.skip("no ACS rankings")
+    assert by_source["census_acs"]["ranged"] == by_source["census_acs"]["ranks"]
+    # A Zillow or MOD-IV rank is a place, as it always was.
+    for source in ("zillow_zhvi", "nj_modiv"):
+        if source in by_source:
+            assert by_source[source]["ranged"] == 0
+
+
+def test_a_region_with_no_known_margin_cannot_be_placed() -> None:
+    """A Census special code leaves the margin unknown: the whole cohort is its range."""
+    rows = _rows(
+        """
+        SELECT rr.rank_best, rr.rank_worst, rr."of"
+        FROM region_rankings rr
+        JOIN LATERAL (
+            SELECT f.margin_of_error FROM fact_metric_observation f
+            WHERE f.region_id = rr.region_id AND f.metric_id = rr.metric_id
+            ORDER BY f.period_end DESC LIMIT 1
+        ) o ON true
+        WHERE rr.basis = 'value' AND rr.metric_id = 'acs_median_gross_rent'
+          AND o.margin_of_error IS NULL
+        """
+    )
+    if not rows:
+        pytest.skip("every rent carries a margin")
+    assert all((r["rank_best"], r["rank_worst"]) == (1, r["of"]) for r in rows)
+
+
+def test_a_derived_ratio_carries_the_survey_income_margin() -> None:
+    """price_to_income's margin is its value times the income's relative margin: the
+    home value index publishes no sampling error of its own."""
+    rows = _rows(
+        """
+        SELECT d.value, d.margin_of_error, i.value AS income, i.margin_of_error AS im
+        FROM fact_metric_observation d
+        JOIN fact_metric_observation i
+          ON i.region_id = d.region_id AND i.period_start = d.period_start
+         AND i.metric_id = 'acs_median_hh_income'
+        WHERE d.metric_id = 'price_to_income' AND i.margin_of_error IS NOT NULL
+        LIMIT 50
+        """
+    )
+    if not rows:
+        pytest.skip("no ratios with a margined income")
+    for r in rows:
+        expected = float(r["value"]) * float(r["im"]) / float(r["income"])  # type: ignore[arg-type]
+        assert r["margin_of_error"] == pytest.approx(expected, abs=2e-6)
+
+
+def test_a_change_carries_the_census_margin_for_a_ratio() -> None:
+    rows = _rows(
+        """
+        SELECT c.start_value, c.end_value, c.pct_change_margin,
+               s.margin_of_error AS sm, e.margin_of_error AS em
+        FROM fact_metric_change c
+        JOIN fact_metric_observation s
+          ON s.region_id = c.region_id AND s.metric_id = c.metric_id
+         AND s.period_end = c.window_start
+        JOIN fact_metric_observation e
+          ON e.region_id = c.region_id AND e.metric_id = c.metric_id
+         AND e.period_end = c.window_end
+        WHERE c.metric_id = 'acs_median_home_value' AND c."window" = '5y'
+          AND s.margin_of_error IS NOT NULL AND e.margin_of_error IS NOT NULL
+        LIMIT 50
+        """
+    )
+    if not rows:
+        pytest.skip("no margined five-year changes")
+    for r in rows:
+        start, end = float(r["start_value"]), float(r["end_value"])  # type: ignore[arg-type]
+        expected = (
+            100
+            * (float(r["em"]) ** 2 + (end / start) ** 2 * float(r["sm"]) ** 2) ** 0.5  # type: ignore[arg-type]
+            / abs(start)
+        )
+        assert r["pct_change_margin"] == pytest.approx(expected)
