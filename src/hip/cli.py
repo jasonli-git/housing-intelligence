@@ -82,6 +82,7 @@ from hip.transform.dbt_runner import (
 )
 from hip.validate.gate import run_checks, write_report
 from hip.warehouse.db import get_engine
+from hip.warehouse.discoveries import load_discoveries
 from hip.warehouse.load import (
     MetricRecord,
     ReleaseProvenance,
@@ -1016,6 +1017,13 @@ def load(
         f"{facts.rejects} unresolved geographies recorded",
         fg=typer.colors.GREEN,
     )
+
+    # `Discovery` (Milestone 26) into the warehouse, so the API's freshness page
+    # (Milestone 27) can read it without importing `hip.sources` (ARCHITECTURE #6).
+    # Every configured source, not only METRIC_SOURCES: a source with no row in
+    # `metrics.yml` still has a freshness status worth showing.
+    discovered = load_discoveries(get_engine(), settings.raw_dir, configured.keys())
+    typer.echo(f"discoveries   {discovered:>8,} sources' release status recorded")
 
 
 @app.command()

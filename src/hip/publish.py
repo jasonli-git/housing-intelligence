@@ -192,6 +192,8 @@ def _plan(
     # travel with the artifacts rather than depending on an API being up.
     yield "/sources", "sources.json"
     yield "/sources/unresolved", "sources/unresolved.json"
+    # Milestone 27's public freshness page.
+    yield "/freshness", "freshness.json"
 
     for level in ("state", "county", "municipality", "zip"):
         yield f"/geo/{level}?state=NJ", f"geo/{level}.json"
