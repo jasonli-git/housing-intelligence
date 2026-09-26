@@ -48,6 +48,8 @@ class Observation(BaseModel):
     source_id: str
     vintage: str
     match_method: str
+    # A survey estimate's 90% margin of error (Milestone 28); None for other sources.
+    margin_of_error: float | None = None
 
 
 class RegionMetrics(BaseModel):
@@ -143,7 +145,7 @@ def region_metrics(
         text(
             f"""
             SELECT f.metric_id, f.period_start, f.period_end, f.value,
-                   sr.source_id, sr.vintage, f.match_method
+                   sr.source_id, sr.vintage, f.match_method, f.margin_of_error
             FROM fact_metric_observation f
             JOIN source_releases sr ON sr.release_id = f.release_id
             WHERE {" AND ".join(filters)}

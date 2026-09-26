@@ -319,7 +319,8 @@ def _changes(conn: object) -> int:
                 f"""
                 INSERT INTO fact_metric_change
                     (region_id, metric_id, "window", window_start, window_end,
-                     start_value, end_value, pct_change, cagr, pct_change_margin)
+                     start_value, end_value, pct_change, cagr, pct_change_margin,
+                     start_margin, end_margin)
                 -- Anchored on period_end, not period_start. An ACS 5-year estimate
                 -- starts four years before it ends, so anchoring on period_start
                 -- labels a comparison of the 2019 and 2023 vintages as "2015 to
@@ -392,7 +393,11 @@ def _changes(conn: object) -> int:
                             THEN 100.0 * sqrt(
                                 end_margin ^ 2
                                 + (end_value / start_value) ^ 2 * start_margin ^ 2
-                            ) / abs(start_value) END
+                            ) / abs(start_value) END,
+                       -- Each end's own margin, for a page that shows the two figures
+                       -- (migration 0018): from the observations compared, so never
+                       -- another period's.
+                       start_margin, end_margin
                 FROM picked
                 WHERE start_value <> 0 AND window_end > window_start
                 """
@@ -415,10 +420,10 @@ def _rankings(conn: object) -> int:
                 """
                 INSERT INTO region_rankings
                     (metric_id, level, basis, "window", region_id, value,
-                     rank, of, percentile)
+                     rank, of, percentile, margin_of_error)
                 WITH ranked AS (
                     SELECT c.metric_id, r.level::text AS level, c."window", c.region_id,
-                           c.pct_change AS value,
+                           c.pct_change AS value, c.pct_change_margin AS margin,
                            rank() OVER (
                                PARTITION BY c.metric_id, r.level, c."window"
                                ORDER BY CASE WHEN m.direction = 'lower_is_better'
@@ -435,7 +440,10 @@ def _rankings(conn: object) -> int:
                 SELECT metric_id, level, 'change', "window", region_id, value, rank, of,
                        CASE WHEN of > 1
                             THEN 100.0 * (of - rank) / (of - 1)
-                            ELSE 100.0 END
+                            ELSE 100.0 END,
+                       -- The margin of the value ranked (migration 0018), which
+                       -- `_rank_ranges` tests differences with and `/rankings` shows.
+                       margin
                 FROM ranked
                 -- A ranking over one region is not a ranking.
                 WHERE of > 1
@@ -462,15 +470,16 @@ def _value_rankings(conn: object) -> int:
                 """
                 INSERT INTO region_rankings
                     (metric_id, level, basis, "window", region_id, value,
-                     rank, of, percentile)
+                     rank, of, percentile, margin_of_error)
                 WITH latest AS (
                     SELECT DISTINCT ON (f.region_id, f.metric_id)
-                           f.region_id, f.metric_id, f.value
+                           f.region_id, f.metric_id, f.value, f.margin_of_error
                     FROM fact_metric_observation f
                     ORDER BY f.region_id, f.metric_id, f.period_end DESC
                 ),
                 ranked AS (
                     SELECT l.metric_id, r.level::text AS level, l.region_id, l.value,
+                           l.margin_of_error AS margin,
                            rank() OVER (
                                PARTITION BY l.metric_id, r.level
                                -- Same convention as change rankings: rank 1 is the
@@ -490,7 +499,9 @@ def _value_rankings(conn: object) -> int:
                 SELECT metric_id, level, 'value', 'latest', region_id, value, rank, of,
                        CASE WHEN of > 1
                             THEN 100.0 * (of - rank) / (of - 1)
-                            ELSE 100.0 END
+                            ELSE 100.0 END,
+                       -- From the row the value came from (migration 0018).
+                       margin
                 FROM ranked
                 WHERE of > 1
                 """
@@ -509,7 +520,8 @@ def _rank_ranges(conn: object) -> int:
     margins (ACS General Handbook, chapter 7) — and its range runs from one ahead of
     everyone significantly better to one behind everyone significantly worse. The
     roadmap's sketch was overlapping intervals, a stricter test that calls many real
-    differences ties; this is the one the Census publishes.
+    differences ties; this is the one the Census publishes. The margins are each
+    ranking's own `margin_of_error`, stored with the value it ranked (migration 0018).
 
     Only groups where some region has a margin get a range: a Zillow or MOD-IV rank is
     a place, as it always was. Inside such a group a region whose own margin is unknown
@@ -530,23 +542,9 @@ def _rank_ranges(conn: object) -> int:
                            -- The order ranks are assigned in: rank 1 is the better end.
                            CASE WHEN m.direction = 'lower_is_better'
                                 THEN rr.value ELSE -rr.value END AS k,
-                           CASE WHEN rr.basis = 'change' THEN c.pct_change_margin
-                                ELSE o.margin_of_error END AS margin
+                           rr.margin_of_error AS margin
                     FROM region_rankings rr
                     JOIN metrics m ON m.metric_id = rr.metric_id
-                    LEFT JOIN fact_metric_change c
-                      ON rr.basis = 'change' AND c.region_id = rr.region_id
-                     AND c.metric_id = rr.metric_id AND c."window" = rr."window"
-                    -- The observation a value ranking ranked: the latest, as
-                    -- `_value_rankings` picks it.
-                    LEFT JOIN LATERAL (
-                        SELECT f.margin_of_error
-                        FROM fact_metric_observation f
-                        WHERE rr.basis = 'value' AND f.region_id = rr.region_id
-                          AND f.metric_id = rr.metric_id
-                        ORDER BY f.period_end DESC
-                        LIMIT 1
-                    ) o ON true
                 ),
                 margined AS (
                     SELECT metric_id, level, basis, "window"
