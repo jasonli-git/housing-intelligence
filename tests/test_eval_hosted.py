@@ -1217,6 +1217,25 @@ def test_explicit_models_are_each_verified_once_and_local_ones_not_at_all(
     assert probed == ["deepseek-test", "gemini-test"]
 
 
+def test_a_dry_run_probes_no_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A probe is a real, billed call, and `--dry-run` promises it reaches no model.
+
+    Found in Codex's Milestone 27 review of the free check the scheduler gates on.
+    """
+    from hip.eval_cli import _unusable
+
+    monkeypatch.setattr("hip.eval.selection.benchmarked", _all_pass)
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: "v2")
+
+    def forbidden(self: HostedRunner, model: CandidateModel) -> str | None:
+        raise AssertionError(f"a dry run probed {model.id}")
+
+    monkeypatch.setattr(HostedRunner, "probe", forbidden)
+    evaluation = _evaluation(["deepseek-test", "gemini-test", "gemma-4-e4b-q4"])
+
+    assert _unusable(evaluation, ["deepseek-test", "gemini-test"], probe=False) == {}
+
+
 def test_a_misspelled_model_is_skipped_rather_than_crashing_the_run(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -2215,6 +2234,40 @@ def test_dry_run_does_not_prune(monkeypatch: pytest.MonkeyPatch) -> None:
             None, None, "5y", "county", "markdown", None, all_models=True, dry_run=True
         )
     assert exited.value.exit_code == PARTIAL
+
+
+def test_explain_dry_run_turns_the_probe_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The wiring for `test_a_dry_run_probes_no_model`: `--dry-run` asks for no probe."""
+    import contextlib
+
+    import typer
+
+    from hip.eval_cli import explain_command
+
+    asked: dict[str, Any] = {}
+
+    def unusable(*_args: Any, **kwargs: Any) -> dict[str, str]:
+        asked.update(kwargs)
+        return {}
+
+    @contextlib.contextmanager
+    def session(engine: Any) -> Any:
+        yield SimpleNamespace(commit=lambda: None)
+
+    monkeypatch.setattr(
+        "hip.eval_cli.load_evaluation", lambda: _evaluation(["gemini-test"])
+    )
+    monkeypatch.setattr("hip.eval_cli._unusable", unusable)
+    monkeypatch.setattr("hip.eval_cli.get_engine", lambda: None)
+    monkeypatch.setattr("hip.eval_cli.Session", session)
+    monkeypatch.setattr("hip.packets.regions_for_level", lambda *args: [1])
+    monkeypatch.setattr("hip.eval_cli._explain_each", lambda *args, **kwargs: None)
+
+    with contextlib.suppress(typer.Exit):
+        explain_command(
+            None, None, "5y", "county", "markdown", None, all_models=True, dry_run=True
+        )
+    assert asked["probe"] is False
 
 
 def test_a_missing_runtime_skips_its_model_and_the_rest_still_run(

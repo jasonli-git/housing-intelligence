@@ -734,7 +734,12 @@ def explain_command(
     # benchmark gate, then one probe per hosted model up front rather than learning
     # about a routed pin from 21 paid failures that all say the same thing.
     if all_models or model_id:
-        unusable = _unusable(evaluation, models, require_benchmark=not unbenchmarked)
+        # Not probed on a dry run: a probe is a real, billed call, and a dry run's one
+        # promise is that it reaches no model. What it reports is what is stale, which
+        # does not depend on whether a provider answers today.
+        unusable = _unusable(
+            evaluation, models, require_benchmark=not unbenchmarked, probe=not dry_run
+        )
         for candidate, why in unusable.items():
             outcomes[candidate].skipped = why
         if len(unusable) == len(outcomes):
@@ -936,7 +941,11 @@ def _stored_state(
 
 
 def _unusable(
-    evaluation: EvaluationConfig, models: list[str], *, require_benchmark: bool = True
+    evaluation: EvaluationConfig,
+    models: list[str],
+    *,
+    require_benchmark: bool = True,
+    probe: bool = True,
 ) -> dict[str, str]:
     """The requested models that may not publish, each with the reason.
 
@@ -978,7 +987,7 @@ def _unusable(
         except RunnerUnavailable as exc:
             skip(model_id, str(exc))
             continue
-        if isinstance(runner, HostedRunner):
+        if probe and isinstance(runner, HostedRunner):
             failure = runner.probe(evaluation.model(model_id))
             if failure:
                 skip(model_id, failure)
