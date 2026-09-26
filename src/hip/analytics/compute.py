@@ -40,6 +40,8 @@ class AnalyticsResult:
     changes: int = 0
     rankings: int = 0
     value_rankings: int = 0
+    # Ranks given the range they could plausibly hold (Milestone 28).
+    rank_ranges: int = 0
     derived_observations: dict[str, int] = field(default_factory=dict)
     pruned_releases: int = 0
 
@@ -56,6 +58,7 @@ def rebuild(engine: Engine) -> AnalyticsResult:
         conn.execute(text("TRUNCATE region_rankings"))
         result.rankings = _rankings(conn)
         result.value_rankings = _value_rankings(conn)
+        result.rank_ranges = _rank_ranges(conn)
     return result
 
 
@@ -78,7 +81,11 @@ def _affordability(conn: object) -> dict[str, int]:
                 metric_id    text             NOT NULL,
                 period_start date             NOT NULL,
                 period_end   date             NOT NULL,
-                value        double precision NOT NULL
+                value        double precision NOT NULL,
+                -- Milestone 28: the survey income's margin carried through the ratio.
+                -- NULL where the denominator has none (HUD's AMI is not a survey
+                -- estimate) or the income's own margin is unknown.
+                margin_of_error double precision
             ) ON COMMIT DROP
             """
         )
@@ -104,7 +111,8 @@ def _affordability(conn: object) -> dict[str, int]:
             text(
                 """
                 INSERT INTO derived_facts
-                    (region_id, metric_id, period_start, period_end, value)
+                    (region_id, metric_id, period_start, period_end, value,
+                     margin_of_error)
                 SELECT income.region_id, :metric_id,
                        income.period_start, income.period_end,
                        -- Rounded, and computed in `numeric` throughout. Both halves
@@ -114,6 +122,17 @@ def _affordability(conn: object) -> dict[str, int]:
                        -- denominator can support, so nothing a reader sees moves.
                        round(
                            (num.annual_value * CAST(:multiplier AS numeric))
+                               / income.value::numeric,
+                           6
+                       )::double precision,
+                       -- The ratio times the income's relative margin: the numerator
+                       -- (Zillow's index, HUD's rent) publishes no sampling error, so
+                       -- the income's is the ratio's whole margin. Numeric and rounded
+                       -- for the same reason as the value above.
+                       round(
+                           (num.annual_value * CAST(:multiplier AS numeric))
+                               / income.value::numeric
+                               * income.margin_of_error::numeric
                                / income.value::numeric,
                            6
                        )::double precision
@@ -163,14 +182,15 @@ def _affordability(conn: object) -> dict[str, int]:
             """
             INSERT INTO fact_metric_observation
                 (region_id, metric_id, period_start, period_end, value,
-                 release_id, match_method)
+                 release_id, match_method, margin_of_error)
             SELECT region_id, metric_id, period_start, period_end, value,
-                   :release_id, 'derived'
+                   :release_id, 'derived', margin_of_error
             FROM derived_facts
             ON CONFLICT (region_id, metric_id, period_start) DO UPDATE SET
                 value = EXCLUDED.value,
                 release_id = EXCLUDED.release_id,
-                match_method = EXCLUDED.match_method
+                match_method = EXCLUDED.match_method,
+                margin_of_error = EXCLUDED.margin_of_error
             """
         ),
         {"release_id": release_id},
@@ -203,7 +223,8 @@ def _derived_release(conn: object) -> int:
                 """
                 SELECT encode(sha256(convert_to(coalesce(string_agg(
                            region_id || '|' || metric_id || '|' || period_start || '|'
-                               || period_end || '|' || value,
+                               || period_end || '|' || value || '|'
+                               || coalesce(margin_of_error::text, ''),
                            chr(10) ORDER BY metric_id, region_id, period_start
                        ), ''), 'UTF8')), 'hex')
                 FROM derived_facts
@@ -298,7 +319,8 @@ def _changes(conn: object) -> int:
                 f"""
                 INSERT INTO fact_metric_change
                     (region_id, metric_id, "window", window_start, window_end,
-                     start_value, end_value, pct_change, cagr)
+                     start_value, end_value, pct_change, cagr, pct_change_margin,
+                     start_margin, end_margin)
                 -- Anchored on period_end, not period_start. An ACS 5-year estimate
                 -- starts four years before it ends, so anchoring on period_start
                 -- labels a comparison of the 2019 and 2023 vintages as "2015 to
@@ -314,7 +336,7 @@ def _changes(conn: object) -> int:
                 ends AS (
                     SELECT DISTINCT ON (f.region_id, f.metric_id)
                            f.region_id, f.metric_id, f.period_end AS window_end,
-                           f.value AS end_value
+                           f.value AS end_value, f.margin_of_error AS end_margin
                     FROM fact_metric_observation f
                     JOIN latest l USING (region_id, metric_id)
                     WHERE f.period_end = l.end_period
@@ -331,7 +353,8 @@ def _changes(conn: object) -> int:
                     SELECT DISTINCT ON (t.region_id, t.metric_id, t.label)
                            t.region_id, t.metric_id, t.label,
                            s.period_end AS window_start, s.value AS start_value,
-                           t.window_end, t.end_value
+                           s.margin_of_error AS start_margin,
+                           t.window_end, t.end_value, t.end_margin
                     FROM targets t
                     JOIN fact_metric_observation s
                       ON s.region_id = t.region_id AND s.metric_id = t.metric_id
@@ -359,7 +382,22 @@ def _changes(conn: object) -> int:
                             THEN 100.0 * (
                                 power(end_value / start_value,
                                       365.0 / (window_end - window_start)) - 1
-                            ) END
+                            ) END,
+                       -- Milestone 28: the Census's margin for a ratio of two estimates,
+                       -- end over start, in the percentage points the change is stated
+                       -- in. It treats the two as independent, which holds for the
+                       -- default five-year window (the two editions share no sample)
+                       -- and overstates nothing the existing caveat on shorter,
+                       -- overlapping windows does not already warn about.
+                       CASE WHEN start_margin IS NOT NULL AND end_margin IS NOT NULL
+                            THEN 100.0 * sqrt(
+                                end_margin ^ 2
+                                + (end_value / start_value) ^ 2 * start_margin ^ 2
+                            ) / abs(start_value) END,
+                       -- Each end's own margin, for a page that shows the two figures
+                       -- (migration 0018): from the observations compared, so never
+                       -- another period's.
+                       start_margin, end_margin
                 FROM picked
                 WHERE start_value <> 0 AND window_end > window_start
                 """
@@ -382,10 +420,10 @@ def _rankings(conn: object) -> int:
                 """
                 INSERT INTO region_rankings
                     (metric_id, level, basis, "window", region_id, value,
-                     rank, of, percentile)
+                     rank, of, percentile, margin_of_error)
                 WITH ranked AS (
                     SELECT c.metric_id, r.level::text AS level, c."window", c.region_id,
-                           c.pct_change AS value,
+                           c.pct_change AS value, c.pct_change_margin AS margin,
                            rank() OVER (
                                PARTITION BY c.metric_id, r.level, c."window"
                                ORDER BY CASE WHEN m.direction = 'lower_is_better'
@@ -402,7 +440,10 @@ def _rankings(conn: object) -> int:
                 SELECT metric_id, level, 'change', "window", region_id, value, rank, of,
                        CASE WHEN of > 1
                             THEN 100.0 * (of - rank) / (of - 1)
-                            ELSE 100.0 END
+                            ELSE 100.0 END,
+                       -- The margin of the value ranked (migration 0018), which
+                       -- `_rank_ranges` tests differences with and `/rankings` shows.
+                       margin
                 FROM ranked
                 -- A ranking over one region is not a ranking.
                 WHERE of > 1
@@ -429,15 +470,16 @@ def _value_rankings(conn: object) -> int:
                 """
                 INSERT INTO region_rankings
                     (metric_id, level, basis, "window", region_id, value,
-                     rank, of, percentile)
+                     rank, of, percentile, margin_of_error)
                 WITH latest AS (
                     SELECT DISTINCT ON (f.region_id, f.metric_id)
-                           f.region_id, f.metric_id, f.value
+                           f.region_id, f.metric_id, f.value, f.margin_of_error
                     FROM fact_metric_observation f
                     ORDER BY f.region_id, f.metric_id, f.period_end DESC
                 ),
                 ranked AS (
                     SELECT l.metric_id, r.level::text AS level, l.region_id, l.value,
+                           l.margin_of_error AS margin,
                            rank() OVER (
                                PARTITION BY l.metric_id, r.level
                                -- Same convention as change rankings: rank 1 is the
@@ -457,9 +499,84 @@ def _value_rankings(conn: object) -> int:
                 SELECT metric_id, level, 'value', 'latest', region_id, value, rank, of,
                        CASE WHEN of > 1
                             THEN 100.0 * (of - rank) / (of - 1)
-                            ELSE 100.0 END
+                            ELSE 100.0 END,
+                       -- From the row the value came from (migration 0018).
+                       margin
                 FROM ranked
                 WHERE of > 1
+                """
+            )
+        ).rowcount
+    )
+
+
+def _rank_ranges(conn: object) -> int:
+    """The ranks each region could plausibly hold, given everyone's margins of error.
+
+    A rank from survey estimates claims more than the survey knows: "9th of 21" when
+    the Census's own margins cannot tell ninth from fifth. So a region moves ahead of
+    another only where the two differ significantly — by the Census's test at 90%,
+    |difference| greater than the square root of the sum of the two squared 90%
+    margins (ACS General Handbook, chapter 7) — and its range runs from one ahead of
+    everyone significantly better to one behind everyone significantly worse. The
+    roadmap's sketch was overlapping intervals, a stricter test that calls many real
+    differences ties; this is the one the Census publishes. The margins are each
+    ranking's own `margin_of_error`, stored with the value it ranked (migration 0018).
+
+    Only groups where some region has a margin get a range: a Zillow or MOD-IV rank is
+    a place, as it always was. Inside such a group a region whose own margin is unknown
+    — a Census special code — is significantly different from no one, so its range is
+    the whole cohort: it cannot be placed, and says so.
+
+    Always contains the rank itself (`ck_region_rankings_rank_range`): the significant
+    betters are a subset of those ranked ahead, and the significant worses of those
+    behind.
+    """
+    return int(
+        conn.execute(  # type: ignore[attr-defined]
+            text(
+                """
+                WITH margins AS (
+                    SELECT rr.metric_id, rr.level, rr.basis, rr."window", rr.region_id,
+                           rr."of",
+                           -- The order ranks are assigned in: rank 1 is the better end.
+                           CASE WHEN m.direction = 'lower_is_better'
+                                THEN rr.value ELSE -rr.value END AS k,
+                           rr.margin_of_error AS margin
+                    FROM region_rankings rr
+                    JOIN metrics m ON m.metric_id = rr.metric_id
+                ),
+                margined AS (
+                    SELECT metric_id, level, basis, "window"
+                    FROM margins
+                    GROUP BY 1, 2, 3, 4
+                    HAVING count(margin) > 0
+                ),
+                counts AS (
+                    SELECT a.metric_id, a.level, a.basis, a."window", a.region_id,
+                           a."of",
+                           -- A comparison with an unknown margin is NULL, so it counts
+                           -- as no difference at all.
+                           count(*) FILTER (
+                               WHERE a.k - b.k > sqrt(a.margin ^ 2 + b.margin ^ 2)
+                           ) AS better,
+                           count(*) FILTER (
+                               WHERE b.k - a.k > sqrt(a.margin ^ 2 + b.margin ^ 2)
+                           ) AS worse
+                    FROM margins a
+                    JOIN margined g USING (metric_id, level, basis, "window")
+                    JOIN margins b
+                      ON b.metric_id = a.metric_id AND b.level = a.level
+                     AND b.basis = a.basis AND b."window" = a."window"
+                     AND b.region_id <> a.region_id
+                    GROUP BY 1, 2, 3, 4, 5, 6
+                )
+                UPDATE region_rankings rr
+                SET rank_best = 1 + c.better, rank_worst = c."of" - c.worse
+                FROM counts c
+                WHERE rr.metric_id = c.metric_id AND rr.level = c.level
+                  AND rr.basis = c.basis AND rr."window" = c."window"
+                  AND rr.region_id = c.region_id
                 """
             )
         ).rowcount

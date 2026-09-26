@@ -106,3 +106,89 @@ def test_summary_scopes_every_caveat_to_figures_the_region_shows(analyzed: None)
 def test_unknown_metric_and_region_are_404(analyzed: None) -> None:
     assert client.get("/rankings?metric_id=not_a_metric").status_code == 404
     assert client.get("/regions/99999999/summary").status_code == 404
+
+
+def test_the_summary_carries_margins_and_rank_ranges_for_survey_figures_only(
+    analyzed: None,
+) -> None:
+    """Milestone 28: margins reach the page through the summary, not the packet."""
+    mercer = client.get("/regions?level=county&q=Mercer").json()["items"][0]["region_id"]
+    body = client.get(f"/regions/{mercer}/summary?window=5y").json()
+    levels = {row["metric_id"]: row for row in body["levels"]}
+    changes = {row["metric_id"]: row for row in body["headlines"]}
+    if "acs_median_hh_income" not in levels:
+        pytest.skip("no ACS income for Mercer")
+
+    income = levels["acs_median_hh_income"]
+    assert income["margin_of_error"] > 0
+    assert income["rank_best"] <= income["rank"] <= income["rank_worst"]
+    assert changes["acs_median_hh_income"]["pct_change_margin"] > 0
+    # Zillow publishes no margin, so its rank stays a single place.
+    home = levels["zhvi_sfr"]
+    assert (home["margin_of_error"], home["rank_best"], home["rank_worst"]) == (
+        None,
+        None,
+        None,
+    )
+
+
+def test_rankings_carry_each_region_s_rank_range(analyzed: None) -> None:
+    """Milestone 28: the New Jersey page's county table shows the range a survey rank
+    could hold, from the same `/rankings` it already reads."""
+    body = client.get(
+        "/rankings?metric_id=acs_median_hh_income&level=county&window=5y"
+    ).json()
+    if not body.get("items"):
+        pytest.skip("no ACS income ranking")
+    for item in body["items"]:
+        assert item["rank_best"] <= item["rank"] <= item["rank_worst"]
+    zillow = client.get("/rankings?metric_id=zhvi_sfr&level=county&window=5y").json()
+    assert all(item["rank_best"] is None for item in zillow["items"])
+
+
+def test_every_survey_figure_the_api_serves_carries_its_margin(analyzed: None) -> None:
+    """SPEC v1.3 (migration 0018): both ends of a change, a ranked value, each
+    observation and each compared point carry their margins, and only a survey's."""
+    mercer = client.get("/regions?level=county&q=Mercer").json()["items"][0]["region_id"]
+    summary = client.get(f"/regions/{mercer}/summary?window=5y").json()
+    changes = {row["metric_id"]: row for row in summary["headlines"]}
+    levels = {row["metric_id"]: row for row in summary["levels"]}
+    if "acs_median_hh_income" not in changes:
+        pytest.skip("no ACS income change for Mercer")
+
+    income = changes["acs_median_hh_income"]
+    assert income["start_margin"] > 0 and income["end_margin"] > 0
+    # The change ends on the latest observation, so its end margin is the level's.
+    assert income["end_margin"] == pytest.approx(
+        levels["acs_median_hh_income"]["margin_of_error"]
+    )
+    assert (changes["zhvi_sfr"]["start_margin"], changes["zhvi_sfr"]["end_margin"]) == (
+        None,
+        None,
+    )
+
+    ranked = client.get(
+        "/rankings?metric_id=acs_median_hh_income&level=county&window=5y&limit=50"
+    ).json()["items"]
+    here = next(item for item in ranked if item["region_id"] == mercer)
+    assert here["margin_of_error"] == pytest.approx(income["pct_change_margin"])
+    assert here["end_margin"] == pytest.approx(income["end_margin"])
+    by_value = client.get(
+        "/rankings?metric_id=acs_median_hh_income&level=county&basis=value&limit=50"
+    ).json()["items"]
+    value = next(item for item in by_value if item["region_id"] == mercer)
+    assert value["margin_of_error"] == pytest.approx(
+        levels["acs_median_hh_income"]["margin_of_error"]
+    )
+
+    observed = client.get(
+        f"/regions/{mercer}/metrics?metric_id=acs_median_hh_income&metric_id=zhvi_sfr"
+    ).json()["observations"]
+    assert all(
+        (o["margin_of_error"] is not None) == (o["metric_id"] == "acs_median_hh_income")
+        for o in observed
+    )
+    compared = client.get(
+        f"/compare?metric_id=acs_median_hh_income&region_ids={mercer}"
+    ).json()["regions"][0]["series"]
+    assert all(point["margin_of_error"] > 0 for point in compared)

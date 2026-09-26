@@ -8,7 +8,16 @@ import type { TablePlacement } from "@/lib/caveats";
 import { formatChange, formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { windowLabel } from "@/lib/periods";
-import { RANK_HEADING, rankPosition, rankWords } from "@/lib/ranks";
+import { RANK_HEADING, rankBasis, rankPosition } from "@/lib/ranks";
+import {
+  changeMarginLabel,
+  cohortLabel,
+  marginLabel,
+  type Peers,
+  rankReading,
+  type Uncertainties,
+  type Uncertainty,
+} from "@/lib/uncertainty";
 
 // A 3px tick and a 1px gap, so 21 counties draw as 21 ticks.
 const TICK = 4;
@@ -46,26 +55,77 @@ export function RankText({ rank, of, words, className, visual }: {
  * background, so it is one marker and one box whatever the cohort; position and width
  * are data, which is why they are inline.
  */
-export function RankStrip({ rank, of, words }: { rank: number; of: number; words: string }) {
+export function RankStrip({
+  rank,
+  of,
+  best = null,
+  worst = null,
+}: {
+  rank: number;
+  of: number;
+  /** The ranks it could plausibly hold, shaded behind the marker (Milestone 28). */
+  best?: number | null;
+  worst?: number | null;
+}) {
   const ticks = of <= MAX_TICKS;
   const width = ticks ? of * TICK - 1 : TRACK;
-  const left = ticks
-    ? (rank - 1) * TICK
-    : of > 1
-      ? Math.round(rankPosition(rank, of) * (TRACK - 3))
-      : 0;
+  const at = (n: number) =>
+    ticks ? (n - 1) * TICK : of > 1 ? Math.round(rankPosition(n, of) * (TRACK - 3)) : 0;
+  const ranged = best !== null && worst !== null && best !== worst;
   return (
-    <>
-      <span className={`strip ${ticks ? "ticks" : "track"}`} style={{ width }} aria-hidden="true">
-        <i style={{ left }} />
-      </span>
-      <RankText rank={rank} of={of} words={words} className="rank-n" />
-    </>
+    <span className={`strip ${ticks ? "ticks" : "track"}`} style={{ width }} aria-hidden="true">
+      {ranged && <b style={{ left: at(best!), width: at(worst!) - at(best!) + 3 }} />}
+      <i style={{ left: at(rank) }} />
+    </span>
   );
 }
 
+/**
+ * A rank as a reader should take it (Milestone 28, `lib/uncertainty.ts`): "12th of 21
+ * NJ counties" where the rank is one place; otherwise where its range sits, with the
+ * range beneath — "Near the middle of 21 NJ counties", "between 10th and 12th". What
+ * was ranked, and which end is first, is on hover and read to a screen reader.
+ */
+export function RankReading({
+  rank,
+  of,
+  basis,
+  uncertainty,
+  cohort,
+}: {
+  rank: number;
+  of: number;
+  /** `rankBasis`: "by value, highest first". */
+  basis: string;
+  uncertainty?: Uncertainty;
+  cohort: string;
+}) {
+  const reading = rankReading(rank, of, uncertainty, cohort);
+  return (
+    <span className="rank-read" title={`${reading.lead}${reading.range ? `, ${reading.range}` : ""}, ${basis}`}>
+      <span className="rank-lead">{reading.lead}</span>
+      {reading.range && <span className="rank-range">{reading.range}</span>}
+      <span className="visually-hidden">, {basis}</span>
+    </span>
+  );
+}
+
+/** A figure's margin of error on its own line beneath it, where the source publishes one. */
+export function Margin({ label }: { label: string | null }) {
+  return label ? <span className="margin">{label}</span> : null;
+}
+
 /** A signed change, its arrow first so the direction reads before the number does. */
-export function ChangeCell({ pct, className }: { pct: number; className?: string }) {
+export function ChangeCell({
+  pct,
+  className,
+  margin = null,
+}: {
+  pct: number;
+  className?: string;
+  /** The change's margin of error, "± 4.0 points", beneath it (Milestone 28). */
+  margin?: string | null;
+}) {
   const direction = pct > 0 ? "up" : pct < 0 ? "down" : "";
   return (
     <td className={["change", direction, className].filter(Boolean).join(" ")}>
@@ -75,7 +135,36 @@ export function ChangeCell({ pct, className }: { pct: number; className?: string
         </span>
       )}
       {formatChange(pct)}
+      <Margin label={margin} />
     </td>
+  );
+}
+
+/** The strip and the reading together, as a rank column shows them. */
+export function RankCell({
+  rank,
+  of,
+  basis,
+  uncertainty,
+  peers,
+}: {
+  rank: number;
+  of: number;
+  basis: string;
+  uncertainty?: Uncertainty;
+  peers?: Peers;
+}) {
+  return (
+    <>
+      <RankStrip rank={rank} of={of} best={uncertainty?.best} worst={uncertainty?.worst} />
+      <RankReading
+        rank={rank}
+        of={of}
+        basis={basis}
+        uncertainty={uncertainty}
+        cohort={peers ? cohortLabel(of, peers) : String(of)}
+      />
+    </>
   );
 }
 
@@ -172,6 +261,8 @@ export function Ledger({
   regionLabel,
   sources,
   path,
+  uncertainties,
+  peers,
 }: {
   metrics: PacketMetric[];
   placement: TablePlacement;
@@ -182,6 +273,10 @@ export function Ledger({
   regionLabel?: string;
   sources?: Packet["sources"];
   path?: string;
+  /** Margins and rank ranges from the summary (Milestone 28); none without a summary. */
+  uncertainties?: Uncertainties;
+  /** The region's peers, which name every rank's cohort. */
+  peers?: Peers;
 }) {
   const sections = groupRows(metrics);
   const atFoot = new Set(sections.flatMap((s) => s.rows.map((r) => r.metric_id)).slice(-FOOT_ROWS));
@@ -236,14 +331,30 @@ export function Ledger({
                     </td>
                     <td className="value">
                       {formatMetric(metric.end_value, metric.unit, metric.metric_id)}
+                      {/* The change's own end: the observation it compares (0018). */}
+                      <Margin
+                        label={marginLabel(
+                          metric.end_value,
+                          uncertainties?.change.get(metric.metric_id)?.end ?? null,
+                          metric.unit,
+                          metric.metric_id,
+                        )}
+                      />
                     </td>
-                    <ChangeCell pct={metric.pct_change} />
+                    <ChangeCell
+                      pct={metric.pct_change}
+                      margin={changeMarginLabel(
+                        uncertainties?.change.get(metric.metric_id)?.margin ?? null,
+                      )}
+                    />
                     <td className="rank">
                       {metric.rank !== null && metric.of !== null ? (
-                        <RankStrip
+                        <RankCell
                           rank={metric.rank}
                           of={metric.of}
-                          words={rankWords(metric.rank, metric.of, "change", metric.direction)}
+                          basis={rankBasis("change", metric.direction)}
+                          uncertainty={uncertainties?.change.get(metric.metric_id)}
+                          peers={peers}
                         />
                       ) : (
                         "—"

@@ -568,6 +568,8 @@ body > main { flex: 1 0 auto; width: 100%; }
 .region-standout-card .term:hover,
 .region-standout-card .term:focus-visible { text-decoration-color: #ffffff; }
 .region-standout-card .gl { position: static; }
+/* A survey figure's margin, legible on the card's dark ground (Milestone 28). */
+.region-standout-card .margin { color: rgb(255 255 255 / 0.82); }
 .region-standout-card .tip {
   left: 1rem; right: 1rem; width: auto; top: auto; margin-top: 6px;
   background: var(--surface-1); color: var(--text-secondary);
@@ -728,6 +730,17 @@ body > main { flex: 1 0 auto; width: 100%; }
   background: var(--series-1); border-radius: 1px;
 }
 .rank-n { font: var(--text-label)/1 var(--font-mono); color: var(--text-secondary); margin-left: 0.45rem; }
+/* Milestone 28: the ranks a figure could plausibly hold, shaded behind its marker, and
+   the rank in words beneath the strip — one place, or where its range sits with the
+   range under it. A figure's margin of error sits on its own line under the figure. */
+.strip b {
+  position: absolute; bottom: 0; height: 13px;
+  background: color-mix(in srgb, var(--series-1) 28%, transparent); border-radius: 1px;
+}
+.rank-read { display: block; margin-top: 0.2rem; white-space: normal; max-width: 15rem; }
+.rank-lead { display: block; font-size: var(--text-note); line-height: 1.35; color: var(--text-secondary); }
+.rank-range { display: block; font: var(--text-label)/1.4 var(--font-mono); color: var(--text-muted); }
+.margin { display: block; font: var(--text-label)/1.4 var(--font-mono); color: var(--text-muted); white-space: nowrap; }
 .ledger tr.has-note td { border-bottom: 0; }
 .ledger tr.note td { padding: 0 0 0.6rem; border-bottom: 1px solid var(--grid); }
 .row-note {
@@ -1241,7 +1254,7 @@ tr[data-status="pending"] .fresh-status {
 .ranks th { padding: 0 0 0.4rem; border-bottom: 1px solid var(--border); }
 .ranks td { padding: 0.42rem 0; border-bottom: 1px solid var(--grid); }
 .ranks td + td, .ranks th + th { padding-left: 0.8rem; }
-.ranks .pos { width: 2.2em; color: var(--text-muted); }
+.ranks .pos { width: 2.2em; color: var(--text-muted); white-space: nowrap; } /* "1–12" (M28) */
 .ranks tr.on td { background: color-mix(in srgb, var(--text-primary) 6%, var(--surface-2)); }
 .ranks tr.on td:first-child { box-shadow: inset 2px 0 0 var(--text-primary); }
 /* Place names in the text color, not a generic link blue (Milestone 23): the row is

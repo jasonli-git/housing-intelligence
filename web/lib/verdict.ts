@@ -15,6 +15,13 @@ import { definitionOf } from "@/lib/definitions";
 import { formatMetric } from "@/lib/format";
 import { periodLabel, surveyYears } from "@/lib/periods";
 import { ordinal, rankPosition } from "@/lib/ranks";
+import {
+  changeMarginLabel,
+  marginLabel,
+  type Uncertainties,
+  type Uncertainty,
+  withMargin,
+} from "@/lib/uncertainty";
 
 /**
  * The home values a verdict can stand on, in order of preference. Zillow's index is the
@@ -57,6 +64,43 @@ export function standing(rank: number, of: number): string {
     : `the ${ordinal(of - rank + 1)} least expensive`;
 }
 
+/** A rank range that is more than one place (Milestone 28), or null. */
+function spread(u: Uncertainty | undefined): { best: number; worst: number } | null {
+  return u && u.best !== null && u.worst !== null && u.best !== u.worst
+    ? { best: u.best, worst: u.worst }
+    : null;
+}
+
+/**
+ * Where a value rank sits as price when its margin leaves a range (Milestone 28): by
+ * thirds of the cohort, the same thirds `rankReading` uses — "near the middle of",
+ * "toward the less expensive end of" — and "hard to place among" where the range runs
+ * from the expensive third to the cheap one.
+ */
+export function standingRange(best: number, worst: number, of: number): string {
+  if (best === 1 && worst === of) return "too uncertain to place among";
+  const from = rankPosition(best, of);
+  const to = rankPosition(worst, of);
+  if (to <= 1 / 3) return "among the most expensive of";
+  if (from >= 2 / 3) return "among the least expensive of";
+  if (from >= 1 / 3 && to <= 2 / 3) return "near the middle of";
+  if (from < 1 / 3 && to > 2 / 3) return "hard to place among";
+  return from < 1 / 3 ? "toward the expensive end of" : "toward the less expensive end of";
+}
+
+/**
+ * How a change rank compares when its margin leaves a range: a pace the whole range
+ * agrees on, or "at a pace that can't be told apart from most".
+ */
+export function paceRange(best: number, worst: number, of: number): string {
+  const from = rankPosition(best, of);
+  const to = rankPosition(worst, of);
+  if (to <= 0.4) return "faster than most";
+  if (from >= 0.6) return "more slowly than most";
+  if (from >= 0.4 && to < 0.6) return "at about the typical pace";
+  return "at a pace that can’t be told apart from most";
+}
+
 /** How a change rank compares, in fifths: "faster than most", "at about the typical pace". */
 export function pace(rank: number, of: number): string {
   const p = rankPosition(rank, of);
@@ -76,7 +120,12 @@ export function pace(rank: number, of: number): string {
  * because that contrast is the news; "and" otherwise. Null when the region has no ranked
  * home value at all.
  */
-export function verdict(peers: Peers, metrics: PacketMetric[], levels: PacketLevel[]): string | null {
+export function verdict(
+  peers: Peers,
+  metrics: PacketMetric[],
+  levels: PacketLevel[],
+  uncertainties?: Uncertainties,
+): string | null {
   for (const home of HOME_VALUES) {
     const level = ranked(levels, home.metric_id);
     if (!level) continue;
@@ -86,23 +135,50 @@ export function verdict(peers: Peers, metrics: PacketMetric[], levels: PacketLev
         ? `${peers.scope}’s ${level.of} ${peers.noun}`
         : `the ${level.of} ${peers.scope} ${peers.noun} ${home.cohort}`;
     const value = formatMetric(level.value, level.unit, level.metric_id);
-    let sentence = `${peers.name} is ${standing(level.rank, level.of)} of ${cohort}, by ${home.noun} (${value})`;
+    // A survey's home value carries a margin (Milestone 28): the sentence gives the
+    // margin and the ranks the value could hold, and never a place it cannot back.
+    const u = uncertainties?.value.get(home.metric_id);
+    const range = spread(u);
+    const margin = u ? marginLabel(level.value, u.margin, level.unit, level.metric_id) : null;
+    let sentence = range
+      ? `${peers.name} is ${standingRange(range.best, range.worst, level.of)} ${cohort}, ` +
+        `by ${home.noun} (${withMargin(value, margin)}, ranked between ` +
+        `${ordinal(range.best)} and ${ordinal(range.worst)})`
+      : `${peers.name} is ${standing(level.rank, level.of)} of ${cohort}, by ${home.noun} ` +
+        `(${withMargin(value, margin)})`;
 
     const change = ranked(metrics, home.metric_id);
     if (change) {
       const pct = change.pct_change;
-      const quoted = `${ordinal(change.rank)} of ${change.of} by change`;
+      const cu = uncertainties?.change.get(home.metric_id);
+      const changeRange = spread(cu);
+      const changeMargin = changeMarginLabel(cu?.margin ?? null, home.metric_id);
+      const quoted = changeRange
+        ? `between ${ordinal(changeRange.best)} and ${ordinal(changeRange.worst)} of ${change.of} by change`
+        : `${ordinal(change.rank)} of ${change.of} by change`;
       if (pct === 0) {
-        sentence += `, and its value was unchanged over five years (${quoted})`;
+        sentence +=
+          `, and its value was unchanged over five years ` +
+          `(${changeMargin ? `${changeMargin}, ` : ""}${quoted})`;
       } else if (pct < 0) {
-        sentence += `, and its value fell ${Math.abs(pct).toFixed(1)}% over five years (${quoted})`;
+        sentence +=
+          `, and its value fell ${withMargin(`${Math.abs(pct).toFixed(1)}%`, changeMargin)} ` +
+          `over five years (${quoted})`;
+      } else if (changeRange || range) {
+        // Where either rank is a range, "but" would claim a contrast the margins cannot
+        // back, so the sentence only reports.
+        const how = changeRange
+          ? paceRange(changeRange.best, changeRange.worst, change.of)
+          : pace(change.rank, change.of);
+        const moved = withMargin(`+${pct.toFixed(1)}%`, changeMargin);
+        sentence += `, and its value rose ${how} over five years (${moved}, ${quoted})`;
       } else {
         const p = rankPosition(change.rank, change.of);
         const dear = level.rank <= Math.ceil(level.of / 2);
         const contrast = (dear && p >= 0.6) || (!dear && p <= 0.4);
         sentence +=
           `, ${contrast ? "but" : "and"} its value rose ${pace(change.rank, change.of)} over ` +
-          `five years (+${pct.toFixed(1)}%, ${quoted})`;
+          `five years (${withMargin(`+${pct.toFixed(1)}%`, changeMargin)}, ${quoted})`;
       }
     }
     return `${sentence}.`;
@@ -183,11 +259,14 @@ export type ProfileItem = {
   metric_id: string;
   label: string;
   value: string;
+  /** A survey figure's margin beneath its value, "± 2.3 points" (Milestone 28). */
+  margin?: string | null;
   definition: string;
   /** Plain-language context plus an optional typed rank; never parsed back out of prose. */
   context: {
     words: string;
-    rank: { value: number; of: number } | null;
+    /** `best` and `worst` where a margin leaves the rank a range (Milestone 28). */
+    rank: { value: number; of: number; best?: number; worst?: number } | null;
   } | null;
 };
 
@@ -197,12 +276,29 @@ export type ProfileItem = {
  * fifth between is near the middle. Rank 1 is the largest value except where lower is
  * better (`lib/ranks.ts`), so the position is read from the largest end either way.
  */
-function among(row: PacketLevel, more: string, fewer: string): ProfileItem["context"] {
+function among(
+  row: PacketLevel,
+  more: string,
+  fewer: string,
+  u?: Uncertainty,
+): ProfileItem["context"] {
   if (row.rank === null || row.of === null) return null;
-  const p = rankPosition(row.rank, row.of);
-  const fromLargest = row.direction === "lower_is_better" ? 1 - p : p;
-  const words = fromLargest <= 0.4 ? more : fromLargest >= 0.6 ? fewer : "near the middle";
-  return { words, rank: { value: row.rank, of: row.of } };
+  const of = row.of;
+  const largest = (rank: number) => {
+    const p = rankPosition(rank, of);
+    return row.direction === "lower_is_better" ? 1 - p : p;
+  };
+  const range = spread(u);
+  if (range) {
+    // Milestone 28: words only where the whole range agrees on them.
+    const [a, b] = [largest(range.best), largest(range.worst)].sort((x, y) => x - y);
+    const words =
+      b <= 0.4 ? more : a >= 0.6 ? fewer : a >= 0.4 && b < 0.6 ? "near the middle" : "hard to tell from most";
+    return { words, rank: { value: row.rank, of, best: range.best, worst: range.worst } };
+  }
+  const p = largest(row.rank);
+  const words = p <= 0.4 ? more : p >= 0.6 ? fewer : "near the middle";
+  return { words, rank: { value: row.rank, of } };
 }
 
 function moved(pct: number): string {
@@ -222,7 +318,16 @@ function moved(pct: number): string {
  * parcel is tax-roll vocabulary, and what it counts here is buildings. The metric keeps
  * its label, because renaming it would change every packet and stale every explanation.
  */
-export function housingProfile(levels: PacketLevel[], metrics: PacketMetric[] = []): ProfileItem[] {
+export function housingProfile(
+  levels: PacketLevel[],
+  metrics: PacketMetric[] = [],
+  uncertainties?: Uncertainties,
+): ProfileItem[] {
+  // A survey figure's rank range, where it has one (Milestone 28).
+  const rangeOf = (row: PacketLevel) => uncertainties?.value.get(row.metric_id);
+  // And its margin beneath the value.
+  const marginOf = (row: PacketLevel) =>
+    marginLabel(row.value, rangeOf(row)?.margin ?? null, row.unit, row.metric_id);
   const find = (id: string) => levels.find((l) => l.metric_id === id);
   const items: ProfileItem[] = [];
 
@@ -235,7 +340,7 @@ export function housingProfile(levels: PacketLevel[], metrics: PacketMetric[] = 
       definition:
         "The median year one- to four-family homes here were built, among those New " +
         "Jersey’s property tax records (MOD-IV) give a year for.",
-      context: among(built, "newer than most", "older than most"),
+      context: among(built, "newer than most", "older than most", rangeOf(built)),
     });
   }
   const lot = find("modiv_median_lot_acres");
@@ -247,7 +352,7 @@ export function housingProfile(levels: PacketLevel[], metrics: PacketMetric[] = 
       definition:
         "The median lot size of one- to four-family homes here, from the property tax " +
         "records (MOD-IV). An acre is 43,560 square feet.",
-      context: among(lot, "larger than most", "smaller than most"),
+      context: among(lot, "larger than most", "smaller than most", rangeOf(lot)),
     });
   }
   const owned = find("acs_homeownership_rate");
@@ -256,10 +361,11 @@ export function housingProfile(levels: PacketLevel[], metrics: PacketMetric[] = 
       metric_id: owned.metric_id,
       label: "Households that own",
       value: formatMetric(owned.value, owned.unit, owned.metric_id),
+      margin: marginOf(owned),
       definition:
         "The share of occupied homes lived in by their owners rather than rented out, from " +
         "the Census Bureau’s American Community Survey five-year estimate.",
-      context: among(owned, "more than most", "fewer than most"),
+      context: among(owned, "more than most", "fewer than most", rangeOf(owned)),
     });
   }
   const apartments = find("modiv_multifamily_share");
@@ -272,7 +378,7 @@ export function housingProfile(levels: PacketLevel[], metrics: PacketMetric[] = 
         "Apartment buildings as a share of the residential properties on the tax roll — " +
         "one- to four-family homes and apartment buildings. It counts buildings, not " +
         "homes: a 200-unit building counts once.",
-      context: among(apartments, "more than most", "fewer than most"),
+      context: among(apartments, "more than most", "fewer than most", rangeOf(apartments)),
     });
   }
   const empty = find("acs_vacancy_rate");
@@ -281,10 +387,11 @@ export function housingProfile(levels: PacketLevel[], metrics: PacketMetric[] = 
       metric_id: empty.metric_id,
       label: "Homes standing empty",
       value: formatMetric(empty.value, empty.unit, empty.metric_id),
+      margin: marginOf(empty),
       definition:
         definitionOf(empty.metric_id)?.what ??
         "The share of all homes standing empty, from the Census Bureau’s American Community Survey.",
-      context: among(empty, "more than most", "fewer than most"),
+      context: among(empty, "more than most", "fewer than most", rangeOf(empty)),
     });
   }
   const permits = find("permits_total_units");
@@ -297,7 +404,7 @@ export function housingProfile(levels: PacketLevel[], metrics: PacketMetric[] = 
         "New homes authorized by building permits that year, counted in units, from the " +
         "Census Bureau’s Building Permits Survey. A permit is approval to build, not a " +
         "finished home.",
-      context: among(permits, "more than most", "fewer than most"),
+      context: among(permits, "more than most", "fewer than most", rangeOf(permits)),
     });
   }
   const people = find("acs_population");
@@ -307,17 +414,25 @@ export function housingProfile(levels: PacketLevel[], metrics: PacketMetric[] = 
       metric_id: people.metric_id,
       label: "People",
       value: formatMetric(people.value, people.unit, people.metric_id),
+      margin: marginOf(people),
       definition:
         "The Census Bureau’s American Community Survey five-year estimate for the survey " +
         `years ${surveyYears(people.period_start, people.period_end)}.`,
       context: change
         ? {
             words:
-              `${moved(change.pct_change)}, ${periodLabel(change.window_start, change.metric_id)} to ` +
+              withMargin(
+                moved(change.pct_change),
+                changeMarginLabel(
+                  uncertainties?.change.get(change.metric_id)?.margin ?? null,
+                  change.metric_id,
+                ),
+              ) +
+              `, ${periodLabel(change.window_start, change.metric_id)} to ` +
               `${periodLabel(change.window_end, change.metric_id)}`,
             rank: null,
           }
-        : among(people, "more than most", "fewer than most"),
+        : among(people, "more than most", "fewer than most", rangeOf(people)),
     });
   }
 
@@ -329,15 +444,30 @@ export function housingProfile(levels: PacketLevel[], metrics: PacketMetric[] = 
  * it has both: "Mercer County's typical single-family home value is 9th of 21 by its
  * five-year rise and 14th of 21 by value." The example is the point — the two ranks of
  * one figure, side by side, are what stops a change rank being read as a price rank.
+ * A survey's value gives the ranks its margins leave it, as the tables do (Milestone
+ * 28): "between 58th and 549th of 561 by its five-year rise".
  */
-export function rankBasisExample(name: string, metrics: PacketMetric[], levels: PacketLevel[]): string | null {
+export function rankBasisExample(
+  name: string,
+  metrics: PacketMetric[],
+  levels: PacketLevel[],
+  uncertainties?: Uncertainties,
+): string | null {
+  const place = (rank: number, of: number, u: Uncertainty | undefined) => {
+    const range = spread(u);
+    return range
+      ? `between ${ordinal(range.best)} and ${ordinal(range.worst)} of ${of}`
+      : `${ordinal(rank)} of ${of}`;
+  };
   for (const home of HOME_VALUES) {
     const change = ranked(metrics, home.metric_id);
     const level = ranked(levels, home.metric_id);
     if (change && level) {
       return (
-        `${name}’s ${home.noun} is ${ordinal(change.rank)} of ${change.of} by its five-year ` +
-        `rise and ${ordinal(level.rank)} of ${level.of} by value.`
+        `${name}’s ${home.noun} is ` +
+        `${place(change.rank, change.of, uncertainties?.change.get(home.metric_id))} by its ` +
+        `five-year rise and ` +
+        `${place(level.rank, level.of, uncertainties?.value.get(home.metric_id))} by value.`
       );
     }
   }
@@ -355,22 +485,30 @@ export function rankBasisExample(name: string, metrics: PacketMetric[], levels: 
  * to the buyer, so pairing it with a price would be a reading the figure does not
  * support (ARCHITECTURE #142).
  */
-export function tradeoff(peers: Peers, levels: PacketLevel[]): string | null {
+export function tradeoff(
+  peers: Peers,
+  levels: PacketLevel[],
+  uncertainties?: Uncertainties,
+): string | null {
   const home = HOME_VALUES.map((h) => ranked(levels, h.metric_id)).find((row) => row !== undefined);
   const tax = ranked(levels, "modiv_median_tax_bill");
   if (!home || !tax) return null;
 
-  const price = rankPosition(home.rank, home.of);
+  // "Less than in most" only where every rank a survey's margins leave the home value
+  // agrees (Milestone 28): its best rank past the middle, or its worst short of it.
+  const range = spread(uncertainties?.value.get(home.metric_id));
+  const cheaper = rankPosition(range ? range.best : home.rank, home.of) > 0.5;
+  const dearer = rankPosition(range ? range.worst : home.rank, home.of) < 0.5;
   const taxAt = rankPosition(tax.rank, tax.of);
   const bill = formatMetric(tax.value, tax.unit, tax.metric_id);
-  if (price > 0.5 && taxAt <= 1 / 3) {
+  if (cheaper && taxAt <= 1 / 3) {
     const nth = tax.rank === 1 ? "the highest" : `the ${ordinal(tax.rank)} highest`;
     return (
       `Homes here cost less than in most ${peers.noun}, but the typical property tax ` +
       `bill, ${bill} a year, is ${nth} of ${tax.of}.`
     );
   }
-  if (price < 0.5 && taxAt >= 2 / 3) {
+  if (dearer && taxAt >= 2 / 3) {
     const low = tax.of - tax.rank + 1;
     const nth = low === 1 ? "the lowest" : `the ${ordinal(low)} lowest`;
     return (

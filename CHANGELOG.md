@@ -3,6 +3,72 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.24.0] — 2026-09-26
+
+**Milestone 28 — figures that read right at a glance.** Survey figures show how sure
+they are, and ranks say only what the survey can back.
+
+### Added
+
+- **Margins of error on the Census's survey figures.** Beside each ACS value and change:
+  "$100,645 ± $2,565", "50.1% ± 2.3 points", "+24.2% ± 4.0%", or, for a share whose
+  margin would pass 0% or 100%, its range ("0.0% to 40.0%"). The three affordability
+  ratios that divide by survey income carry its margin too. One note under the tables
+  says what ± means (ARCHITECTURE #235, #238).
+- **Ranks the margins can back.** Where the margins cannot tell a place from its
+  neighbours, its rank reads as a word over a range: "Near the middle of 21 NJ counties",
+  "between 10th and 12th", with the range shaded on the rank strip. The verdict sentence,
+  the housing profile, the stand-out cards, the print report and the New Jersey page's
+  county table all follow (#239, #241).
+- **Every rank names its cohort**: "12th of 21 NJ counties", "561 NJ municipalities with
+  data" (#242).
+- **`/changes` labels this site's own recomputations** apart from a publisher's revisions
+  (#243).
+- The completeness check's second run, now measuring margins
+  (`reports/completeness/2026-09-26-2.md`, #245).
+- **SPEC v1.3, principle 12: a survey figure carries its margin of error**, decided by the
+  owner on 2026-09-26. Every survey figure the site shows now gives its margin, or reads
+  "no margin available" where it has none, rather than looking exact: the housing
+  profile's tiles, the region head's population, the report's start column, the
+  stand-out cards, the value history and chart readouts, the since-a-year lines, and the
+  New Jersey page's county table, readout and municipal list (#246).
+- The New Jersey page's municipal list gives survey ranks as ranges, like the county
+  table (#248). The API gives the margins of both ends of a change, of each ranked value,
+  and of each observation and `/compare` point (migration 0018, #247).
+
+### Changed
+
+- **Renter cost burden** no longer counts renters whose burden the Census could not
+  compute (no or negative income, or no cash rent), the way HUD's CHAS tables count them:
+  3,084 figures rose, typically by 6.4% (#236).
+- The New Jersey page's house price indexes lead with their five-year change, with the
+  level beneath as a multiple of its base: "442.7, about 4.4× its 1991 Q1 level" (#244).
+- The region page head no longer carries "every figure ranked against …"; each rank says
+  it (#242).
+- ACS fetches six editions instead of five, so both ends of a five-year change are
+  fetched (#237).
+
+### Fixed
+
+- **The 2015–2019 ACS edition cited the 2020–2024 file** on every reload since 0.19
+  (Milestone 24): with no release fetched for it, the loader fell back to another. Its
+  figures now cite their own release (#237).
+- The region page's rank note and tradeoff line quoted and decided from a survey's point
+  rank; they now use its range (#246).
+- `/changes` labels a recomputation on the first day its metric was revised after the
+  change shipped, not only on the change's own date (#249).
+- The page's note no longer says HUD publishes no margins for CHAS: its bulk files do;
+  the API this site reads does not.
+
+### Not in this release
+
+- Margins in the analysis packets and the AI readings, which Milestone 30 takes in when it
+  rewrites them (#240). The burden fix changed a figure every county packet carries, so
+  all 84 readings are marked stale until they are regenerated.
+- Margins for HUD's CHAS figures, which HUD's API does not publish; each reads "no
+  margin available" meanwhile.
+- Margins on `/changes`, whose revision records keep values only.
+
 ## [0.23.1] — 2026-09-26
 
 ### Fixed

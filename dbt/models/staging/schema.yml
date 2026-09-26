@@ -53,6 +53,22 @@ models:
   # Milestone 21. Keyed models: the geoid is exact, so the tests guard the shape of the
   # files — a moved column shows up as nulls or out-of-range values here, before the
   # gate or the warehouse sees it.
+  - name: stg_census_acs
+    description: >-
+      ACS income, rent, population, home value and renter cost burden, county and
+      municipal, each with its 90% margin of error (Milestone 28).
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests: [not_null]
+      # A margin is never negative: the Census's negative codes are read as NULL, or 0
+      # for a controlled estimate. No upper bound — a share over a handful of renters
+      # can have a margin wider than the share itself, which is the finding, not a bug.
+      - name: margin_of_error
+        tests:
+          - accepted_range: {min_value: 0, max_value: 1.0e+15}
+
   - name: stg_census_acs_housing
     description: ACS vacancy (B25002) and homeownership (B25003) rates, county and municipal.
     columns:
@@ -65,6 +81,9 @@ models:
         tests:
           - not_null
           - accepted_range: {min_value: 0, max_value: 1}
+      - name: margin_of_error
+        tests:
+          - accepted_range: {min_value: 0, max_value: 1.0e+15}
 
   - name: stg_census_permits_place
     description: Building permits by place, resolved to municipal GEOIDs by FIPS MCD code.

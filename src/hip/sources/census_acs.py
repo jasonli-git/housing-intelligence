@@ -16,6 +16,7 @@ states, so a ZIP-level pull means downloading all ~33,000 nationally per year fo
 from __future__ import annotations
 
 import os
+from collections.abc import Iterable
 from datetime import date
 from typing import ClassVar
 
@@ -32,8 +33,18 @@ VARIABLES: dict[str, str] = {
     "B01003_001E": "acs_population",
     "B25077_001E": "acs_median_home_value",
 }
-# Renter cost burden: households paying 30%+ of income on housing, over all renters.
-BURDEN_PARTS = ("B25070_001E", "B25070_007E", "B25070_008E", "B25070_009E", "B25070_010E")
+# Renter cost burden: households paying 30%+ of income on housing, over the renters
+# whose burden the Census could compute. `B25070_011E` counts the rest — no or negative
+# income, or no cash rent — and leaves the denominator in Milestone 28, the universe
+# HUD's CHAS tables already use.
+BURDEN_PARTS = (
+    "B25070_001E",
+    "B25070_007E",
+    "B25070_008E",
+    "B25070_009E",
+    "B25070_010E",
+    "B25070_011E",
+)
 
 # Housing stock (Milestone 21): occupancy (B25002 — all units, vacant) and tenure (B25003
 # — occupied units, owner-occupied), from which vacancy and homeownership rates are
@@ -43,13 +54,29 @@ BURDEN_PARTS = ("B25070_001E", "B25070_007E", "B25070_008E", "B25070_009E", "B25
 # the new columns, silently. Separate layers also give these rows their own release.
 HOUSING_VARIABLES = ("B25002_001E", "B25002_003E", "B25003_001E", "B25003_002E")
 
-# How many consecutive 5-year vintages to fetch. Five vintages span nine years of
-# sample, because consecutive vintages overlap by four.
-VINTAGE_COUNT = 5
+
+def with_margins(estimates: Iterable[str]) -> list[str]:
+    """Each estimate beside its margin of error: `B19013_001E` and `B19013_001M`.
+
+    The Census publishes a 90% margin with every ACS estimate, and Milestone 28 shows
+    it. Asked for in the same request as its estimate, so the two can never come from
+    different files. Widening a request is safe since ARCHITECTURE #214: a cached copy
+    answers only the request it was fetched with, so the wider one is fetched afresh.
+    """
+    return [v for estimate in estimates for v in (estimate, estimate[:-1] + "M")]
+
+
+# How many consecutive 5-year vintages to fetch: six, so the newest edition and the one
+# five years before it — the pair the default five-year change compares, whose samples
+# do not overlap — are both fetched, with the four between. Until Milestone 28 this was
+# five, and the start of every five-year change was an edition fetched under an older
+# end year and kept only because nothing deleted it: a clean rebuild would have lost
+# the five-year change, and re-fetching for margins of error passed it by.
+VINTAGE_COUNT = 6
 
 
 def vintages(end_year: int) -> tuple[int, ...]:
-    """The five vintages ending at ``end_year``, newest first."""
+    """The six vintages ending at ``end_year``, newest first."""
     return tuple(range(end_year, end_year - VINTAGE_COUNT, -1))
 
 
@@ -111,8 +138,8 @@ class AcsAdapter(SourceAdapter):
                 "Get one free at https://api.census.gov/data/key_signup.html"
             )
         requests = {
-            "": ",".join(["NAME", *VARIABLES, *BURDEN_PARTS]),
-            "housing_": ",".join(["NAME", *HOUSING_VARIABLES]),
+            "": ",".join(["NAME", *with_margins([*VARIABLES, *BURDEN_PARTS])]),
+            "housing_": ",".join(["NAME", *with_margins(HOUSING_VARIABLES)]),
         }
         years = [int(vintage)] if vintage else list(vintages(self.latest))
         refs = []

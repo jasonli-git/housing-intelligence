@@ -40,6 +40,13 @@ export type Headline = {
   pct_change: number;
   rank: number | null;
   of: number | null;
+  /** The change's 90% margin, in percentage points, and its rank range (Milestone 28). */
+  pct_change_margin?: number | null;
+  rank_best?: number | null;
+  rank_worst?: number | null;
+  /** The margins of `start_value` and `end_value` (migration 0018). */
+  start_margin?: number | null;
+  end_margin?: number | null;
 };
 
 /** A metric's most recent value and its rank by value, not by change. */
@@ -54,6 +61,10 @@ export type LevelReading = {
   source_id: string;
   rank: number | null;
   of: number | null;
+  /** The value's 90% margin of error and its rank range; null without margins (M28). */
+  margin_of_error?: number | null;
+  rank_best?: number | null;
+  rank_worst?: number | null;
 };
 
 export type Summary = {
@@ -102,6 +113,13 @@ export type RankedRegion = {
   end_value: number | null;
   window_start: string | null;
   window_end: string | null;
+  /** The ranks it could plausibly hold given margins of error; null without (M28). */
+  rank_best?: number | null;
+  rank_worst?: number | null;
+  /** The margin of `value`, whichever the basis, and of each end of a change (0018). */
+  margin_of_error?: number | null;
+  start_margin?: number | null;
+  end_margin?: number | null;
 };
 
 export type Ranking = {
@@ -123,6 +141,8 @@ export type Observation = {
   source_id: string;
   vintage: string;
   match_method: string;
+  /** A survey estimate's 90% margin of error; null for any other source (M28). */
+  margin_of_error?: number | null;
 };
 
 /**
@@ -628,6 +648,8 @@ export type RevisionGroup = {
   source_id: string | null;
   /** The period had not ended when the figure changed: a month filling in, not a correction. */
   under_way: boolean;
+  /** This site changed how it computes the figure that day: what a reader is told (M28). */
+  method_change?: string | null;
   figures: number;
   places: number;
   /** End dates of the earliest and latest revised periods. */

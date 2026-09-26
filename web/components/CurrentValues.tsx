@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 
-import { Marks, NoteRows, RankText } from "@/components/Ledger";
+import { Margin, Marks, NoteRows, RankCell } from "@/components/Ledger";
 import { MetricTerm } from "@/components/MetricTerm";
 import { ReportProblem } from "@/components/ReportProblem";
 import type { Packet, PacketLevel } from "@/lib/api";
@@ -8,7 +8,8 @@ import type { TablePlacement } from "@/lib/caveats";
 import { formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { periodLabel } from "@/lib/periods";
-import { RANK_HEADING, rankWords } from "@/lib/ranks";
+import { RANK_HEADING, rankBasis } from "@/lib/ranks";
+import { marginLabel, type Peers, type Uncertainties } from "@/lib/uncertainty";
 
 /**
  * Every metric's latest reading, ranked by value rather than by change.
@@ -28,6 +29,8 @@ export function CurrentValues({
   regionLabel,
   sources,
   path,
+  uncertainties,
+  peers,
 }: {
   levels: PacketLevel[];
   placement: TablePlacement;
@@ -35,6 +38,9 @@ export function CurrentValues({
   regionLabel?: string;
   sources?: Packet["sources"];
   path?: string;
+  /** Margins and rank ranges from the summary (Milestone 28). */
+  uncertainties?: Uncertainties;
+  peers?: Peers;
 }) {
   return (
     <div className="values-grid">
@@ -47,9 +53,7 @@ export function CurrentValues({
               <th scope="col" className="num">
                 Value
               </th>
-              <th scope="col" className="num">
-                {RANK_HEADING.value}
-              </th>
+              <th scope="col">{RANK_HEADING.value}</th>
               <th scope="col">As of</th>
             </tr>
           </thead>
@@ -75,15 +79,27 @@ export function CurrentValues({
                         />
                       )}
                     </td>
-                    <td className="num">{formatMetric(level.value, level.unit, level.metric_id)}</td>
                     <td className="num">
+                      {formatMetric(level.value, level.unit, level.metric_id)}
+                      <Margin
+                        label={marginLabel(
+                          level.value,
+                          uncertainties?.value.get(level.metric_id)?.margin ?? null,
+                          level.unit,
+                          level.metric_id,
+                        )}
+                      />
+                    </td>
+                    <td className="rank">
                       {level.rank === null || level.of === null ? (
                         "—"
                       ) : (
-                        <RankText
+                        <RankCell
                           rank={level.rank}
                           of={level.of}
-                          words={rankWords(level.rank, level.of, "value", level.direction)}
+                          basis={rankBasis("value", level.direction)}
+                          uncertainty={uncertainties?.value.get(level.metric_id)}
+                          peers={peers}
                         />
                       )}
                     </td>

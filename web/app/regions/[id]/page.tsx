@@ -9,7 +9,7 @@ import { Definition } from "@/components/Definition";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
 import { Glossed } from "@/components/Glossed";
 import { ProfileTicker } from "@/components/StateProfileTicker";
-import { Ledger, TableNotes } from "@/components/Ledger";
+import { Ledger, Margin, TableNotes } from "@/components/Ledger";
 import { MoreExpander } from "@/components/MoreExpander";
 import { Masthead } from "@/components/Masthead";
 import { RankOverview } from "@/components/RankOverview";
@@ -25,6 +25,14 @@ import { groupRows } from "@/lib/groups";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, surveyYears } from "@/lib/periods";
 import { standOuts } from "@/lib/standouts";
+import {
+  anyMargin,
+  changeMarginLabel,
+  MARGIN_NOTE,
+  marginLabel,
+  uncertaintiesFrom,
+  withMargin,
+} from "@/lib/uncertainty";
 import {
   housingProfile,
   type PaycheckAnswer,
@@ -181,17 +189,20 @@ export default async function RegionPage({
 
   // The answers above the tables (Milestone 17), each from figures the tables carry.
   const peers = { name, count: peer_count, noun: peerNoun(peer_level), scope: scopeName(peer_scope) };
-  const lead = verdict(peers, packet.metrics, packet.levels);
+  // Each figure's margin and rank range, from the summary rather than the packet
+  // (Milestone 28), so no reading goes stale before Milestone 30 takes them in.
+  const uncertainties = uncertaintiesFrom(summary);
+  const lead = verdict(peers, packet.metrics, packet.levels, uncertainties);
   const paid = paychecks(packet.metrics);
   const answers = paycheckAnswers(packet.metrics);
-  const trade = tradeoff(peers, packet.levels);
+  const trade = tradeoff(peers, packet.levels, uncertainties);
   // Population is promoted to the page head, where it can orient the reader without
   // repeating the same figure in the compact housing profile immediately below.
-  const profile = housingProfile(packet.levels, packet.metrics).filter(
+  const profile = housingProfile(packet.levels, packet.metrics, uncertainties).filter(
     (item) => item.metric_id !== "acs_population",
   );
-  const standing = standOuts(packet);
-  const rankExample = rankBasisExample(name, packet.metrics, packet.levels);
+  const standing = standOuts(packet, uncertainties);
+  const rankExample = rankBasisExample(name, packet.metrics, packet.levels, uncertainties);
   const rankChartCount =
     Number(packet.metrics.some((row) => row.rank !== null && row.of !== null && row.of > 1)) +
     Number(packet.levels.some((row) => row.rank !== null && row.of !== null && row.of > 1));
@@ -249,11 +260,31 @@ export default async function RegionPage({
               <strong>
                 {formatMetric(population.value, population.unit, population.metric_id)}
               </strong>
+              {/* A survey estimate, so its margin (Milestone 28). */}
+              <Margin
+                label={marginLabel(
+                  population.value,
+                  uncertainties.value.get(population.metric_id)?.margin ?? null,
+                  population.unit,
+                  population.metric_id,
+                )}
+              />
               <span className="population-summary-context">
                 <Definition term={asOfTerm(population, Boolean(populationChange))}>
                   {periodLabel(population.period_end)} estimate
                 </Definition>
-                {populationChange && <> · {changeWords(populationChange.pct_change)}</>}
+                {populationChange && (
+                  <>
+                    {" · "}
+                    {withMargin(
+                      changeWords(populationChange.pct_change),
+                      changeMarginLabel(
+                        uncertainties.change.get(populationChange.metric_id)?.margin ?? null,
+                        populationChange.metric_id,
+                      ),
+                    )}
+                  </>
+                )}
               </span>
             </aside>
           )}
@@ -262,11 +293,9 @@ export default async function RegionPage({
             <h1 className="page-title">{name}</h1>
             <ComputedBadge />
           </div>
-          <p className="meta">
-            {placeLine(region)}
-            {" · "}every figure ranked against {scopeName(peer_scope)}’s {peer_count}{" "}
-            {peerNoun(peer_level)}
-          </p>
+          {/* Every rank names its own cohort now — "12th of 21 NJ counties" — so the
+              line that named it once for the whole page is gone (Milestone 28). */}
+          <p className="meta">{placeLine(region)}</p>
           {lead && <p className="verdict">{lead}</p>}
           {trade && <p className="verdict-more">{trade}</p>}
           {/* The short answers in the line, the sentences behind them a click away: the
@@ -356,6 +385,8 @@ export default async function RegionPage({
               regionLabel={name}
               sources={packet.sources}
               path={`/regions/${id}`}
+              uncertainties={uncertainties}
+              peers={peers}
             />
           ) : (
             <p className="meta">
@@ -371,6 +402,7 @@ export default async function RegionPage({
               {rankExample && ` ${rankExample}`}
             </p>
           )}
+          {anyMargin(uncertainties) && <p className="table-note">{MARGIN_NOTE}</p>}
         </section>
 
         {trends.length > 0 && (
@@ -386,7 +418,11 @@ export default async function RegionPage({
                   short,
                   unit,
                   // The end date alone: it is all the charts and the lines read (#148).
-                  points: observations.map((o) => ({ period_end: o.period_end, value: o.value })),
+                  points: observations.map((o) => ({
+                    period_end: o.period_end,
+                    value: o.value,
+                    margin: o.margin_of_error ?? null,
+                  })),
                   // Keyed: it rides in a list of series into a client component, and React
                   // asks every element created in a list for a key.
                   table: (
@@ -411,7 +447,17 @@ export default async function RegionPage({
                               .map((o) => (
                                 <tr key={o.period_start}>
                                   <td className="nowrap">{periodLabel(o.period_end, metricId)}</td>
-                                  <td className="num">{formatMetric(o.value, unit, metricId)}</td>
+                                  <td className="num">
+                                    {formatMetric(o.value, unit, metricId)}
+                                    <Margin
+                                      label={marginLabel(
+                                        o.value,
+                                        o.margin_of_error ?? null,
+                                        unit,
+                                        metricId,
+                                      )}
+                                    />
+                                  </td>
                                   <td>{o.source_id}</td>
                                   <td>{o.match_method}</td>
                                 </tr>
@@ -449,6 +495,8 @@ export default async function RegionPage({
               regionLabel={name}
               sources={packet.sources}
               path={`/regions/${id}`}
+              uncertainties={uncertainties}
+              peers={peers}
             />
             <TableNotes placement={values} above="the figures above" />
           </section>

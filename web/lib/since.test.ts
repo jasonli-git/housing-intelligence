@@ -69,6 +69,22 @@ describe("sinceLine", () => {
     );
   });
 
+  it("gives a survey's readings their margins, and the change between them its own", () => {
+    const income = {
+      metricId: "acs_median_hh_income",
+      label: "Income",
+      unit: "usd",
+      points: [
+        { period_start: "2015-01-01", period_end: "2019-12-31", value: 81000, margin: 1990 },
+        { period_start: "2020-01-01", period_end: "2024-12-31", value: 100645, margin: 2565 },
+      ],
+    };
+
+    expect(sinceLine(income, 2019).text).toBe(
+      "$81,000 ± $1,990 in 2019, $100,645 ± $2,565 in 2024: up 24.3% ± 4.4%",
+    );
+  });
+
   it("says why a year has no reading", () => {
     const income = { metricId: "acs_median_hh_income", label: "Income", unit: "usd", points: [annual(2019, 1), annual(2023, 2)] };
 

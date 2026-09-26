@@ -96,6 +96,12 @@ export default async function NewJerseyPage() {
                 of: item.of,
                 change: item.value,
                 latest: item.end_value,
+                // The ranks a survey measure's margins leave it (Milestone 28).
+                best: item.rank_best ?? null,
+                worst: item.rank_worst ?? null,
+                // And the margins of its change and its latest value (0018).
+                changeMargin: item.margin_of_error ?? null,
+                latestMargin: item.end_margin ?? null,
               })),
             };
           }),
@@ -156,7 +162,7 @@ export default async function NewJerseyPage() {
           </div>
         </div>
       </header>
-      <StateProfileTicker items={stateProfile(levels)} />
+      <StateProfileTicker items={stateProfile(levels, statewide?.headlines ?? [])} />
       <div className="nj-source-notes">
           {statewideNotes.map((text) => (
             <p key={text} className="table-note">

@@ -81,6 +81,9 @@ class RevisionGroup(BaseModel):
     source_id: str | None = None
     # The period had not ended when the figure changed (see the module docstring).
     under_way: bool
+    # Set where this site changed how it computes the figure that day (`method_changes`,
+    # Milestone 28): the note a reader is told, because the publisher revised nothing.
+    method_change: str | None = None
     figures: int
     places: int
     # End dates of the earliest and latest revised periods, for a label like
@@ -252,6 +255,29 @@ def revision_report(
             )
         )
 
+    # A method change labels the first day its metric was revised on or after the date
+    # it shipped, not only that date: a warehouse migrated one day and rebuilt the next
+    # — or rebuilt after midnight UTC, where these days are counted — would otherwise
+    # read this site's recomputation as the publisher's revision. Only the first: a
+    # later revision of the same metric is the publisher's again.
+    method_changes = {
+        (row["applied_on"], row["metric_id"]): row["note"]
+        for row in session.execute(
+            text(
+                """
+                SELECT m.metric_id, m.note,
+                       (SELECT min((r.revised_at AT TIME ZONE 'UTC')::date)
+                        FROM fact_revision r
+                        WHERE r.metric_id = m.metric_id
+                          AND (r.revised_at AT TIME ZONE 'UTC')::date >= m.changed_on
+                       ) AS applied_on
+                FROM method_changes m
+                """
+            )
+        ).mappings()
+        if row["applied_on"] in days
+    }
+
     by_day: dict[date, list[RevisionGroup]] = {day: [] for day in days}
     for row in session.execute(text(_GROUPS), params).mappings():
         key = (row["revised_on"], row["metric_id"], row["under_way"])
@@ -263,6 +289,7 @@ def revision_report(
                 frequency=row["frequency"],
                 source_id=row["source_id"],
                 under_way=row["under_way"],
+                method_change=method_changes.get((row["revised_on"], row["metric_id"])),
                 figures=row["figures"],
                 places=row["places"],
                 earliest_period=row["earliest_period"],
@@ -282,6 +309,7 @@ def revision_report(
             by_day[day],
             key=lambda g: (
                 g.source_id == "hip_derived",
+                g.method_change is not None,
                 g.under_way,
                 -g.figures,
                 g.label,

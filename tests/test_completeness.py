@@ -73,6 +73,9 @@ def test_coverage_is_measured_at_each_metric_s_newest_period() -> None:
         assert c.municipalities <= totals.municipalities
         assert c.population_share is None or 0 < c.population_share <= 1.0001
         assert sum(c.match_methods.values()) == pytest.approx(1)
+    # Milestone 28: the survey's figures carry margins, a source without them none.
+    assert by_id["acs_median_hh_income"].margin_share > 0.9
+    assert by_id["zhvi_sfr"].margin_share == 0
     # A national figure is not counted as covering New Jersey's people.
     assert by_id["mortgage_rate_30y"].national
     assert by_id["mortgage_rate_30y"].population_share is None

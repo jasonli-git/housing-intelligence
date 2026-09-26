@@ -42,6 +42,15 @@ class RankedRegion(BaseModel):
     end_value: float | None = None
     window_start: date | None = None
     window_end: date | None = None
+    # The ranks it could plausibly hold given everyone's margins of error (Milestone 28);
+    # None where the metric has no margins.
+    rank_best: int | None = None
+    rank_worst: int | None = None
+    # The 90% margin of `value`, whichever the basis, and under `basis=change` those of
+    # `start_value` and `end_value` (migration 0018). None where the metric has none.
+    margin_of_error: float | None = None
+    start_margin: float | None = None
+    end_margin: float | None = None
 
 
 class Ranking(BaseModel):
@@ -98,7 +107,8 @@ def rankings(
             SELECT k.rank, k.of, k.percentile, k.region_id, r.name, r.level::text,
                    k.value,
                    c.pct_change, c.start_value, c.end_value,
-                   c.window_start, c.window_end
+                   c.window_start, c.window_end, k.rank_best, k.rank_worst,
+                   k.margin_of_error, c.start_margin, c.end_margin
             FROM region_rankings k
             JOIN regions r ON r.region_id = k.region_id
             LEFT JOIN fact_metric_change c
@@ -134,6 +144,8 @@ def rankings(
 class SeriesPoint(BaseModel):
     period_start: date
     value: float
+    # Milestone 28: a survey estimate's 90% margin of error; None for any other source.
+    margin_of_error: float | None = None
 
 
 class ComparedRegion(BaseModel):
@@ -182,7 +194,8 @@ def compare(
     rows = session.execute(
         text(
             f"""
-            SELECT f.region_id, r.name, r.level::text, f.period_start, f.value
+            SELECT f.region_id, r.name, r.level::text, f.period_start, f.value,
+                   f.margin_of_error
             FROM fact_metric_observation f
             JOIN regions r ON r.region_id = f.region_id
             WHERE {" AND ".join(filters)}
@@ -204,7 +217,11 @@ def compare(
             )
             grouped[row["region_id"]] = region
         region.series.append(
-            SeriesPoint(period_start=row["period_start"], value=row["value"])
+            SeriesPoint(
+                period_start=row["period_start"],
+                value=row["value"],
+                margin_of_error=row["margin_of_error"],
+            )
         )
 
     return Comparison(
@@ -227,6 +244,14 @@ class Headline(BaseModel):
     pct_change: float
     rank: int | None = None
     of: int | None = None
+    # Milestone 28: the change's 90% margin in percentage points, and the ranks it could
+    # plausibly hold given everyone's margins. None where the metric has no margins.
+    pct_change_margin: float | None = None
+    rank_best: int | None = None
+    rank_worst: int | None = None
+    # The margins of `start_value` and `end_value` (migration 0018).
+    start_margin: float | None = None
+    end_margin: float | None = None
 
 
 class Level(BaseModel):
@@ -246,6 +271,10 @@ class Level(BaseModel):
     source_id: str
     rank: int | None = None
     of: int | None = None
+    # Milestone 28, as on `Headline`: the value's 90% margin of error and its rank range.
+    margin_of_error: float | None = None
+    rank_best: int | None = None
+    rank_worst: int | None = None
 
 
 class CaveatScope(BaseModel):
@@ -281,7 +310,13 @@ def summary(
     session: SessionDep,
     window: Annotated[Window, Query()] = "5y",
 ) -> Summary:
-    """The dashboard landing view: headline changes with rank and relevant caveats."""
+    """The dashboard landing view: headline changes with rank and relevant caveats.
+
+    Also where a page learns each figure's margin of error and rank range (Milestone
+    28), the way it learned caveat scopes (#123): from here rather than the packet, so
+    nothing a model reads, and nothing a content hash covers, moves until Milestone 30
+    takes them into the readings.
+    """
     region = (
         session.execute(
             text(
@@ -300,7 +335,8 @@ def summary(
             """
             SELECT c.metric_id, m.label, m.unit, m.direction,
                    c.start_value, c.end_value, c.pct_change,
-                   k.rank, k.of
+                   k.rank, k.of, c.pct_change_margin, k.rank_best, k.rank_worst,
+                   c.start_margin, c.end_margin
             FROM fact_metric_change c
             JOIN metrics m ON m.metric_id = c.metric_id
             LEFT JOIN region_rankings k
@@ -323,7 +359,8 @@ def summary(
             """
             SELECT DISTINCT ON (f.metric_id)
                    f.metric_id, m.label, m.unit, m.direction, f.value,
-                   f.period_start, f.period_end, sr.source_id, k.rank, k.of
+                   f.period_start, f.period_end, sr.source_id, k.rank, k.of,
+                   f.margin_of_error, k.rank_best, k.rank_worst
             FROM fact_metric_observation f
             JOIN metrics m ON m.metric_id = f.metric_id
             JOIN source_releases sr ON sr.release_id = f.release_id

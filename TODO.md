@@ -8,24 +8,30 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — Milestone 27 complete, in review (2026-09-26)
+## Now — Milestone 28 complete, in review (2026-09-26)
 
-Branch `milestone/m27-refresh-reaches-the-reader`, pull request into `main`. Everything in
-ROADMAP's Milestone 27 row is built: [CHANGELOG.md](CHANGELOG.md) 0.23.0 has what
-shipped, [ARCHITECTURE.md](ARCHITECTURE.md) #216–#226 the decisions, and ROADMAP the
-completeness check's first record.
+Branch `milestone/m28-figures-that-read-right`, pull request into `main`. Everything in
+ROADMAP's Milestone 28 row is built: [CHANGELOG.md](CHANGELOG.md) 0.24.0 has what
+shipped, [ARCHITECTURE.md](ARCHITECTURE.md) #235–#249 the decisions, and ROADMAP the
+completeness check's second record. [SPEC.md](SPEC.md) is v1.3: principle 12, decided by
+the owner in review, requires a survey figure's margin wherever it is shown.
 
 **Waiting on the owner:**
 
-- **Review and merge.** Nothing from the second half is live: `/freshness`, `/changes`
-  and report-a-problem reach the site with the first deploy after the merge — by hand
-  (`make publish deploy check-live`) or the Friday run.
-- **Check out `main` in this folder after merging.** Both scheduled scripts now run only
-  from a clean `main`, and notify and stop otherwise (#226). The next weekly run is
-  Friday 2026-10-02 at 08:00; the `launchd` agents and the three Shortcuts are live.
+- **Review and merge**, then check out `main` here: Friday's run (2026-10-02) refuses
+  any other branch (#226).
+- **The 84 readings are stale.** The renter cost burden fix changed a figure every county
+  packet carries. Regenerating them costs well under a dollar for the hosted models, with
+  Gemma run locally (Ollama starts and stops for it, #230); leaving them, the site labels
+  them stale until Milestone 30 rewrites them anyway. `hip regenerate-now` or the
+  Shortcut does it once this is merged and `main` is checked out here; it publishes and
+  deploys what it writes.
+- **Confirm a reading of principle 12:** HUD's area median income, income limits and
+  Fair Market Rents are set from ACS data but published as HUD's determinations, without
+  margins. They are treated as outside the principle (#246); if they should say "no
+  margin available" too, it is one line in `SURVEY_METRICS`.
 
-**To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
-`make refresh`.
+**To resume:** `make db-up` for Postgres.
 
 Open items a planned milestone now covers say so with **Scheduled: Milestone N**. They
 stay here until that milestone starts and takes them into `Now`.
@@ -99,6 +105,26 @@ first raised, not where it must be done.
       whether a file changed is kept, so `/freshness` says it does not yet record when.
       Recording the check time per source at `hip refresh` and loading it with the
       discoveries would let the page show a date it can back.
+
+- [ ] **The loader credits a row whose vintage has no release to another release.**
+      (M28, #237) `load_facts` falls back from `(source, layer, vintage)` to another
+      vintage's release of the same layer, then to any release of the source, which let
+      the 2015–2019 ACS edition cite the 2020–2024 file from Milestone 24 on without
+      anything failing. A row whose exact release is missing should fail the load, or at
+      least be counted and reported, rather than be quietly re-attributed.
+- [ ] **A reading can quote a single rank beside its page's range.** (M28, #240) The
+      packets carry no margins or rank ranges, so a reading can say "9th" where its page
+      says "between 5th and 13th", and the readings and the Markdown report state survey
+      figures without their margins, short of SPEC principle 12. **Scheduled: Milestone
+      30.**
+- [ ] **HUD's CHAS figures carry no margins of error, which SPEC principle 12 requires.**
+      (M28, #235, #246) HUD's API publishes none; its bulk CHAS files do (`_moe` columns
+      beside each `_est`). Switching the adapter to the bulk files would give the three
+      CHAS figures their margins and their ranks ranges; meanwhile each reads "no margin
+      available".
+- [ ] **`/changes` shows revised survey figures without margins.** (M28, #246) The
+      revision trigger (#194) records old and new values only; recording the margins
+      beside them would let the page show both, as principle 12 asks.
 
 ### Evaluation harness
 

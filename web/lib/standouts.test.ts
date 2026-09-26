@@ -78,6 +78,7 @@ describe("standOuts", () => {
         group: "leads",
         rank: "1st of 21",
         figure: "+319.3%",
+        margin: null,
         detail: "538 in 2019, 2,256 in 2024",
       },
       {
@@ -86,6 +87,7 @@ describe("standOuts", () => {
         group: "lags",
         rank: "20th of 21",
         figure: "+15.8%",
+        margin: null,
         detail: "$108,700 in 2020, $125,900 in 2024",
       },
     ]);
@@ -120,5 +122,73 @@ describe("standOuts", () => {
     const levels = [level("modiv_median_tax_bill", { value: 9000, rank: 1, of: 4 })];
 
     expect(standOuts({ highlights: [], metrics: [], levels })).toEqual([]);
+  });
+});
+
+describe("standOuts with margins of error (Milestone 28)", () => {
+  const highlight = (rank: number) => ({
+    metric_id: "acs_median_hh_income",
+    label: "Median household income",
+    position: "leading" as const,
+    rank,
+    of: 21,
+    pct_change: 30,
+  });
+  const packet = (rank: number) => ({
+    highlights: [highlight(rank)],
+    metrics: [metric("acs_median_hh_income", { rank, of: 21, pct_change: 30 })],
+    levels: [],
+  });
+  const around = (best: number, worst: number) => ({
+    value: new Map(),
+    change: new Map([["acs_median_hh_income", { margin: 4, best, worst }]]),
+  });
+
+  it("drops a leader whose margin could put it far from the top", () => {
+    // 2nd by rank, but anywhere from 1st to 15th: it does not stand out.
+    expect(standOuts(packet(2), around(1, 15))).toEqual([]);
+  });
+
+  it("keeps a leader whose whole range is at the top, and gives the range", () => {
+    const [card] = standOuts(packet(2), around(1, 3));
+    expect(card.rank).toBe("between 1st and 3rd of 21");
+  });
+
+  it("gives a survey figure's margins: the change's, and each reading's behind it", () => {
+    const withEnds = {
+      value: new Map(),
+      change: new Map([
+        ["acs_median_hh_income", { margin: 4, best: 1, worst: 3, start: 1990, end: 2565 }],
+      ]),
+    };
+    const found = {
+      highlights: [highlight(2)],
+      metrics: [
+        metric("acs_median_hh_income", {
+          rank: 2,
+          of: 21,
+          pct_change: 30,
+          start_value: 81000,
+          end_value: 100645,
+          window_start: "2019-12-31",
+          window_end: "2024-12-31",
+        }),
+      ],
+      levels: [],
+    };
+    const [card] = standOuts(found, withEnds);
+    expect(card.margin).toBe("± 4.0%");
+    expect(card.detail).toBe("$81,000 ± $1,990 in 2019, $100,645 ± $2,565 in 2024");
+  });
+
+  it("names a value among the highest only where its whole range is there", () => {
+    const levels = [level("acs_median_hh_income", { rank: 2, of: 21, value: 140374 })];
+    const value = (best: number, worst: number) => ({
+      value: new Map([["acs_median_hh_income", { margin: 3294, best, worst }]]),
+      change: new Map(),
+    });
+    const kept = standOuts({ highlights: [], metrics: [], levels }, value(1, 3));
+    expect(kept.map((c) => c.detail)).toEqual(["among the 3 highest of 21"]);
+    expect(standOuts({ highlights: [], metrics: [], levels }, value(1, 9))).toEqual([]);
   });
 });

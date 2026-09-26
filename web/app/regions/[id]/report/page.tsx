@@ -3,7 +3,7 @@ import { Fragment } from "react";
 
 import { CostToOwn } from "@/components/CostToOwn";
 import { Crumbs, Kind } from "@/components/Crumbs";
-import { ChangeCell, Marks, NoteRows, RankText, TableNotes } from "@/components/Ledger";
+import { ChangeCell, Margin, Marks, NoteRows, RankReading, TableNotes } from "@/components/Ledger";
 import { MetricTerm } from "@/components/MetricTerm";
 import { Masthead } from "@/components/Masthead";
 import { PrintButton } from "@/components/PrintButton";
@@ -15,9 +15,17 @@ import { formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, windowLabel } from "@/lib/periods";
-import { RANK_HEADING, rankWords } from "@/lib/ranks";
+import { RANK_HEADING, rankBasis } from "@/lib/ranks";
 import { isRestricted } from "@/lib/sources";
 import { standOuts } from "@/lib/standouts";
+import {
+  anyMargin,
+  changeMarginLabel,
+  cohortLabel,
+  MARGIN_NOTE,
+  marginLabel,
+  uncertaintiesFrom,
+} from "@/lib/uncertainty";
 import { paychecks, tradeoff, verdict } from "@/lib/verdict";
 
 const WINDOW = "5y";
@@ -132,7 +140,10 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     noun: peerNoun(comparisons.peer_level),
     scope: scopeName(comparisons.peer_scope),
   };
-  const lead = verdict(peers, packet.metrics, packet.levels);
+  // Margins and rank ranges from the summary, as on the region page (Milestone 28).
+  const uncertainties = uncertaintiesFrom(summary);
+  const cohort = (of: number) => cohortLabel(of, peers);
+  const lead = verdict(peers, packet.metrics, packet.levels, uncertainties);
   const paid = paychecks(packet.metrics);
   const trade = tradeoff(peers, packet.levels);
   const cost = await costInputs(region.level, packet.levels, packet.metrics);
@@ -156,10 +167,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <Kind kind="report" />
           {/* A no-break space before the dash, so a wrapped title never starts a line with it. */}
           <h1 className="page-title">{region.label}&nbsp;— housing report</h1>
+          {/* Each rank names its own cohort in the tables (Milestone 28). */}
           <p className="meta">
-            {packet.metrics.length} measures over the five-year change window, each ranked
-            against {scopeName(comparisons.peer_scope)}’s {comparisons.peer_count}{" "}
-            {peerNoun(comparisons.peer_level)}.
+            {packet.metrics.length} measures over the five-year change window.
           </p>
           <p className="muted">
             {/* The envelope, not a span every metric covers: sources publish at different
@@ -202,7 +212,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       <StandOuts
         name={name}
         peers={`${scopeName(comparisons.peer_scope)}’s ${comparisons.peer_count} ${peerNoun(comparisons.peer_level)}`}
-        items={standOuts(packet)}
+        items={standOuts(packet, uncertainties)}
       />
 
       <section className="section">
@@ -234,18 +244,49 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                         <MetricTerm metricId={m.metric_id} label={m.label} scope="report-measures" />
                         <Marks letters={measures.marks.get(m.metric_id)} />
                       </td>
-                      <td className="num">{formatMetric(m.start_value, m.unit, m.metric_id)}</td>
-                      <td className="num">{formatMetric(m.end_value, m.unit, m.metric_id)}</td>
-                      <ChangeCell pct={m.pct_change} className="num" />
-                      <td className="num">{m.cagr === null ? "—" : `${m.cagr.toFixed(1)}%/yr`}</td>
+                      {/* Each end with its own margin, from the observations the change
+                          compares (Milestone 28). */}
                       <td className="num">
+                        {formatMetric(m.start_value, m.unit, m.metric_id)}
+                        <Margin
+                          label={marginLabel(
+                            m.start_value,
+                            uncertainties.change.get(m.metric_id)?.start ?? null,
+                            m.unit,
+                            m.metric_id,
+                          )}
+                        />
+                      </td>
+                      <td className="num">
+                        {formatMetric(m.end_value, m.unit, m.metric_id)}
+                        <Margin
+                          label={marginLabel(
+                            m.end_value,
+                            uncertainties.change.get(m.metric_id)?.end ?? null,
+                            m.unit,
+                            m.metric_id,
+                          )}
+                        />
+                      </td>
+                      <ChangeCell
+                        pct={m.pct_change}
+                        className="num"
+                        margin={changeMarginLabel(
+                          uncertainties.change.get(m.metric_id)?.margin ?? null,
+                          m.metric_id,
+                        )}
+                      />
+                      <td className="num">{m.cagr === null ? "—" : `${m.cagr.toFixed(1)}%/yr`}</td>
+                      <td>
                         {m.rank === null || m.of === null ? (
                           "—"
                         ) : (
-                          <RankText
+                          <RankReading
                             rank={m.rank}
                             of={m.of}
-                            words={rankWords(m.rank, m.of, "change", m.direction)}
+                            basis={rankBasis("change", m.direction)}
+                            uncertainty={uncertainties.change.get(m.metric_id)}
+                            cohort={cohort(m.of)}
                           />
                         )}
                       </td>
@@ -265,6 +306,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           Ranked by change over five years, not by price or size: rank 1 is the largest
           rise, or the smallest where lower is better, as for unemployment.
         </p>
+        {anyMargin(uncertainties) && <p className="table-note">{MARGIN_NOTE}</p>}
       </section>
 
       {packet.levels.length > 0 && (
@@ -299,15 +341,27 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                           <MetricTerm metricId={l.metric_id} label={l.label} scope="report-values" />
                           <Marks letters={current.marks.get(l.metric_id)} />
                         </td>
-                        <td className="num">{formatMetric(l.value, l.unit, l.metric_id)}</td>
                         <td className="num">
+                          {formatMetric(l.value, l.unit, l.metric_id)}
+                          <Margin
+                            label={marginLabel(
+                              l.value,
+                              uncertainties.value.get(l.metric_id)?.margin ?? null,
+                              l.unit,
+                              l.metric_id,
+                            )}
+                          />
+                        </td>
+                        <td>
                           {l.rank === null || l.of === null ? (
                             "—"
                           ) : (
-                            <RankText
+                            <RankReading
                               rank={l.rank}
                               of={l.of}
-                              words={rankWords(l.rank, l.of, "value", l.direction)}
+                              basis={rankBasis("value", l.direction)}
+                              uncertainty={uncertainties.value.get(l.metric_id)}
+                              cohort={cohort(l.of)}
                             />
                           )}
                         </td>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type KeyboardEvent, useState } from "react";
 
 import { type DetailLevel, type Focus, GlobeMap } from "@/components/GlobeMap";
+import { Margin } from "@/components/Ledger";
 import { TownRanks } from "@/components/TownRanks";
 import { useMapFile } from "@/components/useMapFile";
 import { readingsFor } from "@/lib/mapdata";
@@ -11,7 +12,14 @@ import { definitionOf } from "@/lib/definitions";
 import { formatChange, formatMetric } from "@/lib/format";
 import type { Section } from "@/lib/groups";
 import { windowLabel } from "@/lib/periods";
-import { rankWords } from "@/lib/ranks";
+import { rankBasis } from "@/lib/ranks";
+import {
+  changeMarginLabel,
+  MARGIN_NOTE,
+  marginLabel,
+  rankReading,
+  withMargin,
+} from "@/lib/uncertainty";
 import { WINDOWS, type WindowKey, windowNote } from "@/lib/windows";
 
 export type RankRow = {
@@ -21,7 +29,20 @@ export type RankRow = {
   of: number;
   change: number;
   latest: number | null;
+  /** The ranks the measure's margins of error leave it; null without margins (M28). */
+  best?: number | null;
+  worst?: number | null;
+  /** The 90% margins of `change` and `latest`; null without margins (migration 0018). */
+  changeMargin?: number | null;
+  latestMargin?: number | null;
 };
+
+/** "3–18" where the margins leave a range, the rank itself where they do not. */
+function position(row: RankRow): string {
+  return row.best != null && row.worst != null && row.best !== row.worst
+    ? `${row.best}–${row.worst}`
+    : String(row.rank);
+}
 
 export type Measure = {
   metric_id: string;
@@ -122,11 +143,22 @@ export function CountyExplorer({
   // A region's reading of one measure, from the map's own figures. "Not published"
   // rather than a dash: a municipality missing from a measure is the ordinary case here
   // — 176 of 564 have no Zillow value — and a dash reads like a rendering fault.
+  // A survey measure's margin in the terms the figure is read in (Milestone 28).
+  const marginOf = (value: number, margin: number | null) =>
+    basis.kind === "change"
+      ? changeMarginLabel(margin, measure.metric_id)
+      : marginLabel(value, margin, measure.unit, measure.metric_id);
   const reading = (id: number) => {
     const value = basis.values[String(id)];
     if (value === undefined) return "not published";
-    return basis.kind === "change" ? formatChange(value) : latestOf(value);
+    return withMargin(
+      basis.kind === "change" ? formatChange(value) : latestOf(value),
+      marginOf(value, basis.margins?.[String(id)] ?? null),
+    );
   };
+  const margined =
+    rows.some((row) => row.changeMargin != null || row.latestMargin != null) ||
+    Object.keys(basis.margins ?? {}).length > 0;
 
   function onWindowKeys(event: KeyboardEvent<HTMLDivElement>) {
     const step =
@@ -266,15 +298,19 @@ export function CountyExplorer({
           <p className="readout" aria-live="polite">
             {focus ? (
               <>
-                <b>{focus.name}</b> · {formatChange(focus.change)} · now{" "}
-                {latest(focus.latest)} ·{" "}
-                {rankWords(
-                  focus.rank,
-                  focus.of,
-                  "change",
-                  measure.direction,
-                  phrase,
-                )}
+                <b>{focus.name}</b> ·{" "}
+                {withMargin(
+                  formatChange(focus.change),
+                  changeMarginLabel(focus.changeMargin ?? null, measure.metric_id),
+                )}{" "}
+                · now{" "}
+                {focus.latest === null
+                  ? latest(null)
+                  : withMargin(
+                      latest(focus.latest),
+                      marginLabel(focus.latest, focus.latestMargin ?? null, measure.unit, measure.metric_id),
+                    )}{" "}
+                · {readoutRank(focus, measure.direction, phrase)}
               </>
             ) : markedTown ? (
               <>
@@ -336,6 +372,8 @@ export function CountyExplorer({
                     : `${measure.label.toLowerCase()} today`,
                 direction: measure.direction,
                 format: basis.kind === "change" ? formatChange : latestOf,
+                margins: basis.margins,
+                marginOf,
               }}
               hovered={marked}
               onHover={setPicked}
@@ -369,7 +407,7 @@ export function CountyExplorer({
                         onMouseEnter={() => setPicked(row.id)}
                         onMouseLeave={() => setPicked(null)}
                       >
-                        <td className="num pos">{row.rank}</td>
+                        <td className="num pos">{position(row)}</td>
                         <td>
                           <Link
                             href={`/regions/${row.id}`}
@@ -379,8 +417,23 @@ export function CountyExplorer({
                             {row.name}
                           </Link>
                         </td>
-                        <td className="num">{formatChange(row.change)}</td>
-                        <td className="num">{latest(row.latest)}</td>
+                        <td className="num">
+                          {formatChange(row.change)}
+                          <Margin label={changeMarginLabel(row.changeMargin ?? null, measure.metric_id)} />
+                        </td>
+                        <td className="num">
+                          {latest(row.latest)}
+                          {row.latest !== null && (
+                            <Margin
+                              label={marginLabel(
+                                row.latest,
+                                row.latestMargin ?? null,
+                                measure.unit,
+                                measure.metric_id,
+                              )}
+                            />
+                          )}
+                        </td>
                         <td className="go">
                           {/* A second way in at the row's end, out of the tab order: the name
                             is the keyboard's link. */}
@@ -399,8 +452,27 @@ export function CountyExplorer({
               </div>
             </>
           )}
+          {margined && <p className="table-note">{MARGIN_NOTE}</p>}
         </div>
       </div>
     </section>
   );
+}
+
+/**
+ * A county's rank in the readout: "7th of 21 NJ counties, by change over five years,
+ * largest rise first", or where a survey measure's margins leave it — "near the middle
+ * of 21 NJ counties (between 5th and 13th), by change …" (Milestone 28).
+ */
+function readoutRank(row: RankRow, direction: string, phrase: string): string {
+  const reading = rankReading(
+    row.rank,
+    row.of,
+    row.best != null && row.worst != null
+      ? { margin: null, best: row.best, worst: row.worst }
+      : undefined,
+    `${row.of} NJ counties`,
+  );
+  const lead = reading.range ? `${reading.lead} (${reading.range})` : reading.lead;
+  return `${lead}, ${rankBasis("change", direction, phrase)}`;
 }

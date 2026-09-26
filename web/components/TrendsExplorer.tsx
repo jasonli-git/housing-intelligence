@@ -90,7 +90,7 @@ export function TrendsExplorer({ series }: { series: TrendSeries[] }) {
         {charts.map(({ s, reading }) => (
           <TrendChart
             key={s.metricId}
-            points={s.points.map((p) => ({ date: p.period_end, value: p.value }))}
+            points={s.points.map((p) => ({ date: p.period_end, value: p.value, margin: p.margin ?? null }))}
             title={s.title}
             unit={s.unit}
             metricId={s.metricId}

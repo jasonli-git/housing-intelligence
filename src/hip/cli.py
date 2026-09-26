@@ -244,7 +244,14 @@ def completeness(
     if not write:
         typer.echo(report, nl=False)
         return
-    path = settings.reports_dir / "completeness" / f"{date.today().isoformat()}.md"
+    # Never over a run already kept: two milestones can close on one day, and each run
+    # is a record the next is compared with.
+    folder = settings.reports_dir / "completeness"
+    path = folder / f"{date.today().isoformat()}.md"
+    n = 2
+    while path.exists():
+        path = folder / f"{date.today().isoformat()}-{n}.md"
+        n += 1
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(report)
     typer.secho(f"wrote {path}", fg=typer.colors.GREEN)
@@ -1086,6 +1093,7 @@ def analyze() -> None:
     typer.echo(f"{'change rows':<20} {result.changes:>9,}")
     typer.echo(f"{'change rankings':<20} {result.rankings:>9,}")
     typer.echo(f"{'value rankings':<20} {result.value_rankings:>9,}")
+    typer.echo(f"{'with rank ranges':<20} {result.rank_ranges:>9,}")
     if result.pruned_releases:
         # Derived releases left behind by runs before #73, which minted one per run.
         typer.echo(
