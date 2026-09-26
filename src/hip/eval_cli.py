@@ -605,11 +605,16 @@ class _Outcome:
 def _exit_code(outcomes: dict[str, _Outcome], *, dry_run: bool = False) -> int:
     """0, `PARTIAL` or 1, as defined beside `PARTIAL`.
 
-    A dry run never fails or writes, so its own question is different: whether anything
-    *would* cost money. `PARTIAL` there means "stale and unregenerated", which is the
-    signal a scheduler gates a paid step on (Milestone 27) — not "something went wrong".
+    A dry run writes nothing, so its own question is different: whether anything *would*
+    cost money. `PARTIAL` there means "stale and unregenerated", which is the signal a
+    scheduler gates a paid step on (Milestone 27) — not "something went wrong". But a
+    dry run that could assess no model at all — every one skipped, as when no judged
+    run exists — has not found that nothing is stale; it has not looked. That is 1, not
+    0, which "Regenerate Now" would otherwise report as "every reading is current".
     """
     if dry_run:
+        if all(outcome.skipped for outcome in outcomes.values()):
+            return 1
         return PARTIAL if any(outcome.would_write for outcome in outcomes.values()) else 0
     if not any(
         outcome.written or outcome.current or outcome.rebound
@@ -708,8 +713,9 @@ def explain_command(
         models = list(model_id)
     else:
         try:
+            # Probed only for a real run: a probe is a billed call (see `_unusable`).
             resolution = resolve(
-                evaluation, require_benchmark=not unbenchmarked, probe=True
+                evaluation, require_benchmark=not unbenchmarked, probe=not dry_run
             )
         except NoModelAvailable as exc:
             typer.secho(str(exc), fg=typer.colors.RED, err=True)
