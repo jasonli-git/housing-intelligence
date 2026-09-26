@@ -137,13 +137,16 @@ def build_observations(
     con.execute(
         f"""
         CREATE TABLE {OBSERVATION_TABLE} AS
+        -- `margin_of_error` is last and NULL here: a margin is a survey's, and no
+        -- name-matched source publishes one (Milestone 28).
         -- County: exact FIPS.
         SELECT s.metric_id, c.geoid, 'county' AS level,
                date_trunc('month', s.period_start)::date AS period_start,
                (date_trunc('month', s.period_start) + INTERVAL 1 MONTH
                     - INTERVAL 1 DAY)::date AS period_end,
                s.value, s.source_id, s.layer, 'fips' AS match_method,
-               'current' AS release_vintage
+               'current' AS release_vintage,
+               NULL::DOUBLE AS margin_of_error
         FROM staged s
         JOIN county_lookup c ON c.geoid = s.fips_key
         WHERE s.layer = 'county'
@@ -156,7 +159,8 @@ def build_observations(
                (date_trunc('month', s.period_start) + INTERVAL 1 MONTH
                     - INTERVAL 1 DAY)::date,
                s.value, s.source_id, s.layer, 'zip_code' AS match_method,
-               'current' AS release_vintage
+               'current' AS release_vintage,
+               NULL::DOUBLE AS margin_of_error
         FROM staged s
         JOIN zip_lookup z ON z.geoid = s.region_name
         WHERE s.layer = 'zip'
@@ -169,7 +173,8 @@ def build_observations(
                (date_trunc('month', s.period_start) + INTERVAL 1 MONTH
                     - INTERVAL 1 DAY)::date,
                s.value, s.source_id, s.layer, 'name_county' AS match_method,
-               'current' AS release_vintage
+               'current' AS release_vintage,
+               NULL::DOUBLE AS margin_of_error
         FROM staged s
         JOIN muni_lookup m
           ON m.name_key = {_norm("s.region_name")}
@@ -219,12 +224,24 @@ def _append_keyed(
     appears in the TIGER-derived staging table.
     """
     for model in models:
+        # A margin of error is carried where the model has one — ACS since Milestone
+        # 28 — and NULL everywhere else, so a source gains margins by adding the
+        # column to its own model and nothing here changes.
+        columns = {
+            row[0]
+            for row in con.execute(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_schema = ? AND table_name = ?",
+                [staging_schema, model],
+            ).fetchall()
+        }
+        margin = "s.margin_of_error" if "margin_of_error" in columns else "NULL"
         con.execute(
             f"""
             INSERT INTO {OBSERVATION_TABLE}
             SELECT s.metric_id, s.geoid, s.level, s.period_start, s.period_end,
                    s.value, s.source_id, s.release_layer AS layer, s.match_method,
-               s.release_vintage
+                   s.release_vintage, {margin}
             FROM {staging_schema}.{model} s
             WHERE s.level = 'nation'
                OR EXISTS (

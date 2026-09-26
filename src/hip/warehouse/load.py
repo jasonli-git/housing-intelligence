@@ -225,16 +225,18 @@ class FactLoadResult:
 _INSERT_FACT = text(
     """
     INSERT INTO fact_metric_observation
-        (region_id, metric_id, period_start, period_end, value, release_id, match_method)
+        (region_id, metric_id, period_start, period_end, value, release_id, match_method,
+         margin_of_error)
     SELECT r.region_id, :metric_id, :period_start, :period_end, :value,
-           :release_id, :match_method
+           :release_id, :match_method, :margin_of_error
     FROM regions r
     WHERE r.level = CAST(:level AS region_level) AND r.geoid = :geoid
     ON CONFLICT (region_id, metric_id, period_start) DO UPDATE SET
-        period_end   = EXCLUDED.period_end,
-        value        = EXCLUDED.value,
-        release_id   = EXCLUDED.release_id,
-        match_method = EXCLUDED.match_method
+        period_end      = EXCLUDED.period_end,
+        value           = EXCLUDED.value,
+        release_id      = EXCLUDED.release_id,
+        match_method    = EXCLUDED.match_method,
+        margin_of_error = EXCLUDED.margin_of_error
     """
 )
 
@@ -262,7 +264,7 @@ def load_facts(
         rows = duck.execute(
             f"""
             SELECT geoid, level, metric_id, period_start, period_end, value,
-                   source_id, layer, match_method, release_vintage
+                   source_id, layer, match_method, release_vintage, margin_of_error
             FROM {observation_table}
             """
         ).fetchall()
@@ -310,6 +312,7 @@ def load_facts(
             layer,
             method,
             vintage,
+            margin,
         ) in rows:
             source = str(source_id)
             release_id = (
@@ -330,6 +333,8 @@ def load_facts(
                     "value": float(value),
                     "release_id": release_id,
                     "match_method": method,
+                    # A survey's 90% margin of error, or None (Milestone 28).
+                    "margin_of_error": None if margin is None else float(margin),
                 }
             )
             by_metric[str(metric_id)] = by_metric.get(str(metric_id), 0) + 1

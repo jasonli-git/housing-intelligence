@@ -421,16 +421,47 @@ def test_acs_housing_tables_are_their_own_layers(monkeypatch: pytest.MonkeyPatch
     assert all(v in by_layer["housing_cousub"].url for v in HOUSING_VARIABLES)
 
 
+def test_acs_asks_for_every_estimate_with_its_margin_of_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Milestone 28: each `E` beside its `M`, in the same request, so an estimate and
+    its margin can never come from different files."""
+    from hip.sources.census_acs import (
+        BURDEN_PARTS,
+        HOUSING_VARIABLES,
+        VARIABLES,
+        AcsAdapter,
+    )
+
+    monkeypatch.setenv("CENSUS_API_KEY", "census-test")
+    by_layer = {
+        r.layer: r.url for r in AcsAdapter(states=["NJ"], end_year=2024).refs("2023")
+    }
+
+    for layer, estimates in (
+        ("cousub", [*VARIABLES, *BURDEN_PARTS]),
+        ("housing_county", HOUSING_VARIABLES),
+    ):
+        asked = by_layer[layer].split("get=")[1].split("&")[0].split(",")
+        for estimate in estimates:
+            assert estimate in asked and estimate[:-1] + "M" in asked
+    # The renters whose burden was not computed, which leave the denominator.
+    assert "B25070_011E" in by_layer["county"] and "B25070_011M" in by_layer["county"]
+
+
 def test_acs_vintages_follow_the_bump_constant_not_a_hard_coded_list() -> None:
     """Milestone 24. The vintage list was hard-coded in the adapter from Milestone 3,
     so a new ACS release needed an edit inside the source rather than a bump beside
     `BLS_END_YEAR`. The window is derived; only the end year is a decision."""
     from hip.sources.census_acs import VINTAGE_COUNT, vintages
 
-    assert vintages(2024) == (2024, 2023, 2022, 2021, 2020)
+    assert vintages(2024) == (2024, 2023, 2022, 2021, 2020, 2019)
     assert len(vintages(2024)) == VINTAGE_COUNT
-    # Consecutive 5-year vintages overlap by four, so five of them span nine years.
-    assert max(vintages(2030)) - min(vintages(2030)) + 5 == 9
+    # The pair the default five-year change compares, whose samples do not overlap, are
+    # both fetched: a clean rebuild would otherwise have no five-year change at all.
+    assert vintages(2024)[0] - vintages(2024)[-1] == 5
+    # Consecutive 5-year vintages overlap by four, so six of them span ten years.
+    assert max(vintages(2030)) - min(vintages(2030)) + 5 == 10
 
 
 def test_acs_end_year_is_injected_so_a_rerun_fetches_what_the_first_run_recorded(
@@ -444,7 +475,7 @@ def test_acs_end_year_is_injected_so_a_rerun_fetches_what_the_first_run_recorded
     refs = AcsAdapter(states=["NJ"], end_year=2024).refs()
 
     fetched = {r.vintage for r in refs}
-    assert fetched == {"2024", "2023", "2022", "2021", "2020"}
+    assert fetched == {"2024", "2023", "2022", "2021", "2020", "2019"}
     assert all(f"/{r.vintage}/acs/acs5" in r.url for r in refs), "vintage reaches the URL"
     # An older adapter still fetches the older window, whatever the constant now says.
     assert {r.vintage for r in AcsAdapter(states=["NJ"], end_year=2023).refs()} == {
@@ -453,6 +484,7 @@ def test_acs_end_year_is_injected_so_a_rerun_fetches_what_the_first_run_recorded
         "2021",
         "2020",
         "2019",
+        "2018",
     }
 
 
