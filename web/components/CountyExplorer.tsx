@@ -11,7 +11,8 @@ import { definitionOf } from "@/lib/definitions";
 import { formatChange, formatMetric } from "@/lib/format";
 import type { Section } from "@/lib/groups";
 import { windowLabel } from "@/lib/periods";
-import { rankWords } from "@/lib/ranks";
+import { rankBasis } from "@/lib/ranks";
+import { rankReading } from "@/lib/uncertainty";
 import { WINDOWS, type WindowKey, windowNote } from "@/lib/windows";
 
 export type RankRow = {
@@ -21,7 +22,17 @@ export type RankRow = {
   of: number;
   change: number;
   latest: number | null;
+  /** The ranks the measure's margins of error leave it; null without margins (M28). */
+  best?: number | null;
+  worst?: number | null;
 };
+
+/** "3–18" where the margins leave a range, the rank itself where they do not. */
+function position(row: RankRow): string {
+  return row.best != null && row.worst != null && row.best !== row.worst
+    ? `${row.best}–${row.worst}`
+    : String(row.rank);
+}
 
 export type Measure = {
   metric_id: string;
@@ -267,14 +278,7 @@ export function CountyExplorer({
             {focus ? (
               <>
                 <b>{focus.name}</b> · {formatChange(focus.change)} · now{" "}
-                {latest(focus.latest)} ·{" "}
-                {rankWords(
-                  focus.rank,
-                  focus.of,
-                  "change",
-                  measure.direction,
-                  phrase,
-                )}
+                {latest(focus.latest)} · {readoutRank(focus, measure.direction, phrase)}
               </>
             ) : markedTown ? (
               <>
@@ -369,7 +373,7 @@ export function CountyExplorer({
                         onMouseEnter={() => setPicked(row.id)}
                         onMouseLeave={() => setPicked(null)}
                       >
-                        <td className="num pos">{row.rank}</td>
+                        <td className="num pos">{position(row)}</td>
                         <td>
                           <Link
                             href={`/regions/${row.id}`}
@@ -403,4 +407,22 @@ export function CountyExplorer({
       </div>
     </section>
   );
+}
+
+/**
+ * A county's rank in the readout: "7th of 21 NJ counties, by change over five years,
+ * largest rise first", or where a survey measure's margins leave it — "near the middle
+ * of 21 NJ counties (between 5th and 13th), by change …" (Milestone 28).
+ */
+function readoutRank(row: RankRow, direction: string, phrase: string): string {
+  const reading = rankReading(
+    row.rank,
+    row.of,
+    row.best != null && row.worst != null
+      ? { margin: null, best: row.best, worst: row.worst }
+      : undefined,
+    `${row.of} NJ counties`,
+  );
+  const lead = reading.range ? `${reading.lead} (${reading.range})` : reading.lead;
+  return `${lead}, ${rankBasis("change", direction, phrase)}`;
 }

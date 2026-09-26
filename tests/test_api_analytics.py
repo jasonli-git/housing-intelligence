@@ -130,3 +130,17 @@ def test_the_summary_carries_margins_and_rank_ranges_for_survey_figures_only(
         None,
         None,
     )
+
+
+def test_rankings_carry_each_region_s_rank_range(analyzed: None) -> None:
+    """Milestone 28: the New Jersey page's county table shows the range a survey rank
+    could hold, from the same `/rankings` it already reads."""
+    body = client.get(
+        "/rankings?metric_id=acs_median_hh_income&level=county&window=5y"
+    ).json()
+    if not body.get("items"):
+        pytest.skip("no ACS income ranking")
+    for item in body["items"]:
+        assert item["rank_best"] <= item["rank"] <= item["rank_worst"]
+    zillow = client.get("/rankings?metric_id=zhvi_sfr&level=county&window=5y").json()
+    assert all(item["rank_best"] is None for item in zillow["items"])

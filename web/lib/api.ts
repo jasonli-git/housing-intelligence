@@ -110,6 +110,9 @@ export type RankedRegion = {
   end_value: number | null;
   window_start: string | null;
   window_end: string | null;
+  /** The ranks it could plausibly hold given margins of error; null without (M28). */
+  rank_best?: number | null;
+  rank_worst?: number | null;
 };
 
 export type Ranking = {

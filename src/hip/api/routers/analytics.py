@@ -42,6 +42,10 @@ class RankedRegion(BaseModel):
     end_value: float | None = None
     window_start: date | None = None
     window_end: date | None = None
+    # The ranks it could plausibly hold given everyone's margins of error (Milestone 28);
+    # None where the metric has no margins.
+    rank_best: int | None = None
+    rank_worst: int | None = None
 
 
 class Ranking(BaseModel):
@@ -98,7 +102,7 @@ def rankings(
             SELECT k.rank, k.of, k.percentile, k.region_id, r.name, r.level::text,
                    k.value,
                    c.pct_change, c.start_value, c.end_value,
-                   c.window_start, c.window_end
+                   c.window_start, c.window_end, k.rank_best, k.rank_worst
             FROM region_rankings k
             JOIN regions r ON r.region_id = k.region_id
             LEFT JOIN fact_metric_change c
