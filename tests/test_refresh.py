@@ -388,3 +388,43 @@ def test_unreadable_state_forces_a_rebuild(tmp_path: Path) -> None:
     (tmp_path / refresh.STATE_FILE).write_text("{ truncated")
 
     assert refresh.RefreshState.read(tmp_path).changed(report.shas) != []
+
+
+def test_a_missing_gate_defaults_to_asking(tmp_path: Path) -> None:
+    """An unwritten or unreadable setting must never read as licence to spend money."""
+    assert refresh.RefreshGate.read(tmp_path).mode == "ask"
+
+    (tmp_path / refresh.MODE_FILE).write_text("{ truncated")
+    assert refresh.RefreshGate.read(tmp_path).mode == "ask"
+
+    (tmp_path / refresh.MODE_FILE).write_text(json.dumps({"mode": "orbital"}))
+    assert refresh.RefreshGate.read(tmp_path).mode == "ask"
+
+
+def test_the_gate_round_trips_through_the_same_file_either_side_writes(
+    tmp_path: Path,
+) -> None:
+    """One file, one setting: a Mac command and an iPhone Shortcut both write it whole."""
+    refresh.RefreshGate(mode="auto").write(tmp_path)
+    assert refresh.RefreshGate.read(tmp_path).mode == "auto"
+
+    # The Shortcut side: overwriting the whole file, not patching a field.
+    (tmp_path / refresh.MODE_FILE).write_text(json.dumps({"mode": "ask"}) + "\n")
+    assert refresh.RefreshGate.read(tmp_path).mode == "ask"
+
+
+def test_a_regenerate_request_is_presence_not_content(tmp_path: Path) -> None:
+    """No timestamp to compare: a second tap has to be a new event some other way."""
+    assert refresh.regenerate_requested(tmp_path) is False
+
+    refresh.request_regenerate_now(tmp_path)
+    assert refresh.regenerate_requested(tmp_path) is True
+
+    refresh.handle_regenerate_request(tmp_path)
+    assert refresh.regenerate_requested(tmp_path) is False
+
+
+def test_handling_an_absent_request_does_not_raise(tmp_path: Path) -> None:
+    """A launchd agent firing twice for one write must not crash the second time."""
+    refresh.handle_regenerate_request(tmp_path)  # nothing to consume; must not raise
+    assert refresh.regenerate_requested(tmp_path) is False

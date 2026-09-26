@@ -133,8 +133,15 @@ class Settings(BaseSettings):
     # here is byte-identical to what that expression returned, so nothing moves for
     # anyone who does not set the variable.
     reports_dir: Path = REPO_ROOT / "reports"
+    # Milestone 27's ask/auto toggle and "regenerate now" trigger (`refresh.RefreshGate`).
+    # Under iCloud Drive by default, not `data/`, so a Mac-side command and an iPhone
+    # Shortcut read and write one synced setting rather than two that could disagree —
+    # and so `hip prune-raw` or a wiped `data/` directory can never touch it.
+    gate_dir: Path = (
+        Path.home() / "Library/Mobile Documents/com~apple~CloudDocs/HousingPipeline"
+    )
 
-    @field_validator("data_dir", "config_dir", "reports_dir")
+    @field_validator("data_dir", "config_dir", "reports_dir", "gate_dir")
     @classmethod
     def _expand(cls, value: Path) -> Path:
         """Expand `~` and resolve, so a hand-written .env path behaves like a shell one.

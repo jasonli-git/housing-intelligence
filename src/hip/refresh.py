@@ -23,6 +23,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import Literal
 
 from hip.sources.base import (
     Discovery,
@@ -260,6 +261,12 @@ __all__ = [
     "Superseded",
     "exit_code",
     "superseded_releases",
+    "MODE_FILE",
+    "TRIGGER_FILE",
+    "RefreshGate",
+    "regenerate_requested",
+    "request_regenerate_now",
+    "handle_regenerate_request",
 ]
 
 
@@ -387,3 +394,71 @@ class RefreshState:
         empty or describes an older state of the disk.
         """
         return sorted(k for k, sha in shas.items() if self.processed.get(k) != sha)
+
+
+# Milestone 27's scheduled refresh reaches all the way to a deploy, so two of its steps
+# need the owner's say-so rather than running unattended forever: regenerating readings
+# costs money, and the owner asked to approve that from either this Mac or their phone,
+# switching freely between "ask me" and "just do it".
+#
+# The file lives outside `data/` — which `hip prune-raw` and a clean `data/` wipe both
+# treat as disposable — and under iCloud Drive specifically, so one file is genuinely one
+# setting: a Mac-side command and an iPhone Shortcut both read and write the bytes at the
+# same synced path, rather than two settings that could disagree. `Settings.gate_dir`
+# points there by default and is overridable, the same way every other data location is.
+MODE_FILE = "mode.json"
+TRIGGER_FILE = "regenerate-now.trigger"
+
+
+@dataclass(frozen=True)
+class RefreshGate:
+    """Whether a scheduled refresh may regenerate readings without asking first.
+
+    Two states, not a boolean: `"ask"` and `"auto"` read as what a person chose, where
+    `True`/`False` would read as a flag nobody remembers the sense of. Defaults to
+    `"ask"` — an unreadable or missing file is not licence to spend money unattended,
+    the same reasoning `RefreshState` applies to "was the last run recorded".
+    """
+
+    mode: Literal["ask", "auto"] = "ask"
+
+    @classmethod
+    def read(cls, gate_dir: Path) -> RefreshGate:
+        path = gate_dir / MODE_FILE
+        if not path.exists():
+            return cls()
+        try:
+            data = json.loads(path.read_text())
+        except (json.JSONDecodeError, OSError):
+            return cls()
+        mode = data.get("mode")
+        return cls(mode=mode if mode in ("ask", "auto") else "ask")
+
+    def write(self, gate_dir: Path) -> None:
+        gate_dir.mkdir(parents=True, exist_ok=True)
+        (gate_dir / MODE_FILE).write_text(
+            json.dumps({"mode": self.mode}, indent=2) + "\n"
+        )
+
+
+def regenerate_requested(gate_dir: Path) -> bool:
+    """Whether a "regenerate now" request is waiting to be handled.
+
+    Presence, not content: the trigger carries no timestamp to compare, because the
+    thing that makes a *second* tap a *new* event is `handle_regenerate_request`
+    deleting the file once the first one is acted on. A launchd agent with `WatchPaths`
+    on this exact path fires the instant an iPhone Shortcut's write reaches it through
+    iCloud Drive, rather than on a poll.
+    """
+    return (gate_dir / TRIGGER_FILE).exists()
+
+
+def request_regenerate_now(gate_dir: Path) -> None:
+    """Ask for a regeneration outside the weekly schedule, from the Mac or the phone."""
+    gate_dir.mkdir(parents=True, exist_ok=True)
+    (gate_dir / TRIGGER_FILE).touch()
+
+
+def handle_regenerate_request(gate_dir: Path) -> None:
+    """Consume a pending "regenerate now" request so it fires exactly once."""
+    (gate_dir / TRIGGER_FILE).unlink(missing_ok=True)
