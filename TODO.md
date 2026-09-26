@@ -12,8 +12,9 @@ into `Now` / `Open` / `Parked`. They are recoverable with
 
 Branch `milestone/m28-figures-that-read-right`, pull request into `main`. Everything in
 ROADMAP's Milestone 28 row is built: [CHANGELOG.md](CHANGELOG.md) 0.24.0 has what
-shipped, [ARCHITECTURE.md](ARCHITECTURE.md) #235–#245 the decisions, and ROADMAP the
-completeness check's second record.
+shipped, [ARCHITECTURE.md](ARCHITECTURE.md) #235–#249 the decisions, and ROADMAP the
+completeness check's second record. [SPEC.md](SPEC.md) is v1.3: principle 12, decided by
+the owner in review, requires a survey figure's margin wherever it is shown.
 
 **Waiting on the owner:**
 
@@ -25,6 +26,10 @@ completeness check's second record.
   them stale until Milestone 30 rewrites them anyway. `hip regenerate-now` or the
   Shortcut does it once this is merged and `main` is checked out here; it publishes and
   deploys what it writes.
+- **Confirm a reading of principle 12:** HUD's area median income, income limits and
+  Fair Market Rents are set from ACS data but published as HUD's determinations, without
+  margins. They are treated as outside the principle (#246); if they should say "no
+  margin available" too, it is one line in `SURVEY_METRICS`.
 
 **To resume:** `make db-up` for Postgres.
 
@@ -109,9 +114,17 @@ first raised, not where it must be done.
       least be counted and reported, rather than be quietly re-attributed.
 - [ ] **A reading can quote a single rank beside its page's range.** (M28, #240) The
       packets carry no margins or rank ranges, so a reading can say "9th" where its page
-      says "between 5th and 13th". **Scheduled: Milestone 30.**
-- [ ] **HUD's CHAS figures carry no margins of error.** (M28, #235) HUD's API publishes
-      none; its bulk CHAS files do. Switching would give CHAS ranks their ranges.
+      says "between 5th and 13th", and the readings and the Markdown report state survey
+      figures without their margins, short of SPEC principle 12. **Scheduled: Milestone
+      30.**
+- [ ] **HUD's CHAS figures carry no margins of error, which SPEC principle 12 requires.**
+      (M28, #235, #246) HUD's API publishes none; its bulk CHAS files do (`_moe` columns
+      beside each `_est`). Switching the adapter to the bulk files would give the three
+      CHAS figures their margins and their ranks ranges; meanwhile each reads "no margin
+      available".
+- [ ] **`/changes` shows revised survey figures without margins.** (M28, #246) The
+      revision trigger (#194) records old and new values only; recording the margins
+      beside them would let the page show both, as principle 12 asks.
 
 ### Evaluation harness
 

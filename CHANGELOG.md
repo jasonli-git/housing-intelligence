@@ -26,6 +26,15 @@ they are, and ranks say only what the survey can back.
   (#243).
 - The completeness check's second run, now measuring margins
   (`reports/completeness/2026-09-26-2.md`, #245).
+- **SPEC v1.3, principle 12: a survey figure carries its margin of error**, decided by the
+  owner on 2026-09-26. Every survey figure the site shows now gives its margin, or reads
+  "no margin available" where it has none, rather than looking exact: the housing
+  profile's tiles, the region head's population, the report's start column, the
+  stand-out cards, the value history and chart readouts, the since-a-year lines, and the
+  New Jersey page's county table, readout and municipal list (#246).
+- The New Jersey page's municipal list gives survey ranks as ranges, like the county
+  table (#248). The API gives the margins of both ends of a change, of each ranked value,
+  and of each observation and `/compare` point (migration 0018, #247).
 
 ### Changed
 
@@ -44,13 +53,21 @@ they are, and ranks say only what the survey can back.
 - **The 2015–2019 ACS edition cited the 2020–2024 file** on every reload since 0.19
   (Milestone 24): with no release fetched for it, the loader fell back to another. Its
   figures now cite their own release (#237).
+- The region page's rank note and tradeoff line quoted and decided from a survey's point
+  rank; they now use its range (#246).
+- `/changes` labels a recomputation on the first day its metric was revised after the
+  change shipped, not only on the change's own date (#249).
+- The page's note no longer says HUD publishes no margins for CHAS: its bulk files do;
+  the API this site reads does not.
 
 ### Not in this release
 
 - Margins in the analysis packets and the AI readings, which Milestone 30 takes in when it
   rewrites them (#240). The burden fix changed a figure every county packet carries, so
   all 84 readings are marked stale until they are regenerated.
-- Margins for HUD's CHAS figures, which HUD's API does not publish.
+- Margins for HUD's CHAS figures, which HUD's API does not publish; each reads "no
+  margin available" meanwhile.
+- Margins on `/changes`, whose revision records keep values only.
 
 ## [0.23.1] — 2026-09-26
 

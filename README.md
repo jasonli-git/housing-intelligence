@@ -207,6 +207,8 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   and the New Jersey page's county table read the same ranges, every rank names its
   cohort, renter cost burden counts only renters whose burden the Census could compute,
   and the house price index reads as a change over its level as a multiple of its base.
+  Since 2026-09-26 the specification requires it: a survey figure carries its margin of
+  error, or says it has none (SPEC principle 12).
 - **It publishes itself, and says how current it is** (M27, built) — a weekly refresh
   now reaches the published site on its own: every Friday at 08:00 this Mac runs
   `hip refresh` under `launchd` and, when something moved, rebuilds the packets and the

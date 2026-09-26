@@ -321,6 +321,10 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 243 | **This site's recomputations are written down, and `/changes` labels them.** Milestone 28. | `method_changes` (migration 0017) holds one row per day and metric this site changed how it computes, with the note a reader is told; the revisions report attaches it to the matching group, tagged "Recomputed by this site", after the publishers' own revisions. Rejected: inferring it from the releases on either side of a revision. The same dated vintage on both sides looks like a recomputation, but Building Permits re-issues its annual file under one label with revised months, and #237's stale citation made one ACS edition look like another: a revision cannot say why a figure moved. Costs: a method change must be recorded by the migration that ships it, or it reads as a publisher's revision. |
 | 244 | **An index leads with its common-period change, its level beneath as a multiple of its base.** Milestone 28, from the Director Note of 2026-09-19. | The New Jersey page's FHFA indexes read "+50.5%" over "over five years to Q2 2026 · 442.7, about 4.4× its 1991 Q1 level" (`stateProfile`): the five years every other figure there is read over, and a level a reader can use, where 442.7 alone told them neither scale nor baseline. The definition beside it is unchanged. |
 | 245 | **The completeness check measures margins, and never overwrites a kept run.** **Amends #225.** | Statistical quality gives each metric's share of newest figures carrying a margin — ten metrics on Milestone 28's run, the survey's seven and the three ratios on its income. Two milestones can close on one day, as 27 and 28 did, and each run is the record the next is compared with, so `--write` takes `<date>-2.md` rather than replacing `<date>.md`. |
+| 246 | **Every survey figure the site shows carries its margin, or says it has none — SPEC v1.3, principle 12.** Decided with the owner 2026-09-26, reviewing Milestone 28. | The first pass (#240, #241) put margins on the region page's tables. Reviewing it — Codex's review, then an audit of every place a figure is formatted — found survey figures still shown bare, and two sentences still deciding from a point rank: the housing profile's tiles, the region head's population, the rank note (`rankBasisExample`) and the tradeoff line (`tradeoff`), the print report's start column, the stand-out cards' readings, the value history and chart readouts, the since-a-year lines, and the New Jersey page's county table, readout and municipal list. Each now gives the margin, in the figure's own terms, or, for a change between two years a reader picks, the margin the Census's ratio formula gives (`changeMargin`, as #238). A survey figure without one — a Census special code, or HUD's CHAS figures — reads "no margin available" (`NO_MARGIN`) rather than as exact: which metrics are survey figures is `SURVEY_METRICS`, the ACS's seven, the three ratios on its income and CHAS's three, held to `config/metrics.yml` by `tests/test_survey_metrics.py`. HUD's area median income, income limits and Fair Market Rents are read as HUD's determinations rather than survey estimates, and left out. Still short of the principle: the packets, the readings and the Markdown report (Milestone 30, #240), `/changes` (below), and CHAS's margins themselves. |
+| 247 | **A change's two ends carry their own margins, and a ranking the margin of what it ranked (migration 0018).** Milestone 28. | `fact_metric_change.start_margin`/`end_margin` are taken from the observations the change compares, so a page showing "538 in 2019, 2,256 in 2024" can never pair a reading with another period's margin; the ledger's end value now reads its margin from here rather than from the latest level. `region_rankings.margin_of_error` is inserted with the value it belongs to, from the same row — the change's margin, or the latest observation's — and `_rank_ranges` now tests with it instead of re-deriving it, so the margins `/rankings` shows and the ranges they set cannot disagree. Rejected: joining observations at read time, which the fact table's `period_start` key makes ambiguous where two observations share an end date (the reason `_changes` uses `DISTINCT ON`). The API gains `start_margin`/`end_margin` on the summary's headlines, `margin_of_error`/`start_margin`/`end_margin` on each ranked region, and `margin_of_error` on each observation and each `/compare` point. Cost: the published artifacts grew from 130 MB to 143 MB, mostly a null margin on every observation from a source without margins; dropping nulls from responses would change every endpoint's contract, so it was not done here. |
+| 248 | **The New Jersey page's municipal list ranks towns by the Census's test in the browser, and `map.json` carries the margins.** Milestone 28. | The list ranks the map's own figures, not a published ranking (#152), so it printed point ranks for survey measures. `rankRanges` (`web/lib/uncertainty.ts`) applies #239's test to the towns alone — the map's figures include the counties — and the list shows "1–12" as the county table does. `map.json` gains `margins` and `changeMargins` for the ten survey measures only: 148 KB on a 1.19 MB file, margins to four significant figures and change margins to a tenth, as the changes are. Rejected: publishing each town's range, two numbers per town per window, heavier than the margins it would be derived from. |
+| 249 | **A method change labels the first day its metric was revised on or after it shipped.** **Amends #243.** From Codex's review of Milestone 28. | The report matched `method_changes.changed_on` to a revision day exactly, and counts days in UTC: a warehouse migrated one day and rebuilt the next, or rebuilt after 8 pm in New Jersey, would have read the recomputation as the Census's revision. Now the note goes to the first day that metric was revised on or after `changed_on`, and to that day only, so a later revision of the same metric is the publisher's again. The 2026-09-26 burden recomputation was recorded on its own day and was never mislabelled. |
 
 ## Module Layout
 
@@ -377,7 +381,7 @@ housing-intelligence/
 │   │   ├── load.py            # one-transaction upsert of spine and facts (#25)
 │   │   ├── discoveries.py     # releases.json → source_discoveries at load (#222)
 │   │   ├── freshness.py       # the freshness report (#222)
-│   │   └── migrations/        # Alembic 0001–0017
+│   │   └── migrations/        # Alembic 0001–0018
 │   ├── analytics/compute.py   # change, CAGR, affordability, rankings (#34–#36)
 │   ├── packets/
 │   │   ├── schema.py          # Pydantic models = the contract (#12, #43, #44)
@@ -520,8 +524,9 @@ Since then: `0012` added `map_backdrop` (#164); `0013` added `fact_revision` and
 trigger that fills it (#194); `0014` redated MOD-IV figures by tax year (#208); `0015`
 added `source_discoveries` (#222); `0016` added `margin_of_error` to observations,
 `pct_change_margin` to changes and `rank_best`/`rank_worst` to rankings (#235–#239); and
-`0017` added `method_changes` (#243). The DDL block below predates them; for these six the
-migrations are the only statement.
+`0017` added `method_changes` (#243); and `0018` added `start_margin`/`end_margin` to
+changes and `margin_of_error` to rankings (#247). The DDL block below predates them; for
+these seven the migrations are the only statement.
 `region_identifiers`, empty since Milestone 1, now holds 554 NJ municipal codes under
 scheme `nj_cd_code` — the join MOD-IV was always going to supply (#21, #51).
 The block below was regenerated from the live tables on 2026-09-10, and
@@ -886,14 +891,14 @@ endpoints are implemented; `hip publish` renders every one to static files excep
 | GET | `/geo/{level}` | ✅ GeoJSON FeatureCollection, simplified by default |
 | GET | `/geo/backdrop` | ✅ every state's outline, as map context only (#164) |
 | GET | `/metrics` | ✅ metric catalog with coverage and date range, optionally for one `level` |
-| GET | `/regions/{region_id}/metrics` | ✅ observations filtered by `metric_id`, `from`, `to`, each with source and match method |
+| GET | `/regions/{region_id}/metrics` | ✅ observations filtered by `metric_id`, `from`, `to`, each with source, match method and margin of error (#247) |
 | GET | `/regions/{region_id}/summary` | ✅ headline changes, rank, caveats, and each figure's margin of error and rank range (#240) — dashboard landing |
 | GET | `/regions/{region_id}/packet` | ✅ the analysis packet, assembled per request (#42) |
 | GET | `/regions/{region_id}/report` | ✅ the same packet as `text/markdown` |
 | GET | `/regions/{region_id}/explanation` | ✅ the preferred model's interpretation, labelled `kind: "interpretation"`, with a `stale` flag and its `binding` — every figure bound to the field and release that licensed it, null for prose written before Milestone 13 (#60, #92, #112, #114) |
 | GET | `/regions/{region_id}/explanations` | ✅ every model's reading of the same packet, in preference order, each with its `stale` flag and `binding` (#91, #92, #112) |
-| GET | `/rankings` | ✅ ranked regions for `metric_id`, `level`, and `basis` (`change` over a window, or `value`), each with its rank range where the metric has margins (#239) |
-| GET | `/compare` | ✅ aligned series for several `region_ids` |
+| GET | `/rankings` | ✅ ranked regions for `metric_id`, `level`, and `basis` (`change` over a window, or `value`), each with its margin and rank range where the metric has margins (#239, #247) |
+| GET | `/compare` | ✅ aligned series for several `region_ids`, each point with its margin of error (#247) |
 | GET | `/sources` | ✅ source registry and the releases currently loaded (#71) |
 | GET | `/sources/unresolved` | ✅ source geographies with no region, and why |
 | GET | `/freshness` | ✅ each downloaded source's status, newest period, release, last check and download dates (#222) |
@@ -947,12 +952,15 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   Zillow, FRED and FHFA are re-read every refresh by revalidation (#188), which records
   whether a file changed but not, anywhere the page reads, when it last asked; the page
   says it does not yet record this rather than printing a date it cannot back.
-- **HUD's CHAS figures carry no margins of error** (#235). They come from HUD's API, which
-  publishes the estimates without them (135 columns, none a margin), so their ranks read
-  as single places and the page says why. HUD's bulk CHAS files do carry margins; switching
-  to them is open work.
+- **HUD's CHAS figures carry no margins of error** (#235), short of SPEC principle 12. They
+  come from HUD's API, which publishes the estimates without them (135 columns, none a
+  margin), so each reads "no margin available" and its rank a single place (#246). HUD's
+  bulk CHAS files do carry margins; switching to them is open work.
 - **A reading can quote a single rank beside a page's range** until Milestone 30 takes
-  margins into the packets (#240).
+  margins into the packets (#240); the packets, the readings and the Markdown report
+  carry no margins until then.
+- **`/changes` shows revised survey figures without margins** (#246). `fact_revision`
+  records a figure's old and new values, not their margins.
 - **ZIP-level metrics are allocated, not observed** (see the schema section).
 - **Parcel data is not queryable through the API** (#16). All 3.48M NJ parcels exist in
   Parquet and DuckDB; only six municipality-level aggregates reach Postgres. There is no
