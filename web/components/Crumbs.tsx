@@ -25,7 +25,7 @@ export function Crumbs({ trail, here }: { trail: Crumb[]; here?: string }) {
   );
 }
 
-export type PageKind = "state" | "county" | "municipality" | "zip" | "report" | "tool";
+export type PageKind = "state" | "county" | "municipality" | "zip" | "report" | "tool" | "data";
 
 const KIND_LABELS: Record<PageKind, string> = {
   state: "State",
@@ -34,6 +34,8 @@ const KIND_LABELS: Record<PageKind, string> = {
   zip: "ZIP code",
   report: "Report",
   tool: "Tool",
+  // The pages about the data itself — how current it is, what changed (Milestone 27).
+  data: "About the data",
 };
 
 /** A region level as the kind of page it gets. */

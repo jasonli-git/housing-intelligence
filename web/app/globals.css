@@ -311,6 +311,7 @@ details[open] > summary .when-closed { display: none; }
 .page-head[data-kind="zip"] { --kind: var(--series-3); }
 .page-head[data-kind="report"] { --kind: var(--text-primary); }
 .page-head[data-kind="tool"] { --kind: var(--series-2); }
+.page-head[data-kind="data"] { --kind: var(--text-secondary); }
 .kind {
   margin: 0 0 0.35rem; display: inline-flex; align-items: center; gap: 0.45rem;
   font: 600 var(--text-label)/1 var(--font-mono); letter-spacing: 0.14em;
@@ -917,6 +918,41 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 /* --------------------------------------------------------- current values --- */
 
 .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 0.5rem var(--gap); align-items: start; }
+/* The freshness page (Milestone 27): one row per source, three dates kept apart. The
+   status reads as a small tag, coloured only where it asks for attention — a source that
+   could not be reached, or one with a newer release waiting. */
+.foot-links { margin: 0.75rem 0 0; font-size: var(--text-small); display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; }
+.foot-links a { color: var(--text-secondary); }
+.foot-links a:hover { color: var(--text-primary); }
+.freshness { min-width: 44rem; font-size: var(--text-small); }
+.freshness th, .freshness td { text-align: left; vertical-align: baseline; }
+.freshness td, .freshness tbody th { padding: 0.55rem 0; border-bottom: 1px solid var(--grid); }
+.freshness th + th, .freshness td + td, .freshness th + td { padding-left: 0.9rem; }
+.freshness tbody th { font-weight: 400; }
+.fresh-name { display: block; font-weight: 600; color: var(--text-primary); }
+.fresh-sub { display: block; color: var(--text-muted); font-size: var(--text-note); }
+.fresh-stale { color: var(--notice-text); }
+.fresh-built { font-family: var(--font-mono); font-size: var(--text-note); }
+.fresh-status {
+  display: inline-block; padding: 0.05rem 0.45rem; border-radius: 999px; white-space: nowrap;
+  font: 500 var(--text-label)/1.5 var(--font-mono); letter-spacing: 0.04em;
+  border: 1px solid var(--grid); color: var(--text-secondary);
+}
+tr[data-status="unreachable"] .fresh-status {
+  border-color: var(--notice); color: var(--notice-text);
+  background: color-mix(in srgb, var(--notice) 12%, transparent);
+}
+tr[data-status="pending"] .fresh-status {
+  border-color: color-mix(in srgb, var(--series-2) 60%, var(--grid)); color: var(--text-primary);
+}
+.fresh-legend { margin: 1rem 0 0; display: grid; gap: 0.45rem; max-width: 72ch; }
+.fresh-legend div { display: grid; grid-template-columns: minmax(9rem, max-content) 1fr; gap: 0.75rem; }
+.fresh-legend dt { font: 500 var(--text-label)/1.6 var(--font-mono); color: var(--text-secondary); }
+.fresh-legend dd { margin: 0; font-size: var(--text-note); color: var(--text-secondary); }
+@media (max-width: 40rem) {
+  .fresh-legend div { grid-template-columns: 1fr; gap: 0.1rem; }
+}
+
 .values { font-size: var(--text-small); }
 .values .colheads th { padding-top: 0.6rem; }
 .values td { padding: 0.35rem 0; border-bottom: 1px solid var(--grid); vertical-align: baseline; }

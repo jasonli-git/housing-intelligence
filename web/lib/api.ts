@@ -440,6 +440,8 @@ export const api = {
       `/regions/${id}/explanations?window=${window}`,
     ),
   sources: () => tryGet<SourceEntry[]>(`/sources`),
+  /** How current each source is (Milestone 27). */
+  freshness: () => tryGet<FreshnessReport>(`/freshness`),
   /** The metric catalog, for the New Jersey page's measure picker. */
   metrics: () => tryGet<MetricEntry[]>(`/metrics`),
 };
@@ -565,4 +567,33 @@ export type SourceEntry = {
   homepage: string;
   cadence: string;
   releases: { vintage: string; fetched_at: string; row_count: number }[];
+};
+
+/** One source's freshness (Milestone 27, `GET /freshness`). */
+export type FreshnessStatus = "current" | "pending" | "unreachable" | "not_tracked";
+
+export type SourceFreshness = {
+  source_id: string;
+  name: string;
+  publisher: string;
+  cadence: string;
+  status: FreshnessStatus;
+  /** The newest period actually loaded, not merely discovered. ISO dates. */
+  period_observed_start: string | null;
+  period_observed_end: string | null;
+  /** What the publisher itself said, when it said anything. */
+  published: string | null;
+  /** When the publisher was last asked. ISO timestamp. */
+  checked_at: string | null;
+  pending: string | null;
+  pending_from: string | null;
+  /** When this source's data was last downloaded. ISO timestamp. */
+  acquired_at: string | null;
+};
+
+export type FreshnessReport = {
+  site_version: string;
+  /** When the report — and so the page — was built. ISO timestamp. */
+  generated_at: string;
+  sources: SourceFreshness[];
 };
