@@ -16,7 +16,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from hip.config import Source
-from hip.sources.base import Discovery, write_discovery
+from hip.sources.base import Discovery, read_discovery, write_discovery
 from hip.warehouse.db import get_engine, probe
 from hip.warehouse.discoveries import load_discoveries
 from hip.warehouse.freshness import (
@@ -246,3 +246,69 @@ def test_published_dates_come_out_iso_whatever_form_the_publisher_used() -> None
     assert _published_date(None) is None
     # Unreadable is absent, never printed as it came.
     assert _published_date("sometime last spring") is None
+
+
+def test_an_outage_reaches_the_page_through_the_normal_acquisition_path(
+    tmp_path: Path, clean_test_source: str
+) -> None:
+    """Acquisition, then the warehouse, then the status the page shows.
+
+    Found in Codex's Milestone 27 review: `write_discovery` used to skip an unreachable
+    probe, so the record kept the last success and "Could not reach" was unreachable
+    by any real path — `_status` was only ever tested with a hand-made row.
+    """
+    from datetime import date
+
+    import httpx
+
+    from hip.refresh import acquire
+    from hip.sources.census_permits import PermitsAdapter
+
+    class Permits(PermitsAdapter):
+        source_id = clean_test_source
+
+        def __init__(self, transport: httpx.MockTransport) -> None:
+            super().__init__(states=["NJ"])
+            self.probe_transport = transport
+
+        def refs(self, vintage: str | None = None):  # type: ignore[no-untyped-def]
+            return []
+
+    def publisher(answer: httpx.Response | Exception) -> httpx.MockTransport:
+        def handle(request: httpx.Request) -> httpx.Response:
+            if isinstance(answer, Exception):
+                raise answer
+            return answer
+
+        return httpx.MockTransport(handle)
+
+    stamped = httpx.Response(
+        200, headers={"last-modified": "Fri, 20 Feb 2026 12:45:25 GMT"}
+    )
+    list(
+        acquire([Permits(publisher(stamped))], raw_dir=tmp_path, today=date(2026, 9, 23))
+    )
+    reached = read_discovery(tmp_path, clean_test_source)
+    assert reached is not None and reached.outcome == "confirmed"
+
+    # A week later the publisher is down, and this adapter's own idea of the newest
+    # release is older than the record's — the record must not fall back to it.
+    down = Permits(publisher(httpx.ConnectError("no route")))
+    down.newest = "2020"
+    list(acquire([down], raw_dir=tmp_path, today=date(2026, 9, 30)))
+
+    load_discoveries(get_engine(), tmp_path, [clean_test_source])
+    with Session(get_engine()) as session:
+        row = (
+            session.execute(
+                text("SELECT * FROM source_discoveries WHERE source_id = :s"),
+                {"s": clean_test_source},
+            )
+            .mappings()
+            .one()
+        )
+
+    assert _status(dict(row)) == "unreachable"
+    # The release it last reached is kept; only the outcome and the check are new.
+    assert (row["newest"], row["published"]) == (reached.newest, reached.published)
+    assert row["checked_at"] > reached.checked_at

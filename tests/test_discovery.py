@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import io
 import zipfile
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
 
@@ -316,12 +317,31 @@ def test_a_discovery_round_trips_through_its_record(tmp_path: Path) -> None:
     assert read_discovery(tmp_path, "census_permits") == _found("2025")
 
 
-def test_an_unreachable_discovery_keeps_the_last_good_record(tmp_path: Path) -> None:
-    write_discovery(tmp_path, _found("2025"))
+def test_an_unreachable_discovery_keeps_the_last_good_release(tmp_path: Path) -> None:
+    """It records the outage and keeps the release: later stages build refs from it."""
+    good = replace(_found("2025"), published="2026-02-20")
+    write_discovery(tmp_path, good)
+    outage = replace(
+        _found("2024", outcome="unreachable"),
+        checked_at=datetime(2026, 9, 30, tzinfo=UTC),
+        pending=None,
+        pending_from=None,
+    )
+    write_discovery(tmp_path, outage)
+
+    recorded = read_discovery(tmp_path, "census_permits")
+    assert recorded == replace(
+        good, outcome="unreachable", checked_at=datetime(2026, 9, 30, tzinfo=UTC)
+    )
+
+
+def test_an_unreachable_first_discovery_is_recorded_as_found(tmp_path: Path) -> None:
+    """With no good record to keep, the outage is recorded with the floor it fell to."""
     write_discovery(tmp_path, _found("2024", outcome="unreachable"))
 
     recorded = read_discovery(tmp_path, "census_permits")
-    assert recorded is not None and recorded.newest == "2025"
+    assert recorded is not None
+    assert (recorded.newest, recorded.outcome) == ("2024", "unreachable")
 
 
 def test_later_stages_build_refs_from_the_record(tmp_path: Path) -> None:
