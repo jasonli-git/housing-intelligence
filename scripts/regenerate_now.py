@@ -76,19 +76,35 @@ def main() -> int:
         return 2
 
     # A free check first: someone can tap "Regenerate Now" when nothing is actually
-    # stale, and that must cost nothing.
-    if _hip("explain", "--all", "--dry-run") == 0:
+    # stale, and that must cost nothing. Only 3 means "stale" — any other nonzero exit
+    # means the check itself failed, and a failed check is no licence to spend money.
+    dry_run_code = _hip("explain", "--all", "--dry-run")
+    if dry_run_code == 0:
         _notify(
             "Nothing to regenerate",
             "Regenerate Now was triggered, but every reading is already current. "
             "Nothing was generated.",
         )
         return 0
+    if dry_run_code != 3:
+        _notify(
+            "Regenerate now: the readings check failed",
+            f"hip explain --all --dry-run exited {dry_run_code}, so nothing was "
+            "generated. Check the log on the Mac.",
+            priority=_PRIORITY_URGENT,
+        )
+        return 1
 
-    if _hip("explain", "--all") != 0:
+    # 3 is partial: some readings written, a model or region skipped. Those are worth
+    # publishing, and the rest stay up labelled stale (eval_cli.PARTIAL). 1 means none
+    # was written, and any other exit is a run that did not finish: either way this
+    # stops, and whatever it did commit goes live with the next deploy.
+    explain_code = _hip("explain", "--all")
+    if explain_code not in (0, 3):
         _notify(
             "Regenerate now: failed",
-            "hip explain --all did not complete cleanly. Check the log on the Mac.",
+            f"hip explain --all exited {explain_code} without finishing. Nothing was "
+            "deployed. Check the log on the Mac.",
             priority=_PRIORITY_URGENT,
         )
         return 1
@@ -119,7 +135,14 @@ def main() -> int:
         )
         return 1
 
-    _notify("Readings regenerated", "New readings are live.")
+    if explain_code == 3:
+        _notify(
+            "Readings partly regenerated",
+            "The new readings are live, but a model or region was skipped; those "
+            "readings stay up labelled stale. Check the log on the Mac.",
+        )
+    else:
+        _notify("Readings regenerated", "New readings are live.")
     print(f"=== {datetime.now(UTC).isoformat()} regenerate-now complete ===")
     return 0
 

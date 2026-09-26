@@ -458,10 +458,11 @@ def test_only_a_clean_main_may_run_the_schedule(tmp_path: Path) -> None:
     repo = _repo(tmp_path)
     assert refresh.checkout_problem(repo) is None
 
-    # The schedule's own output — `hip pack --report` rewriting the county reports —
-    # must not block the next week's run.
+    # No path is exempt: the schedule writes nothing git tracks, so a change even to a
+    # generated report is someone's work.
     (repo / "reports" / "county.md").write_text("new\n")
-    assert refresh.checkout_problem(repo) is None
+    assert "reports/county.md" in (refresh.checkout_problem(repo) or "")
+    subprocess.run(["git", "checkout", "-q", "reports"], cwd=repo, check=True)
 
     (repo / "app.py").write_text("x = 2\n")
     assert "uncommitted work: app.py" in (refresh.checkout_problem(repo) or "")

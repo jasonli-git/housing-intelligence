@@ -493,11 +493,6 @@ def handle_regenerate_request(gate_dir: Path) -> None:
     (gate_dir / TRIGGER_FILE).unlink(missing_ok=True)
 
 
-# Written by every scheduled run itself (`hip pack --report` rewrites the county
-# reports), so a change under it is the schedule's own output, not someone's work.
-_GENERATED = ("reports/",)
-
-
 def checkout_problem(repo_root: Path) -> str | None:
     """Why this checkout must not run the scheduled refresh, or None when it may.
 
@@ -507,6 +502,11 @@ def checkout_problem(repo_root: Path) -> str | None:
     would run that code's pipeline against the one warehouse and deploy it as the public
     site, unreviewed. So only a clean `main` runs. Untracked files count as well as
     edits: a new page directory nobody has committed would still be built.
+
+    No path is exempt. Everything a scheduled run writes is gitignored — `data/`,
+    `dist/`, the build caches, `logs/` — and it runs `hip pack` without `--report` so
+    as not to rewrite the county reports git tracks. An exemption for those would have
+    hidden anyone's unrelated work under `reports/` too.
     """
 
     def git(*args: str) -> str:
@@ -518,11 +518,7 @@ def checkout_problem(repo_root: Path) -> str | None:
 
     try:
         branch = git("rev-parse", "--abbrev-ref", "HEAD").strip()
-        changed = [
-            line[3:]
-            for line in git("status", "--porcelain").splitlines()
-            if not line[3:].startswith(_GENERATED)
-        ]
+        changed = [line[3:] for line in git("status", "--porcelain").splitlines()]
     except (OSError, subprocess.CalledProcessError) as exc:
         return f"git could not be read ({exc})"
     if branch != "main":

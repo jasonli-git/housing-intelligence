@@ -91,56 +91,89 @@ def main() -> int:
     before = _completed_at()
 
     refresh_code = _hip("refresh")
-    if refresh_code == 1:
+    if refresh_code not in (0, 3):
+        # 1 is a pipeline failure; anything else — Click's 2 for a usage error, a
+        # crash's traceback exit — is not a result `hip refresh` defines, and must not
+        # be read as a clean run either.
         _notify(
             "Weekly refresh failed",
-            "hip refresh exited 1 — the pipeline itself failed. Nothing downstream "
-            "ran. Check the log on the Mac.",
+            f"hip refresh exited {refresh_code}, so the pipeline did not complete. "
+            "Nothing downstream ran. Check the log on the Mac.",
             priority=_PRIORITY_URGENT,
         )
         return 1
 
-    # Both a clean run (0) and one with an unreachable publisher (3) leave the
-    # warehouse consistent (ARCHITECTURE #102) — the second is worth a heads-up, not a
-    # stop. `RefreshState.completed_at` only moves when the pipeline actually ran, so
+    # An unreachable publisher (3) leaves the warehouse consistent (ARCHITECTURE #102),
+    # which is worth a heads-up, not a stop — and it has to be said before the quiet-week
+    # check below: a week in which the one source that failed was also the only one
+    # that might have moved is exactly the outage a person needs to hear about.
+    quiet = _completed_at() == before
+    if refresh_code == 3:
+        _notify(
+            "Weekly refresh: a source was unreachable",
+            "One or more publishers could not be reached this week, so their figures "
+            "are the last ones fetched. "
+            + (
+                "Nothing else moved, so the site was left as it was."
+                if quiet
+                else "The site still updates from what did move."
+            ),
+        )
+
+    # `RefreshState.completed_at` only moves when the pipeline actually ran, so
     # comparing it (not `refresh_code`) is what tells a quiet week from a real one:
     # `hip refresh` itself stops before the pipeline when nothing moved, and there is
     # nothing for `pack`, `explain` or a deploy to do that would produce different
     # bytes.
-    if _completed_at() == before:
+    if quiet:
         print("nothing changed since the last completed refresh; stopping here")
         return 0
 
-    if refresh_code == 3:
-        _notify(
-            "Weekly refresh: a source was unreachable",
-            "hip refresh completed and the warehouse updated, but one or more "
-            "publishers could not be reached this week. The site will still "
-            "update from what did move.",
-        )
-
-    if _hip("pack", "--report") != 0:
+    # Every packet rebuilt and checked against its schema before anything is published.
+    # Not `--report`: that rewrites the county reports git tracks, which would leave
+    # this shared checkout dirty after every run, and the site does not read them.
+    if _hip("pack") != 0:
         _notify(
             "Weekly refresh: packet build failed",
-            "hip pack --report failed after the data refresh succeeded. Check the "
-            "log on the Mac.",
+            "hip pack failed after the data refresh succeeded. Nothing was deployed. "
+            "Check the log on the Mac.",
             priority=_PRIORITY_URGENT,
         )
         return 1
 
-    # A cost report, not a generation: 0 means nothing is stale, 3 means something is,
-    # and neither call reaches a model (`hip explain --dry-run`, this milestone).
+    # The free check: 0 means nothing is stale and 3 that something is, and no model is
+    # called either way (`hip explain --dry-run`). Anything else means the check itself
+    # failed — it says nothing about the readings, so it is not read as "none stale".
     dry_run_code = _hip("explain", "--all", "--dry-run")
+    if dry_run_code not in (0, 3):
+        _notify(
+            "Weekly refresh: the readings check failed",
+            f"hip explain --all --dry-run exited {dry_run_code}. Nothing was generated "
+            "or deployed. Check the log on the Mac.",
+            priority=_PRIORITY_URGENT,
+        )
+        return 1
     if dry_run_code == 3:
         if _refresh_mode() == "auto":
-            if _hip("explain", "--all") != 0:
+            # `hip explain` exits 0, 3 (some readings written, a model or region
+            # skipped) or 1 (none written), and a scheduled refresh deploys on any of
+            # them: a reading that was not rewritten stays up labelled stale, and the
+            # data behind it is still worth publishing (eval_cli.PARTIAL, #102).
+            explain_code = _hip("explain", "--all")
+            if explain_code == 3:
+                _notify(
+                    "Weekly refresh: some readings were not regenerated",
+                    "A model or region was skipped. What was written is publishing, "
+                    "and the rest stays up labelled stale. Check the log on the Mac.",
+                )
+            elif explain_code != 0:
                 _notify(
                     "Weekly refresh: regenerating readings failed",
-                    "hip explain --all did not complete cleanly in auto mode. Check "
-                    "the log on the Mac.",
+                    f"hip explain --all exited {explain_code} without finishing. The "
+                    "data still publishes, and any reading not rewritten stays up "
+                    "labelled stale. Check the log on the Mac.",
                     priority=_PRIORITY_URGENT,
                 )
-                return 1
         else:
             _notify(
                 "Readings are stale",
