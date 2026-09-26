@@ -1,10 +1,15 @@
 """How fresh each source is, for a public page (Milestone 27).
 
 Built from `source_discoveries` (`load_discoveries`, this module's write side),
-`source_releases` (when it was acquired) and `config/sources.yml` (what to do the day
-it stops answering) — because the whole reason this page exists is that *checked
+`source_releases` (when it was acquired) and `config/sources.yml` (each source's name,
+publisher and cadence) — because the whole reason this page exists is that *checked
 today* must never read as *measured today*, and inventing a number to fill a gap would
 be exactly that.
+
+Two fields of `config/sources.yml` are never read here: `notes`, which holds at least
+one fact known only from a private email (below), and `fallback`, which ARCHITECTURE
+#211 records as internal — the plan for the day a source stops answering, not a
+public claim about it.
 
 **Four statuses, not the six once sketched, and why the other two are not here.**
 `current`, `pending` and `unreachable` come straight from the discovery row's
@@ -55,7 +60,6 @@ class SourceFreshness(BaseModel):
     name: str
     publisher: str
     cadence: str
-    fallback: str
     status: Status
     # The newest period actually loaded into the warehouse, not merely discovered — a
     # refresh can find a newer release and not yet have processed it.
@@ -158,7 +162,6 @@ def build_report(
                 name=source.name,
                 publisher=source.publisher,
                 cadence=source.cadence,
-                fallback=source.fallback,
                 status=_status(discovery),
                 period_observed_start=start,
                 period_observed_end=end,

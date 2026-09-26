@@ -204,6 +204,15 @@ def test_build_report_never_reads_a_sources_notes_field() -> None:
     assert "private email" not in body
 
 
+def test_build_report_never_publishes_a_sources_fallback() -> None:
+    """ARCHITECTURE #211: the plan for the day a source stops answering is internal."""
+    with Session(get_engine()) as session:
+        report = build_report(
+            session, sources={"hud_fmr": _source(fallback="Secret internal route.")}
+        )
+    assert "Secret internal route" not in report.model_dump_json()
+
+
 def test_report_carries_the_changelog_version_not_the_package_metadata(
     tmp_path: Path,
 ) -> None:
