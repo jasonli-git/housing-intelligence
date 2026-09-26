@@ -17,6 +17,7 @@ import logging
 import shutil
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Annotated
 
@@ -27,6 +28,7 @@ from sqlalchemy.orm import Session
 
 from hip import __version__, refresh
 from hip.analytics.compute import rebuild
+from hip.completeness import run as run_completeness
 from hip.config import (
     ConfigError,
     check_config,
@@ -218,6 +220,34 @@ def footprint(
             )
 
     typer.secho(f"{human_bytes(result.total_bytes)} total", fg=typer.colors.GREEN)
+
+
+@app.command()
+def completeness(
+    write: Annotated[
+        bool,
+        typer.Option(
+            "--write", help="Save to reports/completeness/<date>.md instead of printing."
+        ),
+    ] = False,
+) -> None:
+    """Run the completeness standing check: six dimensions, measured the same way.
+
+    An inspection command like `footprint`, run at every milestone's close (ROADMAP.md,
+    "The completeness standing check"). Each saved run is kept, so the next can be
+    compared with it.
+    """
+    settings = get_settings()
+    with Session(get_engine()) as session:
+        sources = load_sources(settings.config_dir)
+        report = run_completeness(session, sources, date.today())
+    if not write:
+        typer.echo(report, nl=False)
+        return
+    path = settings.reports_dir / "completeness" / f"{date.today().isoformat()}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(report)
+    typer.secho(f"wrote {path}", fg=typer.colors.GREEN)
 
 
 @app.command("publish")

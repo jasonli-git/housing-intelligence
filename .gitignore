@@ -5,13 +5,17 @@ data/
 # region reports and the model-evaluation report. Both are small Markdown, both are
 # linked from the README, and both stay rebuildable — `hip pack --report` and
 # `hip eval report` overwrite them. Validation-gate JSON stays out: it is per-run
-# machine state, not a document anyone reads.
+# machine state, not a document anyone reads. The completeness runs are the third
+# exception and the one that is not rebuildable: each records the warehouse as it stood
+# that day, and the next run is compared with it (ROADMAP, the completeness check).
 reports/**
 !reports/regions/
 !reports/regions/5y/
 !reports/regions/5y/*.md
 !reports/evaluation/
 !reports/evaluation/*.md
+!reports/completeness/
+!reports/completeness/*.md
 
 # Python
 .venv/
