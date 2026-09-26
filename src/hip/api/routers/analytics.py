@@ -227,6 +227,11 @@ class Headline(BaseModel):
     pct_change: float
     rank: int | None = None
     of: int | None = None
+    # Milestone 28: the change's 90% margin in percentage points, and the ranks it could
+    # plausibly hold given everyone's margins. None where the metric has no margins.
+    pct_change_margin: float | None = None
+    rank_best: int | None = None
+    rank_worst: int | None = None
 
 
 class Level(BaseModel):
@@ -246,6 +251,10 @@ class Level(BaseModel):
     source_id: str
     rank: int | None = None
     of: int | None = None
+    # Milestone 28, as on `Headline`: the value's 90% margin of error and its rank range.
+    margin_of_error: float | None = None
+    rank_best: int | None = None
+    rank_worst: int | None = None
 
 
 class CaveatScope(BaseModel):
@@ -281,7 +290,13 @@ def summary(
     session: SessionDep,
     window: Annotated[Window, Query()] = "5y",
 ) -> Summary:
-    """The dashboard landing view: headline changes with rank and relevant caveats."""
+    """The dashboard landing view: headline changes with rank and relevant caveats.
+
+    Also where a page learns each figure's margin of error and rank range (Milestone
+    28), the way it learned caveat scopes (#123): from here rather than the packet, so
+    nothing a model reads, and nothing a content hash covers, moves until Milestone 30
+    takes them into the readings.
+    """
     region = (
         session.execute(
             text(
@@ -300,7 +315,7 @@ def summary(
             """
             SELECT c.metric_id, m.label, m.unit, m.direction,
                    c.start_value, c.end_value, c.pct_change,
-                   k.rank, k.of
+                   k.rank, k.of, c.pct_change_margin, k.rank_best, k.rank_worst
             FROM fact_metric_change c
             JOIN metrics m ON m.metric_id = c.metric_id
             LEFT JOIN region_rankings k
@@ -323,7 +338,8 @@ def summary(
             """
             SELECT DISTINCT ON (f.metric_id)
                    f.metric_id, m.label, m.unit, m.direction, f.value,
-                   f.period_start, f.period_end, sr.source_id, k.rank, k.of
+                   f.period_start, f.period_end, sr.source_id, k.rank, k.of,
+                   f.margin_of_error, k.rank_best, k.rank_worst
             FROM fact_metric_observation f
             JOIN metrics m ON m.metric_id = f.metric_id
             JOIN source_releases sr ON sr.release_id = f.release_id

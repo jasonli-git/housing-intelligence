@@ -106,3 +106,27 @@ def test_summary_scopes_every_caveat_to_figures_the_region_shows(analyzed: None)
 def test_unknown_metric_and_region_are_404(analyzed: None) -> None:
     assert client.get("/rankings?metric_id=not_a_metric").status_code == 404
     assert client.get("/regions/99999999/summary").status_code == 404
+
+
+def test_the_summary_carries_margins_and_rank_ranges_for_survey_figures_only(
+    analyzed: None,
+) -> None:
+    """Milestone 28: margins reach the page through the summary, not the packet."""
+    mercer = client.get("/regions?level=county&q=Mercer").json()["items"][0]["region_id"]
+    body = client.get(f"/regions/{mercer}/summary?window=5y").json()
+    levels = {row["metric_id"]: row for row in body["levels"]}
+    changes = {row["metric_id"]: row for row in body["headlines"]}
+    if "acs_median_hh_income" not in levels:
+        pytest.skip("no ACS income for Mercer")
+
+    income = levels["acs_median_hh_income"]
+    assert income["margin_of_error"] > 0
+    assert income["rank_best"] <= income["rank"] <= income["rank_worst"]
+    assert changes["acs_median_hh_income"]["pct_change_margin"] > 0
+    # Zillow publishes no margin, so its rank stays a single place.
+    home = levels["zhvi_sfr"]
+    assert (home["margin_of_error"], home["rank_best"], home["rank_worst"]) == (
+        None,
+        None,
+        None,
+    )
