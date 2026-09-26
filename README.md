@@ -13,37 +13,38 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.22.0, 2026-09-23. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.24.0, 2026-09-26. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, housing, economic context, property
 > tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
-> parcels, 1.4M deeds, and 414,359 observations across 38 metrics from 16 public sources
+> parcels, 1.4M deeds, and 414,360 observations across 38 metrics from 16 public sources
 > spanning 1971 to 2026, plus 38,270 computed changes and 53,753 rankings. On each
 > refresh, every source is asked whether anything has moved and every dated source
 > whether a newer release exists. A figure that changes is recorded rather than
-> overwritten: 313,536 such revisions so far. Every value carries its source file and
-> match method. All eight pipeline stages run. The site publishes itself — 5,955 static
-> artifacts and 2,276 pre-rendered pages, served with no database and no application
-> server — across four page types: the state, 1,135 region pages, their reports, and an
-> affordability workspace, reachable in place from the state and county pages or at its
-> own address.
+> overwritten: 316,621 such revisions so far. Every value carries its source file and
+> match method, and the Census's survey figures their margins of error. All eight pipeline
+> stages run. The site publishes itself — 5,956 static artifacts and 2,278
+> pre-rendered pages, served with no database and no application server — across four
+> page types: the state, 1,135 region pages, their reports, and an affordability
+> workspace, reachable in place from the state and county pages or at its own address;
+> two more say how current each source is and which published figures were revised.
 >
-> **Latest.** Milestone 26 shipped on 2026-09-23: each dated source now finds its own
-> newest release instead of waiting for someone to bump a constant. Its first run loaded
-> figures published months earlier and never requested: BLS unemployment through July
-> 2026, the 2025 building permits, IRS migration for 2022–23, and HUD income limits for
-> FY2025 and FY2026. The cost card is priced at Freddie Mac's weekly benchmark (6.95%
-> for the week of 2026-09-17, where the monthly figure had read 6.67%). MOD-IV figures
-> are dated by their tax year, and every source records a fallback. The New Jersey
-> landing page and map explorer were redesigned the day before. Interpretation is a
-> measured layer, not a claim: seventeen models have been evaluated against standardized
-> scenarios, and every county page shows four of their readings side by side. Since
-> Milestone 13, any figure the packet does not carry is refused before it is stored.
+> **Latest.** Milestone 28 (2026-09-26) makes figures say how sure they are. Census
+> survey figures carry the Census's 90% margin of error ("$100,645 ± $2,565"), and a rank
+> the margins cannot back reads as a word over its range — "Near the middle of 21 NJ
+> counties, between 10th and 12th" — rather than a precise place. Renter cost burden now
+> counts only renters whose burden the Census could compute. Milestone 27, the same day,
+> carried the weekly refresh through to the site: every Friday this Mac refreshes,
+> rebuilds, deploys and checks the deploy, asking first only before the billed step of
+> regenerating the AI readings. Interpretation is a measured layer, not a claim:
+> seventeen models have been evaluated against standardized scenarios, and every county
+> page shows four of their readings side by side.
 >
-> **Next.** Milestone 27: `hip refresh` carries a refresh through to the published site,
-> within limits its first task decides — where it runs, and what may run without asking.
-> See [ROADMAP.md](ROADMAP.md) for what is planned and [CHANGELOG.md](CHANGELOG.md) for
-> what shipped.
+> **Next.** Milestone 30: one analyst reading per region in place of four side by side,
+> a plain-language reading for someone deciding whether to move, and batch pricing for
+> the models that write them — the first readings to quote a rank as the range the
+> survey can back. See [ROADMAP.md](ROADMAP.md) for what is planned and
+> [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
@@ -199,6 +200,13 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   that MOD-IV had gone behind a token and kept going. And a published figure that
   changes is now recorded in `fact_revision` instead of silently overwritten: that first
   run caught **313,536** revisions, 294,469 of them Zillow restating its own history.
+- **Figures that say how sure they are** (M28, built) — Census survey figures now carry
+  the Census's 90% margin of error ("$100,645 ± $2,565"), and a rank the margins
+  cannot back says so: "Near the middle of 21 NJ counties, between 10th and 12th" rather
+  than a precise "12th". The verdict sentence, the housing profile, the stand-out cards
+  and the New Jersey page's county table read the same ranges, every rank names its
+  cohort, renter cost burden counts only renters whose burden the Census could compute,
+  and the house price index reads as a change over its level as a multiple of its base.
 - **It publishes itself, and says how current it is** (M27, built) — a weekly refresh
   now reaches the published site on its own: every Friday at 08:00 this Mac runs
   `hip refresh` under `launchd` and, when something moved, rebuilds the packets and the
@@ -444,7 +452,7 @@ uv run hip schema                 # the published JSON Schema
 uv run hip footprint              # bytes per storage tier and rows per state
 uv run hip footprint --json       # the same, for capturing into a document
 uv run hip completeness           # the completeness standing check (ROADMAP)
-uv run hip completeness --write   # the same, kept at reports/completeness/<date>.md
+uv run hip completeness --write   # the same, kept under reports/completeness/, never overwritten
 ```
 
 Evaluate candidate models and generate explanations (needs `make setup-eval`; the local
@@ -630,7 +638,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.23.1 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.24.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -647,12 +655,12 @@ Northeast and to every US county was deferred past Version 2 on 2026-09-07.
 Version 3 began as depth on what is already held. On 2026-09-23 it absorbed Version 4
 and the Director Note on accessible, comprehensive and current housing data, and became
 the version that makes the platform current, as complete as public data allows, and
-honest about both. Five of its milestones have shipped — **24** fresher figures, **25**
+honest about both. Six of its milestones have shipped — **24** fresher figures, **25**
 recorded sale prices and a comparable tax rate, **26** current releases, **27** a refresh
-that reaches the reader, and **29** scheduled refresh, brought forward out of order once
-the site was public and had started to decay. **28** and **30** through **50** remain,
-with the map's standing check; the completeness standing check ran first on 2026-09-26
-and runs again at every milestone's close. Version 4 holds nowcasts, a local price model
+that reaches the reader, **28** figures that say how sure they are, and **29** scheduled
+refresh, brought forward out of order once the site was public and had started to decay.
+**30** through **50** remain, with the map's standing check; the completeness standing
+check runs at every milestone's close, twice so far. Version 4 holds nowcasts, a local price model
 study and forecasting. Between milestones, the New Jersey landing page and region pages were
 redesigned (0.21.1 and 0.21.3).
 
