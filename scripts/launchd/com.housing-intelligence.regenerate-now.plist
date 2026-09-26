@@ -47,7 +47,7 @@
          this only ever runs on this Mac under this account. -->
     <key>WatchPaths</key>
     <array>
-        <string>/Users/jasonli/Library/Mobile Documents/com~apple~CloudDocs/HousingPipeline/regenerate-now.trigger</string>
+        <string>/Users/jasonli/Library/Mobile Documents/com~apple~CloudDocs/HousingPipeline/regenerate-now-trigger.txt</string>
     </array>
 
     <key>StandardOutPath</key>

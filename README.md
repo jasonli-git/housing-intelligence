@@ -522,9 +522,11 @@ built-in actions, no scripting:
   it once per mode, or add a menu (**Choose from Menu**) with "Ask" and "Auto" options
   feeding the **Text** action, for one Shortcut that does either.
 - **Regenerate now** — actions: **Text** (any placeholder content) → **Save File**, to
-  `HousingPipeline/regenerate-now.trigger`, overwrite on. `com.housing-intelligence.
-  regenerate-now` deletes the file itself once it has acted, so a second tap is a new
-  request rather than a no-op.
+  `HousingPipeline/regenerate-now-trigger.txt`, overwrite on — a plain `.txt` rather than
+  a more descriptive extension, because Shortcuts silently rewrites an extension it does
+  not recognize to one, so fighting it is not worth a nicer filename.
+  `com.housing-intelligence.regenerate-now` deletes the file itself once it has acted,
+  so a second tap is a new request rather than a no-op.
 
 Add either to the Home Screen or Control Center for a one-tap version.
 

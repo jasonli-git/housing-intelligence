@@ -152,7 +152,7 @@ def test_regenerate_now_touches_the_same_trigger_a_shortcut_would(
     result = runner.invoke(app, ["regenerate-now"])
 
     assert result.exit_code == 0
-    assert (tmp_path / "regenerate-now.trigger").exists()
+    assert (tmp_path / "regenerate-now-trigger.txt").exists()
 
 
 def test_notify_exits_clean_even_with_no_keys_configured(

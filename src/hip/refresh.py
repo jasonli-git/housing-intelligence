@@ -407,7 +407,11 @@ class RefreshState:
 # same synced path, rather than two settings that could disagree. `Settings.gate_dir`
 # points there by default and is overridable, the same way every other data location is.
 MODE_FILE = "mode.json"
-TRIGGER_FILE = "regenerate-now.trigger"
+# A plain .txt extension, not something more descriptive like .trigger: iOS Shortcuts'
+# Save File action silently forces a .txt extension onto Text content whenever the
+# typed extension isn't one it recognizes, and fighting that on every phone that ever
+# builds this Shortcut is a worse trade than a slightly less self-explanatory name.
+TRIGGER_FILE = "regenerate-now-trigger.txt"
 
 
 @dataclass(frozen=True)
