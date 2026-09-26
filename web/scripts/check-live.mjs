@@ -250,6 +250,9 @@ async function pageSamples() {
 
   const county = entries.find((entry) => entry.level === "county");
   samples.push({ label: "report", route: `/regions/${county.id}/report` });
+  // The two pages about the data (Milestone 27), which no region sample reaches.
+  samples.push({ label: "freshness", route: "/freshness" });
+  samples.push({ label: "changes", route: "/changes" });
   return samples;
 }
 
