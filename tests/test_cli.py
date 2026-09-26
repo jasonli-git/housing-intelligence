@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from typer.testing import CliRunner
 
 from hip import __version__
 from hip.cli import _STAGE_MILESTONE, app
+from hip.config import Settings
 
 runner = CliRunner()
 
@@ -101,3 +104,95 @@ def test_check_config_exits_nonzero_when_a_key_is_missing(
 
     assert result.exit_code == 1
     assert "CENSUS_API_KEY" in result.output
+
+
+def _settings_at(gate_dir: Path) -> Settings:
+    """`get_settings()` is `@lru_cache(maxsize=1)`, so an env var set after the first
+    call in this process is invisible to it — the standard fix elsewhere in this suite
+    (`tests/test_eval_hosted.py`) is replacing the name the command module looked up,
+    not the environment."""
+    return Settings(gate_dir=gate_dir)
+
+
+def test_refresh_mode_defaults_to_ask_and_round_trips(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Milestone 27: the file a Mac command and an iPhone Shortcut share."""
+    monkeypatch.setattr("hip.cli.get_settings", lambda: _settings_at(tmp_path))
+
+    assert runner.invoke(app, ["refresh-mode"]).output.strip() == "ask"
+
+    set_auto = runner.invoke(app, ["refresh-mode", "auto"])
+    assert set_auto.exit_code == 0
+    assert runner.invoke(app, ["refresh-mode"]).output.strip() == "auto"
+
+    set_ask = runner.invoke(app, ["refresh-mode", "ask"])
+    assert set_ask.exit_code == 0
+    assert runner.invoke(app, ["refresh-mode"]).output.strip() == "ask"
+
+
+def test_refresh_mode_rejects_an_unknown_value(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("hip.cli.get_settings", lambda: _settings_at(tmp_path))
+
+    result = runner.invoke(app, ["refresh-mode", "sometimes"])
+
+    assert result.exit_code == 1
+    assert "ask" in result.output and "auto" in result.output
+    # Rejected before anything was written — the file must not exist at all.
+    assert not (tmp_path / "mode.json").exists()
+
+
+def test_regenerate_now_touches_the_same_trigger_a_shortcut_would(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("hip.cli.get_settings", lambda: _settings_at(tmp_path))
+
+    result = runner.invoke(app, ["regenerate-now"])
+
+    assert result.exit_code == 0
+    assert (tmp_path / "regenerate-now-trigger.txt").exists()
+
+
+def test_notify_exits_clean_even_with_no_keys_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A missing Pushover key must not fail whatever script called this."""
+    monkeypatch.delenv("PUSHOVER_USER_KEY", raising=False)
+    monkeypatch.delenv("PUSHOVER_API_TOKEN", raising=False)
+
+    result = runner.invoke(app, ["notify", "--title", "t", "--message", "m"])
+
+    assert result.exit_code == 0
+
+
+def test_a_quiet_refresh_still_records_what_it_learned_of_each_publisher(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The figures stand, so no pipeline runs — but a publisher out of reach this week,
+    or back, is news the freshness report carries, and `hip load` is what would have
+    recorded it (ARCHITECTURE #232). Found in Codex's second review of Milestone 27."""
+    from hip.config import load_sources
+
+    loaded: list[list[str]] = []
+    monkeypatch.setattr(
+        "hip.cli.get_settings", lambda: Settings(data_dir=tmp_path, gate_dir=tmp_path)
+    )
+    monkeypatch.setattr("hip.cli._adapters", lambda source: [])
+    monkeypatch.setattr("hip.cli.get_engine", lambda: None)
+    monkeypatch.setattr(
+        "hip.cli.load_discoveries",
+        lambda engine, raw_dir, ids: loaded.append(sorted(ids)) or 0,
+    )
+
+    def no_pipeline(*args: object, **kwargs: object) -> None:
+        raise AssertionError("a quiet refresh ran a pipeline stage")
+
+    monkeypatch.setattr("hip.cli.subprocess.run", no_pipeline)
+
+    result = runner.invoke(app, ["refresh"])
+
+    assert result.exit_code == 0, result.output
+    assert "nothing changed" in result.output
+    assert loaded == [sorted(load_sources().keys())]

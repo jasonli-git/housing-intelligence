@@ -199,6 +199,20 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   that MOD-IV had gone behind a token and kept going. And a published figure that
   changes is now recorded in `fact_revision` instead of silently overwritten: that first
   run caught **313,536** revisions, 294,469 of them Zillow restating its own history.
+- **It publishes itself, and says how current it is** (M27, built) — a weekly refresh
+  now reaches the published site on its own: every Friday at 08:00 this Mac runs
+  `hip refresh` under `launchd` and, when something moved, rebuilds the packets and the
+  site, deploys it and checks the deploy, with any failure reaching the owner's phone
+  through Pushover. Regenerating the AI readings is billed, so it is the one step that
+  asks first — an `ask`/`auto` setting that starts at `ask`, switchable from the Mac or
+  an iPhone Shortcut. Two new pages say what a reader could otherwise only take on
+  trust: `/freshness` keeps each source's newest period, release date, last check and
+  download date apart, because checked today is not measured today, and `/changes`
+  shows figures revised after they were published — 313,536 in the first refresh that
+  recorded them, summarised per metric with the places that moved most. Every row of a
+  region's full metric tables can open a pre-filled GitHub issue about that figure, and
+  `hip completeness` measures the platform along six fixed dimensions, first run
+  2026-09-26.
 - **It finds new releases on its own** (M26, built) — Milestone 29 asked whether a file
   had changed, but nothing asked whether a *newer* one existed: each dated source's
   newest year was a constant someone had to bump. By 2026-09-23 that had left BLS
@@ -403,7 +417,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 571 Python + 215 dashboard tests; API tests skip without a warehouse
+make test          # 660 Python + 246 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -429,6 +443,8 @@ uv run hip pack --region 11       # one region
 uv run hip schema                 # the published JSON Schema
 uv run hip footprint              # bytes per storage tier and rows per state
 uv run hip footprint --json       # the same, for capturing into a document
+uv run hip completeness           # the completeness standing check (ROADMAP)
+uv run hip completeness --write   # the same, kept at reports/completeness/<date>.md
 ```
 
 Evaluate candidate models and generate explanations (needs `make setup-eval`; the local
@@ -481,22 +497,62 @@ source unreachable, and **1** when the pipeline itself failed — the split a sc
 needs, because fifteen sources moving while one publisher is down is a successful
 refresh whose numbers should still deploy. One source failing no longer ends the run.
 
-**Scheduling is yours to install**, deliberately: nothing here writes a cron or launchd
-entry. A daily run is enough for a platform whose fastest source publishes weekly —
-
-```cron
-0 6 * * *  cd /path/to/housing-intelligence && uv run hip refresh >> /tmp/hip-refresh.log 2>&1
-```
-
-— and on macOS a `launchd` agent with `StartCalendarInterval` is the equivalent. Deploy
-on exit 0 or 3; investigate on 1.
-
 **Schedule the command, not `make refresh`.** `make` collapses any failing recipe to its
 own exit status 2, so scheduling the make target throws away the distinction above: a run
 that completed with one publisher down and a run whose pipeline broke both arrive as 2.
 `make refresh` is for running it by hand. `make prune-raw` shows which superseded downloads are
 safe to delete and needs `--apply` to do it, because a cadence makes `data/raw/` grow
 without bound: one refresh took it from 264MB of superseded copies to 511MB.
+
+**Reaching the reader (Milestone 27).** `hip refresh` still means "update the warehouse"
+and nothing past it — a second host with no `make`, `wrangler` or `rclone` installed can
+run it alone. `scripts/scheduled_refresh.py` is the scheduler-facing script: it calls
+`hip refresh`, and only if `RefreshState.completed_at` actually moved — a quiet week
+stops there, at no cost past the refresh itself — goes on to rebuild packets, check
+whether any reading is stale (`hip explain --all --dry-run`, which classifies every
+county without calling a model), rebuild the site, deploy it, and confirm the deploy
+with `check-live`. A quiet week still republishes, without rebuilding packets or
+readings, when a source's line on the freshness page would change — out of reach, back,
+or a release now waiting (ARCHITECTURE #232). `scripts/launchd/` holds the two
+`launchd` agents this Mac runs it under, real absolute paths and all, since this project
+runs on exactly one machine on purpose: `com.housing-intelligence.weekly-refresh`
+(Fridays, the morning after Freddie Mac's Thursday rate release, wrapped in
+`caffeinate`) and `com.housing-intelligence.regenerate-now` (`WatchPaths` on a trigger
+file, fired instantly rather than polled).
+Installing either is a standing decision on its own, not something this repo does for
+you — see the comment at the top of each `.plist` for the `launchctl load` line. Both
+scripts run only from a clean `main`: this checkout is shared with development, so a run
+that finds another branch, or any uncommitted work, notifies and stops instead of
+deploying unreviewed code (ARCHITECTURE #226, #227).
+
+**Regenerating AI readings is billed, so it is the one step gated.** Everything else —
+the refresh, the rebuild, the deploy — runs every scheduled cycle regardless.
+`hip refresh-mode` shows or sets `ask` or `auto`: `ask` (the default) notifies instead
+of spending anything when a reading has gone stale, and `auto` regenerates without
+asking. The setting lives in one file under `Settings.gate_dir` (iCloud Drive by
+default), so `hip refresh-mode auto` from the Mac and an iPhone Shortcut writing the
+same file are two doors onto one setting, switchable either way at any time.
+A regeneration starts Ollama for the local model and stops it again after, so it can
+stay quit the rest of the time; an Ollama you opened yourself is used and left running
+(ARCHITECTURE #230). `hip regenerate-now` (or the same Shortcut idea) asks for a
+regeneration outside the schedule; `hip notify --title … --message …` is what the scripts use to reach Pushover,
+and never fails the run that called it if the notification itself does not go through.
+
+*Building the two Shortcuts*, once, in the iOS Shortcuts app — each is two or three
+built-in actions, no scripting:
+
+- **Set refresh mode** — actions: **Text** (`{"mode": "ask"}` or `{"mode": "auto"}`) →
+  **Save File**, to `HousingPipeline/mode.json` in iCloud Drive, overwrite on. Duplicate
+  it once per mode, or add a menu (**Choose from Menu**) with "Ask" and "Auto" options
+  feeding the **Text** action, for one Shortcut that does either.
+- **Regenerate now** — actions: **Text** (any placeholder content) → **Save File**, to
+  `HousingPipeline/regenerate-now-trigger.txt`, overwrite on — a plain `.txt` rather than
+  a more descriptive extension, because Shortcuts silently rewrites an extension it does
+  not recognize to one, so fighting it is not worth a nicer filename.
+  `com.housing-intelligence.regenerate-now` deletes the file itself once it has acted,
+  so a second tap is a new request rather than a no-op.
+
+Add either to the Home Screen or Control Center for a one-tap version.
 
 **When a source stops answering.** A refresh exits **3** and names it — `failed` or
 `unreachable` in the output. Then:
@@ -574,7 +630,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.22.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.23.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -591,12 +647,13 @@ Northeast and to every US county was deferred past Version 2 on 2026-09-07.
 Version 3 began as depth on what is already held. On 2026-09-23 it absorbed Version 4
 and the Director Note on accessible, comprehensive and current housing data, and became
 the version that makes the platform current, as complete as public data allows, and
-honest about both. Four of its milestones have shipped — **24** fresher figures, **25**
-recorded sale prices and a comparable tax rate, **26** current releases, and **29**
-scheduled refresh, brought forward out of order once the site was public and had
-started to decay. **27** and **28**, and **30** through **50**, remain, with the map's
-and the completeness standing checks; Version 4 holds nowcasts, a local price model study
-and forecasting. Between milestones, the New Jersey landing page and region pages were
+honest about both. Five of its milestones have shipped — **24** fresher figures, **25**
+recorded sale prices and a comparable tax rate, **26** current releases, **27** a refresh
+that reaches the reader, and **29** scheduled refresh, brought forward out of order once
+the site was public and had started to decay. **28** and **30** through **50** remain,
+with the map's standing check; the completeness standing check ran first on 2026-09-26
+and runs again at every milestone's close. Version 4 holds nowcasts, a local price model
+study and forecasting. Between milestones, the New Jersey landing page and region pages were
 redesigned (0.21.1 and 0.21.3).
 
 The notes below are a running commentary on individual milestones rather than a complete

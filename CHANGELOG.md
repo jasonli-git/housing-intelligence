@@ -3,6 +3,83 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.23.0] — 2026-09-26
+
+**Milestone 27 — refresh reaches the reader.** A weekly refresh now carries through to
+the published site, and a reader can see how current each source is and which figures
+changed after they were published.
+
+### Added
+
+- **A weekly refresh that publishes itself.** `scripts/scheduled_refresh.py` runs every
+  Friday at 08:00 on this Mac, under `launchd` and inside `caffeinate`: `hip refresh`,
+  then — only if something moved — `hip pack`, the readings check, `make publish`,
+  `make deploy` and `make check-live` (ARCHITECTURE #216, #217). A publisher it cannot
+  reach is reported even in a week when nothing else moved, and readings that fail to
+  regenerate are reported without holding back the data (ARCHITECTURE #227). It runs
+  only from a clean `main`: this checkout is shared with development, so on any other
+  branch, or with uncommitted work, it says so on the phone and stops
+  (ARCHITECTURE #226).
+- **Regenerating readings is the one step that asks first**, because it is billed. An
+  `ask`/`auto` setting decides it, starting at `ask`, held in one iCloud file that
+  `hip refresh-mode` on the Mac and an iPhone Shortcut both write. `hip regenerate-now`,
+  or a second Shortcut, starts a regeneration on demand through a second `launchd`
+  agent, and `hip explain --dry-run` reports what would be regenerated without calling
+  any model (ARCHITECTURE #219, #229, #231). A failed or inconclusive check never goes
+  on to the paid run. A regeneration starts Ollama for the local model and stops it
+  after, unless it was already running (ARCHITECTURE #230).
+- **Notifications on the owner's phone** through Pushover, `hip notify`: a failed step as
+  urgent; an unreachable source or readings awaiting a go-ahead as normal
+  (ARCHITECTURE #218).
+- **`/freshness`**, for every downloaded source: its status, the newest period its
+  figures describe, the publisher's release date, when the site last asked for anything
+  newer, when it was downloaded, and any release waiting to take effect — HUD's FY2027
+  Fair Market Rents, from 2026-10-01. A publisher the last refresh could not reach is
+  shown as such (ARCHITECTURE #228), and a week in which no figure moved still
+  republishes the page when a source's status changes (ARCHITECTURE #232). Every status
+  is worded as of the page's build, with its age beside the build date
+  (ARCHITECTURE #233). Served by `GET /freshness` from a new
+  `source_discoveries` table (migration 0015) that `hip load` fills (ARCHITECTURE #222).
+- **`/changes`**: figures the site had already published that a later refresh revised,
+  per refresh and metric — how many, where, which way, typically by how much, and the
+  places that moved most. Served by `GET /revisions` (ARCHITECTURE #224). The first
+  refresh that recorded revisions changed 313,536 figures, 294,469 of them Zillow
+  restating home values back to 2000; Margate City's rent index for January 2026 went
+  from $2,606 to $1,408 a month.
+- **Report a problem with this figure**, on every row of a region's two full metric
+  tables: a GitHub issue pre-filled with the region, metric, value, period, source and
+  release (ARCHITECTURE #221).
+- **`hip completeness`**, the completeness standing check. Its first run is recorded in
+  ROADMAP and kept at `reports/completeness/2026-09-26.md` (ARCHITECTURE #225).
+- Links to both new pages from every page's footer.
+
+### Changed
+
+- `check-live` pins one region per cost-card shape — Absecon, Frankford and Walpack —
+  instead of the first in the search index, which had drifted to a town with no Zillow
+  coverage. It also checks `/freshness` and `/changes` (ARCHITECTURE #220).
+
+### Fixed
+
+- **A refresh that found nothing newer erased a discovery's publication date.** The
+  2026-09-26 refresh lost Building Permits' (2026-02-20) and IRS migration's
+  (2026-03-19); each returns when its source next publishes (ARCHITECTURE #223).
+- The regenerate-now trigger is `regenerate-now-trigger.txt`, because iOS Shortcuts
+  cannot save a file ending in `.trigger`.
+
+### Not in this release
+
+- Automated README screenshots, which need a runner off this Mac (ARCHITECTURE #175);
+  Milestone 27 chose this Mac.
+- A last-checked date for Zillow, FRED and FHFA on the freshness page: revalidation does
+  not record one anywhere the page reads, and the page says so.
+
+### Regenerated
+
+- One county report, `reports/regions/5y/34013.md`, which cites an extra HUD vintage
+  after the 2026-09-25 refresh. No reading needed regenerating: 56 were re-bound to the
+  new packets for free, and none was written.
+
 ## [0.22.0] — 2026-09-23
 
 **Milestone 26 — current releases.** Each dated source finds its own newest release,

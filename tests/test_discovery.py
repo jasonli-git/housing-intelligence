@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import io
 import zipfile
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
 
@@ -316,12 +317,31 @@ def test_a_discovery_round_trips_through_its_record(tmp_path: Path) -> None:
     assert read_discovery(tmp_path, "census_permits") == _found("2025")
 
 
-def test_an_unreachable_discovery_keeps_the_last_good_record(tmp_path: Path) -> None:
-    write_discovery(tmp_path, _found("2025"))
+def test_an_unreachable_discovery_keeps_the_last_good_release(tmp_path: Path) -> None:
+    """It records the outage and keeps the release: later stages build refs from it."""
+    good = replace(_found("2025"), published="2026-02-20")
+    write_discovery(tmp_path, good)
+    outage = replace(
+        _found("2024", outcome="unreachable"),
+        checked_at=datetime(2026, 9, 30, tzinfo=UTC),
+        pending=None,
+        pending_from=None,
+    )
+    write_discovery(tmp_path, outage)
+
+    recorded = read_discovery(tmp_path, "census_permits")
+    assert recorded == replace(
+        good, outcome="unreachable", checked_at=datetime(2026, 9, 30, tzinfo=UTC)
+    )
+
+
+def test_an_unreachable_first_discovery_is_recorded_as_found(tmp_path: Path) -> None:
+    """With no good record to keep, the outage is recorded with the floor it fell to."""
     write_discovery(tmp_path, _found("2024", outcome="unreachable"))
 
     recorded = read_discovery(tmp_path, "census_permits")
-    assert recorded is not None and recorded.newest == "2025"
+    assert recorded is not None
+    assert (recorded.newest, recorded.outcome) == ("2024", "unreachable")
 
 
 def test_later_stages_build_refs_from_the_record(tmp_path: Path) -> None:
@@ -368,6 +388,42 @@ def test_acquisition_discovers_first_and_records_it(tmp_path: Path) -> None:
     assert adapter.newest == "2025"
     recorded = read_discovery(tmp_path, "census_permits")
     assert recorded is not None and recorded.newest == "2025"
+
+
+def test_a_later_refresh_keeps_the_publication_date_it_learned(tmp_path: Path) -> None:
+    """Found building Milestone 27's freshness page: the probe learns `published` only
+    when it finds a newer release, so the next refresh — finding nothing newer — wrote
+    `None` over it. The 2026-09-26 refresh erased Building Permits' 2026-02-20 so."""
+    stamped = {"last-modified": "Fri, 20 Feb 2026 12:45:25 GMT"}
+    first = _Recorded(_publisher({"co2512y.txt": _ok(**stamped), "ne2512y.txt": _ok()}))
+    list(acquire([first], raw_dir=tmp_path, today=TODAY))
+    learned = read_discovery(tmp_path, "census_permits")
+    assert learned is not None and learned.published is not None
+
+    # A week later: 2025 is still the newest, and the probe for 2026 finds nothing.
+    later = _Recorded(_publisher({}))
+    later.newest = "2025"
+    list(acquire([later], raw_dir=tmp_path, today=TODAY))
+
+    kept = read_discovery(tmp_path, "census_permits")
+    assert kept is not None and kept.newest == "2025"
+    assert kept.published == learned.published
+
+
+def test_a_newer_release_replaces_the_carried_publication_date(tmp_path: Path) -> None:
+    """Carried only while the release is unchanged: a new newest brings its own date."""
+    old = {"last-modified": "Fri, 20 Feb 2026 12:45:25 GMT"}
+    new = {"last-modified": "Fri, 19 Feb 2027 12:00:00 GMT"}
+    first = _Recorded(_publisher({"co2512y.txt": _ok(**old), "ne2512y.txt": _ok()}))
+    list(acquire([first], raw_dir=tmp_path, today=TODAY))
+
+    later = _Recorded(_publisher({"co2612y.txt": _ok(**new), "ne2612y.txt": _ok()}))
+    later.newest = "2025"
+    list(acquire([later], raw_dir=tmp_path, today=TODAY))
+
+    replaced = read_discovery(tmp_path, "census_permits")
+    assert replaced is not None and replaced.newest == "2026"
+    assert replaced.published is not None and "2027" in replaced.published
 
 
 def test_a_named_vintage_skips_discovery(tmp_path: Path) -> None:

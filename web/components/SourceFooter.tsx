@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { api } from "@/lib/api";
 import { byInstitution, isRestricted, shortPublisher } from "@/lib/sources";
 
@@ -110,6 +112,13 @@ export async function SourceFooter() {
             ))}
           </ul>
         </details>
+
+        {/* Outside the disclosure, so the pages about the data are reachable without
+            opening the source list first (Milestone 27). */}
+        <p className="foot-links">
+          <Link href="/freshness">How current each source is</Link>
+          <Link href="/changes">What changed since it was published</Link>
+        </p>
 
         <div className="foot-notice">
           <svg viewBox="0 0 20 20" aria-hidden="true">

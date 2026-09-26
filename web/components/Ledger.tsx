@@ -2,7 +2,8 @@ import { Fragment, type ReactNode } from "react";
 
 import { Glossed } from "@/components/Glossed";
 import { MetricTerm } from "@/components/MetricTerm";
-import type { PacketMetric } from "@/lib/api";
+import { ReportProblem } from "@/components/ReportProblem";
+import type { Packet, PacketMetric } from "@/lib/api";
 import type { TablePlacement } from "@/lib/caveats";
 import { formatChange, formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
@@ -168,10 +169,19 @@ export function Ledger({
   metrics,
   placement,
   defined,
+  regionLabel,
+  sources,
+  path,
 }: {
   metrics: PacketMetric[];
   placement: TablePlacement;
   defined: Set<string>;
+  /** Region, packet sources and this page's own route, for each row's "report a
+   * problem" link. Omitted, the link itself is omitted — the report page reuses
+   * `ChangeCell`/`Marks` without it. */
+  regionLabel?: string;
+  sources?: Packet["sources"];
+  path?: string;
 }) {
   const sections = groupRows(metrics);
   const atFoot = new Set(sections.flatMap((s) => s.rows.map((r) => r.metric_id)).slice(-FOOT_ROWS));
@@ -211,6 +221,18 @@ export function Ledger({
                         up={atFoot.has(metric.metric_id)}
                       />
                       <Marks letters={placement.marks.get(metric.metric_id)} />
+                      {regionLabel && sources && path && (
+                        <ReportProblem
+                          regionLabel={regionLabel}
+                          metricLabel={metric.label}
+                          displayValue={formatMetric(metric.end_value, metric.unit, metric.metric_id)}
+                          periodLabel={windowLabel(metric.window_start, metric.window_end, metric.metric_id)}
+                          sourceId={metric.source_id}
+                          releaseId={metric.release_id}
+                          sources={sources}
+                          path={path}
+                        />
+                      )}
                     </td>
                     <td className="value">
                       {formatMetric(metric.end_value, metric.unit, metric.metric_id)}

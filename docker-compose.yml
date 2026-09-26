@@ -11,7 +11,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hip}
       POSTGRES_DB: ${POSTGRES_DB:-hip}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      # This Mac only. Without the address Docker publishes on every interface, which
+      # put the warehouse on the local network behind nothing but its password.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       # Named volume by default, a bind mount when HIP_PGDATA is set to a path.
       # Opt-in on purpose: switching the source does not migrate anything, it points

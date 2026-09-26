@@ -8,12 +8,21 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — between milestones (2026-09-23)
+## Now — Milestone 27 complete, in review (2026-09-26)
 
-Milestone 26 merged and deployed on 2026-09-23, with every county's readings regenerated;
-what it shipped is in CHANGELOG 0.22.0. Milestone 27 is next and has not started: its
-first task decides where a refresh runs and what it may do unattended, and it begins on
-the owner's go-ahead.
+Branch `milestone/m27-refresh-reaches-the-reader`, pull request into `main`. Everything in
+ROADMAP's Milestone 27 row is built: [CHANGELOG.md](CHANGELOG.md) 0.23.0 has what
+shipped, [ARCHITECTURE.md](ARCHITECTURE.md) #216–#226 the decisions, and ROADMAP the
+completeness check's first record.
+
+**Waiting on the owner:**
+
+- **Review and merge.** Nothing from the second half is live: `/freshness`, `/changes`
+  and report-a-problem reach the site with the first deploy after the merge — by hand
+  (`make publish deploy check-live`) or the Friday run.
+- **Check out `main` in this folder after merging.** Both scheduled scripts now run only
+  from a clean `main`, and notify and stop otherwise (#226). The next weekly run is
+  Friday 2026-10-02 at 08:00; the `launchd` agents and the three Shortcuts are live.
 
 **To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
@@ -48,7 +57,9 @@ first raised, not where it must be done.
       names it, so no page misreads. But the dates also claim FY2026 applied from
       January, when a year's limits apply from the effective date in HUD's annual notice
       (not checked here). Dating by effective date, as Fair Market Rents are (#106), is
-      the fix to weigh; it moves every AMI ratio's window.
+      the fix to weigh; it moves every AMI ratio's window. Since Milestone 27 a reader can
+      see it: `/freshness` shows the source's data "through Dec 2026", marked as a period
+      still under way.
 
 - [ ] **The validation gate has no range bounds for the two HUD metrics.**
       (pre-M12 review) `hud_area_median_income` and `hud_income_limit_80` are absent from
@@ -82,6 +93,12 @@ first raised, not where it must be done.
       four new metrics went unclassified without failing anything — they would have
       rendered under "Other measures" silently. Derive the list from
       `config/metrics.yml` or from a recorded API response, so the guard guards.
+
+- [ ] **A revalidated source's last check is recorded nowhere the freshness page
+      reads.** (M27, #222) Zillow, FRED and FHFA are asked every refresh, but only
+      whether a file changed is kept, so `/freshness` says it does not yet record when.
+      Recording the check time per source at `hip refresh` and loading it with the
+      discoveries would let the page show a date it can back.
 
 ### Evaluation harness
 
@@ -141,6 +158,10 @@ first raised, not where it must be done.
       `refs()` or `to_records()` against a stubbed response, so a publisher changing a
       response shape would surface as a pipeline failure rather than a test failure.
       `test_nj_modiv.py` is the pattern to copy — a `MockTransport` subclass, no network.
+
+- [x] **The two scheduled scripts' step order has no committed test.** (M27) **Done
+      2026-09-26** — `tests/test_scheduled_scripts.py`, after Codex's review found three
+      defects in that sequence (ARCHITECTURE #227).
 
 ### API and scale limits
 
@@ -216,7 +237,20 @@ first raised, not where it must be done.
       (`agent-handoffs/screenshot-automation.md`) built a working capture command and
       recommended against automating it per push — retaking them is now a manual step
       with tooling that exists.
-      **Unblocked only if Milestone 27 runs the refresh off this machine.**
+      **Still blocked:** Milestone 27 chose this Mac on 2026-09-25, and only a runner
+      off it unblocks automation (ARCHITECTURE #175).
+
+- [ ] **The site does not say which questions it declines.** (M27 completeness run)
+      ROADMAP decided on 2026-09-13 not to forecast prices or give investment advice,
+      and schedules schools, commutes, crime and flood risk for Milestones 39–45, but no
+      page tells a reader; the check counts 7 of its 17 questions as neither answered
+      nor declined. A short statement on the site would move them to declined.
+- [ ] **Report a problem is on a region's two full metric tables only.** (M27, #221)
+      The cost cards, the verdict sentence, the New Jersey rankings and `/afford` quote
+      figures without it. ROADMAP's row asked for every figure.
+- [ ] **A figure's own history of values is not shown.** (M27, #224) `/changes`
+      summarises each refresh; a region page neither marks a revised figure nor shows its
+      earlier values, which `fact_revision` holds.
 
 ### Map performance — open leads, for the end of V3
 
@@ -237,7 +271,9 @@ first raised, not where it must be done.
 
 ### Publication
 
-- [ ] **`hip refresh` stops short of the site.** (M29, found 2026-09-20 while
+- [x] **`hip refresh` stops short of the site.** **Done in Milestone 27** — the weekly
+      script carries a refresh through to the site, gating only the billed readings
+      (ARCHITECTURE #216–#219). (M29, found 2026-09-20 while
       deploying it) `STAGES` runs land through analyze and no further, so a scheduled
       refresh updates the warehouse and leaves packets, prose and the published site
       exactly as they were. Worse than standing still: the warehouse moves underneath
@@ -250,7 +286,8 @@ first raised, not where it must be done.
       automated refresh.
       **Scheduled: Milestone 27.**
 
-- [ ] **`make check-live` samples one municipality, and never the interesting ones.**
+- [x] **`make check-live` samples one municipality, and never the interesting ones.**
+      **Done in Milestone 27:** Absecon, Frankford and Walpack are pinned (#220).
       **Still open, and now also proven to matter:** on 2026-09-21 it passed a deploy
       whose transaction-fallback and no-price pages were again checked by hand. Its
       `file://` defect was fixed the same day (ARCHITECTURE #202); the sampling was not.
@@ -302,7 +339,9 @@ first raised, not where it must be done.
       output, so they go stale silently** — these had been carrying Zillow figures the
       September release restated, Atlantic County's home-value change among them at
       +46.4% against an actual +44.5%. Either regenerate them whenever the data moves,
-      or stop tracking them and link a published report instead.
+      or stop tracking them and link a published report instead. The weekly run leaves
+      them alone — it packs without `--report` (#227) — so they stay a committed
+      snapshot until someone regenerates and commits them.
 
 ### Documentation upkeep
 
@@ -322,6 +361,12 @@ first raised, not where it must be done.
       file-based source; the status narrative, the Features descriptions and the setup
       prose do not. Deciding the boundary is what makes any "regenerate on deploy" work
       scopeable, and ARCHITECTURE #175 settles only the images half.
+
+- [ ] **ARCHITECTURE's Module Layout stops at 2026-09-11, plus Milestone 27's files.**
+      (found 2026-09-26) Files from Milestones 24–26 and 29 are missing —
+      `sources/nj_sr1a.py` and `sources/nj_tax_rates.py` among them — and its counts
+      are stale (15 sources and 31 metrics; 16 and 38 today). Its schema DDL block
+      likewise predates migrations 0012–0015, which the section now says.
 
 ### Housekeeping
 
@@ -380,6 +425,12 @@ first raised, not where it must be done.
       in a state where county subdivisions are statistical divisions.
       `config/geography.yml` already warns the identifier system is expensive to change
       once fact rows reference it.
+
+- [ ] **Reuse rights beyond display are unverified for six sources.** (M27
+      completeness run) FRED, the three NJ sources and both Zillow indexes: the licence
+      recorded in `config/sources.yml` does not say whether download, derived figures or
+      commercial use are allowed, and no publisher's terms have been checked.
+      **Scheduled: Milestone 32**, whose licence table needs exactly this.
 
 ### Data sources worth adding
 
