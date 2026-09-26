@@ -188,6 +188,9 @@ class Coverage:
     population_share: float | None
     # Share of the metric's observations joined to their region by each method.
     match_methods: dict[str, float]
+    # Share of the metric's observations at its newest period that carry a margin of
+    # error (Milestone 28); 0 for a source that publishes none.
+    margin_share: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -268,6 +271,26 @@ def measure_coverage(session: Session) -> tuple[Totals, list[Coverage]]:
     ).mappings():
         methods.setdefault(row["metric_id"], {})[row["match_method"]] = row["share"]
 
+    margins = {
+        row["metric_id"]: row["share"]
+        for row in session.execute(
+            text(
+                """
+                WITH newest AS (
+                    SELECT metric_id, max(period_start) AS period_start
+                    FROM fact_metric_observation GROUP BY metric_id
+                )
+                SELECT o.metric_id,
+                       count(o.margin_of_error)::float / count(*) AS share
+                FROM fact_metric_observation o
+                JOIN newest n
+                  ON n.metric_id = o.metric_id AND n.period_start = o.period_start
+                GROUP BY o.metric_id
+                """
+            )
+        ).mappings()
+    }
+
     coverage = []
     for row in rows:
         if row["municipalities"]:
@@ -289,6 +312,7 @@ def measure_coverage(session: Session) -> tuple[Totals, list[Coverage]]:
                 statewide=bool(row["statewide"]),
                 population_share=None if row["national"] else share,
                 match_methods=methods.get(row["metric_id"], {}),
+                margin_share=margins.get(row["metric_id"], 0.0),
             )
         )
     return Totals(totals.municipalities, totals.zips, totals.counties), coverage
@@ -399,19 +423,21 @@ def render(session: Session, sources: dict[str, Source], run_on: date) -> str:
         "",
         "## Statistical quality",
         "",
-        "No margins of error, sample counts or suppression flags are loaded for any "
-        "metric: `fact_metric_observation` has no column for them. What is recorded is "
-        "how each observation was matched to its region.",
+        "How each observation was matched to its region, and — since Milestone 28 — "
+        "the share of each metric's newest figures that carry a 90% margin of error. "
+        "Only the Census's survey publishes margins, and the ratios divided by its "
+        "income inherit them. No sample counts or suppression flags are loaded.",
         "",
-        "| Metric | Matched by |",
-        "|---|---|",
+        "| Metric | Matched by | With a margin |",
+        "|---|---|---:|",
     ]
     for c in coverage:
         methods = ", ".join(
             f"{method}{' (by name)' if method in _BY_NAME else ''} {share:.0%}"
             for method, share in c.match_methods.items()
         )
-        lines.append(f"| `{c.metric_id}` | {methods} |")
+        margin = f"{c.margin_share:.0%}" if c.margin_share else "—"
+        lines.append(f"| `{c.metric_id}` | {methods} | {margin} |")
 
     lines += ["", "## Usability", "", "| Question | Status | Where |", "|---|---|---|"]
     for q in QUESTIONS:
@@ -454,6 +480,7 @@ def summary(
     answered = sum(1 for q in QUESTIONS if q.status == "answered")
     declined = sum(1 for q in QUESTIONS if q.status == "declined")
     by_name = sum(1 for c in coverage if any(m in _BY_NAME for m in c.match_methods))
+    margined = sum(1 for c in coverage if c.margin_share > 0)
     public = sum(
         1
         for s in freshness
@@ -470,8 +497,8 @@ def summary(
         f"**Subject:** {len(held)} of {len(SUBJECTS)} held; "
         f"{', '.join(missing) or 'none'} not held. "
         f"**Statistical quality:** match method on every observation, {by_name} "
-        "metrics partly matched by name; no margins of error, sample counts or "
-        "suppression flags. "
+        f"metrics partly matched by name; margins of error on {margined} metrics — the "
+        "survey's, and the ratios built on it; no sample counts or suppression flags. "
         f"**Usability:** {answered} of {len(QUESTIONS)} fixed questions answered, "
         f"{declined} declined on the site, "
         f"{len(QUESTIONS) - answered - declined} neither. "
