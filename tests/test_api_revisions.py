@@ -190,3 +190,25 @@ def test_the_endpoint_is_bounded_and_newest_first() -> None:
             ]
             assert changes == sorted(changes, reverse=True)
             assert len(group["largest"]) <= EXAMPLES
+
+
+def test_a_recorded_method_change_labels_its_day_and_metric(session: Session) -> None:
+    """Milestone 28: a figure this site recomputed is not a publisher's revision, and
+    the report says so from `method_changes`, never from guessing at the releases."""
+    first, _ = _counties_with(session, "zhvi_sfr", "2020-01-01")
+    _revise(session, first, "zhvi_sfr", "2020-01-01", 100.0, 101.0)
+    _revise(session, first, "acs_median_hh_income", "2020-01-01", 50.0, 51.0)
+    session.execute(
+        text(
+            "INSERT INTO method_changes (changed_on, metric_id, note) "
+            "VALUES (DATE '2099-01-02', 'acs_median_hh_income', 'Worked out anew.')"
+        )
+    )
+
+    groups = revision_report(session, batches=1).batches[0].groups
+
+    by_metric = {g.metric_id: g for g in groups}
+    assert by_metric["acs_median_hh_income"].method_change == "Worked out anew."
+    assert by_metric["zhvi_sfr"].method_change is None
+    # A publisher's revisions come before this site's recomputations.
+    assert [g.metric_id for g in groups] == ["zhvi_sfr", "acs_median_hh_income"]

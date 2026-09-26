@@ -81,6 +81,9 @@ class RevisionGroup(BaseModel):
     source_id: str | None = None
     # The period had not ended when the figure changed (see the module docstring).
     under_way: bool
+    # Set where this site changed how it computes the figure that day (`method_changes`,
+    # Milestone 28): the note a reader is told, because the publisher revised nothing.
+    method_change: str | None = None
     figures: int
     places: int
     # End dates of the earliest and latest revised periods, for a label like
@@ -252,6 +255,17 @@ def revision_report(
             )
         )
 
+    method_changes = {
+        (row["changed_on"], row["metric_id"]): row["note"]
+        for row in session.execute(
+            text(
+                "SELECT changed_on, metric_id, note FROM method_changes "
+                "WHERE changed_on = ANY(:days)"
+            ),
+            {"days": days},
+        ).mappings()
+    }
+
     by_day: dict[date, list[RevisionGroup]] = {day: [] for day in days}
     for row in session.execute(text(_GROUPS), params).mappings():
         key = (row["revised_on"], row["metric_id"], row["under_way"])
@@ -263,6 +277,7 @@ def revision_report(
                 frequency=row["frequency"],
                 source_id=row["source_id"],
                 under_way=row["under_way"],
+                method_change=method_changes.get((row["revised_on"], row["metric_id"])),
                 figures=row["figures"],
                 places=row["places"],
                 earliest_period=row["earliest_period"],
@@ -282,6 +297,7 @@ def revision_report(
             by_day[day],
             key=lambda g: (
                 g.source_id == "hip_derived",
+                g.method_change is not None,
                 g.under_way,
                 -g.figures,
                 g.label,

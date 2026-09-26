@@ -639,6 +639,8 @@ export type RevisionGroup = {
   source_id: string | null;
   /** The period had not ended when the figure changed: a month filling in, not a correction. */
   under_way: boolean;
+  /** This site changed how it computes the figure that day: what a reader is told (M28). */
+  method_change?: string | null;
   figures: number;
   places: number;
   /** End dates of the earliest and latest revised periods. */

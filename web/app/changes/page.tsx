@@ -124,6 +124,11 @@ function ChangeGroup({ group, day }: { group: RevisionGroup; day: string }) {
           period goes on; a change here is expected, not a correction.
         </p>
       )}
+      {group.method_change && (
+        <p className="change-note">
+          <span className="fresh-status">Recomputed by this site</span> {group.method_change}
+        </p>
+      )}
       <p className="change-summary">{summaryLine(group)}</p>
       <div className="scroll-x">
         <table className="change-places">
