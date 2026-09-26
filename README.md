@@ -199,6 +199,20 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   that MOD-IV had gone behind a token and kept going. And a published figure that
   changes is now recorded in `fact_revision` instead of silently overwritten: that first
   run caught **313,536** revisions, 294,469 of them Zillow restating its own history.
+- **It publishes itself, and says how current it is** (M27, built) — a weekly refresh
+  now reaches the published site on its own: every Friday at 08:00 this Mac runs
+  `hip refresh` under `launchd` and, when something moved, rebuilds the packets and the
+  site, deploys it and checks the deploy, with any failure reaching the owner's phone
+  through Pushover. Regenerating the AI readings is billed, so it is the one step that
+  asks first — an `ask`/`auto` setting that starts at `ask`, switchable from the Mac or
+  an iPhone Shortcut. Two new pages say what a reader could otherwise only take on
+  trust: `/freshness` keeps each source's newest period, release date, last check and
+  download date apart, because checked today is not measured today, and `/changes`
+  shows figures revised after they were published — 313,536 in the first refresh that
+  recorded them, summarised per metric with the places that moved most. Every row of a
+  region's full metric tables can open a pre-filled GitHub issue about that figure, and
+  `hip completeness` measures the platform along six fixed dimensions, first run
+  2026-09-26.
 - **It finds new releases on its own** (M26, built) — Milestone 29 asked whether a file
   had changed, but nothing asked whether a *newer* one existed: each dated source's
   newest year was a constant someone had to bump. By 2026-09-23 that had left BLS
@@ -429,6 +443,8 @@ uv run hip pack --region 11       # one region
 uv run hip schema                 # the published JSON Schema
 uv run hip footprint              # bytes per storage tier and rows per state
 uv run hip footprint --json       # the same, for capturing into a document
+uv run hip completeness           # the completeness standing check (ROADMAP)
+uv run hip completeness --write   # the same, kept at reports/completeness/<date>.md
 ```
 
 Evaluate candidate models and generate explanations (needs `make setup-eval`; the local
@@ -501,7 +517,10 @@ purpose: `com.housing-intelligence.weekly-refresh` (Fridays, the morning after F
 Mac's Thursday rate release, wrapped in `caffeinate`) and `com.housing-intelligence.
 regenerate-now` (`WatchPaths` on a trigger file, fired instantly rather than polled).
 Installing either is a standing decision on its own, not something this repo does for
-you — see the comment at the top of each `.plist` for the `launchctl load` line.
+you — see the comment at the top of each `.plist` for the `launchctl load` line. Both
+scripts run only from a clean `main`: this checkout is shared with development, so a run
+that finds another branch, or uncommitted work outside `reports/`, notifies and stops
+instead of deploying unreviewed code (ARCHITECTURE #226).
 
 **Regenerating AI readings is billed, so it is the one step gated.** Everything else —
 the refresh, the rebuild, the deploy — runs every scheduled cycle regardless.
@@ -606,7 +625,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.22.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.23.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -623,12 +642,13 @@ Northeast and to every US county was deferred past Version 2 on 2026-09-07.
 Version 3 began as depth on what is already held. On 2026-09-23 it absorbed Version 4
 and the Director Note on accessible, comprehensive and current housing data, and became
 the version that makes the platform current, as complete as public data allows, and
-honest about both. Four of its milestones have shipped — **24** fresher figures, **25**
-recorded sale prices and a comparable tax rate, **26** current releases, and **29**
-scheduled refresh, brought forward out of order once the site was public and had
-started to decay. **27** and **28**, and **30** through **50**, remain, with the map's
-and the completeness standing checks; Version 4 holds nowcasts, a local price model study
-and forecasting. Between milestones, the New Jersey landing page and region pages were
+honest about both. Five of its milestones have shipped — **24** fresher figures, **25**
+recorded sale prices and a comparable tax rate, **26** current releases, **27** a refresh
+that reaches the reader, and **29** scheduled refresh, brought forward out of order once
+the site was public and had started to decay. **28** and **30** through **50** remain,
+with the map's standing check; the completeness standing check ran first on 2026-09-26
+and runs again at every milestone's close. Version 4 holds nowcasts, a local price model
+study and forecasting. Between milestones, the New Jersey landing page and region pages were
 redesigned (0.21.1 and 0.21.3).
 
 The notes below are a running commentary on individual milestones rather than a complete

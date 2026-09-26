@@ -295,12 +295,20 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 217 | **A quiet week is detected by comparing `RefreshState.completed_at` before and after `hip refresh`, not by its exit code.** Exit 0 covers both "nothing moved" and "the pipeline ran and finished clean" — the same code for two outcomes a scheduler has to tell apart, since only one of them has anything for `pack`, `explain` or a deploy to do. | `completed_at` only moves when the pipeline actually completed (ARCHITECTURE #191's `RefreshState`), so it is the one signal already written down for exactly this question, and reading it needed no change to `hip refresh` itself. Rejected: grepping the command's printed "nothing changed"/"refresh complete" text, which ties a scheduler's control flow to wording nothing else pins and a later rewrite could change without any test failing. |
 | 218 | **A source unreachable during a scheduled run notifies at normal priority; a broken pipeline step notifies urgent.** Both reach Pushover; only the second interrupts the rest of the run. | ARCHITECTURE #102's own reasoning — a source down leaves the numbers consistent and the site should still deploy — extends past the exit code into what a person should be interrupted for. `scripts/scheduled_refresh.py` and `scripts/regenerate_now.py` continue past an unreachable publisher and past a stale-but-declined regeneration, stopping only at a step that actually failed: `pack`, `explain --all` (in `auto`), `make publish`, `make deploy` or `make check-live`. |
 | 219 | **Regenerating readings on a schedule is gated by one setting, read fresh every run and never cached across weeks; `hip explain --dry-run` is what the gate checks against for free.** `RefreshGate` (`ask`/`auto`) lives under `Settings.gate_dir`, iCloud Drive by default, so a Mac command (`hip refresh-mode`, `hip regenerate-now`) and an iPhone Shortcut write one synced file rather than two settings that could disagree. | The owner asked to switch freely between being asked and running unattended, from either device, without a code change or a redeploy — a file both sides can write is the only shape that answers that, and `Settings.gate_dir` sits outside `data/` (`hip prune-raw` and a clean wipe both treat that as disposable) for the same reason `reports_dir` does (#65). `hip explain --dry-run` classifies every (model, region) pair exactly as a real run would and stops short of the one call that reaches a model, so `ask` mode can report "N readings are stale" and cost nothing finding out; free re-citation still happens, since it costs nothing either. `scripts/regenerate_now.py` always regenerates once triggered, `RefreshGate.mode` notwithstanding — reaching that path at all means someone just asked for it, which is a different question from what the weekly run may do unasked. |
+| 220 | **`check-live` pins one region per cost-card shape, and samples the two pages about the data.** | The municipality it sampled was whichever came first in the search index, and that drifted from a Zillow-priced town to Aberdeen, which has no Zillow coverage, between when it was written and 2026-09-25 — so the shape the check was meant to prove was silently not the one it checked. Three named regions now cover the three shapes the cost card takes: Absecon (194, priced from Zillow), Frankford (112, priced from SR1A sales) and Walpack (51, neither). A missing id fails with instructions rather than falling back to a sample. `/freshness` and `/changes` are sampled too, since no region sample reaches them. Rejected: choosing by predicate at run time ("the first region with a home value"), which is the drift that failed. Costs: a renumbered region fails the check until its pin is updated, which is the point. |
+| 221 | **"Report a problem with this figure" opens a pre-filled GitHub issue, from every row of the two tables that list all of a region's metrics.** | A reader who doubts a figure should be able to say so in one step and name the figure, source and release — the three things a maintainer needs and a reader cannot be expected to know how to describe. `reportProblemUrl` (`web/lib/reportProblem.ts`) writes region, metric, value, period, source and release into the issue with the `data-quality` label, resolving the source by release id first and source id second. The page link is built from `SITE_URL` and a `path` prop, because a static export renders at build time, where `window.location` does not exist — the first version left "Page:" empty on every issue. Rejected: a form or backend, which would make the site collect data; email, which loses the structure. Costs: the reader needs a GitHub account; the ledger and current-values tables carry the link, and the cards and verdict sentence, which quote the same figures, do not yet — narrower than the Milestone 27 row's "every figure". |
+| 222 | **Freshness is published from a `source_discoveries` table loaded at `hip load`, with four statuses where the Milestone 27 row named six.** | The API may import only `warehouse` and `packets` (#6), and the `Discovery` records Milestone 26 writes live in `data/raw/<source>/releases.json`, so an API route reading them would either cross the boundary or teach the API to parse raw files. Loading them into a table (migration 0015) at `hip load`, with everything else the site publishes, keeps the API on the warehouse; `hip/warehouse/freshness.py` joins them to `source_releases` (when downloaded) and the observations (the newest period loaded). `current`, `pending` and `unreachable` come from the row; `not_tracked` is no row — a source revalidated rather than discovered (Zillow, FRED, FHFA; #188) or pinned (TIGER, #206). Of the other statuses: *delayed* needs an expected-release calendar this platform does not keep, and one guessed for MOD-IV — 2019, 2021, 2022, 2023, 2024, 2025, no fixed month — would claim precision nobody has; *superseded* is what `/changes` shows; *discontinued* applies to no source; *historical* is the pinned case. Never read: `notes`, which holds at least one fact known only from private correspondence, and `fallback` (#211). Only sources actually downloaded are listed, less `hip_derived`. Release dates are normalised to ISO days when the report is built: MOD-IV's metadata gives one and a `Last-Modified` probe gives an HTTP date, which the first version of the page printed as "Nov NaN". Rejected: the API reading `releases.json`; a next-release date the publisher has not stated. Costs: a revalidated source's last check is recorded nowhere the page reads, so the page says so instead of showing a date (Known Limitations). |
+| 223 | **A discovery keeps its publication date across refreshes that find nothing newer.** | `acquire` wrote each run's `Discovery` afresh, and a probe that finds the same release often cannot read its date again, so the 2026-09-26 refresh erased the dates the first discovery run had recorded for Building Permits (2026-02-20) and IRS migration (2026-03-19). `_keep_published` (`hip/refresh.py`) carries the recorded date forward when the newest release is unchanged and the new probe found none. The two lost dates return when each source next publishes; they are not re-entered by hand. |
+| 224 | **`GET /revisions` summarises `fact_revision` per refresh and metric, so its size is bounded by refreshes rather than by revisions.** | One refresh wrote 313,536 revision rows, so the endpoint cannot serve rows. A batch is a UTC day of `revised_at`, the loading transaction's clock. A figure counts once per batch at its net change — first old value to last new, dropped if they agree — because a re-run after a failure can revise one twice in a day. Groups are per metric, split by whether the period had ended when the figure moved, judged by the period's natural length from its metric's frequency: a month's mortgage-rate average fills in as each week arrives (#207), which is not a correction, and its `period_end` (the last observed week) has already passed, so it cannot be the test. Examples are one per place — its largest relative change, three places per group — because the largest changes are otherwise every month of one ZIP's restated series. Twelve batches, a quarter of weekly refreshes, about 6KB today. `/changes` renders it with every change relative to the earlier value and rates to two decimals. Rejected: serving rows; per-region revision histories now, a larger surface recorded as open work. Costs: two refreshes on one UTC day merge; a restatement of a period set in advance and still in force, such as a Fair Market Rent year, would be marked under way — true of the period, not the reason it moved. |
+| 225 | **The completeness standing check is `hip completeness`: three dimensions measured, three fixed as data, and every run kept under `reports/completeness/`.** | "Measured the same way every time" rules out re-judging subjects, reader questions and licence rights on each run, so those are data in `hip/completeness.py`, with tests that fail when a metric lands without a subject, a licence without rights, or an answered question names a page that does not exist. The questions are the ones ROADMAP already names — Milestone 17's views, what those views decided not to answer, and Milestone 27's two pages — not new ones. Coverage is taken at each metric's newest period, since coverage at any period counts towns a series has since dropped. The runs are tracked in git, the one `reports/` exception that is not rebuildable: a past run is the warehouse as it stood that day. "Unverified" rights, wherever the recorded licence does not say, are a finding rather than a gap in the check. First run 2026-09-26, recorded in ROADMAP. |
+| 226 | **The scheduled scripts run only from a clean `main`.** | The `launchd` agents run the scripts from the working copy they live in, which is also where the owner, Claude and Codex develop. Found while writing Milestone 27's own TODO: on 2026-09-26 that checkout was this milestone's branch, with two public pages nobody had reviewed, and a Friday run from it would have run the branch's pipeline against the one warehouse and deployed those pages. `checkout_problem` (`hip/refresh.py`) refuses any branch but `main`, and any uncommitted or untracked work outside `reports/`, which each run rewrites itself (`hip pack --report`); the script notifies and stops before `hip refresh`. Regenerate-now consumes its trigger first, so a refused request does not fire again. Rejected: a dedicated worktree of `main` for the schedule, the cleaner separation, which needs its own `data/` cache or settings pointing at this one's — worth building if the refusal fires often. Costs: a week the checkout is elsewhere is a week the site does not refresh, said on the phone rather than silently. |
 
 ## Module Layout
 
-What exists as of 2026-09-11. Every pipeline package now holds real modules; the
-boundary rule in `tests/test_module_boundaries.py` enforces the import direction between
-them. Planned files are marked with the milestone that adds them.
+What exists as of 2026-09-11, with Milestone 27's files added on 2026-09-26; files from
+Milestones 24–26 and 29 are not all listed yet (TODO.md). Every pipeline package holds
+real modules; the boundary rule in `tests/test_module_boundaries.py` enforces the import
+direction between them. Planned files are marked with the milestone that adds them.
 
 ```text
 housing-intelligence/
@@ -317,6 +325,9 @@ housing-intelligence/
 │   ├── config.py              # settings, YAML loading, env resolution, STATE_FIPS
 │   ├── duck.py                # DuckDB session + /vsizip path helper (#23)
 │   ├── footprint.py           # bytes per storage tier and per state (#66)
+│   ├── completeness.py        # the completeness standing check (#225)
+│   ├── refresh.py             # acquire every source, report what moved (#190, #223)
+│   ├── notify.py              # Pushover, for the scheduled runs (#218)
 │   ├── publish.py             # API surface rendered to static files (#67)
 │   ├── sources/
 │   │   ├── base.py            # SourceAdapter, retry, content-addressed cache (#10)
@@ -345,7 +356,9 @@ housing-intelligence/
 │   │   ├── db.py              # engine, session_scope, probe() for /health
 │   │   ├── models.py          # Region, RegionIdentifier, RegionCrosswalk, RegionExplanation, MapBackdrop
 │   │   ├── load.py            # one-transaction upsert of spine and facts (#25)
-│   │   └── migrations/        # Alembic 0001–0011
+│   │   ├── discoveries.py     # releases.json → source_discoveries at load (#222)
+│   │   ├── freshness.py       # the freshness report (#222)
+│   │   └── migrations/        # Alembic 0001–0015
 │   ├── analytics/compute.py   # change, CAGR, affordability, rankings (#34–#36)
 │   ├── packets/
 │   │   ├── schema.py          # Pydantic models = the contract (#12, #43, #44)
@@ -374,7 +387,8 @@ housing-intelligence/
 │       ├── deps.py            # session dependency; read-only by construction (#6)
 │       ├── params.py          # RegionLevel and Window, shared by the routers
 │       └── routers/           # health, regions, metrics, analytics, packets,
-│                              #   explanations (#60)
+│                              #   explanations (#60), freshness (#222),
+│                              #   revisions (#224)
 ├── dbt/
 │   ├── dbt_project.yml        # staging = views, marts = tables
 │   ├── profiles.yml           # duckdb (default) and postgres targets
@@ -392,13 +406,16 @@ housing-intelligence/
 │   ├── app/map.json/route.ts            # the map's outlines and measures (#163)
 │   ├── app/regions/[id]/page.tsx        # region, answers first, one expander (#156)
 │   ├── app/regions/[id]/report/page.tsx # print-ready report from the packet (#45, #160)
+│   ├── app/freshness/page.tsx # how current each source is (#222)
+│   ├── app/changes/page.tsx   # figures revised after they were published (#224)
 │   ├── components/            # Masthead, PlaceSearch, PlacePicker, ThemeToggle, Crumbs,
 │   │                          #   LicenceLine, SourceFooter, InlineScript, CountyExplorer,
 │   │                          #   GlobeMap, TownRanks, useMapFile (#163, #165),
 │   │                          #   AffordCta, AffordExplorer, CostToOwn,
 │   │                          #   StandOuts, MoreExpander, Ledger, CurrentValues,
 │   │                          #   TrendsExplorer, TrendChart, ExplanationPanel, Glossed,
-│   │                          #   Definition, MetricTerm (#161), PrintButton
+│   │                          #   Definition, MetricTerm (#161), PrintButton,
+│   │                          #   ReportProblem (#221)
 │   ├── lib/api.ts             # server-side fetchers + packet types; the national rate
 │   ├── lib/format.ts          # value formatting (#41); shares and multiples (#124)
 │   ├── lib/caveats.ts         # where each caveat sits on a page (#123)
@@ -423,6 +440,10 @@ housing-intelligence/
 │   ├── lib/scale.ts           # ramp and breaks — pure and tested (#48)
 │   ├── lib/globe.ts           # the sphere, the camera, the prisms (#163)
 │   ├── lib/mapdata.ts         # map.json packed and unpacked (#163)
+│   ├── lib/freshness.ts       # the freshness page's wording and order (#222)
+│   ├── lib/changes.ts         # the what-changed page's sentences (#224)
+│   ├── lib/reportProblem.ts   # the pre-filled issue behind each figure (#221)
+│   ├── scripts/check-live.mjs # the deployed site against dist/ (#202, #203, #220)
 │   ├── public/_redirects      # /regions/1 folded into / (#127)
 │   └── vitest.config.ts       # node environment, lib/**/*.test.ts
 ├── data/                      # gitignored, machine-local
@@ -434,7 +455,9 @@ housing-intelligence/
 ├── reports/                   # human-facing output, not rebuildable input
 │   ├── validation/            # gate reports per run; gitignored, per-run machine state
 │   ├── regions/<window>/      # Markdown reports, one per region; 5y committed, README-linked
-│   └── evaluation/            # the published model-evaluation report; committed
+│   ├── evaluation/            # the published model-evaluation report; committed
+│   └── completeness/          # one report per standing-check run; committed (#225)
+├── scripts/                   # scheduled_refresh.py, regenerate_now.py, launchd/ (#216–#219)
 ├── tests/                     # 571 Python tests; API tests skip without a warehouse
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
@@ -473,6 +496,10 @@ which is why every write path lives there.
 and `content_sha256` (#112, #114). Measured 2026-09-10, the
 fact table holds 351,295 observations, with 26,805 changes, 26,790 change rankings and
 11,884 value rankings derived from them.
+Since then: `0012` added `map_backdrop` (#164); `0013` added `fact_revision` and the
+trigger that fills it (#194); `0014` redated MOD-IV figures by tax year (#208); `0015`
+added `source_discoveries` (#222). The DDL block below predates them; for these four the
+migrations are the only statement.
 `region_identifiers`, empty since Milestone 1, now holds 554 NJ municipal codes under
 scheme `nj_cd_code` — the join MOD-IV was always going to supply (#21, #51).
 The block below was regenerated from the live tables on 2026-09-10, and
@@ -825,7 +852,7 @@ when the data stopped warranting it, and would return if a future source regress
 
 ## API
 
-FastAPI over Postgres, read-only (#6), served at `http://localhost:8000`. All fifteen
+FastAPI over Postgres, read-only (#6), served at `http://localhost:8000`. All eighteen
 endpoints are implemented; `hip publish` renders every one to static files except
 `/compare` and `/regions?q=` search, which do not enumerate (#67).
 
@@ -835,6 +862,7 @@ endpoints are implemented; `hip publish` renders every one to static files excep
 | GET | `/regions` | ✅ paged regions filtered by `level`, `state`, `parent_id`, name `q` |
 | GET | `/regions/{region_id}` | ✅ one region, its full ancestor chain, child count |
 | GET | `/geo/{level}` | ✅ GeoJSON FeatureCollection, simplified by default |
+| GET | `/geo/backdrop` | ✅ every state's outline, as map context only (#164) |
 | GET | `/metrics` | ✅ metric catalog with coverage and date range, optionally for one `level` |
 | GET | `/regions/{region_id}/metrics` | ✅ observations filtered by `metric_id`, `from`, `to`, each with source and match method |
 | GET | `/regions/{region_id}/summary` | ✅ headline changes, rank, caveats — dashboard landing |
@@ -846,6 +874,8 @@ endpoints are implemented; `hip publish` renders every one to static files excep
 | GET | `/compare` | ✅ aligned series for several `region_ids` |
 | GET | `/sources` | ✅ source registry and the releases currently loaded (#71) |
 | GET | `/sources/unresolved` | ✅ source geographies with no region, and why |
+| GET | `/freshness` | ✅ each downloaded source's status, newest period, release, last check and download dates (#222) |
+| GET | `/revisions` | ✅ the most recent refreshes that revised published figures, summarised per metric (#224) |
 
 `/compare` takes one `metric_id` across several regions, not several metrics — the
 earlier version of this table said otherwise. `/sources` was the last of the originally
@@ -881,8 +911,9 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   published at the time. Since Milestone 29 the *fact that it moved* is kept in
   `fact_revision`, naming the release on each side. Zillow's first release under it
   restated 294,469 observations at a median 1.06%, every one of which had previously been
-  overwritten in silence. What is still absent is a way for a reader to see that history:
-  the table records, nothing presents it.
+  overwritten in silence. Since Milestone 27 a reader sees it too, summarised per refresh
+  at `/changes` (#224) — how many figures moved, which way, and the places that moved
+  most. What a reader still cannot see is one figure's own history of values.
 - **MOD-IV assessed values are not market values**, and since Milestone 25 the platform
   says so with numbers rather than only in prose. Assessment ratios vary by municipality
   and revaluation year, so any parcel-derived value metric remains an approximation of
@@ -890,6 +921,10 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   `nj_director_ratio` and the state's own market-basis rate as `nj_effective_tax_rate`
   (#180), so a reader can see how far a town's assessments sit from market value instead
   of having to be warned that they do.
+- **The freshness page cannot say when a revalidated source was last checked** (#222).
+  Zillow, FRED and FHFA are re-read every refresh by revalidation (#188), which records
+  whether a file changed but not, anywhere the page reads, when it last asked; the page
+  says it does not yet record this rather than printing a date it cannot back.
 - **ZIP-level metrics are allocated, not observed** (see the schema section).
 - **Parcel data is not queryable through the API** (#16). All 3.48M NJ parcels exist in
   Parquet and DuckDB; only six municipality-level aggregates reach Postgres. There is no

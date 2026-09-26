@@ -8,103 +8,21 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — Milestone 27, refresh reaches the reader (started 2026-09-25)
+## Now — Milestone 27 complete, in review (2026-09-26)
 
-Branch `milestone/m27-refresh-reaches-the-reader`. Deliverable and scope: ROADMAP.md,
-Milestone 27.
+Branch `milestone/m27-refresh-reaches-the-reader`, pull request into `main`. Everything in
+ROADMAP's Milestone 27 row is built: [CHANGELOG.md](CHANGELOG.md) 0.23.0 has what
+shipped, [ARCHITECTURE.md](ARCHITECTURE.md) #216–#226 the decisions, and ROADMAP the
+completeness check's first record.
 
-**First task, decided with the owner 2026-09-25 (not in chat/code, recorded here):**
+**Waiting on the owner:**
 
-- **Where it runs:** this Mac, under `launchd`, wrapped in `caffeinate`. Not a cloud
-  runner — this Mac is never slept, closed or unplugged (confirmed with the owner;
-  `pmset` already shows system sleep off). Consequence, stated plainly rather than
-  glossed over: **ARCHITECTURE #175's automated screenshots stay blocked** — that needs
-  a cloud runner, which this is not.
-- **Schedule:** weekly, Friday mornings, the day after Freddie Mac's Thursday rate
-  release. `hip refresh` exits immediately when nothing moved (#192), so a quiet week
-  costs nothing extra.
-- **What may run without asking:** the data refresh, rebuild and deploy steps run
-  automatically every scheduled cycle — unchanged from how a refresh already behaves.
-  **Regenerating AI readings is the one gated step**, because it is billed. A toggle,
-  `ask` or `auto`, starts at **`ask`**: a run that finds stale readings notifies the
-  owner and does not regenerate until told to. `auto` regenerates without asking. The
-  toggle and an on-demand "regenerate now" trigger both live in one file synced through
-  iCloud Drive, so a Mac-side command and an iPhone Shortcut are two doors onto the same
-  setting rather than two settings that could disagree. Switching is meant to happen
-  freely in either direction, not once.
-- **Failure notifications: Pushover.** `PUSHOVER_USER_KEY` and `PUSHOVER_API_TOKEN` are
-  in `.env` (2026-09-24) and a test notification was confirmed delivered. Used for both
-  a failed run and a "readings are stale, awaiting your go-ahead" notice in `ask` mode.
-
-**Tasks**
-
-- [x] **A refresh continues to the reader**, as a separate orchestrating script rather
-      than a longer `hip refresh` (ARCHITECTURE #216 records why): `scripts/
-      scheduled_refresh.py` calls `hip refresh`, then — only if `RefreshState.
-      completed_at` actually moved — `hip pack --report`, the gated `hip explain`, and
-      `make publish`/`deploy`/`check-live`, stopping and notifying at the first failure.
-- [x] **The ask/auto toggle and the regenerate-now trigger.** `RefreshGate` (`src/hip/
-      refresh.py`) reads and writes `Settings.gate_dir` (iCloud Drive by default);
-      `hip refresh-mode [ask|auto]` and `hip regenerate-now` are the Mac-side commands;
-      `hip explain --dry-run` is the free cost check the gate is decided from. Nine new
-      tests across `test_refresh.py`, `test_notify.py` and `test_cli.py`, mutation-checked.
-- [x] **`hip notify`**, a thin Pushover wrapper (`src/hip/notify.py`) both scripts use;
-      never fails the caller if the notification itself does not go through.
-- [x] **The two `launchd` agents**, `scripts/launchd/*.plist`, real absolute paths
-      throughout (this runs on one Mac on purpose): `weekly-refresh` on
-      `StartCalendarInterval` (Fridays 08:00, `caffeinate`-wrapped, logs to `logs/`), and
-      `regenerate-now` on `WatchPaths`. **Not yet loaded** — a standing job that can
-      reach production is the owner's call, not a default this branch turns on. Verified
-      by real, careful runs: a full smoke test of `scheduled_refresh.py` reached and
-      completed `make publish` before being stopped short of `make deploy` (today's
-      refresh needed no paid regeneration — 56 readings re-bound for free, 0 generated),
-      and every branch of both scripts' control flow against mocked subprocess calls.
-- [x] **The iOS Shortcuts documented** (README, "Reaching the reader"): each is two or
-      three built-in actions (**Text** → **Save File** to the same iCloud file the Mac
-      reads). Building them in the Shortcuts app is the owner's, not something a commit
-      can do.
-- [ ] **A public freshness page per source**: period observed, published date, acquired
-      date, last checked date, the site version carrying it, the next expected release,
-      and a status (current, delayed, unreachable, superseded, discontinued, historical).
-      Built from the `Discovery` records `data/raw/<source>/releases.json` already
-      writes (Milestone 26) plus `refresh-state.json`. *Checked today* must never read as
-      *measured today*. **Not started.**
-- [ ] **A public freshness page per source**: period observed, published date, acquired
-      date, last checked date, the site version carrying it, the next expected release,
-      and a status (current, delayed, unreachable, superseded, discontinued, historical).
-      Built from the `Discovery` records `data/raw/<source>/releases.json` already
-      writes (Milestone 26) plus `refresh-state.json`. *Checked today* must never read as
-      *measured today*.
-- [ ] **A "what changed since the last release" page**, presenting the `fact_revision`
-      rows Milestone 29 has recorded since 2026-09-20 and nothing has shown a reader yet.
-      **Not started.**
-- [ ] **`check-live` pins one region per cost-card shape** instead of sampling whatever
-      is first in the search index (which drifted to Aberdeen having *no* Zillow
-      coverage between when that was written and now — proof the pin has to be explicit,
-      not just less arbitrary). **The three regions are found and verified, the code
-      change is not made:**
-      - Zillow-priced: Absecon, region 194 (`3400100100`)
-      - transaction-priced: Frankford, region 112 (`3403724810`), sr1a through 2026-06-30
-      - neither: Walpack, region 51 (`3403776640`), no zhvi, no sr1a ever
-- [ ] **A "report a problem with this figure" link** on every figure, opening a
-      pre-filled GitHub issue naming its source and release. **Not started.**
-- [ ] **The first run of [the completeness standing check](ROADMAP.md#the-completeness-standing-check)**,
-      recorded as the table's first row. **Not started.**
-- [x] **Doc pass, for what shipped in this slice**: README's scheduling section
-      describes the real `launchd`/toggle/Shortcut setup; ARCHITECTURE #216–#219 record
-      the scheduling decisions. ROADMAP's M27 row and the completeness table stay open
-      until the four items above are built — this is a partial slice, not the milestone
-      closing.
-
-**Flagged for the owner, not decided in code:**
-
-- **Today's real refresh is built and unpublished.** Verifying `scheduled_refresh.py`
-  against the live warehouse pulled this week's real Freddie Mac rate and rebuilt the
-  site (`dist/`, 2026-09-25) — for free, since nothing needed a paid regeneration. It was
-  deliberately not deployed. Say if you want it published.
-- **Loading the two `launchd` agents** makes the schedule and the phone trigger live.
-  Commands are in each `.plist`'s header comment.
-- **Building the two iOS Shortcuts** — steps are in README, "Reaching the reader".
+- **Review and merge.** Nothing from the second half is live: `/freshness`, `/changes`
+  and report-a-problem reach the site with the first deploy after the merge — by hand
+  (`make publish deploy check-live`) or the Friday run.
+- **Check out `main` in this folder after merging.** Both scheduled scripts now run only
+  from a clean `main`, and notify and stop otherwise (#226). The next weekly run is
+  Friday 2026-10-02 at 08:00; the `launchd` agents and the three Shortcuts are live.
 
 **To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
@@ -139,7 +57,9 @@ first raised, not where it must be done.
       names it, so no page misreads. But the dates also claim FY2026 applied from
       January, when a year's limits apply from the effective date in HUD's annual notice
       (not checked here). Dating by effective date, as Fair Market Rents are (#106), is
-      the fix to weigh; it moves every AMI ratio's window.
+      the fix to weigh; it moves every AMI ratio's window. Since Milestone 27 a reader can
+      see it: `/freshness` shows the source's data "through Dec 2026", marked as a period
+      still under way.
 
 - [ ] **The validation gate has no range bounds for the two HUD metrics.**
       (pre-M12 review) `hud_area_median_income` and `hud_income_limit_80` are absent from
@@ -173,6 +93,12 @@ first raised, not where it must be done.
       four new metrics went unclassified without failing anything — they would have
       rendered under "Other measures" silently. Derive the list from
       `config/metrics.yml` or from a recorded API response, so the guard guards.
+
+- [ ] **A revalidated source's last check is recorded nowhere the freshness page
+      reads.** (M27, #222) Zillow, FRED and FHFA are asked every refresh, but only
+      whether a file changed is kept, so `/freshness` says it does not yet record when.
+      Recording the check time per source at `hip refresh` and loading it with the
+      discoveries would let the page show a date it can back.
 
 ### Evaluation harness
 
@@ -232,6 +158,11 @@ first raised, not where it must be done.
       `refs()` or `to_records()` against a stubbed response, so a publisher changing a
       response shape would surface as a pipeline failure rather than a test failure.
       `test_nj_modiv.py` is the pattern to copy — a `MockTransport` subclass, no network.
+
+- [ ] **The two scheduled scripts' step order has no committed test.** (M27) Both were
+      checked by hand against stubbed `subprocess` calls on 2026-09-25 and 2026-09-26;
+      the pieces they call are tested (`checkout_problem`, `RefreshGate`, `hip explain
+      --dry-run`), the sequence between them is not.
 
 ### API and scale limits
 
@@ -307,7 +238,20 @@ first raised, not where it must be done.
       (`agent-handoffs/screenshot-automation.md`) built a working capture command and
       recommended against automating it per push — retaking them is now a manual step
       with tooling that exists.
-      **Unblocked only if Milestone 27 runs the refresh off this machine.**
+      **Still blocked:** Milestone 27 chose this Mac on 2026-09-25, and only a runner
+      off it unblocks automation (ARCHITECTURE #175).
+
+- [ ] **The site does not say which questions it declines.** (M27 completeness run)
+      ROADMAP decided on 2026-09-13 not to forecast prices or give investment advice,
+      and schedules schools, commutes, crime and flood risk for Milestones 39–45, but no
+      page tells a reader; the check counts 7 of its 17 questions as neither answered
+      nor declined. A short statement on the site would move them to declined.
+- [ ] **Report a problem is on a region's two full metric tables only.** (M27, #221)
+      The cost cards, the verdict sentence, the New Jersey rankings and `/afford` quote
+      figures without it. ROADMAP's row asked for every figure.
+- [ ] **A figure's own history of values is not shown.** (M27, #224) `/changes`
+      summarises each refresh; a region page neither marks a revised figure nor shows its
+      earlier values, which `fact_revision` holds.
 
 ### Map performance — open leads, for the end of V3
 
@@ -328,7 +272,9 @@ first raised, not where it must be done.
 
 ### Publication
 
-- [ ] **`hip refresh` stops short of the site.** (M29, found 2026-09-20 while
+- [x] **`hip refresh` stops short of the site.** **Done in Milestone 27** — the weekly
+      script carries a refresh through to the site, gating only the billed readings
+      (ARCHITECTURE #216–#219). (M29, found 2026-09-20 while
       deploying it) `STAGES` runs land through analyze and no further, so a scheduled
       refresh updates the warehouse and leaves packets, prose and the published site
       exactly as they were. Worse than standing still: the warehouse moves underneath
@@ -341,7 +287,8 @@ first raised, not where it must be done.
       automated refresh.
       **Scheduled: Milestone 27.**
 
-- [ ] **`make check-live` samples one municipality, and never the interesting ones.**
+- [x] **`make check-live` samples one municipality, and never the interesting ones.**
+      **Done in Milestone 27:** Absecon, Frankford and Walpack are pinned (#220).
       **Still open, and now also proven to matter:** on 2026-09-21 it passed a deploy
       whose transaction-fallback and no-price pages were again checked by hand. Its
       `file://` defect was fixed the same day (ARCHITECTURE #202); the sampling was not.
@@ -393,7 +340,9 @@ first raised, not where it must be done.
       output, so they go stale silently** — these had been carrying Zillow figures the
       September release restated, Atlantic County's home-value change among them at
       +46.4% against an actual +44.5%. Either regenerate them whenever the data moves,
-      or stop tracking them and link a published report instead.
+      or stop tracking them and link a published report instead. Since Milestone 27 the
+      weekly run regenerates them in the working tree and leaves them uncommitted (#226
+      lets it), so the local copies stay current and the committed ones still do not.
 
 ### Documentation upkeep
 
@@ -413,6 +362,12 @@ first raised, not where it must be done.
       file-based source; the status narrative, the Features descriptions and the setup
       prose do not. Deciding the boundary is what makes any "regenerate on deploy" work
       scopeable, and ARCHITECTURE #175 settles only the images half.
+
+- [ ] **ARCHITECTURE's Module Layout stops at 2026-09-11, plus Milestone 27's files.**
+      (found 2026-09-26) Files from Milestones 24–26 and 29 are missing —
+      `sources/nj_sr1a.py` and `sources/nj_tax_rates.py` among them — and its counts
+      are stale (15 sources and 31 metrics; 16 and 38 today). Its schema DDL block
+      likewise predates migrations 0012–0015, which the section now says.
 
 ### Housekeeping
 
@@ -471,6 +426,12 @@ first raised, not where it must be done.
       in a state where county subdivisions are statistical divisions.
       `config/geography.yml` already warns the identifier system is expensive to change
       once fact rows reference it.
+
+- [ ] **Reuse rights beyond display are unverified for six sources.** (M27
+      completeness run) FRED, the three NJ sources and both Zillow indexes: the licence
+      recorded in `config/sources.yml` does not say whether download, derived figures or
+      commercial use are allowed, and no publisher's terms have been checked.
+      **Scheduled: Milestone 32**, whose licence table needs exactly this.
 
 ### Data sources worth adding
 
