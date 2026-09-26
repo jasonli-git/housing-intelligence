@@ -211,15 +211,41 @@ function assertMarker(route, expected, actual) {
   }
 }
 
+// The three shapes the cost-to-own card can take (`web/lib/costInputs.ts:homePrice`),
+// pinned by region id rather than sampled. Milestone 27, replacing the municipality
+// pick below: it took whichever town search.json listed first, which was Aberdeen when
+// this was written up as a gap — and by the time it was fixed, Aberdeen itself had lost
+// its Zillow coverage and silently become the "neither" case instead of the "Zillow"
+// case it was meant to demonstrate. A sampled pick cannot be wrong in a way anyone
+// notices; a named one can only go stale in a way a future check-live failure surfaces.
+// Verified against the warehouse 2026-09-25 and re-checked against search.json here.
+const COST_CARD_SHAPES = [
+  { label: "muni-zillow", id: 194 }, // Absecon: zhvi_sfr through 2026-08-31
+  { label: "muni-transaction", id: 112 }, // Frankford: no zhvi_sfr, sr1a through 2026-06-30
+  { label: "muni-neither", id: 51 }, // Walpack: no zhvi_sfr, no sr1a ever
+];
+
 async function pageSamples() {
   const searchPath = path.join(siteDir, "search.json");
   const entries = JSON.parse(await readFile(searchPath, "utf8"));
+  const byId = new Map(entries.map((entry) => [entry.id, entry]));
   const samples = [{ label: "site", route: "/" }];
 
-  for (const level of ["county", "municipality", "zip"]) {
+  for (const level of ["county", "zip"]) {
     const entry = entries.find((candidate) => candidate.level === level);
     if (!entry) throw new Error(`${searchPath} has no ${level} entry`);
     samples.push({ label: level, route: `/regions/${entry.id}` });
+  }
+
+  for (const { label, id } of COST_CARD_SHAPES) {
+    const entry = byId.get(id);
+    if (!entry) {
+      throw new Error(
+        `${searchPath} has no region ${id} (${label}) — the region was renumbered or ` +
+          "removed; find its replacement in the warehouse and update COST_CARD_SHAPES",
+      );
+    }
+    samples.push({ label, route: `/regions/${id}` });
   }
 
   const county = entries.find((entry) => entry.level === "county");
