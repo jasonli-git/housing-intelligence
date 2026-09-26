@@ -40,6 +40,12 @@ export function firstEnd(basis: RankBasis, direction: string): string {
   return lowFirst ? "lowest first" : "highest first";
 }
 
+/** What a rank ranks, and which end is first: "by change over five years, largest rise first". */
+export function rankBasis(basis: RankBasis, direction: string, span = "over five years"): string {
+  const by = basis === "change" ? `by change ${span}` : "by value";
+  return `${by}, ${firstEnd(basis, direction)}`;
+}
+
 /**
  * A rank as a sentence fragment: "9th of 21 by change over five years, largest rise
  * first", or "14th of 21 by value, highest first". `span` names a change's window.

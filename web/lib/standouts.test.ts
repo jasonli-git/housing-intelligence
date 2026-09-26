@@ -122,3 +122,44 @@ describe("standOuts", () => {
     expect(standOuts({ highlights: [], metrics: [], levels })).toEqual([]);
   });
 });
+
+describe("standOuts with margins of error (Milestone 28)", () => {
+  const highlight = (rank: number) => ({
+    metric_id: "acs_median_hh_income",
+    label: "Median household income",
+    position: "leading" as const,
+    rank,
+    of: 21,
+    pct_change: 30,
+  });
+  const packet = (rank: number) => ({
+    highlights: [highlight(rank)],
+    metrics: [metric("acs_median_hh_income", { rank, of: 21, pct_change: 30 })],
+    levels: [],
+  });
+  const around = (best: number, worst: number) => ({
+    value: new Map(),
+    change: new Map([["acs_median_hh_income", { margin: 4, best, worst }]]),
+  });
+
+  it("drops a leader whose margin could put it far from the top", () => {
+    // 2nd by rank, but anywhere from 1st to 15th: it does not stand out.
+    expect(standOuts(packet(2), around(1, 15))).toEqual([]);
+  });
+
+  it("keeps a leader whose whole range is at the top, and gives the range", () => {
+    const [card] = standOuts(packet(2), around(1, 3));
+    expect(card.rank).toBe("between 1st and 3rd of 21");
+  });
+
+  it("names a value among the highest only where its whole range is there", () => {
+    const levels = [level("acs_median_hh_income", { rank: 2, of: 21, value: 140374 })];
+    const value = (best: number, worst: number) => ({
+      value: new Map([["acs_median_hh_income", { margin: 3294, best, worst }]]),
+      change: new Map(),
+    });
+    const kept = standOuts({ highlights: [], metrics: [], levels }, value(1, 3));
+    expect(kept.map((c) => c.detail)).toEqual(["among the 3 highest of 21"]);
+    expect(standOuts({ highlights: [], metrics: [], levels }, value(1, 9))).toEqual([]);
+  });
+});

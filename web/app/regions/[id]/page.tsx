@@ -25,6 +25,7 @@ import { groupRows } from "@/lib/groups";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, surveyYears } from "@/lib/periods";
 import { standOuts } from "@/lib/standouts";
+import { anyMargin, MARGIN_NOTE, uncertaintiesFrom } from "@/lib/uncertainty";
 import {
   housingProfile,
   type PaycheckAnswer,
@@ -181,16 +182,19 @@ export default async function RegionPage({
 
   // The answers above the tables (Milestone 17), each from figures the tables carry.
   const peers = { name, count: peer_count, noun: peerNoun(peer_level), scope: scopeName(peer_scope) };
-  const lead = verdict(peers, packet.metrics, packet.levels);
+  // Each figure's margin and rank range, from the summary rather than the packet
+  // (Milestone 28), so no reading goes stale before Milestone 30 takes them in.
+  const uncertainties = uncertaintiesFrom(summary);
+  const lead = verdict(peers, packet.metrics, packet.levels, uncertainties);
   const paid = paychecks(packet.metrics);
   const answers = paycheckAnswers(packet.metrics);
   const trade = tradeoff(peers, packet.levels);
   // Population is promoted to the page head, where it can orient the reader without
   // repeating the same figure in the compact housing profile immediately below.
-  const profile = housingProfile(packet.levels, packet.metrics).filter(
+  const profile = housingProfile(packet.levels, packet.metrics, uncertainties).filter(
     (item) => item.metric_id !== "acs_population",
   );
-  const standing = standOuts(packet);
+  const standing = standOuts(packet, uncertainties);
   const rankExample = rankBasisExample(name, packet.metrics, packet.levels);
   const rankChartCount =
     Number(packet.metrics.some((row) => row.rank !== null && row.of !== null && row.of > 1)) +
@@ -262,11 +266,9 @@ export default async function RegionPage({
             <h1 className="page-title">{name}</h1>
             <ComputedBadge />
           </div>
-          <p className="meta">
-            {placeLine(region)}
-            {" · "}every figure ranked against {scopeName(peer_scope)}’s {peer_count}{" "}
-            {peerNoun(peer_level)}
-          </p>
+          {/* Every rank names its own cohort now — "12th of 21 NJ counties" — so the
+              line that named it once for the whole page is gone (Milestone 28). */}
+          <p className="meta">{placeLine(region)}</p>
           {lead && <p className="verdict">{lead}</p>}
           {trade && <p className="verdict-more">{trade}</p>}
           {/* The short answers in the line, the sentences behind them a click away: the
@@ -356,6 +358,8 @@ export default async function RegionPage({
               regionLabel={name}
               sources={packet.sources}
               path={`/regions/${id}`}
+              uncertainties={uncertainties}
+              peers={peers}
             />
           ) : (
             <p className="meta">
@@ -371,6 +375,7 @@ export default async function RegionPage({
               {rankExample && ` ${rankExample}`}
             </p>
           )}
+          {anyMargin(uncertainties) && <p className="table-note">{MARGIN_NOTE}</p>}
         </section>
 
         {trends.length > 0 && (
@@ -449,6 +454,8 @@ export default async function RegionPage({
               regionLabel={name}
               sources={packet.sources}
               path={`/regions/${id}`}
+              uncertainties={uncertainties}
+              peers={peers}
             />
             <TableNotes placement={values} above="the figures above" />
           </section>

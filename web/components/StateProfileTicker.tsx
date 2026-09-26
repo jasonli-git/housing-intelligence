@@ -102,10 +102,10 @@ export function ProfileTicker({
                           className="profile-rank"
                           rank={context.rank.value}
                           of={context.rank.of}
-                          words={`Rank ${context.rank.value} of ${context.rank.of} ${peerLabel}`}
+                          words={profileRankWords(context.rank, peerLabel)}
                           visual={(
                             <span className="profile-rank-visual" aria-hidden="true">
-                              <strong>{context.rank.value}/{context.rank.of}</strong>
+                              <strong>{profileRankShown(context.rank)}/{context.rank.of}</strong>
                               <em>{peerLabel}</em>
                             </span>
                           )}
@@ -125,4 +125,19 @@ export function ProfileTicker({
 
 export function StateProfileTicker({ items }: { items: ProfileItem[] }) {
   return <ProfileTicker items={items} title="Statewide" ariaLabel="Across the state" />;
+}
+
+type ProfileRank = { value: number; of: number; best?: number; worst?: number };
+
+/** "25–190" where a survey figure's margin leaves its rank a range (Milestone 28). */
+function profileRankShown(rank: ProfileRank): string {
+  return rank.best !== undefined && rank.worst !== undefined && rank.best !== rank.worst
+    ? `${rank.best}–${rank.worst}`
+    : String(rank.value);
+}
+
+function profileRankWords(rank: ProfileRank, peers: string): string {
+  return rank.best !== undefined && rank.worst !== undefined && rank.best !== rank.worst
+    ? `Rank between ${rank.best} and ${rank.worst} of ${rank.of} ${peers}`
+    : `Rank ${rank.value} of ${rank.of} ${peers}`;
 }

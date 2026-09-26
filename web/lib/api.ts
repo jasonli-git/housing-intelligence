@@ -40,6 +40,10 @@ export type Headline = {
   pct_change: number;
   rank: number | null;
   of: number | null;
+  /** The change's 90% margin, in percentage points, and its rank range (Milestone 28). */
+  pct_change_margin?: number | null;
+  rank_best?: number | null;
+  rank_worst?: number | null;
 };
 
 /** A metric's most recent value and its rank by value, not by change. */
@@ -54,6 +58,10 @@ export type LevelReading = {
   source_id: string;
   rank: number | null;
   of: number | null;
+  /** The value's 90% margin of error and its rank range; null without margins (M28). */
+  margin_of_error?: number | null;
+  rank_best?: number | null;
+  rank_worst?: number | null;
 };
 
 export type Summary = {

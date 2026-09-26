@@ -728,6 +728,17 @@ body > main { flex: 1 0 auto; width: 100%; }
   background: var(--series-1); border-radius: 1px;
 }
 .rank-n { font: var(--text-label)/1 var(--font-mono); color: var(--text-secondary); margin-left: 0.45rem; }
+/* Milestone 28: the ranks a figure could plausibly hold, shaded behind its marker, and
+   the rank in words beneath the strip — one place, or where its range sits with the
+   range under it. A figure's margin of error sits on its own line under the figure. */
+.strip b {
+  position: absolute; bottom: 0; height: 13px;
+  background: color-mix(in srgb, var(--series-1) 28%, transparent); border-radius: 1px;
+}
+.rank-read { display: block; margin-top: 0.2rem; white-space: normal; max-width: 15rem; }
+.rank-lead { display: block; font-size: var(--text-note); line-height: 1.35; color: var(--text-secondary); }
+.rank-range { display: block; font: var(--text-label)/1.4 var(--font-mono); color: var(--text-muted); }
+.margin { display: block; font: var(--text-label)/1.4 var(--font-mono); color: var(--text-muted); white-space: nowrap; }
 .ledger tr.has-note td { border-bottom: 0; }
 .ledger tr.note td { padding: 0 0 0.6rem; border-bottom: 1px solid var(--grid); }
 .row-note {
