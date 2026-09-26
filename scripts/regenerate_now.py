@@ -43,6 +43,19 @@ def _notify(title: str, message: str, *, priority: int = 0) -> None:
           "--priority", str(priority)])  # fmt: skip
 
 
+def _ollama():  # type: ignore[no-untyped-def]
+    """Ollama up for a regeneration and back as it was after (ARCHITECTURE #230).
+
+    The local model is one of the readings `hip explain --all` writes, and the owner
+    keeps Ollama quit between runs. A seam of its own so the tests never start a server.
+    """
+    from hip.eval.runners.ollama import serving
+
+    logs = REPO_ROOT / "logs"
+    logs.mkdir(exist_ok=True)
+    return serving(log_path=logs / "ollama.log")
+
+
 def main() -> int:
     from hip.config import get_settings
     from hip.refresh import (
@@ -99,7 +112,9 @@ def main() -> int:
     # publishing, and the rest stay up labelled stale (eval_cli.PARTIAL). 1 means none
     # was written, and any other exit is a run that did not finish: either way this
     # stops, and whatever it did commit goes live with the next deploy.
-    explain_code = _hip("explain", "--all")
+    with _ollama() as ollama:
+        print(ollama, flush=True)
+        explain_code = _hip("explain", "--all")
     if explain_code not in (0, 3):
         _notify(
             "Regenerate now: failed",

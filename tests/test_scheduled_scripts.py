@@ -15,7 +15,8 @@ a test says otherwise.
 from __future__ import annotations
 
 import importlib.util
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
@@ -73,6 +74,16 @@ def _run(
         result.notes.append((title, priority))
 
     stamps: Callable[[], str] = iter(["before", "after" if moved else "before"]).__next__
+
+    @contextmanager
+    def fake_ollama() -> Iterator[str]:
+        result.steps.append("ollama up")
+        try:
+            yield "stubbed"
+        finally:
+            result.steps.append("ollama down")
+
+    monkeypatch.setattr(script, "_ollama", fake_ollama)
     monkeypatch.setattr(script, "_hip", fake_hip)
     monkeypatch.setattr(script, "_run", fake_run)
     monkeypatch.setattr(script, "_notify", fake_notify)
@@ -143,14 +154,22 @@ def test_a_week_that_moved_rebuilds_checks_and_publishes(
 
 
 @pytest.mark.parametrize("code", [1, 2])
-def test_a_failed_readings_check_is_not_read_as_nothing_stale(
+def test_a_failed_readings_check_alerts_regenerates_nothing_and_publishes_the_data(
     monkeypatch: pytest.MonkeyPatch, code: int
 ) -> None:
-    run = _run(monkeypatch, "scheduled_refresh", hip={"explain --all --dry-run": code})
+    run = _run(
+        monkeypatch,
+        "scheduled_refresh",
+        hip={"explain --all --dry-run": code},
+        mode="auto",
+    )
 
-    assert run.code == 1
-    assert run.steps[-1] == "hip explain --all --dry-run"
-    assert run.notes == [("Weekly refresh: the readings check failed", 1)]
+    assert "hip explain --all" not in run.steps
+    assert run.steps[-3:] == PUBLISH
+    assert (run.code, run.notes) == (
+        0,
+        [("Weekly refresh: the readings check failed", 1)],
+    )
 
 
 def test_stale_readings_in_ask_mode_notify_and_still_publish_the_data(
@@ -175,7 +194,7 @@ def test_a_partial_regeneration_in_auto_mode_still_publishes(
         mode="auto",
     )
 
-    assert run.steps[-4:] == ["hip explain --all", *PUBLISH]
+    assert run.steps[-6:] == ["ollama up", "hip explain --all", "ollama down", *PUBLISH]
     assert run.code == 0
     assert run.notes == [("Weekly refresh: some readings were not regenerated", 0)]
 
@@ -247,7 +266,14 @@ def test_a_failed_check_never_reaches_the_paid_run(
 def test_a_regeneration_is_published(monkeypatch: pytest.MonkeyPatch) -> None:
     run = _run(monkeypatch, "regenerate_now", hip={"explain --all --dry-run": 3})
 
-    assert run.steps == ["hip explain --all --dry-run", "hip explain --all", *PUBLISH]
+    # Ollama is up for the paid run alone: started before it, stopped before publishing.
+    assert run.steps == [
+        "hip explain --all --dry-run",
+        "ollama up",
+        "hip explain --all",
+        "ollama down",
+        *PUBLISH,
+    ]
     assert (run.code, run.notes) == (0, [("Readings regenerated", 0)])
 
 
@@ -273,5 +299,23 @@ def test_a_regeneration_that_wrote_nothing_deploys_nothing(
         hip={"explain --all --dry-run": 3, "explain --all": 1},
     )
 
-    assert run.steps == ["hip explain --all --dry-run", "hip explain --all"]
+    assert run.steps == [
+        "hip explain --all --dry-run",
+        "ollama up",
+        "hip explain --all",
+        "ollama down",
+    ]
     assert (run.code, run.notes) == (1, [("Regenerate now: failed", 1)])
+
+
+def test_ollama_is_never_started_without_a_paid_run(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Ask mode, a clean check and a failed one all leave Ollama alone."""
+    for hip, mode in (
+        ({"explain --all --dry-run": 3}, "ask"),
+        ({"explain --all --dry-run": 0}, "auto"),
+        ({"explain --all --dry-run": 1}, "auto"),
+    ):
+        run = _run(monkeypatch, "scheduled_refresh", hip=hip, mode=mode)
+        assert "ollama up" not in run.steps
