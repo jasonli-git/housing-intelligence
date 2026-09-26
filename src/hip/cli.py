@@ -530,6 +530,65 @@ def refresh_command(
     raise typer.Exit(code=code)
 
 
+@app.command(name="refresh-mode")
+def refresh_mode_command(
+    mode: Annotated[
+        str | None,
+        typer.Argument(help='"ask" or "auto". Omit to print the current setting.'),
+    ] = None,
+) -> None:
+    """Show or set whether a scheduled refresh may regenerate readings unasked.
+
+    Reads and writes the one file `scripts/scheduled-refresh.sh` gates on
+    (`Settings.gate_dir`, under iCloud Drive by default) — the same file an iPhone
+    Shortcut writes, so this command and a Shortcut's "Set Auto"/"Set Ask" button are
+    two doors onto one setting rather than two that could disagree (Milestone 27).
+    """
+    settings = get_settings()
+    if mode is None:
+        typer.echo(refresh.RefreshGate.read(settings.gate_dir).mode)
+        return
+    if mode not in ("ask", "auto"):
+        typer.secho(f'mode must be "ask" or "auto", not {mode!r}', fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+    refresh.RefreshGate(mode=mode).write(settings.gate_dir)  # type: ignore[arg-type]
+    typer.secho(f"refresh mode set to {mode}", fg=typer.colors.GREEN)
+
+
+@app.command(name="regenerate-now")
+def regenerate_now_command() -> None:
+    """Ask for a reading regeneration outside the weekly schedule.
+
+    Touches the same trigger file an iPhone Shortcut writes, so running this from the
+    Mac has exactly the effect tapping the Shortcut does: the `launchd` agent watching
+    it (`WatchPaths`) wakes immediately and runs `scripts/regenerate-now.sh`
+    (Milestone 27). This command only asks; it does not generate anything itself.
+    """
+    settings = get_settings()
+    refresh.request_regenerate_now(settings.gate_dir)
+    typer.secho(
+        f"requested — {settings.gate_dir / refresh.TRIGGER_FILE}", fg=typer.colors.GREEN
+    )
+
+
+@app.command()
+def notify(
+    title: Annotated[str, typer.Option("--title")],
+    message: Annotated[str, typer.Option("--message")],
+    priority: Annotated[int, typer.Option("--priority")] = 0,
+) -> None:
+    """Send one Pushover notification (Milestone 27's scheduled scripts use this).
+
+    Exits 0 whether or not the notification actually reached Pushover — a missing key
+    or an offline Mac must not turn "the notification failed" into "the calling script
+    failed", when the calling script's own job (a refresh, a regeneration) may have
+    succeeded. `hip.notify.send` logs the reason; nothing here escalates it.
+    """
+    from hip.notify import send
+
+    send(title, message, priority=priority)
+
+
 @app.command()
 def land(
     source: Annotated[
