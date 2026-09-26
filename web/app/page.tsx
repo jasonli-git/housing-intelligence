@@ -156,7 +156,7 @@ export default async function NewJerseyPage() {
           </div>
         </div>
       </header>
-      <StateProfileTicker items={stateProfile(levels)} />
+      <StateProfileTicker items={stateProfile(levels, statewide?.headlines ?? [])} />
       <div className="nj-source-notes">
           {statewideNotes.map((text) => (
             <p key={text} className="table-note">
