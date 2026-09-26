@@ -417,7 +417,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 646 Python + 243 dashboard tests; API tests skip without a warehouse
+make test          # 655 Python + 243 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -529,8 +529,10 @@ of spending anything when a reading has gone stale, and `auto` regenerates witho
 asking. The setting lives in one file under `Settings.gate_dir` (iCloud Drive by
 default), so `hip refresh-mode auto` from the Mac and an iPhone Shortcut writing the
 same file are two doors onto one setting, switchable either way at any time.
-`hip regenerate-now` (or the same Shortcut idea) asks for a regeneration outside the
-schedule; `hip notify --title … --message …` is what the scripts use to reach Pushover,
+A regeneration starts Ollama for the local model and stops it again after, so it can
+stay quit the rest of the time; an Ollama you opened yourself is used and left running
+(ARCHITECTURE #230). `hip regenerate-now` (or the same Shortcut idea) asks for a
+regeneration outside the schedule; `hip notify --title … --message …` is what the scripts use to reach Pushover,
 and never fails the run that called it if the notification itself does not go through.
 
 *Building the two Shortcuts*, once, in the iOS Shortcuts app — each is two or three

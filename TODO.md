@@ -465,13 +465,15 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
-- [ ] **The local model cannot regenerate while Ollama is quit.** (M27, found
-      2026-09-26) Ollama was quit when Gemma was closed out (#215), so every regeneration
-      that needs Gemma's reading reaches it, fails fast, and ends partial: the hosted
-      readings publish and Gemma's stays up labelled stale, with a notification each
-      time (#227). Waiting on a choice: start Ollama for a regeneration and stop it
-      after, leave it quit and accept a stale local reading, or take Gemma off the
-      preference list.
+- [ ] **The public freshness page is as of its last build, and quiet weeks do not
+      rebuild it.** (M27, Codex's second review, 2026-09-26) A quiet week stops before
+      `hip load`, so a publisher unreachable that week reaches the owner's phone but not
+      the page, which keeps its last build's "Current" and last-check dates. The page
+      shows its build date, so it is a snapshot rather than a false claim — the question
+      is whether a snapshot is enough. Options: show the page's age in the reader's
+      browser and word its statuses as of the build; rebuild and deploy in a quiet week
+      only when a source was unreachable; or rebuild every week, ending "a quiet week
+      costs nothing" (#217). Waiting on the owner.
 
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.

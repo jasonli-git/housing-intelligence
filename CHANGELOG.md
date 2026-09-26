@@ -25,7 +25,9 @@ changed after they were published.
   `hip refresh-mode` on the Mac and an iPhone Shortcut both write. `hip regenerate-now`,
   or a second Shortcut, starts a regeneration on demand through a second `launchd`
   agent, and `hip explain --dry-run` reports what would be regenerated without calling
-  any model (ARCHITECTURE #219, #229). A failed check never goes on to the paid run.
+  any model (ARCHITECTURE #219, #229, #231). A failed or inconclusive check never goes
+  on to the paid run. A regeneration starts Ollama for the local model and stops it
+  after, unless it was already running (ARCHITECTURE #230).
 - **Notifications on the owner's phone** through Pushover, `hip notify`: a failed step as
   urgent; an unreachable source or readings awaiting a go-ahead as normal
   (ARCHITECTURE #218).
