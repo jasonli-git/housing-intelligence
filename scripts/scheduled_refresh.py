@@ -28,6 +28,7 @@ this script does neither itself, so running it by hand behaves the same way.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -86,62 +87,37 @@ def _ollama():  # type: ignore[no-untyped-def]
     return serving(log_path=logs / "ollama.log")
 
 
-def main() -> int:
-    from hip.refresh import checkout_problem
+# Where the published site's data lives; `make deploy` puts `freshness.json` there.
+_ARTIFACT_URL = os.environ.get("ARTIFACT_URL", "https://housing-data.jasonli.app")
 
-    print(f"=== {datetime.now(UTC).isoformat()} scheduled refresh starting ===")
-    # Before anything runs: this checkout is shared with development, and only a
-    # clean `main` may refresh the warehouse or deploy (`checkout_problem`).
-    problem = checkout_problem(REPO_ROOT)
-    if problem:
-        print(f"skipped: {problem}")
-        _notify(
-            "Weekly refresh skipped",
-            f"{problem}. The data was not refreshed and nothing was deployed; "
-            "merge or put the work away, and the next run picks it up.",
-        )
-        return 2
-    before = _completed_at()
 
-    refresh_code = _hip("refresh")
-    if refresh_code not in (0, 3):
-        # 1 is a pipeline failure; anything else — Click's 2 for a usage error, a
-        # crash's traceback exit — is not a result `hip refresh` defines, and must not
-        # be read as a clean run either.
-        _notify(
-            "Weekly refresh failed",
-            f"hip refresh exited {refresh_code}, so the pipeline did not complete. "
-            "Nothing downstream ran. Check the log on the Mac.",
-            priority=_PRIORITY_URGENT,
-        )
-        return 1
+def _freshness_changes() -> list[str]:
+    """Sources whose line on the live freshness page would now read differently (#232).
 
-    # An unreachable publisher (3) leaves the warehouse consistent (ARCHITECTURE #102),
-    # which is worth a heads-up, not a stop — and it has to be said before the quiet-week
-    # check below: a week in which the one source that failed was also the only one
-    # that might have moved is exactly the outage a person needs to hear about.
-    quiet = _completed_at() == before
-    if refresh_code == 3:
-        _notify(
-            "Weekly refresh: a source was unreachable",
-            "One or more publishers could not be reached this week, so their figures "
-            "are the last ones fetched. "
-            + (
-                "Nothing else moved, so the site was left as it was."
-                if quiet
-                else "The site still updates from what did move."
-            ),
-        )
+    Read against the live `freshness.json` rather than `dist/`, because what matters is
+    what a reader has: a build that was never deployed is not their page. A live page
+    that cannot be read counts as changed — the rebuild that causes is the cheap
+    mistake, and a page left saying the wrong thing is the expensive one.
+    """
+    import httpx
+    from sqlalchemy.orm import Session
 
-    # `RefreshState.completed_at` only moves when the pipeline actually ran, so
-    # comparing it (not `refresh_code`) is what tells a quiet week from a real one:
-    # `hip refresh` itself stops before the pipeline when nothing moved, and there is
-    # nothing for `pack`, `explain` or a deploy to do that would produce different
-    # bytes.
-    if quiet:
-        print("nothing changed since the last completed refresh; stopping here")
-        return 0
+    from hip.config import get_settings, load_sources
+    from hip.warehouse.db import get_engine
+    from hip.warehouse.freshness import build_report, page_changes
 
+    with Session(get_engine()) as session:
+        current = build_report(session, load_sources(get_settings().config_dir))
+    try:
+        response = httpx.get(f"{_ARTIFACT_URL}/freshness.json", timeout=30.0)
+        published = response.json() if response.status_code == 200 else None
+    except (httpx.HTTPError, ValueError):
+        published = None
+    return page_changes(published, current)
+
+
+def _rebuild_readings() -> int | None:
+    """Packets, then readings, for a week the figures moved. An exit code to stop on."""
     # Every packet rebuilt and checked against its schema before anything is published.
     # Not `--report`: that rewrites the county reports git tracks, which would leave
     # this shared checkout dirty after every run, and the site does not read them.
@@ -200,9 +176,89 @@ def main() -> int:
                 "Regenerate Now shortcut) when you're ready — the rest of this "
                 "week's data is publishing regardless.",
             )
-            # Deliberately continue: the data-only changes still publish below, on the
-            # same "stale readings deploy labelled stale, not withheld" basis a refresh
-            # has always worked on.
+            # Deliberately continue: the data-only changes still publish after this, on
+            # the same "stale readings deploy labelled stale, not withheld" basis a
+            # refresh has always worked on.
+    return None
+
+
+def main() -> int:
+    from hip.refresh import checkout_problem
+
+    print(f"=== {datetime.now(UTC).isoformat()} scheduled refresh starting ===")
+    # Before anything runs: this checkout is shared with development, and only a
+    # clean `main` may refresh the warehouse or deploy (`checkout_problem`).
+    problem = checkout_problem(REPO_ROOT)
+    if problem:
+        print(f"skipped: {problem}")
+        _notify(
+            "Weekly refresh skipped",
+            f"{problem}. The data was not refreshed and nothing was deployed; "
+            "merge or put the work away, and the next run picks it up.",
+        )
+        return 2
+    before = _completed_at()
+
+    refresh_code = _hip("refresh")
+    if refresh_code not in (0, 3):
+        # 1 is a pipeline failure; anything else — Click's 2 for a usage error, a
+        # crash's traceback exit — is not a result `hip refresh` defines, and must not
+        # be read as a clean run either.
+        _notify(
+            "Weekly refresh failed",
+            f"hip refresh exited {refresh_code}, so the pipeline did not complete. "
+            "Nothing downstream ran. Check the log on the Mac.",
+            priority=_PRIORITY_URGENT,
+        )
+        return 1
+
+    # `RefreshState.completed_at` only moves when the pipeline actually ran, so comparing
+    # it (not `refresh_code`) is what tells a quiet week from a real one. A quiet week
+    # still republishes when the freshness page would read differently — a source out
+    # of reach or back, a release now waiting — since the page should carry that within
+    # the week, and nothing else about the site has moved (ARCHITECTURE #232).
+    quiet = _completed_at() == before
+    changes: list[str] = []
+    if quiet:
+        try:
+            changes = _freshness_changes()
+        except Exception as exc:  # the one place a surprise must reach the phone
+            _notify(
+                "Weekly refresh: could not check the freshness page",
+                f"Comparing the freshness page with the published one failed ({exc}). "
+                "Nothing was deployed. Check the log on the Mac.",
+                priority=_PRIORITY_URGENT,
+            )
+            return 1
+
+    # An unreachable publisher (3) leaves the warehouse consistent (ARCHITECTURE #102),
+    # which is worth a heads-up, not a stop — and it is said even in a quiet week: a
+    # week in which the one source that failed was also the only one that might have
+    # moved is exactly the outage a person needs to hear about.
+    if refresh_code == 3:
+        _notify(
+            "Weekly refresh: a source was unreachable",
+            "One or more publishers could not be reached this week, so their figures "
+            "are the last ones fetched. "
+            + (
+                "The site still updates from what did move."
+                if not quiet
+                else "Nothing else moved; the freshness page is republished to say so."
+                if changes
+                else "Nothing else moved, so the site was left as it was."
+            ),
+        )
+
+    if quiet and not changes:
+        print("nothing changed since the last completed refresh; stopping here")
+        return 0
+    if quiet:
+        # No figure moved, so no packet or reading did: straight to publishing.
+        print(f"no figure moved; the freshness page changes for {', '.join(changes)}")
+    else:
+        stop = _rebuild_readings()
+        if stop is not None:
+            return stop
 
     if _run(["make", "publish"]) != 0:
         _notify(

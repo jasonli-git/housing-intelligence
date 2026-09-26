@@ -21,10 +21,12 @@ from hip.warehouse.db import get_engine, probe
 from hip.warehouse.discoveries import load_discoveries
 from hip.warehouse.freshness import (
     FreshnessReport,
+    SourceFreshness,
     _changelog_version,
     _published_date,
     _status,
     build_report,
+    page_changes,
 )
 
 pytestmark = pytest.mark.skipif(not probe().migrated, reason="needs a migrated warehouse")
@@ -312,3 +314,50 @@ def test_an_outage_reaches_the_page_through_the_normal_acquisition_path(
     # The release it last reached is kept; only the outcome and the check are new.
     assert (row["newest"], row["published"]) == (reached.newest, reached.published)
     assert row["checked_at"] > reached.checked_at
+
+
+def _report(*lines: tuple[str, str, str | None]) -> FreshnessReport:
+    return FreshnessReport(
+        site_version="0.23.0",
+        generated_at=datetime(2026, 10, 2, tzinfo=UTC),
+        sources=[
+            SourceFreshness(
+                source_id=source_id,
+                name=source_id,
+                publisher="p",
+                cadence="annual",
+                status=status,  # type: ignore[arg-type]
+                pending=pending,
+            )
+            for source_id, status, pending in lines
+        ],
+    )
+
+
+def test_page_changes_compares_what_a_reader_sees_not_dates() -> None:
+    """Whether a quiet week rebuilds the site (ARCHITECTURE #232)."""
+    last_week = _report(("bls", "current", None), ("hud_fmr", "pending", "2027"))
+    published = last_week.model_dump(mode="json")
+
+    # A week later, every check has a new date and nothing a reader sees has moved.
+    later = last_week.model_copy(
+        update={"generated_at": datetime(2026, 10, 9, tzinfo=UTC)}
+    )
+    assert page_changes(published, later) == []
+
+    # Out of reach, and back again, both change the page.
+    down = _report(("bls", "unreachable", None), ("hud_fmr", "pending", "2027"))
+    assert page_changes(published, down) == ["bls"]
+    assert page_changes(down.model_dump(mode="json"), last_week) == ["bls"]
+
+    # So does a release that starts waiting, and a source new to the page.
+    waiting = _report(("bls", "pending", "2026"), ("hud_fmr", "pending", "2027"))
+    assert page_changes(published, waiting) == ["bls"]
+    more = _report(
+        *[(s.source_id, s.status, s.pending) for s in last_week.sources],
+        ("fred", "not_tracked", None),
+    )
+    assert page_changes(published, more) == ["fred"]
+
+    # Never published: every line is new.
+    assert page_changes(None, last_week) == ["bls", "hud_fmr"]

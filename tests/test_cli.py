@@ -165,3 +165,34 @@ def test_notify_exits_clean_even_with_no_keys_configured(
     result = runner.invoke(app, ["notify", "--title", "t", "--message", "m"])
 
     assert result.exit_code == 0
+
+
+def test_a_quiet_refresh_still_records_what_it_learned_of_each_publisher(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The figures stand, so no pipeline runs — but a publisher out of reach this week,
+    or back, is news the freshness report carries, and `hip load` is what would have
+    recorded it (ARCHITECTURE #232). Found in Codex's second review of Milestone 27."""
+    from hip.config import load_sources
+
+    loaded: list[list[str]] = []
+    monkeypatch.setattr(
+        "hip.cli.get_settings", lambda: Settings(data_dir=tmp_path, gate_dir=tmp_path)
+    )
+    monkeypatch.setattr("hip.cli._adapters", lambda source: [])
+    monkeypatch.setattr("hip.cli.get_engine", lambda: None)
+    monkeypatch.setattr(
+        "hip.cli.load_discoveries",
+        lambda engine, raw_dir, ids: loaded.append(sorted(ids)) or 0,
+    )
+
+    def no_pipeline(*args: object, **kwargs: object) -> None:
+        raise AssertionError("a quiet refresh ran a pipeline stage")
+
+    monkeypatch.setattr("hip.cli.subprocess.run", no_pipeline)
+
+    result = runner.invoke(app, ["refresh"])
+
+    assert result.exit_code == 0, result.output
+    assert "nothing changed" in result.output
+    assert loaded == [sorted(load_sources().keys())]

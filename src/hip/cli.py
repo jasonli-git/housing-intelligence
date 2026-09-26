@@ -520,6 +520,12 @@ def refresh_command(
     changed = state.changed(report.shas)
 
     if not changed and not force:
+        # The figures stand, but what this run learned about each publisher does not:
+        # a source out of reach this week, or back, or a release now waiting. `hip load`
+        # is what records that, and it is skipped here, so the discoveries go in on
+        # their own — a few rows, not a pipeline — and the freshness report stays true
+        # of this week's checks (ARCHITECTURE #232).
+        load_discoveries(get_engine(), settings.raw_dir, load_sources().keys())
         typer.secho(
             f"nothing changed since the last completed refresh "
             f"({state.completed_at or 'never'}); the warehouse already reflects it",
@@ -570,7 +576,7 @@ def refresh_mode_command(
 ) -> None:
     """Show or set whether a scheduled refresh may regenerate readings unasked.
 
-    Reads and writes the one file `scripts/scheduled-refresh.sh` gates on
+    Reads and writes the one file `scripts/scheduled_refresh.py` gates on
     (`Settings.gate_dir`, under iCloud Drive by default) — the same file an iPhone
     Shortcut writes, so this command and a Shortcut's "Set Auto"/"Set Ask" button are
     two doors onto one setting rather than two that could disagree (Milestone 27).
@@ -592,7 +598,7 @@ def regenerate_now_command() -> None:
 
     Touches the same trigger file an iPhone Shortcut writes, so running this from the
     Mac has exactly the effect tapping the Shortcut does: the `launchd` agent watching
-    it (`WatchPaths`) wakes immediately and runs `scripts/regenerate-now.sh`
+    it (`WatchPaths`) wakes immediately and runs `scripts/regenerate_now.py`
     (Milestone 27). This command only asks; it does not generate anything itself.
     """
     settings = get_settings()

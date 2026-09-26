@@ -55,6 +55,7 @@ def _run(
     mode: str = "ask",
     problem: str | None = None,
     requested: bool = True,
+    freshness: list[str] | Exception | None = None,
 ) -> Run:
     script = _load(name)
     result = Run(code=-1)
@@ -83,7 +84,15 @@ def _run(
         finally:
             result.steps.append("ollama down")
 
+    def fake_freshness() -> list[str]:
+        result.steps.append("compare freshness")
+        if isinstance(freshness, Exception):
+            raise freshness
+        return freshness or []
+
     monkeypatch.setattr(script, "_ollama", fake_ollama)
+    if hasattr(script, "_freshness_changes"):
+        monkeypatch.setattr(script, "_freshness_changes", fake_freshness)
     monkeypatch.setattr(script, "_hip", fake_hip)
     monkeypatch.setattr(script, "_run", fake_run)
     monkeypatch.setattr(script, "_notify", fake_notify)
@@ -125,7 +134,7 @@ def test_an_unreachable_publisher_in_a_quiet_week_is_still_reported(
 ) -> None:
     run = _run(monkeypatch, "scheduled_refresh", hip={"refresh": 3}, moved=False)
 
-    assert (run.code, run.steps) == (0, ["hip refresh"])
+    assert (run.code, run.steps) == (0, ["hip refresh", "compare freshness"])
     assert run.notes == [("Weekly refresh: a source was unreachable", 0)]
 
 
@@ -134,7 +143,47 @@ def test_a_quiet_week_stops_after_the_refresh_and_says_nothing(
 ) -> None:
     run = _run(monkeypatch, "scheduled_refresh", moved=False)
 
-    assert (run.code, run.steps, run.notes) == (0, ["hip refresh"], [])
+    assert (run.code, run.notes) == (0, [])
+    assert run.steps == ["hip refresh", "compare freshness"]
+
+
+def test_a_quiet_week_republishes_when_the_freshness_page_would_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """ARCHITECTURE #232: a source out of reach, or back, reaches the page within the
+    week. No figure moved, so no packet or reading is rebuilt on the way."""
+    run = _run(
+        monkeypatch,
+        "scheduled_refresh",
+        hip={"refresh": 3},
+        moved=False,
+        freshness=["nj_modiv"],
+    )
+
+    assert run.steps == ["hip refresh", "compare freshness", *PUBLISH]
+    assert run.code == 0
+    assert run.notes == [("Weekly refresh: a source was unreachable", 0)]
+
+
+def test_a_source_coming_back_republishes_without_a_notification(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run = _run(monkeypatch, "scheduled_refresh", moved=False, freshness=["nj_modiv"])
+
+    assert run.steps == ["hip refresh", "compare freshness", *PUBLISH]
+    assert (run.code, run.notes) == (0, [])
+
+
+def test_a_failed_freshness_comparison_deploys_nothing_and_says_so(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run = _run(
+        monkeypatch, "scheduled_refresh", moved=False, freshness=OSError("no route")
+    )
+
+    assert run.steps == ["hip refresh", "compare freshness"]
+    assert run.code == 1
+    assert run.notes == [("Weekly refresh: could not check the freshness page", 1)]
 
 
 def test_a_week_that_moved_rebuilds_checks_and_publishes(
@@ -144,6 +193,7 @@ def test_a_week_that_moved_rebuilds_checks_and_publishes(
 
     # `hip pack` without `--report`: the county reports are tracked by git, and
     # rewriting them would leave the shared checkout dirty after every run.
+    # A week the figures moved does not compare the page: it is rebuilt regardless.
     assert run.steps == [
         "hip refresh",
         "hip pack",

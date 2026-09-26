@@ -44,7 +44,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from email.utils import parsedate_to_datetime
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -210,3 +210,24 @@ def build_report(
         generated_at=datetime.now(UTC),
         sources=rows,
     )
+
+
+def page_changes(published: dict[str, Any] | None, current: FreshnessReport) -> list[str]:
+    """The sources whose line on the published freshness page would now read differently.
+
+    What decides whether a week in which no figure moved still rebuilds the site
+    (ARCHITECTURE #232): a publisher out of reach, or back, or a release now waiting,
+    is news the page should carry within the week. Compared on what a reader sees
+    change — each source's status and any pending release — and never on dates, which
+    move with every week's checks and would rebuild the site every Friday, ending "a
+    quiet week costs nothing" (#217). `published` is the live `freshness.json`, or
+    None when there is none, which changes every line.
+    """
+    now = {s.source_id: (s.status, s.pending) for s in current.sources}
+    if published is None:
+        return sorted(now)
+    then = {
+        s["source_id"]: (s["status"], s.get("pending"))
+        for s in published.get("sources", [])
+    }
+    return sorted(k for k in now.keys() | then.keys() if now.get(k) != then.get(k))
