@@ -481,22 +481,52 @@ source unreachable, and **1** when the pipeline itself failed — the split a sc
 needs, because fifteen sources moving while one publisher is down is a successful
 refresh whose numbers should still deploy. One source failing no longer ends the run.
 
-**Scheduling is yours to install**, deliberately: nothing here writes a cron or launchd
-entry. A daily run is enough for a platform whose fastest source publishes weekly —
-
-```cron
-0 6 * * *  cd /path/to/housing-intelligence && uv run hip refresh >> /tmp/hip-refresh.log 2>&1
-```
-
-— and on macOS a `launchd` agent with `StartCalendarInterval` is the equivalent. Deploy
-on exit 0 or 3; investigate on 1.
-
 **Schedule the command, not `make refresh`.** `make` collapses any failing recipe to its
 own exit status 2, so scheduling the make target throws away the distinction above: a run
 that completed with one publisher down and a run whose pipeline broke both arrive as 2.
 `make refresh` is for running it by hand. `make prune-raw` shows which superseded downloads are
 safe to delete and needs `--apply` to do it, because a cadence makes `data/raw/` grow
 without bound: one refresh took it from 264MB of superseded copies to 511MB.
+
+**Reaching the reader (Milestone 27).** `hip refresh` still means "update the warehouse"
+and nothing past it — a second host with no `make`, `wrangler` or `rclone` installed can
+run it alone. `scripts/scheduled_refresh.py` is the scheduler-facing script: it calls
+`hip refresh`, and only if `RefreshState.completed_at` actually moved — a quiet week
+stops there, at no cost past the refresh itself — goes on to rebuild packets, check
+whether any reading is stale (`hip explain --all --dry-run`, which classifies every
+county without calling a model), rebuild the site, deploy it, and confirm the deploy
+with `check-live`. `scripts/launchd/` holds the two `launchd` agents this Mac runs it
+under, real absolute paths and all, since this project runs on exactly one machine on
+purpose: `com.housing-intelligence.weekly-refresh` (Fridays, the morning after Freddie
+Mac's Thursday rate release, wrapped in `caffeinate`) and `com.housing-intelligence.
+regenerate-now` (`WatchPaths` on a trigger file, fired instantly rather than polled).
+Installing either is a standing decision on its own, not something this repo does for
+you — see the comment at the top of each `.plist` for the `launchctl load` line.
+
+**Regenerating AI readings is billed, so it is the one step gated.** Everything else —
+the refresh, the rebuild, the deploy — runs every scheduled cycle regardless.
+`hip refresh-mode` shows or sets `ask` or `auto`: `ask` (the default) notifies instead
+of spending anything when a reading has gone stale, and `auto` regenerates without
+asking. The setting lives in one file under `Settings.gate_dir` (iCloud Drive by
+default), so `hip refresh-mode auto` from the Mac and an iPhone Shortcut writing the
+same file are two doors onto one setting, switchable either way at any time.
+`hip regenerate-now` (or the same Shortcut idea) asks for a regeneration outside the
+schedule; `hip notify --title … --message …` is what the scripts use to reach Pushover,
+and never fails the run that called it if the notification itself does not go through.
+
+*Building the two Shortcuts*, once, in the iOS Shortcuts app — each is two or three
+built-in actions, no scripting:
+
+- **Set refresh mode** — actions: **Text** (`{"mode": "ask"}` or `{"mode": "auto"}`) →
+  **Save File**, to `HousingPipeline/mode.json` in iCloud Drive, overwrite on. Duplicate
+  it once per mode, or add a menu (**Choose from Menu**) with "Ask" and "Auto" options
+  feeding the **Text** action, for one Shortcut that does either.
+- **Regenerate now** — actions: **Text** (any placeholder content) → **Save File**, to
+  `HousingPipeline/regenerate-now.trigger`, overwrite on. `com.housing-intelligence.
+  regenerate-now` deletes the file itself once it has acted, so a second tap is a new
+  request rather than a no-op.
+
+Add either to the Home Screen or Control Center for a one-tap version.
 
 **When a source stops answering.** A refresh exits **3** and names it — `failed` or
 `unreachable` in the output. Then:

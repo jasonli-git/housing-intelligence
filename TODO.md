@@ -38,19 +38,37 @@ Milestone 27.
 
 **Tasks**
 
-- [ ] **`hip refresh` continues past `analyze`** through `pack`, `explain` (gated by the
-      toggle above), `publish`, `deploy` and `check-live`, instead of stopping after the
-      warehouse update.
-- [ ] **The ask/auto toggle and the regenerate-now trigger**: one settings file under
-      iCloud Drive (`~/Library/Mobile Documents/com~apple~CloudDocs/...`), a `hip`
-      command or small script to read/flip it from the Mac, and a `launchd` job with
-      `WatchPaths` on the trigger file so an iPhone Shortcut writing to it fires
-      immediately rather than on a poll.
-- [ ] **The `launchd` job itself**: weekly, Friday morning, `caffeinate`-wrapped, restarts
-      across reboots, logs to a file, calls Pushover on any non-zero exit.
-- [ ] **Two iOS Shortcuts**, built in the Shortcuts app (not something a commit can
-      produce) — document exact steps for the owner to build: a toggle for ask/auto, and
-      a one-tap "regenerate now." Confirm both write the same file the Mac reads.
+- [x] **A refresh continues to the reader**, as a separate orchestrating script rather
+      than a longer `hip refresh` (ARCHITECTURE #216 records why): `scripts/
+      scheduled_refresh.py` calls `hip refresh`, then — only if `RefreshState.
+      completed_at` actually moved — `hip pack --report`, the gated `hip explain`, and
+      `make publish`/`deploy`/`check-live`, stopping and notifying at the first failure.
+- [x] **The ask/auto toggle and the regenerate-now trigger.** `RefreshGate` (`src/hip/
+      refresh.py`) reads and writes `Settings.gate_dir` (iCloud Drive by default);
+      `hip refresh-mode [ask|auto]` and `hip regenerate-now` are the Mac-side commands;
+      `hip explain --dry-run` is the free cost check the gate is decided from. Nine new
+      tests across `test_refresh.py`, `test_notify.py` and `test_cli.py`, mutation-checked.
+- [x] **`hip notify`**, a thin Pushover wrapper (`src/hip/notify.py`) both scripts use;
+      never fails the caller if the notification itself does not go through.
+- [x] **The two `launchd` agents**, `scripts/launchd/*.plist`, real absolute paths
+      throughout (this runs on one Mac on purpose): `weekly-refresh` on
+      `StartCalendarInterval` (Fridays 08:00, `caffeinate`-wrapped, logs to `logs/`), and
+      `regenerate-now` on `WatchPaths`. **Not yet loaded** — a standing job that can
+      reach production is the owner's call, not a default this branch turns on. Verified
+      by real, careful runs: a full smoke test of `scheduled_refresh.py` reached and
+      completed `make publish` before being stopped short of `make deploy` (today's
+      refresh needed no paid regeneration — 56 readings re-bound for free, 0 generated),
+      and every branch of both scripts' control flow against mocked subprocess calls.
+- [x] **The iOS Shortcuts documented** (README, "Reaching the reader"): each is two or
+      three built-in actions (**Text** → **Save File** to the same iCloud file the Mac
+      reads). Building them in the Shortcuts app is the owner's, not something a commit
+      can do.
+- [ ] **A public freshness page per source**: period observed, published date, acquired
+      date, last checked date, the site version carrying it, the next expected release,
+      and a status (current, delayed, unreachable, superseded, discontinued, historical).
+      Built from the `Discovery` records `data/raw/<source>/releases.json` already
+      writes (Milestone 26) plus `refresh-state.json`. *Checked today* must never read as
+      *measured today*. **Not started.**
 - [ ] **A public freshness page per source**: period observed, published date, acquired
       date, last checked date, the site version carrying it, the next expected release,
       and a status (current, delayed, unreachable, superseded, discontinued, historical).
@@ -59,21 +77,34 @@ Milestone 27.
       *measured today*.
 - [ ] **A "what changed since the last release" page**, presenting the `fact_revision`
       rows Milestone 29 has recorded since 2026-09-20 and nothing has shown a reader yet.
+      **Not started.**
 - [ ] **`check-live` pins one region per cost-card shape** instead of sampling whatever
       is first in the search index (which drifted to Aberdeen having *no* Zillow
       coverage between when that was written and now — proof the pin has to be explicit,
-      not just less arbitrary). Verified against the warehouse 2026-09-25:
+      not just less arbitrary). **The three regions are found and verified, the code
+      change is not made:**
       - Zillow-priced: Absecon, region 194 (`3400100100`)
       - transaction-priced: Frankford, region 112 (`3403724810`), sr1a through 2026-06-30
       - neither: Walpack, region 51 (`3403776640`), no zhvi, no sr1a ever
 - [ ] **A "report a problem with this figure" link** on every figure, opening a
-      pre-filled GitHub issue naming its source and release.
+      pre-filled GitHub issue naming its source and release. **Not started.**
 - [ ] **The first run of [the completeness standing check](ROADMAP.md#the-completeness-standing-check)**,
-      recorded as the table's first row.
-- [ ] **Doc pass**: README's scheduling section describes the real `launchd` setup
-      instead of "a cron line and a pointer to launchd, not a timer installed on anyone's
-      machine"; ARCHITECTURE gains the toggle/notification decisions; ROADMAP's M27 row
-      and the completeness table close out.
+      recorded as the table's first row. **Not started.**
+- [x] **Doc pass, for what shipped in this slice**: README's scheduling section
+      describes the real `launchd`/toggle/Shortcut setup; ARCHITECTURE #216–#219 record
+      the scheduling decisions. ROADMAP's M27 row and the completeness table stay open
+      until the four items above are built — this is a partial slice, not the milestone
+      closing.
+
+**Flagged for the owner, not decided in code:**
+
+- **Today's real refresh is built and unpublished.** Verifying `scheduled_refresh.py`
+  against the live warehouse pulled this week's real Freddie Mac rate and rebuilt the
+  site (`dist/`, 2026-09-25) — for free, since nothing needed a paid regeneration. It was
+  deliberately not deployed. Say if you want it published.
+- **Loading the two `launchd` agents** makes the schedule and the phone trigger live.
+  Commands are in each `.plist`'s header comment.
+- **Building the two iOS Shortcuts** — steps are in README, "Reaching the reader".
 
 **To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
