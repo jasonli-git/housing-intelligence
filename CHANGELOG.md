@@ -3,6 +3,16 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.23.1] — 2026-09-26
+
+### Fixed
+
+- **`make check-live` failed a correct deploy.** It read the local page before its client
+  code had drawn anything and the live page as soon as its heading appeared, so the
+  first deploy of 0.23.0 compared a drawn map with the "needs JavaScript" placeholder.
+  Both sides are now read once the page has loaded and its network has gone quiet, and
+  every sample of that deploy passes (ARCHITECTURE #234).
+
 ## [0.23.0] — 2026-09-26
 
 **Milestone 27 — refresh reaches the reader.** A weekly refresh now carries through to

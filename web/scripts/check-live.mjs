@@ -165,10 +165,22 @@ async function marker(page) {
   return { heading, meta: normalize(meta), contentSha256 };
 }
 
+// Both sides are read once the page has loaded and its network has gone quiet, which
+// is when its client code has drawn what it fetches. ARCHITECTURE #203 said this and
+// the code never did it: the local side read at `domcontentloaded` and the live side
+// as soon as its heading appeared, so which of them had hydrated was a race. On
+// 2026-09-26 the local home page had drawn its map and the live one still showed "The
+// map needs JavaScript to draw", failing a deploy that was correct (#234).
+async function settle(page) {
+  await page.waitForLoadState("load", { timeout });
+  await page.waitForLoadState("networkidle", { timeout });
+}
+
 async function localMarker(page, route) {
   const file = routeFile(route);
   await access(file);
   await page.goto(localUrl(route), { waitUntil: "domcontentloaded", timeout });
+  await settle(page);
   return marker(page);
 }
 
@@ -191,6 +203,7 @@ async function liveMarker(page, route, expected) {
     await page
       .getByRole("heading", { name: expected.heading, exact: true })
       .waitFor({ timeout });
+    await settle(page);
     if (navigationStatus !== 200) {
       throw new Error(
         `${route} returned HTTP ${navigationStatus ?? "unknown"}`,
