@@ -1,5 +1,5 @@
 # Housing Intelligence Platform Specifications
-## Product Specification v1.2
+## Product Specification v1.3
 
 ### Vision
 
@@ -200,6 +200,14 @@ The platform may or may not offer projected or forecast figures; that is a scopi
 AI may help a reader interpret evidence, but it is not the foundation of trust. Trust comes from transparent sources, reproducible calculations, visible dates, explicit limitations, and an unambiguous separation between what was measured and what was modeled.
 
 This extends principle 5, which orders computation before interpretation, to say that the *result* carries its own kind forward — and it is why citation binding refuses prose stating a figure the packet does not carry.
+
+#### 12. A survey figure carries its margin of error.
+
+A figure estimated from a sample survey — the Census Bureau's American Community Survey, and the tables others build from it, such as HUD's CHAS — is an estimate with a known sampling error, and the platform should never present it as exact. Wherever the platform shows such a figure — on a page, in a table, a chart, a ranking, a report or an API response — it shows the margin of error the publisher reports for it. A figure the platform calculates from survey figures, such as a ratio or a change, carries the margin its inputs imply.
+
+Where the publisher reports no margin for a figure, the platform says so rather than presenting the figure as exact.
+
+This refines principle 11 for the observed figures it leaves most room to misread: a survey estimate is observed, not modeled, and its uncertainty is part of what was observed.
 
 ---
 
@@ -689,3 +697,27 @@ platform already honors implicitly — citation binding refuses prose stating a 
 the packet does not carry, and every observation records its source release and match
 method. Writing the principle down means a future projected mode inherits the
 obligation rather than negotiating it.
+
+---
+
+### Amendments in v1.3
+
+Recorded 2026-09-26. The sections above are the current specification; this section
+says what changed and why, as the earlier amendment sections do.
+
+#### 1. A survey figure carries its margin of error (principle 12)
+
+**Previous idea:** Not addressed. Principle 11 asked for uncertainty on modeled figures
+only. An observed figure was shown as its publisher's estimate, and until Milestone 28
+the platform dropped the margins of error the Census Bureau publishes with every
+American Community Survey estimate.
+
+**Current version:** A new principle 12. Wherever the platform shows a figure
+estimated from a sample survey, it shows the margin of error its publisher reports,
+and figures calculated from survey figures carry the margins their inputs imply. Where
+a publisher reports no margin for a figure, the platform says so.
+
+**Reason:** Decided by the owner on 2026-09-26, reviewing Milestone 28, which carried
+the ACS margins to the pages. As with principle 11, writing it down means a new survey
+source, a new page or a new endpoint inherits the obligation rather than negotiating
+it.
