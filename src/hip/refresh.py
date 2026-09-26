@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable, Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Literal
@@ -31,6 +31,7 @@ from hip.sources.base import (
     ReleaseRef,
     SourceAdapter,
     SourceError,
+    read_discovery,
     redact,
     write_discovery,
 )
@@ -159,6 +160,9 @@ def acquire(
                 yield adapter, RefFailure.of(adapter.source_id, "discover()", exc)
                 discovery = None
             if discovery is not None:
+                discovery = _keep_published(
+                    discovery, read_discovery(raw_dir, discovery.source_id)
+                )
                 write_discovery(raw_dir, discovery)
                 if discovery.outcome == "confirmed":
                     adapter.newest = discovery.newest
@@ -192,6 +196,26 @@ def acquire(
                     yield adapter, adapter.fetch(child, raw_dir=raw_dir, force=force)
                 except (SourceError, OSError) as exc:
                     yield adapter, RefFailure.of(adapter.source_id, child.key, exc)
+
+
+def _keep_published(discovery: Discovery, recorded: Discovery | None) -> Discovery:
+    """Carry a release's publication date forward while that release is still newest.
+
+    `_probe_forward` learns `published` only from the probe that *finds* a newer release,
+    so every later refresh that finds nothing newer returned `None` — and writing that
+    record erased the date the first one had learned. Found building Milestone 27's
+    freshness page: the 2026-09-26 refresh wiped Building Permits' 2026-02-20 and IRS
+    migration's 2026-03-19. A release's publication date does not change while it stays
+    the newest, so the recorded one is still the answer.
+    """
+    if (
+        discovery.published is None
+        and recorded is not None
+        and recorded.newest == discovery.newest
+        and recorded.published is not None
+    ):
+        return replace(discovery, published=recorded.published)
+    return discovery
 
 
 def collect(
