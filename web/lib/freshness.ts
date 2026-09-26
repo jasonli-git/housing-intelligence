@@ -21,19 +21,19 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 export const STATUS_COPY: Record<FreshnessStatus, { label: string; means: string }> = {
   current: {
     label: "Current",
-    means: "Asked on the last refresh, and nothing newer had been released.",
+    means: "When this page was built, the last check had found nothing newer released.",
   },
   pending: {
     label: "Newer release waiting",
     means:
-      "The publisher has released a newer edition that has not taken effect yet. The site " +
-      "keeps showing the edition in force until it does.",
+      "When this page was built, the publisher had released a newer edition that had not " +
+      "taken effect yet. The site keeps showing the edition in force until it does.",
   },
   unreachable: {
     label: "Could not reach",
     means:
-      "The last refresh could not reach the publisher, so these are the figures from the " +
-      "last time it could.",
+      "When this page was built, the last check could not reach the publisher, so these " +
+      "are the figures from the last time it could.",
   },
   not_tracked: {
     label: "No release schedule",
@@ -102,3 +102,17 @@ export function checkedDaysBefore(generatedAt: string, checkedAt: string | null)
 // A week's refresh plus a day's grace: past this, "last checked" is old enough that a
 // reader should be told rather than left to do the subtraction.
 export const STALE_CHECK_DAYS = 8;
+
+/**
+ * How long ago a page was built, beside its build date: "today", "3 days ago". The page
+ * is a snapshot, rebuilt when a figure or a source's status changes, so a quiet stretch
+ * leaves it as it was, and its age is what tells a reader how far "Current" reaches
+ * (ARCHITECTURE #233). Counted in UTC days, like every other date here.
+ */
+export function builtAgo(generatedAt: string, now: Date): string {
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const days = Math.max(0, Math.round((today - utcDay(generatedAt)) / 86_400_000));
+  if (days === 0) return "today";
+  if (days === 1) return "yesterday";
+  return `${days} days ago`;
+}

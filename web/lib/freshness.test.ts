@@ -7,6 +7,7 @@ import {
   nextLabel,
   sortForDisplay,
   STATUS_COPY,
+  builtAgo,
   stillUnderWay,
   throughLabel,
 } from "@/lib/freshness";
@@ -101,5 +102,26 @@ describe("STATUS_COPY", () => {
     // The page cannot back "checked" for a revalidated source: that timestamp is not
     // recorded anywhere it reads from (hip/warehouse/freshness.py).
     expect(STATUS_COPY.not_tracked.means).toContain("does not yet record when it was last read");
+  });
+});
+
+describe("builtAgo", () => {
+  it("counts whole UTC days since the build, as a reader would say it", () => {
+    const built = "2026-09-26T08:00:00Z";
+    expect(builtAgo(built, new Date("2026-09-26T23:59:00Z"))).toBe("today");
+    expect(builtAgo(built, new Date("2026-09-27T00:01:00Z"))).toBe("yesterday");
+    expect(builtAgo(built, new Date("2026-10-06T12:00:00Z"))).toBe("10 days ago");
+  });
+
+  it("never reads a clock set behind the build as the future", () => {
+    expect(builtAgo("2026-09-26T08:00:00Z", new Date("2026-09-20T00:00:00Z"))).toBe("today");
+  });
+});
+
+describe("STATUS_COPY", () => {
+  it("says every status is as of the build, not as of the reading", () => {
+    for (const status of ["current", "pending", "unreachable"] as const) {
+      expect(STATUS_COPY[status].means).toMatch(/^When this page was built/);
+    }
   });
 });

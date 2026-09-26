@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { BuiltAgo } from "@/components/BuiltAgo";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { api, type FreshnessStatus } from "@/lib/api";
@@ -66,8 +67,13 @@ export default async function FreshnessPage() {
               figures describe, when the site last asked for anything newer, and when the data was
               downloaded. A source asked yesterday can still describe last year.
             </p>
+            <p className="meta">
+              Sources are checked every week. This page is rebuilt when a figure moves or a
+              source&rsquo;s status changes, so everything on it is as of its build.
+            </p>
             <p className="meta fresh-built">
-              Built {dayLabel(report.generated_at)} · site version {report.site_version} ·
+              Built {dayLabel(report.generated_at)}
+              <BuiltAgo at={report.generated_at} /> · site version {report.site_version} ·
               dates are UTC
             </p>
           </div>

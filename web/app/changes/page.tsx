@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { BuiltAgo } from "@/components/BuiltAgo";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { api, type RevisionGroup } from "@/lib/api";
@@ -59,7 +60,8 @@ export default async function ChangesPage() {
               {report.recorded_since
                 ? `Earlier values kept since ${dayLabel(report.recorded_since)}`
                 : "No earlier values kept yet"}{" "}
-              · built {dayLabel(report.generated_at)} · dates are UTC · changes are relative
+              · built {dayLabel(report.generated_at)}
+              <BuiltAgo at={report.generated_at} /> · dates are UTC · changes are relative
               to the earlier value
             </p>
           </div>

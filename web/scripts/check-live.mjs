@@ -151,8 +151,15 @@ async function marker(page) {
         return copy.textContent ?? "";
       })
     : "";
+  // Text worked out from the reader's clock (`data-volatile`, e.g. "built 3 days ago")
+  // is left out: it is not content the build decided, and the two sides can be read
+  // either side of midnight.
   const content = normalize(
-    (await page.locator("main").first().textContent()) ?? "",
+    (await page.locator("main").first().evaluate((node) => {
+      const copy = node.cloneNode(true);
+      copy.querySelectorAll("[data-volatile]").forEach((part) => part.remove());
+      return copy.textContent ?? "";
+    })) ?? "",
   );
   const contentSha256 = createHash("sha256").update(content).digest("hex");
   return { heading, meta: normalize(meta), contentSha256 };
