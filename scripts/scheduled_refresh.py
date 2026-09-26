@@ -74,7 +74,20 @@ def _refresh_mode() -> str:
 
 
 def main() -> int:
+    from hip.refresh import checkout_problem
+
     print(f"=== {datetime.now(UTC).isoformat()} scheduled refresh starting ===")
+    # Before anything runs: this checkout is shared with development, and only a
+    # clean `main` may refresh the warehouse or deploy (`checkout_problem`).
+    problem = checkout_problem(REPO_ROOT)
+    if problem:
+        print(f"skipped: {problem}")
+        _notify(
+            "Weekly refresh skipped",
+            f"{problem}. The data was not refreshed and nothing was deployed; "
+            "merge or put the work away, and the next run picks it up.",
+        )
+        return 2
     before = _completed_at()
 
     refresh_code = _hip("refresh")

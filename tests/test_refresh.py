@@ -428,3 +428,53 @@ def test_handling_an_absent_request_does_not_raise(tmp_path: Path) -> None:
     """A launchd agent firing twice for one write must not crash the second time."""
     refresh.handle_regenerate_request(tmp_path)  # nothing to consume; must not raise
     assert refresh.regenerate_requested(tmp_path) is False
+
+
+def _repo(tmp_path: Path) -> Path:
+    """A throwaway git repository on a clean `main`, with one tracked file."""
+    import subprocess
+
+    def git(*args: str) -> None:
+        subprocess.run(
+            ["git", "-c", "user.name=t", "-c", "user.email=t@example.com", *args],
+            cwd=tmp_path,
+            check=True,
+            capture_output=True,
+        )
+
+    git("init", "-q", "-b", "main")
+    (tmp_path / "app.py").write_text("x = 1\n")
+    (tmp_path / "reports").mkdir()
+    (tmp_path / "reports" / "county.md").write_text("old\n")
+    git("add", ".")
+    git("commit", "-q", "-m", "start")
+    return tmp_path
+
+
+def test_only_a_clean_main_may_run_the_schedule(tmp_path: Path) -> None:
+    """The scheduled scripts run from the checkout development happens in."""
+    import subprocess
+
+    repo = _repo(tmp_path)
+    assert refresh.checkout_problem(repo) is None
+
+    # The schedule's own output — `hip pack --report` rewriting the county reports —
+    # must not block the next week's run.
+    (repo / "reports" / "county.md").write_text("new\n")
+    assert refresh.checkout_problem(repo) is None
+
+    (repo / "app.py").write_text("x = 2\n")
+    assert "uncommitted work: app.py" in (refresh.checkout_problem(repo) or "")
+    subprocess.run(["git", "checkout", "-q", "app.py"], cwd=repo, check=True)
+
+    # An untracked page would be built into the site just the same.
+    (repo / "page.tsx").write_text("export {}\n")
+    assert "page.tsx" in (refresh.checkout_problem(repo) or "")
+    (repo / "page.tsx").unlink()
+
+    subprocess.run(["git", "checkout", "-q", "-b", "feature"], cwd=repo, check=True)
+    assert refresh.checkout_problem(repo) == "the checkout is on 'feature', not main"
+
+
+def test_a_directory_that_is_not_a_repository_may_not_run(tmp_path: Path) -> None:
+    assert (refresh.checkout_problem(tmp_path) or "").startswith("git could not be read")

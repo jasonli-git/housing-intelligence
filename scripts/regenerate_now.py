@@ -45,7 +45,11 @@ def _notify(title: str, message: str, *, priority: int = 0) -> None:
 
 def main() -> int:
     from hip.config import get_settings
-    from hip.refresh import handle_regenerate_request, regenerate_requested
+    from hip.refresh import (
+        checkout_problem,
+        handle_regenerate_request,
+        regenerate_requested,
+    )
 
     settings = get_settings()
     print(f"=== {datetime.now(UTC).isoformat()} regenerate-now triggered ===")
@@ -58,6 +62,18 @@ def main() -> int:
         print("no pending request; nothing to do")
         return 0
     handle_regenerate_request(settings.gate_dir)
+
+    # Consumed first, so a refused request does not fire again on the next filesystem
+    # event; the owner asks again once the checkout is back on a clean `main`.
+    problem = checkout_problem(REPO_ROOT)
+    if problem:
+        print(f"skipped: {problem}")
+        _notify(
+            "Regenerate now skipped",
+            f"{problem}. Nothing was generated or deployed; ask again once main "
+            "is checked out and clean.",
+        )
+        return 2
 
     # A free check first: someone can tap "Regenerate Now" when nothing is actually
     # stale, and that must cost nothing.

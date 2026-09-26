@@ -19,6 +19,7 @@ nothing changed* and *never asked*, so the report keeps them apart.
 from __future__ import annotations
 
 import json
+import subprocess
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime
@@ -490,3 +491,43 @@ def request_regenerate_now(gate_dir: Path) -> None:
 def handle_regenerate_request(gate_dir: Path) -> None:
     """Consume a pending "regenerate now" request so it fires exactly once."""
     (gate_dir / TRIGGER_FILE).unlink(missing_ok=True)
+
+
+# Written by every scheduled run itself (`hip pack --report` rewrites the county
+# reports), so a change under it is the schedule's own output, not someone's work.
+_GENERATED = ("reports/",)
+
+
+def checkout_problem(repo_root: Path) -> str | None:
+    """Why this checkout must not run the scheduled refresh, or None when it may.
+
+    The `launchd` agents run the scripts from the working copy they live in, which is
+    also where development happens — the owner's, Claude's and Codex's, in one shared
+    checkout. A Friday run from a feature branch, or from `main` with work in progress,
+    would run that code's pipeline against the one warehouse and deploy it as the public
+    site, unreviewed. So only a clean `main` runs. Untracked files count as well as
+    edits: a new page directory nobody has committed would still be built.
+    """
+
+    def git(*args: str) -> str:
+        # Not stripped: a porcelain line starts with its status column, which is a
+        # space for an unstaged edit (" M app.py"), and the path starts at column 3.
+        return subprocess.run(
+            ["git", *args], cwd=repo_root, capture_output=True, text=True, check=True
+        ).stdout
+
+    try:
+        branch = git("rev-parse", "--abbrev-ref", "HEAD").strip()
+        changed = [
+            line[3:]
+            for line in git("status", "--porcelain").splitlines()
+            if not line[3:].startswith(_GENERATED)
+        ]
+    except (OSError, subprocess.CalledProcessError) as exc:
+        return f"git could not be read ({exc})"
+    if branch != "main":
+        return f"the checkout is on {branch!r}, not main"
+    if changed:
+        shown = ", ".join(changed[:3]) + (" and more" if len(changed) > 3 else "")
+        return f"main has uncommitted work: {shown}"
+    return None
