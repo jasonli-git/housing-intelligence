@@ -49,6 +49,11 @@ web/next-env.d.ts
 # Deployable output from `make publish`: two trees for two hosts, both rebuildable.
 dist/
 
+# The scheduled refresh's own output (Milestone 27) — machine-local, and the reason it
+# exists is so a failure has somewhere to be read from after the Pushover notification
+# already said something went wrong.
+logs/
+
 # OS
 .DS_Store
 

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Milestone 27's on-demand "regenerate now" — see scripts/regenerate_now.py. Fires the
+  instant the watched trigger file changes: from this Mac (`hip regenerate-now`) or an
+  iPhone Shortcut writing the same file through iCloud Drive. No polling.
+
+  WatchPaths fires once when the agent is first loaded if the path already exists
+  (a documented launchd quirk, not a bug here) — regenerate_now.py's own first check is
+  "is a request actually pending", so that harmless extra firing does nothing.
+
+  Install:
+    cp scripts/launchd/com.housing-intelligence.regenerate-now.plist \
+       ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.housing-intelligence.regenerate-now.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.housing-intelligence.regenerate-now.plist
+    rm ~/Library/LaunchAgents/com.housing-intelligence.regenerate-now.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.housing-intelligence.regenerate-now</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/caffeinate</string>
+        <string>-i</string>
+        <string>/opt/homebrew/bin/uv</string>
+        <string>run</string>
+        <string>python</string>
+        <string>scripts/regenerate_now.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/jasonli/Developer/PROJECTS/housing-intelligence</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <!-- The one path this agent exists to watch: Settings.gate_dir's trigger file
+         (`RefreshGate`/`TRIGGER_FILE` in src/hip/refresh.py). Real absolute path, since
+         this only ever runs on this Mac under this account. -->
+    <key>WatchPaths</key>
+    <array>
+        <string>/Users/jasonli/Library/Mobile Documents/com~apple~CloudDocs/HousingPipeline/regenerate-now.trigger</string>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/jasonli/Developer/PROJECTS/housing-intelligence/logs/regenerate-now.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/jasonli/Developer/PROJECTS/housing-intelligence/logs/regenerate-now.log</string>
+</dict>
+</plist>
