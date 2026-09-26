@@ -568,6 +568,8 @@ body > main { flex: 1 0 auto; width: 100%; }
 .region-standout-card .term:hover,
 .region-standout-card .term:focus-visible { text-decoration-color: #ffffff; }
 .region-standout-card .gl { position: static; }
+/* A survey figure's margin, legible on the card's dark ground (Milestone 28). */
+.region-standout-card .margin { color: rgb(255 255 255 / 0.82); }
 .region-standout-card .tip {
   left: 1rem; right: 1rem; width: auto; top: auto; margin-top: 6px;
   background: var(--surface-1); color: var(--text-secondary);
@@ -1252,7 +1254,7 @@ tr[data-status="pending"] .fresh-status {
 .ranks th { padding: 0 0 0.4rem; border-bottom: 1px solid var(--border); }
 .ranks td { padding: 0.42rem 0; border-bottom: 1px solid var(--grid); }
 .ranks td + td, .ranks th + th { padding-left: 0.8rem; }
-.ranks .pos { width: 2.2em; color: var(--text-muted); }
+.ranks .pos { width: 2.2em; color: var(--text-muted); white-space: nowrap; } /* "1–12" (M28) */
 .ranks tr.on td { background: color-mix(in srgb, var(--text-primary) 6%, var(--surface-2)); }
 .ranks tr.on td:first-child { box-shadow: inset 2px 0 0 var(--text-primary); }
 /* Place names in the text color, not a generic link blue (Milestone 23): the row is

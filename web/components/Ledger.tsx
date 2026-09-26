@@ -331,10 +331,11 @@ export function Ledger({
                     </td>
                     <td className="value">
                       {formatMetric(metric.end_value, metric.unit, metric.metric_id)}
+                      {/* The change's own end: the observation it compares (0018). */}
                       <Margin
                         label={marginLabel(
                           metric.end_value,
-                          uncertainties?.value.get(metric.metric_id)?.margin ?? null,
+                          uncertainties?.change.get(metric.metric_id)?.end ?? null,
                           metric.unit,
                           metric.metric_id,
                         )}

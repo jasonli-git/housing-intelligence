@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { Margin } from "@/components/Ledger";
 import type { MapFile } from "@/lib/mapdata";
+import { rankRanges } from "@/lib/uncertainty";
 
 /** How many towns are listed before the reader asks for the rest, as `/afford` does. */
 const FIRST_PAGE = 25;
@@ -16,6 +18,10 @@ type Channel = {
   basis: string;
   direction: string;
   format: (value: number) => string;
+  /** region_id -> the margin of its figure, for a survey measure (Milestone 28). */
+  margins?: Record<string, number>;
+  /** A margin as it reads beside its figure: "± $2,565", "± 4.0%". */
+  marginOf?: (value: number, margin: number | null) => string | null;
 };
 
 /**
@@ -48,22 +54,43 @@ export function TownRanks({
 
   const readings = measure.readings;
   const towns = file.municipality.outlines;
-  const rows = towns
-    .map((town) => ({
-      id: Number(town.id),
-      name: town.label ?? town.name,
-      value: readings[String(town.id)],
-    }))
-    .filter(
-      (row): row is typeof row & { value: number } => row.value !== undefined,
-    )
-    // Rank 1 is the top of the measure's own direction, as the county ranking's is:
-    // the largest figure, unless a smaller one is the better end.
-    .sort((a, b) =>
-      measure.direction === "lower_is_better"
-        ? a.value - b.value
-        : b.value - a.value,
-    );
+  // Kept between hovers, which re-render this list, so the ranges below are too.
+  const rows = useMemo(
+    () =>
+      towns
+        .map((town) => ({
+          id: Number(town.id),
+          name: town.label ?? town.name,
+          value: readings[String(town.id)],
+        }))
+        .filter(
+          (row): row is typeof row & { value: number } => row.value !== undefined,
+        )
+        // Rank 1 is the top of the measure's own direction, as the county ranking's is:
+        // the largest figure, unless a smaller one is the better end.
+        .sort((a, b) =>
+          measure.direction === "lower_is_better"
+            ? a.value - b.value
+            : b.value - a.value,
+        ),
+    [towns, readings, measure.direction],
+  );
+
+  // The places a survey measure's margins can back, among these towns only — the map's
+  // figures carry the counties too — by the warehouse's own test (Milestone 28).
+  const ranges = useMemo(
+    () =>
+      rankRanges(
+        Object.fromEntries(rows.map((row) => [String(row.id), row.value])),
+        measure.margins,
+        measure.direction,
+      ),
+    [rows, measure.margins, measure.direction],
+  );
+  const position = (id: number, rank: number) => {
+    const range = ranges.get(String(id));
+    return range && range.best !== range.worst ? `${range.best}–${range.worst}` : String(rank);
+  };
 
   const shown = all ? rows : rows.slice(0, FIRST_PAGE);
 
@@ -109,7 +136,7 @@ export function TownRanks({
                 onMouseEnter={() => onHover(row.id)}
                 onMouseLeave={() => onHover(null)}
               >
-                <td className="num pos">{index + 1}</td>
+                <td className="num pos">{position(row.id, index + 1)}</td>
                 <td>
                   <Link
                     href={`/regions/${row.id}`}
@@ -119,7 +146,15 @@ export function TownRanks({
                     {row.name}
                   </Link>
                 </td>
-                <td className="num">{measure.format(row.value)}</td>
+                <td className="num">
+                  {measure.format(row.value)}
+                  <Margin
+                    label={
+                      measure.marginOf?.(row.value, measure.margins?.[String(row.id)] ?? null) ??
+                      null
+                    }
+                  />
+                </td>
                 <td className="go">
                   <Link
                     href={`/regions/${row.id}`}

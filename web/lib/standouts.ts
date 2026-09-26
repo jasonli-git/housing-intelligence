@@ -14,7 +14,13 @@ import type { Packet, PacketLevel, PacketMetric } from "@/lib/api";
 import { formatChange, formatMetric } from "@/lib/format";
 import { periodLabel } from "@/lib/periods";
 import { ordinal } from "@/lib/ranks";
-import type { Uncertainties, Uncertainty } from "@/lib/uncertainty";
+import {
+  changeMarginLabel,
+  marginLabel,
+  type Uncertainties,
+  type Uncertainty,
+  withMargin,
+} from "@/lib/uncertainty";
 
 /** `HIGHLIGHT_DEPTH` and `MIN_COHORT` in `hip/packets/assemble.py`. */
 const DEPTH = 3;
@@ -38,6 +44,8 @@ export type StandOut = {
   rank: string;
   /** What it stands out on: a change, "+319.3%", or a value, "$12,238". */
   figure: string;
+  /** A survey figure's margin beneath it, "± 4.0%" (Milestone 28); null otherwise. */
+  margin: string | null;
   /** The readings behind a change, "538 in 2019, 2,256 in 2024", or where a value sits, "the highest of 21". */
   detail: string;
 };
@@ -48,11 +56,18 @@ function figureOf(value: number, unit: string, metricId: string): string {
   return formatMetric(value, unit, metricId);
 }
 
-function changeDetail(metric: PacketMetric | undefined): string {
+function changeDetail(metric: PacketMetric | undefined, u?: Uncertainty): string {
   if (!metric) return "";
-  const at = (value: number, date: string) =>
-    `${figureOf(value, metric.unit, metric.metric_id)} in ${periodLabel(date, metric.metric_id)}`;
-  return `${at(metric.start_value, metric.window_start)}, ${at(metric.end_value, metric.window_end)}`;
+  // Each reading with its own margin where it is a survey's (Milestone 28).
+  const at = (value: number, margin: number | null | undefined, date: string) =>
+    `${withMargin(
+      figureOf(value, metric.unit, metric.metric_id),
+      marginLabel(value, margin ?? null, metric.unit, metric.metric_id),
+    )} in ${periodLabel(date, metric.metric_id)}`;
+  return (
+    `${at(metric.start_value, u?.start, metric.window_start)}, ` +
+    `${at(metric.end_value, u?.end, metric.window_end)}`
+  );
 }
 
 /** A rank range that is more than one place (Milestone 28), or null. */
@@ -114,7 +129,8 @@ export function standOuts(
         group: h.position === "leading" ? "leads" : "lags",
         rank: rankText(h.rank, h.of, u),
         figure: formatChange(h.pct_change),
-        detail: changeDetail(metrics.get(h.metric_id)),
+        margin: changeMarginLabel(u?.margin ?? null, h.metric_id),
+        detail: changeDetail(metrics.get(h.metric_id), u),
       },
     ];
   });
@@ -130,6 +146,7 @@ export function standOuts(
         group: "value",
         rank: rankText(level.rank!, level.of!, u),
         figure: figureOf(level.value, level.unit, level.metric_id),
+        margin: marginLabel(level.value, u?.margin ?? null, level.unit, level.metric_id),
         detail,
       },
     ];

@@ -11,6 +11,7 @@
 
 import { formatMetric } from "@/lib/format";
 import { periodLabel } from "@/lib/periods";
+import { changeMargin, changeMarginLabel, marginLabel, withMargin } from "@/lib/uncertainty";
 
 /**
  * A reading as the trends carry it to the browser: its period's end and its value. The
@@ -18,7 +19,8 @@ import { periodLabel } from "@/lib/periods";
  * second date on each of several hundred points per page cost about 14 KB a page
  * (ARCHITECTURE #148).
  */
-export type Point = { period_end: string; value: number };
+/** A reading; `margin` is a survey estimate's 90% margin of error (Milestone 28). */
+export type Point = { period_end: string; value: number; margin?: number | null };
 
 export type Since = {
   from: Point;
@@ -122,9 +124,22 @@ export function sinceLine(series: Series, year: number): SinceLine {
     const why = first !== null && year < first ? `; the series begins in ${first}` : "";
     return { metricId, label, text: `no reading for ${year}${why}` };
   }
-  const fmt = (p: Point) => formatMetric(p.value, unit, metricId);
+  // A survey's readings carry their margins, and so does the change between them, by the
+  // same formula as the warehouse's own changes (Milestone 28).
+  const fmt = (p: Point) =>
+    withMargin(
+      formatMetric(p.value, unit, metricId),
+      marginLabel(p.value, p.margin ?? null, unit, metricId),
+    );
   const when = (p: Point) => periodLabel(p.period_end, metricId);
-  const change = result.pct === 0 ? "unchanged" : `${result.pct > 0 ? "up" : "down"} ${Math.abs(result.pct).toFixed(1)}%`;
+  const moved = result.pct === 0 ? "unchanged" : `${result.pct > 0 ? "up" : "down"} ${Math.abs(result.pct).toFixed(1)}%`;
+  const change = withMargin(
+    moved,
+    changeMarginLabel(
+      changeMargin(result.from.value, result.to.value, result.from.margin, result.to.margin),
+      metricId,
+    ),
+  );
   return {
     metricId,
     label,

@@ -129,6 +129,7 @@ function StandOutRow({
               <FloatingMetricTerm metricId={item.metric_id} label={item.label} />
             </span>
             <span className="region-standout-figure">{item.figure}</span>
+            {item.margin && <span className="margin">{item.margin}</span>}
             {item.detail && <span className="region-standout-detail">{item.detail}</span>}
           </li>
         ))}

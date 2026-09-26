@@ -99,6 +99,9 @@ export default async function NewJerseyPage() {
                 // The ranks a survey measure's margins leave it (Milestone 28).
                 best: item.rank_best ?? null,
                 worst: item.rank_worst ?? null,
+                // And the margins of its change and its latest value (0018).
+                changeMargin: item.margin_of_error ?? null,
+                latestMargin: item.end_margin ?? null,
               })),
             };
           }),

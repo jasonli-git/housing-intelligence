@@ -30,6 +30,14 @@ describe("statewide profile", () => {
     expect(item.value).toBe("+50.5%");
     expect(item.context?.words).toBe("over five years to Q2 2026 · 442.7, about 4.4× its 1991 Q1 level");
   });
+  it("puts a statewide survey figure's margin beneath it, and none beside an index (M28)", () => {
+    const income = { ...level("acs_median_hh_income", 101050), unit: "usd", margin_of_error: 540 };
+    const [item] = stateProfile([income]);
+    expect(item.value).toBe("$101,050");
+    expect(item.margin).toBe("± $540");
+    const [index] = stateProfile([level("fhfa_hpi", 442.71)], [{ metric_id: "fhfa_hpi", pct_change: 50.5 }]);
+    expect(index.margin).toBeNull();
+  });
   it("preserves other published levels and handles missing data without placeholder figures", () => {
     expect(stateProfile([])).toEqual([]);
     const item = stateProfile([{ ...level("sr1a_median_sale_price", 520000), unit: "usd" }])[0];

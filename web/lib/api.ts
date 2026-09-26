@@ -44,6 +44,9 @@ export type Headline = {
   pct_change_margin?: number | null;
   rank_best?: number | null;
   rank_worst?: number | null;
+  /** The margins of `start_value` and `end_value` (migration 0018). */
+  start_margin?: number | null;
+  end_margin?: number | null;
 };
 
 /** A metric's most recent value and its rank by value, not by change. */
@@ -113,6 +116,10 @@ export type RankedRegion = {
   /** The ranks it could plausibly hold given margins of error; null without (M28). */
   rank_best?: number | null;
   rank_worst?: number | null;
+  /** The margin of `value`, whichever the basis, and of each end of a change (0018). */
+  margin_of_error?: number | null;
+  start_margin?: number | null;
+  end_margin?: number | null;
 };
 
 export type Ranking = {
@@ -134,6 +141,8 @@ export type Observation = {
   source_id: string;
   vintage: string;
   match_method: string;
+  /** A survey estimate's 90% margin of error; null for any other source (M28). */
+  margin_of_error?: number | null;
 };
 
 /**

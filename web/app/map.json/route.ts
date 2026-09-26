@@ -32,9 +32,15 @@ export async function GET() {
 
   const values: MapFile["values"] = {};
   const changes: MapFile["changes"] = {};
+  // A survey measure's margins beside its figures (Milestone 28), to four significant
+  // figures: the page prints fewer, and full precision would only add weight.
+  const margins: NonNullable<MapFile["margins"]> = {};
+  const changeMargins: NonNullable<MapFile["changeMargins"]> = {};
+  const trim = (margin: number) => Number(margin.toPrecision(4));
   await Promise.all(
     (catalog ?? []).map(async (metric) => {
       const byRegion: Record<string, number> = {};
+      const marginBy: Record<string, number> = {};
       await Promise.all(
         // Both levels into one table: the map switches between them as the reader zooms,
         // and region ids are unique across levels, so they cannot collide.
@@ -42,19 +48,24 @@ export async function GET() {
           // 1000 rather than a page: 564 municipalities have to arrive whole, or the
           // map would shade the first 25 and leave the state blank.
           const ranking = await api.values(metric.metric_id, level);
-          for (const item of ranking?.items ?? [])
+          for (const item of ranking?.items ?? []) {
             byRegion[item.region_id] = item.value;
+            if (item.margin_of_error != null) marginBy[item.region_id] = trim(item.margin_of_error);
+          }
         }),
       );
       if (Object.keys(byRegion).length > 0) values[metric.metric_id] = byRegion;
+      if (Object.keys(marginBy).length > 0) margins[metric.metric_id] = marginBy;
 
       // And the movement over each window the page offers, which is what the map
       // colors by. Rounded to a tenth of a percent — the precision the page prints —
       // because at full precision these are four times the bytes.
       const byWindow: Record<string, Record<string, number>> = {};
+      const marginsByWindow: Record<string, Record<string, number>> = {};
       await Promise.all(
         WINDOWS.map(async ({ key }) => {
           const overWindow: Record<string, number> = {};
+          const marginOver: Record<string, number> = {};
           await Promise.all(
             ["county", "municipality"].map(async (level) => {
               const ranking = await api.rankings(
@@ -65,14 +76,20 @@ export async function GET() {
               );
               for (const item of ranking?.items ?? []) {
                 overWindow[item.region_id] = Math.round(item.value * 10) / 10;
+                // Rounded as the change is: the page prints both to a tenth.
+                if (item.margin_of_error != null)
+                  marginOver[item.region_id] = Math.round(item.margin_of_error * 10) / 10;
               }
             }),
           );
           if (Object.keys(overWindow).length > 0) byWindow[key] = overWindow;
+          if (Object.keys(marginOver).length > 0) marginsByWindow[key] = marginOver;
         }),
       );
       if (Object.keys(byWindow).length > 0)
         changes[metric.metric_id] = byWindow;
+      if (Object.keys(marginsByWindow).length > 0)
+        changeMargins[metric.metric_id] = marginsByWindow;
     }),
   );
 
@@ -113,6 +130,8 @@ export async function GET() {
     municipalityWide: { noun: "municipality", outlines: named(wideTowns) },
     values,
     changes,
+    margins,
+    changeMargins,
   };
   return Response.json(file);
 }

@@ -2,6 +2,7 @@ import type { Headline, PacketLevel } from "@/lib/api";
 import { definitionOf } from "@/lib/definitions";
 import { formatChange, formatMetric } from "@/lib/format";
 import { periodLabel } from "@/lib/periods";
+import { marginLabel } from "@/lib/uncertainty";
 import type { ProfileItem } from "@/lib/verdict";
 
 /** Each index's baseline: the quarter it was set to 100. */
@@ -20,7 +21,10 @@ const INDEX_BASES: Record<string, string> = {
  * nor baseline at a glance.
  */
 export function stateProfile(
-  levels: Pick<PacketLevel, "metric_id" | "label" | "unit" | "value" | "period_end">[],
+  levels: (Pick<PacketLevel, "metric_id" | "label" | "unit" | "value" | "period_end"> & {
+    /** A survey figure's 90% margin, from the statewide summary (Milestone 28). */
+    margin_of_error?: number | null;
+  })[],
   changes: Pick<Headline, "metric_id" | "pct_change">[] = [],
 ): ProfileItem[] {
   return levels.filter((level) => !["pep_population", "acs_population"].includes(level.metric_id)).map((level) => {
@@ -34,6 +38,10 @@ export function stateProfile(
       metric_id: level.metric_id,
       label: level.label,
       value: change ? formatChange(change.pct_change) : index,
+      // An index publishes no sampling error; a survey figure shows its margin beneath.
+      margin: change
+        ? null
+        : marginLabel(level.value, level.margin_of_error ?? null, level.unit, level.metric_id),
       definition: definition ? `${definition.what} ${definition.why}` : level.label,
       context: {
         words: change

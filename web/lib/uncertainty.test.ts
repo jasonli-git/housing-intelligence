@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import type { Summary } from "@/lib/api";
 import {
+  changeMargin,
   changeMarginLabel,
   cohortLabel,
   marginLabel,
+  rankRanges,
   rankReading,
   uncertaintiesFrom,
+  withMargin,
 } from "@/lib/uncertainty";
 
 const counties = { count: 21, noun: "counties", scope: "New Jersey" };
@@ -93,12 +96,77 @@ describe("uncertaintiesFrom", () => {
         { metric_id: "acs_median_hh_income", margin_of_error: 2565, rank_best: 10, rank_worst: 12 },
       ],
       headlines: [
-        { metric_id: "acs_median_hh_income", pct_change_margin: 4, rank_best: 3, rank_worst: 20 },
+        {
+          metric_id: "acs_median_hh_income",
+          pct_change_margin: 4,
+          rank_best: 3,
+          rank_worst: 20,
+          start_margin: 1990,
+          end_margin: 2565,
+        },
       ],
     } as unknown as Summary;
     const found = uncertaintiesFrom(summary);
     expect(found.value.get("acs_median_hh_income")).toEqual({ margin: 2565, best: 10, worst: 12 });
-    expect(found.change.get("acs_median_hh_income")).toEqual({ margin: 4, best: 3, worst: 20 });
+    expect(found.change.get("acs_median_hh_income")).toEqual({
+      margin: 4,
+      best: 3,
+      worst: 20,
+      start: 1990,
+      end: 2565,
+    });
     expect(uncertaintiesFrom(null).value.size).toBe(0);
+  });
+});
+
+describe("withMargin", () => {
+  it("runs a figure and its margin together, a clipped share's range in brackets", () => {
+    expect(withMargin("$100,645", "± $2,565")).toBe("$100,645 ± $2,565");
+    expect(withMargin("12.0%", "0.0% to 40.0%")).toBe("12.0% (0.0% to 40.0%)");
+    expect(withMargin("$1,500", null)).toBe("$1,500");
+  });
+});
+
+describe("changeMargin", () => {
+  it("is the warehouse's ratio formula, and null without both ends' margins", () => {
+    // 100 · sqrt(2565² + (100645/81000)² · 1990²) / 81000
+    expect(changeMargin(81000, 100645, 1990, 2565)).toBeCloseTo(4.4, 2);
+    expect(changeMargin(81000, 100645, null, 2565)).toBeNull();
+    expect(changeMargin(0, 1, 1, 1)).toBeNull();
+  });
+});
+
+describe("rankRanges", () => {
+  it("moves a region past another only where the Census's test finds a difference", () => {
+    const values = { a: 100, b: 98, c: 50 };
+    const margins = { a: 3, b: 3, c: 3 };
+    const ranges = rankRanges(values, margins, "higher_is_better");
+    // a and b differ by 2, inside sqrt(3² + 3²) ≈ 4.2: either could be first.
+    expect(ranges.get("a")).toEqual({ best: 1, worst: 2 });
+    expect(ranges.get("b")).toEqual({ best: 1, worst: 2 });
+    expect(ranges.get("c")).toEqual({ best: 3, worst: 3 });
+  });
+
+  it("gives a region with no margin the whole list, and nothing without margins", () => {
+    const values = { a: 100, b: 50, c: 10 };
+    const ranges = rankRanges(values, { a: 1, c: 1 }, "higher_is_better");
+    expect(ranges.get("b")).toEqual({ best: 1, worst: 3 });
+    expect(ranges.get("a")).toEqual({ best: 1, worst: 2 });
+    expect(rankRanges(values, undefined, "higher_is_better").size).toBe(0);
+  });
+
+  it("reads lower-is-better from the small end", () => {
+    const ranges = rankRanges({ a: 1, b: 10 }, { a: 1, b: 1 }, "lower_is_better");
+    expect(ranges.get("a")).toEqual({ best: 1, worst: 1 });
+  });
+});
+
+describe("a survey figure without a margin (SPEC principle 12)", () => {
+  it("says so, where any other source's figure stays bare", () => {
+    expect(marginLabel(0.42, null, "ratio", "chas_renter_cost_burden")).toBe("no margin available");
+    expect(marginLabel(450985, null, "usd", "zhvi_sfr")).toBeNull();
+    expect(changeMarginLabel(null, "acs_median_hh_income")).toBe("no margin available");
+    expect(changeMarginLabel(null, "zhvi_sfr")).toBeNull();
+    expect(changeMarginLabel(null)).toBeNull();
   });
 });

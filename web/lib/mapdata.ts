@@ -78,12 +78,21 @@ export type MapFile = {
    * prints: at full precision these are 125KB where they are now 29KB gzipped.
    */
   changes: Record<string, Record<string, Record<string, number>>>;
+  /**
+   * The same two, as 90% margins of error: metric_id -> region_id for `values`, and
+   * metric_id -> window -> region_id for `changes` (Milestone 28). Survey measures only,
+   * so every other measure costs nothing here.
+   */
+  margins?: Record<string, Record<string, number>>;
+  changeMargins?: Record<string, Record<string, Record<string, number>>>;
 };
 
 /** What the map is drawing: a movement over a window, or a level where none is published. */
 export type Basis = {
   values: Record<string, number>;
   kind: "change" | "level";
+  /** The margins of `values`, for a survey measure (Milestone 28). */
+  margins?: Record<string, number>;
 };
 
 /**
@@ -102,8 +111,8 @@ export function readingsFor(
 ): Basis {
   const change = file?.changes[metric]?.[window];
   if (change && Object.keys(change).length > 0)
-    return { values: change, kind: "change" };
-  return { values: file?.values[metric] ?? {}, kind: "level" };
+    return { values: change, kind: "change", margins: file?.changeMargins?.[metric]?.[window] };
+  return { values: file?.values[metric] ?? {}, kind: "level", margins: file?.margins?.[metric] };
 }
 
 function packRing(coordinates: number[][]): PackedRing {

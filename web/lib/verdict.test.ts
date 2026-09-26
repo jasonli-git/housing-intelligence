@@ -246,7 +246,7 @@ describe("housingProfile", () => {
       "Households that own": { words: "fewer than most", rank: { value: 17, of: 21 } },
       "Apartment buildings": { words: "more than most", rank: { value: 6, of: 21 } },
       "Homes standing empty": { words: "near the middle", rank: { value: 11, of: 21 } },
-      People: { words: "up 4.2%, 2018 to 2023", rank: null },
+      People: { words: "up 4.2% (no margin available), 2018 to 2023", rank: null },
     });
   });
 
@@ -336,6 +336,57 @@ describe("verdict with margins of error (Milestone 28)", () => {
   it("reads as before where the figure has no margin", () => {
     const plain = verdict(frankford, metrics, levels);
     expect(plain).toContain("the 246th least expensive");
+  });
+});
+
+describe("the rank note, the tradeoff and the profile with margins (Milestone 28)", () => {
+  const levels = [
+    level("acs_median_home_value", { value: 418400, rank: 316, of: 561 }),
+    level("modiv_median_tax_bill", { value: 12038, rank: 20, of: 561 }),
+  ];
+  const metrics = [metric("acs_median_home_value", { pct_change: 30.7, rank: 374, of: 561 })];
+  const uncertainties = {
+    value: new Map([["acs_median_home_value", { margin: 31488, best: 259, worst: 368 }]]),
+    change: new Map([["acs_median_home_value", { margin: 15.7, best: 58, worst: 549 }]]),
+  };
+
+  it("states the rank note's ranks as the ranges the margins leave", () => {
+    expect(rankBasisExample("Frankford", metrics, levels, uncertainties)).toBe(
+      "Frankford’s median owner-reported home value is between 58th and 549th of 561 by " +
+        "its five-year rise and between 259th and 368th of 561 by value.",
+    );
+  });
+
+  it("names no tradeoff when the home value's range straddles the middle", () => {
+    // 316th of 561 alone reads as cheaper than most; 259th to 368th does not.
+    expect(tradeoff(TOWN, levels)).toContain("cost less than in most municipalities");
+    expect(tradeoff(TOWN, levels, uncertainties)).toBeNull();
+  });
+
+  it("still names it when the whole range agrees", () => {
+    const sure = {
+      ...uncertainties,
+      value: new Map([["acs_median_home_value", { margin: 9000, best: 300, worst: 340 }]]),
+    };
+    expect(tradeoff(TOWN, levels, sure)).toContain("cost less than in most municipalities");
+  });
+
+  it("puts a survey tile's margin beneath its value", () => {
+    const owned = level("acs_homeownership_rate", {
+      unit: "ratio",
+      value: 0.501,
+      rank: 300,
+      of: 561,
+    });
+    const found = {
+      value: new Map([["acs_homeownership_rate", { margin: 0.023, best: 250, worst: 350 }]]),
+      change: new Map(),
+    };
+    const [tile] = housingProfile([owned], [], found);
+    expect(tile.value).toBe("50.1%");
+    expect(tile.margin).toBe("± 2.3 points");
+    // A survey figure without a margin says so rather than reading as exact (SPEC 12).
+    expect(housingProfile([owned], [])[0].margin).toBe("no margin available");
   });
 });
 

@@ -38,6 +38,7 @@ export function StandOuts({ name, peers, items }: { name: string; peers: string;
                     <MetricTerm metricId={item.metric_id} label={item.label} scope={`standout-${group.key}`} />
                   </span>
                   <span className="standout-figure">{item.figure}</span>
+                  {item.margin && <span className="margin">{item.margin}</span>}
                   {item.detail && <span className="standout-detail">{item.detail}</span>}
                 </li>
               ))}

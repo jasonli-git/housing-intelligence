@@ -94,6 +94,7 @@ export function ProfileTicker({
                 return (
                   <li key={item.metric_id}>
                     <b>{item.value}</b>
+                    {item.margin && <span className="margin ticker-margin">{item.margin}</span>}
                     {duplicate ? <span>{item.label}</span> : <FloatingMetricTerm metricId={item.metric_id} label={item.label} definition={item.definition} why={null} />}
                     <span className="state-ticker-meta">
                       {context?.words && <small>{context.words}</small>}

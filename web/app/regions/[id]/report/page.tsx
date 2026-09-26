@@ -244,13 +244,25 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                         <MetricTerm metricId={m.metric_id} label={m.label} scope="report-measures" />
                         <Marks letters={measures.marks.get(m.metric_id)} />
                       </td>
-                      <td className="num">{formatMetric(m.start_value, m.unit, m.metric_id)}</td>
+                      {/* Each end with its own margin, from the observations the change
+                          compares (Milestone 28). */}
+                      <td className="num">
+                        {formatMetric(m.start_value, m.unit, m.metric_id)}
+                        <Margin
+                          label={marginLabel(
+                            m.start_value,
+                            uncertainties.change.get(m.metric_id)?.start ?? null,
+                            m.unit,
+                            m.metric_id,
+                          )}
+                        />
+                      </td>
                       <td className="num">
                         {formatMetric(m.end_value, m.unit, m.metric_id)}
                         <Margin
                           label={marginLabel(
                             m.end_value,
-                            uncertainties.value.get(m.metric_id)?.margin ?? null,
+                            uncertainties.change.get(m.metric_id)?.end ?? null,
                             m.unit,
                             m.metric_id,
                           )}
@@ -259,7 +271,10 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                       <ChangeCell
                         pct={m.pct_change}
                         className="num"
-                        margin={changeMarginLabel(uncertainties.change.get(m.metric_id)?.margin ?? null)}
+                        margin={changeMarginLabel(
+                          uncertainties.change.get(m.metric_id)?.margin ?? null,
+                          m.metric_id,
+                        )}
                       />
                       <td className="num">{m.cagr === null ? "—" : `${m.cagr.toFixed(1)}%/yr`}</td>
                       <td>

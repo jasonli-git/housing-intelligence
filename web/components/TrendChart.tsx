@@ -21,8 +21,10 @@ import { type ReactNode, useState } from "react";
 import { formatMetric } from "@/lib/format";
 import { periodLabel } from "@/lib/periods";
 import { linearScale, nearestIndex, paddedExtent } from "@/lib/scale";
+import { marginLabel, withMargin } from "@/lib/uncertainty";
 
-type Point = { date: string; value: number };
+/** `margin`: a survey estimate's 90% margin of error, shown in the readout (M28). */
+type Point = { date: string; value: number; margin?: number | null };
 
 type Props = {
   /** Each reading, dated by the end of its period. */
@@ -45,6 +47,9 @@ export function TrendChart({ points, title, unit, metricId, marker = null, child
   if (points.length < 2) return null;
 
   const format = (value: number) => formatMetric(value, unit, metricId);
+  // A reading as the readout states it: with its margin where it is a survey's.
+  const reading = (p: Point) =>
+    withMargin(format(p.value), marginLabel(p.value, p.margin ?? null, unit, metricId));
   const when = (date: string) => periodLabel(date, metricId);
   const times = points.map((p) => new Date(p.date).getTime());
   const values = points.map((p) => p.value);
@@ -161,10 +166,10 @@ export function TrendChart({ points, title, unit, metricId, marker = null, child
       </svg>
       <p className="trend-readout">
         {hover !== null
-          ? `${when(active.date)} · ${format(active.value)}`
+          ? `${when(active.date)} · ${reading(active)}`
           : markAt >= 0 && marker
-            ? `${marker.label} · ${format(points[markAt].value)} → latest · ${format(points[last].value)}`
-            : `Latest · ${format(points[last].value)}`}
+            ? `${marker.label} · ${reading(points[markAt])} → latest · ${reading(points[last])}`
+            : `Latest · ${reading(points[last])}`}
       </p>
       {children}
     </figure>
