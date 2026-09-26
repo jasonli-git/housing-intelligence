@@ -8,12 +8,72 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — between milestones (2026-09-23)
+## Now — Milestone 27, refresh reaches the reader (started 2026-09-25)
 
-Milestone 26 merged and deployed on 2026-09-23, with every county's readings regenerated;
-what it shipped is in CHANGELOG 0.22.0. Milestone 27 is next and has not started: its
-first task decides where a refresh runs and what it may do unattended, and it begins on
-the owner's go-ahead.
+Branch `milestone/m27-refresh-reaches-the-reader`. Deliverable and scope: ROADMAP.md,
+Milestone 27.
+
+**First task, decided with the owner 2026-09-25 (not in chat/code, recorded here):**
+
+- **Where it runs:** this Mac, under `launchd`, wrapped in `caffeinate`. Not a cloud
+  runner — this Mac is never slept, closed or unplugged (confirmed with the owner;
+  `pmset` already shows system sleep off). Consequence, stated plainly rather than
+  glossed over: **ARCHITECTURE #175's automated screenshots stay blocked** — that needs
+  a cloud runner, which this is not.
+- **Schedule:** weekly, Friday mornings, the day after Freddie Mac's Thursday rate
+  release. `hip refresh` exits immediately when nothing moved (#192), so a quiet week
+  costs nothing extra.
+- **What may run without asking:** the data refresh, rebuild and deploy steps run
+  automatically every scheduled cycle — unchanged from how a refresh already behaves.
+  **Regenerating AI readings is the one gated step**, because it is billed. A toggle,
+  `ask` or `auto`, starts at **`ask`**: a run that finds stale readings notifies the
+  owner and does not regenerate until told to. `auto` regenerates without asking. The
+  toggle and an on-demand "regenerate now" trigger both live in one file synced through
+  iCloud Drive, so a Mac-side command and an iPhone Shortcut are two doors onto the same
+  setting rather than two settings that could disagree. Switching is meant to happen
+  freely in either direction, not once.
+- **Failure notifications: Pushover.** `PUSHOVER_USER_KEY` and `PUSHOVER_API_TOKEN` are
+  in `.env` (2026-09-24) and a test notification was confirmed delivered. Used for both
+  a failed run and a "readings are stale, awaiting your go-ahead" notice in `ask` mode.
+
+**Tasks**
+
+- [ ] **`hip refresh` continues past `analyze`** through `pack`, `explain` (gated by the
+      toggle above), `publish`, `deploy` and `check-live`, instead of stopping after the
+      warehouse update.
+- [ ] **The ask/auto toggle and the regenerate-now trigger**: one settings file under
+      iCloud Drive (`~/Library/Mobile Documents/com~apple~CloudDocs/...`), a `hip`
+      command or small script to read/flip it from the Mac, and a `launchd` job with
+      `WatchPaths` on the trigger file so an iPhone Shortcut writing to it fires
+      immediately rather than on a poll.
+- [ ] **The `launchd` job itself**: weekly, Friday morning, `caffeinate`-wrapped, restarts
+      across reboots, logs to a file, calls Pushover on any non-zero exit.
+- [ ] **Two iOS Shortcuts**, built in the Shortcuts app (not something a commit can
+      produce) — document exact steps for the owner to build: a toggle for ask/auto, and
+      a one-tap "regenerate now." Confirm both write the same file the Mac reads.
+- [ ] **A public freshness page per source**: period observed, published date, acquired
+      date, last checked date, the site version carrying it, the next expected release,
+      and a status (current, delayed, unreachable, superseded, discontinued, historical).
+      Built from the `Discovery` records `data/raw/<source>/releases.json` already
+      writes (Milestone 26) plus `refresh-state.json`. *Checked today* must never read as
+      *measured today*.
+- [ ] **A "what changed since the last release" page**, presenting the `fact_revision`
+      rows Milestone 29 has recorded since 2026-09-20 and nothing has shown a reader yet.
+- [ ] **`check-live` pins one region per cost-card shape** instead of sampling whatever
+      is first in the search index (which drifted to Aberdeen having *no* Zillow
+      coverage between when that was written and now — proof the pin has to be explicit,
+      not just less arbitrary). Verified against the warehouse 2026-09-25:
+      - Zillow-priced: Absecon, region 194 (`3400100100`)
+      - transaction-priced: Frankford, region 112 (`3403724810`), sr1a through 2026-06-30
+      - neither: Walpack, region 51 (`3403776640`), no zhvi, no sr1a ever
+- [ ] **A "report a problem with this figure" link** on every figure, opening a
+      pre-filled GitHub issue naming its source and release.
+- [ ] **The first run of [the completeness standing check](ROADMAP.md#the-completeness-standing-check)**,
+      recorded as the table's first row.
+- [ ] **Doc pass**: README's scheduling section describes the real `launchd` setup
+      instead of "a cron line and a pointer to launchd, not a timer installed on anyone's
+      machine"; ARCHITECTURE gains the toggle/notification decisions; ROADMAP's M27 row
+      and the completeness table close out.
 
 **To resume:** `make db-up` for Postgres. A scheduler runs `uv run hip refresh`, never
 `make refresh`.
