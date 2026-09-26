@@ -255,15 +255,27 @@ def revision_report(
             )
         )
 
+    # A method change labels the first day its metric was revised on or after the date
+    # it shipped, not only that date: a warehouse migrated one day and rebuilt the next
+    # — or rebuilt after midnight UTC, where these days are counted — would otherwise
+    # read this site's recomputation as the publisher's revision. Only the first: a
+    # later revision of the same metric is the publisher's again.
     method_changes = {
-        (row["changed_on"], row["metric_id"]): row["note"]
+        (row["applied_on"], row["metric_id"]): row["note"]
         for row in session.execute(
             text(
-                "SELECT changed_on, metric_id, note FROM method_changes "
-                "WHERE changed_on = ANY(:days)"
-            ),
-            {"days": days},
+                """
+                SELECT m.metric_id, m.note,
+                       (SELECT min((r.revised_at AT TIME ZONE 'UTC')::date)
+                        FROM fact_revision r
+                        WHERE r.metric_id = m.metric_id
+                          AND (r.revised_at AT TIME ZONE 'UTC')::date >= m.changed_on
+                       ) AS applied_on
+                FROM method_changes m
+                """
+            )
         ).mappings()
+        if row["applied_on"] in days
     }
 
     by_day: dict[date, list[RevisionGroup]] = {day: [] for day in days}

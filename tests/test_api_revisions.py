@@ -212,3 +212,36 @@ def test_a_recorded_method_change_labels_its_day_and_metric(session: Session) ->
     assert by_metric["zhvi_sfr"].method_change is None
     # A publisher's revisions come before this site's recomputations.
     assert [g.metric_id for g in groups] == ["zhvi_sfr", "acs_median_hh_income"]
+
+
+def test_a_method_change_labels_a_rebuild_on_a_later_day_and_only_that_one(
+    session: Session,
+) -> None:
+    """A warehouse migrated one day and rebuilt the next still labels the rebuild's
+    revisions, and a revision of the same metric after that is the publisher's again."""
+    first, _ = _counties_with(session, "zhvi_sfr", "2020-01-01")
+    session.execute(
+        text(
+            "INSERT INTO method_changes (changed_on, metric_id, note) "
+            "VALUES (DATE '2098-12-30', 'acs_median_hh_income', 'Worked out anew.')"
+        )
+    )
+    _revise(session, first, "acs_median_hh_income", "2020-01-01", 50.0, 51.0)
+    _revise(
+        session,
+        first,
+        "acs_median_hh_income",
+        "2021-01-01",
+        60.0,
+        62.0,
+        at="2099-01-05 12:00:00+00",
+    )
+
+    batches = revision_report(session, batches=2).batches
+    labels = {
+        (batch.revised_on.isoformat(), g.metric_id): g.method_change
+        for batch in batches
+        for g in batch.groups
+    }
+    assert labels[("2099-01-02", "acs_median_hh_income")] == "Worked out anew."
+    assert labels[("2099-01-05", "acs_median_hh_income")] is None
