@@ -17,6 +17,7 @@ import logging
 import shutil
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Annotated
 
@@ -27,6 +28,7 @@ from sqlalchemy.orm import Session
 
 from hip import __version__, refresh
 from hip.analytics.compute import rebuild
+from hip.completeness import run as run_completeness
 from hip.config import (
     ConfigError,
     check_config,
@@ -82,6 +84,7 @@ from hip.transform.dbt_runner import (
 )
 from hip.validate.gate import run_checks, write_report
 from hip.warehouse.db import get_engine
+from hip.warehouse.discoveries import load_discoveries
 from hip.warehouse.load import (
     MetricRecord,
     ReleaseProvenance,
@@ -217,6 +220,34 @@ def footprint(
             )
 
     typer.secho(f"{human_bytes(result.total_bytes)} total", fg=typer.colors.GREEN)
+
+
+@app.command()
+def completeness(
+    write: Annotated[
+        bool,
+        typer.Option(
+            "--write", help="Save to reports/completeness/<date>.md instead of printing."
+        ),
+    ] = False,
+) -> None:
+    """Run the completeness standing check: six dimensions, measured the same way.
+
+    An inspection command like `footprint`, run at every milestone's close (ROADMAP.md,
+    "The completeness standing check"). Each saved run is kept, so the next can be
+    compared with it.
+    """
+    settings = get_settings()
+    with Session(get_engine()) as session:
+        sources = load_sources(settings.config_dir)
+        report = run_completeness(session, sources, date.today())
+    if not write:
+        typer.echo(report, nl=False)
+        return
+    path = settings.reports_dir / "completeness" / f"{date.today().isoformat()}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(report)
+    typer.secho(f"wrote {path}", fg=typer.colors.GREEN)
 
 
 @app.command("publish")
@@ -489,6 +520,12 @@ def refresh_command(
     changed = state.changed(report.shas)
 
     if not changed and not force:
+        # The figures stand, but what this run learned about each publisher does not:
+        # a source out of reach this week, or back, or a release now waiting. `hip load`
+        # is what records that, and it is skipped here, so the discoveries go in on
+        # their own — a few rows, not a pipeline — and the freshness report stays true
+        # of this week's checks (ARCHITECTURE #232).
+        load_discoveries(get_engine(), settings.raw_dir, load_sources().keys())
         typer.secho(
             f"nothing changed since the last completed refresh "
             f"({state.completed_at or 'never'}); the warehouse already reflects it",
@@ -528,6 +565,65 @@ def refresh_command(
         fg=typer.colors.GREEN if code == 0 else typer.colors.YELLOW,
     )
     raise typer.Exit(code=code)
+
+
+@app.command(name="refresh-mode")
+def refresh_mode_command(
+    mode: Annotated[
+        str | None,
+        typer.Argument(help='"ask" or "auto". Omit to print the current setting.'),
+    ] = None,
+) -> None:
+    """Show or set whether a scheduled refresh may regenerate readings unasked.
+
+    Reads and writes the one file `scripts/scheduled_refresh.py` gates on
+    (`Settings.gate_dir`, under iCloud Drive by default) — the same file an iPhone
+    Shortcut writes, so this command and a Shortcut's "Set Auto"/"Set Ask" button are
+    two doors onto one setting rather than two that could disagree (Milestone 27).
+    """
+    settings = get_settings()
+    if mode is None:
+        typer.echo(refresh.RefreshGate.read(settings.gate_dir).mode)
+        return
+    if mode not in ("ask", "auto"):
+        typer.secho(f'mode must be "ask" or "auto", not {mode!r}', fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+    refresh.RefreshGate(mode=mode).write(settings.gate_dir)  # type: ignore[arg-type]
+    typer.secho(f"refresh mode set to {mode}", fg=typer.colors.GREEN)
+
+
+@app.command(name="regenerate-now")
+def regenerate_now_command() -> None:
+    """Ask for a reading regeneration outside the weekly schedule.
+
+    Touches the same trigger file an iPhone Shortcut writes, so running this from the
+    Mac has exactly the effect tapping the Shortcut does: the `launchd` agent watching
+    it (`WatchPaths`) wakes immediately and runs `scripts/regenerate_now.py`
+    (Milestone 27). This command only asks; it does not generate anything itself.
+    """
+    settings = get_settings()
+    refresh.request_regenerate_now(settings.gate_dir)
+    typer.secho(
+        f"requested — {settings.gate_dir / refresh.TRIGGER_FILE}", fg=typer.colors.GREEN
+    )
+
+
+@app.command()
+def notify(
+    title: Annotated[str, typer.Option("--title")],
+    message: Annotated[str, typer.Option("--message")],
+    priority: Annotated[int, typer.Option("--priority")] = 0,
+) -> None:
+    """Send one Pushover notification (Milestone 27's scheduled scripts use this).
+
+    Exits 0 whether or not the notification actually reached Pushover — a missing key
+    or an offline Mac must not turn "the notification failed" into "the calling script
+    failed", when the calling script's own job (a refresh, a regeneration) may have
+    succeeded. `hip.notify.send` logs the reason; nothing here escalates it.
+    """
+    from hip.notify import send
+
+    send(title, message, priority=priority)
 
 
 @app.command()
@@ -958,6 +1054,13 @@ def load(
         fg=typer.colors.GREEN,
     )
 
+    # `Discovery` (Milestone 26) into the warehouse, so the API's freshness page
+    # (Milestone 27) can read it without importing `hip.sources` (ARCHITECTURE #6).
+    # Every configured source, not only METRIC_SOURCES: a source with no row in
+    # `metrics.yml` still has a freshness status worth showing.
+    discovered = load_discoveries(get_engine(), settings.raw_dir, configured.keys())
+    typer.echo(f"discoveries   {discovered:>8,} sources' release status recorded")
+
 
 @app.command()
 def analyze() -> None:
@@ -1127,6 +1230,15 @@ def explain(
             "list and so retires any model that has left it.",
         ),
     ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            help="Report how many explanations are stale and would be generated, "
+            "without calling a model, spending anything, or pruning. Exit 3 if anything "
+            "would be generated, 0 if nothing would (Milestone 27's scheduler gate).",
+        ),
+    ] = False,
 ) -> None:
     """Write model explanations into the warehouse for the API to serve.
 
@@ -1156,6 +1268,12 @@ def explain(
     `--prune` then deletes, for the regions and window the run covered, every stored
     explanation from a model neither on the preference list nor named in the run
     (ARCHITECTURE #119). Nothing else in the platform deletes an explanation.
+
+    `--dry-run` answers "would this cost anything" without spending: it classifies every
+    requested (model, region) pair exactly as a real run would, but stops short of the
+    one step that reaches a model. Free re-citation still happens, since it costs
+    nothing; `--prune`'s deletion does not, since a cost report should not itself change
+    the database.
     """
     explain_command(
         region,
@@ -1168,6 +1286,7 @@ def explain(
         unbenchmarked,
         all_models,
         prune=prune,
+        dry_run=dry_run,
     )
 
 

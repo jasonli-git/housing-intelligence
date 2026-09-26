@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Milestone 27's weekly, unattended run — see scripts/scheduled_refresh.py for what it
+  actually does and why. Real, machine-specific absolute paths throughout: this project
+  runs on exactly one Mac, on purpose (ROADMAP.md, Milestone 27's first-task decision),
+  so a templated path would be a fiction nothing reads differently.
+
+  Install (not done by this repo automatically — a standing scheduled job that can
+  reach production is a decision of its own):
+    cp scripts/launchd/com.housing-intelligence.weekly-refresh.plist \
+       ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.housing-intelligence.weekly-refresh.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.housing-intelligence.weekly-refresh.plist
+    rm ~/Library/LaunchAgents/com.housing-intelligence.weekly-refresh.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.housing-intelligence.weekly-refresh</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/caffeinate</string>
+        <string>-i</string>
+        <string>/opt/homebrew/bin/uv</string>
+        <string>run</string>
+        <string>python</string>
+        <string>scripts/scheduled_refresh.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/jasonli/Developer/PROJECTS/housing-intelligence</string>
+
+    <!-- `EnvironmentVariables.PATH` is required: launchd agents run with none of a
+         shell profile's PATH, and this job's own subprocess tree (uv -> make ->
+         wrangler/rclone/npm/node) needs all of it, not just uv. -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <!-- Fridays, the morning after Freddie Mac's Thursday rate release (Weekday: 5 in
+         launchd's Sun=0 convention). A quiet week costs nothing extra: hip refresh
+         exits before the pipeline when nothing moved (ARCHITECTURE #192), and
+         scheduled_refresh.py stops there rather than rebuilding or deploying. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>5</integer>
+        <key>Hour</key>
+        <integer>8</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- False on purpose: loading this agent for the first time must not itself trigger
+         a live run (and a possible deploy) with no further confirmation. The weekly
+         schedule above is the only trigger; test a run by hand first
+         (uv run python scripts/scheduled_refresh.py) before relying on this. -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/jasonli/Developer/PROJECTS/housing-intelligence/logs/scheduled-refresh.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/jasonli/Developer/PROJECTS/housing-intelligence/logs/scheduled-refresh.log</string>
+</dict>
+</plist>

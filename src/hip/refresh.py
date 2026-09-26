@@ -19,10 +19,12 @@ nothing changed* and *never asked*, so the report keeps them apart.
 from __future__ import annotations
 
 import json
+import subprocess
 from collections.abc import Iterable, Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import Literal
 
 from hip.sources.base import (
     Discovery,
@@ -30,6 +32,7 @@ from hip.sources.base import (
     ReleaseRef,
     SourceAdapter,
     SourceError,
+    read_discovery,
     redact,
     write_discovery,
 )
@@ -158,6 +161,9 @@ def acquire(
                 yield adapter, RefFailure.of(adapter.source_id, "discover()", exc)
                 discovery = None
             if discovery is not None:
+                discovery = _keep_published(
+                    discovery, read_discovery(raw_dir, discovery.source_id)
+                )
                 write_discovery(raw_dir, discovery)
                 if discovery.outcome == "confirmed":
                     adapter.newest = discovery.newest
@@ -191,6 +197,26 @@ def acquire(
                     yield adapter, adapter.fetch(child, raw_dir=raw_dir, force=force)
                 except (SourceError, OSError) as exc:
                     yield adapter, RefFailure.of(adapter.source_id, child.key, exc)
+
+
+def _keep_published(discovery: Discovery, recorded: Discovery | None) -> Discovery:
+    """Carry a release's publication date forward while that release is still newest.
+
+    `_probe_forward` learns `published` only from the probe that *finds* a newer release,
+    so every later refresh that finds nothing newer returned `None` — and writing that
+    record erased the date the first one had learned. Found building Milestone 27's
+    freshness page: the 2026-09-26 refresh wiped Building Permits' 2026-02-20 and IRS
+    migration's 2026-03-19. A release's publication date does not change while it stays
+    the newest, so the recorded one is still the answer.
+    """
+    if (
+        discovery.published is None
+        and recorded is not None
+        and recorded.newest == discovery.newest
+        and recorded.published is not None
+    ):
+        return replace(discovery, published=recorded.published)
+    return discovery
 
 
 def collect(
@@ -260,6 +286,12 @@ __all__ = [
     "Superseded",
     "exit_code",
     "superseded_releases",
+    "MODE_FILE",
+    "TRIGGER_FILE",
+    "RefreshGate",
+    "regenerate_requested",
+    "request_regenerate_now",
+    "handle_regenerate_request",
 ]
 
 
@@ -387,3 +419,111 @@ class RefreshState:
         empty or describes an older state of the disk.
         """
         return sorted(k for k, sha in shas.items() if self.processed.get(k) != sha)
+
+
+# Milestone 27's scheduled refresh reaches all the way to a deploy, so two of its steps
+# need the owner's say-so rather than running unattended forever: regenerating readings
+# costs money, and the owner asked to approve that from either this Mac or their phone,
+# switching freely between "ask me" and "just do it".
+#
+# The file lives outside `data/` — which `hip prune-raw` and a clean `data/` wipe both
+# treat as disposable — and under iCloud Drive specifically, so one file is genuinely one
+# setting: a Mac-side command and an iPhone Shortcut both read and write the bytes at the
+# same synced path, rather than two settings that could disagree. `Settings.gate_dir`
+# points there by default and is overridable, the same way every other data location is.
+MODE_FILE = "mode.json"
+# A plain .txt extension, not something more descriptive like .trigger: iOS Shortcuts'
+# Save File action silently forces a .txt extension onto Text content whenever the
+# typed extension isn't one it recognizes, and fighting that on every phone that ever
+# builds this Shortcut is a worse trade than a slightly less self-explanatory name.
+TRIGGER_FILE = "regenerate-now-trigger.txt"
+
+
+@dataclass(frozen=True)
+class RefreshGate:
+    """Whether a scheduled refresh may regenerate readings without asking first.
+
+    Two states, not a boolean: `"ask"` and `"auto"` read as what a person chose, where
+    `True`/`False` would read as a flag nobody remembers the sense of. Defaults to
+    `"ask"` — an unreadable or missing file is not licence to spend money unattended,
+    the same reasoning `RefreshState` applies to "was the last run recorded".
+    """
+
+    mode: Literal["ask", "auto"] = "ask"
+
+    @classmethod
+    def read(cls, gate_dir: Path) -> RefreshGate:
+        path = gate_dir / MODE_FILE
+        if not path.exists():
+            return cls()
+        try:
+            data = json.loads(path.read_text())
+        except (json.JSONDecodeError, OSError):
+            return cls()
+        mode = data.get("mode")
+        return cls(mode=mode if mode in ("ask", "auto") else "ask")
+
+    def write(self, gate_dir: Path) -> None:
+        gate_dir.mkdir(parents=True, exist_ok=True)
+        (gate_dir / MODE_FILE).write_text(
+            json.dumps({"mode": self.mode}, indent=2) + "\n"
+        )
+
+
+def regenerate_requested(gate_dir: Path) -> bool:
+    """Whether a "regenerate now" request is waiting to be handled.
+
+    Presence, not content: the trigger carries no timestamp to compare, because the
+    thing that makes a *second* tap a *new* event is `handle_regenerate_request`
+    deleting the file once the first one is acted on. A launchd agent with `WatchPaths`
+    on this exact path fires the instant an iPhone Shortcut's write reaches it through
+    iCloud Drive, rather than on a poll.
+    """
+    return (gate_dir / TRIGGER_FILE).exists()
+
+
+def request_regenerate_now(gate_dir: Path) -> None:
+    """Ask for a regeneration outside the weekly schedule, from the Mac or the phone."""
+    gate_dir.mkdir(parents=True, exist_ok=True)
+    (gate_dir / TRIGGER_FILE).touch()
+
+
+def handle_regenerate_request(gate_dir: Path) -> None:
+    """Consume a pending "regenerate now" request so it fires exactly once."""
+    (gate_dir / TRIGGER_FILE).unlink(missing_ok=True)
+
+
+def checkout_problem(repo_root: Path) -> str | None:
+    """Why this checkout must not run the scheduled refresh, or None when it may.
+
+    The `launchd` agents run the scripts from the working copy they live in, which is
+    also where development happens — the owner's, Claude's and Codex's, in one shared
+    checkout. A Friday run from a feature branch, or from `main` with work in progress,
+    would run that code's pipeline against the one warehouse and deploy it as the public
+    site, unreviewed. So only a clean `main` runs. Untracked files count as well as
+    edits: a new page directory nobody has committed would still be built.
+
+    No path is exempt. Everything a scheduled run writes is gitignored — `data/`,
+    `dist/`, the build caches, `logs/` — and it runs `hip pack` without `--report` so
+    as not to rewrite the county reports git tracks. An exemption for those would have
+    hidden anyone's unrelated work under `reports/` too.
+    """
+
+    def git(*args: str) -> str:
+        # Not stripped: a porcelain line starts with its status column, which is a
+        # space for an unstaged edit (" M app.py"), and the path starts at column 3.
+        return subprocess.run(
+            ["git", *args], cwd=repo_root, capture_output=True, text=True, check=True
+        ).stdout
+
+    try:
+        branch = git("rev-parse", "--abbrev-ref", "HEAD").strip()
+        changed = [line[3:] for line in git("status", "--porcelain").splitlines()]
+    except (OSError, subprocess.CalledProcessError) as exc:
+        return f"git could not be read ({exc})"
+    if branch != "main":
+        return f"the checkout is on {branch!r}, not main"
+    if changed:
+        shown = ", ".join(changed[:3]) + (" and more" if len(changed) > 3 else "")
+        return f"main has uncommitted work: {shown}"
+    return None

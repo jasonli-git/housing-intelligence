@@ -349,7 +349,14 @@ export default async function RegionPage({
         <section className="section" aria-labelledby="ledger-heading">
           <h2 id="ledger-heading">Every figure, ranked by change over five years</h2>
           {packet.metrics.length > 0 ? (
-            <Ledger metrics={packet.metrics} placement={changes} defined={defined} />
+            <Ledger
+              metrics={packet.metrics}
+              placement={changes}
+              defined={defined}
+              regionLabel={name}
+              sources={packet.sources}
+              path={`/regions/${id}`}
+            />
           ) : (
             <p className="meta">
               No figure here has two readings five years apart, so there is no change to
@@ -435,7 +442,14 @@ export default async function RegionPage({
                 defined={defined}
               />
             </p>
-            <CurrentValues levels={packet.levels} placement={values} defined={defined} />
+            <CurrentValues
+              levels={packet.levels}
+              placement={values}
+              defined={defined}
+              regionLabel={name}
+              sources={packet.sources}
+              path={`/regions/${id}`}
+            />
             <TableNotes placement={values} above="the figures above" />
           </section>
         )}

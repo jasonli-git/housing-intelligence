@@ -1217,6 +1217,25 @@ def test_explicit_models_are_each_verified_once_and_local_ones_not_at_all(
     assert probed == ["deepseek-test", "gemini-test"]
 
 
+def test_a_dry_run_probes_no_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A probe is a real, billed call, and `--dry-run` promises it reaches no model.
+
+    Found in Codex's Milestone 27 review of the free check the scheduler gates on.
+    """
+    from hip.eval_cli import _unusable
+
+    monkeypatch.setattr("hip.eval.selection.benchmarked", _all_pass)
+    monkeypatch.setattr("hip.eval.selection.latest_run", lambda: "v2")
+
+    def forbidden(self: HostedRunner, model: CandidateModel) -> str | None:
+        raise AssertionError(f"a dry run probed {model.id}")
+
+    monkeypatch.setattr(HostedRunner, "probe", forbidden)
+    evaluation = _evaluation(["deepseek-test", "gemini-test", "gemma-4-e4b-q4"])
+
+    assert _unusable(evaluation, ["deepseek-test", "gemini-test"], probe=False) == {}
+
+
 def test_a_misspelled_model_is_skipped_rather_than_crashing_the_run(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -2077,6 +2096,231 @@ def test_the_exit_status_tells_a_scheduler_partial_from_clean() -> None:
     assert PARTIAL not in (0, 1, 2), "2 is Click's usage error"
 
 
+def test_a_dry_run_exit_code_asks_would_anything_be_generated() -> None:
+    """A dry run's PARTIAL means "stale", not "something went wrong" (Milestone 27).
+
+    A failed or refused generation cannot appear in a dry run at all — nothing was
+    called — so the ordinary exit-code rules about them do not apply here; only
+    `would_write` decides.
+    """
+    from hip.eval_cli import PARTIAL, _exit_code, _Outcome
+
+    nothing_stale = {"a": _Outcome(current=21), "b": _Outcome(rebound=5, current=16)}
+    assert _exit_code(nothing_stale, dry_run=True) == 0
+    something_stale = {
+        "a": _Outcome(current=20, would_write=1),
+        "b": _Outcome(current=21),
+    }
+    assert _exit_code(something_stale, dry_run=True) == PARTIAL
+
+
+def test_a_dry_run_that_could_assess_no_model_has_not_found_nothing_stale() -> None:
+    """Every model skipped — no judged run, say — is not "every reading is current".
+
+    From Codex's second review of Milestone 27: this exited 0, and Regenerate Now told
+    the owner nothing needed regenerating when nothing had been checked.
+    """
+    from hip.eval_cli import _exit_code, _Outcome
+
+    none_assessed = {"a": _Outcome(skipped="no judged run"), "b": _Outcome(skipped="x")}
+    one_assessed = {"a": _Outcome(skipped="no judged run"), "b": _Outcome(current=21)}
+
+    assert _exit_code(none_assessed, dry_run=True) == 1
+    assert _exit_code(one_assessed, dry_run=True) == 0
+
+
+def test_the_default_dry_run_resolves_without_a_probe(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Without `--all` or `--model`, `hip explain` resolves one model — and that path
+    probed too, the other half of the billed call a dry run promised not to make."""
+    import contextlib
+
+    import typer
+
+    from hip.eval.selection import Resolution
+    from hip.eval_cli import explain_command
+
+    asked: dict[str, Any] = {}
+
+    def resolve(*_args: Any, **kwargs: Any) -> Resolution:
+        asked.update(kwargs)
+        return Resolution(model_id="gemini-test", cohort="c", runtime="r", skipped=[])
+
+    @contextlib.contextmanager
+    def session(engine: Any) -> Any:
+        yield SimpleNamespace(commit=lambda: None)
+
+    monkeypatch.setattr(
+        "hip.eval_cli.load_evaluation", lambda: _evaluation(["gemini-test"])
+    )
+    monkeypatch.setattr("hip.eval.selection.resolve", resolve)
+    monkeypatch.setattr("hip.eval_cli.get_engine", lambda: None)
+    monkeypatch.setattr("hip.eval_cli.Session", session)
+    monkeypatch.setattr("hip.packets.regions_for_level", lambda *args: [1])
+    monkeypatch.setattr("hip.eval_cli._explain_each", lambda *args, **kwargs: None)
+
+    with contextlib.suppress(typer.Exit):
+        explain_command(None, None, "5y", "county", "markdown", None, dry_run=True)
+    assert asked["probe"] is False
+
+
+def test_a_dry_run_never_calls_the_model_it_would_have_used(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The one thing `--dry-run` promises: it does not reach a model."""
+    from hip.eval_cli import _explain_each, _Outcome
+
+    def forbidden(*_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("a dry run called explain_region")
+
+    monkeypatch.setattr("hip.eval.explain.explain_region", forbidden)
+    monkeypatch.setattr("hip.eval_cli._stored_state", lambda *args: "stale")
+    outcome = _Outcome()
+
+    _explain_each(
+        SimpleNamespace(commit=lambda: None),  # type: ignore[arg-type]
+        _evaluation(["gemini-test"]),
+        {"gemini-test": outcome},
+        [1, 2, 3],
+        window="5y",
+        payload_format="markdown",
+        force=False,
+        dry_run=True,
+    )
+
+    assert (outcome.would_write, outcome.written) == (3, 0)
+
+
+def test_a_dry_run_still_does_the_free_rebinding(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Re-citing stored prose against a moved release costs nothing, so a cost report
+    that skipped it would leave real provenance stale for no reason."""
+    from hip.eval_cli import _explain_each, _Outcome
+
+    committed = []
+    monkeypatch.setattr("hip.eval_cli._stored_state", lambda *args: "rebound")
+    outcome = _Outcome()
+
+    _explain_each(
+        SimpleNamespace(commit=lambda: committed.append(True)),  # type: ignore[arg-type]
+        _evaluation(["gemini-test"]),
+        {"gemini-test": outcome},
+        [1, 2],
+        window="5y",
+        payload_format="markdown",
+        force=False,
+        dry_run=True,
+    )
+
+    assert (outcome.rebound, outcome.would_write) == (2, 0)
+    assert len(committed) == 2
+
+
+def test_dry_run_with_force_counts_every_region_not_just_the_stale_ones(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`--force` skips the staleness check by design, so `--force --dry-run` reports
+    every requested region as a cost, matching what `--force` alone would generate."""
+    from hip.eval_cli import _explain_each, _Outcome
+
+    def forbidden(*_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError("--force --dry-run called explain_region")
+
+    def checked(*_args: Any, **_kwargs: Any) -> str:
+        raise AssertionError("--force must not consult staleness at all")
+
+    monkeypatch.setattr("hip.eval.explain.explain_region", forbidden)
+    monkeypatch.setattr("hip.eval_cli._stored_state", checked)
+    outcome = _Outcome()
+
+    _explain_each(
+        SimpleNamespace(commit=lambda: None),  # type: ignore[arg-type]
+        _evaluation(["gemini-test"]),
+        {"gemini-test": outcome},
+        [1, 2, 3, 4],
+        window="5y",
+        payload_format="markdown",
+        force=True,
+        dry_run=True,
+    )
+
+    assert outcome.would_write == 4
+
+
+def test_dry_run_does_not_prune(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A cost report must not itself delete a stored explanation (Milestone 27)."""
+    import contextlib
+
+    import typer
+
+    from hip.eval_cli import PARTIAL, explain_command
+
+    @contextlib.contextmanager
+    def session(engine: Any) -> Any:
+        yield SimpleNamespace(commit=lambda: None)
+
+    def fake_explain_each(
+        _session: Any, _evaluation: Any, outcomes: Any, _region_ids: Any, **_: Any
+    ) -> None:
+        # Stands in for what a real dry run would find: something stale.
+        for outcome in outcomes.values():
+            outcome.would_write = 1
+
+    def forbidden_prune(*_args: Any, **_kwargs: Any) -> None:
+        raise AssertionError("--dry-run pruned a model's readings")
+
+    evaluation = _evaluation(["gemini-test"])
+    monkeypatch.setattr("hip.eval_cli.load_evaluation", lambda: evaluation)
+    monkeypatch.setattr("hip.eval_cli._unusable", lambda *args, **kwargs: {})
+    monkeypatch.setattr("hip.eval_cli.get_engine", lambda: None)
+    monkeypatch.setattr("hip.eval_cli.Session", session)
+    monkeypatch.setattr("hip.packets.regions_for_level", lambda *args: [1, 2])
+    monkeypatch.setattr("hip.eval_cli._explain_each", fake_explain_each)
+    monkeypatch.setattr("hip.eval_cli._prune", forbidden_prune)
+
+    with pytest.raises(typer.Exit) as exited:
+        explain_command(
+            None, None, "5y", "county", "markdown", None, all_models=True, dry_run=True
+        )
+    assert exited.value.exit_code == PARTIAL
+
+
+def test_explain_dry_run_turns_the_probe_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The wiring for `test_a_dry_run_probes_no_model`: `--dry-run` asks for no probe."""
+    import contextlib
+
+    import typer
+
+    from hip.eval_cli import explain_command
+
+    asked: dict[str, Any] = {}
+
+    def unusable(*_args: Any, **kwargs: Any) -> dict[str, str]:
+        asked.update(kwargs)
+        return {}
+
+    @contextlib.contextmanager
+    def session(engine: Any) -> Any:
+        yield SimpleNamespace(commit=lambda: None)
+
+    monkeypatch.setattr(
+        "hip.eval_cli.load_evaluation", lambda: _evaluation(["gemini-test"])
+    )
+    monkeypatch.setattr("hip.eval_cli._unusable", unusable)
+    monkeypatch.setattr("hip.eval_cli.get_engine", lambda: None)
+    monkeypatch.setattr("hip.eval_cli.Session", session)
+    monkeypatch.setattr("hip.packets.regions_for_level", lambda *args: [1])
+    monkeypatch.setattr("hip.eval_cli._explain_each", lambda *args, **kwargs: None)
+
+    with contextlib.suppress(typer.Exit):
+        explain_command(
+            None, None, "5y", "county", "markdown", None, all_models=True, dry_run=True
+        )
+    assert asked["probe"] is False
+
+
 def test_a_missing_runtime_skips_its_model_and_the_rest_still_run(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -2383,7 +2627,7 @@ def test_regenerating_the_whole_list_retires_a_model_that_left_it(
             (models, region_ids)
         ),
     )
-    monkeypatch.setattr("hip.eval_cli._summarize", lambda outcomes: 0)
+    monkeypatch.setattr("hip.eval_cli._summarize", lambda outcomes, **kwargs: 0)
 
     explain_command(None, None, "5y", "county", "markdown", None, all_models=True)
 

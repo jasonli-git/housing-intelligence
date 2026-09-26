@@ -16,7 +16,14 @@ MLX ran greedily.
 from __future__ import annotations
 
 import logging
+import os
+import shutil
+import subprocess
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
+from pathlib import Path
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -195,3 +202,77 @@ class OllamaRunner:
             ),
             error=error,
         )
+
+
+# Where the Ollama app keeps its command-line binary, for a PATH that lacks it.
+_APP_BINARY = Path("/Applications/Ollama.app/Contents/Resources/ollama")
+
+
+@contextmanager
+def serving(
+    endpoint: str = "http://localhost:11434",
+    *,
+    log_path: Path | None = None,
+    wait: float = 30.0,
+) -> Iterator[str]:
+    """Ollama answering for the length of a block, and as it was afterwards.
+
+    The owner keeps Ollama quit between runs to spare this Mac's memory (ARCHITECTURE
+    #215), so a regeneration that needs the local model starts it and stops it after
+    (#230). Started only when nothing already answers at `endpoint`, and stopped only
+    if this started it: an Ollama someone opened themselves is used and left running.
+    Started as `ollama serve` rather than the app — headless, bound to `endpoint`'s
+    host alone, and a child this block can stop.
+
+    Yields one line saying which happened, for the run's log. It never raises for
+    Ollama's sake: if it cannot be started, the block still runs, the local model's
+    readings fail fast, and `hip explain` reports the run as partial while the hosted
+    readings publish.
+    """
+    runner = OllamaRunner(endpoint)
+    if runner.available():
+        yield f"Ollama was already running at {endpoint}; leaving it as it was"
+        return
+    binary = shutil.which("ollama") or (
+        str(_APP_BINARY) if _APP_BINARY.exists() else None
+    )
+    if binary is None:
+        yield "Ollama is not installed, so the local model cannot run"
+        return
+
+    # In this process's group, not a session of its own, so that if the run is killed —
+    # by launchd, or by hand — the server goes with it rather than staying up unseen.
+    log_file = open(log_path, "a") if log_path else subprocess.DEVNULL  # noqa: SIM115
+    try:
+        process = subprocess.Popen(
+            [binary, "serve"],
+            env={**os.environ, "OLLAMA_HOST": urlsplit(endpoint).netloc},
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+        )
+    except OSError as exc:
+        if log_path:
+            log_file.close()  # type: ignore[union-attr]
+        yield f"Ollama could not be started ({exc})"
+        return
+    try:
+        deadline = time.monotonic() + wait
+        while not runner.available():
+            if process.poll() is not None:
+                yield f"Ollama exited ({process.returncode}) before it answered"
+                return
+            if time.monotonic() > deadline:
+                yield f"Ollama did not answer at {endpoint} within {wait:.0f}s"
+                return
+            time.sleep(0.5)
+        yield f"started Ollama at {endpoint} for this run"
+    finally:
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+        if log_path:
+            log_file.close()  # type: ignore[union-attr]

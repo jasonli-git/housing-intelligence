@@ -223,9 +223,21 @@ def read_discovery(raw_dir: Path, source_id: str) -> Discovery | None:
 
 
 def write_discovery(raw_dir: Path, discovery: Discovery) -> None:
-    """Record what acquisition found. An unreachable probe keeps the last good record."""
+    """Record what acquisition found.
+
+    An unreachable probe records that it asked and could not get an answer, and keeps
+    the last good record's release — `newest`, its publication date, anything pending
+    — because every later stage builds its refs from `newest` (#197), and an outage is
+    no news about the release. Until Milestone 27's review it wrote nothing at all,
+    which left the last success on record: the freshness page, which reads the outcome
+    from here (#222), could never say a publisher was out of reach.
+    """
     if discovery.outcome == "unreachable":
-        return
+        recorded = read_discovery(raw_dir, discovery.source_id)
+        if recorded is not None:
+            discovery = replace(
+                recorded, checked_at=discovery.checked_at, outcome="unreachable"
+            )
     path = _discovery_path(raw_dir, discovery.source_id)
     path.parent.mkdir(parents=True, exist_ok=True)
     record = {

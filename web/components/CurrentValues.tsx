@@ -2,7 +2,8 @@ import { Fragment } from "react";
 
 import { Marks, NoteRows, RankText } from "@/components/Ledger";
 import { MetricTerm } from "@/components/MetricTerm";
-import type { PacketLevel } from "@/lib/api";
+import { ReportProblem } from "@/components/ReportProblem";
+import type { Packet, PacketLevel } from "@/lib/api";
 import type { TablePlacement } from "@/lib/caveats";
 import { formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
@@ -24,10 +25,16 @@ import { RANK_HEADING, rankWords } from "@/lib/ranks";
 export function CurrentValues({
   levels,
   placement,
+  regionLabel,
+  sources,
+  path,
 }: {
   levels: PacketLevel[];
   placement: TablePlacement;
   defined?: Set<string>;
+  regionLabel?: string;
+  sources?: Packet["sources"];
+  path?: string;
 }) {
   return (
     <div className="values-grid">
@@ -55,6 +62,18 @@ export function CurrentValues({
                     <td>
                       <MetricTerm metricId={level.metric_id} label={level.label} scope="values" />
                       <Marks letters={placement.marks.get(level.metric_id)} />
+                      {regionLabel && sources && path && (
+                        <ReportProblem
+                          regionLabel={regionLabel}
+                          metricLabel={level.label}
+                          displayValue={formatMetric(level.value, level.unit, level.metric_id)}
+                          periodLabel={periodLabel(level.period_end, level.metric_id)}
+                          sourceId={level.source_id}
+                          releaseId={level.release_id}
+                          sources={sources}
+                          path={path}
+                        />
+                      )}
                     </td>
                     <td className="num">{formatMetric(level.value, level.unit, level.metric_id)}</td>
                     <td className="num">
