@@ -14,16 +14,16 @@ public claim about it.
 **Four statuses, not the six once sketched, and why the other two are not here.**
 `current`, `pending` and `unreachable` come straight from the discovery row's
 `outcome` and `pending`. `not_tracked` is no row at all, which is the honest answer
-for three different reasons this page cannot tell apart without more than
+for two different reasons this page cannot tell apart without more than
 `source_discoveries` records: a source Milestone 26 never gave a `discover()` — most
 of them are `current`-vintage (Zillow, FRED, FHFA), fresh-checked every refresh by
 *revalidation* (ARCHITECTURE #188 — "has this exact file changed", a different
 question from discovery's "does something newer exist") rather than discovery, and
-whose check timestamp is not durably recorded anywhere this page reads from yet; a
-source pinned on purpose, like `census_tiger` (#206); or a source never fetched at
-all, like `njgin_parcels` (its own `fallback` says so). None of the three means
-neglect, so `not_tracked` says "no discovery record", not "not checked" — a claim
-this page cannot back for the first case.
+whose check timestamp is not durably recorded anywhere this page reads from yet; or a
+source pinned on purpose, like `census_tiger` (#206). Neither means neglect, so
+`not_tracked` says "no discovery record", not "not checked" — a claim this page cannot
+back for the first case. (A source never fetched at all, like `njgin_parcels`, is left
+out of the report rather than given a status: see `build_report`.)
 
 *Delayed* would need a per-source expected-release calendar this platform does not
 keep — MOD-IV's own history (2019, 2021, 2022, 2023, 2024, 2025, no fixed month) is
@@ -41,7 +41,8 @@ public page. `config/sources.yml`'s `notes` field is never read here.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Literal
 
@@ -88,6 +89,26 @@ def _status(discovery: dict[str, object] | None) -> Status:
     if discovery["pending"]:
         return "pending"
     return "current"
+
+
+def _published_date(value: str | None) -> str | None:
+    """A discovery's `published`, as an ISO date — or nothing, never a garbled string.
+
+    Adapters record what their publisher said, in the publisher's own form: MOD-IV's
+    metadata gives an ISO date ("2025-09-11"), while a probe's `Last-Modified` header is
+    an HTTP date ("Wed, 11 Mar 2026 18:40:37 GMT", NJ's tax-rate workbook). Found on the
+    freshness page, which printed the second as "Nov NaN, Wed,".
+    """
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value[:10]).isoformat()
+    except ValueError:
+        pass
+    try:
+        return parsedate_to_datetime(value).date().isoformat()
+    except (TypeError, ValueError):
+        return None
 
 
 def _changelog_version(changelog_path: Path) -> str:
@@ -154,6 +175,13 @@ def build_report(
 
     rows = []
     for source_id, source in sorted(sources.items()):
+        # The same set the site footer credits: sources actually downloaded, less the
+        # platform's own computed layer. A configured source never fetched — like
+        # `njgin_parcels`, whose own entry says so — has nothing to be fresh about, and
+        # `hip_derived`'s freshness is "was `hip analyze` re-run", which is the "what
+        # changed" page's question, not a publisher's.
+        if source_id == "hip_derived" or source_id not in acquired:
+            continue
         discovery = discoveries.get(source_id)
         start, end = observed.get(source_id, (None, None))
         rows.append(
@@ -165,7 +193,7 @@ def build_report(
                 status=_status(discovery),
                 period_observed_start=start,
                 period_observed_end=end,
-                published=discovery["published"] if discovery else None,
+                published=_published_date(discovery["published"]) if discovery else None,
                 checked_at=discovery["checked_at"] if discovery else None,
                 pending=discovery["pending"] if discovery else None,
                 pending_from=(

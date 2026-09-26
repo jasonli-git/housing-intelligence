@@ -22,6 +22,7 @@ from hip.warehouse.discoveries import load_discoveries
 from hip.warehouse.freshness import (
     FreshnessReport,
     _changelog_version,
+    _published_date,
     _status,
     build_report,
 )
@@ -221,3 +222,27 @@ def test_report_carries_the_changelog_version_not_the_package_metadata(
     with Session(get_engine()) as session:
         report = build_report(session, sources={}, changelog_path=changelog)
     assert report.site_version == "9.9.9"
+
+
+def test_build_report_lists_only_sources_actually_downloaded() -> None:
+    """The footer's set: a configured source never fetched, and the platform's own
+    computed layer, have no publisher freshness to report."""
+    with Session(get_engine()) as session:
+        report = build_report(
+            session,
+            sources={
+                "test_never_fetched": _source(name="Never fetched"),
+                "hip_derived": _source(name="Computed by the platform"),
+                "hud_fmr": _source(name="Fair Market Rents"),
+            },
+        )
+    assert [s.source_id for s in report.sources] == ["hud_fmr"]
+
+
+def test_published_dates_come_out_iso_whatever_form_the_publisher_used() -> None:
+    assert _published_date("2025-09-11") == "2025-09-11"
+    # A Last-Modified header, as NJ's tax-rate workbook answers it.
+    assert _published_date("Wed, 11 Mar 2026 18:40:37 GMT") == "2026-03-11"
+    assert _published_date(None) is None
+    # Unreadable is absent, never printed as it came.
+    assert _published_date("sometime last spring") is None
