@@ -442,6 +442,7 @@ export const api = {
   sources: () => tryGet<SourceEntry[]>(`/sources`),
   /** How current each source is (Milestone 27). */
   freshness: () => tryGet<FreshnessReport>(`/freshness`),
+  revisions: () => tryGet<RevisionReport>(`/revisions`),
   /** The metric catalog, for the New Jersey page's measure picker. */
   metrics: () => tryGet<MetricEntry[]>(`/metrics`),
 };
@@ -596,4 +597,62 @@ export type FreshnessReport = {
   /** When the report — and so the page — was built. ISO timestamp. */
   generated_at: string;
   sources: SourceFreshness[];
+};
+
+/** One place's largest revision in a group, standing for all of that place's (`GET /revisions`). */
+export type RevisedPlace = {
+  region_id: number;
+  name: string;
+  level: string | null;
+  /** The containing county, for a municipality. */
+  county: string | null;
+  /** Whether the site has a page for this place to link to. */
+  has_page: boolean;
+  period_start: string;
+  /** The observation's own end date, for labelling ("2015", not "Jan 2015"). */
+  period_end: string;
+  old_value: number | null;
+  new_value: number | null;
+  /** (new − old) / |old|, a fraction; null when either side is missing or old is zero. */
+  change: number | null;
+  /** How many of this place's periods moved in this group. */
+  periods: number;
+};
+
+/** One metric's revisions in one refresh, split by whether the period had ended. */
+export type RevisionGroup = {
+  metric_id: string;
+  label: string;
+  unit: string;
+  frequency: string | null;
+  source_id: string | null;
+  /** The period had not ended when the figure changed: a month filling in, not a correction. */
+  under_way: boolean;
+  figures: number;
+  places: number;
+  /** End dates of the earliest and latest revised periods. */
+  earliest_period: string;
+  latest_period: string;
+  rose: number;
+  fell: number;
+  /** The median |change| across the group's figures, a fraction. */
+  median_change: number | null;
+  largest: RevisedPlace[];
+};
+
+/** Every figure one refresh revised, by UTC day. */
+export type RevisionBatch = {
+  revised_on: string;
+  figures: number;
+  groups: RevisionGroup[];
+};
+
+export type RevisionReport = {
+  generated_at: string;
+  /** When the oldest kept revision was written; null if none ever was. */
+  recorded_since: string | null;
+  /** Every batch ever recorded, including those beyond `batches`. */
+  total_batches: number;
+  /** The most recent refreshes that revised anything, newest first. */
+  batches: RevisionBatch[];
 };

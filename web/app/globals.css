@@ -918,7 +918,17 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 /* --------------------------------------------------------- current values --- */
 
 .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 0.5rem var(--gap); align-items: start; }
-/* The freshness page (Milestone 27): one row per source, three dates kept apart. The
+.values { font-size: var(--text-small); }
+.values .colheads th { padding-top: 0.6rem; }
+.values td { padding: 0.35rem 0; border-bottom: 1px solid var(--grid); vertical-align: baseline; }
+.values td + td, .values th + th { padding-left: 0.75rem; }
+
+/* --------------------------------------------------------- about the data --- */
+
+/* The pages about the data itself (Milestone 27), linked from every page's footer.
+   `.fresh-status`, `.fresh-sub` and `.fresh-built` are shared by both: a small tag, a
+   secondary line under a cell, and the monospace build line under a heading. */
+/* Freshness: one row per source, three dates kept apart. The
    status reads as a small tag, coloured only where it asks for attention — a source that
    could not be reached, or one with a newer release waiting. */
 .foot-links { margin: 0.75rem 0 0; font-size: var(--text-small); display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; }
@@ -953,10 +963,29 @@ tr[data-status="pending"] .fresh-status {
   .fresh-legend div { grid-template-columns: 1fr; gap: 0.1rem; }
 }
 
-.values { font-size: var(--text-small); }
-.values .colheads th { padding-top: 0.6rem; }
-.values td { padding: 0.35rem 0; border-bottom: 1px solid var(--grid); vertical-align: baseline; }
-.values td + td, .values th + th { padding-left: 0.75rem; }
+/* What changed: each refresh a dated section, each metric a block with one sentence and a
+   small table of the places that moved most. */
+.change-day { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem; }
+.change-day-count { font: 500 var(--text-label)/1.4 var(--font-mono); letter-spacing: 0.04em; color: var(--text-secondary); }
+.change-group { margin-top: 1.1rem; padding-top: 0.9rem; border-top: 1px solid var(--grid); }
+.change-metric { margin: 0; font-size: var(--text-body); font-weight: 600; }
+.change-note { margin: 0.4rem 0 0; max-width: 72ch; font-size: var(--text-note); color: var(--text-secondary); }
+.change-note .fresh-status { margin-right: 0.4rem; }
+.change-summary { margin: 0.45rem 0 0.5rem; max-width: 72ch; font-size: var(--text-small); color: var(--text-primary); }
+.change-places { min-width: 34rem; font-size: var(--text-small); }
+.change-places th, .change-places td { text-align: left; vertical-align: baseline; }
+.change-places th.num, .change-places td.num { text-align: right; }
+.change-places td, .change-places tbody th { padding: 0.45rem 0; border-bottom: 1px solid var(--grid); }
+.change-places th + th, .change-places td + td, .change-places th + td { padding-left: 0.9rem; }
+.change-places tbody th { font-weight: 400; }
+.change-places td.num { white-space: nowrap; }
+.change-narrow { display: none; }
+@media (max-width: 40rem) {
+  .change-places { min-width: 0; width: 100%; }
+  .change-places th + th, .change-places td + td, .change-places th + td { padding-left: 0.6rem; }
+  .change-period, .change-wide { display: none; }
+  .change-narrow { display: block; }
+}
 
 /* ---------------------------------------------------------- New Jersey page --- */
 
