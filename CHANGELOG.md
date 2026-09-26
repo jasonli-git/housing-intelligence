@@ -35,7 +35,10 @@ changed after they were published.
   figures describe, the publisher's release date, when the site last asked for anything
   newer, when it was downloaded, and any release waiting to take effect — HUD's FY2027
   Fair Market Rents, from 2026-10-01. A publisher the last refresh could not reach is
-  shown as such (ARCHITECTURE #228). Served by `GET /freshness` from a new
+  shown as such (ARCHITECTURE #228), and a week in which no figure moved still
+  republishes the page when a source's status changes (ARCHITECTURE #232). Every status
+  is worded as of the page's build, with its age beside the build date
+  (ARCHITECTURE #233). Served by `GET /freshness` from a new
   `source_discoveries` table (migration 0015) that `hip load` fills (ARCHITECTURE #222).
 - **`/changes`**: figures the site had already published that a later refresh revised,
   per refresh and metric — how many, where, which way, typically by how much, and the

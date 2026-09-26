@@ -417,7 +417,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 655 Python + 243 dashboard tests; API tests skip without a warehouse
+make test          # 660 Python + 246 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -511,11 +511,14 @@ run it alone. `scripts/scheduled_refresh.py` is the scheduler-facing script: it 
 stops there, at no cost past the refresh itself — goes on to rebuild packets, check
 whether any reading is stale (`hip explain --all --dry-run`, which classifies every
 county without calling a model), rebuild the site, deploy it, and confirm the deploy
-with `check-live`. `scripts/launchd/` holds the two `launchd` agents this Mac runs it
-under, real absolute paths and all, since this project runs on exactly one machine on
-purpose: `com.housing-intelligence.weekly-refresh` (Fridays, the morning after Freddie
-Mac's Thursday rate release, wrapped in `caffeinate`) and `com.housing-intelligence.
-regenerate-now` (`WatchPaths` on a trigger file, fired instantly rather than polled).
+with `check-live`. A quiet week still republishes, without rebuilding packets or
+readings, when a source's line on the freshness page would change — out of reach, back,
+or a release now waiting (ARCHITECTURE #232). `scripts/launchd/` holds the two
+`launchd` agents this Mac runs it under, real absolute paths and all, since this project
+runs on exactly one machine on purpose: `com.housing-intelligence.weekly-refresh`
+(Fridays, the morning after Freddie Mac's Thursday rate release, wrapped in
+`caffeinate`) and `com.housing-intelligence.regenerate-now` (`WatchPaths` on a trigger
+file, fired instantly rather than polled).
 Installing either is a standing decision on its own, not something this repo does for
 you — see the comment at the top of each `.plist` for the `launchctl load` line. Both
 scripts run only from a clean `main`: this checkout is shared with development, so a run
