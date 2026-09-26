@@ -19,6 +19,7 @@ from hip.api.routers import (
     metrics,
     packets,
     regions,
+    revisions,
 )
 
 app = FastAPI(
@@ -43,3 +44,4 @@ app.include_router(analytics.router)
 app.include_router(packets.router)
 app.include_router(explanations.router)
 app.include_router(freshness.router)
+app.include_router(revisions.router)
