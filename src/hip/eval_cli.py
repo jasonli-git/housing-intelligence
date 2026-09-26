@@ -573,6 +573,10 @@ class _Outcome:
     # Stored prose re-cited against the current packet without a model call: its figures
     # had not moved, only their provenance, or it predated binding (Milestone 13).
     rebound: int = 0
+    # `--dry-run` only: a region this model would generate for, counted instead of
+    # written. Free re-citation still happens and lands in `rebound` above — a dry run
+    # answers "would this spend money", not "would this touch the database at all".
+    would_write: int = 0
     failed: int = 0
     # Prose the model wrote and the binding would not publish: a figure the packet does
     # not carry. Counted apart from `failed` because the model answered.
@@ -585,6 +589,7 @@ class _Outcome:
             f"{count} {what}"
             for count, what in (
                 (self.written, "written"),
+                (self.would_write, "would generate"),
                 (self.rebound, "re-bound"),
                 (self.current, "already current"),
                 (self.refused, "refused"),
@@ -597,8 +602,15 @@ class _Outcome:
         return f"  {model_id:<24}{done}"
 
 
-def _exit_code(outcomes: dict[str, _Outcome]) -> int:
-    """0, `PARTIAL` or 1, as defined beside `PARTIAL`."""
+def _exit_code(outcomes: dict[str, _Outcome], *, dry_run: bool = False) -> int:
+    """0, `PARTIAL` or 1, as defined beside `PARTIAL`.
+
+    A dry run never fails or writes, so its own question is different: whether anything
+    *would* cost money. `PARTIAL` there means "stale and unregenerated", which is the
+    signal a scheduler gates a paid step on (Milestone 27) — not "something went wrong".
+    """
+    if dry_run:
+        return PARTIAL if any(outcome.would_write for outcome in outcomes.values()) else 0
     if not any(
         outcome.written or outcome.current or outcome.rebound
         for outcome in outcomes.values()
@@ -612,13 +624,13 @@ def _exit_code(outcomes: dict[str, _Outcome]) -> int:
     return 0
 
 
-def _summarize(outcomes: dict[str, _Outcome]) -> int:
+def _summarize(outcomes: dict[str, _Outcome], *, dry_run: bool = False) -> int:
     """Print what every requested model came to, and return the exit code it means.
 
     One block at the end, because a skip announced as it happens scrolls away under a
     hundred lines of generation output, and the last lines are the ones a log is read by.
     """
-    code = _exit_code(outcomes)
+    code = _exit_code(outcomes, dry_run=dry_run)
     for model_id, outcome in outcomes.items():
         typer.secho(
             outcome.line(model_id),
@@ -627,11 +639,22 @@ def _summarize(outcomes: dict[str, _Outcome]) -> int:
             else None,
         )
     written = sum(outcome.written for outcome in outcomes.values())
+    would_write = sum(outcome.would_write for outcome in outcomes.values())
     rebound = sum(outcome.rebound for outcome in outcomes.values())
     current = sum(outcome.current for outcome in outcomes.values())
     refused = sum(outcome.refused for outcome in outcomes.values())
     failed = sum(outcome.failed for outcome in outcomes.values())
     skipped = sum(1 for outcome in outcomes.values() if outcome.skipped)
+    if dry_run:
+        total = f"dry run: {would_write} explanation(s) would be generated"
+        if rebound:
+            total += f", {rebound} would be re-bound for free"
+        if current:
+            total += f", {current} already current"
+        total += " — nothing was called" if not would_write else " — nothing spent yet"
+        dry_colour = typer.colors.YELLOW if would_write else typer.colors.GREEN
+        typer.secho(total, fg=dry_colour)
+        return code
     total = f"{written} explanations written"
     if rebound:
         total += f", {rebound} re-bound without regenerating"
@@ -661,6 +684,7 @@ def explain_command(
     unbenchmarked: bool = False,
     all_models: bool = False,
     prune: bool = False,
+    dry_run: bool = False,
 ) -> None:
     """Body of `hip explain`, registered on the root app in cli.py."""
     from hip.eval.selection import NoModelAvailable, resolve
@@ -714,7 +738,7 @@ def explain_command(
         for candidate, why in unusable.items():
             outcomes[candidate].skipped = why
         if len(unusable) == len(outcomes):
-            raise typer.Exit(code=_summarize(outcomes))
+            raise typer.Exit(code=_summarize(outcomes, dry_run=dry_run))
 
     with Session(get_engine()) as session:
         region_ids = (
@@ -737,15 +761,18 @@ def explain_command(
             window=window,
             payload_format=payload_format,
             force=force,
+            dry_run=dry_run,
         )
         # `--all` regenerates the whole preference list, so it also retires any model
         # that has left it (Milestone 26). Before this, retirement was opt-in, and a
         # model dropped from the list — Qwen 3.7 Plus, when its free quota ran out —
         # would have gone on being served beside its replacements indefinitely.
-        if prune or all_models:
+        # Not under `--dry-run`: a report that answers "what would this cost" must not
+        # itself delete anything.
+        if (prune or all_models) and not dry_run:
             _prune(session, evaluation, models, region_ids, window)
 
-    code = _summarize(outcomes)
+    code = _summarize(outcomes, dry_run=dry_run)
     if code:
         raise typer.Exit(code=code)
 
@@ -759,6 +786,7 @@ def _explain_each(
     window: str,
     payload_format: str,
     force: bool,
+    dry_run: bool = False,
 ) -> None:
     """Generate for every usable model and region, recording each result in `outcomes`.
 
@@ -767,6 +795,11 @@ def _explain_each(
     away every generation already paid for. That held for a failed region before
     2026-09-11 but not for a missing runtime, which ended the run for every model after
     it.
+
+    `dry_run` answers "what would this cost", so `explain_region` — the one call that
+    reaches a model — is the one thing it never does. Free re-citation still happens and
+    is still committed: it is not a regeneration, and skipping it would leave the
+    provenance a real run *would* have fixed sitting stale for no reason.
     """
     from hip.eval.explain import UnboundFigures, explain_region
     from hip.eval.runners import RunnerUnavailable
@@ -790,6 +823,9 @@ def _explain_each(
                     session.commit()
                     outcome.rebound += 1
                     continue
+            if dry_run:
+                outcome.would_write += 1
+                continue
             try:
                 explanation = explain_region(
                     session,

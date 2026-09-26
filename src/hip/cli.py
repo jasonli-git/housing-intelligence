@@ -1127,6 +1127,15 @@ def explain(
             "list and so retires any model that has left it.",
         ),
     ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            help="Report how many explanations are stale and would be generated, "
+            "without calling a model, spending anything, or pruning. Exit 3 if anything "
+            "would be generated, 0 if nothing would (Milestone 27's scheduler gate).",
+        ),
+    ] = False,
 ) -> None:
     """Write model explanations into the warehouse for the API to serve.
 
@@ -1156,6 +1165,12 @@ def explain(
     `--prune` then deletes, for the regions and window the run covered, every stored
     explanation from a model neither on the preference list nor named in the run
     (ARCHITECTURE #119). Nothing else in the platform deletes an explanation.
+
+    `--dry-run` answers "would this cost anything" without spending: it classifies every
+    requested (model, region) pair exactly as a real run would, but stops short of the
+    one step that reaches a model. Free re-citation still happens, since it costs
+    nothing; `--prune`'s deletion does not, since a cost report should not itself change
+    the database.
     """
     explain_command(
         region,
@@ -1168,6 +1183,7 @@ def explain(
         unbenchmarked,
         all_models,
         prune=prune,
+        dry_run=dry_run,
     )
 
 
