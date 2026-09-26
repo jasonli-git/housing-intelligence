@@ -417,7 +417,7 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 619 Python + 243 dashboard tests; API tests skip without a warehouse
+make test          # 646 Python + 243 dashboard tests; API tests skip without a warehouse
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 
@@ -519,8 +519,8 @@ regenerate-now` (`WatchPaths` on a trigger file, fired instantly rather than pol
 Installing either is a standing decision on its own, not something this repo does for
 you — see the comment at the top of each `.plist` for the `launchctl load` line. Both
 scripts run only from a clean `main`: this checkout is shared with development, so a run
-that finds another branch, or uncommitted work outside `reports/`, notifies and stops
-instead of deploying unreviewed code (ARCHITECTURE #226).
+that finds another branch, or any uncommitted work, notifies and stops instead of
+deploying unreviewed code (ARCHITECTURE #226, #227).
 
 **Regenerating AI readings is billed, so it is the one step gated.** Everything else —
 the refresh, the rebuild, the deploy — runs every scheduled cycle regardless.

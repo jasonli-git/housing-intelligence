@@ -159,10 +159,9 @@ first raised, not where it must be done.
       response shape would surface as a pipeline failure rather than a test failure.
       `test_nj_modiv.py` is the pattern to copy — a `MockTransport` subclass, no network.
 
-- [ ] **The two scheduled scripts' step order has no committed test.** (M27) Both were
-      checked by hand against stubbed `subprocess` calls on 2026-09-25 and 2026-09-26;
-      the pieces they call are tested (`checkout_problem`, `RefreshGate`, `hip explain
-      --dry-run`), the sequence between them is not.
+- [x] **The two scheduled scripts' step order has no committed test.** (M27) **Done
+      2026-09-26** — `tests/test_scheduled_scripts.py`, after Codex's review found three
+      defects in that sequence (ARCHITECTURE #227).
 
 ### API and scale limits
 
@@ -340,9 +339,9 @@ first raised, not where it must be done.
       output, so they go stale silently** — these had been carrying Zillow figures the
       September release restated, Atlantic County's home-value change among them at
       +46.4% against an actual +44.5%. Either regenerate them whenever the data moves,
-      or stop tracking them and link a published report instead. Since Milestone 27 the
-      weekly run regenerates them in the working tree and leaves them uncommitted (#226
-      lets it), so the local copies stay current and the committed ones still do not.
+      or stop tracking them and link a published report instead. The weekly run leaves
+      them alone — it packs without `--report` (#227) — so they stay a committed
+      snapshot until someone regenerates and commits them.
 
 ### Documentation upkeep
 
@@ -465,6 +464,14 @@ first raised, not where it must be done.
       map layer would be an enormous download.
 
 ## Parked / needs user input
+
+- [ ] **The local model cannot regenerate while Ollama is quit.** (M27, found
+      2026-09-26) Ollama was quit when Gemma was closed out (#215), so every regeneration
+      that needs Gemma's reading reaches it, fails fast, and ends partial: the hosted
+      readings publish and Gemma's stays up labelled stale, with a notification each
+      time (#227). Waiting on a choice: start Ollama for a regeneration and stop it
+      after, leave it quit and accept a stale local reading, or take Gemma off the
+      preference list.
 
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.

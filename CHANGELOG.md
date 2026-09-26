@@ -13,24 +13,27 @@ changed after they were published.
 
 - **A weekly refresh that publishes itself.** `scripts/scheduled_refresh.py` runs every
   Friday at 08:00 on this Mac, under `launchd` and inside `caffeinate`: `hip refresh`,
-  then — only if something moved — `hip pack --report`, the readings check,
-  `make publish`, `make deploy` and `make check-live`, stopping at the first step that
-  fails (ARCHITECTURE #216, #217). It runs only from a clean `main`: this checkout is
-  shared with development, so on any other branch, or with uncommitted work, it says so
-  on the phone and stops (ARCHITECTURE #226).
+  then — only if something moved — `hip pack`, the readings check, `make publish`,
+  `make deploy` and `make check-live` (ARCHITECTURE #216, #217). A publisher it cannot
+  reach is reported even in a week when nothing else moved, and readings that fail to
+  regenerate are reported without holding back the data (ARCHITECTURE #227). It runs
+  only from a clean `main`: this checkout is shared with development, so on any other
+  branch, or with uncommitted work, it says so on the phone and stops
+  (ARCHITECTURE #226).
 - **Regenerating readings is the one step that asks first**, because it is billed. An
   `ask`/`auto` setting decides it, starting at `ask`, held in one iCloud file that
   `hip refresh-mode` on the Mac and an iPhone Shortcut both write. `hip regenerate-now`,
   or a second Shortcut, starts a regeneration on demand through a second `launchd`
-  agent, and `hip explain --dry-run` reports what would be regenerated, free
-  (ARCHITECTURE #219).
+  agent, and `hip explain --dry-run` reports what would be regenerated without calling
+  any model (ARCHITECTURE #219, #229). A failed check never goes on to the paid run.
 - **Notifications on the owner's phone** through Pushover, `hip notify`: a failed step as
   urgent; an unreachable source or readings awaiting a go-ahead as normal
   (ARCHITECTURE #218).
 - **`/freshness`**, for every downloaded source: its status, the newest period its
   figures describe, the publisher's release date, when the site last asked for anything
   newer, when it was downloaded, and any release waiting to take effect — HUD's FY2027
-  Fair Market Rents, from 2026-10-01. Served by `GET /freshness` from a new
+  Fair Market Rents, from 2026-10-01. A publisher the last refresh could not reach is
+  shown as such (ARCHITECTURE #228). Served by `GET /freshness` from a new
   `source_discoveries` table (migration 0015) that `hip load` fills (ARCHITECTURE #222).
 - **`/changes`**: figures the site had already published that a later refresh revised,
   per refresh and metric — how many, where, which way, typically by how much, and the
