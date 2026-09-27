@@ -8,8 +8,8 @@ import { api, type FreshnessStatus } from "@/lib/api";
 import {
   checkedDaysBefore,
   dayLabel,
+  groupByCadence,
   nextLabel,
-  sortForDisplay,
   STALE_CHECK_DAYS,
   STATUS_COPY,
   stillUnderWay,
@@ -49,8 +49,8 @@ export default async function FreshnessPage() {
     );
   }
 
-  const sources = sortForDisplay(report.sources);
-  const shown = new Set<FreshnessStatus>(sources.map((s) => s.status));
+  const groups = groupByCadence(report.sources);
+  const shown = new Set<FreshnessStatus>(report.sources.map((source) => source.status));
 
   return (
     <>
@@ -62,14 +62,8 @@ export default async function FreshnessPage() {
             <Kind kind="data" />
             <h1 className="page-title">How current is each source</h1>
             <p className="meta">
-              Every figure on this site comes from a public source that publishes on its own
-              schedule. For each one, this page keeps three dates apart: the newest period its
-              figures describe, when the site last asked for anything newer, and when the data was
-              downloaded. A source asked yesterday can still describe last year.
-            </p>
-            <p className="meta">
-              Sources are checked every week. This page is rebuilt when a figure moves or a
-              source&rsquo;s status changes, so everything on it is as of its build.
+              Data through is the period a source describes; Last checked is when we looked for
+              updates. Publishers update at the frequencies below; we check weekly.
             </p>
             <p className="meta fresh-built">
               Built {dayLabel(report.generated_at)}
@@ -80,65 +74,74 @@ export default async function FreshnessPage() {
         </header>
 
         <section className="section" aria-labelledby="fresh-heading">
-          <h2 id="fresh-heading" className="visually-hidden">
-            Sources
-          </h2>
-          <div className="scroll-x">
-            <table className="freshness">
-              <caption className="visually-hidden">
-                Each source: its status, the newest period its figures describe, when it was last
-                checked for a newer release, when it was downloaded, and any release waiting to take
-                effect
-              </caption>
-              <thead>
-                <tr className="colheads">
-                  <th scope="col">Source</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Data through</th>
-                  <th scope="col">Last checked</th>
-                  <th scope="col">Downloaded</th>
-                  <th scope="col">Next release</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sources.map((source) => {
-                  const daysOld = checkedDaysBefore(report.generated_at, source.checked_at);
-                  return (
-                    <tr key={source.source_id} data-status={source.status}>
-                      <th scope="row">
-                        <span className="fresh-name">{source.name}</span>
-                        <span className="fresh-sub">
-                          {source.publisher} · publishes {source.cadence}
-                        </span>
-                      </th>
-                      <td>
-                        <span className="fresh-status">{STATUS_COPY[source.status].label}</span>
-                      </td>
-                      <td>
-                        {throughLabel(source.period_observed_end)}
-                        {stillUnderWay(report.generated_at, source.period_observed_end) && (
-                          <span className="fresh-sub">a period still under way</span>
-                        )}
-                        {source.published && (
-                          <span className="fresh-sub">released {dayLabel(source.published)}</span>
-                        )}
-                      </td>
-                      <td>
-                        {dayLabel(source.checked_at)}
-                        {daysOld !== null && daysOld > STALE_CHECK_DAYS && (
-                          <span className="fresh-sub fresh-stale">
-                            {daysOld} days before this page was built
-                          </span>
-                        )}
-                      </td>
-                      <td>{dayLabel(source.acquired_at)}</td>
-                      <td>{nextLabel(source)}</td>
+          <h2 id="fresh-heading">By publication frequency</h2>
+          {groups.map((group, index) => (
+            <section
+              key={group.cadence}
+              className="fresh-cadence-group"
+              aria-labelledby={`fresh-group-${index}`}
+            >
+              <h3 id={`fresh-group-${index}`} className="fresh-cadence-heading">
+                {group.label}
+                <span>
+                  {group.sources.length} {group.sources.length === 1 ? "source" : "sources"}
+                </span>
+              </h3>
+              <div className="scroll-x">
+                <table className="freshness">
+                  <caption className="visually-hidden">
+                    {group.label} sources: status, latest data period, last check, download, and
+                    next release
+                  </caption>
+                  <thead>
+                    <tr className="colheads">
+                      <th scope="col">Source</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Data through</th>
+                      <th scope="col">Last checked</th>
+                      <th scope="col">Downloaded</th>
+                      <th scope="col">Next release</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {group.sources.map((source) => {
+                      const daysOld = checkedDaysBefore(report.generated_at, source.checked_at);
+                      return (
+                        <tr key={source.source_id} data-status={source.status}>
+                          <th scope="row">
+                            <span className="fresh-name">{source.name}</span>
+                            <span className="fresh-sub">{source.publisher}</span>
+                          </th>
+                          <td>
+                            <span className="fresh-status">{STATUS_COPY[source.status].label}</span>
+                          </td>
+                          <td>
+                            {throughLabel(source.period_observed_end)}
+                            {stillUnderWay(report.generated_at, source.period_observed_end) && (
+                              <span className="fresh-sub">a period still under way</span>
+                            )}
+                            {source.published && (
+                              <span className="fresh-sub">released {dayLabel(source.published)}</span>
+                            )}
+                          </td>
+                          <td>
+                            {dayLabel(source.checked_at)}
+                            {daysOld !== null && daysOld > STALE_CHECK_DAYS && (
+                              <span className="fresh-sub fresh-stale">
+                                {daysOld} days before this page was built
+                              </span>
+                            )}
+                          </td>
+                          <td>{dayLabel(source.acquired_at)}</td>
+                          <td>{nextLabel(source)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ))}
 
           <dl className="fresh-legend">
             {(Object.keys(STATUS_COPY) as FreshnessStatus[])

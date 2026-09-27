@@ -941,12 +941,19 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 /* The pages about the data itself (Milestone 27), linked from every page's footer.
    `.fresh-status`, `.fresh-sub` and `.fresh-built` are shared by both: a small tag, a
    secondary line under a cell, and the monospace build line under a heading. */
-/* Freshness: one row per source, three dates kept apart. The
+/* Freshness: one row per source, grouped by publisher schedule, with three dates kept apart. The
    status reads as a small tag, coloured only where it asks for attention — a source that
    could not be reached, or one with a newer release waiting. */
 .foot-links { margin: 0.75rem 0 0; font-size: var(--text-small); display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; }
 .foot-links a { color: var(--text-secondary); }
 .foot-links a:hover { color: var(--text-primary); }
+.fresh-cadence-group { margin-top: 1.6rem; }
+.fresh-cadence-heading {
+  display: flex; align-items: baseline; gap: 0.75rem; margin: 0 0 0.4rem;
+  padding-bottom: 0.45rem; border-bottom: 1px solid var(--border);
+  font-size: 17px; font-weight: 600;
+}
+.fresh-cadence-heading span { font: 500 var(--text-label)/1.4 var(--font-mono); color: var(--text-muted); }
 .freshness { min-width: 44rem; font-size: var(--text-small); }
 .freshness th, .freshness td { text-align: left; vertical-align: baseline; }
 .freshness td, .freshness tbody th { padding: 0.55rem 0; border-bottom: 1px solid var(--grid); }

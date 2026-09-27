@@ -59,6 +59,40 @@ export function sortForDisplay(sources: SourceFreshness[]): SourceFreshness[] {
   );
 }
 
+export type CadenceGroup = { cadence: string; label: string; sources: SourceFreshness[] };
+
+const CADENCE_ORDER = ["weekly", "monthly", "quarterly", "annual"];
+const CADENCE_LABELS: Record<string, string> = {
+  weekly: "Weekly",
+  monthly: "Monthly",
+  quarterly: "Quarterly",
+  annual: "Yearly",
+};
+
+/** Group by publisher update frequency, keeping attention-needed sources first in each table. */
+export function groupByCadence(sources: SourceFreshness[]): CadenceGroup[] {
+  const groups = new Map<string, SourceFreshness[]>();
+  for (const source of sortForDisplay(sources)) {
+    const raw = source.cadence.trim().toLowerCase();
+    const cadence = raw === "yearly" ? "annual" : raw || "unspecified";
+    const members = groups.get(cadence) ?? [];
+    members.push(source);
+    groups.set(cadence, members);
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => {
+      const aOrder = CADENCE_ORDER.indexOf(a);
+      const bOrder = CADENCE_ORDER.indexOf(b);
+      return (aOrder < 0 ? CADENCE_ORDER.length : aOrder) -
+        (bOrder < 0 ? CADENCE_ORDER.length : bOrder) || a.localeCompare(b);
+    })
+    .map(([cadence, members]) => ({
+      cadence,
+      label: CADENCE_LABELS[cadence] ?? cadence.replace(/^./, (letter) => letter.toUpperCase()),
+      sources: members,
+    }));
+}
+
 /** "Sep 26, 2026" from "2026-09-26" or "2026-09-26T00:51:05Z"; "—" for nothing. */
 export function dayLabel(iso: string | null): string {
   if (!iso) return "—";

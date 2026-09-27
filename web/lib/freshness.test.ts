@@ -4,6 +4,7 @@ import type { SourceFreshness } from "@/lib/api";
 import {
   checkedDaysBefore,
   dayLabel,
+  groupByCadence,
   nextLabel,
   sortForDisplay,
   STATUS_COPY,
@@ -46,6 +47,29 @@ describe("sortForDisplay", () => {
     const input = [source({ name: "B" }), source({ name: "A" })];
     sortForDisplay(input);
     expect(input.map((s) => s.name)).toEqual(["B", "A"]);
+  });
+});
+
+describe("groupByCadence", () => {
+  it("shows only represented frequencies and orders attention-needed sources within each", () => {
+    const groups = groupByCadence([
+      source({ name: "Zillow", cadence: "monthly", status: "current" }),
+      source({ name: "ACS", cadence: "annual", status: "unreachable" }),
+      source({ name: "BLS", cadence: "monthly", status: "pending" }),
+      source({ name: "Special release", cadence: "as needed" }),
+    ]);
+    expect(groups.map((group) => group.label)).toEqual(["Monthly", "Yearly", "As needed"]);
+    expect(groups[0].sources.map((entry) => entry.name)).toEqual(["BLS", "Zillow"]);
+    expect(groups.flatMap((group) => group.sources)).toHaveLength(4);
+  });
+
+  it("groups yearly and annual under the same heading", () => {
+    const groups = groupByCadence([
+      source({ name: "A", cadence: "annual" }),
+      source({ name: "B", cadence: "yearly" }),
+    ]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].label).toBe("Yearly");
   });
 });
 
