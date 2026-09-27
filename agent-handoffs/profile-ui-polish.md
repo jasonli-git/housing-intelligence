@@ -13,6 +13,9 @@
 - Removed the redundant parenthetical “no sampling error” from the population change in region population cards, while retaining the statement beneath the population number.
 - Shortened the introductory copy on both source-history pages. The freshness page now separates the data period from the last check in two sentences; the revisions page states only what the comparison shows.
 - Split the freshness list into tables by publisher cadence. Only represented schedules render, with attention-needed statuses first within each group.
+- Replaced the separate population card with a slim badge beside the page-type label on state, county, and municipality headers. The count and estimate period stay in the badge; region change and uncertainty remain visible beneath the title. Pages with no population figure show no badge.
+- Rewrote all 20 currently published New Jersey map-measure explanations as short, plain-language descriptions, scoped to the map so profile/report definitions are unchanged. The selected change window now appears as a blue badge immediately below the measure title.
+- Gave the desktop header search enough fixed width for its full placeholder. Marked the three New Jersey agency sources in the freshness table with the state-page blue, and moved status definitions from a repeated bottom legend onto focusable status labels whose cards open outside the table scroller.
 
 ## Files/modules affected
 
@@ -23,6 +26,10 @@
 - `web/app/freshness/page.tsx` and `web/app/changes/page.tsx` — disabled affordability control and shorter introductions; freshness tables grouped by cadence.
 - `web/lib/freshness.ts` and `web/lib/freshness.test.ts` — cadence grouping and regression tests.
 - `web/app/regions/[id]/page.tsx` — population change copy without a repeated no-sampling-error note.
+- `web/app/page.tsx` and `web/app/regions/[id]/page.tsx` — population badge placement and retained context.
+- `web/components/CountyExplorer.tsx` and `web/lib/mapDefinitions.ts` — map-only plain-language definitions and window badge placement.
+- `web/lib/mapDefinitions.test.ts` — coverage of the 20 published map measures and fallback behavior.
+- `web/app/tokens.css` and `web/app/new-jersey.css` — shared state blue and New Jersey header/map styling.
 
 ## Architectural or implementation decisions
 
@@ -33,17 +40,20 @@
 - The banner's CSS conveyor remains the autoplay mechanism. On pointer-down, the visible transform is frozen; pointer movement updates that offset, and release converts it to an animation delay so motion continues without jumping back to the start. A small movement threshold preserves ordinary metric-definition clicks.
 - The affordability control on source-history pages uses the existing disabled variant, not a new one-off style. The destinations contain source metadata, not local affordability results.
 - Freshness grouping uses the publisher's `cadence`, not the site's weekly checking interval. The current data yields Monthly, Quarterly, and Yearly tables; no empty Weekly table is shown. The heading says frequency, not schedule, because some monthly sources have no dated release to watch. Unknown future cadences retain their own labelled group rather than disappearing.
+- Population is now part of the identity line, not a corner overlay. The 2024/2025 estimate term keeps its definition in a viewport-clamped floating card, and the region's change and sampling-error wording stay on the page rather than hiding behind the badge.
+- The map uses its own concise wording; the shared metric dictionary remains the fuller explanation for other contexts. An unfamiliar new map measure falls back to that shared definition.
+- Freshness status labels use the existing floating-definition component. Its portal avoids the horizontal table's clipping, and its placement clamps to the phone viewport. The bottom legend was removed to avoid saying the same thing twice. New Jersey agency rows are identified by the current `nj_` source IDs, verified against the local API.
 
 ## Assumptions
 
 - This work covers the interactive state, county, municipality, and ZIP page shell. The separate printable report layout is unchanged.
 - A compact disclosure line is preferable to moving the commercial-use warning into the navigation, where its terms could be less clear or harder to print.
 - “Every range” was interpreted as uncertainty ranges in the shared profile banner. Tables and reports retain their established uncertainty layout.
-- The population-badge suggestion was treated as an exploratory design question, not approval to remove the current population card or hide its year and uncertainty context.
+- The population badge was implemented only after explicit follow-up approval. Count, period, change, and uncertainty remain visible; the badge does not alter a source value or calculation.
 
 ## New TODOs / limitations
 
-- The population-card-to-badge redesign remains unimplemented pending a visual direction. The build's existing `NEXT_PUBLIC_ARTIFACT_URL` warning remains: report Markdown links point to localhost when the deployment origin is not configured.
+- The build's existing `NEXT_PUBLIC_ARTIFACT_URL` warning remains: report Markdown links point to localhost when the deployment origin is not configured.
 
 ## Verification
 
@@ -61,3 +71,7 @@
 - Source-history follow-up: `cd web && npm run typecheck` — passed; `npm test` — 32 files, 278 tests passed; `git diff --check` — passed.
 - Source-history follow-up: headless Chromium at 390 and 1440 px found Monthly (5), Quarterly (2), and Yearly (9) groups, 16 rows total, and no document overflow. The revised intro appeared on `/changes`.
 - Source-history follow-up: `cd web && npm run build` — passed, 2,278 static pages; the existing unset-`NEXT_PUBLIC_ARTIFACT_URL` warning remains.
+- Population/map/freshness follow-up: `cd web && npm run typecheck` — passed; `npm test` — 33 files, 280 tests passed; `git diff --check` — passed.
+- Population/map/freshness follow-up: headless Chromium found no page overflow at 390, 800, 900, 1024, or 1440 px. State, county, and municipality badges stayed above their titles; the sampled ZIP had no population figure and showed no badge. The search placeholder fit at 761–1440 px. All 20 published map options showed a concise definition and the change-window badge.
+- Population/map/freshness follow-up: phone taps opened the state and county population definitions and the first/last freshness status definitions inside the viewport. State-source blue resolved to its light and dark variants.
+- Population/map/freshness follow-up: `cd web && npm run build` — passed, 2,278 static pages; the existing unset-`NEXT_PUBLIC_ARTIFACT_URL` warning remains.

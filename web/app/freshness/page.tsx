@@ -3,8 +3,9 @@ import Link from "next/link";
 
 import { BuiltAgo } from "@/components/BuiltAgo";
 import { Crumbs, Kind } from "@/components/Crumbs";
+import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
-import { api, type FreshnessStatus } from "@/lib/api";
+import { api } from "@/lib/api";
 import {
   checkedDaysBefore,
   dayLabel,
@@ -50,7 +51,6 @@ export default async function FreshnessPage() {
   }
 
   const groups = groupByCadence(report.sources);
-  const shown = new Set<FreshnessStatus>(report.sources.map((source) => source.status));
 
   return (
     <>
@@ -106,14 +106,29 @@ export default async function FreshnessPage() {
                   <tbody>
                     {group.sources.map((source) => {
                       const daysOld = checkedDaysBefore(report.generated_at, source.checked_at);
+                      const stateSource = source.source_id.startsWith("nj_");
                       return (
-                        <tr key={source.source_id} data-status={source.status}>
+                        <tr
+                          key={source.source_id}
+                          data-status={source.status}
+                          data-state-source={stateSource ? "true" : undefined}
+                        >
                           <th scope="row">
-                            <span className="fresh-name">{source.name}</span>
+                            <span className="fresh-name">
+                              {source.name}
+                              {stateSource && <span className="fresh-state-tag">NJ source</span>}
+                            </span>
                             <span className="fresh-sub">{source.publisher}</span>
                           </th>
                           <td>
-                            <span className="fresh-status">{STATUS_COPY[source.status].label}</span>
+                            <span className="fresh-status">
+                              <FloatingMetricTerm
+                                metricId={`fresh-${source.status}`}
+                                label={STATUS_COPY[source.status].label}
+                                definition={STATUS_COPY[source.status].means}
+                                why={null}
+                              />
+                            </span>
                           </td>
                           <td>
                             {throughLabel(source.period_observed_end)}
@@ -142,17 +157,6 @@ export default async function FreshnessPage() {
               </div>
             </section>
           ))}
-
-          <dl className="fresh-legend">
-            {(Object.keys(STATUS_COPY) as FreshnessStatus[])
-              .filter((status) => shown.has(status))
-              .map((status) => (
-                <div key={status}>
-                  <dt>{STATUS_COPY[status].label}</dt>
-                  <dd>{STATUS_COPY[status].means}</dd>
-                </div>
-              ))}
-          </dl>
         </section>
       </main>
     </>

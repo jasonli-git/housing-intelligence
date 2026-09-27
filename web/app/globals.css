@@ -356,7 +356,6 @@ body > main { flex: 1 0 auto; width: 100%; }
   letter-spacing: var(--track-display); text-wrap: balance;
 }
 .measure-def { margin: 0.4rem 0 0; max-width: 68ch; font-size: var(--text-small); line-height: 1.55; color: var(--text-primary); }
-.measure-why { color: var(--text-secondary); }
 .measure-window { margin: 0.55rem 0 0; font: var(--text-label)/1.4 var(--font-mono); letter-spacing: 0.04em; color: var(--text-muted); }
 .measure-card .explorer-controls {
   padding-top: 0.85rem; border-top: 1px solid color-mix(in srgb, var(--series-1) 18%, var(--border));
@@ -941,7 +940,7 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 /* The pages about the data itself (Milestone 27), linked from every page's footer.
    `.fresh-status`, `.fresh-sub` and `.fresh-built` are shared by both: a small tag, a
    secondary line under a cell, and the monospace build line under a heading. */
-/* Freshness: one row per source, grouped by publisher schedule, with three dates kept apart. The
+/* Freshness: one row per source, grouped by publisher frequency, with three dates kept apart. The
    status reads as a small tag, coloured only where it asks for attention — a source that
    could not be reached, or one with a newer release waiting. */
 .foot-links { margin: 0.75rem 0 0; font-size: var(--text-small); display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; }
@@ -960,6 +959,18 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 .freshness th + th, .freshness td + td, .freshness th + td { padding-left: 0.9rem; }
 .freshness tbody th { font-weight: 400; }
 .fresh-name { display: block; font-weight: 600; color: var(--text-primary); }
+.fresh-state-tag {
+  display: inline-block; margin-left: 0.45rem; padding: 0.05rem 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--state-blue) 35%, var(--border));
+  border-radius: 999px; color: var(--state-blue);
+  font: 600 9px/1.4 var(--font-mono); white-space: nowrap;
+}
+.freshness tr[data-state-source="true"] th,
+.freshness tr[data-state-source="true"] td {
+  background: color-mix(in srgb, var(--state-blue) 5%, transparent);
+}
+.freshness tr[data-state-source="true"] th:first-child { box-shadow: inset 3px 0 var(--state-blue); padding-left: 0.55rem; }
+.freshness tr[data-state-source="true"] .fresh-name { color: var(--state-blue); }
 .fresh-sub { display: block; color: var(--text-muted); font-size: var(--text-note); }
 .fresh-stale { color: var(--notice-text); }
 .fresh-built { font-family: var(--font-mono); font-size: var(--text-note); }
@@ -975,14 +986,6 @@ tr[data-status="unreachable"] .fresh-status {
 tr[data-status="pending"] .fresh-status {
   border-color: color-mix(in srgb, var(--series-2) 60%, var(--grid)); color: var(--text-primary);
 }
-.fresh-legend { margin: 1rem 0 0; display: grid; gap: 0.45rem; max-width: 72ch; }
-.fresh-legend div { display: grid; grid-template-columns: minmax(9rem, max-content) 1fr; gap: 0.75rem; }
-.fresh-legend dt { font: 500 var(--text-label)/1.6 var(--font-mono); color: var(--text-secondary); }
-.fresh-legend dd { margin: 0; font-size: var(--text-note); color: var(--text-secondary); }
-@media (max-width: 40rem) {
-  .fresh-legend div { grid-template-columns: 1fr; gap: 0.1rem; }
-}
-
 /* What changed: each refresh a dated section, each metric a block with one sentence and a
    small table of the places that moved most. */
 .change-day { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem; }

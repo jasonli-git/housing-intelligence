@@ -5,8 +5,8 @@ import { ComputedBadge } from "@/components/ComputedBadge";
 import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
-import { Definition } from "@/components/Definition";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
+import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Glossed } from "@/components/Glossed";
 import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Ledger, Margin, TableNotes } from "@/components/Ledger";
@@ -199,6 +199,23 @@ export default async function RegionPage({
         populationChange.metric_id,
       )
     : null;
+  const populationMargin = population
+    ? marginLabel(
+        population.value,
+        uncertainties.value.get(population.metric_id)?.margin ?? null,
+        population.unit,
+        population.metric_id,
+      )
+    : null;
+  const populationDetail = [
+    populationMargin,
+    populationChange
+      ? withMargin(
+          changeWords(populationChange.pct_change),
+          populationChangeMargin === NO_SAMPLING_ERROR ? null : populationChangeMargin,
+        )
+      : null,
+  ].filter((part): part is string => Boolean(part)).join(" · ");
   const lead = verdict(peers, packet.metrics, packet.levels, uncertainties);
   const paid = paychecks(packet.metrics);
   const answers = paycheckAnswers(packet.metrics);
@@ -261,38 +278,23 @@ export default async function RegionPage({
             ]}
             here={name}
           />
-          {population && (
-            <aside className="population-summary" aria-label="Population">
-              <span className="population-summary-label">Population</span>
-              <strong>
-                {formatMetric(population.value, population.unit, population.metric_id)}
-              </strong>
-              {/* A survey estimate, so its margin (Milestone 28). */}
-              <Margin
-                label={marginLabel(
-                  population.value,
-                  uncertainties.value.get(population.metric_id)?.margin ?? null,
-                  population.unit,
-                  population.metric_id,
-                )}
-              />
-              <span className="population-summary-context">
-                <Definition term={asOfTerm(population, Boolean(populationChange))}>
-                  {periodLabel(population.period_end)} estimate
-                </Definition>
-                {populationChange && (
-                  <>
-                    {" · "}
-                    {withMargin(
-                      changeWords(populationChange.pct_change),
-                      populationChangeMargin === NO_SAMPLING_ERROR ? null : populationChangeMargin,
-                    )}
-                  </>
-                )}
-              </span>
-            </aside>
-          )}
-          <Kind kind={kindOf(region.level)} />
+          <div className="page-head-eyebrow">
+            <Kind kind={kindOf(region.level)} />
+            {population && (
+              <aside className="population-badge" aria-label="Population">
+                <span className="population-badge-label">Population</span>
+                <strong>{formatMetric(population.value, population.unit, population.metric_id)}</strong>
+                <span className="population-badge-year">
+                  <FloatingMetricTerm
+                    metricId={population.metric_id}
+                    label={`${periodLabel(population.period_end)} estimate`}
+                    definition={asOfTerm(population, Boolean(populationChange)).definition}
+                    why={null}
+                  />
+                </span>
+              </aside>
+            )}
+          </div>
           <div className="page-title-row">
             <h1 className="page-title">{name}</h1>
             <ComputedBadge />
@@ -300,6 +302,7 @@ export default async function RegionPage({
           {/* Every rank names its own cohort now — "12th of 21 NJ counties" — so the
               line that named it once for the whole page is gone (Milestone 28). */}
           <p className="meta">{placeLine(region)}</p>
+          {populationDetail && <p className="population-detail">{populationDetail}</p>}
           {lead && <p className="verdict">{lead}</p>}
           {trade && <p className="verdict-more">{trade}</p>}
           {/* The short answers in the line, the sentences behind them a click away: the
