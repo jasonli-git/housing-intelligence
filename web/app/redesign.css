@@ -244,6 +244,25 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 
 /* ------------------------------------------------------------ licence / location --- */
 
+.site-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.15rem 1rem;
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0.25rem var(--gutter) 0.05rem;
+}
+
+.site-meta-row .licence {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
 .licence {
   padding-top: 0.25rem;
   padding-bottom: 0.05rem;
@@ -274,6 +293,44 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 
 .licence-box .disclose-hint {
   color: var(--text-muted);
+}
+
+.site-status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.1rem 0.6rem;
+  max-width: 100%;
+  min-height: 1.9rem;
+  margin-left: auto;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--state-blue) 22%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--state-blue) 5%, var(--surface-card));
+  color: var(--text-secondary);
+  font: 500 11px/1.35 var(--font-text);
+  text-decoration: none;
+}
+
+.site-status:hover {
+  border-color: color-mix(in srgb, var(--state-blue) 55%, var(--border));
+  text-decoration: none;
+}
+
+.site-status:focus-visible { outline-offset: 2px; }
+
+.site-status-schedule {
+  color: var(--state-blue);
+  font-weight: 650;
+}
+
+.site-status-built { color: var(--text-muted); }
+.site-status-built time { color: var(--text-secondary); }
+.site-status-arrow { color: var(--state-blue); }
+
+@media (max-width: 760px) {
+  .site-meta-row .licence { flex-basis: 100%; }
+  .site-status { margin-left: 0; }
 }
 
 .crumbs ol {

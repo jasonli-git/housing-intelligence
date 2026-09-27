@@ -15,6 +15,7 @@
 - Moved the region population's five-year percentage into that badge. Removed the context-free “no sampling error · up …” line beneath county and town titles. The estimate definition now explains why a county figure can have no sampling error while still being an estimate; town sampling margins and change margins remain available there too.
 - Rewrote all 20 currently published New Jersey map-measure explanations as short, plain-language descriptions, scoped to the map so profile/report definitions are unchanged. The selected change window now appears as a blue badge immediately below the measure title.
 - Gave the desktop header search enough fixed width for its full placeholder. Marked the three New Jersey agency sources in the freshness table with the state-page blue, and moved status definitions from a repeated bottom legend onto focusable status labels whose cards open outside the table scroller.
+- Added one site-wide Data status link beside the non-commercial notice (stacked beneath it on phones). It says source checks are scheduled Fridays and names the build date of this static snapshot, with a relative age that updates in the reader's browser. The link leads to `/freshness` for source-by-source dates; it does not call an unchanged week a data update.
 
 ## Files/modules affected
 
@@ -29,6 +30,8 @@
 - `web/components/CountyExplorer.tsx` and `web/lib/mapDefinitions.ts` — map-only plain-language definitions and window badge placement.
 - `web/lib/mapDefinitions.test.ts` — coverage of the 20 published map measures and fallback behavior.
 - `web/app/tokens.css` and `web/app/new-jersey.css` — shared state blue and New Jersey header/map styling.
+- `web/components/SiteStatus.tsx`, `web/components/Masthead.tsx`, and `web/app/redesign.css` — shared status link and responsive position beside the licence line.
+- `web/next.config.mjs` — one UTC build timestamp embedded consistently across the static export; `BuiltAgo` and `dayLabel` are reused rather than duplicating date logic.
 
 ## Architectural or implementation decisions
 
@@ -41,6 +44,7 @@
 - Population is now part of the identity line, not a corner overlay. The 2024/2025 estimate term keeps its definition in a viewport-clamped floating card. On region pages, its five-year change is visible beside the count; sampling information is in that same badge's definition instead of floating under the page title. “No sampling error” describes the Census's method, not perfect accuracy.
 - The map uses its own concise wording; the shared metric dictionary remains the fuller explanation for other contexts. An unfamiliar new map measure falls back to that shared definition.
 - Freshness status labels use the existing floating-definition component. Its portal avoids the horizontal table's clipping, and its placement clamps to the phone viewport. The bottom legend was removed to avoid saying the same thing twice. New Jersey agency rows are identified by the current `nj_` source IDs, verified against the local API.
+- The global status distinguishes a Friday *check schedule* from a data update and from the static site's build date. The link sits in the existing licence row rather than in the already crowded navigation bar. The UTC timestamp is captured once in Next configuration so all exported pages show the same snapshot date; only the relative age is client-computed, using the existing `data-volatile` convention for `check-live`.
 
 ## Assumptions
 
@@ -48,10 +52,12 @@
 - A compact disclosure line is preferable to moving the commercial-use warning into the navigation, where its terms could be less clear or harder to print.
 - “Every range” was interpreted as uncertainty ranges in the shared profile banner. Tables and reports retain their established uncertainty layout.
 - The population badge was implemented only after explicit follow-up approval. Count, period, and change remain visible; uncertainty is available in the estimate definition. The badge does not alter a source value or calculation.
+- The Friday copy follows the repository's configured `launchd` schedule; it does not assert that the job ran successfully or that every publisher released new data. The site is rebuilt only when a figure or source status changes, so its build date may be older than the latest quiet Friday check.
 
 ## New TODOs / limitations
 
 - The build's existing `NEXT_PUBLIC_ARTIFACT_URL` warning remains: report Markdown links point to localhost when the deployment origin is not configured.
+- A site-wide last-*successful*-check time is not yet published independently of the static snapshot. The global status intentionally gives the schedule and build age, and sends readers to `/freshness` for per-source checks. If the `launchd` weekday changes, the displayed schedule copy must change with it.
 
 ## Verification
 
@@ -76,3 +82,7 @@
 - Population clarity follow-up: `cd web && npm run typecheck` — passed; `npm test` — 33 files, 280 tests passed; `git diff --check` — passed.
 - Population clarity follow-up: headless Chromium checked Somerset County and Absecon municipality at 320, 375, 390, 768, and 1440 px. The badge remained 28 px tall with the five-year change inside, no population detail appeared beneath the title, no page overflow occurred, and both definition cards fit the viewport.
 - Population clarity follow-up: `cd web && npm run build` — passed, 2,278 static pages; the existing unset-`NEXT_PUBLIC_ARTIFACT_URL` warning remains.
+- Global status follow-up: `cd web && npm run typecheck` — passed; `npm test` — 33 files, 280 tests passed; `git diff --check` — passed.
+- Global status follow-up: headless Chromium checked the state, county, report, freshness, and revision pages at 320, 390, 768, and 1440 px. The link was present on every page, pointed to `/freshness`, and caused no horizontal overflow. The non-commercial disclosure still opened without overflow. Desktop, phone, and settled dark-mode header screenshots were visually inspected; keyboard focus and the link's accessible name were checked.
+- Global status follow-up: `cd web && npm run build` — passed, 2,278 static pages. The same UTC `dateTime` stamp appeared in exported state, county, report, and freshness HTML. The existing unset-`NEXT_PUBLIC_ARTIFACT_URL` warning remains.
+- Global status follow-up: `launchctl list com.housing-intelligence.weekly-refresh` — the Friday agent is loaded on this Mac and reported last exit status 0; this checks the schedule behind the badge, not when each publisher last released data.
