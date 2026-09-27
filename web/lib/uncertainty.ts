@@ -144,6 +144,14 @@ export const SURVEY_METRICS = new Set([
 export const NO_MARGIN = "no margin available";
 
 /**
+ * What a margin of zero says: the Census fixes some survey figures — a county's or the
+ * state's population — to its population estimates rather than estimating them from the
+ * sample, and publishes no sampling error for them (a special code `acs_margin` reads as
+ * 0). "± 0" would read as a margin that happens to be tiny, or as an exact count.
+ */
+export const NO_SAMPLING_ERROR = "no sampling error";
+
+/**
  * A value's margin as it reads beside the value: "± $2,565", "± 2.3 points" for a share,
  * "± 0.12×" for a multiple. A share whose margin would carry it past 0% or 100% reads as
  * its range instead — "0.0% to 40.1%" — since "12.0% ± 28.0 points" implies a negative
@@ -156,6 +164,7 @@ export function marginLabel(
   metricId: string,
 ): string | null {
   if (margin === null) return SURVEY_METRICS.has(metricId) ? NO_MARGIN : null;
+  if (margin === 0) return NO_SAMPLING_ERROR;
   if (unit === "ratio" && SHARE_METRICS.has(metricId)) {
     const low = value - margin;
     const high = value + margin;
@@ -177,6 +186,8 @@ export function marginLabel(
  */
 export function changeMarginLabel(margin: number | null, metricId?: string): string | null {
   if (margin === null) return metricId && SURVEY_METRICS.has(metricId) ? NO_MARGIN : null;
+  // Both ends fixed to the population estimates: the change has no sampling error either.
+  if (margin === 0) return NO_SAMPLING_ERROR;
   return `± ${margin.toFixed(1)}%`;
 }
 
@@ -256,6 +267,8 @@ export function anyMargin(uncertainties: Uncertainties): boolean {
 export const MARGIN_NOTE =
   "Figures marked ± come from the Census Bureau’s survey and carry its 90% margin of error: " +
   "the true figure is very likely within that range of the estimate. Where the margins " +
-  "cannot tell a place from its neighbours, its rank reads as a range. HUD’s CHAS " +
+  "cannot tell a place from its neighbours, its rank reads as a range. “No sampling " +
+  "error” marks a figure the Census fixes to its population estimates rather than " +
+  "estimating from the survey, such as a county’s population. HUD’s CHAS " +
   "figures come from the same survey, but the HUD source this site reads carries no " +
   "margins, so they show none yet and their ranks read as single places.";

@@ -74,7 +74,7 @@ describe("marginLabel", () => {
     expect(marginLabel(1623, 34, "usd_month", "acs_median_gross_rent")).toBe("± $34/mo");
     expect(marginLabel(0.5008, 0.0231, "ratio", "acs_renter_cost_burden")).toBe("± 2.3 points");
     expect(marginLabel(4.05, 0.12, "ratio", "price_to_income")).toBe("± 0.12×");
-    expect(marginLabel(385864, 0, "count", "acs_population")).toBe("± 0");
+    expect(marginLabel(385864, 0, "count", "acs_population")).toBe("no sampling error");
   });
 
   it("gives a share's range where the margin would pass 0% or 100%", () => {
@@ -168,5 +168,16 @@ describe("a survey figure without a margin (SPEC principle 12)", () => {
     expect(changeMarginLabel(null, "acs_median_hh_income")).toBe("no margin available");
     expect(changeMarginLabel(null, "zhvi_sfr")).toBeNull();
     expect(changeMarginLabel(null)).toBeNull();
+  });
+});
+
+describe("a controlled estimate", () => {
+  it("says it has no sampling error, not ± 0", () => {
+    // Mercer's population: the Census controls county totals to its estimates (-555555555).
+    expect(marginLabel(387340, 0, "count", "acs_population")).toBe("no sampling error");
+    expect(changeMarginLabel(0, "acs_population")).toBe("no sampling error");
+    expect(withMargin("387,340", marginLabel(387340, 0, "count", "acs_population"))).toBe(
+      "387,340 (no sampling error)",
+    );
   });
 });

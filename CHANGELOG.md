@@ -3,6 +3,15 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.24.1] — 2026-09-26
+
+### Fixed
+
+- **A county's population read "± 0".** The Census fixes county and state population
+  totals to its population estimates and publishes no sampling error for them; the
+  page now says "no sampling error", for the figure and for a change between two such
+  figures, and the note under the tables says what that means (ARCHITECTURE #250).
+
 ## [0.24.0] — 2026-09-26
 
 **Milestone 28 — figures that read right at a glance.** Survey figures show how sure
