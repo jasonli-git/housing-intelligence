@@ -8,28 +8,14 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — Milestone 28 complete, in review (2026-09-26)
+## Now — between milestones (2026-09-26)
 
-Branch `milestone/m28-figures-that-read-right`, pull request into `main`. Everything in
-ROADMAP's Milestone 28 row is built: [CHANGELOG.md](CHANGELOG.md) 0.24.0 has what
-shipped, [ARCHITECTURE.md](ARCHITECTURE.md) #235–#249 the decisions, and ROADMAP the
-completeness check's second record. [SPEC.md](SPEC.md) is v1.3: principle 12, decided by
-the owner in review, requires a survey figure's margin wherever it is shown.
-
-**Waiting on the owner:**
-
-- **Review and merge**, then check out `main` here: Friday's run (2026-10-02) refuses
-  any other branch (#226).
-- **The 84 readings are stale.** The renter cost burden fix changed a figure every county
-  packet carries. Regenerating them costs well under a dollar for the hosted models, with
-  Gemma run locally (Ollama starts and stops for it, #230); leaving them, the site labels
-  them stale until Milestone 30 rewrites them anyway. `hip regenerate-now` or the
-  Shortcut does it once this is merged and `main` is checked out here; it publishes and
-  deploys what it writes.
-- **Confirm a reading of principle 12:** HUD's area median income, income limits and
-  Fair Market Rents are set from ACS data but published as HUD's determinations, without
-  margins. They are treated as outside the principle (#246); if they should say "no
-  margin available" too, it is one line in `SURVEY_METRICS`.
+Milestone 28 merged and deployed on 2026-09-26, with every county's readings regenerated;
+what it shipped is in CHANGELOG 0.24.0, and 0.24.1 follows it with "no sampling error"
+where a margin is zero. [SPEC.md](SPEC.md) is v1.3, whose principle 12 requires a survey
+figure's margin wherever it is shown. Milestone 30 is
+next and has not started: one analyst reading and one consumer reading per region, with
+the packets taking in margins. It begins on the owner's go-ahead.
 
 **To resume:** `make db-up` for Postgres.
 
@@ -297,6 +283,23 @@ first raised, not where it must be done.
 
 ### Publication
 
+- [ ] **A failed `check-live` has no written runbook.** (raised 2026-09-26, after 0.24.0's
+      deploy) The Friday run and `hip regenerate-now` send an urgent Pushover alert —
+      "check-live failed after deploy … Check the log on the Mac" — and stop; nothing says
+      what to do next. The steps today: rerun `make check-live`; if it fails again, read
+      which page or manifest it names, fix forward (`make publish`, `make deploy`, `make
+      check-live`), and roll the Pages site back from Cloudflare's dashboard if readers
+      are meanwhile seeing a broken page. Belongs in README's Publishing section.
+- [ ] **`check-live` alerts on its first failure, transient or not.** (raised 2026-09-26)
+      A CDN still propagating, or a page-timing race like the one PR #42 fixed, reads the
+      same as a real mismatch, and the site is already deployed by then. One retry after
+      a short wait, before the urgent alert, would separate the two; a failure to start
+      Chromium is the checker's own problem and could say so.
+- [ ] **The published data files cannot be rolled back.** (raised 2026-09-26) `make
+      publish` deletes the previous `dist/`, and `rclone sync` overwrites R2 in place, so
+      only the Pages site has a previous deployment to return to — and rolling back the
+      site alone would leave it beside the new artifacts. Keeping the last good build
+      (or versioned artifact paths) would give both halves a way back.
 - [x] **`hip refresh` stops short of the site.** **Done in Milestone 27** — the weekly
       script carries a refresh through to the site, gating only the billed readings
       (ARCHITECTURE #216–#219). (M29, found 2026-09-20 while
@@ -491,6 +494,11 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
+- [ ] **Confirm a reading of SPEC principle 12.** (M28, #246) HUD's area median income,
+      income limits and Fair Market Rents are set from ACS data but published as HUD's
+      determinations, without margins, so they are treated as outside the principle. If
+      they should read "no margin available" too, it is one line in `SURVEY_METRICS`
+      (`web/lib/uncertainty.ts`) and its guard, `tests/test_survey_metrics.py`.
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.
 
