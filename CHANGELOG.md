@@ -3,6 +3,22 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.24.3] — 2026-09-27
+
+From Codex (PR #46).
+
+### Fixed
+
+- **A paused profile banner could not be swiped on a phone.** Paused, the statewide and
+  local banners now scroll natively under a finger in either direction, keep the card
+  that was showing in place, and resume from wherever the reader left them; a mouse
+  still drags them. Checked in headless Chromium's touch emulation, not yet on an iPhone.
+
+### Changed
+
+- The site's status link is a plain line of metadata rather than a blue badge, so it no
+  longer resembles the population badge.
+
 ## [0.24.2] — 2026-09-27
 
 Profile and source-history polish, from Codex (PR #45).
