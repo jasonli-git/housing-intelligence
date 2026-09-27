@@ -127,7 +127,7 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     why: "It is the cut-off for many affordable-housing programs, so it shows who can get help.",
   },
   unemployment_rate: {
-    what: "The share of people looking for work who cannot find a job, from the Bureau of Labor Statistics.",
+    what: "The share of the labor force — people working or looking for work — who have no job, from the Bureau of Labor Statistics.",
     why: "Jobs pay for housing; a rising rate can mean more people struggling with rent or a mortgage.",
   },
 

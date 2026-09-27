@@ -17,7 +17,7 @@ export const MAP_DEFINITIONS: Record<string, string> = {
   acs_median_hh_income: "Middle household income in a five-year Census survey: half of households earn more, half less.",
   hud_area_median_income: "HUD’s estimate of middle family income in this area. Housing programs use it to set eligibility.",
   hud_income_limit_80: "The income cutoff for HUD to count a four-person family as low-income here.",
-  unemployment_rate: "The share of people looking for work who have no job.",
+  unemployment_rate: "The share of people working or looking for work who have no job.",
   permits_total_units: "New homes approved for construction in a year, counting each apartment separately.",
   acs_vacancy_rate: "The share of homes with no resident, including seasonal homes. It does not mean all are for rent.",
   acs_homeownership_rate: "The share of occupied homes lived in by their owners rather than renters.",
