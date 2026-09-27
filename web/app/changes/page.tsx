@@ -26,7 +26,7 @@ export default async function ChangesPage() {
   if (!report) {
     return (
       <>
-        <Masthead affordability={{ kind: "route" }} />
+        <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
         <main className="shell">
           <h1 className="page-title">Figures revised after they were published</h1>
           <p className="meta">
@@ -42,7 +42,7 @@ export default async function ChangesPage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} />
+      <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
       <main className="shell">
         <header className="page-head" data-kind="data">
           <div>
@@ -50,11 +50,8 @@ export default async function ChangesPage() {
             <Kind kind="data" />
             <h1 className="page-title">Figures revised after they were published</h1>
             <p className="meta">
-              Publishers revise figures they have already released: Zillow restates past months of
-              its indexes as more sales are recorded, and a month still under way, like the current
-              month&rsquo;s average mortgage rate, moves as each week&rsquo;s reading arrives. When
-              a refresh changes a figure this site already showed, the earlier value is kept. Each
-              refresh that changed anything is below, newest first, with the places that moved most.
+              Publishers sometimes revise figures already shown here. Compare the earlier and
+              updated values by refresh, newest first.
             </p>
             <p className="meta fresh-built">
               {report.recorded_since

@@ -5,8 +5,8 @@ import { ComputedBadge } from "@/components/ComputedBadge";
 import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
-import { Definition } from "@/components/Definition";
 import { ExplanationPanel } from "@/components/ExplanationPanel";
+import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Glossed } from "@/components/Glossed";
 import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Ledger, Margin, TableNotes } from "@/components/Ledger";
@@ -30,8 +30,9 @@ import {
   changeMarginLabel,
   MARGIN_NOTE,
   marginLabel,
+  NO_MARGIN,
+  NO_SAMPLING_ERROR,
   uncertaintiesFrom,
-  withMargin,
 } from "@/lib/uncertainty";
 import {
   housingProfile,
@@ -85,19 +86,39 @@ function placeLine(region: Region & { ancestors: Region[] }): string {
 }
 
 /**
- * The population's date, defined where it is stated. An ACS five-year estimate is not a
- * count on a date, so the term names the survey years and what the change compares.
+ * The population's date and uncertainty, defined in its badge. An ACS five-year estimate
+ * is not a count on a date; the badge's change and its sampling caveat belong together.
  */
-function asOfTerm(population: PacketLevel, compared: boolean): Term {
+function asOfTerm(
+  population: PacketLevel,
+  compared: boolean,
+  valueMargin: string | null,
+  changeMargin: string | null,
+): Term {
   const year = periodLabel(population.period_end);
+  const marginNote = valueMargin === NO_SAMPLING_ERROR
+    ? "For this area, the Census Bureau uses its population estimates rather than a survey sample. There is no sampling error, but this is still an estimate."
+    : valueMargin === NO_MARGIN
+      ? "A sampling margin is not available for this estimate."
+      : valueMargin?.startsWith("±")
+        ? `The published 90% sampling margin is ${valueMargin} people.`
+        : "";
+  const changeMarginNote = changeMargin === NO_MARGIN
+    ? "A sampling margin is not available for the five-year change."
+    : changeMargin === NO_SAMPLING_ERROR && valueMargin !== NO_SAMPLING_ERROR
+      ? "The five-year change has no sampling error."
+      : changeMargin?.startsWith("±")
+        ? `The five-year change has a 90% sampling margin of ${changeMargin}.`
+        : "";
   return {
     key: "population-as-of",
     title: `As of ${year}`,
     phrases: [],
     definition:
-      `The Census Bureau’s American Community Survey five-year estimate for the survey ` +
-      `years ${surveyYears(population.period_start, population.period_end)}` +
-      (compared ? ". The change compares it with the estimate five years earlier." : "."),
+      `The Census Bureau’s American Community Survey population figure covers ` +
+      `${surveyYears(population.period_start, population.period_end)}. ` +
+      (compared ? "The percentage in this badge compares it with the figure five years earlier. " : "") +
+      [marginNote, changeMarginNote].filter(Boolean).join(" "),
   };
 }
 
@@ -192,6 +213,20 @@ export default async function RegionPage({
   // Each figure's margin and rank range, from the summary rather than the packet
   // (Milestone 28), so no reading goes stale before Milestone 30 takes them in.
   const uncertainties = uncertaintiesFrom(summary);
+  const populationChangeMargin = populationChange
+    ? changeMarginLabel(
+        uncertainties.change.get(populationChange.metric_id)?.margin ?? null,
+        populationChange.metric_id,
+      )
+    : null;
+  const populationMargin = population
+    ? marginLabel(
+        population.value,
+        uncertainties.value.get(population.metric_id)?.margin ?? null,
+        population.unit,
+        population.metric_id,
+      )
+    : null;
   const lead = verdict(peers, packet.metrics, packet.levels, uncertainties);
   const paid = paychecks(packet.metrics);
   const answers = paycheckAnswers(packet.metrics);
@@ -254,41 +289,31 @@ export default async function RegionPage({
             ]}
             here={name}
           />
-          {population && (
-            <aside className="population-summary" aria-label="Population">
-              <span className="population-summary-label">Population</span>
-              <strong>
-                {formatMetric(population.value, population.unit, population.metric_id)}
-              </strong>
-              {/* A survey estimate, so its margin (Milestone 28). */}
-              <Margin
-                label={marginLabel(
-                  population.value,
-                  uncertainties.value.get(population.metric_id)?.margin ?? null,
-                  population.unit,
-                  population.metric_id,
-                )}
-              />
-              <span className="population-summary-context">
-                <Definition term={asOfTerm(population, Boolean(populationChange))}>
-                  {periodLabel(population.period_end)} estimate
-                </Definition>
+          <div className="page-head-eyebrow">
+            <Kind kind={kindOf(region.level)} />
+            {population && (
+              <aside className="population-badge" aria-label="Population">
+                <span className="population-badge-label">Population</span>
+                <strong>{formatMetric(population.value, population.unit, population.metric_id)}</strong>
                 {populationChange && (
-                  <>
-                    {" · "}
-                    {withMargin(
-                      changeWords(populationChange.pct_change),
-                      changeMarginLabel(
-                        uncertainties.change.get(populationChange.metric_id)?.margin ?? null,
-                        populationChange.metric_id,
-                      ),
-                    )}
-                  </>
+                  <span className="population-badge-change">{changeWords(populationChange.pct_change)}</span>
                 )}
-              </span>
-            </aside>
-          )}
-          <Kind kind={kindOf(region.level)} />
+                <span className="population-badge-year">
+                  <FloatingMetricTerm
+                    metricId={population.metric_id}
+                    label={`${periodLabel(population.period_end)} estimate`}
+                    definition={asOfTerm(
+                      population,
+                      Boolean(populationChange),
+                      populationMargin,
+                      populationChangeMargin,
+                    ).definition}
+                    why={null}
+                  />
+                </span>
+              </aside>
+            )}
+          </div>
           <div className="page-title-row">
             <h1 className="page-title">{name}</h1>
             <ComputedBadge />

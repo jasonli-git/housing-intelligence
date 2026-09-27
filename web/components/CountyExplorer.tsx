@@ -8,7 +8,7 @@ import { Margin } from "@/components/Ledger";
 import { TownRanks } from "@/components/TownRanks";
 import { useMapFile } from "@/components/useMapFile";
 import { readingsFor } from "@/lib/mapdata";
-import { definitionOf } from "@/lib/definitions";
+import { mapDefinitionOf } from "@/lib/mapDefinitions";
 import { formatChange, formatMetric } from "@/lib/format";
 import type { Section } from "@/lib/groups";
 import { windowLabel } from "@/lib/periods";
@@ -71,7 +71,7 @@ export type Measure = {
  * every county; the map's own links are kept out of the tab order.
  *
  * Since Milestone 23 the measure is introduced in a card with the controls that change
- * it — its name, what it is and why it matters (`lib/definitions.ts`), and the window —
+ * it — its name, plain-language explanation (`lib/mapDefinitions.ts`), and the window —
  * and the ranking sits in a card of its own, the county names in text color rather than
  * a generic link blue, each row ending in "›".
  */
@@ -130,7 +130,7 @@ export function CountyExplorer({
       : (file.municipality.outlines.find(
           (town) => Number(town.id) === marked,
         ) ?? null);
-  const definition = definitionOf(measure.metric_id);
+  const definition = mapDefinitionOf(measure.metric_id);
   const notes = windowNote(key, measure.metric_id, measure.windows);
   const windowName = WINDOWS.find((w) => w.key === key)!.label;
   const latest = (value: number | null) =>
@@ -187,18 +187,15 @@ export function CountyExplorer({
             <h2 className="measure-name" id="explorer-heading">
               {measure.label}
             </h2>
-            {definition && (
-              <p className="measure-def">
-                {definition.what}{" "}
-                <span className="measure-why">{definition.why}</span>
-              </p>
-            )}
             <p className="measure-window">
               Change {phrase}, by county
               {current.start && current.end
                 ? ` · ${windowLabel(current.start, current.end, measure.metric_id)}`
                 : ""}
             </p>
+            {definition && (
+              <p className="measure-def">{definition}</p>
+            )}
           </div>
           {/* What a reader needs to read the chosen window, beside the measure it qualifies
               and only while that window is chosen; set apart as a note, not more definition. */}

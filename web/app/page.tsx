@@ -141,21 +141,23 @@ export default async function NewJerseyPage() {
       <main className="shell nj-page">
       <header className="page-head nj-head" data-kind="state">
         <div className="region-head-main">
-          {population && (
-            <aside className="population-summary" aria-label="Population">
-              <span className="population-summary-label">Population</span>
-              <strong>{formatMetric(population.value, population.unit, population.metric_id)}</strong>
-              <span className="population-summary-context">
-                <FloatingMetricTerm
-                  metricId={population.metric_id}
-                  label={`${periodLabel(population.period_end, population.metric_id)} estimate`}
-                  definition={definitionOf(population.metric_id)?.what ?? population.label}
-                  why={null}
-                />
-              </span>
-            </aside>
-          )}
-          <Kind kind="state" />
+          <div className="page-head-eyebrow">
+            <Kind kind="state" />
+            {population && (
+              <aside className="population-badge" aria-label="Population">
+                <span className="population-badge-label">Population</span>
+                <strong>{formatMetric(population.value, population.unit, population.metric_id)}</strong>
+                <span className="population-badge-year">
+                  <FloatingMetricTerm
+                    metricId={population.metric_id}
+                    label={`${periodLabel(population.period_end, population.metric_id)} estimate`}
+                    definition={definitionOf(population.metric_id)?.what ?? population.label}
+                    why={null}
+                  />
+                </span>
+              </aside>
+            )}
+          </div>
           <div className="page-title-row">
             <h1 className="page-title">New Jersey</h1>
             <ComputedBadge />

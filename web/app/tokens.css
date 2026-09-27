@@ -62,6 +62,7 @@
   --series-1: #0071e3;
   --series-2: #e07227;
   --series-3: #00866a;
+  --state-blue: light-dark(#2368a0, #86bce8);
 
   /* Sequential blue, for unsigned magnitude. */
   --seq-100: #9cb7e6;

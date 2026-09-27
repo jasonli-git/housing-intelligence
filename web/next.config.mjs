@@ -33,6 +33,9 @@ const nextConfig = {
   // (see the dependency rule in ARCHITECTURE.md).
   env: {
     NEXT_PUBLIC_API_URL: API_URL,
+    // One timestamp for the whole static export. A quiet Friday check can leave the
+    // published snapshot untouched, so this must describe the build, not a data update.
+    SITE_BUILT_AT: new Date().toISOString(),
     // Where the published artifacts are served from in production. Distinct from the
     // API origin: the JSON tree goes to object storage, which has no file-count limit,
     // while the HTML goes to a static host that does.

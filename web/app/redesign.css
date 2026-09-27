@@ -122,6 +122,7 @@ select,
    the gutter to themselves. */
 @media (min-width: 761px) {
   .bar-tools {
+    flex: 0 0 auto;
     padding-inline-end: 1.25rem;
   }
 }
@@ -143,6 +144,10 @@ select,
 
 .bar .place-search {
   flex-basis: 17rem;
+}
+
+@media (min-width: 761px) {
+  .bar .place-search { flex: 0 0 13.5rem; }
 }
 
 .bar .place-search input {
@@ -239,9 +244,28 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 
 /* ------------------------------------------------------------ licence / location --- */
 
+.site-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.15rem 1rem;
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0.25rem var(--gutter) 0.05rem;
+}
+
+.site-meta-row .licence {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
 .licence {
-  padding-top: 0.72rem;
-  padding-bottom: 0.15rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.05rem;
 }
 
 /* The licence notice is a line of text, not a box, and its label keeps the notice's amber
@@ -255,12 +279,58 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   box-shadow: none;
 }
 
+.licence-box > summary {
+  min-height: 1.9rem;
+  padding: 0.2rem 0;
+  align-items: center;
+}
+
+.licence-box > .licence-text { padding: 0 0 0.5rem; }
+
 .licence-label {
   color: var(--notice-text);
 }
 
 .licence-box .disclose-hint {
   color: var(--text-muted);
+}
+
+.site-status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.1rem 0.6rem;
+  max-width: 100%;
+  min-height: 1.9rem;
+  margin-left: auto;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--state-blue) 22%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--state-blue) 5%, var(--surface-card));
+  color: var(--text-secondary);
+  font: 500 11px/1.35 var(--font-text);
+  text-decoration: none;
+}
+
+.site-status:hover {
+  border-color: color-mix(in srgb, var(--state-blue) 55%, var(--border));
+  text-decoration: none;
+}
+
+.site-status:focus-visible { outline-offset: 2px; }
+
+.site-status-schedule {
+  color: var(--state-blue);
+  font-weight: 650;
+}
+
+.site-status-built { color: var(--text-muted); }
+.site-status-built time { color: var(--text-secondary); }
+.site-status-arrow { color: var(--state-blue); }
+
+@media (max-width: 760px) {
+  .site-meta-row .licence { flex-basis: 100%; }
+  .site-status { margin-left: 0; }
 }
 
 .crumbs ol {
@@ -301,66 +371,59 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   bottom: clamp(2rem, 4vw, 3.5rem);
 }
 
-/* Population is the compact orientation figure in a region head. It occupies the open
-   corner beside the breadcrumb/kind on a phone, rather than adding another row or being
-   repeated in both the metadata sentence and The housing here. */
+/* Population shares the page-type line instead of reserving a tall corner card. */
 .region-head-main {
   position: relative;
 }
 
-.region-head-main > .crumbs {
-  padding-right: 10.5rem;
+.page-head-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.85rem;
+  margin: 0 0 0.55rem;
 }
+.page-head-eyebrow .kind { margin: 0; }
 
-.population-summary {
-  position: absolute;
-  z-index: 1;
-  top: 0;
-  right: 0;
-  display: grid;
-  width: max-content;
-  min-width: 8.75rem;
-  max-width: 10rem;
-  gap: 0.15rem;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid var(--border);
-  border-left: 3px solid color-mix(in srgb, var(--series-3) 72%, var(--border));
-  border-radius: 10px;
-  background: var(--surface-2);
-  text-align: right;
-}
-
-.population-summary-label {
-  font: 600 8px/1.2 var(--font-mono);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--series-3);
-}
-
-.population-summary strong {
-  font: 650 21px/1.05 var(--jl-font);
-  letter-spacing: -0.04em;
+.population-badge {
+  --badge-accent: var(--series-3);
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.45rem;
+  max-width: 100%;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--badge-accent) 28%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--badge-accent) 6%, var(--surface-card));
   font-variant-numeric: tabular-nums;
+}
+
+.population-badge-label {
+  font: 600 9px/1.2 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--badge-accent);
+}
+
+.population-badge strong {
+  font: 650 14px/1 var(--jl-font);
+  letter-spacing: -0.025em;
   color: var(--text-primary);
 }
 
-.population-summary-context {
-  font-size: 9px;
-  line-height: 1.3;
+.population-badge-change {
+  padding-left: 0.45rem;
+  border-left: 1px solid color-mix(in srgb, var(--badge-accent) 30%, var(--border));
+  font: 600 10px/1.2 var(--font-mono);
+  white-space: nowrap;
+  color: var(--badge-accent);
+}
+
+.population-badge-year {
+  font-size: 10px;
   white-space: nowrap;
   color: var(--text-muted);
-}
-
-.population-summary .gl {
-  position: static;
-}
-
-.population-summary .tip {
-  top: calc(100% + 6px);
-  right: 0;
-  left: auto;
-  width: min(18rem, calc(100vw - 2rem));
-  text-align: left;
 }
 
 .page-head[data-kind="state"] {
@@ -528,26 +591,31 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 .state-ticker-head button { display: grid; place-items: center; width: 24px; height: 24px; min-height: 24px; padding: 0; border-radius: 50%; color: var(--profile-accent); background: transparent; }
 .state-ticker-head button svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .state-ticker-head button svg .play { fill: currentColor; stroke: none; }
-.state-ticker-window { min-width: 0; flex: 1; overflow: hidden; }
+.state-ticker-window { min-width: 0; flex: 1; overflow: hidden; cursor: grab; touch-action: pan-y; }
+.state-ticker-window[data-dragging="true"] { cursor: grabbing; user-select: none; }
 .state-ticker-track { display: flex; width: max-content; animation: state-conveyor linear infinite; }
 .state-ticker-group { display: flex; list-style: none; margin: 0; padding: 0; }
-.state-ticker-group li { width: 280px; box-sizing: border-box; padding: 0.82rem 1.4rem 0.48rem; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid var(--border); }
-.state-ticker-group b { font-size: 24px; font-weight: 550; line-height: 1; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.state-ticker-group li { --ticker-inline-pad: 1.4rem; width: 280px; box-sizing: border-box; padding: 0.82rem var(--ticker-inline-pad) 0.48rem; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid var(--border); }
+.region-profile-ticker .state-ticker-group li { width: 248px; }
+.state-ticker-group li.has-rank { justify-content: flex-start; padding-bottom: 0; }
+.ticker-value { display: flex; align-items: baseline; gap: 0.55rem; white-space: nowrap; }
+.ticker-value b { font-size: 24px; font-weight: 550; line-height: 1; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
 .state-ticker-group li > span, .state-ticker-group .metric-term { font-size: 12px; }
 .state-ticker-group small { font-size: 9px; margin-top: 3px; color: var(--text-muted); }
-/* A survey figure's margin, under its value (Milestone 28). */
-.state-ticker-group .ticker-margin { font-size: 10px; margin-top: 3px; }
-.state-ticker-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.55rem; min-width: 0; margin-top: 3px; }
-.state-ticker-meta > small { min-width: 0; margin: 0; }
+/* Keep a survey figure's range beside its value without giving it equal emphasis. */
+.state-ticker-group .ticker-margin { min-width: 0; font-size: 10px; color: var(--text-muted); }
 .profile-rank {
-  display: inline-flex; flex: 0 0 auto; align-items: baseline; gap: 0.32rem;
-  padding: 2px 6px; border: 1px solid color-mix(in srgb, var(--profile-accent) 30%, var(--border));
-  border-radius: 999px; background: color-mix(in srgb, var(--profile-accent) 8%, var(--surface-card));
-  color: var(--text-primary); white-space: nowrap;
+  display: flex; flex: 0 0 auto; align-items: center;
+  min-height: 1.55rem; margin: auto calc(-1 * var(--ticker-inline-pad)) 0;
+  padding: 0.26rem var(--ticker-inline-pad);
+  border-top: 1px solid color-mix(in srgb, var(--profile-accent) 24%, var(--border));
+  background: color-mix(in srgb, var(--profile-accent) 9%, var(--surface-card));
+  color: var(--text-primary);
 }
-.profile-rank strong { font: 700 11px/1 var(--font-mono); letter-spacing: -0.04em; }
-.profile-rank em { font: 600 8px/1 var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; color: var(--profile-accent); font-style: normal; }
-.profile-rank-visual { display: contents; }
+.profile-rank strong { font: 700 12px/1 var(--font-mono); letter-spacing: -0.04em; }
+.profile-rank em { font: 600 9px/1 var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; color: var(--profile-accent); font-style: normal; }
+.profile-rank-visual { display: flex; align-items: baseline; gap: 0.32rem; width: 100%; min-width: 0; }
+.profile-rank-label { margin-right: auto; font: 600 9px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
 @keyframes state-conveyor { to { transform: translateX(-50%); } }
 .state-ticker[data-stopped="true"] .state-ticker-track { animation: none; width: auto; }
 .state-ticker[data-stopped="true"] .state-ticker-window { overflow-x: auto; }
@@ -568,14 +636,16 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 
 @media (max-width: 520px) {
   .state-ticker-head { flex-basis: 72px; padding: 0.55rem; }
-  .state-ticker-group li { width: 220px; padding: 0.75rem 0.9rem 0.45rem; }
+  .state-ticker-group li { --ticker-inline-pad: 0.9rem; width: 220px; padding: 0.75rem var(--ticker-inline-pad) 0.45rem; }
+  .region-profile-ticker .state-ticker-group li { width: 205px; }
+  .state-ticker-group li.has-rank { padding-bottom: 0; }
 }
 
 @media (prefers-reduced-motion: reduce), print {
   .state-ticker-track { animation: none !important; width: auto; }
   .state-ticker-window { overflow: visible !important; }
   .state-ticker-group { flex: 1; flex-wrap: wrap; }
-  .state-ticker-group li { width: auto; flex: 1 1 220px; }
+  .state-ticker-group li, .region-profile-ticker .state-ticker-group li { width: auto; flex: 1 1 220px; }
   .state-ticker-group[aria-hidden="true"], .state-ticker-head button { display: none; }
   .mode-panel, .region-standard-content { animation: none; }
 }
@@ -613,10 +683,6 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   font-size: 14px;
   line-height: 1.62;
   color: var(--text-secondary);
-}
-
-.measure-why {
-  color: var(--text-muted);
 }
 
 .measure-window {
@@ -1133,6 +1199,28 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 }
 .foot-notice-copy { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.75rem; }
 .foot-notice .foot-tab { color: var(--text-primary); font-weight: 650; }
+
+.foot-links {
+  display: grid; gap: 0.65rem; margin: 0; padding: 0.95rem 1.05rem 1.05rem;
+  border: 1px solid var(--border); border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-card) 92%, transparent);
+}
+.foot-link-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
+.foot-link-list a {
+  display: grid; align-content: start; gap: 0.3rem; min-width: 0; padding: 0.8rem 0.9rem;
+  border: 1px solid var(--grid); border-radius: 10px;
+  background: var(--surface-1); color: var(--text-primary); text-decoration: none;
+}
+.foot-link-list a:hover, .foot-link-list a:focus-visible {
+  border-color: color-mix(in srgb, var(--series-3) 45%, var(--border));
+  background: color-mix(in srgb, var(--series-3) 5%, var(--surface-1));
+}
+.foot-link-title { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; font-weight: 650; }
+.foot-link-title span { flex: none; color: var(--series-3); }
+.foot-link-detail { color: var(--text-secondary); font-size: var(--text-note); line-height: 1.4; }
+@media (max-width: 600px) {
+  .foot-link-list { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* ---------------------------------------------------------------- responsive --- */
 
