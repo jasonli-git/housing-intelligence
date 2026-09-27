@@ -3,6 +3,22 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.24.4] — 2026-09-27
+
+The atlas redesign, from Codex (PR #48).
+
+### Changed
+
+- **The New Jersey page reads as an atlas:** a larger state heading with a link down to
+  the explorer, the statewide profile on a deep-blue strip, and the measure, controls,
+  map and county comparison as one connected workspace. On a wide screen the comparison
+  scrolls within its panel; phones and print keep the full table.
+- **The same language on the other public pages:** county, municipality and ZIP pages
+  get editorial headings, a deep-green profile strip and connected cost cards;
+  `/afford` keeps its orange and joins its map and county list; `/freshness` and
+  `/changes` get ledger headings and grouped cards. Print reports are unchanged, and no
+  figure, calculation or source status moved (ARCHITECTURE #254).
+
 ## [0.24.3] — 2026-09-27
 
 From Codex (PR #46).
