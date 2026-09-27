@@ -8,14 +8,20 @@ Completed milestone sections were removed on 2026-09-19 when this file was restr
 into `Now` / `Open` / `Parked`. They are recoverable with
 `git show 62bc3c2:TODO.md`, and what they shipped is in `CHANGELOG.md`.
 
-## Now — between milestones (2026-09-26)
+**Last audited against the code on 2026-09-27.** Sixteen entries were closed: ten open
+items the code had already resolved or that no longer apply, and six ticked ones whose
+record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision, restated
+under Open decisions. The rest were checked and, where they had drifted, rewritten. The
+removed entries are in `git show ca49f74:TODO.md`.
+
+## Now — between milestones (2026-09-27)
 
 Milestone 28 merged and deployed on 2026-09-26, with every county's readings regenerated;
-what it shipped is in CHANGELOG 0.24.0, and 0.24.1 follows it with "no sampling error"
-where a margin is zero. [SPEC.md](SPEC.md) is v1.3, whose principle 12 requires a survey
-figure's margin wherever it is shown. Milestone 30 is
-next and has not started: one analyst reading and one consumer reading per region, with
-the packets taking in margins. It begins on the owner's go-ahead.
+CHANGELOG 0.24.0 has what it shipped, and 0.24.1–0.24.3 the fixes and polish since.
+[SPEC.md](SPEC.md) is v1.3, whose principle 12 requires a survey figure's margin wherever
+it is shown. Milestone 30 is next and has not started: one analyst reading and one
+consumer reading per region, with the packets taking in margins. It begins on the
+owner's go-ahead.
 
 **To resume:** `make db-up` for Postgres.
 
@@ -57,9 +63,6 @@ first raised, not where it must be done.
       (pre-M12 review) `hud_area_median_income` and `hud_income_limit_80` are absent from
       `VALUE_BOUNDS` ([gate.py](src/hip/validate/gate.py)), so the one metric family
       feeding `price_to_ami` passes unchecked. Every other loaded metric has bounds.
-- [ ] **`hip load` re-fetches every source's refs just to rebuild provenance.** (M3)
-      That is `acquire`-level work inside `load` — harmless while cached, wrong in
-      principle. The loader should read the manifests instead.
 - [ ] **Crosswalk weights carry ~1% area error for polygons with few vertices.** (M1)
       `ST_Transform` reprojects vertices without densifying edges. Negligible for real
       TIGER geometry, which is vertex-dense; it only shows up in synthetic test fixtures.
@@ -114,38 +117,6 @@ first raised, not where it must be done.
 
 ### Evaluation harness
 
-- [ ] **A single transient error disqualifies a candidate model.** (pre-M12 review)
-      `select_winner` requires `summary.errors == 0`
-      ([src/hip/eval/report.py:193](src/hip/eval/report.py:193)). Right for local
-      runtimes, where an error means the model genuinely could not run. One HTTP 429 from
-      a hosted provider would disqualify an otherwise winning model on the same rule. The
-      hosted runner needs retry with backoff, and this gate should become a *rate* with a
-      stated threshold, the way the 5% fabrication bar already is (#59).
-- [ ] **Cohort names are hardcoded inside the runners.** (pre-M12 review) `cohort="gguf"`
-      in [ollama.py](src/hip/eval/runners/ollama.py) and `cohort="mlx"` in
-      [mlx_runner.py](src/hip/eval/runners/mlx_runner.py), in both success and failure
-      paths. Three hosted providers behind one `HostedRunner` cannot each be their own
-      cohort under that scheme. Cohort should come from config, and `Cohort.runner`'s
-      `Literal` has to gain the new value.
-- [ ] **"The most recent evaluation run" is chosen lexically.** (pre-M12 review) `runs()`
-      sorts directory names ([store.py:102](src/hip/eval/store.py:102)), so `v10` sorts
-      before `v2` and `hip explain` would silently pick the older run's winner. Either
-      name runs so they sort, or sort by modification time.
-- [ ] **Two strings say the explanation layer is local.** (pre-M12 review) The judge's
-      system prompt ([judge.py:47](src/hip/eval/judge.py:47)) and the API disclaimer
-      ([explanations.py:31](src/hip/api/routers/explanations.py:31)). The disclaimer is a
-      straight edit. The judge prompt is not: changing it changes scores, so hosted
-      candidates cannot be compared against the stored `v1` judgments.
-      **The disclaimer half is scheduled: Milestone 30.**
-- [x] **`test_generations_are_written_as_they_complete_not_in_a_final_pass` was
-      intermittent.** (M18) Seen 2026-09-11, during the M18 run, and again 2026-09-19.
-      **Fixed 2026-09-19:** reproduced at 4 failures in 25 runs, then made deterministic.
-      The race was in the test, not the runner — `pool.map` hands a freed worker the next
-      scenario the moment an earlier `generate` returns, while the append happens on the
-      main thread once it consumes that future, so sampling the file raced the writer.
-      The last scenario now waits for the evidence instead of sampling for it. 0 failures
-      in 50 runs, and a mutation to a final-pass write still fails it.
-
 - [ ] **`import_gguf.sh` was lost, so nothing in the repo rebuilds the local models.**
       (M8 prep; found lost 2026-09-23) It and `kvbench.sh` lived in a `/private/tmp`
       scratchpad and did not survive a reboot around 2026-09-15. The four
@@ -167,18 +138,13 @@ first raised, not where it must be done.
       is exercised by pipeline runs only. `hip.validate.gate` (216 lines) has no test
       importing it at all — the thing whose whole job is to block a bad load is the
       least-tested module in the pipeline.
-- [ ] **Unit tests for the source adapters.** (M3, wider than first written) As of
-      Milestone 7, 2 of 11 adapters have direct tests — `TigerAdapter`
-      (`tests/test_sources.py`) and `ModivAdapter` (`tests/test_nj_modiv.py`). The nine
-      metric adapters — Zillow ZHVI and ZORI, ACS, FRED, BLS, FHFA, permits, IRS, HUD —
-      have none. They are exercised end to end by pipeline runs, but nothing drives
-      `refs()` or `to_records()` against a stubbed response, so a publisher changing a
-      response shape would surface as a pipeline failure rather than a test failure.
+- [ ] **Unit tests for the source adapters.** (M3; narrowed 2026-09-27) Coverage has
+      grown: TIGER, MOD-IV, SR1A and the NJ tax rates have their own tests, and
+      `tests/test_sources.py` drives the requests of ACS, PEP, permits, Fair Market Rents
+      and CHAS and the parsing of the last two. Zillow's ZHVI and ZORI, FRED, BLS, FHFA
+      and IRS still have nothing that reads a stubbed response, so a publisher changing a
+      file's shape surfaces as a pipeline failure rather than a test failure.
       `test_nj_modiv.py` is the pattern to copy — a `MockTransport` subclass, no network.
-
-- [x] **The two scheduled scripts' step order has no committed test.** (M27) **Done
-      2026-09-26** — `tests/test_scheduled_scripts.py`, after Codex's review found three
-      defects in that sequence (ARCHITECTURE #227).
 
 ### API and scale limits
 
@@ -186,22 +152,23 @@ first raised, not where it must be done.
       `/regions/{id}/metrics` is published at its default `limit=5000` with nothing in
       the response saying whether it truncated; the largest region carries 760
       observations today, so this is a watch item. `/rankings` caps at 1,000, below the
-      3,144 counties Milestone 15 adds — a national ranking would be silently cut off at
-      rank 1,000.
+      3,144 counties national coverage would add (Milestone 15, unscheduled) — a national
+      ranking would be silently cut off at rank 1,000.
 - [ ] **`GET /regions?q=` passes `%` and `_` through to `ILIKE`.** (pre-M12 review) A
       caller searching for `%` matches every region. Cosmetic today; worth settling
       before Milestone 17 builds real search over this endpoint.
 - [ ] **New Jersey is hardcoded in three places**, despite `config/geography.yml` stating
       no state code is hard-coded anywhere in `src/hip`. (pre-M12 review) NJ's
-      odd-numbered county FIPS in [registry.py:73](src/hip/sources/registry.py:73), which
-      is a real arithmetic assumption about one state; and `?state=NJ` in both
-      [publish.py:197](src/hip/publish.py:197) and
-      [web/lib/api.ts:245](web/lib/api.ts:245). Blocks Milestone 14, not 12.
+      odd-numbered county FIPS in [registry.py:100](src/hip/sources/registry.py:100),
+      which is a real arithmetic assumption about one state; and `?state=NJ` in both
+      [publish.py:200](src/hip/publish.py:200) and
+      [web/lib/api.ts:437](web/lib/api.ts:437). Blocks the Northeast expansion
+      (Milestone 14, unscheduled).
 - [ ] **`python-dotenv` is imported but not declared.** (pre-M12 review) `load_env_file`
       ([config.py](src/hip/config.py)) imports it directly; it reaches the environment
       only as a transitive dependency of `pydantic-settings`. Load-bearing since #63 — a
       resolver change that drops it breaks `hip` at startup. One line in `pyproject.toml`.
-      **Verified still undeclared 2026-09-19.**
+      **Verified still undeclared 2026-09-27.**
 
 ### Frontend and presentation
 
@@ -241,22 +208,15 @@ first raised, not where it must be done.
 - [ ] **Fold `redesign.css` into `globals.css`**, so each component has one set of rules
       rather than two whose winner depends on file order (#162's cost). (Quiet utility)
       Mechanical and large — worth its own review.
-- [ ] **A lone card on its own row** — Mercer's seventh housing card — keeps a full row's
-      borders, so it reads as unfinished. (Quiet utility)
-- [ ] **The county picker does not preselect the county being viewed.** (M18) It opens on
-      "Choose…" on every page; reading the path would need `usePathname` in the bar.
-- [ ] **Shares still render as `0.68`, not `68%`.** (M21) `ratio` covers both multiples
-      (price-to-income 4.5) and shares (homeownership 0.68). A share unit belongs with
-      Milestone 18's design system.
 - [ ] **The print rule that opens disclosures, `::details-content`, was checked in
       Chromium only.** (M18) A browser without it prints the licence label alone and the
       footer's institutions without their datasets. Check Safari and Firefox print
       previews before relying on it.
-- [ ] **The README's screenshots predate the redesign** and Milestone 23: all eight show
-      the old pages. (Quiet utility) Codex's 2026-09-19 investigation
-      (`agent-handoffs/screenshot-automation.md`) built a working capture command and
-      recommended against automating it per push — retaking them is now a manual step
-      with tooling that exists.
+- [ ] **The README has no screenshots.** (Quiet utility) The eight it had predated the
+      redesign and Milestone 23 and were removed; the section says so. Codex's
+      2026-09-19 investigation (`agent-handoffs/screenshot-automation.md`) built a
+      working capture command, `npm run screenshot:poc`, and recommended against
+      automating it per push — retaking them is a manual step with tooling that exists.
       **Still blocked:** Milestone 27 chose this Mac on 2026-09-25, and only a runner
       off it unblocks automation (ARCHITECTURE #175).
 
@@ -316,34 +276,7 @@ first raised, not where it must be done.
       only the Pages site has a previous deployment to return to — and rolling back the
       site alone would leave it beside the new artifacts. Keeping the last good build
       (or versioned artifact paths) would give both halves a way back.
-- [x] **`hip refresh` stops short of the site.** **Done in Milestone 27** — the weekly
-      script carries a refresh through to the site, gating only the billed readings
-      (ARCHITECTURE #216–#219). (M29, found 2026-09-20 while
-      deploying it) `STAGES` runs land through analyze and no further, so a scheduled
-      refresh updates the warehouse and leaves packets, prose and the published site
-      exactly as they were. Worse than standing still: the warehouse moves underneath
-      prose written against the old figures, which is precisely what happened on this
-      deploy — 105 of 105 explanations went stale and had to be regenerated by hand.
-      Closing it means deciding what a scheduled run is allowed to do unattended, which
-      is a real question: `pack` and `explain` are cheap and safe, `explain` costs money
-      per run, and `deploy` publishes to the internet. This is also what the approved
-      screenshots Director Note is blocked on, which is automated *deployment* and not
-      automated refresh.
-      **Scheduled: Milestone 27.**
 
-- [x] **`make check-live` samples one municipality, and never the interesting ones.**
-      **Done in Milestone 27:** Absecon, Frankford and Walpack are pinned (#220).
-      **Still open, and now also proven to matter:** on 2026-09-21 it passed a deploy
-      whose transaction-fallback and no-price pages were again checked by hand. Its
-      `file://` defect was fixed the same day (ARCHITECTURE #202); the sampling was not.
-      (found 2026-09-20, on its first use validating a real release) It verified the
-      0.20.1 deploy by fetching Aberdeen, which is priced from Zillow like most places —
-      so neither the transaction fallback nor the no-price case was exercised, and both
-      were checked by hand afterwards. A sample drawn from the head of the search index
-      finds the common path every time by construction. It should instead pin one region
-      per *shape* the page can take, named explicitly rather than sampled: a Zillow-priced
-      card, a transaction-priced card, and a region with neither.
-      **Scheduled: Milestone 27.**
 - [ ] **Nothing stops `/afford` from acquiring a second price source.** (found
       2026-09-20) The comparison page reads `latest("zhvi_sfr", …)` directly rather than
       going through the warehouse ratios, so the test that keeps the transaction median
@@ -352,8 +285,6 @@ first raised, not where it must be done.
       2026-09-20 by reading `web/app/afford/page.tsx`; that is a fact about today, not a
       guard.
 
-- [ ] **`make publish` assembling both halves into one directory.** (M11) Its done
-      criterion is a reachable public URL.
 - [ ] **`hip explain` does not report what a run cost.** Found 2026-09-19 regenerating
       Milestone 24's readings: the command prints characters and figures bound per
       region but never a billed total, so the only way to know what a regeneration cost
@@ -371,35 +302,9 @@ first raised, not where it must be done.
       polling and partial-failure handling, and the local tier cannot batch at all —
       so this is a scale decision, not a cleanup.
       **Scheduled for the analyst reading: Milestone 30.**
-- [ ] **`reports/evaluation/v1.md` is as rendered at Milestone 8.** (M13) A re-render
-      would change its title and add Milestone 20's Effort columns without changing a
-      figure, so it was left alone and reverted once. Already in ARCHITECTURE's Known
-      Limitations — say if it should be re-rendered.
-- [x] **No example report is visible to anyone browsing the repository.** (M6)
-      **Already done, and this entry was wrong.** `reports/**` is gitignored, but 24
-      files were force-added at Milestones 13 and 21 and are tracked: the three
-      evaluation reports and all 21 county reports. Corrected 2026-09-20, when
-      regenerating them after the refresh made the working tree show 21 modified files
-      the entry said could not exist. **They are a committed snapshot of generated
-      output, so they go stale silently** — these had been carrying Zillow figures the
-      September release restated, Atlantic County's home-value change among them at
-      +46.4% against an actual +44.5%. Either regenerate them whenever the data moves,
-      or stop tracking them and link a published report instead. The weekly run leaves
-      them alone — it packs without `--report` (#227) — so they stay a committed
-      snapshot until someone regenerates and commits them.
 
 ### Documentation upkeep
 
-- [x] **Nothing detects a stale `README.md` Features list.** Found 2026-09-19, closed
-      the same day by `tests/test_doc_consistency.py`: the list
-      named M0–M9, M13, M17, M21 and M23 while M11, M12, M16, M18, M19 and M20 had all
-      shipped — including M16's globe, the most recent milestone and the platform's main
-      visual object. `ROADMAP.md` already records which milestones shipped, so a test can
-      assert that every milestone marked shipped appears in the Features list and fail
-      when one does not. It cannot write the prose — that is editorial — but it can
-      refuse to let a shipped milestone go undescribed. Same shape as
-      `tests/test_module_boundaries.py`, which parses source rather than trusting it.
-      **Done.** The check found M10 undescribed on its first run; that entry is written.
 - [ ] **Which README figures are mechanically derivable has never been settled.** The
       status counts (regions, observations, metrics, sources), the Tech Stack, the
       evaluation table and the resource and storage figures all have a queryable or
@@ -407,11 +312,13 @@ first raised, not where it must be done.
       prose do not. Deciding the boundary is what makes any "regenerate on deploy" work
       scopeable, and ARCHITECTURE #175 settles only the images half.
 
-- [ ] **ARCHITECTURE's Module Layout stops at 2026-09-11, plus Milestone 27's files.**
-      (found 2026-09-26) Files from Milestones 24–26 and 29 are missing —
+- [ ] **ARCHITECTURE's Module Layout stops at 2026-09-11, plus Milestones 27 and 28's
+      files.** (found 2026-09-26) Files from Milestones 24–26 and 29 are missing —
       `sources/nj_sr1a.py` and `sources/nj_tax_rates.py` among them — and its counts
       are stale (15 sources and 31 metrics; 16 and 38 today). Its schema DDL block
-      likewise predates migrations 0012–0015, which the section now says.
+      predates migrations 0012–0018, which the section says, and the status lines at the
+      top of the file still read "351,295 observations across 31 metrics from 12
+      sources" (414,360, 38 and 16 on 2026-09-27).
 
 ### Housekeeping
 
@@ -426,8 +333,10 @@ first raised, not where it must be done.
       are unset. (M0) Correct behaviour, but it means `check-config` cannot be wired into
       `make lint` or CI until the keys exist.
 - [ ] **Starlette's `TestClient` emits a deprecation warning asking for `httpx2`.** (M0)
-      Suppressed in `pyproject.toml` rather than fixed, because swapping the HTTP client
-      was not Milestone 0 work. Revisit before it becomes an error.
+      Suppressed in `pyproject.toml` for the test suite rather than fixed, because
+      swapping the HTTP client was not Milestone 0 work — but every `hip` command prints
+      it too (checked 2026-09-27), so it fills the scheduled runs' logs. Revisit before
+      it becomes an error.
 
 ### Open decisions — not scheduled, not decided
 
@@ -447,7 +356,8 @@ first raised, not where it must be done.
       measure kept alongside it. That is a larger change than closing the gap, and it is
       schedulable separately from the cards that are now live. `tests/test_nj_sr1a.py` fails if the input is added
       before this is settled. **Not decided.**
-- [ ] **Should a change of model force regeneration?** (deferred to M12) The preference
+- [ ] **Should a change of model force regeneration?** (deferred to M12; worth settling
+      before Milestone 30 sets its fallback lists) The preference
       list can fall through mid-run, so some regions may carry prose from one model and
       some from another. `region_explanations` stores `model_id`, `model_label` and
       `runtime`, and the dashboard shows them, so it is visible rather than hidden. A
@@ -458,15 +368,22 @@ first raised, not where it must be done.
       nothing stale. That is the correct default under the leaning above, but it is a
       default nobody chose — it falls out of the Milestone 8 implementation. Whichever
       way the decision above goes, this function should say so explicitly.
+- [ ] **The 21 committed county reports are a snapshot that goes stale silently.**
+      (M6; restated 2026-09-27) `reports/**` is gitignored, but the three evaluation
+      reports and the 21 county reports were force-added and are tracked. The county
+      reports were last regenerated on 2026-09-25, so they predate Milestone 28's
+      renter cost burden fix, and the weekly run leaves them alone (it packs without
+      `--report`, #227). Either regenerate and commit them whenever the data moves, or
+      stop tracking them and link the published reports. **Not decided.**
 - [ ] **Milestone 17's second user path needs a query the static tree cannot answer.**
       Someone evaluating a place they are moving to wants it compared against where they
       live now, which is `/compare` — one of three endpoints in the publish manifest's
       `unpublishable` list, because an arbitrary set of region ids is combinatorial. The
       consumer entry point therefore carries a dependency on a browser-side query layer
       over published data, and is larger than its roadmap row suggests.
-- [ ] **`place` versus `cousub` outside the strong-MCD states.** Not a Version 2
-      decision — Milestone 14's nine states are all strong-MCD and Milestone 15 stops at
-      county level. It becomes blocking the first time municipality-level data is wanted
+- [ ] **`place` versus `cousub` outside the strong-MCD states.** Not yet a live
+      decision — the Northeast states of Milestone 14 are all strong-MCD, Milestone 15
+      stops at county level, and both are unscheduled. It becomes blocking the first time municipality-level data is wanted
       in a state where county subdivisions are statistical divisions.
       `config/geography.yml` already warns the identifier system is expensive to change
       once fact rows reference it.
@@ -499,11 +416,12 @@ first raised, not where it must be done.
       within states, so a ZIP pull means downloading all ~33,000 nationally per vintage
       for the 598 that matter.
       **Scheduled: Milestone 34.**
-- [ ] **Municipal coverage is 403/564 (71%) under Zillow name matching** — a ceiling, not
-      a bug. (M2, updated at M7) MOD-IV landed and `region_identifiers` holds 554 NJ
-      codes, so a crosswalk exists, but routing Zillow through it still needs a
-      Zillow-name-to-CD_CODE mapping MOD-IV does not supply. ACS closed the gap to
-      564/564 separately; Zillow's 403 stands.
+- [ ] **Zillow's home value reaches 388 of 564 municipalities (69%)** — a ceiling, not a
+      bug. (M2, updated at M7; recounted 2026-09-27, when it was 403 before) MOD-IV landed
+      and `region_identifiers` holds 554 NJ codes, so a crosswalk exists, but routing
+      Zillow through it still needs a Zillow-name-to-CD_CODE mapping MOD-IV does not
+      supply. ACS closed the gap to 564/564 separately, and since Milestone 25 a town
+      without a Zillow value is priced from its recorded sales where it has them.
 - [ ] **NJ Parcels geometry (`njgin_parcels`)** — **blocked.** No key needed, but the
       REST path Milestone 7 uses returns attributes only, and the geometry for a parcel
       map layer would be an enormous download.
