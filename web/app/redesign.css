@@ -298,39 +298,53 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 .site-status {
   display: inline-flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.1rem 0.6rem;
+  align-items: baseline;
+  gap: 0.1rem 0.55rem;
   max-width: 100%;
   min-height: 1.9rem;
   margin-left: auto;
-  padding: 0.25rem 0.6rem;
-  border: 1px solid color-mix(in srgb, var(--state-blue) 22%, var(--border));
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--state-blue) 5%, var(--surface-card));
+  padding: 0.25rem 0.1rem 0.25rem 0.75rem;
+  border-left: 2px solid var(--border);
   color: var(--text-secondary);
   font: 500 11px/1.35 var(--font-text);
   text-decoration: none;
 }
 
 .site-status:hover {
-  border-color: color-mix(in srgb, var(--state-blue) 55%, var(--border));
+  border-left-color: var(--text-secondary);
   text-decoration: none;
 }
 
 .site-status:focus-visible { outline-offset: 2px; }
 
 .site-status-schedule {
-  color: var(--state-blue);
-  font-weight: 650;
+  color: var(--text-primary);
 }
 
-.site-status-built { color: var(--text-muted); }
+.site-status-kicker {
+  margin-right: 0.2rem;
+  color: var(--text-muted);
+  font: 650 9px/1.35 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-status-built {
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--border);
+  color: var(--text-muted);
+}
 .site-status-built time { color: var(--text-secondary); }
-.site-status-arrow { color: var(--state-blue); }
+.site-status-arrow { color: var(--text-muted); transition: transform 150ms ease; }
+.site-status:hover .site-status-arrow { transform: translateX(2px); }
 
 @media (max-width: 760px) {
   .site-meta-row .licence { flex-basis: 100%; }
   .site-status { margin-left: 0; }
+}
+
+@media (max-width: 520px) {
+  .site-status-built { padding-left: 0; border-left: 0; }
 }
 
 .crumbs ol {
