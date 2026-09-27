@@ -28,7 +28,7 @@ export default async function AffordPage() {
     return (
       <>
         <Masthead affordability={{ kind: "route", active: true }} />
-        <main className="shell">
+        <main className="shell atlas-page atlas-tool">
           <h1 className="page-title">What can I afford?</h1>
           <p className="meta">
             The API is unreachable, so there is nothing to show.{" "}
@@ -42,7 +42,7 @@ export default async function AffordPage() {
   return (
     <>
       <Masthead affordability={{ kind: "route", active: true }} />
-      <main className="shell">
+      <main className="shell atlas-page atlas-tool">
       <header className="page-head" data-kind="tool">
         <div>
           <Crumbs

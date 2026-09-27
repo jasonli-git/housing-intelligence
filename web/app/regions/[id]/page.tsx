@@ -279,7 +279,7 @@ export default async function RegionPage({
   return (
     <>
       <Masthead affordability={affordabilityControl} />
-      <main className="shell">
+      <main className="shell atlas-page atlas-local">
       <header className="page-head" data-kind={kindOf(region.level)}>
         <div className="region-head-main">
           <Crumbs

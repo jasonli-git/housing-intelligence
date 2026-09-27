@@ -9,6 +9,7 @@ import { THEME_SCRIPT } from "@/lib/theme";
 import "./tokens.css";
 import "./globals.css";
 import "./redesign.css";
+import "./atlas-pages.css";
 
 // Self-hosted at build time: next/font downloads each face once and serves it from this
 // site, so a reader's browser never asks Google for anything (ARCHITECTURE #121).
