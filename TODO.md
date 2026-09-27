@@ -283,6 +283,23 @@ first raised, not where it must be done.
 
 ### Publication
 
+- [ ] **A failed `check-live` has no written runbook.** (raised 2026-09-26, after 0.24.0's
+      deploy) The Friday run and `hip regenerate-now` send an urgent Pushover alert —
+      "check-live failed after deploy … Check the log on the Mac" — and stop; nothing says
+      what to do next. The steps today: rerun `make check-live`; if it fails again, read
+      which page or manifest it names, fix forward (`make publish`, `make deploy`, `make
+      check-live`), and roll the Pages site back from Cloudflare's dashboard if readers
+      are meanwhile seeing a broken page. Belongs in README's Publishing section.
+- [ ] **`check-live` alerts on its first failure, transient or not.** (raised 2026-09-26)
+      A CDN still propagating, or a page-timing race like the one PR #42 fixed, reads the
+      same as a real mismatch, and the site is already deployed by then. One retry after
+      a short wait, before the urgent alert, would separate the two; a failure to start
+      Chromium is the checker's own problem and could say so.
+- [ ] **The published data files cannot be rolled back.** (raised 2026-09-26) `make
+      publish` deletes the previous `dist/`, and `rclone sync` overwrites R2 in place, so
+      only the Pages site has a previous deployment to return to — and rolling back the
+      site alone would leave it beside the new artifacts. Keeping the last good build
+      (or versioned artifact paths) would give both halves a way back.
 - [x] **`hip refresh` stops short of the site.** **Done in Milestone 27** — the weekly
       script carries a refresh through to the site, gating only the billed readings
       (ARCHITECTURE #216–#219). (M29, found 2026-09-20 while
