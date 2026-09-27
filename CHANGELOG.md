@@ -72,11 +72,19 @@ they are, and ranks say only what the survey can back.
 ### Not in this release
 
 - Margins in the analysis packets and the AI readings, which Milestone 30 takes in when it
-  rewrites them (#240). The burden fix changed a figure every county packet carries, so
-  all 84 readings are marked stale until they are regenerated.
+  rewrites them (#240).
 - Margins for HUD's CHAS figures, which HUD's API does not publish; each reads "no
   margin available" meanwhile.
 - Margins on `/changes`, whose revision records keep values only.
+
+### Regenerated
+
+- All 84 county readings, 21 each from `gemini-3.7-flash-low`, `deepseek-flash-nothink`,
+  `gemini-3.1-flash-lite` and the local `gemma-4-e4b-q4`, after the merge on 2026-09-26:
+  the burden fix had changed a figure every county packet carries. The first full run of
+  Milestone 27's approval path — `hip regenerate-now` started Ollama for the local model
+  and stopped it after (#230), then published, deployed and passed `check-live`. No model
+  or region was skipped.
 
 ## [0.23.1] — 2026-09-26
 
