@@ -355,16 +355,18 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   color: var(--text-primary);
 }
 
+.population-badge-change {
+  padding-left: 0.45rem;
+  border-left: 1px solid color-mix(in srgb, var(--badge-accent) 30%, var(--border));
+  font: 600 10px/1.2 var(--font-mono);
+  white-space: nowrap;
+  color: var(--badge-accent);
+}
+
 .population-badge-year {
   font-size: 10px;
   white-space: nowrap;
   color: var(--text-muted);
-}
-
-.population-detail {
-  margin: 0.25rem 0 0;
-  color: var(--text-muted);
-  font-size: var(--text-note);
 }
 
 .page-head[data-kind="state"] {

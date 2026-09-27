@@ -30,9 +30,9 @@ import {
   changeMarginLabel,
   MARGIN_NOTE,
   marginLabel,
+  NO_MARGIN,
   NO_SAMPLING_ERROR,
   uncertaintiesFrom,
-  withMargin,
 } from "@/lib/uncertainty";
 import {
   housingProfile,
@@ -86,19 +86,39 @@ function placeLine(region: Region & { ancestors: Region[] }): string {
 }
 
 /**
- * The population's date, defined where it is stated. An ACS five-year estimate is not a
- * count on a date, so the term names the survey years and what the change compares.
+ * The population's date and uncertainty, defined in its badge. An ACS five-year estimate
+ * is not a count on a date; the badge's change and its sampling caveat belong together.
  */
-function asOfTerm(population: PacketLevel, compared: boolean): Term {
+function asOfTerm(
+  population: PacketLevel,
+  compared: boolean,
+  valueMargin: string | null,
+  changeMargin: string | null,
+): Term {
   const year = periodLabel(population.period_end);
+  const marginNote = valueMargin === NO_SAMPLING_ERROR
+    ? "For this area, the Census Bureau uses its population estimates rather than a survey sample. There is no sampling error, but this is still an estimate."
+    : valueMargin === NO_MARGIN
+      ? "A sampling margin is not available for this estimate."
+      : valueMargin?.startsWith("±")
+        ? `The published 90% sampling margin is ${valueMargin} people.`
+        : "";
+  const changeMarginNote = changeMargin === NO_MARGIN
+    ? "A sampling margin is not available for the five-year change."
+    : changeMargin === NO_SAMPLING_ERROR && valueMargin !== NO_SAMPLING_ERROR
+      ? "The five-year change has no sampling error."
+      : changeMargin?.startsWith("±")
+        ? `The five-year change has a 90% sampling margin of ${changeMargin}.`
+        : "";
   return {
     key: "population-as-of",
     title: `As of ${year}`,
     phrases: [],
     definition:
-      `The Census Bureau’s American Community Survey five-year estimate for the survey ` +
-      `years ${surveyYears(population.period_start, population.period_end)}` +
-      (compared ? ". The change compares it with the estimate five years earlier." : "."),
+      `The Census Bureau’s American Community Survey population figure covers ` +
+      `${surveyYears(population.period_start, population.period_end)}. ` +
+      (compared ? "The percentage in this badge compares it with the figure five years earlier. " : "") +
+      [marginNote, changeMarginNote].filter(Boolean).join(" "),
   };
 }
 
@@ -207,15 +227,6 @@ export default async function RegionPage({
         population.metric_id,
       )
     : null;
-  const populationDetail = [
-    populationMargin,
-    populationChange
-      ? withMargin(
-          changeWords(populationChange.pct_change),
-          populationChangeMargin === NO_SAMPLING_ERROR ? null : populationChangeMargin,
-        )
-      : null,
-  ].filter((part): part is string => Boolean(part)).join(" · ");
   const lead = verdict(peers, packet.metrics, packet.levels, uncertainties);
   const paid = paychecks(packet.metrics);
   const answers = paycheckAnswers(packet.metrics);
@@ -284,11 +295,19 @@ export default async function RegionPage({
               <aside className="population-badge" aria-label="Population">
                 <span className="population-badge-label">Population</span>
                 <strong>{formatMetric(population.value, population.unit, population.metric_id)}</strong>
+                {populationChange && (
+                  <span className="population-badge-change">{changeWords(populationChange.pct_change)}</span>
+                )}
                 <span className="population-badge-year">
                   <FloatingMetricTerm
                     metricId={population.metric_id}
                     label={`${periodLabel(population.period_end)} estimate`}
-                    definition={asOfTerm(population, Boolean(populationChange)).definition}
+                    definition={asOfTerm(
+                      population,
+                      Boolean(populationChange),
+                      populationMargin,
+                      populationChangeMargin,
+                    ).definition}
                     why={null}
                   />
                 </span>
@@ -302,7 +321,6 @@ export default async function RegionPage({
           {/* Every rank names its own cohort now — "12th of 21 NJ counties" — so the
               line that named it once for the whole page is gone (Milestone 28). */}
           <p className="meta">{placeLine(region)}</p>
-          {populationDetail && <p className="population-detail">{populationDetail}</p>}
           {lead && <p className="verdict">{lead}</p>}
           {trade && <p className="verdict-more">{trade}</p>}
           {/* The short answers in the line, the sentences behind them a click away: the
