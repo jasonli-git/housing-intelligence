@@ -163,6 +163,10 @@ export default async function NewJerseyPage() {
             <ComputedBadge />
           </div>
         </div>
+        <a className="nj-atlas-entry" href="#nj-explore">
+          <span className="nj-atlas-count">{geo.features.length}<span>counties</span></span>
+          <span className="nj-atlas-entry-label">Explore the differences <span aria-hidden="true">↘</span></span>
+        </a>
       </header>
       <StateProfileTicker items={stateProfile(levels, statewide?.headlines ?? [])} />
       <div className="nj-source-notes">
@@ -173,17 +177,19 @@ export default async function NewJerseyPage() {
           ))}
       </div>
 
-      {initial ? (
-        <StateModeWorkspace
-          frame={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
-          counties={geo.features.length}
-          sections={sections}
-          initial={initial}
-          afford={affordability}
-        />
-      ) : (
-        <p className="meta">No county rankings are published yet.</p>
-      )}
+      <div id="nj-explore" className="nj-explore-anchor">
+        {initial ? (
+          <StateModeWorkspace
+            frame={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
+            counties={geo.features.length}
+            sections={sections}
+            initial={initial}
+            afford={affordability}
+          />
+        ) : (
+          <p className="meta">No county rankings are published yet.</p>
+        )}
+      </div>
       </main>
     </>
   );
