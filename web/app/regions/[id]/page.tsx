@@ -30,6 +30,7 @@ import {
   changeMarginLabel,
   MARGIN_NOTE,
   marginLabel,
+  NO_SAMPLING_ERROR,
   uncertaintiesFrom,
   withMargin,
 } from "@/lib/uncertainty";
@@ -192,6 +193,12 @@ export default async function RegionPage({
   // Each figure's margin and rank range, from the summary rather than the packet
   // (Milestone 28), so no reading goes stale before Milestone 30 takes them in.
   const uncertainties = uncertaintiesFrom(summary);
+  const populationChangeMargin = populationChange
+    ? changeMarginLabel(
+        uncertainties.change.get(populationChange.metric_id)?.margin ?? null,
+        populationChange.metric_id,
+      )
+    : null;
   const lead = verdict(peers, packet.metrics, packet.levels, uncertainties);
   const paid = paychecks(packet.metrics);
   const answers = paycheckAnswers(packet.metrics);
@@ -278,10 +285,7 @@ export default async function RegionPage({
                     {" · "}
                     {withMargin(
                       changeWords(populationChange.pct_change),
-                      changeMarginLabel(
-                        uncertainties.change.get(populationChange.metric_id)?.margin ?? null,
-                        populationChange.metric_id,
-                      ),
+                      populationChangeMargin === NO_SAMPLING_ERROR ? null : populationChangeMargin,
                     )}
                   </>
                 )}

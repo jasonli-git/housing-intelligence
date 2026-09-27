@@ -118,8 +118,14 @@ export async function SourceFooter() {
         <nav className="foot-links" aria-label="Source history">
           <span className="foot-kicker">Source history</span>
           <div className="foot-link-list">
-            <Link href="/freshness">How current each source is <span aria-hidden="true">→</span></Link>
-            <Link href="/changes">What changed since it was published <span aria-hidden="true">→</span></Link>
+            <Link href="/freshness">
+              <span className="foot-link-title">How current is each source? <span aria-hidden="true">→</span></span>
+              <span className="foot-link-detail">Latest data period, last check, and next release.</span>
+            </Link>
+            <Link href="/changes">
+              <span className="foot-link-title">Which figures changed? <span aria-hidden="true">→</span></span>
+              <span className="foot-link-detail">Earlier values and revisions after publication.</span>
+            </Link>
           </div>
         </nav>
 

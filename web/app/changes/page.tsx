@@ -26,7 +26,7 @@ export default async function ChangesPage() {
   if (!report) {
     return (
       <>
-        <Masthead affordability={{ kind: "route" }} />
+        <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
         <main className="shell">
           <h1 className="page-title">Figures revised after they were published</h1>
           <p className="meta">
@@ -42,7 +42,7 @@ export default async function ChangesPage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} />
+      <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
       <main className="shell">
         <header className="page-head" data-kind="data">
           <div>

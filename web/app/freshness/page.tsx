@@ -37,7 +37,7 @@ export default async function FreshnessPage() {
   if (!report) {
     return (
       <>
-        <Masthead affordability={{ kind: "route" }} />
+        <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
         <main className="shell">
           <h1 className="page-title">How current is each source</h1>
           <p className="meta">
@@ -54,7 +54,7 @@ export default async function FreshnessPage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} />
+      <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
       <main className="shell">
         <header className="page-head" data-kind="data">
           <div>

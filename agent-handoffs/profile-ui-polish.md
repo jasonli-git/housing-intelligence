@@ -6,14 +6,20 @@
 - Increased the state and local profile conveyor speed by exactly 5%. Local profile ranks now sit in a separate low-profile chin beneath each metric's value, label, and plain-language context. The rank still names its peer cohort and retains its full screen-reader wording.
 - Kept population cards and their text within the page. On narrow county pages, the title clears the corner card; on medium phone widths, the title's first line stays beside it.
 - Let long uncertainty-range rankings wrap within the narrow “Where … stands out” cards.
-- Grouped the freshness and revision links in one Source history card in the footer, with one dividing rule between the links rather than separate cards.
+- Grouped the freshness and revision links in one Source history card in the footer. A follow-up gave each destination a short question and explanatory line in a compact inset link, so their purposes are easier to distinguish.
+- Disabled and greyed the affordability toggle on both source-history pages, including their API-unavailable states.
+- Added pointer dragging to the state and local profile conveyors. Dragging preserves their loop and resumes from the dropped position; paused banners can be dragged as a horizontal scroller, and reduced-motion layout remains static.
+- Narrowed local profile cells from 280 to 248 px on desktop and from 220 to 205 px on phones. Uncertainty ranges now sit in muted text beside the metric value rather than taking a separate line.
+- Removed the redundant parenthetical “no sampling error” from the population change in region population cards, while retaining the statement beneath the population number.
 
 ## Files/modules affected
 
-- `web/components/StateProfileTicker.tsx` — conveyor timing and rank placement.
+- `web/components/StateProfileTicker.tsx` — conveyor timing, rank placement, and pointer dragging.
 - `web/components/SourceFooter.tsx` — shared source-history navigation.
-- `web/app/redesign.css` — notice, population, profile chin, county title, and footer styles.
+- `web/app/redesign.css` — notice, population, profile chin, county title, ticker widths, and footer styles.
 - `web/app/globals.css` — standout rank wrapping.
+- `web/app/freshness/page.tsx` and `web/app/changes/page.tsx` — disabled affordability control.
+- `web/app/regions/[id]/page.tsx` — population change copy without a repeated no-sampling-error note.
 
 ## Architectural or implementation decisions
 
@@ -21,11 +27,14 @@
 - Used the existing typed rank and `RankText` component; the visual rank adds a small “Rank” label, while the full “Rank N of M counties/municipalities” wording remains available to assistive technology.
 - Kept the population estimate, change, and sampling-error text visible. The width and text wrapping were corrected in CSS without changing the underlying data claim.
 - Kept both footer destinations outside the Sources disclosure so either remains directly reachable.
+- The banner's CSS conveyor remains the autoplay mechanism. On pointer-down, the visible transform is frozen; pointer movement updates that offset, and release converts it to an animation delay so motion continues without jumping back to the start. A small movement threshold preserves ordinary metric-definition clicks.
+- The affordability control on source-history pages uses the existing disabled variant, not a new one-off style. The destinations contain source metadata, not local affordability results.
 
 ## Assumptions
 
 - This work covers the interactive state, county, municipality, and ZIP page shell. The separate printable report layout is unchanged.
 - A compact disclosure line is preferable to moving the commercial-use warning into the navigation, where its terms could be less clear or harder to print.
+- “Every range” was interpreted as uncertainty ranges in the shared profile banner. Tables and reports retain their established uncertainty layout.
 
 ## New TODOs / limitations
 
@@ -41,3 +50,6 @@
 - `cd web && npm run build` — passed, 2,278 static pages. The first sandboxed attempt could not reach the local API; the authorized run with the API and database available passed.
 - `git diff --check` — passed.
 - Visually inspected light-mode phone screenshots of the population corner, profile chin, and unified footer card. The existing broad browser check also exercised dark mode.
+- Follow-up: `cd web && npm run typecheck` — passed; `npm test` — 32 files, 276 tests passed; `git diff --check` — passed.
+- Follow-up: headless Chromium loaded `/`, `/regions/12`, `/freshness`, and `/changes`; both source-history routes reported the toggle disabled. A pointer drag on the Somerset banner moved the track and left a nonzero resume delay; the two updated cards were inspected at 1440 and 390 px, with no document overflow at 390 px.
+- Follow-up: `cd web && npm run build` — passed, 2,278 static pages. The existing unset-`NEXT_PUBLIC_ARTIFACT_URL` warning remains. The local frontend preview was restarted after the build.
