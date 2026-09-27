@@ -240,8 +240,8 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 /* ------------------------------------------------------------ licence / location --- */
 
 .licence {
-  padding-top: 0.72rem;
-  padding-bottom: 0.15rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.05rem;
 }
 
 /* The licence notice is a line of text, not a box, and its label keeps the notice's amber
@@ -254,6 +254,14 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   background: transparent;
   box-shadow: none;
 }
+
+.licence-box > summary {
+  min-height: 1.9rem;
+  padding: 0.2rem 0;
+  align-items: center;
+}
+
+.licence-box > .licence-text { padding: 0 0 0.5rem; }
 
 .licence-label {
   color: var(--notice-text);
@@ -318,9 +326,9 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   top: 0;
   right: 0;
   display: grid;
-  width: max-content;
-  min-width: 8.75rem;
-  max-width: 10rem;
+  width: 10rem;
+  max-width: 100%;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.15rem;
   padding: 0.6rem 0.7rem;
   border: 1px solid var(--border);
@@ -347,7 +355,8 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 .population-summary-context {
   font-size: 9px;
   line-height: 1.3;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--text-muted);
 }
 
@@ -531,23 +540,25 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 .state-ticker-window { min-width: 0; flex: 1; overflow: hidden; }
 .state-ticker-track { display: flex; width: max-content; animation: state-conveyor linear infinite; }
 .state-ticker-group { display: flex; list-style: none; margin: 0; padding: 0; }
-.state-ticker-group li { width: 280px; box-sizing: border-box; padding: 0.82rem 1.4rem 0.48rem; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid var(--border); }
+.state-ticker-group li { --ticker-inline-pad: 1.4rem; width: 280px; box-sizing: border-box; padding: 0.82rem var(--ticker-inline-pad) 0.48rem; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid var(--border); }
+.state-ticker-group li.has-rank { justify-content: flex-start; padding-bottom: 0; }
 .state-ticker-group b { font-size: 24px; font-weight: 550; line-height: 1; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
 .state-ticker-group li > span, .state-ticker-group .metric-term { font-size: 12px; }
 .state-ticker-group small { font-size: 9px; margin-top: 3px; color: var(--text-muted); }
 /* A survey figure's margin, under its value (Milestone 28). */
 .state-ticker-group .ticker-margin { font-size: 10px; margin-top: 3px; }
-.state-ticker-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.55rem; min-width: 0; margin-top: 3px; }
-.state-ticker-meta > small { min-width: 0; margin: 0; }
 .profile-rank {
-  display: inline-flex; flex: 0 0 auto; align-items: baseline; gap: 0.32rem;
-  padding: 2px 6px; border: 1px solid color-mix(in srgb, var(--profile-accent) 30%, var(--border));
-  border-radius: 999px; background: color-mix(in srgb, var(--profile-accent) 8%, var(--surface-card));
-  color: var(--text-primary); white-space: nowrap;
+  display: flex; flex: 0 0 auto; align-items: center;
+  min-height: 1.55rem; margin: auto calc(-1 * var(--ticker-inline-pad)) 0;
+  padding: 0.26rem var(--ticker-inline-pad);
+  border-top: 1px solid color-mix(in srgb, var(--profile-accent) 24%, var(--border));
+  background: color-mix(in srgb, var(--profile-accent) 9%, var(--surface-card));
+  color: var(--text-primary);
 }
-.profile-rank strong { font: 700 11px/1 var(--font-mono); letter-spacing: -0.04em; }
-.profile-rank em { font: 600 8px/1 var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; color: var(--profile-accent); font-style: normal; }
-.profile-rank-visual { display: contents; }
+.profile-rank strong { font: 700 12px/1 var(--font-mono); letter-spacing: -0.04em; }
+.profile-rank em { font: 600 9px/1 var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; color: var(--profile-accent); font-style: normal; }
+.profile-rank-visual { display: flex; align-items: baseline; gap: 0.32rem; width: 100%; min-width: 0; }
+.profile-rank-label { margin-right: auto; font: 600 9px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
 @keyframes state-conveyor { to { transform: translateX(-50%); } }
 .state-ticker[data-stopped="true"] .state-ticker-track { animation: none; width: auto; }
 .state-ticker[data-stopped="true"] .state-ticker-window { overflow-x: auto; }
@@ -568,7 +579,8 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 
 @media (max-width: 520px) {
   .state-ticker-head { flex-basis: 72px; padding: 0.55rem; }
-  .state-ticker-group li { width: 220px; padding: 0.75rem 0.9rem 0.45rem; }
+  .state-ticker-group li { --ticker-inline-pad: 0.9rem; width: 220px; padding: 0.75rem var(--ticker-inline-pad) 0.45rem; }
+  .state-ticker-group li.has-rank { padding-bottom: 0; }
 }
 
 @media (prefers-reduced-motion: reduce), print {
@@ -1134,6 +1146,24 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 .foot-notice-copy { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.75rem; }
 .foot-notice .foot-tab { color: var(--text-primary); font-weight: 650; }
 
+.foot-links {
+  display: grid; gap: 0.55rem; margin: 0; padding: 0.9rem 1.05rem;
+  border: 1px solid var(--border); border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-card) 92%, transparent);
+}
+.foot-link-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--grid); }
+.foot-link-list a {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  min-width: 0; padding: 0.6rem 0.1rem 0; color: var(--text-primary); text-decoration: none;
+}
+.foot-link-list a + a { border-left: 1px solid var(--grid); margin-left: 1rem; padding-left: 1rem; }
+.foot-link-list a:hover { text-decoration: underline; }
+.foot-link-list a span { flex: none; color: var(--series-3); }
+@media (max-width: 600px) {
+  .foot-link-list { grid-template-columns: minmax(0, 1fr); }
+  .foot-link-list a + a { border-top: 1px solid var(--grid); border-left: 0; margin: 0.55rem 0 0; padding: 0.55rem 0.1rem 0; }
+}
+
 /* ---------------------------------------------------------------- responsive --- */
 
 @media (max-width: 900px) {
@@ -1256,10 +1286,20 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   }
 }
 
+@media (min-width: 400px) and (max-width: 700px) {
+  /* Keep a county's first title line to the left of the population corner. */
+  .page-head[data-kind="county"]:has(.population-summary) .page-title {
+    max-width: calc(100% - 11rem);
+  }
+}
+
 @media (max-width: 480px) {
   .bar-mode > span:first-child { width: 1rem; overflow: hidden; font-size: 0; white-space: nowrap; }
   .bar-mode > span:first-child::before { content: "$"; font: 700 13px/1 var(--font-mono); color: var(--series-2); }
   .bar-mode { padding-inline: 0.35rem; }
+
+  /* County names can wrap under the population card once its context fits inside it. */
+  .page-head[data-kind="county"] .page-title-row { margin-top: 1.8rem; }
 
   .page-title {
     font-size: clamp(38px, 12vw, 48px);

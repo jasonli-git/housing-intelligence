@@ -115,10 +115,13 @@ export async function SourceFooter() {
 
         {/* Outside the disclosure, so the pages about the data are reachable without
             opening the source list first (Milestone 27). */}
-        <p className="foot-links">
-          <Link href="/freshness">How current each source is</Link>
-          <Link href="/changes">What changed since it was published</Link>
-        </p>
+        <nav className="foot-links" aria-label="Source history">
+          <span className="foot-kicker">Source history</span>
+          <div className="foot-link-list">
+            <Link href="/freshness">How current each source is <span aria-hidden="true">→</span></Link>
+            <Link href="/changes">What changed since it was published <span aria-hidden="true">→</span></Link>
+          </div>
+        </nav>
 
         <div className="foot-notice">
           <svg viewBox="0 0 20 20" aria-hidden="true">

@@ -39,6 +39,8 @@ export function ProfileTicker({
   const [manualPlaying, setManualPlaying] = useState(false);
   const motion = useAutoCarousel(false, () => {});
   if (!items.length) return null;
+  // Same travel distance, 5% more movement per second.
+  const durationSeconds = (Math.max(30, items.length * 14) / 1.05).toFixed(1);
   return (
     <section
       ref={motion.rootRef}
@@ -86,33 +88,32 @@ export function ProfileTicker({
         </button>
       </div>
       <div className="state-ticker-window">
-        <div className="state-ticker-track" style={{ animationDuration: `${Math.max(30, items.length * 14)}s`, animationPlayState: stopped || (motion.paused && !manualPlaying) ? "paused" : "running" }}>
+        <div className="state-ticker-track" style={{ animationDuration: `${durationSeconds}s`, animationPlayState: stopped || (motion.paused && !manualPlaying) ? "paused" : "running" }}>
           {[false, true].map((duplicate) => (
             <ul key={String(duplicate)} className="state-ticker-group" aria-hidden={duplicate || undefined}>
               {items.map((item) => {
                 const context = item.context;
                 return (
-                  <li key={item.metric_id}>
+                  <li key={item.metric_id} className={context?.rank && peerLabel ? "has-rank" : undefined}>
                     <b>{item.value}</b>
                     {item.margin && <span className="margin ticker-margin">{item.margin}</span>}
                     {duplicate ? <span>{item.label}</span> : <FloatingMetricTerm metricId={item.metric_id} label={item.label} definition={item.definition} why={null} />}
-                    <span className="state-ticker-meta">
-                      {context?.words && <small>{context.words}</small>}
-                      {context?.rank && peerLabel && (
-                        <RankText
-                          className="profile-rank"
-                          rank={context.rank.value}
-                          of={context.rank.of}
-                          words={profileRankWords(context.rank, peerLabel)}
-                          visual={(
-                            <span className="profile-rank-visual" aria-hidden="true">
-                              <strong>{profileRankShown(context.rank)}/{context.rank.of}</strong>
-                              <em>{peerLabel}</em>
-                            </span>
-                          )}
-                        />
-                      )}
-                    </span>
+                    {context?.words && <small className="state-ticker-context">{context.words}</small>}
+                    {context?.rank && peerLabel && (
+                      <RankText
+                        className="profile-rank"
+                        rank={context.rank.value}
+                        of={context.rank.of}
+                        words={profileRankWords(context.rank, peerLabel)}
+                        visual={(
+                          <span className="profile-rank-visual" aria-hidden="true">
+                            <span className="profile-rank-label">Rank</span>
+                            <strong>{profileRankShown(context.rank)}/{context.rank.of}</strong>
+                            <em>{peerLabel}</em>
+                          </span>
+                        )}
+                      />
+                    )}
                   </li>
                 );
               })}
