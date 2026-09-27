@@ -156,6 +156,11 @@ first raised, not where it must be done.
 
 ### Test coverage
 
+- [ ] **`web/scripts/check-nj-redesign.mjs` stops at the population card PR #45 removed.**
+      (PR #46) It asserts one `.population-summary` and that the card aligns to the
+      header's right edge; the population is now a badge in the eyebrow above the title
+      (#252). The count can move to `.population-badge`, but the alignment check needs
+      rewriting for the new layout, so everything after it in the script goes unchecked.
 - [ ] **Tests: unpivot shape and gate behavior — never written.** (M2, corrected
       2026-08-13 after this line was briefly ticked in full) `test_matching.py` builds
       `stg_zillow_zhvi` as a hand-made fixture, so the dbt UNPIVOT of ~318 date columns
@@ -200,6 +205,9 @@ first raised, not where it must be done.
 
 ### Frontend and presentation
 
+- [ ] **Swiping a paused profile banner is unverified on a real iPhone.** (PR #46) It was
+      checked with headless Chromium's touch emulation; iOS Safari's scrolling and
+      pointer events differ enough to be worth one pass on a device.
 - [ ] **15 municipality pages priced from deeds show a caveat about Zillow's home
       value.** (M25/#187, found 2026-09-21 while reviewing the region redesign) Where
       Zillow publishes no home value, the cost card is priced from SR1A transactions —

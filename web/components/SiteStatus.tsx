@@ -13,8 +13,9 @@ export function SiteStatus() {
 
   return (
     <Link className="site-status" href="/freshness">
-      <span className="site-status-schedule">Source checks scheduled Fridays</span>
-      {" "}
+      <span className="site-status-schedule">
+        <span className="site-status-kicker">Source checks</span>{" "}scheduled Fridays
+      </span>
       <span className="site-status-built">
         Built <time dateTime={builtAt}>{dayLabel(builtAt)}</time>
         <BuiltAgo at={builtAt} />
