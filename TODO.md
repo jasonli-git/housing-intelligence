@@ -283,6 +283,14 @@ first raised, not where it must be done.
 
 ### Publication
 
+- [ ] **The site's status link cannot say when a check last succeeded.** (PR #45, #251)
+      It names the Friday schedule and the build date; a quiet Friday that found nothing
+      leaves the build date where it was, and nothing published records the run itself.
+      Publishing the last successful check apart from the snapshot would let it say so.
+- [ ] **`npm run build` alone points report links at localhost.** (PR #45) Without
+      `NEXT_PUBLIC_ARTIFACT_URL` the Markdown-report link falls back to the local API;
+      `make publish` sets it, so the deployed site is right, but a bare build warns and
+      is wrong.
 - [ ] **A failed `check-live` has no written runbook.** (raised 2026-09-26, after 0.24.0's
       deploy) The Friday run and `hip regenerate-now` send an urgent Pushover alert —
       "check-live failed after deploy … Check the log on the Mac" — and stop; nothing says
@@ -494,6 +502,11 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
+- [ ] **Does a margin in a definition card count as shown? (SPEC principle 12, #252)**
+      The population badge shows the count and five-year change, with their margins in
+      the definition its period opens. If principle 12 means beside the figure, the badge
+      needs them inline — "5,322 ± 21 · up 0.3% ± 0.6%" — and a county's "no sampling
+      error"; if a card one tap away is enough, the principle's wording should say so.
 - [ ] **Confirm a reading of SPEC principle 12.** (M28, #246) HUD's area median income,
       income limits and Fair Market Rents are set from ACS data but published as HUD's
       determinations, without margins, so they are treated as outside the principle. If

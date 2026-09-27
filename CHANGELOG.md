@@ -3,6 +3,33 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.24.2] — 2026-09-27
+
+Profile and source-history polish, from Codex (PR #45).
+
+### Changed
+
+- **Population is a slim badge beside the page-type label,** with its five-year change.
+  The estimate's definition gives its sampling margin, the change's, or says a county's
+  figure has no sampling error (ARCHITECTURE #252).
+- **Profile banners:** each rank in a band beneath its metric, a survey figure's margin
+  beside its value, narrower cells, a conveyor 5% faster that a pointer can drag.
+- **Source history:** `/freshness` groups sources by how often their publishers release
+  (#253), opens each status's definition from its label, and marks the New Jersey
+  agencies; both source-history pages have shorter introductions, and the footer links
+  them from one card.
+- **The New Jersey map explains each measure in a sentence of its own,** with the chosen
+  window beneath the measure's name (#253).
+- **A site-wide status link** beside the non-commercial notice says source checks are
+  scheduled for Fridays and when this snapshot was built, and leads to `/freshness`
+  (#251).
+
+### Fixed
+
+- The unemployment rate is the share of the labor force — people working or looking for
+  work — without a job; two definitions called it a share of the people looking for
+  work, which is nearly all of them by construction.
+
 ## [0.24.1] — 2026-09-26
 
 ### Fixed
