@@ -1,0 +1,206 @@
+/* Carry the New Jersey atlas experiment into the other public screens. These rules are
+   intentionally scoped by page: reports keep their paper/print presentation, and the
+   state page keeps its blue identity and map-specific layout. */
+@media screen {
+  .atlas-page {
+    --atlas-accent: var(--series-3);
+    --atlas-ink: light-dark(#13564f, #b3e8dc);
+  }
+
+  .atlas-tool {
+    --atlas-accent: var(--series-2);
+    --atlas-ink: light-dark(#89451d, #ffc49d);
+  }
+
+  .atlas-ledger {
+    --atlas-accent: var(--state-blue);
+    --atlas-ink: light-dark(#214b69, #c5def4);
+  }
+
+  .atlas-page > .page-head {
+    margin-top: clamp(0.5rem, 1.5vw, 1rem);
+    padding-block: 1.35rem 1.45rem;
+  }
+
+  .atlas-page .page-title {
+    max-width: none;
+    font-size: clamp(52px, 6.5vw, 88px);
+    font-weight: 700;
+    line-height: 0.97;
+    letter-spacing: -0.07em;
+    color: var(--atlas-ink);
+  }
+
+  .atlas-page .page-head-eyebrow { margin-block: 0 0.85rem; }
+  .atlas-page .page-title-row { gap: 0.75rem; }
+  .atlas-page .page-head .meta { margin-top: 0.55rem; }
+
+  /* Local profiles read as an atlas entry: answer first, then a compact profile
+     instrument. The report stays a secondary path off to the side. */
+  .atlas-local > .page-head { padding-bottom: 1.6rem; }
+  .atlas-local .verdict { margin-top: 1rem; }
+  .atlas-local .page-head > .actions { bottom: 1.55rem; }
+  .atlas-local .report-action {
+    min-width: 11.5rem;
+    padding: 0.2rem 0 0.2rem 0.9rem;
+    border: 0;
+    border-left: 2px solid var(--atlas-accent);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .atlas-local .report-action:hover {
+    border-left-color: var(--text-primary);
+    background: transparent;
+  }
+  .atlas-local .report-action-copy strong { font-size: 13px; }
+  .atlas-local .report-action-arrow { font-size: 18px; }
+
+  .atlas-local > .region-profile-ticker {
+    --profile-accent: #c4eadd;
+    --text-primary: #f8fffc;
+    --text-muted: #c1ddd6;
+    --border: #4b776f;
+    --surface-card: #174d46;
+    margin-bottom: 0;
+    border: 0;
+    border-radius: 4px;
+    background: #174d46;
+    color: #f8fffc;
+  }
+  .atlas-local > .region-profile-ticker .state-ticker-head {
+    flex-basis: 106px;
+    background: #103e38;
+  }
+  .atlas-local > .region-profile-ticker .state-ticker-head h2,
+  .atlas-local > .region-profile-ticker .ticker-value b,
+  .atlas-local > .region-profile-ticker .term { color: #f8fffc; }
+  .atlas-local > .region-profile-ticker .ticker-value b { font-size: 28px; }
+  .atlas-local > .region-profile-ticker .state-ticker-group li { padding-block: 0.85rem 0.65rem; }
+  .atlas-local > .region-profile-ticker .state-ticker-head button { border-color: #62988e; }
+
+  .atlas-local .region-standard-content > .section:first-child { margin-top: clamp(2rem, 3vw, 3rem); }
+  .atlas-local .region-standard-content > .section:first-child > h2,
+  .atlas-local .region-standard-content > .section:first-child .section-head {
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid var(--atlas-accent);
+  }
+  .atlas-local .cost-cards {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface-card);
+  }
+  .atlas-local .cost-card {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .atlas-local .cost-card + .cost-card { border-left: 1px solid var(--border); }
+  .atlas-local .region-standouts { margin-top: clamp(2.5rem, 5vw, 4rem); }
+
+  /* The standalone tool uses the same connected map/table grammar as the new state
+     workspace, with the tool's established orange reserved for affordability. */
+  .atlas-tool .page-title { font-size: clamp(52px, 6vw, 82px); }
+  .atlas-tool .page-head .meta { max-width: 68ch; font-size: 15px; }
+  .atlas-tool .afford-controls,
+  .atlas-tool .check {
+    border: 1px solid color-mix(in srgb, var(--series-2) 25%, var(--border));
+    border-radius: 10px;
+    box-shadow: none;
+  }
+  .atlas-tool .afford-summary {
+    padding-left: 1rem;
+    border-left: 3px solid var(--series-2);
+  }
+  .atlas-tool .explorer {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: none;
+  }
+  .atlas-tool .map-panel { padding: 0.85rem; }
+  .atlas-tool .globe-stage {
+    border: 0;
+    border-radius: 6px;
+    background: radial-gradient(ellipse at 35% 20%, light-dark(#f1f6fa, #273647), light-dark(#cddde8, #14202d));
+  }
+  .atlas-tool .globe-ground path,
+  .atlas-tool .globe-absent {
+    fill: light-dark(#e2e7ec, #29333e);
+    stroke: light-dark(#c9d1d9, #3b4652);
+    stroke-width: 0.6;
+  }
+  .atlas-tool .globe-ground .globe-world-land {
+    fill: light-dark(#d5dce3, #222d38);
+    stroke: light-dark(#bec8d1, #35414d);
+    stroke-width: 0.45;
+  }
+  .atlas-tool .explorer > .scroll-x {
+    max-height: 680px;
+    padding: 1.2rem 1rem;
+    scrollbar-width: thin;
+  }
+  .atlas-tool .ranks thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--surface-card);
+  }
+  .atlas-tool .afford-group-row th {
+    padding: 0.9rem 0.6rem 0.45rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--series-2);
+    font: 650 11px/1.3 var(--font-display);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: left;
+  }
+
+  /* Source history is a ledger, not another map. Group related releases without
+     changing their status colors, table columns, or revision explanations. */
+  .atlas-ledger .page-title { max-width: 23ch; font-size: clamp(46px, 5vw, 70px); }
+  .atlas-ledger > .page-head { --kind: var(--atlas-accent); }
+  .atlas-ledger .page-head .meta { max-width: 75ch; }
+  .atlas-ledger > .section:first-of-type { margin-top: clamp(1.7rem, 3vw, 2.5rem); }
+  .atlas-ledger .fresh-cadence-group,
+  .atlas-ledger .change-batch {
+    padding: 1.15rem 1.3rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-card);
+  }
+  .atlas-ledger .fresh-cadence-group { margin-top: 1rem; }
+  .atlas-ledger .freshness { min-width: 55rem; }
+  .atlas-ledger .fresh-cadence-heading { padding-bottom: 0.75rem; border-bottom: 2px solid var(--atlas-accent); }
+  .atlas-ledger .change-batch { margin-top: 1rem; }
+  .atlas-ledger .change-day { margin-bottom: 0.9rem; padding-bottom: 0.75rem; border-bottom: 2px solid var(--atlas-accent); }
+  .atlas-ledger .change-group { margin-top: 0.8rem; }
+}
+
+@media screen and (max-width: 900px) {
+  .atlas-local .page-head > .actions { position: static; }
+  .atlas-tool .explorer > .scroll-x { max-height: none; border-left: 0; }
+  .atlas-tool .ranks thead { position: static; }
+}
+
+@media screen and (max-width: 700px) {
+  .atlas-page .page-title { font-size: clamp(46px, 11.5vw, 64px); }
+  .atlas-page > .page-head { padding-block: 1.1rem 1.2rem; }
+  .atlas-local .page-head > .actions { margin-top: 0.4rem; }
+  .atlas-local .section-head .control {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.45rem;
+    margin-left: auto;
+  }
+  .atlas-local .section-head .control select { flex: 0 0 auto; width: 4.8rem; }
+  .atlas-local > .region-profile-ticker .state-ticker-head { flex-basis: 72px; }
+  .atlas-local > .region-profile-ticker .ticker-value b { font-size: 25px; }
+  .atlas-local .cost-card + .cost-card { border-left: 0; border-top: 1px solid var(--border); }
+  .atlas-tool .map-panel { padding: 0.5rem; }
+  .atlas-ledger .fresh-cadence-group,
+  .atlas-ledger .change-batch { padding: 0.9rem 0.75rem; }
+}

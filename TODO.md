@@ -172,9 +172,10 @@ first raised, not where it must be done.
 
 ### Frontend and presentation
 
-- [ ] **Swiping a paused profile banner is unverified on a real iPhone.** (PR #46) It was
-      checked with headless Chromium's touch emulation; iOS Safari's scrolling and
-      pointer events differ enough to be worth one pass on a device.
+- [ ] **The paused-banner swipe and the atlas redesign are unverified on a real iPhone.**
+      (PR #46, PR #48) Both were checked in Chromium only, the swipe with its touch
+      emulation; iOS Safari's scrolling, pointer events and sticky table headers differ
+      enough to be worth one pass on a device.
 - [ ] **15 municipality pages priced from deeds show a caveat about Zillow's home
       value.** (M25/#187, found 2026-09-21 while reviewing the region redesign) Where
       Zillow publishes no home value, the cost card is priced from SR1A transactions —

@@ -84,3 +84,128 @@
   .nj-page .quick-measure, .nj-page .nj-afford-intro { display: none; }
   .nj-page .explorer { display: block; box-shadow: none; }
 }
+
+/* Atlas experiment: a stronger opening and a continuous map/comparison workspace.
+   Scoped here because local profiles share the same explorer and ticker primitives. */
+.nj-page { --atlas-ink: light-dark(#163b5d, #c5def4); }
+.nj-page .nj-head {
+  display: flex; align-items: end; justify-content: space-between; gap: 2rem;
+  padding-block: 1.4rem 1.5rem;
+}
+.nj-page .nj-head > .region-head-main { flex: 1 1 auto; width: auto; min-width: 0; }
+.nj-head .page-title {
+  font-size: clamp(64px, 8.2vw, 116px); line-height: 0.96; font-weight: 700;
+  letter-spacing: -0.075em; color: var(--atlas-ink);
+}
+.nj-head .page-title-row { gap: 0.9rem; }
+.nj-head .page-head-eyebrow { margin-bottom: 1rem; }
+.nj-atlas-entry {
+  flex: 0 0 auto; display: grid; gap: 0.5rem; padding: 0.25rem 0 0.25rem 1.5rem;
+  border-left: 1px solid var(--border); color: var(--atlas-ink); text-decoration: none;
+}
+.nj-atlas-count { display: flex; align-items: baseline; gap: 0.6rem; font: 550 64px/1 var(--font-display); letter-spacing: -0.07em; }
+.nj-atlas-count > span { font: 500 12px var(--font-mono); letter-spacing: 0; color: var(--text-secondary); }
+.nj-atlas-entry-label { display: flex; gap: 1.5rem; align-items: center; font-size: 12px; }
+.nj-atlas-entry-label > span { font-size: 25px; line-height: 1; }
+.nj-atlas-entry:hover { text-decoration: none; color: var(--text-primary); }
+.nj-explore-anchor { scroll-margin-top: 1rem; }
+
+.nj-page > .state-ticker {
+  --profile-accent: #c4e2fc; --text-primary: #f7fbff; --text-muted: #c0d2e2;
+  --border: #456581; --surface-card: #163c60;
+  border: 0; border-radius: 4px; background: #163c60; color: #f7fbff;
+}
+.nj-page > .state-ticker .state-ticker-head { background: #12324f; flex-basis: 106px; }
+.nj-page > .state-ticker .ticker-value b { font-size: 29px; letter-spacing: -0.045em; color: #f7fbff; }
+.nj-page > .state-ticker .state-ticker-head h2 { color: #f7fbff; }
+.nj-page > .state-ticker .term { color: #f7fbff; }
+.nj-page > .state-ticker .state-ticker-group li { padding-block: 0.85rem 0.65rem; }
+.nj-page > .state-ticker .state-ticker-head button { border-color: #6488a7; }
+
+.nj-page .measure-card { padding-block: 1.4rem 0; gap: 1rem; margin-bottom: 0; }
+.nj-page .measure-intro { align-items: center; }
+.nj-page .measure-eyebrow { color: var(--atlas-blue); font-size: 10px; }
+.nj-page .measure-name { font-size: clamp(23px, 2.7vw, 36px); letter-spacing: -0.05em; }
+.nj-page .measure-window { border-radius: 3px; padding: 0.2rem 0.45rem; margin-top: 0.5rem; font-size: 10px; }
+.nj-page .measure-def { margin-top: 0.5rem; max-width: 90ch; }
+.nj-page .measure-card .explorer-controls {
+  border-radius: 12px 12px 0 0; border-bottom: 0; background: var(--surface-card);
+  padding: 0.8rem 1.15rem; gap: 1rem;
+}
+.nj-page .explorer { border-radius: 0 0 12px 12px; box-shadow: none; grid-template-columns: minmax(0, 1.4fr) minmax(22rem, 0.9fr); align-items: start; }
+.nj-page .map-panel { padding: 0.8rem; border-radius: 0; }
+.nj-page .readout {
+  border-radius: 0; min-height: 3rem; padding: 0.45rem 0.6rem 0.7rem;
+  background: transparent; font-size: 11px; line-height: 1.6;
+}
+.nj-page .readout b { color: var(--atlas-ink); font-size: 13px; }
+.nj-page .globe-stage {
+  border-radius: 6px; border: 0;
+  background: radial-gradient(ellipse at 35% 20%, light-dark(#f1f6fa, #273647), light-dark(#cddde8, #14202d));
+}
+.nj-page .globe-level-label { font-size: 11px; letter-spacing: 0.19em; }
+.nj-page .globe-controls-dive { border-radius: 5px; box-shadow: 0 3px 8px rgb(14 50 80 / 15%); }
+.nj-page .globe-legend { padding-inline: 0.5rem; }
+.nj-page .rank-card { padding: 1.1rem 1rem; border-radius: 0 0 12px 0; }
+.nj-page .nj-rank-head { padding-bottom: 0.8rem; margin-bottom: 0; border-bottom: 2px solid var(--atlas-blue); }
+.nj-page .nj-rank-head h3 { font-size: 22px; letter-spacing: -0.04em; }
+.nj-page .ranks td { padding-block: 0.68rem; }
+.nj-page .ranks .pos { font: 11px var(--font-mono); }
+.nj-page .ranks tbody tr.on td { background: color-mix(in srgb, var(--atlas-blue) 10%, var(--surface-card)); }
+.nj-page .ranks thead { position: sticky; top: 0; z-index: 1; background: var(--surface-card); }
+.nj-page .rank-card > .scroll-x { max-height: 680px; scrollbar-width: thin; }
+.nj-page .nj-afford-mode .explorer { border-radius: 12px; }
+.nj-page .nj-afford-mode .nj-rank-head { border-bottom-color: var(--series-2); }
+
+@media (min-width: 1100px) {
+  .nj-page .measure-card {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center;
+    gap: 1.5rem; margin-top: 1.4rem; padding: 1.1rem 1.2rem;
+    border: 1px solid var(--border); border-bottom: 0; border-radius: 12px 12px 0 0;
+    background: var(--surface-card);
+  }
+  .nj-page .measure-intro { grid-template-columns: minmax(0, 1fr); }
+  .nj-page .measure-name { font-size: 29px; }
+  .nj-page .measure-card .explorer-controls {
+    display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
+    padding: 0 0 0 1.25rem; border: 0; border-left: 1px solid var(--border); border-radius: 0;
+    gap: 0.7rem;
+  }
+  .nj-page .explorer-controls .control { display: grid; gap: 0.3rem; min-width: 0; }
+  .nj-page .explorer-controls .control select { width: 100%; min-width: 0; max-width: 100%; }
+  .nj-page .explorer-controls .control:last-child { grid-column: 1 / -1; display: flex; justify-content: space-between; }
+}
+
+@media (max-width: 1000px) {
+  .nj-page .explorer { grid-template-columns: minmax(0, 1fr); }
+  .nj-page .rank-card { border-radius: 0 0 12px 12px; }
+  .nj-page .rank-card > .scroll-x { max-height: none; }
+  .nj-atlas-count { font-size: 48px; }
+}
+@media (max-width: 600px) {
+  .nj-page .nj-head { gap: 0.8rem; padding-block: 1.1rem; }
+  .nj-head .page-title { font-size: clamp(47px, 12vw, 70px); }
+  .nj-head .page-head-eyebrow { margin-bottom: 0.7rem; }
+  .nj-atlas-entry { display: none; }
+  .nj-page > .state-ticker .state-ticker-head { flex-basis: 72px; }
+  .nj-page > .state-ticker .ticker-value b { font-size: 26px; }
+  .nj-page .measure-card { padding-top: 1.2rem; }
+  .nj-page .measure-card .explorer-controls { padding: 0.7rem; gap: 0.7rem; flex-wrap: wrap; }
+  .nj-page .explorer-controls .control { display: flex; flex-direction: row; width: 100%; min-width: 0; gap: 0.4rem; }
+  .nj-page .explorer-controls .control-label { flex: 0 0 3.8rem; font-size: 9px; }
+  .nj-page .explorer-controls .control select { flex: 1; min-width: 0; width: 0; }
+  .nj-page .explorer-controls .seg { flex: 1; min-width: 0; display: flex; }
+  .nj-page .explorer-controls .seg button { flex: 1; padding-inline: 0.35rem; font-size: 11px; }
+  .nj-page .map-panel { padding: 0.5rem; }
+  .nj-page .rank-card { padding: 1rem 0.6rem; }
+  .nj-page .nj-rank-head h3 { font-size: 20px; }
+}
+@media print {
+  .nj-atlas-entry { display: none; }
+  .nj-page > .state-ticker { --text-primary: #000; --text-muted: #444; background: transparent; border: 1px solid #aaa; }
+  .nj-page > .state-ticker .state-ticker-head { background: transparent; }
+  .nj-page > .state-ticker .term { color: #000; }
+  .nj-page > .state-ticker .ticker-value b, .nj-page > .state-ticker .state-ticker-head h2 { color: #000; }
+  .nj-page .rank-card > .scroll-x { max-height: none; overflow: visible; }
+  .nj-page .ranks thead { position: static; }
+}

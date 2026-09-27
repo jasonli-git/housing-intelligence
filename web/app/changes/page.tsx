@@ -27,7 +27,7 @@ export default async function ChangesPage() {
     return (
       <>
         <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
-        <main className="shell">
+        <main className="shell atlas-page atlas-ledger">
           <h1 className="page-title">Figures revised after they were published</h1>
           <p className="meta">
             The API is unreachable, so there is nothing to show.{" "}
@@ -43,7 +43,7 @@ export default async function ChangesPage() {
   return (
     <>
       <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
-      <main className="shell">
+      <main className="shell atlas-page atlas-ledger">
         <header className="page-head" data-kind="data">
           <div>
             <Crumbs trail={[{ href: "/", label: "New Jersey" }]} here="What changed" />
@@ -71,7 +71,7 @@ export default async function ChangesPage() {
         {report.batches.map((batch) => (
           <section
             key={batch.revised_on}
-            className="section"
+            className="section change-batch"
             aria-labelledby={`batch-${batch.revised_on}`}
           >
             <h2 id={`batch-${batch.revised_on}`} className="change-day">
