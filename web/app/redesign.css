@@ -591,7 +591,8 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 .state-ticker-head button { display: grid; place-items: center; width: 24px; height: 24px; min-height: 24px; padding: 0; border-radius: 50%; color: var(--profile-accent); background: transparent; }
 .state-ticker-head button svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .state-ticker-head button svg .play { fill: currentColor; stroke: none; }
-.state-ticker-window { min-width: 0; flex: 1; overflow: hidden; cursor: grab; touch-action: pan-y; }
+/* Contain absolutely positioned screen-reader rank text inside the horizontal clip. */
+.state-ticker-window { position: relative; min-width: 0; flex: 1; overflow: hidden; cursor: grab; touch-action: pan-y; }
 .state-ticker-window[data-dragging="true"] { cursor: grabbing; user-select: none; }
 .state-ticker-track { display: flex; width: max-content; animation: state-conveyor linear infinite; }
 .state-ticker-group { display: flex; list-style: none; margin: 0; padding: 0; }
@@ -619,6 +620,8 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 @keyframes state-conveyor { to { transform: translateX(-50%); } }
 .state-ticker[data-stopped="true"] .state-ticker-track { animation: none; width: auto; }
 .state-ticker[data-stopped="true"] .state-ticker-window { overflow-x: auto; }
+.state-ticker[data-manual-paused="true"] .state-ticker-track { animation: none; width: auto; }
+.state-ticker[data-manual-paused="true"] .state-ticker-window { overflow-x: auto; touch-action: auto; }
 /* Limit this to the duplicate group: the SVG control is aria-hidden too. */
 .state-ticker[data-stopped="true"] .state-ticker-group[aria-hidden="true"] { display: none; }
 
