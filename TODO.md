@@ -41,13 +41,6 @@ first raised, not where it must be done.
 
 ### Correctness and data integrity
 
-- [ ] **Binding attributes a figure by the words of its whole sentence.** (M30, #257) In
-      a sentence naming several measures, "incomes rose 24% while rents rose 28%" can
-      hand the 28% to rent-to-income for its words rather than to rent. The margin check
-      now judges a figure under every field it could be read from, so no reading is
-      refused for it — but a citation's `field`, shown in each reading's figure list, can
-      still name the wrong measure. Weighting the words nearest the figure over the rest
-      of the sentence would fix the attribution itself.
 - [ ] **A packet's `cagr` for a survey figure carries no margin.** (M30, #256) The
       Markdown report and so the readings leave a survey figure's annualised change out,
       because nothing computes its margin, but the packet's JSON still carries the

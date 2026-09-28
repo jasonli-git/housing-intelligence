@@ -3,6 +3,19 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.25.1] — 2026-09-28
+
+From Codex (PR #51).
+
+### Fixed
+
+- **A reading's figure list names the measure the sentence attaches to the figure.** In
+  "incomes rose 24% while rents rose 28%", the 28% is cited to rent, not to rent-to-income:
+  binding now weighs the measure words beside a figure over those elsewhere in its
+  sentence. Stored bindings carry a binder revision, so existing readings are re-cited
+  without a model call — and only if they still pass every publication rule (ARCHITECTURE
+  #263).
+
 ## [0.25.0] — 2026-09-28
 
 Milestone 30, Readings for every reader.
