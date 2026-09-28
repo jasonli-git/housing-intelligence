@@ -95,7 +95,7 @@ RELATIVE_TOLERANCE = 0.005
 
 # Stored readings keep their citations. Bump this when a binder change can alter a
 # citation's field, so `hip explain` re-cites existing prose without a model call.
-BINDING_VERSION = 1
+BINDING_VERSION = 2
 
 # A plain whole number below this that matches nothing is an ordinal, a count or a list
 # position ("the 3 metrics below", "ranked 2nd") rather than a claim about the data.
@@ -141,6 +141,13 @@ _LEVEL_WORDS = re.compile(
 )
 _ORDINAL_AFTER = re.compile(r"^(st|nd|rd|th)\b|^\s+of\s+\d|^\s*/\s*\d", re.IGNORECASE)
 _COHORT_BEFORE = re.compile(r"(\b(of|among|out of)\s+|/\s*)$", re.IGNORECASE)
+# In "21st of 21", the second 21 is the cohort, even when the packet also has a
+# 21st-place rank, 21% change or 21-point margin. Its grammar is stronger evidence
+# than the earlier metric words that normally resolve a numerical tie.
+_RANK_DENOMINATOR = re.compile(
+    r"(?:\b\d+(?:st|nd|rd|th)|\brank(?:ed|ing|s)?\s+\d+)\s+(?:of|out of)\s+$",
+    re.IGNORECASE,
+)
 # "68 percent" is a percentage; "95 percentile" is a position. "2.3 points" is a share's
 # margin, which the site writes in percentage points.
 _PERCENT_AFTER = re.compile(
@@ -926,6 +933,14 @@ def _choose(
     usable = matches
     if not usable:
         raise LookupError(stated.text)
+
+    # The number of peers has a distinct grammatical role. In a published reading,
+    # "21st of 21 counties" otherwise bound the denominator to rank_worst (or even a
+    # matching 21% change), so the source table described a cohort as another measure.
+    if _COHORT_AFTER.search(context.after) or _RANK_DENOMINATOR.search(context.before):
+        cohorts = [match for match in usable if match.figure.kind == "cohort"]
+        if cohorts:
+            usable = cohorts
 
     named = set().union(
         *(
