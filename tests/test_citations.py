@@ -325,6 +325,33 @@ def test_a_rank_belongs_to_the_metric_its_sentence_is_about(packet: Packet) -> N
     assert cohort.field == "comparisons.peer_count"
 
 
+@pytest.mark.parametrize(
+    "prose",
+    [
+        "Income ranks 21st of 21 counties.",
+        "Income ranks 21st of 21.",
+        "Income ranks between 1st and 21st of 21 counties.",
+    ],
+)
+def test_a_cohort_denominator_is_not_an_equal_rank_or_change(
+    packet: Packet, prose: str
+) -> None:
+    """The county count must remain a cohort even when a nearby field is also 21."""
+    income = next(m for m in packet.metrics if m.metric_id == "acs_median_hh_income")
+    income.rank = 21
+    income.rank_best = 1
+    income.rank_worst = 21
+    income.pct_change = 21.0
+
+    binding = bind(prose, packet)
+    assert binding.complete, binding.unbound
+    denominator = next(
+        c for c in binding.citations if prose[max(0, c.start - 3) : c.start] == "of "
+    )
+    assert denominator.kind == "cohort"
+    assert denominator.field == "comparisons.peer_count"
+
+
 def test_a_rank_nothing_distinguishes_says_so(packet: Packet) -> None:
     citation = _only("It ranks 4th.", packet)
     assert citation.kind == "rank"
@@ -639,12 +666,16 @@ def test_what_a_stored_explanation_needs(packet: Packet) -> None:
     assert freshness(_row(packet, body), revised) == "stale"
 
 
+@pytest.mark.parametrize("previous_version", [None, BINDING_VERSION - 1])
 def test_an_older_binding_is_recited_without_regenerating_the_reading(
-    packet: Packet,
+    packet: Packet, previous_version: int | None
 ) -> None:
     body = "Home values rose 45.97%."
     previous = bind(body, packet).model_dump(mode="json")
-    previous.pop("binding_version")
+    if previous_version is None:
+        previous.pop("binding_version")
+    else:
+        previous["binding_version"] = previous_version
     row = _row(packet, body, binding=previous)
 
     assert freshness(row, packet) == "rebind"

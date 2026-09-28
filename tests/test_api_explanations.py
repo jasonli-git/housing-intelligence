@@ -435,6 +435,24 @@ def test_prune_removes_readings_from_models_off_their_audience_list(
     assert [e["audience"] for e in other["explanations"]] == ["consumer"]
 
 
+def test_prune_for_one_audience_preserves_the_other(both_readings: int) -> None:
+    """A consumer-only explain run must not retire the analyst's reading."""
+    from hip.eval.explain import prune
+
+    with Session(get_engine()) as session:
+        removed = prune(
+            session,
+            [both_readings],
+            WINDOW,
+            {"consumer": {"gemini-3.7-flash-low"}},
+        )
+        session.commit()
+
+    assert removed == {"deepseek-flash-nothink": 1}
+    kept = client.get(f"/regions/{both_readings}/explanations?window={WINDOW}").json()
+    assert [e["audience"] for e in kept["explanations"]] == ["analyst"]
+
+
 def test_prune_refuses_to_keep_nothing(county_id: int) -> None:
     """An empty keep-set would delete every reading in scope."""
     from hip.eval.explain import prune
