@@ -95,12 +95,6 @@ first raised, not where it must be done.
       Recording the check time per source at `hip refresh` and loading it with the
       discoveries would let the page show a date it can back.
 
-- [ ] **The loader credits a row whose vintage has no release to another release.**
-      (M28, #237) `load_facts` falls back from `(source, layer, vintage)` to another
-      vintage's release of the same layer, then to any release of the source, which let
-      the 2015–2019 ACS edition cite the 2020–2024 file from Milestone 24 on without
-      anything failing. A row whose exact release is missing should fail the load, or at
-      least be counted and reported, rather than be quietly re-attributed.
 - [ ] **A reading can quote a single rank beside its page's range.** (M28, #240) The
       packets carry no margins or rank ranges, so a reading can say "9th" where its page
       says "between 5th and 13th", and the readings and the Markdown report state survey
