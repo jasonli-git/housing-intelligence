@@ -47,6 +47,8 @@ Rules:
 - Carry through any caveat that changes how a figure should be read.
 - Do not assert causes the packet cannot support. "Values rose while incomes did not"
   is supported; "values rose because of migration" is not.
+- Call each measure what its label calls it, without narrowing what it covers: the
+  vacancy rate counts every empty home, not only rentals.
 - A figure shown with ± is a survey estimate. Whenever you state one, give its margin
   in the same sentence, as the packet does: "$100,645 (± $2,565)". Where the packet
   says a figure has no sampling error, or that no margin is available, say so in the
@@ -130,9 +132,15 @@ JARGON: dict[str, str] = {
     "basis points": "percentage points",
 }
 
-# Figures per answer. "A couple" in the roadmap; two, so an answer can give one change
-# and where it leaves the region, and no more.
-MAX_FIGURES = 2
+# Figures per answer: the prompt asks for two — "a couple", in the roadmap — and
+# publication allows three (decided with the owner 2026-09-27, ARCHITECTURE #262). At
+# two, the model that answered best lost a third of its readings for answers like "sold
+# for $715,000, with a tax bill of $12,038; rent is $2,899 a month", whole at three and
+# still short. The prompt stays at two because it is not a limit a model keeps exactly:
+# asked for three, Gemini 3.7 Flash wrote four and five (measured 2026-09-28), where
+# asked for two it wrote three at most — the conditions the owner's choice was read in.
+TARGET_FIGURES = 2
+MAX_FIGURES = 3
 
 # The kinds that count toward it. A margin qualifies a figure rather than adding one, a
 # cohort size or a year places it, and a number inside a quoted label is the label.
@@ -150,11 +158,12 @@ this order, with a short answer beneath each:
 
 Rules:
 - The bottom line is one or two sentences; every other answer two or three.
-- Each answer states at most {MAX_FIGURES} figures: choose the ones that matter most
-  for its question and leave the rest out — comparing renting with buying, one figure
-  for each. Every dollar amount, percentage, count or rank is a figure; a margin, and a
-  threshold such as "30% of income", are not. Before you finish, count the figures in
-  each answer and cut any beyond {MAX_FIGURES}.
+- Each answer states at most {TARGET_FIGURES} figures: choose the ones that matter most
+  for its question and leave the rest out. Every dollar amount, percentage, count or
+  rank is a figure; a margin, and a threshold such as "30% of income", are not. Before
+  you finish, count the figures in each answer and cut any beyond {TARGET_FIGURES}.
+- Call each measure what its label calls it, in plain words, without narrowing what it
+  covers: the vacancy rate counts every empty home, not only rentals.
 - Use only figures from the packet, as the packet writes them or rounded to three
   significant digits ($445,000, $1,620) or a whole percentage. Never calculate a figure
   of your own.
@@ -349,6 +358,7 @@ __all__ = [
     "JARGON",
     "MAX_FIGURES",
     "QUESTIONS",
+    "TARGET_FIGURES",
     "SOURCE_NAMES",
     "Format",
     "MalformedReading",

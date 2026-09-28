@@ -58,14 +58,17 @@ def test_a_publishable_reading_is_shown_as_it_would_publish(
 
     assert result.status == "published" and result.reasons == []
     assert [s.id for s in result.sections] == [q.id for q in QUESTIONS]
-    assert max(result.figures) <= 2
+    assert max(result.figures) <= 3
     assert (result.tier, result.usd) == ("flex", 0.0006)
 
 
 def test_a_refused_reading_is_shown_with_the_rule_it_broke(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    crowded = "Home values rose 34.4% to $445,078, and incomes rose 24.2% (± 4.0%)."
+    crowded = (
+        "Home values rose 34.4% to $445,078, incomes rose 24.2% (± 4.0%), and 385,864 "
+        "people live here, with no sampling error."
+    )
     _model_writing(_reading({"whats_changing": crowded}), monkeypatch)
     result = trial(
         uncertain_packet(), load_evaluation(), "gemini-3.7-flash-low", "consumer"
@@ -73,11 +76,11 @@ def test_a_refused_reading_is_shown_with_the_rule_it_broke(
 
     assert result.status == "refused"
     assert result.reasons == [
-        "3 figures under 'What's changing?', where at most 2 are allowed"
+        "4 figures under 'What's changing?', where at most 3 are allowed"
     ]
     # Shaped anyway, so the report can still lay it out under its questions.
     assert len(result.sections) == len(QUESTIONS)
-    assert result.publishes_at(3) and not result.publishes_at(2)
+    assert result.publishes_at(4) and not result.publishes_at(3)
 
 
 def test_an_unbound_figure_is_a_refusal_and_an_error_a_failure(

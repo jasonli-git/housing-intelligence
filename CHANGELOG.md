@@ -3,6 +3,52 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.25.0] — 2026-09-28
+
+Milestone 30, Readings for every reader.
+
+### Added
+
+- **A plain-language reading on every county page.** A bottom line and four fixed
+  questions — *Is it getting harder to afford here? How does renting compare with
+  buying? What's changing? What should I check before moving?* — each answered in a
+  few sentences with at most three figures, no source names and no jargon, after the
+  stand-outs and before the tables. Written first by Gemini 3.7 Flash, chosen by the
+  owner from a side-by-side of four models on three counties
+  ([`reports/evaluation/readings-v1.md`](reports/evaluation/readings-v1.md),
+  ARCHITECTURE #260–#262).
+- **`hip eval readings`**, which sets both readings from several models side by side,
+  judged exactly as publication would judge them, without storing anything (#261).
+- **What a regeneration cost.** `hip explain` ends with a line per model: calls, tokens,
+  price, and how it was billed (#259).
+
+### Changed
+
+- **One analyst reading per region, in place of four models' side by side.** Each of a
+  region's two readings comes from the first model on its own list that writes one fit
+  to publish; a model whose reading is refused passes the region to the next, and a
+  reading a fallback wrote stands until its figures change (#258). The panel's model
+  switcher is gone. `hip explain` writes both by default; `--all` and `--prune` are
+  gone, and every run retires readings from a model that has left its list.
+- **Readings give every survey figure its margin and every uncertain rank its range.**
+  Packets (1.3) carry each figure's margin, both ends of a change and the change itself,
+  and the range of ranks the margins allow; the Markdown report shows them; and prose is
+  refused that states a survey figure without its margin or quotes an uncertain rank as
+  a single place — SPEC principle 12, now in the readings too (#256, #257).
+- **Gemini writes at half price.** Readings are requested at Gemini's Flex tier, billed
+  at the Batch API's discount on the ordinary call; DeepSeek, with no discounted tier,
+  is priced by the hour it ran (#259).
+- **The report's shares and multiples read as on the page** — "62.2%" and "4.26×" rather
+  than "0.62" and "4.26" — and a rank reads "12th of 21".
+- `/regions/{id}/explanation` serves the analyst reading; `/regions/{id}/explanations`
+  serves both, each with its `audience` and the consumer reading's `sections`.
+
+### Fixed
+
+- Binding read the "30%" of "renters paying over 30% of income" as a claim about a
+  figure that rounds to 30%; a label's own numbers, a caveat's, and a label's income
+  threshold however it is worded are now read as the packet's text (#257).
+
 ## [0.24.5] — 2026-09-28
 
 From Codex (PR #49).

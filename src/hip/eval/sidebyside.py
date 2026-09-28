@@ -220,7 +220,8 @@ def _money(usd: float | None) -> str:
 
 def _summary(trials: list[Trial], models: Sequence[str]) -> list[str]:
     lines = [
-        "| Model | Consumer published | …at 3 figures an answer | Analyst published | "
+        f"| Model | Consumer published | …at {MAX_FIGURES + 1} figures an answer | "
+        "Analyst published | "
         "Consumer words | Figures per answer, most | Cost | Seconds, mean |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
@@ -236,7 +237,8 @@ def _summary(trials: list[Trial], models: Sequence[str]) -> list[str]:
         lines.append(
             f"| {mine[0].model_label} "
             f"| {sum(t.status == 'published' for t in consumer)} of {len(consumer)} "
-            f"| {sum(t.publishes_at(3) for t in consumer)} of {len(consumer)} "
+            f"| {sum(t.publishes_at(MAX_FIGURES + 1) for t in consumer)} "
+            f"of {len(consumer)} "
             f"| {sum(t.status == 'published' for t in analyst)} of {len(analyst)} "
             f"| {round(sum(words) / len(words)) if words else '—'} "
             f"| {most} "
@@ -295,9 +297,9 @@ def render(
         "",
         *_summary(trials, models),
         "",
-        f"*…at 3 figures an answer* counts the consumer readings that would publish if "
-        f"an answer could state three figures rather than {MAX_FIGURES}: those refused "
-        "for figures per answer alone, with no answer over three.",
+        f"*…at {MAX_FIGURES + 1} figures an answer* counts the consumer readings that "
+        f"would publish if an answer could state one figure more than {MAX_FIGURES}: "
+        "those refused for figures per answer alone, with no answer over the new limit.",
         "",
         "Cost is what each model's generations here would bill, at the tier the "
         "provider says served them and, for DeepSeek, the hour they ran — an upper "

@@ -21,6 +21,7 @@ from hip.eval.formats import (
     FORMATS,
     MAX_FIGURES,
     QUESTIONS,
+    TARGET_FIGURES,
     MalformedReading,
     consumer_problems,
     shape_consumer,
@@ -146,11 +147,14 @@ def test_jargon_is_a_problem(word: str) -> None:
     assert problems and problems[0].startswith("jargon:")
 
 
-def test_more_than_two_figures_in_an_answer_is_a_problem() -> None:
-    crowded = "Home values rose 34.4% to $445,078, and incomes rose 24.2% (± 4.0%)."
+def test_more_figures_in_an_answer_than_the_limit_is_a_problem() -> None:
+    crowded = (
+        "Home values rose 34.4% to $445,078, incomes rose 24.2% (± 4.0%), and 385,864 "
+        "people live here, with no sampling error."
+    )
     problems = _problems({"whats_changing": crowded})
     assert problems == [
-        f"3 figures under 'What's changing?', where at most {MAX_FIGURES} are allowed"
+        f"4 figures under 'What's changing?', where at most {MAX_FIGURES} are allowed"
     ]
 
 
@@ -223,7 +227,9 @@ def test_the_prompts_name_every_rule_the_gates_hold_them_to() -> None:
     consumer = FORMATS["consumer"].prompt
     for question in QUESTIONS:
         assert question.heading in consumer
-    assert f"at most {MAX_FIGURES} figures" in consumer
+    # Asked for fewer than publication allows: a model overshoots what it is asked for.
+    assert f"at most {TARGET_FIGURES} figures" in consumer
+    assert TARGET_FIGURES < MAX_FIGURES
     assert "give or take" in consumer
     assert "median" in consumer
     assert "±" in FORMATS["analyst"].prompt

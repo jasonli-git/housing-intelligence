@@ -4,6 +4,19 @@ Generated 2026-09-27 by `hip eval readings`. Each model was given the prompt, pa
 
 The consumer reading answers, in this order: *The bottom line*; *Is it getting harder to afford here?*; *How does renting compare with buying?*; *What's changing?*; *What should I check before moving?*.
 
+## Decision
+
+Decided with the owner on 2026-09-27, after reading the readings below (ARCHITECTURE
+#262). The consumer reading is written first by **Gemini 3.7 Flash (low thinking)**, then
+Gemini 3.1 Flash-Lite, DeepSeek V4.1 Flash and Gemma 4 E4B. Gemini 3.7 Flash was the one
+model to answer each question with the comparison it asks for — home values against
+incomes, rent against price — where Flash-Lite kept every rule with thinner answers that
+repeat one pair of figures, and DeepSeek stated survey figures without their margins.
+An answer may state three figures rather than two: at two, Gemini lost Bergen's reading
+for a rent-or-buy answer the third figure made useful. The prompt still asks for two,
+since a model asked for three wrote four and five. This run was judged at two figures,
+so its counts below are as they stood then; this section was added by hand after it.
+
 ## Summary
 
 | Model | Consumer published | …at 3 figures an answer | Analyst published | Consumer words | Figures per answer, most | Cost | Seconds, mean |

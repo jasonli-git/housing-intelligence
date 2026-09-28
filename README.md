@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.24.5, 2026-09-28. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.25.0, 2026-09-28. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, housing, economic context, property
 > tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
@@ -29,21 +29,22 @@ layer only explains metrics that were already computed.
 > workspace, reachable in place from the state and county pages or at its own address;
 > two more say how current each source is and which published figures were revised.
 >
-> **Latest.** Milestone 28 (2026-09-26) makes figures say how sure they are. Census
-> survey figures carry the Census's 90% margin of error ("$100,645 ± $2,565"), and a rank
-> the margins cannot back reads as a word over its range — "Near the middle of 21 NJ
-> counties, between 10th and 12th" — rather than a precise place. Renter cost burden now
-> counts only renters whose burden the Census could compute. Milestone 27, the same day,
-> carried the weekly refresh through to the site: every Friday this Mac refreshes,
-> rebuilds, deploys and checks the deploy, asking first only before the billed step of
-> regenerating the AI readings. Interpretation is a measured layer, not a claim:
-> seventeen models have been evaluated against standardized scenarios, and every county
-> page shows four of their readings side by side.
+> **Latest.** Milestone 30 (2026-09-28) writes readings for two kinds of reader. Every
+> county page now opens its interpretation with a plain-language reading — a bottom
+> line and four fixed questions, from *is it getting harder to afford here?* to *what
+> should I check before moving?* — and keeps an analyst reading behind it, each written
+> by the first model on its list whose reading passes every check: each figure traced
+> to its source, each survey figure given its margin of error, each uncertain rank read
+> as its range. The model for the plain reading was chosen by reading four candidates'
+> work on three counties side by side, not by guess, and Gemini now writes them at
+> half price. Milestone 28 had made the figures on the pages say how sure they are
+> ("$100,645 ± $2,565", "Near the middle of 21 NJ counties"); since 29 and 27 every
+> Friday this Mac refreshes, rebuilds, deploys and checks the deploy, asking first only
+> before regenerating the readings, the one billed step.
 >
-> **Next.** Milestone 30: one analyst reading per region in place of four side by side,
-> a plain-language reading for someone deciding whether to move, and batch pricing for
-> the models that write them — the first readings to quote a rank as the range the
-> survey can back. See [ROADMAP.md](ROADMAP.md) for what is planned and
+> **Next.** Milestone 31: a licence and provenance pass — what kind of claim every figure
+> is, where it is read, and which uses each source's terms allow. See
+> [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
@@ -653,7 +654,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.24.5 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.25.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -670,12 +671,12 @@ Northeast and to every US county was deferred past Version 2 on 2026-09-07.
 Version 3 began as depth on what is already held. On 2026-09-23 it absorbed Version 4
 and the Director Note on accessible, comprehensive and current housing data, and became
 the version that makes the platform current, as complete as public data allows, and
-honest about both. Six of its milestones have shipped — **24** fresher figures, **25**
+honest about both. Seven of its milestones have shipped — **24** fresher figures, **25**
 recorded sale prices and a comparable tax rate, **26** current releases, **27** a refresh
-that reaches the reader, **28** figures that say how sure they are, and **29** scheduled
-refresh, brought forward out of order once the site was public and had started to decay.
-**30** through **50** remain, with the map's standing check; the completeness standing
-check runs at every milestone's close, twice so far. Version 4 holds nowcasts, a local price model
+that reaches the reader, **28** figures that say how sure they are, **29** scheduled
+refresh, brought forward out of order once the site was public and had started to decay,
+and **30** readings for every reader. **31** through **50** remain, with the map's standing check; the completeness standing
+check runs at every milestone's close, three times so far. Version 4 holds nowcasts, a local price model
 study and forecasting. Between milestones, the New Jersey landing page and region pages were
 redesigned (0.21.1 and 0.21.3).
 

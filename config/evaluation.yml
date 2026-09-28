@@ -450,14 +450,23 @@ generation:
       # Last, and a working model rather than a degraded one: Gemma 4 E4B [3.13]
       # outscored two hosted candidates again.
       - gemma-4-e4b-q4
-    # PROVISIONAL until the owner chooses from the three-county side-by-side
-    # (ROADMAP, Milestone 30), which generates both formats with DeepSeek, Gemini 3.7
-    # Flash and Flash-Lite. Until then it mirrors the analyst list, so the consumer
-    # path can run end to end; it ends on this machine like every list.
+    # Chosen by the owner on 2026-09-27 from the three-county side-by-side,
+    # reports/evaluation/readings-v1.md (ARCHITECTURE #262), not from the benchmark,
+    # which measured the analyst task. Consumer readings published, of three:
+    #
+    #   Gemini 3.7 Flash (low thinking)   2 (3 at three figures an answer), the
+    #                                     only one answering with the comparisons the
+    #                                     questions ask for
+    #   Gemini 3.1 Flash-Lite             3, but thin, repeating one pair of figures
+    #   DeepSeek V4.1 Flash (thinking off) 0: bare survey figures, too many of them
+    #   Gemma 4 E4B                       1
+    #
+    # DeepSeek stays above the local model for what it is on the analyst list: the one
+    # tier outside Google, if Google is unreachable. It ends on this machine.
     consumer:
       - gemini-3.7-flash-low
-      - deepseek-flash-nothink
       - gemini-3.1-flash-lite
+      - deepseek-flash-nothink
       - gemma-4-e4b-q4
   # In-flight requests per hosted cohort. Hosted inference is on this milestone for
   # concurrency, but an unbounded fan-out earns 429s that look like model failures,

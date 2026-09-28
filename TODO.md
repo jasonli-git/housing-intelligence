@@ -14,37 +14,20 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 30, Readings for every reader (started 2026-09-27)
+## Now — Milestone 30 built, awaiting review (2026-09-28)
 
-Branch `milestone/m30-readings-for-every-reader`. The deliverable is ROADMAP's row 30: one
-analyst reading and one consumer reading per region, packets carrying margins and rank
-ranges (SPEC principle 12), batch pricing where a provider offers it, and a run that says
-what it cost. It takes in three items that were **Scheduled: Milestone 30** — a reading
-quoting a single rank beside its page's range (#240), `hip explain` not reporting what a
-run cost, and generation not using any provider's batch pricing.
+Milestone 30 is complete on `milestone/m30-readings-for-every-reader`: one analyst and one
+consumer reading per region, packets 1.3 with margins and rank ranges, Gemini's Flex tier
+for batch pricing, and a cost line on every run. CHANGELOG 0.25.0 has what it shipped and
+ARCHITECTURE #256–#262 the decisions. It took in the three items scheduled for it.
 
-- [ ] **Packets 1.3.** Each figure's margin, whether it is a survey figure, and each rank's
-      range; a stand-out needs its whole range at one end, as on the page (#241).
-- [ ] **The Markdown report** gives the margins and ranges.
-- [ ] **Citation binding** licenses margins and range ends, and not a point rank the
-      survey cannot back; a check that each survey figure quoted carries its margin.
-- [ ] **Two formats.** The analyst prompt as today plus margins and ranges; the consumer
-      prompt, a bottom line and four fixed questions, with a parser and checks for
-      source names, jargon and figures per answer.
-- [ ] **The three-county side-by-side:** both formats from DeepSeek, Gemini 3.7 Flash and
-      Flash-Lite, with Gemma 4 E4B as the fallback both lists end on. **The owner picks
-      the consumer model from it.**
-- [ ] **One reading per region and audience** (migration 0019), each audience with its
-      own preference list and a per-region fallthrough; `--all` retired.
-- [ ] **Batch pricing:** which providers offer it; a batch path where one does, with a
-      deadline after which unfinished regions run synchronously; the run's cost reported.
-- [ ] **API and site:** readings carry their audience and sections; the consumer reading
-      on region pages; the analyst panel loses its model switcher.
-- [ ] **Scheduled scripts, tests, docs, completeness check, PR.**
+**Decided with the owner 2026-09-27:** the consumer reading is written first by Gemini 3.7
+Flash, then Flash-Lite, DeepSeek and Gemma; an answer may state three figures; a reading
+a fallback wrote stands until its figures change (#258, #262).
 
-Two decisions this milestone needs from the owner: the consumer model, after the
-side-by-side; and whether a change of model forces regeneration (Open decisions below),
-which the fallback lists make concrete — the recommendation is that it does not.
+**After the merge:** every county's readings are stale — packet 1.3 moved every content
+hash — and no consumer reading exists yet. Regenerating is billed and the owner’s
+call: `hip regenerate-now` (about 42 readings, roughly $0.15 at Flex), then deploy.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -364,13 +347,6 @@ first raised, not where it must be done.
       measure kept alongside it. That is a larger change than closing the gap, and it is
       schedulable separately from the cards that are now live. `tests/test_nj_sr1a.py` fails if the input is added
       before this is settled. **Not decided.**
-- [ ] **Should a change of model force regeneration?** (deferred to M12) Milestone 30
-      made it concrete — each region's reading now falls through per region, so a
-      fallback can write some counties and the first choice the rest — and built the
-      leaning: which model wrote a reading does not make it stale, except a model that
-      has left its audience's list, whose readings are rewritten or retired (#258). The
-      page names the writer. `is_stale` now says so rather than falling out of the
-      Milestone 8 implementation. **Awaiting the owner's confirmation.**
 - [ ] **The 21 committed county reports are a snapshot that goes stale silently.**
       (M6; restated 2026-09-27) `reports/**` is gitignored, but the three evaluation
       reports and the 21 county reports were force-added and are tracked. The county
