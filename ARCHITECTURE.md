@@ -5,27 +5,28 @@ boundaries, the warehouse schema, the pipeline stages, and the decisions behind 
 [SPEC.md](SPEC.md) is the source of truth for *what* the system does and for Version 1
 scope; this document does not restate it.
 
-> **Status (2026-09-11):** Milestones 0 through 13, 19, 20, 21 and 22 are complete; 16,
-> 17 and 18 are planned, and 14 and 15 were deferred past Version 2 on 2026-09-07
-> ([ROADMAP.md](ROADMAP.md)). The warehouse holds a NJ geography spine — 3,365 regions
-> and the `nation` row, 2,493 ZIP allocation weights (2,460 of them HUD
-> residential-address ratios), and 554 NJ municipal codes in `region_identifiers` — and
-> **351,295 observations across 31 metrics from 12 sources**, spanning 1971 to 2026, with
-> 26,805 computed changes, 26,790 change rankings and 11,884 value rankings derived from
-> them. All eight stages run, `acquire → land → stage → geocode → validate → load →
-> analyze → pack`. **3.48M NJ parcels** live in Parquet and DuckDB and reach the
-> warehouse only as six municipality-level aggregates (#49). Packet `1.2` is validated
-> against `schemas/packet-v1.json`. The API and a three-page dashboard are published as
-> static files, with no database and no application server in production (#67, #68).
-> Interpretation is written by hosted models behind a preference list that ends at a
-> local one (#78, #96, #118): 84 explanations, four models' readings of each of the 21
-> counties (#91) since Qwen 3.7 Plus's were retired on 2026-09-23 (#213), chosen by
-> evaluation runs `v1`, `v2` and `v3`, with reasoning effort part of
-> each candidate's configuration since Milestone 20 (#98). Since Milestone 13 every
-> figure in new prose is bound to the packet field and release that licensed it before
-> it is stored, and prose stating a figure the packet does not carry is refused (#112,
-> #113). 660 Python tests and 246 dashboard tests pass (2026-09-26). Nothing in the pipeline or the API depends on a model being
-> present: with no explanations stored, every page and endpoint still works.
+> **Status (2026-09-27):** Milestones 0 through 13 and 16 through 29 are complete, and 30
+> is under way; 14 and 15 are unscheduled ([ROADMAP.md](ROADMAP.md)). The warehouse holds
+> a NJ geography spine — 3,366 regions with the `nation` row, 2,493 ZIP allocation
+> weights and 564 NJ municipal codes in `region_identifiers` — and **414,360
+> observations across 38 metrics from 16 sources**, spanning 1971 to 2026, with 38,270
+> computed changes, 38,245 change rankings and 15,508 value rankings derived from them;
+> the survey figures carry their margins of error, and their ranks the ranges those
+> margins allow (#235, #239). All eight stages run, `acquire → land → stage → geocode →
+> validate → load → analyze → pack`, and a weekly scheduled refresh carries them to the
+> site (#216). **3.48M NJ parcels** live in Parquet and DuckDB and reach the warehouse
+> only as municipality-level aggregates (#49). Packet `1.3` is validated against
+> `schemas/packet-v1.json`. The API and the dashboard are published as static files,
+> with no database and no application server in production (#67, #68). Interpretation
+> is written by hosted models behind preference lists that end at a local one (#78,
+> #96, #258): each county carries an analyst reading and a plain-language consumer
+> reading, each from the first model on its list that writes one fit to publish.
+> Every figure in the prose is bound to the packet field and release that licensed it
+> before it is stored (#112), and prose is refused that states a figure the packet
+> does not carry, a survey figure without its margin, or an uncertain rank as a place
+> (#257). 763 Python tests and 283 dashboard tests pass (2026-09-27). Nothing in the
+> pipeline or the API depends on a model being present: with no readings stored,
+> every page and endpoint still works.
 
 ## System Shape
 
@@ -47,10 +48,11 @@ and production is their output rendered to static files (#67, #68).
   extracts. Each is reached
   through one source adapter, and every download is cached to disk so a full rebuild
   never re-fetches.
-- **Model and hosting services, all optional** — Gemini and DeepSeek write
-  explanations by default, behind a preference list that ends at a local Ollama model
-  (#78, #96, #118); Qwen did until 2026-09-23 (#213); Anthropic's API grades the evaluation and is read by `hip eval judge`
-  alone (#56); Cloudflare R2 and Pages serve the published files (#68).
+- **Model and hosting services, all optional** — Gemini and DeepSeek write readings
+  by default, behind preference lists that end at a local Ollama model (#78, #96,
+  #258), Gemini at its Flex tier's half price (#259); Qwen did until 2026-09-23 (#213);
+  Anthropic's API grades the evaluation and is read by `hip eval judge` alone (#56);
+  Cloudflare R2 and Pages serve the published files (#68).
 - **No cloud service is required to run it.** Docker Compose provides Postgres/PostGIS;
   Python and Node run natively. Without the hosted services the platform still builds,
   serves and renders everything except generated prose, which falls through to the
@@ -59,7 +61,8 @@ and production is their output rendered to static files (#67, #68).
   packets and stores it with the model and packet hash that produced it (#60); the API
   serves it and never runs a model (#6). Every figure in the prose is bound to the packet
   field that licensed it before the row is written, and prose stating a figure the packet
-  does not carry is refused (#112, #113).
+  does not carry is refused (#112, #113), as is prose stating a survey figure without
+  its margin (#257).
 
 Future deployment shapes stay cheap because of where the seams are. The API reads
 Postgres through SQLAlchemy and holds no DuckDB or Parquet dependency, so moving to a
@@ -331,6 +334,12 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 253 | **`/freshness` groups sources by their publisher's cadence, and the map's picker has its own short definitions.** From Codex's PR #45. | Grouping by cadence — monthly, quarterly, yearly, and any future cadence under its own heading — rather than by the site's weekly check, which is the same for every source and so says nothing about how current each one can be. The map's sentences (`web/lib/mapDefinitions.ts`) are written for a picker and scoped to it; tables, profiles and reports keep the fuller shared dictionary, which an unlisted measure falls back to. |
 | 254 | **The atlas redesign is one screen-only stylesheet scoped by page, and leaves the reports alone.** From Codex's PR #48. | `web/app/atlas-pages.css` sits entirely inside `@media screen`, and every rule hangs off a page class — `atlas-local`, `atlas-tool`, `atlas-ledger` — so a page opts in by its `<main>` and the print report, which carries none, keeps its paper layout; the New Jersey page's own layout stays in `new-jersey.css`. The dark profile strips redefine `--text-muted` in their own scope, so a survey figure's margin stays legible on them (principle 12), and print resets them to black on white. No data, calculation, palette or map-engine change. Costs: the wide-screen county comparison scrolls inside its panel, so a reader can miss that the list continues; and the redesign was checked in Chromium only. |
 | 255 | **A loaded figure cites its exact release or the load fails.** **Amends #47, #53, #237.** From Codex's PR #49. | The fallback from `(source, layer, vintage)` to the same vintage, the same layer or any release of the source let 689 figures cite the wrong file — the 2015–2019 ACS edition was the case #237 found. `load_facts` now resolves every staged key before writing: this run's fetched release first; for a vintage the adapter's window no longer lists, the one release with that exact key already in `source_releases`; and otherwise it raises `ReleaseAttributionError` with the keys and row counts, rolling back the whole fact load. Two releases with the same key in one fetch are an error too, rather than a silent overwrite. Costs: a stale staged row, or an older key with several historical files — which the staged row has no file hash to choose between — now stops a refresh until someone restages or restores the release. |
+| 256 | **Packet 1.3 carries each figure's uncertainty, and the Markdown report shows an uncertain rank only as its range.** Milestone 30. **Amends #240.** | #240 put margins and ranges on the pages and left packets as they were, so a reading could say "9th" beside a page's "between 5th and 13th". Now each metric and level says whether it is a `survey` figure — `SURVEY_METRICS` in `hip/packets/survey.py`, held to `config/metrics.yml` and to the dashboard's list by `tests/test_survey_metrics.py`, because a null margin alone cannot tell "no margin available" from "not a survey figure" — and carries the margins of its value, both ends and the change, and `rank_best`/`rank_worst`. A stand-out needs its whole range at one end, as on the page (#241). The report, which is also what a model reads, gives each survey figure its margin in the dashboard's words (`margin_label`, mirroring `marginLabel`), formats shares and multiples as the page does, and shows a ranged rank only as "3rd–20th of 21 (can't be told apart from most)"; a survey figure's annualised change is left out, since nothing computes its margin. Costs: the county payload grew from about 2,100 tokens to 3,000; and every packet's content hash moved, so every reading went stale at once. |
+| 257 | **Prose must give each survey figure its margin and each uncertain rank its range, or it is refused — judged under every field a figure could be read from.** Milestone 30, SPEC principle 12. | Binding (#112) asks only whether a figure is in the packet, and "income rose to $100,645" binds perfectly while reading as exact. `hip.packets.margins` reads a binding back against its packet: a survey figure needs its own margin in the same sentence — "no sampling error" or "no margin available" where that is what the packet says — and a ranged rank needs both ends; a single place, one end alone or a percentile is refused. Binding now licenses margins, rounded to two significant figures as well, and both ends of a range. **Attribution is the weak point**, measured on the first side-by-side: in a sentence naming several measures binding picks a field by word overlap, and it gave an income change's "± 4%" to another ratio's change, then refused the income figure as bare. So a figure passes if *any* field it could be read from (`readings_of`) is satisfied or needs nothing, a margin is recognised by its value after "±" or "give or take" (`states_margin`), and a number quoted with a label's or a caveat's own words, or a label's income threshold however it is worded ("more than 30 percent of their income"), is the packet's text, not a claim. Costs, accepted as binding's own generosity is (#112): a figure that could equally be a non-survey figure passes without a margin, and a ratio mis-rounded onto a threshold — "rent takes 30% of income" for 28.1% — passes as the threshold. |
+| 258 | **A region carries one analyst and one consumer reading, each from the first model on its audience's list that writes one fit to publish (migration 0019).** Milestone 30, from the owner's review of 2026-09-23. **Supersedes #91's per-model key and #213's `--all`.** | `region_explanations` is keyed on `(region_id, window, audience)`; `model_id`, `rank` and `runtime` stay as provenance. Each audience has its own list in `generation.preference`, each ending at the local model. For each region a model that cannot be reached, or whose reading a gate refuses (#257, #260), passes the region to the next — where #96 resolved one model per run, so one refusal left a region unwritten. `--all` and `--prune` are gone: every run retires what it cannot replace from a model that has left a list (#213), and exits 3 when a region's reading could not be written or a model could not be used — a refusal a fallback covered is reported, not partial. **Which model wrote a reading does not make it stale**, except a model that has left its list: a fallback's reading passed every gate the first model's would have and names its writer (`is_stale`, settling the question deferred since Milestone 12 — the owner's to confirm). Migration 0019 kept each region's preferred reading as its analyst reading and deleted the 63 others. The singular endpoint serves the analyst reading in its old shape; the plural serves both, analyst first, each with `audience` and `sections`. Costs: the site no longer shows models disagreeing about one packet, which #91 valued as a demonstration that prose is interpretation; the label, the model's name and the checked-figures list now carry that alone. |
+| 259 | **Batch pricing through Gemini's Flex tier rather than a batch API; a provider without one runs synchronously, and every run reports what it cost.** Milestone 30, answering the batch-pricing Director Note. | Checked 2026-09-27. Gemini offers a Batch API at 50% with a 24-hour target and expiry at 48 hours, and a Flex tier at the same 50% on the synchronous `generateContent` call, with a 1–15 minute target — measured to work on both Gemini candidates, with `usageMetadata.serviceTier` naming the tier that served each call. DeepSeek has no batch API or discounted tier; it bills half outside 01:00–04:00 and 06:00–10:00 UTC on weekdays, and the Friday 08:00 run is off-peak. Gemma is local. So `hip explain` asks Gemini for Flex (`generation_tier`, never in the evaluation, which measures latency), retries once at the standard tier when Flex has no capacity rather than letting a price tier choose the writer, and prices each call at the tier it was served and, for DeepSeek, the hour it ran (`hip.eval.costs`); the run ends with a cost line per model saying how it was billed. **Rejected: the Batch API.** Same discount, and it would bring what the Director Note feared — a run waiting hours, a partly failed batch, failures returning after the deadline and failover out of step with the region — for no price advantage. It stays the path if Flex is withdrawn. Costs: the cost is an upper bound, since neither provider's prompt-cache discount is counted, and Chinese public holidays, off-peak for DeepSeek, are priced as peak. |
+| 260 | **The consumer reading is a bottom line and four fixed questions, stored with its sections and held to its own gates.** Milestone 30. | `bottom_line`, then *Is it getting harder to afford here?*, *How does renting compare with buying?*, *What's changing?* and *What should I check before moving?* (`QUESTIONS` in `hip/eval/formats.py`) — fixed so a reader can scan them and Milestone 47 can reuse them by id. The model's answer is parsed however it dresses the headings; the stored body is each heading exactly as written here followed by its answer, and `sections` holds each answer's offsets, like a citation's. Refused, and passed to the next model, when a heading or answer is missing, when it names a source, agency, survey or index (a fixed list plus the packet's own publishers) or uses the listed jargon, or when an answer states more than two figures — "a couple", in the roadmap's words; a margin, a range's two ends, a year and a quoted threshold do not count. Nothing checks whether an answer advises rather than describes; the owner reads for that. On the region page it sits after the stand-outs and before the expander — computed answers first, their plain reading next, the tables behind — two by two where there is room. |
+| 261 | **`hip eval readings` sets both formats from several models side by side, judged as publication would judge them.** Milestone 30. | The roadmap chooses the consumer model "by generating both formats with DeepSeek, Gemini and Flash-Lite on three counties and reading them, not by guess". Each model gets the prompt, packet, tier and gates `hip explain` would give it, on Bergen, Mercer and Cumberland — the dearest county, SPEC's example, the cheapest — and the local model both lists end on is read too. Nothing is stored in the warehouse; a refused reading is shown with the rule it broke. The report is committed under `reports/evaluation/` beside the benchmark reports (SPEC: the report explains which model was selected and why), and each trial is kept as it completes under `data/sidebyside/`, not `data/eval/`, where a directory is a benchmark run. |
 
 ## Module Layout
 
@@ -387,14 +396,16 @@ housing-intelligence/
 │   │   ├── load.py            # one-transaction upsert of spine and facts (#25)
 │   │   ├── discoveries.py     # releases.json → source_discoveries at load (#222)
 │   │   ├── freshness.py       # the freshness report (#222)
-│   │   └── migrations/        # Alembic 0001–0018
+│   │   └── migrations/        # Alembic 0001–0019
 │   ├── analytics/compute.py   # change, CAGR, affordability, rankings (#34–#36)
 │   ├── packets/
 │   │   ├── schema.py          # Pydantic models = the contract (#12, #43, #44)
 │   │   ├── assemble.py        # build_packet(session, region_id, window) (#42)
 │   │   ├── caveats.py         # pure caveat derivation, shared with /summary (#46)
-│   │   ├── citations.py       # citation binding: figure index + bind() (#112, #116)
-│   │   └── report.py          # render_markdown(packet) — pure (#45)
+│   │   ├── citations.py       # citation binding: figure index + bind() (#112, #116, #257)
+│   │   ├── margins.py         # principle 12 in prose: margins and ranges (#257)
+│   │   ├── survey.py          # which metrics are survey figures (#256)
+│   │   └── report.py          # render_markdown(packet) — pure (#45, #256)
 │   ├── eval/                  # Milestone 8: model evaluation + explanations (#56)
 │   │   ├── types.py           # Scenario, Generation, CheckResult, Judgment
 │   │   ├── scenarios.py       # questions x sampled packets, deterministic
@@ -405,11 +416,14 @@ housing-intelligence/
 │   │   │                      #   cohorts fan out to max_concurrency (#82)
 │   │   ├── runners/           # base protocol (#57), ollama.py, mlx_runner.py,
 │   │   │                      #   hosted.py — 4 providers, 1 runner (#78)
-│   │   ├── selection.py       # preference list → the model that will write
+│   │   ├── selection.py       # preference lists → who heads each today (#258)
+│   │   ├── formats.py         # the analyst and consumer readings and their gates (#260)
+│   │   ├── costs.py           # a generation's price at the tier and hour it ran (#259)
+│   │   ├── sidebyside.py      # `hip eval readings`: both formats, several models (#261)
 │   │   ├── judge.py           # Claude rubric grading, Batch API; effort + usage per verdict (#101)
 │   │   ├── store.py           # JSONL artifacts per stage, resumable
 │   │   ├── report.py          # the published evaluation report (#59, #83, #98)
-│   │   └── explain.py         # explanations; the binding gate and re-binding (#60, #113, #114)
+│   │   └── explain.py         # readings; the gates, fallthrough and re-binding (#60, #113, #258)
 │   ├── eval_cli.py            # `hip eval ...`; optional deps imported lazily
 │   └── api/
 │       ├── main.py            # FastAPI app, CORS for the dashboard origin
@@ -481,7 +495,8 @@ housing-intelligence/
 │   ├── parquet/               # landing tier
 │   ├── duckdb/                # working analytical database; 3.48M parcels live here
 │   ├── packets/<window>/      # analysis packets, one JSON per region
-│   └── eval/<run>/            # scenarios, generations, checks, judgments (JSONL)
+│   ├── eval/<run>/            # scenarios, generations, checks, judgments (JSONL)
+│   └── sidebyside/<name>/     # `hip eval readings` trials, kept as they complete (#261)
 ├── reports/                   # human-facing output, not rebuildable input
 │   ├── validation/            # gate reports per run; gitignored, per-run machine state
 │   ├── regions/<window>/      # Markdown reports, one per region; 5y committed, README-linked
@@ -901,8 +916,8 @@ endpoints are implemented; `hip publish` renders every one to static files excep
 | GET | `/regions/{region_id}/summary` | ✅ headline changes, rank, caveats, and each figure's margin of error and rank range (#240) — dashboard landing |
 | GET | `/regions/{region_id}/packet` | ✅ the analysis packet, assembled per request (#42) |
 | GET | `/regions/{region_id}/report` | ✅ the same packet as `text/markdown` |
-| GET | `/regions/{region_id}/explanation` | ✅ the preferred model's interpretation, labelled `kind: "interpretation"`, with a `stale` flag and its `binding` — every figure bound to the field and release that licensed it, null for prose written before Milestone 13 (#60, #92, #112, #114) |
-| GET | `/regions/{region_id}/explanations` | ✅ every model's reading of the same packet, in preference order, each with its `stale` flag and `binding` (#91, #92, #112) |
+| GET | `/regions/{region_id}/explanation` | ✅ the analyst reading, labelled `kind: "interpretation"` and `audience: "analyst"`, with a `stale` flag and its `binding` — every figure bound to the field and release that licensed it, null for prose written before Milestone 13 (#60, #92, #112, #114, #258) |
+| GET | `/regions/{region_id}/explanations` | ✅ both readings, analyst then consumer, each with its `audience`, `stale` flag and `binding`, and the consumer reading's `sections` (#258, #260) |
 | GET | `/rankings` | ✅ ranked regions for `metric_id`, `level`, and `basis` (`change` over a window, or `value`), each with its margin and rank range where the metric has margins (#239, #247) |
 | GET | `/compare` | ✅ aligned series for several `region_ids`, each point with its margin of error (#247) |
 | GET | `/sources` | ✅ source registry and the releases currently loaded (#71) |

@@ -46,8 +46,9 @@ def _notify(title: str, message: str, *, priority: int = 0) -> None:
 def _ollama():  # type: ignore[no-untyped-def]
     """Ollama up for a regeneration and back as it was after (ARCHITECTURE #230).
 
-    The local model is one of the readings `hip explain --all` writes, and the owner
-    keeps Ollama quit between runs. A seam of its own so the tests never start a server.
+    The local model ends both readings' preference lists, so `hip explain` may need it
+    when every hosted model fails, and the owner keeps Ollama quit between runs. A seam
+    of its own so the tests never start a server.
     """
     from hip.eval.runners.ollama import serving
 
@@ -91,7 +92,7 @@ def main() -> int:
     # A free check first: someone can tap "Regenerate Now" when nothing is actually
     # stale, and that must cost nothing. Only 3 means "stale" — any other nonzero exit
     # means the check itself failed, and a failed check is no licence to spend money.
-    dry_run_code = _hip("explain", "--all", "--dry-run")
+    dry_run_code = _hip("explain", "--dry-run")
     if dry_run_code == 0:
         _notify(
             "Nothing to regenerate",
@@ -102,23 +103,24 @@ def main() -> int:
     if dry_run_code != 3:
         _notify(
             "Regenerate now: the readings check failed",
-            f"hip explain --all --dry-run exited {dry_run_code}, so nothing was "
+            f"hip explain --dry-run exited {dry_run_code}, so nothing was "
             "generated. Check the log on the Mac.",
             priority=_PRIORITY_URGENT,
         )
         return 1
 
-    # 3 is partial: some readings written, a model or region skipped. Those are worth
-    # publishing, and the rest stay up labelled stale (eval_cli.PARTIAL). 1 means none
-    # was written, and any other exit is a run that did not finish: either way this
-    # stops, and whatever it did commit goes live with the next deploy.
+    # 3 is partial: some readings written, but a region's reading no model could write,
+    # or a model that could not be used. Those written are worth publishing, and the
+    # rest stay up labelled stale (eval_cli.PARTIAL). 1 means none was written, and any
+    # other exit is a run that did not finish: either way this stops, and whatever it
+    # did commit goes live with the next deploy.
     with _ollama() as ollama:
         print(ollama, flush=True)
-        explain_code = _hip("explain", "--all")
+        explain_code = _hip("explain")
     if explain_code not in (0, 3):
         _notify(
             "Regenerate now: failed",
-            f"hip explain --all exited {explain_code} without finishing. Nothing was "
+            f"hip explain exited {explain_code} without finishing. Nothing was "
             "deployed. Check the log on the Mac.",
             priority=_PRIORITY_URGENT,
         )
@@ -153,8 +155,9 @@ def main() -> int:
     if explain_code == 3:
         _notify(
             "Readings partly regenerated",
-            "The new readings are live, but a model or region was skipped; those "
-            "readings stay up labelled stale. Check the log on the Mac.",
+            "The new readings are live, but a region's reading could not be written, "
+            "or a model could not be used; any reading not rewritten stays up labelled "
+            "stale. Check the log on the Mac.",
         )
     else:
         _notify("Readings regenerated", "New readings are live.")

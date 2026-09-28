@@ -50,7 +50,8 @@ Rules:
 - A figure shown with ± is a survey estimate. Whenever you state one, give its margin
   in the same sentence, as the packet does: "$100,645 (± $2,565)". Where the packet
   says a figure has no sampling error, or that no margin is available, say so in the
-  same sentence instead.
+  same sentence instead. A figure the packet shows with none of these is not a survey
+  estimate: state it plainly.
 - A rank shown as a range, such as "10th–12th of 21", is as precise as the survey
   allows: give the range ("between 10th and 12th of 21 counties") or its words ("near
   the middle"), never a single rank.
@@ -149,12 +150,19 @@ this order, with a short answer beneath each:
 
 Rules:
 - The bottom line is one or two sentences; every other answer two or three.
-- Use at most {MAX_FIGURES} figures in each answer, and only figures from the packet —
-  as the packet writes them, or rounded to three significant digits ($445,000, $1,620)
-  or a whole percentage. Never calculate a figure of your own.
+- Each answer states at most {MAX_FIGURES} figures: choose the ones that matter most
+  for its question and leave the rest out — comparing renting with buying, one figure
+  for each. Every dollar amount, percentage, count or rank is a figure; a margin, and a
+  threshold such as "30% of income", are not. Before you finish, count the figures in
+  each answer and cut any beyond {MAX_FIGURES}.
+- Use only figures from the packet, as the packet writes them or rounded to three
+  significant digits ($445,000, $1,620) or a whole percentage. Never calculate a figure
+  of your own.
 - A figure shown with ± is an estimate from a survey: give its margin in the same
   sentence, in plain words: "about $100,645 a year, give or take $2,565". Where the
   packet says a figure has no sampling error, or that no margin is available, say so.
+  A figure the packet shows with none of these is not a survey estimate: state it
+  plainly, with nothing about margins.
 - Where the packet gives a rank as a range, say where the range sits ("near the middle
   of New Jersey's 21 counties") rather than any single rank.
 - Write for someone with no background in housing data: no names of sources, agencies,
@@ -265,7 +273,7 @@ def _banned(packet: Packet) -> list[tuple[str, re.Pattern[str]]]:
     ]
 
 
-def _figures(binding: Binding, section: Section) -> int:
+def figures_in(binding: Binding, section: Section) -> int:
     """Figures stated in one answer; a range's two ends are one figure."""
     counted: set[str] = set()
     for citation in binding.citations:
@@ -290,7 +298,7 @@ def consumer_problems(
                 f'{label} in "…{body[max(0, match.start() - 30) : match.end() + 20]}…"'
             )
     for section in sections:
-        count = _figures(binding, section)
+        count = figures_in(binding, section)
         if count > MAX_FIGURES:
             problems.append(
                 f"{count} figures under '{section.heading}', where at most {MAX_FIGURES} "
@@ -347,5 +355,6 @@ __all__ = [
     "Question",
     "Section",
     "consumer_problems",
+    "figures_in",
     "shape_consumer",
 ]

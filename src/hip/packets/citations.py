@@ -628,6 +628,48 @@ def _add_rank(
         add(f"{key}.rank", "rank", rank, about)
 
 
+def readings_of(text: str, citation: Citation, packet: Packet) -> list[Figure]:
+    """Every packet field the figure behind `citation` could have been read from.
+
+    Binding records one field per figure, the best-supported, and in a sentence naming
+    several measures that choice rests on word overlap: "incomes rose 24% while rents
+    rose 28%" can hand the 28% to rent-to-income rather than to rent. A rule about what
+    a figure needs beside it — `hip.packets.margins` — asks all of them, so a sentence
+    is never refused over the binder's guess. Only fields whose unit the writing fits.
+    """
+    stated = Stated(
+        value=citation.value,
+        text=citation.text,
+        start=citation.start,
+        end=citation.end,
+    )
+    context = _context(text, stated, frozenset())
+    exact = _yearlike(stated)
+    found = []
+    for figure in figure_index(packet):
+        match = _best_form(stated.value, figure, exact=exact)
+        if match is not None and _fit(match, context, stated) > 0:
+            found.append(figure)
+    return found
+
+
+def states_margin(text: str, start: int, end: int, margin: float) -> bool:
+    """Whether the span `text[start:end]` gives `margin` as a margin: a number the words
+    before it introduce as one — "±", "give or take" — that is `margin` in any form a
+    margin may be written in, a share's as points included."""
+    forms = _forms(margin, significant=True)
+    for stated in stated_numbers(text[start:end]):
+        at = start + stated.start
+        if not _MARGIN_BEFORE.search(text[max(0, at - 30) : at]):
+            continue
+        for form in forms:
+            if abs(form.value - stated.value) <= max(
+                abs(form.value) * RELATIVE_TOLERANCE, 1e-9
+            ):
+                return True
+    return False
+
+
 def licensed_values(packet: Packet) -> set[float]:
     """Every number the packet licenses outright — every form but a dropped sign."""
     return {
@@ -883,6 +925,20 @@ def _quotes(stated: Stated, haystack: str) -> bool:
 
 _TOKEN = re.compile(r"[a-z0-9$%.,]+", re.IGNORECASE)
 
+# A share of income a measure is defined by, however it is worded: "30% of income",
+# "30 percent of their income", "80% of area median income". The number in it is the
+# threshold of a label — "Renters paying over 30% of income on housing" — and not a
+# figure about the region.
+_THRESHOLD_AFTER = re.compile(
+    r"^\s*(?:%|percent|per cent)?\s*(?:or more\s+)?of\s+(?:[\w’']+\s+){0,2}?"
+    r"(?:incomes?|AMI|area median income)\b",
+    re.IGNORECASE,
+)
+# The same threshold introduced rather than followed: "24.4% of renters over 50%".
+_THRESHOLD_BEFORE = re.compile(
+    r"\b(?:over|more than|above|at least|exceeding)\s+$", re.IGNORECASE
+)
+
 
 def _neighbours(text: str, start: int, end: int) -> tuple[str, str]:
     """The two words before a span and the two after it, lower-cased."""
@@ -900,21 +956,38 @@ def _label_quote(stated: Stated, text: str, packet: Packet) -> Citation | None:
     measure's definition a claim about it (Milestone 30, where a margin check made that
     a refusal). A quote needs the label's own words on one side of the number, two of
     them, so a real claim that happens to share the number is still read as a claim.
+    A caveat's number quoted that way is the caveat's: "from the 50th to the 40th
+    percentile" is HUD's change of method, not a percentile of this region. Or, for a
+    label's income threshold, the same number as a share of income however
+    it is worded ("more than 30 percent of their income"). That one can let a mis-
+    rounded ratio pass as the threshold — "rent takes 30% of income" where the figure
+    is 28.1% — which is the cost of never refusing prose for naming a measure.
     """
     core = stated.text.strip().replace("$", "").rstrip("%")
     if not core:
         return None
     pattern = re.compile(rf"(?<![\d.,]){re.escape(core)}%?(?![\d]|[.,]\d)")
     before, after = _neighbours(text, stated.start, stated.end)
+    threshold = bool(
+        _THRESHOLD_AFTER.match(text[stated.end : stated.end + 50])
+        or _THRESHOLD_BEFORE.search(text[max(0, stated.start - 20) : stated.start])
+    )
     for field, label, metric_id in _packet_texts(packet):
-        if not field.endswith(".label"):
+        if not field.endswith(".label") and not field.startswith("caveats["):
             continue
+        # A label's threshold, paraphrased: the same number as a share of income.
+        if threshold and any(
+            _THRESHOLD_AFTER.match(label[found.end() :])
+            for found in pattern.finditer(label)
+        ):
+            return _text_citation(stated, field, metric_id, label)
         for found in pattern.finditer(label):
             label_before, label_after = _neighbours(label, found.start(), found.end())
             if (label_before and label_before == before) or (
                 label_after and label_after == after
             ):
-                return _text_citation(stated, field, metric_id, label)
+                quoted = label if field.endswith(".label") else None
+                return _text_citation(stated, field, metric_id, quoted)
     return None
 
 
@@ -1122,7 +1195,9 @@ __all__ = [
     "describe_unbound",
     "figure_index",
     "licensed_values",
+    "readings_of",
     "sentence_span",
+    "states_margin",
     "stated_numbers",
     "strip_dates",
 ]

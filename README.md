@@ -267,11 +267,16 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
 - **Substitution detection** (M22, built) — a provider answering with a different model
   than the one requested is caught at runtime and recorded, since not every provider
   offers a pinnable checkpoint.
-- **Several models reading the same packet** (M19, built) — every county page carries
-  one interpretation per listed model side by side, switchable by the reader, each
-  labeled with the model that wrote it: four since Qwen 3.7 Plus left the list in
-  Milestone 26. The reachable subset of bring-your-own-model comparison, since
-  pre-generated explanations need no server.
+- **Several models reading the same packet** (M19, built) — county pages carried one
+  interpretation per listed model side by side, switchable by the reader, each labeled
+  with the model that wrote it, until Milestone 30 replaced the comparison with one
+  reading for each kind of reader.
+- **Readings for every reader** (M30, built) — every county page carries a
+  plain-language reading, a bottom line and four fixed questions for someone deciding
+  whether to live there, and in its expander the analyst reading; each names the model
+  that wrote it, gives every survey figure its margin and quotes an uncertain rank as its
+  range. Each comes from the first model on its own list that writes one fit to
+  publish, and Gemini writes at its Flex tier's half price.
 - **Reasoning effort as a measured variable** (M20, built) — effort is configured per
   candidate and recorded with every generation, so a model's cost and quality are
   compared at a stated setting rather than at whatever the provider defaults to.
@@ -467,8 +472,9 @@ uv run hip eval run --run v3          # every scenario through every model, or -
 uv run hip eval cost --run v3         # what judging would cost, without spending it
 uv run hip eval judge --run v3        # rubric grading, billed
 uv run hip eval report --run v3       # reports/evaluation/v3.md
-uv run hip explain --region 11        # write an explanation the API can serve
-uv run hip explain --level county --all --prune   # every listed model; retire the rest
+uv run hip explain --region 11        # both readings for one region, as the API serves them
+uv run hip explain --dry-run          # how many readings are stale, calling no model
+uv run hip eval readings --name readings-v1   # both formats, several models, side by side
 ```
 
 Every `hip eval` command names its run, and a run's scenario set is frozen once anything
@@ -477,14 +483,21 @@ has been generated against it. Scenarios give models the packet as Markdown, as
 
 For a hosted cohort, `hip eval models` asks the provider what it actually serves and
 marks a pinned ref that has been withdrawn, which is cheaper to discover here than as
-fifteen identical 404s inside a run. `hip explain` resolves its model through the
-ordered preference list in `config/evaluation.yml` — the first benchmarked candidate
-that is currently reachable, ending at a local model so no vendor decision can stop the
-command — and skips regions whose stored prose was written from these exact numbers.
-`--all` and `--model` hold every model to the same benchmark; a model that cannot be
-used is skipped and named in the closing summary, and the exit status is 0 when every
-requested model's prose is current, 3 when some is, and 1 when none is. Local cohorts
-run one model at a time because two do not fit in 16GB; hosted cohorts fan out, which is
+fifteen identical 404s inside a run. `hip explain` writes two readings per region
+(Milestone 30): the analyst reading, and a plain-language consumer reading that answers
+four fixed questions. Each has an ordered preference list in `config/evaluation.yml`
+ending at a local model, so no vendor decision can stop the command, and for each region
+the first benchmarked model that writes a reading fit to publish writes it: every
+figure bound to the packet, every survey figure with its margin, every uncertain rank as
+its range, and for the consumer reading five fixed headings, no source names or jargon,
+and at most two figures an answer. A refused reading passes the region to the next
+model. Regions whose stored readings were written from these exact numbers are skipped.
+Gemini is asked for its Flex tier, at the batch price; the run ends with what it cost,
+per model; and the exit status is 0 when every reading is current, 3 when some is but a
+region's reading could not be written or a model could not be used, and 1 when none
+is. `hip eval readings` generates both formats from several models on three counties
+without storing anything, for choosing a model by reading its work. Local cohorts run
+one model at a time because two do not fit in 16GB; hosted cohorts fan out, which is
 the reason hosted inference is on the roadmap at all.
 
 **Keeping it current.** `make refresh` asks every publisher whether anything has moved
@@ -519,8 +532,8 @@ and nothing past it — a second host with no `make`, `wrangler` or `rclone` ins
 run it alone. `scripts/scheduled_refresh.py` is the scheduler-facing script: it calls
 `hip refresh`, and only if `RefreshState.completed_at` actually moved — a quiet week
 stops there, at no cost past the refresh itself — goes on to rebuild packets, check
-whether any reading is stale (`hip explain --all --dry-run`, which classifies every
-county without calling a model), rebuild the site, deploy it, and confirm the deploy
+whether any reading is stale (`hip explain --dry-run`, which classifies every
+county's readings without calling a model), rebuild the site, deploy it, and confirm the deploy
 with `check-live`. A quiet week still republishes, without rebuilding packets or
 readings, when a source's line on the freshness page would change — out of reach, back,
 or a release now waiting (ARCHITECTURE #232). `scripts/launchd/` holds the two

@@ -5,7 +5,7 @@ import { ComputedBadge } from "@/components/ComputedBadge";
 import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
-import { ExplanationPanel } from "@/components/ExplanationPanel";
+import { ConsumerReading, ExplanationPanel } from "@/components/ExplanationPanel";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Glossed } from "@/components/Glossed";
 import { ProfileTicker } from "@/components/StateProfileTicker";
@@ -203,7 +203,11 @@ export default async function RegionPage({
 
   const name = displayName(region);
   const county = region.ancestors.find((a) => a.level === "county");
+  // One reading per audience since Milestone 30. A response published before it has no
+  // `audience`, and every reading then was an analyst's.
   const readings = explanations?.explanations ?? [];
+  const analyst = readings.find((r) => (r.audience ?? "analyst") === "analyst") ?? null;
+  const consumer = readings.find((r) => r.audience === "consumer") ?? null;
   const population = packet.levels.find((l) => l.metric_id === "acs_population");
   const populationChange = packet.metrics.find((m) => m.metric_id === "acs_population");
   const { peer_count, peer_level, peer_scope } = packet.comparisons;
@@ -259,10 +263,10 @@ export default async function RegionPage({
     trends.length + rankChartCount > 0
       ? `${trends.length + rankChartCount} ${trends.length + rankChartCount === 1 ? "chart" : "charts"}`
       : null,
-    readings.length > 1 ? `${readings.length} models’ readings` : readings.length === 1 ? "a model’s reading" : null,
+    analyst ? "a model’s analyst reading" : null,
   ].filter((part): part is string => part !== null);
   const moreTitle =
-    readings.length > 0
+    analyst
       ? "Every table, the trends and the interpretation"
       : trends.length > 0
         ? "Every table and the trends"
@@ -392,6 +396,14 @@ export default async function RegionPage({
         peers={`${scopeName(peer_scope)}’s ${peer_count} ${peerNoun(peer_level)}`}
         items={standing}
       />
+
+      {/* After the computed answers, before the tables: the same figures read aloud in
+          plain language, and marked as a model's reading of them (Milestone 30). */}
+      {consumer && (
+        <div className="section">
+          <ConsumerReading reading={consumer} />
+        </div>
+      )}
 
       <MoreExpander title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>
         <RankOverview
@@ -528,9 +540,9 @@ export default async function RegionPage({
         )}
 
         {/* Whole, with no "Read the rest": opening the expander was the choice to read on. */}
-        {readings.length > 0 && (
+        {analyst && (
           <div className="section">
-            <ExplanationPanel explanations={readings} whole />
+            <ExplanationPanel reading={analyst} whole />
           </div>
         )}
       </MoreExpander>

@@ -58,6 +58,20 @@ first raised, not where it must be done.
 
 ### Correctness and data integrity
 
+- [ ] **Binding attributes a figure by the words of its whole sentence.** (M30, #257) In
+      a sentence naming several measures, "incomes rose 24% while rents rose 28%" can
+      hand the 28% to rent-to-income for its words rather than to rent. The margin check
+      now judges a figure under every field it could be read from, so no reading is
+      refused for it — but a citation's `field`, shown in each reading's figure list, can
+      still name the wrong measure. Weighting the words nearest the figure over the rest
+      of the sentence would fix the attribution itself.
+- [ ] **A packet's `cagr` for a survey figure carries no margin.** (M30, #256) The
+      Markdown report and so the readings leave a survey figure's annualised change out,
+      because nothing computes its margin, but the packet's JSON still carries the
+      number — an API response stating a survey figure without its margin, short of
+      SPEC principle 12. Either compute the margin in `hip analyze` (the Census ratio
+      formula carried through the root) or null the field for survey figures.
+
 - [ ] **2,936 revision rows have an `old_release_id` that no longer resolves.**
       (M29, found in review 2026-09-20) They predate the retention fix in ARCHITECTURE
       #199: `_prune_orphan_derived_releases` had already deleted the `hip_derived`
@@ -311,9 +325,8 @@ first raised, not where it must be done.
       files.** (found 2026-09-26) Files from Milestones 24–26 and 29 are missing —
       `sources/nj_sr1a.py` and `sources/nj_tax_rates.py` among them — and its counts
       are stale (15 sources and 31 metrics; 16 and 38 today). Its schema DDL block
-      predates migrations 0012–0018, which the section says, and the status lines at the
-      top of the file still read "351,295 observations across 31 metrics from 12
-      sources" (414,360, 38 and 16 on 2026-09-27).
+      predates migrations 0012–0019, which the section says. The status lines at the top
+      were brought up to date in Milestone 30.
 
 ### Housekeeping
 
@@ -351,18 +364,13 @@ first raised, not where it must be done.
       measure kept alongside it. That is a larger change than closing the gap, and it is
       schedulable separately from the cards that are now live. `tests/test_nj_sr1a.py` fails if the input is added
       before this is settled. **Not decided.**
-- [ ] **Should a change of model force regeneration?** (deferred to M12; worth settling
-      before Milestone 30 sets its fallback lists) The preference
-      list can fall through mid-run, so some regions may carry prose from one model and
-      some from another. `region_explanations` stores `model_id`, `model_label` and
-      `runtime`, and the dashboard shows them, so it is visible rather than hidden. A
-      consistent voice costs a full re-run; leaving it is free but leaves several models'
-      writing on the site indefinitely. Leaning toward leaving it. **Not decided.**
-- [ ] **Staleness currently ignores model identity.** (deferred to M12)
-      `hip.eval.explain.is_stale` compares only `packet_sha256`, so swapping models marks
-      nothing stale. That is the correct default under the leaning above, but it is a
-      default nobody chose — it falls out of the Milestone 8 implementation. Whichever
-      way the decision above goes, this function should say so explicitly.
+- [ ] **Should a change of model force regeneration?** (deferred to M12) Milestone 30
+      made it concrete — each region's reading now falls through per region, so a
+      fallback can write some counties and the first choice the rest — and built the
+      leaning: which model wrote a reading does not make it stale, except a model that
+      has left its audience's list, whose readings are rewritten or retired (#258). The
+      page names the writer. `is_stale` now says so rather than falling out of the
+      Milestone 8 implementation. **Awaiting the owner's confirmation.**
 - [ ] **The 21 committed county reports are a snapshot that goes stale silently.**
       (M6; restated 2026-09-27) `reports/**` is gitignored, but the three evaluation
       reports and the 21 county reports were force-added and are tracked. The county

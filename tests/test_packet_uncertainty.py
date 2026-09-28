@@ -379,6 +379,25 @@ def test_a_range_binds_both_ends_to_one_entry(packet: Packet) -> None:
     ]
 
 
+@pytest.mark.parametrize(
+    "prose",
+    [
+        "About half of renters spend more than 30 percent of their income on housing.",
+        "Renters paying 30% of their income or more are 50.1% ± 2.3 points.",
+    ],
+)
+def test_a_labels_income_threshold_paraphrased_is_the_label(
+    packet: Packet, prose: str
+) -> None:
+    """A measure's threshold, however it is worded, is not a claim that something moved
+    30% — which would bind to a 29.7% change and read as a survey figure without its
+    margin (found in the first side-by-side, 2026-09-27)."""
+    binding = bind(prose, packet)
+    first = binding.citations[0]
+    assert first.kind == "text"
+    assert not margin_problems(prose, binding, packet)
+
+
 def test_a_number_inside_a_quoted_label_is_the_label(packet: Packet) -> None:
     """ "30%" in "paying over 30% of income" names the measure; it is not a claim that
     something rose 30%."""
@@ -416,6 +435,139 @@ def test_a_margin_must_be_the_one_for_that_quantity(packet: Packet) -> None:
     """The change's margin does not vouch for the value beside it."""
     problems = _problems("Household income rose 24.2% (± 4.0%) to $100,645.", packet)
     assert [text for text, _ in problems] == ["$100,645"]
+
+
+def test_a_figure_is_judged_under_every_field_it_could_be_read_from(
+    packet: Packet,
+) -> None:
+    """Gemini's consumer reading of Mercer, 2026-09-27: binding gave "4%" to another
+    ratio's change margin for the words around it, and the income change beside it read
+    as bare. The sentence gives the income change its margin; it is not refused."""
+    packet.metrics.append(
+        _metric(
+            metric_id="fmr_to_income",
+            label="Two-bedroom Fair Market Rent to household income",
+            unit="ratio",
+            direction="lower_is_better",
+            start_value=0.2157,
+            end_value=0.2418,
+            pct_change=12.18,
+            pct_change_margin=3.64,
+            start_margin=0.0043,
+            end_margin=0.0062,
+            rank=14,
+            rank_best=12,
+            rank_worst=16,
+        )
+    )
+    assert not _problems(
+        "Typical household incomes rose by 24% (give or take 4%), while two-bedroom "
+        "rents measured against household income rose too.",
+        packet,
+    )
+
+
+def test_a_rank_that_is_one_place_by_value_is_fine_beside_a_ranged_change(
+    packet: Packet,
+) -> None:
+    """Gemini's analyst reading of Mercer, 2026-09-27: "62.2%, ranking 17th of 21" is
+    the rank by value, one place, though binding gave "17th" to the change's rank, which
+    the survey places only within 7th-21st."""
+    packet.metrics.append(
+        _metric(
+            metric_id="acs_homeownership_rate",
+            label="Homeownership rate",
+            unit="ratio",
+            direction="neutral",
+            start_value=0.631,
+            end_value=0.6215,
+            pct_change=-1.43,
+            pct_change_margin=2.18,
+            start_margin=0.0084,
+            end_margin=0.011,
+            rank=17,
+            rank_best=7,
+            rank_worst=21,
+        )
+    )
+    packet.levels.append(
+        _level(
+            metric_id="acs_homeownership_rate",
+            label="Homeownership rate",
+            unit="ratio",
+            direction="neutral",
+            value=0.6215,
+            rank=17,
+            margin_of_error=0.011,
+            rank_best=17,
+            rank_worst=17,
+        )
+    )
+    assert not _problems(
+        "Homeownership eased to 62.2% (± 1.1 points), ranking 17th of 21.", packet
+    )
+
+
+def test_a_ranges_ends_split_by_binding_are_still_a_range(packet: Packet) -> None:
+    """ "10th–12th" whose first end binding gave to another measure's range, and whose
+    second went to a single rank: the sentence still quotes income's range."""
+    packet.metrics.append(
+        _metric(
+            metric_id="price_to_income",
+            label="Home value to household income",
+            unit="ratio",
+            direction="lower_is_better",
+            start_value=3.38,
+            end_value=4.26,
+            pct_change=26.2,
+            pct_change_margin=4.09,
+            start_margin=0.068,
+            end_margin=0.109,
+            rank=13,
+            rank_best=10,
+            rank_worst=15,
+        )
+    )
+    assert not _problems(
+        "Household income is 10th–12th of 21, and home value to household income "
+        "8th–9th of 21.",
+        packet,
+    )
+
+
+def test_a_number_quoted_from_a_caveat_is_the_caveats(packet: Packet) -> None:
+    """HUD's move "from the 50th to the 40th percentile" is a change of method a caveat
+    describes, not a percentile of this region."""
+    packet.caveats.append(
+        "HUD moved some areas' Fair Market Rents from the 50th to the 40th percentile."
+    )
+    prose = "HUD moved some areas from the 50th to the 40th percentile."
+    binding = bind(prose, packet)
+    assert [c.kind for c in binding.citations] == ["text", "text"]
+    assert not margin_problems(prose, binding, packet)
+
+
+def test_a_threshold_introduced_rather_than_followed_is_the_labels(
+    packet: Packet,
+) -> None:
+    packet.levels.append(
+        _level(
+            metric_id="chas_renter_severe_burden",
+            label="Renters paying over 50% of income, HUD CHAS",
+            unit="ratio",
+            direction="lower_is_better",
+            value=0.2443,
+            rank=11,
+            source_id="hud_chas",
+            margin_of_error=None,
+            rank_best=None,
+            rank_worst=None,
+        )
+    )
+    prose = "And 24.4% of renters pay over 50%, with no margin available."
+    binding = bind(prose, packet)
+    assert [c.kind for c in binding.citations] == ["value", "text"]
+    assert not margin_problems(prose, binding, packet)
 
 
 def test_a_margin_in_another_sentence_is_not_beside_the_figure(packet: Packet) -> None:

@@ -197,7 +197,7 @@ def test_a_week_that_moved_rebuilds_checks_and_publishes(
     assert run.steps == [
         "hip refresh",
         "hip pack",
-        "hip explain --all --dry-run",
+        "hip explain --dry-run",
         *PUBLISH,
     ]
     assert (run.code, run.notes) == (0, [])
@@ -210,11 +210,11 @@ def test_a_failed_readings_check_alerts_regenerates_nothing_and_publishes_the_da
     run = _run(
         monkeypatch,
         "scheduled_refresh",
-        hip={"explain --all --dry-run": code},
+        hip={"explain --dry-run": code},
         mode="auto",
     )
 
-    assert "hip explain --all" not in run.steps
+    assert "hip explain" not in run.steps
     assert run.steps[-3:] == PUBLISH
     assert (run.code, run.notes) == (
         0,
@@ -225,9 +225,9 @@ def test_a_failed_readings_check_alerts_regenerates_nothing_and_publishes_the_da
 def test_stale_readings_in_ask_mode_notify_and_still_publish_the_data(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    run = _run(monkeypatch, "scheduled_refresh", hip={"explain --all --dry-run": 3})
+    run = _run(monkeypatch, "scheduled_refresh", hip={"explain --dry-run": 3})
 
-    assert "hip explain --all" not in run.steps
+    assert "hip explain" not in run.steps
     assert run.steps[-3:] == PUBLISH
     assert (run.code, run.notes) == (0, [("Readings are stale", 0)])
 
@@ -235,16 +235,17 @@ def test_stale_readings_in_ask_mode_notify_and_still_publish_the_data(
 def test_a_partial_regeneration_in_auto_mode_still_publishes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """`hip explain` exits 3 when some readings were written and a model was skipped —
-    which, with Ollama quit, is every run that needs the local model."""
+    """`hip explain` exits 3 when some readings were written but a region's reading
+    could not be, or a model could not be used — Ollama quit when every hosted model
+    failed, say. What was written still publishes."""
     run = _run(
         monkeypatch,
         "scheduled_refresh",
-        hip={"explain --all --dry-run": 3, "explain --all": 3},
+        hip={"explain --dry-run": 3, "explain": 3},
         mode="auto",
     )
 
-    assert run.steps[-6:] == ["ollama up", "hip explain --all", "ollama down", *PUBLISH]
+    assert run.steps[-6:] == ["ollama up", "hip explain", "ollama down", *PUBLISH]
     assert run.code == 0
     assert run.notes == [("Weekly refresh: some readings were not regenerated", 0)]
 
@@ -255,7 +256,7 @@ def test_a_failed_regeneration_in_auto_mode_alerts_and_still_publishes_the_data(
     run = _run(
         monkeypatch,
         "scheduled_refresh",
-        hip={"explain --all --dry-run": 3, "explain --all": 1},
+        hip={"explain --dry-run": 3, "explain": 1},
         mode="auto",
     )
 
@@ -293,9 +294,9 @@ def test_a_request_on_the_wrong_checkout_is_refused(
 
 
 def test_nothing_stale_costs_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
-    run = _run(monkeypatch, "regenerate_now", hip={"explain --all --dry-run": 0})
+    run = _run(monkeypatch, "regenerate_now", hip={"explain --dry-run": 0})
 
-    assert run.steps == ["hip explain --all --dry-run"]
+    assert run.steps == ["hip explain --dry-run"]
     assert (run.code, run.notes) == (0, [("Nothing to regenerate", 0)])
 
 
@@ -303,10 +304,10 @@ def test_nothing_stale_costs_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_a_failed_check_never_reaches_the_paid_run(
     monkeypatch: pytest.MonkeyPatch, code: int
 ) -> None:
-    """The review's first finding: exit 1 used to fall through to `hip explain --all`."""
-    run = _run(monkeypatch, "regenerate_now", hip={"explain --all --dry-run": code})
+    """The review's first finding: exit 1 used to fall through to `hip explain`."""
+    run = _run(monkeypatch, "regenerate_now", hip={"explain --dry-run": code})
 
-    assert run.steps == ["hip explain --all --dry-run"]
+    assert run.steps == ["hip explain --dry-run"]
     assert (run.code, run.notes) == (
         1,
         [("Regenerate now: the readings check failed", 1)],
@@ -314,13 +315,13 @@ def test_a_failed_check_never_reaches_the_paid_run(
 
 
 def test_a_regeneration_is_published(monkeypatch: pytest.MonkeyPatch) -> None:
-    run = _run(monkeypatch, "regenerate_now", hip={"explain --all --dry-run": 3})
+    run = _run(monkeypatch, "regenerate_now", hip={"explain --dry-run": 3})
 
     # Ollama is up for the paid run alone: started before it, stopped before publishing.
     assert run.steps == [
-        "hip explain --all --dry-run",
+        "hip explain --dry-run",
         "ollama up",
-        "hip explain --all",
+        "hip explain",
         "ollama down",
         *PUBLISH,
     ]
@@ -333,7 +334,7 @@ def test_a_partial_regeneration_is_published_and_says_so(
     run = _run(
         monkeypatch,
         "regenerate_now",
-        hip={"explain --all --dry-run": 3, "explain --all": 3},
+        hip={"explain --dry-run": 3, "explain": 3},
     )
 
     assert run.steps[-3:] == PUBLISH
@@ -346,13 +347,13 @@ def test_a_regeneration_that_wrote_nothing_deploys_nothing(
     run = _run(
         monkeypatch,
         "regenerate_now",
-        hip={"explain --all --dry-run": 3, "explain --all": 1},
+        hip={"explain --dry-run": 3, "explain": 1},
     )
 
     assert run.steps == [
-        "hip explain --all --dry-run",
+        "hip explain --dry-run",
         "ollama up",
-        "hip explain --all",
+        "hip explain",
         "ollama down",
     ]
     assert (run.code, run.notes) == (1, [("Regenerate now: failed", 1)])
@@ -363,9 +364,9 @@ def test_ollama_is_never_started_without_a_paid_run(
 ) -> None:
     """Ask mode, a clean check and a failed one all leave Ollama alone."""
     for hip, mode in (
-        ({"explain --all --dry-run": 3}, "ask"),
-        ({"explain --all --dry-run": 0}, "auto"),
-        ({"explain --all --dry-run": 1}, "auto"),
+        ({"explain --dry-run": 3}, "ask"),
+        ({"explain --dry-run": 0}, "auto"),
+        ({"explain --dry-run": 1}, "auto"),
     ):
         run = _run(monkeypatch, "scheduled_refresh", hip=hip, mode=mode)
         assert "ollama up" not in run.steps

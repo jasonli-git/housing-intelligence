@@ -12,7 +12,13 @@ So this reads a binding back against its packet and reports, per figure:
   quantity: a start value's, an end value's, or the change's. Where the packet has a
   margin of zero the sentence must say "no sampling error", and where it has none, that
   no margin is available. "Same sentence" is the unit binding already uses for context;
-  a margin two sentences later is not beside the figure it qualifies.
+  a margin two sentences later is not beside the figure it qualifies. A figure is
+  judged under every field it could have been read from, not only the one binding
+  chose: in "incomes rose 24% (give or take 4%) while rents rose 28% (give or take
+  4%)" binding may hand the 28% to rent-to-income for its words, and the sentence is
+  right about rent. So a margin is found by its value after "±" or "give or take", not
+  only by the field binding gave it, and a figure any of whose readings is satisfied —
+  or needs no margin — passes.
 - **A rank the margins cannot pin down, quoted as a place** — the single rank, one end
   of its range alone, or a percentile. "Between 10th and 12th" passes; "12th" does not
   (ARCHITECTURE #241).
@@ -28,7 +34,14 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from hip.packets.citations import Binding, Citation, sentence_span
+from hip.packets.citations import (
+    Binding,
+    Citation,
+    Figure,
+    readings_of,
+    sentence_span,
+    states_margin,
+)
 from hip.packets.schema import Packet, PacketLevel, PacketMetric
 
 # What a sentence says in place of a margin. The site's own phrases are "no margin
@@ -70,25 +83,24 @@ def _entries(
     )
 
 
+_QUANTITIES = frozenset({"value", "start", "change", "annualised"})
+
+
 def _needed(
-    citation: Citation,
+    field: str | None,
+    kind: str,
     metrics: dict[str, PacketMetric],
     levels: dict[str, PacketLevel],
 ) -> tuple[float | None, set[str]] | None:
-    """The margin a survey figure needs, and the fields that would give it.
+    """The margin a survey figure read from `field` needs, and the fields that give it.
 
-    None when the citation is not a survey figure's value, start or change — nothing is
+    None when the field is not a survey figure's value, start or change — nothing is
     needed. A margin of None means none is available; the empty field set then means no
     number can satisfy it, only the words.
     """
-    if citation.field is None or citation.kind not in {
-        "value",
-        "start",
-        "change",
-        "annualised",
-    }:
+    if field is None or kind not in _QUANTITIES:
         return None
-    match = _ENTRY.match(citation.field)
+    match = _ENTRY.match(field)
     if match is None:
         return None
     array, metric_id, attribute = match.groups()
@@ -140,10 +152,73 @@ def _ranged(
     return f"{array}[{metric_id}]", entry
 
 
+def _rank_problem(
+    field: str,
+    kind: str,
+    fields: set[str],
+    metrics: dict[str, PacketMetric],
+    levels: dict[str, PacketLevel],
+    stated: set[float] | None = None,
+) -> str | None:
+    """Why a rank read from `field` claims more than its survey allows, or None.
+
+    A range is quoted when both its ends are in the sentence — as bound fields, or,
+    judging an alternative reading, as ranks the sentence states (`stated`).
+    """
+    ranged = _ranged(field, metrics, levels)
+    if ranged is None:
+        return None
+    prefix, entry = ranged
+    span_text = f"{entry.rank_best}–{entry.rank_worst} of {entry.of}"
+    if kind == "percentile":
+        return f"a percentile for a rank the survey places only within {span_text}"
+    if field == f"{prefix}.rank":
+        return f"a single rank where the survey places it only within {span_text}"
+    if {f"{prefix}.rank_best", f"{prefix}.rank_worst"} <= fields:
+        return None
+    ends = {float(entry.rank_best or 0), float(entry.rank_worst or 0)}
+    if stated is not None and ends <= stated:
+        return None
+    return f"one end of the range {span_text} quoted as a place"
+
+
 def _ranklike(text: str, citation: Citation) -> bool:
     after = text[citation.end : citation.end + 12]
     before = text[max(0, citation.start - 20) : citation.start]
     return bool(_ORDINAL_AFTER.match(after) or _RANK_BEFORE.search(before))
+
+
+def _satisfied(
+    need: tuple[float | None, set[str]],
+    sentence: str,
+    span: tuple[int, int],
+    text: str,
+    fields: set[str],
+) -> str | None:
+    """Why a figure with this need reads more exactly than its survey allows, or None."""
+    margin, satisfied_by = need
+    if margin is None:
+        if _NO_MARGIN.search(sentence):
+            return None
+        return (
+            "a survey figure with no margin available, stated as if exact — say that "
+            "no margin is available"
+        )
+    if margin == 0:
+        if _NO_SAMPLING_ERROR.search(sentence):
+            return None
+        return "a survey figure with no sampling error, stated without saying so"
+    if fields & satisfied_by or states_margin(text, span[0], span[1], margin):
+        return None
+    return "a survey figure stated without its margin"
+
+
+def _figure_need(
+    figure: Figure,
+    metrics: dict[str, PacketMetric],
+    levels: dict[str, PacketLevel],
+) -> tuple[float | None, set[str]] | None:
+    return _needed(figure.field, figure.kind, metrics, levels)
 
 
 def margin_problems(text: str, binding: Binding, packet: Packet) -> list[MarginProblem]:
@@ -170,51 +245,44 @@ def margin_problems(text: str, binding: Binding, packet: Packet) -> list[MarginP
         sentence = text[span[0] : span[1]]
         fields = {c.field for c in cited if c.field is not None}
         for citation in cited:
-            needed = _needed(citation, metrics, levels)
+            needed = _needed(citation.field, citation.kind, metrics, levels)
             if needed is not None:
-                margin, satisfied_by = needed
-                if margin is None:
-                    if not _NO_MARGIN.search(sentence):
-                        problem(
-                            citation,
-                            "a survey figure with no margin available, stated as if "
-                            "exact — say that no margin is available",
-                        )
-                elif margin == 0:
-                    if not _NO_SAMPLING_ERROR.search(sentence):
-                        problem(
-                            citation,
-                            "a survey figure with no sampling error, stated without "
-                            "saying so",
-                        )
-                elif not fields & satisfied_by:
-                    problem(citation, "a survey figure stated without its margin")
+                why = _satisfied(needed, sentence, span, text, fields)
+                if why is not None:
+                    # Every other field the figure could be read from, before refusing.
+                    alternatives = [
+                        _figure_need(figure, metrics, levels)
+                        for figure in readings_of(text, citation, packet)
+                        if figure.field != citation.field
+                    ]
+                    if any(
+                        need is None
+                        or _satisfied(need, sentence, span, text, fields) is None
+                        for need in alternatives
+                    ):
+                        continue
+                    problem(citation, why)
                 continue
 
             if citation.field is None or citation.kind not in {"rank", "percentile"}:
                 continue
-            ranged = _ranged(citation.field, metrics, levels)
-            if ranged is None:
+            why = _rank_problem(citation.field, citation.kind, fields, metrics, levels)
+            if why is None or (citation.kind == "rank" and not _ranklike(text, citation)):
                 continue
-            prefix, entry = ranged
-            span_text = f"{entry.rank_best}–{entry.rank_worst} of {entry.of}"
-            if citation.kind == "percentile":
-                problem(
-                    citation,
-                    f"a percentile for a rank the survey places only within {span_text}",
+            # As with a margin, every field the rank could be read from: "17th" may be
+            # the rank by value, one place, where binding gave it the ranged change's.
+            stated = {c.value for c in cited if c.kind == "rank"}
+            if any(
+                figure.kind in {"rank", "percentile"}
+                and _rank_problem(
+                    figure.field, figure.kind, fields, metrics, levels, stated
                 )
-            elif not _ranklike(text, citation):
+                is None
+                for figure in readings_of(text, citation, packet)
+                if figure.field != citation.field
+            ):
                 continue
-            elif citation.field == f"{prefix}.rank":
-                problem(
-                    citation,
-                    f"a single rank where the survey places it only within {span_text}",
-                )
-            elif not {f"{prefix}.rank_best", f"{prefix}.rank_worst"} <= fields:
-                problem(
-                    citation,
-                    f"one end of the range {span_text} quoted as a place",
-                )
+            problem(citation, why)
     problems.sort(key=lambda p: p.start)
     return problems
 

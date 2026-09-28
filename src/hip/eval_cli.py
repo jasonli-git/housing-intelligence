@@ -1109,6 +1109,129 @@ def _unusable(
     return unusable
 
 
+@app.command("readings")
+def readings_command(
+    name: Annotated[
+        str,
+        typer.Option(
+            "--name",
+            help="Report name: reports/evaluation/<name>.md, data/sidebyside/<name>/.",
+        ),
+    ],
+    region: Annotated[
+        list[int] | None,
+        typer.Option("--region", help="Region ids; default Bergen, Mercer, Cumberland."),
+    ] = None,
+    model: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--model",
+            help="Models; default the three hosted candidates and the local fallback.",
+        ),
+    ] = None,
+    audience: Annotated[
+        list[str] | None,
+        typer.Option("--audience", help="consumer | analyst; default both."),
+    ] = None,
+    window: Annotated[str, typer.Option("--window")] = "5y",
+    report_only: Annotated[
+        bool,
+        typer.Option(
+            "--report-only",
+            help="Re-render the report from the trials already kept, calling no model.",
+        ),
+    ] = False,
+) -> None:
+    """Both readings from several models on a few regions, set side by side to be read.
+
+    The comparison the consumer reading's model is chosen from (ROADMAP, Milestone 30):
+    every model gets the prompt, packet, service tier and gates `hip explain` would give
+    it, and every reading is shown — a refused one with the rule it broke. Nothing is
+    stored in the warehouse. Billed like the readings it compares: three hosted models
+    on three counties, both formats, is 18 hosted calls.
+    """
+    from contextlib import ExitStack
+    from datetime import date
+
+    from hip.config import AUDIENCES
+    from hip.eval.runners.ollama import serving
+    from hip.eval.sidebyside import (
+        DEFAULT_MODELS,
+        DEFAULT_REGIONS,
+        Trial,
+        compare,
+        render,
+        write,
+    )
+    from hip.packets import build_packet
+
+    evaluation = load_evaluation()
+    settings = get_settings()
+    models = list(model or DEFAULT_MODELS)
+    chosen = [a for a in ("consumer", "analyst") if a in (audience or AUDIENCES)]
+    report_path = settings.reports_dir / "evaluation" / f"{name}.md"
+    if report_only:
+        kept_path = settings.data_dir / "sidebyside" / name / "trials.jsonl"
+        trials = [
+            Trial.from_json(json.loads(line))
+            for line in kept_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        write(render(trials, models, name=name, on=date.today()), report_path=report_path)
+        typer.secho(
+            f"re-rendered {len(trials)} readings to {report_path}", fg=typer.colors.GREEN
+        )
+        return
+    for model_id in models:
+        evaluation.model(model_id)  # a misspelt model fails before anything is billed
+
+    # Each trial is kept as it completes, so a run stopped halfway — Gemma takes a
+    # minute or more a reading — keeps what it paid for.
+    data_dir = settings.data_dir / "sidebyside" / name
+    data_dir.mkdir(parents=True, exist_ok=True)
+    kept = (data_dir / "trials.jsonl").open("w", encoding="utf-8")
+
+    def progress(result: Trial) -> None:
+        kept.write(json.dumps(result.as_json(), ensure_ascii=False) + "\n")
+        kept.flush()
+        colour = None if result.status == "published" else typer.colors.YELLOW
+        typer.secho(
+            f"{result.region_label:<24}{result.audience:<9}{result.model_id:<24}"
+            f"{result.status:<10}{result.seconds:>6.1f}s  {result.words:>4} words",
+            fg=colour,
+        )
+        for reason in result.reasons:
+            typer.secho(f"    {reason[:160]}", fg=typer.colors.BRIGHT_BLACK)
+
+    with Session(get_engine()) as session:
+        packets = [
+            build_packet(session, region_id, window)
+            for region_id in (region or DEFAULT_REGIONS)
+        ]
+    local = any(evaluation.cohort_for(m).runner == "ollama" for m in models)
+    with ExitStack() as stack:
+        stack.callback(kept.close)
+        if local:
+            logs = settings.data_dir.parent / "logs"
+            logs.mkdir(exist_ok=True)
+            typer.echo(stack.enter_context(serving(log_path=logs / "ollama.log")))
+        trials = compare(
+            packets,
+            evaluation,
+            models,
+            audiences=chosen,  # type: ignore[arg-type]
+            progress=progress,
+        )
+
+    write(render(trials, models, name=name, on=date.today()), report_path=report_path)
+    billed = [t.usd for t in trials if t.usd is not None]
+    typer.secho(
+        f"{len(trials)} readings, {sum(t.status == 'published' for t in trials)} would "
+        f"publish; ${sum(billed):.4f} billed; report at {report_path}",
+        fg=typer.colors.GREEN,
+    )
+
+
 @app.command("cost")
 def cost_command(
     run: Annotated[str, typer.Option("--run", help=_RUN_HELP)],
