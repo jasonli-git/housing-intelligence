@@ -14,16 +14,39 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones (2026-09-27)
+## Now — Milestone 30, Readings for every reader (started 2026-09-27)
 
-Milestone 28 merged and deployed on 2026-09-26, with every county's readings regenerated;
-CHANGELOG 0.24.0 has what it shipped, and 0.24.1–0.24.3 the fixes and polish since.
-[SPEC.md](SPEC.md) is v1.3, whose principle 12 requires a survey figure's margin wherever
-it is shown. Milestone 30 is next and has not started: one analyst reading and one
-consumer reading per region, with the packets taking in margins. It begins on the
-owner's go-ahead.
+Branch `milestone/m30-readings-for-every-reader`. The deliverable is ROADMAP's row 30: one
+analyst reading and one consumer reading per region, packets carrying margins and rank
+ranges (SPEC principle 12), batch pricing where a provider offers it, and a run that says
+what it cost. It takes in three items that were **Scheduled: Milestone 30** — a reading
+quoting a single rank beside its page's range (#240), `hip explain` not reporting what a
+run cost, and generation not using any provider's batch pricing.
 
-**To resume:** `make db-up` for Postgres.
+- [ ] **Packets 1.3.** Each figure's margin, whether it is a survey figure, and each rank's
+      range; a stand-out needs its whole range at one end, as on the page (#241).
+- [ ] **The Markdown report** gives the margins and ranges.
+- [ ] **Citation binding** licenses margins and range ends, and not a point rank the
+      survey cannot back; a check that each survey figure quoted carries its margin.
+- [ ] **Two formats.** The analyst prompt as today plus margins and ranges; the consumer
+      prompt, a bottom line and four fixed questions, with a parser and checks for
+      source names, jargon and figures per answer.
+- [ ] **The three-county side-by-side:** both formats from DeepSeek, Gemini 3.7 Flash and
+      Flash-Lite, with Gemma 4 E4B as the fallback both lists end on. **The owner picks
+      the consumer model from it.**
+- [ ] **One reading per region and audience** (migration 0019), each audience with its
+      own preference list and a per-region fallthrough; `--all` retired.
+- [ ] **Batch pricing:** which providers offer it; a batch path where one does, with a
+      deadline after which unfinished regions run synchronously; the run's cost reported.
+- [ ] **API and site:** readings carry their audience and sections; the consumer reading
+      on region pages; the analyst panel loses its model switcher.
+- [ ] **Scheduled scripts, tests, docs, completeness check, PR.**
+
+Two decisions this milestone needs from the owner: the consumer model, after the
+side-by-side; and whether a change of model forces regeneration (Open decisions below),
+which the fallback lists make concrete — the recommendation is that it does not.
+
+**To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
 Open items a planned milestone now covers say so with **Scheduled: Milestone N**. They
 stay here until that milestone starts and takes them into `Now`.
@@ -95,11 +118,6 @@ first raised, not where it must be done.
       Recording the check time per source at `hip refresh` and loading it with the
       discoveries would let the page show a date it can back.
 
-- [ ] **A reading can quote a single rank beside its page's range.** (M28, #240) The
-      packets carry no margins or rank ranges, so a reading can say "9th" where its page
-      says "between 5th and 13th", and the readings and the Markdown report state survey
-      figures without their margins, short of SPEC principle 12. **Scheduled: Milestone
-      30.**
 - [ ] **HUD's CHAS figures carry no margins of error, which SPEC principle 12 requires.**
       (M28, #235, #246) HUD's API publishes none; its bulk CHAS files do (`_moe` columns
       beside each `_est`). Switching the adapter to the bulk files would give the three
@@ -279,24 +297,6 @@ first raised, not where it must be done.
       deed-priced towns would render without failing anything. Verified Zillow-only on
       2026-09-20 by reading `web/app/afford/page.tsx`; that is a fact about today, not a
       guard.
-
-- [ ] **`hip explain` does not report what a run cost.** Found 2026-09-19 regenerating
-      Milestone 24's readings: the command prints characters and figures bound per
-      region but never a billed total, so the only way to know what a regeneration cost
-      is the provider console. `hip eval judge` already prints what it was billed — the
-      same treatment here would make a regeneration's cost checkable against the
-      estimate `hip eval cost` gives.
-      **Scheduled: Milestone 30.**
-- [ ] **Generation does not use any provider's batch pricing.** Raised 2026-09-19.
-      `hip eval judge` submits through Anthropic's Batch API for a flat 50%; `hip
-      explain` calls each provider's synchronous chat endpoint once per (region, model)
-      at list price. Defensible at 21 counties and five models, where a run is under a
-      dollar and finishes in about 45 minutes. It stops being noise at scale: the
-      Milestone 19 estimate for full New Jersey municipal coverage is roughly $42 a
-      refresh. Batching would need a per-provider path in `HostedRunner` with its own
-      polling and partial-failure handling, and the local tier cannot batch at all —
-      so this is a scale decision, not a cleanup.
-      **Scheduled for the analyst reading: Milestone 30.**
 
 ### Documentation upkeep
 
