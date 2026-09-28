@@ -93,6 +93,10 @@ _YEAR_RANGE = re.compile(r"\b(\d{4})\s*[-–—]\s*(\d{4})\b")
 # different figure of the same magnitude is still caught.
 RELATIVE_TOLERANCE = 0.005
 
+# Stored readings keep their citations. Bump this when a binder change can alter a
+# citation's field, so `hip explain` re-cites existing prose without a model call.
+BINDING_VERSION = 1
+
 # A plain whole number below this that matches nothing is an ordinal, a count or a list
 # position ("the 3 metrics below", "ranked 2nd") rather than a claim about the data.
 TRIVIAL_BELOW = 20
@@ -102,6 +106,9 @@ TRIVIAL_BELOW = 20
 # value's, and a boundary at either would cut the rank off from the metric it ranks.
 _SENTENCE_END = re.compile(r"[.!?](?=\s)|\n")
 _WORD = re.compile(r"[a-z]+")
+# Between two figures, a separator starts the next claim. It is not a sentence
+# boundary: "income rose 24%; rent rose 28%" still shares one sentence for margins.
+_CLAUSE_BREAK = re.compile(r"[;,]|\b(?:and|but|while|whereas)\b", re.IGNORECASE)
 
 # A plain whole number followed by a unit of time is a duration — "over 10 years", the
 # `5y` window — and one joined to a word by a hyphen is a descriptor: "5-year estimates",
@@ -222,6 +229,12 @@ class UnboundFigure(_Strict):
 class Binding(_Strict):
     """Every figure in one text, bound to the packet or reported as unbound."""
 
+    binding_version: int | None = Field(
+        default=None,
+        description=(
+            "Binder revision; null for citations stored before revision tracking."
+        ),
+    )
     citations: list[Citation] = Field(default_factory=list)
     releases: list[CitedRelease] = Field(default_factory=list)
     unbound: list[UnboundFigure] = Field(default_factory=list)
@@ -740,11 +753,28 @@ def sentence_span(text: str, start: int, end: int) -> tuple[int, int]:
 
 def _words(text: str) -> set[str]:
     """Content words, crudely singularised so "values" meets "value"."""
-    return {
-        word[:-1] if len(word) > 3 and word.endswith("s") else word
-        for word in _WORD.findall(text.lower())
-        if word not in _STOPWORDS
-    }
+    words: set[str] = set()
+    for raw in _WORD.findall(text.lower()):
+        word = _content_word(raw)
+        if word is not None:
+            words.add(word)
+    return words
+
+
+def _content_word(word: str) -> str | None:
+    if word in _STOPWORDS:
+        return None
+    return word[:-1] if len(word) > 3 and word.endswith("s") else word
+
+
+def _nearest_named_word(fragment: str, named: set[str], *, before: bool) -> int | None:
+    """Distance from a figure to the closest measure word on one side of it."""
+    distances = [
+        len(fragment) - match.end() if before else match.start()
+        for match in _WORD.finditer(fragment.lower())
+        if _content_word(match.group()) in named
+    ]
+    return min(distances) if distances else None
 
 
 @dataclass(frozen=True)
@@ -753,6 +783,11 @@ class _Context:
 
     style: Literal["percent", "money", "plain"]
     sentence: set[str]
+    # The words between this figure and its adjacent figures. A sentence can name two
+    # measures, but the words beside each number should decide its own attribution.
+    local_before: str
+    local_after: str
+    local: set[str]
     near: str
     before: str
     after: str
@@ -772,14 +807,31 @@ def _context(
     stated: Stated,
     cited: frozenset[str],
     fields: frozenset[str] = frozenset(),
+    previous: Stated | None = None,
+    following: Stated | None = None,
 ) -> _Context:
     begin, finish = _sentence(text, stated.start, stated.end)
     after = text[stated.end : finish]
     before = text[begin : stated.start]
+    local_before = text[max(begin, previous.end if previous else begin) : stated.start]
+    local_after = text[stated.end : min(finish, following.start if following else finish)]
+    if previous is not None and previous.end >= begin:
+        breaks = list(_CLAUSE_BREAK.finditer(local_before))
+        if breaks:
+            local_before = local_before[breaks[-1].end() :]
+    if (
+        following is not None
+        and following.start <= finish
+        and (split := _CLAUSE_BREAK.search(local_after))
+    ):
+        local_after = local_after[: split.start()]
     percent = stated.text.endswith("%") or bool(_PERCENT_AFTER.match(after))
     return _Context(
         style="percent" if percent else "money" if "$" in stated.text else "plain",
         sentence=_words(text[begin:finish]),
+        local_before=local_before,
+        local_after=local_after,
+        local=set(),
         near=before[-60:] + " " + after[:30],
         before=before[-14:],
         after=after,
@@ -818,7 +870,14 @@ def _signal(match: _Match, context: _Context) -> int:
     """Words that name this field's metric, or its kind of quantity."""
     figure = match.figure
     named = _words(f"{figure.label or ''} {(figure.metric_id or '').replace('_', ' ')}")
-    score = len(named & context.sentence)
+    # A composite measure can share a nearby word with a simpler one ("rents" with
+    # "rent to income"). Do not let its *other* word, attached to a different figure
+    # elsewhere in the sentence, pull this citation to the composite field.
+    score = (
+        3 * len(named & context.local) - len((named & context.sentence) - context.local)
+        if context.local
+        else len(named & context.sentence)
+    )
     if figure.metric_id is not None and figure.metric_id in context.cited:
         score += 2
     kind = figure.kind
@@ -867,6 +926,21 @@ def _choose(
     usable = matches
     if not usable:
         raise LookupError(stated.text)
+
+    named = set().union(
+        *(
+            _words(
+                f"{m.figure.label or ''} {(m.figure.metric_id or '').replace('_', ' ')}"
+            )
+            for m in usable
+        )
+    )
+    before = _nearest_named_word(context.local_before, named, before=True)
+    after = _nearest_named_word(context.local_after, named, before=False)
+    if before is not None and (after is None or before < after):
+        context = replace(context, local=_words(context.local_before))
+    elif after is not None and (before is None or after < before):
+        context = replace(context, local=_words(context.local_after))
 
     def key(m: _Match) -> tuple[int, int, int, float, int]:
         return (
@@ -1054,7 +1128,8 @@ def bind(
 
     citations: list[Citation] = []
     unbound: list[UnboundFigure] = []
-    for stated in stated_numbers(text):
+    statements = stated_numbers(text)
+    for index, stated in enumerate(statements):
         if not _is_claim(stated, text, outright, skipped):
             continue
 
@@ -1073,7 +1148,14 @@ def bind(
         span = _sentence(text, stated.start, stated.end)
         cited = cited_in.setdefault(span, set())
         fields = fields_in.setdefault(span, set())
-        context = _context(text, stated, frozenset(cited), frozenset(fields))
+        context = _context(
+            text,
+            stated,
+            frozenset(cited),
+            frozenset(fields),
+            previous=statements[index - 1] if index else None,
+            following=statements[index + 1] if index + 1 < len(statements) else None,
+        )
         best: _Match | None
         try:
             best, tied = _choose(context, stated, matches)
@@ -1123,6 +1205,7 @@ def bind(
         )
 
     return Binding(
+        binding_version=BINDING_VERSION,
         citations=citations,
         releases=_cited_releases(packet, citations),
         unbound=unbound,

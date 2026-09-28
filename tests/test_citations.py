@@ -23,7 +23,7 @@ from hip.eval.explain import UnboundFigures, freshness, generate, rebind
 from hip.eval.prompts import render_payload
 from hip.eval.types import Generation, Scenario, Telemetry
 from hip.packets import bind, packet_content_hash, packet_hash, still_describes
-from hip.packets.citations import stated_numbers
+from hip.packets.citations import BINDING_VERSION, stated_numbers
 from hip.packets.schema import (
     Packet,
     PacketComparisons,
@@ -331,6 +331,83 @@ def test_a_rank_nothing_distinguishes_says_so(packet: Packet) -> None:
     assert citation.alternatives >= 1
 
 
+@pytest.mark.parametrize(
+    ("prose", "fields"),
+    [
+        (
+            "Incomes rose 24% while rents rose 28%.",
+            ["acs_median_hh_income", "zori_all"],
+        ),
+        (
+            "Rents rose 28%; incomes rose 24%.",
+            ["zori_all", "acs_median_hh_income"],
+        ),
+        (
+            "Incomes rose 24% while rent to income rose 28%.",
+            ["acs_median_hh_income", "rent_to_income"],
+        ),
+        (
+            "24% income growth and 28% rent growth.",
+            ["acs_median_hh_income", "zori_all"],
+        ),
+    ],
+)
+def test_each_change_in_one_sentence_cites_its_own_measure(
+    packet: Packet, prose: str, fields: list[str]
+) -> None:
+    """A distant mention of income must not turn rent growth into rent-to-income
+    growth, with the wrong source then listed under a published reading."""
+    income = next(m for m in packet.metrics if m.metric_id == "acs_median_hh_income")
+    income.pct_change = 24.0
+    zillow = next(s for s in packet.sources if s.source_id == "zillow_zhvi")
+    packet.sources.append(
+        zillow.model_copy(
+            update={
+                "source_id": "zillow_zori",
+                "name": "Zillow Observed Rent Index",
+                "release_ids": [8],
+            }
+        )
+    )
+    packet.metrics.extend(
+        [
+            income.model_copy(
+                update={
+                    "metric_id": "rent_to_income",
+                    "label": "Annual rent to household income",
+                    "unit": "ratio",
+                    "start_value": 0.2,
+                    "end_value": 0.256,
+                    "pct_change": 28.0,
+                    "cagr": None,
+                }
+            ),
+            income.model_copy(
+                update={
+                    "metric_id": "zori_all",
+                    "label": "Observed rent index, all homes",
+                    "start_value": 1000.0,
+                    "end_value": 1280.0,
+                    "pct_change": 28.0,
+                    "cagr": None,
+                    "release_id": 8,
+                    "start_release_id": 8,
+                    "source_id": "zillow_zori",
+                }
+            ),
+        ]
+    )
+
+    binding = bind(prose, packet)
+    assert binding.complete, binding.unbound
+    assert [c.field for c in binding.citations] == [
+        f"metrics[{metric}].pct_change" for metric in fields
+    ]
+    assert [c.release_ids for c in binding.citations] == [
+        [8] if metric == "zori_all" else [98, 90] for metric in fields
+    ]
+
+
 def test_a_change_cites_both_ends_of_its_window(packet: Packet) -> None:
     """Packet 1.2: the start of a window often comes from an older release, and a
     citation has to name it."""
@@ -534,6 +611,7 @@ def _row(packet: Packet, body: str, **overrides: Any) -> RegionExplanation:
     fields: dict[str, Any] = {
         "region_id": 11,
         "window": "5y",
+        "audience": "analyst",
         "model_id": "gemma-4-e4b-q4",
         "model_label": "Gemma 4 E4B",
         "runtime": "ollama",
@@ -559,6 +637,48 @@ def test_what_a_stored_explanation_needs(packet: Packet) -> None:
     revised = packet.model_copy(deep=True)
     revised.metrics[0].pct_change = 46.5
     assert freshness(_row(packet, body), revised) == "stale"
+
+
+def test_an_older_binding_is_recited_without_regenerating_the_reading(
+    packet: Packet,
+) -> None:
+    body = "Home values rose 45.97%."
+    previous = bind(body, packet).model_dump(mode="json")
+    previous.pop("binding_version")
+    row = _row(packet, body, binding=previous)
+
+    assert freshness(row, packet) == "rebind"
+    assert rebind(row, packet).complete
+    assert row.binding is not None
+    assert row.binding["binding_version"] == BINDING_VERSION
+    assert row.body == body
+    assert freshness(row, packet) == "current"
+
+
+def test_a_changed_binding_does_not_skip_the_reading_gate(
+    packet: Packet, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from hip.eval_cli import _stored_state
+
+    body = "Incomes rose 16.67%."
+    old = bind(body, packet).model_dump(mode="json")
+    old.pop("binding_version")
+    row = _row(packet, body, binding=old)
+    income = next(m for m in packet.metrics if m.metric_id == "acs_median_hh_income")
+    income.survey = True
+    income.pct_change_margin = 4.0
+    # Pretend the same packet bytes had been published under the older binder.
+    row.packet_sha256 = packet_hash(packet)
+    row.content_sha256 = packet_content_hash(packet)
+
+    assert rebind(row, packet).complete
+    assert row.binding == old
+    assert freshness(row, packet) == "rebind"
+    monkeypatch.setattr("hip.packets.build_packet", lambda *_: packet)
+    session = SimpleNamespace(get=lambda *_: row)
+    assert (
+        _stored_state(session, 11, "5y", "analyst", "markdown", {row.model_id}) == "stale"
+    )
 
 
 def test_re_binding_pins_the_row_only_when_every_figure_binds(packet: Packet) -> None:
