@@ -14,20 +14,13 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 30 built, awaiting review (2026-09-28)
+## Now — between milestones (2026-09-28)
 
-Milestone 30 is complete on `milestone/m30-readings-for-every-reader`: one analyst and one
-consumer reading per region, packets 1.3 with margins and rank ranges, Gemini's Flex tier
-for batch pricing, and a cost line on every run. CHANGELOG 0.25.0 has what it shipped and
-ARCHITECTURE #256–#262 the decisions. It took in the three items scheduled for it.
-
-**Decided with the owner 2026-09-27:** the consumer reading is written first by Gemini 3.7
-Flash, then Flash-Lite, DeepSeek and Gemma; an answer may state three figures; a reading
-a fallback wrote stands until its figures change (#258, #262).
-
-**After the merge:** every county's readings are stale — packet 1.3 moved every content
-hash — and no consumer reading exists yet. Regenerating is billed and the owner’s
-call: `hip regenerate-now` (about 42 readings, roughly $0.15 at Flex), then deploy.
+Milestone 30 is merged and deployed (0.25.0), with Codex's binding fixes as 0.25.1 and
+0.25.2. Every county has an analyst reading; Gloucester and Warren have no consumer
+reading, because every model's was refused on the 2026-09-28 regeneration — they are
+retried on the next run, or singly with `hip explain --audience consumer --region <id>`
+(billed). Next is Milestone 31 (ROADMAP).
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -40,6 +33,17 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
+
+- [ ] **The consumer reading's figure limit counts distinct fields, not figures
+      written.** (Codex review, PR #52) An answer that states the same packet field
+      twice counts it once against the three-figure cap. None of the 40 published
+      readings exceeds the cap this way; decide whether the cap is on figures a reader
+      sees, and count occurrences if so.
+
+- [ ] **A run's cost line leaves out paid reachability probes.** (Codex review, PR #52)
+      `hip explain` probes each hosted model before generating; those calls are billed
+      but not in the per-model cost lines. Small, but the line claims to be the run's
+      cost.
 
 - [ ] **A packet's `cagr` for a survey figure carries no margin.** (M30, #256) The
       Markdown report and so the readings leave a survey figure's annualised change out,

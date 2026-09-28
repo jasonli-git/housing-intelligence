@@ -3,6 +3,21 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.25.2] — 2026-09-28
+
+From Codex (PR #52).
+
+### Fixed
+
+- **A one-audience `hip explain` run no longer deletes the other audience's reading.**
+  The automatic cleanup after a run now touches only the audiences that run wrote, so
+  `--audience consumer` leaves every analyst reading alone, and the reverse (ARCHITECTURE
+  #264).
+- **The county count in "21st of 21 counties" is cited as the number of peers.** When a
+  rank, change or margin in the packet had the same value, the denominator could be
+  listed under that measure instead. The binder revision is now 2, so stored readings
+  are re-cited without a model call.
+
 ## [0.25.1] — 2026-09-28
 
 From Codex (PR #51).
