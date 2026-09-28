@@ -33,6 +33,12 @@ question, and a plain whole number under 20 that matches nothing ("the 3 points 
 Only a plain whole number is skipped that way; a decimal, a percentage or an amount
 under 20 is a claim, and is checked.
 
+Since packet 1.3 a survey figure's margin is a figure too, and so are the two ends of a
+rank's range (Milestone 30). A margin may also be rounded to two significant figures —
+"give or take $2,600" for 2,565 — because a margin is itself an estimate, and prose
+rounds it further than the figure it qualifies. Whether prose gives a survey figure its
+margin is a separate question, answered by `hip.packets.margins` from this binding.
+
 What binding adds to a check is attribution. Where several fields carry the number — a
 rank of 4 and a 4.0% change, a cohort of 21 and a peer count of 21 — it prefers the field
 whose unit the writer used, then the field whose metric the sentence names, and records
@@ -43,13 +49,14 @@ the sentence around them does, but it never binds a figure the packet does not c
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, replace
 from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from hip.packets.report import SHARE_METRICS
 from hip.packets.schema import Packet
 
 FigureKind = Literal[
@@ -60,6 +67,7 @@ FigureKind = Literal[
     "rank",
     "cohort",
     "percentile",
+    "margin",
     "year",
     "vintage",
     "text",
@@ -126,8 +134,17 @@ _LEVEL_WORDS = re.compile(
 )
 _ORDINAL_AFTER = re.compile(r"^(st|nd|rd|th)\b|^\s+of\s+\d|^\s*/\s*\d", re.IGNORECASE)
 _COHORT_BEFORE = re.compile(r"(\b(of|among|out of)\s+|/\s*)$", re.IGNORECASE)
-# "68 percent" is a percentage; "95 percentile" is a position.
-_PERCENT_AFTER = re.compile(r"^\s*(percent|per cent)\b", re.IGNORECASE)
+# "68 percent" is a percentage; "95 percentile" is a position. "2.3 points" is a share's
+# margin, which the site writes in percentage points.
+_PERCENT_AFTER = re.compile(
+    r"^\s*(percent|per cent|percentage points?|points?)\b", re.IGNORECASE
+)
+# The words that introduce a margin of error: "± $2,565", "give or take $2,565".
+_MARGIN_BEFORE = re.compile(
+    r"(±|\+/-|\+/−|give or take|plus or minus|margin of error of|margin of)"
+    r"\s*(about\s+)?\$?$",
+    re.IGNORECASE,
+)
 _COHORT_AFTER = re.compile(
     r"^\s+(count(y|ies)|municipalit(y|ies)|regions?|zips?|tracts?|places?|peers?)\b",
     re.IGNORECASE,
@@ -298,7 +315,7 @@ def _plain_whole(stated: Stated) -> bool:
 
 # --- the index: every figure a packet licenses ----------------------------------------
 
-FormName = Literal["as_is", "rounded", "percent", "thousands", "magnitude"]
+FormName = Literal["as_is", "rounded", "percent", "thousands", "magnitude", "significant"]
 
 
 @dataclass(frozen=True)
@@ -328,13 +345,24 @@ class Figure:
     order: int = 0
 
 
-def _forms(value: float, *, plain: bool = False) -> tuple[_Form, ...]:
+def _significant(number: float, digits: int = 2) -> float:
+    """`number` rounded to `digits` significant figures: 2,565 is 2,600, 0.0231 0.023."""
+    if number == 0:
+        return 0.0
+    from math import floor, log10
+
+    return round(number, digits - 1 - floor(log10(abs(number))))
+
+
+def _forms(
+    value: float, *, plain: bool = False, significant: bool = False
+) -> tuple[_Form, ...]:
     """The ways a writer may state `value`: as is, rounded, as a percentage, in thousands.
 
     Those are the forms the evaluation checker has accepted since Milestone 8. A negative
     value adds the same forms of its size, marked so binding can ask the sentence for a
     direction before accepting one. `plain` is for years and vintages, which are only
-    ever written one way.
+    ever written one way. `significant` adds two significant figures, for a margin.
     """
     if plain:
         return (_Form(value, "as_is", exact_only=True),)
@@ -363,6 +391,12 @@ def _forms(value: float, *, plain: bool = False) -> tuple[_Form, ...]:
     if value < 0:
         for form in written(-value):
             forms.setdefault(form, "magnitude")
+    if significant:
+        rounded = _significant(value)
+        forms.setdefault(rounded, "significant")
+        # A share's margin in points: 0.0231 is "2.3 points", and to two figures "2.3".
+        if abs(value) <= 1:
+            forms.setdefault(_significant(value * 100), "significant")
     return tuple(_Form(form, name) for form, name in forms.items())
 
 
@@ -413,7 +447,7 @@ def figure_index(packet: Packet) -> list[Figure]:
                 field=field,
                 kind=kind,
                 value=number,
-                forms=_forms(number, plain=plain),
+                forms=_forms(number, plain=plain, significant=kind == "margin"),
                 metric_id=about.metric_id,
                 label=about.label,
                 unit=about.unit,
@@ -424,6 +458,22 @@ def figure_index(packet: Packet) -> list[Figure]:
                 order=len(figures),
             )
         )
+
+    def add_margin(
+        field: str, margin: float | None, about: _About, *, value: float | None = None
+    ) -> None:
+        """A margin, and for a share whose margin passes 0% or 100% the range the report
+        shows in its place — "0.0% to 40.1%" — whose ends are then the quotable figures.
+        """
+        if margin is None or margin == 0:
+            return
+        add(field, "margin", margin, about)
+        if value is None or about.metric_id not in SHARE_METRICS:
+            return
+        low, high = value - margin, value + margin
+        if low < 0 or high > 1:
+            add(f"{field}.low", "margin", max(0.0, low), about)
+            add(f"{field}.high", "margin", min(1.0, high), about)
 
     peers = packet.comparisons.peer_count
     add("comparisons.peer_count", "cohort", peers)
@@ -449,38 +499,50 @@ def figure_index(packet: Packet) -> list[Figure]:
             release_ids=_releases(metric.start_release_id, metric.release_id),
             match_method=metric.match_method,
         )
-        add(
-            f"{key}.start_value",
-            "start",
-            metric.start_value,
-            replace(
-                about,
-                period_end=metric.window_start,
-                release_ids=_releases(metric.start_release_id),
-                match_method=metric.start_match_method or metric.match_method,
-            ),
+        started = replace(
+            about,
+            period_end=metric.window_start,
+            release_ids=_releases(metric.start_release_id),
+            match_method=metric.start_match_method or metric.match_method,
         )
+        ended = replace(
+            about,
+            period_end=metric.window_end,
+            release_ids=_releases(metric.release_id),
+            match_method=metric.match_method,
+        )
+        add(f"{key}.start_value", "start", metric.start_value, started)
         level = levels.get(metric.metric_id)
         if level is None or level.value != metric.end_value:
-            add(
-                f"{key}.end_value",
-                "value",
-                metric.end_value,
-                replace(
-                    about,
-                    period_end=metric.window_end,
-                    release_ids=_releases(metric.release_id),
-                    match_method=metric.match_method,
-                ),
-            )
+            add(f"{key}.end_value", "value", metric.end_value, ended)
         add(f"{key}.pct_change", "change", metric.pct_change, window)
         add(f"{key}.cagr", "annualised", metric.cagr, window)
-        add(f"{key}.rank", "rank", metric.rank, window)
+        _add_rank(add, key, metric.rank, metric.rank_best, metric.rank_worst, window)
         if metric.of != peers:
             add(f"{key}.of", "cohort", metric.of, window)
         add(f"{key}.percentile", "percentile", metric.percentile, window)
         add_year(f"{key}.window_start", metric.window_start.year)
         add_year(f"{key}.window_end", metric.window_end.year)
+        # The margins, where the survey reports one; a margin of zero is said in words,
+        # "no sampling error", and has no number to quote. The change's margin is in
+        # percentage points of the change, so it is written as a percentage.
+        add_margin(
+            f"{key}.pct_change_margin",
+            metric.pct_change_margin,
+            replace(window, unit="percent"),
+        )
+        add_margin(
+            f"{key}.start_margin", metric.start_margin, started, value=metric.start_value
+        )
+        # The latest figure's margin is its level's, as the value is, unless they differ.
+        if (
+            level is None
+            or level.value != metric.end_value
+            or level.margin_of_error != metric.end_margin
+        ):
+            add_margin(
+                f"{key}.end_margin", metric.end_margin, ended, value=metric.end_value
+            )
 
     for level in packet.levels:
         key = f"levels[{level.metric_id}]"
@@ -494,7 +556,10 @@ def figure_index(packet: Packet) -> list[Figure]:
             match_method=level.match_method,
         )
         add(f"{key}.value", "value", level.value, observed)
-        add(f"{key}.rank", "rank", level.rank, observed)
+        add_margin(
+            f"{key}.margin_of_error", level.margin_of_error, observed, value=level.value
+        )
+        _add_rank(add, key, level.rank, level.rank_best, level.rank_worst, observed)
         if level.of != peers:
             add(f"{key}.of", "cohort", level.of, observed)
         add(f"{key}.percentile", "percentile", level.percentile, observed)
@@ -510,8 +575,19 @@ def figure_index(packet: Packet) -> list[Figure]:
         named = _About(metric_id=highlight.metric_id, label=highlight.label)
         if twin is None or twin.pct_change != highlight.pct_change:
             add(f"{key}.pct_change", "change", highlight.pct_change, named)
-        if twin is None or twin.rank != highlight.rank:
-            add(f"{key}.rank", "rank", highlight.rank, named)
+        if twin is None or (twin.rank, twin.rank_best, twin.rank_worst) != (
+            highlight.rank,
+            highlight.rank_best,
+            highlight.rank_worst,
+        ):
+            _add_rank(
+                add,
+                key,
+                highlight.rank,
+                highlight.rank_best,
+                highlight.rank_worst,
+                named,
+            )
         if (twin is None or twin.of != highlight.of) and highlight.of != peers:
             add(f"{key}.of", "cohort", highlight.of, named)
 
@@ -526,6 +602,72 @@ def figure_index(packet: Packet) -> list[Figure]:
                 plain=True,
             )
     return figures
+
+
+def _add_rank(
+    add: Callable[..., None],
+    key: str,
+    rank: int | None,
+    best: int | None,
+    worst: int | None,
+    about: _About,
+) -> None:
+    """A rank, or where the margins leave it a range, the range's two ends.
+
+    The point rank is still indexed where it differs from both ends, so prose quoting it
+    binds — it is in the packet — and `hip.packets.margins` can say what is wrong with
+    it: a single place the survey cannot back. Where it equals an end it is that end,
+    and indexing it twice would make every range end ambiguous.
+    """
+    if best is None or worst is None or best == worst:
+        add(f"{key}.rank", "rank", rank, about)
+        return
+    add(f"{key}.rank_best", "rank", best, about)
+    add(f"{key}.rank_worst", "rank", worst, about)
+    if rank is not None and rank not in (best, worst):
+        add(f"{key}.rank", "rank", rank, about)
+
+
+def readings_of(text: str, citation: Citation, packet: Packet) -> list[Figure]:
+    """Every packet field the figure behind `citation` could have been read from.
+
+    Binding records one field per figure, the best-supported, and in a sentence naming
+    several measures that choice rests on word overlap: "incomes rose 24% while rents
+    rose 28%" can hand the 28% to rent-to-income rather than to rent. A rule about what
+    a figure needs beside it — `hip.packets.margins` — asks all of them, so a sentence
+    is never refused over the binder's guess. Only fields whose unit the writing fits.
+    """
+    stated = Stated(
+        value=citation.value,
+        text=citation.text,
+        start=citation.start,
+        end=citation.end,
+    )
+    context = _context(text, stated, frozenset())
+    exact = _yearlike(stated)
+    found = []
+    for figure in figure_index(packet):
+        match = _best_form(stated.value, figure, exact=exact)
+        if match is not None and _fit(match, context, stated) > 0:
+            found.append(figure)
+    return found
+
+
+def states_margin(text: str, start: int, end: int, margin: float) -> bool:
+    """Whether the span `text[start:end]` gives `margin` as a margin: a number the words
+    before it introduce as one — "±", "give or take" — that is `margin` in any form a
+    margin may be written in, a share's as points included."""
+    forms = _forms(margin, significant=True)
+    for stated in stated_numbers(text[start:end]):
+        at = start + stated.start
+        if not _MARGIN_BEFORE.search(text[max(0, at - 30) : at]):
+            continue
+        for form in forms:
+            if abs(form.value - stated.value) <= max(
+                abs(form.value) * RELATIVE_TOLERANCE, 1e-9
+            ):
+                return True
+    return False
 
 
 def licensed_values(packet: Packet) -> set[float]:
@@ -590,6 +732,12 @@ def _sentence(text: str, start: int, end: int) -> tuple[int, int]:
     return begin, after.start() if after else len(text)
 
 
+def sentence_span(text: str, start: int, end: int) -> tuple[int, int]:
+    """The sentence — or line of a list — a figure sits in: binding's unit of context,
+    and `hip.packets.margins`' unit for "beside the figure"."""
+    return _sentence(text, start, end)
+
+
 def _words(text: str) -> set[str]:
     """Content words, crudely singularised so "values" meets "value"."""
     return {
@@ -612,9 +760,19 @@ class _Context:
     # "Home value: $591,891, rank 10 of 21" is about one metric throughout, and the rank
     # is the home value's even where seven other fields also hold a 10.
     cited: frozenset[str]
+    # Wider than `before`: "margin of error of" is longer than fourteen characters.
+    lead: str = ""
+    # Fields already cited in the sentence, so the second end of "between 10th and
+    # 12th" goes to the range whose first end the sentence has just quoted.
+    fields: frozenset[str] = frozenset()
 
 
-def _context(text: str, stated: Stated, cited: frozenset[str]) -> _Context:
+def _context(
+    text: str,
+    stated: Stated,
+    cited: frozenset[str],
+    fields: frozenset[str] = frozenset(),
+) -> _Context:
     begin, finish = _sentence(text, stated.start, stated.end)
     after = text[stated.end : finish]
     before = text[begin : stated.start]
@@ -625,6 +783,8 @@ def _context(text: str, stated: Stated, cited: frozenset[str]) -> _Context:
         near=before[-60:] + " " + after[:30],
         before=before[-14:],
         after=after,
+        lead=before[-30:],
+        fields=fields,
         cited=cited,
     )
 
@@ -633,13 +793,21 @@ def _fit(match: _Match, context: _Context, stated: Stated) -> int:
     """How well the written form suits the field: 2 good, 1 neutral, 0 poor."""
     figure, form = match.figure, match.form
     if context.style == "percent":
-        if form.name == "percent":
+        if form.name == "percent" or (
+            form.name == "significant"
+            and figure.kind == "margin"
+            and figure.unit == "ratio"
+        ):
             return 2 if figure.unit == "ratio" or figure.kind == "percentile" else 0
         if figure.kind in {"change", "annualised"} or figure.unit == "percent":
             return 2
         return 0
     if context.style == "money":
-        money = figure.unit in {"usd", "usd_month"} and figure.kind in {"value", "start"}
+        money = figure.unit in {"usd", "usd_month"} and figure.kind in {
+            "value",
+            "start",
+            "margin",
+        }
         return 2 if money else 0
     if figure.kind in {"year", "vintage"}:
         return 2 if _yearlike(stated) else 0
@@ -668,6 +836,16 @@ def _signal(match: _Match, context: _Context) -> int:
         score += 2
     if kind == "percentile" and "percentile" in context.near.lower():
         score += 2
+    # A margin is introduced by its own words, and a figure after "±" is nothing else.
+    if kind == "margin" and _MARGIN_BEFORE.search(context.lead):
+        score += 3
+    # One end of a range, when the sentence has just quoted the other.
+    for end, partner in ((".rank_worst", ".rank_best"), (".rank_best", ".rank_worst")):
+        if (
+            figure.field.endswith(end)
+            and figure.field[: -len(end)] + partner in context.fields
+        ):
+            score += 3
     if kind in {"rank", "cohort", "percentile"}:
         on_change = figure.field.startswith("metrics[")
         worded = _CHANGE_WORDS if on_change else _LEVEL_WORDS
@@ -745,6 +923,74 @@ def _quotes(stated: Stated, haystack: str) -> bool:
     return re.search(pattern, haystack) is not None
 
 
+_TOKEN = re.compile(r"[a-z0-9$%.,]+", re.IGNORECASE)
+
+# A share of income a measure is defined by, however it is worded: "30% of income",
+# "30 percent of their income", "80% of area median income". The number in it is the
+# threshold of a label — "Renters paying over 30% of income on housing" — and not a
+# figure about the region.
+_THRESHOLD_AFTER = re.compile(
+    r"^\s*(?:%|percent|per cent)?\s*(?:or more\s+)?of\s+(?:[\w’']+\s+){0,2}?"
+    r"(?:incomes?|AMI|area median income)\b",
+    re.IGNORECASE,
+)
+# The same threshold introduced rather than followed: "24.4% of renters over 50%".
+_THRESHOLD_BEFORE = re.compile(
+    r"\b(?:over|more than|above|at least|exceeding)\s+$", re.IGNORECASE
+)
+
+
+def _neighbours(text: str, start: int, end: int) -> tuple[str, str]:
+    """The two words before a span and the two after it, lower-cased."""
+    before = _TOKEN.findall(text[max(0, start - 40) : start].lower())[-2:]
+    after = _TOKEN.findall(text[end : end + 40].lower())[:2]
+    return " ".join(before), " ".join(after)
+
+
+def _label_quote(stated: Stated, text: str, packet: Packet) -> Citation | None:
+    """A figure the prose quotes as part of a packet label: the "30%" in "renters
+    paying over 30% of income".
+
+    Found first, before any value is matched, because a label's number can equal a
+    rounded value — Mercer's home value rose 29.7% — and binding "30%" there calls a
+    measure's definition a claim about it (Milestone 30, where a margin check made that
+    a refusal). A quote needs the label's own words on one side of the number, two of
+    them, so a real claim that happens to share the number is still read as a claim.
+    A caveat's number quoted that way is the caveat's: "from the 50th to the 40th
+    percentile" is HUD's change of method, not a percentile of this region. Or, for a
+    label's income threshold, the same number as a share of income however
+    it is worded ("more than 30 percent of their income"). That one can let a mis-
+    rounded ratio pass as the threshold — "rent takes 30% of income" where the figure
+    is 28.1% — which is the cost of never refusing prose for naming a measure.
+    """
+    core = stated.text.strip().replace("$", "").rstrip("%")
+    if not core:
+        return None
+    pattern = re.compile(rf"(?<![\d.,]){re.escape(core)}%?(?![\d]|[.,]\d)")
+    before, after = _neighbours(text, stated.start, stated.end)
+    threshold = bool(
+        _THRESHOLD_AFTER.match(text[stated.end : stated.end + 50])
+        or _THRESHOLD_BEFORE.search(text[max(0, stated.start - 20) : stated.start])
+    )
+    for field, label, metric_id in _packet_texts(packet):
+        if not field.endswith(".label") and not field.startswith("caveats["):
+            continue
+        # A label's threshold, paraphrased: the same number as a share of income.
+        if threshold and any(
+            _THRESHOLD_AFTER.match(label[found.end() :])
+            for found in pattern.finditer(label)
+        ):
+            return _text_citation(stated, field, metric_id, label)
+        for found in pattern.finditer(label):
+            label_before, label_after = _neighbours(label, found.start(), found.end())
+            if (label_before and label_before == before) or (
+                label_after and label_after == after
+            ):
+                quoted = label if field.endswith(".label") else None
+                return _text_citation(stated, field, metric_id, quoted)
+    return None
+
+
 def _quoted(stated: Stated, packet: Packet, payload: str | None) -> Citation | None:
     """A citation for a figure the packet states in words rather than as a value."""
     for field, text, metric_id in _packet_texts(packet):
@@ -804,11 +1050,17 @@ def bind(
     }
     skipped = set(skip)
     cited_in: dict[tuple[int, int], set[str]] = {}
+    fields_in: dict[tuple[int, int], set[str]] = {}
 
     citations: list[Citation] = []
     unbound: list[UnboundFigure] = []
     for stated in stated_numbers(text):
         if not _is_claim(stated, text, outright, skipped):
+            continue
+
+        quote = _label_quote(stated, text, packet)
+        if quote is not None:
+            citations.append(quote)
             continue
 
         # A year is exactly one the packet covers or it is not one it covers.
@@ -820,7 +1072,8 @@ def bind(
         ]
         span = _sentence(text, stated.start, stated.end)
         cited = cited_in.setdefault(span, set())
-        context = _context(text, stated, frozenset(cited))
+        fields = fields_in.setdefault(span, set())
+        context = _context(text, stated, frozenset(cited), frozenset(fields))
         best: _Match | None
         try:
             best, tied = _choose(context, stated, matches)
@@ -849,6 +1102,7 @@ def bind(
         figure = best.figure
         if not tied and figure.metric_id is not None:
             cited.add(figure.metric_id)
+        fields.add(figure.field)
         citations.append(
             Citation(
                 text=stated.text,
@@ -941,6 +1195,9 @@ __all__ = [
     "describe_unbound",
     "figure_index",
     "licensed_values",
+    "readings_of",
+    "sentence_span",
+    "states_margin",
     "stated_numbers",
     "strip_dates",
 ]

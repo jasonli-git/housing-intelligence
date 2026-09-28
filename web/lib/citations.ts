@@ -1,4 +1,4 @@
-import type { Citation, CitedRelease } from "@/lib/api";
+import type { Citation, CitedRelease, ReadingSection } from "@/lib/api";
 
 /**
  * Reading a model's prose against its citation binding (Milestone 13).
@@ -54,6 +54,35 @@ export function segment(body: string, citations: readonly Citation[]): Segment[]
   return paragraphs.filter((paragraph) => paragraph.length > 0);
 }
 
+/** One answer of a consumer reading, as runs of plain text and cited figures. */
+export type Answer = { id: string; heading: string; runs: Segment[] };
+
+/**
+ * A consumer reading's answers, each marked as `segment` marks a paragraph (Milestone
+ * 30). A section's offsets locate its answer in the body; the citations inside it are
+ * shifted to the answer's own start, so a figure is marked exactly where it sits. An
+ * answer is one paragraph by construction — `hip explain` joins it — so its runs are
+ * flattened rather than split.
+ */
+export function answers(
+  body: string,
+  sections: readonly ReadingSection[],
+  citations: readonly Citation[],
+): Answer[] {
+  return sections
+    .filter((s) => s.start >= 0 && s.end <= body.length && s.start < s.end)
+    .map((section) => {
+      const inside = citations
+        .filter((c) => c.start >= section.start && c.end <= section.end)
+        .map((c) => ({ ...c, start: c.start - section.start, end: c.end - section.start }));
+      return {
+        id: section.id,
+        heading: section.heading,
+        runs: segment(body.slice(section.start, section.end), inside).flat(),
+      };
+    });
+}
+
 const KIND: Record<Citation["kind"], string> = {
   value: "latest value",
   start: "value at the start of the window",
@@ -62,6 +91,7 @@ const KIND: Record<Citation["kind"], string> = {
   rank: "rank among peers",
   cohort: "number of regions compared",
   percentile: "percentile among peers",
+  margin: "margin of error",
   year: "a year the data covers",
   vintage: "a source release's vintage",
   text: "the packet's own wording",

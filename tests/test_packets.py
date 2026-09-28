@@ -322,7 +322,7 @@ def test_report_names_the_region_every_metric_and_every_source() -> None:
     assert markdown.startswith("# Mercer County, NJ — housing report")
     assert "Home value index, single-family" in markdown
     assert "$453,317" in markdown
-    assert "9 / 21" in markdown
+    assert "9th of 21" in markdown
     assert "ZORI is sparse." in markdown
     assert "Zillow Research" in markdown
     assert "model-generated" in markdown

@@ -71,6 +71,9 @@ log = logging.getLogger(__name__)
 # Shorter than the local runners' 600s. A hosted provider that has not answered in two
 # minutes is not thinking, it is wedged, and the retry below is the cheaper recovery.
 _TIMEOUT = httpx.Timeout(120.0, connect=10.0)
+# Except on Gemini's Flex tier, which queues by design: its target is one to fifteen
+# minutes, and Google asks clients to wait ten or more (Milestone 30).
+_FLEX_TIMEOUT = httpx.Timeout(900.0, connect=10.0)
 
 # Retried because they are transient by definition: 429 is the provider asking for less
 # concurrency, and 5xx is its problem rather than the prompt's. A 400 or a 401 is not
@@ -180,7 +183,9 @@ _DIALECTS: dict[str, _Dialect] = {
 class HostedRunner:
     """Implements `ModelRunner` over one hosted provider's chat endpoint."""
 
-    def __init__(self, cohort: Cohort, name: str) -> None:
+    def __init__(
+        self, cohort: Cohort, name: str, *, service_tier: str | None = None
+    ) -> None:
         if cohort.provider is None or cohort.api_key_env is None or not cohort.endpoint:
             # Unreachable through config, which validates this at load. Kept because the
             # class is constructible directly in tests and a None here would surface far
@@ -194,6 +199,9 @@ class HostedRunner:
         self._endpoint = cohort.endpoint.rstrip("/")
         self._api_key_env = cohort.api_key_env
         self._dialect = _DIALECTS[cohort.provider]
+        # Asked for on every generation call, never on a probe: a probe measures
+        # reachability, and a queued tier would only make it slower to say so.
+        self._service_tier = service_tier
 
     @property
     def provider(self) -> str:
@@ -333,6 +341,16 @@ class HostedRunner:
             },
         }
 
+    def _tiered(self, body: dict[str, Any], tier: str | None) -> dict[str, Any]:
+        """`body` asking for `tier`, where the dialect takes one on the request.
+
+        Only Gemini does (`hip.config.SERVICE_TIERS`, which config validates against),
+        as a top-level `serviceTier` beside `contents`.
+        """
+        if tier is None or self._dialect.openai_compatible:
+            return body
+        return {**body, "serviceTier": tier}
+
     def _reasoning(self, model: CandidateModel) -> dict[str, Any]:
         """The request fields that carry `model`'s reasoning setting; none for `default`.
 
@@ -393,6 +411,11 @@ class HostedRunner:
         truncated = truncated or (finish in _CUTOFF_REASONS and not answer.strip())
         prompt_tokens, generation_tokens, reasoning_tokens = self._usage(data)
         served_model, fingerprint = self._served(data)
+        service_tier = (
+            None
+            if self._dialect.openai_compatible
+            else (data.get("usageMetadata") or {}).get("serviceTier")
+        )
         elapsed_ms = (time.perf_counter() - started) * 1000
 
         telemetry = Telemetry(
@@ -417,6 +440,7 @@ class HostedRunner:
             finish_reason=finish,
             served_model=served_model,
             system_fingerprint=fingerprint,
+            service_tier=str(service_tier) if service_tier else None,
         )
 
         substitution = self._substitution(model, served_model)
@@ -478,15 +502,46 @@ class HostedRunner:
 
         `Retry-After` wins over the computed delay when the provider sends one: it is
         the only party that knows when the limit clears.
+
+        A discounted tier that still has no capacity after the retries is asked once
+        more at the standard tier. Gemini never upgrades a Flex call itself — "to prevent
+        unexpected charges" — and falling to the next model instead would let a price
+        tier decide who writes a region's reading. The response's own tier says which
+        rate the call billed at.
         """
+        base = self._body(model, prompt, sampling, limits)
+        try:
+            return self._post_tier(model, self._tiered(base, self._service_tier), key)
+        except httpx.HTTPStatusError as exc:
+            if (
+                self._service_tier is None
+                or exc.response.status_code not in _RETRY_STATUS
+            ):
+                raise
+            log.info(
+                "%s %s: no %s capacity, asking the standard tier",
+                self._provider,
+                model.id,
+                self._service_tier,
+            )
+            return self._post_tier(model, base, key, attempts=1)
+
+    def _post_tier(
+        self,
+        model: CandidateModel,
+        body: dict[str, Any],
+        key: str,
+        *,
+        attempts: int = _MAX_ATTEMPTS,
+    ) -> dict[str, Any]:
         url = self._url(model)
-        body = self._body(model, prompt, sampling, limits)
         headers = self._headers(key)
+        timeout = _FLEX_TIMEOUT if body.get("serviceTier") == "flex" else _TIMEOUT
         last: httpx.HTTPError | None = None
 
-        for attempt in range(_MAX_ATTEMPTS):
+        for attempt in range(attempts):
             try:
-                response = httpx.post(url, json=body, headers=headers, timeout=_TIMEOUT)
+                response = httpx.post(url, json=body, headers=headers, timeout=timeout)
                 response.raise_for_status()
                 return dict(response.json())
             except httpx.HTTPStatusError as exc:
@@ -501,14 +556,14 @@ class HostedRunner:
                 last = exc
                 delay = self._retry_delay(attempt, None)
 
-            if attempt == _MAX_ATTEMPTS - 1:
+            if attempt == attempts - 1:
                 break
             log.info(
                 "%s %s: attempt %d/%d failed, retrying in %.1fs",
                 self._provider,
                 model.id,
                 attempt + 1,
-                _MAX_ATTEMPTS,
+                attempts,
                 delay,
             )
             time.sleep(delay)

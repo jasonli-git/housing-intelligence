@@ -34,7 +34,14 @@ from pydantic import BaseModel, ConfigDict, Field
 # very often comes from an older release — ACS 2019 against 2023 — that `sources[]`
 # never listed. Citation binding (Milestone 13) cannot resolve a figure to a release the
 # packet does not name. Additive in the same way 1.1 was.
-PACKET_VERSION = "1.2"
+#
+# 1.3 adds uncertainty (Milestone 30, SPEC principle 12): whether each figure is a survey
+# figure, its margin of error — on a level, on both ends of a change and on the change
+# itself — and the range of ranks the margins let a region hold. Milestone 28 put them on
+# the pages and left packets as they were (ARCHITECTURE #240), so until 1.3 a reading
+# could quote "9th" beside a page saying "between 5th and 13th". Additive again: every
+# new field is optional, and a 1.2 packet parses with each at its default.
+PACKET_VERSION = "1.3"
 
 # The published contract. Resolved from the source tree, which is where this project
 # runs from (ARCHITECTURE #13 — local-first, no packaged deployment yet).
@@ -79,6 +86,20 @@ class PacketWindow(_Strict):
     end: date
 
 
+_SURVEY = (
+    "A survey estimate, or a figure calculated from one, which carries a margin of "
+    "error (SPEC principle 12). A survey figure whose margin is null has none "
+    "available — a Census special code, or HUD's CHAS tables — and is not exact."
+)
+_RANK_BEST = (
+    "The best rank the margins of error let this region hold: it moves ahead of "
+    "another region only where the Census's 90% test finds the difference real "
+    "(ARCHITECTURE #239). Null where no region in the ranking has a margin, so the "
+    "rank is a place."
+)
+_RANK_WORST = "The worst rank the margins of error let this region hold; see `rank_best`."
+
+
 class PacketMetric(_Strict):
     """One metric's change over the window, with its rank and its provenance.
 
@@ -87,6 +108,11 @@ class PacketMetric(_Strict):
     `start_value`, which for an annual source is a different release. All are null only
     when the derived tables are stale relative to the facts — a rebuilt `hip analyze`
     restores them — and the start pair is absent from packets older than 1.2.
+
+    Since 1.3 a survey figure carries the margins of both ends and of the change, and a
+    rank the margins cannot pin down carries its range. `rank` and `percentile` stay the
+    point order, which is how the ranking was built; a reader quoting a rank whose range
+    is wider than one place quotes the range.
     """
 
     metric_id: str
@@ -107,6 +133,25 @@ class PacketMetric(_Strict):
     match_method: str | None = None
     start_release_id: int | None = None
     start_match_method: str | None = None
+    survey: bool = Field(default=False, description=_SURVEY)
+    pct_change_margin: float | None = Field(
+        default=None,
+        description=(
+            "90% margin of error of `pct_change`, in percentage points, by the Census's "
+            "formula for a ratio of two estimates (ARCHITECTURE #238). 0 where both "
+            "ends are controlled estimates with no sampling error."
+        ),
+    )
+    start_margin: float | None = Field(
+        default=None,
+        description="90% margin of error of `start_value`, in the metric's unit.",
+    )
+    end_margin: float | None = Field(
+        default=None,
+        description="90% margin of error of `end_value`, in the metric's unit.",
+    )
+    rank_best: int | None = Field(default=None, description=_RANK_BEST)
+    rank_worst: int | None = Field(default=None, description=_RANK_WORST)
 
 
 class PacketLevel(_Strict):
@@ -120,6 +165,9 @@ class PacketLevel(_Strict):
     Every metric with an observation appears here, including those that also appear in
     `metrics`: "the value now" and "how it moved" are both worth stating, and a
     consumer should not have to reconstruct the first from the second.
+
+    Since 1.3 a survey figure carries its margin, and a rank the margins cannot pin
+    down its range, as a change does.
     """
 
     metric_id: str
@@ -135,6 +183,17 @@ class PacketLevel(_Strict):
     release_id: int | None = None
     source_id: str | None = None
     match_method: str | None = None
+    survey: bool = Field(default=False, description=_SURVEY)
+    margin_of_error: float | None = Field(
+        default=None,
+        description=(
+            "90% margin of error of `value`, in the metric's unit, as the publisher "
+            "reports it or as its inputs imply. 0 for a controlled estimate, which has "
+            "no sampling error."
+        ),
+    )
+    rank_best: int | None = Field(default=None, description=_RANK_BEST)
+    rank_worst: int | None = Field(default=None, description=_RANK_WORST)
 
 
 class PacketComparisons(_Strict):
@@ -155,6 +214,8 @@ class PacketHighlight(_Strict):
 
     Selection, not statistics: the rank is read from `region_rankings` and nothing new
     is computed. `leading` is the good end as the metric's own `direction` defines it.
+    Since 1.3 a rank with a range stands out only when the whole range sits at that end,
+    the rule the region pages follow (ARCHITECTURE #241).
     """
 
     metric_id: str
@@ -163,6 +224,8 @@ class PacketHighlight(_Strict):
     rank: int
     of: int
     pct_change: float
+    rank_best: int | None = Field(default=None, description=_RANK_BEST)
+    rank_worst: int | None = Field(default=None, description=_RANK_WORST)
 
 
 class PacketSource(_Strict):
@@ -179,9 +242,9 @@ class PacketSource(_Strict):
 
 
 class Packet(_Strict):
-    # 1.1 still parses. Every 1.2 addition is optional, and the evaluation reads the 1.1
-    # packets frozen into run `v2`'s scenarios as the ground truth for its checks.
-    packet_version: Literal["1.1", "1.2"]
+    # 1.1 still parses. Every 1.2 and 1.3 addition is optional, and the evaluation reads
+    # the 1.1 packets frozen into run `v2`'s scenarios as the ground truth for its checks.
+    packet_version: Literal["1.1", "1.2", "1.3"]
     region: PacketRegion
     window: PacketWindow
     metrics: list[PacketMetric]
@@ -231,7 +294,8 @@ def packet_content_hash(packet: Packet) -> str:
 
     Excluded: every release id, source id and match method, the `sources[]` block, and
     the contract version. Included: every figure, label, caveat, rank and date, because
-    each of those is something the prose may have said.
+    each of those is something the prose may have said — and since 1.3 every margin and
+    rank range, which the prose must give where it quotes a survey figure.
     """
     content = packet.model_dump(
         mode="json",

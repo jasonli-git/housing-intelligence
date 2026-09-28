@@ -14,16 +14,22 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones (2026-09-27)
+## Now — Milestone 30 built, awaiting review (2026-09-28)
 
-Milestone 28 merged and deployed on 2026-09-26, with every county's readings regenerated;
-CHANGELOG 0.24.0 has what it shipped, and 0.24.1–0.24.3 the fixes and polish since.
-[SPEC.md](SPEC.md) is v1.3, whose principle 12 requires a survey figure's margin wherever
-it is shown. Milestone 30 is next and has not started: one analyst reading and one
-consumer reading per region, with the packets taking in margins. It begins on the
-owner's go-ahead.
+Milestone 30 is complete on `milestone/m30-readings-for-every-reader`: one analyst and one
+consumer reading per region, packets 1.3 with margins and rank ranges, Gemini's Flex tier
+for batch pricing, and a cost line on every run. CHANGELOG 0.25.0 has what it shipped and
+ARCHITECTURE #256–#262 the decisions. It took in the three items scheduled for it.
 
-**To resume:** `make db-up` for Postgres.
+**Decided with the owner 2026-09-27:** the consumer reading is written first by Gemini 3.7
+Flash, then Flash-Lite, DeepSeek and Gemma; an answer may state three figures; a reading
+a fallback wrote stands until its figures change (#258, #262).
+
+**After the merge:** every county's readings are stale — packet 1.3 moved every content
+hash — and no consumer reading exists yet. Regenerating is billed and the owner’s
+call: `hip regenerate-now` (about 42 readings, roughly $0.15 at Flex), then deploy.
+
+**To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
 Open items a planned milestone now covers say so with **Scheduled: Milestone N**. They
 stay here until that milestone starts and takes them into `Now`.
@@ -34,6 +40,20 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
+
+- [ ] **Binding attributes a figure by the words of its whole sentence.** (M30, #257) In
+      a sentence naming several measures, "incomes rose 24% while rents rose 28%" can
+      hand the 28% to rent-to-income for its words rather than to rent. The margin check
+      now judges a figure under every field it could be read from, so no reading is
+      refused for it — but a citation's `field`, shown in each reading's figure list, can
+      still name the wrong measure. Weighting the words nearest the figure over the rest
+      of the sentence would fix the attribution itself.
+- [ ] **A packet's `cagr` for a survey figure carries no margin.** (M30, #256) The
+      Markdown report and so the readings leave a survey figure's annualised change out,
+      because nothing computes its margin, but the packet's JSON still carries the
+      number — an API response stating a survey figure without its margin, short of
+      SPEC principle 12. Either compute the margin in `hip analyze` (the Census ratio
+      formula carried through the root) or null the field for survey figures.
 
 - [ ] **2,936 revision rows have an `old_release_id` that no longer resolves.**
       (M29, found in review 2026-09-20) They predate the retention fix in ARCHITECTURE
@@ -95,11 +115,6 @@ first raised, not where it must be done.
       Recording the check time per source at `hip refresh` and loading it with the
       discoveries would let the page show a date it can back.
 
-- [ ] **A reading can quote a single rank beside its page's range.** (M28, #240) The
-      packets carry no margins or rank ranges, so a reading can say "9th" where its page
-      says "between 5th and 13th", and the readings and the Markdown report state survey
-      figures without their margins, short of SPEC principle 12. **Scheduled: Milestone
-      30.**
 - [ ] **HUD's CHAS figures carry no margins of error, which SPEC principle 12 requires.**
       (M28, #235, #246) HUD's API publishes none; its bulk CHAS files do (`_moe` columns
       beside each `_est`). Switching the adapter to the bulk files would give the three
@@ -280,24 +295,6 @@ first raised, not where it must be done.
       2026-09-20 by reading `web/app/afford/page.tsx`; that is a fact about today, not a
       guard.
 
-- [ ] **`hip explain` does not report what a run cost.** Found 2026-09-19 regenerating
-      Milestone 24's readings: the command prints characters and figures bound per
-      region but never a billed total, so the only way to know what a regeneration cost
-      is the provider console. `hip eval judge` already prints what it was billed — the
-      same treatment here would make a regeneration's cost checkable against the
-      estimate `hip eval cost` gives.
-      **Scheduled: Milestone 30.**
-- [ ] **Generation does not use any provider's batch pricing.** Raised 2026-09-19.
-      `hip eval judge` submits through Anthropic's Batch API for a flat 50%; `hip
-      explain` calls each provider's synchronous chat endpoint once per (region, model)
-      at list price. Defensible at 21 counties and five models, where a run is under a
-      dollar and finishes in about 45 minutes. It stops being noise at scale: the
-      Milestone 19 estimate for full New Jersey municipal coverage is roughly $42 a
-      refresh. Batching would need a per-provider path in `HostedRunner` with its own
-      polling and partial-failure handling, and the local tier cannot batch at all —
-      so this is a scale decision, not a cleanup.
-      **Scheduled for the analyst reading: Milestone 30.**
-
 ### Documentation upkeep
 
 - [ ] **Which README figures are mechanically derivable has never been settled.** The
@@ -311,9 +308,8 @@ first raised, not where it must be done.
       files.** (found 2026-09-26) Files from Milestones 24–26 and 29 are missing —
       `sources/nj_sr1a.py` and `sources/nj_tax_rates.py` among them — and its counts
       are stale (15 sources and 31 metrics; 16 and 38 today). Its schema DDL block
-      predates migrations 0012–0018, which the section says, and the status lines at the
-      top of the file still read "351,295 observations across 31 metrics from 12
-      sources" (414,360, 38 and 16 on 2026-09-27).
+      predates migrations 0012–0019, which the section says. The status lines at the top
+      were brought up to date in Milestone 30.
 
 ### Housekeeping
 
@@ -351,18 +347,6 @@ first raised, not where it must be done.
       measure kept alongside it. That is a larger change than closing the gap, and it is
       schedulable separately from the cards that are now live. `tests/test_nj_sr1a.py` fails if the input is added
       before this is settled. **Not decided.**
-- [ ] **Should a change of model force regeneration?** (deferred to M12; worth settling
-      before Milestone 30 sets its fallback lists) The preference
-      list can fall through mid-run, so some regions may carry prose from one model and
-      some from another. `region_explanations` stores `model_id`, `model_label` and
-      `runtime`, and the dashboard shows them, so it is visible rather than hidden. A
-      consistent voice costs a full re-run; leaving it is free but leaves several models'
-      writing on the site indefinitely. Leaning toward leaving it. **Not decided.**
-- [ ] **Staleness currently ignores model identity.** (deferred to M12)
-      `hip.eval.explain.is_stale` compares only `packet_sha256`, so swapping models marks
-      nothing stale. That is the correct default under the leaning above, but it is a
-      default nobody chose — it falls out of the Milestone 8 implementation. Whichever
-      way the decision above goes, this function should say so explicitly.
 - [ ] **The 21 committed county reports are a snapshot that goes stale silently.**
       (M6; restated 2026-09-27) `reports/**` is gitignored, but the three evaluation
       reports and the 21 county reports were force-added and are tracked. The county

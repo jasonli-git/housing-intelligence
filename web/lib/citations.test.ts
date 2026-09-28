@@ -1,7 +1,7 @@
 import { describe as suite, expect, it } from "vitest";
 
 import type { Citation, CitedRelease } from "@/lib/api";
-import { describe, period, segment, sourceOf, whatItIs } from "@/lib/citations";
+import { answers, describe, period, segment, sourceOf, whatItIs } from "@/lib/citations";
 
 function cite(body: string, text: string, overrides: Partial<Citation> = {}): Citation {
   const start = body.indexOf(text);
@@ -110,6 +110,44 @@ suite("describing a citation", () => {
     const body = "x";
     expect(describe(cite(body, "x", { alternatives: 2 }), releases)).toContain(
       "2 other field(s) in the packet hold the same number",
+    );
+  });
+});
+
+suite("answers", () => {
+  const body =
+    "The bottom line\nPrices rose 34.4%.\n\nWhat's changing?\nIncomes are $100,645, give or take $2,565.";
+  const sections = [
+    { id: "bottom_line", heading: "The bottom line", start: 16, end: 34 },
+    { id: "whats_changing", heading: "What's changing?", start: 53, end: body.length },
+  ];
+
+  it("lays each answer out under its question, figures marked where they sit", () => {
+    const laid = answers(body, sections, [
+      cite(body, "34.4%", { kind: "change" }),
+      cite(body, "$100,645"),
+      cite(body, "$2,565", { kind: "margin" }),
+    ]);
+
+    expect(laid.map((a) => a.heading)).toEqual(["The bottom line", "What's changing?"]);
+    expect(laid[0].runs.map((r) => r.text).join("")).toBe("Prices rose 34.4%.");
+    expect(laid[0].runs.find((r) => r.citation)?.text).toBe("34.4%");
+    expect(laid[1].runs.filter((r) => r.citation).map((r) => r.text)).toEqual([
+      "$100,645",
+      "$2,565",
+    ]);
+  });
+
+  it("drops a section whose offsets fall outside the body", () => {
+    expect(answers(body, [{ id: "x", heading: "X", start: 10, end: 999 }], [])).toEqual([]);
+  });
+});
+
+suite("whatItIs, for a margin", () => {
+  it("names a margin of error as one", () => {
+    const body = "give or take $2,565";
+    expect(whatItIs(cite(body, "$2,565", { kind: "margin", label: "Median household income" }))).toBe(
+      "Median household income — margin of error",
     );
   });
 });

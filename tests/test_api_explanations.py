@@ -59,6 +59,7 @@ def _store(region_id: int, packet_sha256: str) -> None:
             RegionExplanation(
                 region_id=region_id,
                 window=WINDOW,
+                audience="analyst",
                 model_id="gemma-4-e4b-q4",
                 model_label="Gemma 4 E4B",
                 runtime="ollama",
@@ -80,23 +81,15 @@ def preserve_real_explanations(county_id: int) -> Iterator[None]:
     2026-08-14, which only surfaced because a count came back 20 instead of 21.
 
     Autouse so a test added later cannot forget it. Restores the exact row, including
-    `generated_at`, so the warehouse is byte-identical afterwards.
+    `generated_at`, so the warehouse is byte-identical afterwards — every column the
+    table has, read from the model, so a column added later is restored too. A
+    hand-written list of columns missed `audience` when migration 0019 added it, and
+    the restore failed after the test had already deleted Atlantic County's reading.
     """
+    columns = [column.key for column in RegionExplanation.__table__.columns]
     with Session(get_engine()) as session:
         saved = [
-            {
-                "region_id": row.region_id,
-                "window": row.window,
-                "model_id": row.model_id,
-                "model_label": row.model_label,
-                "runtime": row.runtime,
-                "rank": row.rank,
-                "body": row.body,
-                "packet_sha256": row.packet_sha256,
-                "content_sha256": row.content_sha256,
-                "binding": row.binding,
-                "generated_at": row.generated_at,
-            }
+            {column: getattr(row, column) for column in columns}
             for row in session.execute(
                 select(RegionExplanation).where(RegionExplanation.region_id == county_id)
             ).scalars()
@@ -189,13 +182,17 @@ def test_explanations_are_scoped_per_window(current_explanation: int) -> None:
     assert response.status_code == 404
 
 
-# --- multi-model comparison (Milestone 19) ------------------------------------------
+# --- two readings per region (Milestone 30) ------------------------------------------
+
+SECTIONS = [
+    {"id": "bottom_line", "heading": "The bottom line", "start": 16, "end": 33},
+]
 
 
-def _store_many(
-    region_id: int, packet_sha256: str, models: list[tuple[str, str, int]]
+def _store_both(
+    region_id: int, analyst_sha256: str, consumer_sha256: str | None = None
 ) -> None:
-    """Several models' readings of one region, each at its preference-list rank."""
+    """A region's analyst and consumer readings, as `hip explain` writes them."""
     with Session(get_engine()) as session:
         session.execute(
             delete(RegionExplanation).where(
@@ -203,107 +200,109 @@ def _store_many(
                 RegionExplanation.window == WINDOW,
             )
         )
-        for model_id, runtime, rank in models:
-            session.add(
-                RegionExplanation(
-                    region_id=region_id,
-                    window=WINDOW,
-                    model_id=model_id,
-                    model_label=model_id,
-                    runtime=runtime,
-                    rank=rank,
-                    body=f"{model_id} reading. {BODY}",
-                    packet_sha256=packet_sha256,
-                )
-            )
-        session.commit()
-
-
-@pytest.fixture
-def five_models(county_id: int) -> Iterator[int]:
-    with Session(get_engine()) as session:
-        digest = packet_hash(build_packet(session, county_id, WINDOW))
-    _store_many(
-        county_id,
-        digest,
-        [
-            ("gemini-3.7-flash", "gemini", 0),
-            ("gemini-3.1-flash-lite", "gemini", 1),
-            ("mistral-small-4", "mistral", 2),
-            ("deepseek-v4-pro", "deepseek", 3),
-            ("gemma-4-e4b-q4", "ollama", 4),
-        ],
-    )
-    yield county_id
-
-
-def test_several_models_coexist_for_one_region(five_models: int) -> None:
-    """The capability the widened primary key exists for. Before migration 0010 storing
-    a second model's reading silently erased the first."""
-    body = client.get(f"/regions/{five_models}/explanations?window={WINDOW}").json()
-    assert len(body["explanations"]) == 5
-    assert len({e["model_id"] for e in body["explanations"]}) == 5
-
-
-def test_explanations_are_returned_in_preference_order(five_models: int) -> None:
-    """The order is the information — it is the preference list's own ranking, and the
-    dashboard takes the first as its default."""
-    body = client.get(f"/regions/{five_models}/explanations?window={WINDOW}").json()
-    assert [e["model_id"] for e in body["explanations"]] == [
-        "gemini-3.7-flash",
-        "gemini-3.1-flash-lite",
-        "mistral-small-4",
-        "deepseek-v4-pro",
-        "gemma-4-e4b-q4",
-    ]
-
-
-def test_the_singular_endpoint_keeps_its_shape_and_returns_the_preferred_model(
-    five_models: int,
-) -> None:
-    """`/explanation` is a published contract with an artifact tree behind it. Migration
-    0010 must not turn it into a list, and it must answer with rank 1 rather than
-    whichever row the scan reached first."""
-    body = client.get(f"/regions/{five_models}/explanation?window={WINDOW}").json()
-    assert isinstance(body, dict)
-    assert body["model_id"] == "gemini-3.7-flash"
-    assert body["kind"] == "interpretation"
-    assert "explanations" not in body
-
-
-def test_every_model_reads_the_same_packet(five_models: int) -> None:
-    """The point of serving them together: the numbers underneath are identical, so any
-    difference in the prose is the model's own."""
-    body = client.get(f"/regions/{five_models}/explanations?window={WINDOW}").json()
-    assert all(e["stale"] is False for e in body["explanations"])
-
-
-def test_one_model_can_be_stale_while_another_is_current(
-    county_id: int,
-) -> None:
-    """Models are generated independently, so collapsing staleness to one flag per
-    region would misreport both."""
-    with Session(get_engine()) as session:
-        digest = packet_hash(build_packet(session, county_id, WINDOW))
-    _store_many(county_id, digest, [("gemini-3.7-flash", "gemini", 0)])
-    with Session(get_engine()) as session:
         session.add(
             RegionExplanation(
-                region_id=county_id,
+                region_id=region_id,
                 window=WINDOW,
-                model_id="gemma-4-e4b-q4",
-                model_label="Gemma 4 E4B",
-                runtime="ollama",
-                rank=4,
+                audience="analyst",
+                model_id="gemini-3.7-flash-low",
+                model_label="Gemini 3.7 Flash (low thinking)",
+                runtime="gemini",
+                rank=0,
                 body=BODY,
-                packet_sha256="0" * 64,
+                packet_sha256=analyst_sha256,
+            )
+        )
+        session.add(
+            RegionExplanation(
+                region_id=region_id,
+                window=WINDOW,
+                audience="consumer",
+                model_id="deepseek-flash-nothink",
+                model_label="DeepSeek V4.1 Flash (thinking off)",
+                runtime="deepseek",
+                rank=0,
+                body="The bottom line\nPrices rose fast.",
+                sections=SECTIONS,
+                packet_sha256=consumer_sha256 or analyst_sha256,
             )
         )
         session.commit()
 
+
+@pytest.fixture
+def both_readings(county_id: int) -> Iterator[int]:
+    with Session(get_engine()) as session:
+        digest = packet_hash(build_packet(session, county_id, WINDOW))
+    _store_both(county_id, digest)
+    yield county_id
+
+
+def test_a_region_carries_an_analyst_and_a_consumer_reading(both_readings: int) -> None:
+    """Keyed on the audience since migration 0019: writing the consumer reading must not
+    erase the analyst one, which the old per-model key would not have prevented either
+    way — and the analyst reading leads, as the singular endpoint always has."""
+    body = client.get(f"/regions/{both_readings}/explanations?window={WINDOW}").json()
+    assert [e["audience"] for e in body["explanations"]] == ["analyst", "consumer"]
+    assert [e["model_id"] for e in body["explanations"]] == [
+        "gemini-3.7-flash-low",
+        "deepseek-flash-nothink",
+    ]
+
+
+def test_the_consumer_reading_carries_its_sections(both_readings: int) -> None:
+    body = client.get(f"/regions/{both_readings}/explanations?window={WINDOW}").json()
+    analyst, consumer = body["explanations"]
+    assert analyst["sections"] is None
+    assert consumer["sections"] == SECTIONS
+    section = consumer["sections"][0]
+    assert consumer["body"][section["start"] : section["end"]] == "Prices rose fast."
+
+
+def test_the_singular_endpoint_keeps_its_shape_and_serves_the_analyst_reading(
+    both_readings: int,
+) -> None:
+    """`/explanation` is a published contract with an artifact tree behind it: one
+    object, and the analyst reading whichever row a scan would reach first."""
+    body = client.get(f"/regions/{both_readings}/explanation?window={WINDOW}").json()
+    assert isinstance(body, dict)
+    assert body["audience"] == "analyst"
+    assert body["model_id"] == "gemini-3.7-flash-low"
+    assert body["kind"] == "interpretation"
+    assert "explanations" not in body
+
+
+def test_one_reading_can_be_stale_while_the_other_is_current(county_id: int) -> None:
+    """Generated independently, so collapsing staleness to one flag per region would
+    misreport both."""
+    with Session(get_engine()) as session:
+        digest = packet_hash(build_packet(session, county_id, WINDOW))
+    _store_both(county_id, digest, consumer_sha256="0" * 64)
+
     body = client.get(f"/regions/{county_id}/explanations?window={WINDOW}").json()
-    by_model = {e["model_id"]: e["stale"] for e in body["explanations"]}
-    assert by_model == {"gemini-3.7-flash": False, "gemma-4-e4b-q4": True}
+    by_audience = {e["audience"]: e["stale"] for e in body["explanations"]}
+    assert by_audience == {"analyst": False, "consumer": True}
+
+
+def test_a_consumer_reading_alone_is_no_analyst_reading(county_id: int) -> None:
+    """The singular endpoint serves the analyst reading or nothing — never the consumer
+    reading under the analyst contract."""
+    with Session(get_engine()) as session:
+        digest = packet_hash(build_packet(session, county_id, WINDOW))
+    _store_both(county_id, digest)
+    with Session(get_engine()) as session:
+        session.execute(
+            delete(RegionExplanation).where(
+                RegionExplanation.region_id == county_id,
+                RegionExplanation.audience == "analyst",
+            )
+        )
+        session.commit()
+    assert (
+        client.get(f"/regions/{county_id}/explanation?window={WINDOW}").status_code == 404
+    )
+    plural = client.get(f"/regions/{county_id}/explanations?window={WINDOW}").json()
+    assert [e["audience"] for e in plural["explanations"]] == ["consumer"]
 
 
 def test_absent_explanations_are_a_404_not_an_empty_list(
@@ -341,6 +340,7 @@ def _store_bound(region_id: int, *, packet_sha256: str | None = None) -> str:
             RegionExplanation(
                 region_id=region_id,
                 window=WINDOW,
+                audience="analyst",
                 model_id="gemma-4-e4b-q4",
                 model_label="Gemma 4 E4B",
                 runtime="ollama",
@@ -391,48 +391,48 @@ def test_a_re_download_that_moved_no_figure_is_not_staleness(county_id: int) -> 
     assert plural["explanations"][0]["stale"] is False
 
 
-# --- pruning retired models (after run `v3`) ----------------------------------------
+# --- retiring models that leave a list (Milestone 26, per audience since 30) ---------
 
 
-def test_prune_removes_models_off_the_list_and_only_in_its_scope(
-    five_models: int,
+def test_prune_removes_readings_from_models_off_their_audience_list(
+    both_readings: int,
 ) -> None:
-    """A model that leaves the preference list keeps its rows until something deletes
-    them, and `/explanations` serves every stored row — so without this a comparison
-    shows a retired model beside its replacement. Scoped to the run's window."""
+    """A model that leaves an audience's list keeps its rows until something deletes
+    them. Kept per audience: a model on the analyst list does not keep a consumer
+    reading it wrote, and the prune is scoped to the run's window."""
     from hip.eval.explain import prune
 
     with Session(get_engine()) as session:
         session.add(
             RegionExplanation(
-                region_id=five_models,
+                region_id=both_readings,
                 window="since_2019",
-                model_id="deepseek-v4-pro",
-                model_label="DeepSeek V4 Pro",
+                audience="consumer",
+                model_id="deepseek-flash-nothink",
+                model_label="DeepSeek",
                 runtime="deepseek",
-                rank=3,
+                rank=0,
                 body="A reading for another window.",
                 packet_sha256="0" * 64,
             )
         )
         session.commit()
         removed = prune(
-            session, [five_models], WINDOW, {"gemini-3.7-flash", "gemma-4-e4b-q4"}
+            session,
+            [both_readings],
+            WINDOW,
+            {
+                "analyst": {"gemini-3.7-flash-low", "deepseek-flash-nothink"},
+                "consumer": {"gemini-3.7-flash-low"},
+            },
         )
         session.commit()
 
-    assert removed == {
-        "gemini-3.1-flash-lite": 1,
-        "mistral-small-4": 1,
-        "deepseek-v4-pro": 1,
-    }
-    kept = client.get(f"/regions/{five_models}/explanations?window={WINDOW}").json()
-    assert [e["model_id"] for e in kept["explanations"]] == [
-        "gemini-3.7-flash",
-        "gemma-4-e4b-q4",
-    ]
-    other = client.get(f"/regions/{five_models}/explanations?window=since_2019").json()
-    assert [e["model_id"] for e in other["explanations"]] == ["deepseek-v4-pro"]
+    assert removed == {"deepseek-flash-nothink": 1}
+    kept = client.get(f"/regions/{both_readings}/explanations?window={WINDOW}").json()
+    assert [e["audience"] for e in kept["explanations"]] == ["analyst"]
+    other = client.get(f"/regions/{both_readings}/explanations?window=since_2019").json()
+    assert [e["audience"] for e in other["explanations"]] == ["consumer"]
 
 
 def test_prune_refuses_to_keep_nothing(county_id: int) -> None:
@@ -440,7 +440,7 @@ def test_prune_refuses_to_keep_nothing(county_id: int) -> None:
     from hip.eval.explain import prune
 
     with Session(get_engine()) as session, pytest.raises(ValueError):
-        prune(session, [county_id], WINDOW, set())
+        prune(session, [county_id], WINDOW, {"analyst": set()})
 
 
 def test_a_row_without_a_binding_stores_sql_null(county_id: int) -> None:
@@ -454,6 +454,7 @@ def test_a_row_without_a_binding_stores_sql_null(county_id: int) -> None:
             RegionExplanation(
                 region_id=county_id,
                 window=WINDOW,
+                audience="analyst",
                 model_id="gemma-4-e4b-q4",
                 model_label="Gemma 4 E4B",
                 runtime="ollama",

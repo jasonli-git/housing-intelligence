@@ -27,7 +27,7 @@
     },
     "PacketHighlight": {
       "additionalProperties": false,
-      "description": "A metric where this region sits at one end of its cohort.\n\nSelection, not statistics: the rank is read from `region_rankings` and nothing new\nis computed. `leading` is the good end as the metric's own `direction` defines it.",
+      "description": "A metric where this region sits at one end of its cohort.\n\nSelection, not statistics: the rank is read from `region_rankings` and nothing new\nis computed. `leading` is the good end as the metric's own `direction` defines it.\nSince 1.3 a rank with a range stands out only when the whole range sits at that end,\nthe rule the region pages follow (ARCHITECTURE #241).",
       "properties": {
         "label": {
           "title": "Label",
@@ -56,6 +56,32 @@
         "rank": {
           "title": "Rank",
           "type": "integer"
+        },
+        "rank_best": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The best rank the margins of error let this region hold: it moves ahead of another region only where the Census's 90% test finds the difference real (ARCHITECTURE #239). Null where no region in the ranking has a margin, so the rank is a place.",
+          "title": "Rank Best"
+        },
+        "rank_worst": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The worst rank the margins of error let this region hold; see `rank_best`.",
+          "title": "Rank Worst"
         }
       },
       "required": [
@@ -71,7 +97,7 @@
     },
     "PacketLevel": {
       "additionalProperties": false,
-      "description": "A metric's most recent observed value, and where it stands among peers.\n\n`metrics` describes movement and needs two observations to exist at all. A snapshot\nsource \u2014 MOD-IV publishes one composite of 3.48M parcels \u2014 has no movement, so\nwithout this array its figures would load into the warehouse and never reach a\nreader. Ranked by value rather than by change (migration 0006).\n\nEvery metric with an observation appears here, including those that also appear in\n`metrics`: \"the value now\" and \"how it moved\" are both worth stating, and a\nconsumer should not have to reconstruct the first from the second.",
+      "description": "A metric's most recent observed value, and where it stands among peers.\n\n`metrics` describes movement and needs two observations to exist at all. A snapshot\nsource \u2014 MOD-IV publishes one composite of 3.48M parcels \u2014 has no movement, so\nwithout this array its figures would load into the warehouse and never reach a\nreader. Ranked by value rather than by change (migration 0006).\n\nEvery metric with an observation appears here, including those that also appear in\n`metrics`: \"the value now\" and \"how it moved\" are both worth stating, and a\nconsumer should not have to reconstruct the first from the second.\n\nSince 1.3 a survey figure carries its margin, and a rank the margins cannot pin\ndown its range, as a change does.",
       "properties": {
         "direction": {
           "title": "Direction",
@@ -80,6 +106,19 @@
         "label": {
           "title": "Label",
           "type": "string"
+        },
+        "margin_of_error": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "90% margin of error of `value`, in the metric's unit, as the publisher reports it or as its inputs imply. 0 for a controlled estimate, which has no sampling error.",
+          "title": "Margin Of Error"
         },
         "match_method": {
           "anyOf": [
@@ -143,6 +182,32 @@
           "default": null,
           "title": "Rank"
         },
+        "rank_best": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The best rank the margins of error let this region hold: it moves ahead of another region only where the Census's 90% test finds the difference real (ARCHITECTURE #239). Null where no region in the ranking has a margin, so the rank is a place.",
+          "title": "Rank Best"
+        },
+        "rank_worst": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The worst rank the margins of error let this region hold; see `rank_best`.",
+          "title": "Rank Worst"
+        },
         "release_id": {
           "anyOf": [
             {
@@ -167,6 +232,12 @@
           "default": null,
           "title": "Source Id"
         },
+        "survey": {
+          "default": false,
+          "description": "A survey estimate, or a figure calculated from one, which carries a margin of error (SPEC principle 12). A survey figure whose margin is null has none available \u2014 a Census special code, or HUD's CHAS tables \u2014 and is not exact.",
+          "title": "Survey",
+          "type": "boolean"
+        },
         "unit": {
           "title": "Unit",
           "type": "string"
@@ -190,7 +261,7 @@
     },
     "PacketMetric": {
       "additionalProperties": false,
-      "description": "One metric's change over the window, with its rank and its provenance.\n\n`release_id`, `source_id`, and `match_method` describe the observation behind\n`end_value`; `start_release_id` and `start_match_method` the one behind\n`start_value`, which for an annual source is a different release. All are null only\nwhen the derived tables are stale relative to the facts \u2014 a rebuilt `hip analyze`\nrestores them \u2014 and the start pair is absent from packets older than 1.2.",
+      "description": "One metric's change over the window, with its rank and its provenance.\n\n`release_id`, `source_id`, and `match_method` describe the observation behind\n`end_value`; `start_release_id` and `start_match_method` the one behind\n`start_value`, which for an annual source is a different release. All are null only\nwhen the derived tables are stale relative to the facts \u2014 a rebuilt `hip analyze`\nrestores them \u2014 and the start pair is absent from packets older than 1.2.\n\nSince 1.3 a survey figure carries the margins of both ends and of the change, and a\nrank the margins cannot pin down carries its range. `rank` and `percentile` stay the\npoint order, which is how the ranking was built; a reader quoting a rank whose range\nis wider than one place quotes the range.",
       "properties": {
         "cagr": {
           "anyOf": [
@@ -207,6 +278,19 @@
         "direction": {
           "title": "Direction",
           "type": "string"
+        },
+        "end_margin": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "90% margin of error of `end_value`, in the metric's unit.",
+          "title": "End Margin"
         },
         "end_value": {
           "title": "End Value",
@@ -248,6 +332,19 @@
           "title": "Pct Change",
           "type": "number"
         },
+        "pct_change_margin": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "90% margin of error of `pct_change`, in percentage points, by the Census's formula for a ratio of two estimates (ARCHITECTURE #238). 0 where both ends are controlled estimates with no sampling error.",
+          "title": "Pct Change Margin"
+        },
         "percentile": {
           "anyOf": [
             {
@@ -272,6 +369,32 @@
           "default": null,
           "title": "Rank"
         },
+        "rank_best": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The best rank the margins of error let this region hold: it moves ahead of another region only where the Census's 90% test finds the difference real (ARCHITECTURE #239). Null where no region in the ranking has a margin, so the rank is a place.",
+          "title": "Rank Best"
+        },
+        "rank_worst": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The worst rank the margins of error let this region hold; see `rank_best`.",
+          "title": "Rank Worst"
+        },
         "release_id": {
           "anyOf": [
             {
@@ -295,6 +418,19 @@
           ],
           "default": null,
           "title": "Source Id"
+        },
+        "start_margin": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "90% margin of error of `start_value`, in the metric's unit.",
+          "title": "Start Margin"
         },
         "start_match_method": {
           "anyOf": [
@@ -323,6 +459,12 @@
         "start_value": {
           "title": "Start Value",
           "type": "number"
+        },
+        "survey": {
+          "default": false,
+          "description": "A survey estimate, or a figure calculated from one, which carries a margin of error (SPEC principle 12). A survey figure whose margin is null has none available \u2014 a Census special code, or HUD's CHAS tables \u2014 and is not exact.",
+          "title": "Survey",
+          "type": "boolean"
         },
         "unit": {
           "title": "Unit",
@@ -549,7 +691,8 @@
     "packet_version": {
       "enum": [
         "1.1",
-        "1.2"
+        "1.2",
+        "1.3"
       ],
       "title": "Packet Version",
       "type": "string"

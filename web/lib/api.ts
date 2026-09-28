@@ -345,6 +345,7 @@ export type Citation = {
     | "rank"
     | "cohort"
     | "percentile"
+    | "margin"
     | "year"
     | "vintage"
     | "text";
@@ -382,11 +383,20 @@ export type Binding = {
  * reader is told its figures are unverified rather than shown an empty citation list,
  * which would claim there was nothing to check.
  */
+/** One answer in a consumer reading: its fixed question, and where the answer sits in
+ * the reading's `body`, as character offsets like a citation's (Milestone 30). */
+export type ReadingSection = { id: string; heading: string; start: number; end: number };
+
 export type Explanation = {
   kind: "interpretation";
+  /** Who it is written for. Absent from responses published before Milestone 30,
+   * every one of which was an analyst reading. */
+  audience?: "analyst" | "consumer";
   region_id: number;
   window: string;
   body: string;
+  /** A consumer reading's answers, in order; null for an analyst reading. */
+  sections?: ReadingSection[] | null;
   model_id: string;
   model_label: string;
   runtime: string;

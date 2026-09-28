@@ -8,14 +8,47 @@ Markdown rather than HTML or PDF: it is readable as text, diffable between runs,
 opens anywhere. The dashboard's `/regions/[id]/report` page renders the same packet for
 the screen, so the two media share a contract rather than a template.
 
-`format_value` mirrors `web/lib/format.ts`. The duplication is deliberate and small —
-the packet carries `unit`, and each medium formats for itself; sharing the code would
-mean shipping Python to the browser or JavaScript to the pipeline.
+It is also what a model reads (`hip.eval.prompts.render_payload`), so what it shows is
+what a reading may quote. Since packet 1.3 that includes every survey figure's margin
+and every rank's range (SPEC principle 12): a survey rank the margins cannot pin down is
+shown only as its range, so no reading is handed a single place the survey cannot back.
+
+`format_value` mirrors `web/lib/format.ts`, and `format_metric`, `margin_label` and the
+rank words mirror `formatMetric`, `marginLabel` and `rankReading` beside it. The
+duplication is deliberate and small — the packet carries `unit`, and each medium formats
+for itself; sharing the code would mean shipping Python to the browser or JavaScript to
+the pipeline. `tests/test_packets.py` holds the two metric lists to the dashboard's.
 """
 
 from __future__ import annotations
 
 from hip.packets.schema import Packet, PacketHighlight, PacketLevel, PacketMetric
+
+# What a survey figure with no margin says in its place, and what a margin of zero says
+# — the Census fixes some figures to its population estimates, and they have no
+# sampling error (ARCHITECTURE #250). The dashboard's `NO_MARGIN` and
+# `NO_SAMPLING_ERROR`, word for word.
+NO_MARGIN = "no margin available"
+NO_SAMPLING_ERROR = "no sampling error"
+
+# The `ratio` metrics that are shares, and the ones that are multiples: 0.62 of occupied
+# homes is "62.2%", a home costing 4.26 times income is "4.26×". The unit says `ratio`
+# for both, so the dashboard classifies by metric (ARCHITECTURE #124) and so does this.
+SHARE_METRICS = frozenset(
+    {
+        "acs_homeownership_rate",
+        "acs_renter_cost_burden",
+        "acs_vacancy_rate",
+        "chas_owner_cost_burden",
+        "chas_renter_cost_burden",
+        "chas_renter_severe_burden",
+        "fmr_to_income",
+        "rent_to_income",
+        "modiv_multifamily_share",
+        "modiv_vacant_land_share",
+    }
+)
+MULTIPLE_METRICS = frozenset({"price_to_income", "price_to_ami"})
 
 
 def format_value(value: float, unit: str) -> str:
@@ -37,8 +70,119 @@ def format_value(value: float, unit: str) -> str:
     return formatted[:-2] if formatted.endswith(".0") else formatted
 
 
+def format_metric(value: float, unit: str, metric_id: str) -> str:
+    """A metric's value as the dashboard shows it: a share as a percentage, a multiple
+    with ×, monthly money per month. Everything else is `format_value`.
+
+    The dashboard throws on a ratio classed as neither, so an unclassified metric fails
+    its build; a report falls back to the plain ratio rather than failing a pipeline run
+    over formatting, and the build catches the omission first.
+    """
+    if unit == "ratio":
+        if metric_id in SHARE_METRICS:
+            return f"{value * 100:.1f}%"
+        if metric_id in MULTIPLE_METRICS:
+            return f"{value:.2f}×"
+    if unit == "usd_month":
+        return f"{format_value(value, unit)}/mo"
+    return format_value(value, unit)
+
+
+def margin_label(
+    value: float, margin: float | None, unit: str, metric_id: str, *, survey: bool
+) -> str | None:
+    """A value's margin as it reads beside the value: "± $2,565", "± 2.3 points" for a
+    share, "± 0.11×" for a multiple; a share whose margin would pass 0% or 100% as its
+    range. `NO_MARGIN` for a survey figure without one; None for a figure with no
+    sampling error to report, which reads exactly as it did before margins.
+    """
+    if margin is None:
+        return NO_MARGIN if survey else None
+    if margin == 0:
+        return NO_SAMPLING_ERROR
+    if unit == "ratio" and metric_id in SHARE_METRICS:
+        low, high = value - margin, value + margin
+        if low < 0 or high > 1:
+            return (
+                f"{format_metric(max(0.0, low), unit, metric_id)} to "
+                f"{format_metric(min(1.0, high), unit, metric_id)}"
+            )
+        return f"± {margin * 100:.1f} points"
+    if unit == "ratio" and metric_id in MULTIPLE_METRICS:
+        return f"± {margin:.2f}×"
+    return f"± {format_metric(margin, unit, metric_id)}"
+
+
+def change_margin_label(margin: float | None, *, survey: bool) -> str | None:
+    """A change's margin in the change's own terms: "+24.2%" reads "± 4.0%"."""
+    if margin is None:
+        return NO_MARGIN if survey else None
+    if margin == 0:
+        return NO_SAMPLING_ERROR
+    return f"± {margin:.1f}%"
+
+
+def with_margin(shown: str, label: str | None) -> str:
+    """A figure and its margin: "$100,645 ± $2,565", or "385,864 (no sampling
+    error)". The figure alone where there is no margin to give."""
+    if label is None:
+        return shown
+    return f"{shown} {label}" if label.startswith("±") else f"{shown} ({label})"
+
+
 def format_change(pct: float) -> str:
     return f"{'+' if pct >= 0 else ''}{pct:.1f}%"
+
+
+def ordinal(n: int) -> str:
+    last_two = n % 100
+    if 11 <= last_two <= 13:
+        return f"{n}th"
+    return f"{n}{['th', 'st', 'nd', 'rd'][n % 10] if n % 10 < 4 else 'th'}"
+
+
+def _position(rank: int, of: int) -> float:
+    """Rank 1 at zero, the final rank at one; a cohort of one sits in the middle."""
+    return (rank - 1) / (of - 1) if of > 1 else 0.5
+
+
+def rank_words(best: int, worst: int, of: int) -> str:
+    """Where a range of ranks sits, by thirds of the cohort — `rankReading`'s words."""
+    if best == 1 and worst == of:
+        return "too uncertain to place"
+    start, end = _position(best, of), _position(worst, of)
+    if end <= 1 / 3:
+        return "near the top"
+    if start >= 2 / 3:
+        return "near the bottom"
+    if start >= 1 / 3 and end <= 2 / 3:
+        return "near the middle"
+    if start < 1 / 3 and end > 2 / 3:
+        return "can't be told apart from most"
+    return "toward the top" if start < 1 / 3 else "toward the bottom"
+
+
+def has_range(entry: PacketMetric | PacketLevel | PacketHighlight) -> bool:
+    """Whether the margins leave this rank more than one place to fall in."""
+    return (
+        entry.rank_best is not None
+        and entry.rank_worst is not None
+        and entry.rank_best != entry.rank_worst
+    )
+
+
+def rank_label(entry: PacketMetric | PacketLevel) -> str:
+    """ "12th of 21", or for a rank the margins cannot pin down, only its range:
+    "3rd–20th of 21 (can't be told apart from most)"."""
+    if entry.rank is None or entry.of is None:
+        return "—"
+    if has_range(entry):
+        assert entry.rank_best is not None and entry.rank_worst is not None
+        return (
+            f"{ordinal(entry.rank_best)}–{ordinal(entry.rank_worst)} of {entry.of} "
+            f"({rank_words(entry.rank_best, entry.rank_worst, entry.of)})"
+        )
+    return f"{ordinal(entry.rank)} of {entry.of}"
 
 
 def _cell(text: str) -> str:
@@ -60,12 +204,34 @@ def _end(highlight: PacketHighlight, directions: dict[str, str]) -> str:
     return "best" if leading else "worst"
 
 
-def _rank(entry: PacketMetric | PacketLevel) -> str:
-    return "—" if entry.rank is None else f"{entry.rank} / {entry.of}"
-
-
 def _annualised(metric: PacketMetric) -> str:
-    return "—" if metric.cagr is None else f"{metric.cagr:.1f}%/yr"
+    """A survey figure's annualised change is left out: nothing computes its margin, and
+    principle 12 lets no survey figure read as exact."""
+    if metric.cagr is None or metric.survey:
+        return "—"
+    return f"{metric.cagr:.1f}%/yr"
+
+
+def _highlight_line(
+    highlight: PacketHighlight, directions: dict[str, str], metric: PacketMetric | None
+) -> str:
+    if has_range(highlight):
+        assert highlight.rank_best is not None and highlight.rank_worst is not None
+        place = (
+            f"between {ordinal(highlight.rank_best)} and "
+            f"{ordinal(highlight.rank_worst)} of {highlight.of}"
+        )
+    else:
+        place = f"rank {highlight.rank} of {highlight.of}"
+    change = format_change(highlight.pct_change)
+    if metric is not None:
+        change = with_margin(
+            change, change_margin_label(metric.pct_change_margin, survey=metric.survey)
+        )
+    return (
+        f"- **{_cell(highlight.label)}** — {place} "
+        f"({_end(highlight, directions)} end), {change}"
+    )
 
 
 def render_markdown(packet: Packet) -> str:
@@ -88,14 +254,13 @@ def render_markdown(packet: Packet) -> str:
         "",
     ]
 
+    metrics = {metric.metric_id: metric for metric in packet.metrics}
     if packet.highlights:
         lines += ["## Where this region stands out", ""]
         directions = {metric.metric_id: metric.direction for metric in packet.metrics}
         for highlight in packet.highlights:
             lines.append(
-                f"- **{_cell(highlight.label)}** — rank {highlight.rank} of "
-                f"{highlight.of} ({_end(highlight, directions)} end), "
-                f"{format_change(highlight.pct_change)}"
+                _highlight_line(highlight, directions, metrics.get(highlight.metric_id))
             )
         lines.append("")
 
@@ -106,13 +271,28 @@ def render_markdown(packet: Packet) -> str:
         "| --- | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for metric in packet.metrics:
+        unit, mid, survey = metric.unit, metric.metric_id, metric.survey
+        start = with_margin(
+            format_metric(metric.start_value, unit, mid),
+            margin_label(
+                metric.start_value, metric.start_margin, unit, mid, survey=survey
+            ),
+        )
+        latest = with_margin(
+            format_metric(metric.end_value, unit, mid),
+            margin_label(metric.end_value, metric.end_margin, unit, mid, survey=survey),
+        )
+        change = with_margin(
+            format_change(metric.pct_change),
+            change_margin_label(metric.pct_change_margin, survey=survey),
+        )
         lines.append(
             f"| {_cell(metric.label)} "
-            f"| {format_value(metric.start_value, metric.unit)} "
-            f"| {format_value(metric.end_value, metric.unit)} "
-            f"| {format_change(metric.pct_change)} "
+            f"| {start} "
+            f"| {latest} "
+            f"| {change} "
             f"| {_annualised(metric)} "
-            f"| {_rank(metric)} "
+            f"| {rank_label(metric)} "
             f"| {metric.window_start} → {metric.window_end} |"
         )
     lines += [
@@ -135,14 +315,39 @@ def render_markdown(packet: Packet) -> str:
             "| --- | ---: | ---: | --- | --- |",
         ]
         for level in packet.levels:
+            value = with_margin(
+                format_metric(level.value, level.unit, level.metric_id),
+                margin_label(
+                    level.value,
+                    level.margin_of_error,
+                    level.unit,
+                    level.metric_id,
+                    survey=level.survey,
+                ),
+            )
             lines.append(
                 f"| {_cell(level.label)} "
-                f"| {format_value(level.value, level.unit)} "
-                f"| {_rank(level)} "
+                f"| {value} "
+                f"| {rank_label(level)} "
                 f"| {level.period_end} "
                 f"| {_cell(level.source_id or '—')} |"
             )
         lines.append("")
+
+    if any(m.survey for m in packet.metrics) or any(lv.survey for lv in packet.levels):
+        lines += [
+            "## Margins of error",
+            "",
+            "± is a survey figure's 90% margin of error, as the publisher reports it or "
+            "as its inputs imply: a change's margin is in the change's own terms, and a "
+            "share's in percentage points. A rank given as a range is where those "
+            "margins let this region fall — the survey cannot place it more precisely. "
+            f'"{NO_MARGIN}" means the publisher reports none for that figure, which is '
+            f'still an estimate; "{NO_SAMPLING_ERROR}" means the figure is fixed to '
+            "another estimate rather than drawn from the sample. A survey figure's "
+            "annualised change is not shown, because no margin is computed for it.",
+            "",
+        ]
 
     if packet.caveats:
         lines += ["## Caveats", ""]

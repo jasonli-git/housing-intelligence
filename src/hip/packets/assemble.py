@@ -31,6 +31,7 @@ from hip.packets.schema import (
     PacketWindow,
     RegionRef,
 )
+from hip.packets.survey import is_survey
 
 # A region is "at one end" of its cohort within this many places of either extreme.
 # Selection only — the rank itself is read from region_rankings.
@@ -57,6 +58,10 @@ _REGION_SQL = text(
 # The start observation is resolved the way `hip analyze` chose it — the one ending on
 # `window_start`, earliest `period_start` first — so the release cited for `start_value`
 # is the release that value was read from (packet 1.2).
+#
+# The margins are the change row's own (migration 0018), taken from the observations it
+# compares, so an end's margin can never belong to another period; the range is the
+# ranking's (packet 1.3).
 _METRICS_SQL = text(
     """
     SELECT DISTINCT ON (c.metric_id)
@@ -65,7 +70,9 @@ _METRICS_SQL = text(
            c.pct_change, c.cagr,
            k.rank, k.of, k.percentile,
            o.release_id, sr.source_id, o.match_method,
-           s.release_id AS start_release_id, s.match_method AS start_match_method
+           s.release_id AS start_release_id, s.match_method AS start_match_method,
+           c.pct_change_margin, c.start_margin, c.end_margin,
+           k.rank_best, k.rank_worst
     FROM fact_metric_change c
     JOIN metrics m ON m.metric_id = c.metric_id
     LEFT JOIN region_rankings k
@@ -97,7 +104,8 @@ _LEVELS_SQL = text(
            f.metric_id, m.label, m.unit, m.direction, f.value,
            f.period_start, f.period_end,
            k.rank, k.of, k.percentile,
-           f.release_id, sr.source_id, f.match_method
+           f.release_id, sr.source_id, f.match_method,
+           f.margin_of_error, k.rank_best, k.rank_worst
     FROM fact_metric_observation f
     JOIN metrics m ON m.metric_id = f.metric_id
     JOIN source_releases sr ON sr.release_id = f.release_id
@@ -194,9 +202,9 @@ def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet
         raise PacketUnavailable(f"No region {region_id}")
 
     rows = list(session.execute(_METRICS_SQL, {"id": region_id, "w": window}).mappings())
-    metrics = [PacketMetric(**row) for row in rows]
+    metrics = [PacketMetric(**row, survey=is_survey(row["metric_id"])) for row in rows]
     levels = [
-        PacketLevel(**row)
+        PacketLevel(**row, survey=is_survey(row["metric_id"]))
         for row in session.execute(_LEVELS_SQL, {"id": region_id}).mappings()
     ]
     # A region with observations but no change rows is a real case, not an error: it is
@@ -285,15 +293,23 @@ def _highlights(metrics: list[PacketMetric]) -> list[PacketHighlight]:
     Leading first, best rank first; then trailing, worst rank first. `direction` has
     already been applied by `hip analyze`, so rank 1 is the good end whatever the
     metric measures.
+
+    A rank with a range stands out only when the whole range does (packet 1.3): its
+    worst place within the top three to lead, its best within the bottom three to
+    trail. The region pages' stand-outs follow the same rule (ARCHITECTURE #241), and a
+    packet calling a region third when its survey could as well make it tenth would
+    hand a reading a claim the page refuses to make.
     """
     leading: list[PacketHighlight] = []
     trailing: list[PacketHighlight] = []
     for metric in metrics:
         if metric.rank is None or metric.of is None or metric.of < MIN_COHORT:
             continue
-        if metric.rank <= HIGHLIGHT_DEPTH:
+        best = metric.rank if metric.rank_best is None else metric.rank_best
+        worst = metric.rank if metric.rank_worst is None else metric.rank_worst
+        if worst <= HIGHLIGHT_DEPTH:
             bucket, position = leading, "leading"
-        elif metric.rank > metric.of - HIGHLIGHT_DEPTH:
+        elif best > metric.of - HIGHLIGHT_DEPTH:
             bucket, position = trailing, "trailing"
         else:
             continue
@@ -305,6 +321,8 @@ def _highlights(metrics: list[PacketMetric]) -> list[PacketHighlight]:
                 rank=metric.rank,
                 of=metric.of,
                 pct_change=metric.pct_change,
+                rank_best=metric.rank_best,
+                rank_worst=metric.rank_worst,
             )
         )
     leading.sort(key=lambda h: (h.rank, h.metric_id))

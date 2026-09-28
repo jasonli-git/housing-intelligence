@@ -15,6 +15,10 @@ to the packet field, source release, period and match method that licensed it. `
 explain` refuses to store prose with a figure the packet does not carry, so a binding is
 always complete. It is null only for text written before figures were checked, and a
 client should say so rather than present that text as verified.
+
+Since Milestone 30 a region carries two readings, one per `audience`: the analyst
+reading, which the singular endpoint serves as it always served the preferred one, and
+the consumer reading, whose `sections` give each fixed question's answer.
 """
 
 from __future__ import annotations
@@ -24,7 +28,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import case, select
 
 from hip.api.deps import SessionDep
 from hip.api.params import Window
@@ -32,6 +36,10 @@ from hip.packets import Binding, PacketUnavailable, build_packet, still_describe
 from hip.warehouse.models import RegionExplanation
 
 router = APIRouter(tags=["explanations"])
+
+# The order the plural endpoint lists readings in: the analyst reading first, as the
+# singular endpoint has always led with it.
+_AUDIENCE_ORDER = case((RegionExplanation.audience == "analyst", 0), else_=1)
 
 # Says "a language model" rather than "a local language model": since Milestone 12 the
 # model may be hosted, and the row itself carries which one wrote it. The disclaimer's
@@ -43,6 +51,16 @@ DISCLAIMER = (
 )
 
 
+class ReadingSection(BaseModel):
+    """One answer in a consumer reading: which fixed question, and where its answer sits
+    in `body`, as character offsets like a citation's."""
+
+    id: str = Field(description="The question's published key, e.g. `rent_or_buy`.")
+    heading: str
+    start: int
+    end: int
+
+
 class Explanation(BaseModel):
     """A generated narrative, with everything needed to discount it appropriately."""
 
@@ -50,9 +68,24 @@ class Explanation(BaseModel):
         default="interpretation",
         description="Never 'measurement'. This text was written by a model.",
     )
+    audience: Literal["analyst", "consumer"] = Field(
+        default="analyst",
+        description=(
+            "Who the reading is written for: `analyst`, the interpretation of the "
+            "packet in prose; `consumer`, a bottom line and short answers to fixed "
+            "questions in plain language (Milestone 30)."
+        ),
+    )
     region_id: int
     window: str
     body: str
+    sections: list[ReadingSection] | None = Field(
+        default=None,
+        description=(
+            "A consumer reading's answers, in order: each fixed question's key and "
+            "heading, and where its answer sits in `body`. Null for an analyst reading."
+        ),
+    )
     model_id: str
     model_label: str
     runtime: str
@@ -76,9 +109,15 @@ class Explanation(BaseModel):
 
 def _served(row: RegionExplanation, *, stale: bool) -> Explanation:
     return Explanation(
+        audience=row.audience,  # type: ignore[arg-type]
         region_id=row.region_id,
         window=row.window,
         body=row.body,
+        sections=(
+            [ReadingSection.model_validate(s) for s in row.sections]
+            if row.sections
+            else None
+        ),
         model_id=row.model_id,
         model_label=row.model_label,
         runtime=row.runtime,
@@ -91,36 +130,26 @@ def _served(row: RegionExplanation, *, stale: bool) -> Explanation:
 @router.get(
     "/regions/{region_id}/explanation",
     response_model=Explanation,
-    summary="Model-written explanation for a region (interpretation, not measurement)",
+    summary="A region's analyst reading (interpretation, not measurement)",
 )
 def explanation(
     region_id: int,
     session: SessionDep,
     window: Annotated[Window, Query()] = "5y",
 ) -> Explanation:
-    """The preferred stored explanation for one region and window.
+    """The analyst reading for one region and window.
 
     404 when none has been generated. That is the ordinary state of a fresh warehouse,
     not an error condition — the platform is fully usable with no explanations at all,
     which is the SPEC requirement that the AI layer stay optional.
 
-    Shape deliberately unchanged by migration 0010. A region may now hold several
-    models' readings, and this endpoint still answers with one, because it is a
-    published contract and the artifact tree behind it exists to be consumed. Callers
-    that want the comparison ask `/regions/{id}/explanations` instead.
+    Shape unchanged since migration 0007, apart from fields added beside it, because it
+    is a published contract and the artifact tree behind it exists to be consumed. It
+    served the preferred model's reading while a region carried one per model; since
+    migration 0019 it serves the region's one analyst reading. Both readings, analyst
+    and consumer, are at `/regions/{id}/explanations`.
     """
-    # `LIMIT 1` over rank rather than `scalar_one_or_none`: since migration 0010 a
-    # region can carry one explanation per model, and this endpoint's contract is a
-    # single object. Rank 1 is the preferred model at the time the rows were written.
-    row = session.execute(
-        select(RegionExplanation)
-        .where(
-            RegionExplanation.region_id == region_id,
-            RegionExplanation.window == window,
-        )
-        .order_by(RegionExplanation.rank, RegionExplanation.model_id)
-        .limit(1)
-    ).scalar_one_or_none()
+    row = session.get(RegionExplanation, (region_id, window, "analyst"))
     if row is None:
         raise HTTPException(
             status_code=404,
@@ -146,10 +175,10 @@ def explanation(
 
 
 class Explanations(BaseModel):
-    """Every model's reading of one region's packet, in preference order.
+    """A region's readings: the analyst reading, then the consumer reading.
 
-    A list rather than a map keyed by model, because the order is the information: it is
-    the preference list's own ranking, and a JSON object does not promise to keep it.
+    A list, as it was when it held one reading per model in preference order (Milestone
+    19); since migration 0019 it holds one per audience, each saying which it is.
     """
 
     region_id: int
@@ -160,20 +189,19 @@ class Explanations(BaseModel):
 @router.get(
     "/regions/{region_id}/explanations",
     response_model=Explanations,
-    summary="Every model's explanation for a region, in preference order",
+    summary="A region's readings, analyst then consumer",
 )
 def explanations(
     region_id: int,
     session: SessionDep,
     window: Annotated[Window, Query()] = "5y",
 ) -> Explanations:
-    """All stored explanations for one region and window, ordered by rank.
+    """Every stored reading for one region and window: analyst first, then consumer.
 
-    The point of serving them together is that the numbers underneath are identical, so
-    the differences are the models' own. That is the most honest demonstration the
-    platform can make of its own SPEC requirement that a reader can always tell
-    interpretation from measurement — a disclaimer asserts it, five readings of one
-    packet show it.
+    Until Milestone 30 this served every model's reading of one packet side by side, so
+    a reader could see models disagree about identical numbers. It now serves the two
+    readings written for two readers, each from the first model on its audience's list
+    that wrote one fit to publish, and each naming that model.
 
     404 rather than an empty list when nothing has been generated, matching the singular
     endpoint: `hip publish` treats a 404 as a skip, so an empty body would put a file
@@ -186,7 +214,7 @@ def explanations(
                 RegionExplanation.region_id == region_id,
                 RegionExplanation.window == window,
             )
-            .order_by(RegionExplanation.rank, RegionExplanation.model_id)
+            .order_by(_AUDIENCE_ORDER)
         )
         .scalars()
         .all()
@@ -196,13 +224,13 @@ def explanations(
             status_code=404,
             detail=(
                 f"no explanations for region {region_id} over window '{window}'. "
-                f"Generate them with `hip explain --region {region_id} --all`."
+                f"Generate them with `hip explain --region {region_id}`."
             ),
         )
 
-    # The packet is built once and compared per row: models are generated
-    # independently, so one reading can be current while another is stale, and
-    # collapsing that to a single flag would misreport both.
+    # The packet is built once and compared per row: the two readings are generated
+    # independently, so one can be current while the other is stale, and collapsing
+    # that to a single flag would misreport both.
     try:
         packet = build_packet(session, region_id, window)
     except PacketUnavailable:

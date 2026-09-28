@@ -77,8 +77,9 @@ def _refresh_mode() -> str:
 def _ollama():  # type: ignore[no-untyped-def]
     """Ollama up for a regeneration and back as it was after (ARCHITECTURE #230).
 
-    The local model is one of the readings `hip explain --all` writes, and the owner
-    keeps Ollama quit between runs. A seam of its own so the tests never start a server.
+    The local model ends both readings' preference lists, so `hip explain` may need it
+    when every hosted model fails, and the owner keeps Ollama quit between runs. A seam
+    of its own so the tests never start a server.
     """
     from hip.eval.runners.ollama import serving
 
@@ -135,34 +136,36 @@ def _rebuild_readings() -> int | None:
     # failed, which says nothing about the readings: it is never read as "none stale",
     # and nothing is regenerated on it. The data still publishes — the site labels any
     # reading whose figures moved as stale, whether or not this check could tell.
-    dry_run_code = _hip("explain", "--all", "--dry-run")
+    dry_run_code = _hip("explain", "--dry-run")
     if dry_run_code not in (0, 3):
         _notify(
             "Weekly refresh: the readings check failed",
-            f"hip explain --all --dry-run exited {dry_run_code}, so no reading was "
+            f"hip explain --dry-run exited {dry_run_code}, so no reading was "
             "regenerated. The data still publishes, with any reading whose figures "
             "moved labelled stale. Check the log on the Mac.",
             priority=_PRIORITY_URGENT,
         )
     elif dry_run_code == 3:
         if _refresh_mode() == "auto":
-            # `hip explain` exits 0, 3 (some readings written, a model or region
-            # skipped) or 1 (none written), and a scheduled refresh deploys on any of
-            # them: a reading that was not rewritten stays up labelled stale, and the
-            # data behind it is still worth publishing (eval_cli.PARTIAL, #102).
+            # `hip explain` exits 0, 3 (some readings written, but a region's reading
+            # no model could write, or a model that could not be used) or 1 (none
+            # written), and a scheduled refresh deploys on any of them: a reading that
+            # was not rewritten stays up labelled stale, and the data behind it is
+            # still worth publishing (eval_cli.PARTIAL, #102).
             with _ollama() as ollama:
                 print(ollama, flush=True)
-                explain_code = _hip("explain", "--all")
+                explain_code = _hip("explain")
             if explain_code == 3:
                 _notify(
                     "Weekly refresh: some readings were not regenerated",
-                    "A model or region was skipped. What was written is publishing, "
-                    "and the rest stays up labelled stale. Check the log on the Mac.",
+                    "A region's reading could not be written, or a model could not be "
+                    "used. What was written is publishing, and the rest stays up "
+                    "labelled stale. Check the log on the Mac.",
                 )
             elif explain_code != 0:
                 _notify(
                     "Weekly refresh: regenerating readings failed",
-                    f"hip explain --all exited {explain_code} without finishing. The "
+                    f"hip explain exited {explain_code} without finishing. The "
                     "data still publishes, and any reading not rewritten stays up "
                     "labelled stale. Check the log on the Mac.",
                     priority=_PRIORITY_URGENT,

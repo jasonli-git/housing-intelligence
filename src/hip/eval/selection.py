@@ -41,7 +41,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 
-from hip.config import CandidateModel, EvaluationConfig
+from hip.config import Audience, CandidateModel, EvaluationConfig
 from hip.eval.report import ModelSummary, meets_the_bar
 from hip.eval.runners import HostedRunner, RunnerUnavailable, build_runner
 
@@ -166,8 +166,13 @@ def resolve(
     run: str | None = None,
     require_benchmark: bool = True,
     probe: bool = False,
+    audience: Audience = "analyst",
 ) -> Resolution:
-    """The first candidate in the preference list that has passed and can be reached.
+    """The first candidate in an audience's preference list that has passed and can be
+    reached — the model that would write that audience's readings first.
+
+    `hip explain` falls through per region since Milestone 30, so it no longer resolves
+    once per run; this remains the answer to "which model heads the list today".
 
     `require_benchmark=False` exists for the bootstrap case this milestone is itself in:
     before any run has scored a hosted candidate there is nothing to check against, and
@@ -193,7 +198,7 @@ def resolve(
     skipped: list[tuple[str, str]] = []
     declared = {m.id for m in evaluation.models}
 
-    for model_id in evaluation.generation.preference:
+    for model_id in evaluation.generation.preference[audience]:
         if model_id not in declared:
             # `hip check-config` catches this; reaching it here means config changed
             # under a running process.
@@ -233,5 +238,5 @@ def resolve(
 
     trail = "\n  ".join(f"{model_id}: {why}" for model_id, why in skipped)
     raise NoModelAvailable(
-        "every candidate in generation.preference was skipped:\n  " + trail
+        f"every candidate in generation.preference.{audience} was skipped:\n  " + trail
     )

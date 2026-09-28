@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.24.5, 2026-09-28. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.25.0, 2026-09-28. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, housing, economic context, property
 > tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
@@ -29,21 +29,22 @@ layer only explains metrics that were already computed.
 > workspace, reachable in place from the state and county pages or at its own address;
 > two more say how current each source is and which published figures were revised.
 >
-> **Latest.** Milestone 28 (2026-09-26) makes figures say how sure they are. Census
-> survey figures carry the Census's 90% margin of error ("$100,645 ± $2,565"), and a rank
-> the margins cannot back reads as a word over its range — "Near the middle of 21 NJ
-> counties, between 10th and 12th" — rather than a precise place. Renter cost burden now
-> counts only renters whose burden the Census could compute. Milestone 27, the same day,
-> carried the weekly refresh through to the site: every Friday this Mac refreshes,
-> rebuilds, deploys and checks the deploy, asking first only before the billed step of
-> regenerating the AI readings. Interpretation is a measured layer, not a claim:
-> seventeen models have been evaluated against standardized scenarios, and every county
-> page shows four of their readings side by side.
+> **Latest.** Milestone 30 (2026-09-28) writes readings for two kinds of reader. Every
+> county page now opens its interpretation with a plain-language reading — a bottom
+> line and four fixed questions, from *is it getting harder to afford here?* to *what
+> should I check before moving?* — and keeps an analyst reading behind it, each written
+> by the first model on its list whose reading passes every check: each figure traced
+> to its source, each survey figure given its margin of error, each uncertain rank read
+> as its range. The model for the plain reading was chosen by reading four candidates'
+> work on three counties side by side, not by guess, and Gemini now writes them at
+> half price. Milestone 28 had made the figures on the pages say how sure they are
+> ("$100,645 ± $2,565", "Near the middle of 21 NJ counties"); since 29 and 27 every
+> Friday this Mac refreshes, rebuilds, deploys and checks the deploy, asking first only
+> before regenerating the readings, the one billed step.
 >
-> **Next.** Milestone 30: one analyst reading per region in place of four side by side,
-> a plain-language reading for someone deciding whether to move, and batch pricing for
-> the models that write them — the first readings to quote a rank as the range the
-> survey can back. See [ROADMAP.md](ROADMAP.md) for what is planned and
+> **Next.** Milestone 31: a licence and provenance pass — what kind of claim every figure
+> is, where it is read, and which uses each source's terms allow. See
+> [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
@@ -267,11 +268,16 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
 - **Substitution detection** (M22, built) — a provider answering with a different model
   than the one requested is caught at runtime and recorded, since not every provider
   offers a pinnable checkpoint.
-- **Several models reading the same packet** (M19, built) — every county page carries
-  one interpretation per listed model side by side, switchable by the reader, each
-  labeled with the model that wrote it: four since Qwen 3.7 Plus left the list in
-  Milestone 26. The reachable subset of bring-your-own-model comparison, since
-  pre-generated explanations need no server.
+- **Several models reading the same packet** (M19, built) — county pages carried one
+  interpretation per listed model side by side, switchable by the reader, each labeled
+  with the model that wrote it, until Milestone 30 replaced the comparison with one
+  reading for each kind of reader.
+- **Readings for every reader** (M30, built) — every county page carries a
+  plain-language reading, a bottom line and four fixed questions for someone deciding
+  whether to live there, and in its expander the analyst reading; each names the model
+  that wrote it, gives every survey figure its margin and quotes an uncertain rank as its
+  range. Each comes from the first model on its own list that writes one fit to
+  publish, and Gemini writes at its Flex tier's half price.
 - **Reasoning effort as a measured variable** (M20, built) — effort is configured per
   candidate and recorded with every generation, so a model's cost and quality are
   compared at a stated setting rather than at whatever the provider defaults to.
@@ -467,8 +473,9 @@ uv run hip eval run --run v3          # every scenario through every model, or -
 uv run hip eval cost --run v3         # what judging would cost, without spending it
 uv run hip eval judge --run v3        # rubric grading, billed
 uv run hip eval report --run v3       # reports/evaluation/v3.md
-uv run hip explain --region 11        # write an explanation the API can serve
-uv run hip explain --level county --all --prune   # every listed model; retire the rest
+uv run hip explain --region 11        # both readings for one region, as the API serves them
+uv run hip explain --dry-run          # how many readings are stale, calling no model
+uv run hip eval readings --name readings-v1   # both formats, several models, side by side
 ```
 
 Every `hip eval` command names its run, and a run's scenario set is frozen once anything
@@ -477,14 +484,21 @@ has been generated against it. Scenarios give models the packet as Markdown, as
 
 For a hosted cohort, `hip eval models` asks the provider what it actually serves and
 marks a pinned ref that has been withdrawn, which is cheaper to discover here than as
-fifteen identical 404s inside a run. `hip explain` resolves its model through the
-ordered preference list in `config/evaluation.yml` — the first benchmarked candidate
-that is currently reachable, ending at a local model so no vendor decision can stop the
-command — and skips regions whose stored prose was written from these exact numbers.
-`--all` and `--model` hold every model to the same benchmark; a model that cannot be
-used is skipped and named in the closing summary, and the exit status is 0 when every
-requested model's prose is current, 3 when some is, and 1 when none is. Local cohorts
-run one model at a time because two do not fit in 16GB; hosted cohorts fan out, which is
+fifteen identical 404s inside a run. `hip explain` writes two readings per region
+(Milestone 30): the analyst reading, and a plain-language consumer reading that answers
+four fixed questions. Each has an ordered preference list in `config/evaluation.yml`
+ending at a local model, so no vendor decision can stop the command, and for each region
+the first benchmarked model that writes a reading fit to publish writes it: every
+figure bound to the packet, every survey figure with its margin, every uncertain rank as
+its range, and for the consumer reading five fixed headings, no source names or jargon,
+and at most two figures an answer. A refused reading passes the region to the next
+model. Regions whose stored readings were written from these exact numbers are skipped.
+Gemini is asked for its Flex tier, at the batch price; the run ends with what it cost,
+per model; and the exit status is 0 when every reading is current, 3 when some is but a
+region's reading could not be written or a model could not be used, and 1 when none
+is. `hip eval readings` generates both formats from several models on three counties
+without storing anything, for choosing a model by reading its work. Local cohorts run
+one model at a time because two do not fit in 16GB; hosted cohorts fan out, which is
 the reason hosted inference is on the roadmap at all.
 
 **Keeping it current.** `make refresh` asks every publisher whether anything has moved
@@ -519,8 +533,8 @@ and nothing past it — a second host with no `make`, `wrangler` or `rclone` ins
 run it alone. `scripts/scheduled_refresh.py` is the scheduler-facing script: it calls
 `hip refresh`, and only if `RefreshState.completed_at` actually moved — a quiet week
 stops there, at no cost past the refresh itself — goes on to rebuild packets, check
-whether any reading is stale (`hip explain --all --dry-run`, which classifies every
-county without calling a model), rebuild the site, deploy it, and confirm the deploy
+whether any reading is stale (`hip explain --dry-run`, which classifies every
+county's readings without calling a model), rebuild the site, deploy it, and confirm the deploy
 with `check-live`. A quiet week still republishes, without rebuilding packets or
 readings, when a source's line on the freshness page would change — out of reach, back,
 or a release now waiting (ARCHITECTURE #232). `scripts/launchd/` holds the two
@@ -640,7 +654,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.24.5 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.25.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -657,12 +671,12 @@ Northeast and to every US county was deferred past Version 2 on 2026-09-07.
 Version 3 began as depth on what is already held. On 2026-09-23 it absorbed Version 4
 and the Director Note on accessible, comprehensive and current housing data, and became
 the version that makes the platform current, as complete as public data allows, and
-honest about both. Six of its milestones have shipped — **24** fresher figures, **25**
+honest about both. Seven of its milestones have shipped — **24** fresher figures, **25**
 recorded sale prices and a comparable tax rate, **26** current releases, **27** a refresh
-that reaches the reader, **28** figures that say how sure they are, and **29** scheduled
-refresh, brought forward out of order once the site was public and had started to decay.
-**30** through **50** remain, with the map's standing check; the completeness standing
-check runs at every milestone's close, twice so far. Version 4 holds nowcasts, a local price model
+that reaches the reader, **28** figures that say how sure they are, **29** scheduled
+refresh, brought forward out of order once the site was public and had started to decay,
+and **30** readings for every reader. **31** through **50** remain, with the map's standing check; the completeness standing
+check runs at every milestone's close, three times so far. Version 4 holds nowcasts, a local price model
 study and forecasting. Between milestones, the New Jersey landing page and region pages were
 redesigned (0.21.1 and 0.21.3).
 

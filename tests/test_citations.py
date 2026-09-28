@@ -405,7 +405,7 @@ class _Runner:
 
 
 def _generate(answer: str, packet: Packet, monkeypatch: pytest.MonkeyPatch) -> Any:
-    monkeypatch.setattr("hip.eval.explain.build_runner", lambda *_: _Runner(answer))
+    monkeypatch.setattr("hip.eval.explain.build_runner", lambda *_, **__: _Runner(answer))
     return generate(packet, load_evaluation(), "gemma-4-e4b-q4")
 
 
@@ -430,50 +430,101 @@ def test_publishable_prose_carries_its_binding_and_content_hash(
     assert explanation.content_sha256 == packet_content_hash(packet)
 
 
-def test_a_refusal_is_its_own_outcome_and_a_partial_run(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], packet: Packet
-) -> None:
-    from hip.eval_cli import PARTIAL, _explain_each, _Outcome, _summarize
+def _explain_run(
+    monkeypatch: pytest.MonkeyPatch,
+    packet: Packet,
+    refuse: dict[tuple[str, int], str],
+    states: dict[int, str],
+    models: list[str],
+) -> Any:
+    """`_explain_each` over regions 1-3 for the analyst audience, with `explain_region`
+    replaced: a (model, region) in `refuse` is refused with an unbound figure."""
+    from hip.eval_cli import _explain_each, _Outcome, _Readings, _Run
 
     def explain_region(
-        session: Any, evaluation: Any, region_id: int, *_: Any, **__: Any
+        session: Any, evaluation: Any, region_id: int, model_id: str, **__: Any
     ) -> Any:
-        if region_id == 2:
-            raise UnboundFigures(2, "gemini-test", bind("It hit $612,300.", packet))
+        if (model_id, region_id) in refuse:
+            raise UnboundFigures(
+                region_id, model_id, bind(refuse[model_id, region_id], packet)
+            )
         return SimpleNamespace(
-            model_id="gemini-test",
+            model_id=model_id,
             region_id=region_id,
             body="Rose.\n",
             binding=SimpleNamespace(citations=[]),
+            usage=None,
         )
 
     monkeypatch.setattr("hip.eval.explain.explain_region", explain_region)
-    states = {1: "stale", 2: "stale", 3: "rebound"}
     monkeypatch.setattr(
         "hip.eval_cli._stored_state", lambda _s, region_id, *_: states[region_id]
     )
-    outcomes = {"gemini-test": _Outcome()}
+    monkeypatch.setattr("hip.packets.build_packet", lambda *_: packet)
+    run = _Run(
+        readings={"analyst": _Readings()},
+        models={m: _Outcome() for m in models},
+        usage=[],
+    )
     _explain_each(
         SimpleNamespace(commit=lambda: None),  # type: ignore[arg-type]
         load_evaluation(),
-        outcomes,
+        run,
+        {"analyst": models},
         [1, 2, 3],
         window="5y",
         payload_format="markdown",
         force=False,
     )
+    return run
 
-    outcome = outcomes["gemini-test"]
-    assert (outcome.written, outcome.refused, outcome.rebound, outcome.failed) == (
-        1,
-        1,
-        1,
-        0,
+
+def test_a_refusal_passes_the_region_to_the_next_model(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], packet: Packet
+) -> None:
+    """One reading per region, from the first model that writes one fit to publish:
+    a refusal is not the end of the region (Milestone 30)."""
+    from hip.eval_cli import _summarize
+
+    run = _explain_run(
+        monkeypatch,
+        packet,
+        {("gemini-test", 2): "It hit $612,300."},
+        {1: "stale", 2: "stale", 3: "rebound"},
+        ["gemini-test", "gemma-4-e4b-q4"],
     )
-    assert _summarize(outcomes) == PARTIAL
+
+    readings = run.readings["analyst"]
+    assert (readings.written, readings.rebound, readings.unwritten) == (2, 1, 0)
+    assert readings.by_fallback == 1
+    assert (run.models["gemini-test"].written, run.models["gemini-test"].refused) == (
+        1,
+        1,
+    )
+    assert run.models["gemma-4-e4b-q4"].written == 1
+    assert _summarize(run) == 0
     printed = capsys.readouterr().out
     assert "1 re-bound without regenerating" in printed
-    assert "1 refused for figures the packet does not carry" in printed
+    assert "(1 by a fallback)" in printed
+
+
+def test_a_region_no_model_could_write_is_a_partial_run(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], packet: Packet
+) -> None:
+    from hip.eval_cli import PARTIAL, _summarize
+
+    run = _explain_run(
+        monkeypatch,
+        packet,
+        {("gemini-test", 2): "It hit $612,300.", ("gemma-4-e4b-q4", 2): "Or $700,000."},
+        {1: "stale", 2: "stale", 3: "current"},
+        ["gemini-test", "gemma-4-e4b-q4"],
+    )
+
+    readings = run.readings["analyst"]
+    assert (readings.written, readings.current, readings.unwritten) == (1, 1, 1)
+    assert _summarize(run) == PARTIAL
+    assert "1 not written by any model on the list" in capsys.readouterr().out
 
 
 # --- re-binding stored prose -------------------------------------------------------

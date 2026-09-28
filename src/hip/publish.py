@@ -218,8 +218,10 @@ def _plan(
             yield f"{base}/explanation?window={window}", explain
             # Beside the singular file rather than replacing it: the singular path is a
             # published contract with consumers, and the plural is additive
-            # (Milestone 19). Both 404 for a region with no explanation, and a 404 is a
-            # skip, so this adds one file per explained region and none elsewhere.
+            # (Milestone 19). Since Milestone 30 the singular is the analyst reading and
+            # the plural both, analyst then consumer. Both 404 for a region with no
+            # reading, and a 404 is a skip, so this adds one file per explained region
+            # and none elsewhere.
             yield (
                 f"{base}/explanations?window={window}",
                 f"{out}/explanations/{window}.json",

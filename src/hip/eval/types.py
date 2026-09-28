@@ -90,6 +90,10 @@ class Telemetry(_Strict):
     finish_reason: str | None = None
     served_model: str | None = None
     system_fingerprint: str | None = None
+    # The service tier the provider says served the call — Gemini's `serviceTier`,
+    # "standard" or "flex" — which is what the call bills at (Milestone 30). Null where a
+    # provider reports none, which is every provider but Gemini.
+    service_tier: str | None = None
 
 
 class Generation(_Strict):
