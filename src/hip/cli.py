@@ -1198,7 +1198,8 @@ def explain(
         list[str] | None,
         typer.Option(
             "--model",
-            help="Override the resolved model. Repeat to generate several.",
+            help="Try these models, in the order given, instead of each audience's "
+            "preference list. Repeat to name several.",
         ),
     ] = None,
     window: Annotated[str, typer.Option("--window")] = "5y",
@@ -1219,74 +1220,57 @@ def explain(
         bool,
         typer.Option(
             "--unbenchmarked",
-            help="Allow a candidate that has not passed the evaluation, on every path "
-            "— --all and --model included. Bootstrap only: it publishes prose from an "
-            "unmeasured model.",
+            help="Allow a candidate that has not passed the evaluation. Bootstrap "
+            "only: it publishes prose from an unmeasured model.",
         ),
     ] = False,
-    all_models: Annotated[
-        bool,
+    audience: Annotated[
+        list[str] | None,
         typer.Option(
-            "--all",
-            help="Generate one explanation per model in the preference list, so a "
-            "reader can compare how each reads the same packet. A model that cannot "
-            "be used is skipped, and the closing summary says why.",
+            "--audience",
+            help="analyst | consumer. Repeat for both, which is the default.",
         ),
-    ] = False,
-    prune: Annotated[
-        bool,
-        typer.Option(
-            "--prune",
-            help="After generating, delete the covered regions' stored explanations "
-            "from models that are neither on the preference list nor named in this run, "
-            "and list what was deleted. Implied by --all, which regenerates the whole "
-            "list and so retires any model that has left it.",
-        ),
-    ] = False,
+    ] = None,
     dry_run: Annotated[
         bool,
         typer.Option(
             "--dry-run",
-            help="Report how many explanations are stale and would be generated, "
-            "without calling a model, spending anything, or pruning. Exit 3 if anything "
-            "would be generated, 0 if nothing would (Milestone 27's scheduler gate).",
+            help="Report how many readings are stale and would be generated, "
+            "without calling a model, spending anything, or retiring any. Exit 3 if "
+            "anything would be generated, 0 if nothing would (Milestone 27's gate).",
         ),
     ] = False,
 ) -> None:
-    """Write model explanations into the warehouse for the API to serve.
+    """Write each region's analyst and consumer readings for the API to serve.
 
     A write path, and therefore a CLI command rather than an API call (ARCHITECTURE #6):
-    an explanation costs a model call and seconds of inference, which does not belong in
-    a page view. The model is resolved through the ordered preference list in
-    `config/evaluation.yml` — the first benchmarked candidate that is currently
-    reachable, ending at a local model so that no vendor decision can stop this command
-    (Milestone 12). Every figure in a generation is bound to the packet field that
-    licensed it before it is stored, and prose stating a figure the packet does not
-    carry is refused (Milestone 13). A region whose stored prose still describes these
-    figures is skipped — re-bound for free first if only provenance moved — and
-    `--force` regenerates it anyway.
+    a reading costs a model call and seconds of inference, which does not belong in a
+    page view. Each audience has its own ordered preference list in
+    `config/evaluation.yml` (Milestone 30), ending at a local model so that no vendor
+    decision can stop this command (Milestone 12). For each region the first model on
+    the list writes, and a model that cannot be reached, or whose reading a gate refuses,
+    passes the region to the next. The gates: every figure bound to the packet field
+    that licenses it (Milestone 13); every survey figure with its margin and every
+    uncertain rank as its range (SPEC principle 12); and for the consumer reading, its
+    five fixed headings, no source names or jargon, and at most two figures an answer.
 
-    `--all` generates one explanation per model on the preference list instead of one
-    from the first reachable candidate, which is what the dashboard's model comparison
-    is built from (Milestone 19). Staleness is tracked per region *and* model, so a
-    partial run resumes rather than restarting.
+    A region whose stored reading still describes these figures is skipped — re-bound
+    for free first if only provenance moved — and `--force` regenerates it anyway.
+    Which model wrote a reading does not make it stale, except a model that has left
+    the audience's list: its readings are rewritten, and any no model could rewrite are
+    retired (#213). Nothing else in the platform deletes a reading.
 
     Every path publishes only from a model that passed the latest judged run, as it is
-    configured now; `--unbenchmarked` is the only way past that (ARCHITECTURE #102). A
-    model that cannot be used is skipped rather than fatal, and the run ends with what
-    each requested model came to. Exit status: 0 when every requested model's prose is
-    current, 3 when some is but something was skipped, failed or refused, 1 when none
-    is.
+    configured now; `--unbenchmarked` is the only way past that (ARCHITECTURE #102).
+    Gemini is asked for its Flex tier, billed at the Batch API's half price, and the
+    run ends with what it cost, per model and how each was billed. Exit status: 0 when
+    every reading is current and every model could be used, 3 when some reading is but
+    a region went unwritten or a model could not be used, 1 when none is.
 
-    `--prune` then deletes, for the regions and window the run covered, every stored
-    explanation from a model neither on the preference list nor named in the run
-    (ARCHITECTURE #119). Nothing else in the platform deletes an explanation.
-
-    `--dry-run` answers "would this cost anything" without spending: it classifies every
-    requested (model, region) pair exactly as a real run would, but stops short of the
-    one step that reaches a model. Free re-citation still happens, since it costs
-    nothing; `--prune`'s deletion does not, since a cost report should not itself change
-    the database.
+    `--dry-run` answers "would this cost anything" without spending: it classifies
+    every region and audience exactly as a real run would, but stops short of the one
+    step that reaches a model. Free re-citation still happens, since it costs nothing;
+    retirement does not, since a cost report should not itself change the database.
     """
     explain_command(
         region,
@@ -1297,8 +1281,7 @@ def explain(
         limit,
         force,
         unbenchmarked,
-        all_models,
-        prune=prune,
+        audiences=audience,
         dry_run=dry_run,
     )
 

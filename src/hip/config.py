@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import re
+from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal
@@ -265,6 +266,18 @@ class EvalLimits(BaseModel):
 # refused by 3.7 Flash with HTTP 400 on 2026-09-10.
 ReasoningEffort = Literal["default", "disabled", "low"]
 
+# Who a reading is written for (Milestone 30). The analyst reading is the interpretation
+# the site has always carried; the consumer reading answers fixed questions in plain
+# language. Each has its own preference list, and a region carries one of each.
+Audience = Literal["analyst", "consumer"]
+AUDIENCES: tuple[Audience, ...] = ("analyst", "consumer")
+
+# The service tiers a provider can be asked for on a synchronous call, beyond its
+# standard one. Gemini's Flex tier bills at the Batch API's discount, answers on the
+# same `generateContent` call and says in `usageMetadata.serviceTier` which tier served
+# it — measured 2026-09-27 on both Gemini candidates (ARCHITECTURE #259).
+SERVICE_TIERS: dict[str, frozenset[str]] = {"gemini": frozenset({"flex"})}
+
 # Which settings each hosted provider can express. The wire format lives beside each
 # dialect in `hip.eval.runners.hosted`; this is what config validates against at load,
 # and a test holds the two in agreement.
@@ -333,6 +346,33 @@ class CandidateModel(BaseModel):
         ) / 1_000_000
 
 
+class OffPeak(BaseModel):
+    """A provider that bills less outside its peak hours, and when those are.
+
+    DeepSeek bills half its peak rate outside 01:00-04:00 and 06:00-10:00 UTC on
+    weekdays, and all weekend (its pricing page, 2026-09-27). The rates in this file
+    stay the peak ones, the higher, so an estimate is never below the bill; this lets a
+    run's report price each call at the rate its hour actually carried. Chinese public
+    holidays are off-peak too and are not modelled, which errs the same safe way.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # The multiplier on the configured rates outside peak hours.
+    rate: float = Field(gt=0.0, le=1.0)
+    # Peak windows as [start, end) UTC hours.
+    peak_utc: list[tuple[int, int]] = Field(min_length=1)
+    # Whether peak applies Monday to Friday only.
+    weekdays_only: bool = True
+
+    def discounted(self, at: datetime) -> bool:
+        """Whether a call made at `at` was billed at the off-peak rate."""
+        moment = at.astimezone(UTC)
+        if self.weekdays_only and moment.weekday() >= 5:
+            return True
+        return not any(start <= moment.hour < end for start, end in self.peak_utc)
+
+
 class Cohort(BaseModel):
     """One runtime and the candidates it serves.
 
@@ -366,6 +406,14 @@ class Cohort(BaseModel):
     # budget on reasoning and returned nothing for 12 of 21 counties, then completed the
     # same packet in 6,985.
     generation_limits: EvalLimits | None = None
+    # The tier `hip explain` asks for, and never the evaluation, for the reason
+    # `generation_limits` is explain-only: a benchmark measures the wait, and Flex trades
+    # latency for price. Null asks for the provider's standard tier.
+    generation_tier: Literal["flex"] | None = None
+    # What each tier the provider reports it served bills at, as a multiplier on the
+    # standard rates: Gemini's `{flex: 0.5}`. A tier not listed bills at 1.
+    tier_rates: dict[str, float] = Field(default_factory=dict)
+    off_peak: OffPeak | None = None
 
     @model_validator(mode="after")
     def _hosted_needs_credentials(self) -> Cohort:
@@ -389,6 +437,25 @@ class Cohort(BaseModel):
             raise ValueError(
                 f"runner '{self.runner}' is local; provider and api_key_env apply "
                 f"only to a hosted cohort"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _tier_is_expressible(self) -> Cohort:
+        """A tier the provider cannot be asked for would be dropped or refused, and a
+        tier with no rate would price its calls as standard."""
+        if self.generation_tier is None:
+            return self
+        offered = SERVICE_TIERS.get(self.provider or "", frozenset())
+        if self.generation_tier not in offered:
+            raise ValueError(
+                f"generation_tier '{self.generation_tier}' is not one provider "
+                f"'{self.provider}' offers "
+                f"(offered: {', '.join(sorted(offered)) or 'none'})"
+            )
+        if self.generation_tier not in self.tier_rates:
+            raise ValueError(
+                f"generation_tier '{self.generation_tier}' needs its rate in tier_rates"
             )
         return self
 
@@ -483,8 +550,19 @@ class GenerationConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    preference: list[str] = Field(min_length=1)
+    # One list per audience since Milestone 30: a region carries one analyst and one
+    # consumer reading, each from the first model on its own list that can write it.
+    preference: dict[Audience, list[str]]
     max_concurrency: int = Field(default=4, ge=1, le=32)
+
+    @model_validator(mode="after")
+    def _every_audience_has_a_list(self) -> GenerationConfig:
+        missing = [a for a in AUDIENCES if not self.preference.get(a)]
+        if missing:
+            raise ValueError(
+                f"generation.preference needs a non-empty list for {', '.join(missing)}"
+            )
+        return self
 
 
 class EvaluationConfig(BaseModel):
@@ -714,30 +792,29 @@ def evaluation_problems(evaluation: EvaluationConfig) -> list[str]:
         if len(cohorts) < 2
     ]
 
-    # The preference list is what `hip explain` resolves against, so an entry naming a
-    # model no cohort declares is a silent fallthrough to the next tier rather than an
-    # error at the point of use. Caught here instead.
+    # The preference lists are what `hip explain` resolves against, so an entry naming
+    # a model no cohort declares is a silent fallthrough to the next tier rather than an
+    # error at the point of use. Caught here instead, for each audience's list.
     declared = {m.id for m in evaluation.models}
-    problems += [
-        f"evaluation.yml: generation.preference names '{model_id}', which no cohort "
-        f"declares"
-        for model_id in evaluation.generation.preference
-        if model_id not in declared
-    ]
-    problems += [
-        f"evaluation.yml: duplicate entry '{dup}' in generation.preference"
-        for dup in _duplicates(evaluation.generation.preference)
-    ]
-
-    # SPEC requires the list to end at the local runtime: it is what keeps the
-    # explanation layer working when every vendor is not.
-    if evaluation.generation.preference:
-        last = evaluation.generation.preference[-1]
+    for audience, preference in evaluation.generation.preference.items():
+        where = f"generation.preference.{audience}"
+        problems += [
+            f"evaluation.yml: {where} names '{model_id}', which no cohort declares"
+            for model_id in preference
+            if model_id not in declared
+        ]
+        problems += [
+            f"evaluation.yml: duplicate entry '{dup}' in {where}"
+            for dup in _duplicates(preference)
+        ]
+        # SPEC requires each list to end at the local runtime: it is what keeps the
+        # explanation layer working when every vendor is not.
+        last = preference[-1]
         if last in declared and evaluation.cohort_for(last).runner == "hosted":
             problems.append(
-                f"evaluation.yml: generation.preference ends at '{last}', which is "
-                f"hosted. The list must end at a local model so that no vendor "
-                f"decision can stop `hip explain` from running."
+                f"evaluation.yml: {where} ends at '{last}', which is hosted. The list "
+                f"must end at a local model so that no vendor decision can stop "
+                f"`hip explain` from running."
             )
 
     # A pin, not an alias. A withdrawn pin fails loudly and falls through; a repointed

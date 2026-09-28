@@ -100,8 +100,9 @@ def _level(**fields: object) -> PacketLevel:
     return PacketLevel(**{**base, **fields})  # type: ignore[arg-type]
 
 
-@pytest.fixture
-def packet() -> Packet:
+def uncertain_packet() -> Packet:
+    """Mercer County's income, a share, a CHAS figure, a controlled population and a
+    multiple — each kind of margin — beside Zillow's index, which has none."""
     return Packet(
         packet_version="1.3",
         region=PacketRegion(
@@ -202,6 +203,11 @@ def packet() -> Packet:
             )
         ],
     )
+
+
+@pytest.fixture
+def packet() -> Packet:
+    return uncertain_packet()
 
 
 # --- the packet ------------------------------------------------------------------

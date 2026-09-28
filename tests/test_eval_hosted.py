@@ -469,6 +469,11 @@ def _settings_at(root: pathlib.Path) -> Settings:
 # --- preference-list resolution ----------------------------------------------------
 
 
+def _lists(preference: list[str]) -> dict[str, list[str]]:
+    """One preference list for both audiences, for a test about how a list resolves."""
+    return {"analyst": list(preference), "consumer": list(preference)}
+
+
 def _evaluation(preference: list[str]) -> EvaluationConfig:
     """A three-tier config: two hosted providers, then a local model."""
     base = load_evaluation(CONFIG_DIR)
@@ -490,7 +495,7 @@ def _evaluation(preference: list[str]) -> EvaluationConfig:
                     ],
                 ),
             },
-            "generation": GenerationConfig(preference=preference),
+            "generation": GenerationConfig(preference=_lists(preference)),
         }
     )
 
@@ -731,7 +736,7 @@ def _concurrent_evaluation() -> EvaluationConfig:
         update={
             "cohorts": {"hosted": _cohort("deepseek", "https://x/v1")},
             "generation": GenerationConfig(
-                preference=["deepseek-test"], max_concurrency=4
+                preference=_lists(["deepseek-test"]), max_concurrency=4
             ),
         }
     )
@@ -781,7 +786,9 @@ def _run_recording_concurrency(
     evaluation = base.model_copy(
         update={
             "cohorts": cohorts,
-            "generation": GenerationConfig(preference=[model_id], max_concurrency=4),
+            "generation": GenerationConfig(
+                preference=_lists([model_id]), max_concurrency=4
+            ),
         }
     )
 
@@ -1577,7 +1584,7 @@ def test_the_repo_config_adds_variants_without_touching_a_benchmarked_candidate(
         "qwen3.7-plus-nothink": "disabled",
         "gemma-4-e4b-q4": "default",
     }
-    for model_id in evaluation.generation.preference:
+    for model_id in evaluation.generation.preference["analyst"]:
         assert evaluation.model(model_id).reasoning_effort == measured_in_v3[model_id]
     # Everything `v2` measured is still configured the way it was measured. An in-place
     # edit here would publish prose from a setting nobody benchmarked.
@@ -1597,7 +1604,7 @@ def _serial(evaluation: EvaluationConfig) -> EvaluationConfig:
     return evaluation.model_copy(
         update={
             "generation": GenerationConfig(
-                preference=list(evaluation.generation.preference), max_concurrency=1
+                preference=dict(evaluation.generation.preference), max_concurrency=1
             )
         }
     )
@@ -2083,16 +2090,83 @@ def test_with_no_judged_run_no_explicit_model_may_publish(
     assert "no evaluation run has been judged" in unusable["gemma-4-e4b-q4"]
 
 
-def test_the_exit_status_tells_a_scheduler_partial_from_clean() -> None:
-    from hip.eval_cli import PARTIAL, _exit_code, _Outcome
+def _run_of(
+    readings: dict[str, dict[str, int]] | None = None,
+    models: dict[str, dict[str, Any]] | None = None,
+) -> Any:
+    """A `_Run` as `_explain_each` leaves one, for the exit-code rules."""
+    from hip.eval_cli import _Outcome, _Readings, _Run
 
-    clean = {"a": _Outcome(written=20, current=1), "b": _Outcome(current=21)}
-    assert _exit_code(clean) == 0
-    assert _exit_code({"a": _Outcome(written=21), "b": _Outcome(skipped="routed")}) == (
-        PARTIAL
+    return _Run(
+        readings={a: _Readings(**v) for a, v in (readings or {}).items()},
+        models={m: _Outcome(**v) for m, v in (models or {}).items()},
+        usage=[],
     )
-    assert _exit_code({"a": _Outcome(written=20, failed=1)}) == PARTIAL
-    assert _exit_code({"a": _Outcome(skipped="routed"), "b": _Outcome(failed=21)}) == 1
+
+
+def _each(
+    monkeypatch: pytest.MonkeyPatch,
+    evaluation: EvaluationConfig,
+    lists: dict[str, list[str]],
+    region_ids: list[int],
+    *,
+    force: bool = False,
+    dry_run: bool = False,
+    skipped: dict[str, str] | None = None,
+    commit: Any = None,
+) -> Any:
+    """`_explain_each` over `lists`, with a stand-in packet, returning the run."""
+    from hip.eval_cli import _explain_each, _Outcome, _Readings, _Run
+
+    monkeypatch.setattr("hip.packets.build_packet", lambda *_: SimpleNamespace())
+    run = _Run(
+        readings={audience: _Readings() for audience in lists},
+        models={
+            m: _Outcome(skipped=(skipped or {}).get(m))
+            for models in lists.values()
+            for m in models
+        },
+        usage=[],
+    )
+    _explain_each(
+        SimpleNamespace(commit=commit or (lambda: None)),  # type: ignore[arg-type]
+        evaluation,
+        run,
+        lists,
+        region_ids,
+        window="5y",
+        payload_format="markdown",
+        force=force,
+        dry_run=dry_run,
+    )
+    return run
+
+
+def test_the_exit_status_tells_a_scheduler_partial_from_clean() -> None:
+    """PARTIAL is what the scheduled refresh alerts on: a reading no model could write,
+    or a model that could not be used at all. A refusal the next model covered is
+    neither — every reading is current, and the summary names the fallback."""
+    from hip.eval_cli import PARTIAL, _exit_code
+
+    clean = _run_of(
+        {"analyst": {"written": 20, "current": 1}, "consumer": {"current": 21}},
+        {"a": {"written": 20}},
+    )
+    assert _exit_code(clean) == 0
+    covered = _run_of(
+        {"analyst": {"written": 21, "by_fallback": 1}},
+        {"a": {"written": 20, "refused": 1}, "b": {"written": 1}},
+    )
+    assert _exit_code(covered) == 0
+    assert _exit_code(_run_of({"analyst": {"written": 20, "unwritten": 1}})) == PARTIAL
+    skipped = _run_of(
+        {"analyst": {"written": 21}}, {"a": {"skipped": "routed"}, "b": {"written": 21}}
+    )
+    assert _exit_code(skipped) == PARTIAL
+    nothing = _run_of(
+        {"analyst": {"unwritten": 21}}, {"a": {"skipped": "routed"}, "b": {"failed": 21}}
+    )
+    assert _exit_code(nothing) == 1
     assert PARTIAL not in (0, 1, 2), "2 is Click's usage error"
 
 
@@ -2103,14 +2177,17 @@ def test_a_dry_run_exit_code_asks_would_anything_be_generated() -> None:
     called — so the ordinary exit-code rules about them do not apply here; only
     `would_write` decides.
     """
-    from hip.eval_cli import PARTIAL, _exit_code, _Outcome
+    from hip.eval_cli import PARTIAL, _exit_code
 
-    nothing_stale = {"a": _Outcome(current=21), "b": _Outcome(rebound=5, current=16)}
+    nothing_stale = _run_of(
+        {"analyst": {"current": 21}, "consumer": {"rebound": 5, "current": 16}},
+        {"a": {}},
+    )
     assert _exit_code(nothing_stale, dry_run=True) == 0
-    something_stale = {
-        "a": _Outcome(current=20, would_write=1),
-        "b": _Outcome(current=21),
-    }
+    something_stale = _run_of(
+        {"analyst": {"current": 20, "would_write": 1}, "consumer": {"current": 21}},
+        {"a": {}},
+    )
     assert _exit_code(something_stale, dry_run=True) == PARTIAL
 
 
@@ -2120,76 +2197,85 @@ def test_a_dry_run_that_could_assess_no_model_has_not_found_nothing_stale() -> N
     From Codex's second review of Milestone 27: this exited 0, and Regenerate Now told
     the owner nothing needed regenerating when nothing had been checked.
     """
-    from hip.eval_cli import _exit_code, _Outcome
+    from hip.eval_cli import _exit_code
 
-    none_assessed = {"a": _Outcome(skipped="no judged run"), "b": _Outcome(skipped="x")}
-    one_assessed = {"a": _Outcome(skipped="no judged run"), "b": _Outcome(current=21)}
-
+    none_assessed = _run_of(
+        {"analyst": {}}, {"a": {"skipped": "no judged run"}, "b": {"skipped": "x"}}
+    )
+    one_assessed = _run_of(
+        {"analyst": {"current": 21}}, {"a": {"skipped": "no judged run"}, "b": {}}
+    )
     assert _exit_code(none_assessed, dry_run=True) == 1
     assert _exit_code(one_assessed, dry_run=True) == 0
 
 
-def test_the_default_dry_run_resolves_without_a_probe(
+def test_by_default_each_audience_is_written_from_its_own_list(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Without `--all` or `--model`, `hip explain` resolves one model — and that path
-    probed too, the other half of the billed call a dry run promised not to make."""
+    """Milestone 30: no flag generates both readings, each down its own list — and
+    `--model` replaces every list with the models named, in their order."""
     import contextlib
 
     import typer
 
-    from hip.eval.selection import Resolution
     from hip.eval_cli import explain_command
 
-    asked: dict[str, Any] = {}
-
-    def resolve(*_args: Any, **kwargs: Any) -> Resolution:
-        asked.update(kwargs)
-        return Resolution(model_id="gemini-test", cohort="c", runtime="r", skipped=[])
+    seen: list[dict[str, list[str]]] = []
 
     @contextlib.contextmanager
     def session(engine: Any) -> Any:
         yield SimpleNamespace(commit=lambda: None)
 
-    monkeypatch.setattr(
-        "hip.eval_cli.load_evaluation", lambda: _evaluation(["gemini-test"])
-    )
-    monkeypatch.setattr("hip.eval.selection.resolve", resolve)
+    evaluation = _evaluation(["gemini-test", "gemma-4-e4b-q4"])
+    evaluation.generation.preference["consumer"] = ["deepseek-test", "gemma-4-e4b-q4"]
+    monkeypatch.setattr("hip.eval_cli.load_evaluation", lambda: evaluation)
+    monkeypatch.setattr("hip.eval_cli._unusable", lambda *args, **kwargs: {})
     monkeypatch.setattr("hip.eval_cli.get_engine", lambda: None)
     monkeypatch.setattr("hip.eval_cli.Session", session)
     monkeypatch.setattr("hip.packets.regions_for_level", lambda *args: [1])
-    monkeypatch.setattr("hip.eval_cli._explain_each", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        "hip.eval_cli._explain_each",
+        lambda _s, _e, _run, lists, *args, **kwargs: seen.append(lists),
+    )
 
-    with contextlib.suppress(typer.Exit):
-        explain_command(None, None, "5y", "county", "markdown", None, dry_run=True)
-    assert asked["probe"] is False
+    for models in (None, ["deepseek-test", "gemini-test"]):
+        with contextlib.suppress(typer.Exit):
+            explain_command(None, models, "5y", "county", "markdown", None, dry_run=True)
+
+    assert seen == [
+        {
+            "analyst": ["gemini-test", "gemma-4-e4b-q4"],
+            "consumer": ["deepseek-test", "gemma-4-e4b-q4"],
+        },
+        {
+            "analyst": ["deepseek-test", "gemini-test"],
+            "consumer": ["deepseek-test", "gemini-test"],
+        },
+    ]
 
 
 def test_a_dry_run_never_calls_the_model_it_would_have_used(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The one thing `--dry-run` promises: it does not reach a model."""
-    from hip.eval_cli import _explain_each, _Outcome
 
     def forbidden(*_args: Any, **_kwargs: Any) -> Any:
         raise AssertionError("a dry run called explain_region")
 
     monkeypatch.setattr("hip.eval.explain.explain_region", forbidden)
     monkeypatch.setattr("hip.eval_cli._stored_state", lambda *args: "stale")
-    outcome = _Outcome()
 
-    _explain_each(
-        SimpleNamespace(commit=lambda: None),  # type: ignore[arg-type]
+    run = _each(
+        monkeypatch,
         _evaluation(["gemini-test"]),
-        {"gemini-test": outcome},
+        {"analyst": ["gemini-test"], "consumer": ["gemini-test"]},
         [1, 2, 3],
-        window="5y",
-        payload_format="markdown",
-        force=False,
         dry_run=True,
     )
 
-    assert (outcome.would_write, outcome.written) == (3, 0)
+    assert run.readings["analyst"].would_write == 3
+    assert run.readings["consumer"].would_write == 3
+    assert run.models["gemini-test"].written == 0
 
 
 def test_a_dry_run_still_does_the_free_rebinding(
@@ -2197,24 +2283,20 @@ def test_a_dry_run_still_does_the_free_rebinding(
 ) -> None:
     """Re-citing stored prose against a moved release costs nothing, so a cost report
     that skipped it would leave real provenance stale for no reason."""
-    from hip.eval_cli import _explain_each, _Outcome
-
-    committed = []
+    committed: list[bool] = []
     monkeypatch.setattr("hip.eval_cli._stored_state", lambda *args: "rebound")
-    outcome = _Outcome()
 
-    _explain_each(
-        SimpleNamespace(commit=lambda: committed.append(True)),  # type: ignore[arg-type]
+    run = _each(
+        monkeypatch,
         _evaluation(["gemini-test"]),
-        {"gemini-test": outcome},
+        {"analyst": ["gemini-test"]},
         [1, 2],
-        window="5y",
-        payload_format="markdown",
-        force=False,
         dry_run=True,
+        commit=lambda: committed.append(True),
     )
 
-    assert (outcome.rebound, outcome.would_write) == (2, 0)
+    readings = run.readings["analyst"]
+    assert (readings.rebound, readings.would_write) == (2, 0)
     assert len(committed) == 2
 
 
@@ -2223,7 +2305,6 @@ def test_dry_run_with_force_counts_every_region_not_just_the_stale_ones(
 ) -> None:
     """`--force` skips the staleness check by design, so `--force --dry-run` reports
     every requested region as a cost, matching what `--force` alone would generate."""
-    from hip.eval_cli import _explain_each, _Outcome
 
     def forbidden(*_args: Any, **_kwargs: Any) -> Any:
         raise AssertionError("--force --dry-run called explain_region")
@@ -2233,24 +2314,21 @@ def test_dry_run_with_force_counts_every_region_not_just_the_stale_ones(
 
     monkeypatch.setattr("hip.eval.explain.explain_region", forbidden)
     monkeypatch.setattr("hip.eval_cli._stored_state", checked)
-    outcome = _Outcome()
 
-    _explain_each(
-        SimpleNamespace(commit=lambda: None),  # type: ignore[arg-type]
+    run = _each(
+        monkeypatch,
         _evaluation(["gemini-test"]),
-        {"gemini-test": outcome},
+        {"analyst": ["gemini-test"]},
         [1, 2, 3, 4],
-        window="5y",
-        payload_format="markdown",
         force=True,
         dry_run=True,
     )
 
-    assert outcome.would_write == 4
+    assert run.readings["analyst"].would_write == 4
 
 
 def test_dry_run_does_not_prune(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A cost report must not itself delete a stored explanation (Milestone 27)."""
+    """A cost report must not itself delete a stored reading (Milestone 27)."""
     import contextlib
 
     import typer
@@ -2262,14 +2340,14 @@ def test_dry_run_does_not_prune(monkeypatch: pytest.MonkeyPatch) -> None:
         yield SimpleNamespace(commit=lambda: None)
 
     def fake_explain_each(
-        _session: Any, _evaluation: Any, outcomes: Any, _region_ids: Any, **_: Any
+        _session: Any, _evaluation: Any, run: Any, *_args: Any, **_: Any
     ) -> None:
         # Stands in for what a real dry run would find: something stale.
-        for outcome in outcomes.values():
-            outcome.would_write = 1
+        for readings in run.readings.values():
+            readings.would_write = 1
 
     def forbidden_prune(*_args: Any, **_kwargs: Any) -> None:
-        raise AssertionError("--dry-run pruned a model's readings")
+        raise AssertionError("--dry-run retired a model's readings")
 
     evaluation = _evaluation(["gemini-test"])
     monkeypatch.setattr("hip.eval_cli.load_evaluation", lambda: evaluation)
@@ -2281,9 +2359,7 @@ def test_dry_run_does_not_prune(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("hip.eval_cli._prune", forbidden_prune)
 
     with pytest.raises(typer.Exit) as exited:
-        explain_command(
-            None, None, "5y", "county", "markdown", None, all_models=True, dry_run=True
-        )
+        explain_command(None, None, "5y", "county", "markdown", None, dry_run=True)
     assert exited.value.exit_code == PARTIAL
 
 
@@ -2315,19 +2391,18 @@ def test_explain_dry_run_turns_the_probe_off(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setattr("hip.eval_cli._explain_each", lambda *args, **kwargs: None)
 
     with contextlib.suppress(typer.Exit):
-        explain_command(
-            None, None, "5y", "county", "markdown", None, all_models=True, dry_run=True
-        )
+        explain_command(None, None, "5y", "county", "markdown", None, dry_run=True)
     assert asked["probe"] is False
 
 
 def test_a_missing_runtime_skips_its_model_and_the_rest_still_run(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """A `RunnerUnavailable` ended the whole command until 2026-09-11, taking every model
-    after the one that raised it with it."""
+    """A `RunnerUnavailable` passes every region on to the next model for the rest of
+    the run, where until 2026-09-11 it ended the whole command. A region whose every
+    model failed, or was skipped, is counted as not written — and the run is partial."""
     from hip.eval.runners import RunnerUnavailable
-    from hip.eval_cli import PARTIAL, _explain_each, _Outcome, _summarize
+    from hip.eval_cli import PARTIAL, _summarize
 
     def explain_region(
         session: Any, evaluation: Any, region_id: int, model_id: str, **_: Any
@@ -2341,38 +2416,36 @@ def test_a_missing_runtime_skips_its_model_and_the_rest_still_run(
             region_id=region_id,
             body="Rose.\n",
             binding=SimpleNamespace(citations=[]),
+            usage=None,
         )
 
     monkeypatch.setattr("hip.eval.explain.explain_region", explain_region)
     monkeypatch.setattr("hip.eval_cli._stored_state", lambda *args: "stale")
-    outcomes = {
-        "gemma-4-e4b-q4": _Outcome(),
-        "gemini-test": _Outcome(),
-        "deepseek-test": _Outcome(skipped="routed to deepseek-flash"),
-    }
 
-    _explain_each(
-        SimpleNamespace(commit=lambda: None),  # type: ignore[arg-type]
+    run = _each(
+        monkeypatch,
         _evaluation(["gemini-test"]),
-        outcomes,
+        {"analyst": ["gemma-4-e4b-q4", "gemini-test", "deepseek-test"]},
         [1, 2, 3],
-        window="5y",
-        payload_format="markdown",
-        force=False,
+        skipped={"deepseek-test": "routed to deepseek-flash"},
     )
 
-    assert outcomes["gemma-4-e4b-q4"].skipped == "mlx-lm is not installed"
-    assert (outcomes["gemini-test"].written, outcomes["gemini-test"].failed) == (2, 1)
-    assert _summarize(outcomes) == PARTIAL
+    assert run.models["gemma-4-e4b-q4"].skipped == "mlx-lm is not installed"
+    gemini = run.models["gemini-test"]
+    assert (gemini.written, gemini.failed) == (2, 1)
+    readings = run.readings["analyst"]
+    assert (readings.written, readings.unwritten, readings.by_fallback) == (2, 1, 2)
+    assert _summarize(run) == PARTIAL
     printed = capsys.readouterr().out
     assert "skipped: mlx-lm is not installed" in printed
     assert "skipped: routed to deepseek-flash" in printed
     assert printed.rstrip().endswith(
-        "2 explanations written, 1 failed, 2 of 3 model(s) skipped — partial"
+        "2 reading(s) written, 1 not written by any model on the list, "
+        "2 model(s) could not be used — partial"
     )
 
 
-def test_all_with_no_usable_model_exits_1_without_touching_the_warehouse(
+def test_with_no_usable_model_a_run_exits_1_without_touching_the_warehouse(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     import typer
@@ -2388,7 +2461,7 @@ def test_all_with_no_usable_model_exits_1_without_touching_the_warehouse(
     monkeypatch.setattr("hip.eval.selection.latest_run", lambda: None)
 
     with pytest.raises(typer.Exit) as exited:
-        explain_command(None, None, "5y", "county", "markdown", None, all_models=True)
+        explain_command(None, None, "5y", "county", "markdown", None)
     assert exited.value.exit_code == 1
 
 
@@ -2566,49 +2639,51 @@ def test_the_report_holds_qwen_to_the_temperature_its_cards_give_for_each_mode()
     )
 
 
-def test_prune_keeps_the_preference_list_and_every_model_named_in_the_run(
+def test_prune_keeps_each_audiences_list_and_every_model_named_in_the_run(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """`--model X --prune` must not delete the reading it has just written for a model
-    that is not on the list."""
+    """`--model X` must not retire the reading it has just written for a model that is
+    not on the list, and each audience keeps its own list."""
     from hip.eval_cli import _prune
 
-    kept: dict[str, set[str]] = {}
+    kept: dict[str, Any] = {}
 
-    def prune(session: Any, region_ids: list[int], window: str, keep: set[str]) -> Any:
-        kept["keep"] = set(keep)
+    def prune(session: Any, region_ids: list[int], window: str, keep: Any) -> Any:
+        kept.update(keep)
         return {"mistral-small-4": 21, "deepseek-v4-pro": 21}
 
+    evaluation = _evaluation(["gemini-test", "gemma-4-e4b-q4"])
+    evaluation.generation.preference["consumer"] = ["deepseek-test", "gemma-4-e4b-q4"]
     monkeypatch.setattr("hip.eval.explain.prune", prune)
     _prune(
         SimpleNamespace(commit=lambda: None),  # type: ignore[arg-type]
-        _evaluation(["gemini-test", "gemma-4-e4b-q4"]),
-        ["experimental-model"],
+        evaluation,
+        {"analyst": ["experimental-model"], "consumer": ["experimental-model"]},
         [1, 2],
         "5y",
     )
 
-    assert kept["keep"] == {"gemini-test", "gemma-4-e4b-q4", "experimental-model"}
+    assert kept == {
+        "analyst": {"gemini-test", "gemma-4-e4b-q4", "experimental-model"},
+        "consumer": {"deepseek-test", "gemma-4-e4b-q4", "experimental-model"},
+    }
     assert (
-        "pruned 42 explanation(s) from models no longer on the preference list: "
+        "retired 42 reading(s) from models no longer on their list: "
         "deepseek-v4-pro (21), mistral-small-4 (21)" in capsys.readouterr().out
     )
 
 
-def test_regenerating_the_whole_list_retires_a_model_that_left_it(
+def test_every_run_retires_readings_from_models_that_left_a_list(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """`--all` prunes without being asked (Milestone 26).
-
-    Qwen 3.7 Plus left the preference list on 2026-09-23. Retirement used to need
-    `--prune`, so a regeneration that forgot it would have gone on serving Qwen's
-    readings beside the four models still writing.
-    """
+    """Retirement without being asked (Milestone 26), on every real run since Milestone
+    30. Qwen 3.7 Plus left the list on 2026-09-23; a run that forgot to retire it would
+    have gone on serving its readings."""
     import contextlib
 
     from hip.eval_cli import explain_command
 
-    pruned: list[tuple[list[str], list[int]]] = []
+    pruned: list[tuple[dict[str, list[str]], list[int]]] = []
 
     @contextlib.contextmanager
     def session(engine: Any) -> Any:
@@ -2623,12 +2698,100 @@ def test_regenerating_the_whole_list_retires_a_model_that_left_it(
     monkeypatch.setattr("hip.eval_cli._explain_each", lambda *args, **kwargs: None)
     monkeypatch.setattr(
         "hip.eval_cli._prune",
-        lambda session, evaluation, models, region_ids, window: pruned.append(
-            (models, region_ids)
+        lambda session, evaluation, lists, region_ids, window: pruned.append(
+            (lists, region_ids)
         ),
     )
-    monkeypatch.setattr("hip.eval_cli._summarize", lambda outcomes, **kwargs: 0)
+    monkeypatch.setattr("hip.eval_cli._summarize", lambda run, *args, **kwargs: 0)
 
-    explain_command(None, None, "5y", "county", "markdown", None, all_models=True)
+    explain_command(None, None, "5y", "county", "markdown", None)
 
-    assert pruned == [(["gemini-test", "gemma-4-e4b-q4"], [1, 2])]
+    both = ["gemini-test", "gemma-4-e4b-q4"]
+    assert pruned == [({"analyst": both, "consumer": both}, [1, 2])]
+
+
+# --- Gemini's Flex tier, for `hip explain` only (Milestone 30) ------------------------
+
+
+def _flex(monkeypatch: pytest.MonkeyPatch) -> HostedRunner:
+    monkeypatch.setenv("GEMINI_API_KEY", "goog-test")
+    runner = build_runner(
+        _cohort("gemini", "https://x/v1beta"), "gemini", service_tier="flex"
+    )
+    assert isinstance(runner, HostedRunner)
+    return runner
+
+
+def _served_as(tier: str) -> dict[str, object]:
+    body = _gemini_answer()
+    body["usageMetadata"] = {**body["usageMetadata"], "serviceTier": tier}  # type: ignore[dict-item]
+    return body
+
+
+def test_a_flex_runner_asks_for_the_tier_and_records_what_served_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Asked for on the request, beside `contents`; read back from `usageMetadata`,
+    because the tier that served the call is the one it bills at."""
+    sent: list[dict[str, Any]] = []
+    generation = _generate_as(
+        _flex(monkeypatch),
+        _at("gemini", "default"),
+        _recording(_served_as("flex"), sent),
+        monkeypatch,
+    )
+    assert sent[-1]["serviceTier"] == "flex"
+    assert generation.telemetry.service_tier == "flex"
+
+
+def test_the_evaluation_never_asks_for_flex(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A benchmark measures the wait, which Flex trades away."""
+    sent: list[dict[str, Any]] = []
+    _generate_as(
+        _gemini(monkeypatch),
+        _at("gemini", "default"),
+        _recording(_served_as("standard"), sent),
+        monkeypatch,
+    )
+    assert "serviceTier" not in sent[-1]
+
+
+def test_no_flex_capacity_is_asked_once_more_at_the_standard_tier(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Gemini never upgrades a Flex call itself, and falling to the next model instead
+    would let a price tier decide who writes a region's reading."""
+    tiers: list[str | None] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        tiers.append(body.get("serviceTier"))
+        if body.get("serviceTier") == "flex":
+            return httpx.Response(503, json={"error": {"message": "no capacity"}})
+        return httpx.Response(200, json=_served_as("standard"))
+
+    monkeypatch.setattr("hip.eval.runners.hosted.time.sleep", lambda _s: None)
+    generation = _generate_as(
+        _flex(monkeypatch), _at("gemini", "default"), handler, monkeypatch
+    )
+    assert generation.error is None
+    assert tiers == ["flex", "flex", "flex", "flex", None]
+    assert generation.telemetry.service_tier == "standard"
+
+
+def test_a_probe_never_asks_for_flex(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A probe measures reachability, and a queued tier would only make it slower."""
+    sent: list[dict[str, Any]] = []
+    assert (
+        _probe(_flex(monkeypatch), _recording(_served_as("standard"), sent), monkeypatch)
+        is None
+    )
+    assert "serviceTier" not in sent[-1]
+
+
+def test_the_repo_asks_gemini_for_flex_and_prices_deepseek_by_the_clock() -> None:
+    evaluation = load_evaluation(CONFIG_DIR)
+    gemini, deepseek = evaluation.cohorts["gemini"], evaluation.cohorts["deepseek"]
+    assert (gemini.generation_tier, gemini.tier_rates) == ("flex", {"flex": 0.5})
+    assert deepseek.generation_tier is None
+    assert deepseek.off_peak is not None and deepseek.off_peak.rate == 0.5

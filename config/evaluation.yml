@@ -144,6 +144,15 @@ cohorts:
       # generation is accepted as non-reproducible (SPEC), and this is what that costs
       # in practice: a cap set near the median truncates the tail into empty answers.
       max_output_tokens: 24000
+    # No batch API and no discounted tier (checked 2026-09-27 against the pricing
+    # page): DeepSeek discounts by the clock instead, half its peak rate outside
+    # 01:00-04:00 and 06:00-10:00 UTC on weekdays. The rates below stay the peak ones;
+    # this lets `hip explain` price each call at the rate its hour carried. The Friday
+    # 08:00 New Jersey run falls at 12:00 or 13:00 UTC, off-peak.
+    off_peak:
+      rate: 0.5
+      peak_utc: [[1, 4], [6, 10]]
+      weekdays_only: true
     endpoint: https://api.deepseek.com/v1
     models:
       # Rates are the PEAK figures. DeepSeek prices by time of day — off-peak is
@@ -228,6 +237,15 @@ cohorts:
       # generation is accepted as non-reproducible (SPEC), and this is what that costs
       # in practice: a cap set near the median truncates the tail into empty answers.
       max_output_tokens: 24000
+    # Batch pricing without a batch (Milestone 30, ARCHITECTURE #259). Gemini bills its
+    # Flex tier at the Batch API's 50%, on the same synchronous `generateContent` call,
+    # with a 1-15 minute target instead of the batch's 24 hours, and reports in
+    # `usageMetadata.serviceTier` which tier served each call — both candidates,
+    # measured 2026-09-27. `hip explain` only: the evaluation measures latency, which
+    # Flex gives up. A call Flex cannot serve is retried once at the standard tier.
+    generation_tier: flex
+    tier_rates:
+      flex: 0.5
     endpoint: https://generativelanguage.googleapis.com/v1beta
     models:
       # 3.1 Flash-Lite, not the cheaper 2.5 Flash-Lite. 2.5 is still returned by the
@@ -384,56 +402,63 @@ cohorts:
 
 # How `hip explain` picks a model, resolved at generation time rather than pinned.
 #
-# The list is a durability mechanism, not a tuning knob: it resolves to the first
-# available candidate and ends at a local model, so no vendor decision can stop `hip
-# explain` from running. Two rules keep it from becoming a back door around the
-# benchmark — every entry must be a model some cohort declares (checked by
-# `hip check-config`) and must have passed the evaluation (checked at resolution,
-# where the run results are).
+# Each list is a durability mechanism, not a tuning knob: for each region it falls
+# through to the next model when one cannot write a publishable reading, and it ends
+# at a local model, so no vendor decision can stop `hip explain` from running. Two
+# rules keep it from becoming a back door around the benchmark — every entry must be
+# a model some cohort declares (checked by `hip check-config`) and must have passed
+# the evaluation (checked at resolution, where the run results are).
 #
-# It holds one model today because one model has passed. Milestone 12's hosted tiers
-# are prepended as they clear the benchmark; the candidate slate, the rejected
-# candidates, and the reasons are in TODO.md under "Milestone 12 — Hosted inference".
-# Hosted refs are deliberately absent rather than provisional: a model identifier
-# taken from a blog and never called is indistinguishable in this file from one that
-# was verified, and the one thing a pin exists to prevent is a silent substitution.
+# One list per audience since Milestone 30: a region carries one analyst reading and
+# one consumer reading, where it carried one reading per model on a single list.
 generation:
   preference:
-    # Ordered from the `v3` benchmark (2026-09-11), not from reputation. Rubric scores
-    # in brackets, graded at judge effort `high` and so not comparable with `v2`'s; the
-    # full table is reports/evaluation/v3.md. `hip explain --all` writes one reading per
-    # entry, in this order, and resolves the single preferred reading the same way.
-    #
-    # Every hosted tier sits above the local model because it measured better, except
-    # Flash-Lite (below). Mistral Small 4 [2.68], the EU tier since Milestone 12, left
-    # on 2026-09-11 for the opposite reason: it scored below the local model, so it
-    # should never write before it, and the failover its regime offered is one this
-    # machine now provides better (ARCHITECTURE #118).
-    #
-    # Gemini 3.7 Flash leads at low thinking [3.77]: its default setting [3.75] scored
-    # no better at nearly twice the cost, and one model at two settings is one reading
-    # twice, not two readings.
-    - gemini-3.7-flash-low
-    # The China slot, held by the better of its two contenders. DeepSeek V4.1 Flash
-    # with thinking off [3.57] beats the same model thinking [2.78 — three answers cut
-    # off by the benchmark's 6,000-token ceiling] and every Qwen configuration. It is an
-    # alias DeepSeek repoints, so the substitution guard (#95) is what stands between a
-    # repoint and prose published under the wrong name.
-    - deepseek-flash-nothink
-    # Qwen 3.7 Plus [3.46] held a second tier in the China regime until 2026-09-23, when
-    # the owner retired it: its free quota was spent. It stays a benchmarked candidate
-    # above, so its scores keep their meaning; it is simply no longer asked to write.
-    # `hip explain --all` retires its stored readings on the next run (Milestone 26),
-    # and a DeepSeek repoint or retirement now falls straight to Flash-Lite.
-    #
-    # Kept at the owner's request on 2026-09-11 [3.10]: a cheap in-provider step-down,
-    # and a reading on every county page. It sits above the local model it scored 0.03
-    # below — a gap fifteen answers cannot separate — because the list must end on
-    # this machine.
-    - gemini-3.1-flash-lite
-    # Last, and a working model rather than a degraded one: Gemma 4 E4B [3.13]
-    # outscored two hosted candidates again.
-    - gemma-4-e4b-q4
+    analyst:
+      # Ordered from the `v3` benchmark (2026-09-11), not from reputation. Rubric scores
+      # in brackets, graded at judge effort `high` and so not comparable with `v2`'s; the
+      # full table is reports/evaluation/v3.md. Until Milestone 30 `hip explain --all`
+      # wrote one reading per entry; now each region's analyst reading comes from the
+      # first entry that writes one it can publish, in this order.
+      #
+      # Every hosted tier sits above the local model because it measured better, except
+      # Flash-Lite (below). Mistral Small 4 [2.68], the EU tier since Milestone 12, left
+      # on 2026-09-11 for the opposite reason: it scored below the local model, so it
+      # should never write before it, and the failover its regime offered is one this
+      # machine now provides better (ARCHITECTURE #118).
+      #
+      # Gemini 3.7 Flash leads at low thinking [3.77]: its default setting [3.75] scored
+      # no better at nearly twice the cost, and one model at two settings is one reading
+      # twice, not two readings.
+      - gemini-3.7-flash-low
+      # The China slot, held by the better of its two contenders. DeepSeek V4.1 Flash
+      # with thinking off [3.57] beats the same model thinking [2.78 — three answers cut
+      # off by the benchmark's 6,000-token ceiling] and every Qwen configuration. It is an
+      # alias DeepSeek repoints, so the substitution guard (#95) is what stands between a
+      # repoint and prose published under the wrong name.
+      - deepseek-flash-nothink
+      # Qwen 3.7 Plus [3.46] held a second tier in the China regime until 2026-09-23, when
+      # the owner retired it: its free quota was spent. It stays a benchmarked candidate
+      # above, so its scores keep their meaning; it is simply no longer asked to write.
+      # A reading from a model that leaves a list is rewritten or retired on the next
+      # run (Milestone 26), and a DeepSeek repoint or retirement falls to Flash-Lite.
+      #
+      # Kept at the owner's request on 2026-09-11 [3.10]: a cheap in-provider step-down,
+      # and a reading on every county page. It sits above the local model it scored 0.03
+      # below — a gap fifteen answers cannot separate — because the list must end on
+      # this machine.
+      - gemini-3.1-flash-lite
+      # Last, and a working model rather than a degraded one: Gemma 4 E4B [3.13]
+      # outscored two hosted candidates again.
+      - gemma-4-e4b-q4
+    # PROVISIONAL until the owner chooses from the three-county side-by-side
+    # (ROADMAP, Milestone 30), which generates both formats with DeepSeek, Gemini 3.7
+    # Flash and Flash-Lite. Until then it mirrors the analyst list, so the consumer
+    # path can run end to end; it ends on this machine like every list.
+    consumer:
+      - gemini-3.7-flash-low
+      - deepseek-flash-nothink
+      - gemini-3.1-flash-lite
+      - gemma-4-e4b-q4
   # In-flight requests per hosted cohort. Hosted inference is on this milestone for
   # concurrency, but an unbounded fan-out earns 429s that look like model failures,
   # and the retry that follows costs more wall-clock than the parallelism saved.

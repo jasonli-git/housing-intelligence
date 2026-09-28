@@ -106,13 +106,14 @@ class RegionExplanation(Base):
     reads this to compute anything. `hip explain` writes it, the explanation endpoints
     serve it, and the dashboard labels it as interpretation (migrations 0007, 0010).
 
-    Keyed on the model as well as the region and window since migration 0010, so one
-    region can carry several models' readings of the same packet and a reader can
-    compare them. `rank` is the model's position in `generation.preference` when the row
-    was written: the API cannot look that up, because `API_MAY_IMPORT` is
-    `{warehouse, packets}` and ordering must therefore be data rather than configuration
-    read at request time. It is also provenance — the row records which tier produced
-    this paragraph, not merely that some model did.
+    Keyed on the audience since migration 0019 (Milestone 30): a region carries one
+    analyst reading and one consumer reading, each from the first model on its
+    audience's preference list that wrote one fit to publish. Migration 0010 had keyed it
+    on the model, so a region could carry every model's reading side by side. `rank` is
+    the writer's position in its audience's list when the row was written — provenance:
+    the row records which tier produced it, not merely that some model did, and whether a
+    fallback wrote it. `sections` holds a consumer reading's answers: each fixed
+    question's id and heading, and where its answer sits in `body`.
 
     `packet_sha256` is what makes staleness detectable rather than invisible — the text
     is pinned to the packet bytes it was written from, so a later pipeline run leaves a
@@ -132,7 +133,8 @@ class RegionExplanation(Base):
         BigInteger, ForeignKey("regions.region_id", ondelete="CASCADE"), primary_key=True
     )
     window: Mapped[str] = mapped_column(String(16), primary_key=True)
-    model_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    audience: Mapped[str] = mapped_column(String(16), primary_key=True)
+    model_id: Mapped[str] = mapped_column(String(64), nullable=False)
     model_label: Mapped[str] = mapped_column(Text, nullable=False)
     runtime: Mapped[str] = mapped_column(String(16), nullable=False)
     rank: Mapped[int] = mapped_column(SmallInteger, nullable=False)
@@ -146,14 +148,19 @@ class RegionExplanation(Base):
     binding: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB(none_as_null=True), nullable=True
     )
+    sections: Mapped[list[dict[str, Any]] | None] = mapped_column(
+        JSONB(none_as_null=True), nullable=True
+    )
     generated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
     __table_args__ = (
         CheckConstraint("length(body) > 0", name="ck_explanation_body_not_empty"),
+        CheckConstraint(
+            "audience IN ('analyst', 'consumer')", name="ck_region_explanations_audience"
+        ),
         Index("ix_region_explanations_model", "model_id"),
-        Index("ix_region_explanations_rank", "region_id", "window", "rank"),
     )
 
 

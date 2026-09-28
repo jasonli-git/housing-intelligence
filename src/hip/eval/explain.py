@@ -1,4 +1,4 @@
-"""Generating region explanations with the model the evaluation selected.
+"""Generating region readings with the models the evaluation selected.
 
 This is the AI layer the platform actually ships, and it is deliberately the smallest
 one that is useful. SPEC: AI is an enhancement, the platform stays fully useful with it
@@ -18,23 +18,35 @@ Four consequences, all enforced in code rather than left to convention:
   row is written, and prose stating a figure the packet does not carry is refused rather
   than stored (Milestone 13). Until then the figure check ran only in the evaluation, so
   published prose was vouched for by its model's benchmark and nothing else.
+
+Since Milestone 30 a region carries two readings, one per audience (`hip.eval.formats`):
+the analyst reading, the interpretation as it always was, and the consumer reading, a
+bottom line and four fixed questions in plain language. Both are refused, too, where a
+survey figure is stated without its margin or an uncertain rank as a place (SPEC
+principle 12), and the consumer reading where it loses its shape, names a source, uses
+jargon or crowds an answer with figures. A refusal is not a failure of the run: the next
+model on the audience's list is asked instead.
 """
 
 from __future__ import annotations
 
 import logging
-from collections.abc import Collection, Sequence
-from dataclasses import dataclass
+from collections.abc import Collection, Mapping, Sequence
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Literal
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, tuple_
 from sqlalchemy.orm import Session
 
-from hip.config import EvaluationConfig
+from hip.config import Audience, EvaluationConfig
+from hip.eval.costs import Usage, generation_usd
+from hip.eval.formats import ANALYST_PROMPT, ANALYST_QUESTION, FORMATS, MalformedReading
+from hip.eval.formats import Section as Section
 from hip.eval.prompts import build_prompt, fits_context, render_payload
 from hip.eval.runners import build_runner
 from hip.eval.runners.mlx_runner import MlxRunner
-from hip.eval.types import Scenario
+from hip.eval.types import Generation, Scenario
 from hip.packets import (
     Binding,
     Packet,
@@ -49,8 +61,23 @@ from hip.warehouse.models import RegionExplanation
 
 log = logging.getLogger(__name__)
 
+# The analyst format under its original names, which the evaluation's tests and every
+# reading written before Milestone 30 were built against.
+EXPLAIN_PROMPT = ANALYST_PROMPT
+EXPLAIN_QUESTION = ANALYST_QUESTION
 
-class UnboundFigures(RuntimeError):
+
+class GenerationFailed(RuntimeError):
+    """A generation that produced nothing publishable for a reason of its own — an
+    error, an empty answer, a substituted model. Carries what it cost where it cost
+    anything, because a run's cost includes what it paid for and could not use."""
+
+    def __init__(self, message: str, usage: Usage | None = None) -> None:
+        self.usage = usage
+        super().__init__(message)
+
+
+class UnboundFigures(GenerationFailed):
     """Generated prose stated a figure its packet does not carry, so it was not stored.
 
     A `RuntimeError`, like every other way a generation fails, so a bulk run records it
@@ -59,41 +86,46 @@ class UnboundFigures(RuntimeError):
     """
 
     def __init__(
-        self, region_id: int, model_id: str, binding: Binding, body: str | None = None
+        self,
+        region_id: int,
+        model_id: str,
+        binding: Binding,
+        body: str | None = None,
+        usage: Usage | None = None,
     ) -> None:
         self.binding = binding
         super().__init__(
             f"region {region_id}: {model_id} stated {len(binding.unbound)} figure(s) "
-            f"the packet does not carry — {describe_unbound(binding, body)} — not stored"
+            f"the packet does not carry — {describe_unbound(binding, body)} — not stored",
+            usage,
         )
 
 
-# The instruction that produces an explanation rather than an answer to a question. It
-# differs from the evaluation's system prompt on purpose: the evaluation measures
-# question-answering, while this asks for the short narrative the dashboard shows.
-EXPLAIN_PROMPT = """\
-You are a housing-market analyst writing a short explanatory note for a dashboard.
+class ReadingRefused(GenerationFailed):
+    """A bound reading that still may not be published: a survey figure without its
+    margin, an uncertain rank quoted as a place, or a consumer reading without its
+    shape, with a source name or jargon, or with too many figures in an answer."""
 
-You are given a data packet for one region, already computed by a deterministic
-pipeline. Write two or three short paragraphs explaining what the numbers show.
-
-Rules:
-- Use only figures that appear in the packet. Never invent one.
-- Describe what changed and how the region compares with its peers.
-- Carry through any caveat that changes how a figure should be read.
-- Do not assert causes the packet cannot support. "Values rose while incomes did not"
-  is supported; "values rose because of migration" is not.
-- No preamble, no headings, no bullet lists. Plain prose a resident could follow.
-"""
-
-EXPLAIN_QUESTION = (
-    "Explain what this packet shows about the region's housing market over the window."
-)
+    def __init__(
+        self,
+        region_id: int,
+        model_id: str,
+        problems: list[str],
+        usage: Usage | None = None,
+    ) -> None:
+        self.problems = problems
+        shown = "; ".join(problems[:3])
+        more = f"; and {len(problems) - 3} more" if len(problems) > 3 else ""
+        super().__init__(
+            f"region {region_id}: {model_id} wrote a reading that cannot be published — "
+            f"{shown}{more} — not stored",
+            usage,
+        )
 
 
 @dataclass
 class Explanation:
-    """A generated explanation and the provenance that makes it accountable."""
+    """A generated reading and the provenance that makes it accountable."""
 
     region_id: int
     window: str
@@ -108,40 +140,64 @@ class Explanation:
     # Every figure in `body`, resolved to the packet field that licenses it. Complete by
     # construction — prose with an unbound figure never becomes an `Explanation`.
     binding: Binding
-    # Position in `generation.preference` when this was written. Stored rather than
-    # looked up because the API may not read that config (`API_MAY_IMPORT`), so the
-    # order five explanations are offered in has to travel with the rows.
+    # Position in the audience's preference list when this was written. Stored rather
+    # than looked up because the API may not read that config (`API_MAY_IMPORT`).
     rank: int = 0
+    audience: Audience = "analyst"
+    # A consumer reading's answers; empty for an analyst reading.
+    sections: list[Section] = field(default_factory=list)
+    usage: Usage | None = None
 
 
-def generate(
+def _usage(evaluation: EvaluationConfig, model_id: str, generation: Generation) -> Usage:
+    candidate = evaluation.model(model_id)
+    cohort = evaluation.cohort_for(model_id)
+    telemetry = generation.telemetry
+    usd, off_peak = generation_usd(
+        candidate,
+        cohort,
+        telemetry.prompt_tokens,
+        telemetry.generation_tokens,
+        tier=telemetry.service_tier,
+        at=datetime.now(UTC),
+    )
+    return Usage(
+        model_id=model_id,
+        prompt_tokens=telemetry.prompt_tokens,
+        generation_tokens=telemetry.generation_tokens,
+        tier=telemetry.service_tier,
+        usd=usd,
+        off_peak=off_peak,
+    )
+
+
+def run_model(
     packet: Packet,
     evaluation: EvaluationConfig,
     model_id: str,
     *,
+    audience: Audience = "analyst",
     payload_format: str = "markdown",
-    rank: int | None = None,
-) -> Explanation:
-    """Run one packet through the selected model.
-
-    Markdown by default: the same information at roughly a third of the JSON token
-    count, which on a 16GB machine is the difference between a comfortable context and
-    a truncated one. The evaluation is what establishes whether that costs quality.
-    """
+    service_tier: str | None = None,
+) -> tuple[Generation, str, Usage]:
+    """One call to one model with one audience's prompt: the generation, the payload it
+    was shown, and what it cost. Raises only for a packet that does not fit the model's
+    context; a failed call is a `Generation` with an error, for the caller to judge."""
     candidate = evaluation.model(model_id)
     cohort_name = evaluation.cohort_of(model_id)
     cohort = evaluation.cohorts[cohort_name]
-    runner = build_runner(cohort, cohort_name)
+    runner = build_runner(cohort, cohort_name, service_tier=service_tier)
 
     # The cohort's own generation budget where it declares one, the evaluation's
     # otherwise. Never the evaluation's for a hosted cohort that has stated its own: a
-    # reasoning model cut off mid-thought returns an empty answer, which this function
-    # reports as a failure — correctly, but for a reason that is a config artifact about
-    # different hardware rather than a property of the model.
+    # reasoning model cut off mid-thought returns an empty answer, which is reported as
+    # a failure — correctly, but for a reason that is a config artifact about different
+    # hardware rather than a property of the model.
     limits = cohort.generation_limits or evaluation.limits
 
+    reading = FORMATS[audience]
     payload = render_payload(packet, payload_format)
-    prompt = build_prompt(EXPLAIN_PROMPT, payload, EXPLAIN_QUESTION)
+    prompt = build_prompt(reading.prompt, payload, reading.question)
     if not fits_context(prompt, limits.max_output_tokens, limits.context_tokens):
         raise ValueError(
             f"region {packet.region.region_id}: packet does not fit the configured "
@@ -150,11 +206,11 @@ def generate(
         )
 
     scenario = Scenario(
-        scenario_id="explain",
+        scenario_id=f"explain-{audience}",
         region_id=packet.region.region_id,
         region_label=packet.region.label,
         window=packet.window.label,
-        question=EXPLAIN_QUESTION,
+        question=reading.question,
         payload_format=payload_format,  # type: ignore[arg-type]
         payload=payload,
         payload_tokens=0,
@@ -173,9 +229,28 @@ def generate(
     finally:
         if isinstance(runner, MlxRunner):
             runner.unload()
+    return generation, payload, _usage(evaluation, model_id, generation)
 
+
+def judge_generation(
+    packet: Packet,
+    generation: Generation,
+    payload: str,
+    *,
+    audience: Audience,
+    usage: Usage | None = None,
+) -> tuple[str, list[Section], Binding]:
+    """The gates a generation must pass to be published, in order: an answer at all,
+    its audience's shape, every figure bound, then the audience's own rules.
+
+    Returns the body to store, its sections and its binding; raises `GenerationFailed`
+    or one of its refusals otherwise. Shared by `generate` and the side-by-side, so what
+    the owner reads there is judged exactly as publication would judge it.
+    """
+    region_id = packet.region.region_id
+    model_id = generation.model_id
     if generation.error:
-        raise RuntimeError(f"region {packet.region.region_id}: {generation.error}")
+        raise GenerationFailed(f"region {region_id}: {generation.error}", usage)
     if not generation.answer.strip():
         # An empty answer from a reasoning model usually means the output budget went
         # entirely to hidden reasoning — a truncation, not a refusal, and storing it
@@ -185,19 +260,61 @@ def generate(
             if generation.truncated_reasoning
             else "no reasoning emitted"
         )
-        raise RuntimeError(
-            f"region {packet.region.region_id}: {model_id} returned no answer "
+        raise GenerationFailed(
+            f"region {region_id}: {model_id} returned no answer "
             f"({generation.telemetry.generation_tokens} tokens generated, {detail}). "
-            f"Raise generation.max_output_tokens in config/evaluation.yml."
+            f"Raise generation.max_output_tokens in config/evaluation.yml.",
+            usage,
         )
 
-    # The gate. Bound against the payload the model was given, so a figure it quoted
-    # from the packet's own words is licensed by those words.
-    body = generation.answer.strip()
+    reading = FORMATS[audience]
+    try:
+        body, sections = reading.shape(generation.answer)
+    except MalformedReading as exc:
+        raise ReadingRefused(region_id, model_id, [str(exc)], usage) from exc
+
+    # The binding gate. Bound against the payload the model was given, so a figure it
+    # quoted from the packet's own words is licensed by those words.
     binding = bind(body, packet, payload=payload)
     if not binding.complete:
-        raise UnboundFigures(packet.region.region_id, model_id, binding, body)
+        raise UnboundFigures(region_id, model_id, binding, body, usage)
+    problems = reading.problems(body, sections, binding, packet)
+    if problems:
+        raise ReadingRefused(region_id, model_id, problems, usage)
+    return body, sections, binding
 
+
+def generate(
+    packet: Packet,
+    evaluation: EvaluationConfig,
+    model_id: str,
+    *,
+    audience: Audience = "analyst",
+    payload_format: str = "markdown",
+    rank: int | None = None,
+) -> Explanation:
+    """Run one packet through one model for one audience, and judge the result.
+
+    Markdown by default: the same information at roughly a third of the JSON token
+    count, which on a 16GB machine is the difference between a comfortable context and
+    a truncated one. The evaluation is what establishes whether that costs quality.
+
+    A hosted cohort is asked for its `generation_tier` — Gemini's Flex, at half price —
+    which the evaluation never uses.
+    """
+    candidate = evaluation.model(model_id)
+    cohort = evaluation.cohort_for(model_id)
+    generation, payload, usage = run_model(
+        packet,
+        evaluation,
+        model_id,
+        audience=audience,
+        payload_format=payload_format,
+        service_tier=cohort.generation_tier,
+    )
+    body, sections, binding = judge_generation(
+        packet, generation, payload, audience=audience, usage=usage
+    )
     return Explanation(
         region_id=packet.region.region_id,
         window=packet.window.label,
@@ -212,38 +329,43 @@ def generate(
         packet_sha256=packet_hash(packet),
         content_sha256=packet_content_hash(packet),
         binding=binding,
-        rank=rank if rank is not None else rank_of(evaluation, model_id),
+        rank=rank if rank is not None else rank_of(evaluation, model_id, audience),
+        audience=audience,
+        sections=sections,
+        usage=usage,
     )
 
 
-def rank_of(evaluation: EvaluationConfig, model_id: str) -> int:
-    """Where `model_id` sits in the preference list.
+def rank_of(
+    evaluation: EvaluationConfig, model_id: str, audience: Audience = "analyst"
+) -> int:
+    """Where `model_id` sits in the audience's preference list.
 
     A model that is not on the list — one named explicitly with `--model` — sorts after
     every model that is, rather than silently ahead of them at position 0.
     """
-    preference = evaluation.generation.preference
+    preference = evaluation.generation.preference[audience]
     return preference.index(model_id) if model_id in preference else len(preference)
 
 
 def store(session: Session, explanation: Explanation) -> None:
-    """Replace this model's explanation for this region and window.
+    """Replace this region's reading for this window and audience.
 
-    Scoped to the model since migration 0010. Deleting by `(region_id, window)` alone
-    would make generating a second model's reading erase the first, which is the whole
-    capability the key was widened for.
+    Keyed on the audience since migration 0019: a region carries one analyst and one
+    consumer reading, so writing either replaces whichever model wrote it before.
     """
     session.execute(
         delete(RegionExplanation).where(
             RegionExplanation.region_id == explanation.region_id,
             RegionExplanation.window == explanation.window,
-            RegionExplanation.model_id == explanation.model_id,
+            RegionExplanation.audience == explanation.audience,
         )
     )
     session.add(
         RegionExplanation(
             region_id=explanation.region_id,
             window=explanation.window,
+            audience=explanation.audience,
             model_id=explanation.model_id,
             model_label=explanation.model_label,
             runtime=explanation.runtime,
@@ -252,6 +374,11 @@ def store(session: Session, explanation: Explanation) -> None:
             packet_sha256=explanation.packet_sha256,
             content_sha256=explanation.content_sha256,
             binding=explanation.binding.model_dump(mode="json"),
+            sections=(
+                [section.as_json() for section in explanation.sections]
+                if explanation.sections
+                else None
+            ),
         )
     )
 
@@ -260,23 +387,27 @@ def prune(
     session: Session,
     region_ids: Sequence[int],
     window: str,
-    keep: Collection[str],
+    keep: Mapping[str, Collection[str]],
 ) -> dict[str, int]:
-    """Delete these regions' stored explanations for `window` from every model not kept.
+    """Delete these regions' stored readings for `window` from every model not kept for
+    its audience.
 
-    Writing a model's reading replaces only that model's previous one, so a model that
-    leaves the preference list would keep its rows — and `/regions/{id}/explanations`
-    would go on serving them beside its replacements'. This removes them, scoped to what
-    the run covers: `hip explain --all` calls it on every run (Milestone 26), and
-    `--prune` does for a run that names its models. Returns the rows removed per model,
-    so the run can say exactly what it deleted.
+    A reading from a model that has left its audience's list is regenerated by the next
+    run (`hip explain` treats it as stale), which replaces it; this removes the ones
+    that could not be replaced, so a retired model's prose is never served on (#213).
+    Returns the rows removed per model, so the run can say exactly what it deleted.
     """
-    if not keep:
+    if not keep or not any(keep.values()):
         raise ValueError("refusing to prune with nothing to keep")
+    kept = [
+        (audience, model_id)
+        for audience, models in keep.items()
+        for model_id in sorted(models)
+    ]
     scope = (
         RegionExplanation.region_id.in_(list(region_ids)),
         RegionExplanation.window == window,
-        RegionExplanation.model_id.not_in(sorted(keep)),
+        tuple_(RegionExplanation.audience, RegionExplanation.model_id).not_in(kept),
     )
     removed = {
         model_id: int(count)
@@ -297,12 +428,17 @@ def explain_region(
     region_id: int,
     model_id: str,
     *,
+    audience: Audience = "analyst",
     window: str = "5y",
     payload_format: str = "markdown",
+    packet: Packet | None = None,
 ) -> Explanation:
     """Build the packet, generate, and store — the whole path for one region."""
-    packet = build_packet(session, region_id, window)
-    explanation = generate(packet, evaluation, model_id, payload_format=payload_format)
+    if packet is None:
+        packet = build_packet(session, region_id, window)
+    explanation = generate(
+        packet, evaluation, model_id, audience=audience, payload_format=payload_format
+    )
     store(session, explanation)
     return explanation
 
@@ -312,22 +448,29 @@ def is_stale(
     region_id: int,
     window: str,
     packet: Packet,
-    model_id: str | None = None,
+    audience: Audience | None = None,
 ) -> bool:
-    """Whether a stored explanation was written from different numbers.
+    """Whether a stored reading was written from different numbers.
 
-    Per model since migration 0010: one model's reading can be current while another's
-    is stale, because they are generated independently. With no `model_id` the question
-    is asked of the whole region — stale if *any* stored explanation is, which is the
-    conservative reading for a caller deciding whether to warn a reader. On the content
-    hash since Milestone 13, so a re-download that moved no figure is not staleness.
+    Per audience: the analyst and consumer readings are generated independently, so one
+    can be current while the other is stale. With no `audience` the question is asked
+    of the whole region — stale if *any* stored reading is, the conservative answer for
+    a caller deciding whether to warn a reader. On the content hash since Milestone 13,
+    so a re-download that moved no figure is not staleness.
+
+    Which model wrote a reading does not enter into it, and that is decided rather than
+    incidental (Milestone 30): a reading a fallback wrote when the first model could not
+    passed every gate the first model's would have, and names the model that wrote it,
+    so it stands until its figures change. The one exception is a model that has left
+    its audience's list, whose readings `hip explain` rewrites — a question about the
+    list, which this function does not read.
     """
     query = select(RegionExplanation).where(
         RegionExplanation.region_id == region_id,
         RegionExplanation.window == window,
     )
-    if model_id is not None:
-        query = query.where(RegionExplanation.model_id == model_id)
+    if audience is not None:
+        query = query.where(RegionExplanation.audience == audience)
     return any(
         not still_describes(
             packet, packet_sha256=row.packet_sha256, content_sha256=row.content_sha256
@@ -340,7 +483,7 @@ Freshness = Literal["current", "rebind", "stale"]
 
 
 def freshness(row: RegionExplanation, packet: Packet) -> Freshness:
-    """What a stored explanation needs, given the packet as it stands now.
+    """What a stored reading needs, given the packet as it stands now.
 
     `current` — written from these exact bytes and already bound. `rebind` — its words
     still describe the packet but its citations do not: either it was written before
@@ -360,11 +503,12 @@ def freshness(row: RegionExplanation, packet: Packet) -> Freshness:
 def rebind(
     row: RegionExplanation, packet: Packet, *, payload_format: str = "markdown"
 ) -> Binding:
-    """Bind a stored explanation to the current packet, and pin it there if it binds.
+    """Bind a stored reading to the current packet, and pin it there if it binds.
 
     The row is updated only when every figure binds, so a refusal leaves it exactly as
-    it was. The prose and `generated_at` are untouched: the text was not rewritten, only
-    re-cited.
+    it was. The prose, its sections and `generated_at` are untouched: the text was not
+    rewritten, only re-cited — and since its figures and margins have not moved, the
+    rules it was published under hold as they did.
     """
     binding = bind(row.body, packet, payload=render_payload(packet, payload_format))
     if binding.complete:
