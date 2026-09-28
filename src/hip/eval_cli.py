@@ -1035,11 +1035,10 @@ def _stored_state(
     """`current`, `rebound` or `stale` for a region's stored reading for an audience.
 
     `rebound` means the stored prose was re-cited against the current packet in this
-    call — it predated binding, or only provenance moved since it was written — and the
-    row is updated but not committed. Anything that needs a model is `stale`: no stored
-    row, a reading from a model that has left the audience's list, a packet that cannot
-    be built (the generation attempt then fails on its own terms rather than being
-    silently skipped here), figures that changed, or prose that no longer binds.
+    call — it predated binding, its binder revision changed, or only provenance moved —
+    and the row is updated but not committed. Anything that needs a model is `stale`:
+    no stored row, a reading from a model that has left the audience's list, a packet
+    that cannot be built, figures that changed, or prose that cannot pass re-binding.
     """
     from hip.eval.explain import freshness, rebind
     from hip.packets import PacketUnavailable, build_packet
@@ -1054,7 +1053,10 @@ def _stored_state(
         return "stale"
     state = freshness(row, packet)
     if state == "rebind":
-        if rebind(row, packet, payload_format=payload_format).complete:
+        if (
+            rebind(row, packet, payload_format=payload_format).complete
+            and freshness(row, packet) == "current"
+        ):
             return "rebound"
         return "stale"
     return state

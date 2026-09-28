@@ -34,7 +34,7 @@ import logging
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Literal
+from typing import Literal, cast
 
 from sqlalchemy import delete, func, select, tuple_
 from sqlalchemy.orm import Session
@@ -56,7 +56,7 @@ from hip.packets import (
     packet_hash,
     still_describes,
 )
-from hip.packets.citations import describe_unbound
+from hip.packets.citations import BINDING_VERSION, describe_unbound
 from hip.warehouse.models import RegionExplanation
 
 log = logging.getLogger(__name__)
@@ -485,14 +485,18 @@ Freshness = Literal["current", "rebind", "stale"]
 def freshness(row: RegionExplanation, packet: Packet) -> Freshness:
     """What a stored reading needs, given the packet as it stands now.
 
-    `current` — written from these exact bytes and already bound. `rebind` — its words
-    still describe the packet but its citations do not: either it was written before
-    binding existed, or only provenance moved (a re-download that changed a release id
-    or a retrieval date and no figure). Both are repaired without a model call.
+    `current` — written from these exact bytes and bound by this binder revision.
+    `rebind` — its words still describe the packet but its citations do not: it was
+    written before binding existed, the binder's attribution changed, or only
+    provenance moved (a re-download that changed a release id or a retrieval date and
+    no figure). Each is repaired without a model call.
     `stale` — the figures it describes have changed, so only a new generation will do.
     """
     if row.packet_sha256 == packet_hash(packet):
-        return "current" if row.binding is not None else "rebind"
+        version = (
+            row.binding.get("binding_version") if isinstance(row.binding, dict) else None
+        )
+        return "current" if version == BINDING_VERSION else "rebind"
     if row.content_sha256 is not None and row.content_sha256 == packet_content_hash(
         packet
     ):
@@ -505,13 +509,27 @@ def rebind(
 ) -> Binding:
     """Bind a stored reading to the current packet, and pin it there if it binds.
 
-    The row is updated only when every figure binds, so a refusal leaves it exactly as
-    it was. The prose, its sections and `generated_at` are untouched: the text was not
-    rewritten, only re-cited — and since its figures and margins have not moved, the
-    rules it was published under hold as they did.
+    The row is updated only when every figure binds. When the binder's attribution has
+    changed, the reading must also still pass its publication rules under the new
+    citations. A refusal leaves the old row untouched so the caller can regenerate it.
+    The prose, its sections and `generated_at` are never changed by re-citation.
     """
     binding = bind(row.body, packet, payload=render_payload(packet, payload_format))
-    if binding.complete:
+    old_version = (
+        row.binding.get("binding_version") if isinstance(row.binding, dict) else None
+    )
+    acceptable = binding.complete
+    if acceptable and row.binding is not None and old_version != BINDING_VERSION:
+        reading = FORMATS[cast(Audience, row.audience)]
+        try:
+            shaped, sections = reading.shape(row.body)
+        except MalformedReading:
+            acceptable = False
+        else:
+            acceptable = shaped == row.body and not reading.problems(
+                row.body, sections, binding, packet
+            )
+    if acceptable:
         row.binding = binding.model_dump(mode="json")
         row.packet_sha256 = packet_hash(packet)
         row.content_sha256 = packet_content_hash(packet)
