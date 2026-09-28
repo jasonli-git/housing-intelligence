@@ -11,7 +11,8 @@ ids would silently repoint every metric in the warehouse at the wrong place.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections import Counter
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -222,6 +223,13 @@ class FactLoadResult:
     rejects: int
 
 
+ReleaseKey = tuple[str, str, str]
+
+
+class ReleaseAttributionError(ValueError):
+    """A staged observation has no unique release with its exact provenance key."""
+
+
 _INSERT_FACT = text(
     """
     INSERT INTO fact_metric_observation
@@ -256,9 +264,9 @@ def load_facts(
     Values are upserted on (region, metric, period), so re-running after a Zillow
     revision updates history in place rather than accumulating duplicates.
 
-    Each fact points at the release for its own (source, layer): a county value and a
-    ZIP value come from different files, and attributing both to one release would make
-    the provenance a lie.
+    Each fact points at the release for its exact (source, layer, vintage). Older
+    staged vintages may use an existing warehouse release outside the adapters' current
+    acquisition window, but an absent or ambiguous exact release aborts the transaction.
     """
     with duckdb_session(duckdb_path) as duck:
         rows = duck.execute(
@@ -282,23 +290,13 @@ def load_facts(
         _upsert_metrics(conn, metrics)
         release_index = _release_ids(conn, releases)
 
-        # Resolution order, most precise first. Vintage matters more than layer: a
-        # value attributed to the wrong *year* of a source misstates when it was
-        # measured, while a value attributed to the wrong layer of the right vintage
-        # only loses which file within that release carried it.
-        #
-        # `(source, layer)` alone was the only key until Milestone 7, and it is not
-        # unique for a source publishing several vintages — ACS has ten releases across
-        # five vintages, HUD 107 — so all but one collapsed and every year's value cited
-        # the survivor (ARCHITECTURE #47, #53).
-        by_layer_vintage = {(s, la, v): r for (s, la, v), r in release_index.items()}
-        by_vintage: dict[tuple[str, str], int] = {}
-        by_layer: dict[tuple[str, str], int] = {}
-        any_release: dict[str, int] = {}
-        for (src, layer_name, vintage), rid in release_index.items():
-            by_vintage.setdefault((src, vintage), rid)
-            by_layer.setdefault((src, layer_name), rid)
-            any_release.setdefault(src, rid)
+        needed: Counter[ReleaseKey] = Counter(
+            (str(source_id), str(layer), str(vintage))
+            for _, _, _, _, _, _, source_id, layer, _, vintage, _ in rows
+        )
+        missing = set(needed) - set(release_index)
+        historical = _historical_release_candidates(conn, missing) if missing else []
+        release_index = _resolve_fact_release_ids(release_index, needed, historical)
 
         payload = []
         for (
@@ -314,15 +312,7 @@ def load_facts(
             vintage,
             margin,
         ) in rows:
-            source = str(source_id)
-            release_id = (
-                by_layer_vintage.get((source, str(layer), str(vintage)))
-                or by_vintage.get((source, str(vintage)))
-                or by_layer.get((source, str(layer)))
-                or any_release.get(source)
-            )
-            if release_id is None:
-                continue
+            release_id = release_index[(str(source_id), str(layer), str(vintage))]
             payload.append(
                 {
                     "geoid": geoid,
@@ -398,7 +388,7 @@ def load_region_identifiers(
 
 def _release_ids(
     conn: Any, releases: Sequence[ReleaseProvenance]
-) -> dict[tuple[str, str, str], int]:
+) -> dict[ReleaseKey, int]:
     """Map (source_id, layer, vintage) to the release row just inserted for it.
 
     Keyed on all three because two of them are not enough: `(source, layer)` collapses
@@ -406,6 +396,18 @@ def _release_ids(
     """
     if not releases:
         return {}
+    duplicated = [
+        key
+        for key, count in Counter(
+            (r.source_id, r.layer, r.vintage) for r in releases
+        ).items()
+        if count > 1
+    ]
+    if duplicated:
+        raise ReleaseAttributionError(
+            f"More than one cached release for the same (source, layer, vintage): "
+            f"{sorted(duplicated)[:5]}"
+        )
     rows = conn.execute(
         text(
             """
@@ -428,6 +430,73 @@ def _release_ids(
     return {
         (str(s), str(layer), str(vintage)): int(rid) for s, layer, vintage, rid in rows
     }
+
+
+def _historical_release_candidates(
+    conn: Any, missing: set[ReleaseKey]
+) -> list[tuple[str, str, str, int]]:
+    """Find exact older releases no longer enumerated by the current adapter window.
+
+    Loading from the existing registry is safe only when one release has the required
+    key. If several versions exist, the staged row has no file hash to choose between
+    them, and the resolver below fails instead of guessing.
+    """
+    sources = sorted({source for source, _, _ in missing})
+    rows = conn.execute(
+        text(
+            "SELECT source_id, layer, vintage, release_id FROM source_releases "
+            "WHERE source_id = ANY(CAST(:source_ids AS text[]))"
+        ),
+        {"source_ids": sources},
+    ).fetchall()
+    return [
+        (str(source), str(layer), str(vintage), int(release_id))
+        for source, layer, vintage, release_id in rows
+        if (str(source), str(layer), str(vintage)) in missing
+    ]
+
+
+def _resolve_fact_release_ids(
+    current: Mapping[ReleaseKey, int],
+    needed: Mapping[ReleaseKey, int],
+    historical: Sequence[tuple[str, str, str, int]],
+) -> dict[ReleaseKey, int]:
+    """Resolve every staged key exactly, preferring this run's fetched file.
+
+    A source-only or layer-only fallback is never provenance: it can cite another
+    survey edition as the file that supplied a row. An error here happens before any
+    fact upsert, so `engine.begin()` rolls back the source and metric upserts too.
+    """
+    resolved = dict(current)
+    candidates: dict[ReleaseKey, list[int]] = {}
+    for source, layer, vintage, release_id in historical:
+        key = (source, layer, vintage)
+        if key in needed and key not in resolved:
+            candidates.setdefault(key, []).append(release_id)
+
+    problems: list[tuple[ReleaseKey, int, int]] = []
+    for key, count in needed.items():
+        if key in resolved:
+            continue
+        matches = candidates.get(key, [])
+        if len(matches) == 1:
+            resolved[key] = matches[0]
+        else:
+            problems.append((key, count, len(matches)))
+
+    if problems:
+        examples = ", ".join(
+            f"{source}/{layer}/{vintage}: {count} rows, {matches} releases"
+            for (source, layer, vintage), count, matches in sorted(problems)[:5]
+        )
+        more = f" (+{len(problems) - 5} more keys)" if len(problems) > 5 else ""
+        raise ReleaseAttributionError(
+            f"Cannot load {sum(count for _, count, _ in problems)} observations: "
+            f"{len(problems)} (source, layer, vintage) keys have no unique exact "
+            f"release. {examples}{more}. No facts were written; restore the matching "
+            "release or remove stale staged rows."
+        )
+    return resolved
 
 
 def _upsert_metrics(conn: Any, metrics: Sequence[MetricRecord]) -> None:

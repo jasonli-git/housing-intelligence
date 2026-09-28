@@ -3,6 +3,20 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.24.5] — 2026-09-28
+
+From Codex (PR #49).
+
+### Fixed
+
+- **Every loaded figure cites its own release.** The loader no longer falls back to
+  another year's, layer's or source's file when a figure's exact release is missing: it
+  uses the exact `(source, layer, vintage)` release, an older one the warehouse already
+  holds where the current fetch no longer lists it, and otherwise stops the load before
+  writing anything. The first load under the rule corrected 689 figures that had been
+  citing the wrong file — a 2015 permit count, for one, had cited the 2025 release
+  (ARCHITECTURE #255).
+
 ## [0.24.4] — 2026-09-27
 
 The atlas redesign, from Codex (PR #48).

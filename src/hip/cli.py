@@ -87,6 +87,7 @@ from hip.warehouse.db import get_engine
 from hip.warehouse.discoveries import load_discoveries
 from hip.warehouse.load import (
     MetricRecord,
+    ReleaseAttributionError,
     ReleaseProvenance,
     SourceRecord,
     _upsert_metrics,
@@ -1041,17 +1042,21 @@ def load(
                 for release in _cached_releases(metric_adapter, settings.raw_dir, None)
             ]
 
-    facts = load_facts(
-        get_engine(),
-        settings.duckdb_path,
-        metrics=[
-            MetricRecord(metric_id=mid, **m.model_dump())
-            for mid, m in metric_config.items()
-            if m.source_id in metric_sources & set(METRIC_SOURCES)
-        ],
-        sources=fact_sources,
-        releases=fact_provenance,
-    )
+    try:
+        facts = load_facts(
+            get_engine(),
+            settings.duckdb_path,
+            metrics=[
+                MetricRecord(metric_id=mid, **m.model_dump())
+                for mid, m in metric_config.items()
+                if m.source_id in metric_sources & set(METRIC_SOURCES)
+            ],
+            sources=fact_sources,
+            releases=fact_provenance,
+        )
+    except ReleaseAttributionError as exc:
+        typer.secho(str(exc), fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
     typer.echo("")
     for metric_id, count in sorted(facts.by_metric.items()):
         typer.echo(f"{metric_id:<14} {count:>9,} observations")
