@@ -840,20 +840,6 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
   margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--border);
   font-size: 0.75rem; color: var(--text-muted);
 }
-/* The consumer reading (Milestone 30): the bottom line in the reading's own voice, then
-   the four fixed questions as a definition list — each question set as a heading a
-   reader can scan, each answer in the panel's prose. Inside the same dashed frame as
-   the analyst reading: plain language is not measurement either. */
-.consumer-reading .consumer-bottom-line { font-size: 1rem; color: var(--text-primary); }
-/* Two by two where there is room, never three and a lone fourth: four answers are a
-   square, and a card alone on its row reads as an afterthought. */
-.consumer-answers { display: grid; gap: 0.9rem 1.6rem; margin: 0.9rem 0 0; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 720px) {
-  .consumer-answers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-.consumer-answer { min-width: 0; }
-.consumer-answers dt { margin: 0 0 0.25rem; font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
-.consumer-answers dd { margin: 0; font-size: 0.9rem; line-height: 1.6; max-width: 65ch; }
 /* A figure the binding traced to the packet (Milestone 13). A dotted underline says
    "there is more here" without the weight of a link; the full provenance is in the
    figure list below, which is the path that works without a pointer. */

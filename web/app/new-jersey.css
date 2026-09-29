@@ -147,13 +147,13 @@
 .nj-page .globe-controls-dive { border-radius: 5px; box-shadow: 0 3px 8px rgb(14 50 80 / 15%); }
 .nj-page .globe-legend { padding-inline: 0.5rem; }
 .nj-page .rank-card { padding: 1.1rem 1rem; border-radius: 0 0 12px 0; }
-.nj-page .nj-rank-head { padding-bottom: 0.8rem; margin-bottom: 0; border-bottom: 2px solid var(--atlas-blue); }
+.nj-page .nj-rank-head { padding-bottom: 0.45rem; margin-bottom: 0.5rem; border-bottom: 2px solid var(--atlas-blue); }
 .nj-page .nj-rank-head h3 { font-size: 22px; letter-spacing: -0.04em; }
-.nj-page .ranks td { padding-block: 0.68rem; }
+.nj-page .rank-card .ranks td { padding-block: 0.3rem; }
 .nj-page .ranks .pos { font: 11px var(--font-mono); }
 .nj-page .ranks tbody tr.on td { background: color-mix(in srgb, var(--atlas-blue) 10%, var(--surface-card)); }
-.nj-page .ranks thead { position: sticky; top: 0; z-index: 1; background: var(--surface-card); }
-.nj-page .rank-card > .scroll-x { max-height: 680px; scrollbar-width: thin; }
+.nj-page .rank-card .ranks thead { position: static; background: var(--surface-card); }
+.nj-page .rank-card > .scroll-x { max-height: none; }
 .nj-page .nj-afford-mode .explorer { border-radius: 12px; }
 .nj-page .nj-afford-mode .nj-rank-head { border-bottom-color: var(--series-2); }
 
@@ -179,6 +179,7 @@
 @media (max-width: 1000px) {
   .nj-page .explorer { grid-template-columns: minmax(0, 1fr); }
   .nj-page .rank-card { border-radius: 0 0 12px 12px; }
+  .nj-page .rank-card .ranks td { padding-block: 0.62rem; }
   .nj-page .rank-card > .scroll-x { max-height: none; }
   .nj-atlas-count { font-size: 48px; }
 }

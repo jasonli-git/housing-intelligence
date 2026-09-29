@@ -1,7 +1,16 @@
 import { describe as suite, expect, it } from "vitest";
 
-import type { Citation, CitedRelease } from "@/lib/api";
-import { answers, describe, period, segment, sourceOf, whatItIs } from "@/lib/citations";
+import type { Binding, Citation, CitedRelease } from "@/lib/api";
+import {
+  answers,
+  describe,
+  focusedConsumerAnswer,
+  period,
+  segment,
+  sentenceRuns,
+  sourceOf,
+  whatItIs,
+} from "@/lib/citations";
 
 function cite(body: string, text: string, overrides: Partial<Citation> = {}): Citation {
   const start = body.indexOf(text);
@@ -78,6 +87,25 @@ suite("segment", () => {
   });
 });
 
+suite("sentenceRuns", () => {
+  it("turns existing sentences into list items without rewriting a cited figure", () => {
+    const body = "Check the $12,000 tax bill. Compare homes in each town.";
+    const result = sentenceRuns(segment(body, [cite(body, "$12,000")]).flat());
+
+    expect(result.map((runs) => runs.map((run) => run.text).join(""))).toEqual([
+      "Check the $12,000 tax bill.",
+      "Compare homes in each town.",
+    ]);
+    expect(result[0].find((run) => run.citation)?.citation?.text).toBe("$12,000");
+  });
+
+  it("keeps an abbreviation inside its sentence", () => {
+    const result = sentenceRuns([{ text: "Check the U.S. Census estimate. Then inspect the address." }]);
+    expect(result).toHaveLength(2);
+    expect(result[0].map((run) => run.text).join("")).toBe("Check the U.S. Census estimate.");
+  });
+});
+
 suite("describing a citation", () => {
   it("names the metric and the quantity", () => {
     const body = "Rose 4.7%.";
@@ -140,6 +168,48 @@ suite("answers", () => {
 
   it("drops a section whose offsets fall outside the body", () => {
     expect(answers(body, [{ id: "x", heading: "X", start: 10, end: 999 }], [])).toEqual([]);
+  });
+});
+
+suite("focusedConsumerAnswer", () => {
+  const blocks = [
+    ["bottom_line", "The bottom line", "Homes cost $500."],
+    ["harder_to_afford", "Is it getting harder to afford here?", "Prices rose 34%."],
+    ["rent_or_buy", "How does renting compare with buying?", "Rent is $1,900."],
+    ["whats_changing", "What's changing?", "Permits rose 12%."],
+    ["before_moving", "What should I check before moving?", "Check the local tax bill."],
+  ] as const;
+  const body = blocks.map(([, heading, answer]) => `${heading}\n${answer}`).join("\n\n");
+  const sections = blocks.map(([id, heading, answer]) => ({
+    id,
+    heading,
+    start: body.indexOf(answer),
+    end: body.indexOf(answer) + answer.length,
+  }));
+  const binding: Binding = {
+    citations: ["$500", "34%", "$1,900", "12%"].map((text) => cite(body, text)),
+    releases,
+    unbound: [],
+  };
+
+  it("keeps only the chosen answer and its cited figures", () => {
+    const changing = focusedConsumerAnswer(body, sections, binding, "whats_changing");
+    const moving = focusedConsumerAnswer(body, sections, binding, "before_moving");
+
+    expect(changing.answer?.runs.map((run) => run.text).join("")).toBe("Permits rose 12%.");
+    expect(changing.binding?.citations.map((citation) => citation.text)).toEqual(["12%"]);
+    expect(moving.answer?.runs.map((run) => run.text).join("")).toBe(
+      "Check the local tax bill.",
+    );
+    expect(moving.binding?.citations).toEqual([]);
+    expect(binding.citations).toHaveLength(4);
+  });
+
+  it("keeps an unverified reading unverified while hiding retired answers", () => {
+    const focused = focusedConsumerAnswer(body, sections, null, "whats_changing");
+
+    expect(focused.answer?.id).toBe("whats_changing");
+    expect(focused.binding).toBeNull();
   });
 });
 

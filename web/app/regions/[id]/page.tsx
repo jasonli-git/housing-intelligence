@@ -7,15 +7,17 @@ import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
 import { ConsumerReading, ExplanationPanel } from "@/components/ExplanationPanel";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
+import { IndexedComparison } from "@/components/IndexedComparison";
 import { Glossed } from "@/components/Glossed";
 import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Ledger, Margin, TableNotes } from "@/components/Ledger";
-import { MoreExpander } from "@/components/MoreExpander";
+import { AnalystReadingJump, DetailedDataJump, MoreExpander } from "@/components/MoreExpander";
 import { Masthead } from "@/components/Masthead";
 import { RankOverview } from "@/components/RankOverview";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
 import { TrendsExplorer } from "@/components/TrendsExplorer";
 import { api, type PacketLevel, type PacketMetric, type Region, regionsWithData } from "@/lib/api";
+import { indexedComparison } from "@/lib/chartInsights";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
 import { affordData, affordabilityForCounty } from "@/lib/affordData";
 import { costInputs, homePrice } from "@/lib/costInputs";
@@ -148,10 +150,9 @@ function Answer({ label, answer }: { label: string; answer: PaycheckAnswer }) {
 /**
  * A region page, laid out answer first (Milestone 23, layout B, the owner's choice): the
  * head and its verdict, what it costs per month, where the region stands out, and what its
- * housing is like — then one expander holding every table, the trends and the full
- * interpretation, for the reader who wants the whole picture. The stand-outs lead in place
- * of the tables because they are the tables' news; the tables are one click away, and
- * remembered open for a reader who opens them.
+ * housing is like — then separate disclosures for the automated summary and the full data.
+ * The stand-outs lead in place of the tables because they are the tables' news; the tables
+ * are one click away, and remembered open for a reader who opens them.
  */
 export default async function RegionPage({
   params,
@@ -200,6 +201,11 @@ export default async function RegionPage({
       : Promise.resolve(null),
   ]);
   const trends = series.filter((s) => s.observations.length >= 2);
+  const indexedInputs = trends.map(({ metricId, short, observations }) => ({
+    metricId,
+    label: short,
+    points: observations.map((o) => ({ date: o.period_end, value: o.value })),
+  }));
 
   const name = displayName(region);
   const county = region.ancestors.find((a) => a.level === "county");
@@ -245,6 +251,8 @@ export default async function RegionPage({
   const rankChartCount =
     Number(packet.metrics.some((row) => row.rank !== null && row.of !== null && row.of > 1)) +
     Number(packet.levels.some((row) => row.rank !== null && row.of !== null && row.of > 1));
+  const hasIndexedComparison = indexedComparison(indexedInputs) !== null;
+  const chartCount = trends.length + rankChartCount + Number(hasIndexedComparison);
 
   // One set per page: each glossary term is marked the first time it appears.
   const defined = new Set<string>();
@@ -256,21 +264,16 @@ export default async function RegionPage({
   );
   const [changes, values] = placement.tables;
 
-  // What the expander holds, said on it, so a reader knows what one click opens.
+  // What the data expander holds, said on it, so a reader knows what one click opens.
   const contents = [
     packet.metrics.length > 0 ? `${packet.metrics.length} figures ranked by change` : null,
     packet.levels.length > 0 ? `${packet.levels.length} current values` : null,
-    trends.length + rankChartCount > 0
-      ? `${trends.length + rankChartCount} ${trends.length + rankChartCount === 1 ? "chart" : "charts"}`
+    chartCount > 0
+      ? `${chartCount} ${chartCount === 1 ? "chart" : "charts"}`
       : null,
-    analyst ? "a model’s analyst reading" : null,
   ].filter((part): part is string => part !== null);
   const moreTitle =
-    analyst
-      ? "Every table, the trends and the interpretation"
-      : trends.length > 0
-        ? "Every table and the trends"
-        : "Every table";
+    trends.length > 0 ? "Every table and the trends" : "Every table";
   const affordabilityControl = region.level === "county"
     ? { kind: "local" as const, fallbackHref: `/afford?place=${regionId}` }
     : region.level === "zip"
@@ -345,6 +348,8 @@ export default async function RegionPage({
           )}
         </div>
         <div className="actions">
+          <DetailedDataJump targetId="region-detailed-data" />
+          {analyst && <AnalystReadingJump targetId="region-analyst-reading" />}
           <Link className="button report-action" href={`/regions/${regionId}/report`}>
             <svg viewBox="0 0 20 20" aria-hidden="true">
               <path d="M5.5 2.75h6l3 3v11.5h-9Z" />
@@ -374,7 +379,10 @@ export default async function RegionPage({
       <div className="region-standard-content">
 
       {cost ? (
-        <CostToOwn {...cost} />
+        <CostToOwn
+          {...cost}
+          beforeMoving={<ConsumerReading reading={consumer} section="before_moving" />}
+        />
       ) : (
         // Said rather than left out, so a thinner page reads as designed, not broken: the
         // section a reader looks for first says why it is empty here.
@@ -391,25 +399,52 @@ export default async function RegionPage({
         )
       )}
 
-      <RegionStandOuts
-        name={name}
-        peers={`${scopeName(peer_scope)}’s ${peer_count} ${peerNoun(peer_level)}`}
-        items={standing}
-      />
+      {/* Keep the interpretation visible even when no cost card can be calculated. */}
+      {!cost && <ConsumerReading reading={consumer} section="before_moving" />}
 
-      {/* After the computed answers, before the tables: the same figures read aloud in
-          plain language, and marked as a model's reading of them (Milestone 30). */}
-      {consumer && (
-        <div className="section">
-          <ConsumerReading reading={consumer} />
-        </div>
+      {/* The model's change reading leads into, but does not author, the computed ranks. */}
+      <ConsumerReading reading={consumer} section="whats_changing" />
+
+      {standing.length > 0 && (
+        <details className="standouts-disclosure">
+          <summary>
+            <span className="standouts-disclosure-copy">
+              <span className="standouts-disclosure-kicker">Computed rankings · {standing.length} measures</span>
+              <strong>Explore ranked measures</strong>
+              <span className="standouts-disclosure-hint">Where {name} leads, lags, or sits at an extreme</span>
+            </span>
+            <span className="standouts-disclosure-icon" aria-hidden="true">+</span>
+          </summary>
+          <RegionStandOuts
+            name={name}
+            peers={`${scopeName(peer_scope)}’s ${peer_count} ${peerNoun(peer_level)}`}
+            items={standing}
+          />
+        </details>
       )}
 
-      <MoreExpander title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>
+      {analyst && (
+        <details id="region-analyst-reading" className="analyst-disclosure">
+          <summary>
+            <span className="analyst-disclosure-copy">
+              <span className="analyst-disclosure-kicker">Model-written reading</span>
+              <strong>Automated data summary</strong>
+              <span className="analyst-disclosure-hint">A detailed digest of the reported figures</span>
+            </span>
+            <span className="analyst-disclosure-icon" aria-hidden="true">+</span>
+          </summary>
+          <div className="analyst-disclosure-body">
+            <ExplanationPanel reading={analyst} whole />
+          </div>
+        </details>
+      )}
+
+      <MoreExpander id="region-detailed-data" title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>
         <RankOverview
           changes={packet.metrics}
           values={packet.levels}
           peerLabel={peerNoun(peer_level)}
+          uncertainties={uncertainties}
         />
 
         <section className="section" aria-labelledby="ledger-heading">
@@ -445,6 +480,13 @@ export default async function RegionPage({
         {trends.length > 0 && (
           <section className="section" aria-labelledby="trends-heading">
             <h2 id="trends-heading">Trends</h2>
+            <IndexedComparison series={indexedInputs} />
+            {hasIndexedComparison && (
+              <div className="trend-detail-intro">
+                <h3>Explore each measure</h3>
+                <p>The year below changes only the individual charts, not the comparison above.</p>
+              </div>
+            )}
             <TrendsExplorer
               series={trends.map(({ metricId, short, observations }) => {
                 const meta = findSeries(packet.metrics, packet.levels, metricId);
@@ -539,12 +581,6 @@ export default async function RegionPage({
           </section>
         )}
 
-        {/* Whole, with no "Read the rest": opening the expander was the choice to read on. */}
-        {analyst && (
-          <div className="section">
-            <ExplanationPanel reading={analyst} whole />
-          </div>
-        )}
       </MoreExpander>
       </div>
       </main>
