@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.25.2, 2026-09-28. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.25.3, 2026-09-28. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, housing, economic context, property
 > tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
@@ -30,9 +30,9 @@ layer only explains metrics that were already computed.
 > two more say how current each source is and which published figures were revised.
 >
 > **Latest.** Milestone 30 (2026-09-28) writes readings for two kinds of reader. Every
-> county page now opens its interpretation with a plain-language reading — a bottom
-> line and four fixed questions, from *is it getting harder to afford here?* to *what
-> should I check before moving?* — and keeps an analyst reading behind it, each written
+> county page now shows a plain-language reading — *what's changing?* ahead of the
+> rankings and *what should I check before moving?* beside the costs — and keeps an
+> analyst reading, labelled the automated data summary, behind its own disclosure, each written
 > by the first model on its list whose reading passes every check: each figure traced
 > to its source, each survey figure given its margin of error, each uncertain rank read
 > as its range. The model for the plain reading was chosen by reading four candidates'
@@ -273,8 +273,9 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   with the model that wrote it, until Milestone 30 replaced the comparison with one
   reading for each kind of reader.
 - **Readings for every reader** (M30, built) — every county page carries a
-  plain-language reading, a bottom line and four fixed questions for someone deciding
-  whether to live there, and in its expander the analyst reading; each names the model
+  plain-language reading for someone deciding whether to live there — two of its five
+  answers shown, *what's changing?* and *what should I check before moving?* (0.25.3) —
+  and, behind its own disclosure, the analyst reading as an automated data summary; each names the model
   that wrote it, gives every survey figure its margin and quotes an uncertain rank as its
   range. Each comes from the first model on its own list that writes one fit to
   publish, and Gemini writes at its Flex tier's half price.
@@ -654,7 +655,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.25.2 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.25.3 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable

@@ -1,10 +1,12 @@
 import type { PacketLevel, PacketMetric } from "@/lib/api";
-import { groupRows } from "@/lib/groups";
-import { rankPosition } from "@/lib/ranks";
+import { type ClusterRank } from "@/lib/chartInsights";
+import { RankDotPlot } from "@/components/RankDotPlot";
+import type { Uncertainties } from "@/lib/uncertainty";
 
 type Rankable = {
   metric_id: string;
   label: string;
+  direction: string;
   rank: number | null;
   of: number | null;
 };
@@ -15,75 +17,10 @@ function hasRank(row: Rankable): row is Ranked {
   return row.rank !== null && row.of !== null && row.of > 1;
 }
 
-function RankPlot({
-  title,
-  basis,
-  rows,
-  peerLabel,
-}: {
-  title: string;
-  basis: string;
-  rows: Rankable[];
-  peerLabel: string;
-}) {
-  const sections = groupRows(rows.filter(hasRank));
-  if (sections.length === 0) return null;
-
-  const width = 660;
-  const left = 164;
-  const right = 22;
-  const top = 44;
-  const rowHeight = 54;
-  const height = top + sections.length * rowHeight + 18;
-  const plotWidth = width - left - right;
-
-  return (
-    <figure className="rank-plot">
-      <figcaption>
-        <strong>{title}</strong>
-        <span>{rows.filter(hasRank).length} ranked measures</span>
-      </figcaption>
-      <p>{basis}</p>
-      <div className="rank-plot-scroll">
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          role="img"
-          aria-label={`${title}. Each dot is one measure, positioned from rank 1 to its cohort’s final rank.`}
-        >
-          <text className="rank-plot-end" x={left} y={20}>Rank 1</text>
-          <text className="rank-plot-end" x={width - right} y={20} textAnchor="end">Last rank</text>
-          {sections.map((section, sectionIndex) => {
-            const y = top + sectionIndex * rowHeight;
-            return (
-              <g key={section.key}>
-                <text className="rank-plot-label" x={8} y={y + 4}>{section.title}</text>
-                <line className="rank-plot-track" x1={left} x2={width - right} y1={y} y2={y} />
-                <line className="rank-plot-middle" x1={left + plotWidth / 2} x2={left + plotWidth / 2} y1={y - 13} y2={y + 13} />
-                {section.rows.map((row, index) => {
-                  const x = left + rankPosition(row.rank, row.of) * plotWidth;
-                  const dotY = y + ((index % 5) - 2) * 5;
-                  const description = `${row.label}: rank ${row.rank} of ${row.of} ${peerLabel}`;
-                  return (
-                    <circle
-                      key={row.metric_id}
-                      className={`rank-plot-dot rank-plot-dot-${section.key}`}
-                      cx={x}
-                      cy={dotY}
-                      r={6}
-                      tabIndex={0}
-                      aria-label={description}
-                    >
-                      <title>{description}</title>
-                    </circle>
-                  );
-                })}
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-    </figure>
-  );
+function rankMarks(rows: Rankable[]): ClusterRank[] {
+  return rows.filter(hasRank).map(({ metric_id, label, rank, of, direction }) => ({
+    metric_id, label, rank, of, direction,
+  }));
 }
 
 /** Two compact, non-line views of the exact ranks repeated in the tables below. */
@@ -91,14 +28,21 @@ export function RankOverview({
   changes,
   values,
   peerLabel,
+  uncertainties,
 }: {
   changes: PacketMetric[];
   values: PacketLevel[];
   peerLabel: string;
+  uncertainties: Uncertainties;
 }) {
   const hasChanges = changes.some(hasRank);
   const hasValues = values.some(hasRank);
   if (!hasChanges && !hasValues) return null;
+  const hasRanges = [...uncertainties.value.values(), ...uncertainties.change.values()]
+    .some((range) => range.best !== null && range.worst !== null && range.best < range.worst);
+  const serializableRanges = (ranges: Uncertainties["value"]) => Object.fromEntries(
+    [...ranges].map(([id, range]) => [id, { best: range.best, worst: range.worst }]),
+  );
 
   return (
     <section className="section rank-overview" aria-labelledby="rank-overview-heading">
@@ -107,22 +51,25 @@ export function RankOverview({
         <span className="section-sub">the same ranks as the tables below</span>
       </div>
       <p className="rank-overview-intro">
-        Each dot is one measure. Its position is normalized to that measure’s reported
-        cohort, because coverage can differ: left is rank 1 and right is the final rank.
-        Rank 1 follows the measure’s own direction, so it does not always mean “better.”
+        Each plot groups measures by topic. Left is rank 1; right is the last rank in that
+        measure’s peer group. A numbered dot holds several nearby measures. Select one
+        to see exactly what it ranks and why.
+        {hasRanges && " Sampling uncertainty appears only when you inspect a measure."}
       </p>
       <div className="rank-plots">
-        <RankPlot
+        <RankDotPlot
           title="Five-year change"
-          basis="Where the size of each five-year change ranks."
-          rows={changes}
+          basis="change"
+          rows={rankMarks(changes)}
           peerLabel={peerLabel}
+          ranges={serializableRanges(uncertainties.change)}
         />
-        <RankPlot
+        <RankDotPlot
           title="Current value"
-          basis="Where each latest reported value ranks."
-          rows={values}
+          basis="value"
+          rows={rankMarks(values)}
           peerLabel={peerLabel}
+          ranges={serializableRanges(uncertainties.value)}
         />
       </div>
     </section>

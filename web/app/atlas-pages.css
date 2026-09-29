@@ -55,6 +55,9 @@
   }
   .atlas-local .report-action-copy strong { font-size: 13px; }
   .atlas-local .report-action-arrow { font-size: 18px; }
+  .atlas-local .analyst-jump-action { border-left-color: var(--text-muted); }
+  .atlas-local .analyst-jump-action > svg,
+  .atlas-local .analyst-jump-action .report-action-arrow { color: var(--text-secondary); stroke: var(--text-secondary); }
 
   .atlas-local > .region-profile-ticker {
     --profile-accent: #c4eadd;
@@ -87,10 +90,19 @@
   }
   .atlas-local .cost-cards {
     gap: 0;
+    margin-top: 1rem;
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: 12px;
     background: var(--surface-card);
+  }
+  .atlas-local .cost-monthly-headline {
+    border-radius: 12px 12px 0 0;
+    border-bottom: 0;
+  }
+  .atlas-local .cost-monthly-headline + .cost-cards {
+    margin-top: 0;
+    border-radius: 0 0 12px 12px;
   }
   .atlas-local .cost-card {
     border: 0;
@@ -99,7 +111,10 @@
     box-shadow: none;
   }
   .atlas-local .cost-card + .cost-card { border-left: 1px solid var(--border); }
-  .atlas-local .region-standouts { margin-top: clamp(2.5rem, 5vw, 4rem); }
+  .atlas-local .cost-cards + .cost-evidence { margin-top: 1.3rem; }
+  .atlas-local .standouts-disclosure { margin-top: clamp(1.5rem, 3vw, 2rem); }
+  .atlas-local .consumer-feature-whats_changing + .standouts-disclosure { margin-top: 0.75rem; }
+  .atlas-local .standouts-disclosure .region-standouts { margin: 1.35rem 0 1.8rem; }
 
   /* The standalone tool uses the same connected map/table grammar as the new state
      workspace, with the tool's established orange reserved for affordability. */

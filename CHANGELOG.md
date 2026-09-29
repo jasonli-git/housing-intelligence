@@ -3,6 +3,32 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.25.3] — 2026-09-29
+
+From Codex (PR #53).
+
+### Changed
+
+- **A county page shows two of the plain-language reading's answers, each where it
+  belongs.** *What's changing?* leads into the rankings, now behind an "Explore ranked
+  measures" disclosure; *what should I check before moving?* sits with the monthly costs,
+  as a list of its sentences. The bottom line and the affordability and rent-or-buy
+  answers are no longer shown, since the cost panels above already compute them; they
+  are still generated and stored (ARCHITECTURE #265). Each answer lists only its own
+  figures.
+- **The analyst reading is labelled "Automated data summary"** and has its own
+  disclosure, with a shortcut beside the report link, instead of sitting at the foot of
+  the data expander.
+- **The monthly-cost comparison is one headline above the cost cards**, and New Jersey's
+  county comparison shows all 21 counties without an inner scroll on desktop.
+
+### Added
+
+- **Housing costs against income on one indexed chart** in Trends, shown only when all
+  three series share a base year.
+- **Rank plots** in the data expander: each measure's rank among peers, with its exact
+  rank and sampling range on inspection. The tables remain.
+
 ## [0.25.2] — 2026-09-28
 
 From Codex (PR #52).

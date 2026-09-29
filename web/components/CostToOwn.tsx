@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 
 import { Definition } from "@/components/Definition";
 import { costToOwn, DEFAULT_DOWN, DOWN_PAYMENTS, goneAgainstRent, incomeFor, leftOut } from "@/lib/cost";
@@ -63,10 +63,10 @@ function share(part: number, whole: number): string {
  * gone — interest and tax — and money kept, the principal that pays the loan down and
  * stays the buyer's. Rent is set against money gone rather than the whole payment:
  * counting the part a buyer keeps as cost made owning read hundreds of dollars dearer than
- * renting (the owner's review, 2026-09-14). The strip under both says which is dearer by
- * that count, says plainly that a house usually rents for more than Zillow's all-rental
- * figure, sets the past five years' gain in value beside it as the past, and names what is
- * left out.
+ * renting (the owner's review, 2026-09-14). On region pages that monthly comparison
+ * leads the cards; the strip below keeps the limitations and past context. Reports keep
+ * their compact paragraph strip. Both say plainly that a house usually rents for more
+ * than Zillow's all-rental figure.
  *
  * The cards' headings keep their definitions — how each figure is worked out and where it
  * comes from, filled in with this page's rate, down payment and dates. The one control is
@@ -83,7 +83,8 @@ export function CostToOwn({
   gain,
   rateThen,
   control = true,
-}: CostProps & { control?: boolean }) {
+  beforeMoving,
+}: CostProps & { control?: boolean; beforeMoving?: ReactNode }) {
   const [down, setDown] = useState<number>(DEFAULT_DOWN);
   const id = useId();
   const cost = costToOwn({
@@ -209,6 +210,13 @@ export function CostToOwn({
           <span className="control-label">{down}% down payment</span>
         )}
       </div>
+
+      {control && cashComparison && (
+        <div className="cost-monthly-headline" aria-label="Monthly cash comparison">
+          <p className="cost-evidence-label">Monthly cash</p>
+          <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>
+        </div>
+      )}
 
       <div className="cost-cards">
         <article className="cost-card">
@@ -356,14 +364,7 @@ export function CostToOwn({
             </p>
             <p>{listed(leftOut(down))}.</p>
           </aside>
-          {cashComparison && (
-            <div className="cost-evidence-answer">
-              <p className="cost-evidence-label">Monthly cash</p>
-              <p className="cost-strip-big" aria-live="polite">
-                {cashComparison}
-              </p>
-            </div>
-          )}
+          {beforeMoving}
           <div className="cost-evidence-grid">
             {rentalCaveat && (
               <div className="cost-evidence-item">

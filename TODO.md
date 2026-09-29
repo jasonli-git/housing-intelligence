@@ -17,7 +17,7 @@ removed entries are in `git show ca49f74:TODO.md`.
 ## Now — between milestones (2026-09-28)
 
 Milestone 30 is merged and deployed (0.25.0), with Codex's binding fixes as 0.25.1 and
-0.25.2. Every county has an analyst reading; Gloucester and Warren have no consumer
+0.25.2; Codex's page layout (0.25.3) shows two of the five consumer answers. Every county has an analyst reading; Gloucester and Warren have no consumer
 reading, because every model's was refused on the 2026-09-28 regeneration — they are
 retried on the next run, or singly with `hip explain --audience consumer --region <id>`
 (billed). Next is Milestone 31 (ROADMAP).
@@ -33,6 +33,11 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
+
+- [ ] **Three of the consumer reading's five answers are generated but not shown.**
+      (PR #53, ARCHITECTURE #265) Each run pays for them and can refuse a whole reading
+      over one. Decide, with the Director Note *Grounded synthesis*, whether to drop them
+      from the prompt or show them again; a prompt change needs a new side-by-side.
 
 - [ ] **The consumer reading's figure limit counts distinct fields, not figures
       written.** (Codex review, PR #52) An answer that states the same packet field

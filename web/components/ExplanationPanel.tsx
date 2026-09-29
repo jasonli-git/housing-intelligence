@@ -2,13 +2,15 @@ import { Fragment } from "react";
 
 import type { Binding, Explanation } from "@/lib/api";
 import {
-  answers,
   describe,
+  focusedConsumerAnswer,
   matchedBy,
   period,
   segment,
+  sentenceRuns,
   sourceOf,
   whatItIs,
+  type FocusedConsumerSection,
   type Segment,
 } from "@/lib/citations";
 
@@ -22,7 +24,7 @@ import {
  *
  * - They never render where a metric would. A dashed border and a muted background hold
  *   them visually apart from the tiles and tables around them.
- * - The label reads "Interpretation" before the text does, and names the model that
+ * - The label reads "Automated data summary" before the text does, and names the model that
  *   wrote it. Attribution is not a footnote.
  * - A stale reading says so in place. Prose describing numbers the warehouse has since
  *   revised is worse than no prose, because it still looks authoritative.
@@ -39,11 +41,11 @@ import {
  * unverified — never with an empty list, which would claim there was nothing to check.
  *
  * Since Milestone 30 a region has two readings, one for each kind of reader, where it
- * had one per model side by side: `ConsumerReading`, a bottom line and four fixed
- * questions in plain language, and `ExplanationPanel`, the analyst reading in the page's
- * expander. Each names the model that wrote it — the first on its list that wrote one
- * fit to publish — and neither needs a switcher, so neither needs the browser: both
- * render with the static page.
+ * had one per model side by side: `ConsumerReading` holds fixed questions in plain
+ * language, and `ExplanationPanel` holds the model-written data summary in its own disclosure.
+ * Each names the model that wrote it — the first on its list that wrote one fit to
+ * publish — and neither needs a switcher, so neither needs the browser: both render
+ * with the static page.
  */
 
 function Runs({ runs, binding }: { runs: Segment[]; binding: Binding | null }) {
@@ -133,11 +135,12 @@ function Figures({ binding }: { binding: Binding | null }) {
 }
 
 /**
- * The analyst reading: two or three paragraphs on what changed and how the region
- * compares, every survey figure with its margin (SPEC principle 12).
+ * The model-written data summary (stored under the analyst audience): paragraphs on
+ * what changed and how the region compares, every survey figure with its margin
+ * (SPEC principle 12).
  *
  * Since the owner's review of Milestone 17 a reading opens at its first paragraph, the
- * rest a click away; inside a region page's expander (Milestone 23) it is shown whole,
+ * rest a click away; inside a region page's summary disclosure it is shown whole,
  * with no "Read the rest": the reader has already chosen to read on by opening it.
  */
 export function ExplanationPanel({
@@ -161,7 +164,7 @@ export function ExplanationPanel({
 
   return (
     <section aria-labelledby={id} className="interpretation">
-      <Head id={id} title="Interpretation" reading={reading} />
+      <Head id={id} title="Automated data summary" reading={reading} />
       <Stale reading={reading} />
       {whole ? paragraphs : paragraphs[0]}
       {!whole && paragraphs.length > 1 && (
@@ -180,42 +183,56 @@ export function ExplanationPanel({
 }
 
 /**
- * The consumer reading (Milestone 30): the bottom line, then four fixed questions —
- * is it getting harder to afford here, how renting compares with buying, what is
- * changing, what to check before moving — each answered in a few plain sentences with
- * at most two figures. The questions are the same on every page, so a reader can scan
- * them; the answers are a model's, and the panel says so exactly as the analyst
- * reading's does.
+ * The two consumer answers sit in different parts of the page: the change reading is a
+ * headline before the stand-outs, while the place-specific limits follow the cost
+ * section. Their stored five-section body, the analyst reading and generation rules are
+ * unchanged. Each visible answer carries only its own citations and model attribution.
  */
-export function ConsumerReading({ reading }: { reading: Explanation | null }) {
+export function ConsumerReading({
+  reading,
+  section,
+}: {
+  reading: Explanation | null;
+  section: FocusedConsumerSection;
+}) {
   if (!reading || !reading.sections?.length) return null;
-  const binding = reading.binding ?? null;
-  const id = `interpretation-${reading.region_id}-consumer`;
-  const laid = answers(reading.body, reading.sections, binding?.citations ?? []);
-  const bottom = laid.find((answer) => answer.id === "bottom_line");
-  const rest = laid.filter((answer) => answer !== bottom);
+  const { answer, binding } = focusedConsumerAnswer(
+    reading.body,
+    reading.sections,
+    reading.binding ?? null,
+    section,
+  );
+  if (!answer) return null;
+  const id = `interpretation-${reading.region_id}-${section}`;
 
   return (
-    <section aria-labelledby={id} className="interpretation consumer-reading">
-      <Head id={id} title="Interpretation, in plain terms" reading={reading} />
+    <section aria-labelledby={id} className={`interpretation consumer-feature consumer-feature-${section}`}>
+      <div className="consumer-feature-topline">
+        <span className="consumer-feature-tag">Model interpretation</span>
+        <span className="interpretation-source">
+          written by {reading.model_label}
+          <span className="interpretation-runtime"> · {reading.runtime}</span>
+        </span>
+      </div>
       <Stale reading={reading} />
-      {bottom && (
-        <p className="consumer-bottom-line">
-          <Runs runs={bottom.runs} binding={binding} />
-        </p>
-      )}
-      <dl className="consumer-answers">
-        {rest.map((answer) => (
-          <div key={answer.id} className="consumer-answer">
-            <dt>{answer.heading}</dt>
-            <dd>
-              <Runs runs={answer.runs} binding={binding} />
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <div className="consumer-feature-main">
+        <h2 id={id}>{answer.heading}</h2>
+        {section === "before_moving" ? (
+          <ul className="consumer-feature-answer consumer-moving-list">
+            {sentenceRuns(answer.runs).map((runs, index) => (
+              <li key={index}><Runs runs={runs} binding={binding} /></li>
+            ))}
+          </ul>
+        ) : (
+          <p className="consumer-feature-answer">
+            <Runs runs={answer.runs} binding={binding} />
+          </p>
+        )}
+      </div>
       <Figures binding={binding} />
-      <p className="interpretation-note">{reading.disclaimer}</p>
+      <p className="interpretation-note">
+        Interpretation of area figures, not a measurement or advice.
+      </p>
     </section>
   );
 }

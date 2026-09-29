@@ -1,4 +1,4 @@
-import type { Citation, CitedRelease, ReadingSection } from "@/lib/api";
+import type { Binding, Citation, CitedRelease, ReadingSection } from "@/lib/api";
 
 /**
  * Reading a model's prose against its citation binding (Milestone 13).
@@ -11,6 +11,39 @@ import type { Citation, CitedRelease, ReadingSection } from "@/lib/api";
  */
 
 export type Segment = { text: string; citation?: Citation };
+
+/** Present an existing answer as sentences without changing its words or citation spans. */
+export function sentenceRuns(runs: readonly Segment[]): Segment[][] {
+  const body = runs.map((run) => run.text).join("");
+  const sentences: { start: number; end: number }[] = [];
+  for (const { index, segment: sentence } of new Intl.Segmenter("en", { granularity: "sentence" }).segment(body)) {
+    const previous = sentences.at(-1);
+    // Intl.Segmenter can break after "U.S." even when it modifies the next word.
+    if (previous && /(?:[A-Z]\.){2,}$/.test(body.slice(previous.start, previous.end).trimEnd())) {
+      previous.end = index + sentence.trimEnd().length;
+    } else {
+      sentences.push({ start: index, end: index + sentence.trimEnd().length });
+    }
+  }
+  return sentences.map(({ start: index, end }) => {
+    const pieces: Segment[] = [];
+    let offset = 0;
+    for (const run of runs) {
+      const start = Math.max(index, offset);
+      const stop = Math.min(end, offset + run.text.length);
+      if (start < stop) {
+        pieces.push({
+          text: run.text.slice(start - offset, stop - offset),
+          ...(run.citation && start === offset && stop === offset + run.text.length
+            ? { citation: run.citation }
+            : {}),
+        });
+      }
+      offset += run.text.length;
+    }
+    return pieces;
+  }).filter((pieces) => pieces.length > 0);
+}
 
 /**
  * The body as paragraphs, each a run of plain text and cited figures.
@@ -81,6 +114,35 @@ export function answers(
         runs: segment(body.slice(section.start, section.end), inside).flat(),
       };
     });
+}
+
+/**
+ * The local consumer-page experiment keeps the two questions that add context beyond
+ * the computed affordability and cost panels. Stored five-section readings remain
+ * untouched; citations for retired answers must not appear in the visible figure list.
+ */
+export type FocusedConsumerSection = "whats_changing" | "before_moving";
+
+export function focusedConsumerAnswer(
+  body: string,
+  sections: readonly ReadingSection[],
+  binding: Binding | null,
+  id: FocusedConsumerSection,
+): { answer: Answer | null; binding: Binding | null } {
+  const shown = sections.find(
+    (section) =>
+      section.id === id &&
+      section.start >= 0 &&
+      section.end <= body.length &&
+      section.start < section.end,
+  );
+  const citations = (binding?.citations ?? []).filter((citation) =>
+    shown && citation.start >= shown.start && citation.end <= shown.end,
+  );
+  return {
+    answer: shown ? (answers(body, [shown], citations)[0] ?? null) : null,
+    binding: binding ? { ...binding, citations } : null,
+  };
 }
 
 const KIND: Record<Citation["kind"], string> = {
