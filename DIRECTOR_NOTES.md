@@ -324,3 +324,20 @@ report is [`agent-handoffs/data-completeness-research.md`](agent-handoffs/data-c
 **Not promoted:** a paid subscription (32 decides), a Spanish edition and alerts (both
 unscheduled), and the institutional outreach, which is the owner's to send.
 *README audit and documentation auto-maintenance* stays open.
+
+---
+
+## Grounded synthesis beyond the automated data summary
+
+**Status:** Exploratory — not approved for implementation
+**Recorded:** 2026-09-29
+
+The current summary accurately gathers reported figures, but it does not always connect
+them into a useful “so what?” for a resident. Explore a separate, short synthesis on a
+few varied counties. Each pilot should lead with a consequential pattern, connect only
+time-compatible and cited evidence, explain why it may matter, and distinguish
+observation from inference. It should name uncertainty and missing context, avoid
+unsupported claims about causes or the wider economy, and add something the existing
+“What’s changing?” headline does not already say. Evaluate usefulness, readability,
+redundancy, and factual support with human review before changing generation or
+regenerating any readings.
