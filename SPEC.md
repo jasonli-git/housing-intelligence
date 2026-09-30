@@ -1,5 +1,5 @@
 # Housing Intelligence Platform Specifications
-## Product Specification v1.3
+## Product Specification v1.4
 
 ### Vision
 
@@ -206,6 +206,10 @@ This extends principle 5, which orders computation before interpretation, to say
 A figure estimated from a sample survey — the Census Bureau's American Community Survey, and the tables others build from it, such as HUD's CHAS — is an estimate with a known sampling error, and the platform should never present it as exact. Wherever the platform shows such a figure — on a page, in a table, a chart, a ranking, a report or an API response — it shows the margin of error the publisher reports for it. A figure the platform calculates from survey figures, such as a ratio or a change, carries the margin its inputs imply.
 
 Where the publisher reports no margin for a figure, the platform says so rather than presenting the figure as exact.
+
+The margin belongs beside the figure. Where a figure is secondary and space is tight, a margin one step away — in the figure's own definition, opened from the figure itself — also counts as shown, but it is the exception, decided case by case, never the default.
+
+A figure an agency sets from survey data and publishes as its own determination — HUD's area median income, income limits and Fair Market Rents — is not a survey estimate: it is used exactly as published, and the publisher attaches no margin to it. The platform labels it as a determination (principle 11) rather than saying a margin is unavailable, which would misdescribe it. A tabulation of survey data, such as HUD's CHAS, remains a survey figure.
 
 This refines principle 11 for the observed figures it leaves most room to misread: a survey estimate is observed, not modeled, and its uncertainty is part of what was observed.
 
@@ -721,3 +725,38 @@ a publisher reports no margin for a figure, the platform says so.
 the ACS margins to the pages. As with principle 11, writing it down means a new survey
 source, a new page or a new endpoint inherits the obligation rather than negotiating
 it.
+
+---
+
+### Amendments in v1.4
+
+Recorded 2026-09-30. The sections above are the current specification; this section
+says what changed and why, as the earlier amendment sections do.
+
+#### 1. Where a margin counts as shown (principle 12)
+
+**Previous idea:** "Wherever the platform shows such a figure … it shows the margin of
+error", without saying where. The population badge put its margins in the definition
+its period opens, which left open whether that counted.
+
+**Current version:** Beside the figure is the rule. A margin one step away, in the
+figure's own definition, also counts, as an exception for secondary figures where space
+is tight, decided case by case.
+
+**Reason:** Decided by the owner on 2026-09-30. The population badge was kept compact on
+purpose, for a figure that matters little on that card; the exception is written down so
+it is not stretched to a figure that does matter.
+
+#### 2. Agency determinations are not survey estimates (principle 12)
+
+**Previous idea:** Not addressed. Since Milestone 28 the platform treated HUD's area
+median income, income limits and Fair Market Rents as outside principle 12 (ARCHITECTURE
+#246), without the specification saying so.
+
+**Current version:** A figure an agency sets from survey data and publishes as its own
+determination is labelled as a determination, not given a margin note. Tabulations of
+survey data, such as CHAS, stay inside the principle.
+
+**Reason:** Decided by the owner on 2026-09-30. These figures are used exactly as
+published; "no margin available" would suggest a survey estimate with unknown error,
+which misdescribes them. Milestone 31's record-type labels carry the distinction.

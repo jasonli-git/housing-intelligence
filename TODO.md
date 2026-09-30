@@ -18,8 +18,8 @@ removed entries are in `git show ca49f74:TODO.md`.
 
 Every reading on the site is Gemini 3.7 Flash's (0.25.4, regenerated and deployed
 2026-09-30). On `fix/small-cleanups`: five small fixes and the handoff cleanup (0.25.6).
-**Milestone 31 waits on the owner**, who asked not to start it yet; before it starts, the
-two SPEC principle 12 questions under Parked need answers.
+**Milestone 31 waits on the owner**, who asked not to start it yet. Its two SPEC principle
+12 questions were answered on 2026-09-30 (SPEC v1.4, ARCHITECTURE #268).
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -387,16 +387,6 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
-- [ ] **Does a margin in a definition card count as shown? (SPEC principle 12, #252)**
-      The population badge shows the count and five-year change, with their margins in
-      the definition its period opens. If principle 12 means beside the figure, the badge
-      needs them inline — "5,322 ± 21 · up 0.3% ± 0.6%" — and a county's "no sampling
-      error"; if a card one tap away is enough, the principle's wording should say so.
-- [ ] **Confirm a reading of SPEC principle 12.** (M28, #246) HUD's area median income,
-      income limits and Fair Market Rents are set from ACS data but published as HUD's
-      determinations, without margins, so they are treated as outside the principle. If
-      they should read "no margin available" too, it is one line in `SURVEY_METRICS`
-      (`web/lib/uncertainty.ts`) and its guard, `tests/test_survey_metrics.py`.
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.
 
