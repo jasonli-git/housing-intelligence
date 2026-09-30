@@ -29,6 +29,9 @@ sources:
     cadence: annual
     adapter: hip.sources.demo:Adapter
     fallback: Keep the last release, labelled historical.
+    licence_class: public_domain
+    terms_url: https://example.invalid/terms
+    terms_checked: 2026-09-30
 """
 
 MINIMAL_METRICS = """
@@ -40,6 +43,7 @@ metrics:
     direction: neutral
     description: Demo metric.
     source_id: demo
+    record_type: survey
 """
 
 MINIMAL_GEOGRAPHY = """

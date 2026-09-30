@@ -13,6 +13,10 @@ sources:
     name: Computed by the platform
     publisher: Housing Intelligence Platform
     license: Derived from cited sources
+    licence_class: derived
+    terms_url: https://github.com/jasonli-git/housing-intelligence/blob/main/LICENSE
+    terms_note: >-
+      The platform's own figures, each carrying the most restrictive licence of the metrics it is computed from (ARCHITECTURE #269).
     url: https://github.com/jasonli-git/housing-intelligence
     cadence: irregular
     adapter: none
@@ -27,6 +31,9 @@ sources:
     name: TIGER/Line boundary files
     publisher: U.S. Census Bureau
     license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    terms_url: https://www.census.gov/about/policies/open-gov/open-data.html
+    terms_checked: 2026-09-30
     url: https://www2.census.gov/geo/tiger
     cadence: annual
     adapter: hip.sources.tiger:TigerAdapter
@@ -42,6 +49,10 @@ sources:
     name: Zillow Home Value Index
     publisher: Zillow Research
     license: Free for non-commercial use with attribution
+    licence_class: non_commercial
+    terms_url: https://www.zillow.com/research/data/
+    terms_note: >-
+      Zillow's data page refused an automated reader (HTTP 403) on 2026-09-30, and no other route to its terms was taken. The class is the non-commercial, attribution-required wording recorded from that page in 2026-09 (ARCHITECTURE #71), unconfirmed since; the owner reads it by hand.
     url: https://www.zillow.com/research/data/
     cadence: monthly
     adapter: hip.sources.zillow:ZhviAdapter
@@ -57,6 +68,10 @@ sources:
     name: Zillow Observed Rent Index
     publisher: Zillow Research
     license: Free for non-commercial use with attribution
+    licence_class: non_commercial
+    terms_url: https://www.zillow.com/research/data/
+    terms_note: >-
+      As zillow_zhvi: the same page and the same unconfirmed wording.
     url: https://www.zillow.com/research/data/
     cadence: monthly
     adapter: hip.sources.zillow:ZoriAdapter
@@ -69,6 +84,12 @@ sources:
     name: American Community Survey, 5-year estimates
     publisher: U.S. Census Bureau
     license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    terms_url: https://www.census.gov/data/developers/about/terms-of-service.html
+    terms_checked: 2026-09-30
+    notices:
+      - >-
+        This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau.
     url: https://api.census.gov/data
     homepage: https://www.census.gov/programs-surveys/acs
     cadence: annual
@@ -85,6 +106,12 @@ sources:
     name: Population Estimates Program, Vintage 2025
     publisher: U.S. Census Bureau
     license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    terms_url: https://www.census.gov/data/developers/about/terms-of-service.html
+    terms_checked: 2026-09-30
+    notices:
+      - >-
+        This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau.
     url: https://www2.census.gov/programs-surveys/popest/datasets
     homepage: https://www.census.gov/programs-surveys/popest.html
     cadence: annual
@@ -102,6 +129,9 @@ sources:
     name: Building Permits Survey
     publisher: U.S. Census Bureau
     license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    terms_url: https://www.census.gov/about/policies/open-gov/open-data.html
+    terms_checked: 2026-09-30
     url: https://www.census.gov/construction/bps/
     cadence: monthly
     adapter: hip.sources.census_permits:PermitsAdapter
@@ -113,6 +143,11 @@ sources:
     name: House Price Index
     publisher: Federal Housing Finance Agency
     license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    terms_url: https://www.fhfa.gov/data/hpi
+    terms_checked: 2026-09-30
+    terms_note: >-
+      The HPI page states no terms; FHFA is a federal agency and its data a U.S. Government work.
     url: https://www.fhfa.gov/data/hpi
     cadence: quarterly
     adapter: hip.sources.fhfa:HpiAdapter
@@ -123,6 +158,14 @@ sources:
     name: Federal Reserve Economic Data
     publisher: Federal Reserve Bank of St. Louis
     license: Free with attribution; series-level terms vary by originator
+    licence_class: display_only
+    terms_url: https://fred.stlouisfed.org/legal/
+    terms_checked: 2026-09-30
+    terms_note: >-
+      FRED lists MORTGAGE30US as Freddie Mac's copyrighted series, "Citation required", and asks for the owner's permission for anything beyond personal use. Freddie Mac's PMMS page allows use with attribution; its general terms forbid redistributing data without a licence. So it is shown, credited to Freddie Mac via FRED, and left out of downloads.
+    notices:
+      - >-
+        This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis. FRED® API Terms of Use: https://fred.stlouisfed.org/docs/api/terms_of_use.html
     url: https://api.stlouisfed.org/fred
     homepage: https://fred.stlouisfed.org/
     cadence: monthly
@@ -137,6 +180,12 @@ sources:
     name: Local Area Unemployment Statistics and QCEW
     publisher: U.S. Bureau of Labor Statistics
     license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    terms_url: https://www.bls.gov/opub/copyright-information.htm
+    terms_checked: 2026-09-30
+    notices:
+      - >-
+        BLS.gov cannot vouch for the data or analyses derived from these data after the data have been retrieved from BLS.gov.
     url: https://api.bls.gov/publicAPI/v2
     homepage: https://www.bls.gov/lau/
     cadence: monthly
@@ -150,6 +199,12 @@ sources:
     name: USPS ZIP crosswalk and income limits
     publisher: U.S. Department of Housing and Urban Development
     license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    terms_url: https://www.huduser.gov/portal/dataset/api-terms-of-service.html
+    terms_checked: 2026-09-30
+    notices:
+      - >-
+        This product uses the HUD User Data API but is not endorsed or certified by HUD User.
     url: https://www.huduser.gov/hudapi/public
     homepage: https://www.huduser.gov/portal/datasets/usps_crosswalk.html
     cadence: quarterly
@@ -166,6 +221,12 @@ sources:
     name: Fair Market Rents
     publisher: U.S. Department of Housing and Urban Development
     license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    terms_url: https://www.huduser.gov/portal/dataset/api-terms-of-service.html
+    terms_checked: 2026-09-30
+    notices:
+      - >-
+        This product uses the HUD User Data API but is not endorsed or certified by HUD User.
     url: https://www.huduser.gov/hudapi/public/fmr
     homepage: https://www.huduser.gov/portal/datasets/fmr.html
     cadence: annual
@@ -186,6 +247,12 @@ sources:
     name: Comprehensive Housing Affordability Strategy (CHAS)
     publisher: U.S. Department of Housing and Urban Development
     license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    terms_url: https://www.huduser.gov/portal/dataset/api-terms-of-service.html
+    terms_checked: 2026-09-30
+    notices:
+      - >-
+        This product uses the HUD User Data API but is not endorsed or certified by HUD User.
     url: https://www.huduser.gov/hudapi/public/chas
     homepage: https://www.huduser.gov/portal/datasets/cp.html
     cadence: annual
@@ -202,6 +269,11 @@ sources:
     name: SOI county-to-county migration flows
     publisher: Internal Revenue Service
     license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    terms_url: https://www.irs.gov/statistics/soi-tax-stats-migration-data
+    terms_checked: 2026-09-30
+    terms_note: >-
+      The SOI migration page states no terms; a U.S. Government work.
     url: https://www.irs.gov/statistics/soi-tax-stats-migration-data
     cadence: annual
     adapter: hip.sources.irs_migration:MigrationAdapter
@@ -214,6 +286,11 @@ sources:
     name: MOD-IV property tax assessment records (NJ Division of Taxation)
     publisher: NJ Office of Information Technology, Office of GIS (NJOGIS)
     license: Open public record
+    licence_class: attribution
+    terms_url: https://www.arcgis.com/sharing/rest/content/items/102a9bf3c6da4ca3b9b31f831a1e9f72?f=json
+    terms_checked: 2026-09-30
+    terms_note: >-
+      The dataset's licence field requests acknowledgment of NJOGIS on derived products, provided as is.
     url: https://njogis-newjersey.opendata.arcgis.com/datasets/102a9bf3c6da4ca3b9b31f831a1e9f72
     cadence: annual
     adapter: hip.sources.nj_modiv:ModivAdapter
@@ -231,6 +308,11 @@ sources:
     name: SR1A sales file
     publisher: New Jersey Division of Taxation
     license: Open public record
+    licence_class: public_record
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-09-30
+    terms_note: >-
+      New Jersey's legal statement: anyone may view, copy or distribute State information without obligation, unless marked otherwise; the SR1A page marks nothing.
     url: https://www.nj.gov/treasury/taxation/lpt/statdata.shtml
     cadence: annual
     adapter: hip.sources.nj_sr1a:Sr1aAdapter
@@ -250,6 +332,11 @@ sources:
     name: General and effective tax rates, and the Director's Ratio
     publisher: New Jersey Division of Taxation
     license: Open public record
+    licence_class: public_record
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-09-30
+    terms_note: >-
+      As nj_sr1a: the same statement, and nothing marked on the page.
     url: https://www.nj.gov/treasury/taxation/lpt/statdata.shtml
     cadence: annual
     adapter: hip.sources.nj_tax_rates:NjTaxRatesAdapter
@@ -266,6 +353,10 @@ sources:
     name: NJ statewide parcel boundaries
     publisher: NJ Office of GIS (NJGIN)
     license: Open data
+    licence_class: attribution
+    terms_url: https://njogis-newjersey.opendata.arcgis.com/
+    terms_note: >-
+      Not fetched (the MOD-IV composite carries parcel geometry), so its terms were not read; read them before it is ever loaded.
     url: https://njogis-newjersey.opendata.arcgis.com/
     cadence: annual
     adapter: hip.sources.nj_modiv:ParcelGeometryAdapter
