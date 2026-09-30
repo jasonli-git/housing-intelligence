@@ -10,6 +10,7 @@
 - Restored a green card beneath “Explore the evidence,” preserving the data disclosure, its remembered state, and shortcut behavior. After visual feedback, strengthened it to deep forest green with light text and slightly squarer corners to distinguish it from “What’s changing?”.
 - Made the ranked-measures disclosure a compact invitation: “See where [place] stands out,” up to two data-driven previews, and a text cue to explore the available measures. Its neutral background keeps it subordinate to the surrounding cards.
 - Joined “Not included” to the cost card as a full-width amber footer. Placed the moving-checklist disclaimer directly below its bullet list, in the same desktop column, with smaller muted text.
+- Fixed region-header shortcuts overlapping expanded paycheck details: shortcuts now participate in normal layout and sit below the header content at every width.
 
 ## Files/modules affected
 
@@ -50,3 +51,4 @@
 - Follow-up evidence-card design: reran the full static export successfully and inspected mobile, desktop, and dark-theme captures. Light title text renders against the dark green surface in both themes; no page overflow at 390 or 1,440 pixels, and the data shortcut still opens the disclosure.
 - Ranking invitation: frontend tests, TypeScript, and the full static export passed again. Headless checks confirmed no overflow at 320, 390, and 1,440 pixels, that the disclosure opens and changes its cue to “Close,” and that a sparse municipal page remains free of invented previews.
 - Joined cost footer / checklist footnote: 292 tests, TypeScript, and the static export passed again. Browser checks at 320, 390, and 1,440 pixels found no overflow. The omissions footer is contained by the cost card; the footnote aligns with the bullet column on desktop and renders at 12 pixels. Changing down payment to 5% adds mortgage insurance to the footer and returning to 20% removes it. The report retains its original omission paragraph.
+- Header overlap: reproduced the annotated Atlantic County layout at 1,055 pixels. Browser geometry checks with paycheck details both closed and open confirmed a 24-pixel gap before shortcuts at 900, 1,055, and 1,440 pixels, and a positive gap at 320 and 390 pixels. No horizontal overflow at any checked width. Visually inspected the expanded dark-theme header. The full static export (including TypeScript) passed; `git diff --check` passed.

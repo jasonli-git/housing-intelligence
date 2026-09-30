@@ -39,7 +39,7 @@
      instrument. The report stays a secondary path off to the side. */
   .atlas-local > .page-head { padding-bottom: 1.6rem; }
   .atlas-local .verdict { margin-top: 1rem; }
-  .atlas-local .page-head > .actions { bottom: 1.55rem; }
+  .atlas-local .page-head > .actions { position: static; margin-left: auto; }
   .atlas-local .report-action {
     min-width: 11.5rem;
     padding: 0.2rem 0 0.2rem 0.9rem;
