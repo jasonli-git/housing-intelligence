@@ -17,7 +17,7 @@ removed entries are in `git show ca49f74:TODO.md`.
 ## Now — between milestones; Milestone 31 not started (2026-09-30)
 
 Every reading on the site is Gemini 3.7 Flash's (0.25.4, regenerated and deployed
-2026-09-30). On `fix/small-cleanups`: four small fixes and the handoff cleanup (0.25.6).
+2026-09-30). On `fix/small-cleanups`: five small fixes and the handoff cleanup (0.25.6).
 **Milestone 31 waits on the owner**, who asked not to start it yet; before it starts, the
 two SPEC principle 12 questions under Parked need answers.
 
@@ -121,6 +121,12 @@ first raised, not where it must be done.
 
 ### Test coverage
 
+- [ ] **`tests/test_analytics.py` rebuilds the analytics tables in the live warehouse.**
+      (found in review of PR #56, 2026-09-30) Its tests call `rebuild(get_engine())`
+      against the same database the API serves, so a suite run while the API or another
+      query is busy can deadlock. Nothing is lost — the rebuild is one transaction and
+      rolls back — but the run fails for a reason unrelated to the code. Point these
+      tests at a scratch schema or a disposable database.
 - [ ] **Tests: unpivot shape and gate behavior — never written.** (M2, corrected
       2026-08-13 after this line was briefly ticked in full) `test_matching.py` builds
       `stg_zillow_zhvi` as a hand-made fixture, so the dbt UNPIVOT of ~318 date columns

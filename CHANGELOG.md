@@ -9,7 +9,7 @@ All notable changes to the Housing Intelligence Platform. Format loosely follows
 
 - **A phone-width county page no longer scrolls sideways with its data open.** A value's
   margin line could not wrap, which pushed the current-values tables 15px past a 375px
-  screen (Somerset); all 21 counties were checked at that width.
+  screen on every one of the 21 county pages; none does now.
 - **The consumer reading's three-figure limit counts figures as written.** A figure
   stated twice counts twice, as a reader sees it; a range's two ends still count once
   (ARCHITECTURE #267). None of the 21 published readings changes.
