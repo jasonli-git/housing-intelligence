@@ -3,6 +3,7 @@ import { JetBrains_Mono, Public_Sans, Space_Grotesk } from "next/font/google";
 
 import { InlineScript } from "@/components/InlineScript";
 import { FrameMeter } from "@/components/FrameMeter";
+import { PrintFooter } from "@/components/PrintFooter";
 import { SourceFooter } from "@/components/SourceFooter";
 import { HOUSING_MODE_SCRIPT } from "@/lib/housingMode";
 import { THEME_SCRIPT } from "@/lib/theme";
@@ -57,6 +58,7 @@ export default function RootLayout({
             condition of Zillow's licence, and the pages most likely to be linked
             directly are the ones least likely to have remembered it. */}
         <SourceFooter />
+        <PrintFooter />
       </body>
     </html>
   );
