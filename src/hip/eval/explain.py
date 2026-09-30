@@ -21,11 +21,12 @@ Four consequences, all enforced in code rather than left to convention:
 
 Since Milestone 30 a region carries two readings, one per audience (`hip.eval.formats`):
 the analyst reading, the interpretation as it always was, and the consumer reading, a
-bottom line and four fixed questions in plain language. Both are refused, too, where a
-survey figure is stated without its margin or an uncertain rank as a place (SPEC
-principle 12), and the consumer reading where it loses its shape, names a source, uses
-jargon or crowds an answer with figures. A refusal is not a failure of the run: the next
-model on the audience's list is asked instead.
+two fixed questions in plain language. Both are refused, too, where a survey figure is
+stated without its margin or an uncertain rank as a place (SPEC principle 12), and the
+consumer reading where it loses its shape, names a source, uses jargon or crowds an
+answer with figures. A refusal is not a failure of the run: the model is shown the
+refusal and asked to correct its answer (`generation.revisions`, #266), and only then
+is the next model on the audience's list asked.
 """
 
 from __future__ import annotations
@@ -41,7 +42,14 @@ from sqlalchemy.orm import Session
 
 from hip.config import Audience, EvaluationConfig
 from hip.eval.costs import Usage, generation_usd
-from hip.eval.formats import ANALYST_PROMPT, ANALYST_QUESTION, FORMATS, MalformedReading
+from hip.eval.formats import (
+    ANALYST_PROMPT,
+    ANALYST_QUESTION,
+    FORMATS,
+    QUESTIONS,
+    MalformedReading,
+    revision_request,
+)
 from hip.eval.formats import Section as Section
 from hip.eval.prompts import build_prompt, fits_context, render_payload
 from hip.eval.runners import build_runner
@@ -74,7 +82,13 @@ class GenerationFailed(RuntimeError):
 
     def __init__(self, message: str, usage: Usage | None = None) -> None:
         self.usage = usage
+        # Refused attempts before this one, by the same model (`generate`'s revisions).
+        self.earlier: list[Usage] = []
         super().__init__(message)
+
+    def reasons(self) -> list[str]:
+        """What to tell the model that wrote it, for a revision."""
+        return [str(self)]
 
 
 class UnboundFigures(GenerationFailed):
@@ -94,11 +108,18 @@ class UnboundFigures(GenerationFailed):
         usage: Usage | None = None,
     ) -> None:
         self.binding = binding
+        self.unbound_detail = describe_unbound(binding, body)
         super().__init__(
             f"region {region_id}: {model_id} stated {len(binding.unbound)} figure(s) "
-            f"the packet does not carry — {describe_unbound(binding, body)} — not stored",
+            f"the packet does not carry — {self.unbound_detail} — not stored",
             usage,
         )
+
+    def reasons(self) -> list[str]:
+        return [
+            f"figures the data packet does not carry, which must be removed or replaced "
+            f"with the packet's own: {self.unbound_detail}"
+        ]
 
 
 class ReadingRefused(GenerationFailed):
@@ -121,6 +142,9 @@ class ReadingRefused(GenerationFailed):
             f"{shown}{more} — not stored",
             usage,
         )
+
+    def reasons(self) -> list[str]:
+        return list(self.problems)
 
 
 @dataclass
@@ -147,6 +171,8 @@ class Explanation:
     # A consumer reading's answers; empty for an analyst reading.
     sections: list[Section] = field(default_factory=list)
     usage: Usage | None = None
+    # Refused attempts by the same model before the one stored, each still billed.
+    earlier: list[Usage] = field(default_factory=list)
 
 
 def _usage(evaluation: EvaluationConfig, model_id: str, generation: Generation) -> Usage:
@@ -179,10 +205,14 @@ def run_model(
     audience: Audience = "analyst",
     payload_format: str = "markdown",
     service_tier: str | None = None,
+    revision: str | None = None,
 ) -> tuple[Generation, str, Usage]:
     """One call to one model with one audience's prompt: the generation, the payload it
     was shown, and what it cost. Raises only for a packet that does not fit the model's
-    context; a failed call is a `Generation` with an error, for the caller to judge."""
+    context; a failed call is a `Generation` with an error, for the caller to judge.
+
+    `revision` follows the question when the model is asked to correct a refused answer
+    (`formats.revision_request`); the packet-first prefix is unchanged, so it caches."""
     candidate = evaluation.model(model_id)
     cohort_name = evaluation.cohort_of(model_id)
     cohort = evaluation.cohorts[cohort_name]
@@ -198,6 +228,8 @@ def run_model(
     reading = FORMATS[audience]
     payload = render_payload(packet, payload_format)
     prompt = build_prompt(reading.prompt, payload, reading.question)
+    if revision:
+        prompt += f"\n{revision}\n"
     if not fits_context(prompt, limits.max_output_tokens, limits.context_tokens):
         raise ValueError(
             f"region {packet.region.region_id}: packet does not fit the configured "
@@ -304,16 +336,13 @@ def generate(
     """
     candidate = evaluation.model(model_id)
     cohort = evaluation.cohort_for(model_id)
-    generation, payload, usage = run_model(
+    body, sections, binding, usage, earlier = write_reading(
         packet,
         evaluation,
         model_id,
         audience=audience,
         payload_format=payload_format,
         service_tier=cohort.generation_tier,
-    )
-    body, sections, binding = judge_generation(
-        packet, generation, payload, audience=audience, usage=usage
     )
     return Explanation(
         region_id=packet.region.region_id,
@@ -333,7 +362,67 @@ def generate(
         audience=audience,
         sections=sections,
         usage=usage,
+        earlier=earlier,
     )
+
+
+def write_reading(
+    packet: Packet,
+    evaluation: EvaluationConfig,
+    model_id: str,
+    *,
+    audience: Audience,
+    payload_format: str = "markdown",
+    service_tier: str | None = None,
+) -> tuple[str, list[Section], Binding, Usage, list[Usage]]:
+    """One model's publishable reading, asking it to correct a refused one.
+
+    A refusal names the rule and quotes the words that broke it, which is exactly what
+    the model needs to fix it: so before the region passes to the next model on the
+    list, the same model is shown its answer and the refusal and asked again, up to
+    `generation.revisions` times (ARCHITECTURE #266). The corrected answer is judged by
+    every gate, as the first was. A failed call is not revised — there is no answer to
+    correct — and neither is a revision's own failure.
+
+    Returns the body, sections and binding to store, the usage of the call that wrote
+    it, and of every refused attempt before it. Raises the last refusal otherwise, with
+    the earlier attempts' usage on `earlier`.
+    """
+    earlier: list[Usage] = []
+    revision: str | None = None
+    for attempt in range(evaluation.generation.revisions + 1):
+        generation, payload, usage = run_model(
+            packet,
+            evaluation,
+            model_id,
+            audience=audience,
+            payload_format=payload_format,
+            service_tier=service_tier,
+            revision=revision,
+        )
+        try:
+            body, sections, binding = judge_generation(
+                packet, generation, payload, audience=audience, usage=usage
+            )
+        except (UnboundFigures, ReadingRefused) as exc:
+            if attempt == evaluation.generation.revisions:
+                exc.earlier = earlier
+                raise
+            log.warning(
+                "%s/%s/%s refused, asking for a revision: %s",
+                audience,
+                model_id,
+                packet.region.region_id,
+                "; ".join(exc.reasons()),
+            )
+            earlier.append(usage)
+            revision = revision_request(generation.answer, exc.reasons())
+            continue
+        except GenerationFailed as exc:
+            exc.earlier = earlier
+            raise
+        return body, sections, binding, usage, earlier
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
 def rank_of(
@@ -492,8 +581,13 @@ def freshness(row: RegionExplanation, packet: Packet) -> Freshness:
     written before binding existed, the binder's attribution changed, or only
     provenance moved (a re-download that changed a release id or a retrieval date and
     no figure). Each is repaired without a model call.
-    `stale` — the figures it describes have changed, so only a new generation will do.
+    `stale` — the figures it describes have changed, or its answers are no longer the
+    questions its format asks (#266), so only a new generation will do.
     """
+    if row.audience == "consumer" and [
+        section.get("id") for section in (row.sections or [])
+    ] != [question.id for question in QUESTIONS]:
+        return "stale"
     if row.packet_sha256 == packet_hash(packet):
         version = (
             row.binding.get("binding_version") if isinstance(row.binding, dict) else None

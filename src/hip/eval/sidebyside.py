@@ -25,16 +25,24 @@ from pathlib import Path
 from typing import Any, Literal
 
 from hip.config import Audience, EvaluationConfig
-from hip.eval.explain import GenerationFailed, ReadingRefused, judge_generation, run_model
+from hip.eval.costs import Usage
+from hip.eval.explain import (
+    GenerationFailed,
+    ReadingRefused,
+    UnboundFigures,
+    judge_generation,
+    run_model,
+)
 from hip.eval.formats import (
     MAX_FIGURES,
     QUESTIONS,
     Section,
     figures_in,
+    revision_request,
     shape_consumer,
 )
 from hip.eval.runners import RunnerUnavailable
-from hip.packets import Packet, bind
+from hip.packets import Binding, Packet, bind
 
 Status = Literal["published", "refused", "failed"]
 
@@ -73,7 +81,11 @@ class Trial:
     prompt_tokens: int = 0
     output_tokens: int = 0
     tier: str | None = None
+    # Summed over every attempt, revisions included.
     usd: float | None = None
+    # Why each answer before the last was refused and sent back for revision (#266):
+    # empty where the first answer was the one judged.
+    refusals: list[list[str]] = field(default_factory=list)
 
     def as_json(self) -> dict[str, object]:
         record = asdict(self)
@@ -118,79 +130,93 @@ def trial(
     *,
     payload_format: str = "markdown",
 ) -> Trial:
-    """One generation, judged exactly as publication would judge it."""
+    """One model's reading, judged exactly as publication would judge it — a refused
+    answer sent back for revision as `hip explain` sends it (#266)."""
     cohort = evaluation.cohort_for(model_id)
     started = time.perf_counter()
-    try:
-        generation, payload, usage = run_model(
-            packet,
-            evaluation,
-            model_id,
-            audience=audience,
-            payload_format=payload_format,
-            service_tier=cohort.generation_tier,
-        )
-    except (RunnerUnavailable, ValueError) as exc:
-        return Trial(
-            region_id=packet.region.region_id,
-            region_label=packet.region.label,
-            audience=audience,
-            model_id=model_id,
-            model_label=evaluation.model(model_id).label,
-            status="failed",
-            reasons=[str(exc)],
-            body="",
-        )
-    seconds = time.perf_counter() - started
-    common = {
+    revision: str | None = None
+    refusals: list[list[str]] = []
+    spent: list[Usage] = []
+    published: tuple[str, list[Section], Binding] | None = None
+    while True:
+        try:
+            generation, payload, usage = run_model(
+                packet,
+                evaluation,
+                model_id,
+                audience=audience,
+                payload_format=payload_format,
+                service_tier=cohort.generation_tier,
+                revision=revision,
+            )
+        except (RunnerUnavailable, ValueError) as exc:
+            return Trial(
+                region_id=packet.region.region_id,
+                region_label=packet.region.label,
+                audience=audience,
+                model_id=model_id,
+                model_label=evaluation.model(model_id).label,
+                status="failed",
+                reasons=[str(exc)],
+                body="",
+                refusals=refusals,
+            )
+        spent.append(usage)
+        try:
+            published = judge_generation(
+                packet, generation, payload, audience=audience, usage=usage
+            )
+        except (ReadingRefused, UnboundFigures) as exc:
+            if len(refusals) < evaluation.generation.revisions:
+                refusals.append(exc.reasons())
+                revision = revision_request(generation.answer, exc.reasons())
+                continue
+            status: Status = "refused"
+            reasons = exc.reasons() if isinstance(exc, ReadingRefused) else [str(exc)]
+        except GenerationFailed as exc:
+            status, reasons = "failed", [str(exc)]
+        else:
+            status, reasons = "published", []
+        break
+
+    billed = [u.usd for u in spent if u.usd is not None]
+    common: dict[str, Any] = {
         "region_id": packet.region.region_id,
         "region_label": packet.region.label,
         "audience": audience,
         "model_id": model_id,
         "model_label": evaluation.model(model_id).label,
-        "seconds": seconds,
-        "prompt_tokens": usage.prompt_tokens,
-        "output_tokens": usage.generation_tokens,
+        "seconds": time.perf_counter() - started,
+        "prompt_tokens": sum(u.prompt_tokens for u in spent),
+        "output_tokens": sum(u.generation_tokens for u in spent),
         "tier": usage.tier,
-        "usd": usage.usd,
+        "usd": sum(billed) if billed else None,
+        "refusals": refusals,
     }
-    try:
-        body, sections, binding = judge_generation(
-            packet, generation, payload, audience=audience, usage=usage
-        )
-    except ReadingRefused as exc:
-        status: Status = "refused"
-        reasons = exc.problems
-    except GenerationFailed as exc:
-        # An unbound figure is a refusal like any other rule; anything else is a
-        # failure of the call, with nothing to read.
-        unbound = getattr(exc, "binding", None)
-        status = "refused" if unbound is not None else "failed"
-        reasons = [str(exc)]
-    else:
-        figures = [figures_in(binding, s) for s in sections]
+    if published is not None:
+        body, sections, binding = published
         return Trial(
-            **common,  # type: ignore[arg-type]
+            **common,
             status="published",
             reasons=[],
             body=body,
             sections=sections,
-            figures=figures,
+            figures=[figures_in(binding, s) for s in sections],
             words=len(body.split()),
         )
 
     raw = generation.answer.strip()
-    body, sections, figures = raw, [], []
+    shown, laid, figures = raw, list[Section](), list[int]()
     if audience == "consumer" and raw:
-        body, sections, figures = _consumer_figures(raw, packet, payload)
+        shown, laid, figures = _consumer_figures(raw, packet, payload)
     return Trial(
-        **common,  # type: ignore[arg-type]
+        **common,
         status=status,
         reasons=reasons,
-        body=body,
-        sections=sections,
+        body=shown,
+        sections=laid,
         figures=figures,
-        words=len(body.split()),
+        words=len(shown.split()),
     )
 
 
@@ -221,9 +247,9 @@ def _money(usd: float | None) -> str:
 def _summary(trials: list[Trial], models: Sequence[str]) -> list[str]:
     lines = [
         f"| Model | Consumer published | …at {MAX_FIGURES + 1} figures an answer | "
-        "Analyst published | "
+        "Analyst published | Published after a revision | "
         "Consumer words | Figures per answer, most | Cost | Seconds, mean |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for model_id in models:
         mine = [t for t in trials if t.model_id == model_id]
@@ -240,6 +266,7 @@ def _summary(trials: list[Trial], models: Sequence[str]) -> list[str]:
             f"| {sum(t.publishes_at(MAX_FIGURES + 1) for t in consumer)} "
             f"of {len(consumer)} "
             f"| {sum(t.status == 'published' for t in analyst)} of {len(analyst)} "
+            f"| {sum(t.status == 'published' and bool(t.refusals) for t in mine)} "
             f"| {round(sum(words) / len(words)) if words else '—'} "
             f"| {most} "
             f"| {_money(sum(billed)) if billed else '—'} "
@@ -287,6 +314,9 @@ def render(
         "`hip explain` would give it, for "
         f"{len(regions)} counties: {', '.join(label for _, label in regions)}. Nothing "
         "was stored; a reading marked *refused* is shown with the rule it broke. "
+        "A refused answer goes back to its model with the refusal, up to "
+        "`generation.revisions` times, as it would in `hip explain`; each such refusal "
+        "is listed above the reading. "
         "The consumer reading's model is chosen from this (ROADMAP, Milestone 30).",
         "",
         "The consumer reading answers, in this order: "
@@ -326,6 +356,12 @@ def render(
                     + "_",
                     "",
                 ]
+                for number, refusal in enumerate(item.refusals, start=1):
+                    lines += [
+                        f"_Answer {number} refused and sent back for revision:_ "
+                        + "; ".join(refusal),
+                        "",
+                    ]
                 for reason in item.reasons:
                     lines += [f"> {reason}", ""]
                 lines += _body(item)

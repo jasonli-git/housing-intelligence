@@ -4,11 +4,14 @@
 two or three paragraphs on what changed and how the region compares, now giving every
 survey figure its margin and every uncertain rank its range (SPEC principle 12).
 
-**The consumer reading** is for someone deciding whether to live somewhere: a bottom
-line and short answers to four fixed questions, with at most two figures each, no
-source names and no jargon. The questions are fixed so the answers are addressable —
-Milestone 47's decision guides reuse them by id — and so every region's reading has the
-same shape a reader can scan.
+**The consumer reading** is for someone deciding whether to live somewhere: short
+answers to two fixed questions, with at most two figures each, no source names and no
+jargon. The questions are fixed so the answers are addressable — Milestone 47's decision
+guides reuse them by id — and so every region's reading has the same shape a reader can
+scan. It asked five until 2026-09-30: the bottom line, "is it getting harder to afford
+here?" and "how does renting compare with buying?" restated what the page's cost panels
+compute, so the page stopped showing them (ARCHITECTURE #265) and the owner then stopped
+asking for them (#266).
 
 Both are held to the same gates as a condition of publication, and the consumer reading
 to four more. Every one is deterministic, so a refusal costs nothing to decide and says
@@ -17,7 +20,7 @@ exactly what was wrong:
 - every figure bound to the packet (`hip.packets.bind`, Milestone 13);
 - every survey figure with its margin, every uncertain rank as its range
   (`hip.packets.margins`);
-- for the consumer reading: the five headings in order, each with an answer; no name of
+- for the consumer reading: the headings in order, each with an answer; no name of
   a source, agency, survey or index; none of the listed jargon; at most two figures per
   answer, not counting a margin or a quoted label.
 
@@ -50,7 +53,9 @@ Rules:
 - Call each measure what its label calls it, without narrowing what it covers: the
   vacancy rate counts every empty home, not only rentals.
 - A figure shown with ± is a survey estimate. Whenever you state one, give its margin
-  in the same sentence, as the packet does: "$100,645 (± $2,565)". Where the packet
+  in the same sentence, as the packet does: "$100,645 (± $2,565)". Take the margin
+  printed beside that very figure — a latest value's, a start value's or a change's —
+  and copy it as printed. Where the packet
   says a figure has no sampling error, or that no margin is available, say so in the
   same sentence instead. A figure the packet shows with none of these is not a survey
   estimate: state it plainly.
@@ -74,9 +79,6 @@ class Question:
 
 
 QUESTIONS: tuple[Question, ...] = (
-    Question("bottom_line", "The bottom line"),
-    Question("harder_to_afford", "Is it getting harder to afford here?"),
-    Question("rent_or_buy", "How does renting compare with buying?"),
     Question("whats_changing", "What's changing?"),
     Question("before_moving", "What should I check before moving?"),
 )
@@ -151,13 +153,13 @@ You are writing a short, plain-language guide to one place's housing for someone
 deciding whether to live there.
 
 You are given a data packet for the region, already computed by a deterministic
-pipeline. Answer under these five headings, each on its own line, word for word and in
+pipeline. Answer under these two headings, each on its own line, word for word and in
 this order, with a short answer beneath each:
 
 {chr(10).join(q.heading for q in QUESTIONS)}
 
 Rules:
-- The bottom line is one or two sentences; every other answer two or three.
+- Each answer is two or three sentences.
 - Each answer states at most {TARGET_FIGURES} figures: choose the ones that matter most
   for its question and leave the rest out. Every dollar amount, percentage, count or
   rank is a figure; a margin, and a threshold such as "30% of income", are not. Before
@@ -168,7 +170,9 @@ Rules:
   significant digits ($445,000, $1,620) or a whole percentage. Never calculate a figure
   of your own.
 - A figure shown with ± is an estimate from a survey: give its margin in the same
-  sentence, in plain words: "about $100,645 a year, give or take $2,565". Where the
+  sentence, in plain words: "about $100,645 a year, give or take $2,565". Take the
+  margin printed beside that very figure and copy it as printed, or round it to the
+  nearest whole number: "± 2.51%" may become "give or take 3%", never "2%". Where the
   packet says a figure has no sampling error, or that no margin is available, say so.
   A figure the packet shows with none of these is not a survey estimate: state it
   plainly, with nothing about margins.
@@ -176,7 +180,10 @@ Rules:
   of New Jersey's 21 counties") rather than any single rank.
 - Write for someone with no background in housing data: no names of sources, agencies,
   surveys or indexes, no abbreviations, and none of these words: \
-{", ".join(JARGON)}. Say "typical" where the packet says median.
+{", ".join(JARGON)}. The packet's own labels and caveats use some of these words — "home
+  value index", "parcels", "area median income" — so put them in plain words rather
+  than copying them: say "typical" where the packet says median, "typical home value"
+  for a home value index, and "property" for a parcel.
 - Describe; do not advise. Say what the figures show about renting and buying, not which
   the reader should choose.
 - Do not claim causes the packet cannot support.
@@ -185,7 +192,24 @@ Rules:
 - No preamble, no bullet lists, no bold.
 """
 
-CONSUMER_QUESTION = "Answer the five questions about this region under their headings."
+CONSUMER_QUESTION = "Answer the two questions about this region under their headings."
+
+
+def revision_request(answer: str, problems: list[str]) -> str:
+    """What a model is told after its reading was refused, to write it once more.
+
+    The refusal's own sentences, which name the rule and quote the words that broke it,
+    and the answer itself, so the model corrects that text rather than drafting anew and
+    breaking a different rule (ARCHITECTURE #266).
+    """
+    listed = "\n".join(f"- {problem}" for problem in problems)
+    return (
+        "Your previous answer, below, could not be published, for these reasons:\n"
+        f"{listed}\n"
+        "Write the whole answer again, correcting exactly these, and keep every other "
+        "rule above.\n"
+        f"--- PREVIOUS ANSWER ---\n{answer.strip()}\n--- END PREVIOUS ANSWER ---"
+    )
 
 
 @dataclass(frozen=True)
@@ -366,5 +390,6 @@ __all__ = [
     "Section",
     "consumer_problems",
     "figures_in",
+    "revision_request",
     "shape_consumer",
 ]

@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 
 from hip.packets import bind, build_packet, packet_content_hash, render_markdown
 from hip.packets.assemble import _highlights
+from hip.packets.citations import Binding, Citation
 from hip.packets.margins import margin_problems
 from hip.packets.report import (
     MULTIPLE_METRICS,
@@ -641,3 +642,51 @@ def test_a_real_packet_carries_the_warehouse_margins_and_ranges() -> None:
             assert metric.rank is not None and metric.rank_worst is not None
             assert metric.rank_best <= metric.rank <= metric.rank_worst
     assert not any(m.survey for m in packet.metrics if m.source_id == "zillow_zhvi")
+
+
+def _rank_at(prose: str, figure: str, field: str) -> Citation:
+    start = prose.index(figure)
+    return Citation(
+        text=figure,
+        start=start,
+        end=start + len(figure),
+        value=float(figure),
+        packet_value=float(figure),
+        field=field,
+        kind="rank",
+    )
+
+
+@pytest.mark.parametrize(
+    "prose",
+    [
+        "Renter cost burden sits 3rd–14th of 21 counties.",
+        "Renter cost burden sits between 3rd and 14th of 21 counties.",
+        "Renter cost burden sits from 3rd to 14th of 21 counties.",
+    ],
+)
+def test_a_range_written_as_one_passes_wherever_its_ends_were_bound(
+    packet: Packet, prose: str
+) -> None:
+    """Binding places each end on its own, so the two can land on different measures
+    that share the values; the range as written is what the rule is about (#266). Three
+    of Gemini's four analyst refusals on 2026-09-28 were this."""
+    binding = Binding(
+        citations=[
+            _rank_at(prose, "3", "levels[acs_renter_cost_burden].rank_best"),
+            _rank_at(prose, "14", "metrics[zhvi_sfr].rank"),
+        ]
+    )
+    assert not margin_problems(prose, binding, packet)
+
+
+def test_two_ranks_that_happen_to_be_the_ends_are_not_a_range(packet: Packet) -> None:
+    prose = "Renter cost burden ranks 3rd, and home values 14th of 21 counties."
+    binding = Binding(
+        citations=[
+            _rank_at(prose, "3", "levels[acs_renter_cost_burden].rank_best"),
+            _rank_at(prose, "14", "metrics[zhvi_sfr].rank"),
+        ]
+    )
+    [problem] = margin_problems(prose, binding, packet)
+    assert problem.text == "3" and "one end of the range 3–14" in problem.reason

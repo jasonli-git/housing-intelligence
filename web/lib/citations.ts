@@ -117,9 +117,10 @@ export function answers(
 }
 
 /**
- * The local consumer-page experiment keeps the two questions that add context beyond
- * the computed affordability and cost panels. Stored five-section readings remain
- * untouched; citations for retired answers must not appear in the visible figure list.
+ * The two questions a county page shows (ARCHITECTURE #265, #266): the ones that add
+ * context beyond the computed affordability and cost panels. A reading written before
+ * 2026-09-30 also answers three retired questions; their citations must not appear in
+ * the visible figure list.
  */
 export type FocusedConsumerSection = "whats_changing" | "before_moving";
 

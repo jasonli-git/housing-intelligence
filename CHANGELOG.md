@@ -3,6 +3,39 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.25.4] — 2026-09-30
+
+### Changed
+
+- **The plain-language reading asks only the two questions a county page shows.**
+  *What's changing?* and *What should I check before moving?*; the bottom line, *is it
+  getting harder to afford here?* and *how does renting compare with buying?* restated
+  the cost panels, cost a share of every run, and could get a whole reading refused. A
+  reading written to the old five is rewritten on the next run (ARCHITECTURE #266).
+- **A refused reading goes back to the model that wrote it before the next model is
+  asked.** The model sees its answer and the refusal, which quotes the words that broke
+  the rule, and writes it once more (`generation.revisions: 1`). Gemini 3.7 Flash, first
+  on both lists, was refused 9 times in 42 on 2026-09-28, and each refusal handed a
+  county to a lower-ranked model. `hip explain` reports readings written after a
+  revision, and counts what each attempt cost.
+
+### Fixed
+
+- **A rank range written as a range is accepted as one.** "3rd–7th of 21" and "between
+  1st and 2nd of 21" were refused as one end quoted alone whenever binding credited the
+  two ends to different measures that shared those values — three of Gemini's four
+  analyst refusals on 2026-09-28.
+- **The prompts name the slips Gemini made.** The packet's own labels use words the
+  consumer reading may not ("home value index", "parcels"), so the prompt says how to
+  put them plainly; a margin is copied from beside the figure it qualifies and rounded
+  only to the nearest whole number.
+
+### Evidence
+
+- On the eight counties where Gemini 3.7 Flash was refused on 2026-09-28, it wrote all
+  16 readings fit to publish, each on the first answer, for $0.096
+  ([`reports/evaluation/gemini-first-v1.md`](reports/evaluation/gemini-first-v1.md)).
+
 ## [0.25.3] — 2026-09-29
 
 From Codex (PR #53).

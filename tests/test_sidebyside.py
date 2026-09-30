@@ -78,6 +78,8 @@ def test_a_refused_reading_is_shown_with_the_rule_it_broke(
     assert result.reasons == [
         "4 figures under 'What's changing?', where at most 3 are allowed"
     ]
+    # Sent back once, as `hip explain` would, and refused again for the same rule.
+    assert result.refusals == [result.reasons]
     # Shaped anyway, so the report can still lay it out under its questions.
     assert len(result.sections) == len(QUESTIONS)
     assert result.publishes_at(4) and not result.publishes_at(3)
@@ -97,6 +99,43 @@ def test_an_unbound_figure_is_a_refusal_and_an_error_a_failure(
         uncertain_packet(), load_evaluation(), "gemini-3.7-flash-low", "analyst"
     )
     assert empty.status == "failed"
+
+
+def test_a_reading_published_after_a_revision_says_so(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    answers = iter([_reading({"before_moving": "Check each parcel."}), _reading()])
+
+    def run_model(packet: Any, evaluation: Any, model_id: str, **_: Any) -> Any:
+        answer = next(answers)
+        generation = Generation(
+            scenario_key="k",
+            scenario_id="explain",
+            region_id=packet.region.region_id,
+            model_id=model_id,
+            cohort="gemini",
+            mode="deterministic",
+            answer=answer,
+            raw=answer,
+            telemetry=Telemetry(
+                prompt_tokens=3000, generation_tokens=300, generation_ms=1.0, total_ms=1.0
+            ),
+        )
+        return (
+            generation,
+            render_markdown(packet),
+            Usage(model_id, 3000, 300, None, 0.001),
+        )
+
+    monkeypatch.setattr("hip.eval.sidebyside.run_model", run_model)
+    result = trial(
+        uncertain_packet(), load_evaluation(), "gemini-3.7-flash-low", "consumer"
+    )
+    assert result.status == "published"
+    assert len(result.refusals) == 1 and "parcel" in result.refusals[0][0]
+    assert result.usd == 0.002 and result.output_tokens == 600
+    report = render([result], ["gemini-3.7-flash-low"], name="t", on=date(2026, 9, 30))
+    assert "_Answer 1 refused and sent back for revision:_ jargon: 'parcel'" in report
 
 
 def _trial(**fields: Any) -> Trial:

@@ -554,6 +554,10 @@ class GenerationConfig(BaseModel):
     # consumer reading, each from the first model on its own list that can write it.
     preference: dict[Audience, list[str]]
     max_concurrency: int = Field(default=4, ge=1, le=32)
+    # How many times a refused reading goes back to the model that wrote it, with the
+    # refusal, before the region passes to the next model on the list (ARCHITECTURE
+    # #266). Each is a billed call; one recovers most refusals.
+    revisions: int = Field(default=1, ge=0, le=3)
 
     @model_validator(mode="after")
     def _every_audience_has_a_list(self) -> GenerationConfig:

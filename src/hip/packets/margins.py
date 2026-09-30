@@ -63,6 +63,10 @@ _RANK_BEFORE = re.compile(r"\b(rank(ed|s|ing)?|place[ds]?|No\.|#)\s*$", re.IGNOR
 
 _ENTRY = re.compile(r"^(metrics|levels)\[([^\]]+)\]\.(.+)$")
 
+# What joins a range's two ends: "3rd–7th", "between 1st and 2nd", "5th to 18th". The
+# ordinal suffix of the first end sits between the numbers, so it is allowed here.
+_RANGE_JOIN = re.compile(r"^(?:st|nd|rd|th)?\s*(?:[–—-]|to|and|through)\s*$", re.I)
+
 
 @dataclass(frozen=True)
 class MarginProblem:
@@ -182,6 +186,23 @@ def _rank_problem(
     return f"one end of the range {span_text} quoted as a place"
 
 
+def _quoted_as_range(text: str, citation: Citation, cited: list[Citation]) -> set[float]:
+    """The pair of ranks `citation` is written as one end of, if it is: the two numbers
+    of "3rd–7th" or "between 1st and 2nd", whichever fields binding gave each.
+
+    Binding places each number on its own, so the two ends of one range can land on two
+    different measures that happen to share those values — and the check would then see
+    each end quoted alone. A range written as a range is judged as one here (#266).
+    """
+    for other in cited:
+        if other is citation:
+            continue
+        first, second = sorted((citation, other), key=lambda c: c.start)
+        if _RANGE_JOIN.match(text[first.end : second.start]):
+            return {citation.value, other.value}
+    return set()
+
+
 def _ranklike(text: str, citation: Citation) -> bool:
     after = text[citation.end : citation.end + 12]
     before = text[max(0, citation.start - 20) : citation.start]
@@ -266,7 +287,14 @@ def margin_problems(text: str, binding: Binding, packet: Packet) -> list[MarginP
 
             if citation.field is None or citation.kind not in {"rank", "percentile"}:
                 continue
-            why = _rank_problem(citation.field, citation.kind, fields, metrics, levels)
+            why = _rank_problem(
+                citation.field,
+                citation.kind,
+                fields,
+                metrics,
+                levels,
+                _quoted_as_range(text, citation, cited) or None,
+            )
             if why is None or (citation.kind == "rank" and not _ranklike(text, citation)):
                 continue
             # As with a margin, every field the rank could be read from: "17th" may be
