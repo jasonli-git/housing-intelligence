@@ -7,7 +7,7 @@
 - Arranged region-page shortcuts into two columns on mobile while retaining their current visual treatment.
 - Removed the moving-checklist divider and added space above its disclaimer. Removed the top and bottom borders around the cost-context section.
 - Added more space between “What’s changing?” and the ranked-measures disclosure.
-- Restored a faint green card beneath “Explore the evidence,” preserving the data disclosure, its remembered state, and shortcut behavior.
+- Restored a green card beneath “Explore the evidence,” preserving the data disclosure, its remembered state, and shortcut behavior. After visual feedback, strengthened it to deep forest green with light text and slightly squarer corners to distinguish it from “What’s changing?”.
 
 ## Files/modules affected
 
@@ -21,6 +21,7 @@
 
 - The existing build timestamp and relative-age component now render in the shared footer. The schedule remains a link to source freshness.
 - A wrapper inside the existing native summary provides the green card while keeping its evidence label above it.
+- The evidence card has its own dark green palette in both site themes. Its text and controls use local light foreground tokens; the expanded data keeps the site's normal palette.
 - The two-column shortcut layout applies to region pages at widths up to 700 pixels. A third shortcut naturally starts the next row.
 
 ## Assumptions
@@ -42,3 +43,4 @@
 - Headless browser checks: Cumberland County at 320, 390, 768, and 1,440 pixels; Absecon municipality at 390 and 768 pixels. No page overflow. At 390 pixels, shortcuts share a row, the moving-checklist disclaimer has a 16-pixel gap, and the data shortcut opens the disclosure. The schedule indicator is about 22 pixels tall.
 - Visual inspection of mobile header, cost context, evidence card, and source-history card captures.
 - No separate frontend lint script is configured.
+- Follow-up evidence-card design: reran the full static export successfully and inspected mobile, desktop, and dark-theme captures. Light title text renders against the dark green surface in both themes; no page overflow at 390 or 1,440 pixels, and the data shortcut still opens the disclosure.

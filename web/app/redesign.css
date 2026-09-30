@@ -1107,17 +1107,21 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 }
 
 .more-entry {
+  --text-primary: #f4fff9;
+  --text-secondary: #c5ded6;
+  --atlas-ink: #d9f2e7;
+  --atlas-accent: #93cdbb;
   display: grid;
   grid-template-columns: 3.5rem minmax(0, 1fr) auto;
   gap: clamp(0.8rem, 2vw, 1.75rem);
   align-items: center;
   padding: clamp(1.1rem, 2.3vw, 1.8rem);
-  border: 1px solid color-mix(in srgb, var(--series-3) 30%, var(--border));
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--series-3) 9%, var(--surface-card));
+  border: 1px solid #397566;
+  border-radius: 10px;
+  background: #164b42;
   transition: background-color 150ms ease;
 }
-.more > summary:hover .more-entry { background: color-mix(in srgb, var(--series-3) 14%, var(--surface-card)); }
+.more > summary:hover .more-entry { background: #1b574d; }
 .more > summary > .more-kicker { display: block; margin-bottom: 0.65rem; }
 
 .more-index {
