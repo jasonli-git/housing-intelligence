@@ -1,6 +1,8 @@
 import Link from "next/link";
 
+import { BuiltAgo } from "@/components/BuiltAgo";
 import { api } from "@/lib/api";
+import { dayLabel } from "@/lib/freshness";
 import { byInstitution, isRestricted, shortPublisher } from "@/lib/sources";
 
 const NOTICE_URL = "https://github.com/jasonli-git/housing-intelligence/blob/main/NOTICE";
@@ -30,6 +32,7 @@ const NOTICE_URL = "https://github.com/jasonli-git/housing-intelligence/blob/mai
  * and `make check-dist` already refuses to deploy a tree built without a live API.
  */
 export async function SourceFooter() {
+  const builtAt = process.env.SITE_BUILT_AT ?? new Date().toISOString();
   const sources = await api.sources();
   if (!sources?.length) return null;
 
@@ -116,7 +119,13 @@ export async function SourceFooter() {
         {/* Outside the disclosure, so the pages about the data are reachable without
             opening the source list first (Milestone 27). */}
         <nav className="foot-links" aria-label="Source history">
-          <span className="foot-kicker">Source history</span>
+          <div className="foot-history-head">
+            <span className="foot-kicker">Source history</span>
+            <span className="foot-built">
+              Built <time dateTime={builtAt}>{dayLabel(builtAt)}</time>
+              <BuiltAgo at={builtAt} />
+            </span>
+          </div>
           <div className="foot-link-list">
             <Link href="/freshness">
               <span className="foot-link-title">How current is each source? <span aria-hidden="true">→</span></span>

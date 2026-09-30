@@ -91,15 +91,17 @@ export function MoreExpander({ id, title, sub, children }: { id?: string; title:
       }}
     >
       <summary>
-        <span className="more-index" aria-hidden="true">↳</span>
-        <span className="more-copy">
-          <span className="more-kicker">Explore the evidence</span>
-          <span className="more-title">{title}</span>
-          <span className="more-sub">{sub}</span>
-        </span>
-        <span className="more-open" aria-hidden="true">
-          <span className="more-open-label"><span className="when-closed">Open</span><span className="when-open">Close</span></span>
-          <span className="more-open-icon">+</span>
+        <span className="more-kicker">Explore the evidence</span>
+        <span className="more-entry">
+          <span className="more-index" aria-hidden="true">↳</span>
+          <span className="more-copy">
+            <span className="more-title">{title}</span>
+            <span className="more-sub">{sub}</span>
+          </span>
+          <span className="more-open" aria-hidden="true">
+            <span className="more-open-label"><span className="when-closed">Open</span><span className="when-open">Close</span></span>
+            <span className="more-open-icon">+</span>
+          </span>
         </span>
       </summary>
       <div className="more-body">{children}</div>

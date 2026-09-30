@@ -39,7 +39,7 @@
      instrument. The report stays a secondary path off to the side. */
   .atlas-local > .page-head { padding-bottom: 1.6rem; }
   .atlas-local .verdict { margin-top: 1rem; }
-  .atlas-local .page-head > .actions { bottom: 1.55rem; }
+  .atlas-local .page-head > .actions { position: static; margin-left: auto; }
   .atlas-local .report-action {
     min-width: 11.5rem;
     padding: 0.2rem 0 0.2rem 0.9rem;
@@ -89,6 +89,7 @@
     border-bottom: 2px solid var(--atlas-accent);
   }
   .atlas-local .cost-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0;
     margin-top: 1rem;
     overflow: hidden;
@@ -113,7 +114,7 @@
   .atlas-local .cost-card + .cost-card { border-left: 1px solid var(--border); }
   .atlas-local .cost-cards + .cost-evidence { margin-top: 1.3rem; }
   .atlas-local .standouts-disclosure { margin-top: clamp(1.5rem, 3vw, 2rem); }
-  .atlas-local .consumer-feature-whats_changing + .standouts-disclosure { margin-top: 0.75rem; }
+  .atlas-local .consumer-feature-whats_changing + .standouts-disclosure { margin-top: clamp(1.5rem, 3vw, 2rem); }
   .atlas-local .standouts-disclosure .region-standouts { margin: 1.35rem 0 1.8rem; }
 
   /* The standalone tool uses the same connected map/table grammar as the new state
@@ -201,9 +202,13 @@
 }
 
 @media screen and (max-width: 700px) {
+  .atlas-local .cost-cards { grid-template-columns: minmax(0, 1fr); }
   .atlas-page .page-title { font-size: clamp(46px, 11.5vw, 64px); }
   .atlas-page > .page-head { padding-block: 1.1rem 1.2rem; }
-  .atlas-local .page-head > .actions { margin-top: 0.4rem; }
+  .atlas-local .page-head > .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem 0.6rem; width: 100%; margin-top: 0.4rem; }
+  .atlas-local .page-head > .actions .report-action { min-width: 0; gap: 0.4rem; padding-left: 0.55rem; }
+  .atlas-local .page-head > .actions .report-action > svg { width: 16px; height: 16px; }
+  .atlas-local .page-head > .actions .report-action-copy strong { font-size: 12px; }
   .atlas-local .section-head .control {
     flex: 0 0 auto;
     flex-wrap: nowrap;

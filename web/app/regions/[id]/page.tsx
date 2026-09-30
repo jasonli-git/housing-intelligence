@@ -27,6 +27,7 @@ import { groupRows } from "@/lib/groups";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, surveyYears } from "@/lib/periods";
 import { standOuts } from "@/lib/standouts";
+import { firstEnd } from "@/lib/ranks";
 import {
   anyMargin,
   changeMarginLabel,
@@ -247,6 +248,12 @@ export default async function RegionPage({
     (item) => item.metric_id !== "acs_population",
   );
   const standing = standOuts(packet, uncertainties);
+  const changePreview = standing.find((item) => item.group === "leads")
+    ?? standing.find((item) => item.group === "lags");
+  const valuePreview = standing.find((item) => item.group === "value" && item.metric_id !== changePreview?.metric_id)
+    ?? standing.find((item) => item.group === "value");
+  const changePreviewMetric = packet.metrics.find((metric) => metric.metric_id === changePreview?.metric_id);
+  const standoutMeasureCount = new Set(standing.map((item) => item.metric_id)).size;
   const rankExample = rankBasisExample(name, packet.metrics, packet.levels, uncertainties);
   const rankChartCount =
     Number(packet.metrics.some((row) => row.rank !== null && row.of !== null && row.of > 1)) +
@@ -409,11 +416,29 @@ export default async function RegionPage({
         <details className="standouts-disclosure">
           <summary>
             <span className="standouts-disclosure-copy">
-              <span className="standouts-disclosure-kicker">Computed rankings · {standing.length} measures</span>
-              <strong>Explore ranked measures</strong>
-              <span className="standouts-disclosure-hint">Where {name} leads, lags, or sits at an extreme</span>
+              <span className="standouts-disclosure-kicker">Computed rankings</span>
+              <strong>See where {name} stands out</strong>
+              <span className="standouts-previews">
+                {changePreview && changePreviewMetric && (
+                  <span className="standouts-preview">
+                    <span className="standouts-preview-basis">5-year change</span>
+                    <b>{changePreview.label}</b>
+                    <span>{changePreview.rank} · {firstEnd("change", changePreviewMetric.direction)}</span>
+                  </span>
+                )}
+                {valuePreview && (
+                  <span className="standouts-preview">
+                    <span className="standouts-preview-basis">Current value</span>
+                    <b>{valuePreview.label}</b>
+                    <span>{valuePreview.detail}</span>
+                  </span>
+                )}
+              </span>
             </span>
-            <span className="standouts-disclosure-icon" aria-hidden="true">+</span>
+            <span className="standouts-disclosure-cue">
+              <span className="when-closed">Explore {standoutMeasureCount} {standoutMeasureCount === 1 ? "measure" : "measures"} →</span>
+              <span className="when-open">Close ↑</span>
+            </span>
           </summary>
           <RegionStandOuts
             name={name}
