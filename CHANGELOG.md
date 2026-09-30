@@ -3,6 +3,24 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.25.5] — 2026-09-30
+
+From Codex (PR #55). Presentation only: no figure, reading or calculation changed.
+
+### Changed
+
+- **The build date moved from the page header to the source-history footer**; the
+  header keeps a compact link to the Friday source checks.
+- **The ranked-measures disclosure previews what it holds:** "See where [place] stands
+  out", with up to two of the county's computed stand-outs — one change, one current
+  value — and the number of measures inside.
+- **"Explore the evidence" is a deep-green card**, set apart from the model-written
+  answers around it.
+- **"Not included" is joined to the cost card as its footer**, and the moving
+  checklist's disclaimer sits directly beneath its list.
+- **Region-page shortcuts sit in two columns on phones**, and no longer overlap the
+  paycheck details when those are expanded.
+
 ## [0.25.4] — 2026-09-30
 
 ### Changed
