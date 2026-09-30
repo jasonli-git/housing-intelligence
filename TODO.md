@@ -14,33 +14,20 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 31, licence and provenance pass (started 2026-09-30)
+## Now — Milestone 31 built, awaiting review (2026-09-30)
 
-On `milestone/m31-licence-provenance`. Principle 11 on every figure, a licence that follows
-a figure into anything derived from it and any download of it, and the terms behind
-both re-read. Decided with the owner before starting: a figure's kind is shown beside it
-in tables and in its definition card (headline tiles keep it one tap away, case by case);
-Zillow figures and their ratios go into downloads with their restriction attached; the
-model-comparison dashboard is dropped from this milestone.
+Milestone 31 is complete on `milestone/m31-licence-provenance` (0.26.0): every figure's
+kind shown beside it, a licence class per source that a calculated figure inherits, the
+notices the sources' terms require on every page, a CSV of each region's figures that
+carries all three, a print footer, and a written acquisition policy. CHANGELOG 0.26.0
+has what shipped and ARCHITECTURE #269–#271 the decisions.
 
-- [ ] **Kinds and licences in config.** `record_type` on every metric (survey estimate,
-      administrative record, official determination, calculated, modelled index);
-      `inputs` on each calculated metric, checked against `hip.analytics.compute`;
-      `licence_class` and the date its terms were read on every source.
-- [ ] **Carried through.** A migration for the two columns; a metric's licence is its
-      source's, or for a calculated metric the most restrictive of its inputs'. Both in
-      the API and packet 1.4, outside the content hash, so no reading goes stale.
-- [ ] **Shown.** A kind tag on every row of the full metric tables and the report, and a
-      line in every definition card; HUD's determinations labelled as such (SPEC v1.4).
-- [ ] **Download this page's data.** A CSV per region, served by the API and published
-      beside the packet, each row with its kind, source, period and licence, and a
-      header carrying the citation and any restriction.
-- [ ] **Print footer.** Every printed page carries the restriction and the page's
-      address, so one page cut from a PDF still does.
-- [ ] **Terms re-read,** every source's, recorded with the date and what they allow;
-      Realtor.com's settled in the register. Zillow's page refuses automated readers.
-- [ ] **A written scraping policy** in ARCHITECTURE.
-- [ ] **Update pass** and the spec drift check.
+**After the merge:** `make migrate` (0020 fills the new columns from config), then
+`hip explain --dry-run` to re-cite the readings for free — packet 1.4 moves the packet
+hash but not the content hash — then `make publish`, deploy and `make check-live`.
+
+**Waiting on the owner,** under Parked: Zillow's and Realtor.com's terms, which refuse
+automated readers, and whether to ask Freddie Mac about the mortgage rate.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -373,11 +360,16 @@ first raised, not where it must be done.
       `config/geography.yml` already warns the identifier system is expensive to change
       once fact rows reference it.
 
-- [ ] **Reuse rights beyond display are unverified for six sources.** (M27
-      completeness run) FRED, the three NJ sources and both Zillow indexes: the licence
-      recorded in `config/sources.yml` does not say whether download, derived figures or
-      commercial use are allowed, and no publisher's terms have been checked.
-      **Scheduled: Milestone 32**, whose licence table needs exactly this.
+- [ ] **Commercial-use rights are recorded only as the terms state them.** (M27
+      completeness run; narrowed by Milestone 31) Every source's terms were read on
+      2026-09-30 and classed in `config/sources.yml` (#269), which settles display,
+      download and derived figures; whether each allows *commercial* use is what
+      Milestone 32's licence table has to state, source by source. Zillow's terms are
+      unconfirmed (see Parked). **Scheduled: Milestone 32.**
+- [ ] **The Markdown report does not carry each figure's kind or licence.** (M31) The
+      report page and the CSV do. Left out on purpose: the Markdown is also the payload a
+      reading's model is given, and a change to it is a change to every reading's input,
+      which wants its own side-by-side.
 
 ### Data sources worth adding
 
@@ -412,6 +404,21 @@ first raised, not where it must be done.
       map layer would be an enormous download.
 
 ## Parked / needs user input
+
+- [ ] **Read Zillow's and Realtor.com's terms by hand.** (M31) Both sites refuse an
+      automated reader, which the acquisition policy does not work around (#271).
+      Zillow's research data page (terms at the foot of
+      [zillow.com/research/data](https://www.zillow.com/research/data/)): does it still
+      say free for non-commercial use with attribution, and does it allow redistributing
+      the figures in a download? The site's class for both indexes rests on the wording
+      recorded in 2026-09 until then. Realtor.com's research data terms settle a source
+      the register lists as unverified.
+- [ ] **Ask Freddie Mac about the mortgage rate?** (M31, #269) Its PMMS page allows use
+      with attribution; its general terms forbid publishing or redistributing its data
+      without an agreement. The site shows the weekly and monthly rate, credited, and
+      leaves it out of downloads. Nothing public reconciles the two, so this is a question
+      only Freddie Mac can answer — a candidate for the owner's outreach, or leave it as
+      it stands.
 
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.

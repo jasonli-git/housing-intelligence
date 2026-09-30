@@ -196,12 +196,15 @@ def test_no_derived_ratio_is_computed_from_the_transaction_median() -> None:
     the ratio table in `hip.analytics.compute` rather than the warehouse, so it fails when
     someone adds the input, not only after a pipeline run.
     """
-    source = (ROOT / "src/hip/analytics/compute.py").read_text()
-    head = "for metric_id, numerator, denominator, multiplier in ("
-    block = source[source.index(head) :]
-    block = block[: block.index("):")]
-    assert "zhvi_sfr" in block, "the ratio table moved; this reads the wrong text"
-    assert "sr1a_median_sale_price" not in block, (
+    from hip.analytics.compute import RATIOS
+
+    inputs = {
+        metric
+        for _, numerator, denominator, _ in RATIOS
+        for metric in (numerator, denominator)
+    }
+    assert "zhvi_sfr" in inputs, "the ratio table moved; this reads the wrong list"
+    assert "sr1a_median_sale_price" not in inputs, (
         "a derived ratio is computed from sr1a_median_sale_price. That figure is a "
         "median of what sold, not of what exists, so a ratio mixing it with Zillow's "
         "index across regions compares them on different yardsticks. Needs an explicit "
