@@ -14,12 +14,33 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones; Milestone 31 not started (2026-09-30)
+## Now — Milestone 31, licence and provenance pass (started 2026-09-30)
 
-Every reading on the site is Gemini 3.7 Flash's (0.25.4, regenerated and deployed
-2026-09-30). On `fix/small-cleanups`: five small fixes and the handoff cleanup (0.25.6).
-**Milestone 31 waits on the owner**, who asked not to start it yet. Its two SPEC principle
-12 questions were answered on 2026-09-30 (SPEC v1.4, ARCHITECTURE #268).
+On `milestone/m31-licence-provenance`. Principle 11 on every figure, a licence that follows
+a figure into anything derived from it and any download of it, and the terms behind
+both re-read. Decided with the owner before starting: a figure's kind is shown beside it
+in tables and in its definition card (headline tiles keep it one tap away, case by case);
+Zillow figures and their ratios go into downloads with their restriction attached; the
+model-comparison dashboard is dropped from this milestone.
+
+- [ ] **Kinds and licences in config.** `record_type` on every metric (survey estimate,
+      administrative record, official determination, calculated, modelled index);
+      `inputs` on each calculated metric, checked against `hip.analytics.compute`;
+      `licence_class` and the date its terms were read on every source.
+- [ ] **Carried through.** A migration for the two columns; a metric's licence is its
+      source's, or for a calculated metric the most restrictive of its inputs'. Both in
+      the API and packet 1.4, outside the content hash, so no reading goes stale.
+- [ ] **Shown.** A kind tag on every row of the full metric tables and the report, and a
+      line in every definition card; HUD's determinations labelled as such (SPEC v1.4).
+- [ ] **Download this page's data.** A CSV per region, served by the API and published
+      beside the packet, each row with its kind, source, period and licence, and a
+      header carrying the citation and any restriction.
+- [ ] **Print footer.** Every printed page carries the restriction and the page's
+      address, so one page cut from a PDF still does.
+- [ ] **Terms re-read,** every source's, recorded with the date and what they allow;
+      Realtor.com's settled in the register. Zillow's page refuses automated readers.
+- [ ] **A written scraping policy** in ARCHITECTURE.
+- [ ] **Update pass** and the spec drift check.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -221,6 +242,11 @@ first raised, not where it must be done.
 - [ ] **A figure's own history of values is not shown.** (M27, #224) `/changes`
       summarises each refresh; a region page neither marks a revised figure nor shows its
       earlier values, which `fact_revision` holds.
+
+- [ ] **A model-comparison page on the site.** Dropped from Milestone 31 by the owner
+      (2026-09-30); `reports/evaluation/v1.md`–`v3.md` and the readings side-by-sides cover
+      it in Markdown. If revived: one page from the latest run, earlier runs listed but
+      not merged, since their judging differed.
 
 ### Map performance — open leads, for the end of V3
 
