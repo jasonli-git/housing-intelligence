@@ -31,6 +31,20 @@ const NOTICE_URL = "https://github.com/jasonli-git/housing-intelligence/blob/mai
  * sources that may not be the ones actually behind the page would be worse than none,
  * and `make check-dist` already refuses to deploy a tree built without a live API.
  */
+/** A notice with any address in it made a link: FRED's requires a link to its terms. */
+function linked(notice: string) {
+  const parts = notice.split(/(https:\/\/\S+)/);
+  return parts.map((part, index) =>
+    part.startsWith("https://") ? (
+      <a key={index} href={part} rel="noreferrer noopener" target="_blank">
+        {part.replace(/^https:\/\//, "")}
+      </a>
+    ) : (
+      part
+    ),
+  );
+}
+
 export async function SourceFooter() {
   const builtAt = process.env.SITE_BUILT_AT ?? new Date().toISOString();
   const sources = await api.sources();
@@ -39,6 +53,7 @@ export async function SourceFooter() {
   // `hip_derived` is the platform's own computed metrics, not a third party to credit.
   const external = sources.filter((s) => s.source_id !== "hip_derived");
   const institutions = byInstitution(external);
+  const notices = [...new Set(external.flatMap((s) => s.notices ?? []))];
 
   return (
     <footer className="foot" aria-labelledby="sources-heading">
@@ -101,6 +116,11 @@ export async function SourceFooter() {
                           ↗
                         </span>
                       </a>
+                      {source.originators?.length ? (
+                        <span className="ds-meta">
+                          series owned by {source.originators.join(" and ")}
+                        </span>
+                      ) : null}
                       {source.cadence && <span className="ds-meta">{source.cadence}</span>}
                       {isRestricted(source) && (
                         <span className="nc-tag" title="See the licence line at the top of the page">
@@ -115,6 +135,18 @@ export async function SourceFooter() {
             ))}
           </ul>
         </details>
+
+        {/* The statements the sources' terms require, word for word and "prominently" —
+            so outside the disclosure, on every page (Milestone 31). Census, HUD User and
+            FRED each require one of an application using their API; BLS asks for its
+            disclaimer. */}
+        {notices.length > 0 && (
+          <div className="foot-notices" aria-label="Notices the sources require">
+            {notices.map((notice) => (
+              <p key={notice}>{linked(notice)}</p>
+            ))}
+          </div>
+        )}
 
         {/* Outside the disclosure, so the pages about the data are reachable without
             opening the source list first (Milestone 27). */}

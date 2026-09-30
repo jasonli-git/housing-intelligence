@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 
 import { Margin, Marks, NoteRows, RankCell } from "@/components/Ledger";
+import { KindTag } from "@/components/KindTag";
 import { MetricTerm } from "@/components/MetricTerm";
 import { ReportProblem } from "@/components/ReportProblem";
 import type { Packet, PacketLevel } from "@/lib/api";
@@ -66,6 +67,7 @@ export function CurrentValues({
                     <td>
                       <MetricTerm metricId={level.metric_id} label={level.label} scope="values" />
                       <Marks letters={placement.marks.get(level.metric_id)} />
+                      <KindTag metricId={level.metric_id} />
                       {regionLabel && sources && path && (
                         <ReportProblem
                           regionLabel={regionLabel}

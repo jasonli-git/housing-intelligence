@@ -4,6 +4,7 @@ import { type CSSProperties, useCallback, useEffect, useId, useLayoutEffect, use
 import { createPortal } from "react-dom";
 
 import { definitionOf } from "@/lib/definitions";
+import { KIND_LABELS, kindOf } from "@/lib/kinds";
 
 type Position = Pick<CSSProperties, "left" | "top" | "width">;
 
@@ -26,6 +27,7 @@ export function FloatingMetricTerm({ metricId, label, definition, why }: Floatin
   const shared = definitionOf(metricId);
   const what = definition ?? shared?.what;
   const whyItMatters = why === undefined ? shared?.why : why;
+  const kind = kindOf(metricId);
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
   const tooltip = useRef<HTMLSpanElement>(null);
@@ -88,6 +90,11 @@ export function FloatingMetricTerm({ metricId, label, definition, why }: Floatin
       {open && typeof document !== "undefined" && createPortal(
         <span ref={tooltip} role="tooltip" id={id} className="floating-tip" style={position}>
           <strong>{label}.</strong> {what}
+          {kind && (
+            <span className="tip-kind">
+              <b>Kind of figure:</b> {KIND_LABELS[kind]}
+            </span>
+          )}
           {whyItMatters && (
             <span className="tip-why">
               <b>Why it matters:</b> {whyItMatters}

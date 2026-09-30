@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 
 import { Glossed } from "@/components/Glossed";
+import { KindTag } from "@/components/KindTag";
 import { MetricTerm } from "@/components/MetricTerm";
 import { ReportProblem } from "@/components/ReportProblem";
 import type { Packet, PacketMetric } from "@/lib/api";
@@ -316,6 +317,7 @@ export function Ledger({
                         up={atFoot.has(metric.metric_id)}
                       />
                       <Marks letters={placement.marks.get(metric.metric_id)} />
+                      <KindTag metricId={metric.metric_id} />
                       {regionLabel && sources && path && (
                         <ReportProblem
                           regionLabel={regionLabel}

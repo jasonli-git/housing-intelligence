@@ -113,3 +113,21 @@ def test_inheritance_takes_the_most_restrictive_input(restricted: str) -> None:
         "ratio": _metric("mine", inputs=["a", "b"]),
     }
     assert metric_licence("ratio", metrics, sources) == restricted
+
+
+def test_the_site_shows_each_metric_as_the_kind_the_config_says() -> None:
+    """`web/lib/kinds.ts` is a static copy, so a definition card needs no API call;
+    this keeps it from drifting from `config/metrics.yml`, including a metric added to
+    one and not the other."""
+    import re
+    from pathlib import Path
+
+    source = (
+        Path(__file__).resolve().parents[1] / "web" / "lib" / "kinds.ts"
+    ).read_text()
+    block = re.search(
+        r"export const KINDS: Record<string, RecordType> = \{(.*?)\};", source, re.S
+    )
+    assert block, "KINDS not found in web/lib/kinds.ts"
+    on_the_site = dict(re.findall(r'(\w+): "(\w+)"', block.group(1)))
+    assert on_the_site == {m: d.record_type for m, d in load_metrics().items()}

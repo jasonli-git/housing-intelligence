@@ -223,6 +223,9 @@ class SourceEntry(BaseModel):
     terms_checked: date | None = None
     terms_note: str | None = None
     notices: list[str] = Field(default_factory=list)
+    # Who owns series this source redistributes, credited beside it: FRED's terms
+    # require naming the owner of a copyrighted series as well as FRED.
+    originators: list[str] = Field(default_factory=list)
     releases: list[SourceRelease] = Field(default_factory=list)
 
 
@@ -247,6 +250,11 @@ def sources(session: SessionDep) -> list[SourceEntry]:
                    COALESCE(s.homepage, s.url) AS homepage, s.cadence,
                    s.licence_class, s.terms_url, s.terms_checked, s.terms_note,
                    s.notices,
+                   ARRAY(
+                       SELECT DISTINCT m.originator FROM metrics m
+                       WHERE m.source_id = s.source_id AND m.originator IS NOT NULL
+                       ORDER BY 1
+                   ) AS originators,
                    r.vintage, r.fetched_at, r.row_count
             FROM sources s
             LEFT JOIN source_releases r ON r.source_id = s.source_id
@@ -272,6 +280,7 @@ def sources(session: SessionDep) -> list[SourceEntry]:
                 terms_checked=row["terms_checked"],
                 terms_note=row["terms_note"],
                 notices=list(row["notices"] or []),
+                originators=list(row["originators"] or []),
             )
             entries[row["source_id"]] = entry
         # LEFT JOIN: a registered source with nothing ingested yet has a null vintage

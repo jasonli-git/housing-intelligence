@@ -597,6 +597,14 @@ export type SourceEntry = {
   /** Where to send a reader; equals `url` when the source has no separate page. */
   homepage: string;
   cadence: string;
+  /** Milestone 31: what its terms allow, and the statements they require the site to show. */
+  licence_class?: string | null;
+  terms_url?: string | null;
+  terms_checked?: string | null;
+  terms_note?: string | null;
+  notices?: string[];
+  /** Who owns series it redistributes (FRED serves Freddie Mac's mortgage rate). */
+  originators?: string[];
   releases: { vintage: string; fetched_at: string; row_count: number }[];
 };
 

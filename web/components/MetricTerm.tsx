@@ -2,6 +2,7 @@
 
 import { Definition } from "@/components/Definition";
 import { definitionOf } from "@/lib/definitions";
+import { KIND_LABELS, kindOf } from "@/lib/kinds";
 
 /**
  * A metric's name with its plain definition attached (Milestone 23, `lib/definitions.ts`).
@@ -30,10 +31,18 @@ export function MetricTerm({
   up?: boolean;
 }) {
   const definition = definitionOf(metricId);
+  const kind = kindOf(metricId);
   if (!definition) return <>{label}</>;
   return (
     <Definition
-      term={{ key: `${scope}-${metricId}`, title: label, definition: definition.what, why: definition.why, phrases: [] }}
+      term={{
+        key: `${scope}-${metricId}`,
+        title: label,
+        definition: definition.what,
+        why: definition.why,
+        kind: kind ? KIND_LABELS[kind] : undefined,
+        phrases: [],
+      }}
       up={up}
     >
       {label}

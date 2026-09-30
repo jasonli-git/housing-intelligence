@@ -28,6 +28,11 @@ export function Definition({ term, children, up = false }: { term: Term; childre
       </span>
       <span role="tooltip" id={id} className={up ? "tip up" : "tip"}>
         <strong>{term.title}.</strong> {term.definition}
+        {term.kind && (
+          <span className="tip-kind">
+            <b>Kind of figure:</b> {term.kind}
+          </span>
+        )}
         {term.why && (
           <span className="tip-why">
             <b>Why it matters:</b> {term.why}
