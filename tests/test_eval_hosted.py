@@ -1151,6 +1151,35 @@ def test_probe_accepts_a_reasoning_model_cut_off_by_its_small_budget(
     assert _probe(runner, _answering(body), monkeypatch) is None
 
 
+def test_an_answered_probe_is_counted_in_the_runs_cost(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A probe is a billed call, so `hip explain`'s cost line must include it (found in
+    review of PR #52): the line claims to be what the run spent."""
+    from hip.eval_cli import _cost_lines, _Outcome, _Run, _unusable
+
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    evaluation = load_evaluation()
+    spent: list[Any] = []
+    with httpx.Client(
+        transport=httpx.MockTransport(_answering(_openai_body(None)))  # type: ignore[arg-type]
+    ) as client:
+        monkeypatch.setattr(httpx, "post", client.post)
+        unusable = _unusable(
+            evaluation,
+            ["deepseek-flash-nothink"],
+            require_benchmark=False,
+            spent=spent,
+        )
+
+    assert unusable == {}
+    [probe] = spent
+    assert probe.probe and (probe.prompt_tokens, probe.generation_tokens) == (100, 40)
+    assert probe.usd is not None and probe.usd > 0
+    run = _Run(readings={}, models={"deepseek-flash-nothink": _Outcome()}, usage=spent)
+    assert "for 0 generation(s) and 1 probe(s)" in _cost_lines(run, evaluation)[0]
+
+
 def test_probe_still_fails_an_empty_answer_that_was_not_a_cutoff(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

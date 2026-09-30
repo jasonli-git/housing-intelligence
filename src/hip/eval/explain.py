@@ -175,25 +175,43 @@ class Explanation:
     earlier: list[Usage] = field(default_factory=list)
 
 
-def _usage(evaluation: EvaluationConfig, model_id: str, generation: Generation) -> Usage:
-    candidate = evaluation.model(model_id)
-    cohort = evaluation.cohort_for(model_id)
-    telemetry = generation.telemetry
+def usage_of(
+    evaluation: EvaluationConfig,
+    model_id: str,
+    prompt_tokens: int,
+    generation_tokens: int,
+    *,
+    tier: str | None = None,
+    probe: bool = False,
+) -> Usage:
+    """What one call to `model_id` cost, priced now at the tier it was served at."""
     usd, off_peak = generation_usd(
-        candidate,
-        cohort,
-        telemetry.prompt_tokens,
-        telemetry.generation_tokens,
-        tier=telemetry.service_tier,
+        evaluation.model(model_id),
+        evaluation.cohort_for(model_id),
+        prompt_tokens,
+        generation_tokens,
+        tier=tier,
         at=datetime.now(UTC),
     )
     return Usage(
         model_id=model_id,
-        prompt_tokens=telemetry.prompt_tokens,
-        generation_tokens=telemetry.generation_tokens,
-        tier=telemetry.service_tier,
+        prompt_tokens=prompt_tokens,
+        generation_tokens=generation_tokens,
+        tier=tier,
         usd=usd,
         off_peak=off_peak,
+        probe=probe,
+    )
+
+
+def _usage(evaluation: EvaluationConfig, model_id: str, generation: Generation) -> Usage:
+    telemetry = generation.telemetry
+    return usage_of(
+        evaluation,
+        model_id,
+        telemetry.prompt_tokens,
+        telemetry.generation_tokens,
+        tier=telemetry.service_tier,
     )
 
 

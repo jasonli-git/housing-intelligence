@@ -3,6 +3,30 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.25.6] — 2026-09-30
+
+### Fixed
+
+- **A phone-width county page no longer scrolls sideways with its data open.** A value's
+  margin line could not wrap, which pushed the current-values tables 15px past a 375px
+  screen (Somerset); all 21 counties were checked at that width.
+- **The consumer reading's three-figure limit counts figures as written.** A figure
+  stated twice counts twice, as a reader sees it; a range's two ends still count once
+  (ARCHITECTURE #267). None of the 21 published readings changes.
+- **`hip explain`'s cost line includes the probes it makes before a run.** Each hosted
+  model is called once to check it answers as itself; those calls are billed, and the
+  line now counts them apart from the readings.
+- **`python-dotenv` is declared** rather than arriving through `pydantic-settings`.
+- **`web/scripts/check-nj-redesign.mjs` runs to the end again.** It stopped at a
+  population card the header redesign removed; it now checks the eyebrow badge that
+  replaced it, and allows the profile ticker the 2px survey margins added.
+
+### Removed
+
+- Nine Codex handoffs in `agent-handoffs/` whose work, decisions and open items are in
+  CHANGELOG, ARCHITECTURE and TODO. The data-completeness research and the screenshot
+  investigation stay, since the canonical documents cite them.
+
 ## [0.25.5] — 2026-09-30
 
 From Codex (PR #55). Presentation only: no figure, reading or calculation changed.

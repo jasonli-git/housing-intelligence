@@ -9,6 +9,9 @@ dependencies = [
     "typer>=0.12",
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
+    # Imported directly by `load_env_file`; declared rather than left to arrive through
+    # pydantic-settings, where a resolver change could drop it.
+    "python-dotenv>=1.0",
     "pyyaml>=6.0",
     "fastapi>=0.111",
     "uvicorn[standard]>=0.30",
