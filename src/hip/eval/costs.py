@@ -33,6 +33,8 @@ class Usage:
     tier: str | None
     usd: float | None
     off_peak: bool = False
+    # A reachability probe before the run (`hip explain`'s model check), not a reading.
+    probe: bool = False
 
 
 def generation_usd(

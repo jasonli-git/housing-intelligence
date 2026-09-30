@@ -202,6 +202,9 @@ class HostedRunner:
         # Asked for on every generation call, never on a probe: a probe measures
         # reachability, and a queued tier would only make it slower to say so.
         self._service_tier = service_tier
+        # The provider's token counts for the last probe that was answered — prompt and
+        # output — so a caller can count what the probe cost; None until one is.
+        self.probe_tokens: tuple[int, int] | None = None
 
     @property
     def provider(self) -> str:
@@ -296,6 +299,8 @@ class HostedRunner:
         except httpx.HTTPError as exc:
             return str(exc)
         data = dict(response.json())
+        prompt_tokens, output_tokens, _ = self._usage(data)
+        self.probe_tokens = (prompt_tokens, output_tokens)
         served, _ = self._served(data)
         substitution = self._substitution(model, served)
         if substitution:

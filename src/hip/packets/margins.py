@@ -194,6 +194,16 @@ def _rank_problem(
     return f"one end of the range {span_text} quoted as a place"
 
 
+def joined_as_range(text: str, one: Citation, other: Citation) -> bool:
+    """Whether two figures are written as the two ends of one range — "3rd–7th",
+    "between 1st and 2nd", "from 3rd to 14th" — and not a movement from one to the
+    other ("rose from 14th to 3rd")."""
+    first, second = sorted((one, other), key=lambda c: c.start)
+    return bool(_RANGE_JOIN.match(text[first.end : second.start])) and not (
+        _MOVED_FROM.search(text[max(0, first.start - 30) : first.start])
+    )
+
+
 def _quoted_as_range(text: str, citation: Citation, cited: list[Citation]) -> set[float]:
     """The pair of ranks `citation` is written as one end of, if it is: the two numbers
     of "3rd–7th" or "between 1st and 2nd", whichever fields binding gave each.
@@ -203,12 +213,7 @@ def _quoted_as_range(text: str, citation: Citation, cited: list[Citation]) -> se
     each end quoted alone. A range written as a range is judged as one here (#266).
     """
     for other in cited:
-        if other is citation:
-            continue
-        first, second = sorted((citation, other), key=lambda c: c.start)
-        if _RANGE_JOIN.match(text[first.end : second.start]) and not _MOVED_FROM.search(
-            text[max(0, first.start - 30) : first.start]
-        ):
+        if other is not citation and joined_as_range(text, citation, other):
             return {citation.value, other.value}
     return set()
 
@@ -338,4 +343,4 @@ def describe_problems(problems: list[MarginProblem], text: str, limit: int = 4) 
     return "; ".join(shown) + (f"; and {more} more" if more > 0 else "")
 
 
-__all__ = ["MarginProblem", "describe_problems", "margin_problems"]
+__all__ = ["MarginProblem", "describe_problems", "joined_as_range", "margin_problems"]

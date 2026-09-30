@@ -84,7 +84,8 @@ try {
     await page.locator(".nj-head .title-computed .term").evaluate((node) => node.blur());
     const ticker = page.locator(".state-ticker");
     const track = ticker.locator(".state-ticker-track");
-    assert.ok((await ticker.boundingBox()).height <= 100, "State profile should stay compact");
+    // 110, not 100: survey figures gained their margins in 5d4894f, about 2px taller.
+    assert.ok((await ticker.boundingBox()).height <= 110, "State profile should stay compact");
     assert.ok(await page.locator(".globe-world-land[d]:not([d=''])").count() > 0, "World land should be drawn behind the US");
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.mouse.move(0, 0);
@@ -110,7 +111,7 @@ try {
     await page.emulateMedia({ reducedMotion: "reduce" });
     const band = ticker;
     const facts = band.locator(".state-ticker-group").first();
-    assert.equal(await page.locator(".population-summary").count(), 1);
+    assert.equal(await page.locator(".population-badge").count(), 1, "State header carries one population badge");
     await facts.getByText("House price index", { exact: true }).focus();
     const tip = page.locator(".floating-tip");
     await tip.waitFor();
@@ -226,11 +227,13 @@ try {
     );
     await page.keyboard.press("Escape");
     await page.locator(".page-title-row .title-computed .term").evaluate((node) => node.blur());
-    const countyHead = await page.locator(".page-head").boundingBox();
-    const countyPopulation = await page.locator(".population-summary").boundingBox();
+    // Since #252 the population is a badge in the eyebrow above the title, not a card
+    // at the header's right edge.
+    const countyTitle = await page.locator(".page-title-row .page-title").boundingBox();
+    const countyPopulation = await page.locator(".page-head-eyebrow .population-badge").boundingBox();
     assert.ok(
-      countyHead && countyPopulation && Math.abs(countyPopulation.x + countyPopulation.width - (countyHead.x + countyHead.width)) <= 2,
-      "County population card should align to the page header's right edge",
+      countyTitle && countyPopulation && countyPopulation.y + countyPopulation.height <= countyTitle.y + 1,
+      "County population badge should sit in the eyebrow above the title",
     );
     const reportAction = page.getByRole("link", { name: /Open full report/ });
     await reportAction.waitFor();
@@ -339,7 +342,7 @@ try {
       await page.setViewportSize({ width: 375, height: 900 });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Regression overflow on ${route}`);
     }
-    console.log("PASS: link-safe typed affordability controls, direct-mode pre-paint gating, continuous measure-change lift, isolated ground rendering, keyboard-visible profile facts, concise cost quote disclosure, instant ticker resume, stacked shared title badges, bounded computed-data definitions, edge-aligned county population, full-report action, streamlined cost copy, modern functional source footer, shared local profile tickers with named rank cohorts, balanced profile banners, contained stand-out cards, two added rank plots, compact one-row selectors, precise reticle, atlas-only world land, state and county affordability modes, compact other-county rows, county preselection, disabled ZIP mode, grouped local reach, transitions, color switch, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes");
+    console.log("PASS: link-safe typed affordability controls, direct-mode pre-paint gating, continuous measure-change lift, isolated ground rendering, keyboard-visible profile facts, concise cost quote disclosure, instant ticker resume, stacked shared title badges, bounded computed-data definitions, eyebrow county population badge, full-report action, streamlined cost copy, modern functional source footer, shared local profile tickers with named rank cohorts, balanced profile banners, contained stand-out cards, two added rank plots, compact one-row selectors, precise reticle, atlas-only world land, state and county affordability modes, compact other-county rows, county preselection, disabled ZIP mode, grouped local reach, transitions, color switch, municipality zoom and jump-out, county tap, drag commit, reset, dark mode, and responsive regression routes");
   }
   console.log(JSON.stringify({ errors }));
   if (errors.length) process.exitCode = 1;

@@ -36,6 +36,7 @@ from hip.eval.formats import (
     TARGET_FIGURES,
     MalformedReading,
     consumer_problems,
+    figures_in,
     shape_consumer,
 )
 from hip.eval.types import Generation, Telemetry
@@ -173,6 +174,34 @@ def test_a_margin_a_range_and_a_quoted_label_do_not_count_as_figures() -> None:
     )
     problems = _problems({"whats_changing": answer})
     assert not [p for p in problems if "figures under" in p]
+
+
+def test_a_figure_stated_twice_counts_twice() -> None:
+    """The limit is on what a reader sees, not on how many packet fields are behind it."""
+    repeated = (
+        "Home values rose 34.4% to $445,078; that 34.4% rise took the typical home to "
+        "$445,078."
+    )
+    assert _problems({"whats_changing": repeated}) == [
+        f"4 figures under 'What's changing?', where at most {MAX_FIGURES} are allowed"
+    ]
+
+
+def test_a_range_is_one_figure_however_its_ends_were_bound() -> None:
+    packet = uncertain_packet()
+    body, sections = shape_consumer(
+        _reading(
+            {
+                "whats_changing": (
+                    "Incomes are $100,645, give or take $2,565, between 10th and 12th "
+                    "of 21 counties."
+                )
+            }
+        )
+    )
+    binding = bind(body, packet, payload=render_markdown(packet))
+    changing = next(s for s in sections if s.id == "whats_changing")
+    assert figures_in(body, binding, changing) == 2
 
 
 # --- judging a generation -------------------------------------------------------------

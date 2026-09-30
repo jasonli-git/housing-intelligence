@@ -119,7 +119,7 @@ def _consumer_figures(
     except ValueError:
         return body, [], []
     binding = bind(shaped, packet, payload=payload)
-    return shaped, sections, [figures_in(binding, section) for section in sections]
+    return shaped, sections, [figures_in(shaped, binding, s) for s in sections]
 
 
 def trial(
@@ -203,7 +203,7 @@ def trial(
             reasons=[],
             body=body,
             sections=sections,
-            figures=[figures_in(binding, s) for s in sections],
+            figures=[figures_in(body, binding, s) for s in sections],
             words=len(body.split()),
         )
 

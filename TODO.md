@@ -14,19 +14,12 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Gemini-first readings, awaiting review (2026-09-30)
+## Now — between milestones; Milestone 31 not started (2026-09-30)
 
-On `fix/gemini-first-readings`: the consumer reading asks only the two questions the page
-shows, a refused reading goes back to its model once with the refusal before the next
-model is asked, the range check reads "3rd–7th" as a range, and the prompts name the
-jargon and margins Gemini slipped on (0.25.4, ARCHITECTURE #266). On the eight counties
-where Gemini 3.7 Flash was refused on 2026-09-28, all 16 readings published first time
-([`reports/evaluation/gemini-first-v1.md`](reports/evaluation/gemini-first-v1.md)).
-
-**After the merge:** every stored consumer reading is stale (it answers the retired
-questions), so `hip regenerate-now` writes all 21 county consumer readings — the 19
-stored ones and the missing Gloucester and Warren — for about $0.10. Analyst readings
-stay unless their figures changed. Then Milestone 31 (ROADMAP).
+Every reading on the site is Gemini 3.7 Flash's (0.25.4, regenerated and deployed
+2026-09-30). On `fix/small-cleanups`: five small fixes and the handoff cleanup (0.25.6).
+**Milestone 31 waits on the owner**, who asked not to start it yet; before it starts, the
+two SPEC principle 12 questions under Parked need answers.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -39,17 +32,6 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
-
-- [ ] **The consumer reading's figure limit counts distinct fields, not figures
-      written.** (Codex review, PR #52) An answer that states the same packet field
-      twice counts it once against the three-figure cap. None of the 40 published
-      readings exceeds the cap this way; decide whether the cap is on figures a reader
-      sees, and count occurrences if so.
-
-- [ ] **A run's cost line leaves out paid reachability probes.** (Codex review, PR #52)
-      `hip explain` probes each hosted model before generating; those calls are billed
-      but not in the per-model cost lines. Small, but the line claims to be the run's
-      cost.
 
 - [ ] **A packet's `cagr` for a survey figure carries no margin.** (M30, #256) The
       Markdown report and so the readings leave a survey figure's annualised change out,
@@ -139,11 +121,12 @@ first raised, not where it must be done.
 
 ### Test coverage
 
-- [ ] **`web/scripts/check-nj-redesign.mjs` stops at the population card PR #45 removed.**
-      (PR #46) It asserts one `.population-summary` and that the card aligns to the
-      header's right edge; the population is now a badge in the eyebrow above the title
-      (#252). The count can move to `.population-badge`, but the alignment check needs
-      rewriting for the new layout, so everything after it in the script goes unchecked.
+- [ ] **`tests/test_analytics.py` rebuilds the analytics tables in the live warehouse.**
+      (found in review of PR #56, 2026-09-30) Its tests call `rebuild(get_engine())`
+      against the same database the API serves, so a suite run while the API or another
+      query is busy can deadlock. Nothing is lost — the rebuild is one transaction and
+      rolls back — but the run fails for a reason unrelated to the code. Point these
+      tests at a scratch schema or a disposable database.
 - [ ] **Tests: unpivot shape and gate behavior — never written.** (M2, corrected
       2026-08-13 after this line was briefly ticked in full) `test_matching.py` builds
       `stg_zillow_zhvi` as a hand-made fixture, so the dbt UNPIVOT of ~318 date columns
@@ -176,12 +159,6 @@ first raised, not where it must be done.
       [publish.py:200](src/hip/publish.py:200) and
       [web/lib/api.ts:437](web/lib/api.ts:437). Blocks the Northeast expansion
       (Milestone 14, unscheduled).
-- [ ] **`python-dotenv` is imported but not declared.** (pre-M12 review) `load_env_file`
-      ([config.py](src/hip/config.py)) imports it directly; it reaches the environment
-      only as a transitive dependency of `pydantic-settings`. Load-bearing since #63 — a
-      resolver change that drops it breaks `hip` at startup. One line in `pyproject.toml`.
-      **Verified still undeclared 2026-09-27.**
-
 ### Frontend and presentation
 
 - [ ] **The paused-banner swipe and the atlas redesign are unverified on a real iPhone.**

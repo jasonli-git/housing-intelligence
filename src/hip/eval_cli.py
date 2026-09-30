@@ -683,15 +683,20 @@ def _cost_lines(run: _Run, evaluation: EvaluationConfig) -> list[str]:
     if not by_model:
         return []
     billed = [u.usd for u in run.usage if u.usd is not None]
+    probes = sum(1 for u in run.usage if u.probe)
+    calls = f"{len(run.usage) - probes} generation(s)" + (
+        f" and {probes} probe(s)" if probes else ""
+    )
     lines = [
-        f"cost: ${sum(billed):.4f} for {len(run.usage)} generation(s) — an upper "
-        f"bound, since prompt-cache discounts are not counted"
+        f"cost: ${sum(billed):.4f} for {calls} — an upper bound, since prompt-cache "
+        f"discounts are not counted"
     ]
     for model_id, usages in by_model.items():
         cohort = evaluation.cohort_for(model_id)
         tiers: dict[str, int] = {}
         for usage in usages:
-            tiers[usage.tier or "standard"] = tiers.get(usage.tier or "standard", 0) + 1
+            tier = "probe" if usage.probe else usage.tier or "standard"
+            tiers[tier] = tiers.get(tier, 0) + 1
         if cohort.runner != "hosted":
             how = "local, not billed per token"
         elif cohort.generation_tier:
@@ -825,7 +830,11 @@ def explain_command(
     # same thing. Not probed on a dry run: a probe is a real, billed call, and a dry
     # run's one promise is that it reaches no model.
     for candidate, why in _unusable(
-        evaluation, every, require_benchmark=not unbenchmarked, probe=not dry_run
+        evaluation,
+        every,
+        require_benchmark=not unbenchmarked,
+        probe=not dry_run,
+        spent=run.usage,
     ).items():
         run.models[candidate].skipped = why
     if all(outcome.skipped for outcome in run.models.values()):
@@ -1079,6 +1088,7 @@ def _unusable(
     *,
     require_benchmark: bool = True,
     probe: bool = True,
+    spent: list[Usage] | None = None,
 ) -> dict[str, str]:
     """The listed or requested models that may not publish, each with the reason.
 
@@ -1086,8 +1096,10 @@ def _unusable(
     run measured it (#102) — unless `--unbenchmarked` lifts it. Then one probe per hosted
     model. Without it a routed pin fails every region separately, paying for each call
     to learn the same fact. Local models are not probed: they run the weights on disk,
-    so there is nothing a provider could substitute.
+    so there is nothing a provider could substitute. A probe the provider answered is
+    billed, so it goes into `spent`, which the run's cost line totals.
     """
+    from hip.eval.explain import usage_of
     from hip.eval.runners import HostedRunner, RunnerUnavailable, build_runner
     from hip.eval.selection import benchmark_problem, benchmarked, latest_run
 
@@ -1117,6 +1129,10 @@ def _unusable(
             continue
         if probe and isinstance(runner, HostedRunner):
             failure = runner.probe(evaluation.model(model_id))
+            if spent is not None and runner.probe_tokens is not None:
+                spent.append(
+                    usage_of(evaluation, model_id, *runner.probe_tokens, probe=True)
+                )
             if failure:
                 skip(model_id, failure)
     return unusable

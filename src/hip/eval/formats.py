@@ -5,13 +5,13 @@ two or three paragraphs on what changed and how the region compares, now giving 
 survey figure its margin and every uncertain rank its range (SPEC principle 12).
 
 **The consumer reading** is for someone deciding whether to live somewhere: short
-answers to two fixed questions, with at most two figures each, no source names and no
-jargon. The questions are fixed so the answers are addressable — Milestone 47's decision
-guides reuse them by id — and so every region's reading has the same shape a reader can
-scan. It asked five until 2026-09-30: the bottom line, "is it getting harder to afford
-here?" and "how does renting compare with buying?" restated what the page's cost panels
-compute, so the page stopped showing them (ARCHITECTURE #265) and the owner then stopped
-asking for them (#266).
+answers to two fixed questions, asked for two figures each and published with at most
+three, no source names and no jargon. The questions are fixed so the answers are
+addressable — a county page places each by its id — and so every region's reading has
+the same shape a reader can scan. It asked five until 2026-09-30: the bottom line, "is
+it getting harder to afford here?" and "how does renting compare with buying?" restated
+what the page's cost panels compute, so the page stopped showing them (ARCHITECTURE
+#265) and the owner then stopped asking for them (#266).
 
 Both are held to the same gates as a condition of publication, and the consumer reading
 to four more. Every one is deterministic, so a refusal costs nothing to decide and says
@@ -21,8 +21,8 @@ exactly what was wrong:
 - every survey figure with its margin, every uncertain rank as its range
   (`hip.packets.margins`);
 - for the consumer reading: the headings in order, each with an answer; no name of
-  a source, agency, survey or index; none of the listed jargon; at most two figures per
-  answer, not counting a margin or a quoted label.
+  a source, agency, survey or index; none of the listed jargon; at most three figures
+  an answer as written, not counting a margin, a quoted label or a range's second end.
 
 What no check can see — whether an answer advises rather than describes, or reads well
 — is what the owner reads the three-county side-by-side for.
@@ -36,7 +36,7 @@ from typing import Any
 
 from hip.config import Audience
 from hip.packets import Binding, Packet
-from hip.packets.margins import describe_problems, margin_problems
+from hip.packets.margins import describe_problems, joined_as_range, margin_problems
 
 ANALYST_PROMPT = """\
 You are a housing-market analyst writing a short explanatory note for a dashboard.
@@ -306,17 +306,32 @@ def _banned(packet: Packet) -> list[tuple[str, re.Pattern[str]]]:
     ]
 
 
-def figures_in(binding: Binding, section: Section) -> int:
-    """Figures stated in one answer; a range's two ends are one figure."""
-    counted: set[str] = set()
-    for citation in binding.citations:
-        if not section.start <= citation.start < section.end:
+def figures_in(body: str, binding: Binding, section: Section) -> int:
+    """Figures a reader sees in one answer: each one written, so a figure stated twice
+    counts twice, and a range's two ends ("between 3rd and 7th") count once.
+
+    Counted as written rather than per packet field since 2026-09-30: the limit is on
+    what crowds an answer, and a repeated figure crowds it as much as a new one.
+    """
+    stated = sorted(
+        (
+            citation
+            for citation in binding.citations
+            if section.start <= citation.start < section.end and citation.kind in _COUNTED
+        ),
+        key=lambda citation: citation.start,
+    )
+    count = 0
+    for index, citation in enumerate(stated):
+        previous = stated[index - 1] if index else None
+        if (
+            previous is not None
+            and {previous.kind, citation.kind} <= {"rank", "percentile"}
+            and joined_as_range(body, previous, citation)
+        ):
             continue
-        if citation.kind not in _COUNTED:
-            continue
-        field = citation.field or f"@{citation.start}"
-        counted.add(re.sub(r"\.rank_(best|worst)$", ".rank", field))
-    return len(counted)
+        count += 1
+    return count
 
 
 def consumer_problems(
@@ -331,7 +346,7 @@ def consumer_problems(
                 f'{label} in "…{body[max(0, match.start() - 30) : match.end() + 20]}…"'
             )
     for section in sections:
-        count = figures_in(binding, section)
+        count = figures_in(body, binding, section)
         if count > MAX_FIGURES:
             problems.append(
                 f"{count} figures under '{section.heading}', where at most {MAX_FIGURES} "

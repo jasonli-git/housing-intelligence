@@ -1007,6 +1007,10 @@ tr[data-status="pending"] .fresh-status {
 /* "Rank by value" is a wider heading than "Rank" was (#138); on a phone it wraps rather
    than pushing the current-values tables past the screen's edge. */
 .values .colheads th { white-space: normal; }
+/* A value's margin line ("± 0.5 points") is kept on one line beside its figure, but on a
+   phone it may wrap: unbroken, it carried every county's current values 15px past a
+   375px screen once the data section was open (found 2026-09-30). */
+@media (max-width: 480px) { .values .margin { white-space: normal; } }
 .control-label { font: var(--text-label)/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0.04em; }
 .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; padding: 2px; background: var(--surface-2); }
 .seg button { border: 0; background: transparent; color: var(--text-secondary); padding: 0.45rem 0.7rem; border-radius: 6px; }
