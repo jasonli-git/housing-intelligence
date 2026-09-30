@@ -14,9 +14,21 @@ from typing import Any
 
 import pytest
 
-from hip.config import CandidateModel, Cohort, GenerationConfig, OffPeak
-from hip.eval.costs import generation_usd
-from hip.eval.explain import ReadingRefused, UnboundFigures, judge_generation
+from hip.config import (
+    CandidateModel,
+    Cohort,
+    GenerationConfig,
+    OffPeak,
+    load_evaluation,
+)
+from hip.eval.costs import Usage, generation_usd
+from hip.eval.explain import (
+    ReadingRefused,
+    UnboundFigures,
+    freshness,
+    judge_generation,
+    write_reading,
+)
 from hip.eval.formats import (
     FORMATS,
     MAX_FIGURES,
@@ -27,19 +39,15 @@ from hip.eval.formats import (
     shape_consumer,
 )
 from hip.eval.types import Generation, Telemetry
-from hip.packets import bind, render_markdown
+from hip.packets import bind, packet_content_hash, packet_hash, render_markdown
+from hip.packets.citations import BINDING_VERSION
+from hip.warehouse.models import RegionExplanation
 from tests.test_packet_uncertainty import uncertain_packet
 
 ANSWERS = {
-    "bottom_line": "Incomes here rose 24.2% (± 4.0%) in five years.",
-    "harder_to_afford": (
-        "A home costs 4.26 times a typical income, give or take 0.11, near the middle "
-        "of New Jersey's 21 counties."
+    "whats_changing": (
+        "Home values rose 34.4% to $445,078, while incomes rose 24.2% (± 4.0%)."
     ),
-    "rent_or_buy": (
-        "Half of renters, 50.1% give or take 2.3 points, pay over 30% of income."
-    ),
-    "whats_changing": "Home values rose 34.4% to $445,078.",
     "before_moving": "These are county figures; a street can differ.",
 }
 
@@ -79,14 +87,14 @@ def _generation(answer: str, *, error: str | None = None) -> Generation:
 
 
 @pytest.mark.parametrize("style", ["plain", "markdown", "bold"])
-def test_a_consumer_reading_is_shaped_into_its_five_answers(style: str) -> None:
+def test_a_consumer_reading_is_shaped_into_its_answers(style: str) -> None:
     body, sections = shape_consumer(_reading(style=style))
 
     assert [s.id for s in sections] == [q.id for q in QUESTIONS]
     for section in sections:
         assert body[section.start : section.end] == ANSWERS[section.id]
     # The stored body names each question exactly as the site does, whatever the dress.
-    assert body.startswith("The bottom line\nIncomes here rose")
+    assert body.startswith("What's changing?\nHome values rose")
     assert "## " not in body and "**" not in body
 
 
@@ -105,8 +113,8 @@ def test_bullets_and_bold_inside_an_answer_are_flattened() -> None:
 
 
 def test_a_missing_heading_is_no_reading() -> None:
-    text = _reading().replace("How does renting compare with buying?", "Renting")
-    with pytest.raises(MalformedReading, match="How does renting compare"):
+    text = _reading().replace("What should I check before moving?", "Before moving")
+    with pytest.raises(MalformedReading, match="What should I check"):
         shape_consumer(text)
 
 
@@ -163,7 +171,7 @@ def test_a_margin_a_range_and_a_quoted_label_do_not_count_as_figures() -> None:
         "Incomes are $100,645, give or take $2,565, between 10th and 12th of 21 "
         "counties; renters pay over 30% of income."
     )
-    problems = _problems({"harder_to_afford": answer})
+    problems = _problems({"whats_changing": answer})
     assert not [p for p in problems if "figures under" in p]
 
 
@@ -198,7 +206,7 @@ def test_an_invented_figure_is_refused_before_any_other_rule() -> None:
 
 def test_a_survey_figure_without_its_margin_is_refused_in_either_format() -> None:
     with pytest.raises(ReadingRefused, match="without its margin"):
-        _judge(_reading({"bottom_line": "Incomes here rose 24.2% in five years."}))
+        _judge(_reading({"whats_changing": "Incomes here rose 24.2% in five years."}))
     with pytest.raises(ReadingRefused, match="without its margin"):
         _judge("Median household income rose 24.2% over the window.", "analyst")
 
@@ -310,3 +318,129 @@ def test_a_tier_without_its_rate_is_refused_at_load() -> None:
 def test_every_audience_needs_its_own_list() -> None:
     with pytest.raises(ValueError, match="consumer"):
         GenerationConfig(preference={"analyst": ["m"]})  # type: ignore[dict-item]
+
+
+# --- revising a refused reading -------------------------------------------------------
+
+
+def _scripted(answers: list[str], monkeypatch: pytest.MonkeyPatch) -> list[str | None]:
+    """A model that writes `answers` in turn; returns the revision each call was sent."""
+    sent: list[str | None] = []
+
+    def run_model(packet: Any, evaluation: Any, model_id: str, **kwargs: Any) -> Any:
+        sent.append(kwargs.get("revision"))
+        answer = answers[len(sent) - 1]
+        usage = Usage(model_id, 3000, 300, "flex", 0.001)
+        return _generation(answer), render_markdown(packet), usage
+
+    monkeypatch.setattr("hip.eval.explain.run_model", run_model)
+    return sent
+
+
+def test_a_refused_reading_goes_back_to_its_model_with_the_refusal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    jargon = _reading({"before_moving": "Check each parcel's tax bill."})
+    sent = _scripted([jargon, _reading()], monkeypatch)
+
+    body, sections, _, usage, earlier = write_reading(
+        uncertain_packet(), load_evaluation(), "gemini-3.7-flash-low", audience="consumer"
+    )
+
+    assert len(sections) == len(QUESTIONS) and "parcel" not in body
+    assert sent[0] is None
+    revision = sent[1] or ""
+    assert "jargon: 'parcel'" in revision
+    assert "Check each parcel's tax bill." in revision  # the answer to correct
+    assert [u.usd for u in earlier] == [0.001] and usage.usd == 0.001
+
+
+def test_a_reading_refused_after_its_revisions_carries_what_they_cost(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    jargon = _reading({"before_moving": "Check each parcel's tax bill."})
+    evaluation = load_evaluation()
+    sent = _scripted([jargon] * 5, monkeypatch)
+
+    with pytest.raises(ReadingRefused) as refused:
+        write_reading(
+            uncertain_packet(), evaluation, "gemini-3.7-flash-low", audience="consumer"
+        )
+
+    assert len(sent) == evaluation.generation.revisions + 1
+    assert len(refused.value.earlier) == evaluation.generation.revisions
+
+
+def test_an_invented_figure_is_revised_too(monkeypatch: pytest.MonkeyPatch) -> None:
+    invented = _reading({"whats_changing": "Home values hit $612,300."})
+    sent = _scripted([invented, _reading()], monkeypatch)
+    write_reading(
+        uncertain_packet(), load_evaluation(), "gemini-3.7-flash-low", audience="consumer"
+    )
+    assert "$612,300" in (sent[1] or "")
+
+
+def test_a_failed_call_is_not_revised(monkeypatch: pytest.MonkeyPatch) -> None:
+    sent: list[Any] = []
+
+    def run_model(packet: Any, evaluation: Any, model_id: str, **kwargs: Any) -> Any:
+        sent.append(kwargs.get("revision"))
+        usage = Usage(model_id, 0, 0, None, None)
+        return _generation("", error="HTTP 503"), render_markdown(packet), usage
+
+    monkeypatch.setattr("hip.eval.explain.run_model", run_model)
+    with pytest.raises(RuntimeError, match="HTTP 503"):
+        write_reading(
+            uncertain_packet(),
+            load_evaluation(),
+            "gemini-3.7-flash-low",
+            audience="analyst",
+        )
+    assert sent == [None]
+
+
+def test_a_consumer_reading_asking_other_questions_is_stale() -> None:
+    """The five-answer readings written before 2026-09-30 are rewritten, not re-cited."""
+    packet = uncertain_packet()
+    body, sections = shape_consumer(_reading())
+    row = RegionExplanation(
+        region_id=11,
+        window="5y",
+        audience="consumer",
+        model_id="gemini-3.7-flash-low",
+        model_label="Gemini",
+        runtime="gemini",
+        rank=0,
+        body=body,
+        packet_sha256=packet_hash(packet),
+        content_sha256=packet_content_hash(packet),
+        binding={"binding_version": BINDING_VERSION},
+        sections=[s.as_json() for s in sections],
+    )
+    assert freshness(row, packet) == "current"
+    row.sections = [{"id": "bottom_line"}, *row.sections]
+    assert freshness(row, packet) == "stale"
+
+
+def test_a_revision_that_never_reaches_the_model_keeps_the_refused_attempts_cost(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    jargon = _reading({"before_moving": "Check each parcel's tax bill."})
+    calls: list[int] = []
+
+    def run_model(packet: Any, evaluation: Any, model_id: str, **kwargs: Any) -> Any:
+        calls.append(1)
+        if kwargs.get("revision"):
+            raise ValueError("packet does not fit the configured context window")
+        usage = Usage(model_id, 3000, 300, "flex", 0.001)
+        return _generation(jargon), render_markdown(packet), usage
+
+    monkeypatch.setattr("hip.eval.explain.run_model", run_model)
+    with pytest.raises(ValueError) as failed:
+        write_reading(
+            uncertain_packet(),
+            load_evaluation(),
+            "gemini-3.7-flash-low",
+            audience="consumer",
+        )
+    assert [u.usd for u in failed.value.earlier] == [0.001]  # type: ignore[attr-defined]

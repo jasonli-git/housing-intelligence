@@ -185,8 +185,9 @@ export function ExplanationPanel({
 /**
  * The two consumer answers sit in different parts of the page: the change reading is a
  * headline before the stand-outs, while the place-specific limits follow the cost
- * section. Their stored five-section body, the analyst reading and generation rules are
- * unchanged. Each visible answer carries only its own citations and model attribution.
+ * section. A reading written before 2026-09-30 answers five questions and is shown by
+ * these two alone; since then a reading answers only these (ARCHITECTURE #266). Each
+ * visible answer carries only its own citations and model attribution.
  */
 export function ConsumerReading({
   reading,

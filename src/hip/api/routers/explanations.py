@@ -55,7 +55,7 @@ class ReadingSection(BaseModel):
     """One answer in a consumer reading: which fixed question, and where its answer sits
     in `body`, as character offsets like a citation's."""
 
-    id: str = Field(description="The question's published key, e.g. `rent_or_buy`.")
+    id: str = Field(description="The question's published key, e.g. `whats_changing`.")
     heading: str
     start: int
     end: int
@@ -72,8 +72,9 @@ class Explanation(BaseModel):
         default="analyst",
         description=(
             "Who the reading is written for: `analyst`, the interpretation of the "
-            "packet in prose; `consumer`, a bottom line and short answers to fixed "
-            "questions in plain language (Milestone 30)."
+            "packet in prose; `consumer`, short answers to fixed questions in plain "
+            "language (Milestone 30). A consumer reading written before 2026-09-30 "
+            "answers five questions; since then, two."
         ),
     )
     region_id: int

@@ -577,6 +577,10 @@ class _Outcome:
     # `failed` because the model answered; the next model on the list was asked.
     refused: int = 0
     failed: int = 0
+    # Readings written only after the model corrected a refused answer (#266), and the
+    # refused attempts that asked for them — counted within `written` and apart from
+    # `refused`, which is what passed the region to the next model.
+    revised: int = 0
     # Why the model could not be used at all, when it could not.
     skipped: str | None = None
 
@@ -585,6 +589,7 @@ class _Outcome:
             f"{count} {what}"
             for count, what in (
                 (self.written, "written"),
+                (self.revised, "of them after a revision"),
                 (self.refused, "refused"),
                 (self.failed, "failed"),
             )
@@ -937,6 +942,7 @@ def _explain_each(
                         packet=packet,
                     )
                 except RunnerUnavailable as exc:
+                    _spent(run, exc)
                     # The runtime itself is missing — a local runtime not installed, a
                     # key not set — so every remaining region would fail the same way.
                     outcome.skipped = str(exc)
@@ -973,6 +979,10 @@ def _explain_each(
                 tally.written += 1
                 if position:
                     tally.by_fallback += 1
+                earlier = getattr(explanation, "earlier", [])
+                run.usage.extend(earlier)
+                if earlier:
+                    outcome.revised += 1
                 if explanation.usage is not None:
                     run.usage.append(explanation.usage)
                 written = True
@@ -989,6 +999,7 @@ def _explain_each(
 
 def _spent(run: _Run, exc: BaseException) -> None:
     """Count what a generation that was not stored still cost."""
+    run.usage.extend(getattr(exc, "earlier", []))
     usage = getattr(exc, "usage", None)
     if usage is not None:
         run.usage.append(usage)

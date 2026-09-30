@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.25.3, 2026-09-28. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.25.4, 2026-09-30. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, housing, economic context, property
 > tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
@@ -273,8 +273,8 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   with the model that wrote it, until Milestone 30 replaced the comparison with one
   reading for each kind of reader.
 - **Readings for every reader** (M30, built) — every county page carries a
-  plain-language reading for someone deciding whether to live there — two of its five
-  answers shown, *what's changing?* and *what should I check before moving?* (0.25.3) —
+  plain-language reading for someone deciding whether to live there — *what's
+  changing?* and *what should I check before moving?* (two questions since 0.25.4) —
   and, behind its own disclosure, the analyst reading as an automated data summary; each names the model
   that wrote it, gives every survey figure its margin and quotes an uncertain rank as its
   range. Each comes from the first model on its own list that writes one fit to
@@ -487,13 +487,14 @@ For a hosted cohort, `hip eval models` asks the provider what it actually serves
 marks a pinned ref that has been withdrawn, which is cheaper to discover here than as
 fifteen identical 404s inside a run. `hip explain` writes two readings per region
 (Milestone 30): the analyst reading, and a plain-language consumer reading that answers
-four fixed questions. Each has an ordered preference list in `config/evaluation.yml`
+two fixed questions. Each has an ordered preference list in `config/evaluation.yml`
 ending at a local model, so no vendor decision can stop the command, and for each region
 the first benchmarked model that writes a reading fit to publish writes it: every
 figure bound to the packet, every survey figure with its margin, every uncertain rank as
-its range, and for the consumer reading five fixed headings, no source names or jargon,
-and at most two figures an answer. A refused reading passes the region to the next
-model. Regions whose stored readings were written from these exact numbers are skipped.
+its range, and for the consumer reading its two fixed headings, no source names or
+jargon, and at most three figures an answer. A refused reading goes back to its model
+once with the refusal, then passes the region to the next model. Regions whose stored
+readings were written from these exact numbers are skipped.
 Gemini is asked for its Flex tier, at the batch price; the run ends with what it cost,
 per model; and the exit status is 0 when every reading is current, 3 when some is but a
 region's reading could not be written or a model could not be used, and 1 when none
@@ -655,7 +656,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.25.3 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.25.4 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable

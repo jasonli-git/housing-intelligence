@@ -14,13 +14,19 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones (2026-09-28)
+## Now — Gemini-first readings, awaiting review (2026-09-30)
 
-Milestone 30 is merged and deployed (0.25.0), with Codex's binding fixes as 0.25.1 and
-0.25.2; Codex's page layout (0.25.3) shows two of the five consumer answers. Every county has an analyst reading; Gloucester and Warren have no consumer
-reading, because every model's was refused on the 2026-09-28 regeneration — they are
-retried on the next run, or singly with `hip explain --audience consumer --region <id>`
-(billed). Next is Milestone 31 (ROADMAP).
+On `fix/gemini-first-readings`: the consumer reading asks only the two questions the page
+shows, a refused reading goes back to its model once with the refusal before the next
+model is asked, the range check reads "3rd–7th" as a range, and the prompts name the
+jargon and margins Gemini slipped on (0.25.4, ARCHITECTURE #266). On the eight counties
+where Gemini 3.7 Flash was refused on 2026-09-28, all 16 readings published first time
+([`reports/evaluation/gemini-first-v1.md`](reports/evaluation/gemini-first-v1.md)).
+
+**After the merge:** every stored consumer reading is stale (it answers the retired
+questions), so `hip regenerate-now` writes all 21 county consumer readings — the 19
+stored ones and the missing Gloucester and Warren — for about $0.10. Analyst readings
+stay unless their figures changed. Then Milestone 31 (ROADMAP).
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -33,11 +39,6 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
-
-- [ ] **Three of the consumer reading's five answers are generated but not shown.**
-      (PR #53, ARCHITECTURE #265) Each run pays for them and can refuse a whole reading
-      over one. Decide, with the Director Note *Grounded synthesis*, whether to drop them
-      from the prompt or show them again; a prompt change needs a new side-by-side.
 
 - [ ] **The consumer reading's figure limit counts distinct fields, not figures
       written.** (Codex review, PR #52) An answer that states the same packet field

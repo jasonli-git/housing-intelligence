@@ -412,6 +412,12 @@ cohorts:
 # One list per audience since Milestone 30: a region carries one analyst reading and
 # one consumer reading, where it carried one reading per model on a single list.
 generation:
+  # A refused reading goes back to the model that wrote it, with the refusal quoting
+  # the words that broke the rule, this many times before the next model on the list is
+  # asked (ARCHITECTURE #266). On 2026-09-28 Gemini 3.7 Flash was refused 9 times in 42,
+  # each over one rule in one sentence, and every refusal handed the region to a model
+  # the benchmark ranked lower.
+  revisions: 1
   preference:
     analyst:
       # Ordered from the `v3` benchmark (2026-09-11), not from reputation. Rubric scores
