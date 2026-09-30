@@ -690,3 +690,17 @@ def test_two_ranks_that_happen_to_be_the_ends_are_not_a_range(packet: Packet) ->
     )
     [problem] = margin_problems(prose, binding, packet)
     assert problem.text == "3" and "one end of the range 3–14" in problem.reason
+
+
+def test_a_movement_between_two_ranks_is_not_a_range(packet: Packet) -> None:
+    """ "Rose from 14th to 3rd" names two places, even where the survey's range is
+    exactly 3rd–14th."""
+    prose = "Renter cost burden rose from 14th to 3rd of 21 counties."
+    binding = Binding(
+        citations=[
+            _rank_at(prose, "14", "metrics[zhvi_sfr].rank"),
+            _rank_at(prose, "3", "levels[acs_renter_cost_burden].rank_best"),
+        ]
+    )
+    [problem] = margin_problems(prose, binding, packet)
+    assert problem.text == "3"

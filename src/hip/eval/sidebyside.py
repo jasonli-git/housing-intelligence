@@ -150,6 +150,7 @@ def trial(
                 revision=revision,
             )
         except (RunnerUnavailable, ValueError) as exc:
+            billed = [u.usd for u in spent if u.usd is not None]
             return Trial(
                 region_id=packet.region.region_id,
                 region_label=packet.region.label,
@@ -159,6 +160,7 @@ def trial(
                 status="failed",
                 reasons=[str(exc)],
                 body="",
+                usd=sum(billed) if billed else None,
                 refusals=refusals,
             )
         spent.append(usage)

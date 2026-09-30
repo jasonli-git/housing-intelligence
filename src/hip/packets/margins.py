@@ -66,6 +66,14 @@ _ENTRY = re.compile(r"^(metrics|levels)\[([^\]]+)\]\.(.+)$")
 # What joins a range's two ends: "3rd–7th", "between 1st and 2nd", "5th to 18th". The
 # ordinal suffix of the first end sits between the numbers, so it is allowed here.
 _RANGE_JOIN = re.compile(r"^(?:st|nd|rd|th)?\s*(?:[–—-]|to|and|through)\s*$", re.I)
+# "Fell from 12th to 3rd" is a movement between two ranks, not a range, even when the
+# survey's range happens to be 3rd–12th.
+_MOVED_FROM = re.compile(
+    r"\b(?:rose|risen|rising|fell|fallen|falling|moved|moving|climbed|climbing|"
+    r"dropped|dropping|slipped|slipping|jumped|went|gone|improved|improving|"
+    r"worsened|worsening|shifted|up|down)\s+from\s+$",
+    re.I,
+)
 
 
 @dataclass(frozen=True)
@@ -198,7 +206,9 @@ def _quoted_as_range(text: str, citation: Citation, cited: list[Citation]) -> se
         if other is citation:
             continue
         first, second = sorted((citation, other), key=lambda c: c.start)
-        if _RANGE_JOIN.match(text[first.end : second.start]):
+        if _RANGE_JOIN.match(text[first.end : second.start]) and not _MOVED_FROM.search(
+            text[max(0, first.start - 30) : first.start]
+        ):
             return {citation.value, other.value}
     return set()
 

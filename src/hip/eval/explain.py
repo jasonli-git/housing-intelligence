@@ -20,13 +20,13 @@ Four consequences, all enforced in code rather than left to convention:
   published prose was vouched for by its model's benchmark and nothing else.
 
 Since Milestone 30 a region carries two readings, one per audience (`hip.eval.formats`):
-the analyst reading, the interpretation as it always was, and the consumer reading, a
-two fixed questions in plain language. Both are refused, too, where a survey figure is
-stated without its margin or an uncertain rank as a place (SPEC principle 12), and the
-consumer reading where it loses its shape, names a source, uses jargon or crowds an
-answer with figures. A refusal is not a failure of the run: the model is shown the
-refusal and asked to correct its answer (`generation.revisions`, #266), and only then
-is the next model on the audience's list asked.
+the analyst reading, the interpretation as it always was, and the consumer reading,
+answers to two fixed questions in plain language. Both are refused, too, where a survey
+figure is stated without its margin or an uncertain rank as a place (SPEC principle 12),
+and the consumer reading where it loses its shape, names a source, uses jargon or
+crowds an answer with figures. A refusal is not a failure of the run: the model is shown
+the refusal and asked to correct its answer (`generation.revisions`, #266), and only
+then is the next model on the audience's list asked.
 """
 
 from __future__ import annotations
@@ -391,15 +391,21 @@ def write_reading(
     earlier: list[Usage] = []
     revision: str | None = None
     for attempt in range(evaluation.generation.revisions + 1):
-        generation, payload, usage = run_model(
-            packet,
-            evaluation,
-            model_id,
-            audience=audience,
-            payload_format=payload_format,
-            service_tier=service_tier,
-            revision=revision,
-        )
+        try:
+            generation, payload, usage = run_model(
+                packet,
+                evaluation,
+                model_id,
+                audience=audience,
+                payload_format=payload_format,
+                service_tier=service_tier,
+                revision=revision,
+            )
+        except Exception as exc:
+            # A revision's call that never reached the model (its prompt no longer
+            # fits, the runtime went away): the refused attempts were still billed.
+            exc.earlier = earlier  # type: ignore[attr-defined]
+            raise
         try:
             body, sections, binding = judge_generation(
                 packet, generation, payload, audience=audience, usage=usage

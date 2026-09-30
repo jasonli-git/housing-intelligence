@@ -420,3 +420,27 @@ def test_a_consumer_reading_asking_other_questions_is_stale() -> None:
     assert freshness(row, packet) == "current"
     row.sections = [{"id": "bottom_line"}, *row.sections]
     assert freshness(row, packet) == "stale"
+
+
+def test_a_revision_that_never_reaches_the_model_keeps_the_refused_attempts_cost(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    jargon = _reading({"before_moving": "Check each parcel's tax bill."})
+    calls: list[int] = []
+
+    def run_model(packet: Any, evaluation: Any, model_id: str, **kwargs: Any) -> Any:
+        calls.append(1)
+        if kwargs.get("revision"):
+            raise ValueError("packet does not fit the configured context window")
+        usage = Usage(model_id, 3000, 300, "flex", 0.001)
+        return _generation(jargon), render_markdown(packet), usage
+
+    monkeypatch.setattr("hip.eval.explain.run_model", run_model)
+    with pytest.raises(ValueError) as failed:
+        write_reading(
+            uncertain_packet(),
+            load_evaluation(),
+            "gemini-3.7-flash-low",
+            audience="consumer",
+        )
+    assert [u.usd for u in failed.value.earlier] == [0.001]  # type: ignore[attr-defined]

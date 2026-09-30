@@ -942,6 +942,7 @@ def _explain_each(
                         packet=packet,
                     )
                 except RunnerUnavailable as exc:
+                    _spent(run, exc)
                     # The runtime itself is missing — a local runtime not installed, a
                     # key not set — so every remaining region would fail the same way.
                     outcome.skipped = str(exc)

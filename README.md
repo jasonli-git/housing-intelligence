@@ -487,13 +487,14 @@ For a hosted cohort, `hip eval models` asks the provider what it actually serves
 marks a pinned ref that has been withdrawn, which is cheaper to discover here than as
 fifteen identical 404s inside a run. `hip explain` writes two readings per region
 (Milestone 30): the analyst reading, and a plain-language consumer reading that answers
-four fixed questions. Each has an ordered preference list in `config/evaluation.yml`
+two fixed questions. Each has an ordered preference list in `config/evaluation.yml`
 ending at a local model, so no vendor decision can stop the command, and for each region
 the first benchmarked model that writes a reading fit to publish writes it: every
 figure bound to the packet, every survey figure with its margin, every uncertain rank as
-its range, and for the consumer reading five fixed headings, no source names or jargon,
-and at most two figures an answer. A refused reading passes the region to the next
-model. Regions whose stored readings were written from these exact numbers are skipped.
+its range, and for the consumer reading its two fixed headings, no source names or
+jargon, and at most three figures an answer. A refused reading goes back to its model
+once with the refusal, then passes the region to the next model. Regions whose stored
+readings were written from these exact numbers are skipped.
 Gemini is asked for its Flex tier, at the batch price; the run ends with what it cost,
 per model; and the exit status is 0 when every reading is current, 3 when some is but a
 region's reading could not be written or a model could not be used, and 1 when none

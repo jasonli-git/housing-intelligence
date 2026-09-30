@@ -23,9 +23,10 @@ jargon and margins Gemini slipped on (0.25.4, ARCHITECTURE #266). On the eight c
 where Gemini 3.7 Flash was refused on 2026-09-28, all 16 readings published first time
 ([`reports/evaluation/gemini-first-v1.md`](reports/evaluation/gemini-first-v1.md)).
 
-**After the merge:** every consumer reading is stale (it answers the retired questions),
-so `hip regenerate-now` rewrites 21 of them — about $0.10 — and fills Gloucester and
-Warren. Analyst readings stay unless their figures changed. Then Milestone 31 (ROADMAP).
+**After the merge:** every stored consumer reading is stale (it answers the retired
+questions), so `hip regenerate-now` writes all 21 county consumer readings — the 19
+stored ones and the missing Gloucester and Warren — for about $0.10. Analyst readings
+stay unless their figures changed. Then Milestone 31 (ROADMAP).
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
