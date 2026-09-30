@@ -86,13 +86,14 @@ from hip.validate.gate import run_checks, write_report
 from hip.warehouse.db import get_engine
 from hip.warehouse.discoveries import load_discoveries
 from hip.warehouse.load import (
-    MetricRecord,
     ReleaseAttributionError,
     ReleaseProvenance,
     SourceRecord,
-    _upsert_metrics,
     load_facts,
     load_region_identifiers,
+    metric_records,
+    source_record,
+    sync_registry,
 )
 from hip.warehouse.load import load_geography as load_warehouse_geography
 
@@ -956,17 +957,7 @@ def load(
     result = load_warehouse_geography(
         get_engine(),
         settings.duckdb_path,
-        sources=[
-            SourceRecord(
-                source_id=TigerAdapter.source_id,
-                name=source.name,
-                publisher=source.publisher,
-                license=source.license,
-                url=source.url,
-                homepage=source.homepage,
-                cadence=source.cadence,
-            )
-        ],
+        sources=[source_record(TigerAdapter.source_id, source)],
         releases=provenance,
     )
 
@@ -1015,17 +1006,7 @@ def load(
     fact_sources: list[SourceRecord] = []
     for source_id in METRIC_SOURCES:
         definition = configured[source_id]
-        fact_sources.append(
-            SourceRecord(
-                source_id=source_id,
-                name=definition.name,
-                publisher=definition.publisher,
-                license=definition.license,
-                url=definition.url,
-                homepage=definition.homepage,
-                cadence=definition.cadence,
-            )
-        )
+        fact_sources.append(source_record(source_id, definition))
         metric_adapter: SourceAdapter = build_adapter(
             source_id, scope, raw_dir=settings.raw_dir
         )
@@ -1046,11 +1027,15 @@ def load(
         facts = load_facts(
             get_engine(),
             settings.duckdb_path,
-            metrics=[
-                MetricRecord(metric_id=mid, **m.model_dump())
-                for mid, m in metric_config.items()
-                if m.source_id in metric_sources & set(METRIC_SOURCES)
-            ],
+            metrics=metric_records(
+                metric_config,
+                configured,
+                only={
+                    mid
+                    for mid, m in metric_config.items()
+                    if m.source_id in metric_sources & set(METRIC_SOURCES)
+                },
+            ),
             sources=fact_sources,
             releases=fact_provenance,
         )
@@ -1080,16 +1065,11 @@ def analyze() -> None:
     metric_config = load_metrics()
     engine = get_engine()
 
-    # Derived metrics must exist in `metrics` before facts can reference them.
+    # Derived metrics must exist in `metrics` before facts can reference them. Every
+    # source and metric is written as the config now states it, so a licence, a kind or
+    # a notice changed there reaches the site on the next refresh (Milestone 31).
     with engine.begin() as conn:
-        _upsert_metrics(
-            conn,
-            [
-                MetricRecord(metric_id=mid, **m.model_dump())
-                for mid, m in metric_config.items()
-                if m.source_id == "hip_derived"
-            ],
-        )
+        sync_registry(conn, load_sources(), metric_config)
 
     result = rebuild(engine)
 

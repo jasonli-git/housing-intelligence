@@ -28,6 +28,26 @@ class Metric(BaseModel):
     direction: str
     description: str
     source_id: str
+    # What kind of figure it is (SPEC principle 11) and the licence its figures carry,
+    # inherited through a calculated metric's inputs (Milestone 31, #269). None only for
+    # a metric that has left the config.
+    record_type: str | None = Field(
+        default=None,
+        description=(
+            "survey, administrative, determination, benchmark, calculated or modelled."
+        ),
+    )
+    licence_class: str | None = Field(
+        default=None,
+        description=(
+            "public_domain, public_record, attribution, non_commercial or display_only; "
+            "a calculated metric's is the most restrictive of its inputs'."
+        ),
+    )
+    originator: str | None = Field(
+        default=None,
+        description="Who owns the series, where not its source (e.g. Freddie Mac).",
+    )
 
 
 class MetricCoverage(Metric):
@@ -84,7 +104,8 @@ def list_metrics(
         text(
             f"""
             SELECT m.metric_id, m.label, m.unit, m.frequency, m.direction,
-                   m.description, m.source_id,
+                   m.description, m.source_id, m.record_type, m.licence_class,
+                   m.originator,
                    count(DISTINCT CASE WHEN {keep} THEN f.region_id END) AS regions,
                    count(*) FILTER (WHERE f.region_id IS NOT NULL AND {keep})
                        AS observations,
@@ -94,7 +115,8 @@ def list_metrics(
             LEFT JOIN fact_metric_observation f ON f.metric_id = m.metric_id
             LEFT JOIN regions r ON r.region_id = f.region_id
             GROUP BY m.metric_id, m.label, m.unit, m.frequency, m.direction,
-                     m.description, m.source_id
+                     m.description, m.source_id, m.record_type, m.licence_class,
+                     m.originator
             ORDER BY m.metric_id
             """
         ),
@@ -194,6 +216,13 @@ class SourceEntry(BaseModel):
     # may be machine-facing; equals `url` when a source publishes no separate page (#72).
     homepage: str
     cadence: str
+    # What its terms allow, where they were read and when — or, with no date, why they
+    # could not be — and the statements they require the site to display (Milestone 31).
+    licence_class: str | None = None
+    terms_url: str | None = None
+    terms_checked: date | None = None
+    terms_note: str | None = None
+    notices: list[str] = Field(default_factory=list)
     releases: list[SourceRelease] = Field(default_factory=list)
 
 
@@ -216,6 +245,8 @@ def sources(session: SessionDep) -> list[SourceEntry]:
             """
             SELECT s.source_id, s.name, s.publisher, s.license, s.url,
                    COALESCE(s.homepage, s.url) AS homepage, s.cadence,
+                   s.licence_class, s.terms_url, s.terms_checked, s.terms_note,
+                   s.notices,
                    r.vintage, r.fetched_at, r.row_count
             FROM sources s
             LEFT JOIN source_releases r ON r.source_id = s.source_id
@@ -236,6 +267,11 @@ def sources(session: SessionDep) -> list[SourceEntry]:
                 url=row["url"],
                 homepage=row["homepage"],
                 cadence=row["cadence"],
+                licence_class=row["licence_class"],
+                terms_url=row["terms_url"],
+                terms_checked=row["terms_checked"],
+                terms_note=row["terms_note"],
+                notices=list(row["notices"] or []),
             )
             entries[row["source_id"]] = entry
         # LEFT JOIN: a registered source with nothing ingested yet has a null vintage

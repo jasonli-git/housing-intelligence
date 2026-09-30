@@ -14,12 +14,14 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import field as dataclass_field
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 from sqlalchemy import Engine, text
 
+from hip.config import Metric, Source, metric_licence
 from hip.duck import duckdb_session
 
 # Parents must exist before children, because the parent_id lookup happens inline and
@@ -51,6 +53,31 @@ class SourceRecord:
     # Human-facing landing page where it differs from the canonical root (#72).
     homepage: str | None
     cadence: str
+    # What its terms allow, where they were read and when, and the notices they require
+    # the site to display (Milestone 31).
+    licence_class: str | None = None
+    terms_url: str | None = None
+    terms_checked: date | None = None
+    terms_note: str | None = None
+    notices: list[str] = dataclass_field(default_factory=list)
+
+
+def source_record(source_id: str, source: Source) -> SourceRecord:
+    """The `sources` row for one configured source."""
+    return SourceRecord(
+        source_id=source_id,
+        name=source.name,
+        publisher=source.publisher,
+        license=source.license,
+        url=source.url,
+        homepage=source.homepage,
+        cadence=source.cadence,
+        licence_class=source.licence_class,
+        terms_url=source.terms_url,
+        terms_checked=source.terms_checked,
+        terms_note=source.terms_note,
+        notices=list(source.notices),
+    )
 
 
 @dataclass(frozen=True)
@@ -159,14 +186,21 @@ def _upsert_sources(conn: Any, sources: Sequence[SourceRecord]) -> None:
         text(
             """
             INSERT INTO sources
-                (source_id, name, publisher, license, url, homepage, cadence)
+                (source_id, name, publisher, license, url, homepage, cadence,
+                 licence_class, terms_url, terms_checked, terms_note, notices)
             VALUES
-                (:source_id, :name, :publisher, :license, :url, :homepage, :cadence)
+                (:source_id, :name, :publisher, :license, :url, :homepage, :cadence,
+                 :licence_class, :terms_url, :terms_checked, :terms_note, :notices)
             ON CONFLICT (source_id) DO UPDATE SET
                 name = EXCLUDED.name, publisher = EXCLUDED.publisher,
                 homepage = EXCLUDED.homepage,
                 license = EXCLUDED.license, url = EXCLUDED.url,
-                cadence = EXCLUDED.cadence
+                cadence = EXCLUDED.cadence,
+                licence_class = EXCLUDED.licence_class,
+                terms_url = EXCLUDED.terms_url,
+                terms_checked = EXCLUDED.terms_checked,
+                terms_note = EXCLUDED.terms_note,
+                notices = EXCLUDED.notices
             """
         ),
         [s.__dict__ for s in sources],
@@ -214,6 +248,55 @@ class MetricRecord:
     direction: str
     description: str
     source_id: str
+    # Its kind (SPEC principle 11), its licence as inherited (#269), and who owns the
+    # series where that is not its source (Milestone 31).
+    record_type: str | None = None
+    licence_class: str | None = None
+    originator: str | None = None
+
+
+def metric_records(
+    metrics: Mapping[str, Metric],
+    sources: Mapping[str, Source],
+    only: set[str] | None = None,
+) -> list[MetricRecord]:
+    """The `metrics` rows for configured metrics — all of them, or those in `only` —
+    each with its licence inherited through its inputs."""
+    return [
+        MetricRecord(
+            metric_id=metric_id,
+            label=metric.label,
+            unit=metric.unit,
+            frequency=metric.frequency,
+            direction=metric.direction,
+            description=metric.description,
+            source_id=metric.source_id,
+            record_type=metric.record_type,
+            licence_class=metric_licence(metric_id, dict(metrics), dict(sources)),
+            originator=metric.originator,
+        )
+        for metric_id, metric in metrics.items()
+        if only is None or metric_id in only
+    ]
+
+
+def sync_registry(
+    conn: Any, sources: Mapping[str, Source], metrics: Mapping[str, Metric]
+) -> None:
+    """Write every configured metric, and every source the site already has or a metric
+    needs, as the config now states them — so a change to a licence, a kind or a notice
+    reaches the site without reloading any facts.
+
+    A configured source nothing uses is not added: `GET /sources` lists every row as a
+    source behind the site, and the NJ parcel boundaries, declared but never fetched,
+    would be credited for figures it never supplied. The sources are written before the
+    metrics whose foreign key needs them."""
+    present = {row[0] for row in conn.execute(text("SELECT source_id FROM sources"))}
+    needed = present | {metric.source_id for metric in metrics.values()}
+    _upsert_sources(
+        conn, [source_record(sid, s) for sid, s in sources.items() if sid in needed]
+    )
+    _upsert_metrics(conn, metric_records(metrics, sources))
 
 
 @dataclass(frozen=True)
@@ -506,14 +589,18 @@ def _upsert_metrics(conn: Any, metrics: Sequence[MetricRecord]) -> None:
         text(
             """
             INSERT INTO metrics
-                (metric_id, label, unit, frequency, direction, description, source_id)
+                (metric_id, label, unit, frequency, direction, description, source_id,
+                 record_type, licence_class, originator)
             VALUES
                 (:metric_id, :label, :unit, :frequency, :direction, :description,
-                 :source_id)
+                 :source_id, :record_type, :licence_class, :originator)
             ON CONFLICT (metric_id) DO UPDATE SET
                 label = EXCLUDED.label, unit = EXCLUDED.unit,
                 frequency = EXCLUDED.frequency, direction = EXCLUDED.direction,
-                description = EXCLUDED.description, source_id = EXCLUDED.source_id
+                description = EXCLUDED.description, source_id = EXCLUDED.source_id,
+                record_type = EXCLUDED.record_type,
+                licence_class = EXCLUDED.licence_class,
+                originator = EXCLUDED.originator
             """
         ),
         [m.__dict__ for m in metrics],

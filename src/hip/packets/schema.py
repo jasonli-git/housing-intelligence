@@ -41,7 +41,13 @@ from pydantic import BaseModel, ConfigDict, Field
 # the pages and left packets as they were (ARCHITECTURE #240), so until 1.3 a reading
 # could quote "9th" beside a page saying "between 5th and 13th". Additive again: every
 # new field is optional, and a 1.2 packet parses with each at its default.
-PACKET_VERSION = "1.3"
+#
+# 1.4 adds what kind of figure each is and the licence it carries (Milestone 31, SPEC
+# principle 11): `record_type` and `licence_class` on every metric and level, the owner
+# of a redistributed series as `originator`, and each source's licence class and the
+# notices its terms require. Additive, and outside the content hash: they say what a
+# figure is and what may be done with it, not what it says, so no reading goes stale.
+PACKET_VERSION = "1.4"
 
 # The published contract. Resolved from the source tree, which is where this project
 # runs from (ARCHITECTURE #13 — local-first, no packaged deployment yet).
@@ -100,6 +106,21 @@ _RANK_BEST = (
 _RANK_WORST = "The worst rank the margins of error let this region hold; see `rank_best`."
 
 
+_RECORD_TYPE = (
+    "What kind of figure this is (SPEC principle 11): survey, administrative, "
+    "determination, benchmark, calculated or modelled. Since 1.4."
+)
+_LICENCE_CLASS = (
+    "The licence the figure carries: public_domain, public_record, attribution, "
+    "non_commercial or display_only. A calculated figure's is the most restrictive of "
+    "its inputs'. Since 1.4."
+)
+_ORIGINATOR = (
+    "Who owns the series, where that is not its source (FRED serves Freddie Mac's "
+    "mortgage rate). Since 1.4."
+)
+
+
 class PacketMetric(_Strict):
     """One metric's change over the window, with its rank and its provenance.
 
@@ -152,6 +173,9 @@ class PacketMetric(_Strict):
     )
     rank_best: int | None = Field(default=None, description=_RANK_BEST)
     rank_worst: int | None = Field(default=None, description=_RANK_WORST)
+    record_type: str | None = Field(default=None, description=_RECORD_TYPE)
+    licence_class: str | None = Field(default=None, description=_LICENCE_CLASS)
+    originator: str | None = Field(default=None, description=_ORIGINATOR)
 
 
 class PacketLevel(_Strict):
@@ -194,6 +218,9 @@ class PacketLevel(_Strict):
     )
     rank_best: int | None = Field(default=None, description=_RANK_BEST)
     rank_worst: int | None = Field(default=None, description=_RANK_WORST)
+    record_type: str | None = Field(default=None, description=_RECORD_TYPE)
+    licence_class: str | None = Field(default=None, description=_LICENCE_CLASS)
+    originator: str | None = Field(default=None, description=_ORIGINATOR)
 
 
 class PacketComparisons(_Strict):
@@ -239,12 +266,20 @@ class PacketSource(_Strict):
     vintage: str
     fetched_at: datetime
     release_ids: list[int]
+    licence_class: str | None = Field(default=None, description=_LICENCE_CLASS)
+    notices: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Statements the source's terms require wherever its figures are shown, "
+            "word for word. Since 1.4."
+        ),
+    )
 
 
 class Packet(_Strict):
     # 1.1 still parses. Every 1.2 and 1.3 addition is optional, and the evaluation reads
     # the 1.1 packets frozen into run `v2`'s scenarios as the ground truth for its checks.
-    packet_version: Literal["1.1", "1.2", "1.3"]
+    packet_version: Literal["1.1", "1.2", "1.3", "1.4"]
     region: PacketRegion
     window: PacketWindow
     metrics: list[PacketMetric]
@@ -271,15 +306,17 @@ def packet_hash(packet: Packet) -> str:
     return hashlib.sha256(packet.model_dump_json().encode()).hexdigest()
 
 
-# The fields that say where a figure came from rather than what it is.
+# The fields that say where a figure came from, or what kind of figure it is and what
+# may be done with it (1.4), rather than what it says.
+_ABOUT_THE_FIGURE = {"record_type", "licence_class", "originator"}
 _METRIC_PROVENANCE = {
     "release_id",
     "source_id",
     "match_method",
     "start_release_id",
     "start_match_method",
-}
-_LEVEL_PROVENANCE = {"release_id", "source_id", "match_method"}
+} | _ABOUT_THE_FIGURE
+_LEVEL_PROVENANCE = {"release_id", "source_id", "match_method"} | _ABOUT_THE_FIGURE
 
 
 def packet_content_hash(packet: Packet) -> str:
