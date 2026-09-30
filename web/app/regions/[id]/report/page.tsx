@@ -4,6 +4,7 @@ import { Fragment } from "react";
 import { CostToOwn } from "@/components/CostToOwn";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { ChangeCell, Margin, Marks, NoteRows, RankReading, TableNotes } from "@/components/Ledger";
+import { DataDownload } from "@/components/DataDownload";
 import { KindTag } from "@/components/KindTag";
 import { MetricTerm } from "@/components/MetricTerm";
 import { Masthead } from "@/components/Masthead";
@@ -205,6 +206,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           >
             Download Markdown
           </a>
+          <DataDownload regionId={regionId} geoid={region.geoid} window={WINDOW} className="button" />
         </div>
       </header>
 

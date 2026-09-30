@@ -18,6 +18,7 @@ from fastapi.responses import PlainTextResponse
 from hip.api.deps import SessionDep
 from hip.api.params import Window
 from hip.packets import Packet, PacketUnavailable, build_packet, render_markdown
+from hip.packets.download import render_csv
 
 router = APIRouter(tags=["packets"])
 
@@ -60,3 +61,25 @@ def report(
     except PacketUnavailable as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return PlainTextResponse(rendered, media_type="text/markdown; charset=utf-8")
+
+
+@router.get(
+    "/regions/{region_id}/download",
+    response_class=PlainTextResponse,
+    summary="Every figure on a region's page, as CSV",
+    responses={200: {"content": {"text/csv": {}}}},
+)
+def download(
+    region_id: int,
+    session: SessionDep,
+    window: Annotated[Window, Query()] = "5y",
+) -> PlainTextResponse:
+    """The packet's figures, one per row, each with its kind, source, release and
+    licence, under header lines carrying the citation, any restriction and the notices
+    the sources require (Milestone 31). A figure whose terms allow display only is left
+    out, and the header says so."""
+    try:
+        rendered = render_csv(build_packet(session, region_id, window))
+    except PacketUnavailable as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return PlainTextResponse(rendered, media_type="text/csv; charset=utf-8")

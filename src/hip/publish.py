@@ -214,6 +214,8 @@ def _plan(
             yield f"{base}/packet?window={window}", f"{out}/packet/{window}.json"
             # Markdown, not JSON: `/regions/{id}/report` serves text/markdown.
             yield f"{base}/report?window={window}", f"{out}/report/{window}.md"
+            # The page's figures as CSV, with their kinds and licences (Milestone 31).
+            yield f"{base}/download?window={window}", f"{out}/download/{window}.csv"
             explain = f"{out}/explanation/{window}.json"
             yield f"{base}/explanation?window={window}", explain
             # Beside the singular file rather than replacing it: the singular path is a
