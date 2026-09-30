@@ -205,6 +205,14 @@ export function ConsumerReading({
   );
   if (!answer) return null;
   const id = `interpretation-${reading.region_id}-${section}`;
+  const footnote = (
+    <>
+      <Figures binding={binding} />
+      <p className="interpretation-note">
+        Interpretation of area figures, not a measurement or advice.
+      </p>
+    </>
+  );
 
   return (
     <section aria-labelledby={id} className={`interpretation consumer-feature consumer-feature-${section}`}>
@@ -219,21 +227,21 @@ export function ConsumerReading({
       <div className="consumer-feature-main">
         <h2 id={id}>{answer.heading}</h2>
         {section === "before_moving" ? (
-          <ul className="consumer-feature-answer consumer-moving-list">
-            {sentenceRuns(answer.runs).map((runs, index) => (
-              <li key={index}><Runs runs={runs} binding={binding} /></li>
-            ))}
-          </ul>
+          <div className="consumer-moving-body">
+            <ul className="consumer-feature-answer consumer-moving-list">
+              {sentenceRuns(answer.runs).map((runs, index) => (
+                <li key={index}><Runs runs={runs} binding={binding} /></li>
+              ))}
+            </ul>
+            {footnote}
+          </div>
         ) : (
           <p className="consumer-feature-answer">
             <Runs runs={answer.runs} binding={binding} />
           </p>
         )}
       </div>
-      <Figures binding={binding} />
-      <p className="interpretation-note">
-        Interpretation of area figures, not a measurement or advice.
-      </p>
+      {section !== "before_moving" && footnote}
     </section>
   );
 }

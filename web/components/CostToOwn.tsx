@@ -353,10 +353,7 @@ export function CostToOwn({
             </p>
           )}
         </article>
-      </div>
-
-      {control ? (
-        <div className="cost-strip cost-evidence">
+        {control && (
           <aside className="cost-evidence-omissions" aria-label="Costs not included">
             <p className="cost-evidence-label">
               <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
@@ -364,6 +361,11 @@ export function CostToOwn({
             </p>
             <p>{listed(leftOut(down))}.</p>
           </aside>
+        )}
+      </div>
+
+      {control ? (
+        <div className="cost-strip cost-evidence">
           {beforeMoving}
           <div className="cost-evidence-grid">
             {rentalCaveat && (

@@ -1011,10 +1011,12 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   grid-template-columns: 7.5rem minmax(0, 1fr);
   gap: 0.75rem;
   align-items: baseline;
-  margin: 0.75rem 0 0;
+  grid-column: 1 / -1;
+  margin: 0;
   padding: 0.8rem 0.9rem;
-  border: 1px dashed color-mix(in srgb, var(--notice) 42%, var(--border));
-  border-radius: 12px;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--notice) 25%, var(--border));
+  border-radius: 0;
   background: color-mix(in srgb, var(--notice) 7%, var(--surface-card));
 }
 
@@ -1482,10 +1484,14 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 
 .consumer-feature-before_moving .consumer-feature-tag { color: var(--text-muted); }
 .consumer-feature-before_moving .interpretation-note {
-  margin-top: 1rem;
+  margin-top: 0.85rem;
   padding-top: 0;
   border-top: 0;
+  color: var(--text-muted);
+  font-size: var(--text-note);
+  line-height: 1.45;
 }
+.consumer-moving-body { min-width: 0; }
 
 .consumer-feature-before_moving h2 {
   font-size: clamp(1.15rem, 1.6vw, 1.35rem);

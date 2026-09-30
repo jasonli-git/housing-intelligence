@@ -9,6 +9,7 @@
 - Added more space between “What’s changing?” and the ranked-measures disclosure.
 - Restored a green card beneath “Explore the evidence,” preserving the data disclosure, its remembered state, and shortcut behavior. After visual feedback, strengthened it to deep forest green with light text and slightly squarer corners to distinguish it from “What’s changing?”.
 - Made the ranked-measures disclosure a compact invitation: “See where [place] stands out,” up to two data-driven previews, and a text cue to explore the available measures. Its neutral background keeps it subordinate to the surrounding cards.
+- Joined “Not included” to the cost card as a full-width amber footer. Placed the moving-checklist disclaimer directly below its bullet list, in the same desktop column, with smaller muted text.
 
 ## Files/modules affected
 
@@ -25,6 +26,7 @@
 - The evidence card has its own dark green palette in both site themes. Its text and controls use local light foreground tokens; the expanded data keeps the site's normal palette.
 - The two-column shortcut layout applies to region pages at widths up to 700 pixels. A third shortcut naturally starts the next row.
 - Ranking previews reuse the uncertainty-filtered standout items: one change and one current-value extreme when available, preferring different measures. Change previews state the ranking direction; current-value previews retain the existing qualified extreme wording. The explore count deduplicates measure IDs across change and value groups.
+- The owning/renting grid has two explicit desktop columns and one mobile column, so its full-width omissions footer cannot create an extra auto-fit column. Reports retain the original cost-strip branch.
 
 ## Assumptions
 
@@ -47,3 +49,4 @@
 - No separate frontend lint script is configured.
 - Follow-up evidence-card design: reran the full static export successfully and inspected mobile, desktop, and dark-theme captures. Light title text renders against the dark green surface in both themes; no page overflow at 390 or 1,440 pixels, and the data shortcut still opens the disclosure.
 - Ranking invitation: frontend tests, TypeScript, and the full static export passed again. Headless checks confirmed no overflow at 320, 390, and 1,440 pixels, that the disclosure opens and changes its cue to “Close,” and that a sparse municipal page remains free of invented previews.
+- Joined cost footer / checklist footnote: 292 tests, TypeScript, and the static export passed again. Browser checks at 320, 390, and 1,440 pixels found no overflow. The omissions footer is contained by the cost card; the footnote aligns with the bullet column on desktop and renders at 12 pixels. Changing down payment to 5% adds mortgage insurance to the footer and returning to 20% removes it. The report retains its original omission paragraph.

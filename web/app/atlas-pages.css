@@ -89,6 +89,7 @@
     border-bottom: 2px solid var(--atlas-accent);
   }
   .atlas-local .cost-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0;
     margin-top: 1rem;
     overflow: hidden;
@@ -201,6 +202,7 @@
 }
 
 @media screen and (max-width: 700px) {
+  .atlas-local .cost-cards { grid-template-columns: minmax(0, 1fr); }
   .atlas-page .page-title { font-size: clamp(46px, 11.5vw, 64px); }
   .atlas-page > .page-head { padding-block: 1.1rem 1.2rem; }
   .atlas-local .page-head > .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem 0.6rem; width: 100%; margin-top: 0.4rem; }
