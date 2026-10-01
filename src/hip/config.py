@@ -57,7 +57,8 @@ RECORD_TYPE_LABELS: dict[RecordType, str] = {
 # What a source's terms let the site do with its figures (Milestone 31, ARCHITECTURE
 # #269), least restrictive first — the order a calculated figure's licence is taken
 # from: it inherits the most restrictive of its inputs'. `display_only` may be shown,
-# credited, and nothing more: it is left out of every download. `derived` is the
+# credited, and nothing more: it is left out of every CSV download (the site's own JSON
+# still carries it, as part of showing it — #269). `derived` is the
 # platform's own source, whose figures take their inputs' class instead.
 LicenceClass = Literal[
     "public_domain",

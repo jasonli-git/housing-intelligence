@@ -38,8 +38,9 @@ Milestone 31, the licence and provenance pass.
   every metric and level, and `licence_class` and `notices` to every source. Outside the
   content hash, so no reading went stale.
 - **The mortgage rate is credited to Freddie Mac** as well as FRED, and is left out of
-  downloads: FRED lists it as Freddie Mac's copyrighted series, and Freddie Mac's terms
-  forbid redistributing its data without an agreement.
+  the CSV downloads: FRED lists it as Freddie Mac's copyrighted series, and Freddie
+  Mac's terms forbid redistributing its data without an agreement. Its series stays in
+  the site's JSON files, which the pages and map are built from — part of showing it.
 
 ## [0.25.6] — 2026-09-30
 

@@ -417,7 +417,8 @@ first raised, not where it must be done.
 - [ ] **Ask Freddie Mac about the mortgage rate?** (M31, #269) Its PMMS page allows use
       with attribution; its general terms forbid publishing or redistributing its data
       without an agreement. The site shows the weekly and monthly rate, credited, and
-      leaves it out of downloads. Nothing public reconciles the two, so this is a question
+      leaves it out of the CSV downloads; its series is still in the site's public JSON,
+      which the pages are built from. Nothing public reconciles the two, so this is a question
       only Freddie Mac can answer — a candidate for the owner's outreach, or leave it as
       it stands.
 

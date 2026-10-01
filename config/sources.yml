@@ -162,7 +162,7 @@ sources:
     terms_url: https://fred.stlouisfed.org/legal/
     terms_checked: 2026-09-30
     terms_note: >-
-      FRED lists MORTGAGE30US as Freddie Mac's copyrighted series, "Citation required", and asks for the owner's permission for anything beyond personal use. Freddie Mac's PMMS page allows use with attribution; its general terms forbid redistributing data without a licence. So it is shown, credited to Freddie Mac via FRED, and left out of downloads.
+      FRED lists MORTGAGE30US as Freddie Mac's copyrighted series, "Citation required", and asks for the owner's permission for anything beyond personal use. Freddie Mac's PMMS page allows use with attribution; its general terms forbid redistributing data without a licence. So it is shown, credited to Freddie Mac via FRED, and left out of the CSV downloads; its series stays in the site's JSON, which the pages are built from.
     notices:
       - >-
         This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis. FRED® API Terms of Use: https://fred.stlouisfed.org/docs/api/terms_of_use.html

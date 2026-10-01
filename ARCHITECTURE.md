@@ -997,7 +997,10 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
 - **The mortgage rate's redistribution rests on Freddie Mac's permission** (#269).
   Freddie Mac's general terms forbid redistributing its data without an agreement, while
   its PMMS page allows use with attribution. The site shows the rate, credited, and
-  leaves it out of downloads; whether showing it needs more than attribution is a
+  leaves it out of the CSV downloads. Its series is still in the site's public JSON
+  files (the national region's `metrics.json` and summary, `metrics.json`,
+  `revisions.json`), which the owner decided on 2026-09-30 count as part of showing it,
+  not as a download. Whether showing it needs more than attribution is a
   question only Freddie Mac can answer.
 - **The printed footer is Chromium's alone** (#270). Safari and Firefox do not print
   `@page` margin boxes, so only the first printed page carries the terms there.
