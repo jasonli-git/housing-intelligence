@@ -14,19 +14,19 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — reading costs and the synthesis pilot, awaiting review (2026-10-01)
+## Now — the analyst reading retired, awaiting review (2026-10-01)
 
-Milestone 31 shipped as 0.26.0 on 2026-09-30, deployed with `check-live` passing.
-Milestone 32 is next and not started, at the owner's direction.
+On `change/consumer-only-readings` (0.27.0): the analyst reading is retired and the
+consumer reading answers a third question, *What stands out here?* (ARCHITECTURE
+#275). Tested on five counties with the live gates in
+`reports/evaluation/readings-v3.md`; nothing is regenerated or published yet.
 
-On `experiment/consumer-models-and-synthesis` (0.26.1): a margin-check fix (#273),
-prompt-cache hits counted (#274), the Flex Director Note, and two reports —
-`reports/evaluation/readings-v2.md` (consumer reading, three models, five counties)
-and `reports/evaluation/synthesis-pilot.md` (four rounds, scored). Nothing published
-changes.
+**After the merge:** `hip explain` regenerates the 21 consumer readings and retires the
+analyst ones, keeping a copy in `data/retired/` (about $0.20); then `make publish`,
+deploy and `make check-live`.
 
-**Waiting on the owner:** whether to adopt the round-4 synthesis, refine it, or stop.
-The staleness question stays parked at the owner's direction. Both are under Parked.
+Milestone 32 is next and not started, at the owner's direction; it now also reconsiders
+the analyst reading.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -407,18 +407,6 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
-- [ ] **Grounded synthesis: adopt, refine, or stop.** (Director Note 2026-09-29) Four
-      rounds on five counties, scored in `reports/evaluation/synthesis-pilot.md` (by
-      Claude, at the owner's request). Round 4 — three fixed sentences, housing measures
-      only, no interpretation, ranks only of where a county stands now, one home price,
-      opening with the county — fails none of its twenty scores and holds 17 outright.
-      Left: Bergen narrows "vacant land" to "vacant residential land", Mercer's second
-      sentence says only that two figures "coincided", and three of five calls thought
-      for ~2,600 tokens. Less thinking costs quality: Gemini 3.7 Flash cannot think
-      below `low`, and the round-4 prompt on Flash-Lite and DeepSeek failed more gates,
-      needed more revisions and broke the plain-language rules. Gemini at `low`
-      averaged about $0.008 a county over two runs, about $0.17 for 21 counties a
-      regeneration. Whether it is published is the owner's decision.
 - [ ] **Readings stale only when the figures they cite change?** Zillow's monthly
       release moves every packet's content hash, so every reading is rewritten monthly
       whether or not it quotes Zillow. The stored binding names each figure a reading

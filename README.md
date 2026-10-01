@@ -38,9 +38,9 @@ layer only explains metrics that were already computed.
 > recorded, and a figure calculated from a restricted one carries the restriction. A
 > region's figures download as a CSV carrying each one's kind, source and licence;
 > printed pages carry the terms on every sheet; and the notices three data APIs require
-> are on every page. Milestone 30 (2026-09-28) had given each county page a
-> plain-language reading beside the analyst one, each checked figure by figure before
-> it is published.
+> are on every page. Since 0.27.0 each county page's model-written reading is one
+> plain-language reading in three answers, checked figure by figure before it is
+> published; the longer analyst reading is retired, to be reconsidered in Milestone 32.
 >
 > **Next.** Milestone 32: a commercial viability study, ending in a go or no-go. See
 > [ROADMAP.md](ROADMAP.md) for what is planned and
@@ -279,11 +279,12 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   terms on every sheet.
 - **Readings for every reader** (M30, built) — every county page carries a
   plain-language reading for someone deciding whether to live there — *what's
-  changing?* and *what should I check before moving?* (two questions since 0.25.4) —
-  and, behind its own disclosure, the analyst reading as an automated data summary; each names the model
-  that wrote it, gives every survey figure its margin and quotes an uncertain rank as its
-  range. Each comes from the first model on its own list that writes one fit to
-  publish, and Gemini writes at its Flex tier's half price.
+  changing?*, *what stands out here?* and *what should I check before moving?* (three
+  questions since 0.27.0). It names the model that wrote it, gives every survey figure
+  its margin and quotes an uncertain rank as its range, and comes from the first model
+  on its list that writes one fit to publish; Gemini writes at its Flex tier's half
+  price. The analyst reading, an automated data summary behind its own disclosure, was
+  retired in 0.27.0 and its list kept, so it can be revived.
 - **Reasoning effort as a measured variable** (M20, built) — effort is configured per
   candidate and recorded with every generation, so a model's cost and quality are
   compared at a stated setting rather than at whatever the provider defaults to.
@@ -490,14 +491,17 @@ has been generated against it. Scenarios give models the packet as Markdown, as
 
 For a hosted cohort, `hip eval models` asks the provider what it actually serves and
 marks a pinned ref that has been withdrawn, which is cheaper to discover here than as
-fifteen identical 404s inside a run. `hip explain` writes two readings per region
-(Milestone 30): the analyst reading, and a plain-language consumer reading that answers
-two fixed questions. Each has an ordered preference list in `config/evaluation.yml`
+fifteen identical 404s inside a run. `hip explain` writes one reading per region and
+audience not listed under `generation.retired` (Milestone 30; the analyst audience is
+retired since 0.27.0, and a run removes its readings after keeping a copy in
+`data/retired/`): today the plain-language consumer reading, which answers three fixed
+questions. Each audience has an ordered preference list in `config/evaluation.yml`
 ending at a local model, so no vendor decision can stop the command, and for each region
 the first benchmarked model that writes a reading fit to publish writes it: every
 figure bound to the packet, every survey figure with its margin, every uncertain rank as
-its range, and for the consumer reading its two fixed headings, no source names or
-jargon, and at most three figures an answer. A refused reading goes back to its model
+its range, and for the consumer reading its three fixed headings, no source names or
+jargon, at most three figures an answer, one measure for each thing, and under *what
+stands out here?* housing measures only. A refused reading goes back to its model
 once with the refusal, then passes the region to the next model. Regions whose stored
 readings were written from these exact numbers are skipped.
 Gemini is asked for its Flex tier, at the batch price; the run ends with what it cost,

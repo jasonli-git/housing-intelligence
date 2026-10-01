@@ -3,6 +3,30 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.27.0] — 2026-10-01
+
+### Changed
+
+- **One reading per county, in three plain-language answers.** The consumer reading
+  gains *What stands out here?*: three sentences on the housing pattern that most sets a
+  place apart by where its figures rank now, what it means for someone renting or
+  buying, and the limitation that most affects it. It sits on the county page just
+  above the computed rankings. The prompt is round 4 of the grounded-synthesis pilot
+  (`reports/evaluation/synthesis-pilot.md`), checked on five counties with the live
+  gates in `reports/evaluation/readings-v3.md` (ARCHITECTURE #275).
+- **New gates on the consumer reading**: never two measures of the same thing (two home
+  values, two rents, two incomes, two population counts) anywhere in one reading, and
+  under *What stands out here?* housing measures only and no opening on a date.
+
+### Removed
+
+- **The analyst reading is retired** (#275): the "Automated data summary" disclosure and
+  its jump button leave the county page, `hip explain` no longer writes it, and a run
+  removes the stored ones after keeping a copy in `data/retired/analyst-readings.jsonl`.
+  Its preference list stays in `config/evaluation.yml` under `generation.retired`, so
+  reviving it is a one-line change; Milestone 32 reconsiders it. The API's singular
+  `/explanation` path stays and answers 404, as for any region without the reading.
+
 ## [0.26.1] — 2026-10-01
 
 ### Fixed
