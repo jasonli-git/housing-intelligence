@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.25.6, 2026-09-30. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.26.0, 2026-09-30. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, housing, economic context, property
 > tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
@@ -22,28 +22,27 @@ layer only explains metrics that were already computed.
 > refresh, every source is asked whether anything has moved and every dated source
 > whether a newer release exists. A figure that changes is recorded rather than
 > overwritten: 316,621 such revisions so far. Every value carries its source file and
-> match method, and the Census's survey figures their margins of error. All eight pipeline
+> match method, and the Census's survey figures their margins of error; every figure says
+> what kind it is and carries its source's licence, and a region's figures download as a
+> CSV that keeps both. All eight pipeline
 > stages run. The site publishes itself — 5,956 static artifacts and 2,278
 > pre-rendered pages, served with no database and no application server — across four
 > page types: the state, 1,135 region pages, their reports, and an affordability
 > workspace, reachable in place from the state and county pages or at its own address;
 > two more say how current each source is and which published figures were revised.
 >
-> **Latest.** Milestone 30 (2026-09-28) writes readings for two kinds of reader. Every
-> county page now shows a plain-language reading — *what's changing?* ahead of the
-> rankings and *what should I check before moving?* beside the costs — and keeps an
-> analyst reading, labelled the automated data summary, behind its own disclosure, each written
-> by the first model on its list whose reading passes every check: each figure traced
-> to its source, each survey figure given its margin of error, each uncertain rank read
-> as its range. The model for the plain reading was chosen by reading four candidates'
-> work on three counties side by side, not by guess, and Gemini now writes them at
-> half price. Milestone 28 had made the figures on the pages say how sure they are
-> ("$100,645 ± $2,565", "Near the middle of 21 NJ counties"); since 29 and 27 every
-> Friday this Mac refreshes, rebuilds, deploys and checks the deploy, asking first only
-> before regenerating the readings, the one billed step.
+> **Latest.** Milestone 31 (2026-09-30) is a licence and provenance pass. Every figure
+> now says what kind it is — survey estimate, administrative records, official
+> determination, published benchmark, calculated here, or modelled — beside it in the
+> tables and in its definition. Every source's terms were re-read and its licence
+> recorded, and a figure calculated from a restricted one carries the restriction. A
+> region's figures download as a CSV carrying each one's kind, source and licence;
+> printed pages carry the terms on every sheet; and the notices three data APIs require
+> are on every page. Milestone 30 (2026-09-28) had given each county page a
+> plain-language reading beside the analyst one, each checked figure by figure before
+> it is published.
 >
-> **Next.** Milestone 31: a licence and provenance pass — what kind of claim every figure
-> is, where it is read, and which uses each source's terms allow. See
+> **Next.** Milestone 32: a commercial viability study, ending in a go or no-go. See
 > [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
@@ -272,6 +271,12 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   interpretation per listed model side by side, switchable by the reader, each labeled
   with the model that wrote it, until Milestone 30 replaced the comparison with one
   reading for each kind of reader.
+- **Licence and provenance** (M31, built) — every figure is tagged with its kind
+  (survey estimate, administrative records, official determination, published
+  benchmark, calculated, modelled) and carries its source's licence, inherited by any
+  figure calculated from it. Each region page offers its figures as a CSV with the
+  citation, restriction and required notices in its header; printed pages carry the
+  terms on every sheet.
 - **Readings for every reader** (M30, built) — every county page carries a
   plain-language reading for someone deciding whether to live there — *what's
   changing?* and *what should I check before moving?* (two questions since 0.25.4) —
@@ -597,6 +602,20 @@ Add either to the Home Screen or Control Center for a one-tap version.
 5. **Check the publisher's own notice channel** where there is one — NJOGIS announces
    service changes on the NJ Geospatial Forum listserv before making them.
 
+**Zillow is downloaded by hand, monthly.** Zillow's Terms of Use forbid automated
+fetching, so the refresh never requests its files (ARCHITECTURE #272). When Zillow
+publishes a month — its data release calendar is linked from
+[zillow.com/research/data](https://www.zillow.com/research/data/) — download six CSVs
+from that page and put them in `data/manual/`, keeping Zillow's file names:
+
+| Folder | Files (each for County, City and Zip) |
+|---|---|
+| `data/manual/zillow_zhvi/` | ZHVI, all homes, mid-tier, smoothed and seasonally adjusted: `County_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` and its `City_` and `Zip_` siblings |
+| `data/manual/zillow_zori/` | ZORI, all homes plus multifamily, smoothed: `County_zori_uc_sfrcondomfr_sm_month.csv` and its `City_` and `Zip_` siblings |
+
+The next refresh ingests whichever changed; with nothing new there, the last files stand.
+A missing file names itself and the page to get it from.
+
 `make` on its own lists every target. With the warehouse down, the API and dashboard
 still run and report the degraded state rather than failing.
 
@@ -656,7 +675,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.25.6 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.26.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable

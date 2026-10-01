@@ -31,7 +31,7 @@ def test_packet_endpoint_serves_the_published_contract(county_id: int) -> None:
 
     assert response.status_code == 200
     body = response.json()
-    assert body["packet_version"] == "1.3"
+    assert body["packet_version"] == "1.4"
     jsonschema.validate(body, json.loads(SCHEMA_PATH.read_text()))
 
 
@@ -118,3 +118,55 @@ def test_an_unsupported_window_is_rejected_before_the_query(county_id: int) -> N
     response = client.get(f"/regions/{county_id}/packet?window=7y")
 
     assert response.status_code == 422
+
+
+def test_every_figure_says_what_kind_it_is_and_what_it_may_be_used_for(
+    county_id: int,
+) -> None:
+    """Packet 1.4 (Milestone 31): a kind and a licence on every figure, a licence class
+    on every source, and the notices the sources' terms require."""
+    packet = client.get(f"/regions/{county_id}/packet?window=5y").json()
+    for entry in packet["metrics"] + packet["levels"]:
+        assert entry["record_type"], entry["metric_id"]
+        assert entry["licence_class"], entry["metric_id"]
+    by_id = {e["metric_id"]: e for e in packet["levels"]}
+    if "price_to_income" in by_id:
+        assert by_id["price_to_income"]["licence_class"] == "non_commercial"
+    assert all(source["licence_class"] for source in packet["sources"])
+    census = [s for s in packet["sources"] if s["source_id"] == "census_acs"]
+    assert census and "not endorsed or certified" in census[0]["notices"][0]
+
+
+def test_the_kind_and_licence_do_not_move_the_content_hash(county_id: int) -> None:
+    """They say what a figure is, not what it says: a reading written before 1.4 must
+    stay current, re-cited for free, rather than be paid for again."""
+    from hip.packets import Packet, packet_content_hash
+
+    packet = Packet.model_validate(
+        client.get(f"/regions/{county_id}/packet?window=5y").json()
+    )
+    stripped = packet.model_copy(
+        update={
+            "metrics": [
+                m.model_copy(
+                    update={
+                        "record_type": None,
+                        "licence_class": None,
+                        "originator": None,
+                    }
+                )
+                for m in packet.metrics
+            ],
+            "levels": [
+                v.model_copy(
+                    update={
+                        "record_type": None,
+                        "licence_class": None,
+                        "originator": None,
+                    }
+                )
+                for v in packet.levels
+            ],
+        }
+    )
+    assert packet_content_hash(stripped) == packet_content_hash(packet)

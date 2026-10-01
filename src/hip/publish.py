@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -183,9 +183,15 @@ def _ranking_keys(engine_conn) -> list[tuple[str, str, str, str]]:  # type: igno
 
 
 def _plan(
-    region_ids: list[int], keys: list[tuple[str, str, str, str]]
+    region_ids: list[int],
+    keys: list[tuple[str, str, str, str]],
+    geoids: Mapping[str, str] | None = None,
 ) -> Iterator[tuple[str, str]]:
-    """Yield (api_path, output_path) pairs. Pure, so the layout is testable alone."""
+    """Yield (api_path, output_path) pairs. Pure, so the layout is testable alone.
+
+    `geoids` (region id as text → geoid) names each region's CSV download: a browser
+    ignores a link's `download` name for a file on another origin, which the artifacts
+    are, so the saved file keeps the name the path gives it."""
     yield "/health", "health.json"
     yield "/metrics", "metrics.json"
     # The attribution the site footer renders. Static like everything else, so the terms
@@ -214,6 +220,13 @@ def _plan(
             yield f"{base}/packet?window={window}", f"{out}/packet/{window}.json"
             # Markdown, not JSON: `/regions/{id}/report` serves text/markdown.
             yield f"{base}/report?window={window}", f"{out}/report/{window}.md"
+            # The page's figures as CSV, with their kinds and licences (Milestone 31),
+            # named for the region, as the report's Markdown download is.
+            name = (geoids or {}).get(str(region_id), f"region-{region_id}")
+            yield (
+                f"{base}/download?window={window}",
+                f"{out}/download/{name}-{window}.csv",
+            )
             explain = f"{out}/explanation/{window}.json"
             yield f"{base}/explanation?window={window}", explain
             # Beside the singular file rather than replacing it: the singular path is a
@@ -241,6 +254,32 @@ def _plan(
         yield query, f"rankings/{metric_id}/{level}/{window}/{basis}.json"
 
 
+def _unlicensed(engine_conn) -> list[str]:  # type: ignore[no-untyped-def]
+    """Metrics with data, and sources behind them, missing a kind or a licence class.
+
+    Migration 0020 adds those columns empty, and `hip sync-registry` (or `hip analyze`)
+    fills them. A tree published in between would ship CSVs with no restriction line and
+    no notices, carrying the display-only mortgage rate — so publishing refuses instead.
+    """
+    rows = engine_conn.execute(
+        text("""
+            SELECT 'metric ' || m.metric_id
+            FROM metrics m
+            WHERE (m.record_type IS NULL OR m.licence_class IS NULL)
+              AND EXISTS (SELECT 1 FROM fact_metric_observation f
+                          WHERE f.metric_id = m.metric_id)
+            UNION ALL
+            SELECT 'source ' || s.source_id
+            FROM sources s
+            WHERE s.licence_class IS NULL
+              AND EXISTS (SELECT 1 FROM source_releases r
+                          WHERE r.source_id = s.source_id)
+            ORDER BY 1
+        """)
+    )
+    return [row[0] for row in rows]
+
+
 def publish(root: Path) -> Result:
     """Render every enumerable endpoint under ``root``.
 
@@ -254,12 +293,19 @@ def publish(root: Path) -> Result:
         region_ids = _regions_with_data(conn)
         keys = _ranking_keys(conn)
         geoids = _region_geoids(conn)
+        unlicensed = _unlicensed(conn)
 
+    if unlicensed:
+        raise RuntimeError(
+            f"{len(unlicensed)} metric(s) or source(s) have no kind or licence recorded "
+            f"({', '.join(unlicensed[:5])}{', …' if len(unlicensed) > 5 else ''}). "
+            f"Run `hip sync-registry` first (Milestone 31)."
+        )
     _check_region_identity(root, geoids)
 
     result = Result(root=root, region_geoids=geoids)
     with TestClient(app) as client:
-        for api_path, out_path in _plan(region_ids, keys):
+        for api_path, out_path in _plan(region_ids, keys, geoids):
             response = client.get(api_path)
             if response.status_code == 404:
                 result.skipped.append(api_path)

@@ -107,6 +107,19 @@
           "title": "Label",
           "type": "string"
         },
+        "licence_class": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The licence the figure carries: public_domain, public_record, attribution, non_commercial or display_only. A calculated figure's is the most restrictive of its inputs'. Since 1.4.",
+          "title": "Licence Class"
+        },
         "margin_of_error": {
           "anyOf": [
             {
@@ -147,6 +160,19 @@
           ],
           "default": null,
           "title": "Of"
+        },
+        "originator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Who owns the series, where that is not its source (FRED serves Freddie Mac's mortgage rate). Since 1.4.",
+          "title": "Originator"
         },
         "percentile": {
           "anyOf": [
@@ -207,6 +233,19 @@
           "default": null,
           "description": "The worst rank the margins of error let this region hold; see `rank_best`.",
           "title": "Rank Worst"
+        },
+        "record_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What kind of figure this is (SPEC principle 11): survey, administrative, determination, benchmark, calculated or modelled. Since 1.4.",
+          "title": "Record Type"
         },
         "release_id": {
           "anyOf": [
@@ -300,6 +339,19 @@
           "title": "Label",
           "type": "string"
         },
+        "licence_class": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The licence the figure carries: public_domain, public_record, attribution, non_commercial or display_only. A calculated figure's is the most restrictive of its inputs'. Since 1.4.",
+          "title": "Licence Class"
+        },
         "match_method": {
           "anyOf": [
             {
@@ -327,6 +379,19 @@
           ],
           "default": null,
           "title": "Of"
+        },
+        "originator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Who owns the series, where that is not its source (FRED serves Freddie Mac's mortgage rate). Since 1.4.",
+          "title": "Originator"
         },
         "pct_change": {
           "title": "Pct Change",
@@ -394,6 +459,19 @@
           "default": null,
           "description": "The worst rank the margins of error let this region hold; see `rank_best`.",
           "title": "Rank Worst"
+        },
+        "record_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What kind of figure this is (SPEC principle 11): survey, administrative, determination, benchmark, calculated or modelled. Since 1.4.",
+          "title": "Record Type"
         },
         "release_id": {
           "anyOf": [
@@ -555,6 +633,19 @@
           "title": "Fetched At",
           "type": "string"
         },
+        "licence_class": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The licence the figure carries: public_domain, public_record, attribution, non_commercial or display_only. A calculated figure's is the most restrictive of its inputs'. Since 1.4.",
+          "title": "Licence Class"
+        },
         "license": {
           "title": "License",
           "type": "string"
@@ -562,6 +653,14 @@
         "name": {
           "title": "Name",
           "type": "string"
+        },
+        "notices": {
+          "description": "Statements the source's terms require wherever its figures are shown, word for word. Since 1.4.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Notices",
+          "type": "array"
         },
         "publisher": {
           "title": "Publisher",
@@ -692,7 +791,8 @@
       "enum": [
         "1.1",
         "1.2",
-        "1.3"
+        "1.3",
+        "1.4"
       ],
       "title": "Packet Version",
       "type": "string"

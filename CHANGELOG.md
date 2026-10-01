@@ -3,6 +3,54 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.26.0] — 2026-09-30
+
+Milestone 31, the licence and provenance pass.
+
+### Added
+
+- **Every figure says what kind it is** (SPEC principle 11): survey estimate,
+  administrative records, official determination, published benchmark, calculated
+  here, or modelled estimate. A tag under each metric in a region's full tables and its
+  report, a line in every definition card, and `record_type` in the API and the packet
+  (ARCHITECTURE #269). HUD's area median income, income limits and Fair Market Rents
+  read as official determinations (SPEC v1.4).
+- **Download this page's data.** Every figure in a region's tables as a CSV — each row
+  with its kind, margin, source, release and licence, under header lines carrying the
+  citation, any non-commercial restriction and the notices the sources require —
+  linked from the top of the data section and beside the report's Markdown (#270). The
+  downloadable Markdown report now closes with the same terms and notices, and both
+  files leave out a figure whose owner allows display only. A page with nothing to
+  download — the United States, whose figures are Freddie Mac's — shows no link.
+- **Every printed page carries the terms and its own address**, in the page margin, so
+  one sheet cut from a PDF still has them (Chromium; #270).
+- **The notices the sources' terms require**, shown on every page: the Census, HUD
+  User and FRED APIs each require one, and BLS asks for its disclaimer. The site had
+  not shown them.
+- **A licence class for every source**, with the page its terms were read on and the
+  date, or why they could not be read; a calculated figure inherits the most
+  restrictive class of its inputs. In `config/sources.yml`, the `sources` table,
+  `GET /sources` and the packet's sources.
+- **A written acquisition policy**: bulk downloads, then documented APIs, then services
+  meant for reuse, then permission; never a listing portal, never a bypassed control
+  (#271).
+
+### Changed
+
+- **Packets are version 1.4**, adding `record_type`, `licence_class` and `originator` to
+  every metric and level, and `licence_class` and `notices` to every source. Outside the
+  content hash, so no reading went stale.
+- **Zillow's data is downloaded by hand.** Its Terms of Use forbid automated fetching, so
+  the refresh no longer requests its files: the six CSVs are downloaded from Zillow's
+  data page into `data/manual/`, and the next refresh ingests whichever changed. A
+  standing arrangement: Zillow offers no channel for the question (#272).
+- **"Data Provided by Zillow Group"** is shown on every page and in every CSV, the
+  attribution Zillow's Terms of Use require wherever its data appears (#272).
+- **The mortgage rate is credited to Freddie Mac** as well as FRED, and is left out of
+  the CSV downloads: FRED lists it as Freddie Mac's copyrighted series, and Freddie
+  Mac's terms forbid redistributing its data without an agreement. Its series stays in
+  the site's JSON files, which the pages and map are built from — part of showing it.
+
 ## [0.25.6] — 2026-09-30
 
 ### Fixed

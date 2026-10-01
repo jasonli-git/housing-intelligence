@@ -4,6 +4,8 @@ import { Fragment } from "react";
 import { CostToOwn } from "@/components/CostToOwn";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { ChangeCell, Margin, Marks, NoteRows, RankReading, TableNotes } from "@/components/Ledger";
+import { DataDownload } from "@/components/DataDownload";
+import { KindTag } from "@/components/KindTag";
 import { MetricTerm } from "@/components/MetricTerm";
 import { Masthead } from "@/components/Masthead";
 import { PrintButton } from "@/components/PrintButton";
@@ -204,6 +206,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           >
             Download Markdown
           </a>
+          <DataDownload
+            regionId={regionId}
+            geoid={region.geoid}
+            window={WINDOW}
+            figures={[...packet.metrics, ...packet.levels]}
+            className="button"
+          />
         </div>
       </header>
 
@@ -243,6 +252,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                       <td>
                         <MetricTerm metricId={m.metric_id} label={m.label} scope="report-measures" />
                         <Marks letters={measures.marks.get(m.metric_id)} />
+                        <KindTag metricId={m.metric_id} />
                       </td>
                       {/* Each end with its own margin, from the observations the change
                           compares (Milestone 28). */}
@@ -340,6 +350,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                         <td>
                           <MetricTerm metricId={l.metric_id} label={l.label} scope="report-values" />
                           <Marks letters={current.marks.get(l.metric_id)} />
+                          <KindTag metricId={l.metric_id} />
                         </td>
                         <td className="num">
                           {formatMetric(l.value, l.unit, l.metric_id)}

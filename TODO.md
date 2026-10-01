@@ -14,12 +14,25 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones; Milestone 31 not started (2026-09-30)
+## Now — Milestone 31 built, awaiting review (2026-09-30)
 
-Every reading on the site is Gemini 3.7 Flash's (0.25.4, regenerated and deployed
-2026-09-30). On `fix/small-cleanups`: five small fixes and the handoff cleanup (0.25.6).
-**Milestone 31 waits on the owner**, who asked not to start it yet. Its two SPEC principle
-12 questions were answered on 2026-09-30 (SPEC v1.4, ARCHITECTURE #268).
+Milestone 31 is complete on `milestone/m31-licence-provenance` (0.26.0): every figure's
+kind shown beside it, a licence class per source that a calculated figure inherits, the
+notices the sources' terms require on every page, a CSV of each region's figures that
+carries all three, a print footer, and a written acquisition policy. CHANGELOG 0.26.0
+has what shipped and ARCHITECTURE #269–#271 the decisions.
+
+**After the merge:** `make migrate` (0020 adds the columns), `hip sync-registry` (fills them
+from config), then
+`hip explain --dry-run` to re-cite the readings for free — packet 1.4 moves the packet
+hash but not the content hash — then `make publish`, deploy and `make check-live`.
+
+**Settled with the owner on 2026-09-30:** Zillow's and Realtor.com's terms, read by hand
+(Zillow is downloaded by hand and credited "Data Provided by Zillow Group", #272;
+Realtor.com is not usable without Move's permission), and Freddie Mac's, which allow the
+rate shown with credit and not redistributed — not asked further (owner, 2026-09-30).
+Zillow's six CSVs go into `data/manual/` when it
+next publishes (README, "Zillow is downloaded by hand").
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -222,6 +235,11 @@ first raised, not where it must be done.
       summarises each refresh; a region page neither marks a revised figure nor shows its
       earlier values, which `fact_revision` holds.
 
+- [ ] **A model-comparison page on the site.** Dropped from Milestone 31 by the owner
+      (2026-09-30); `reports/evaluation/v1.md`–`v3.md` and the readings side-by-sides cover
+      it in Markdown. If revived: one page from the latest run, earlier runs listed but
+      not merged, since their judging differed.
+
 ### Map performance — open leads, for the end of V3
 
 - [ ] **Unexplained: `slowest input 504ms`.** A single event took half a second to be
@@ -347,11 +365,19 @@ first raised, not where it must be done.
       `config/geography.yml` already warns the identifier system is expensive to change
       once fact rows reference it.
 
-- [ ] **Reuse rights beyond display are unverified for six sources.** (M27
-      completeness run) FRED, the three NJ sources and both Zillow indexes: the licence
-      recorded in `config/sources.yml` does not say whether download, derived figures or
-      commercial use are allowed, and no publisher's terms have been checked.
-      **Scheduled: Milestone 32**, whose licence table needs exactly this.
+- [ ] **Commercial-use rights are recorded only as the terms state them.** (M27
+      completeness run; narrowed by Milestone 31) Every source's terms were read on
+      2026-09-30 and classed in `config/sources.yml` (#269), which settles display,
+      download and derived figures; whether each allows *commercial* use is what
+      Milestone 32's licence table has to state, source by source. Zillow's terms allow
+      "non-personal uses" with attribution but say nothing on commercial use; the site
+      keeps them non-commercial (#272). **Scheduled: Milestone 32.**
+- [ ] **The Markdown report does not carry each figure's kind or licence.** (M31) The
+      report page and the CSV do, and the downloadable Markdown closes with the terms and
+      notices and leaves display-only figures out (`render_report`). The kind and licence
+      per row are left out on purpose: `render_markdown` is also the payload a reading's
+      model is given, and a change to it is a change to every reading's input, which
+      wants its own side-by-side.
 
 ### Data sources worth adding
 
@@ -387,6 +413,13 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
+- [ ] **Zillow's files are downloaded by hand, as a standing arrangement.** (M31, #272)
+      Its Terms of Use forbid automated fetching, and its pages neither exempt a monthly
+      scripted download of the public CSVs nor offer a channel to ask (2026-09-30: the
+      contact page lists customer support, press and ZTRAX only). Revisit with
+      Milestone 32: if it says go, the question goes to the Zillow Group developer
+      program with the commercial application. A yes means `manual = False` on
+      `_ZillowAdapter`. **Scheduled: Milestone 32.**
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.
 

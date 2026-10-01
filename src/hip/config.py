@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 import re
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal
@@ -29,6 +29,52 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 RegionLevel = Literal["state", "county", "municipality", "zip", "tract", "parcel"]
 Cadence = Literal["weekly", "monthly", "quarterly", "annual", "irregular"]
 Direction = Literal["higher_is_better", "lower_is_better", "neutral"]
+
+# What kind of figure a metric is (SPEC principle 11, Milestone 31), shown beside it
+# wherever a table lists it. Observed kinds first: a survey estimate carries sampling
+# error (principle 12); an administrative record counts what records say; an official
+# determination is a figure an agency sets and publishes as its own (SPEC v1.4); a
+# published benchmark is an average the publisher reports without a margin. Then the
+# platform's own arithmetic, and the modelled figures a publisher estimates rather than
+# counts. Nothing on the site is a forecast.
+RecordType = Literal[
+    "survey",
+    "administrative",
+    "determination",
+    "benchmark",
+    "calculated",
+    "modelled",
+]
+RECORD_TYPE_LABELS: dict[RecordType, str] = {
+    "survey": "Survey estimate",
+    "administrative": "Administrative records",
+    "determination": "Official determination",
+    "benchmark": "Published benchmark",
+    "calculated": "Calculated here",
+    "modelled": "Modelled estimate",
+}
+
+# What a source's terms let the site do with its figures (Milestone 31, ARCHITECTURE
+# #269), least restrictive first — the order a calculated figure's licence is taken
+# from: it inherits the most restrictive of its inputs'. `display_only` may be shown,
+# credited, and nothing more: it is left out of every CSV download (the site's own JSON
+# still carries it, as part of showing it — #269). `derived` is the
+# platform's own source, whose figures take their inputs' class instead.
+LicenceClass = Literal[
+    "public_domain",
+    "public_record",
+    "attribution",
+    "non_commercial",
+    "display_only",
+    "derived",
+]
+LICENCE_ORDER: tuple[LicenceClass, ...] = (
+    "public_domain",
+    "public_record",
+    "attribution",
+    "non_commercial",
+    "display_only",
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -193,6 +239,17 @@ class Source(BaseModel):
     # source cannot be added without one: MOD-IV's layer disappeared in September 2026
     # and the route around it was found under pressure rather than read off a list.
     fallback: str = Field(min_length=1)
+    # What its terms allow (Milestone 31): a class the licence propagates by, the page
+    # the terms were read on, and when. A source whose terms could not be read has no
+    # date and must say why in `terms_note` (check-config), so an unread licence is a
+    # recorded fact rather than an assumption nobody noticed.
+    licence_class: LicenceClass
+    terms_url: str
+    terms_checked: date | None = None
+    terms_note: str | None = None
+    # Statements the terms require the site to display, word for word — the Census,
+    # HUD User and FRED APIs each require one. Rendered site-wide and in every download.
+    notices: list[str] = Field(default_factory=list)
 
 
 class Metric(BaseModel):
@@ -206,6 +263,28 @@ class Metric(BaseModel):
     direction: Direction
     description: str
     source_id: str
+    record_type: RecordType
+    # The metrics a calculated figure is computed from, for the platform's own source
+    # (`hip_derived`) only: its licence is the most restrictive of theirs. Checked
+    # against `hip.analytics.compute` by test.
+    inputs: list[str] = Field(default_factory=list)
+    # Who owns a series a source redistributes, where that is not the source: FRED
+    # serves Freddie Mac's mortgage rate, and FRED's terms require crediting both.
+    originator: str | None = None
+
+
+def metric_licence(
+    metric_id: str, metrics: dict[str, Metric], sources: dict[str, Source]
+) -> LicenceClass:
+    """The licence class a metric's figures carry: its source's, or for a calculated
+    metric the most restrictive of its inputs' (ARCHITECTURE #269). A figure computed
+    from a non-commercial one is non-commercial too, and so is any download of it."""
+    metric = metrics[metric_id]
+    source_class = sources[metric.source_id].licence_class
+    if source_class != "derived":
+        return source_class
+    inherited = [metric_licence(i, metrics, sources) for i in metric.inputs]
+    return max(inherited, key=LICENCE_ORDER.index)
 
 
 class GeographyScope(BaseModel):
@@ -863,7 +942,30 @@ def check_config(config_dir: Path | None = None) -> list[str]:
                 f"metrics.yml: {metric_id}.source_id: "
                 f"'{metric.source_id}' is not defined in sources.yml"
             )
+            continue
+        derived = sources[metric.source_id].licence_class == "derived"
+        if derived and not metric.inputs:
+            problems.append(
+                f"metrics.yml: {metric_id}: a calculated metric must list its inputs, "
+                f"which its licence is inherited from"
+            )
+        if not derived and metric.inputs:
+            problems.append(
+                f"metrics.yml: {metric_id}.inputs: only a metric of a derived source "
+                f"takes its licence from inputs"
+            )
+        for input_id in metric.inputs:
+            if input_id not in metrics or input_id == metric_id:
+                problems.append(
+                    f"metrics.yml: {metric_id}.inputs: '{input_id}' is not another "
+                    f"metric in metrics.yml"
+                )
     for source_id, source in sources.items():
+        if source.terms_checked is None and not source.terms_note:
+            problems.append(
+                f"sources.yml: {source_id}: terms_checked is not set, so terms_note must "
+                f"say why its terms were not read"
+            )
         if source.api_key_env and source.api_key_env not in os.environ:
             problems.append(
                 f"sources.yml: {source_id}: requires {source.api_key_env}, "

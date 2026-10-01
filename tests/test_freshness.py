@@ -41,6 +41,8 @@ def _source(**overrides: object) -> Source:
         "cadence": "annual",
         "adapter": "hip.sources.fake:FakeAdapter",
         "fallback": "There is none; this is a test.",
+        "licence_class": "public_domain",
+        "terms_url": "https://example.invalid/terms",
     }
     return Source(**{**defaults, **overrides})
 

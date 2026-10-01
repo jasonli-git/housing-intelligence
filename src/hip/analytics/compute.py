@@ -46,6 +46,17 @@ class AnalyticsResult:
     pruned_releases: int = 0
 
 
+# (computed metric, monthly numerator, annual denominator, multiplier). Its inputs are
+# declared again in `config/metrics.yml`, where each ratio's licence is inherited from
+# them (ARCHITECTURE #269); `tests/test_licences.py` holds the two to the same pairs.
+RATIOS: tuple[tuple[str, str, str, float], ...] = (
+    ("price_to_income", "zhvi_sfr", "acs_median_hh_income", 1.0),
+    ("rent_to_income", "zori_all", "acs_median_hh_income", 12.0),
+    ("price_to_ami", "zhvi_sfr", "hud_area_median_income", 1.0),
+    ("fmr_to_income", "hud_fmr_2br", "acs_median_hh_income", 12.0),
+)
+
+
 def rebuild(engine: Engine) -> AnalyticsResult:
     """Recompute every derived table. Idempotent."""
     result = AnalyticsResult()
@@ -101,12 +112,7 @@ def _affordability(conn: object) -> dict[str, int]:
     # the year it is grouped under is the one its 1 October start falls in: FY2024 took
     # effect in October 2023 and meets the ACS vintage ending 2023. FMRs exist only for
     # counties, so the join yields county rows and nothing is allocated downward.
-    for metric_id, numerator, denominator, multiplier in (
-        ("price_to_income", "zhvi_sfr", "acs_median_hh_income", 1.0),
-        ("rent_to_income", "zori_all", "acs_median_hh_income", 12.0),
-        ("price_to_ami", "zhvi_sfr", "hud_area_median_income", 1.0),
-        ("fmr_to_income", "hud_fmr_2br", "acs_median_hh_income", 12.0),
-    ):
+    for metric_id, numerator, denominator, multiplier in RATIOS:
         computed = conn.execute(  # type: ignore[attr-defined]
             text(
                 """

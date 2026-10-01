@@ -15,6 +15,8 @@ export type Term = {
   definition: string;
   /** Why it matters, set on its own line under the definition (Milestone 23). */
   why?: string;
+  /** For a metric, what kind of figure it is (SPEC principle 11, Milestone 31). */
+  kind?: string;
   /** Exact, case-sensitive phrases that mark the term in running text. */
   phrases: string[];
 };

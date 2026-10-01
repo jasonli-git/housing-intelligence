@@ -72,7 +72,8 @@ _METRICS_SQL = text(
            o.release_id, sr.source_id, o.match_method,
            s.release_id AS start_release_id, s.match_method AS start_match_method,
            c.pct_change_margin, c.start_margin, c.end_margin,
-           k.rank_best, k.rank_worst
+           k.rank_best, k.rank_worst,
+           m.record_type, m.licence_class, m.originator
     FROM fact_metric_change c
     JOIN metrics m ON m.metric_id = c.metric_id
     LEFT JOIN region_rankings k
@@ -105,7 +106,8 @@ _LEVELS_SQL = text(
            f.period_start, f.period_end,
            k.rank, k.of, k.percentile,
            f.release_id, sr.source_id, f.match_method,
-           f.margin_of_error, k.rank_best, k.rank_worst
+           f.margin_of_error, k.rank_best, k.rank_worst,
+           m.record_type, m.licence_class, m.originator
     FROM fact_metric_observation f
     JOIN metrics m ON m.metric_id = f.metric_id
     JOIN source_releases sr ON sr.release_id = f.release_id
@@ -130,7 +132,7 @@ _CROSSWALK_SQL = text(
 _SOURCES_SQL = text(
     """
     SELECT sr.release_id, sr.source_id, sr.vintage, sr.fetched_at,
-           s.name, s.publisher, s.license, s.url
+           s.name, s.publisher, s.license, s.url, s.licence_class, s.notices
     FROM source_releases sr
     JOIN sources s ON s.source_id = sr.source_id
     WHERE sr.release_id = ANY(:ids)
@@ -364,6 +366,8 @@ def _sources(
                 # fetch is when this vintage entered the warehouse.
                 "fetched_at": row["fetched_at"],
                 "release_ids": [],
+                "licence_class": row["licence_class"],
+                "notices": list(row["notices"] or []),
             }
             entry = grouped[key]
         entry["fetched_at"] = min(entry["fetched_at"], row["fetched_at"])

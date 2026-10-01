@@ -323,6 +323,14 @@ details[open] > summary .when-closed { display: none; }
    at the foot of a scrolling table, whose box would otherwise cut it off. */
 .tip-why { display: block; margin-top: 0.45rem; padding-top: 0.45rem; border-top: 1px solid var(--grid); }
 .tip-why b { color: var(--text-primary); font-weight: 600; }
+/* What kind of figure a metric is (SPEC principle 11, Milestone 31): in its definition
+   card, and on a line of its own under its name in a table — its own line, so a table's
+   width is set by the figures, not the label, and a phone never scrolls sideways. */
+.tip-kind { display: block; margin-top: 0.45rem; }
+.tip-kind b { color: var(--text-primary); font-weight: 600; }
+.data-download-line { margin: 0 0 1rem; font-size: var(--text-small); color: var(--text-secondary); }
+.data-download { font-weight: 600; }
+.kind-tag { display: block; margin-top: 0.1rem; font: var(--text-label)/1.3 var(--font-mono); letter-spacing: 0.02em; color: var(--text-muted); }
 .tip.up { top: auto; bottom: calc(100% + 6px); }
 
 /* A footnote mark is a link to its note, and the note it lands on is lit. */
@@ -926,6 +934,10 @@ sup.mk { font: 600 0.72em/0 var(--font-mono); color: var(--series-1); margin-lef
 /* Freshness: one row per source, grouped by publisher frequency, with three dates kept apart. The
    status reads as a small tag, coloured only where it asks for attention — a source that
    could not be reached, or one with a newer release waiting. */
+/* The notices the sources' terms require (Milestone 31): small, muted, always shown. */
+.foot-notices { margin: 0.75rem 0 0; font: var(--text-label)/1.5 var(--font-mono); color: var(--text-muted); }
+.foot-notices p { margin: 0.15rem 0; overflow-wrap: anywhere; }
+.foot-notices a { color: inherit; }
 .foot-links { margin: 0.75rem 0 0; font-size: var(--text-small); display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; }
 .foot-links a { color: var(--text-secondary); }
 .foot-links a:hover { color: var(--text-primary); }
