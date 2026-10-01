@@ -14,14 +14,41 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 32 decided, awaiting review (2026-10-01)
+## Now — Milestone 33, the full cost of owning (started 2026-10-01)
 
-On `milestone/m32-commercial-viability` (0.28.0): **no-go on both commercial uses for
-now**, ads or sponsorship and a paid tier (ARCHITECTURE #278,
-`reports/commercial/viability.md`). Every source states its commercial rights in config
-(#277). Nothing published changes; no deploy is needed after the merge.
+On `milestone/m33-full-cost-of-owning`. Four views in place of one total — monthly cash,
+upfront cash, the cost of owning excluding principal, and a long view — every component
+either from a source, a published rule, a labelled rule of thumb, or left for the reader,
+and a total missing any says *partial estimate*. Decided with the owner 2026-10-01: a
+reader's own inputs (down payment, rate, insurance quote, mortgage insurance, upkeep
+share, the long view's assumptions) follow them across towns in this browser, and a
+price or tax bill never does; home prices are flat in the long view unless the reader
+sets a rate; 3.5% down is an FHA loan with HUD's premiums. The source search
+(2026-10-01) settled each component:
 
-Milestone 33, the full cost of owning, is next and not started.
+- [ ] **New survey figures, `census_acs`:** homeowners insurance a year for owners with a
+      mortgage (B25141, editions from 2023), monthly electricity and gas and yearly water
+      and other fuel bills (B25132–B25135, from 2021), and the share of renters paying
+      utilities on top of rent (B25069). The Census publishes these only in brackets, so
+      the typical figure is interpolated within the bracket holding the middle household,
+      with no margin, which the packet says.
+- [ ] **Published rules:** FHA's 1.75% upfront and 0.50–0.75% yearly premiums (HUD
+      Mortgagee Letter 2023-05); NJ's realty transfer fee and, since 2025-07-10, the
+      seller's graduated percent fee above $1 million (Division of Taxation); NJ's cap on a
+      security deposit, a month and a half's rent (N.J.S.A. 46:8-21.2).
+- [ ] **Labelled ranges and rules of thumb, the reader's figure first:** closing costs 2–5%
+      of the price (CFPB); conventional mortgage insurance $30–70 a month per $100,000
+      borrowed (Freddie Mac); upkeep 1% of the price a year; an agent's commission only in
+      the long view.
+- [ ] **Left for the reader:** HOA or condo fees, flood insurance (FEMA's flood map
+      linked; premiums are Milestone 39's), renters insurance, moving and first repairs.
+- [ ] **The cards:** the four views, the reader's inputs with the published figures
+      prefilled, *partial estimate* on any total missing a part, renting's own costs
+      beside owning's, and tax relief and assistance as official links with a review date.
+- [ ] **The report** prints the published defaults, with no controls.
+
+Not here: flood premiums (Milestone 39, OpenFEMA's policies, whose v2 dataset is retired
+2026-10-15) and lenders' closing costs (Milestone 46, HMDA).
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
