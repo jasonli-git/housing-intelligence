@@ -485,6 +485,87 @@ def _withdraw(
     )
 
 
+def load_income_limits(
+    engine: Engine,
+    duckdb_path: Path,
+    *,
+    staging_table: str = "main_staging.stg_hud_income_limit_lines",
+) -> int:
+    """Replace `income_limits` from the staged lines (Milestone 35, ARCHITECTURE #285).
+
+    Replaced whole rather than upserted: each line comes from an immutable release, so
+    the staged set is the full truth, and a line HUD stopped publishing should leave.
+    Each row cites the release it came from, found by its exact (source, layer,
+    vintage); a line whose release is not in the warehouse is dropped rather than
+    loaded uncited. Returns 0, changing nothing, when the model has not been staged.
+    """
+    schema, table = staging_table.split(".")
+    with duckdb_session(duckdb_path) as duck:
+        staged = {
+            row[0]
+            for row in duck.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = ?",
+                [schema],
+            ).fetchall()
+        }
+        if table not in staged:
+            return 0
+        rows = duck.execute(
+            f"""
+            SELECT geoid, fiscal_year, band, household_size, income_limit,
+                   median_income, source_id, release_layer, release_vintage
+            FROM {staging_table}
+            """
+        ).fetchall()
+
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM income_limits"))
+        conn.execute(
+            text(
+                """
+                INSERT INTO income_limits
+                    (region_id, fiscal_year, band, household_size, income_limit,
+                     median_income, release_id)
+                SELECT r.region_id, :fiscal_year, :band, :household_size,
+                       :income_limit, :median_income, sr.release_id
+                FROM regions r
+                JOIN LATERAL (
+                    SELECT release_id FROM source_releases
+                    WHERE source_id = :source_id AND layer = :layer
+                      AND vintage = :vintage
+                    ORDER BY fetched_at DESC LIMIT 1
+                ) sr ON true
+                WHERE r.level = 'county' AND r.geoid = :geoid
+                """
+            ),
+            [
+                {
+                    "geoid": geoid,
+                    "fiscal_year": int(year),
+                    "band": int(band),
+                    "household_size": int(size),
+                    "income_limit": float(limit),
+                    "median_income": None if median is None else float(median),
+                    "source_id": source_id,
+                    "layer": layer,
+                    "vintage": vintage,
+                }
+                for (
+                    geoid,
+                    year,
+                    band,
+                    size,
+                    limit,
+                    median,
+                    source_id,
+                    layer,
+                    vintage,
+                ) in rows
+            ],
+        )
+        return int(conn.execute(text("SELECT count(*) FROM income_limits")).scalar_one())
+
+
 def load_region_identifiers(
     engine: Engine, duckdb_path: Path, *, staging_table: str = "stg_nj_municipal_codes"
 ) -> int:

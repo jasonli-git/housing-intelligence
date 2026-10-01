@@ -292,6 +292,74 @@ def test_fmr_is_one_release_per_state_and_fiscal_year(
     assert "2016" not in {r.vintage for r in refs}, "the API refuses FY2016"
 
 
+def test_fmr_asks_for_zip_level_rents_only_where_hud_sets_them(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Milestone 35: the statewide file marks the counties HUD prices ZIP by ZIP; each
+    of those, and only those, is asked for its Small Area FMRs."""
+    from hip.sources.hud import HudFmrAdapter
+
+    _hud(monkeypatch)
+    path = tmp_path / "statedata"
+    path.write_text(
+        json.dumps(
+            {
+                "data": {
+                    "counties": [
+                        {"fips_code": "3401799999", "smallarea_status": "1"},
+                        {"fips_code": "3402199999", "smallarea_status": "0"},
+                    ]
+                }
+            }
+        )
+    )
+    ref = ReleaseRef("hud_fmr", "fmr", "2027", "https://x", scope="NJ")
+    release = Release(
+        ref=ref, path=path, sha256="0" * 64, size_bytes=1, fetched_at=datetime.now(UTC)
+    )
+    [child] = HudFmrAdapter(states=["NJ"]).child_refs(release)
+    assert child.layer == "safmr_34017" and child.vintage == "2027"
+    assert child.url.endswith("/fmr/data/3401799999?year=2027")
+
+
+def test_safmr_records_are_zips_and_never_the_metro_row() -> None:
+    from hip.sources.hud import HudFmrAdapter
+
+    ref = ReleaseRef("hud_fmr", "safmr_34017", "2027", "https://x")
+    payload = {
+        "data": {
+            "basicdata": [
+                {"zip_code": "MSA level", "Two-Bedroom": 2763},
+                {"zip_code": "07030", "Efficiency": 3200, "Two-Bedroom": 4190},
+            ]
+        }
+    }
+    [row] = HudFmrAdapter.to_records(payload, ref)
+    assert row["zip_code"] == "07030" and row["county_fips"] == "34017"
+    assert row["two_bedroom"] == 4190 and row["efficiency"] == 3200
+    assert row["fiscal_year"] == "2027"
+
+
+def test_income_limits_keep_every_band_and_household_size() -> None:
+    """Milestone 35: the income check needs HUD's 24 lines a county-year, not the one
+    four-person 80% figure the metric reads."""
+    from hip.sources.hud import HudAdapter
+
+    ref = ReleaseRef("hud", "il_34017", "2026", "https://x")
+    payload = {
+        "data": {
+            "median_income": 110100,
+            "extremely_low": {f"il30_p{n}": 30000 + n for n in range(1, 9)},
+            "very_low": {f"il50_p{n}": 50000 + n for n in range(1, 9)},
+            "low": {f"il80_p{n}": 80000 + n for n in range(1, 9)},
+        }
+    }
+    [row] = HudAdapter.to_records(payload, ref)
+    assert row["income_limit_80"] == row["il80_p4"] == 80004
+    assert (row["il30_p1"], row["il50_p8"]) == (30001, 50008)
+    assert sum(1 for key in row if key.startswith("il") and "_p" in key) == 24
+
+
 def test_fmr_records_keep_every_county_and_the_area_it_belongs_to() -> None:
     from hip.sources.hud import HudFmrAdapter
 

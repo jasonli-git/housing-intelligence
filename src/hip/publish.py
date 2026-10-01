@@ -213,6 +213,12 @@ def _plan(
         # The unfiltered series for every metric the region has. The filtered form takes
         # arbitrary dates and is listed in UNPUBLISHABLE instead.
         yield f"/regions/{region_id}/metrics", f"regions/{region_id}/metrics.json"
+        # HUD's income limits for the region's county (Milestone 35). A 404 — the state,
+        # or a ZIP the crosswalk does not place — is a skip, as everywhere here.
+        yield (
+            f"/regions/{region_id}/income-limits",
+            f"regions/{region_id}/income-limits.json",
+        )
         for window in PUBLISHED_WINDOWS:
             base = f"/regions/{region_id}"
             out = f"regions/{region_id}"

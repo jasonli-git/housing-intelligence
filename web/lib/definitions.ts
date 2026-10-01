@@ -346,9 +346,45 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "HUD’s official middle income for families in this area, set each year.",
     why: "Affordable-housing programs are set as a percentage of it, so it decides who qualifies.",
   },
+  hud_fmr_0br: {
+    what: "HUD’s estimate of what a modest studio home rents for here, utilities included, set near the lower middle of recent movers’ rents.",
+    why: "It sets what housing vouchers pay for this size, so it marks the cost of a modest home to the programs that help renters.",
+  },
+  hud_fmr_1br: {
+    what: "HUD’s estimate of what a modest one-bedroom home rents for here, utilities included, set near the lower middle of recent movers’ rents.",
+    why: "It sets what housing vouchers pay for this size, so it marks the cost of a modest home to the programs that help renters.",
+  },
+  hud_fmr_3br: {
+    what: "HUD’s estimate of what a modest three-bedroom home rents for here, utilities included, set near the lower middle of recent movers’ rents.",
+    why: "It sets what housing vouchers pay for this size, so it marks the cost of a modest home to the programs that help renters.",
+  },
+  hud_fmr_4br: {
+    what: "HUD’s estimate of what a modest four-bedroom home rents for here, utilities included, set near the lower middle of recent movers’ rents.",
+    why: "It sets what housing vouchers pay for this size, so it marks the cost of a modest home to the programs that help renters.",
+  },
+  hud_safmr_0br: {
+    what: "HUD’s rent standard for a modest studio home in this ZIP code, utilities included, set ZIP by ZIP where HUD prices the metro area that way.",
+    why: "Where it exists, vouchers pay against it rather than the county figure, so it tracks rents street by street more closely.",
+  },
+  hud_safmr_1br: {
+    what: "HUD’s rent standard for a modest one-bedroom home in this ZIP code, utilities included, set ZIP by ZIP where HUD prices the metro area that way.",
+    why: "Where it exists, vouchers pay against it rather than the county figure, so it tracks rents street by street more closely.",
+  },
+  hud_safmr_2br: {
+    what: "HUD’s rent standard for a modest two-bedroom home in this ZIP code, utilities included, set ZIP by ZIP where HUD prices the metro area that way.",
+    why: "Where it exists, vouchers pay against it rather than the county figure, so it tracks rents street by street more closely.",
+  },
+  hud_safmr_3br: {
+    what: "HUD’s rent standard for a modest three-bedroom home in this ZIP code, utilities included, set ZIP by ZIP where HUD prices the metro area that way.",
+    why: "Where it exists, vouchers pay against it rather than the county figure, so it tracks rents street by street more closely.",
+  },
+  hud_safmr_4br: {
+    what: "HUD’s rent standard for a modest four-bedroom home in this ZIP code, utilities included, set ZIP by ZIP where HUD prices the metro area that way.",
+    why: "Where it exists, vouchers pay against it rather than the county figure, so it tracks rents street by street more closely.",
+  },
   hud_income_limit_80: {
     what: "The income below which HUD counts a family of four as low-income here: 80% of the area median.",
-    why: "It is the cut-off for many affordable-housing programs, so it shows who can get help.",
+    why: "Many affordable-housing programs start from this line, each with rules of its own, so it is a reference point rather than a test of who qualifies.",
   },
   unemployment_rate: {
     what: "The share of the labor force — people working or looking for work — who have no job, from the Bureau of Labor Statistics.",

@@ -217,3 +217,29 @@ def test_ancestors_carry_name_lsad_too() -> None:
     detail = client.get(f"/regions/{body['region_id']}").json()
     assert detail["ancestors"], "a municipality has a county above it"
     assert all(a["name_lsad"] for a in detail["ancestors"])
+
+
+def test_income_limits_read_the_county_for_a_town_and_a_zip(loaded: None) -> None:
+    """Milestone 35: HUD sets the lines by county, so a town reads its parent's and a ZIP
+    the county holding most of its homes; the state has none."""
+    county = client.get("/regions?level=county&q=Hudson").json()["items"][0]
+    town = client.get("/regions?level=municipality&q=Hoboken").json()["items"][0]
+    zip_code = client.get("/regions?level=zip&q=07030").json()["items"][0]
+
+    by_county = client.get(f"/regions/{county['region_id']}/income-limits")
+    if by_county.status_code == 404:
+        pytest.skip("income limits not loaded; run `hip load`")
+    body = by_county.json()
+    assert body["via"] == "self" and body["county_id"] == county["region_id"]
+    assert [b["band"] for b in body["bands"]] == [30, 50, 80]
+    assert all(len(b["limits"]) == 8 for b in body["bands"])
+    # A larger household has a higher line, in every band.
+    assert all(b["limits"] == sorted(b["limits"]) for b in body["bands"])
+
+    for region, via in ((town, "parent"), (zip_code, "crosswalk")):
+        other = client.get(f"/regions/{region['region_id']}/income-limits").json()
+        assert other["via"] == via and other["county_id"] == county["region_id"]
+        assert other["bands"] == body["bands"]
+
+    state = client.get("/regions?level=state").json()["items"][0]
+    assert client.get(f"/regions/{state['region_id']}/income-limits").status_code == 404

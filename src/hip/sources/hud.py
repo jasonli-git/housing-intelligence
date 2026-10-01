@@ -47,8 +47,13 @@ IL_FLOOR = 2024
 IL_YEAR_COUNT = 5
 
 # HUD publishes limits for 1-8 person households. Four-person is the conventional
-# reference figure and the one policy documents quote.
+# reference figure and the one policy documents quote, so it is the metric; every size
+# and band is landed too, for the income check sized to a reader's household
+# (Milestone 35).
 HOUSEHOLD_SIZE = "p4"
+HOUSEHOLD_SIZES = range(1, 9)
+# HUD's three bands, by its own keys: extremely low (30%), very low (50%), low (80%).
+INCOME_BANDS = {"extremely_low": "il30", "very_low": "il50", "low": "il80"}
 
 # Fair Market Rents: the newest fiscal year in force when this was written, and how many
 # years back to fetch. The API refuses FY2016 ("Invalid year"), which ten years from
@@ -190,9 +195,19 @@ def _crosswalk_rows(data: dict[str, object], ref: ReleaseRef) -> list[dict[str, 
 def _income_limit_rows(
     data: dict[str, object], ref: ReleaseRef
 ) -> list[dict[str, object]]:
-    """One row per county-year, flattening the nested band structure."""
+    """One row per county-year, flattening the nested band structure.
+
+    Every band and household size becomes a column, `il30_p1` to `il80_p8`, beside the
+    four-person 80% limit the metric has always read.
+    """
     low = data.get("low")
     limit_80 = low.get(f"il80_{HOUSEHOLD_SIZE}") if isinstance(low, dict) else None
+    lines: dict[str, object] = {}
+    for band, prefix in INCOME_BANDS.items():
+        values = data.get(band)
+        for size in HOUSEHOLD_SIZES:
+            key = f"{prefix}_p{size}"
+            lines[key] = values.get(key) if isinstance(values, dict) else None
     return [
         {
             # layer is 'il_<fips>'; the county FIPS is what joins to regions.
@@ -200,6 +215,7 @@ def _income_limit_rows(
             "year": ref.vintage,
             "median_income": data.get("median_income"),
             "income_limit_80": limit_80,
+            **lines,
         }
     ]
 
@@ -271,9 +287,42 @@ class HudFmrAdapter(SourceAdapter):
             pending_from=fmr_in_force_from(pending) if pending else None,
         )
 
+    def child_refs(
+        self, release: Release, vintage: str | None = None
+    ) -> list[ReleaseRef]:
+        """Small Area FMRs for each county the statewide file marks as priced by ZIP.
+
+        Milestone 35. HUD sets Fair Market Rents by ZIP code in some metro areas — nine
+        New Jersey counties in FY2026 — and the statewide file says which, with
+        `smallarea_status`, but carries only the metro figure. The county endpoint
+        answers every ZIP in the county, one request each.
+        """
+        if release.ref.layer != "fmr":
+            return []
+        payload = json.loads(release.path.read_text())
+        data = payload.get("data") if isinstance(payload, dict) else None
+        counties = data.get("counties") if isinstance(data, dict) else None
+        if not isinstance(counties, list):
+            return []
+        year = release.ref.vintage
+        return [
+            ReleaseRef(
+                source_id=self.source_id,
+                layer=f"safmr_{str(entry['fips_code'])[:5]}",
+                vintage=year,
+                url=f"{BASE_URL}/fmr/data/{entry['fips_code']}?year={year}",
+            )
+            for entry in counties
+            if isinstance(entry, dict)
+            and str(entry.get("smallarea_status")) == "1"
+            and str(entry.get("fips_code", "")).endswith("99999")
+        ]
+
     @classmethod
     def to_records(cls, payload: object, ref: ReleaseRef) -> list[dict[str, object]]:
         data = payload.get("data") if isinstance(payload, dict) else None
+        if ref.layer.startswith("safmr_"):
+            return _safmr_rows(data, ref)
         counties = data.get("counties") if isinstance(data, dict) else None
         if not isinstance(counties, list):
             raise ValueError(f"hud_fmr/{ref.key}: no 'data.counties' in response")
@@ -296,6 +345,27 @@ class HudFmrAdapter(SourceAdapter):
             for entry in counties
             if isinstance(entry, dict)
         ]
+
+
+def _safmr_rows(data: object, ref: ReleaseRef) -> list[dict[str, object]]:
+    """One row per ZIP. The metro row HUD lists first ("MSA level") is not a ZIP."""
+    rows = data.get("basicdata") if isinstance(data, dict) else None
+    if not isinstance(rows, list):
+        raise ValueError(f"hud_fmr/{ref.key}: no 'data.basicdata' list in response")
+    return [
+        {
+            "zip_code": str(row.get("zip_code")),
+            "county_fips": ref.layer.removeprefix("safmr_"),
+            "efficiency": row.get("Efficiency"),
+            "one_bedroom": row.get("One-Bedroom"),
+            "two_bedroom": row.get("Two-Bedroom"),
+            "three_bedroom": row.get("Three-Bedroom"),
+            "four_bedroom": row.get("Four-Bedroom"),
+            "fiscal_year": ref.vintage,
+        }
+        for row in rows
+        if isinstance(row, dict) and str(row.get("zip_code", "")).isdigit()
+    ]
 
 
 class HudChasAdapter(SourceAdapter):

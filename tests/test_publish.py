@@ -53,6 +53,12 @@ def test_plan_publishes_both_explanation_shapes() -> None:
     assert plan["/regions/11/explanations?window=5y"] == "regions/11/explanations/5y.json"
 
 
+def test_plan_publishes_each_regions_income_limits() -> None:
+    """Milestone 35: the income check reads its county's lines from the artifact tree."""
+    plan = dict(_plan([11], []))
+    assert plan["/regions/11/income-limits"] == "regions/11/income-limits.json"
+
+
 def test_plan_publishes_reports_as_markdown_not_json() -> None:
     """`/regions/{id}/report` serves text/markdown; the extension has to follow."""
     paths = [out for _, out in _plan([11], [])]
@@ -165,8 +171,16 @@ def test_skipped_entries_are_explanations_not_data(published: Path) -> None:
     manifest = json.loads((published / "manifest.json").read_text())
     # Matches both the singular and plural paths: a region without generated prose
     # 404s on each, and both are legitimate skips.
-    unexpected = [path for path in manifest["skipped_404"] if "/explanation" not in path]
+    unexpected = [
+        path
+        for path in manifest["skipped_404"]
+        if "/explanation" not in path and "/income-limits" not in path
+    ]
     assert not unexpected, f"unexpected 404s: {unexpected[:5]}"
+    # Milestone 35: only a region with no county — the state, the nation — has no income
+    # limits; every county, town and ZIP reads one.
+    no_limits = [path for path in manifest["skipped_404"] if "/income-limits" in path]
+    assert len(no_limits) <= 2, f"income limits missing: {no_limits[:5]}"
 
 
 # --- Region identity. Pure: a manifest on disk, no warehouse. ----------------------

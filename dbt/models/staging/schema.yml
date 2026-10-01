@@ -160,7 +160,21 @@ models:
           - accepted_range: {min_value: 0, max_value: 1000000}
 
   - name: stg_hud_fmr
-    description: Two-bedroom Fair Market Rent per county per fiscal year.
+    description: >-
+      Fair Market Rent per county per fiscal year, studio to four bedrooms (two-bedroom
+      since Milestone 21, every size since 35).
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {min_value: 100, max_value: 20000}
+
+  - name: stg_hud_safmr
+    description: >-
+      HUD Small Area Fair Market Rents by ZIP, studio to four bedrooms, where HUD sets
+      them (Milestone 35).
     columns:
       - name: geoid
         tests: [not_null]
@@ -178,3 +192,21 @@ models:
         tests:
           - not_null
           - accepted_range: {min_value: 0, max_value: 1}
+
+  - name: stg_hud_income_limit_lines
+    description: >-
+      HUD income limits for households of one to eight at 30%, 50% and 80% of area
+      median income, per county and fiscal year (Milestone 35).
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: band
+        tests:
+          - accepted_values: {values: [30, 50, 80], quote: false}
+      - name: household_size
+        tests:
+          - accepted_range: {min_value: 1, max_value: 8}
+      - name: income_limit
+        tests:
+          - not_null
+          - accepted_range: {min_value: 1000, max_value: 1000000}

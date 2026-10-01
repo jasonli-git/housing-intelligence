@@ -20,7 +20,19 @@ DERIVED_RATIOS = frozenset(
 )
 
 # Milestone 21's HUD figures, each with a caveat of its own below.
-FMR_METRICS = frozenset({"hud_fmr_2br", "fmr_to_income"})
+FMR_METRICS = frozenset(
+    {
+        "hud_fmr_0br",
+        "hud_fmr_1br",
+        "hud_fmr_2br",
+        "hud_fmr_3br",
+        "hud_fmr_4br",
+        "fmr_to_income",
+    }
+)
+SAFMR_METRICS = frozenset(
+    {"hud_safmr_0br", "hud_safmr_1br", "hud_safmr_2br", "hud_safmr_3br", "hud_safmr_4br"}
+)
 CHAS_METRICS = frozenset(
     {"chas_renter_cost_burden", "chas_renter_severe_burden", "chas_owner_cost_burden"}
 )
@@ -58,7 +70,7 @@ TEXTS: dict[str, str] = {
         "a rank among them compares areas. HUD moved some New Jersey areas from the "
         "50th to the 40th percentile by fiscal 2020, so a change spanning that year "
         "mixes two standards. In nine counties vouchers use HUD's ZIP-level Small Area "
-        "FMRs instead, which are not shown here."
+        "FMRs instead, shown on those ZIP codes' pages."
     ),
     "chas_one_vintage": (
         "CHAS figures are HUD's tabulation of ACS 2018-2022 microdata, published a year "
@@ -95,6 +107,13 @@ TEXTS: dict[str, str] = {
         "Census builds from census blocks to approximate the ZIP's delivery routes; the "
         "two can differ. ZCTA figures begin with the 2016-2020 survey, the first drawn "
         "on 2020's ZCTAs, so none shows a five-year change yet."
+    ),
+    # Milestone 35.
+    "hud_safmr": (
+        "Small Area Fair Market Rents are HUD's rent standard set ZIP code by ZIP code, "
+        "where HUD prices a metro area that way, and are what vouchers pay against "
+        "there. They are a benchmark set near the 40th percentile of recent movers' "
+        "rents, not what this ZIP's renters pay."
     ),
     "name_matched": (
         "Some values here were matched to this place by name and county rather than by "
@@ -212,6 +231,8 @@ def scoped_caveats(
         add("hud_county_ami", ami)
     if present & FMR_METRICS:
         add("hud_fmr_area", present & FMR_METRICS)
+    if present & SAFMR_METRICS:
+        add("hud_safmr", present & SAFMR_METRICS)
     if present & CHAS_METRICS:
         add("chas_one_vintage", present & CHAS_METRICS)
     if "modiv_median_tax_bill" in present:

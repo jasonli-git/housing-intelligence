@@ -16,6 +16,7 @@ from hip.api.routers import (
     explanations,
     freshness,
     health,
+    income_limits,
     metrics,
     packets,
     regions,
@@ -45,3 +46,4 @@ app.include_router(packets.router)
 app.include_router(explanations.router)
 app.include_router(freshness.router)
 app.include_router(revisions.router)
+app.include_router(income_limits.router)

@@ -8,7 +8,7 @@ page can read it. `load_discoveries` is that load; `build_report` is the read.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from hip.config import Source
 from hip.sources.base import Discovery, read_discovery, write_discovery
+from hip.sources.hud import fmr_in_force_from
 from hip.warehouse.db import get_engine, probe
 from hip.warehouse.discoveries import load_discoveries
 from hip.warehouse.freshness import (
@@ -188,11 +189,16 @@ def test_build_report_reads_known_sources_correctly() -> None:
     # TIGER's adapter never implements discover() (ARCHITECTURE #206): no row exists.
     assert by_id["census_tiger"].status == "not_tracked"
     assert by_id["census_tiger"].checked_at is None
-    # HUD FMR: FY2027 was published but does not take effect until 2026-10-01.
+    # HUD FMR: a fiscal year published before it takes effect waits as pending until
+    # its 1 October, and is current from then. Pinned to FY2027 pending when written;
+    # on 2026-10-01 it took effect, so the check follows the calendar, not one day.
     fmr = by_id["hud_fmr"]
-    assert fmr.status == "pending"
-    assert fmr.pending == "2027"
-    assert fmr.pending_from == "2026-10-01"
+    if fmr.pending is not None:
+        assert fmr.status == "pending"
+        assert fmr.pending_from == str(fmr_in_force_from(int(fmr.pending)))
+        assert fmr_in_force_from(int(fmr.pending)) > date.today()
+    else:
+        assert fmr.status == "current"
 
 
 def test_build_report_never_reads_a_sources_notes_field() -> None:

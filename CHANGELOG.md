@@ -3,6 +3,32 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.31.0] — 2026-10-01
+
+Milestone 35, household-sized answers.
+
+### Added
+
+- **Your income against HUD's lines** on every county, town and ZIP page (ARCHITECTURE
+  #285). Enter a household size and income and the page says where the income sits
+  against HUD's 30%, 50% and 80% lines for the county — plainly, then in HUD's words —
+  with the three lines for that household size. It never says who qualifies; it links to
+  HUD and the NJ Housing and Mortgage Finance Agency. A town reads its county's lines and
+  a ZIP the county where most of its homes are, each saying so.
+- **Rents here, by size** (#286): for a studio to four bedrooms, what tenants pay (the
+  Census), HUD's Fair Market Rent — ZIP by ZIP in the nine counties HUD prices that way,
+  307 ZIP codes — and Zillow's asking rent, each labelled for what it measures, beside
+  the rent the reader pays now.
+- Household size, income and rent are remembered in the reader's browser only.
+- HUD's income limits in full, every band and household size, as `GET
+  /regions/{id}/income-limits`; Fair Market Rents for every size, and HUD's Small Area
+  Fair Market Rents by ZIP. FY2027 Fair Market Rents, in force from 2026-10-01.
+
+### Changed
+
+- The readings' checks count every rent figure as one measure, and keep Milestone 34's
+  household and commuting figures out of *What stands out here?*.
+
 ## [0.30.0] — 2026-10-01
 
 Milestone 34, ACS depth and direct ZIP coverage.
