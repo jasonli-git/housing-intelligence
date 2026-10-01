@@ -457,3 +457,85 @@ metrics:
       first owner-side burden measure.
     source_id: hud_chas
     record_type: survey
+
+  # The costs of a home beyond its mortgage and tax (Milestone 33). The Census publishes
+  # each only in brackets; the figure is the median interpolated within them, among the
+  # homes charged for it, with no published margin (stg_census_acs_costs).
+  acs_median_home_insurance:
+    label: Homeowners insurance a year, typical home with a mortgage
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      What owners with a mortgage report paying a year for fire, hazard and flood
+      insurance, ACS 5-year table B25141. The median is interpolated here from the
+      Census's brackets, among owners with a mortgage, and carries no margin. It is what
+      owners already insured pay, which can be less than a new policy costs.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_median_electricity:
+    label: Electricity a month, typical home billed for it
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      Monthly electricity cost among homes charged for it, owners and renters alike, ACS
+      5-year table B25132. The median is interpolated here from the Census's brackets
+      and carries no margin.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_median_gas:
+    label: Gas a month, typical home billed for it
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      Monthly gas cost among homes charged for it, owners and renters alike, ACS 5-year
+      table B25133. The median is interpolated here from the Census's brackets and
+      carries no margin.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_median_water_sewer:
+    label: Water and sewer a year, typical home billed for it
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      Yearly water and sewer cost among homes charged for it, ACS 5-year table B25134. The
+      median is interpolated here from the Census's brackets and carries no margin.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_median_other_fuel:
+    label: Heating oil and other fuels a year, typical home billed for them
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      Yearly cost of oil, coal, kerosene, wood and other fuels among homes charged for
+      them, ACS 5-year table B25135. The median is interpolated here from the Census's
+      three brackets and carries no margin; where it falls in the top one, $750 or more,
+      no figure is given.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_renters_paying_utilities:
+    label: Renters paying utilities on top of rent
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Renter households that pay for at least one utility on top of their rent, ACS
+      5-year table B25069. It says how often a quoted rent leaves the bills to the
+      tenant.
+    source_id: census_acs
+    record_type: survey
+    ranked: false

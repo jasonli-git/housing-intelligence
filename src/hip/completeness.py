@@ -41,6 +41,9 @@ SUBJECTS = (
     "rent",
     "financing",
     "taxes",
+    # What a home costs to run beyond its mortgage and tax: insurance and utility bills
+    # (Milestone 33).
+    "running",
     "stock",
     "supply",
     "assistance",
@@ -73,6 +76,12 @@ METRIC_SUBJECTS: dict[str, str] = {
     "nj_general_tax_rate": "taxes",
     "nj_effective_tax_rate": "taxes",
     "nj_director_ratio": "taxes",
+    "acs_median_home_insurance": "running",
+    "acs_median_electricity": "running",
+    "acs_median_gas": "running",
+    "acs_median_water_sewer": "running",
+    "acs_median_other_fuel": "running",
+    "acs_renters_paying_utilities": "running",
     "acs_vacancy_rate": "stock",
     "acs_homeownership_rate": "stock",
     "modiv_residential_parcels": "stock",

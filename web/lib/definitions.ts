@@ -88,6 +88,30 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "The share of homeowners spending more than 30% of their income on housing: mortgage, tax, insurance and utilities.",
     why: "Owners can be squeezed too; this shows how many are stretched by what they pay.",
   },
+  acs_median_home_insurance: {
+    what: "What the middle homeowner with a mortgage pays a year to insure the home, as owners told the Census. Worked out from the Census’s price brackets, so no margin is given.",
+    why: "Lenders require it, so it is part of the monthly cost; a new policy can cost more than owners already insured pay.",
+  },
+  acs_median_electricity: {
+    what: "The middle monthly electricity bill among homes here that pay one, owners and renters alike, as households told the Census. Worked out from the Census’s price brackets, so no margin is given.",
+    why: "Part of what a home costs to run every month, on top of the mortgage or the rent.",
+  },
+  acs_median_gas: {
+    what: "The middle monthly gas bill among homes here that pay one, as households told the Census. Worked out from the Census’s price brackets, so no margin is given.",
+    why: "Many New Jersey homes heat with gas, so it can be the second-largest utility bill.",
+  },
+  acs_median_water_sewer: {
+    what: "The middle yearly water and sewer bill among homes here billed for it, as households told the Census. Worked out from the Census’s price brackets, so no margin is given.",
+    why: "Often billed by the town or a utility every quarter, so easy to leave out of a monthly budget.",
+  },
+  acs_median_other_fuel: {
+    what: "The middle yearly cost of heating oil, propane, wood or other fuels among homes here that buy them, as households told the Census. The Census gives only three brackets, so where the middle home pays $750 or more no figure is shown.",
+    why: "Homes that heat with oil can pay more for it than for electricity and gas together.",
+  },
+  acs_renters_paying_utilities: {
+    what: "The share of renting households here that pay for at least one utility on top of their rent.",
+    why: "It says how often a quoted rent leaves the bills to the tenant, which matters when setting a rent against the cost of owning.",
+  },
   modiv_median_tax_bill: {
     what: "What the middle one- to four-family home paid in property tax in the tax year shown, before any relief a household may claim.",
     why: "New Jersey’s property taxes are among the highest in the country, so this can matter as much as the price.",

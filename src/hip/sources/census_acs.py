@@ -54,6 +54,33 @@ BURDEN_PARTS = (
 # the new columns, silently. Separate layers also give these rows their own release.
 HOUSING_VARIABLES = ("B25002_001E", "B25002_003E", "B25003_001E", "B25003_002E")
 
+# The costs of a home beyond its mortgage and tax (Milestone 33), as the Census publishes
+# them: in brackets, with no median, so `stg_census_acs_costs` interpolates one. Each
+# table's brackets are requested whole, without margins — no published margin applies to
+# a median worked out here. Two layers, each under the Census API's 50-variable limit,
+# fetched only from the first edition that carries its tables: B25141 from 2023, the
+# utility bills and B25069 from 2021. Asking an older edition for them is an error.
+COST_LAYERS: dict[str, tuple[int, tuple[str, ...]]] = {
+    # Homeowners insurance a year, by mortgage status: the total, then each status's
+    # total and its twelve brackets.
+    "insurance_": (2023, tuple(f"B25141_{n:03d}E" for n in range(1, 28))),
+    # Electricity and gas a month, water and sewer and other fuels a year — each table's
+    # total, those not charged, those charged and their brackets — and whether renters
+    # pay utilities on top of rent.
+    "utilities_": (
+        2021,
+        (
+            *(f"B25132_{n:03d}E" for n in range(1, 10)),
+            *(f"B25133_{n:03d}E" for n in range(1, 10)),
+            *(f"B25134_{n:03d}E" for n in range(1, 10)),
+            *(f"B25135_{n:03d}E" for n in range(1, 7)),
+            "B25069_001E",
+            "B25069_002E",
+            "B25069_003E",
+        ),
+    ),
+}
+
 
 def with_margins(estimates: Iterable[str]) -> list[str]:
     """Each estimate beside its margin of error: `B19013_001E` and `B19013_001M`.
@@ -138,13 +165,19 @@ class AcsAdapter(SourceAdapter):
                 "Get one free at https://api.census.gov/data/key_signup.html"
             )
         requests = {
-            "": ",".join(["NAME", *with_margins([*VARIABLES, *BURDEN_PARTS])]),
-            "housing_": ",".join(["NAME", *with_margins(HOUSING_VARIABLES)]),
+            "": (0, ",".join(["NAME", *with_margins([*VARIABLES, *BURDEN_PARTS])])),
+            "housing_": (0, ",".join(["NAME", *with_margins(HOUSING_VARIABLES)])),
+            **{
+                prefix: (first, ",".join(["NAME", *variables]))
+                for prefix, (first, variables) in COST_LAYERS.items()
+            },
         }
         years = [int(vintage)] if vintage else list(vintages(self.latest))
         refs = []
         for year in years:
-            for prefix, variables in requests.items():
+            for prefix, (first, variables) in requests.items():
+                if year < first:
+                    continue
                 for level, selector in LEVELS.items():
                     for state in self.states:
                         inside = f"state:{fips_for(state)}"

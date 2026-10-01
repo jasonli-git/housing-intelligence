@@ -2,10 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import { GROUPS, groupRows, rampFor } from "@/lib/groups";
 
-// The metric catalog as `GET /metrics` returned it on 2026-09-20. A metric added to
-// `config/metrics.yml` belongs here and in a group; until it is, it renders under
-// "Other measures" rather than disappearing.
+// The metric catalog as `GET /metrics` returned it on 2026-09-20, with Milestone 33's six
+// running costs added 2026-10-01. A metric added to `config/metrics.yml` belongs here and
+// in a group; until it is, it renders under "Other measures" rather than disappearing.
 const CATALOG = [
+  "acs_median_electricity",
+  "acs_median_gas",
+  "acs_median_home_insurance",
+  "acs_median_other_fuel",
+  "acs_median_water_sewer",
+  "acs_renters_paying_utilities",
   "acs_homeownership_rate",
   "acs_median_gross_rent",
   "acs_median_hh_income",

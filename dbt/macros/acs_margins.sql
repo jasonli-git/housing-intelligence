@@ -42,3 +42,28 @@
             end
     end
 {%- endmacro %}
+
+-- The median of a distribution the Census publishes only in brackets (Milestone 33), by
+-- linear interpolation within the bracket holding the middle household — the method the
+-- Census uses for its own medians. `prefix` names columns `<prefix>0`…`<prefix>n-1`, one
+-- count per bracket in order, and `bounds` their lower bounds: bracket i runs from
+-- bounds[i] to bounds[i+1], and the last is open-ended. A median falling in the open
+-- bracket cannot be interpolated and is NULL rather than its lower bound, which would
+-- read as a figure the survey does not give. NULL too where no household is counted.
+{% macro bracket_median(prefix, bounds) -%}
+    {%- set n = bounds | length -%}
+    {%- set total -%}({% for i in range(n) %}{{ prefix }}{{ i }}{% if not loop.last %} + {% endif %}{% endfor %}){%- endset -%}
+    case
+        when {{ total }} is null or {{ total }} = 0 then null
+    {%- for i in range(n) %}
+        {%- set before -%}(0.0{% for j in range(i) %} + {{ prefix }}{{ j }}{% endfor %}){%- endset %}
+        when {{ before }} + {{ prefix }}{{ i }} >= {{ total }} / 2.0 then
+            {% if i == n - 1 -%}
+            null
+            {%- else -%}
+            {{ bounds[i] }} + ({{ total }} / 2.0 - {{ before }}) / nullif({{ prefix }}{{ i }}, 0)
+                * ({{ bounds[i + 1] }} - {{ bounds[i] }})
+            {%- endif %}
+    {%- endfor %}
+    end
+{%- endmacro %}

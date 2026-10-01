@@ -123,11 +123,17 @@ export function rankReading(
  */
 export const SURVEY_METRICS = new Set([
   "acs_homeownership_rate",
+  "acs_median_electricity",
+  "acs_median_gas",
   "acs_median_gross_rent",
   "acs_median_hh_income",
+  "acs_median_home_insurance",
   "acs_median_home_value",
+  "acs_median_other_fuel",
+  "acs_median_water_sewer",
   "acs_population",
   "acs_renter_cost_burden",
+  "acs_renters_paying_utilities",
   "acs_vacancy_rate",
   "chas_owner_cost_burden",
   "chas_renter_cost_burden",
