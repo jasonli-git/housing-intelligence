@@ -29,8 +29,9 @@ hash but not the content hash — then `make publish`, deploy and `make check-li
 
 **Settled with the owner on 2026-09-30:** Zillow's and Realtor.com's terms, read by hand
 (Zillow is downloaded by hand and credited "Data Provided by Zillow Group", #272;
-Realtor.com is not usable without Move's permission). Still parked: whether to ask
-Freddie Mac about the mortgage rate. Zillow's six CSVs go into `data/manual/` when it
+Realtor.com is not usable without Move's permission), and Freddie Mac's, which allow the
+rate shown with credit and not redistributed — not asked further (owner, 2026-09-30).
+Zillow's six CSVs go into `data/manual/` when it
 next publishes (README, "Zillow is downloaded by hand").
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
@@ -419,17 +420,6 @@ first raised, not where it must be done.
       Milestone 32: if it says go, the question goes to the Zillow Group developer
       program with the commercial application. A yes means `manual = False` on
       `_ZillowAdapter`. **Scheduled: Milestone 32.**
-- [ ] **Ask Freddie Mac about the mortgage rate?** (M31, #269) Its PMMS page allows use
-      with attribution; its general terms forbid publishing or redistributing its data
-      without an agreement. The site shows the weekly and monthly rate, credited, and
-      leaves it out of the CSV downloads; its series is still in the site's public JSON,
-      which the pages are built from. Nothing public reconciles the two, so this is a question
-      only Freddie Mac can answer — a candidate for the owner's outreach, or leave it as
-      it stands.
-      FRED's series notes (read by the owner 2026-09-30) say "Reprinted with
-      permission" — Freddie Mac's permission to FRED, not to sites downstream — and give
-      a suggested citation, now shown as a notice. Still to read by hand: the PMMS page's
-      footer, and how freddiemac.com/terms defines "Data" (does it cover PMMS?).
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.
 

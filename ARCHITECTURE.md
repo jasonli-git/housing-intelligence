@@ -997,14 +997,15 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   terms, read by the owner on 2026-09-30, forbid displaying, downloading or collecting
   it, and any use grounding a language model, without Move's written permission
   (ROADMAP, source register). Zillow's terms were read the same day (#272).
-- **The mortgage rate's redistribution rests on Freddie Mac's permission** (#269).
-  Freddie Mac's general terms forbid redistributing its data without an agreement, while
-  its PMMS page allows use with attribution. The site shows the rate, credited, and
-  leaves it out of the CSV downloads. Its series is still in the site's public JSON
-  files (the national region's `metrics.json` and summary, `metrics.json`,
-  `revisions.json`), which the owner decided on 2026-09-30 count as part of showing it,
-  not as a download. Whether showing it needs more than attribution is a
-  question only Freddie Mac can answer.
+- **The mortgage rate is shown, never handed out** (#269). Freddie Mac's Terms and
+  Conditions (updated 2026-09-11), read by the owner on 2026-09-30, allow its content
+  displayed where a page says so, and the PMMS page says "may be used with proper
+  attribution"; they forbid redistributing "Data" without a licence and altering the
+  content. So the rate is shown with FRED's suggested citation and left out of every
+  downloadable file, while its series stays in the site's public JSON, which the owner
+  counts as part of showing it. Freddie Mac was not asked further: a national rate adds
+  little to a county's download. Its own website may not be fetched by script, so the
+  fallback to it is by hand.
 - **The printed footer is Chromium's alone** (#270). Safari and Firefox do not print
   `@page` margin boxes, so only the first printed page carries the terms there.
 
