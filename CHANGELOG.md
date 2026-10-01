@@ -45,9 +45,9 @@ All notable changes to the Housing Intelligence Platform. Format loosely follows
 
 - **Prompt-cache hits are counted.** Each generation records the prompt tokens Gemini
   or DeepSeek served from its cache, and `hip explain`'s cost summary shows them; they
-  are not yet priced (#274). Measured 2026-10-01: Gemini 3.7 Flash reported none, even
-  for the same prompt sent twice seconds apart, so reordering prompts would save
-  nothing today.
+  are not yet priced (#274). A probe on 2026-10-01 saw none, even for the same prompt
+  sent twice seconds apart; the regeneration the same day then saw 28,498, on the calls
+  that revise a refused reading, which resend the same prompt (#276).
 - **Two evaluation reports.** `reports/evaluation/readings-v2.md` sets the consumer
   reading from Gemini 3.7 Flash, Flash-Lite and DeepSeek side by side on five
   counties; `reports/evaluation/synthesis-pilot.md` is the grounded-synthesis pilot the
