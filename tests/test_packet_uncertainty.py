@@ -432,6 +432,21 @@ def test_a_survey_figure_without_its_margin_is_a_problem(packet: Packet) -> None
     assert [text for text, _ in problems] == ["24.2%", "$100,645"]
 
 
+def test_a_margin_rounded_from_its_printed_form_passes() -> None:
+    """Flash-Lite's consumer reading of Sussex, 2026-10-01: the packet prints the vacancy
+    change's margin, 7.47, as "± 7.5%", and the prompt lets a writer round a margin to a
+    whole number. "Give or take 8%" was refused, because 7.47 itself rounds to 7."""
+    from hip.packets.citations import states_margin
+
+    def gives(text: str, margin: float) -> bool:
+        return states_margin(text, 0, len(text), margin)
+
+    assert gives("The vacancy rate fell 44.4%, give or take 8%.", 7.470233)
+    assert gives("Rent rose 12%, give or take 3%.", 2.5)  # half up, not to even
+    assert gives("The share is 50%, give or take 3 points.", 0.025)
+    assert not gives("The vacancy rate fell 44.4%, give or take 9%.", 7.470233)
+
+
 def test_a_margin_must_be_the_one_for_that_quantity(packet: Packet) -> None:
     """The change's margin does not vouch for the value beside it."""
     problems = _problems("Household income rose 24.2% (± 4.0%) to $100,645.", packet)

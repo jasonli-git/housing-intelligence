@@ -3,6 +3,29 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.26.1] — 2026-10-01
+
+### Fixed
+
+- **A margin rounded to a whole number from the way the packet prints it is accepted.**
+  The packet prints 7.47 as "± 7.5%", and the prompt lets a reading round that to "give
+  or take 8%"; the margin check rounded 7.47 to 7 and refused it. It also rounds half
+  up, as people do, so "± 2.5" may be "give or take 3" (ARCHITECTURE #273). Stored
+  readings are unaffected: they had all passed.
+
+### Added
+
+- **Prompt-cache hits are counted.** Each generation records the prompt tokens Gemini
+  or DeepSeek served from its cache, and `hip explain`'s cost summary shows them; they
+  are not yet priced (#274). Measured 2026-10-01: Gemini 3.7 Flash reported none, even
+  for the same prompt sent twice seconds apart, so reordering prompts would save
+  nothing today.
+- **Two evaluation reports.** `reports/evaluation/readings-v2.md` sets the consumer
+  reading from Gemini 3.7 Flash, Flash-Lite and DeepSeek side by side on five
+  counties; `reports/evaluation/synthesis-pilot.md` is the grounded-synthesis pilot the
+  Director Note of 2026-09-29 asked for: four prompt rounds on five counties, scored.
+  Neither changes what is published.
+
 ## [0.26.0] — 2026-09-30
 
 Milestone 31, the licence and provenance pass.

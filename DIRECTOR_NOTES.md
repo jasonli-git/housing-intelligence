@@ -341,3 +341,28 @@ unsupported claims about causes or the wider economy, and add something the exis
 “What’s changing?” headline does not already say. Evaluate usefulness, readability,
 redundancy, and factual support with human review before changing generation or
 regenerating any readings.
+
+---
+
+## Observation: Flex capacity limits the batch-pricing saving
+
+**Status:** Feedback
+**Recorded:** 2026-10-01
+
+Milestone 30 put Gemini on its Flex tier, which bills at half price. When Flex has no
+capacity, the call goes to the standard tier at full price. In the last two
+regenerations most Gemini 3.7 Flash calls got no Flex capacity
+(`logs/regenerate-now.log`):
+
+| Run | Gemini 3.7 Flash calls | Flex | Standard | Run cost |
+|---|---|---|---|---|
+| 2026-09-28 | 42 | 15 | 27 | $0.22 |
+| 2026-09-30 | 23 | 15 | 8 | $0.07 |
+
+So far the saving is roughly a quarter to a third of the bill, not half. At 21 counties
+a full run costs under 25¢, so this doesn't matter yet. It becomes a real question at
+full municipal coverage (about $42 a refresh, Milestone 19's estimate). At that point the
+options would include retrying Flex later instead of falling back, or Gemini's Batch
+API. Nothing has been decided.
+
+Do not implement yet.

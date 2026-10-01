@@ -79,6 +79,7 @@ class Trial:
     words: int = 0
     seconds: float = 0.0
     prompt_tokens: int = 0
+    cached_tokens: int = 0
     output_tokens: int = 0
     tier: str | None = None
     # Summed over every attempt, revisions included.
@@ -190,6 +191,7 @@ def trial(
         "model_label": evaluation.model(model_id).label,
         "seconds": time.perf_counter() - started,
         "prompt_tokens": sum(u.prompt_tokens for u in spent),
+        "cached_tokens": sum(u.cached_tokens for u in spent),
         "output_tokens": sum(u.generation_tokens for u in spent),
         "tier": usage.tier,
         "usd": sum(billed) if billed else None,
@@ -312,7 +314,7 @@ def render(
         f"# Readings side by side — {name}",
         "",
         f"Generated {on.isoformat()} by `hip eval readings`. Each model was given the "
-        "prompt, packet (1.3, with margins and rank ranges), service tier and gates "
+        "prompt, packet (1.4, with margins and rank ranges), service tier and gates "
         "`hip explain` would give it, for "
         f"{len(regions)} counties: {', '.join(label for _, label in regions)}. Nothing "
         "was stored; a reading marked *refused* is shown with the rule it broke. "
@@ -335,7 +337,7 @@ def render(
         "",
         "Cost is what each model's generations here would bill, at the tier the "
         "provider says served them and, for DeepSeek, the hour they ran — an upper "
-        "bound, since prompt-cache discounts are not counted. The local model is not "
+        "bound, since prompt-cache discounts are not priced. The local model is not "
         "billed per token. Seconds are wall-clock, network included.",
         "",
     ]

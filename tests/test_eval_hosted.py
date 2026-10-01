@@ -2824,3 +2824,32 @@ def test_the_repo_asks_gemini_for_flex_and_prices_deepseek_by_the_clock() -> Non
     assert (gemini.generation_tier, gemini.tier_rates) == ("flex", {"flex": 0.5})
     assert deepseek.generation_tier is None
     assert deepseek.off_peak is not None and deepseek.off_peak.rate == 0.5
+
+
+# --- prompt-cache hits, counted (2026-10-01) -------------------------------------------
+
+
+def test_gemini_cache_hits_are_counted(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Counted so the implicit cache can be measured before prompts are reordered to
+    hit it; a response that reports none counts 0."""
+    body = _gemini_answer()
+    body["usageMetadata"] = {**body["usageMetadata"], "cachedContentTokenCount": 8}  # type: ignore[dict-item]
+    hit = _generate_as(
+        _gemini(monkeypatch), _at("gemini", "default"), _answering(body), monkeypatch
+    )
+    miss = _generate_as(
+        _gemini(monkeypatch),
+        _at("gemini", "default"),
+        _answering(_gemini_answer()),
+        monkeypatch,
+    )
+    assert (hit.telemetry.cached_tokens, miss.telemetry.cached_tokens) == (8, 0)
+
+
+def test_deepseek_cache_hits_are_counted(monkeypatch: pytest.MonkeyPatch) -> None:
+    body = _openai_body("pinned-model-0731")
+    body["usage"] = {**body["usage"], "prompt_cache_hit_tokens": 64}  # type: ignore[dict-item]
+    generation = _generate_as(
+        _deepseek(monkeypatch), _at("deepseek", "default"), _answering(body), monkeypatch
+    )
+    assert generation.telemetry.cached_tokens == 64

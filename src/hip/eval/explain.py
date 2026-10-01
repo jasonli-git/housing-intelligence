@@ -183,6 +183,7 @@ def usage_of(
     *,
     tier: str | None = None,
     probe: bool = False,
+    cached_tokens: int = 0,
 ) -> Usage:
     """What one call to `model_id` cost, priced now at the tier it was served at."""
     usd, off_peak = generation_usd(
@@ -201,6 +202,7 @@ def usage_of(
         usd=usd,
         off_peak=off_peak,
         probe=probe,
+        cached_tokens=cached_tokens,
     )
 
 
@@ -212,6 +214,7 @@ def _usage(evaluation: EvaluationConfig, model_id: str, generation: Generation) 
         telemetry.prompt_tokens,
         telemetry.generation_tokens,
         tier=telemetry.service_tier,
+        cached_tokens=telemetry.cached_tokens,
     )
 
 

@@ -417,6 +417,15 @@ def _forms(
         # A share's margin in points: 0.0231 is "2.3 points", and to two figures "2.3".
         if abs(value) <= 1:
             forms.setdefault(_significant(value * 100), "significant")
+        # A margin rounded to a whole number from the way the packet prints it, half up
+        # as people round: 7.47 is printed "± 7.5%", so "give or take 8%", and "± 2.5"
+        # is "give or take 3" where Python's `round` gives 2. Flash-Lite's reading of
+        # Sussex was refused over the first on 2026-10-01; the prompt allows both.
+        printed = [round(value, 1)]
+        if abs(value) <= 1:
+            printed.append(round(value * 100, 1))
+        for number in printed:
+            forms.setdefault(float(int(abs(number) + 0.5)), "rounded")
     return tuple(_Form(form, name) for form, name in forms.items())
 
 
