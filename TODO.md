@@ -22,11 +22,11 @@ Milestone 32 is next and not started, at the owner's direction.
 On `experiment/consumer-models-and-synthesis` (0.26.1): a margin-check fix (#273),
 prompt-cache hits counted (#274), the Flex Director Note, and two reports —
 `reports/evaluation/readings-v2.md` (consumer reading, three models, five counties)
-and `reports/evaluation/synthesis-pilot.md` (two rounds). Nothing published changes.
+and `reports/evaluation/synthesis-pilot.md` (three rounds, scored). Nothing published
+changes.
 
-**Waiting on the owner:** the pilot's review checklist and whether to run a third
-round, and whether readings should go stale only when the figures they cite change.
-Both are under Parked.
+**Waiting on the owner:** whether to adopt the round-3 synthesis, refine it, or stop.
+The staleness question stays parked at the owner's direction. Both are under Parked.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -407,11 +407,15 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
-- [ ] **Grounded synthesis: a third round, or stop.** (Director Note 2026-09-29) Two
-      rounds on five counties, `reports/evaluation/synthesis-pilot.md`: the observation
-      sentence finds a distinctive, checkable pattern; the interpretation sentence is
-      where every unsupported claim sits. A third round would drop the interpretation
-      and keep to housing measures. Waiting for the owner's review of the checklist.
+- [ ] **Grounded synthesis: adopt, refine, or stop.** (Director Note 2026-09-29) Three
+      rounds on five counties, scored in `reports/evaluation/synthesis-pilot.md` (by
+      Claude, at the owner's request). Round 3 — three fixed sentences, housing measures
+      only, no interpretation — is the first where every claim is supported (5 of 5)
+      and every note useful and new. Left: readability. Ranks of *changes* read as
+      nonsense to a resident ("near the bottom for this change"), a sale price beside
+      the page's typical home value reads as a contradiction, and two notes ignored "do
+      not open with a span of years". All three are prompt fixes. Whether it is
+      published is the owner's decision.
 - [ ] **Readings stale only when the figures they cite change?** Zillow's monthly
       release moves every packet's content hash, so every reading is rewritten monthly
       whether or not it quotes Zillow. The stored binding names each figure a reading
@@ -419,6 +423,15 @@ first raised, not where it must be done.
       rose sharply" that cites no figure goes out of date unnoticed. Matters at
       municipal scale (about $42 a refresh, Milestone 19's estimate), not at 21
       counties. Owner's decision; it would amend Milestone 13's staleness rule.
+
+      **Measured 2026-10-01:** 34 of the 42 published readings quote a figure that
+      changes monthly (Zillow's home value in 32), so the rule would spare at most 8
+      readings a Zillow month — less once the risk is covered. Covering it: count as
+      cited every measure a reading names in words as well as in figures, and keep a
+      reading only if its stored text still binds to the new packet and passes every
+      gate. That shrinks the risk to wording no measure name appears in, and shrinks
+      the saving further. **Kept parked by the owner (2026-10-01)**: the saving is
+      small while nearly every reading quotes a monthly figure.
 
 - [ ] **Zillow's files are downloaded by hand, as a standing arrangement.** (M31, #272)
       Its Terms of Use forbid automated fetching, and its pages neither exempt a monthly

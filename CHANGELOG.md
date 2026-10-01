@@ -23,7 +23,8 @@ All notable changes to the Housing Intelligence Platform. Format loosely follows
 - **Two evaluation reports.** `reports/evaluation/readings-v2.md` sets the consumer
   reading from Gemini 3.7 Flash, Flash-Lite and DeepSeek side by side on five
   counties; `reports/evaluation/synthesis-pilot.md` is the grounded-synthesis pilot the
-  Director Note of 2026-09-29 asked for. Neither changes what is published.
+  Director Note of 2026-09-29 asked for: three prompt rounds on five counties, scored.
+  Neither changes what is published.
 
 ## [0.26.0] — 2026-09-30
 
