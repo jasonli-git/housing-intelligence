@@ -10,8 +10,9 @@ reports what a run cost rather than what it would have cost at list price:
 - **Off-peak hours.** DeepSeek bills half outside its peak windows, decided by the time
   the call was made.
 
-Still an upper bound: neither provider's prompt-cache discount is counted, since a
-cache hit's share is not reported the same way by both, and a local model is not billed
+Still an upper bound: neither provider's prompt-cache discount is priced. Each reports
+its cache hits differently; since 2026-10-01 both are counted (`Usage.cached_tokens`) so
+the discount can be measured before it is priced. A local model is not billed
 per token at all — its cost is `None`, never 0.0, as in the evaluation's cost column.
 """
 
@@ -35,6 +36,9 @@ class Usage:
     off_peak: bool = False
     # A reachability probe before the run (`hip explain`'s model check), not a reading.
     probe: bool = False
+    # Of `prompt_tokens`, those the provider served from its cache. Counted, not yet
+    # priced: `usd` stays the upper bound until the discount per provider is configured.
+    cached_tokens: int = 0
 
 
 def generation_usd(

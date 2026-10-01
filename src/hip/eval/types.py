@@ -94,6 +94,12 @@ class Telemetry(_Strict):
     # "standard" or "flex" — which is what the call bills at (Milestone 30). Null where a
     # provider reports none, which is every provider but Gemini.
     service_tier: str | None = None
+    # Prompt tokens the provider says it served from its cache, billed at a fraction of
+    # the input rate: Gemini's `cachedContentTokenCount`, DeepSeek's
+    # `prompt_cache_hit_tokens`. Recorded since 2026-10-01 to measure whether the
+    # implicit caches are hit at all before reordering prompts to hit them; 0 where none
+    # is reported, which is also what a miss reports.
+    cached_tokens: int = 0
 
 
 class Generation(_Strict):

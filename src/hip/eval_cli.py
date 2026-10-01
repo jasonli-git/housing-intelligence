@@ -689,7 +689,7 @@ def _cost_lines(run: _Run, evaluation: EvaluationConfig) -> list[str]:
     )
     lines = [
         f"cost: ${sum(billed):.4f} for {calls} — an upper bound, since prompt-cache "
-        f"discounts are not counted"
+        f"discounts are counted but not priced"
     ]
     for model_id, usages in by_model.items():
         cohort = evaluation.cohort_for(model_id)
@@ -711,6 +711,7 @@ def _cost_lines(run: _Run, evaluation: EvaluationConfig) -> list[str]:
         lines.append(
             f"  {model_id:<24}{len(usages):>3} call(s) "
             f"{sum(u.prompt_tokens for u in usages):>9,} in "
+            f"({sum(u.cached_tokens for u in usages):,} cached) "
             f"{sum(u.generation_tokens for u in usages):>8,} out  {price:>9}  {how}"
         )
     return lines

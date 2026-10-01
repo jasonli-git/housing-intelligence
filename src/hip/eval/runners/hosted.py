@@ -416,6 +416,7 @@ class HostedRunner:
         truncated = truncated or (finish in _CUTOFF_REASONS and not answer.strip())
         prompt_tokens, generation_tokens, reasoning_tokens = self._usage(data)
         served_model, fingerprint = self._served(data)
+        cached_tokens = self._cached(data)
         service_tier = (
             None
             if self._dialect.openai_compatible
@@ -446,6 +447,7 @@ class HostedRunner:
             served_model=served_model,
             system_fingerprint=fingerprint,
             service_tier=str(service_tier) if service_tier else None,
+            cached_tokens=cached_tokens,
         )
 
         substitution = self._substitution(model, served_model)
@@ -652,6 +654,22 @@ class HostedRunner:
             int(usage.get("candidatesTokenCount") or 0) + thoughts,
             thoughts,
         )
+
+    def _cached(self, data: dict[str, Any]) -> int:
+        """Prompt tokens served from the provider's cache, as its response reports them.
+
+        DeepSeek names them `prompt_cache_hit_tokens`; other OpenAI-shaped providers nest
+        them under `prompt_tokens_details.cached_tokens`; Gemini reports
+        `cachedContentTokenCount`, for implicit caching as for an explicit cache.
+        """
+        if self._dialect.openai_compatible:
+            usage = data.get("usage") or {}
+            details = usage.get("prompt_tokens_details") or {}
+            return int(
+                usage.get("prompt_cache_hit_tokens") or details.get("cached_tokens") or 0
+            )
+        usage = data.get("usageMetadata") or {}
+        return int(usage.get("cachedContentTokenCount") or 0)
 
     def _served(self, data: dict[str, Any]) -> tuple[str | None, str | None]:
         """The model the provider says answered, and its backend fingerprint if sent.
