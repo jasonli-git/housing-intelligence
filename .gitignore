@@ -8,6 +8,8 @@ data/
 # machine state, not a document anyone reads. The completeness runs are the third
 # exception and the one that is not rebuildable: each records the warehouse as it stood
 # that day, and the next run is compared with it (ROADMAP, the completeness check).
+# The commercial viability study (Milestone 32) is the fourth: a document read for a
+# decision, not output any command rebuilds.
 reports/**
 !reports/regions/
 !reports/regions/5y/
