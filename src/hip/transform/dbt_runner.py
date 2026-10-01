@@ -40,6 +40,7 @@ KEYED_MODELS = (
     "stg_bls",
     "stg_hud_income_limits",
     "stg_hud_fmr",
+    "stg_hud_safmr",
     "stg_hud_chas",
     "stg_nj_modiv",
     "stg_nj_sr1a",

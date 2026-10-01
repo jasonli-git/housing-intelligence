@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
+import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
@@ -189,7 +190,7 @@ export default async function RegionPage({
     );
   }
 
-  const [series, cost, affordability] = await Promise.all([
+  const [series, cost, affordability, incomeLimits] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -201,7 +202,14 @@ export default async function RegionPage({
     region.level === "county"
       ? affordData().then((data) => data ? affordabilityForCounty(data, regionId) : null)
       : Promise.resolve(null),
+    api.incomeLimits(regionId),
   ]);
+  // A town or ZIP reads HUD's county Fair Market Rents from its county's packet: HUD sets
+  // them for the county's area, and only a county page carries them (Milestone 35).
+  const countyLevels =
+    incomeLimits && incomeLimits.county_id !== regionId
+      ? ((await api.packet(incomeLimits.county_id, WINDOW))?.levels ?? [])
+      : [];
   const trends = series.filter((s) => s.observations.length >= 2);
   const indexedInputs = trends.map(({ metricId, short, observations }) => ({
     metricId,
@@ -405,6 +413,14 @@ export default async function RegionPage({
           </section>
         )
       )}
+
+      <ForYourHousehold
+        regionName={name}
+        limits={incomeLimits}
+        levels={packet.levels}
+        countyLevels={countyLevels}
+        margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))}
+      />
 
       {/* Keep the interpretation visible even when no cost card can be calculated. */}
       {!cost && <ConsumerReading reading={consumer} section="before_moving" />}

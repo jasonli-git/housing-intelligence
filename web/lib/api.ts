@@ -16,6 +16,8 @@
  * href, not a fetcher shipped to the client.
  */
 
+import type { IncomeLimits } from "./household";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export type Region = {
@@ -479,6 +481,11 @@ export const api = {
   /** How current each source is (Milestone 27). */
   freshness: () => tryGet<FreshnessReport>(`/freshness`),
   revisions: () => tryGet<RevisionReport>(`/revisions`),
+  /**
+   * HUD's income limits for the region's county, every band and household size
+   * (Milestone 35). Null for the state, and for a ZIP the crosswalk does not place.
+   */
+  incomeLimits: (id: number) => tryGet<IncomeLimits>(`/regions/${id}/income-limits`),
   /** The metric catalog, for the New Jersey page's measure picker. */
   metrics: () => tryGet<MetricEntry[]>(`/metrics`),
 };

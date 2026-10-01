@@ -105,7 +105,31 @@ SAME_THING: tuple[frozenset[str], ...] = (
             "modiv_median_assessed_value",
         }
     ),
-    frozenset({"zori_all", "acs_median_gross_rent", "hud_fmr_2br"}),
+    # Rent, every source and size: Milestone 34's rents by bedrooms and Milestone 35's
+    # Fair Market Rents by size and by ZIP are the same measure cut finer.
+    frozenset(
+        {
+            "zori_all",
+            "acs_median_gross_rent",
+            "acs_median_rent_studio",
+            "acs_median_rent_1br",
+            "acs_median_rent_2br",
+            "acs_median_rent_3br",
+            "acs_median_rent_4br",
+            "acs_rent_lower_quartile",
+            "acs_rent_upper_quartile",
+            "hud_fmr_0br",
+            "hud_fmr_1br",
+            "hud_fmr_2br",
+            "hud_fmr_3br",
+            "hud_fmr_4br",
+            "hud_safmr_0br",
+            "hud_safmr_1br",
+            "hud_safmr_2br",
+            "hud_safmr_3br",
+            "hud_safmr_4br",
+        }
+    ),
     frozenset({"acs_population", "pep_population"}),
     frozenset({"acs_renter_cost_burden", "chas_renter_cost_burden"}),
     frozenset({"acs_median_hh_income", "hud_area_median_income"}),
@@ -115,7 +139,26 @@ SAME_THING: tuple[frozenset[str], ...] = (
 # second round, free to range, led with unemployment and population and then guessed at
 # what they meant for businesses and community life.
 NOT_HOUSING: frozenset[str] = frozenset(
-    {"acs_population", "pep_population", "unemployment_rate", "net_migration_returns"}
+    {
+        "acs_population",
+        "pep_population",
+        "unemployment_rate",
+        "net_migration_returns",
+        # Milestone 34's people and households: who lives here and how they get to
+        # work, context for the homes rather than the homes.
+        "acs_avg_household_size",
+        "acs_living_alone_share",
+        "acs_married_couple_share",
+        "acs_with_children_share",
+        "acs_disability_share",
+        "acs_no_vehicle_share",
+        "acs_commute_transit_share",
+        "acs_work_from_home_share",
+        "acs_commute_drove_alone_share",
+        "acs_commute_walked_share",
+        "acs_mean_commute_minutes",
+        "acs_commute_60plus_share",
+    }
 )
 
 _DATE_OPENING = re.compile(

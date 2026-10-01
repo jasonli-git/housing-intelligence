@@ -3,10 +3,20 @@ import { describe, expect, it } from "vitest";
 import { GROUPS, groupRows, rampFor } from "@/lib/groups";
 
 // The metric catalog as `GET /metrics` returned it on 2026-09-20, with Milestone 33's six
-// running costs and Milestone 34's fifty ACS figures added 2026-10-01. A metric added to
+// running costs, Milestone 34's fifty ACS figures and Milestone 35's nine Fair Market
+// Rents added 2026-10-01. A metric added to
 // `config/metrics.yml` belongs here and in a group; until it is, it renders under "Other
 // measures" rather than disappearing.
 const CATALOG = [
+  "hud_fmr_0br",
+  "hud_fmr_1br",
+  "hud_fmr_3br",
+  "hud_fmr_4br",
+  "hud_safmr_0br",
+  "hud_safmr_1br",
+  "hud_safmr_2br",
+  "hud_safmr_3br",
+  "hud_safmr_4br",
   "acs_median_rent_studio",
   "acs_median_rent_1br",
   "acs_median_rent_2br",

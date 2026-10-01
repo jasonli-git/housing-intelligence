@@ -14,16 +14,16 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 34 built, awaiting review (2026-10-01)
+## Now — Milestone 35 built, awaiting review (2026-10-01)
 
-On `milestone/m34-acs-depth-zcta` (0.30.0): 50 ACS figures at county, municipality and
-ZCTA, and every ACS figure fetched for New Jersey's 598 ZCTAs (ARCHITECTURE #282, #283).
+On `milestone/m35-household-sized-answers` (0.31.0): the income check and the rent
+comparison by bedrooms, on every page (ARCHITECTURE #285, #286). Migration 0022.
 
-**After the merge:** `hip explain` regenerates the 21 readings, whose packets gained
-figures (`--dry-run` says all 21 are stale; about $0.17, since the payload doubled);
-then `make publish`, deploy and `make check-live`.
+**After the merge:** `make migrate`; the county packets gained four Fair Market Rents, so
+`hip explain` regenerates the 21 readings (about $0.19); then `make publish`, deploy and
+`make check-live`.
 
-Milestone 35, household-sized answers, is next.
+Milestone 36, how homes change hands, is next.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 

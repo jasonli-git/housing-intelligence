@@ -90,6 +90,7 @@ from hip.warehouse.load import (
     ReleaseProvenance,
     SourceRecord,
     load_facts,
+    load_income_limits,
     load_region_identifiers,
     metric_records,
     source_record,
@@ -1042,12 +1043,16 @@ def load(
     except ReleaseAttributionError as exc:
         typer.secho(str(exc), fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1) from exc
+    # HUD's income limits in full, for the income check (Milestone 35). After the facts,
+    # whose load records the releases each line cites.
+    income_lines = load_income_limits(get_engine(), settings.duckdb_path)
     typer.echo("")
     for metric_id, count in sorted(facts.by_metric.items()):
         typer.echo(f"{metric_id:<14} {count:>9,} observations")
     typer.secho(
         f"{facts.observations:,} observations loaded; "
         f"{facts.withdrawn:,} withdrawn; "
+        f"{income_lines:,} income limit lines; "
         f"{facts.rejects} unresolved geographies recorded",
         fg=typer.colors.GREEN,
     )

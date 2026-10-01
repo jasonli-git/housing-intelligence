@@ -47,9 +47,11 @@ layer only explains metrics that were already computed.
 > their own figures. Milestone 34 (2026-10-01) fetches the Census survey for every ZIP
 > code's ZCTA and adds 50 figures — rents by size, owner costs, the age, type and
 > condition of the homes, vacancy, heating fuel, households and commuting — each with
-> its margin.
+> its margin. Milestone 35 (2026-10-01) sizes answers to a reader's household: where
+> their income sits against HUD's lines for their household size, and every rent figure
+> for the number of bedrooms they need, each labelled for what it measures.
 >
-> **Next.** Milestone 35: household-sized answers. See
+> **Next.** Milestone 36: how homes change hands. See
 > [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
@@ -286,6 +288,11 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   rule, a typical range, a rule of thumb or the reader's own; a total missing a part says
   *partial estimate*. A reader can enter their own figures, and their personal ones follow
   them from town to town in their browser.
+- **For your household** (M35, built) — on every county, town and ZIP page, a reader's
+  household size and income set against HUD's 30%, 50% and 80% lines for the county,
+  said plainly and never as eligibility; and rents by bedroom count side by side — what
+  tenants pay, HUD's Fair Market Rent (ZIP by ZIP where HUD sets it), Zillow's asking
+  rent and the reader's own. Remembered in the reader's browser only.
 - **The Census in depth, and for every ZIP** (M34, built) — 50 more survey figures at
   county, town and ZCTA, each with its margin: rents by bedrooms and their spread,
   owner costs with and without a mortgage, the severely burdened, the type, age, size

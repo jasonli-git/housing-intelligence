@@ -1941,3 +1941,50 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
     color: #000000 !important;
   }
 }
+
+/* ------------------------------------- Milestone 35, for your household --- */
+
+/* Two panels in the cost card's idiom: the income check and the rents by size. Side by
+   side where there is room, stacked on a phone. */
+.household { display: grid; gap: 14px; }
+.household .section-head { margin-bottom: 0; }
+.household { grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.household .section-head { grid-column: 1 / -1; }
+.household-panel {
+  display: grid; gap: 0.8rem; align-content: start; padding: 1.1rem 1.25rem;
+  border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border);
+  min-width: 0;
+}
+.household-title {
+  margin: 0; font: 500 var(--text-label)/1.4 var(--font-mono); letter-spacing: var(--track-label);
+  text-transform: uppercase; color: var(--text-muted);
+}
+.household-inputs { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: end; }
+.household-inputs input {
+  width: 9.5rem; padding: 0.35rem 0.5rem; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface-card); color: var(--text-primary); font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.household-inputs .cost-view-tabs { flex-wrap: wrap; }
+.household-position {
+  margin: 0; font-size: var(--text-body); line-height: 1.5; color: var(--text-primary);
+  text-wrap: pretty;
+}
+.household-lines { width: 100%; border-collapse: collapse; font-size: var(--text-small); }
+.household-lines caption {
+  text-align: left; padding-bottom: 0.4rem; font: var(--text-label)/1.4 var(--font-mono);
+  color: var(--text-muted);
+}
+.household-lines th, .household-lines td {
+  padding: 0.4rem 0; border-top: 1px solid var(--grid); text-align: left;
+  color: var(--text-secondary); font-weight: 400;
+}
+.household-lines th { color: var(--text-muted); font-size: var(--text-label); }
+.household-lines .num { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.household-note { margin: 0; font-size: var(--text-small); line-height: 1.5; color: var(--text-muted); }
+.household-kind {
+  display: block; font: 500 var(--text-label)/1.4 var(--font-mono); letter-spacing: var(--track-label);
+  text-transform: uppercase; color: var(--text-muted);
+}
+.household-rents [data-kind="reader"] dd { color: var(--series-3); font-weight: 600; }
+.household-rents dt { min-width: 0; }

@@ -1117,3 +1117,123 @@ metrics:
       population, ACS 5-year table B18101.
     source_id: census_acs
     record_type: survey
+
+  # Milestone 35: Fair Market Rents for every size, and HUD's ZIP-level ones, for the
+  # rent comparison. Shown as levels, never ranked: the county ones repeat across
+  # counties sharing an FMR area, and the ZIP ones exist only where HUD sets them
+  # (ARCHITECTURE #286).
+
+  hud_fmr_0br:
+    label: Fair Market Rent, studio
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      HUD's gross rent standard for a studio unit in the county's FMR area, set per
+      federal fiscal year from 1 October. Counties sharing an FMR area share a figure.
+    source_id: hud_fmr
+    record_type: determination
+    ranked: false
+
+  hud_fmr_1br:
+    label: Fair Market Rent, one-bedroom
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      HUD's gross rent standard for a one-bedroom unit in the county's FMR area, set per
+      federal fiscal year from 1 October. Counties sharing an FMR area share a figure.
+    source_id: hud_fmr
+    record_type: determination
+    ranked: false
+
+  hud_fmr_3br:
+    label: Fair Market Rent, three-bedroom
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      HUD's gross rent standard for a three-bedroom unit in the county's FMR area, set
+      per federal fiscal year from 1 October. Counties sharing an FMR area share a
+      figure.
+    source_id: hud_fmr
+    record_type: determination
+    ranked: false
+
+  hud_fmr_4br:
+    label: Fair Market Rent, four-bedroom
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      HUD's gross rent standard for a four-bedroom unit in the county's FMR area, set
+      per federal fiscal year from 1 October. Counties sharing an FMR area share a
+      figure.
+    source_id: hud_fmr
+    record_type: determination
+    ranked: false
+
+  hud_safmr_0br:
+    label: Small Area Fair Market Rent, studio
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      HUD's gross rent standard for a studio unit in this ZIP code, set per federal
+      fiscal year from 1 October where HUD prices its metro area ZIP by ZIP: nine New
+      Jersey counties in FY2026.
+    source_id: hud_fmr
+    record_type: determination
+    ranked: false
+
+  hud_safmr_1br:
+    label: Small Area Fair Market Rent, one-bedroom
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      HUD's gross rent standard for a one-bedroom unit in this ZIP code, set per federal
+      fiscal year from 1 October where HUD prices its metro area ZIP by ZIP: nine New
+      Jersey counties in FY2026.
+    source_id: hud_fmr
+    record_type: determination
+    ranked: false
+
+  hud_safmr_2br:
+    label: Small Area Fair Market Rent, two-bedroom
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      HUD's gross rent standard for a two-bedroom unit in this ZIP code, set per federal
+      fiscal year from 1 October where HUD prices its metro area ZIP by ZIP: nine New
+      Jersey counties in FY2026.
+    source_id: hud_fmr
+    record_type: determination
+    ranked: false
+
+  hud_safmr_3br:
+    label: Small Area Fair Market Rent, three-bedroom
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      HUD's gross rent standard for a three-bedroom unit in this ZIP code, set per
+      federal fiscal year from 1 October where HUD prices its metro area ZIP by ZIP:
+      nine New Jersey counties in FY2026.
+    source_id: hud_fmr
+    record_type: determination
+    ranked: false
+
+  hud_safmr_4br:
+    label: Small Area Fair Market Rent, four-bedroom
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      HUD's gross rent standard for a four-bedroom unit in this ZIP code, set per
+      federal fiscal year from 1 October where HUD prices its metro area ZIP by ZIP:
+      nine New Jersey counties in FY2026.
+    source_id: hud_fmr
+    record_type: determination
+    ranked: false
