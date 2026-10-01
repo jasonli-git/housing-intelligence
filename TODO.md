@@ -406,12 +406,6 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
-- [ ] **Read Realtor.com's Terms of Use and Asset Sharing Guide, if inventory is added.**
-      (M31) Its data library page, read by the owner on 2026-09-30, gives the attribution
-      ("Realtor.com® Economic Research", with a link to the data library) and nothing on
-      commercial use, redistribution or automated download (ROADMAP source register).
-      Nothing on the site depends on it; read the rest when a milestone schedules
-      inventory data.
 - [ ] **Zillow's files are downloaded by hand, as a standing arrangement.** (M31, #272)
       Its Terms of Use forbid automated fetching, and its pages neither exempt a monthly
       scripted download of the public CSVs nor offer a channel to ask (2026-09-30: the

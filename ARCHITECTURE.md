@@ -993,9 +993,10 @@ configured. (An earlier version said one was.)
 
 Accepted for Version 1, written down so they are not rediscovered as bugs.
 
-- **Realtor.com's terms are unread** (#269). Its research pages refuse automated readers;
-  it is not a source, only a candidate in the register. Zillow's, which refused too,
-  were read by the owner on 2026-09-30 (#272).
+- **No source carries listing inventory.** Realtor.com's research data does, and its
+  terms, read by the owner on 2026-09-30, forbid displaying, downloading or collecting
+  it, and any use grounding a language model, without Move's written permission
+  (ROADMAP, source register). Zillow's terms were read the same day (#272).
 - **The mortgage rate's redistribution rests on Freddie Mac's permission** (#269).
   Freddie Mac's general terms forbid redistributing its data without an agreement, while
   its PMMS page allows use with attribution. The site shows the rate, credited, and
