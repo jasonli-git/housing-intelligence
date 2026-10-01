@@ -206,3 +206,11 @@ def test_new_ids_are_not_a_change(tmp_path: Path) -> None:
 def test_an_unreadable_manifest_is_not_evidence(tmp_path: Path) -> None:
     (tmp_path / "manifest.json").write_text("{ not json")
     _check_region_identity(tmp_path, {"8": "34003"})
+
+
+def test_a_regions_csv_is_named_for_the_region() -> None:
+    """The artifacts are on another origin, where a browser ignores a link's
+    `download` name, so the saved file keeps the name its path gives it (Milestone 31)."""
+    paths = [out for _, out in _plan([12], [], {"12": "34035"})]
+    assert "regions/12/download/34035-5y.csv" in paths
+    assert "regions/7/download/region-7-5y.csv" in [out for _, out in _plan([7], [])]

@@ -22,7 +22,8 @@ notices the sources' terms require on every page, a CSV of each region's figures
 carries all three, a print footer, and a written acquisition policy. CHANGELOG 0.26.0
 has what shipped and ARCHITECTURE #269–#271 the decisions.
 
-**After the merge:** `make migrate` (0020 fills the new columns from config), then
+**After the merge:** `make migrate` (0020 adds the columns), `hip sync-registry` (fills them
+from config), then
 `hip explain --dry-run` to re-cite the readings for free — packet 1.4 moves the packet
 hash but not the content hash — then `make publish`, deploy and `make check-live`.
 

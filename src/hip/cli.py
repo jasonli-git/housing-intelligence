@@ -1059,6 +1059,20 @@ def load(
     typer.echo(f"discoveries   {discovered:>8,} sources' release status recorded")
 
 
+@app.command("sync-registry")
+def sync_registry_command() -> None:
+    """Write every source's licence, terms and notices and every metric's kind and
+    licence from the config to the warehouse, without reloading anything.
+
+    `hip analyze` does the same on every refresh; this is for a change to
+    `config/sources.yml` or `config/metrics.yml` alone, and for the first run after
+    migration 0020, which adds the columns but leaves them empty (Milestone 31).
+    """
+    with get_engine().begin() as conn:
+        sync_registry(conn, load_sources(), load_metrics())
+    typer.secho("registry synced from config", fg=typer.colors.GREEN)
+
+
 @app.command()
 def analyze() -> None:
     """Rebuild derived change metrics, affordability ratios, and rankings."""

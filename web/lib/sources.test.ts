@@ -55,6 +55,12 @@ describe("isRestricted", () => {
     expect(isRestricted({ license: NC })).toBe(true);
     expect(isRestricted({ license: PD })).toBe(false);
   });
+
+  it("goes by the licence class where a source has one, as the CSV does", () => {
+    expect(isRestricted({ license: PD, licence_class: "non_commercial" })).toBe(true);
+    expect(isRestricted({ license: NC, licence_class: "public_domain" })).toBe(false);
+    expect(isRestricted({ license: PD, licence_class: "display_only" })).toBe(false);
+  });
 });
 
 describe("licenceLine", () => {

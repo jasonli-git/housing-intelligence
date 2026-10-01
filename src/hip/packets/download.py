@@ -24,28 +24,22 @@ from __future__ import annotations
 import csv
 import io
 
+from hip.config import RECORD_TYPE_LABELS
 from hip.packets.report import format_metric
 from hip.packets.schema import Packet, PacketLevel, PacketMetric, PacketSource
 
 REPOSITORY = "https://github.com/jasonli-git/housing-intelligence"
 
-# The owner's wording for each licence class, as a row states it. Kept short: the
-# source's own terms are named in the header and linked from the site.
+# Each licence class as a row states it. Kept short: the source's own terms are named in
+# the header and linked from the site. Worded for the figure's sources, not the figure:
+# a ratio this platform calculates from public-domain inputs is not itself a U.S.
+# Government work, but nothing restricts it.
 LICENCE_WORDS = {
-    "public_domain": "Public domain (U.S. Government work)",
-    "public_record": "Public record; free to copy and distribute",
+    "public_domain": "No restriction: public-domain sources",
+    "public_record": "No restriction: public records, free to copy and distribute",
     "attribution": "Free to use with attribution to the source",
     "non_commercial": "Non-commercial use only, with attribution to the source",
     "display_only": "Display only; not for redistribution",
-}
-
-KIND_WORDS = {
-    "survey": "Survey estimate",
-    "administrative": "Administrative records",
-    "determination": "Official determination",
-    "benchmark": "Published benchmark",
-    "calculated": "Calculated by this platform",
-    "modelled": "Modelled estimate",
 }
 
 COLUMNS = (
@@ -92,7 +86,9 @@ def _row(
     common: dict[str, object] = {
         "metric_id": entry.metric_id,
         "label": entry.label,
-        "kind": KIND_WORDS.get(entry.record_type or "", ""),
+        "kind": RECORD_TYPE_LABELS.get(entry.record_type, "")  # type: ignore[call-overload]
+        if entry.record_type
+        else "",
         "unit": entry.unit,
         "rank": _blank(entry.rank),
         "rank_best": _blank(entry.rank_best),

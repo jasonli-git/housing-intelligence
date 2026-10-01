@@ -64,8 +64,16 @@ export function shortPublisher(publisher: string): string {
   return SHORT_PUBLISHERS[publisher] ?? publisher;
 }
 
-/** Whether a source's terms forbid commercial use — the line a reader must not miss. */
-export function isRestricted(source: { license: string }): boolean {
+/**
+ * Whether a source's terms forbid commercial use — the line a reader must not miss.
+ *
+ * Decided by its licence class (Milestone 31), the field the CSV's restriction line and
+ * a calculated figure's inherited licence are decided by, so the site and the download
+ * cannot disagree about which sources are restricted. The licence wording is read only
+ * for a source published without a class.
+ */
+export function isRestricted(source: { license: string; licence_class?: string | null }): boolean {
+  if (source.licence_class) return source.licence_class === "non_commercial";
   return /non-commercial/i.test(source.license);
 }
 

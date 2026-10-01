@@ -131,3 +131,22 @@ def test_the_site_shows_each_metric_as_the_kind_the_config_says() -> None:
     assert block, "KINDS not found in web/lib/kinds.ts"
     on_the_site = dict(re.findall(r'(\w+): "(\w+)"', block.group(1)))
     assert on_the_site == {m: d.record_type for m, d in load_metrics().items()}
+
+
+def test_the_site_and_the_download_name_each_kind_the_same_way() -> None:
+    """One set of labels: `RECORD_TYPE_LABELS`, which the CSV uses, and its copy in
+    `web/lib/kinds.ts` for the pages. A reader should not see "Calculated here" on the
+    page and something else in the file."""
+    import re
+    from pathlib import Path
+
+    from hip.config import RECORD_TYPE_LABELS
+
+    source = (
+        Path(__file__).resolve().parents[1] / "web" / "lib" / "kinds.ts"
+    ).read_text()
+    block = re.search(
+        r"KIND_LABELS: Record<RecordType, string> = \{(.*?)\};", source, re.S
+    )
+    assert block, "KIND_LABELS not found in web/lib/kinds.ts"
+    assert dict(re.findall(r'(\w+): "([^"]+)"', block.group(1))) == RECORD_TYPE_LABELS

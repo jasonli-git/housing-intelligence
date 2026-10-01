@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -183,9 +183,15 @@ def _ranking_keys(engine_conn) -> list[tuple[str, str, str, str]]:  # type: igno
 
 
 def _plan(
-    region_ids: list[int], keys: list[tuple[str, str, str, str]]
+    region_ids: list[int],
+    keys: list[tuple[str, str, str, str]],
+    geoids: Mapping[str, str] | None = None,
 ) -> Iterator[tuple[str, str]]:
-    """Yield (api_path, output_path) pairs. Pure, so the layout is testable alone."""
+    """Yield (api_path, output_path) pairs. Pure, so the layout is testable alone.
+
+    `geoids` (region id as text → geoid) names each region's CSV download: a browser
+    ignores a link's `download` name for a file on another origin, which the artifacts
+    are, so the saved file keeps the name the path gives it."""
     yield "/health", "health.json"
     yield "/metrics", "metrics.json"
     # The attribution the site footer renders. Static like everything else, so the terms
@@ -214,8 +220,13 @@ def _plan(
             yield f"{base}/packet?window={window}", f"{out}/packet/{window}.json"
             # Markdown, not JSON: `/regions/{id}/report` serves text/markdown.
             yield f"{base}/report?window={window}", f"{out}/report/{window}.md"
-            # The page's figures as CSV, with their kinds and licences (Milestone 31).
-            yield f"{base}/download?window={window}", f"{out}/download/{window}.csv"
+            # The page's figures as CSV, with their kinds and licences (Milestone 31),
+            # named for the region, as the report's Markdown download is.
+            name = (geoids or {}).get(str(region_id), f"region-{region_id}")
+            yield (
+                f"{base}/download?window={window}",
+                f"{out}/download/{name}-{window}.csv",
+            )
             explain = f"{out}/explanation/{window}.json"
             yield f"{base}/explanation?window={window}", explain
             # Beside the singular file rather than replacing it: the singular path is a
@@ -261,7 +272,7 @@ def publish(root: Path) -> Result:
 
     result = Result(root=root, region_geoids=geoids)
     with TestClient(app) as client:
-        for api_path, out_path in _plan(region_ids, keys):
+        for api_path, out_path in _plan(region_ids, keys, geoids):
             response = client.get(api_path)
             if response.status_code == 404:
                 result.skipped.append(api_path)

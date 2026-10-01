@@ -14,9 +14,11 @@ saying why they could not be), and `notices`, the statements its terms require t
 to display word for word.
 
 All nullable: the config is where each is required (`hip check-config`), and a source or
-metric that has left the config keeps its row without one. The rows the config names are
-filled here, from the config as it stands, so the site can show them before the next
-refresh; every `hip analyze` writes them again (`hip.warehouse.load.sync_registry`).
+metric that has left the config keeps its row without one. Schema only: the values are
+written by `hip sync-registry`, and again by every `hip analyze`, from the config as it
+then stands. A migration that called the application's upsert would replay today's code
+against a later schema, and fail the first time a later milestone added a column the
+upsert writes.
 """
 
 from __future__ import annotations
@@ -50,13 +52,6 @@ def upgrade() -> None:
     op.add_column("metrics", sa.Column("record_type", sa.Text(), nullable=True))
     op.add_column("metrics", sa.Column("licence_class", sa.Text(), nullable=True))
     op.add_column("metrics", sa.Column("originator", sa.Text(), nullable=True))
-
-    # Imported here rather than at module level so the revision can be read (by
-    # `alembic history`) without the application's config on the path.
-    from hip.config import load_metrics, load_sources
-    from hip.warehouse.load import sync_registry
-
-    sync_registry(op.get_bind(), load_sources(), load_metrics())
 
 
 def downgrade() -> None:
