@@ -14,25 +14,19 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 31 built, awaiting review (2026-09-30)
+## Now — reading costs and the synthesis pilot, awaiting review (2026-10-01)
 
-Milestone 31 is complete on `milestone/m31-licence-provenance` (0.26.0): every figure's
-kind shown beside it, a licence class per source that a calculated figure inherits, the
-notices the sources' terms require on every page, a CSV of each region's figures that
-carries all three, a print footer, and a written acquisition policy. CHANGELOG 0.26.0
-has what shipped and ARCHITECTURE #269–#271 the decisions.
+Milestone 31 shipped as 0.26.0 on 2026-09-30, deployed with `check-live` passing.
+Milestone 32 is next and not started, at the owner's direction.
 
-**After the merge:** `make migrate` (0020 adds the columns), `hip sync-registry` (fills them
-from config), then
-`hip explain --dry-run` to re-cite the readings for free — packet 1.4 moves the packet
-hash but not the content hash — then `make publish`, deploy and `make check-live`.
+On `experiment/consumer-models-and-synthesis` (0.26.1): a margin-check fix (#273),
+prompt-cache hits counted (#274), the Flex Director Note, and two reports —
+`reports/evaluation/readings-v2.md` (consumer reading, three models, five counties)
+and `reports/evaluation/synthesis-pilot.md` (two rounds). Nothing published changes.
 
-**Settled with the owner on 2026-09-30:** Zillow's and Realtor.com's terms, read by hand
-(Zillow is downloaded by hand and credited "Data Provided by Zillow Group", #272;
-Realtor.com is not usable without Move's permission), and Freddie Mac's, which allow the
-rate shown with credit and not redistributed — not asked further (owner, 2026-09-30).
-Zillow's six CSVs go into `data/manual/` when it
-next publishes (README, "Zillow is downloaded by hand").
+**Waiting on the owner:** the pilot's review checklist and whether to run a third
+round, and whether readings should go stale only when the figures they cite change.
+Both are under Parked.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -412,6 +406,19 @@ first raised, not where it must be done.
       map layer would be an enormous download.
 
 ## Parked / needs user input
+
+- [ ] **Grounded synthesis: a third round, or stop.** (Director Note 2026-09-29) Two
+      rounds on five counties, `reports/evaluation/synthesis-pilot.md`: the observation
+      sentence finds a distinctive, checkable pattern; the interpretation sentence is
+      where every unsupported claim sits. A third round would drop the interpretation
+      and keep to housing measures. Waiting for the owner's review of the checklist.
+- [ ] **Readings stale only when the figures they cite change?** Zillow's monthly
+      release moves every packet's content hash, so every reading is rewritten monthly
+      whether or not it quotes Zillow. The stored binding names each figure a reading
+      cites, so staleness could be decided on those alone. Risk: a sentence like "rents
+      rose sharply" that cites no figure goes out of date unnoticed. Matters at
+      municipal scale (about $42 a refresh, Milestone 19's estimate), not at 21
+      counties. Owner's decision; it would amend Milestone 13's staleness rule.
 
 - [ ] **Zillow's files are downloaded by hand, as a standing arrangement.** (M31, #272)
       Its Terms of Use forbid automated fetching, and its pages neither exempt a monthly
