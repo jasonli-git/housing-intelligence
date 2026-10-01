@@ -5,13 +5,16 @@ two or three paragraphs on what changed and how the region compares, now giving 
 survey figure its margin and every uncertain rank its range (SPEC principle 12).
 
 **The consumer reading** is for someone deciding whether to live somewhere: short
-answers to two fixed questions, asked for two figures each and published with at most
+answers to three fixed questions, asked for two figures each and published with at most
 three, no source names and no jargon. The questions are fixed so the answers are
 addressable — a county page places each by its id — and so every region's reading has
 the same shape a reader can scan. It asked five until 2026-09-30: the bottom line, "is
 it getting harder to afford here?" and "how does renting compare with buying?" restated
 what the page's cost panels compute, so the page stopped showing them (ARCHITECTURE
-#265) and the owner then stopped asking for them (#266).
+#265) and the owner then stopped asking for them (#266). "What stands out here?" joined
+on 2026-10-01, when the analyst reading was retired (#275): the fourth round of the
+grounded-synthesis pilot, `reports/evaluation/synthesis-pilot.md`, three sentences on
+the housing pattern that sets a place apart.
 
 Both are held to the same gates as a condition of publication, and the consumer reading
 to four more. Every one is deterministic, so a refusal costs nothing to decide and says
@@ -22,7 +25,9 @@ exactly what was wrong:
   (`hip.packets.margins`);
 - for the consumer reading: the headings in order, each with an answer; no name of
   a source, agency, survey or index; none of the listed jargon; at most three figures
-  an answer as written, not counting a margin, a quoted label or a range's second end.
+  an answer as written, not counting a margin, a quoted label or a range's second end;
+  never two measures of the same thing; and under "What stands out here?", housing
+  measures only and no opening on a date.
 
 What no check can see — whether an answer advises rather than describes, or reads well
 — is what the owner reads the three-county side-by-side for.
@@ -80,7 +85,40 @@ class Question:
 
 QUESTIONS: tuple[Question, ...] = (
     Question("whats_changing", "What's changing?"),
+    Question("what_stands_out", "What stands out here?"),
     Question("before_moving", "What should I check before moving?"),
+)
+
+# Measures of the same thing. A reading quoting two of one family puts two figures a
+# reader takes for the same quantity side by side, and they disagree: the pilot's first
+# round set the survey's typical home value, $221,400, beside Zillow's, $279,277, and its
+# third a sale price beside a typical value (#275).
+SAME_THING: tuple[frozenset[str], ...] = (
+    frozenset(
+        {
+            "zhvi_sfr",
+            "acs_median_home_value",
+            "fhfa_hpi",
+            "fhfa_hpi_all_transactions",
+            "sr1a_median_sale_price",
+            "modiv_median_assessed_value",
+        }
+    ),
+    frozenset({"zori_all", "acs_median_gross_rent", "hud_fmr_2br"}),
+    frozenset({"acs_population", "pep_population"}),
+    frozenset({"acs_renter_cost_burden", "chas_renter_cost_burden"}),
+    frozenset({"acs_median_hh_income", "hud_area_median_income"}),
+)
+
+# Not housing measures: "What stands out here?" keeps to housing, because the pilot's
+# second round, free to range, led with unemployment and population and then guessed at
+# what they meant for businesses and community life.
+NOT_HOUSING: frozenset[str] = frozenset(
+    {"acs_population", "pep_population", "unemployment_rate", "net_migration_returns"}
+)
+
+_DATE_OPENING = re.compile(
+    r"^\s*(?:(?:between|from|since|in|over|during)\s+)?\d{4}|^\s*between\b", re.I
 )
 
 # Names a general reader should never need: the sources behind the figures and the
@@ -153,7 +191,7 @@ You are writing a short, plain-language guide to one place's housing for someone
 deciding whether to live there.
 
 You are given a data packet for the region, already computed by a deterministic
-pipeline. Answer under these two headings, each on its own line, word for word and in
+pipeline. Answer under these three headings, each on its own line, word for word and in
 this order, with a short answer beneath each:
 
 {chr(10).join(q.heading for q in QUESTIONS)}
@@ -187,12 +225,38 @@ Rules:
 - Describe; do not advise. Say what the figures show about renting and buying, not which
   the reader should choose.
 - Do not claim causes the packet cannot support.
-- Under "What should I check before moving?", name what these figures cannot tell
-  someone about a particular home or street, drawn from the packet's caveats.
+- Use one measure for each thing across all three answers: never two different
+  measures of home value (a sale price and a typical home value count as one), of
+  rent, of income, or of what renters pay. A reader would see two figures for the same
+  thing that seem to disagree.
+- Under "What stands out here?", write exactly three sentences. First, the housing
+  pattern that most sets this place apart from the places it is ranked against, judged
+  by where its latest figures rank: connect two or three figures, do not list them, and
+  begin with the place's name or the measure, never with a date, a span of years or
+  "Between". Use housing measures only: home values and sale prices, rents, what
+  households pay for housing against their income, empty homes, homeownership, homes
+  permitted, property tax bills, and the age and type of homes; never population, jobs,
+  unemployment or people moving. Second, what that pattern means for someone renting
+  or buying here, said only in terms of those same figures: no new figure, no guess at
+  why, and nothing about people, businesses, jobs or community life. Third, the one
+  limitation that most affects the pattern. Say something "What's changing?" does not.
+  Give a rank only for where the place stands now, in words a resident follows
+  (highest, lowest, among the highest, near the middle), never for how much a figure
+  changed.
+- Under "What should I check before moving?", write two or three sentences. Each
+  names one thing these figures cannot tell someone about a particular home, street
+  or town, and why, taken from one of the packet's own caveats, in your own words.
+  Prefer caveats about what a resident would pay or get — the tax bill, the rent, the
+  price of a home, the homes themselves — over those about program standards such as
+  income thresholds, and the ones that matter most for this place over the ones every
+  place shares. Where a caveat says what a single address or town depends on, say
+  that too; never say who sets, publishes or keeps anything, or where else it can be
+  found, beyond what the caveat says. Describe what the figures cannot show; never
+  tell the reader what to do: no "you should", "make sure" or "be sure to".
 - No preamble, no bullet lists, no bold.
 """
 
-CONSUMER_QUESTION = "Answer the two questions about this region under their headings."
+CONSUMER_QUESTION = "Answer the three questions about this region under their headings."
 
 
 def revision_request(answer: str, problems: list[str]) -> str:
@@ -352,6 +416,38 @@ def consumer_problems(
                 f"{count} figures under '{section.heading}', where at most {MAX_FIGURES} "
                 f"are allowed"
             )
+    quoted = {
+        c.metric_id: c.label or c.metric_id for c in binding.citations if c.metric_id
+    }
+    for family in SAME_THING:
+        both = sorted(family & set(quoted))
+        if len(both) > 1:
+            problems.append(
+                "two measures of the same thing: "
+                + " and ".join(f"'{quoted[m]}'" for m in both)
+                + "; keep the one the reading quotes first"
+            )
+    for section in sections:
+        if section.id != "what_stands_out":
+            continue
+        answer = body[section.start : section.end]
+        if _DATE_OPENING.search(answer):
+            problems.append(
+                f"'{section.heading}' opens with a date or a span of years; begin with "
+                f"the place's name or the measure"
+            )
+        outside = sorted(
+            {
+                c.label or c.metric_id or ""
+                for c in binding.citations
+                if c.metric_id in NOT_HOUSING and section.start <= c.start < section.end
+            }
+        )
+        if outside:
+            problems.append(
+                f"'{section.heading}' quotes {', '.join(repr(m) for m in outside)}, "
+                f"which is not a housing measure"
+            )
     return problems
 
 
@@ -396,7 +492,9 @@ __all__ = [
     "FORMATS",
     "JARGON",
     "MAX_FIGURES",
+    "NOT_HOUSING",
     "QUESTIONS",
+    "SAME_THING",
     "TARGET_FIGURES",
     "SOURCE_NAMES",
     "Format",

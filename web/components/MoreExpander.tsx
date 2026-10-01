@@ -47,25 +47,6 @@ export function DetailedDataJump({ targetId }: { targetId: string }) {
   );
 }
 
-export function AnalystReadingJump({ targetId }: { targetId: string }) {
-  return (
-    <button
-      type="button"
-      className="button report-action analyst-jump-action print-hide"
-      onClick={() => openAndScroll(targetId)}
-    >
-      <svg viewBox="0 0 20 20" aria-hidden="true">
-        <path d="M4.5 3.5h11v13h-11zM7 7h6M7 10h6M7 13h4" />
-      </svg>
-      <span className="report-action-copy">
-        <strong>Read data summary</strong>
-        <small>Automated · model-written</small>
-      </span>
-      <span className="report-action-arrow" aria-hidden="true">↓</span>
-    </button>
-  );
-}
-
 export function MoreExpander({ id, title, sub, children }: { id?: string; title: string; sub: string; children: ReactNode }) {
   const ref = useRef<HTMLDetailsElement>(null);
 

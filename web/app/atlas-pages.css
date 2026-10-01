@@ -55,9 +55,6 @@
   }
   .atlas-local .report-action-copy strong { font-size: 13px; }
   .atlas-local .report-action-arrow { font-size: 18px; }
-  .atlas-local .analyst-jump-action { border-left-color: var(--text-muted); }
-  .atlas-local .analyst-jump-action > svg,
-  .atlas-local .analyst-jump-action .report-action-arrow { color: var(--text-secondary); stroke: var(--text-secondary); }
 
   .atlas-local > .region-profile-ticker {
     --profile-accent: #c4eadd;
@@ -114,7 +111,8 @@
   .atlas-local .cost-card + .cost-card { border-left: 1px solid var(--border); }
   .atlas-local .cost-cards + .cost-evidence { margin-top: 1.3rem; }
   .atlas-local .standouts-disclosure { margin-top: clamp(1.5rem, 3vw, 2rem); }
-  .atlas-local .consumer-feature-whats_changing + .standouts-disclosure { margin-top: clamp(1.5rem, 3vw, 2rem); }
+  .atlas-local .consumer-feature-whats_changing + .standouts-disclosure,
+  .atlas-local .consumer-feature-what_stands_out + .standouts-disclosure { margin-top: clamp(1.5rem, 3vw, 2rem); }
   .atlas-local .standouts-disclosure .region-standouts { margin: 1.35rem 0 1.8rem; }
 
   /* The standalone tool uses the same connected map/table grammar as the new state

@@ -1222,7 +1222,8 @@ def explain(
         list[str] | None,
         typer.Option(
             "--audience",
-            help="analyst | consumer. Repeat for both, which is the default.",
+            help="analyst | consumer. Default: every audience not retired in "
+            "generation.retired.",
         ),
     ] = None,
     dry_run: Annotated[
@@ -1235,7 +1236,7 @@ def explain(
         ),
     ] = False,
 ) -> None:
-    """Write each region's analyst and consumer readings for the API to serve.
+    """Write each region's readings, one per audience not retired, for the API to serve.
 
     A write path, and therefore a CLI command rather than an API call (ARCHITECTURE #6):
     a reading costs a model call and seconds of inference, which does not belong in a
@@ -1246,13 +1247,15 @@ def explain(
     passes the region to the next. The gates: every figure bound to the packet field
     that licenses it (Milestone 13); every survey figure with its margin and every
     uncertain rank as its range (SPEC principle 12); and for the consumer reading, its
-    five fixed headings, no source names or jargon, and at most two figures an answer.
+    fixed headings, no source names or jargon, and at most three figures an answer.
 
     A region whose stored reading still describes these figures is skipped — re-bound
     for free first if only provenance moved — and `--force` regenerates it anyway.
     Which model wrote a reading does not make it stale, except a model that has left
     the audience's list: its readings are rewritten, and any no model could rewrite are
-    retired (#213). Nothing else in the platform deletes a reading.
+    retired (#213). An audience listed under `generation.retired` is not written, and its
+    stored readings are removed after a copy is kept under `data/retired/` (#275).
+    Nothing else in the platform deletes a reading.
 
     Every path publishes only from a model that passed the latest judged run, as it is
     configured now; `--unbenchmarked` is the only way past that (ARCHITECTURE #102).

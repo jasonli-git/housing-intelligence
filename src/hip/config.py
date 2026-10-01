@@ -629,9 +629,14 @@ class GenerationConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    # One list per audience since Milestone 30: a region carries one analyst and one
-    # consumer reading, each from the first model on its own list that can write it.
+    # One list per audience since Milestone 30: a region carries one reading per
+    # audience, each from the first model on its own list that can write it.
     preference: dict[Audience, list[str]]
+    # Audiences no longer written (ARCHITECTURE #275). A retired audience keeps its list,
+    # so reviving it is deleting it from here; `hip explain` neither writes it nor serves
+    # what it wrote, and keeps a copy of each reading it removes. The analyst reading
+    # was retired by the owner on 2026-10-01, to be reconsidered with Milestone 32.
+    retired: list[Audience] = Field(default_factory=list)
     max_concurrency: int = Field(default=4, ge=1, le=32)
     # How many times a refused reading goes back to the model that wrote it, with the
     # refusal, before the region passes to the next model on the list (ARCHITECTURE
@@ -640,12 +645,19 @@ class GenerationConfig(BaseModel):
 
     @model_validator(mode="after")
     def _every_audience_has_a_list(self) -> GenerationConfig:
-        missing = [a for a in AUDIENCES if not self.preference.get(a)]
+        if not self.audiences:
+            raise ValueError("generation.retired retires every audience")
+        missing = [a for a in self.audiences if not self.preference.get(a)]
         if missing:
             raise ValueError(
                 f"generation.preference needs a non-empty list for {', '.join(missing)}"
             )
         return self
+
+    @property
+    def audiences(self) -> tuple[Audience, ...]:
+        """The audiences `hip explain` writes: every audience but the retired."""
+        return tuple(a for a in AUDIENCES if a not in self.retired)
 
 
 class EvaluationConfig(BaseModel):

@@ -2853,3 +2853,119 @@ def test_deepseek_cache_hits_are_counted(monkeypatch: pytest.MonkeyPatch) -> Non
         _deepseek(monkeypatch), _at("deepseek", "default"), _answering(body), monkeypatch
     )
     assert generation.telemetry.cached_tokens == 64
+
+
+# --- retired audiences (2026-10-01, ARCHITECTURE #275) ----------------------------------
+
+
+def test_a_retired_audience_needs_no_list_and_is_not_written() -> None:
+    generation = GenerationConfig(
+        preference={"consumer": ["gemini-test"]}, retired=["analyst"]
+    )
+    assert generation.audiences == ("consumer",)
+
+
+def test_every_audience_cannot_be_retired() -> None:
+    with pytest.raises(ValueError, match="retires every audience"):
+        GenerationConfig(
+            preference=_lists(["gemini-test"]), retired=["analyst", "consumer"]
+        )
+
+
+def test_a_run_writes_only_the_audiences_not_retired(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import contextlib
+
+    from hip.eval_cli import explain_command
+
+    written: list[list[str]] = []
+    retired: list[list[int]] = []
+
+    @contextlib.contextmanager
+    def session(engine: Any) -> Any:
+        yield SimpleNamespace(commit=lambda: None)
+
+    evaluation = _evaluation(["gemini-test", "gemma-4-e4b-q4"])
+    evaluation.generation.retired = ["analyst"]
+    monkeypatch.setattr("hip.eval_cli.load_evaluation", lambda: evaluation)
+    monkeypatch.setattr("hip.eval_cli._unusable", lambda *args, **kwargs: {})
+    monkeypatch.setattr("hip.eval_cli.get_engine", lambda: None)
+    monkeypatch.setattr("hip.eval_cli.Session", session)
+    monkeypatch.setattr("hip.packets.regions_for_level", lambda *args: [1, 2])
+    monkeypatch.setattr(
+        "hip.eval_cli._explain_each",
+        lambda session, evaluation, run, lists, *args, **kwargs: written.append(
+            sorted(lists)
+        ),
+    )
+    monkeypatch.setattr("hip.eval_cli._prune", lambda *args: None)
+    monkeypatch.setattr(
+        "hip.eval_cli._retire",
+        lambda session, evaluation, region_ids, window: retired.append(region_ids),
+    )
+    monkeypatch.setattr("hip.eval_cli._summarize", lambda run, *args, **kwargs: 0)
+
+    explain_command(None, None, "5y", "county", "markdown", None)
+
+    assert written == [["consumer"]]
+    assert retired == [[1, 2]]
+
+
+def test_asking_for_a_retired_audience_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from hip.eval_cli import explain_command
+
+    evaluation = _evaluation(["gemini-test"])
+    evaluation.generation.retired = ["analyst"]
+    monkeypatch.setattr("hip.eval_cli.load_evaluation", lambda: evaluation)
+    import typer
+
+    with pytest.raises(typer.Exit) as exited:
+        explain_command(
+            None, None, "5y", "county", "markdown", None, audiences=["analyst"]
+        )
+    assert exited.value.exit_code == 1
+
+
+def test_retiring_keeps_a_copy_of_each_reading_it_removes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
+) -> None:
+    """Never served on, never lost: the copy is what the audience said before."""
+    from datetime import UTC, datetime
+
+    from hip.eval_cli import _retire
+
+    row = SimpleNamespace(
+        region_id=11,
+        window="5y",
+        audience="analyst",
+        model_id="gemini-test",
+        model_label="Gemini test",
+        runtime="gemini",
+        rank=1,
+        body="Values rose.",
+        packet_sha256="a",
+        content_sha256="b",
+        binding=None,
+        sections=None,
+        generated_at=datetime(2026, 9, 30, tzinfo=UTC),
+    )
+    executed: list[object] = []
+    session = SimpleNamespace(
+        scalars=lambda query: SimpleNamespace(all=lambda: [row]),
+        execute=executed.append,
+        commit=lambda: None,
+    )
+    monkeypatch.setattr(
+        "hip.eval_cli.get_settings", lambda: SimpleNamespace(data_dir=tmp_path)
+    )
+    evaluation = _evaluation(["gemini-test"])
+    evaluation.generation.retired = ["analyst"]
+
+    _retire(session, evaluation, [11], "5y")  # type: ignore[arg-type]
+
+    kept = (tmp_path / "retired" / "analyst-readings.jsonl").read_text().splitlines()
+    assert [json.loads(line)["body"] for line in kept] == ["Values rose."]
+    assert len(executed) == 1  # the delete

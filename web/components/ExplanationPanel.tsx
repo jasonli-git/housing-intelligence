@@ -135,57 +135,9 @@ function Figures({ binding }: { binding: Binding | null }) {
 }
 
 /**
- * The model-written data summary (stored under the analyst audience): paragraphs on
- * what changed and how the region compares, every survey figure with its margin
- * (SPEC principle 12).
- *
- * Since the owner's review of Milestone 17 a reading opens at its first paragraph, the
- * rest a click away; inside a region page's summary disclosure it is shown whole,
- * with no "Read the rest": the reader has already chosen to read on by opening it.
- */
-export function ExplanationPanel({
-  reading,
-  whole = false,
-}: {
-  reading: Explanation | null;
-  whole?: boolean;
-}) {
-  if (!reading) return null;
-  // `?? null` because a response published before Milestone 13 has no field at all,
-  // and that text is exactly as unverified as one whose binding is null.
-  const binding = reading.binding ?? null;
-  const id = `interpretation-${reading.region_id}-analyst`;
-
-  const paragraphs = segment(reading.body, binding?.citations ?? []).map((runs, index) => (
-    <p key={index}>
-      <Runs runs={runs} binding={binding} />
-    </p>
-  ));
-
-  return (
-    <section aria-labelledby={id} className="interpretation">
-      <Head id={id} title="Automated data summary" reading={reading} />
-      <Stale reading={reading} />
-      {whole ? paragraphs : paragraphs[0]}
-      {!whole && paragraphs.length > 1 && (
-        <details className="interpretation-more">
-          <summary>
-            Read the rest ({paragraphs.length - 1} more{" "}
-            {paragraphs.length === 2 ? "paragraph" : "paragraphs"})
-          </summary>
-          {paragraphs.slice(1)}
-        </details>
-      )}
-      <Figures binding={binding} />
-      <p className="interpretation-note">{reading.disclaimer}</p>
-    </section>
-  );
-}
-
-/**
- * The two consumer answers sit in different parts of the page: the change reading is a
- * headline before the stand-outs, while the place-specific limits follow the cost
- * section. A reading written before 2026-09-30 answers five questions and is shown by
+ * The consumer answers sit in different parts of the page: the change reading is a
+ * headline before the stand-outs, with what sets the place apart just after it, while
+ * the place-specific limits follow the cost section. A reading written before 2026-09-30 answers five questions and is shown by
  * these two alone; since then a reading answers only these (ARCHITECTURE #266). Each
  * visible answer carries only its own citations and model attribution.
  */

@@ -117,12 +117,13 @@ export function answers(
 }
 
 /**
- * The two questions a county page shows (ARCHITECTURE #265, #266): the ones that add
+ * The questions a county page shows (ARCHITECTURE #265, #266, #275): the ones that add
  * context beyond the computed affordability and cost panels. A reading written before
  * 2026-09-30 also answers three retired questions; their citations must not appear in
- * the visible figure list.
+ * the visible figure list. One written before 2026-10-01 has no "What stands out here?",
+ * and the page shows nothing in its place.
  */
-export type FocusedConsumerSection = "whats_changing" | "before_moving";
+export type FocusedConsumerSection = "whats_changing" | "what_stands_out" | "before_moving";
 
 export function focusedConsumerAnswer(
   body: string,

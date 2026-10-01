@@ -1178,64 +1178,6 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   padding: 0 0 2rem;
 }
 
-.analyst-disclosure {
-  margin-top: clamp(2rem, 4vw, 3rem);
-  scroll-margin-top: 7rem;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.analyst-disclosure > summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 0;
-  list-style: none;
-  cursor: pointer;
-}
-.analyst-disclosure > summary::-webkit-details-marker { display: none; }
-.analyst-disclosure-copy { display: grid; gap: 0.2rem; min-width: 0; }
-.analyst-disclosure-kicker {
-  color: var(--text-muted);
-  font: 700 var(--text-label)/1.3 var(--font-mono);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-}
-.analyst-disclosure-copy strong {
-  color: var(--text-primary);
-  font: 650 clamp(1.3rem, 2vw, 1.7rem)/1.2 var(--font-display);
-  letter-spacing: -0.035em;
-}
-.analyst-disclosure-hint { color: var(--text-secondary); font-size: var(--text-small); }
-.analyst-disclosure-icon {
-  display: grid;
-  flex: 0 0 2.5rem;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  color: var(--text-secondary);
-  font: 300 1.75rem/1 var(--font-display);
-  transition: transform 180ms ease, background-color 180ms ease;
-}
-.analyst-disclosure > summary:hover .analyst-disclosure-icon { background: var(--surface-2); }
-.analyst-disclosure[open] .analyst-disclosure-icon { transform: rotate(45deg); }
-.analyst-disclosure[open] > summary { border-bottom: 1px solid var(--border); }
-.analyst-disclosure-body { padding: 1.2rem 0 1.6rem; }
-.analyst-disclosure-body > .interpretation { max-width: 90ch; }
-.analyst-disclosure + .more { margin-top: 1.5rem; }
-
-@media (max-width: 700px) {
-  .analyst-disclosure { scroll-margin-top: 9rem; }
-}
-
-@media print {
-  .analyst-disclosure { border: 0; }
-  .analyst-disclosure > summary { display: none; }
-  .analyst-disclosure::details-content { content-visibility: visible; display: block; }
-}
-
 /* The single-baseline trend uses the same quiet instrument surface as the tables. */
 .indexed-comparison {
   min-width: 0;
@@ -1409,6 +1351,24 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 .consumer-feature-whats_changing .cited {
   color: var(--atlas-ink, var(--series-3));
   font-weight: 650;
+}
+
+/* What sets the place apart (#275): a quieter card under the change headline, read as
+   its second half rather than a second headline. */
+.consumer-feature-what_stands_out {
+  padding: clamp(1.1rem, 2vw, 1.6rem) clamp(1.3rem, 2.5vw, 2rem);
+  border-left: 3px solid color-mix(in srgb, var(--series-3) 55%, var(--border));
+}
+
+.consumer-feature-what_stands_out h2 {
+  font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+  line-height: 1.12;
+}
+
+.interpretation.consumer-feature-what_stands_out .consumer-feature-answer {
+  max-width: 72ch;
+  font-size: clamp(1.02rem, 1.5vw, 1.2rem);
+  line-height: 1.55;
 }
 
 .standouts-disclosure {
