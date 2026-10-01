@@ -70,6 +70,22 @@ def unranked_metrics() -> list[str]:
     return [m for m, metric in load_metrics().items() if not metric.ranked]
 
 
+def survey_metrics() -> list[str]:
+    """Metrics measured by a survey (`record_type: survey`), whose editions are annual,
+    and the ratios this platform divides by one, which inherit its editions.
+
+    A change in one is never measured over less than its label says (#282): an edition
+    a year short of the window's start is not a substitute for the one at it, because
+    the two editions it would compare share more of their sample than the label admits.
+    Milestone 34's ZCTAs, which begin at the 2020 edition, are where this would have
+    shown first: a five-year change for every ZIP, measured over four.
+    """
+    surveyed = {
+        m for m, metric in load_metrics().items() if metric.record_type == "survey"
+    }
+    return sorted(surveyed | {ratio for ratio, _, over, _ in RATIOS if over in surveyed})
+
+
 def rebuild(engine: Engine) -> AnalyticsResult:
     """Recompute every derived table. Idempotent."""
     result = AnalyticsResult()
@@ -77,7 +93,7 @@ def rebuild(engine: Engine) -> AnalyticsResult:
     with engine.begin() as conn:
         result.derived_observations = _affordability(conn)
         result.pruned_releases = _prune_orphan_derived_releases(conn)
-        result.changes = _changes(conn, unranked)
+        result.changes = _changes(conn, unranked, survey_metrics())
         # One TRUNCATE for both bases, so the two ranking passes cannot half-rebuild
         # the table and leave a stale basis behind.
         conn.execute(text("TRUNCATE region_rankings"))
@@ -323,7 +339,7 @@ def _prune_orphan_derived_releases(conn: object) -> int:
     )
 
 
-def _changes(conn: object, unranked: list[str]) -> int:
+def _changes(conn: object, unranked: list[str], survey: list[str]) -> int:
     """Percentage change and CAGR from the latest observation back to each window."""
     conn.execute(text("TRUNCATE fact_metric_change"))  # type: ignore[attr-defined]
 
@@ -365,10 +381,11 @@ def _changes(conn: object, unranked: list[str]) -> int:
                     ORDER BY f.region_id, f.metric_id, f.period_start DESC
                 ),
                 targets AS (
-                    SELECT e.*, w.label, (e.window_end - w.span)::date AS target
+                    SELECT e.*, w.label, (e.window_end - w.span)::date AS target,
+                           true AS relative
                     FROM ends e CROSS JOIN (VALUES {relative}) w(label, span)
                     UNION ALL
-                    SELECT e.*, a.label, a.target
+                    SELECT e.*, a.label, a.target, false
                     FROM ends e CROSS JOIN (VALUES {anchors}) a(label, target)
                 ),
                 picked AS (
@@ -381,6 +398,12 @@ def _changes(conn: object, unranked: list[str]) -> int:
                     JOIN fact_metric_observation s
                       ON s.region_id = t.region_id AND s.metric_id = t.metric_id
                     WHERE abs(s.period_end - t.target) <= {TOLERANCE_DAYS}
+                      -- A survey's fixed-length window never starts late (#282): an
+                      -- edition a year after the target would make a "5y" change four
+                      -- years long. Anchored windows keep the tolerance, since the 2019
+                      -- edition ends in December and "since 2019" starts in January.
+                      AND NOT (t.relative AND t.metric_id = ANY(:survey)
+                               AND s.period_end > t.target + 31)
                     -- The trailing two keys are what make this reproducible (#77).
                     -- Distance alone is not a total order: a target sitting between
                     -- two observations is equidistant from both, which is 5,606 of
@@ -424,7 +447,7 @@ def _changes(conn: object, unranked: list[str]) -> int:
                 WHERE start_value <> 0 AND window_end > window_start
                 """
             ),
-            {"unranked": unranked},
+            {"unranked": unranked, "survey": survey},
         ).rowcount
     )
 

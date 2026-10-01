@@ -11,7 +11,13 @@
  * leads.
  */
 
-export type Group = { key: string; title: string; metrics: readonly string[] };
+export type Group = {
+  key: string;
+  title: string;
+  metrics: readonly string[];
+  /** The map ramp, where the group has none of its own: one of the four in tokens.css. */
+  ramp?: "prices" | "affordability" | "incomes" | "housing";
+};
 
 export const GROUPS: readonly Group[] = [
   {
@@ -27,6 +33,14 @@ export const GROUPS: readonly Group[] = [
       "modiv_median_assessed_value",
       "zori_all",
       "acs_median_gross_rent",
+      // What a place rents for by size, then how wide its rents run (Milestone 34).
+      "acs_median_rent_studio",
+      "acs_median_rent_1br",
+      "acs_median_rent_2br",
+      "acs_median_rent_3br",
+      "acs_median_rent_4br",
+      "acs_rent_lower_quartile",
+      "acs_rent_upper_quartile",
       "hud_fmr_2br",
       "fhfa_hpi",
       "fhfa_hpi_all_transactions",
@@ -41,9 +55,14 @@ export const GROUPS: readonly Group[] = [
       "rent_to_income",
       "fmr_to_income",
       "acs_renter_cost_burden",
+      "acs_renter_severe_burden",
       "chas_renter_cost_burden",
       "chas_renter_severe_burden",
       "chas_owner_cost_burden",
+      "acs_owner_severe_burden",
+      // What owners already pay, beside the cost of buying today (Milestone 34).
+      "acs_owner_costs_mortgage",
+      "acs_owner_costs_no_mortgage",
       "modiv_median_tax_bill",
       "nj_effective_tax_rate",
       "nj_general_tax_rate",
@@ -60,6 +79,7 @@ export const GROUPS: readonly Group[] = [
     // never ranked, because the Census gives them only in brackets (ARCHITECTURE #279).
     key: "running",
     title: "Running costs",
+    ramp: "affordability",
     metrics: [
       "acs_median_home_insurance",
       "acs_median_electricity",
@@ -67,6 +87,12 @@ export const GROUPS: readonly Group[] = [
       "acs_median_water_sewer",
       "acs_median_other_fuel",
       "acs_renters_paying_utilities",
+      // What the homes here are heated with, which sets the winter bills (Milestone 34).
+      "acs_heat_gas_share",
+      "acs_heat_electric_share",
+      "acs_heat_oil_share",
+      "acs_heat_propane_share",
+      "acs_heat_other_share",
     ],
   },
   {
@@ -93,6 +119,58 @@ export const GROUPS: readonly Group[] = [
       "modiv_vacant_land_share",
       "modiv_median_year_built",
       "modiv_median_lot_acres",
+    ],
+  },
+  {
+    // The homes themselves, from the ACS in depth (Milestone 34): what kind, how old, how
+    // big, in what condition, and how many stand empty and why. Bands of a distribution
+    // are listed in order and never ranked (ARCHITECTURE #283).
+    key: "homes",
+    title: "The homes",
+    ramp: "housing",
+    metrics: [
+      "acs_share_detached",
+      "acs_share_attached",
+      "acs_share_2_4_units",
+      "acs_share_5_19_units",
+      "acs_share_20plus_units",
+      "acs_share_mobile_homes",
+      "acs_median_year_built",
+      "acs_share_built_2000_later",
+      "acs_share_built_1980_1999",
+      "acs_share_built_1940_1979",
+      "acs_share_built_pre_1940",
+      "acs_share_0_1_bedrooms",
+      "acs_share_2_bedrooms",
+      "acs_share_3_bedrooms",
+      "acs_share_4plus_bedrooms",
+      "acs_overcrowded_share",
+      "acs_lacking_plumbing_share",
+      "acs_lacking_kitchen_share",
+      "acs_rental_vacancy_rate",
+      "acs_homeowner_vacancy_rate",
+      "acs_vacant_seasonal_share",
+      "acs_vacant_other_share",
+    ],
+  },
+  {
+    // Who lives here and how they get around (Milestone 34).
+    key: "people",
+    title: "Households and getting around",
+    ramp: "incomes",
+    metrics: [
+      "acs_avg_household_size",
+      "acs_living_alone_share",
+      "acs_married_couple_share",
+      "acs_with_children_share",
+      "acs_disability_share",
+      "acs_no_vehicle_share",
+      "acs_commute_transit_share",
+      "acs_work_from_home_share",
+      "acs_commute_drove_alone_share",
+      "acs_commute_walked_share",
+      "acs_mean_commute_minutes",
+      "acs_commute_60plus_share",
     ],
   },
 ];
@@ -150,7 +228,9 @@ export function groupRows<T extends { metric_id: string }>(
  */
 export function rampFor(metricId: string): string[] {
   const group = GROUPS.find((g) => g.metrics.includes(metricId));
-  const name = group ? group.key : "prices";
+  // A group added after the four ramps (Milestone 33's running costs had none until
+  // Milestone 34) borrows one, rather than naming a ramp tokens.css never defined.
+  const name = group ? (group.ramp ?? group.key) : "prices";
   return ["100", "250", "400", "550", "700"].map(
     (step) => `var(--seq-${name}-${step})`,
   );

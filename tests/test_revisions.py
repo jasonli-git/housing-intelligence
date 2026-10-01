@@ -134,3 +134,31 @@ def test_every_revision_names_the_release_on_both_sides(figure) -> None:  # type
         old_release, new_release = _revisions(session, figure)[-1][2:4]
         assert old_release is not None and new_release is not None
         session.rollback()
+
+
+def test_a_withdrawn_figure_is_recorded_as_revised_to_nothing(figure) -> None:  # type: ignore[no-untyped-def]
+    """Milestone 34 (migration 0021): the loader deletes a figure its release no longer
+    gives, and the deletion is recorded rather than the figure simply vanishing."""
+    with Session(get_engine()) as session:
+        value, release = session.execute(
+            text(
+                "SELECT value, release_id FROM fact_metric_observation "
+                "WHERE region_id = :r AND metric_id = :m AND period_start = :p"
+            ),
+            {"r": figure[0], "m": figure[1], "p": figure[2]},
+        ).one()
+        existing = len(_revisions(session, figure))
+
+        session.execute(
+            text(
+                "DELETE FROM fact_metric_observation "
+                "WHERE region_id = :r AND metric_id = :m AND period_start = :p"
+            ),
+            {"r": figure[0], "m": figure[1], "p": figure[2]},
+        )
+
+        recorded = _revisions(session, figure)
+        session.rollback()
+
+    assert len(recorded) == existing + 1
+    assert recorded[-1] == (value, None, release, None)

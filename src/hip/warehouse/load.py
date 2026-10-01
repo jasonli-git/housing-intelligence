@@ -304,6 +304,8 @@ class FactLoadResult:
     observations: int
     by_metric: dict[str, int]
     rejects: int
+    # Figures a loaded release no longer gives, deleted and recorded (migration 0021).
+    withdrawn: int = 0
 
 
 ReleaseKey = tuple[str, str, str]
@@ -415,10 +417,71 @@ def load_facts(
         for start_index in range(0, len(payload), BATCH):
             conn.execute(_INSERT_FACT, payload[start_index : start_index + BATCH])
 
+        withdrawn = _withdraw(conn, payload, {release_index[key] for key in needed})
         _replace_rejects(conn, rejects)
 
     return FactLoadResult(
-        observations=len(payload), by_metric=by_metric, rejects=len(rejects)
+        observations=len(payload),
+        by_metric=by_metric,
+        rejects=len(rejects),
+        withdrawn=withdrawn,
+    )
+
+
+def _withdraw(
+    conn: Any, payload: Sequence[Mapping[str, object]], loaded: set[int]
+) -> int:
+    """Delete each figure a loaded release no longer gives (ARCHITECTURE #284).
+
+    A release's file never changes, so what it gives changes only when the staging that
+    reads it does — Milestone 34 stopped staging 186 open-bracket bounds as medians. A
+    row citing a release this load staged, and absent from what it staged, is therefore
+    stale. Releases this load did not stage are left alone: a source skipped or failing
+    this run withdraws nothing. The deletion trigger (migration 0021) records each one
+    in `fact_revision`.
+    """
+    if not loaded:
+        return 0
+    conn.execute(
+        text(
+            "CREATE TEMP TABLE staged_keys (geoid text, level text, metric_id text, "
+            "period_start date) ON COMMIT DROP"
+        )
+    )
+    keys = [
+        {
+            "geoid": row["geoid"],
+            "level": row["level"],
+            "metric_id": row["metric_id"],
+            "period_start": row["period_start"],
+        }
+        for row in payload
+    ]
+    for start_index in range(0, len(keys), 5000):
+        conn.execute(
+            text(
+                "INSERT INTO staged_keys VALUES "
+                "(:geoid, :level, :metric_id, :period_start)"
+            ),
+            keys[start_index : start_index + 5000],
+        )
+    return int(
+        conn.execute(
+            text(
+                """
+                DELETE FROM fact_metric_observation f
+                WHERE f.release_id = ANY(:loaded)
+                  AND NOT EXISTS (
+                      SELECT 1 FROM staged_keys k
+                      JOIN regions r
+                        ON r.geoid = k.geoid AND r.level = CAST(k.level AS region_level)
+                      WHERE r.region_id = f.region_id AND k.metric_id = f.metric_id
+                        AND k.period_start = f.period_start
+                  )
+                """
+            ),
+            {"loaded": sorted(loaded)},
+        ).rowcount
     )
 
 

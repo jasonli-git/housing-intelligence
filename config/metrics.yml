@@ -539,3 +539,581 @@ metrics:
     source_id: census_acs
     record_type: survey
     ranked: false
+
+  # Milestone 34: the ACS in depth, at county, municipality and ZCTA. Every figure
+  # carries its margin of error. Figures that are one band of a distribution — the
+  # building types, ages, sizes and fuels — are shown as levels and never ranked or
+  # changed (`ranked: false`): a page sets the bands side by side, and a ranking by
+  # one band reads as a standing nobody asked for (ARCHITECTURE #283).
+
+  acs_median_rent_studio:
+    label: Median gross rent, studio
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median gross rent of studio apartments, rent plus utilities, ACS 5-year table
+      B25031.
+    source_id: census_acs
+    record_type: survey
+
+  acs_median_rent_1br:
+    label: Median gross rent, one bedroom
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median gross rent of one-bedroom homes, rent plus utilities, ACS 5-year table
+      B25031.
+    source_id: census_acs
+    record_type: survey
+
+  acs_median_rent_2br:
+    label: Median gross rent, two bedrooms
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median gross rent of two-bedroom homes, rent plus utilities, ACS 5-year table
+      B25031.
+    source_id: census_acs
+    record_type: survey
+
+  acs_median_rent_3br:
+    label: Median gross rent, three bedrooms
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median gross rent of three-bedroom homes, rent plus utilities, ACS 5-year table
+      B25031.
+    source_id: census_acs
+    record_type: survey
+
+  acs_median_rent_4br:
+    label: Median gross rent, four or more bedrooms
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median gross rent of homes with four bedrooms, rent plus utilities, ACS 5-year
+      table B25031. Homes with five or more are left out.
+    source_id: census_acs
+    record_type: survey
+
+  acs_rent_lower_quartile:
+    label: Rent paid to the landlord, lower quarter
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      Lower quartile of contract rent, ACS 5-year table B25057: a quarter of renters pay
+      less. Contract rent leaves out the utilities gross rent includes; the Census
+      publishes quartiles only for contract rent.
+    source_id: census_acs
+    record_type: survey
+
+  acs_rent_upper_quartile:
+    label: Rent paid to the landlord, upper quarter
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      Upper quartile of contract rent, ACS 5-year table B25059: a quarter of renters pay
+      more. Excludes utilities.
+    source_id: census_acs
+    record_type: survey
+
+  acs_owner_costs_mortgage:
+    label: Owner costs a month, with a mortgage
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median selected monthly owner costs for homes with a mortgage — mortgage, tax,
+      insurance, utilities and fees — ACS 5-year table B25088.
+    source_id: census_acs
+    record_type: survey
+
+  acs_owner_costs_no_mortgage:
+    label: Owner costs a month, without a mortgage
+    unit: usd_month
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median selected monthly owner costs for homes without a mortgage, ACS 5-year table
+      B25088: tax, insurance, utilities and fees.
+    source_id: census_acs
+    record_type: survey
+
+  acs_renter_severe_burden:
+    label: Renters paying half their income or more
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Renters paying 50% or more of income on gross rent, over renters whose burden
+      could be computed, ACS 5-year table B25070.
+    source_id: census_acs
+    record_type: survey
+
+  acs_owner_severe_burden:
+    label: Owners paying half their income or more
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Owners paying 50% or more of income on owner costs, with or without a mortgage,
+      over owners whose burden could be computed, ACS 5-year table B25091.
+    source_id: census_acs
+    record_type: survey
+
+  acs_share_detached:
+    label: Single-family detached homes
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Single-family detached homes as a share of all housing units, ACS 5-year table
+      B25024.
+    source_id: census_acs
+    record_type: survey
+
+  acs_share_attached:
+    label: Townhouses and other attached homes
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Single-family attached homes as a share of all housing units, ACS 5-year table
+      B25024.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_share_2_4_units:
+    label: Homes in buildings of two to four
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Units in buildings of two to four units as a share of all housing units, ACS
+      5-year table B25024.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_share_5_19_units:
+    label: Homes in buildings of five to 19
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Units in buildings of five to 19 units as a share of all housing units, ACS 5-year
+      table B25024.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_share_20plus_units:
+    label: Homes in buildings of 20 or more
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Units in buildings of 20 or more units as a share of all housing units, ACS 5-year
+      table B25024.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_share_mobile_homes:
+    label: Mobile homes
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Mobile homes as a share of all housing units, ACS 5-year table B25024.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_median_year_built:
+    label: Median year built
+    unit: year
+    frequency: annual
+    direction: neutral
+    description: >-
+      Median year structure built across all housing units, ACS 5-year table B25035.
+      Where the middle home falls in the oldest bracket, 1939 or earlier, no figure is
+      given.
+    source_id: census_acs
+    record_type: survey
+
+  acs_share_built_2000_later:
+    label: Built in 2000 or later
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Housing units built in 2000 or later as a share of all units, ACS 5-year table
+      B25034.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_share_built_1980_1999:
+    label: Built 1980 to 1999
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Housing units built from 1980 to 1999 as a share of all units, ACS 5-year table
+      B25034.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_share_built_1940_1979:
+    label: Built 1940 to 1979
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Housing units built from 1940 to 1979 as a share of all units, ACS 5-year table
+      B25034.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_share_built_pre_1940:
+    label: Built before 1940
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Housing units built in 1939 or earlier as a share of all units, ACS 5-year table
+      B25034.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_share_0_1_bedrooms:
+    label: Studios and one-bedroom homes
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Housing units with no bedroom or one, as a share of all units, ACS 5-year table
+      B25041.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_share_2_bedrooms:
+    label: Two-bedroom homes
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Housing units with two bedrooms as a share of all units, ACS 5-year table B25041.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_share_3_bedrooms:
+    label: Three-bedroom homes
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Housing units with three bedrooms as a share of all units, ACS 5-year table
+      B25041.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_share_4plus_bedrooms:
+    label: Four or more bedrooms
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Housing units with four or more bedrooms as a share of all units, ACS 5-year table
+      B25041.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_overcrowded_share:
+    label: Crowded homes
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Occupied units with more than one occupant per room, owners and renters together,
+      ACS 5-year table B25014.
+    source_id: census_acs
+    record_type: survey
+
+  acs_lacking_plumbing_share:
+    label: Homes without complete plumbing
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Housing units lacking complete plumbing facilities as a share of all units, ACS
+      5-year table B25047.
+    source_id: census_acs
+    record_type: survey
+
+  acs_lacking_kitchen_share:
+    label: Homes without a complete kitchen
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Housing units lacking complete kitchen facilities as a share of all units, ACS
+      5-year table B25051.
+    source_id: census_acs
+    record_type: survey
+
+  acs_avg_household_size:
+    label: People per household
+    unit: people
+    frequency: annual
+    direction: neutral
+    description: >-
+      Average household size of occupied housing units, ACS 5-year table B25010.
+    source_id: census_acs
+    record_type: survey
+
+  acs_no_vehicle_share:
+    label: Households without a car
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Occupied units with no vehicle available, owners and renters together, ACS 5-year
+      table B25044.
+    source_id: census_acs
+    record_type: survey
+
+  acs_rental_vacancy_rate:
+    label: Rental vacancy rate
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Vacant units for rent over every unit renting or for rent — renter-occupied,
+      rented and not yet occupied, and for rent — the Census's definition, from ACS
+      5-year tables B25004 and B25003.
+    source_id: census_acs
+    record_type: survey
+
+  acs_homeowner_vacancy_rate:
+    label: Homeowner vacancy rate
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Vacant units for sale over every unit owned or for sale — owner-occupied, sold and
+      not yet occupied, and for sale — the Census's definition, from ACS 5-year tables
+      B25004 and B25003.
+    source_id: census_acs
+    record_type: survey
+
+  acs_vacant_seasonal_share:
+    label: Empty homes kept for seasonal use
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Vacant units held for seasonal, recreational or occasional use, as a share of all
+      vacant units, ACS 5-year table B25004.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_vacant_other_share:
+    label: Empty for other reasons
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      "Other vacant" units as a share of all vacant units, ACS 5-year table B25004: not
+      for rent or sale, not sold or rented, not seasonal — homes under repair, in
+      probate or foreclosure, or abandoned.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_heat_gas_share:
+    label: Heated with utility gas
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Occupied units heated mainly with utility gas, ACS 5-year table B25040.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_heat_electric_share:
+    label: Heated with electricity
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Occupied units heated mainly with electricity, ACS 5-year table B25040.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_heat_oil_share:
+    label: Heated with oil
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Occupied units heated mainly with fuel oil or kerosene, ACS 5-year table B25040.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_heat_propane_share:
+    label: Heated with propane
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Occupied units heated mainly with bottled, tank or LP gas, ACS 5-year table
+      B25040.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_heat_other_share:
+    label: Heated another way, or not at all
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Occupied units heated mainly with coal, wood, solar or another fuel, or not
+      heated, ACS 5-year table B25040.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_commute_transit_share:
+    label: Workers commuting by transit
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Workers 16 and over who usually took public transportation to work, excluding
+      taxicab, ACS 5-year table B08301.
+    source_id: census_acs
+    record_type: survey
+
+  acs_work_from_home_share:
+    label: Workers working from home
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Workers 16 and over who usually worked from home, ACS 5-year table B08301.
+    source_id: census_acs
+    record_type: survey
+
+  acs_commute_drove_alone_share:
+    label: Workers driving alone
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Workers 16 and over who usually drove alone to work in a car, truck or van, ACS
+      5-year table B08301.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_commute_walked_share:
+    label: Workers walking to work
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Workers 16 and over who usually walked to work, ACS 5-year table B08301.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_mean_commute_minutes:
+    label: Commute, minutes each way
+    unit: minutes
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Mean travel time to work in minutes, for workers 16 and over who did not work from
+      home: aggregate travel time (B08013) over the workers it covers (B08303), ACS
+      5-year. The Census publishes the aggregate, not a median.
+    source_id: census_acs
+    record_type: survey
+
+  acs_commute_60plus_share:
+    label: Commutes of an hour or more
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Workers who did not work from home with a one-way commute of 60 minutes or more,
+      ACS 5-year table B08303.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_living_alone_share:
+    label: Households of one person
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Householders living alone as a share of all households, ACS 5-year table B11001.
+    source_id: census_acs
+    record_type: survey
+
+  acs_married_couple_share:
+    label: Married-couple households
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Married-couple family households as a share of all households, ACS 5-year table
+      B11001.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
+  acs_with_children_share:
+    label: Households with children
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Households with one or more people under 18 as a share of all households, ACS
+      5-year table B11005.
+    source_id: census_acs
+    record_type: survey
+
+  acs_disability_share:
+    label: People with a disability
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Civilian noninstitutionalized people with any of six disabilities — hearing,
+      vision, cognitive, ambulatory, self-care, independent living — as a share of that
+      population, ACS 5-year table B18101.
+    source_id: census_acs
+    record_type: survey

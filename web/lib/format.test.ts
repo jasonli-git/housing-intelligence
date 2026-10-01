@@ -39,6 +39,8 @@ describe("formatValue", () => {
 
   it("renders acreage with its unit", () => {
     expect(formatValue(0.374, "acres")).toBe("0.37 ac");
+    expect(formatValue(2.374, "people")).toBe("2.37");
+    expect(formatValue(35.43, "minutes")).toBe("35.4 min");
   });
 });
 

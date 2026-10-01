@@ -14,15 +14,16 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — "What's changing?" retired, awaiting review (2026-10-01)
+## Now — Milestone 34 built, awaiting review (2026-10-01)
 
-On `change/retire-whats-changing` (0.29.1): the consumer reading asks two questions,
-and "What stands out here?" takes the retired answer's card (ARCHITECTURE #281).
+On `milestone/m34-acs-depth-zcta` (0.30.0): 50 ACS figures at county, municipality and
+ZCTA, and every ACS figure fetched for New Jersey's 598 ZCTAs (ARCHITECTURE #282, #283).
 
-**After the merge:** `hip explain` regenerates the 21 readings, since their shape
-changed (about $0.10); then `make publish`, deploy and `make check-live`.
+**After the merge:** `hip explain` regenerates the 21 readings, whose packets gained
+figures (`--dry-run` says all 21 are stale; about $0.17, since the payload doubled);
+then `make publish`, deploy and `make check-live`.
 
-Milestone 34, ACS depth and direct ZIP coverage, is next.
+Milestone 35, household-sized answers, is next.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -123,6 +124,14 @@ first raised, not where it must be done.
       a gate that refuses comparative words ("large share", "highest", "among the")
       in a sentence that cites no figure for the measure named; or the judge's
       `factual_accuracy` run on a sample of published readings after each regeneration.
+      A second case on the packets of Milestone 34 (`reports/evaluation/readings-v8.md`):
+      Cumberland's reading called Zillow's home value a five-year survey estimate.
+
+- [ ] **A garbled heading inside an answer publishes.** (M34, 2026-10-01) Cumberland's
+      test reading ended its first answer with "What shout I check before moving?" — the
+      next heading, misspelled, written into the answer — and passed every gate
+      (`reports/evaluation/readings-v8.md`). A gate refusing a question-shaped sentence
+      that ends an answer, or one close to another heading's text, would catch it.
 
 - [ ] **`import_gguf.sh` was lost, so nothing in the repo rebuilds the local models.**
       (M8 prep; found lost 2026-09-23) It and `kvbench.sh` lived in a `/private/tmp`
@@ -158,10 +167,18 @@ first raised, not where it must be done.
 
 - [ ] **Two published limits have no headroom for Milestone 15.** (pre-M12 review)
       `/regions/{id}/metrics` is published at its default `limit=5000` with nothing in
-      the response saying whether it truncated; the largest region carries 760
-      observations today, so this is a watch item. `/rankings` caps at 1,000, below the
+      the response saying whether it truncated; the largest region carries 1,152
+      observations since Milestone 34 (Hudson County; 760 before), so this is a watch
+      item. `/rankings` caps at 1,000, below the
       3,144 counties national coverage would add (Milestone 15, unscheduled) — a national
       ranking would be silently cut off at rank 1,000.
+- [ ] **Rank ranges compare every pair of regions, and Milestone 34 made that slow.**
+      (M34, measured 2026-10-01) `_rank_ranges` joins each ranking group to itself, so
+      a group costs the square of its regions: 598 ZCTAs across 26 more ranked metrics
+      and five windows took the step to about three minutes a rebuild, and the Python
+      suite, which rebuilds six times, to well over half an hour. The weekly refresh
+      rebuilds once, so it is tolerable for New Jersey; at Milestone 14's seven states it
+      is not. A sort-based count, or the step moved to DuckDB, are the leads.
 - [ ] **`GET /regions?q=` passes `%` and `_` through to `ILIKE`.** (pre-M12 review) A
       caller searching for `%` matches every region. Cosmetic today; worth settling
       before Milestone 17 builds real search over this endpoint.
@@ -382,6 +399,11 @@ first raised, not where it must be done.
 
 ### Data sources worth adding
 
+- [ ] **Milestone 34's ACS depth stops at ZCTA; tracts have none of it.** (M34) The
+      warehouse holds 2,181 tracts and the ACS publishes every M34 table for them, but
+      no tract page shows Census figures yet. Left out by decision on 2026-10-01; the
+      adapter would take a `tract` level beside `county` and `cousub`.
+
 - [ ] **ACS housing-stock tables** — B25002 and B25003 landed in Milestone 21 as vacancy
       and homeownership rates; **B25024 (units in structure) and B25034 (year built)
       remain.** Same `CENSUS_API_KEY`, same adapter. Note the raw cache keys on the
@@ -398,10 +420,6 @@ first raised, not where it must be done.
 - [ ] **LEHD LODES** — jobs by workplace and residence per census block, supporting
       jobs-housing balance and commute-shed analysis. Large but static files.
       **Scheduled: Milestone 43.**
-- [ ] **ACS ZIP-level data is not fetched.** (M3) Since 2020 ACS no longer nests ZCTAs
-      within states, so a ZIP pull means downloading all ~33,000 nationally per vintage
-      for the 598 that matter.
-      **Scheduled: Milestone 34.**
 - [ ] **Zillow's home value reaches 388 of 564 municipalities (69%)** — a ceiling, not a
       bug. (M2, updated at M7; recounted 2026-09-27, when it was 403 before) MOD-IV landed
       and `region_identifiers` holds 554 NJ codes, so a crosswalk exists, but routing

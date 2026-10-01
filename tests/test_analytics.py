@@ -253,3 +253,32 @@ def test_a_change_carries_the_census_margin_for_a_ratio() -> None:
             / abs(start)
         )
         assert r["pct_change_margin"] == pytest.approx(expected)
+
+
+def test_a_survey_change_is_never_shorter_than_its_label() -> None:
+    """#282: a ZCTA's first edition is 2020, so a five-year change to 2024 would have
+    been measured from 2020 under the 400-day tolerance — four years labelled as five,
+    over two editions sharing a year of sample. Survey windows may not start late."""
+    rows = _rows(
+        """
+        SELECT count(*) AS n
+        FROM fact_metric_change c JOIN metrics m USING (metric_id)
+        WHERE (m.record_type = 'survey' OR m.metric_id = ANY(:on_income))
+          AND c."window" IN ('1y', '3y', '5y', '10y')
+          AND c.window_end - c.window_start < CASE c."window"
+                WHEN '1y' THEN 365 WHEN '3y' THEN 1095
+                WHEN '5y' THEN 1826 ELSE 3652 END - 31
+        """,
+        on_income=["price_to_income", "rent_to_income", "fmr_to_income"],
+    )
+    assert rows[0]["n"] == 0
+    zip_five = _rows(
+        """
+        SELECT count(*) AS n
+        FROM fact_metric_change c JOIN regions r USING (region_id)
+        JOIN metrics m USING (metric_id)
+        WHERE r.level = 'zip' AND c."window" = '5y'
+          AND (m.source_id = 'census_acs' OR m.metric_id = 'price_to_income')
+        """
+    )
+    assert zip_five[0]["n"] == 0

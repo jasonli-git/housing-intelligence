@@ -1,27 +1,18 @@
 -- ACS occupancy and tenure (Milestone 21): vacancy rate from B25002 and homeownership
--- rate from B25003, at county and municipality. Read from the `housing_*` layers the
--- adapter requests separately, so these rows cite their own release; the income and
--- rent tables stay in stg_census_acs, untouched.
+-- rate from B25003, at county, municipality and, since Milestone 34, ZCTA. Read from the
+-- `housing_*` layers the adapter requests separately, so these rows cite their own
+-- release; the income and rent tables stay in stg_census_acs, untouched.
 {{ config(materialized='table') }}
 
 with raw as (
-    select *, 'county' as lvl, 'housing_county' as release_layer,
-           regexp_extract(filename, '/(\d{4})/', 1) as vintage
-    from read_parquet('{{ var("parquet_dir") }}/census_acs/*/housing_county_*.parquet',
-                      filename=true, union_by_name=true)
-    union all by name
-    select *, 'municipality' as lvl, 'housing_cousub' as release_layer,
-           regexp_extract(filename, '/(\d{4})/', 1) as vintage
-    from read_parquet('{{ var("parquet_dir") }}/census_acs/*/housing_cousub_*.parquet',
-                      filename=true, union_by_name=true)
+    {{ acs_layers('housing_') }}
 ),
 keyed as (
     select
-        case when lvl = 'county' then state || county
-             else state || county || "county subdivision" end as geoid,
-        lvl as level,
+        geoid,
+        level,
         release_layer,
-        vintage::int as vintage,
+        vintage,
         -- The same suppression sentinel stg_census_acs refuses.
         nullif(nullif("B25002_001E", '-666666666'), '')::double as housing_units,
         nullif(nullif("B25002_003E", '-666666666'), '')::double as vacant_units,
@@ -33,7 +24,6 @@ keyed as (
         {{ acs_margin('"B25003_001M"') }} as occupied_units_moe,
         {{ acs_margin('"B25003_002M"') }} as owner_occupied_moe
     from raw
-    where lvl = 'county' or "county subdivision" <> '00000'
 ),
 unpivoted as (
     -- Vacancy counts every unit, seasonal and for-sale included — the Census definition,
@@ -60,7 +50,7 @@ select
     make_date(vintage, 12, 31)   as period_end,
     value,
     margin_of_error,
-    'fips' as match_method,
+    case when level = 'zip' then 'zcta' else 'fips' end as match_method,
     release_layer,
     vintage::varchar as release_vintage
 from unpivoted
