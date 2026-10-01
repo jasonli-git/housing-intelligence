@@ -409,13 +409,13 @@ first raised, not where it must be done.
 - [ ] **Read Realtor.com's terms by hand.** (M31) Its research data pages refuse an
       automated reader. Settles a candidate source the register lists as unverified;
       nothing on the site depends on it. Zillow's were read on 2026-09-30 (#272).
-- [ ] **Ask Zillow whether a scheduled fetch of its public CSVs is allowed.** (M31,
-      #272) Its Terms of Use forbid "any other automated activity with the purpose of
-      obtaining information" from its services, and its data page does not say whether
-      that covers a monthly scripted download of the files it publishes. Until it
-      answers, the six files are downloaded by hand into `data/manual/` (README, "Zillow
-      is downloaded by hand"). If the answer is yes: set `manual = False` on
-      `_ZillowAdapter` and record the reply in ARCHITECTURE.
+- [ ] **Zillow's files are downloaded by hand, as a standing arrangement.** (M31, #272)
+      Its Terms of Use forbid automated fetching, and its pages neither exempt a monthly
+      scripted download of the public CSVs nor offer a channel to ask (2026-09-30: the
+      contact page lists customer support, press and ZTRAX only). Revisit with
+      Milestone 32: if it says go, the question goes to the Zillow Group developer
+      program with the commercial application. A yes means `manual = False` on
+      `_ZillowAdapter`. **Scheduled: Milestone 32.**
 - [ ] **Ask Freddie Mac about the mortgage rate?** (M31, #269) Its PMMS page allows use
       with attribution; its general terms forbid publishing or redistributing its data
       without an agreement. The site shows the weekly and monthly rate, credited, and

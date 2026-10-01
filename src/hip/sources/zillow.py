@@ -37,7 +37,7 @@ class _ZillowAdapter(SourceAdapter):
     Downloaded by hand since Milestone 31 (ARCHITECTURE #272). Zillow's Terms of Use
     forbid "any other automated activity with the purpose of obtaining information" from
     its services, and nothing on its pages says a scheduled fetch of these public CSVs
-    is exempt; the owner has asked. Until Zillow answers, the six files are downloaded
+    is exempt — nor does Zillow offer anywhere to ask. So the six files are downloaded
     from its data page into `data/manual/<source_id>/`, named as Zillow names them, and
     the refresh picks up whatever is there. `refs` still names Zillow's own URL, as the
     provenance of where the file was published.

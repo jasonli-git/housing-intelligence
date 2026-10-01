@@ -39,8 +39,8 @@ Milestone 31, the licence and provenance pass.
   content hash, so no reading went stale.
 - **Zillow's data is downloaded by hand.** Its Terms of Use forbid automated fetching, so
   the refresh no longer requests its files: the six CSVs are downloaded from Zillow's
-  data page into `data/manual/`, and the next refresh ingests whichever changed. The
-  owner has asked Zillow whether a scheduled fetch is allowed (#272).
+  data page into `data/manual/`, and the next refresh ingests whichever changed. A
+  standing arrangement: Zillow offers no channel for the question (#272).
 - **"Data Provided by Zillow Group"** is shown on every page and in every CSV, the
   attribution Zillow's Terms of Use require wherever its data appears (#272).
 - **The mortgage rate is credited to Freddie Mac** as well as FRED, and is left out of
