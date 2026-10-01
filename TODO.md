@@ -118,6 +118,16 @@ first raised, not where it must be done.
 
 ### Evaluation harness
 
+- [ ] **A reading's claims without a figure go unchecked.** (#275, 2026-10-01) Gemini's
+      test reading of Hudson said rents take "a particularly large share of household
+      budgets" under *What stands out here?* with no figure behind the words
+      (`reports/evaluation/readings-v6.md`; ARCHITECTURE, Known Limitations, "Binding
+      checks figures, not claims"). Binding checks numbers only, so a figure-free claim
+      passes whether the packet supports it or not. Possible directions, none decided:
+      a gate that refuses comparative words ("large share", "highest", "among the")
+      in a sentence that cites no figure for the measure named; or the judge's
+      `factual_accuracy` run on a sample of published readings after each regeneration.
+
 - [ ] **`import_gguf.sh` was lost, so nothing in the repo rebuilds the local models.**
       (M8 prep; found lost 2026-09-23) It and `kvbench.sh` lived in a `/private/tmp`
       scratchpad and did not survive a reboot around 2026-09-15. The four

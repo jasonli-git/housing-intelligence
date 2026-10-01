@@ -1180,7 +1180,13 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   one of its 14 figures bound. In a benchmark the judge catches that, under
   `factual_accuracy`; in production nothing does. The counted rate is a floor on error,
   not an accuracy measure. Since #120 that includes a change's sign: a bare "36.66%" for
-  a decline binds.
+  a decline binds. **A claim with no figure in it is not checked at all** (#275):
+  Gemini's test reading of Hudson County on 2026-10-01 (`reports/evaluation/readings-v6.md`)
+  said under *What stands out here?* that rents take "a particularly large share of
+  household budgets", quoting no figure for it. The packet happens to support it —
+  renters paying over 30% of income rank 1st–6th — but the reading never cited that,
+  and a claim the packet contradicted would pass the same way. The prompt forbids
+  "no new figure" claims; no gate enforces it.
 - **Between equal numbers, attribution is a best reading** (#112). Where several fields
   hold the number — two metrics that both rank 4 — the binding goes by the unit written
   and the metric the sentence names, and records the rest as `alternatives`; 97 of the
