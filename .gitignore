@@ -16,6 +16,8 @@ reports/**
 !reports/evaluation/*.md
 !reports/completeness/
 !reports/completeness/*.md
+!reports/commercial/
+!reports/commercial/*.md
 
 # Python
 .venv/

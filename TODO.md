@@ -14,19 +14,42 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — the analyst reading retired, awaiting review (2026-10-01)
+## Now — Milestone 32, the commercial viability study (started 2026-10-01)
 
-On `change/consumer-only-readings` (0.27.0): the analyst reading is retired and the
-consumer reading answers a third question, *What stands out here?* (ARCHITECTURE
-#275). Tested on five counties with the live gates in
-`reports/evaluation/readings-v3.md`; nothing is regenerated or published yet.
+On `milestone/m32-commercial-viability`. Ends in a **go or no-go, judged separately for
+two uses**, decided with the owner on 2026-10-01: **ads or sponsorship** on the free site,
+and a **paid tier** (pages, tools or downloads behind a subscription). Data or API sales
+and paid reports are out of scope. Paid data counts as viable at about **$10 a month**,
+or more if the use's revenue would cover it. The owner signs up for RentCast's free
+allowance; nothing is subscribed to.
 
-**After the merge:** `hip explain` regenerates the 21 consumer readings and retires the
-analyst ones, keeping a copy in `data/retired/` (about $0.15); then `make publish`,
-deploy and `make check-live`.
+Deliverable: `reports/commercial/viability.md`, with the recommendation per use, and
+the per-source rights recorded in `config/sources.yml` so a commercially cleared variant
+could be built from them.
 
-Milestone 32 is next and not started, at the owner's direction; it now also reconsiders
-the analyst reading.
+- [ ] **Licence table.** Every source, for each use: display, download, derived figures
+      — allowed, not allowed, or unclear with the words that make it so. Recorded in
+      `config/sources.yml` and checked by `check_config`.
+- [ ] **What survives.** Which metrics, and which headline features (cost card,
+      affordability verdict, maps, rankings, readings), remain under each use with every
+      source that does not allow it removed; computed from each metric's inputs, as
+      Milestone 31's licence inheritance is.
+- [ ] **Zillow's commercial route.** The developer program's Real Estate Metrics API:
+      its terms (Bridge), what they allow for each use, what it costs, what applying
+      takes. Applied for only on a go.
+- [ ] **Freddie Mac's rate on a commercial page.** Whether its terms allow display on a
+      site with ads, or behind a paywall.
+- [ ] **Paid data, per vendor.** Price and terms for each vendor that could replace a
+      restricted figure or add one, recovered from the 2026-09 comparison
+      (`git show b7ccd98^:TODO.md`) and re-read. RentCast tested on its free allowance
+      under a hard request budget, once the owner's key is in `.env`.
+- [ ] **What it costs to run, and what each use would have to earn.** Hosting, AI
+      readings (ARCHITECTURE #276's measured run), data; break-even per use.
+- [ ] **The analyst reading** (#275): whether a paid tier wants long-form analysis, and
+      in what form.
+- [ ] **Go or no-go per use.** A go proposes a SPEC change for the owner and a milestone
+      to build the cleared variant; a no-go is recorded in ARCHITECTURE.md with what would
+      change it.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 

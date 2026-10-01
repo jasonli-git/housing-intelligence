@@ -76,6 +76,16 @@ LICENCE_ORDER: tuple[LicenceClass, ...] = (
     "display_only",
 )
 
+# Whether a source's terms allow each commercial use the owner is weighing (Milestone
+# 32, ARCHITECTURE #277): `ads`, the free site carrying advertising or a sponsor, and
+# `paid`, figures behind a subscription. Most permissive first, so a calculated figure
+# takes the least permissive of its inputs', as its licence class does. `unclear` means
+# the terms neither grant nor forbid the use in words a reader could rely on.
+CommercialUse = Literal["ads", "paid"]
+COMMERCIAL_USES: tuple[CommercialUse, ...] = ("ads", "paid")
+CommercialRight = Literal["allowed", "unclear", "not_allowed"]
+RIGHT_ORDER: tuple[CommercialRight, ...] = ("allowed", "unclear", "not_allowed")
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # ${VAR} or ${VAR:-fallback}
@@ -250,6 +260,19 @@ class Source(BaseModel):
     # Statements the terms require the site to display, word for word — the Census,
     # HUD User and FRED APIs each require one. Rendered site-wide and in every download.
     notices: list[str] = Field(default_factory=list)
+    # What the terms say about each commercial use (Milestone 32). Required of every
+    # source but the platform's own, whose figures inherit their inputs' (check-config).
+    commercial: CommercialRights | None = None
+
+
+class CommercialRights(BaseModel):
+    """A source's terms on each commercial use, and the words that decide it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ads: CommercialRight
+    paid: CommercialRight
+    note: str = Field(min_length=1)
 
 
 class Metric(BaseModel):
@@ -285,6 +308,25 @@ def metric_licence(
         return source_class
     inherited = [metric_licence(i, metrics, sources) for i in metric.inputs]
     return max(inherited, key=LICENCE_ORDER.index)
+
+
+def metric_commercial(
+    metric_id: str,
+    metrics: dict[str, Metric],
+    sources: dict[str, Source],
+    use: CommercialUse,
+) -> CommercialRight:
+    """Whether a metric's figures may serve `use`: its source's terms, or for a
+    calculated metric the least permissive of its inputs' (ARCHITECTURE #277), the way
+    its licence class is inherited (#269)."""
+    metric = metrics[metric_id]
+    source = sources[metric.source_id]
+    if source.licence_class != "derived":
+        if source.commercial is None:
+            return "unclear"
+        return source.commercial.ads if use == "ads" else source.commercial.paid
+    inherited = [metric_commercial(i, metrics, sources, use) for i in metric.inputs]
+    return max(inherited, key=RIGHT_ORDER.index)
 
 
 class GeographyScope(BaseModel):
@@ -973,6 +1015,17 @@ def check_config(config_dir: Path | None = None) -> list[str]:
                     f"metric in metrics.yml"
                 )
     for source_id, source in sources.items():
+        derived = source.licence_class == "derived"
+        if derived and source.commercial is not None:
+            problems.append(
+                f"sources.yml: {source_id}.commercial: the platform's own figures take "
+                f"their inputs' commercial rights"
+            )
+        if not derived and source.commercial is None:
+            problems.append(
+                f"sources.yml: {source_id}: commercial is not set; every source states "
+                f"what its terms allow for ads and a paid tier (Milestone 32)"
+            )
         if source.terms_checked is None and not source.terms_note:
             problems.append(
                 f"sources.yml: {source_id}: terms_checked is not set, so terms_note must "
