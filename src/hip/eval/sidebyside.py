@@ -312,7 +312,7 @@ def render(
         f"# Readings side by side — {name}",
         "",
         f"Generated {on.isoformat()} by `hip eval readings`. Each model was given the "
-        "prompt, packet (1.3, with margins and rank ranges), service tier and gates "
+        "prompt, packet (1.4, with margins and rank ranges), service tier and gates "
         "`hip explain` would give it, for "
         f"{len(regions)} counties: {', '.join(label for _, label in regions)}. Nothing "
         "was stored; a reading marked *refused* is shown with the rule it broke. "
