@@ -50,9 +50,24 @@ sources:
     publisher: Zillow Research
     license: Free for non-commercial use with attribution
     licence_class: non_commercial
-    terms_url: https://www.zillow.com/research/data/
+    terms_url: https://www.zillow.com/corporate/terms-of-use/
+    terms_checked: 2026-09-30
     terms_note: >-
-      Zillow's data page refused an automated reader (HTTP 403) on 2026-09-30, and no other route to its terms was taken. The class is the non-commercial, attribution-required wording recorded from that page in 2026-09 (ARCHITECTURE #71), unconfirmed since; the owner reads it by hand.
+      Read by the owner by hand on 2026-09-30 (the pages refuse automated readers). The
+      research data page: "free for public use by consumers, media, analysts, academics
+      and policymakers, consistent with our published Terms of Use. Proper and clear
+      attribution of all data to Zillow is required." The Terms of Use (updated
+      2025-10-28), section 4C: aggregate-level data "may be used for non-personal uses,
+      e.g., real estate market analysis", and derivative works may be displayed and
+      distributed "only so long as the Zillow Companies are cited as a source on every
+      page where the Aggregate Data are displayed, including 'Data Provided by Zillow
+      Group'", with no logo and no implied relationship. Neither says non-commercial; the
+      class stays non_commercial until Milestone 32 settles commercial use. Section 5
+      forbids "automated queries … or any other automated activity with the purpose of
+      obtaining information from the Services" (ARCHITECTURE #272).
+    notices:
+      - >-
+        Data Provided by Zillow Group.
     url: https://www.zillow.com/research/data/
     cadence: monthly
     adapter: hip.sources.zillow:ZhviAdapter
@@ -69,9 +84,24 @@ sources:
     publisher: Zillow Research
     license: Free for non-commercial use with attribution
     licence_class: non_commercial
-    terms_url: https://www.zillow.com/research/data/
+    terms_url: https://www.zillow.com/corporate/terms-of-use/
+    terms_checked: 2026-09-30
     terms_note: >-
-      As zillow_zhvi: the same page and the same unconfirmed wording.
+      Read by the owner by hand on 2026-09-30 (the pages refuse automated readers). The
+      research data page: "free for public use by consumers, media, analysts, academics
+      and policymakers, consistent with our published Terms of Use. Proper and clear
+      attribution of all data to Zillow is required." The Terms of Use (updated
+      2025-10-28), section 4C: aggregate-level data "may be used for non-personal uses,
+      e.g., real estate market analysis", and derivative works may be displayed and
+      distributed "only so long as the Zillow Companies are cited as a source on every
+      page where the Aggregate Data are displayed, including 'Data Provided by Zillow
+      Group'", with no logo and no implied relationship. Neither says non-commercial; the
+      class stays non_commercial until Milestone 32 settles commercial use. Section 5
+      forbids "automated queries … or any other automated activity with the purpose of
+      obtaining information from the Services" (ARCHITECTURE #272).
+    notices:
+      - >-
+        Data Provided by Zillow Group.
     url: https://www.zillow.com/research/data/
     cadence: monthly
     adapter: hip.sources.zillow:ZoriAdapter

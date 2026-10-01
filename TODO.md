@@ -406,14 +406,16 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
-- [ ] **Read Zillow's and Realtor.com's terms by hand.** (M31) Both sites refuse an
-      automated reader, which the acquisition policy does not work around (#271).
-      Zillow's research data page (terms at the foot of
-      [zillow.com/research/data](https://www.zillow.com/research/data/)): does it still
-      say free for non-commercial use with attribution, and does it allow redistributing
-      the figures in a download? The site's class for both indexes rests on the wording
-      recorded in 2026-09 until then. Realtor.com's research data terms settle a source
-      the register lists as unverified.
+- [ ] **Read Realtor.com's terms by hand.** (M31) Its research data pages refuse an
+      automated reader. Settles a candidate source the register lists as unverified;
+      nothing on the site depends on it. Zillow's were read on 2026-09-30 (#272).
+- [ ] **Ask Zillow whether a scheduled fetch of its public CSVs is allowed.** (M31,
+      #272) Its Terms of Use forbid "any other automated activity with the purpose of
+      obtaining information" from its services, and its data page does not say whether
+      that covers a monthly scripted download of the files it publishes. Until it
+      answers, the six files are downloaded by hand into `data/manual/` (README, "Zillow
+      is downloaded by hand"). If the answer is yes: set `manual = False` on
+      `_ZillowAdapter` and record the reply in ARCHITECTURE.
 - [ ] **Ask Freddie Mac about the mortgage rate?** (M31, #269) Its PMMS page allows use
       with attribution; its general terms forbid publishing or redistributing its data
       without an agreement. The site shows the weekly and monthly rate, credited, and

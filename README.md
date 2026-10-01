@@ -602,6 +602,20 @@ Add either to the Home Screen or Control Center for a one-tap version.
 5. **Check the publisher's own notice channel** where there is one — NJOGIS announces
    service changes on the NJ Geospatial Forum listserv before making them.
 
+**Zillow is downloaded by hand, monthly.** Zillow's Terms of Use forbid automated
+fetching, so the refresh never requests its files (ARCHITECTURE #272). When Zillow
+publishes a month — its data release calendar is linked from
+[zillow.com/research/data](https://www.zillow.com/research/data/) — download six CSVs
+from that page and put them in `data/manual/`, keeping Zillow's file names:
+
+| Folder | Files (each for County, City and Zip) |
+|---|---|
+| `data/manual/zillow_zhvi/` | ZHVI, all homes, mid-tier, smoothed and seasonally adjusted: `County_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` and its `City_` and `Zip_` siblings |
+| `data/manual/zillow_zori/` | ZORI, all homes plus multifamily, smoothed: `County_zori_uc_sfrcondomfr_sm_month.csv` and its `City_` and `Zip_` siblings |
+
+The next refresh ingests whichever changed; with nothing new there, the last files stand.
+A missing file names itself and the page to get it from.
+
 `make` on its own lists every target. With the warehouse down, the API and dashboard
 still run and report the degraded state rather than failing.
 

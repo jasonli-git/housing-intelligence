@@ -343,6 +343,14 @@ class SourceAdapter(ABC):
     # refs are expensive — HUD's CHAS layer is 571 requests — and it has no effect at
     # all on a source that does send validators, which is checked every run for free.
     revalidate_after: ClassVar[timedelta] = timedelta(days=7)
+    # A source whose terms forbid automated fetching (Milestone 31, ARCHITECTURE #272):
+    # the owner downloads its files by hand into `data/manual/<source_id>/`, and `fetch`
+    # reads them from there and never makes a request. Zillow's Terms of Use forbid "any
+    # other automated activity with the purpose of obtaining information" from it.
+    manual: ClassVar[bool] = False
+    # Where a person downloads a manual source's files, for the message that asks them to.
+    manual_from: ClassVar[str | None] = None
+    _manual_dir: Path | None = None
     # The newest release in force, as acquisition last recorded it (`Discovery`). None
     # until something is recorded, when an adapter answers with its own floor — a
     # release known to exist when the adapter was written. Set from the record by
@@ -586,7 +594,25 @@ class SourceAdapter(ABC):
                 )
             return release
 
-        if not force and (cached_sha := index.get(ref.key)):
+        if self.manual:
+            dropped = self.manual_path(ref, raw_dir)
+            cached_sha = index.get(ref.key)
+            kept = self._from_cache(ref, raw_dir, cached_sha) if cached_sha else None
+            if not dropped.exists():
+                # Nothing new handed in: the last file stands, as a pinned release does.
+                if kept is not None:
+                    return kept
+                raise SourceError(
+                    f"{ref.source_id}/{ref.layer}: downloaded by hand, and no file is "
+                    f"in {dropped.parent}. Download {dropped.name} from "
+                    f"{self.manual_from or 'the publisher'} into that folder, then run "
+                    f"this again."
+                )
+            if kept is not None and not force and _sha256(dropped) == cached_sha:
+                return kept
+            self._manual_dir = dropped.parent
+
+        elif not force and (cached_sha := index.get(ref.key)):
             # The index is keyed by what a release *is*, not by the request that
             # fetched it, and the two can part. BLS asks for the twenty years ending at
             # the newest one discovery found, so when 2026 was found the key stayed
@@ -687,6 +713,11 @@ class SourceAdapter(ABC):
             etag=data.get("etag"),
         )
 
+    def manual_path(self, ref: ReleaseRef, raw_dir: Path) -> Path:
+        """Where a hand-downloaded file for `ref` is expected: beside `raw/`, under
+        `manual/<source_id>/`, named as the publisher names it."""
+        return raw_dir.parent / "manual" / ref.source_id / self.filename(ref)
+
     def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
         """Transfer one file to ``destination``. The only overridable I/O primitive.
 
@@ -699,7 +730,14 @@ class SourceAdapter(ABC):
         a release from many requests simply leaves them unset — there is no single
         response to validate against, and such a release is re-fetched every time
         rather than pretending it can be checked cheaply.
+
+        For a manual source the transfer is a copy of the file the owner handed in, so
+        it is hashed, cached and recorded exactly as a download would be.
         """
+        if self.manual and self._manual_dir is not None:
+            shutil.copyfile(self._manual_dir / destination.name, destination)
+            self._last_validators = {}
+            return
         with httpx.stream(
             "GET",
             ref.url,
