@@ -426,7 +426,10 @@ first raised, not where it must be done.
       which the pages are built from. Nothing public reconciles the two, so this is a question
       only Freddie Mac can answer — a candidate for the owner's outreach, or leave it as
       it stands.
-
+      FRED's series notes (read by the owner 2026-09-30) say "Reprinted with
+      permission" — Freddie Mac's permission to FRED, not to sites downstream — and give
+      a suggested citation, now shown as a notice. Still to read by hand: the PMMS page's
+      footer, and how freddiemac.com/terms defines "Data" (does it cover PMMS?).
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.
 
