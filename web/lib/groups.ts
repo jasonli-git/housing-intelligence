@@ -55,6 +55,21 @@ export const GROUPS: readonly Group[] = [
     ],
   },
   {
+    // The running costs of a home beyond its mortgage and tax (Milestone 33): what the
+    // cost of owning reads its insurance and utility bills from, shown as levels and
+    // never ranked, because the Census gives them only in brackets (ARCHITECTURE #279).
+    key: "running",
+    title: "Running costs",
+    metrics: [
+      "acs_median_home_insurance",
+      "acs_median_electricity",
+      "acs_median_gas",
+      "acs_median_water_sewer",
+      "acs_median_other_fuel",
+      "acs_renters_paying_utilities",
+    ],
+  },
+  {
     key: "incomes",
     title: "Incomes and jobs",
     metrics: [

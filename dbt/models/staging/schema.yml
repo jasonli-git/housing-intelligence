@@ -85,6 +85,24 @@ models:
         tests:
           - accepted_range: {min_value: 0, max_value: 1.0e+15}
 
+  - name: stg_census_acs_costs
+    description: >-
+      ACS homeowners insurance (B25141), utility bills (B25132-B25135) and renters paying
+      utilities on top of rent (B25069), county and municipal; medians interpolated from
+      the published brackets (Milestone 33).
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: release_layer
+        tests:
+          - accepted_values:
+              values: ['insurance_county', 'insurance_cousub',
+                       'utilities_county', 'utilities_cousub']
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {min_value: 0, max_value: 1.0e+6}
+
   - name: stg_census_permits_place
     description: Building permits by place, resolved to municipal GEOIDs by FIPS MCD code.
     columns:

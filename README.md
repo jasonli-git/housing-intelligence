@@ -41,11 +41,12 @@ layer only explains metrics that were already computed.
 > are on every page. Since 0.27.0 each county page's model-written reading is one
 > plain-language reading in three answers, checked figure by figure before it is
 > published; the longer analyst reading is retired. Milestone 32 (2026-10-01) decided
-> against ads and a paid tier for now, recording what each source's terms allow
-> commercially.
+> against ads and a paid tier for now. Milestone 33 (2026-10-01) shows the full cost of
+> owning in four views — each month, up front, money gone, and over the years against
+> renting — with every component saying where it came from, and lets a reader put in
+> their own figures.
 >
-> **Next.** Milestone 33: the full cost of owning, in four views rather than one total.
-> See
+> **Next.** Milestone 34: ACS depth and direct ZIP coverage. See
 > [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
@@ -274,6 +275,14 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   interpretation per listed model side by side, switchable by the reader, each labeled
   with the model that wrote it, until Milestone 30 replaced the comparison with one
   reading for each kind of reader.
+- **The full cost of owning** (M33, built) — each region's cost section shows a month of
+  owning with every part of it (loan, tax, homeowners insurance, mortgage insurance,
+  utilities, upkeep, and HOA fees and flood insurance where they apply), the cash needed
+  up front, the money that does not come back, and owning for some years then selling
+  against renting. Each figure says whether it is published for the place, a published
+  rule, a typical range, a rule of thumb or the reader's own; a total missing a part says
+  *partial estimate*. A reader can enter their own figures, and their personal ones follow
+  them from town to town in their browser.
 - **Commercial rights, recorded** (M32, built) — every source states what its terms
   allow for ads on the site and for a paid tier, inherited by any figure calculated from
   it; `reports/commercial/viability.md` is the study, and the decision is no-go on both

@@ -36,6 +36,7 @@ export function formatChange(pct: number): string {
 export const SHARE_METRICS: ReadonlySet<string> = new Set([
   "acs_homeownership_rate",
   "acs_renter_cost_burden",
+  "acs_renters_paying_utilities",
   "acs_vacancy_rate",
   "chas_owner_cost_burden",
   "chas_renter_cost_burden",

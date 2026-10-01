@@ -416,9 +416,28 @@ def test_acs_housing_tables_are_their_own_layers(monkeypatch: pytest.MonkeyPatch
     refs = AcsAdapter(states=["NJ"], end_year=2024).refs(vintage="2023")
 
     by_layer = {r.layer: r for r in refs}
-    assert set(by_layer) == {"county", "cousub", "housing_county", "housing_cousub"}
+    assert {"county", "cousub", "housing_county", "housing_cousub"} <= set(by_layer)
     assert "B25002" not in by_layer["county"].url, "the cached request is unchanged"
     assert all(v in by_layer["housing_cousub"].url for v in HOUSING_VARIABLES)
+
+
+def test_acs_cost_tables_are_asked_only_of_editions_that_carry_them(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Milestone 33: B25141 begins with the 2023 edition and the utility bills with
+    2021, and the API refuses a variable an edition lacks, so an older edition is not
+    asked for them."""
+    from hip.sources.census_acs import AcsAdapter
+
+    monkeypatch.setenv("CENSUS_API_KEY", "census-test")
+    refs = AcsAdapter(states=["NJ"], end_year=2024).refs()
+    years = {
+        layer: sorted({int(r.vintage) for r in refs if r.layer == layer})
+        for layer in ("insurance_county", "utilities_cousub", "county")
+    }
+    assert years["insurance_county"] == [2023, 2024]
+    assert years["utilities_cousub"] == [2021, 2022, 2023, 2024]
+    assert years["county"] == [2019, 2020, 2021, 2022, 2023, 2024]
 
 
 def test_acs_asks_for_every_estimate_with_its_margin_of_error(

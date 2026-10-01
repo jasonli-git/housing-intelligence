@@ -3,6 +3,47 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.29.0] — 2026-10-01
+
+Milestone 33, the full cost of owning.
+
+### Added
+
+- **Four views of the cost of owning** on every region page with a price (ARCHITECTURE
+  #280).
+  - **Each month:** the loan, property tax, homeowners insurance, mortgage insurance,
+    utilities and upkeep, plus HOA fees and flood insurance where the reader adds them.
+  - **Up front:** the down payment and closing costs, as a range.
+  - **Money gone:** everything but principal.
+  - **Over the years:** owning for a holding period and then selling, against renting
+    for as long.
+  - Every figure says where it came from: a published figure, a published rule, a
+    typical range, a rule of thumb, or the reader. A total missing a part every home has
+    says *partial estimate*.
+- **Your numbers.** Any input can be replaced: a listing's price, a tax bill, an
+  insurance quote, a rate, a rent, HOA fees, flood insurance, moving costs.
+  - Down payment, rate, quotes and the long view's assumptions follow the reader to
+    every page in their browser.
+  - A home's figures stay on its page.
+  - Nothing typed changes a published figure or a ranking.
+- **3.5% down is an FHA loan**, with HUD's upfront and yearly premiums and a link to
+  HUD's county loan limits.
+- **New Jersey's seller fees** in the long view: the realty transfer fee and, above
+  $1 million, the seller's graduated percent fee in force since 2025-07-10.
+- **Renting's own costs** beside owning's: utilities a quoted rent leaves out, and the
+  deposit cap of a month and a half's rent.
+- **Tax relief and help buying** as official links with a review date, never subtracted.
+- **Six running-cost figures** from the Census survey, by county and town, in a new
+  "Running costs" group: homeowners insurance (owners with a mortgage), electricity,
+  gas, water and sewer, other fuels, and renters paying utilities on top of rent.
+  - Each is interpolated from the Census's brackets with no margin.
+  - Never ranked, and no change over time is computed (#279).
+
+### Changed
+
+- The cost section is "What it costs to own and to rent". Its comparison with renting
+  leaves utilities out of both sides.
+
 ## [0.28.0] — 2026-10-01
 
 Milestone 32, the commercial viability study.

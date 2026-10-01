@@ -18,6 +18,8 @@ from datetime import date
 
 from sqlalchemy import Engine, text
 
+from hip.config import load_metrics
+
 # Change windows, as (label, years). `since_2019` is anchored rather than relative: it
 # is the pre-pandemic baseline most housing analysis reaches for.
 RELATIVE_WINDOWS: tuple[tuple[str, int], ...] = (
@@ -57,18 +59,30 @@ RATIOS: tuple[tuple[str, str, str, float], ...] = (
 )
 
 
+def unranked_metrics() -> list[str]:
+    """Metrics that are neither changed nor ranked (`ranked: false` in metrics.yml).
+
+    The costs Milestone 33 reads from the Census's brackets have no margin, so ranking
+    them would place regions more exactly than the survey can (SPEC principle 12), and a
+    change between two of them would claim a precision neither has. They are inputs to
+    a reader's cost of owning, shown as levels, not standings (ARCHITECTURE #279).
+    """
+    return [m for m, metric in load_metrics().items() if not metric.ranked]
+
+
 def rebuild(engine: Engine) -> AnalyticsResult:
     """Recompute every derived table. Idempotent."""
     result = AnalyticsResult()
+    unranked = unranked_metrics()
     with engine.begin() as conn:
         result.derived_observations = _affordability(conn)
         result.pruned_releases = _prune_orphan_derived_releases(conn)
-        result.changes = _changes(conn)
+        result.changes = _changes(conn, unranked)
         # One TRUNCATE for both bases, so the two ranking passes cannot half-rebuild
         # the table and leave a stale basis behind.
         conn.execute(text("TRUNCATE region_rankings"))
         result.rankings = _rankings(conn)
-        result.value_rankings = _value_rankings(conn)
+        result.value_rankings = _value_rankings(conn, unranked)
         result.rank_ranges = _rank_ranges(conn)
     return result
 
@@ -309,7 +323,7 @@ def _prune_orphan_derived_releases(conn: object) -> int:
     )
 
 
-def _changes(conn: object) -> int:
+def _changes(conn: object, unranked: list[str]) -> int:
     """Percentage change and CAGR from the latest observation back to each window."""
     conn.execute(text("TRUNCATE fact_metric_change"))  # type: ignore[attr-defined]
 
@@ -333,7 +347,9 @@ def _changes(conn: object) -> int:
                 -- 2019" — understating the real separation and mislabelling the row.
                 WITH latest AS (
                     SELECT region_id, metric_id, max(period_end) AS end_period
-                    FROM fact_metric_observation GROUP BY 1, 2
+                    FROM fact_metric_observation
+                    WHERE NOT (metric_id = ANY(:unranked))
+                    GROUP BY 1, 2
                 ),
                 -- DISTINCT ON because the fact table is keyed on period_start:
                 -- nothing stops two observations sharing an end date, and two rows
@@ -407,7 +423,8 @@ def _changes(conn: object) -> int:
                 FROM picked
                 WHERE start_value <> 0 AND window_end > window_start
                 """
-            )
+            ),
+            {"unranked": unranked},
         ).rowcount
     )
 
@@ -459,7 +476,7 @@ def _rankings(conn: object) -> int:
     )
 
 
-def _value_rankings(conn: object) -> int:
+def _value_rankings(conn: object, unranked: list[str]) -> int:
     """Rank regions by their most recent observed value, within their own level.
 
     The question "which municipality has the highest assessed value" is different from
@@ -481,6 +498,7 @@ def _value_rankings(conn: object) -> int:
                     SELECT DISTINCT ON (f.region_id, f.metric_id)
                            f.region_id, f.metric_id, f.value, f.margin_of_error
                     FROM fact_metric_observation f
+                    WHERE NOT (f.metric_id = ANY(:unranked))
                     ORDER BY f.region_id, f.metric_id, f.period_end DESC
                 ),
                 ranked AS (
@@ -511,7 +529,8 @@ def _value_rankings(conn: object) -> int:
                 FROM ranked
                 WHERE of > 1
                 """
-            )
+            ),
+            {"unranked": unranked},
         ).rowcount
     )
 

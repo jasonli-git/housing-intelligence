@@ -294,6 +294,10 @@ class Metric(BaseModel):
     # Who owns a series a source redistributes, where that is not the source: FRED
     # serves Freddie Mac's mortgage rate, and FRED's terms require crediting both.
     originator: str | None = None
+    # False for a figure shown as a level only: no change over a window, no ranking.
+    # The Census's bracketed costs (Milestone 33) carry no margin, so a rank or a change
+    # would claim a precision the survey does not give (ARCHITECTURE #279).
+    ranked: bool = True
 
 
 def metric_licence(

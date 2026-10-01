@@ -14,14 +14,15 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 32 decided, awaiting review (2026-10-01)
+## Now — Milestone 33 built, awaiting review (2026-10-01)
 
-On `milestone/m32-commercial-viability` (0.28.0): **no-go on both commercial uses for
-now**, ads or sponsorship and a paid tier (ARCHITECTURE #278,
-`reports/commercial/viability.md`). Every source states its commercial rights in config
-(#277). Nothing published changes; no deploy is needed after the merge.
+On `milestone/m33-full-cost-of-owning` (0.29.0): the full cost of owning in four views,
+every component labelled by where it came from (ARCHITECTURE #280), and six running-cost
+figures from new Census tables (#279). CHANGELOG 0.29.0 has what shipped.
 
-Milestone 33, the full cost of owning, is next and not started.
+**After the merge:** the warehouse already holds the new figures (acquired, staged and
+loaded on the branch); `hip explain` then regenerates the 21 readings, since packets now
+carry six more figures (about $0.15); `make publish`, deploy and `make check-live`.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -173,6 +174,21 @@ first raised, not where it must be done.
       (Milestone 14, unscheduled).
 ### Frontend and presentation
 
+- [ ] **The affordability workspace still prices payment and tax alone.** (M33, #280) The
+      region pages' cost section now counts insurance, mortgage insurance, utilities and
+      upkeep; the workspace that ranks towns by monthly cost does not, so the two can
+      disagree for the same town. Bring it onto `ownership.ts`, or say on it what it
+      leaves out.
+- [ ] **FHA's county loan limits are linked, not held.** (M33, #280) A 3.5%-down card in
+      a dear town can price an FHA loan HUD would not insure. HUD publishes the limits by
+      county each year; loading them would let the card say so outright.
+- [ ] **Re-read the cost rules once a year.** (M33) `web/lib/costRules.ts` carries HUD's
+      FHA premiums, NJ's transfer and graduated fees, the CFPB's closing range and Freddie
+      Mac's mortgage-insurance range, each with `reviewed: 2026-10-01`. Next: 2027-10-01,
+      or when HUD issues a mortgagee letter on premiums.
+- [ ] **ZIP pages have no insurance or utility figures.** (M33, #279) The ACS is not
+      fetched by ZIP (Milestone 34), so a ZIP's cost card reads as a partial estimate.
+
 - [ ] **The paused-banner swipe and the atlas redesign are unverified on a real iPhone.**
       (PR #46, PR #48) Both were checked in Chromium only, the swipe with its touch
       emulation; iOS Safari's scrolling, pointer events and sticky table headers differ
@@ -194,19 +210,6 @@ first raised, not where it must be done.
       piece most worth pinning, since a regression there would put client behaviour into
       printed reports.
 
-- [ ] **Let a reader enter their own purchase price, with the published figure
-      prefilled.** (owner's preference, 2026-09-20, stated alongside the ARCHITECTURE
-      #187 decision — a direction, not an approved requirement.) The cost card already
-      takes one input, the down payment, and now states a purchase price explicitly
-      rather than implying "the typical home" — which is most of the way to a field a
-      reader can overwrite with the price of a listing they are actually looking at. The
-      value is that the card stops being about a town and starts being about a decision,
-      while the assumptions behind it stay visible. **The boundary, from the owner
-      2026-09-20:** an entered price changes that reader's payment scenario only, and
-      never the town's published figures or its rankings — which settles most of what
-      was unscoped here. Still open: whether an entered price persists across regions,
-      and what the comparison strip says once the price is not the published one.
-      **Scheduled: Milestone 33.**
 - [ ] **Fold `redesign.css` into `globals.css`**, so each component has one set of rules
       rather than two whose winner depends on file order (#162's cost). (Quiet utility)
       Mechanical and large — worth its own review.
