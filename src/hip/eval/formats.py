@@ -243,8 +243,16 @@ Rules:
   Give a rank only for where the place stands now, in words a resident follows
   (highest, lowest, among the highest, near the middle), never for how much a figure
   changed.
-- Under "What should I check before moving?", name what these figures cannot tell
-  someone about a particular home or street, drawn from the packet's caveats.
+- Under "What should I check before moving?", write two or three sentences. Each
+  names one thing these figures cannot tell someone about a particular home, street
+  or town, and why, taken from one of the packet's own caveats, in your own words.
+  Prefer caveats about what a resident would pay or get — the tax bill, the rent, the
+  price of a home, the homes themselves — over those about program standards such as
+  income thresholds, and the ones that matter most for this place over the ones every
+  place shares. Where a caveat says what a single address or town depends on, say
+  that too; never say who sets, publishes or keeps anything, or where else it can be
+  found, beyond what the caveat says. Describe what the figures cannot show; never
+  tell the reader what to do: no "you should", "make sure" or "be sure to".
 - No preamble, no bullet lists, no bold.
 """
 

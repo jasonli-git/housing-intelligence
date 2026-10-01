@@ -14,6 +14,10 @@ All notable changes to the Housing Intelligence Platform. Format loosely follows
   above the computed rankings. The prompt is round 4 of the grounded-synthesis pilot
   (`reports/evaluation/synthesis-pilot.md`), checked on five counties with the live
   gates in `reports/evaluation/readings-v3.md` (ARCHITECTURE #275).
+- ***What should I check before moving?* names what the figures cannot show about one
+  address** — the tax bill, the rent, the homes — taken from the packet's caveats, and
+  no longer advises ("you should…"). Rewritten over three test runs,
+  `reports/evaluation/readings-v4.md` to `-v6.md`.
 - **New gates on the consumer reading**: never two measures of the same thing (two home
   values, two rents, two incomes, two population counts) anywhere in one reading, and
   under *What stands out here?* housing measures only and no opening on a date.

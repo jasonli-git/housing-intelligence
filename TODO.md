@@ -22,7 +22,7 @@ consumer reading answers a third question, *What stands out here?* (ARCHITECTURE
 `reports/evaluation/readings-v3.md`; nothing is regenerated or published yet.
 
 **After the merge:** `hip explain` regenerates the 21 consumer readings and retires the
-analyst ones, keeping a copy in `data/retired/` (about $0.20); then `make publish`,
+analyst ones, keeping a copy in `data/retired/` (about $0.15); then `make publish`,
 deploy and `make check-live`.
 
 Milestone 32 is next and not started, at the owner's direction; it now also reconsiders
