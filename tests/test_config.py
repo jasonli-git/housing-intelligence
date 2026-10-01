@@ -32,6 +32,10 @@ sources:
     licence_class: public_domain
     terms_url: https://example.invalid/terms
     terms_checked: 2026-09-30
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: A U.S. Government work.
 """
 
 MINIMAL_METRICS = """

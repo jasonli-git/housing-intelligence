@@ -32,6 +32,12 @@ sources:
     publisher: U.S. Census Bureau
     license: Public domain (U.S. Government work)
     licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105); its
+        terms set no limit on commercial use.
     terms_url: https://www.census.gov/about/policies/open-gov/open-data.html
     terms_checked: 2026-09-30
     url: https://www2.census.gov/geo/tiger
@@ -50,6 +56,21 @@ sources:
     publisher: Zillow Research
     license: Free for non-commercial use with attribution
     licence_class: non_commercial
+    commercial:
+      ads: unclear
+      paid: not_allowed
+      note: >-
+        The research data page: "free for public use by consumers, media, analysts,
+        academics and policymakers, consistent with our published Terms of Use"; the
+        Terms of Use, read by the owner on 2026-09-30, allow non-personal uses with
+        attribution and say nothing about commercial use. A free site carrying ads
+        resembles the media use the page names, but nothing grants it. A paid tier
+        sells access to the figures, which nothing covers. The licensed route, the
+        Zillow API Terms of Use on Bridge (updated November 2023, read 2026-10-01),
+        forbids letting end users download or keep copies (5.18, 6), derivative
+        works (5.17), keeping the data on servers outside the United States (25) and
+        products that compete with Zillow without its approval (5.14), at a monthly
+        fee it does not publish (8), on an application it may refuse (3).
     terms_url: https://www.zillow.com/corporate/terms-of-use/
     terms_checked: 2026-09-30
     terms_note: >-
@@ -84,6 +105,11 @@ sources:
     publisher: Zillow Research
     license: Free for non-commercial use with attribution
     licence_class: non_commercial
+    commercial:
+      ads: unclear
+      paid: not_allowed
+      note: >-
+        As zillow_zhvi: the same research page, Terms of Use and API terms.
     terms_url: https://www.zillow.com/corporate/terms-of-use/
     terms_checked: 2026-09-30
     terms_note: >-
@@ -115,6 +141,14 @@ sources:
     publisher: U.S. Census Bureau
     license: Public domain (U.S. Government work)
     licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        The Census Bureau Data API terms (read 2026-10-01) let a service "search,
+        display, analyze" its data, require only the no-endorsement notice, and
+        forbid implying endorsement of any product "not-for-profit, commercial or
+        otherwise", so commercial services are contemplated. A U.S. Government work.
     terms_url: https://www.census.gov/data/developers/about/terms-of-service.html
     terms_checked: 2026-09-30
     notices:
@@ -137,6 +171,14 @@ sources:
     publisher: U.S. Census Bureau
     license: Public domain (U.S. Government work)
     licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        The Census Bureau Data API terms (read 2026-10-01) let a service "search,
+        display, analyze" its data, require only the no-endorsement notice, and
+        forbid implying endorsement of any product "not-for-profit, commercial or
+        otherwise", so commercial services are contemplated. A U.S. Government work.
     terms_url: https://www.census.gov/data/developers/about/terms-of-service.html
     terms_checked: 2026-09-30
     notices:
@@ -160,6 +202,12 @@ sources:
     publisher: U.S. Census Bureau
     license: Public domain (U.S. Government work)
     licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105); its
+        terms set no limit on commercial use.
     terms_url: https://www.census.gov/about/policies/open-gov/open-data.html
     terms_checked: 2026-09-30
     url: https://www.census.gov/construction/bps/
@@ -174,6 +222,12 @@ sources:
     publisher: Federal Housing Finance Agency
     license: Public domain (U.S. Government work)
     licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105); its
+        terms set no limit on commercial use.
     terms_url: https://www.fhfa.gov/data/hpi
     terms_checked: 2026-09-30
     terms_note: >-
@@ -189,6 +243,17 @@ sources:
     publisher: Federal Reserve Bank of St. Louis
     license: Free with attribution; series-level terms vary by originator
     licence_class: display_only
+    commercial:
+      ads: unclear
+      paid: unclear
+      note: >-
+        FRED's API terms (read 2026-10-01) allow commercial applications, but leave
+        a third party's series to its owner, whose permission is needed "for
+        anything other than your own personal use"; Freddie Mac's PMMS page allows
+        its rate to be used "with proper attribution" without saying whether
+        commercially. The API terms also forbid its use "in connection with"
+        professional services regulated by state licensing regimes, which a site
+        advertising lenders or agents would be.
     terms_url: https://fred.stlouisfed.org/legal/
     terms_checked: 2026-09-30
     terms_note: >-
@@ -216,6 +281,13 @@ sources:
     publisher: U.S. Bureau of Labor Statistics
     license: Public domain (U.S. Government work)
     licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        BLS's copyright page: its material is in the public domain and may be
+        reproduced without permission, with the disclaimer it asks for. A U.S.
+        Government work.
     terms_url: https://www.bls.gov/opub/copyright-information.htm
     terms_checked: 2026-09-30
     notices:
@@ -235,6 +307,14 @@ sources:
     publisher: U.S. Department of Housing and Urban Development
     license: Public domain (U.S. Government work)
     licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        The HUD User API terms (read 2026-10-01) let a service "search, display,
+        analyze" its data, require only the no-endorsement notice, and forbid
+        implying endorsement of any product "not-for-profit, commercial or
+        otherwise", so commercial services are contemplated. A U.S. Government work.
     terms_url: https://www.huduser.gov/portal/dataset/api-terms-of-service.html
     terms_checked: 2026-09-30
     notices:
@@ -257,6 +337,14 @@ sources:
     publisher: U.S. Department of Housing and Urban Development
     license: Public domain (U.S. Government work)
     licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        The HUD User API terms (read 2026-10-01) let a service "search, display,
+        analyze" its data, require only the no-endorsement notice, and forbid
+        implying endorsement of any product "not-for-profit, commercial or
+        otherwise", so commercial services are contemplated. A U.S. Government work.
     terms_url: https://www.huduser.gov/portal/dataset/api-terms-of-service.html
     terms_checked: 2026-09-30
     notices:
@@ -283,6 +371,14 @@ sources:
     publisher: U.S. Department of Housing and Urban Development
     license: Public domain (U.S. Government work)
     licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        The HUD User API terms (read 2026-10-01) let a service "search, display,
+        analyze" its data, require only the no-endorsement notice, and forbid
+        implying endorsement of any product "not-for-profit, commercial or
+        otherwise", so commercial services are contemplated. A U.S. Government work.
     terms_url: https://www.huduser.gov/portal/dataset/api-terms-of-service.html
     terms_checked: 2026-09-30
     notices:
@@ -305,6 +401,12 @@ sources:
     publisher: Internal Revenue Service
     license: Public domain (U.S. Government work)
     licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105); its
+        terms set no limit on commercial use.
     terms_url: https://www.irs.gov/statistics/soi-tax-stats-migration-data
     terms_checked: 2026-09-30
     terms_note: >-
@@ -322,6 +424,13 @@ sources:
     publisher: NJ Office of Information Technology, Office of GIS (NJOGIS)
     license: Open public record
     licence_class: attribution
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        NJOGIS's licence field for the dataset (read 2026-10-01) requests
+        acknowledgment on derived products and disclaims liability; it says nothing
+        to limit commercial use.
     terms_url: https://www.arcgis.com/sharing/rest/content/items/102a9bf3c6da4ca3b9b31f831a1e9f72?f=json
     terms_checked: 2026-09-30
     terms_note: >-
@@ -344,6 +453,13 @@ sources:
     publisher: New Jersey Division of Taxation
     license: Open public record
     licence_class: public_record
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        New Jersey's legal statement: anyone may view, copy or distribute State
+        information without obligation unless it is marked otherwise, and nothing is
+        marked.
     terms_url: https://www.nj.gov/nj/legal.shtml
     terms_checked: 2026-09-30
     terms_note: >-
@@ -368,6 +484,11 @@ sources:
     publisher: New Jersey Division of Taxation
     license: Open public record
     licence_class: public_record
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        As nj_sr1a: New Jersey's legal statement, and nothing marked.
     terms_url: https://www.nj.gov/nj/legal.shtml
     terms_checked: 2026-09-30
     terms_note: >-
@@ -389,6 +510,11 @@ sources:
     publisher: NJ Office of GIS (NJGIN)
     license: Open data
     licence_class: attribution
+    commercial:
+      ads: unclear
+      paid: unclear
+      note: >-
+        Its terms were never read, because it is not loaded; read them before it is.
     terms_url: https://njogis-newjersey.opendata.arcgis.com/
     terms_note: >-
       Not fetched (the MOD-IV composite carries parcel geometry), so its terms were not read; read them before it is ever loaded.

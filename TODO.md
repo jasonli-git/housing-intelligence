@@ -14,19 +14,14 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — the analyst reading retired, awaiting review (2026-10-01)
+## Now — Milestone 32 decided, awaiting review (2026-10-01)
 
-On `change/consumer-only-readings` (0.27.0): the analyst reading is retired and the
-consumer reading answers a third question, *What stands out here?* (ARCHITECTURE
-#275). Tested on five counties with the live gates in
-`reports/evaluation/readings-v3.md`; nothing is regenerated or published yet.
+On `milestone/m32-commercial-viability` (0.28.0): **no-go on both commercial uses for
+now**, ads or sponsorship and a paid tier (ARCHITECTURE #278,
+`reports/commercial/viability.md`). Every source states its commercial rights in config
+(#277). Nothing published changes; no deploy is needed after the merge.
 
-**After the merge:** `hip explain` regenerates the 21 consumer readings and retires the
-analyst ones, keeping a copy in `data/retired/` (about $0.15); then `make publish`,
-deploy and `make check-live`.
-
-Milestone 32 is next and not started, at the owner's direction; it now also reconsiders
-the analyst reading.
+Milestone 33, the full cost of owning, is next and not started.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -369,13 +364,12 @@ first raised, not where it must be done.
       `config/geography.yml` already warns the identifier system is expensive to change
       once fact rows reference it.
 
-- [ ] **Commercial-use rights are recorded only as the terms state them.** (M27
-      completeness run; narrowed by Milestone 31) Every source's terms were read on
-      2026-09-30 and classed in `config/sources.yml` (#269), which settles display,
-      download and derived figures; whether each allows *commercial* use is what
-      Milestone 32's licence table has to state, source by source. Zillow's terms allow
-      "non-personal uses" with attribution but say nothing on commercial use; the site
-      keeps them non-commercial (#272). **Scheduled: Milestone 32.**
+- [ ] **The site owes FRED a sentence in a terms of use it doesn't have.** (M32,
+      #278) FRED's API terms: an application for other users must "explicitly state in
+      your application's terms of use that, by using your application, your users are
+      agreeing to be bound by the FRED® API Terms of Use". The site shows FRED's notice
+      and links its terms, but has no terms of use. A short terms page linked from the
+      footer, saying that and nothing it can't keep, settles it.
 - [ ] **The Markdown report does not carry each figure's kind or licence.** (M31) The
       report page and the CSV do, and the downloadable Markdown closes with the terms and
       notices and leaves display-only figures out (`render_report`). The kind and licence
@@ -437,10 +431,9 @@ first raised, not where it must be done.
 - [ ] **Zillow's files are downloaded by hand, as a standing arrangement.** (M31, #272)
       Its Terms of Use forbid automated fetching, and its pages neither exempt a monthly
       scripted download of the public CSVs nor offer a channel to ask (2026-09-30: the
-      contact page lists customer support, press and ZTRAX only). Revisit with
-      Milestone 32: if it says go, the question goes to the Zillow Group developer
-      program with the commercial application. A yes means `manual = False` on
-      `_ZillowAdapter`. **Scheduled: Milestone 32.**
+      contact page lists customer support, press and ZTRAX only). Milestone 32 found no
+      route around it: the licensed API's terms forbid what the site does (#278), so
+      nothing is applied for, and this stays the arrangement.
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.
 
