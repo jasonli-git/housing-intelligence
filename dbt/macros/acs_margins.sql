@@ -67,3 +67,12 @@
     {%- endfor %}
     end
 {%- endmacro %}
+
+-- The margin of a ratio X / Y where X is not a subset of Y — minutes of commuting per
+-- commuter (ACS General Handbook, chapter 8): sqrt(MOE_X^2 + R^2 * MOE_Y^2) / Y.
+{% macro acs_ratio_margin(x, y, moe_x, moe_y) -%}
+    case
+        when ({{ y }}) > 0 then
+            sqrt(({{ moe_x }}) ^ 2 + (({{ x }}) / ({{ y }})) ^ 2 * ({{ moe_y }}) ^ 2) / ({{ y }})
+    end
+{%- endmacro %}

@@ -55,8 +55,8 @@ models:
   # gate or the warehouse sees it.
   - name: stg_census_acs
     description: >-
-      ACS income, rent, population, home value and renter cost burden, county and
-      municipal, each with its 90% margin of error (Milestone 28).
+      ACS income, rent, population, home value and renter cost burden, county,
+      municipal and ZCTA, each with its 90% margin of error (Milestone 28; ZCTA since 34).
     columns:
       - name: geoid
         tests: [not_null]
@@ -70,13 +70,15 @@ models:
           - accepted_range: {min_value: 0, max_value: 1.0e+15}
 
   - name: stg_census_acs_housing
-    description: ACS vacancy (B25002) and homeownership (B25003) rates, county and municipal.
+    description: >-
+      ACS vacancy (B25002) and homeownership (B25003) rates, county, municipal and ZCTA.
     columns:
       - name: geoid
         tests: [not_null]
       - name: release_layer
         tests:
-          - accepted_values: {values: ['housing_county', 'housing_cousub']}
+          - accepted_values:
+              values: ['housing_county', 'housing_cousub', 'housing_zcta']
       - name: value
         tests:
           - not_null
@@ -88,20 +90,64 @@ models:
   - name: stg_census_acs_costs
     description: >-
       ACS homeowners insurance (B25141), utility bills (B25132-B25135) and renters paying
-      utilities on top of rent (B25069), county and municipal; medians interpolated from
-      the published brackets (Milestone 33).
+      utilities on top of rent (B25069), county, municipal and ZCTA; medians interpolated
+      from the published brackets (Milestone 33).
     columns:
       - name: geoid
         tests: [not_null]
       - name: release_layer
         tests:
           - accepted_values:
-              values: ['insurance_county', 'insurance_cousub',
-                       'utilities_county', 'utilities_cousub']
+              values: ['insurance_county', 'insurance_cousub', 'insurance_zcta',
+                       'utilities_county', 'utilities_cousub', 'utilities_zcta']
       - name: value
         tests:
           - not_null
           - accepted_range: {min_value: 0, max_value: 1.0e+6}
+
+  - name: stg_census_acs_homes
+    description: >-
+      The ACS in depth on the homes (Milestone 34): rent by bedrooms and its quartiles,
+      owner costs, severe burden, building type, age, bedrooms, crowding, plumbing and
+      kitchens, vacancy by reason and heating fuel; county, municipal and ZCTA.
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: release_layer
+        tests:
+          - accepted_values:
+              values: ['rent_county', 'rent_cousub', 'rent_zcta',
+                       'stock_county', 'stock_cousub', 'stock_zcta',
+                       'rooms_county', 'rooms_cousub', 'rooms_zcta',
+                       'vacancy_county', 'vacancy_cousub', 'vacancy_zcta']
+      # Dollars, a year, a household size or a share: none negative, none past $1m.
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {min_value: 0, max_value: 1.0e+6}
+      - name: margin_of_error
+        tests:
+          - accepted_range: {min_value: 0, max_value: 1.0e+15}
+
+  - name: stg_census_acs_people
+    description: >-
+      The ACS in depth on the people (Milestone 34): how and how long workers commute,
+      household types and disability; county, municipal and ZCTA.
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: release_layer
+        tests:
+          - accepted_values:
+              values: ['people_county', 'people_cousub', 'people_zcta',
+                       'disability_county', 'disability_cousub', 'disability_zcta']
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {min_value: 0, max_value: 1000}
+      - name: margin_of_error
+        tests:
+          - accepted_range: {min_value: 0, max_value: 1.0e+15}
 
   - name: stg_census_permits_place
     description: Building permits by place, resolved to municipal GEOIDs by FIPS MCD code.

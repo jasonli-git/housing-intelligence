@@ -8,20 +8,25 @@ Zillow's municipal coverage at 71% (ARCHITECTURE #27).
 Consecutive 5-year vintages overlap by four years of sample, so year-over-year change
 from ACS is not an independent measurement. That caveat lives on the metric, not here.
 
-ZCTA level is deliberately not fetched: since 2020 ACS no longer nests ZCTAs within
-states, so a ZIP-level pull means downloading all ~33,000 nationally per year for the
-598 that matter. Deferred, not forgotten — see TODO.md.
+ZCTAs since Milestone 34. Since the 2020 edition the ACS no longer nests ZCTAs within
+states, which is why Milestone 3 left them out: a state's ZCTAs could only be had by
+downloading all ~33,000 nationally. Instead the 2020 Census names New Jersey's 598 —
+the ZCTAs that cover any part of the state — in one small request (`zctas`), and each
+edition is asked for exactly those by code. The 2019 edition is not asked: it is
+tabulated on the 2010 ZCTAs, so a change from it to a later edition would set two
+different shapes side by side under one code (ARCHITECTURE #282).
 """
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Iterable
 from datetime import date
 from typing import ClassVar
 
 from hip.config import ConfigError, fips_for
-from hip.sources.base import Discovery, ReleaseRef, SourceAdapter
+from hip.sources.base import Discovery, Release, ReleaseRef, SourceAdapter
 
 BASE_URL = "https://api.census.gov/data"
 
@@ -82,6 +87,71 @@ COST_LAYERS: dict[str, tuple[int, tuple[str, ...]]] = {
 }
 
 
+def _cells(table: str, *cells: int) -> tuple[str, ...]:
+    return tuple(f"{table}_{n:03d}E" for n in cells)
+
+
+# The ACS in depth (Milestone 34), each estimate with its margin of error, in layers kept
+# under the API's 50-variable limit — a margin doubles each estimate's count. Every
+# table here is published in all six editions fetched.
+DEPTH_LAYERS: dict[str, tuple[str, ...]] = {
+    # Gross rent by bedrooms (B25031, studio to four); the lower and upper quartiles of
+    # contract rent (B25057, B25059 — the Census publishes quartiles only for rent paid to
+    # the landlord); owner costs with and without a mortgage (B25088); and the households
+    # paying half their income or more: renters (B25070) and owners (B25091).
+    "rent_": (
+        *_cells("B25031", 2, 3, 4, 5, 6),
+        "B25057_001E",
+        "B25059_001E",
+        *_cells("B25088", 2, 3),
+        *_cells("B25070", 1, 10, 11),
+        *_cells("B25091", 1, 11, 12, 22, 23),
+    ),
+    # Units in structure (B25024, the boat-and-RV line left out), year built (B25034) and
+    # its median (B25035).
+    "stock_": (
+        *_cells("B25024", *range(1, 11)),
+        *_cells("B25034", *range(1, 12)),
+        "B25035_001E",
+    ),
+    # Bedrooms (B25041), occupants per room (B25014), complete plumbing (B25047) and
+    # kitchens (B25051), household size (B25010) and vehicles available (B25044).
+    "rooms_": (
+        *_cells("B25041", *range(1, 8)),
+        *_cells("B25014", 1, 5, 6, 7, 11, 12, 13),
+        *_cells("B25047", 1, 3),
+        *_cells("B25051", 1, 3),
+        "B25010_001E",
+        *_cells("B25044", 1, 3, 10),
+    ),
+    # Vacant homes by reason (B25004), with tenure (B25003) for the rental and homeowner
+    # vacancy rates; and heating fuel (B25040).
+    "vacancy_": (
+        *_cells("B25004", *range(1, 9)),
+        *_cells("B25003", 1, 2, 3),
+        *_cells("B25040", *range(1, 11)),
+    ),
+    # How workers get to work (B08301) and how long it takes (B08013 aggregate minutes,
+    # B08303 brackets); household types (B11001) and households with children (B11005).
+    "people_": (
+        *_cells("B08301", 1, 3, 10, 19, 21),
+        "B08013_001E",
+        *_cells("B08303", 1, 13),
+        *_cells("B11001", 1, 3, 8),
+        *_cells("B11005", 1, 2),
+    ),
+    # Disability (B18101): the population counted, and those with a disability in each
+    # sex-and-age cell.
+    "disability_": (
+        "B18101_001E",
+        *_cells("B18101", 4, 7, 10, 13, 16, 19, 23, 26, 29, 32, 35, 38),
+    ),
+}
+
+# The first edition tabulated on the 2020 ZCTAs, and so the first asked for them.
+ZCTA_FIRST = 2020
+
+
 def with_margins(estimates: Iterable[str]) -> list[str]:
     """Each estimate beside its margin of error: `B19013_001E` and `B19013_001M`.
 
@@ -109,9 +179,18 @@ def vintages(end_year: int) -> tuple[int, ...]:
 
 LEVELS = {"county": "county:*", "cousub": "county%20subdivision:*"}
 
+# Where New Jersey's ZCTAs are named: the 2020 Census, which tabulates every ZCTA by the
+# part of it inside each state. 598 for New Jersey on 2026-10-01 — the ZIP regions TIGER
+# gives, ZCTA for ZCTA.
+ZCTA_DIRECTORY = (
+    f"{BASE_URL}/2020/dec/dhc?get=NAME"
+    "&for=zip%20code%20tabulation%20area%20(or%20part):*&in=state:{fips}"
+)
+
 
 class AcsAdapter(SourceAdapter):
-    """Income, rent, population, home value, renter cost burden, occupancy, and tenure."""
+    """The ACS at county, municipality and ZCTA: income, rent, home value, population,
+    cost burden, occupancy and tenure, running costs, and the tables of Milestone 34."""
 
     source_id: ClassVar[str] = "census_acs"
     landing_format: ClassVar[str] = "json"
@@ -156,7 +235,7 @@ class AcsAdapter(SourceAdapter):
         year, published, reached = self._probe_forward(self.latest, exists)
         return self._discovered(str(year), reached=reached, published=published)
 
-    def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+    def _key(self) -> str:
         key = os.environ.get("CENSUS_API_KEY")
         if not key:
             raise ConfigError(
@@ -164,18 +243,32 @@ class AcsAdapter(SourceAdapter):
                 "'Missing Key' page with HTTP 200, which would be cached as data. "
                 "Get one free at https://api.census.gov/data/key_signup.html"
             )
-        requests = {
+        return key
+
+    @staticmethod
+    def requests() -> dict[str, tuple[int, str]]:
+        """Each layer prefix: the first edition it is asked of, and its variables."""
+        return {
             "": (0, ",".join(["NAME", *with_margins([*VARIABLES, *BURDEN_PARTS])])),
             "housing_": (0, ",".join(["NAME", *with_margins(HOUSING_VARIABLES)])),
             **{
                 prefix: (first, ",".join(["NAME", *variables]))
                 for prefix, (first, variables) in COST_LAYERS.items()
             },
+            **{
+                prefix: (0, ",".join(["NAME", *with_margins(variables)]))
+                for prefix, variables in DEPTH_LAYERS.items()
+            },
         }
-        years = [int(vintage)] if vintage else list(vintages(self.latest))
+
+    def _years(self, vintage: str | None) -> list[int]:
+        return [int(vintage)] if vintage else list(vintages(self.latest))
+
+    def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+        key = self._key()
         refs = []
-        for year in years:
-            for prefix, (first, variables) in requests.items():
+        for year in self._years(vintage):
+            for prefix, (first, variables) in self.requests().items():
                 if year < first:
                     continue
                 for level, selector in LEVELS.items():
@@ -195,7 +288,52 @@ class AcsAdapter(SourceAdapter):
                                 ),
                             )
                         )
+        # The directory of each state's ZCTAs, from which `child_refs` names the ZCTA
+        # requests. Asked only when some edition wanted is tabulated on 2020 ZCTAs.
+        if any(year >= ZCTA_FIRST for year in self._years(vintage)):
+            refs += [
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer="zctas",
+                    vintage=str(ZCTA_FIRST),
+                    scope=state,
+                    url=ZCTA_DIRECTORY.format(fips=fips_for(state)) + f"&key={key}",
+                )
+                for state in self.states
+            ]
         return refs
+
+    def child_refs(
+        self, release: Release, vintage: str | None = None
+    ) -> list[ReleaseRef]:
+        """Every layer of every edition from 2020, for the ZCTAs a directory names.
+
+        Asked by code because no edition from 2020 answers `in=state:` for a ZCTA, and
+        the alternative is every ZCTA in the country — about 1GB a year of raw files for
+        the 598 that matter.
+        """
+        if release.ref.layer != "zctas":
+            return []
+        rows = json.loads(release.path.read_text())
+        if not isinstance(rows, list) or len(rows) < 2:
+            raise ValueError(f"census_acs/{release.ref.key}: directory is not a matrix")
+        column = rows[0].index("zip code tabulation area (or part)")
+        codes = sorted({str(row[column]) for row in rows[1:]})
+        selector = "zip%20code%20tabulation%20area:" + ",".join(codes)
+        key = self._key()
+        return [
+            ReleaseRef(
+                source_id=self.source_id,
+                layer=f"{prefix}zcta",
+                vintage=str(year),
+                scope=release.ref.scope,
+                url=f"{BASE_URL}/{year}/acs/acs5?get={variables}&for={selector}&key={key}",
+            )
+            for year in self._years(vintage)
+            if year >= ZCTA_FIRST
+            for prefix, (first, variables) in self.requests().items()
+            if year >= first
+        ]
 
     @classmethod
     def to_records(cls, payload: object, ref: ReleaseRef) -> list[dict[str, object]]:

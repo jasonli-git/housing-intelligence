@@ -3,6 +3,48 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.30.0] — 2026-10-01
+
+Milestone 34, ACS depth and direct ZIP coverage.
+
+### Added
+
+- **Census figures for every ZIP code** (ARCHITECTURE #282). The ACS is fetched for New
+  Jersey's 598 ZCTAs, named by the 2020 Census and asked for by code, from the 2016–2020
+  edition on. Every ZIP page now carries income, rent, home value, population, cost
+  burden, vacancy, homeownership, insurance and utility bills, and everything below;
+  before, 549 of 598 had Zillow figures and nothing from the Census. The figures are
+  labelled as the ZCTA's.
+- **50 more Census figures** at county, municipality and ZCTA, each with its margin
+  (#283):
+  - **Rents:** by bedrooms, studio to four, and the lower and upper quarters of rent
+    paid to the landlord.
+  - **What owners pay:** monthly costs with and without a mortgage; renters and owners
+    paying half their income or more.
+  - **The homes:** building type, year built and its median, bedrooms, crowding,
+    missing plumbing or kitchens, rental and homeowner vacancy rates, why empty homes
+    are empty, and heating fuel.
+  - **Households and getting around:** household size, living alone, married couples,
+    children, disability, households without a car, how workers commute and for how
+    long.
+  - 26 are ranked. The other 24 are bands of a distribution, such as the share built
+    before 1940, and are shown but never ranked.
+- Two new sections on region pages, "The homes" and "Households and getting around".
+
+### Fixed
+
+- **A median in an open-ended bracket is no longer printed as a median.** 109 town
+  figures had shown the bracket's bound as if it were the median: $250,001 of household
+  income, $2,000,001 of home value, rents of $3,501 and of $99. They are now blank, and
+  `/changes` lists each one as withdrawn by this site.
+- **A figure a release no longer gives is removed from the warehouse** (#284). The load
+  had only ever added and updated, so a figure the site stopped computing stayed
+  published.
+- **A survey's change is never measured over less than its label says.** Sixteen
+  "five-year" changes in Census figures and the ratios built on Census income had been
+  measured over four years; they are gone, and a ZIP code shows no five-year Census
+  change until the 2025 edition.
+
 ## [0.29.1] — 2026-10-01
 
 ### Changed

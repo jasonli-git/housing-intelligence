@@ -184,6 +184,25 @@ def test_a_zip_names_the_weights_behind_its_allocation() -> None:
     assert any("allocated" in c and "area, hud_res_ratio" in c for c in caveats)
 
 
+def test_a_zips_census_figures_are_the_zctas_and_not_allocated() -> None:
+    """Milestone 34: the ACS is measured for each ZCTA, so its figures carry the ZCTA
+    caveat, and the allocation caveat is scoped to the figures that are allocated."""
+    from hip.packets.caveats import scoped_caveats
+
+    scoped = scoped_caveats(
+        level="zip",
+        metric_ids=["zhvi_sfr", "acs_median_hh_income"],
+        crosswalk_methods=["area"],
+    )
+    zcta = [c for c in scoped if "are measured for its ZCTA" in c.text]
+    allocated = [c for c in scoped if "allocated" in c.text]
+    assert [c.metric_ids for c in zcta] == [("acs_median_hh_income",)]
+    assert [c.metric_ids for c in allocated] == [("zhvi_sfr",)]
+    # A ZIP with no Census figure keeps the caveat it always had, over the whole page.
+    only = scoped_caveats(level="zip", metric_ids=["zhvi_sfr"])
+    assert [c.metric_ids for c in only if "allocated" in c.text] == [()]
+
+
 def test_name_matched_values_say_so() -> None:
     caveats = caveats_for(
         level="municipality",

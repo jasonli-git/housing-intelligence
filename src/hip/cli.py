@@ -1047,6 +1047,7 @@ def load(
         typer.echo(f"{metric_id:<14} {count:>9,} observations")
     typer.secho(
         f"{facts.observations:,} observations loaded; "
+        f"{facts.withdrawn:,} withdrawn; "
         f"{facts.rejects} unresolved geographies recorded",
         fg=typer.colors.GREEN,
     )

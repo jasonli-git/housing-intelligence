@@ -1,31 +1,15 @@
 -- What a home costs beyond its mortgage and tax (Milestone 33): homeowners insurance
 -- (B25141), the utility bills (B25132–B25135), and whether renters pay utilities on top
--- of rent (B25069), at county and municipality. The Census publishes the costs only in
--- brackets, so each typical figure is the median interpolated within its brackets
--- (`bracket_median`), among the homes charged for it. No margin: the Census publishes
+-- of rent (B25069), at county, municipality and, since Milestone 34, ZCTA. The Census
+-- publishes the costs only in brackets, so each typical figure is the median interpolated
+-- within its brackets (`bracket_median`), among the homes charged for it. No margin: the Census publishes
 -- none for a median worked out here, and the packet says so rather than inventing one.
 {{ config(materialized='table') }}
 
 with raw as (
-    select *, 'county' as lvl, 'insurance_county' as release_layer,
-           regexp_extract(filename, '/(\d{4})/', 1) as vintage
-    from read_parquet('{{ var("parquet_dir") }}/census_acs/*/insurance_county_*.parquet',
-                      filename=true, union_by_name=true)
+    {{ acs_layers('insurance_') }}
     union all by name
-    select *, 'municipality' as lvl, 'insurance_cousub' as release_layer,
-           regexp_extract(filename, '/(\d{4})/', 1) as vintage
-    from read_parquet('{{ var("parquet_dir") }}/census_acs/*/insurance_cousub_*.parquet',
-                      filename=true, union_by_name=true)
-    union all by name
-    select *, 'county' as lvl, 'utilities_county' as release_layer,
-           regexp_extract(filename, '/(\d{4})/', 1) as vintage
-    from read_parquet('{{ var("parquet_dir") }}/census_acs/*/utilities_county_*.parquet',
-                      filename=true, union_by_name=true)
-    union all by name
-    select *, 'municipality' as lvl, 'utilities_cousub' as release_layer,
-           regexp_extract(filename, '/(\d{4})/', 1) as vintage
-    from read_parquet('{{ var("parquet_dir") }}/census_acs/*/utilities_cousub_*.parquet',
-                      filename=true, union_by_name=true)
+    {{ acs_layers('utilities_') }}
 ),
 {%- set tables = {
     'ins': ('B25141', range(3, 15)),
@@ -36,11 +20,10 @@ with raw as (
 } %}
 keyed as (
     select
-        case when lvl = 'county' then state || county
-             else state || county || "county subdivision" end as geoid,
-        lvl as level,
+        geoid,
+        level,
         release_layer,
-        vintage::int as vintage,
+        vintage,
         {%- for name, (table, cells) in tables.items() %}
         {%- for cell in cells %}
         -- The same suppression sentinel stg_census_acs refuses.
@@ -51,7 +34,6 @@ keyed as (
         nullif(nullif("B25069_001E", '-666666666'), '')::double as renters,
         nullif(nullif("B25069_002E", '-666666666'), '')::double as renters_paying_extra
     from raw
-    where lvl = 'county' or "county subdivision" <> '00000'
 ),
 unpivoted as (
     -- Owners with a mortgage: the household buying with a loan is the one a lender makes
@@ -91,7 +73,7 @@ select
     make_date(vintage, 12, 31)   as period_end,
     value,
     null::double as margin_of_error,
-    'fips' as match_method,
+    case when level = 'zip' then 'zcta' else 'fips' end as match_method,
     release_layer,
     vintage::varchar as release_vintage
 from unpivoted

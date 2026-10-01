@@ -196,11 +196,20 @@ def test_every_keyed_model_declares_its_release_layer() -> None:
     """
     from hip.transform.dbt_runner import KEYED_MODELS
 
-    root = Path(__file__).resolve().parents[1] / "dbt" / "models" / "staging"
+    dbt = Path(__file__).resolve().parents[1] / "dbt"
+    root = dbt / "models" / "staging"
+    # The ACS models read their layers through `acs_layers` (Milestone 34), which names
+    # each row's file as its release layer, so a model using it declares one.
+    macro = (dbt / "macros" / "acs_layers.sql").read_text()
+    assert "'{{ prefix }}zcta' as release_layer" in macro
+
+    def declares(sql: str) -> bool:
+        return "as release_layer" in sql or "acs_layers(" in sql
+
     missing = [
         model
         for model in KEYED_MODELS
-        if "as release_layer" not in (root / f"{model}.sql").read_text()
+        if not declares((root / f"{model}.sql").read_text())
     ]
 
     assert not missing, f"keyed models with no release_layer: {missing}"

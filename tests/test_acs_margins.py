@@ -136,9 +136,119 @@ def test_a_median_carries_its_published_margin_and_a_code_is_never_a_number(con)
         if row["county subdivision"] == "00000":
             continue
         geoid = row["state"] + row["county"] + row["county subdivision"]
-        if geoid not in staged:
-            continue  # the estimate itself was suppressed
-        assert staged[geoid] == _margin(row["B25064_001M"])
         coded += row["B25064_001M"] in SPECIAL
+        if geoid not in staged:
+            continue  # suppressed, or since Milestone 34 an open-ended bracket's bound
+        assert staged[geoid] == _margin(row["B25064_001M"])
     # Small towns' rents carry the Census's codes, and none of them became a number.
     assert coded > 0
+
+
+def _staged_at(
+    con: duckdb.DuckDBPyConnection, table: str, metric: str, level: str
+) -> dict[str, tuple]:
+    return {
+        geoid: (value, margin)
+        for geoid, value, margin in con.execute(
+            f"SELECT geoid, value, margin_of_error FROM main_staging.{table} "
+            "WHERE metric_id = ? AND period_end = DATE '2024-12-31' AND level = ?",
+            [metric, level],
+        ).fetchall()
+    }
+
+
+def _sum(row: dict[str, str], cells: list[str]) -> tuple[float, float | None]:
+    """A sum of estimates and its margin: the square root of the summed squares."""
+    margins = [_margin(row[f"{c}M"]) for c in cells]
+    total = sum(float(row[f"{c}E"]) for c in cells)
+    if any(m is None for m in margins):
+        return total, None
+    return total, math.sqrt(sum(m**2 for m in margins))  # type: ignore[operator]
+
+
+def _tables_staged(con: duckdb.DuckDBPyConnection) -> None:
+    tables = {
+        r[0]
+        for r in con.execute(
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = 'main_staging'"
+        ).fetchall()
+    }
+    if not {"stg_census_acs_homes", "stg_census_acs_people"} <= tables:
+        pytest.skip("Milestone 34's ACS tables are not staged")
+
+
+def test_the_rental_vacancy_rate_is_the_censuss_and_so_is_its_margin(con) -> None:  # type: ignore[no-untyped-def]
+    """Milestone 34: homes for rent over every home renting or for rent, at the ZCTA."""
+    _tables_staged(con)
+    staged = _staged_at(con, "stg_census_acs_homes", "acs_rental_vacancy_rate", "zip")
+    checked = 0
+    for row in _raw(con, "vacancy_zcta"):
+        geoid = row["zip code tabulation area"]
+        if geoid not in staged:
+            continue
+        x, mx = _sum(row, ["B25004_002"])
+        y, my = _sum(row, ["B25003_003", "B25004_003", "B25004_002"])
+        value, margin = staged[geoid]
+        assert value == pytest.approx(x / y)
+        expected = None if mx is None or my is None else _share_margin(x, y, mx, my)
+        assert margin == pytest.approx(expected)
+        checked += 1
+    assert checked > 500
+
+
+def test_the_mean_commute_and_its_ratio_margin(con) -> None:  # type: ignore[no-untyped-def]
+    """Aggregate minutes over commuters is not a share, so its margin is the ratio form:
+    sqrt(MOE_X^2 + R^2 * MOE_Y^2) / Y."""
+    _tables_staged(con)
+    staged = _staged_at(
+        con, "stg_census_acs_people", "acs_mean_commute_minutes", "county"
+    )
+    for row in _raw(con, "people_county"):
+        geoid = row["state"] + row["county"]
+        x, mx = _sum(row, ["B08013_001"])
+        y, my = _sum(row, ["B08303_001"])
+        value, margin = staged[geoid]
+        assert value == pytest.approx(x / y)
+        assert 15 < value < 60  # minutes each way, for a whole county
+        assert margin == pytest.approx(math.sqrt(mx**2 + (x / y) ** 2 * my**2) / y)  # type: ignore[operator]
+
+
+def test_a_median_in_an_open_ended_bracket_is_no_median(con) -> None:  # type: ignore[no-untyped-def]
+    """Owner costs top out at "$4,000 or more": the Census prints the bound with the code
+    -333333333 for its margin, and the bound must not be staged as a median."""
+    _tables_staged(con)
+    staged = _staged_at(con, "stg_census_acs_homes", "acs_owner_costs_mortgage", "zip")
+    open_ended = 0
+    for row in _raw(con, "rent_zcta"):
+        geoid = row["zip code tabulation area"]
+        if row["B25088_002M"] == "-333333333":
+            assert geoid not in staged
+            open_ended += 1
+        elif geoid in staged:
+            assert staged[geoid][1] == _margin(row["B25088_002M"])
+    assert open_ended > 0
+
+
+def test_the_older_medians_drop_an_open_ended_bound_too(con) -> None:  # type: ignore[no-untyped-def]
+    """Milestone 34 found 109 municipal figures that were a bracket's bound — $250,001 of
+    income, $2,000,001 of home value — staged as medians. None is staged now."""
+    staged = {
+        (metric, geoid)
+        for metric, geoid in con.execute(
+            "SELECT metric_id, geoid FROM main_staging.stg_census_acs "
+            "WHERE period_end = DATE '2024-12-31' AND level = 'municipality'"
+        ).fetchall()
+    }
+    bounds = 0
+    for row in _raw(con, "cousub"):
+        geoid = row["state"] + row["county"] + row["county subdivision"]
+        for metric, variable in (
+            ("acs_median_hh_income", "B19013_001"),
+            ("acs_median_gross_rent", "B25064_001"),
+            ("acs_median_home_value", "B25077_001"),
+        ):
+            if row[f"{variable}M"] == "-333333333":
+                assert (metric, geoid) not in staged
+                bounds += 1
+    assert bounds > 0

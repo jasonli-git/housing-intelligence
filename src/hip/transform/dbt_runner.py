@@ -29,6 +29,8 @@ KEYED_MODELS = (
     "stg_census_acs",
     "stg_census_acs_housing",
     "stg_census_acs_costs",
+    "stg_census_acs_homes",
+    "stg_census_acs_people",
     "stg_census_pep",
     "stg_fhfa_hpi",
     "stg_census_permits",

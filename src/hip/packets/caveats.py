@@ -89,6 +89,13 @@ TEXTS: dict[str, str] = {
         "ZIP-level values are allocated from Census ZCTAs rather than measured. A ZIP "
         "straddling several municipalities is an estimate, not an observation."
     ),
+    # Milestone 34: the ACS measured for the ZCTA itself, not allocated to a ZIP.
+    "zcta_measured": (
+        "Census survey figures for a ZIP code are measured for its ZCTA, the area the "
+        "Census builds from census blocks to approximate the ZIP's delivery routes; the "
+        "two can differ. ZCTA figures begin with the 2016-2020 survey, the first drawn "
+        "on 2020's ZCTAs, so none shows a five-year change yet."
+    ),
     "name_matched": (
         "Some values here were matched to this place by name and county rather than by "
         "FIPS code. That is a weaker claim than an exact identifier match, and Zillow "
@@ -213,11 +220,17 @@ def scoped_caveats(
         add("irs_matching_2023", {"net_migration_returns"})
 
     if level == "zip":
-        text = TEXTS["zip_allocated"]
-        if crosswalk_methods:
-            named = ", ".join(sorted(set(crosswalk_methods)))
-            text += f" Allocation weights for this ZIP: {named}."
-        out.append(ScopedCaveat(text))
+        # Since Milestone 34 the ACS is fetched for each ZCTA, so its figures are measured
+        # there rather than allocated: the allocation caveat covers the rest.
+        allocated = present - acs
+        if acs:
+            add("zcta_measured", acs)
+        if allocated or not acs:
+            text = TEXTS["zip_allocated"]
+            if crosswalk_methods:
+                named = ", ".join(sorted(set(crosswalk_methods)))
+                text += f" Allocation weights for this ZIP: {named}."
+            out.append(ScopedCaveat(text, tuple(sorted(allocated)) if acs else ()))
     if "name_county" in methods:
         out.append(ScopedCaveat(TEXTS["name_matched"]))
     if thin_cohort:

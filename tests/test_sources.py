@@ -6,12 +6,14 @@ caching, content addressing, and manifest writing are exercised for real.
 
 from __future__ import annotations
 
+import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from hip.config import ConfigError
-from hip.sources.base import ReleaseRef, SourceAdapter, SourceError, redact
+from hip.sources.base import Release, ReleaseRef, SourceAdapter, SourceError, redact
 from hip.sources.tiger import TigerAdapter, shapefile_member
 
 PAYLOAD = b"tiger-bytes"
@@ -468,6 +470,69 @@ def test_acs_asks_for_every_estimate_with_its_margin_of_error(
     assert "B25070_011E" in by_layer["county"] and "B25070_011M" in by_layer["county"]
 
 
+def test_acs_depth_layers_fit_the_api_limit_with_every_margin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Milestone 34: the Census API refuses more than 50 variables a request, and every
+    estimate brings its margin, so each layer is checked against the limit it must fit."""
+    from hip.sources.census_acs import DEPTH_LAYERS, AcsAdapter
+
+    monkeypatch.setenv("CENSUS_API_KEY", "census-test")
+    requests = AcsAdapter.requests()
+    for prefix, estimates in DEPTH_LAYERS.items():
+        asked = requests[prefix][1].split(",")
+        assert len(asked) <= 50, prefix
+        for estimate in estimates:
+            assert estimate in asked and estimate[:-1] + "M" in asked
+    assert all(len(spec[1].split(",")) <= 50 for spec in requests.values())
+
+
+def _zcta_directory(tmp_path: Path, codes: list[str]) -> Release:
+    """A fetched 2020 Census directory naming `codes`, as the API returns it."""
+    path = tmp_path / "dhc"
+    rows = [["NAME", "state", "zip code tabulation area (or part)"]]
+    rows += [[f"ZCTA5 {c}, New Jersey", "34", c] for c in codes]
+    path.write_text(json.dumps(rows))
+    ref = ReleaseRef(
+        source_id="census_acs",
+        layer="zctas",
+        vintage="2020",
+        scope="NJ",
+        url="https://api.census.gov/data/2020/dec/dhc",
+    )
+    return Release(
+        ref=ref, path=path, sha256="0" * 64, size_bytes=1, fetched_at=datetime.now(UTC)
+    )
+
+
+def test_acs_asks_for_new_jerseys_zctas_by_code_from_2020(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Milestone 34: no edition from 2020 nests ZCTAs in a state, so the 2020 Census's
+    list names them and each layer asks for exactly those. The 2019 edition is never
+    asked: it is drawn on the 2010 ZCTAs, a different shape under the same code."""
+    from hip.sources.census_acs import AcsAdapter
+
+    monkeypatch.setenv("CENSUS_API_KEY", "census-test")
+    adapter = AcsAdapter(states=["NJ"], end_year=2024)
+    directory = [r for r in adapter.refs() if r.layer == "zctas"]
+    assert len(directory) == 1 and "dec/dhc" in directory[0].url
+    assert "in=state:34" in directory[0].url
+
+    release = _zcta_directory(tmp_path, ["08012", "07001"])
+    children = adapter.child_refs(release)
+    assert {int(r.vintage) for r in children} == {2020, 2021, 2022, 2023, 2024}
+    assert all("zip%20code%20tabulation%20area:07001,08012&" in r.url for r in children)
+    assert all("in=state" not in r.url for r in children)
+    layers = {r.layer for r in children if r.vintage == "2024"}
+    assert {"zcta", "housing_zcta", "rent_zcta", "insurance_zcta"} <= layers
+    # Insurance begins with the 2023 edition at every level, ZCTAs included.
+    assert "insurance_zcta" not in {r.layer for r in children if r.vintage == "2022"}
+    # A single edition asks only for that edition, and 2019 asks for no ZCTAs at all.
+    assert {r.vintage for r in adapter.child_refs(release, "2022")} == {"2022"}
+    assert not [r for r in adapter.refs("2019") if r.layer == "zctas"]
+
+
 def test_acs_vintages_follow_the_bump_constant_not_a_hard_coded_list() -> None:
     """Milestone 24. The vintage list was hard-coded in the adapter from Milestone 3,
     so a new ACS release needed an edit inside the source rather than a bump beside
@@ -495,7 +560,11 @@ def test_acs_end_year_is_injected_so_a_rerun_fetches_what_the_first_run_recorded
 
     fetched = {r.vintage for r in refs}
     assert fetched == {"2024", "2023", "2022", "2021", "2020", "2019"}
-    assert all(f"/{r.vintage}/acs/acs5" in r.url for r in refs), "vintage reaches the URL"
+    # The ZCTA directory is the 2020 Census, not an ACS edition (Milestone 34).
+    surveys = [r for r in refs if r.layer != "zctas"]
+    assert all(f"/{r.vintage}/acs/acs5" in r.url for r in surveys), (
+        "vintage reaches the URL"
+    )
     # An older adapter still fetches the older window, whatever the constant now says.
     assert {r.vintage for r in AcsAdapter(states=["NJ"], end_year=2023).refs()} == {
         "2023",

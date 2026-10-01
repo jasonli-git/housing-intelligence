@@ -1,30 +1,31 @@
--- ACS 5-year estimates, long form. County and county-subdivision GEOIDs are exact, so
--- this is the only municipal source that needs no name matching (ARCHITECTURE #31).
+-- ACS 5-year estimates, long form. County, county-subdivision and ZCTA codes are exact,
+-- so no row needs name matching (ARCHITECTURE #31; ZCTAs since Milestone 34).
 {{ config(materialized='table') }}
 
 with raw as (
-    select *, 'county' as lvl,
-           regexp_extract(filename, '/(\d{4})/', 1) as vintage
-    from read_parquet('{{ var("parquet_dir") }}/census_acs/*/county_*.parquet',
-                      filename=true, union_by_name=true)
-    union all by name
-    select *, 'municipality' as lvl,
-           regexp_extract(filename, '/(\d{4})/', 1) as vintage
-    from read_parquet('{{ var("parquet_dir") }}/census_acs/*/cousub_*.parquet',
-                      filename=true, union_by_name=true)
+    {{ acs_layers('') }}
 ),
 keyed as (
     select
-        case when lvl = 'county' then state || county
-             else state || county || "county subdivision" end as geoid,
-        lvl as level,
-        vintage::int as vintage,
+        geoid,
+        level,
+        release_layer,
+        vintage,
         -- ACS marks a suppressed or unavailable estimate with -666666666, which is a
         -- plausible-looking number that must never reach the warehouse.
-        nullif(nullif("B19013_001E", '-666666666'), '')::double as median_hh_income,
-        nullif(nullif("B25064_001E", '-666666666'), '')::double as median_gross_rent,
+        -- A median in an open-ended bracket is the bracket's bound ("$250,000 or more",
+        -- "less than $100"), flagged by the margin code -333333333, and is no median:
+        -- NULL since Milestone 34, which found 109 municipal figures printing a bound.
+        case when "B19013_001M" = '-333333333' then null
+             else nullif(nullif("B19013_001E", '-666666666'), '')::double
+        end as median_hh_income,
+        case when "B25064_001M" = '-333333333' then null
+             else nullif(nullif("B25064_001E", '-666666666'), '')::double
+        end as median_gross_rent,
         nullif(nullif("B01003_001E", '-666666666'), '')::double as population,
-        nullif(nullif("B25077_001E", '-666666666'), '')::double as median_home_value,
+        case when "B25077_001M" = '-333333333' then null
+             else nullif(nullif("B25077_001E", '-666666666'), '')::double
+        end as median_home_value,
         nullif(nullif("B25070_001E", '-666666666'), '')::double as renters_total,
         nullif(nullif("B25070_007E", '-666666666'), '')::double as b30,
         nullif(nullif("B25070_008E", '-666666666'), '')::double as b35,
@@ -47,9 +48,6 @@ keyed as (
         {{ acs_margin('"B25070_010M"') }} as b50_moe,
         {{ acs_margin('"B25070_011M"') }} as not_computed_moe
     from raw
-    -- "County subdivisions not defined" carries subdivision code 00000, exactly as in
-    -- TIGER. Same filter, same reason.
-    where lvl = 'county' or "county subdivision" <> '00000'
 ),
 burden as (
     select *,
@@ -60,15 +58,15 @@ burden as (
     from keyed
 ),
 unpivoted as (
-    select geoid, level, vintage, 'acs_median_hh_income' as metric_id,
+    select geoid, level, release_layer, vintage, 'acs_median_hh_income' as metric_id,
            median_hh_income as value, median_hh_income_moe as margin_of_error from burden
-    union all select geoid, level, vintage, 'acs_median_gross_rent',
+    union all select geoid, level, release_layer, vintage, 'acs_median_gross_rent',
            median_gross_rent, median_gross_rent_moe from burden
-    union all select geoid, level, vintage, 'acs_population',
+    union all select geoid, level, release_layer, vintage, 'acs_population',
            population, population_moe from burden
-    union all select geoid, level, vintage, 'acs_median_home_value',
+    union all select geoid, level, release_layer, vintage, 'acs_median_home_value',
            median_home_value, median_home_value_moe from burden
-    union all select geoid, level, vintage, 'acs_renter_cost_burden',
+    union all select geoid, level, release_layer, vintage, 'acs_renter_cost_burden',
            case when computed > 0 then burdened / computed end,
            {{ acs_share_margin('burdened', 'computed', 'burdened_moe', 'computed_moe') }}
            from burden
@@ -83,12 +81,11 @@ select
     make_date(vintage, 12, 31)   as period_end,
     value,
     margin_of_error,
-    'fips' as match_method,
-    -- ACS ships one file per (level, year); Census calls the municipal level
-    -- 'cousub', which is the release layer, while our region level is
-    -- 'municipality'. Naming the level here cited the county file for every
-    -- municipal row.
-    case when level = 'county' then 'county' else 'cousub' end as release_layer,
+    case when level = 'zip' then 'zcta' else 'fips' end as match_method,
+    -- ACS ships one file per (level, year) and names the municipal level 'cousub';
+    -- the layer is the file's, from `acs_layers`. Naming the region level here once
+    -- cited the county file for every municipal row.
+    release_layer,
     -- The ACS vintage is also the Parquet directory, so this is the release.
     vintage::varchar as release_vintage
 from unpivoted

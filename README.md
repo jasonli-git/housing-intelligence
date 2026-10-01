@@ -44,9 +44,12 @@ layer only explains metrics that were already computed.
 > against ads and a paid tier for now. Milestone 33 (2026-10-01) shows the full cost of
 > owning in four views — each month, up front, money gone, and over the years against
 > renting — with every component saying where it came from, and lets a reader put in
-> their own figures.
+> their own figures. Milestone 34 (2026-10-01) fetches the Census survey for every ZIP
+> code's ZCTA and adds 50 figures — rents by size, owner costs, the age, type and
+> condition of the homes, vacancy, heating fuel, households and commuting — each with
+> its margin.
 >
-> **Next.** Milestone 34: ACS depth and direct ZIP coverage. See
+> **Next.** Milestone 35: household-sized answers. See
 > [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
@@ -283,6 +286,13 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   rule, a typical range, a rule of thumb or the reader's own; a total missing a part says
   *partial estimate*. A reader can enter their own figures, and their personal ones follow
   them from town to town in their browser.
+- **The Census in depth, and for every ZIP** (M34, built) — 50 more survey figures at
+  county, town and ZCTA, each with its margin: rents by bedrooms and their spread,
+  owner costs with and without a mortgage, the severely burdened, the type, age, size
+  and condition of the homes, rental and homeowner vacancy and why empty homes are
+  empty, heating fuel, households, disability, cars and commuting. Every ACS figure is
+  fetched for New Jersey's 598 ZCTAs, so every ZIP page carries the Census. Bands of a
+  distribution are shown and never ranked.
 - **Commercial rights, recorded** (M32, built) — every source states what its terms
   allow for ads on the site and for a paid tier, inherited by any figure calculated from
   it; `reports/commercial/viability.md` is the study, and the decision is no-go on both

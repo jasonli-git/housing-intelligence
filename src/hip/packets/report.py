@@ -36,6 +36,44 @@ NO_SAMPLING_ERROR = "no sampling error"
 # for both, so the dashboard classifies by metric (ARCHITECTURE #124) and so does this.
 SHARE_METRICS = frozenset(
     {
+        "acs_renter_severe_burden",
+        "acs_owner_severe_burden",
+        "acs_share_detached",
+        "acs_share_attached",
+        "acs_share_2_4_units",
+        "acs_share_5_19_units",
+        "acs_share_20plus_units",
+        "acs_share_mobile_homes",
+        "acs_share_built_2000_later",
+        "acs_share_built_1980_1999",
+        "acs_share_built_1940_1979",
+        "acs_share_built_pre_1940",
+        "acs_share_0_1_bedrooms",
+        "acs_share_2_bedrooms",
+        "acs_share_3_bedrooms",
+        "acs_share_4plus_bedrooms",
+        "acs_overcrowded_share",
+        "acs_lacking_plumbing_share",
+        "acs_lacking_kitchen_share",
+        "acs_no_vehicle_share",
+        "acs_rental_vacancy_rate",
+        "acs_homeowner_vacancy_rate",
+        "acs_vacant_seasonal_share",
+        "acs_vacant_other_share",
+        "acs_heat_gas_share",
+        "acs_heat_electric_share",
+        "acs_heat_oil_share",
+        "acs_heat_propane_share",
+        "acs_heat_other_share",
+        "acs_commute_transit_share",
+        "acs_work_from_home_share",
+        "acs_commute_drove_alone_share",
+        "acs_commute_walked_share",
+        "acs_commute_60plus_share",
+        "acs_living_alone_share",
+        "acs_married_couple_share",
+        "acs_with_children_share",
+        "acs_disability_share",
         "acs_homeownership_rate",
         "acs_renter_cost_burden",
         "acs_renters_paying_utilities",
@@ -67,6 +105,11 @@ def format_value(value: float, unit: str) -> str:
         return str(round(value))
     if unit == "acres":
         return f"{value:,.2f} ac"
+    # Milestone 34: people per household, and minutes of commuting each way.
+    if unit == "people":
+        return f"{value:.2f}"
+    if unit == "minutes":
+        return f"{value:.1f} min"
     formatted = f"{value:,.1f}"
     return formatted[:-2] if formatted.endswith(".0") else formatted
 

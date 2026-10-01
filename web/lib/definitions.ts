@@ -112,6 +112,206 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "The share of renting households here that pay for at least one utility on top of their rent.",
     why: "It says how often a quoted rent leaves the bills to the tenant, which matters when setting a rent against the cost of owning.",
   },
+  acs_median_rent_studio: {
+    what: "What the middle studio apartment here rents for each month, utilities included, as tenants told the Census.",
+    why: "Rent depends on size; this sets a small place against the typical rent for every size.",
+  },
+  acs_median_rent_1br: {
+    what: "What the middle one-bedroom home here rents for each month, utilities included, as tenants told the Census.",
+    why: "Rent depends on size; this is the figure to compare when looking for a one-bedroom.",
+  },
+  acs_median_rent_2br: {
+    what: "What the middle two-bedroom home here rents for each month, utilities included, as tenants told the Census.",
+    why: "The size HUD’s Fair Market Rent is set for, so the two can be compared.",
+  },
+  acs_median_rent_3br: {
+    what: "What the middle three-bedroom home here rents for each month, utilities included, as tenants told the Census.",
+    why: "What a family needing room would pay to rent rather than buy.",
+  },
+  acs_median_rent_4br: {
+    what: "What the middle four-bedroom rental here costs each month, utilities included, as tenants told the Census.",
+    why: "Large rentals are scarce in most places, so the margin is often wide.",
+  },
+  acs_rent_lower_quartile: {
+    what: "A quarter of renters here pay their landlord less than this each month. Utilities are not included.",
+    why: "Shows what the cheaper rentals cost, which the middle figure hides.",
+  },
+  acs_rent_upper_quartile: {
+    what: "A quarter of renters here pay their landlord more than this each month. Utilities are not included.",
+    why: "With the lower quarter, shows how wide the range of rents is.",
+  },
+  acs_owner_costs_mortgage: {
+    what: "What the middle owner with a mortgage here pays each month for the loan, tax, insurance, utilities and fees, as owners told the Census.",
+    why: "What owning costs people who already own, many on older, cheaper loans than a buyer gets today.",
+  },
+  acs_owner_costs_no_mortgage: {
+    what: "What the middle owner without a mortgage here pays each month for tax, insurance, utilities and fees.",
+    why: "The cost of a home that never goes away, even once the loan is paid off.",
+  },
+  acs_renter_severe_burden: {
+    what: "The share of renting households here paying half their income or more on rent and utilities.",
+    why: "Households this stretched have little left for anything else and are the most at risk of losing their home.",
+  },
+  acs_owner_severe_burden: {
+    what: "The share of homeowners here paying half their income or more on their mortgage, tax, insurance and utilities.",
+    why: "Owning does not always mean affordable; this counts owners under the most strain.",
+  },
+  acs_share_detached: {
+    what: "The share of homes here that are houses standing on their own, as the Census counts them.",
+    why: "Says whether a place is mostly houses or mostly apartments, which shapes what is for sale and for rent.",
+  },
+  acs_share_attached: {
+    what: "The share of homes here that are single-family homes sharing a wall, such as townhouses and rowhouses.",
+    why: "Part of the mix of homes; often cheaper than a detached house nearby.",
+  },
+  acs_share_2_4_units: {
+    what: "The share of homes here in two- to four-family buildings, such as duplexes and triple-deckers.",
+    why: "Small multi-family buildings are where many renters live, and some owners live in one and rent the rest.",
+  },
+  acs_share_5_19_units: {
+    what: "The share of homes here in buildings of five to 19 apartments.",
+    why: "Part of the mix of homes; mid-sized buildings are mostly rentals and condos.",
+  },
+  acs_share_20plus_units: {
+    what: "The share of homes here in apartment buildings of 20 or more units.",
+    why: "A high share means a dense place with large rental or condo buildings.",
+  },
+  acs_share_mobile_homes: {
+    what: "The share of homes here that are mobile or manufactured homes.",
+    why: "Often among the cheapest homes to own, though the land under them may be rented.",
+  },
+  acs_median_year_built: {
+    what: "The year the middle home here was built: half are older and half newer, as households told the Census.",
+    why: "Older homes can need more upkeep and may contain lead paint or outdated wiring.",
+  },
+  acs_share_built_2000_later: {
+    what: "The share of homes here built in 2000 or later.",
+    why: "Shows how much has been built recently, and how new the homes on offer may be.",
+  },
+  acs_share_built_1980_1999: {
+    what: "The share of homes here built between 1980 and 1999.",
+    why: "Part of the age of the homes here, from newest to oldest.",
+  },
+  acs_share_built_1940_1979: {
+    what: "The share of homes here built between 1940 and 1979.",
+    why: "Homes built before 1978 may contain lead paint, which a seller must disclose.",
+  },
+  acs_share_built_pre_1940: {
+    what: "The share of homes here built before 1940.",
+    why: "Very old homes can have character and high upkeep costs.",
+  },
+  acs_share_0_1_bedrooms: {
+    what: "The share of homes here that are studios or have one bedroom.",
+    why: "Says how much there is here for people living alone or as a couple.",
+  },
+  acs_share_2_bedrooms: {
+    what: "The share of homes here with two bedrooms.",
+    why: "Part of the mix of home sizes here.",
+  },
+  acs_share_3_bedrooms: {
+    what: "The share of homes here with three bedrooms.",
+    why: "Part of the mix of home sizes here; the usual family house.",
+  },
+  acs_share_4plus_bedrooms: {
+    what: "The share of homes here with four or more bedrooms.",
+    why: "Says how much there is here for large households.",
+  },
+  acs_overcrowded_share: {
+    what: "The share of homes here with more people than rooms, counting every room but bathrooms, as the Census measures crowding.",
+    why: "Crowding is often how households cope when homes cost more than they can pay.",
+  },
+  acs_lacking_plumbing_share: {
+    what: "The share of homes here missing hot and cold running water, a bathtub or shower, or a flush toilet.",
+    why: "A rare but basic sign of homes in poor condition.",
+  },
+  acs_lacking_kitchen_share: {
+    what: "The share of homes here missing a sink with a faucet, a stove or range, or a refrigerator.",
+    why: "Often rooming houses or units carved out of larger homes, as well as homes in poor repair.",
+  },
+  acs_avg_household_size: {
+    what: "How many people live in the average home here, as households told the Census.",
+    why: "Larger households need more room, which says what kind of homes are in demand.",
+  },
+  acs_no_vehicle_share: {
+    what: "The share of households here that have no car, van or truck.",
+    why: "High where transit is good, and where households cannot afford a car.",
+  },
+  acs_rental_vacancy_rate: {
+    what: "The share of rental homes here that stood empty and for rent, as the Census defines the rental vacancy rate.",
+    why: "A low rate means few rentals open at a time, which tends to push rents up.",
+  },
+  acs_homeowner_vacancy_rate: {
+    what: "The share of owned homes here that stood empty and for sale, as the Census defines the homeowner vacancy rate.",
+    why: "A low rate means few homes on the market at a time, so buyers compete.",
+  },
+  acs_vacant_seasonal_share: {
+    what: "Of the homes here with nobody living in them, the share kept as summer homes, rentals for vacations, or for occasional use.",
+    why: "Explains a high vacancy rate at the shore, where most empty homes are not for rent or sale.",
+  },
+  acs_vacant_other_share: {
+    what: "Of the homes here with nobody living in them, the share empty for none of the usual reasons: being repaired, tied up in an estate or foreclosure, or abandoned.",
+    why: "A high share can be a sign of neglected homes.",
+  },
+  acs_heat_gas_share: {
+    what: "The share of homes here heated mainly with gas piped in by a utility.",
+    why: "The heating fuel sets which bills a home runs up in winter.",
+  },
+  acs_heat_electric_share: {
+    what: "The share of homes here heated mainly with electricity, by heat pump or by resistance heat.",
+    why: "The heating fuel sets which bills a home runs up in winter.",
+  },
+  acs_heat_oil_share: {
+    what: "The share of homes here heated mainly with heating oil or kerosene, delivered by truck.",
+    why: "Oil can cost more than gas, and an old tank can be a costly problem when buying.",
+  },
+  acs_heat_propane_share: {
+    what: "The share of homes here heated mainly with propane from a tank.",
+    why: "Common where gas lines do not reach; prices swing with the season.",
+  },
+  acs_heat_other_share: {
+    what: "The share of homes here heated with wood, coal, solar or another fuel, or not heated at all.",
+    why: "Part of the mix of heating fuels here.",
+  },
+  acs_commute_transit_share: {
+    what: "The share of workers living here who usually get to work by bus, train, light rail or ferry.",
+    why: "Shows how practical it is to get around here without a car.",
+  },
+  acs_work_from_home_share: {
+    what: "The share of workers living here who usually work from home.",
+    why: "A place where many work from home draws people for its homes rather than its commute.",
+  },
+  acs_commute_drove_alone_share: {
+    what: "The share of workers living here who usually drive to work alone.",
+    why: "Part of how people here get to work.",
+  },
+  acs_commute_walked_share: {
+    what: "The share of workers living here who usually walk to work.",
+    why: "Part of how people here get to work.",
+  },
+  acs_mean_commute_minutes: {
+    what: "How many minutes the average worker living here takes to get to work, one way, not counting those who work from home.",
+    why: "A cheaper home farther out can cost hours a week in travel.",
+  },
+  acs_commute_60plus_share: {
+    what: "The share of workers living here who take an hour or more to get to work, one way.",
+    why: "Long commutes are often the price of a cheaper home farther from jobs.",
+  },
+  acs_living_alone_share: {
+    what: "The share of households here that are one person living alone.",
+    why: "Says how much of the demand here is for smaller homes.",
+  },
+  acs_married_couple_share: {
+    what: "The share of households here headed by a married couple.",
+    why: "Part of who lives here.",
+  },
+  acs_with_children_share: {
+    what: "The share of households here with at least one child under 18.",
+    why: "Families with children look for space and schools, which shapes what homes are in demand.",
+  },
+  acs_disability_share: {
+    what: "The share of people here with a disability affecting hearing, sight, memory, walking, self-care or living on their own.",
+    why: "Says how many people here may need homes that are accessible without stairs.",
+  },
   modiv_median_tax_bill: {
     what: "What the middle one- to four-family home paid in property tax in the tax year shown, before any relief a household may claim.",
     why: "New Jersey’s property taxes are among the highest in the country, so this can matter as much as the price.",
