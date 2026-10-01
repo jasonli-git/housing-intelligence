@@ -22,10 +22,10 @@ Milestone 32 is next and not started, at the owner's direction.
 On `experiment/consumer-models-and-synthesis` (0.26.1): a margin-check fix (#273),
 prompt-cache hits counted (#274), the Flex Director Note, and two reports —
 `reports/evaluation/readings-v2.md` (consumer reading, three models, five counties)
-and `reports/evaluation/synthesis-pilot.md` (three rounds, scored). Nothing published
+and `reports/evaluation/synthesis-pilot.md` (four rounds, scored). Nothing published
 changes.
 
-**Waiting on the owner:** whether to adopt the round-3 synthesis, refine it, or stop.
+**Waiting on the owner:** whether to adopt the round-4 synthesis, refine it, or stop.
 The staleness question stays parked at the owner's direction. Both are under Parked.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
@@ -407,15 +407,15 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
-- [ ] **Grounded synthesis: adopt, refine, or stop.** (Director Note 2026-09-29) Three
+- [ ] **Grounded synthesis: adopt, refine, or stop.** (Director Note 2026-09-29) Four
       rounds on five counties, scored in `reports/evaluation/synthesis-pilot.md` (by
-      Claude, at the owner's request). Round 3 — three fixed sentences, housing measures
-      only, no interpretation — is the first where every claim is supported (5 of 5)
-      and every note useful and new. Left: readability. Ranks of *changes* read as
-      nonsense to a resident ("near the bottom for this change"), a sale price beside
-      the page's typical home value reads as a contradiction, and two notes ignored "do
-      not open with a span of years". All three are prompt fixes. Whether it is
-      published is the owner's decision.
+      Claude, at the owner's request). Round 4 — three fixed sentences, housing measures
+      only, no interpretation, ranks only of where a county stands now, one home price,
+      opening with the county — fails none of its twenty scores and holds 17 outright.
+      Left: Bergen narrows "vacant land" to "vacant residential land", Mercer's second
+      sentence says only that two figures "coincided", and three of five calls thought
+      for ~2,600 tokens at ~$0.014 each, so 21 counties would cost about $0.21 a
+      regeneration. Whether it is published is the owner's decision.
 - [ ] **Readings stale only when the figures they cite change?** Zillow's monthly
       release moves every packet's content hash, so every reading is rewritten monthly
       whether or not it quotes Zillow. The stored binding names each figure a reading
