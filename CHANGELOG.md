@@ -3,6 +3,26 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.28.0] — 2026-10-01
+
+Milestone 32, the commercial viability study.
+
+### Decided
+
+- **No-go on both commercial uses, for now: no ads or sponsorship, and no paid tier.**
+  The owner's decision, from `reports/commercial/viability.md` (ARCHITECTURE #278).
+  `SPEC.md` is unchanged. The report lists what would reopen each.
+
+### Added
+
+- **Every source states what its terms allow for ads and for a paid tier**, with the
+  words that decide it, in `config/sources.yml`. `hip check-config` requires it, and a
+  calculated figure takes the least permissive right of its inputs (#277). 31 of the 38
+  metrics are cleared for both; Zillow's indexes, Freddie Mac's rate and the ratios
+  built on Zillow are not.
+- **`scripts/rentcast_probe.py`**, to compare RentCast's ZIP figures with Zillow's under
+  a hard budget of 20 free requests, if its price ever comes within reach. Not run.
+
 ## [0.27.0] — 2026-10-01
 
 ### Changed

@@ -40,9 +40,12 @@ layer only explains metrics that were already computed.
 > printed pages carry the terms on every sheet; and the notices three data APIs require
 > are on every page. Since 0.27.0 each county page's model-written reading is one
 > plain-language reading in three answers, checked figure by figure before it is
-> published; the longer analyst reading is retired, to be reconsidered in Milestone 32.
+> published; the longer analyst reading is retired. Milestone 32 (2026-10-01) decided
+> against ads and a paid tier for now, recording what each source's terms allow
+> commercially.
 >
-> **Next.** Milestone 32: a commercial viability study, ending in a go or no-go. See
+> **Next.** Milestone 33: the full cost of owning, in four views rather than one total.
+> See
 > [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
@@ -271,6 +274,10 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   interpretation per listed model side by side, switchable by the reader, each labeled
   with the model that wrote it, until Milestone 30 replaced the comparison with one
   reading for each kind of reader.
+- **Commercial rights, recorded** (M32, built) — every source states what its terms
+  allow for ads on the site and for a paid tier, inherited by any figure calculated from
+  it; `reports/commercial/viability.md` is the study, and the decision is no-go on both
+  for now.
 - **Licence and provenance** (M31, built) — every figure is tagged with its kind
   (survey estimate, administrative records, official determination, published
   benchmark, calculated, modelled) and carries its source's licence, inherited by any

@@ -14,42 +14,14 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 32, the commercial viability study (started 2026-10-01)
+## Now — Milestone 32 decided, awaiting review (2026-10-01)
 
-On `milestone/m32-commercial-viability`. Ends in a **go or no-go, judged separately for
-two uses**, decided with the owner on 2026-10-01: **ads or sponsorship** on the free site,
-and a **paid tier** (pages, tools or downloads behind a subscription). Data or API sales
-and paid reports are out of scope. Paid data counts as viable at about **$10 a month**,
-or more if the use's revenue would cover it. The owner signs up for RentCast's free
-allowance; nothing is subscribed to.
+On `milestone/m32-commercial-viability` (0.28.0): **no-go on both commercial uses for
+now**, ads or sponsorship and a paid tier (ARCHITECTURE #278,
+`reports/commercial/viability.md`). Every source states its commercial rights in config
+(#277). Nothing published changes; no deploy is needed after the merge.
 
-Deliverable: `reports/commercial/viability.md`, with the recommendation per use, and
-the per-source rights recorded in `config/sources.yml` so a commercially cleared variant
-could be built from them.
-
-- [ ] **Licence table.** Every source, for each use: display, download, derived figures
-      — allowed, not allowed, or unclear with the words that make it so. Recorded in
-      `config/sources.yml` and checked by `check_config`.
-- [ ] **What survives.** Which metrics, and which headline features (cost card,
-      affordability verdict, maps, rankings, readings), remain under each use with every
-      source that does not allow it removed; computed from each metric's inputs, as
-      Milestone 31's licence inheritance is.
-- [ ] **Zillow's commercial route.** The developer program's Real Estate Metrics API:
-      its terms (Bridge), what they allow for each use, what it costs, what applying
-      takes. Applied for only on a go.
-- [ ] **Freddie Mac's rate on a commercial page.** Whether its terms allow display on a
-      site with ads, or behind a paywall.
-- [ ] **Paid data, per vendor.** Price and terms for each vendor that could replace a
-      restricted figure or add one, recovered from the 2026-09 comparison
-      (`git show b7ccd98^:TODO.md`) and re-read. RentCast tested on its free allowance
-      under a hard request budget, once the owner's key is in `.env`.
-- [ ] **What it costs to run, and what each use would have to earn.** Hosting, AI
-      readings (ARCHITECTURE #276's measured run), data; break-even per use.
-- [ ] **The analyst reading** (#275): whether a paid tier wants long-form analysis, and
-      in what form.
-- [ ] **Go or no-go per use.** A go proposes a SPEC change for the owner and a milestone
-      to build the cleared variant; a no-go is recorded in ARCHITECTURE.md with what would
-      change it.
+Milestone 33, the full cost of owning, is next and not started.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -392,13 +364,12 @@ first raised, not where it must be done.
       `config/geography.yml` already warns the identifier system is expensive to change
       once fact rows reference it.
 
-- [ ] **Commercial-use rights are recorded only as the terms state them.** (M27
-      completeness run; narrowed by Milestone 31) Every source's terms were read on
-      2026-09-30 and classed in `config/sources.yml` (#269), which settles display,
-      download and derived figures; whether each allows *commercial* use is what
-      Milestone 32's licence table has to state, source by source. Zillow's terms allow
-      "non-personal uses" with attribution but say nothing on commercial use; the site
-      keeps them non-commercial (#272). **Scheduled: Milestone 32.**
+- [ ] **The site owes FRED a sentence in a terms of use it doesn't have.** (M32,
+      #278) FRED's API terms: an application for other users must "explicitly state in
+      your application's terms of use that, by using your application, your users are
+      agreeing to be bound by the FRED® API Terms of Use". The site shows FRED's notice
+      and links its terms, but has no terms of use. A short terms page linked from the
+      footer, saying that and nothing it can't keep, settles it.
 - [ ] **The Markdown report does not carry each figure's kind or licence.** (M31) The
       report page and the CSV do, and the downloadable Markdown closes with the terms and
       notices and leaves display-only figures out (`render_report`). The kind and licence
@@ -460,10 +431,9 @@ first raised, not where it must be done.
 - [ ] **Zillow's files are downloaded by hand, as a standing arrangement.** (M31, #272)
       Its Terms of Use forbid automated fetching, and its pages neither exempt a monthly
       scripted download of the public CSVs nor offer a channel to ask (2026-09-30: the
-      contact page lists customer support, press and ZTRAX only). Revisit with
-      Milestone 32: if it says go, the question goes to the Zillow Group developer
-      program with the commercial application. A yes means `manual = False` on
-      `_ZillowAdapter`. **Scheduled: Milestone 32.**
+      contact page lists customer support, press and ZTRAX only). Milestone 32 found no
+      route around it: the licensed API's terms forbid what the site does (#278), so
+      nothing is applied for, and this stays the arrangement.
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.
 

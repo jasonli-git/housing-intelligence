@@ -1,8 +1,7 @@
 # Commercial viability study
 
-Milestone 32, started 2026-10-01. **Draft:** the RentCast test and the traffic figures
-are still to come (see the end). The recommendation is the study's; the decision is the
-owner's.
+Milestone 32, 2026-10-01. **Decided by the owner on 2026-10-01: no-go on both uses for
+now** (ARCHITECTURE #278). Section 9 lists what would reopen each.
 
 ## The question
 
@@ -14,12 +13,12 @@ Could the site earn money, and on what terms? The owner set the scope on 2026-10
 - **Paid data** counts as viable at about **$10 a month**, or more if the use's revenue
   would cover it.
 
-## The answer, so far
+## The answer
 
-| Use | Recommendation | Why, in one line |
+| Use | Decision | Why, in one line |
 |---|---|---|
-| **Ads or sponsorship** | **Not yet.** | The licence path is close, but nothing measures whether anyone visits, and the advertisers a housing site attracts are the ones FRED's terms exclude. |
-| **Paid tier** | **No-go.** | Its headline figures can't be sold, a paywall needs a server the static site doesn't have, and nothing shows demand. |
+| **Ads or sponsorship** | **No-go for now.** | The licence path is close, but nothing measures whether anyone visits, and the advertisers a housing site attracts are the ones FRED's terms exclude. |
+| **Paid tier** | **No-go for now.** | Its headline figures can't be sold, a paywall needs a server the static site doesn't have, and nothing shows demand. |
 
 What would change each is at the end.
 
@@ -188,7 +187,11 @@ Those prices are September's estimates, unverified.
   roughly 600 ZIP codes, so a monthly refresh of every one is Foundation's 1,000
   requests: $74 a month, past the $10 ceiling. A cleared rent and sale-price figure by
   ZIP is what it would buy, in place of Zillow's.
-- **Test:** pending the owner's key.
+- **Not tested.** Only the over-ceiling exception could make it viable, and that needs
+  revenue of about $75 a month, which needs traffic or a sponsor the site doesn't have.
+  So the owner dropped the test on 2026-10-01. `scripts/rentcast_probe.py` is ready for
+  the day that changes: 10 ZIP codes against Zillow's, capped at 20 of the 50 free
+  requests.
 
 ## 6. What it costs to run, and what each use would have to earn
 
@@ -240,9 +243,9 @@ Retired 2026-10-01 (#275); reconsidered here for a professional or paying audien
   downloads already do. Reviving it is a one-line config change (#275) whenever that
   changes.
 
-## 9. Recommendation, and what would change it
+## 9. Decision, and what would change it
 
-**Ads or sponsorship: not yet.** Reconsider when any two of these hold:
+**Ads or sponsorship: no-go for now.** Reconsider when any two of these hold:
 1. **Traffic is known and material.** Measured by a privacy-respecting counter; on the
    rough range above, several thousand pageviews a month before display ads are worth
    their policies.
@@ -253,7 +256,7 @@ Retired 2026-10-01 (#275); reconsidered here for a professional or paying audien
    university or a public agency, which avoids FRED's licensed-professional clause and
    needs far less traffic.
 
-**Paid tier: no-go.** It would need all three of these, and none is in reach:
+**Paid tier: no-go for now.** It would need all three of these, and none is in reach:
 - demand shown before building (for example a waitlist);
 - the cleared variant;
 - an authentication layer and a server to run.
@@ -265,12 +268,10 @@ the presentation alone.
 - **The FRED terms-of-use sentence is owed today.** A small site terms page fixes it.
 - **No Zillow application, and no subscription.**
 
-## Still to come in this milestone
+## Not done, and why
 
-- **RentCast test.** Under a hard budget of 20 of the free 50 requests: market
-  statistics for a sample of New Jersey ZIP codes, set against Zillow's figures for
-  the same ZIPs. It checks whether the figures are usable, not just licensable.
-- **Traffic.** Monthly requests or visits from the Cloudflare dashboard, if the owner
-  can read them there. Otherwise "unknown" stands.
-- **The owner's decision per use.** A go becomes a proposed SPEC change and a build
-  milestone. A no-go becomes an ARCHITECTURE.md row with these triggers.
+- **The RentCast test** (section 5), because no figure it returned could change a
+  decision bound by the price.
+- **Traffic.** The site has no analytics, and traffic would only have mattered to a
+  yes on ads that the licence questions already rule out. It stays a reopening
+  trigger (section 9), not an input.
