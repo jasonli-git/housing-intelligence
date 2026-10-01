@@ -414,7 +414,10 @@ first raised, not where it must be done.
       opening with the county — fails none of its twenty scores and holds 17 outright.
       Left: Bergen narrows "vacant land" to "vacant residential land", Mercer's second
       sentence says only that two figures "coincided", and three of five calls thought
-      for ~2,600 tokens at ~$0.014 each, so 21 counties would cost about $0.21 a
+      for ~2,600 tokens. Less thinking costs quality: Gemini 3.7 Flash cannot think
+      below `low`, and the round-4 prompt on Flash-Lite and DeepSeek failed more gates,
+      needed more revisions and broke the plain-language rules. Gemini at `low`
+      averaged about $0.008 a county over two runs, about $0.17 for 21 counties a
       regeneration. Whether it is published is the owner's decision.
 - [ ] **Readings stale only when the figures they cite change?** Zillow's monthly
       release moves every packet's content hash, so every reading is rewritten monthly

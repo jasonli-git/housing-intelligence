@@ -271,6 +271,90 @@ Sussex County maintained the second-highest rate of homeownership in New Jersey 
 
 _Review:_ Second-highest homeownership and among the fewest homes permitted, both checked. "Over the 2020 to 2025 period" blurs the 2025 count with the five-year span, but not into anything false.
 
+## Less thinking: the round-4 prompt on cheaper models
+
+Asked by the owner on 2026-10-01: would less thinking cost quality? Gemini 3.7 Flash cannot think less — it refuses `minimal`, so `low` is its floor — so less thinking means another model. The round-4 prompt and gates were run unchanged on Flash-Lite, which thinks minimally, and DeepSeek with thinking off, with Gemini 3.7 Flash run a second time to see whether its long thinking recurs.
+
+| Model | Passed the gates | Needed a revision | Plain-language flags | Thinking-length calls | Mean cost a county |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Gemini 3.7 Flash, low thinking (round 4 again) | 5 of 5 | 0 | 0 | 3 of 5 | $0.0065 |
+| Gemini 3.1 Flash-Lite, minimal thinking | 4 of 5 | 2 | 6 | 0 of 5 | $0.0011 |
+| DeepSeek V4.1 Flash, thinking off | 3 of 5 | 5 | 8 | 0 of 5 | $0.0034 |
+
+**Less thinking cost quality.**
+
+- **Flash-Lite** is a fifth of the price. But it broke the plain-language rules six times ("median" in four notes, "parcels", a survey's name) and quoted a second home value even after its revision. Its limitations often miss the pattern they are attached to: Sussex's is about tax bills, in a note about ownership and lot sizes.
+- **DeepSeek** needed a revision on every county, and two still failed: a second home value, and a ratio without its margin. Mercer's published note quotes five figures and "Fair Market Rent". Hudson's note contradicts itself, calling apartments both the state's highest share and "only a small slice".
+- **Gemini 3.7 Flash, run again**, passed all five with no revision and no flags. Long thinking recurred on three of five calls (about 1,800–2,400 tokens). The notes it wrote were no better than the short ones: Hudson and Bergen thought least and are among the clearest. Only a long call that falls to the standard tier is dear: $0.013, against $0.006 at Flex.
+
+**Gemini 3.7 Flash at low thinking stays the right writer.** Across its two runs it averaged about $0.008 a county, so about $0.17 for 21 counties a regeneration. The thinking cannot be turned down further, and a cheaper model costs more in refusals and rewrites than it saves.
+
+### Gemini 3.7 Flash, low thinking (round 4 again)
+
+**Bergen** _(156 tokens out, $0.0050)_
+
+Bergen County stands out across the state for steep ownership costs, pairing typical single-family home values of $787,000 in 2026—among the highest in New Jersey—with a typical annual property tax bill of $12,038 in 2024, the second-highest statewide. For buyers, this combination means facing both some of the highest purchase prices and heaviest ongoing tax bills in the state, while renters navigate typical rents of about $1,914 a month, give or take $21 a month, that sit near the top among New Jersey counties. A key limitation is that the property tax figures reflect the full bills as levied before accounting for state tax relief programs paid directly to households.
+
+**Mercer** _(1,785 tokens out, $0.0056)_
+
+Mercer County’s homeownership rate stood at about 62.2%, give or take 1.1 percentage points, ranking toward the bottom of New Jersey in 2024, while roughly 50.1% of renters, give or take 2.3 percentage points, paid over 30% of their income on housing, a share that sat toward the top across the state. For someone looking to live here, this means renters face a market where about half of tenant households spend a major share of their income on shelter while relatively fewer households own their homes. A key limitation is that survey margins for the share of renters paying over 30% of income are wide enough that the county's true standing cannot be precisely separated from most other counties in the state.
+
+**Cumberland** _(2,368 tokens out, $0.0066)_
+
+Cumberland County pairs the highest share of vacant land in New Jersey at 14.1% with the state's lowest annual property tax bill for a typical home at $4,563 as of 2024. For someone buying a home here, this combines the state's lowest recurring local tax charges with the greatest availability of undeveloped ground. A key limitation is that these tax records show amounts billed before state relief credits are applied and reflect local tax assessments rather than actual market values.
+
+**Hudson** _(138 tokens out, $0.0025)_
+
+Hudson County stands out with the lowest homeownership rate in the state, estimated at 31% with a margin of 0.6 points in 2024, alongside an empty-home rate that fell from 8.3% to 6.6% between 2019 and 2024, give or take 0.4 points. For local residents, this means most households navigate a predominantly renter-occupied market where available, unoccupied housing has become tighter over that five-year span. A key limitation is that consecutive five-year estimates share four years of survey data, which can understate how much conditions actually shifted across this period.
+
+**Sussex** _(2,342 tokens out, $0.0131)_
+
+Sussex County had the second-highest share of homeowners in New Jersey in 2024 at 83.7%, give or take 0.9 points, while its typical annual property tax bill stood near the middle of all counties at $7,867. For anyone looking to rent or buy here, this points to an environment overwhelmingly comprised of owner-occupied homes alongside moderate property tax bills. A limitation of this comparison is that the property tax data reflects amounts billed rather than final costs after state relief payments are distributed directly to households.
+
+### Gemini 3.1 Flash-Lite, minimal thinking
+
+**Bergen** _(212 tokens out, $0.0016, revised)_ Refused: quotes a second measure of the same thing as the page: acs_median_home_value beside zhvi_sfr. Flags: jargon: 'median' in "…rgen County holds the highest median owner-occupied home…".
+
+Bergen County holds the highest median owner-occupied home value in New Jersey at $623,000, give or take $4,306, while also maintaining the second-highest typical property tax bill of $12,038. These figures mean that residents face some of the state's most significant ongoing financial commitments to secure and maintain a home. This pattern is limited by the fact that property tax bills are based on local assessment records that do not account for individual tax relief programs.
+
+**Mercer** _(106 tokens out, $0.0008)_ Flags: a source name: 'American Community Survey' in "… on survey estimates from the American Community Survey, which rely on five…".
+
+Mercer County stands out for having one of the highest shares of renters paying over 30% of their income on housing, which reached 50.1% ± 2.3 points by 2024. This pattern means that half of the county's renters must dedicate a significant portion of their monthly earnings to cover their housing costs. These figures are based on survey estimates from the American Community Survey, which rely on five-year windows that overlap and therefore may not capture rapid shifts in local conditions.
+
+**Cumberland** _(222 tokens out, $0.0016, revised)_ Flags: jargon: 'median' in "…berland County has the lowest median household income of…".
+
+Cumberland County has the lowest median household income of $67,436, give or take $1,985, and the lowest typical property tax bill of $4,563, as of 2024. These figures mean that the ongoing costs of owning a home here require a smaller absolute dollar amount than in any other New Jersey county. These rankings are based on survey estimates and assessment records that carry margins of error or varying local assessment practices, which may affect how precisely the county compares to its neighbors.
+
+**Hudson** _(71 tokens out, $0.0008)_ Flags: jargon: 'median' in "…ential parcels and the oldest median year built of 1925 …"; jargon: 'parcel' in "…partment share of residential parcels and the oldest medi…".
+
+Hudson County has the highest apartment share of residential parcels and the oldest median year built of 1925 among all New Jersey counties. This combination means that those looking for a home here face a market dominated by older, multi-unit buildings rather than new construction. These findings rely on property assessment records, which do not provide a margin of error.
+
+**Sussex** _(111 tokens out, $0.0008)_ Flags: jargon: 'median' in "…9 points, while maintaining a median residential lot siz…".
+
+Sussex County holds the second-highest homeownership rate in New Jersey at 83.7%, give or take 0.9 points, while maintaining a median residential lot size of 0.47 acres that ranks as the second-largest in the state. These figures mean that residents here are significantly more likely to own their own land and home compared to those in almost any other county. This pattern is limited by the fact that the property tax bill is based on local assessments that vary by municipality rather than a uniform rate across the county.
+
+### DeepSeek V4.1 Flash, thinking off
+
+**Bergen** _(271 tokens out, $0.0034, revised)_ Refused: quotes a second measure of the same thing as the page: acs_median_home_value beside zhvi_sfr. Flags: 4 figures under '', where at most 3 are allowed.
+
+Bergen County has the highest typical home value of any New Jersey county at $623,000, give or take $4,306, and its typical property tax bill of $12,038 is the second-highest. For someone renting or buying here, that home value sits alongside a typical rent of $1,914 a month, give or take $21, and a home value that is 5.59 times household income, give or take 0.08 times. The main limitation is that the home value and rent figures come from overlapping five-year survey windows, so the county's standing cannot be pinned down more precisely than the ranges shown.
+
+**Mercer** _(310 tokens out, $0.0035, revised)_ Flags: jargon: 'Fair Market Rent' in "…unties, while its two-bedroom Fair Market Rent of $1,950 a month r…"; 5 figures under '', where at most 3 are allowed.
+
+Mercer County's 1,611 residential units permitted in 2025 rank second among New Jersey's 21 counties, while its two-bedroom Fair Market Rent of $1,950 a month ranks 20th and its single-family home value of $445,078 sits 14th. For someone renting or buying here, that combination means new construction is arriving faster than almost anywhere in the state even as the rent standard for a two-bedroom sits near the bottom of the county rankings and the typical single-family home value lands mid-pack. The biggest limitation is that the rent figure comes from a rent standard set once a year for a whole multi-county area rather than measured for Mercer County alone, so it cannot be read as this county's own market rent.
+
+**Cumberland** _(297 tokens out, $0.0034, revised)_ Refused: a survey figure stated without its margin in "…ome value relative to household income, 3.92 times, is among the highest i…". Flags: jargon: 'median' in "…3 a month and the lowest area median income at $89,100, …"; jargon: 'area median income' in "…$1,673 a month and the lowest area median income at $89,100, while i…"; jargon: 'Fair Market Rent' in "…ty has the lowest two-bedroom Fair Market Rent in New Jersey at $1…"; 5 figures under '', where at most 3 are allowed.
+
+Cumberland County has the lowest two-bedroom Fair Market Rent in New Jersey at $1,673 a month and the lowest area median income at $89,100, while its typical property tax bill of $4,563 is also the state's lowest. For someone renting or buying here, those low dollar figures sit alongside a typical single-family home value of $279,277, so entry prices look modest even though the county's home value relative to household income, 3.92 times, is among the highest in the state. The main limitation is that the rent and income figures come from different years than the home value figure, so they cannot be read as one consistent picture of the same moment.
+
+**Hudson** _(257 tokens out, $0.0035, revised)_ Flags: jargon: 'parcel' in "…he highest share of apartment parcels at 3.7%, while its …".
+
+Hudson County has the lowest homeownership rate in New Jersey at 30.7%, give or take 0.6 percentage points, and the highest share of apartment parcels at 3.7%, while its typical home was built in 1925, the oldest among the 21 counties. For someone renting or buying here, that means most households do not own their home, the typical home is a century old, and apartments make up only a small slice of residential parcels. The apartment share and year built are single snapshots with no margin available, so they describe one moment rather than a trend.
+
+**Sussex** _(222 tokens out, $0.0032, revised)_
+
+Sussex County has the second-highest homeownership rate in New Jersey at 83.7%, give or take 0.9 points, alongside the second-largest typical residential lot size at 0.47 acres. For someone renting or buying here, that combination of widespread ownership and large lots sits against a typical annual property tax bill of $7,867. The main limitation is that the homeownership figure comes from a survey whose margin leaves it close to several other counties, so its exact standing is not firmly fixed.
+
 ## The prompts
 
 ### Round 1
