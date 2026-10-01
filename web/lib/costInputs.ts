@@ -107,10 +107,28 @@ export async function costInputs(
   const then = rise ? await nationalMortgageRateIn(rise.window_start.slice(0, 7)) : null;
   const tax = dated(find("modiv_median_tax_bill"));
 
+  const electricity = find("acs_median_electricity");
+  const gas = find("acs_median_gas");
+  const water = find("acs_median_water_sewer");
+  const billed = [electricity?.value, gas?.value, water ? water.value / 12 : undefined];
+
   return {
     home,
     rate: { value: latest.value, asOf: periodLabel(latest.period_start, latest.metric_id) },
     tax,
+    insurance: dated(find("acs_median_home_insurance")),
+    // Electricity is the one bill every home pays, so without it there is no utility
+    // figure to stand behind; gas and water join it where the survey gives them.
+    utilities: electricity
+      ? {
+          month: billed.reduce<number>((sum, part) => sum + (part ?? 0), 0),
+          electricity: electricity.value,
+          gas: gas?.value ?? null,
+          waterYear: water?.value ?? null,
+          asOf: periodLabel(electricity.period_end, electricity.metric_id),
+        }
+      : null,
+    rentersPayUtilities: dated(find("acs_renters_paying_utilities")),
     rent: dated(find("zori_all")),
     noTax: tax ? null : noTaxReason(level),
     gain: rise

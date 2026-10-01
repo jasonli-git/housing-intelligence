@@ -1048,6 +1048,142 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   color: var(--text-secondary);
 }
 
+/* The full cost of owning (Milestone 33). "Your numbers" is a quiet disclosure above the
+   cards: closed, it is one line saying the figures can be replaced; open, two groups of
+   fields — what belongs to this home, and what belongs to the reader and follows them. */
+.cost-yours {
+  margin: 0 0 0.9rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.cost-yours > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.8rem;
+  padding: 0.7rem 0;
+  list-style: none;
+  cursor: pointer;
+}
+.cost-yours > summary::-webkit-details-marker { display: none; }
+.cost-yours-title {
+  font: 600 var(--text-body)/1.3 var(--font-display);
+  color: var(--text-primary);
+}
+.cost-yours-title::before { content: "+ "; color: var(--text-muted); }
+.cost-yours[open] .cost-yours-title::before { content: "− "; }
+.cost-yours-hint { font-size: var(--text-small); color: var(--text-secondary); }
+.cost-yours-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: 0.6rem 1.6rem;
+  padding: 0.2rem 0 0.9rem;
+}
+.cost-yours fieldset { margin: 0; padding: 0; border: 0; display: grid; gap: 0.45rem; min-width: 0; }
+.cost-yours legend {
+  margin-bottom: 0.35rem;
+  font: 700 var(--text-label)/1.3 var(--font-mono);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.cost-yours legend small { margin-left: 0.4rem; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.cost-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8.5rem;
+  align-items: center;
+  gap: 0.2rem 0.7rem;
+  font-size: var(--text-small);
+  color: var(--text-secondary);
+}
+.cost-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.cost-field input::placeholder { color: var(--text-muted); }
+.cost-field small { grid-column: 1 / -1; font-size: var(--text-label); }
+.cost-yours-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.cost-yours-reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cost-partial {
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--notice) 18%, var(--surface-card));
+  color: var(--notice-text);
+  font-weight: 600;
+}
+.cost-lines .missing dd { color: var(--text-muted); }
+
+/* The other three views share one panel; on screen a tab chooses which, and in print and
+   the report all three stand one after another. */
+.cost-views { margin-top: 1rem; }
+.cost-view-tabs { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.6rem; }
+.cost-view-tabs button {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--text-small);
+  cursor: pointer;
+}
+.cost-view-tabs button.on {
+  border-color: var(--text-primary);
+  background: var(--text-primary);
+  color: var(--surface-card);
+}
+.cost-view {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-card);
+}
+.cost-view + .cost-view { margin-top: 0.7rem; }
+.cost-view-title { margin: 0; font: 600 var(--text-body)/1.3 var(--font-display); }
+.cost-view-figure { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; }
+.cost-view-figure b { font: 700 28px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+.cost-view-figure span { font-size: var(--text-small); color: var(--text-secondary); }
+.cost-view-note { margin: 0; max-width: 90ch; font-size: var(--text-small); line-height: 1.5; color: var(--text-secondary); }
+
+.cost-relief {
+  margin-top: 0.9rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--border);
+  font-size: var(--text-small);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.cost-relief p { margin: 0.2rem 0 0; }
+
+@media print {
+  .cost-yours, .cost-view-tabs { display: none; }
+}
+
 .standout-group {
   margin-top: 1.25rem;
 }

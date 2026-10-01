@@ -1,11 +1,27 @@
 "use client";
 
-import { type ReactNode, useId, useState } from "react";
+import { type ReactNode, useEffect, useId, useState } from "react";
 
 import { Definition } from "@/components/Definition";
-import { costToOwn, DEFAULT_DOWN, DOWN_PAYMENTS, goneAgainstRent, incomeFor, leftOut } from "@/lib/cost";
+import { DEFAULT_DOWN, DOWN_PAYMENTS, goneAgainstRent, incomeFor } from "@/lib/cost";
+import {
+  CLOSING,
+  COMMISSION_PCT,
+  DEPOSIT_MONTHS,
+  DEPOSIT_RULE,
+  FHA,
+  FHA_DOWN,
+  FHA_LIMITS,
+  FLOOD_MAP,
+  NJ_TRANSFER_RULE,
+  PMI,
+  RELIEF,
+  UPKEEP_PCT,
+} from "@/lib/costRules";
+import { type Personal, parseAmount, readPersonal, writePersonal } from "@/lib/costScenario";
 import { formatValue } from "@/lib/format";
 import type { Term } from "@/lib/glossary";
+import { type Basis, eachMonth, type Inputs, overYears, upFront } from "@/lib/ownership";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
 export type Dated = { value: number; asOf: string };
@@ -26,10 +42,29 @@ export type HomePrice =
   | ({ basis: "index" } & Dated)
   | ({ basis: "transactions"; from: string; to: string } & Dated);
 
+/**
+ * A month of utility bills for a home here (Milestone 33): the typical electricity and gas
+ * bills and a twelfth of the yearly water and sewer bill, among homes billed for each, from
+ * the Census's brackets. Heating oil and other fuels are left out — a home that burns oil
+ * rarely pays for gas too, and adding both would bill one home for two heating systems.
+ */
+export type Utilities = {
+  month: number;
+  electricity: number | null;
+  gas: number | null;
+  waterYear: number | null;
+  asOf: string;
+};
+
 export type CostProps = {
   home: HomePrice;
   rate: Dated;
   tax: Dated | null;
+  /** Homeowners insurance a year, owners with a mortgage, from the Census's brackets. */
+  insurance: Dated | null;
+  utilities: Utilities | null;
+  /** The share of renters here paying at least one utility on top of rent. */
+  rentersPayUtilities: Dated | null;
   rent: Dated | null;
   /** Why the tax bill is missing, when it is. */
   noTax: string | null;
@@ -54,30 +89,75 @@ function share(part: number, whole: number): string {
   return `${whole > 0 ? (part / whole) * 100 : 0}%`;
 }
 
+
+/** Where each kind of input came from, in a reader's words. */
+const BASIS_WORDS: Record<Basis, string> = {
+  source: "published figure",
+  rule: "published rule",
+  thumb: "rule of thumb",
+  range: "typical range",
+  reader: "your figure",
+  loan: "worked out",
+};
+
+/** The colour each part of a month takes on the bar, money kept last. */
+const PART_COLOURS: Record<string, string> = {
+  interest: "var(--gone-1)",
+  tax: "var(--gone-2)",
+  insurance: "color-mix(in srgb, var(--gone-1) 55%, var(--gone-2))",
+  mi: "color-mix(in srgb, var(--gone-1) 25%, var(--gone-2))",
+  utilities: "var(--text-muted)",
+  upkeep: "color-mix(in srgb, var(--text-muted) 45%, var(--border))",
+  hoa: "var(--notice)",
+  flood: "color-mix(in srgb, var(--notice) 55%, var(--border))",
+};
+
+/** The holding period the long view starts at, until the reader sets one. */
+export const DEFAULT_YEARS = 10;
+
+type HomeFields = {
+  price: string;
+  tax: string;
+  rent: string;
+  hoa: string;
+  flood: string;
+  moving: string;
+  repairs: string;
+};
+
+const NO_HOME_FIELDS: HomeFields = { price: "", tax: "", rent: "", hoa: "", flood: "", moving: "", repairs: "" };
+
+type View = "upfront" | "gone" | "years";
+
 /**
- * What it costs per month to own the typical home here, and to rent one (Milestone 17),
- * as two cards since Milestone 23: the section most readers turn to first, so the one
- * place a region page raises its voice.
+ * The full cost of owning a home here, and of renting one (Milestone 33; cards since
+ * Milestones 17 and 23).
  *
- * Owning leads with its monthly payment and splits it, on a bar and in words, into money
- * gone — interest and tax — and money kept, the principal that pays the loan down and
- * stays the buyer's. Rent is set against money gone rather than the whole payment:
- * counting the part a buyer keeps as cost made owning read hundreds of dollars dearer than
- * renting (the owner's review, 2026-09-14). On region pages that monthly comparison
- * leads the cards; the strip below keeps the limitations and past context. Reports keep
- * their compact paragraph strip. Both say plainly that a house usually rents for more
- * than Zillow's all-rental figure.
+ * The cards show a month of owning with every part of it — the loan, property tax,
+ * homeowners insurance, mortgage insurance, utilities and upkeep, and HOA or condo fees and
+ * flood insurance where they apply — and beside it a month of renting. Below them, three
+ * more views: the cash needed up front, the money a month costs and does not give back,
+ * and owning for a number of years then selling, set against renting for as long.
  *
- * The cards' headings keep their definitions — how each figure is worked out and where it
- * comes from, filled in with this page's rate, down payment and dates. The one control is
- * the down payment, 20% unless the reader changes it; the report prints the cards at 20%
- * with no control. Rendered on the server at the default and re-computed in the browser
- * on change, so the page reads correctly with no script.
+ * Every figure says where it came from: a published figure for this place, a published
+ * rule (HUD's FHA premiums, New Jersey's transfer fees), a typical range (the CFPB's
+ * closing costs, Freddie Mac's mortgage insurance), or the reader. A total missing a part
+ * every home has says *partial estimate* beside it.
+ *
+ * "Your numbers" lets a reader replace any input. What describes the reader — down
+ * payment, rate, quotes, assumptions about the years — follows them to every page in this
+ * browser; what describes a home stays on this one (`costScenario`). Nothing typed changes
+ * a published figure or a ranking.
+ *
+ * The report prints the cards at the published figures, with every view and no controls.
  */
 export function CostToOwn({
   home,
   rate,
   tax,
+  insurance,
+  utilities,
+  rentersPayUtilities,
   rent,
   noTax,
   gain,
@@ -85,28 +165,84 @@ export function CostToOwn({
   control = true,
   beforeMoving,
 }: CostProps & { control?: boolean; beforeMoving?: ReactNode }) {
-  const [down, setDown] = useState<number>(DEFAULT_DOWN);
   const id = useId();
-  const cost = costToOwn({
-    homeValue: home.value,
-    ratePct: rate.value,
-    downPct: down,
-    annualTax: tax?.value ?? null,
-  });
-  const beforeTax = cost.tax === null;
-  // Whole dollars that add up: money gone is its parts, and the key's parts are the payment,
-  // where rounding each figure on its own left them a dollar apart.
-  const shown = {
-    total: Math.round(cost.total),
-    interest: Math.round(cost.interest),
-    tax: cost.tax === null ? 0 : Math.round(cost.tax),
+  const [personal, setPersonalState] = useState<Personal>({});
+  const [fields, setFields] = useState<HomeFields>(NO_HOME_FIELDS);
+  const [view, setView] = useState<View>("upfront");
+
+  // After the first render, so the server's page and the browser's first paint agree.
+  useEffect(() => {
+    if (control) setPersonalState(readPersonal());
+  }, [control]);
+
+  const setPersonal = (key: keyof Personal, value: number | null) => {
+    const next = { ...personal };
+    if (value === null) delete next[key];
+    else next[key] = value;
+    setPersonalState(next);
+    writePersonal(next);
   };
-  const shownGone = shown.interest + shown.tax;
-  const shownKept = shown.total - shownGone;
-  const against = rent ? goneAgainstRent(cost.gone, rent.value) : null;
-  const cashComparison = rent && against && (
+  const setField = (key: keyof HomeFields, text: string) => setFields({ ...fields, [key]: text });
+
+  const typedPrice = parseAmount(fields.price);
+  const typedTax = parseAmount(fields.tax);
+  const typedRent = parseAmount(fields.rent);
+  const down = personal.downPct ?? DEFAULT_DOWN;
+  const input: Inputs = {
+    price: typedPrice ?? home.value,
+    downPct: down,
+    ratePct: personal.ratePct ?? rate.value,
+    taxYear: typedTax ?? tax?.value ?? null,
+    insuranceYear: personal.insuranceYear ?? insurance?.value ?? null,
+    utilitiesMonth: utilities?.month ?? null,
+    hoaMonth: parseAmount(fields.hoa),
+    floodYear: parseAmount(fields.flood),
+    pmiPct: personal.pmiPct ?? null,
+    upkeepPct: personal.upkeepPct ?? UPKEEP_PCT,
+    closingPct: personal.closingPct ?? null,
+    movingCost: parseAmount(fields.moving),
+    repairsCost: parseAmount(fields.repairs),
+    years: personal.years ?? DEFAULT_YEARS,
+    appreciationPct: personal.appreciationPct ?? 0,
+    rentGrowthPct: personal.rentGrowthPct ?? 0,
+    commissionPct: personal.commissionPct ?? COMMISSION_PCT,
+    rentMonth: typedRent ?? rent?.value ?? null,
+  };
+  const month = eachMonth(input, {
+    tax: typedTax !== null ? "reader" : "source",
+    insurance: personal.insuranceYear !== undefined ? "reader" : "source",
+    upkeep: personal.upkeepPct !== undefined ? "reader" : "thumb",
+  });
+  const up = upFront(input);
+  const years = overYears(input);
+  const partial = month.missing.length > 0;
+  const own = typedPrice !== null || Object.keys(personal).length > 0 || Object.values(fields).some(Boolean);
+  const rentMonth = input.rentMonth;
+  const utilitiesLine = month.lines.find((l) => l.key === "utilities")?.value ?? 0;
+
+  // Whole dollars that add up: the bar's parts are the month, and each line is rounded
+  // once, here, so the key, the lines and the total cannot disagree by a dollar.
+  const parts = [
+    { key: "interest", label: "Interest", value: month.interest },
+    ...month.lines
+      .filter((l) => l.key !== "mortgage" && (l.value ?? 0) > 0)
+      .map((l) => ({ key: l.key, label: l.label, value: l.value ?? 0 })),
+  ];
+  const kept = month.principal;
+
+  // Money gone against rent, both without utilities: a home and a rental both pay them,
+  // in amounts this page cannot set side by side, and a quoted rent usually leaves them
+  // out (`rentersPayUtilities`).
+  const goneNoUtilities = month.gone - utilitiesLine;
+  const missingBeyondUtilities = month.missing.filter((label) => label !== "Utilities");
+  const against = rentMonth !== null ? goneAgainstRent(goneNoUtilities, rentMonth) : null;
+  const cashComparison = rentMonth !== null && against && (
     <>
-      Counting only money that’s gone{beforeTax ? ", and before property tax" : ""},{" "}
+      Counting only money that’s gone, and leaving utilities out of both
+      {missingBeyondUtilities.length > 0
+        ? ` (and ${listed(missingBeyondUtilities).toLowerCase()}, which no figure covers)`
+        : ""}
+      ,{" "}
       {against.kind === "about" ? (
         <>
           owning costs <b>about the same as renting</b>
@@ -120,8 +256,8 @@ export function CostToOwn({
           than renting
         </>
       )}{" "}
-      — {money(shownGone)} against {money(rent.value)} — and the first payment also puts{" "}
-      {money(shownKept)} into the home.
+      — {money(goneNoUtilities)} against {money(rentMonth)} — and the first payment also puts{" "}
+      {money(kept)} into the home.
     </>
   );
   const rentalCaveat = rent && (
@@ -141,47 +277,54 @@ export function CostToOwn({
     </>
   );
 
-  const terms = {
-    own: term(
-      "cost-own",
-      "To own",
-      (home.basis === "index"
+  const priceWords =
+    typedPrice !== null
+      ? `A purchase at ${money(typedPrice)}, the price you entered`
+      : home.basis === "index"
         ? `The typical single-family home’s value (Zillow Home Value Index, ${home.asOf})`
         : `A purchase at ${money(home.value)} — the middle price of qualifying residential ` +
           `sales here from ${home.from} to ${home.to}, from New Jersey’s SR1A sales file. ` +
           `That is the middle of what sold in that window, not a valuation of the typical ` +
           `home on any one date, and the homes that sell are not a cross-section of the ` +
-          `homes that exist`) +
-        `, less a ${down}% down payment, borrowed over 30 years at ${rate.value.toFixed(2)}% — ` +
-        `the national benchmark for a 30-year fixed loan (Freddie Mac’s weekly survey, via ` +
-        `FRED, ${rate.asOf}), not a quote for any borrower. A ` +
-        `month is that loan’s principal and interest` +
-        (tax
-          ? `, plus a twelfth of the typical yearly property tax bill for this area ` +
-            `(${money(tax.value)}, from New Jersey’s MOD-IV assessment records, ${tax.asOf}). ` +
-            `That bill is the area’s median, not this price’s tax: it is read from the ` +
-            `assessment records, never worked out from the price above.`
-          : `; property tax is not included here.`) +
-        ` Left out: ${listed(leftOut(down))}.`,
+          `homes that exist`;
+  const terms = {
+    own: term(
+      "cost-own",
+      "To own",
+      `${priceWords}, less a ${down}% down payment, borrowed over 30 years at ` +
+        `${input.ratePct.toFixed(2)}%` +
+        (personal.ratePct !== undefined
+          ? " — the rate you entered."
+          : ` — the national benchmark for a 30-year fixed loan (Freddie Mac’s weekly survey, ` +
+            `via FRED, ${rate.asOf}), not a quote for any borrower.`) +
+        (month.loan.fha
+          ? " At 3.5% down the loan is an FHA loan: HUD’s 1.75% upfront premium is added to it, " +
+            "and its yearly premium is part of each month."
+          : "") +
+        " A month adds property tax, homeowners insurance, any mortgage insurance, utilities " +
+        "and upkeep, each with where it comes from; HOA fees and flood insurance only if you " +
+        "enter them. The tax bill is the area’s median from New Jersey’s assessment records " +
+        "unless you enter a bill — never worked out from the price.",
     ),
     rent: term(
       "cost-rent",
       "To rent",
-      rent
-        ? `Zillow Observed Rent Index for this place (${rent.asOf}): the typical rent asked for ` +
+      typedRent !== null
+        ? `The rent you entered, ${money(typedRent)} a month.`
+        : rent
+          ? `Zillow Observed Rent Index for this place (${rent.asOf}): the typical rent asked for ` +
             `homes listed for rent, across every kind of rental home — mostly apartments — ` +
             `smoothed and seasonally adjusted. It is what a new tenant is asked, not what ` +
-            `tenants already in place pay.`
-        : "Zillow publishes no rent index for this place, so there is no typical rent to compare.",
+            `tenants already in place pay, and it does not include utilities.`
+          : "Zillow publishes no rent index for this place, so there is no typical rent to compare.",
     ),
     gone: term(
       "cost-gone",
       "Money gone each month",
-      `The part of a month of owning that does not come back: the loan’s interest` +
-        (tax ? " and a twelfth of the yearly property tax bill." : "; property tax is not included here.") +
-        " The rest of the payment, principal, pays the loan down and stays the owner’s as " +
-        "equity in the home. These are the first month’s figures: each month after, a little " +
-        "more of the same payment is principal.",
+      "The part of a month of owning that does not come back: interest, tax, insurance, " +
+        "mortgage insurance, utilities, upkeep and any fees. The rest, principal, pays the " +
+        "loan down and stays the owner’s as equity. These are the first month’s figures: " +
+        "each month after, a little more of the payment is principal.",
     ),
     income: term(
       "cost-income",
@@ -189,16 +332,61 @@ export function CostToOwn({
       "The yearly household income, before tax, at which a month’s cost is 30% of a month’s " +
         "pay — HUD’s line for cost burden. It is the monthly cost × 12 ÷ 0.3.",
     ),
+    partial: term(
+      "cost-partial",
+      "Partial estimate",
+      `This total leaves out ${listed(month.missing).toLowerCase()}: no published figure ` +
+        "covers it for this place. Enter yours under “Your numbers” to complete it.",
+    ),
   };
+
+  const source = (key: string): string => {
+    switch (key) {
+      case "mortgage":
+        return month.loan.fha
+          ? `${money(month.loan.amount)} at ${input.ratePct.toFixed(2)}%, HUD’s upfront premium included`
+          : `${money(month.loan.amount)} at ${input.ratePct.toFixed(2)}%`;
+      case "tax":
+        return typedTax !== null ? `${money(typedTax)} a year, your figure` : tax ? `${money(tax.value)} a year, MOD-IV, ${tax.asOf}` : "no figure for this place";
+      case "insurance":
+        return personal.insuranceYear !== undefined
+          ? `${money(personal.insuranceYear)} a year, your quote`
+          : insurance
+            ? `${money(insurance.value)} a year, what owners with a mortgage report · Census survey, ${insurance.asOf}`
+            : "no figure for this place";
+      case "mi": {
+        const line = month.lines.find((l) => l.key === "mi");
+        if (month.loan.fha) return `${FHA.rule.source}: ${month.loan.base > FHA.baseLoanThreshold ? "0.75" : "0.55"}% of the loan a year`;
+        if (down >= 20) return "none at 20% down";
+        if (line?.basis === "reader") return `${input.pmiPct}% of the loan a year, your quote`;
+        return `${money(line?.low ?? 0)}–${money(line?.high ?? 0)} a month, ${PMI.rule.source}`;
+      }
+      case "utilities":
+        return utilities
+          ? `electricity${utilities.gas !== null ? ", gas" : ""}${utilities.waterYear !== null ? ", water and sewer" : ""} · Census survey, ${utilities.asOf}`
+          : "no figure for this place";
+      case "upkeep":
+        return `${input.upkeepPct}% of the price a year`;
+      default:
+        return "";
+    }
+  };
+
+  const views: Record<View, string> = {
+    upfront: "Up front",
+    gone: "Money gone",
+    years: `Over ${input.years} years`,
+  };
+  const showView = (which: View) => !control || view === which;
 
   return (
     <section className="section cost" aria-labelledby={`${id}-heading`}>
       <div className="section-head">
-        <h2 id={`${id}-heading`}>What it costs per month</h2>
+        <h2 id={`${id}-heading`}>What it costs to own and to rent</h2>
         {control ? (
           <label className="control">
             <span className="control-label">Down payment</span>
-            <select value={down} onChange={(event) => setDown(Number(event.target.value))}>
+            <select value={down} onChange={(event) => setPersonal("downPct", Number(event.target.value))}>
               {DOWN_PAYMENTS.map((pct) => (
                 <option key={pct} value={pct}>
                   {pct}%
@@ -211,6 +399,62 @@ export function CostToOwn({
         )}
       </div>
 
+      {control && (
+        <details className="cost-yours">
+          <summary>
+            <span className="cost-yours-title">Your numbers</span>
+            <span className="cost-yours-hint">
+              {own ? "Using your figures" : "Replace any figure with your own — a listing’s price, a quote"}
+            </span>
+          </summary>
+          <div className="cost-yours-body">
+            <fieldset>
+              <legend>This home <small>stays on this page</small></legend>
+              <Field label="Purchase price" value={fields.price} placeholder={money(home.value)} onChange={(t) => setField("price", t)} />
+              <Field label="Property tax a year" value={fields.tax} placeholder={tax ? money(tax.value) : "not published"} onChange={(t) => setField("tax", t)} />
+              <Field label="HOA or condo fees a month" value={fields.hoa} placeholder="if any" onChange={(t) => setField("hoa", t)} />
+              <Field label="Flood insurance a year" value={fields.flood} placeholder="if required" onChange={(t) => setField("flood", t)}>
+                <a href={FLOOD_MAP.url} target="_blank" rel="noreferrer">Check FEMA’s flood map</a>
+              </Field>
+              <Field label="Rent you’d pay instead, a month" value={fields.rent} placeholder={rent ? money(rent.value) : "not published"} onChange={(t) => setField("rent", t)} />
+              <Field label="Moving" value={fields.moving} placeholder="optional" onChange={(t) => setField("moving", t)} />
+              <Field label="First repairs" value={fields.repairs} placeholder="optional" onChange={(t) => setField("repairs", t)} />
+            </fieldset>
+            <fieldset>
+              <legend>You <small>remembered on every page, in this browser</small></legend>
+              <NumberField label="Mortgage rate, %" value={personal.ratePct} placeholder={rate.value.toFixed(2)} onChange={(v) => setPersonal("ratePct", v)} />
+              <NumberField label="Homeowners insurance a year" value={personal.insuranceYear} placeholder={insurance ? money(insurance.value) : "your quote"} onChange={(v) => setPersonal("insuranceYear", v)} />
+              {!month.loan.fha && down < 20 && (
+                <NumberField label="Mortgage insurance, % of loan a year" value={personal.pmiPct} placeholder="your quote" onChange={(v) => setPersonal("pmiPct", v)} />
+              )}
+              <NumberField label="Upkeep, % of price a year" value={personal.upkeepPct} placeholder={String(UPKEEP_PCT)} onChange={(v) => setPersonal("upkeepPct", v)} />
+              <NumberField label="Closing costs, % of price" value={personal.closingPct} placeholder={`${CLOSING.low * 100}–${CLOSING.high * 100}`} onChange={(v) => setPersonal("closingPct", v)} />
+              <NumberField label="Years you’d stay" value={personal.years} placeholder={String(DEFAULT_YEARS)} onChange={(v) => setPersonal("years", v)} />
+              <NumberField label="Home prices, % a year" value={personal.appreciationPct} placeholder="0, flat" onChange={(v) => setPersonal("appreciationPct", v)} />
+              <NumberField label="Rents, % a year" value={personal.rentGrowthPct} placeholder="0, flat" onChange={(v) => setPersonal("rentGrowthPct", v)} />
+              <NumberField label="Selling commission, %" value={personal.commissionPct} placeholder={String(COMMISSION_PCT)} onChange={(v) => setPersonal("commissionPct", v)} />
+            </fieldset>
+            <p className="cost-yours-note">
+              What you enter changes this page’s arithmetic only — never this place’s published
+              figures or its rankings.{" "}
+              {own && (
+                <button
+                  type="button"
+                  className="cost-yours-reset"
+                  onClick={() => {
+                    setPersonalState({});
+                    writePersonal({});
+                    setFields(NO_HOME_FIELDS);
+                  }}
+                >
+                  Use the published figures
+                </button>
+              )}
+            </p>
+          </div>
+        </details>
+      )}
+
       {control && cashComparison && (
         <div className="cost-monthly-headline" aria-label="Monthly cash comparison">
           <p className="cost-evidence-label">Monthly cash</p>
@@ -222,12 +466,14 @@ export function CostToOwn({
         <article className="cost-card">
           <h3 className="cost-card-label">
             <Definition term={terms.own}>
-              {home.basis === "index"
-                ? "To own the typical single-family home"
-                : `Estimated monthly cost at a ${money(home.value)} purchase price`}
+              {typedPrice !== null
+                ? `To own at your ${money(typedPrice)} price`
+                : home.basis === "index"
+                  ? "To own the typical single-family home"
+                  : `To own at a ${money(home.value)} purchase price`}
             </Definition>
           </h3>
-          {home.basis === "transactions" && (
+          {typedPrice === null && home.basis === "transactions" && (
             // The window, on the card rather than only in the definition. A reader who
             // never opens the definition still has to be told that this price is the
             // middle of what sold over a span, not a valuation on a date.
@@ -236,38 +482,53 @@ export function CostToOwn({
             </p>
           )}
           <p className="cost-figure" aria-live="polite">
-            <b>{money(shown.total)}</b>
-            <span>a month{beforeTax ? ", before property tax" : ", to the lender and the town"}</span>
+            <b>{money(month.total)}</b>
+            <span>a month, every cost below</span>
           </p>
-          <p className="cost-estimate-note">Calculated estimate · not a lender quote</p>
+          {month.loan.fha && (
+            <p className="cost-basis">
+              An FHA loan, which HUD caps at a limit set for each county;{" "}
+              <a href={FHA_LIMITS.url} target="_blank" rel="noreferrer">
+                check the limit here
+              </a>
+              .
+            </p>
+          )}
+          <p className="cost-estimate-note">
+            {partial ? (
+              <Definition term={terms.partial}>
+                <span className="cost-partial">Partial estimate</span>
+              </Definition>
+            ) : (
+              "Calculated estimate"
+            )}{" "}
+            · not a lender quote
+          </p>
           <div className="gone-kept">
             <div
               className="gone-kept-bar"
               role="img"
               aria-label={
-                `Of ${money(shown.total)}: interest ${money(shown.interest)}` +
-                (cost.tax === null ? "" : `, property tax ${money(shown.tax)}`) +
-                `, and ${money(shownKept)} paid into the home`
+                `Of ${money(month.total)}: ` +
+                parts.map((p) => `${p.label.toLowerCase()} ${money(p.value)}`).join(", ") +
+                `, and ${money(kept)} paid into the home`
               }
             >
-              <i style={{ width: share(cost.interest, cost.total), background: "var(--gone-1)" }} />
-              {cost.tax !== null && <i style={{ width: share(cost.tax, cost.total), background: "var(--gone-2)" }} />}
-              <i style={{ width: share(cost.principal, cost.total), background: "var(--good)" }} />
+              {parts.map((p) => (
+                <i key={p.key} style={{ width: share(p.value, month.total), background: PART_COLOURS[p.key] }} />
+              ))}
+              <i style={{ width: share(kept, month.total), background: "var(--good)" }} />
             </div>
             <p className="gone-kept-key" aria-hidden="true">
-              <span>
-                <i style={{ background: "var(--gone-1)" }} />
-                Interest {money(shown.interest)}
-              </span>
-              {cost.tax !== null && (
-                <span>
-                  <i style={{ background: "var(--gone-2)" }} />
-                  Property tax {money(shown.tax)}
+              {parts.map((p) => (
+                <span key={p.key}>
+                  <i style={{ background: PART_COLOURS[p.key] }} />
+                  {p.label} {money(p.value)}
                 </span>
-              )}
+              ))}
               <span className="kept">
                 <i style={{ background: "var(--good)" }} />
-                Paid into your home {money(shownKept)}
+                Paid into your home {money(kept)}
               </span>
             </p>
           </div>
@@ -276,93 +537,273 @@ export function CostToOwn({
               <dt>
                 <Definition term={terms.gone}>Money gone each month</Definition>
               </dt>
-              <dd>{money(shownGone)}</dd>
+              <dd>{money(month.gone)}</dd>
             </div>
             <div>
               <dt>
-                {home.basis === "index" ? "Typical single-family home" : "Purchase price"}{" "}
+                {typedPrice !== null ? "Your purchase price" : home.basis === "index" ? "Typical single-family home" : "Purchase price"}{" "}
                 <small className="src">
-                  {home.basis === "index"
-                    ? `Zillow, ${home.asOf}`
-                    : `NJ SR1A sales, ${home.from} to ${home.to}`}
+                  {typedPrice !== null
+                    ? "your figure"
+                    : home.basis === "index"
+                      ? `Zillow, ${home.asOf}`
+                      : `NJ SR1A sales, ${home.from} to ${home.to}`}
                 </small>
               </dt>
-              <dd>{money(home.value)}</dd>
+              <dd>{money(input.price)}</dd>
             </div>
             <div>
               <dt>
                 Down payment, {down}% <small className="src">money a renter could invest instead</small>
               </dt>
-              <dd>{money(cost.down)}</dd>
+              <dd>{money(month.loan.down)}</dd>
             </div>
-            <div>
-              <dt>
-                Mortgage, 30-year fixed at {rate.value.toFixed(2)}%{" "}
-                <small className="src">national weekly benchmark, {rate.asOf}</small>
-              </dt>
-              <dd>{money(cost.mortgage)}/mo</dd>
-            </div>
-            <div>
-              <dt>
-                Property tax{tax && `, ${money(tax.value)} a year`}
-                {tax && <small className="src">MOD-IV, {tax.asOf}</small>}
-              </dt>
-              <dd>{cost.tax === null ? "not included" : `${money(shown.tax)}/mo`}</dd>
-            </div>
+            {month.lines.map((line) => (
+              <div key={line.key} className={line.value === null ? "missing" : undefined}>
+                <dt>
+                  {line.label}
+                  {line.key === "mortgage" && month.loan.fha ? ", FHA" : ""}{" "}
+                  <small className="src">
+                    {line.value === null && line.conditional
+                      ? "add yours if it applies"
+                      : [source(line.key), line.value !== null && line.key !== "mortgage" ? BASIS_WORDS[line.basis] : ""]
+                          .filter(Boolean)
+                          .join(" · ")}
+                  </small>
+                </dt>
+                <dd>{line.value === null ? (line.conditional ? "—" : "not included") : `${money(line.value)}/mo`}</dd>
+              </div>
+            ))}
             <div>
               <dt>
                 <Definition term={terms.income}>Income to keep it at 30% of pay</Definition>
               </dt>
-              <dd>{money(cost.incomeNeeded)} a year</dd>
+              <dd>{money(incomeFor(month.total))} a year</dd>
             </div>
           </dl>
         </article>
 
         <article className="cost-card">
           <h3 className="cost-card-label">
-            <Definition term={terms.rent}>To rent the typical home</Definition>
+            <Definition term={terms.rent}>{typedRent !== null ? "To rent at your figure" : "To rent the typical home"}</Definition>
           </h3>
-          {rent ? (
+          {rentMonth !== null ? (
             <>
               <p className="cost-figure">
-                <b>{money(rent.value)}</b>
+                <b>{money(rentMonth)}</b>
                 <span>a month, all of it gone</span>
               </p>
               <dl className="cost-lines">
                 <div className="sum">
                   <dt>Money gone each month</dt>
-                  <dd>{money(rent.value)}</dd>
+                  <dd>{money(rentMonth)}</dd>
                 </div>
                 <div>
                   <dt>
-                    Typical rent, any kind of rental home{" "}
-                    <small className="src">Zillow, {rent.asOf} · mostly apartments</small>
+                    {typedRent !== null ? "Your rent" : "Typical rent, any kind of rental home"}{" "}
+                    <small className="src">{typedRent !== null ? "your figure" : `Zillow, ${rent?.asOf} · mostly apartments`}</small>
                   </dt>
-                  <dd>{money(rent.value)}/mo</dd>
+                  <dd>{money(rentMonth)}/mo</dd>
+                </div>
+                <div>
+                  <dt>
+                    Utilities on top{" "}
+                    <small className="src">
+                      {rentersPayUtilities
+                        ? `${Math.round(rentersPayUtilities.value * 100)}% of renters here pay at least one · Census survey, ${rentersPayUtilities.asOf}`
+                        : "a quoted rent usually leaves them out"}
+                    </small>
+                  </dt>
+                  <dd>not included</dd>
+                </div>
+                <div>
+                  <dt>
+                    Renters insurance <small className="src">no published figure</small>
+                  </dt>
+                  <dd>not included</dd>
                 </div>
                 <div>
                   <dt>Income to keep it at 30% of pay</dt>
-                  <dd>{money(incomeFor(rent.value))} a year</dd>
+                  <dd>{money(incomeFor(rentMonth))} a year</dd>
                 </div>
               </dl>
             </>
           ) : (
             <p className="cost-missing">
               No rent figure for this place: Zillow publishes its rent index for fewer places than
-              its home values.
+              its home values. Enter one under “Your numbers” to compare.
             </p>
           )}
         </article>
-        {control && (
-          <aside className="cost-evidence-omissions" aria-label="Costs not included">
+        {month.optional.length > 0 && (
+          <aside className="cost-evidence-omissions" aria-label="Costs to add if they apply">
             <p className="cost-evidence-label">
               <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
-              Not included
+              Add if they apply
             </p>
-            <p>{listed(leftOut(down))}.</p>
+            <p>
+              {listed(month.optional)}
+              {control ? ", under “Your numbers”." : "."} Also left out: what the down payment could earn.
+            </p>
           </aside>
         )}
       </div>
+
+      <div className="cost-views">
+        {control && (
+          <div className="cost-view-tabs" role="tablist" aria-label="Other views of the cost">
+            {(Object.keys(views) as View[]).map((key) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={view === key}
+                className={view === key ? "on" : undefined}
+                onClick={() => setView(key)}
+              >
+                {views[key]}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {showView("upfront") && (
+          <div className="cost-view" role={control ? "tabpanel" : undefined}>
+            <h3 className="cost-view-title">Cash needed up front</h3>
+            <p className="cost-view-figure">
+              <b>{up.low === up.high ? money(up.low) : `${money(up.low)}–${money(up.high)}`}</b>
+              <span>before the keys</span>
+            </p>
+            <dl className="cost-lines">
+              <div>
+                <dt>Down payment, {down}%</dt>
+                <dd>{money(up.down)}</dd>
+              </div>
+              <div>
+                <dt>
+                  Closing costs{" "}
+                  <small className="src">
+                    {up.closingBasis === "reader"
+                      ? `${input.closingPct}% of the price, your figure`
+                      : `${CLOSING.low * 100}–${CLOSING.high * 100}% of the price, ${CLOSING.rule.source}`}
+                  </small>
+                </dt>
+                <dd>{up.closingLow === up.closingHigh ? money(up.closingLow) : `${money(up.closingLow)}–${money(up.closingHigh)}`}</dd>
+              </div>
+              {month.loan.fha && (
+                <div>
+                  <dt>
+                    FHA upfront premium <small className="src">1.75% of the loan, added to it rather than paid in cash</small>
+                  </dt>
+                  <dd>{money(month.loan.amount - month.loan.base)}</dd>
+                </div>
+              )}
+              <div className={up.moving === null ? "missing" : undefined}>
+                <dt>Moving</dt>
+                <dd>{up.moving === null ? "—" : money(up.moving)}</dd>
+              </div>
+              <div className={up.repairs === null ? "missing" : undefined}>
+                <dt>First repairs</dt>
+                <dd>{up.repairs === null ? "—" : money(up.repairs)}</dd>
+              </div>
+            </dl>
+            {rentMonth !== null && (
+              <p className="cost-view-note">
+                To rent instead: the first month and a deposit of up to {money(rentMonth * DEPOSIT_MONTHS)},
+                a month and a half’s rent — the most a New Jersey landlord may ask ({DEPOSIT_RULE.source}).
+              </p>
+            )}
+          </div>
+        )}
+
+        {showView("gone") && (
+          <div className="cost-view" role={control ? "tabpanel" : undefined}>
+            <h3 className="cost-view-title">Money gone each month</h3>
+            <p className="cost-view-figure">
+              <b>{money(month.gone)}</b>
+              <span>of {money(month.total)} — the rest, {money(kept)}, pays the loan down</span>
+            </p>
+            <p className="cost-view-note">
+              What a month of owning costs and does not give back: interest, property tax,
+              insurance, any mortgage insurance, utilities and upkeep. Without utilities, which
+              renting pays too, it is {money(goneNoUtilities)}
+              {rentMonth !== null ? `, against ${money(rentMonth)} of rent` : ""}.
+              {partial ? ` It leaves out ${listed(month.missing).toLowerCase()}.` : ""}
+            </p>
+          </div>
+        )}
+
+        {showView("years") && (
+          <div className="cost-view" role={control ? "tabpanel" : undefined}>
+            <h3 className="cost-view-title">Owning for {input.years} years, then selling</h3>
+            <p className="cost-view-figure">
+              <b>{money(years.net)}</b>
+              <span>
+                spent over {input.years} years, after what selling gives back
+                {years.rent !== null ? ` — against ${money(years.rent)} of rent` : ""}
+              </span>
+            </p>
+            <dl className="cost-lines">
+              <div>
+                <dt>Cash up front <small className="src">closing costs at the middle of their range unless you set them</small></dt>
+                <dd>{money(years.upfront)}</dd>
+              </div>
+              <div>
+                <dt>Paid each month over the years <small className="src">utilities left out, as for rent</small></dt>
+                <dd>{money(years.paid)}</dd>
+              </div>
+              <div>
+                <dt>
+                  Sale price{" "}
+                  <small className="src">
+                    {input.appreciationPct === 0 ? "prices flat, as no one can say where they will go" : `${input.appreciationPct}% a year, your assumption`}
+                  </small>
+                </dt>
+                <dd>{money(years.salePrice)}</dd>
+              </div>
+              <div>
+                <dt>
+                  Less the loan still owed
+                </dt>
+                <dd>−{money(years.balance)}</dd>
+              </div>
+              <div>
+                <dt>
+                  Less selling costs{" "}
+                  <small className="src">{input.commissionPct}% commission, an assumption, and New Jersey’s seller fees ({NJ_TRANSFER_RULE.source})</small>
+                </dt>
+                <dd>−{money(years.sellingCosts)}</dd>
+              </div>
+              <div className="sum">
+                <dt>What selling gives back</dt>
+                <dd>{money(years.equity)}</dd>
+              </div>
+            </dl>
+            <p className="cost-view-note">
+              A sum over stated assumptions, not a forecast: tax, insurance, fees and upkeep stay
+              at today’s dollars, and prices and rents stay flat unless you set a rate.
+              {years.missing.length > 0 ? ` It leaves out ${listed(years.missing).toLowerCase()}.` : ""}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <aside className="cost-relief" aria-label="Tax relief and help buying">
+        <p className="cost-evidence-label">Relief and help, not subtracted</p>
+        <p>
+          Who qualifies turns on a household’s age, income and history, so these are links,
+          never part of the totals:{" "}
+          {RELIEF.map((r, index) => (
+            <span key={r.url}>
+              <a href={r.url} target="_blank" rel="noreferrer">
+                {r.label}
+              </a>
+              {index < RELIEF.length - 1 ? "; " : "."}
+            </span>
+          ))}{" "}
+          <small className="src">Links checked {RELIEF[0].reviewed}.</small>
+        </p>
+      </aside>
 
       {control ? (
         <div className="cost-strip cost-evidence">
@@ -398,11 +839,72 @@ export function CostToOwn({
           {rentalCaveat && <p className="cost-strip-small">{rentalCaveat}</p>}
           {history && <p className="cost-strip-small">{history}</p>}
           {noTax && <p className="cost-strip-small">{noTax}</p>}
-          <p className="cost-strip-small">
-            Left out of owning: {listed(leftOut(down))}.
-          </p>
         </div>
       )}
     </section>
+  );
+}
+
+/** A field for a figure about this home: free text, read as an amount when it is one. */
+function Field({
+  label,
+  value,
+  placeholder,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (text: string) => void;
+  children?: ReactNode;
+}) {
+  return (
+    <label className="cost-field">
+      <span>{label}</span>
+      <input
+        inputMode="decimal"
+        aria-label={label}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {children && <small>{children}</small>}
+    </label>
+  );
+}
+
+/**
+ * A field for one of the reader's own figures. Its text is kept while typing, so "6." is
+ * not snapped to "6"; the number reaches the scenario, and storage, once it reads as one.
+ */
+function NumberField({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: number | undefined;
+  placeholder: string;
+  onChange: (value: number | null) => void;
+}) {
+  const [text, setText] = useState<string | null>(null);
+  const shown = text ?? (value === undefined ? "" : String(value));
+  return (
+    <label className="cost-field">
+      <span>{label}</span>
+      <input
+        inputMode="decimal"
+        aria-label={label}
+        value={shown}
+        placeholder={placeholder}
+        onChange={(e) => {
+          setText(e.target.value);
+          onChange(parseAmount(e.target.value));
+        }}
+        onBlur={() => setText(null)}
+      />
+    </label>
   );
 }
