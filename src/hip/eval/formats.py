@@ -5,7 +5,7 @@ two or three paragraphs on what changed and how the region compares, now giving 
 survey figure its margin and every uncertain rank its range (SPEC principle 12).
 
 **The consumer reading** is for someone deciding whether to live somewhere: short
-answers to three fixed questions, asked for two figures each and published with at most
+answers to two fixed questions, asked for two figures each and published with at most
 three, no source names and no jargon. The questions are fixed so the answers are
 addressable — a county page places each by its id — and so every region's reading has
 the same shape a reader can scan. It asked five until 2026-09-30: the bottom line, "is
@@ -14,7 +14,9 @@ what the page's cost panels compute, so the page stopped showing them (ARCHITECT
 #265) and the owner then stopped asking for them (#266). "What stands out here?" joined
 on 2026-10-01, when the analyst reading was retired (#275): the fourth round of the
 grounded-synthesis pilot, `reports/evaluation/synthesis-pilot.md`, three sentences on
-the housing pattern that sets a place apart.
+the housing pattern that sets a place apart. "What's changing?" left the same day
+(#281): the page's own computed sentences already say what changed, and it had become
+the thinnest of the three answers and the one most often refused.
 
 Both are held to the same gates as a condition of publication, and the consumer reading
 to four more. Every one is deterministic, so a refusal costs nothing to decide and says
@@ -84,7 +86,6 @@ class Question:
 
 
 QUESTIONS: tuple[Question, ...] = (
-    Question("whats_changing", "What's changing?"),
     Question("what_stands_out", "What stands out here?"),
     Question("before_moving", "What should I check before moving?"),
 )
@@ -191,7 +192,7 @@ You are writing a short, plain-language guide to one place's housing for someone
 deciding whether to live there.
 
 You are given a data packet for the region, already computed by a deterministic
-pipeline. Answer under these three headings, each on its own line, word for word and in
+pipeline. Answer under these two headings, each on its own line, word for word and in
 this order, with a short answer beneath each:
 
 {chr(10).join(q.heading for q in QUESTIONS)}
@@ -225,7 +226,7 @@ Rules:
 - Describe; do not advise. Say what the figures show about renting and buying, not which
   the reader should choose.
 - Do not claim causes the packet cannot support.
-- Use one measure for each thing across all three answers: never two different
+- Use one measure for each thing across both answers: never two different
   measures of home value (a sale price and a typical home value count as one), of
   rent, of income, or of what renters pay. A reader would see two figures for the same
   thing that seem to disagree.
@@ -239,10 +240,11 @@ Rules:
   unemployment or people moving. Second, what that pattern means for someone renting
   or buying here, said only in terms of those same figures: no new figure, no guess at
   why, and nothing about people, businesses, jobs or community life. Third, the one
-  limitation that most affects the pattern. Say something "What's changing?" does not.
-  Give a rank only for where the place stands now, in words a resident follows
-  (highest, lowest, among the highest, near the middle), never for how much a figure
-  changed.
+  limitation that most affects the pattern. The pattern may be a change, where a change
+  is what sets the place apart; then give its two ends ("from 10.3% to 4.6%") rather
+  than a percentage change of a rate. Give a rank only for where the place stands now,
+  in words a resident follows (highest, lowest, among the highest, near the middle),
+  never for how much a figure changed.
 - Under "What should I check before moving?", write two or three sentences. Each
   names one thing these figures cannot tell someone about a particular home, street
   or town, and why, taken from one of the packet's own caveats, in your own words.
@@ -256,7 +258,7 @@ Rules:
 - No preamble, no bullet lists, no bold.
 """
 
-CONSUMER_QUESTION = "Answer the three questions about this region under their headings."
+CONSUMER_QUESTION = "Answer the two questions about this region under their headings."
 
 
 def revision_request(answer: str, problems: list[str]) -> str:

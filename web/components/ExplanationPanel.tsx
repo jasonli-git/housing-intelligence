@@ -135,9 +135,9 @@ function Figures({ binding }: { binding: Binding | null }) {
 }
 
 /**
- * The consumer answers sit in different parts of the page: the change reading is a
- * headline before the stand-outs, with what sets the place apart just after it, while
- * the place-specific limits follow the cost section. A reading written before 2026-09-30 answers five questions and is shown by
+ * The consumer answers sit in different parts of the page: what sets the place apart is
+ * the headline before the computed stand-outs, and the place-specific limits follow the
+ * cost section. A reading written before 2026-09-30 answers five questions and is shown by
  * these two alone; since then a reading answers only these (ARCHITECTURE #266). Each
  * visible answer carries only its own citations and model attribution.
  */

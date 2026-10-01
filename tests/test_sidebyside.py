@@ -69,14 +69,15 @@ def test_a_refused_reading_is_shown_with_the_rule_it_broke(
         "Home values rose 34.4% to $445,078, incomes rose 24.2% (± 4.0%), and 385,864 "
         "people live here, with no sampling error."
     )
-    _model_writing(_reading({"whats_changing": crowded}), monkeypatch)
+    _model_writing(_reading({"before_moving": crowded}), monkeypatch)
     result = trial(
         uncertain_packet(), load_evaluation(), "gemini-3.7-flash-low", "consumer"
     )
 
     assert result.status == "refused"
     assert result.reasons == [
-        "4 figures under 'What's changing?', where at most 3 are allowed"
+        "4 figures under 'What should I check before moving?', where at most 3 are "
+        "allowed"
     ]
     # Sent back once, as `hip explain` would, and refused again for the same rule.
     assert result.refusals == [result.reasons]
