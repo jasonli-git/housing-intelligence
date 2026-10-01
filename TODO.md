@@ -14,41 +14,15 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 33, the full cost of owning (started 2026-10-01)
+## Now — Milestone 33 built, awaiting review (2026-10-01)
 
-On `milestone/m33-full-cost-of-owning`. Four views in place of one total — monthly cash,
-upfront cash, the cost of owning excluding principal, and a long view — every component
-either from a source, a published rule, a labelled rule of thumb, or left for the reader,
-and a total missing any says *partial estimate*. Decided with the owner 2026-10-01: a
-reader's own inputs (down payment, rate, insurance quote, mortgage insurance, upkeep
-share, the long view's assumptions) follow them across towns in this browser, and a
-price or tax bill never does; home prices are flat in the long view unless the reader
-sets a rate; 3.5% down is an FHA loan with HUD's premiums. The source search
-(2026-10-01) settled each component:
+On `milestone/m33-full-cost-of-owning` (0.29.0): the full cost of owning in four views,
+every component labelled by where it came from (ARCHITECTURE #280), and six running-cost
+figures from new Census tables (#279). CHANGELOG 0.29.0 has what shipped.
 
-- [ ] **New survey figures, `census_acs`:** homeowners insurance a year for owners with a
-      mortgage (B25141, editions from 2023), monthly electricity and gas and yearly water
-      and other fuel bills (B25132–B25135, from 2021), and the share of renters paying
-      utilities on top of rent (B25069). The Census publishes these only in brackets, so
-      the typical figure is interpolated within the bracket holding the middle household,
-      with no margin, which the packet says.
-- [ ] **Published rules:** FHA's 1.75% upfront and 0.50–0.75% yearly premiums (HUD
-      Mortgagee Letter 2023-05); NJ's realty transfer fee and, since 2025-07-10, the
-      seller's graduated percent fee above $1 million (Division of Taxation); NJ's cap on a
-      security deposit, a month and a half's rent (N.J.S.A. 46:8-21.2).
-- [ ] **Labelled ranges and rules of thumb, the reader's figure first:** closing costs 2–5%
-      of the price (CFPB); conventional mortgage insurance $30–70 a month per $100,000
-      borrowed (Freddie Mac); upkeep 1% of the price a year; an agent's commission only in
-      the long view.
-- [ ] **Left for the reader:** HOA or condo fees, flood insurance (FEMA's flood map
-      linked; premiums are Milestone 39's), renters insurance, moving and first repairs.
-- [ ] **The cards:** the four views, the reader's inputs with the published figures
-      prefilled, *partial estimate* on any total missing a part, renting's own costs
-      beside owning's, and tax relief and assistance as official links with a review date.
-- [ ] **The report** prints the published defaults, with no controls.
-
-Not here: flood premiums (Milestone 39, OpenFEMA's policies, whose v2 dataset is retired
-2026-10-15) and lenders' closing costs (Milestone 46, HMDA).
+**After the merge:** the warehouse already holds the new figures (acquired, staged and
+loaded on the branch); `hip explain` then regenerates the 21 readings, since packets now
+carry six more figures (about $0.15); `make publish`, deploy and `make check-live`.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -200,6 +174,21 @@ first raised, not where it must be done.
       (Milestone 14, unscheduled).
 ### Frontend and presentation
 
+- [ ] **The affordability workspace still prices payment and tax alone.** (M33, #280) The
+      region pages' cost section now counts insurance, mortgage insurance, utilities and
+      upkeep; the workspace that ranks towns by monthly cost does not, so the two can
+      disagree for the same town. Bring it onto `ownership.ts`, or say on it what it
+      leaves out.
+- [ ] **FHA's county loan limits are linked, not held.** (M33, #280) A 3.5%-down card in
+      a dear town can price an FHA loan HUD would not insure. HUD publishes the limits by
+      county each year; loading them would let the card say so outright.
+- [ ] **Re-read the cost rules once a year.** (M33) `web/lib/costRules.ts` carries HUD's
+      FHA premiums, NJ's transfer and graduated fees, the CFPB's closing range and Freddie
+      Mac's mortgage-insurance range, each with `reviewed: 2026-10-01`. Next: 2027-10-01,
+      or when HUD issues a mortgagee letter on premiums.
+- [ ] **ZIP pages have no insurance or utility figures.** (M33, #279) The ACS is not
+      fetched by ZIP (Milestone 34), so a ZIP's cost card reads as a partial estimate.
+
 - [ ] **The paused-banner swipe and the atlas redesign are unverified on a real iPhone.**
       (PR #46, PR #48) Both were checked in Chromium only, the swipe with its touch
       emulation; iOS Safari's scrolling, pointer events and sticky table headers differ
@@ -221,19 +210,6 @@ first raised, not where it must be done.
       piece most worth pinning, since a regression there would put client behaviour into
       printed reports.
 
-- [ ] **Let a reader enter their own purchase price, with the published figure
-      prefilled.** (owner's preference, 2026-09-20, stated alongside the ARCHITECTURE
-      #187 decision — a direction, not an approved requirement.) The cost card already
-      takes one input, the down payment, and now states a purchase price explicitly
-      rather than implying "the typical home" — which is most of the way to a field a
-      reader can overwrite with the price of a listing they are actually looking at. The
-      value is that the card stops being about a town and starts being about a decision,
-      while the assumptions behind it stay visible. **The boundary, from the owner
-      2026-09-20:** an entered price changes that reader's payment scenario only, and
-      never the town's published figures or its rankings — which settles most of what
-      was unscoped here. Still open: whether an entered price persists across regions,
-      and what the comparison strip says once the price is not the published one.
-      **Scheduled: Milestone 33.**
 - [ ] **Fold `redesign.css` into `globals.css`**, so each component has one set of rules
       rather than two whose winner depends on file order (#162's cost). (Quiet utility)
       Mechanical and large — worth its own review.
