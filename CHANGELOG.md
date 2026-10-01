@@ -3,6 +3,18 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.29.1] — 2026-10-01
+
+### Changed
+
+- **"What's changing?" is retired from the county pages' reading** (ARCHITECTURE #281).
+  The page's own computed sentences already say what changed, and the model's answer
+  had become the thinnest of the three and the one most often refused.
+- **"What stands out here?" leads**, in the card "What's changing?" had: the green
+  accent, the tinted ground and the headline type. It may now lead with a change where
+  that is what sets a place apart, given by its two ends. Tested on five counties in
+  `reports/evaluation/readings-v7.md`.
+
 ## [0.29.0] — 2026-10-01
 
 Milestone 33, the full cost of owning.

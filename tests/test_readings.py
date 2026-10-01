@@ -52,12 +52,8 @@ from hip.warehouse.models import RegionExplanation
 from tests.test_packet_uncertainty import uncertain_packet
 
 ANSWERS = {
-    "whats_changing": (
-        "Home values rose 34.4% to $445,078, while incomes rose 24.2% (± 4.0%)."
-    ),
     "what_stands_out": (
-        "Mercer County stands apart for its home values. A buyer pays more here. "
-        "These are county figures."
+        "Home values rose 34.4% to $445,078, while incomes rose 24.2% (± 4.0%)."
     ),
     "before_moving": "These are county figures; a street can differ.",
 }
@@ -105,15 +101,15 @@ def test_a_consumer_reading_is_shaped_into_its_answers(style: str) -> None:
     for section in sections:
         assert body[section.start : section.end] == ANSWERS[section.id]
     # The stored body names each question exactly as the site does, whatever the dress.
-    assert body.startswith("What's changing?\nHome values rose")
+    assert body.startswith("What stands out here?\nHome values rose")
     assert "## " not in body and "**" not in body
 
 
 def test_an_answer_on_its_headings_line_and_a_curly_apostrophe_are_understood() -> None:
-    text = _reading().replace("What's changing?\n", "**What’s changing:** ")
+    text = _reading().replace("What stands out here?\n", "**What stands out here:** ")
     body, sections = shape_consumer(text)
-    changing = next(s for s in sections if s.id == "whats_changing")
-    assert body[changing.start : changing.end] == ANSWERS["whats_changing"]
+    changing = next(s for s in sections if s.id == "what_stands_out")
+    assert body[changing.start : changing.end] == ANSWERS["what_stands_out"]
 
 
 def test_bullets_and_bold_inside_an_answer_are_flattened() -> None:
@@ -131,7 +127,7 @@ def test_a_missing_heading_is_no_reading() -> None:
 
 def test_an_empty_answer_is_no_reading() -> None:
     with pytest.raises(MalformedReading, match="no answer under"):
-        shape_consumer(_reading({"whats_changing": "   "}))
+        shape_consumer(_reading({"what_stands_out": "   "}))
 
 
 # --- the consumer reading's rules ---------------------------------------------------
@@ -184,8 +180,10 @@ def test_two_measures_of_the_same_thing_are_a_problem() -> None:
     packet.levels.append(estimate)
     problems = _problems(
         {
-            "whats_changing": "385,864 people live here, with no sampling error.",
-            "before_moving": "Another count puts it at 391,200.",
+            "before_moving": (
+                "385,864 people live here, with no sampling error. Another count puts "
+                "it at 391,200."
+            ),
         },
         packet,
     )
@@ -227,7 +225,7 @@ def test_what_stands_out_keeps_to_housing() -> None:
 
 def test_population_is_still_allowed_in_other_answers() -> None:
     assert (
-        _problems({"whats_changing": "385,864 people live here, with no sampling error."})
+        _problems({"before_moving": "385,864 people live here, with no sampling error."})
         == []
     )
 
@@ -237,9 +235,10 @@ def test_more_figures_in_an_answer_than_the_limit_is_a_problem() -> None:
         "Home values rose 34.4% to $445,078, incomes rose 24.2% (± 4.0%), and 385,864 "
         "people live here, with no sampling error."
     )
-    problems = _problems({"whats_changing": crowded})
+    problems = _problems({"before_moving": crowded})
     assert problems == [
-        f"4 figures under 'What's changing?', where at most {MAX_FIGURES} are allowed"
+        "4 figures under 'What should I check before moving?', where at most "
+        f"{MAX_FIGURES} are allowed"
     ]
 
 
@@ -248,7 +247,7 @@ def test_a_margin_a_range_and_a_quoted_label_do_not_count_as_figures() -> None:
         "Incomes are $100,645, give or take $2,565, between 10th and 12th of 21 "
         "counties; renters pay over 30% of income."
     )
-    problems = _problems({"whats_changing": answer})
+    problems = _problems({"before_moving": answer})
     assert not [p for p in problems if "figures under" in p]
 
 
@@ -258,8 +257,9 @@ def test_a_figure_stated_twice_counts_twice() -> None:
         "Home values rose 34.4% to $445,078; that 34.4% rise took the typical home to "
         "$445,078."
     )
-    assert _problems({"whats_changing": repeated}) == [
-        f"4 figures under 'What's changing?', where at most {MAX_FIGURES} are allowed"
+    assert _problems({"before_moving": repeated}) == [
+        "4 figures under 'What should I check before moving?', where at most "
+        f"{MAX_FIGURES} are allowed"
     ]
 
 
@@ -268,7 +268,7 @@ def test_a_range_is_one_figure_however_its_ends_were_bound() -> None:
     body, sections = shape_consumer(
         _reading(
             {
-                "whats_changing": (
+                "what_stands_out": (
                     "Incomes are $100,645, give or take $2,565, between 10th and 12th "
                     "of 21 counties."
                 )
@@ -276,7 +276,7 @@ def test_a_range_is_one_figure_however_its_ends_were_bound() -> None:
         )
     )
     binding = bind(body, packet, payload=render_markdown(packet))
-    changing = next(s for s in sections if s.id == "whats_changing")
+    changing = next(s for s in sections if s.id == "what_stands_out")
     assert figures_in(body, binding, changing) == 2
 
 
@@ -306,12 +306,12 @@ def test_a_consumer_reading_out_of_shape_is_refused() -> None:
 
 def test_an_invented_figure_is_refused_before_any_other_rule() -> None:
     with pytest.raises(UnboundFigures):
-        _judge(_reading({"whats_changing": "Home values hit $612,300."}))
+        _judge(_reading({"what_stands_out": "Home values hit $612,300."}))
 
 
 def test_a_survey_figure_without_its_margin_is_refused_in_either_format() -> None:
     with pytest.raises(ReadingRefused, match="without its margin"):
-        _judge(_reading({"whats_changing": "Incomes here rose 24.2% in five years."}))
+        _judge(_reading({"what_stands_out": "Incomes here rose 24.2% in five years."}))
     with pytest.raises(ReadingRefused, match="without its margin"):
         _judge("Median household income rose 24.2% over the window.", "analyst")
 
@@ -477,7 +477,7 @@ def test_a_reading_refused_after_its_revisions_carries_what_they_cost(
 
 
 def test_an_invented_figure_is_revised_too(monkeypatch: pytest.MonkeyPatch) -> None:
-    invented = _reading({"whats_changing": "Home values hit $612,300."})
+    invented = _reading({"what_stands_out": "Home values hit $612,300."})
     sent = _scripted([invented, _reading()], monkeypatch)
     write_reading(
         uncertain_packet(), load_evaluation(), "gemini-3.7-flash-low", audience="consumer"

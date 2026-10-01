@@ -14,15 +14,15 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 33 built, awaiting review (2026-10-01)
+## Now — "What's changing?" retired, awaiting review (2026-10-01)
 
-On `milestone/m33-full-cost-of-owning` (0.29.0): the full cost of owning in four views,
-every component labelled by where it came from (ARCHITECTURE #280), and six running-cost
-figures from new Census tables (#279). CHANGELOG 0.29.0 has what shipped.
+On `change/retire-whats-changing` (0.29.1): the consumer reading asks two questions,
+and "What stands out here?" takes the retired answer's card (ARCHITECTURE #281).
 
-**After the merge:** the warehouse already holds the new figures (acquired, staged and
-loaded on the branch); `hip explain` then regenerates the 21 readings, since packets now
-carry six more figures (about $0.15); `make publish`, deploy and `make check-live`.
+**After the merge:** `hip explain` regenerates the 21 readings, since their shape
+changed (about $0.10); then `make publish`, deploy and `make check-live`.
+
+Milestone 34, ACS depth and direct ZIP coverage, is next.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 

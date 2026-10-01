@@ -111,7 +111,6 @@
   .atlas-local .cost-card + .cost-card { border-left: 1px solid var(--border); }
   .atlas-local .cost-cards + .cost-evidence { margin-top: 1.3rem; }
   .atlas-local .standouts-disclosure { margin-top: clamp(1.5rem, 3vw, 2rem); }
-  .atlas-local .consumer-feature-whats_changing + .standouts-disclosure,
   .atlas-local .consumer-feature-what_stands_out + .standouts-disclosure { margin-top: clamp(1.5rem, 3vw, 2rem); }
   .atlas-local .standouts-disclosure .region-standouts { margin: 1.35rem 0 1.8rem; }
 

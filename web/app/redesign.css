@@ -1465,7 +1465,9 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 .consumer-feature .interpretation-figures { margin-top: 0.8rem; }
 .consumer-feature .interpretation-note { max-width: none; margin-bottom: 0; }
 
-.consumer-feature-whats_changing {
+/* The lead answer, "What stands out here?" since 2026-10-01 (#281): the headline card,
+   with the accent and the larger type the change answer it replaced carried. */
+.consumer-feature-what_stands_out {
   padding: clamp(1.3rem, 2.5vw, 2rem);
   background: linear-gradient(
     120deg,
@@ -1474,37 +1476,19 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   );
 }
 
-.consumer-feature-whats_changing h2 {
+.consumer-feature-what_stands_out h2 {
   font-size: clamp(1.65rem, 3vw, 2.5rem);
   line-height: 1.08;
 }
 
-.interpretation.consumer-feature-whats_changing .consumer-feature-answer {
+.interpretation.consumer-feature-what_stands_out .consumer-feature-answer {
   font-size: clamp(1.1rem, 1.9vw, 1.45rem);
   line-height: 1.48;
 }
 
-.consumer-feature-whats_changing .cited {
+.consumer-feature-what_stands_out .cited {
   color: var(--atlas-ink, var(--series-3));
   font-weight: 650;
-}
-
-/* What sets the place apart (#275): a quieter card under the change headline, read as
-   its second half rather than a second headline. */
-.consumer-feature-what_stands_out {
-  padding: clamp(1.1rem, 2vw, 1.6rem) clamp(1.3rem, 2.5vw, 2rem);
-  border-left: 3px solid color-mix(in srgb, var(--series-3) 55%, var(--border));
-}
-
-.consumer-feature-what_stands_out h2 {
-  font-size: clamp(1.3rem, 2.2vw, 1.8rem);
-  line-height: 1.12;
-}
-
-.interpretation.consumer-feature-what_stands_out .consumer-feature-answer {
-  max-width: 72ch;
-  font-size: clamp(1.02rem, 1.5vw, 1.2rem);
-  line-height: 1.55;
 }
 
 .standouts-disclosure {

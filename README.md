@@ -38,9 +38,9 @@ layer only explains metrics that were already computed.
 > recorded, and a figure calculated from a restricted one carries the restriction. A
 > region's figures download as a CSV carrying each one's kind, source and licence;
 > printed pages carry the terms on every sheet; and the notices three data APIs require
-> are on every page. Since 0.27.0 each county page's model-written reading is one
-> plain-language reading in three answers, checked figure by figure before it is
-> published; the longer analyst reading is retired. Milestone 32 (2026-10-01) decided
+> are on every page. Each county page's model-written reading is one plain-language
+> reading in two answers, *what stands out here?* and *what should I check before
+> moving?*, checked figure by figure before it is published; the longer analyst reading is retired. Milestone 32 (2026-10-01) decided
 > against ads and a paid tier for now. Milestone 33 (2026-10-01) shows the full cost of
 > owning in four views — each month, up front, money gone, and over the years against
 > renting — with every component saying where it came from, and lets a reader put in
@@ -294,9 +294,9 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   citation, restriction and required notices in its header; printed pages carry the
   terms on every sheet.
 - **Readings for every reader** (M30, built) — every county page carries a
-  plain-language reading for someone deciding whether to live there — *what's
-  changing?*, *what stands out here?* and *what should I check before moving?* (three
-  questions since 0.27.0). It names the model that wrote it, gives every survey figure
+  plain-language reading for someone deciding whether to live there — *what stands out
+  here?* and *what should I check before moving?* (since 0.29.1; *what's changing?* was
+  retired, the page's own computed sentences saying what changed). It names the model that wrote it, gives every survey figure
   its margin and quotes an uncertain rank as its range, and comes from the first model
   on its list that writes one fit to publish; Gemini writes at its Flex tier's half
   price. The analyst reading, an automated data summary behind its own disclosure, was

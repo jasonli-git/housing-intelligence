@@ -409,11 +409,10 @@ export default async function RegionPage({
       {/* Keep the interpretation visible even when no cost card can be calculated. */}
       {!cost && <ConsumerReading reading={consumer} section="before_moving" />}
 
-      {/* The model's change reading leads into, but does not author, the computed ranks. */}
-      <ConsumerReading reading={consumer} section="whats_changing" />
-
-      {/* What sets the place apart, in three sentences, just above the computed
-          rankings it is drawn from (ARCHITECTURE #275). */}
+      {/* What sets the place apart, in three sentences: the model's lead answer, just above
+          the computed rankings it is drawn from and does not author (ARCHITECTURE #275,
+          #281). "What's changing?" held this place until 2026-10-01; the page's own
+          sentences say what changed. */}
       <ConsumerReading reading={consumer} section="what_stands_out" />
 
       {standing.length > 0 && (
