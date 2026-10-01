@@ -793,11 +793,21 @@ def explain_command(
     from hip.packets import regions_for_level
 
     evaluation = load_evaluation()
-    chosen = audiences or list(AUDIENCES)
+    chosen = audiences or list(evaluation.generation.audiences)
     unknown = [a for a in chosen if a not in AUDIENCES]
     if unknown:
         typer.secho(
             f"unknown audience {', '.join(unknown)} ({' | '.join(AUDIENCES)})",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=1)
+    retired = [a for a in chosen if a in evaluation.generation.retired]
+    if retired:
+        typer.secho(
+            f"{', '.join(retired)} is retired (generation.retired in "
+            "config/evaluation.yml, ARCHITECTURE #275); remove it there to write it "
+            "again",
             fg=typer.colors.RED,
             err=True,
         )
@@ -871,6 +881,7 @@ def explain_command(
         # that answers "what would this cost" must not itself delete anything.
         if not dry_run:
             _prune(session, evaluation, lists, region_ids, window)
+            _retire(session, evaluation, region_ids, window)
 
     code = _summarize(run, evaluation, dry_run=dry_run)
     if code:
@@ -1043,6 +1054,66 @@ def _prune(
         f"list: {detail}",
         fg=typer.colors.CYAN,
     )
+
+
+def _retire(
+    session: Session,
+    evaluation: EvaluationConfig,
+    region_ids: list[int],
+    window: str,
+) -> None:
+    """Remove these regions' readings for every retired audience, keeping a copy.
+
+    The copy is a JSON line per reading under `data/retired/`, so a retired audience's
+    prose is never served on and never lost: reviving the audience regenerates it, and
+    the copy is what it said before (ARCHITECTURE #275).
+    """
+    from datetime import UTC, datetime
+
+    from sqlalchemy import delete, select
+
+    from hip.warehouse.models import RegionExplanation
+
+    for audience in evaluation.generation.retired:
+        # Not `prune`, which refuses to keep nothing: retiring is the one case where
+        # every reading of an audience goes, and it says so by name.
+        scope = (
+            RegionExplanation.region_id.in_(region_ids),
+            RegionExplanation.window == window,
+            RegionExplanation.audience == audience,
+        )
+        rows = session.scalars(select(RegionExplanation).where(*scope)).all()
+        if not rows:
+            continue
+        kept = get_settings().data_dir / "retired" / f"{audience}-readings.jsonl"
+        kept.parent.mkdir(parents=True, exist_ok=True)
+        retired_at = datetime.now(UTC).isoformat()
+        with kept.open("a", encoding="utf-8") as out:
+            for row in rows:
+                record = {
+                    "retired_at": retired_at,
+                    "region_id": row.region_id,
+                    "window": row.window,
+                    "audience": row.audience,
+                    "model_id": row.model_id,
+                    "model_label": row.model_label,
+                    "runtime": row.runtime,
+                    "rank": row.rank,
+                    "body": row.body,
+                    "packet_sha256": row.packet_sha256,
+                    "content_sha256": row.content_sha256,
+                    "binding": row.binding,
+                    "sections": row.sections,
+                    "generated_at": row.generated_at.isoformat(),
+                }
+                out.write(json.dumps(record, ensure_ascii=False) + "\n")
+        session.execute(delete(RegionExplanation).where(*scope))
+        session.commit()
+        typer.secho(
+            f"  retired {len(rows)} {audience} reading(s): the audience is "
+            f"retired; a copy is in {kept}",
+            fg=typer.colors.CYAN,
+        )
 
 
 def _stored_state(

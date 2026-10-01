@@ -40,7 +40,13 @@ from hip.eval.formats import (
     shape_consumer,
 )
 from hip.eval.types import Generation, Telemetry
-from hip.packets import bind, packet_content_hash, packet_hash, render_markdown
+from hip.packets import (
+    Packet,
+    bind,
+    packet_content_hash,
+    packet_hash,
+    render_markdown,
+)
 from hip.packets.citations import BINDING_VERSION
 from hip.warehouse.models import RegionExplanation
 from tests.test_packet_uncertainty import uncertain_packet
@@ -48,6 +54,10 @@ from tests.test_packet_uncertainty import uncertain_packet
 ANSWERS = {
     "whats_changing": (
         "Home values rose 34.4% to $445,078, while incomes rose 24.2% (± 4.0%)."
+    ),
+    "what_stands_out": (
+        "Mercer County stands apart for its home values. A buyer pays more here. "
+        "These are county figures."
     ),
     "before_moving": "These are county figures; a street can differ.",
 }
@@ -127,8 +137,8 @@ def test_an_empty_answer_is_no_reading() -> None:
 # --- the consumer reading's rules ---------------------------------------------------
 
 
-def _problems(answers: dict[str, str]) -> list[str]:
-    packet = uncertain_packet()
+def _problems(answers: dict[str, str], packet: Packet | None = None) -> list[str]:
+    packet = packet or uncertain_packet()
     body, sections = shape_consumer(_reading(answers))
     binding = bind(body, packet, payload=render_markdown(packet))
     assert binding.complete, binding.unbound
@@ -154,6 +164,72 @@ def test_the_packets_own_publishers_are_source_names_too() -> None:
 def test_jargon_is_a_problem(word: str) -> None:
     problems = _problems({"before_moving": f"The {word} here is a county figure."})
     assert problems and problems[0].startswith("jargon:")
+
+
+def test_two_measures_of_the_same_thing_are_a_problem() -> None:
+    """The pilot's first round set the survey's typical home value beside Zillow's, and
+    a reader saw two home values that disagreed (#275). Across the whole reading, since
+    its answers sit on one page."""
+    packet = uncertain_packet()
+    population = next(v for v in packet.levels if v.metric_id == "acs_population")
+    estimate = population.model_copy(
+        update={
+            "metric_id": "pep_population",
+            "label": "Population estimate",
+            "value": 391200.0,
+            "survey": False,
+            "margin_of_error": None,
+        }
+    )
+    packet.levels.append(estimate)
+    problems = _problems(
+        {
+            "whats_changing": "385,864 people live here, with no sampling error.",
+            "before_moving": "Another count puts it at 391,200.",
+        },
+        packet,
+    )
+    assert problems == [
+        "two measures of the same thing: 'Total population' and 'Population "
+        "estimate'; keep the one the reading quotes first"
+    ]
+
+
+@pytest.mark.parametrize(
+    "opening", ["Between 2019 and 2024, home values", "In 2024 home values", "2024 saw"]
+)
+def test_what_stands_out_may_not_open_on_a_date(opening: str) -> None:
+    problems = _problems(
+        {"what_stands_out": f"{opening} rose. A buyer pays more. County figures."}
+    )
+    assert problems == [
+        "'What stands out here?' opens with a date or a span of years; begin with the "
+        "place's name or the measure"
+    ]
+
+
+def test_what_stands_out_keeps_to_housing() -> None:
+    """The pilot's second round led with unemployment and population, then guessed at
+    what they meant for businesses and community life."""
+    problems = _problems(
+        {
+            "what_stands_out": (
+                "Mercer County has 385,864 people, with no sampling error. That is many. "
+                "County figures."
+            )
+        }
+    )
+    assert problems == [
+        "'What stands out here?' quotes 'Total population', which is not a housing "
+        "measure"
+    ]
+
+
+def test_population_is_still_allowed_in_other_answers() -> None:
+    assert (
+        _problems({"whats_changing": "385,864 people live here, with no sampling error."})
+        == []
+    )
 
 
 def test_more_figures_in_an_answer_than_the_limit_is_a_problem() -> None:

@@ -6,13 +6,13 @@ import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
 import { DataDownload, hasDownloadableFigures } from "@/components/DataDownload";
-import { ConsumerReading, ExplanationPanel } from "@/components/ExplanationPanel";
+import { ConsumerReading } from "@/components/ExplanationPanel";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { IndexedComparison } from "@/components/IndexedComparison";
 import { Glossed } from "@/components/Glossed";
 import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Ledger, Margin, TableNotes } from "@/components/Ledger";
-import { AnalystReadingJump, DetailedDataJump, MoreExpander } from "@/components/MoreExpander";
+import { DetailedDataJump, MoreExpander } from "@/components/MoreExpander";
 import { Masthead } from "@/components/Masthead";
 import { RankOverview } from "@/components/RankOverview";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
@@ -211,10 +211,10 @@ export default async function RegionPage({
 
   const name = displayName(region);
   const county = region.ancestors.find((a) => a.level === "county");
-  // One reading per audience since Milestone 30. A response published before it has no
-  // `audience`, and every reading then was an analyst's.
+  // The consumer reading alone since 2026-10-01: the analyst reading is retired
+  // (ARCHITECTURE #275), and a file published before then that still carries one is
+  // not shown.
   const readings = explanations?.explanations ?? [];
-  const analyst = readings.find((r) => (r.audience ?? "analyst") === "analyst") ?? null;
   const consumer = readings.find((r) => r.audience === "consumer") ?? null;
   const population = packet.levels.find((l) => l.metric_id === "acs_population");
   const populationChange = packet.metrics.find((m) => m.metric_id === "acs_population");
@@ -357,7 +357,6 @@ export default async function RegionPage({
         </div>
         <div className="actions">
           <DetailedDataJump targetId="region-detailed-data" />
-          {analyst && <AnalystReadingJump targetId="region-analyst-reading" />}
           <Link className="button report-action" href={`/regions/${regionId}/report`}>
             <svg viewBox="0 0 20 20" aria-hidden="true">
               <path d="M5.5 2.75h6l3 3v11.5h-9Z" />
@@ -413,6 +412,10 @@ export default async function RegionPage({
       {/* The model's change reading leads into, but does not author, the computed ranks. */}
       <ConsumerReading reading={consumer} section="whats_changing" />
 
+      {/* What sets the place apart, in three sentences, just above the computed
+          rankings it is drawn from (ARCHITECTURE #275). */}
+      <ConsumerReading reading={consumer} section="what_stands_out" />
+
       {standing.length > 0 && (
         <details className="standouts-disclosure">
           <summary>
@@ -446,22 +449,6 @@ export default async function RegionPage({
             peers={`${scopeName(peer_scope)}’s ${peer_count} ${peerNoun(peer_level)}`}
             items={standing}
           />
-        </details>
-      )}
-
-      {analyst && (
-        <details id="region-analyst-reading" className="analyst-disclosure">
-          <summary>
-            <span className="analyst-disclosure-copy">
-              <span className="analyst-disclosure-kicker">Model-written reading</span>
-              <strong>Automated data summary</strong>
-              <span className="analyst-disclosure-hint">A detailed digest of the reported figures</span>
-            </span>
-            <span className="analyst-disclosure-icon" aria-hidden="true">+</span>
-          </summary>
-          <div className="analyst-disclosure-body">
-            <ExplanationPanel reading={analyst} whole />
-          </div>
         </details>
       )}
 

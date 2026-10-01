@@ -418,6 +418,12 @@ generation:
   # each over one rule in one sentence, and every refusal handed the region to a model
   # the benchmark ranked lower.
   revisions: 1
+  # Retired by the owner on 2026-10-01 (ARCHITECTURE #275): the analyst reading cost
+  # about 60% of the generation bill for paragraphs few residents read, and the consumer
+  # reading's "What stands out here?" now says in three sentences what a resident wants
+  # from it. Its list below is kept, so deleting this line revives it; Milestone 32
+  # reconsiders it for a professional audience.
+  retired: [analyst]
   preference:
     analyst:
       # Ordered from the `v3` benchmark (2026-09-11), not from reputation. Rubric scores
