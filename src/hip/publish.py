@@ -254,6 +254,32 @@ def _plan(
         yield query, f"rankings/{metric_id}/{level}/{window}/{basis}.json"
 
 
+def _unlicensed(engine_conn) -> list[str]:  # type: ignore[no-untyped-def]
+    """Metrics with data, and sources behind them, missing a kind or a licence class.
+
+    Migration 0020 adds those columns empty, and `hip sync-registry` (or `hip analyze`)
+    fills them. A tree published in between would ship CSVs with no restriction line and
+    no notices, carrying the display-only mortgage rate — so publishing refuses instead.
+    """
+    rows = engine_conn.execute(
+        text("""
+            SELECT 'metric ' || m.metric_id
+            FROM metrics m
+            WHERE (m.record_type IS NULL OR m.licence_class IS NULL)
+              AND EXISTS (SELECT 1 FROM fact_metric_observation f
+                          WHERE f.metric_id = m.metric_id)
+            UNION ALL
+            SELECT 'source ' || s.source_id
+            FROM sources s
+            WHERE s.licence_class IS NULL
+              AND EXISTS (SELECT 1 FROM source_releases r
+                          WHERE r.source_id = s.source_id)
+            ORDER BY 1
+        """)
+    )
+    return [row[0] for row in rows]
+
+
 def publish(root: Path) -> Result:
     """Render every enumerable endpoint under ``root``.
 
@@ -267,7 +293,14 @@ def publish(root: Path) -> Result:
         region_ids = _regions_with_data(conn)
         keys = _ranking_keys(conn)
         geoids = _region_geoids(conn)
+        unlicensed = _unlicensed(conn)
 
+    if unlicensed:
+        raise RuntimeError(
+            f"{len(unlicensed)} metric(s) or source(s) have no kind or licence recorded "
+            f"({', '.join(unlicensed[:5])}{', …' if len(unlicensed) > 5 else ''}). "
+            f"Run `hip sync-registry` first (Milestone 31)."
+        )
     _check_region_identity(root, geoids)
 
     result = Result(root=root, region_geoids=geoids)

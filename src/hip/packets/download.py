@@ -25,7 +25,7 @@ import csv
 import io
 
 from hip.config import RECORD_TYPE_LABELS
-from hip.packets.report import format_metric
+from hip.packets.report import format_metric, render_markdown
 from hip.packets.schema import Packet, PacketLevel, PacketMetric, PacketSource
 
 REPOSITORY = "https://github.com/jasonli-git/housing-intelligence"
@@ -131,9 +131,8 @@ def _restricted_names(entries: list[PacketMetric | PacketLevel]) -> list[str]:
 
 def render_csv(packet: Packet) -> str:
     """The region's figures, one per row, with the header lines described above."""
-    entries: list[PacketMetric | PacketLevel] = [*packet.levels, *packet.metrics]
-    kept = [e for e in entries if e.licence_class != "display_only"]
-    left_out = sorted({e.label for e in entries if e.licence_class == "display_only"})
+    file, left_out = downloadable(packet)
+    kept: list[PacketMetric | PacketLevel] = [*file.levels, *file.metrics]
 
     region, window = packet.region, packet.window
     header = [
@@ -177,4 +176,67 @@ def render_csv(packet: Packet) -> str:
     return out.getvalue()
 
 
-__all__ = ["render_csv"]
+def downloadable(packet: Packet) -> tuple[Packet, list[str]]:
+    """The packet as a file a reader may take away, and the labels of what was left out.
+
+    A figure whose owner allows display only (#269) — Freddie Mac's mortgage rate — is
+    shown on the site and printed with its page, but not handed out in a file, whether
+    the CSV or the downloadable Markdown report (owner's decision, 2026-09-30).
+    """
+    kept_metrics = [m for m in packet.metrics if m.licence_class != "display_only"]
+    kept_levels = [v for v in packet.levels if v.licence_class != "display_only"]
+    kept: list[PacketMetric | PacketLevel] = [*kept_metrics, *kept_levels]
+    every: list[PacketMetric | PacketLevel] = [*packet.metrics, *packet.levels]
+    kept_ids = {e.metric_id for e in kept}
+    left_out = sorted({e.label for e in every if e.licence_class == "display_only"})
+    return (
+        packet.model_copy(
+            update={
+                "metrics": kept_metrics,
+                "levels": kept_levels,
+                "highlights": [h for h in packet.highlights if h.metric_id in kept_ids],
+            }
+        ),
+        left_out,
+    )
+
+
+def has_downloadable_figures(packet: Packet) -> bool:
+    """Whether a region's CSV would have any rows at all."""
+    file, _ = downloadable(packet)
+    return bool(file.metrics or file.levels)
+
+
+def render_report(packet: Packet) -> str:
+    """The Markdown report as a downloadable file: the report readings are written
+    from (`render_markdown`), less any display-only figure, with a closing section
+    naming what was left out and the notices the sources require.
+
+    Kept apart from `render_markdown`, which is also the payload a reading's model is
+    given: what a file must carry to be handed out is not what a model reads.
+    """
+    file, left_out = downloadable(packet)
+    lines = [render_markdown(file).rstrip("\n"), "", "## Terms and notices", ""]
+    restricted = _restricted_names([*file.levels, *file.metrics])
+    if restricted:
+        lines.append(
+            "Not for commercial use: "
+            + ", ".join(restricted)
+            + " come from, or are calculated from, data licensed for non-commercial "
+            "use with attribution."
+        )
+        lines.append("")
+    if left_out:
+        lines.append(
+            "Left out: "
+            + ", ".join(left_out)
+            + ". Their owner's terms allow them to be shown on the site but not "
+            "redistributed."
+        )
+        lines.append("")
+    for notice in sorted({n for s in packet.sources for n in s.notices}):
+        lines += [notice, ""]
+    return "\n".join(lines).rstrip("\n") + "\n"
+
+
+__all__ = ["downloadable", "has_downloadable_figures", "render_csv", "render_report"]

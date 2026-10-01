@@ -214,3 +214,25 @@ def test_a_regions_csv_is_named_for_the_region() -> None:
     paths = [out for _, out in _plan([12], [], {"12": "34035"})]
     assert "regions/12/download/34035-5y.csv" in paths
     assert "regions/7/download/region-7-5y.csv" in [out for _, out in _plan([7], [])]
+
+
+@warehouse
+def test_publishing_refuses_while_a_figure_has_no_licence() -> None:
+    """Migration 0020 adds the columns empty; publishing before `hip sync-registry`
+    would ship CSVs with no restriction line and no notices (Milestone 31)."""
+    from sqlalchemy import text
+
+    from hip.publish import _unlicensed
+    from hip.warehouse.db import get_engine
+
+    with get_engine().connect() as conn:
+        assert _unlicensed(conn) == []
+        try:
+            conn.execute(
+                text(
+                    "UPDATE metrics SET licence_class = NULL WHERE metric_id = 'zhvi_sfr'"
+                )
+            )
+            assert _unlicensed(conn) == ["metric zhvi_sfr"]
+        finally:
+            conn.rollback()

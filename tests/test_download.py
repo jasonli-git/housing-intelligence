@@ -107,3 +107,29 @@ def test_a_change_row_carries_both_ends_and_the_changes_margin() -> None:
         if r["figure"] == "change over the window" and r["metric_id"] != "zhvi_sfr"
     )
     assert change["start_value"] and change["pct_change"] and change["pct_change_margin"]
+
+
+def test_the_report_download_leaves_out_a_display_only_figure_and_names_it() -> None:
+    """Owner's decision 2026-09-30: the Markdown report is a file to take away, like
+    the CSV, so Freddie Mac's rate is left out of it, while the page still shows it."""
+    from hip.packets.download import render_report
+
+    report = render_report(_licensed())
+    assert "30-year fixed mortgage rate" not in report.split("## Terms and notices")[0]
+    assert "Left out: 30-year fixed mortgage rate" in report
+    assert CENSUS_NOTICE in report
+    assert "Not for commercial use: Home value index, single-family" in report
+
+
+def test_a_page_of_display_only_figures_has_nothing_to_download() -> None:
+    from hip.packets.download import has_downloadable_figures
+
+    packet = _licensed()
+    only_the_rate = packet.model_copy(
+        update={
+            "metrics": [],
+            "levels": [v for v in packet.levels if v.licence_class == "display_only"],
+        }
+    )
+    assert has_downloadable_figures(packet)
+    assert not has_downloadable_figures(only_the_rate)

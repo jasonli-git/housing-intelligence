@@ -27,8 +27,11 @@ from config), then
 `hip explain --dry-run` to re-cite the readings for free — packet 1.4 moves the packet
 hash but not the content hash — then `make publish`, deploy and `make check-live`.
 
-**Waiting on the owner,** under Parked: Zillow's and Realtor.com's terms, which refuse
-automated readers, and whether to ask Freddie Mac about the mortgage rate.
+**Settled with the owner on 2026-09-30:** Zillow's and Realtor.com's terms, read by hand
+(Zillow is downloaded by hand and credited "Data Provided by Zillow Group", #272;
+Realtor.com is not usable without Move's permission). Still parked: whether to ask
+Freddie Mac about the mortgage rate. Zillow's six CSVs go into `data/manual/` when it
+next publishes (README, "Zillow is downloaded by hand").
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -365,12 +368,15 @@ first raised, not where it must be done.
       completeness run; narrowed by Milestone 31) Every source's terms were read on
       2026-09-30 and classed in `config/sources.yml` (#269), which settles display,
       download and derived figures; whether each allows *commercial* use is what
-      Milestone 32's licence table has to state, source by source. Zillow's terms are
-      unconfirmed (see Parked). **Scheduled: Milestone 32.**
+      Milestone 32's licence table has to state, source by source. Zillow's terms allow
+      "non-personal uses" with attribution but say nothing on commercial use; the site
+      keeps them non-commercial (#272). **Scheduled: Milestone 32.**
 - [ ] **The Markdown report does not carry each figure's kind or licence.** (M31) The
-      report page and the CSV do. Left out on purpose: the Markdown is also the payload a
-      reading's model is given, and a change to it is a change to every reading's input,
-      which wants its own side-by-side.
+      report page and the CSV do, and the downloadable Markdown closes with the terms and
+      notices and leaves display-only figures out (`render_report`). The kind and licence
+      per row are left out on purpose: `render_markdown` is also the payload a reading's
+      model is given, and a change to it is a change to every reading's input, which
+      wants its own side-by-side.
 
 ### Data sources worth adding
 

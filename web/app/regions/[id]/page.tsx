@@ -5,7 +5,7 @@ import { ComputedBadge } from "@/components/ComputedBadge";
 import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
-import { DataDownload } from "@/components/DataDownload";
+import { DataDownload, hasDownloadableFigures } from "@/components/DataDownload";
 import { ConsumerReading, ExplanationPanel } from "@/components/ExplanationPanel";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { IndexedComparison } from "@/components/IndexedComparison";
@@ -466,10 +466,17 @@ export default async function RegionPage({
       )}
 
       <MoreExpander id="region-detailed-data" title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>
-        <p className="data-download-line">
-          <DataDownload regionId={regionId} geoid={region.geoid} window={WINDOW} />
-          <span> — every figure below, with its kind, source and licence.</span>
-        </p>
+        {hasDownloadableFigures([...packet.metrics, ...packet.levels]) && (
+          <p className="data-download-line">
+            <DataDownload
+              regionId={regionId}
+              geoid={region.geoid}
+              window={WINDOW}
+              figures={[...packet.metrics, ...packet.levels]}
+            />
+            <span> — every figure below, with its kind, source and licence.</span>
+          </p>
+        )}
         <RankOverview
           changes={packet.metrics}
           values={packet.levels}

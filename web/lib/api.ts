@@ -171,6 +171,9 @@ export type PacketMetric = {
   // Packet 1.2: the observation behind `start_value`, often an older release.
   start_release_id?: number | null;
   start_match_method?: string | null;
+  // Packet 1.4 (Milestone 31): what kind of figure it is, and the licence it carries.
+  record_type?: string | null;
+  licence_class?: string | null;
 };
 
 export type PacketLevel = {
@@ -187,6 +190,9 @@ export type PacketLevel = {
   release_id: number | null;
   source_id: string | null;
   match_method: string | null;
+  // Packet 1.4 (Milestone 31): what kind of figure it is, and the licence it carries.
+  record_type?: string | null;
+  licence_class?: string | null;
 };
 
 export type Packet = {

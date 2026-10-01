@@ -206,7 +206,13 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           >
             Download Markdown
           </a>
-          <DataDownload regionId={regionId} geoid={region.geoid} window={WINDOW} className="button" />
+          <DataDownload
+            regionId={regionId}
+            geoid={region.geoid}
+            window={WINDOW}
+            figures={[...packet.metrics, ...packet.levels]}
+            className="button"
+          />
         </div>
       </header>
 

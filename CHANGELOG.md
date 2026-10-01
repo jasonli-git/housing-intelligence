@@ -18,7 +18,10 @@ Milestone 31, the licence and provenance pass.
 - **Download this page's data.** Every figure in a region's tables as a CSV — each row
   with its kind, margin, source, release and licence, under header lines carrying the
   citation, any non-commercial restriction and the notices the sources require —
-  linked from the top of the data section and beside the report's Markdown (#270).
+  linked from the top of the data section and beside the report's Markdown (#270). The
+  downloadable Markdown report now closes with the same terms and notices, and both
+  files leave out a figure whose owner allows display only. A page with nothing to
+  download — the United States, whose figures are Freddie Mac's — shows no link.
 - **Every printed page carries the terms and its own address**, in the page margin, so
   one sheet cut from a PDF still has them (Chromium; #270).
 - **The notices the sources' terms require**, shown on every page: the Census, HUD

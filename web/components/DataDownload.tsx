@@ -14,17 +14,30 @@ import { artifactUrl } from "@/lib/api";
  * development `artifactUrl` is the local API, which serves `/regions/{id}/download` with
  * a query instead — check the link against a published tree.
  */
+/**
+ * Whether a page's CSV would have any rows. A page whose every figure its owner allows
+ * only to be shown — the United States page, with Freddie Mac's mortgage rate — would
+ * link to an empty file, so it links to none.
+ */
+export function hasDownloadableFigures(figures: readonly { licence_class?: string | null }[]): boolean {
+  return figures.some((figure) => figure.licence_class !== "display_only");
+}
+
 export function DataDownload({
   regionId,
   geoid,
   window,
+  figures,
   className = "data-download",
 }: {
   regionId: number;
   geoid: string;
   window: string;
+  /** The page's figures; the link is left out when none may be downloaded. */
+  figures: readonly { licence_class?: string | null }[];
   className?: string;
 }) {
+  if (!hasDownloadableFigures(figures)) return null;
   return (
     <a
       className={className}
