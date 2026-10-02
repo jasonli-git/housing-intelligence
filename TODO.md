@@ -350,6 +350,13 @@ first raised, not where it must be done.
 
 ### Open decisions — not scheduled, not decided
 
+- [ ] **Revisit the refresh's hour when generation costs scale.** (2026-10-02, #259) The
+      Friday 08:00 run is kept for now. Some Gemini Flex calls fall back to the standard
+      price (4 of 23 on 2026-10-02), costing cents a run; if more states multiply the
+      readings, test whether an overnight slot after Thursday's releases (Friday 01:00
+      ET is also DeepSeek off-peak; 02:00 is not) gets Flex more often. Needs the Mac
+      awake then, since launchd runs a missed slot at wake.
+
 - [ ] **A lawyer's read of the lookup under Daniel's Law.** (M38, #295) The removal route
       takes the cautious reading; whether an address with no name is covered, and whether
       the lookup needs more, is unsettled and was not reviewed by counsel.
