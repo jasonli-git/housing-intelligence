@@ -14,13 +14,21 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones (2026-10-02)
+## Now — Milestone 39: approved vs built — plan awaiting approval (2026-10-02)
 
-0.34.0 to 0.34.6 are merged: Milestone 38's statewide property search, the removal
-list in iCloud, the Zillow download reminder, publishers' release calendars on
-`/freshness`, a public building as the lookup's example address, and a 30-second
-`make test` with the slow tests behind `make test-all` (about 11 minutes; run it before
-a merge). Milestone 39, approved vs built, is next and not started.
+On `milestone/m39-approved-vs-built`. Researched 2026-10-02: DCA's Construction Reporter
+publishes yearly housing units certified (certificates of occupancy) and dwellings lost
+to demolition per municipality, 2014–2024, as legacy `.xls` keyed by the state's CD
+code; 2025 exists only as monthly reports (December's year-to-date), and monthly
+reporting stops at January 2026 while DCA overhauls the program. Terms: New Jersey's
+legal statement, as for the other NJ sources. Building waits on the owner's answers.
+
+- [ ] Source `nj_construction` (certificates and demolitions, yearly; 2025 provisional)
+- [ ] Metrics: units certified and lost, by type; net additions; a per-1,000-homes rate
+- [ ] Coverage: a town absent from a year's file is missing, never zero
+- [ ] Region pages: permitted, certified, demolished side by side; stages not
+      published statewide named
+- [ ] Docs pass, tests, PR
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
