@@ -125,8 +125,8 @@ export function HomeSales({
       )}
       {level === "county" && (
         <p className="sales-note">
-          <Link href="/tax">Look up a property in {name}</Link>, by its town and its
-          address or block and lot: its assessment and last year’s tax.
+          <Link href="/tax">Look up a property in {name}</Link> by its address, or by
+          block and lot with its town: its assessment and last year’s tax.
         </p>
       )}
     </section>

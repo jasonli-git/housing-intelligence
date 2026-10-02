@@ -173,6 +173,7 @@ export const SURVEY_METRICS = new Set([
   "acs_with_children_share",
   "acs_disability_share",
   "acs_homeownership_rate",
+  "acs_housing_units",
   "acs_median_electricity",
   "acs_median_gas",
   "acs_median_gross_rent",
@@ -189,6 +190,7 @@ export const SURVEY_METRICS = new Set([
   "chas_renter_cost_burden",
   "chas_renter_severe_burden",
   "fmr_to_income",
+  "nj_net_units_per_1000",
   "price_to_income",
   "rent_to_income",
 ]);

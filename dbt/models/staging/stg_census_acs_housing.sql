@@ -35,6 +35,11 @@ unpivoted as (
                as margin_of_error
     from keyed
     union all
+    -- Milestone 39: the stock itself, the denominator for homes added per 1,000 homes.
+    select geoid, level, release_layer, vintage, 'acs_housing_units',
+           housing_units, housing_units_moe
+    from keyed
+    union all
     select geoid, level, release_layer, vintage, 'acs_homeownership_rate',
            case when occupied_units > 0 then owner_occupied / occupied_units end,
            {{ acs_share_margin('owner_occupied', 'occupied_units',

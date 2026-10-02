@@ -21,6 +21,9 @@ dependencies = [
     "alembic>=1.13",
     "httpx>=0.27",
     "geoalchemy2>=0.15",
+    # Legacy `.xls` workbooks (Milestone 39): DCA's Construction Reporter publishes only
+    # these, which DuckDB's excel extension cannot open.
+    "xlrd>=2.0",
 ]
 
 [project.scripts]
@@ -90,7 +93,7 @@ strict = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-module = ["duckdb.*"]
+module = ["duckdb.*", "xlrd.*"]
 ignore_missing_imports = true
 
 # Apple-silicon only and installed from the optional `mlx` group, so a checkout without

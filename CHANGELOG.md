@@ -3,6 +3,26 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.35.0] — 2026-10-02
+
+Milestone 39: approved vs built.
+
+### Added
+
+- **Is it adding homes?** (ARCHITECTURE #300) On every town and county page, permits
+  beside homes completed and homes demolished, by year, from DCA's Construction
+  Reporter (2014–2024, and 2025 preliminary), with two five-year totals and net homes
+  added. A year a town did not report says so instead of showing zero, and a county's
+  total says how many of its towns it covers.
+- **Net homes added per 1,000 homes standing**, ranked among towns and counties.
+- **Homes, all housing units** (ACS), the stock the rate is measured against.
+- A new source, `nj_construction`, read from DCA's `.xls` workbooks with `xlrd`.
+
+### Fixed
+
+- The county and ZIP pages' property-lookup links still said a town was needed; since
+  0.34.0 an address alone is enough.
+
 ## [0.34.6] — 2026-10-02
 
 ### Changed

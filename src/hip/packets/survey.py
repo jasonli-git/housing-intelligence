@@ -15,13 +15,17 @@ and holds the dashboard's own list, `SURVEY_METRICS` in `web/lib/uncertainty.ts`
 
 from __future__ import annotations
 
-# The ratios `hip analyze` divides by ACS household income, which carry that income's
-# margin (ARCHITECTURE #238). `hip_derived` alone cannot say which derived metrics these
-# are, so they are named.
-ON_SURVEY_INCOME = frozenset({"fmr_to_income", "price_to_income", "rent_to_income"})
+# The ratios `hip analyze` divides by an ACS estimate, which carry its margin
+# (ARCHITECTURE #238): household income, and since Milestone 39 the housing-unit count
+# net additions are measured against. `hip_derived` alone cannot say which derived
+# metrics these are, so they are named.
+ON_SURVEY_INCOME = frozenset(
+    {"fmr_to_income", "price_to_income", "rent_to_income", "nj_net_units_per_1000"}
+)
 
 SURVEY_METRICS = frozenset(
     {
+        "acs_housing_units",
         "acs_median_rent_studio",
         "acs_median_rent_1br",
         "acs_median_rent_2br",

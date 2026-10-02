@@ -428,6 +428,46 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "How many new homes builders were given permission to build here in a year, each apartment counted as one.",
     why: "More permits mean more homes on the way, which can ease prices; few mean supply is not keeping up.",
   },
+  nj_units_certified: {
+    what: "How many new homes were finished and certified ready to live in during the year, from each town’s construction office.",
+    why: "Permits say what may be built; this says what was. A town that reported nothing has no figure, not zero.",
+  },
+  nj_units_certified_1_2: {
+    what: "New homes finished in houses and two-family buildings.",
+    why: "Shows how much of what gets built is single-family housing.",
+  },
+  nj_units_certified_multi: {
+    what: "New homes finished in buildings of three or more homes, mostly apartments.",
+    why: "Apartments add the most homes per acre, and usually the most rentals.",
+  },
+  nj_units_certified_mixed: {
+    what: "New homes finished in buildings that also hold shops or offices.",
+    why: "Homes above stores are common in downtowns and near train stations.",
+  },
+  nj_units_demolished: {
+    what: "How many homes were torn down during the year, counted from demolition permits.",
+    why: "A home demolished cancels out a home built; the net is what the stock really gained.",
+  },
+  nj_net_units_added: {
+    what: "Homes finished minus homes demolished in the year, where the town reported both.",
+    why: "The real change in how many homes there are.",
+  },
+  nj_net_units_per_1000: {
+    what: "Net homes added in the year for every 1,000 homes already standing.",
+    why: "Compares how fast places of different sizes are growing their housing. One big building can swing a small town for a year.",
+  },
+  nj_certificates_reporting_share: {
+    what: "The share of the area’s towns whose construction offices reported finished homes that year.",
+    why: "A county total only covers the towns that reported, so this says how complete it is.",
+  },
+  nj_demolitions_reporting_share: {
+    what: "The share of the area’s towns whose construction offices reported demolitions that year.",
+    why: "Says how complete the demolition total is.",
+  },
+  acs_housing_units: {
+    what: "How many homes there are, occupied or empty, from the Census Bureau’s survey, pooled over five years.",
+    why: "The size of the housing stock that new building is measured against.",
+  },
   acs_vacancy_rate: {
     what: "The share of all homes standing empty, including holiday homes and homes for sale or rent.",
     why: "Low vacancy means a tight market where homes fill fast. Shore towns read high because of holiday homes.",

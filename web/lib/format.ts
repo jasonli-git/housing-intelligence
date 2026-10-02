@@ -19,6 +19,8 @@ export function formatValue(value: number, unit: string): string {
   // Milestone 34: people per household, and minutes of commuting each way.
   if (unit === "people") return value.toFixed(2);
   if (unit === "minutes") return `${value.toFixed(1)} min`;
+  // Milestone 39: net homes added per 1,000 homes standing.
+  if (unit === "per_1000_homes") return `${value.toFixed(1)} per 1,000 homes`;
   return value.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
 
@@ -80,6 +82,9 @@ export const SHARE_METRICS: ReadonlySet<string> = new Set([
   "acs_renter_cost_burden",
   "acs_renters_paying_utilities",
   "acs_vacancy_rate",
+  // Milestone 39: the share of an area's towns a construction total covers.
+  "nj_certificates_reporting_share",
+  "nj_demolitions_reporting_share",
   "chas_owner_cost_burden",
   "chas_renter_cost_burden",
   "chas_renter_severe_burden",

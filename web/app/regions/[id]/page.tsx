@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CostToOwn } from "@/components/CostToOwn";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { HomeSales } from "@/components/HomeSales";
+import { HomesAdded } from "@/components/HomesAdded";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
@@ -191,7 +192,7 @@ export default async function RegionPage({
     );
   }
 
-  const [series, cost, affordability, incomeLimits] = await Promise.all([
+  const [series, cost, affordability, incomeLimits, construction] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -204,6 +205,12 @@ export default async function RegionPage({
       ? affordData().then((data) => data ? affordabilityForCounty(data, regionId) : null)
       : Promise.resolve(null),
     api.incomeLimits(regionId),
+    // Milestone 39: permits beside DCA's completions and demolitions, year by year.
+    Promise.all(
+      ["permits_total_units", "nj_units_certified", "nj_units_demolished", "nj_net_units_added"].map(
+        async (metricId) => (await api.observations(regionId, metricId))?.observations ?? [],
+      ),
+    ),
   ]);
   // A town or ZIP reads HUD's county Fair Market Rents from its county's packet: HUD sets
   // them for the county's area, and only a county page carries them (Milestone 35).
@@ -417,6 +424,16 @@ export default async function RegionPage({
 
       <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} />
 
+      <HomesAdded
+        name={name}
+        level={region.level}
+        permitted={construction[0]}
+        completed={construction[1]}
+        demolished={construction[2]}
+        net={construction[3]}
+        levels={packet.levels}
+      />
+
       <ForYourHousehold
         regionName={name}
         limits={incomeLimits}
@@ -429,7 +446,7 @@ export default async function RegionPage({
       {region.level === "zip" && (
         <p className="sales-note tax-way-in">
           <Link href="/tax">Look up a property here</Link>: its assessment and last year’s
-          tax, found by its town and its address or block and lot.
+          tax, found by its address, or by block and lot with its town.
         </p>
       )}
 

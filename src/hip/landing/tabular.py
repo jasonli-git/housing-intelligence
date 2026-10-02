@@ -204,6 +204,39 @@ def land_pdf(
     )
 
 
+def land_xls(
+    release: Release,
+    adapter: type[SourceAdapter],
+    *,
+    parquet_dir: Path,
+    overwrite: bool = False,
+) -> LandedTable:
+    """Transcode a legacy `.xls` workbook via the adapter's reading of its first sheet
+    (Milestone 39). DuckDB's excel extension reads only `.xlsx`, so `xlrd` reads the grid,
+    every cell as text, and `xls_records` says what the rows mean."""
+    return _land_records(
+        release,
+        lambda: adapter.xls_records(xls_cells(release.path), release.ref),
+        parquet_dir=parquet_dir,
+        overwrite=overwrite,
+    )
+
+
+def xls_cells(path: Path) -> list[list[str]]:
+    """A legacy workbook's first sheet as rows of text: a whole number without its
+    `.0`, an empty cell as an empty string."""
+    import xlrd
+
+    sheet = xlrd.open_workbook(str(path)).sheet_by_index(0)
+
+    def text(value: object) -> str:
+        if isinstance(value, float) and value.is_integer():
+            return str(int(value))
+        return str(value)
+
+    return [[text(cell.value) for cell in sheet.row(r)] for r in range(sheet.nrows)]
+
+
 def pdf_text(path: Path) -> str:
     """A PDF's text, laid out as printed, from Poppler's `pdftotext`."""
     import shutil

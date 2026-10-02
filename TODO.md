@@ -14,21 +14,11 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 39: approved vs built — plan awaiting approval (2026-10-02)
+## Now — Milestone 39 built; PR awaiting review (2026-10-02)
 
-On `milestone/m39-approved-vs-built`. Researched 2026-10-02: DCA's Construction Reporter
-publishes yearly housing units certified (certificates of occupancy) and dwellings lost
-to demolition per municipality, 2014–2024, as legacy `.xls` keyed by the state's CD
-code; 2025 exists only as monthly reports (December's year-to-date), and monthly
-reporting stops at January 2026 while DCA overhauls the program. Terms: New Jersey's
-legal statement, as for the other NJ sources. Building waits on the owner's answers.
-
-- [ ] Source `nj_construction` (certificates and demolitions, yearly; 2025 provisional)
-- [ ] Metrics: units certified and lost, by type; net additions; a per-1,000-homes rate
-- [ ] Coverage: a town absent from a year's file is missing, never zero
-- [ ] Region pages: permitted, certified, demolished side by side; stages not
-      published statewide named
-- [ ] Docs pass, tests, PR
+On `milestone/m39-approved-vs-built` (0.35.0): homes completed and demolished from DCA's
+Construction Reporter beside the Census permits (ARCHITECTURE #300). Milestone 40, flood
+and environmental exposure, follows.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -41,6 +31,19 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
+
+- [ ] **DCA's Construction Reporter has stopped at January 2026.** (M39, #300) DCA says
+      the program is being overhauled. When its 2025 yearly summary posts (one usually
+      does around July), discovery finds it and it replaces the preliminary year to date
+      on its own; if the overhaul changes the files' names or layout, the adapter
+      refuses rather than misreading. Worth a look each quarter.
+- [ ] **Fewer towns report each year.** (M39) Certificates from 559 towns in 2014 and
+      527 in 2024; demolitions from 542 and 465. County and state totals cover less of
+      their area than they did, which the page says, but a long-run line of county
+      totals mixes a real trend with a reporting one. A per-town series is unaffected.
+- [ ] **The New Jersey page has no "Is it adding homes?" section.** (M39) The state's
+      figures are loaded and in its tables; the section is on town and county pages only,
+      because the state page is laid out differently. Add it if the state view needs it.
 
 - [ ] **A packet's `cagr` for a survey figure carries no margin.** (M30, #256) The
       Markdown report and so the readings leave a survey figure's annualised change out,

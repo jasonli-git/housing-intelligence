@@ -120,6 +120,17 @@ export const GROUPS: readonly Group[] = [
     title: "Homes and people",
     metrics: [
       "permits_total_units",
+      // What was built and what came down (Milestone 39), after what was permitted.
+      "nj_units_certified",
+      "nj_units_certified_1_2",
+      "nj_units_certified_multi",
+      "nj_units_certified_mixed",
+      "nj_units_demolished",
+      "nj_net_units_added",
+      "nj_net_units_per_1000",
+      "nj_certificates_reporting_share",
+      "nj_demolitions_reporting_share",
+      "acs_housing_units",
       "acs_vacancy_rate",
       "acs_homeownership_rate",
       "acs_population",
