@@ -65,7 +65,7 @@ export function shardOf(street: string): string {
   return street.replace(/[^A-Z0-9]/g, "").slice(0, 2);
 }
 
-/** What a reader typed, taken apart: "4 Danby Ct, Princeton NJ 08540". */
+/** What a reader typed, taken apart: "100 Community Dr, Skillman NJ 08558". */
 export type Query = {
   number: string | null;
   /** The street part's words, normalised; the last may be half-typed. */
@@ -113,7 +113,7 @@ export type StreetMatch = {
  * The streets in a shard the query names. A street typed in full — its words the first
  * of the query's — beats one only begun, and a longer street beats a shorter: "Main St
  * Ext" is not "Main St". The words after a full street are kept as a town hint, so
- * "4 Danby Ct Montgomery" works without a comma.
+ * "100 Community Dr Montgomery" works without a comma.
  */
 export function matchStreets(shard: StreetShard, query: Query, n: Normaliser): StreetMatch[] {
   const q = query.street;

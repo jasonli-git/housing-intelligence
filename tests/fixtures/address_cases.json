@@ -1,8 +1,8 @@
 {
   "_comment": "Shared by tests/test_statewide_search.py and web/lib/addressSearch.test.ts, so the index builder and the page parse an address the same way (Milestone 38).",
   "same": [
-    ["4 Danby Ct", "4 DANBY COURT"],
-    ["20 Danby Place", "20 DANBY PLACE."],
+    ["100 Community Dr", "100 COMMUNITY DRIVE"],
+    ["20 Testwood Place", "20 TESTWOOD PLACE."],
     ["12 St James Pl", "12 SAINT JAMES PLACE"],
     ["7 N Main St", "7 NORTH MAIN STREET"],
     ["3 First Ave", "3 1ST AVENUE"],

@@ -173,7 +173,7 @@ export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: 
           <input
             value={query}
             disabled={!meta}
-            placeholder={meta ? "4 Danby Ct, or block and lot like 2604/19" : "Loading…"}
+            placeholder={meta ? "100 Community Dr, or block and lot like 2604/19" : "Loading…"}
             aria-label="Address, or block and lot"
             onChange={(event) => {
               setQuery(event.target.value);

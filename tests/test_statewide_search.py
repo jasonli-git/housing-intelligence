@@ -44,18 +44,18 @@ def test_every_spelling_has_one_meaning() -> None:
 
 
 def test_a_street_lives_in_the_file_of_its_first_two_characters() -> None:
-    assert shard("DANBY CT") == "DA"
+    assert shard("COMMUNITY DR") == "CO"
     assert shard("1ST AVE") == "1S"
 
 
 def _removal(**changes: str | None) -> Removal:
     base: dict[str, str | None] = {
         "geoid": "3403547580",
-        "block": "34018",
-        "lot": "15",
+        "block": "20001",
+        "lot": "10.05",
         "qualifier": None,
-        "number": "4",
-        "street": "DANBY CT",
+        "number": "100",
+        "street": "COMMUNITY DR",
         "received": "2026-10-02",
     }
     return Removal(**{**base, **changes})  # type: ignore[arg-type]
@@ -63,14 +63,16 @@ def _removal(**changes: str | None) -> Removal:
 
 def test_a_withdrawal_matches_by_lot_or_by_address() -> None:
     withdrawn = Filter([_removal()])
-    assert withdrawn.withdrawn("3403547580", "34018", "15", None, "4 DANBY COURT")
+    town = "3403547580"
+    assert withdrawn.withdrawn(town, "20001", "10.05", None, "100 COMMUNITY DRIVE")
     # Renumbered lot, same address: still withdrawn.
-    assert withdrawn.withdrawn("3403547580", "99", "1", None, "4 Danby Ct.")
+    assert withdrawn.withdrawn("3403547580", "99", "1", None, "100 Community Dr.")
     # Same lot, address respelled: still withdrawn.
-    assert withdrawn.withdrawn("3403547580", "34018", "15", None, None)
+    assert withdrawn.withdrawn("3403547580", "20001", "10.05", None, None)
     # The same address in another town is not.
-    assert not withdrawn.withdrawn("3402160900", "34018", "15", None, "4 DANBY CT")
-    assert not withdrawn.withdrawn("3403547580", "34018", "14", None, "6 DANBY COURT")
+    other = "3402160900"
+    assert not withdrawn.withdrawn(other, "20001", "10.05", None, "100 COMMUNITY DR")
+    assert not withdrawn.withdrawn("3403547580", "11001", "56", None, "150 HOLLOW ROAD")
     assert withdrawn.unmatched() == []
 
 
@@ -128,8 +130,9 @@ def _warehouse_with_parcels() -> None:
         pytest.skip("MOD-IV landed before Milestone 37's fields")
 
 
-def test_danby_court_is_found_in_montgomery(tmp_path: Path) -> None:
-    """The address the owner tried: "Princeton 08540" by mail, Montgomery by assessor."""
+def test_a_mailed_town_is_not_the_municipality(tmp_path: Path) -> None:
+    """Montgomery's township building: "Skillman 08558" by mail, Montgomery by assessor —
+    the failure the owner hit with an address mailed to Princeton."""
     from hip.parcels import export
     from hip.warehouse.db import get_engine
 
@@ -142,11 +145,11 @@ def test_danby_court_is_found_in_montgomery(tmp_path: Path) -> None:
         towns={"3403547580", "3402160900"},
     )
     streets = tmp_path / "parcels" / "streets"
-    index = json.loads((streets / f"{shard('DANBY CT')}.json").read_text())
-    assert "4" in index["DANBY CT"]["3403547580"]
+    index = json.loads((streets / f"{shard('COMMUNITY DR')}.json").read_text())
+    assert "100" in index["COMMUNITY DR"]["3403547580"]
     meta = json.loads((streets / "meta.json").read_text())
     assert meta["towns"]["3403547580"] == ["Montgomery", "Somerset", "1813"]
-    assert "3403547580" in meta["zips"]["08540"]
+    assert "3403547580" in meta["zips"]["08558"]
     assert meta["words"]["CT"] == street_words()["CT"]
 
 
@@ -167,8 +170,12 @@ def test_a_withdrawn_parcel_leaves_both_the_town_file_and_the_index(
     )
     town = json.loads((tmp_path / "parcels" / "3403547580.json").read_text())
     addresses = {row[3] for row in town["parcels"]}
-    assert "4 DANBY COURT" not in addresses
-    assert "6 DANBY COURT" in addresses
-    index = json.loads((tmp_path / "parcels" / "streets" / "DA.json").read_text())
-    assert "4" not in index["DANBY CT"]["3403547580"]
-    assert "6" in index["DANBY CT"]["3403547580"]
+    assert "100 COMMUNITY DR" not in addresses
+    assert "150 HOLLOW ROAD" in addresses
+    streets = tmp_path / "parcels" / "streets"
+    community = json.loads((streets / "CO.json").read_text())
+    assert "100" not in community.get("COMMUNITY DR", {}).get("3403547580", [])
+    # "Hollow" is itself a USPS suffix, so the index holds it as "HOLW RD".
+    kept = parse("150 HOLLOW ROAD")
+    hollow = json.loads((streets / f"{shard(kept.street)}.json").read_text())
+    assert "150" in hollow[kept.street]["3403547580"]
