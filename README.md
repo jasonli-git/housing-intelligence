@@ -677,6 +677,12 @@ from that page and put them in `data/manual/`, keeping Zillow's file names:
 The next refresh ingests whichever changed; with nothing new there, the last files stand.
 A missing file names itself and the page to get it from.
 
+Zillow releases on the third Thursday of each month (every 2026 date so far), covering
+through the end of the month before. The Friday refresh sends a "Zillow: time to
+download" notification whenever the files on this Mac are behind that, reckoned from the
+calendar and the files alone, never by asking Zillow (ARCHITECTURE #297), and repeats it
+each Friday until they are not.
+
 `make` on its own lists every target. With the warehouse down, the API and dashboard
 still run and report the degraded state rather than failing.
 

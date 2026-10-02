@@ -14,14 +14,11 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 38 live; the removal list moves to iCloud (2026-10-02)
+## Now — Zillow download reminder (2026-10-02)
 
-Milestone 38 deployed as 0.34.0 and `check-live` passed, statewide search included.
-Merged and **not yet deployed**: 0.34.1, affordability mode starting at the budget tool
-(PR #72). On `change/removals-in-icloud` (0.34.2): the Daniel's Law list defaults to
-iCloud Drive and a publish refuses without it (ARCHITECTURE #296).
-
-Milestone 39, approved vs built, is next.
+On `change/zillow-reminder` (0.34.3): the Friday refresh reminds the owner when Zillow's
+hand-downloaded files are behind its third-Thursday release (ARCHITECTURE #297). 0.34.0
+to 0.34.2 are live. Milestone 39, approved vs built, is next.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -363,6 +360,13 @@ first raised, not where it must be done.
       it becomes an error.
 
 ### Open decisions — not scheduled, not decided
+
+- [ ] **Revisit the refresh's hour when generation costs scale.** (2026-10-02, #259) The
+      Friday 08:00 run is kept for now. Some Gemini Flex calls fall back to the standard
+      price (4 of 23 on 2026-10-02), costing cents a run; if more states multiply the
+      readings, test whether an overnight slot after Thursday's releases (Friday 01:00
+      ET is also DeepSeek off-peak; 02:00 is not) gets Flex more often. Needs the Mac
+      awake then, since launchd runs a missed slot at wake.
 
 - [ ] **A lawyer's read of the lookup under Daniel's Law.** (M38, #295) The removal route
       takes the cautious reading; whether an address with no name is covered, and whether
