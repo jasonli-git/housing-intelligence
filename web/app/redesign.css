@@ -214,6 +214,17 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   visibility: hidden;
 }
 
+/* In affordability mode the budget tool follows straight on from the page's name: the
+   profile, its verdicts, the report and explore shortcuts and the statewide notes
+   serve the data view, and stand between a reader and the tool they switched to. */
+html[data-housing-mode="afford"] .nj-head .nj-atlas-entry,
+html[data-housing-mode="afford"] .nj-head ~ .state-ticker,
+html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes,
+html[data-housing-mode="afford"] .page-head[data-kind="county"] :is(.verdict, .verdict-more, .verdict-details, .actions),
+html[data-housing-mode="afford"] .page-head[data-kind="county"] ~ .region-profile-ticker {
+  display: none;
+}
+
 .bar-icon {
   width: 38px;
   height: 38px;
