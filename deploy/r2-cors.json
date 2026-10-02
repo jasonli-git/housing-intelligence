@@ -1,0 +1,11 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": ["https://housing.jasonli.app"],
+        "methods": ["GET", "HEAD"]
+      },
+      "maxAgeSeconds": 86400
+    }
+  ]
+}

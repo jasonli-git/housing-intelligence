@@ -2,7 +2,7 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish \
+.PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
         check-dist check-live deploy api web \
         test test-py test-web lint format check-config dbt-debug eval clean
 
@@ -205,6 +205,11 @@ $$(find dist/site -type f | wc -l | tr -d ' ') site files"
 
 check-live: check-dist  ## Verify the deployed site and artifacts match dist/
 	cd web && SITE_URL='$(SITE_URL)' ARTIFACT_URL='$(ARTIFACT_URL)' node scripts/check-live.mjs
+
+r2-cors:  ## Let the site's pages read the R2 artifacts (the property-tax lookup needs it)
+	@# A standing bucket setting rather than part of `deploy`: it changes only when this
+	@# file does. GET and HEAD from the site's own origin; nothing else (#291).
+	npx wrangler r2 bucket cors set $(R2_BUCKET) --file deploy/r2-cors.json --force
 
 deploy: check-dist  ## Upload artifacts to R2 and the site to Pages
 	rclone sync dist/artifacts $(R2_REMOTE):$(R2_BUCKET) --progress --checksum

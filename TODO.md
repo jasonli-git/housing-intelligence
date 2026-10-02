@@ -14,15 +14,11 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 37 built, awaiting review (2026-10-02)
+## Now — Milestone 37 live; the lookup's CORS fix awaiting review (2026-10-02)
 
-On `milestone/m37-property-tax` (0.33.0): the `/tax` lookup and county and state
-effective tax rates (ARCHITECTURE #289, #290). Removes pypdf; needs Poppler's
-`pdftotext`.
-
-**After the merge:** `uv sync`; the county packets gained an effective tax rate, so
-`hip explain` regenerates the 21 readings; then `make publish` — which now writes 564
-parcel files to `dist/artifacts/parcels/` — deploy and `make check-live`.
+On `fix/r2-cors-for-tax-lookup` (0.33.1): the bucket rule already applied with the
+owner's approval, kept in `deploy/r2-cors.json` with `make r2-cors`, and a live check
+that reads a parcel file as the page does (ARCHITECTURE #291). Nothing to redeploy.
 
 Milestone 38, approved vs built, is next.
 

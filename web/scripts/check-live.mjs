@@ -335,6 +335,37 @@ async function checkManifest(page) {
   }
 }
 
+/**
+ * A parcel file fetched from the live site's own origin, as the property-tax lookup
+ * does (Milestone 37). Every other artifact is opened as a link; these are read by the
+ * page's script, which the browser allows only if the bucket answers with a CORS header
+ * for the site. The deploy of 2026-10-02 shipped without one and every check above
+ * passed: the files existed and the page rendered, and no town would load.
+ */
+async function checkCrossOrigin(page) {
+  const manifest = JSON.parse(await readFile(path.join(artifactsDir, "manifest.json"), "utf8"));
+  const parcel = manifest.artifacts.find((a) => a.path.startsWith("parcels/"));
+  if (!parcel) return;
+  await page.goto(liveUrl(siteUrl, "/tax"), { waitUntil: "domcontentloaded", timeout });
+  const url = liveUrl(artifactUrl, `/${parcel.path}`).toString();
+  const result = await page.evaluate(async (target) => {
+    try {
+      const response = await fetch(target);
+      const body = await response.json();
+      return { status: response.status, rows: Array.isArray(body.parcels) ? body.parcels.length : -1 };
+    } catch (error) {
+      return { error: String(error) };
+    }
+  }, url);
+  if (result.error || result.status !== 200 || result.rows < 1) {
+    throw new Error(
+      `${parcel.path} cannot be read by the site's own pages (${result.error ?? `HTTP ${result.status}`}). ` +
+        "The bucket's CORS rule may be missing: run `make r2-cors`.",
+    );
+  }
+  console.log(`ok cors       ${parcel.path} reads from ${siteUrl.origin} · ${result.rows} parcels`);
+}
+
 async function run() {
   let browser;
   try {
@@ -354,6 +385,7 @@ async function run() {
     const page = await browser.newPage({ reducedMotion: "reduce" });
     page.setDefaultTimeout(timeout);
     await checkManifest(page);
+    await checkCrossOrigin(page);
 
     for (const sample of await pageSamples()) {
       const expected = await localMarker(page, sample.route);
