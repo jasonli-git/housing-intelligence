@@ -1,0 +1,29 @@
+{
+  "_comment": "Shared by tests/test_statewide_search.py and web/lib/addressSearch.test.ts, so the index builder and the page parse an address the same way (Milestone 38).",
+  "same": [
+    ["4 Danby Ct", "4 DANBY COURT"],
+    ["20 Danby Place", "20 DANBY PLACE."],
+    ["12 St James Pl", "12 SAINT JAMES PLACE"],
+    ["7 N Main St", "7 NORTH MAIN STREET"],
+    ["3 First Ave", "3 1ST AVENUE"],
+    ["250 Lorraine Dr", "250 LORRAINE DRIVE"],
+    ["1 Route 9", "1 RT 9"],
+    ["1474 Alpine Ridge Way", "1474 ALPINE RIDGE WAY #3"],
+    ["1044 Route 22", "1044 ROUTE 22 UNIT 1"],
+    ["327 Fort Lee Rd", "327 FORT LEE RD  APT 1A"],
+    ["20 French St", "20 FRENCH ST, SUITE B01"],
+    ["344 N Route 73", "344 NORTH ROUTE 73SUITE A"],
+    ["41 S Route 73", "41 SOUTH ROUTE 73 -BLDG 2"],
+    ["51 Lawr-Penn Rd", "51 LAWR-PENN ROAD C-1"],
+    ["584 Anderson Ave", "584 ANDERSON AVE. C005D"],
+    ["200 Stephen Kritz Ln", "200 STEPHEN KRITZ LN"]
+  ],
+  "parsed": [
+    ["1-3 Main St", "1-3", "MAIN ST"],
+    ["12A Elm Ave", "12A", "ELM AVE"],
+    ["12 1/2 Elm Ave", "12", "ELM AVE"],
+    ["OFF MAIN STREET", null, "OFF MAIN ST"],
+    ["AVON DR U-1", null, "AVON DR"],
+    ["o'neil way", null, "ONEIL WAY"]
+  ]
+}

@@ -344,7 +344,9 @@ async function checkManifest(page) {
  */
 async function checkCrossOrigin(page) {
   const manifest = JSON.parse(await readFile(path.join(artifactsDir, "manifest.json"), "utf8"));
-  const parcel = manifest.artifacts.find((a) => a.path.startsWith("parcels/"));
+  const parcel = manifest.artifacts.find(
+    (a) => a.path.startsWith("parcels/") && !a.path.startsWith("parcels/streets/"),
+  );
   if (!parcel) return;
   await page.goto(liveUrl(siteUrl, "/tax"), { waitUntil: "domcontentloaded", timeout });
   const url = liveUrl(artifactUrl, `/${parcel.path}`).toString();
@@ -364,6 +366,45 @@ async function checkCrossOrigin(page) {
     );
   }
   console.log(`ok cors       ${parcel.path} reads from ${siteUrl.origin} · ${result.rows} parcels`);
+}
+
+/**
+ * The statewide search, driven as a reader would (Milestone 38): an address from a town's
+ * file typed with no town chosen must come back as a result, which takes the street
+ * index's `meta.json`, its shard and the town's file, all read across origins.
+ */
+async function checkStatewideSearch(page) {
+  const manifest = JSON.parse(await readFile(path.join(artifactsDir, "manifest.json"), "utf8"));
+  if (!manifest.artifacts.some((a) => a.path === "parcels/streets/meta.json")) return;
+  const town = manifest.artifacts.find(
+    (a) => a.path.startsWith("parcels/") && !a.path.startsWith("parcels/streets/"),
+  );
+  const file = JSON.parse(await readFile(path.join(artifactsDir, town.path), "utf8"));
+  const at = file.columns.indexOf("address");
+  const address = file.parcels.map((row) => row[at]).find((a) => /^\d+ [A-Z]/.test(a ?? ""));
+  if (!address) return;
+  await page.goto(liveUrl(siteUrl, "/tax"), { waitUntil: "networkidle", timeout });
+  const box = page.getByLabel("Address, or block and lot");
+  await box.waitFor({ state: "visible", timeout });
+  // The box is disabled until the street index's meta.json has loaded.
+  await page.waitForFunction(
+    () => !document.querySelector('input[aria-label="Address, or block and lot"]')?.disabled,
+    null,
+    { timeout },
+  );
+  await box.fill(address);
+  const [number] = address.split(" ");
+  const answer = page.locator(".tax-results button").first();
+  try {
+    await answer.waitFor({ state: "visible", timeout });
+  } catch {
+    throw new Error(`/tax found nothing for "${address}" (${file.municipality}) searched statewide.`);
+  }
+  const text = await answer.innerText();
+  if (!text.startsWith(number)) {
+    throw new Error(`/tax answered "${address}" with "${text.split("\n")[0]}".`);
+  }
+  console.log(`ok search     "${address}" found statewide · ${file.municipality}`);
 }
 
 async function run() {
@@ -386,6 +427,7 @@ async function run() {
     page.setDefaultTimeout(timeout);
     await checkManifest(page);
     await checkCrossOrigin(page);
+    await checkStatewideSearch(page);
 
     for (const sample of await pageSamples()) {
       const expected = await localMarker(page, sample.route);

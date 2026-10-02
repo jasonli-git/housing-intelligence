@@ -17,7 +17,7 @@ import logging
 import shutil
 import subprocess
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Annotated
 
@@ -27,6 +27,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from hip import __version__, refresh
+from hip.addresses import parse as parse_address
 from hip.analytics.compute import rebuild
 from hip.completeness import run as run_completeness
 from hip.config import (
@@ -65,8 +66,12 @@ from hip.packets import (
     render_markdown,
     schema_text,
 )
+from hip.parcels import find_by_address as find_parcels_by_address
 from hip.publish import publish as run_publish
 from hip.refresh import AcquireReport
+from hip.removals import Removal
+from hip.removals import read as read_removals
+from hip.removals import write as write_removals
 from hip.sources.base import Discovery, Release, SourceAdapter, SourceError, redact
 from hip.sources.registry import (
     IMPLEMENTED,
@@ -285,6 +290,84 @@ def publish_command(
         # Overwhelmingly explanations: only the 21 counties have one.
         typer.echo(f"{len(result.skipped):>7,} skipped (404, mostly explanations)")
     typer.secho(f"published to {root}", fg=typer.colors.GREEN)
+
+
+@app.command("remove-address")
+def remove_address_command(
+    address: Annotated[str, typer.Argument(help='The address, e.g. "4 Danby Ct".')],
+    town: Annotated[str, typer.Option("--town", help="The municipality: Montgomery.")],
+    county: Annotated[
+        str | None, typer.Option("--county", help="Its county, where a name repeats.")
+    ] = None,
+    received: Annotated[
+        str | None,
+        typer.Option("--received", help="When the notice arrived, YYYY-MM-DD; today."),
+    ] = None,
+) -> None:
+    """Withdraw an address from the property-tax lookup under Daniel's Law.
+
+    Adds every parcel at the address to the machine-local removal list. The address
+    leaves the live site at the next `make publish deploy`, which must follow within ten
+    business days of the notice (ARCHITECTURE #295).
+    """
+    settings = get_settings()
+    engine = get_engine()
+    with engine.connect() as conn:
+        towns = conn.execute(
+            text(
+                """
+                SELECT m.geoid, m.name, c.name
+                FROM regions m JOIN regions c ON c.region_id = m.parent_id
+                WHERE m.level = 'municipality' AND lower(m.name) = lower(:town)
+                  AND (CAST(:county AS text) IS NULL
+                       OR lower(c.name) IN (lower(:county), lower(:county) || ' county'))
+                """
+            ),
+            {"town": town, "county": county},
+        ).all()
+    if len(towns) != 1:
+        found = ", ".join(f"{name}, {c}" for _, name, c in towns) or "none"
+        typer.secho(
+            f"{len(towns)} towns match {town!r} ({found}); name one, with --county.",
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(1)
+    geoid, name, county_name = towns[0]
+    parcels = find_parcels_by_address(settings.parquet_dir, engine, geoid, address)
+    if not parcels:
+        typer.secho(f"No parcel at {address!r} in {name}, {county_name}.", fg="red")
+        raise typer.Exit(1)
+    day = date.fromisoformat(received) if received else date.today()
+    parsed = parse_address(address)
+    existing = read_removals(settings.address_removals)
+    added = [
+        Removal(
+            geoid=geoid,
+            block=block,
+            lot=lot,
+            qualifier=qualifier,
+            number=parsed.number,
+            street=parsed.street,
+            received=day.isoformat(),
+        )
+        for block, lot, qualifier, _ in parcels
+    ]
+    new = [r for r in added if r not in existing]
+    write_removals(settings.address_removals, existing + new)
+    for block, lot, qualifier, spelled in parcels:
+        unit = f", {qualifier}" if qualifier else ""
+        typer.echo(f"withdrawn  {spelled} · block {block}, lot {lot}{unit} · {name}")
+    deadline = day
+    business = 0
+    while business < 10:
+        deadline += timedelta(days=1)
+        if deadline.weekday() < 5:
+            business += 1
+    typer.secho(
+        f"Run `make publish deploy` by {deadline.isoformat()}, ten business days after "
+        f"{day.isoformat()} (weekends counted out; check for state holidays).",
+        fg=typer.colors.YELLOW,
+    )
 
 
 def _cached_releases(
