@@ -14,14 +14,11 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 38 live; the removal list moves to iCloud (2026-10-02)
+## Now — Zillow download reminder (2026-10-02)
 
-Milestone 38 deployed as 0.34.0 and `check-live` passed, statewide search included.
-Merged and **not yet deployed**: 0.34.1, affordability mode starting at the budget tool
-(PR #72). On `change/removals-in-icloud` (0.34.2): the Daniel's Law list defaults to
-iCloud Drive and a publish refuses without it (ARCHITECTURE #296).
-
-Milestone 39, approved vs built, is next.
+On `change/zillow-reminder` (0.34.3): the Friday refresh reminds the owner when Zillow's
+hand-downloaded files are behind its third-Thursday release (ARCHITECTURE #297). 0.34.0
+to 0.34.2 are live. Milestone 39, approved vs built, is next.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 

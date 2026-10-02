@@ -185,10 +185,36 @@ def _rebuild_readings() -> int | None:
     return None
 
 
+def _zillow_reminder() -> None:
+    """Zillow is downloaded by hand (ARCHITECTURE #272): say so when its files on this
+    Mac are behind what it has published, every Friday until they are not (#297).
+    Nothing here asks Zillow; the calendar and the files on disk decide."""
+    from datetime import date
+
+    from hip.config import get_settings
+    from hip.sources.zillow import due, published_through
+
+    behind = due(get_settings().raw_dir, date.today())
+    if not behind:
+        return
+    held = min((d for d in behind.values() if d), default=None)
+    expected = published_through(date.today())
+    _notify(
+        "Zillow: time to download",
+        f"Zillow has published figures through {expected:%B %Y}; this Mac holds "
+        + (f"{held:%B %Y}" if held else "none")
+        + ". Download the six CSVs (County, City and Zip for home values and rents) from "
+        "zillow.com/research/data into data/manual/zillow_zhvi and zillow_zori, keeping "
+        "Zillow's file names; the next refresh picks them up.",
+    )
+
+
 def main() -> int:
     from hip.refresh import checkout_problem
 
     print(f"=== {datetime.now(UTC).isoformat()} scheduled refresh starting ===")
+    # First, and whatever else happens this run: the one source a person must fetch.
+    _zillow_reminder()
     # Before anything runs: this checkout is shared with development, and only a
     # clean `main` may refresh the warehouse or deploy (`checkout_problem`).
     problem = checkout_problem(REPO_ROOT)
