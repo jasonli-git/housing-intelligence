@@ -24,8 +24,10 @@ scope; this document does not restate it.
 > Every figure in the prose is bound to the packet field and release that licensed it
 > before it is stored (#112), and prose is refused that states a figure the packet
 > does not carry, a survey figure without its margin, or an uncertain rank as a place
-> (#257). 763 Python tests and 283 dashboard tests pass (2026-09-28). Nothing in the
-> pipeline or the API depends on a model being present: with no readings stored,
+> (#257). 925 Python tests and 373 dashboard tests pass (2026-10-02); nine of the
+> Python ones rebuild the analytics or the site and run under `make test-all` (#299).
+> Nothing in the pipeline or the API depends on a model being present: with no
+> readings stored,
 > every page and endpoint still works.
 
 ## System Shape
@@ -541,7 +543,7 @@ housing-intelligence/
 │   ├── evaluation/            # the published model-evaluation report; committed
 │   └── completeness/          # one report per standing-check run; committed (#225)
 ├── scripts/                   # scheduled_refresh.py, regenerate_now.py, launchd/ (#216–#219)
-├── tests/                     # 660 Python tests; API tests skip without a warehouse
+├── tests/                     # 925 Python tests; nine `slow`; warehouse tests skip without one
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
 ├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
