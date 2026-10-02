@@ -14,11 +14,12 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Zillow download reminder (2026-10-02)
+## Now — between milestones (2026-10-02)
 
-On `change/zillow-reminder` (0.34.3): the Friday refresh reminds the owner when Zillow's
-hand-downloaded files are behind its third-Thursday release (ARCHITECTURE #297). 0.34.0
-to 0.34.2 are live. Milestone 39, approved vs built, is next.
+0.34.0 to 0.34.5 are merged: Milestone 38's statewide property search, the removal
+list in iCloud, the Zillow download reminder, publishers' release calendars on
+`/freshness`, and a public building as the lookup's example address. Milestone 39,
+approved vs built, is next and not started.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 

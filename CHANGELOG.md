@@ -3,6 +3,13 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.34.5] — 2026-10-02
+
+### Changed
+
+- **The property-tax lookup's example address is a public building**, Montgomery's
+  township building, in the search box and throughout the documentation and tests.
+
 ## [0.34.4] — 2026-10-02
 
 ### Changed
@@ -48,8 +55,8 @@ Milestone 38: find any property in New Jersey.
 ### Added
 
 - **One search for the whole state** (ARCHITECTURE #294). `/tax` takes an address
-  anywhere in New Jersey with no town chosen: "4 Danby Ct, Princeton NJ 08540" finds the
-  house in Montgomery. A street index — 972 small files beside the town files — says
+  anywhere in New Jersey with no town chosen: "100 Community Dr, Skillman NJ 08558" finds
+  Montgomery's township building, though the mail says Skillman. A street index — 972 small files beside the town files — says
   which towns have the street and the number; a ZIP ranks its towns first.
 - **Abbreviations and units match.** "Ct" finds "COURT", "St James Pl" finds "SAINT
   JAMES PLACE", and a condominium's "#3" or "APT 1A" no longer hides it from its

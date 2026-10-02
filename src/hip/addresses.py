@@ -1,7 +1,7 @@
 """Addresses written one way, so a typed address meets the assessor's (Milestone 38).
 
-A reader types "4 Danby Ct"; MOD-IV holds "4 DANBY COURT", and another town's assessor
-"20 DANBY PLACE." for a street a third writes "DANBY PL". Both sides are normalised by the
+A reader types "12 Elm Ct"; MOD-IV holds "12 ELM COURT", and another town's assessor
+"20 ELM PLACE." for a street a third writes "ELM PL". Both sides are normalised by the
 same rule: upper case, punctuation dropped, and every word USPS Publication 28 writes
 several ways — suffixes, directionals, ordinals, "Saint" — replaced by the Postal
 Service's one abbreviation (`street_words.json`). The rule is applied to every word, not

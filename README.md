@@ -300,8 +300,8 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   anywhere in New Jersey, no town needed, or a block and lot with its town. Shows the
   assessment, last year's tax, the market value the state's ratio implies, its place
   among the town's parcels of the same class, the town's revaluation context, and a link
-  to the county's own record. Abbreviations and condominium units match ("4 Danby Ct"
-  finds "4 DANBY COURT"). Served from object storage as a street index plus one file per
+  to the county's own record. Abbreviations and condominium units match ("12 Elm Ct"
+  finds "12 ELM COURT"). Served from object storage as a street index plus one file per
   town; owner names and mailing addresses are never collected, and an address is removed
   on request under Daniel's Law (below). County and statewide effective tax rates,
   weighted by equalized valuation.
@@ -718,7 +718,7 @@ home address to come off the property-tax lookup; the page gives `privacy@jasonl
 The law allows **ten business days** from the notice (ARCHITECTURE #295).
 
 ```bash
-uv run hip remove-address "4 Danby Ct" --town Montgomery --received 2026-10-02
+uv run hip remove-address "12 Elm Ct" --town Montgomery --received 2026-10-02
 ```
 
 ```bash

@@ -298,7 +298,7 @@ def publish_command(
 
 @app.command("remove-address")
 def remove_address_command(
-    address: Annotated[str, typer.Argument(help='The address, e.g. "4 Danby Ct".')],
+    address: Annotated[str, typer.Argument(help='The address, e.g. "12 Elm Ct".')],
     town: Annotated[str, typer.Option("--town", help="The municipality: Montgomery.")],
     county: Annotated[
         str | None, typer.Option("--county", help="Its county, where a name repeats.")

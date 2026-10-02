@@ -40,8 +40,8 @@ describe("parseAddress", () => {
 });
 
 const SHARD: StreetShard = {
-  "DANBY CT": { "3403547580": ["1", "2", "3", "4", "5", "6"] },
-  "DANBY PL": { "3402959910": ["3", "5", "20"] },
+  "TESTWOOD CT": { "3403547580": ["1", "2", "3", "4", "5", "6"] },
+  "TESTWOOD PL": { "3402959910": ["3", "5", "20"] },
 };
 const MAIN: StreetShard = {
   "MAIN ST": {
@@ -65,9 +65,9 @@ const META: StreetMeta = {
 
 describe("parseQuery", () => {
   it("takes apart a full mailing address", () => {
-    expect(parseQuery("4 Danby Ct, Princeton NJ 08540", N)).toEqual({
+    expect(parseQuery("4 Testwood Ct, Princeton NJ 08540", N)).toEqual({
       number: "4",
-      street: ["DANBY", "CT"],
+      street: ["TESTWOOD", "CT"],
       partial: "",
       hint: ["PRINCETON"],
       zip: "08540",
@@ -87,25 +87,25 @@ describe("matchStreets and placesFor", () => {
     return placesFor(matchStreets(shard, query, N), query, META, N);
   };
 
-  it("finds Danby Court in Montgomery, though the mail says Princeton", () => {
-    expect(find("4 Danby Ct, Princeton NJ 08540", SHARD)).toEqual([
-      { street: "DANBY CT", geoid: "3403547580" },
+  it("finds a street in Montgomery, though the mail says Princeton", () => {
+    expect(find("4 Testwood Ct, Princeton NJ 08540", SHARD)).toEqual([
+      { street: "TESTWOOD CT", geoid: "3403547580" },
     ]);
   });
 
   it("matches a suffix still being typed, in any spelling", () => {
-    for (const text of ["4 danby c", "4 danby cou", "4 danby court"]) {
-      expect(find(text, SHARD).map((h) => h.street)).toEqual(["DANBY CT"]);
+    for (const text of ["4 testwood c", "4 testwood cou", "4 testwood court"]) {
+      expect(find(text, SHARD).map((h) => h.street)).toEqual(["TESTWOOD CT"]);
     }
   });
 
   it("lists every street a half-typed name begins, without a number", () => {
-    expect(find("danb", SHARD).map((h) => h.street)).toEqual(["DANBY CT", "DANBY PL"]);
+    expect(find("testw", SHARD).map((h) => h.street)).toEqual(["TESTWOOD CT", "TESTWOOD PL"]);
   });
 
   it("only offers towns that have the house number", () => {
-    expect(find("20 danby", SHARD).map((h) => h.geoid)).toEqual(["3402959910"]);
-    expect(find("9 danby ct", SHARD)).toEqual([]);
+    expect(find("20 testwood", SHARD).map((h) => h.geoid)).toEqual(["3402959910"]);
+    expect(find("9 testwood ct", SHARD)).toEqual([]);
   });
 
   it("ranks a ZIP's towns first, then a named town, and prefers the street typed in full", () => {
@@ -143,22 +143,22 @@ describe("countyLookup", () => {
 
 describe("parcelsOn", () => {
   const parcels = [
-    { address: "6 DANBY COURT" },
-    { address: "4 DANBY COURT" },
-    { address: "4 DANBY PL" },
+    { address: "6 TESTWOOD COURT" },
+    { address: "4 TESTWOOD COURT" },
+    { address: "4 TESTWOOD PL" },
     { address: "2-6 MAIN ST" },
     { address: null },
   ];
 
   it("finds a house on its street, units and spelling aside", () => {
-    expect(parcelsOn(parcels, "DANBY CT", "4", N)).toEqual([{ address: "4 DANBY COURT" }]);
+    expect(parcelsOn(parcels, "TESTWOOD CT", "4", N)).toEqual([{ address: "4 TESTWOOD COURT" }]);
     expect(parcelsOn(parcels, "MAIN ST", "4", N)).toEqual([{ address: "2-6 MAIN ST" }]);
   });
 
   it("lists a whole street in house-number order without a number", () => {
-    expect(parcelsOn(parcels, "DANBY CT", null, N).map((p) => p.address)).toEqual([
-      "4 DANBY COURT",
-      "6 DANBY COURT",
+    expect(parcelsOn(parcels, "TESTWOOD CT", null, N).map((p) => p.address)).toEqual([
+      "4 TESTWOOD COURT",
+      "6 TESTWOOD COURT",
     ]);
   });
 });
