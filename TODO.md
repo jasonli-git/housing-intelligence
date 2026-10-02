@@ -16,10 +16,11 @@ removed entries are in `git show ca49f74:TODO.md`.
 
 ## Now — between milestones (2026-10-02)
 
-0.34.0 to 0.34.5 are merged: Milestone 38's statewide property search, the removal
+0.34.0 to 0.34.6 are merged: Milestone 38's statewide property search, the removal
 list in iCloud, the Zillow download reminder, publishers' release calendars on
-`/freshness`, and a public building as the lookup's example address. Milestone 39,
-approved vs built, is next and not started.
+`/freshness`, a public building as the lookup's example address, and a 30-second
+`make test` with the slow tests behind `make test-all` (about 11 minutes; run it before
+a merge). Milestone 39, approved vs built, is next and not started.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -164,7 +165,8 @@ first raised, not where it must be done.
       (M34, measured 2026-10-01) `_rank_ranges` joins each ranking group to itself, so
       a group costs the square of its regions: 598 ZCTAs across 26 more ranked metrics
       and five windows took the step to about three minutes a rebuild, and the Python
-      suite, which rebuilds six times, to well over half an hour. The weekly refresh
+      suite, which rebuilt six times, to well over half an hour (since 2026-10-02 it
+      rebuilds twice, under `make test-all`; #299). The weekly refresh
       rebuilds once, so it is tolerable for New Jersey; at Milestone 14's seven states it
       is not. A sort-based count, or the step moved to DuckDB, are the leads.
 - [ ] **`GET /regions?q=` passes `%` and `_` through to `ILIKE`.** (pre-M12 review) A
@@ -345,7 +347,8 @@ first raised, not where it must be done.
       for block and lot; the address half and its tests can go.
 
 - [ ] **Nothing runs `ruff` automatically.** `make lint` exists and is run by hand, so
-      a violation reaches `main` whenever someone runs `make test` and stops there —
+      a violation reaches `main` whenever someone runs `make test` or `make test-all`
+      and stops there —
       which happened on 2026-09-19, when the README features check landed in 0.18.x with
       an E501 and was only caught by the next milestone. Options considered and not
       chosen yet: a test that shells out to `ruff check`, which couples the suite to a

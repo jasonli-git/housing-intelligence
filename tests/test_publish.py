@@ -122,6 +122,7 @@ def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 @warehouse
+@pytest.mark.slow  # the `published` fixture builds the whole site
 def test_published_artifact_is_byte_identical_to_the_live_response(
     published: Path,
 ) -> None:
@@ -147,6 +148,7 @@ def test_published_artifact_is_byte_identical_to_the_live_response(
 
 
 @warehouse
+@pytest.mark.slow  # the `published` fixture builds the whole site
 def test_manifest_hashes_match_the_files_on_disk(published: Path) -> None:
     manifest = json.loads((published / "manifest.json").read_text())
     assert manifest["artifact_count"] == len(manifest["artifacts"])
@@ -157,6 +159,7 @@ def test_manifest_hashes_match_the_files_on_disk(published: Path) -> None:
 
 
 @warehouse
+@pytest.mark.slow  # the `published` fixture builds the whole site
 def test_every_manifest_entry_exists_on_disk(published: Path) -> None:
     manifest = json.loads((published / "manifest.json").read_text())
     missing = [
@@ -166,6 +169,7 @@ def test_every_manifest_entry_exists_on_disk(published: Path) -> None:
 
 
 @warehouse
+@pytest.mark.slow  # the `published` fixture builds the whole site
 def test_skipped_entries_are_explanations_not_data(published: Path) -> None:
     """404s are expected only where `hip explain` has not run, never for a packet."""
     manifest = json.loads((published / "manifest.json").read_text())

@@ -112,6 +112,9 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# `slow`: a test that rebuilds the analytics or the whole published site, minutes each.
+# `make test` leaves them out; `make test-all` runs them, and does before a merge.
+markers = ["slow: rebuilds analytics or the published site; run by make test-all"]
 # Tests import `hip` from the source tree directly rather than relying on the editable
 # install, so a half-built venv fails at `uv sync` instead of as a confusing collection
 # error (see ARCHITECTURE #18).
