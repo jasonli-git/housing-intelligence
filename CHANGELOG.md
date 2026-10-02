@@ -3,6 +3,14 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.33.3] — 2026-10-02
+
+### Fixed
+
+- **The theme icon draws at full size.** It had been squeezed into 9 of its button's 38
+  pixels by the site's general button padding, and drawn solid where it is a line
+  drawing; it is now 20px and outlined.
+
 ## [0.33.2] — 2026-10-02
 
 ### Changed
