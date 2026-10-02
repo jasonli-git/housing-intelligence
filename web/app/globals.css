@@ -140,7 +140,15 @@ main.shell { padding-bottom: 2rem; }
    sun on a dark page, a moon on a light one, each where a press leads (#292). Done in CSS
    so the first paint is right before React knows the theme. */
 .theme-toggle { cursor: pointer; }
-.theme-toggle svg { fill: none; }
+/* Larger than the GitHub mark (20px against 16px): its line-drawn sun and moon read thin
+   at 16. Two classes, so it outranks `.bar-icon svg`, which fills its glyph and comes
+   later in this file — at equal weight that rule drew the sun and moon solid. */
+.bar-icon.theme-toggle svg {
+  width: 20px; height: 20px; flex: none; fill: none; stroke-width: 1.6;
+}
+/* A <button>, unlike the GitHub <a>, takes the site's button padding, which left the icon
+   9px of the 38 to be drawn in: why it looked small. */
+.bar-icon.theme-toggle { padding: 0; }
 .theme-toggle .theme-sun { display: none; }
 :root[data-theme="dark"] .theme-toggle .theme-sun { display: block; }
 :root[data-theme="dark"] .theme-toggle .theme-moon { display: none; }
