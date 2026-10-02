@@ -14,16 +14,17 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 36 built, awaiting review (2026-10-01)
+## Now — Milestone 37 built, awaiting review (2026-10-02)
 
-On `milestone/m36-how-homes-change-hands` (0.32.0): how homes sell, from SR1A, and when
-a town last revalued, from a new source (ARCHITECTURE #287, #288). Adds `pypdf`.
+On `milestone/m37-property-tax` (0.33.0): the `/tax` lookup and county and state
+effective tax rates (ARCHITECTURE #289, #290). Removes pypdf; needs Poppler's
+`pdftotext`.
 
-**After the merge:** `uv sync`; the county packets gained sales figures, so `hip explain`
-regenerates the 21 readings (about $0.10-0.20); then `make publish`, deploy and
-`make check-live`.
+**After the merge:** `uv sync`; the county packets gained an effective tax rate, so
+`hip explain` regenerates the 21 readings; then `make publish` — which now writes 564
+parcel files to `dist/artifacts/parcels/` — deploy and `make check-live`.
 
-Milestone 37, property tax: what you'd actually pay, is next.
+Milestone 38, approved vs built, is next.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -76,14 +77,6 @@ first raised, not where it must be done.
       `ST_Transform` reprojects vertices without densifying edges. Negligible for real
       TIGER geometry, which is vertex-dense; it only shows up in synthetic test fixtures.
       Revisit if a source ever supplies coarse polygons.
-- [ ] **A county has a tax bill but no tax rate.** (M25, #181) `nj_effective_tax_rate`
-      is municipal only, because a county rate is a levy-weighted average and the
-      weights — equalized valuations per municipality — are in the Table of Equalized
-      Valuations PDF rather than the workbooks this milestone ingests. Either parse that
-      PDF as a fourth layer of `nj_tax_rates`, or state on a county page why the rate
-      stops at municipalities. Doing neither leaves an asymmetry a reader will notice
-      before we do.
-      **Scheduled: Milestone 37.**
 - [ ] **SR1A carries four fields the aggregates ignore.** (M25) `assessed_value_total`,
       `sales_ratio`, `year_built` and `living_space` are landed and unused. `living_space`
       is the one that matters: a price per square foot on *transactions* is not derivable

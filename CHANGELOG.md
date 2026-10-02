@@ -3,6 +3,35 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.33.0] — 2026-10-02
+
+Milestone 37, property tax: what you'd actually pay.
+
+### Added
+
+- **Property tax lookup** at `/tax` (ARCHITECTURE #289): any New Jersey property, by
+  address or by block and lot within its town, with its assessed value (land and
+  improvements), last year's tax, the market value the state's ratio implies, how its
+  assessment compares with the town's parcels of the same class, and the town's
+  revaluation context — when it last revalued, and whether its Director's Ratio is at or
+  below the 85% the state's rules generally read as calling for one. Appeals are linked,
+  not judged. Owner names and mailing addresses are never collected or shown. Every town
+  page links to it.
+- **Effective tax rates for counties and the state** (#290), the towns' rates weighted
+  by equalized valuation from the state's Table of Equalized Valuations, 2019 to 2025.
+  2025: New Jersey 1.869 per $100 of market value.
+- A new source, `nj_equalized`: the Table of Equalized Valuations, 2018-2026.
+
+### Changed
+
+- PDFs are read with Poppler's `pdftotext` rather than pypdf, which misread two of the
+  tables; Poppler is now a setup requirement.
+
+### Fixed
+
+- Widening the parcel request was answered from the cached download; the request now
+  names its fields, so a wider one is fetched afresh.
+
 ## [0.32.0] — 2026-10-01
 
 Milestone 36, how homes change hands.

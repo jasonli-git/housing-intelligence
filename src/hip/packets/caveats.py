@@ -118,6 +118,12 @@ TEXTS: dict[str, str] = {
         "two can differ. ZCTA figures begin with the 2016-2020 survey, the first drawn "
         "on 2020's ZCTAs, so none shows a five-year change yet."
     ),
+    # Milestone 37.
+    "county_tax_rate": (
+        "A county's or the state's effective tax rate is worked out here from its towns' "
+        "published rates, each weighted by the town's equalized valuation in the state's "
+        "Table of Equalized Valuations: the levy over the value, taken together."
+    ),
     # Milestone 36, each a guardrail ROADMAP set and a test pins.
     "sales_composition": (
         "Sale prices describe the one- to four-family homes that sold, not every home: a "
@@ -257,6 +263,8 @@ def scoped_caveats(
         add("hud_county_ami", ami)
     if present & FMR_METRICS:
         add("hud_fmr_area", present & FMR_METRICS)
+    if "nj_effective_tax_rate" in present and level in {"county", "state"}:
+        add("county_tax_rate", {"nj_effective_tax_rate"})
     if present & SALE_PRICE_METRICS:
         add("sales_composition", present & SALE_PRICE_METRICS)
     if "sr1a_median_sales_ratio" in present:

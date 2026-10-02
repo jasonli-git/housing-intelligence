@@ -21,7 +21,6 @@ dependencies = [
     "alembic>=1.13",
     "httpx>=0.27",
     "geoalchemy2>=0.15",
-    "pypdf>=6.19.0",
 ]
 
 [project.scripts]

@@ -84,6 +84,33 @@ FIELDS = (
     # says *when* an assessment snapshot is from. Without it the observation period
     # would have to be invented, and a fact with a made-up date is worse than no fact.
     "PCL_PBDATE",
+    # Milestone 37's property lookup: which parcel, where, and what stands on it. The
+    # property's own location, never its owner's mailing address.
+    "PCLBLOCK",
+    "PCLLOT",
+    "PCLQCODE",
+    "PROP_LOC",
+    "BLDG_DESC",
+)
+
+# Fields the layer publishes that identify an owner, and which this project never
+# requests (ARCHITECTURE #289, the boundary SR1A keeps in #183). The layer blanks
+# `OWNER_NAME` — 0 of 3,481,240 populated on 2026-10-02 — but publishes the owner's
+# mailing street for 3,077,973 parcels, and for an owner who does not live there that is
+# their home. Deed book and page lead to the recorded deed and its named parties, and
+# the ZIP fields are left out with them because the layer does not say whose they are.
+# `tests/test_sources.py` holds `FIELDS` apart from this list.
+OWNER_FIELDS = frozenset(
+    {
+        "OWNER_NAME",
+        "ST_ADDRESS",
+        "CITY_STATE",
+        "ZIP_CODE",
+        "ZIP5",
+        "ZIP_PLUS4",
+        "DEED_BOOK",
+        "DEED_PAGE",
+    }
 )
 
 _PAGE_RETRIES = 3
@@ -122,7 +149,11 @@ class ModivAdapter(SourceAdapter):
                 source_id=self.source_id,
                 layer="statewide",
                 vintage=vintage or self.default_vintage,
-                url=f"{LAYER_URL}/query",
+                # The fields go in the ref's URL though the pages are built from
+                # `LAYER_URL`: the URL is what the raw cache compares (#214), so a
+                # wider request misses the cache by itself. Before Milestone 37 it was
+                # the bare layer, and adding five fields was answered from the old copy.
+                url=f"{LAYER_URL}/query?outFields={','.join(FIELDS)}",
             )
         ]
 

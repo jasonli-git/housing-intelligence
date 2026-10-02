@@ -1999,3 +1999,22 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 .sales-lead b { font-weight: 650; }
 .sales-lines { max-width: 70ch; }
 .sales-note { margin: 0; max-width: 70ch; font-size: var(--text-small); line-height: 1.5; color: var(--text-muted); }
+
+/* ---------------------------------------- Milestone 37, the tax lookup --- */
+
+.tax-lookup { display: grid; gap: 1rem; max-width: 760px; }
+.tax-lookup .household-inputs {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+.tax-lookup .control { display: grid; gap: 4px; }
+.tax-lookup .household-inputs input { width: 100%; box-sizing: border-box; }
+.tax-results { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.tax-results button {
+  width: 100%; text-align: left; display: grid; gap: 2px; padding: 0.55rem 0.75rem;
+  border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text-primary); font: inherit; cursor: pointer;
+}
+.tax-results button:hover, .tax-results button:focus-visible { border-color: var(--series-3); }
+.tax-results small { font: var(--text-label)/1.4 var(--font-mono); color: var(--text-muted); }
+.tax-card h2.household-title { font-size: var(--text-small); }
+.tax-context { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; font-size: var(--text-small); line-height: 1.5; color: var(--text-secondary); }

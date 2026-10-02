@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type { PacketLevel } from "@/lib/api";
 import { formatValue } from "@/lib/format";
 import { monthLabel, periodLabel } from "@/lib/periods";
@@ -16,10 +18,12 @@ import { monthLabel, periodLabel } from "@/lib/periods";
 export function HomeSales({
   name,
   level,
+  geoid,
   levels,
 }: {
   name: string;
   level: string;
+  geoid: string;
   levels: PacketLevel[];
 }) {
   const find = (id: string) => levels.find((l) => l.metric_id === id);
@@ -113,6 +117,12 @@ export function HomeSales({
         {level !== "municipality" &&
           " Worked out from every deed in the area, never from its towns’ medians."}
       </p>
+      {level === "municipality" && (
+        <p className="sales-note">
+          <Link href={`/tax?town=${geoid}`}>Look up a property in {name}</Link>: its
+          assessment, last year’s tax and how it compares with the town’s.
+        </p>
+      )}
     </section>
   );
 }

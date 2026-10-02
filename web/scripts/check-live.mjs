@@ -273,6 +273,9 @@ async function pageSamples() {
   // The two pages about the data (Milestone 27), which no region sample reaches.
   samples.push({ label: "freshness", route: "/freshness" });
   samples.push({ label: "changes", route: "/changes" });
+  // Milestone 37's property-tax lookup; its per-town files are artifacts, checked with
+  // the rest of the manifest.
+  samples.push({ label: "tax", route: "/tax" });
   return samples;
 }
 
