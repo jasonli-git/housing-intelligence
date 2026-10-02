@@ -3,6 +3,15 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.34.1] — 2026-10-02
+
+### Changed
+
+- **Affordability mode starts at the budget tool.** On the New Jersey page and county
+  pages, switching to affordability now hides the profile, its verdicts, the explore and
+  report shortcuts and the statewide notes, so "Start with your budget" follows the
+  page's name directly. Switching back brings them back.
+
 ## [0.34.0] — 2026-10-02
 
 Milestone 38: find any property in New Jersey.
