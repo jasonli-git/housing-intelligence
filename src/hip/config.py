@@ -239,6 +239,45 @@ class Settings(BaseSettings):
         return self.data_dir / "packets"
 
 
+Weekday = Literal["monday", "tuesday", "wednesday", "thursday", "friday"]
+
+
+class ReleaseDate(BaseModel):
+    """One release a publisher has scheduled, as its calendar states it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    day: date
+    # "month" where the publisher names only a month ("March 2027"), so the page never
+    # prints a day the publisher did not.
+    precision: Literal["day", "month"] = "day"
+    # What the release brings, in the publisher's terms: "September 2026", "counties".
+    covers: str = Field(min_length=1)
+
+
+class ReleaseCalendar(BaseModel):
+    """The publisher's own release calendar (2026-10-02, ARCHITECTURE #298): read by
+    hand from `url` on `checked`, never inferred from history. Either `weekly`, for a
+    release on a fixed weekday, or the `dates` the publisher has announced; a list that
+    runs out leaves the page saying no date is announced, until someone reads the
+    calendar again."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    url: str
+    checked: date
+    weekly: Weekday | None = None
+    dates: list[ReleaseDate] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _one_kind(self) -> ReleaseCalendar:
+        if (self.weekly is None) == (not self.dates):
+            raise ValueError("a release calendar is either weekly or a list of dates")
+        if self.dates != sorted(self.dates, key=lambda d: d.day):
+            raise ValueError("a release calendar's dates must be in order")
+        return self
+
+
 class Source(BaseModel):
     """One public data source. ``adapter`` is resolved at Milestone 2."""
 
@@ -277,6 +316,9 @@ class Source(BaseModel):
     # What the terms say about each commercial use (Milestone 32). Required of every
     # source but the platform's own, whose figures inherit their inputs' (check-config).
     commercial: CommercialRights | None = None
+    # When the publisher says its next release comes (#298). Absent where it publishes
+    # no calendar, which the freshness page then says rather than guessing one.
+    release_calendar: ReleaseCalendar | None = None
 
 
 class CommercialRights(BaseModel):

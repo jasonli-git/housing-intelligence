@@ -36,11 +36,14 @@ export const STATUS_COPY: Record<FreshnessStatus, { label: string; means: string
       "are the figures from the last time it could.",
   },
   not_tracked: {
-    label: "No release schedule",
+    // Not "No release schedule": FRED and Zillow publish to a fixed address and still
+    // keep a calendar, which the Next release column now shows (#298).
+    label: "Latest file, re-read",
     means:
       "This source publishes to one fixed address and is re-read whenever that file " +
-      "changes, or is held at a chosen edition on purpose. Either way there is no dated " +
-      "release to watch for, and this page does not yet record when it was last read.",
+      "changes, or is held at a chosen edition on purpose. Either way there is no " +
+      "numbered edition to watch for, and this page does not yet record when it was " +
+      "last read.",
   },
 };
 
@@ -115,12 +118,51 @@ export function stillUnderWay(generatedAt: string, periodEnd: string | null): bo
   return periodEnd !== null && periodEnd.slice(0, 10) > generatedAt.slice(0, 10);
 }
 
-/** What comes next, only where the publisher itself has said: "2027, from Oct 1, 2026". */
-export function nextLabel(source: SourceFreshness): string {
-  if (!source.pending) return "—";
-  return source.pending_from
-    ? `${source.pending}, from ${dayLabel(source.pending_from)}`
-    : source.pending;
+const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+
+export type NextRelease = { label: string; detail: string | null };
+
+/**
+ * What comes next, only where the publisher itself has said (#298): a release already
+ * out and waiting to take effect ("2027, from Oct 1, 2026"); else the first date on
+ * the publisher's calendar not yet past on `today` (an ISO day, the reader's); else the
+ * next day a weekly release keeps; else that no date is announced — never a date guessed
+ * from history.
+ */
+export function nextRelease(source: SourceFreshness, today: string): NextRelease {
+  if (source.pending) {
+    return {
+      label: source.pending_from ? `${source.pending}, from ${dayLabel(source.pending_from)}` : source.pending,
+      detail: "published, not yet in force",
+    };
+  }
+  const upcoming = (source.expected ?? []).find((r) =>
+    r.precision === "month" ? r.day.slice(0, 7) >= today.slice(0, 7) : r.day >= today,
+  );
+  if (upcoming) {
+    return {
+      label: upcoming.precision === "month" ? monthLabel(upcoming.day) : dayLabel(upcoming.day),
+      detail: upcoming.covers,
+    };
+  }
+  if (source.expected_weekly) {
+    const want = WEEKDAYS.indexOf(source.expected_weekly);
+    const day = new Date(`${today}T00:00:00Z`);
+    day.setUTCDate(day.getUTCDate() + ((want - day.getUTCDay() + 7) % 7));
+    return {
+      label: dayLabel(day.toISOString().slice(0, 10)),
+      detail: `weekly, ${source.expected_weekly[0].toUpperCase()}${source.expected_weekly.slice(1)}s`,
+    };
+  }
+  // One wording for a calendar run out and a publisher with none: either way the
+  // publisher has announced no date, and the Census Bureau, say, keeps a calendar it has
+  // not yet filled in for the next ACS edition.
+  return { label: "No date announced", detail: null };
+}
+
+/** The label alone, for a plain cell. */
+export function nextLabel(source: SourceFreshness, today: string): string {
+  return nextRelease(source, today).label;
 }
 
 function utcDay(iso: string): number {

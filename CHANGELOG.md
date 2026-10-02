@@ -3,6 +3,16 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.34.4] — 2026-10-02
+
+### Changed
+
+- **"Next release" on `/freshness` is filled from each publisher's own calendar**
+  (ARCHITECTURE #298), linked: BLS, FHFA, Zillow, the Census Bureau's population
+  estimates, HUD's Fair Market Rents and Freddie Mac's weekly rate. A source with no
+  announced date says so. The status once worded "No release schedule" reads "Latest
+  file, re-read".
+
 ## [0.34.2] — 2026-10-02
 
 ### Changed

@@ -641,6 +641,12 @@ export type SourceFreshness = {
   pending_from: string | null;
   /** When this source's data was last downloaded. ISO timestamp. */
   acquired_at: string | null;
+  /** The publisher's announced releases from the build day on, as its calendar says. */
+  expected?: { day: string; precision: "day" | "month"; covers: string }[];
+  /** The weekday a weekly release keeps, where that is the calendar. */
+  expected_weekly?: string | null;
+  /** Where the publisher's calendar is, when it has one. */
+  calendar_url?: string | null;
 };
 
 export type FreshnessReport = {

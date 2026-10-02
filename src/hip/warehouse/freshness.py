@@ -32,11 +32,16 @@ exactly the case where guessing one would read as more precision than exists.
 page's job, not this one's. Both are recorded here as what they need, not faked to
 fill out a list.
 
-**"Next expected" is the discovery row's own `pending_from`, or nothing.** A source
-with a pending release already states its own next date; a source without one gets no
-invented schedule, for the same reason `nj_modiv`'s real next-publication date —
-known only from a private email — stays out of this file entirely and out of every
-public page. `config/sources.yml`'s `notes` field is never read here.
+**"Next release" is what the publisher said, or nothing.** A release already published
+and waiting to take effect states its own date (`pending_from`). Otherwise the date
+comes from the publisher's own calendar, recorded by hand in `config/sources.yml`
+(`release_calendar`, #298, amending this file's first rule of no schedule at all): the
+announced dates still ahead, or the weekday a weekly release keeps, with the calendar's
+address so a reader can check it. Nothing is inferred from a source's history — MOD-IV's
+gaps are why — and a source whose publisher announces no date says so. `nj_modiv`'s
+real next-publication date, known only from a private email, stays out of this file
+entirely and out of every public page; `config/sources.yml`'s `notes` field is never
+read here.
 """
 
 from __future__ import annotations
@@ -51,7 +56,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from hip import __version__
-from hip.config import REPO_ROOT, Source
+from hip.config import REPO_ROOT, ReleaseDate, Source, Weekday
 
 Status = Literal["current", "pending", "unreachable", "not_tracked"]
 
@@ -73,6 +78,12 @@ class SourceFreshness(BaseModel):
     pending_from: str | None = None
     # When this source's data was last downloaded, from `source_releases`.
     acquired_at: datetime | None = None
+    # The publisher's calendar (#298): its announced releases from the day this report
+    # was built, or the weekday of a weekly one, and where it says so. The page picks
+    # the next from the reader's own clock, so a quiet week cannot leave a passed date.
+    expected: list[ReleaseDate] = []
+    expected_weekly: Weekday | None = None
+    calendar_url: str | None = None
 
 
 class FreshnessReport(BaseModel):
@@ -89,6 +100,14 @@ def _status(discovery: dict[str, object] | None) -> Status:
     if discovery["pending"]:
         return "pending"
     return "current"
+
+
+def _not_yet_past(release: ReleaseDate, today: date) -> bool:
+    """A release still to come, or under way: a month-precise one counts until its month
+    ends, since the publisher has not said which day."""
+    if release.precision == "month":
+        return (release.day.year, release.day.month) >= (today.year, today.month)
+    return release.day >= today
 
 
 def _published_date(value: str | None) -> str | None:
@@ -184,6 +203,8 @@ def build_report(
             continue
         discovery = discoveries.get(source_id)
         start, end = observed.get(source_id, (None, None))
+        calendar = source.release_calendar
+        today = datetime.now(UTC).date()
         rows.append(
             SourceFreshness(
                 source_id=source_id,
@@ -202,6 +223,13 @@ def build_report(
                     else None
                 ),
                 acquired_at=acquired.get(source_id),
+                expected=(
+                    [d for d in calendar.dates if _not_yet_past(d, today)]
+                    if calendar
+                    else []
+                ),
+                expected_weekly=calendar.weekly if calendar else None,
+                calendar_url=calendar.url if calendar else None,
             )
         )
 

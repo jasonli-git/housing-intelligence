@@ -369,3 +369,50 @@ def test_page_changes_compares_what_a_reader_sees_not_dates() -> None:
 
     # Never published: every line is new.
     assert page_changes(None, last_week) == ["bls", "hud_fmr"]
+
+
+# --- The publisher's own calendar (#298). ----------------------------------------------
+
+
+def test_a_release_calendar_is_weekly_or_dated_and_in_order() -> None:
+    from pydantic import ValidationError
+
+    from hip.config import ReleaseCalendar
+
+    ReleaseCalendar(url="u", checked=date(2026, 10, 2), weekly="thursday")
+    with pytest.raises(ValidationError, match="either weekly or a list"):
+        ReleaseCalendar(url="u", checked=date(2026, 10, 2))
+    with pytest.raises(ValidationError, match="in order"):
+        ReleaseCalendar(
+            url="u",
+            checked=date(2026, 10, 2),
+            dates=[
+                {"day": date(2026, 12, 1), "covers": "b"},
+                {"day": date(2026, 11, 1), "covers": "a"},
+            ],
+        )
+
+
+def test_a_month_precise_release_counts_until_its_month_ends() -> None:
+    from hip.config import ReleaseDate
+    from hip.warehouse.freshness import _not_yet_past
+
+    march = ReleaseDate(day=date(2027, 3, 1), precision="month", covers="counties")
+    assert _not_yet_past(march, date(2027, 3, 20))
+    assert not _not_yet_past(march, date(2027, 4, 1))
+    day = ReleaseDate(day=date(2026, 10, 28), covers="September 2026")
+    assert _not_yet_past(day, date(2026, 10, 28))
+    assert not _not_yet_past(day, date(2026, 10, 29))
+
+
+def test_modiv_never_carries_a_release_calendar() -> None:
+    """Its real next date is known only from a private email (this module's docstring)."""
+    from hip.config import load_sources
+
+    sources = load_sources()
+    assert sources["nj_modiv"].release_calendar is None
+    assert sources["njgin_parcels"].release_calendar is None
+    # Every calendar names where it was read and when.
+    for source in sources.values():
+        if source.release_calendar:
+            assert source.release_calendar.url.startswith("https://")

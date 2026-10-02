@@ -315,6 +315,17 @@ first raised, not where it must be done.
 
 ### Documentation upkeep
 
+- [ ] **Re-read the publishers' release calendars before they run out.** (#298) Recorded
+      by hand on 2026-10-02 in `config/sources.yml`: BLS's ends 2026-12-30, Zillow's
+      2026-12-17, FHFA's 2027-11-30, the Census Bureau's population estimates May 2027,
+      HUD's rents 2027-10-01. Past the last date the page says "No date announced",
+      which is true but less useful. Check each January; add the ACS edition's date when
+      the Census Bureau announces it.
+- [ ] **Gemini Flash prices double on 2027-01-01.** Gemini 3.6–3.8 Flash's introductory
+      $0.75 / $3.75 per million tokens ends 2026-12-31 and becomes $1.50 / $7.50 (Flex
+      half of each). Update `config/evaluation.yml` that day, or `hip explain`'s cost
+      line will under-report by half.
+
 - [ ] **Which README figures are mechanically derivable has never been settled.** The
       status counts (regions, observations, metrics, sources), the Tech Stack, the
       evaluation table and the resource and storage figures all have a queryable or
