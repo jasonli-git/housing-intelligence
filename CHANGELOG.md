@@ -3,6 +3,15 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.33.1] — 2026-10-02
+
+### Fixed
+
+- **The property-tax lookup loads on the live site** (ARCHITECTURE #291). The artifact
+  bucket sent no CORS header, so a browser refused every town's parcel file. The bucket
+  now allows GET from the site's own origin, set by `make r2-cors` from
+  `deploy/r2-cors.json`, and `make check-live` reads a parcel file the way the page does.
+
 ## [0.33.0] — 2026-10-02
 
 Milestone 37, property tax: what you'd actually pay.

@@ -689,9 +689,14 @@ The platform has no request-time compute, so production is a set of files rather
 running service. `make publish` builds them; `make deploy` sends them.
 
 ```bash
-make publish   # dist/artifacts (5,917 files, 109 MB) + dist/site (13,657 files, 600 MB)
+make publish   # dist/artifacts (9,488 files, about 0.6 GB) + dist/site (14,276 files, 2.9 GB)
 make deploy    # artifacts -> object storage, site -> static host
+make r2-cors   # once per bucket: let the site's pages read the artifacts (the /tax lookup)
 ```
+
+`make r2-cors` applies `deploy/r2-cors.json`, which lets `housing.jasonli.app` — and no
+other origin — read the bucket from a browser: GET and HEAD only. The property-tax
+lookup needs it to load a town's parcels; `make check-live` fails without it.
 
 Two directories because they go to two hosts, and that split is forced by measurement
 rather than taste (ARCHITECTURE #68): the export is three times the size of the data it
