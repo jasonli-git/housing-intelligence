@@ -530,6 +530,31 @@ sources:
       One PDF a year from 2017, each naming the taxing districts recognized in that
       year's Director's Table for a revaluation or reassessment. Milestone 36 (#287).
 
+  nj_equalized:
+    name: Table of Equalized Valuations
+    publisher: New Jersey Division of Taxation
+    license: Open public record
+    licence_class: public_record
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        As nj_sr1a: New Jersey's legal statement, and nothing marked on the tables.
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-10-02
+    terms_note: >-
+      As nj_sr1a: the statement lets anyone view, copy or distribute State information
+      unless the material says otherwise, and the 2026 table does not.
+    url: https://www.nj.gov/treasury/taxation/lpt/statdata.shtml
+    cadence: annual
+    adapter: hip.sources.nj_equalized:NjEqualizedAdapter
+    fallback: >-
+      The Division of Taxation's statistics page links each year's table; its URL has
+      changed shape between years, so a new year is added to `PUBLISHED` from that page.
+    notes: >-
+      Equalized valuation per taxing district, certified each October; the weights a
+      county's effective tax rate is computed with. Milestone 37 (#290).
+
   njgin_parcels:
     name: NJ statewide parcel boundaries
     publisher: NJ Office of GIS (NJGIN)

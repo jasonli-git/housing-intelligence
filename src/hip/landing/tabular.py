@@ -188,19 +188,40 @@ def land_pdf(
     overwrite: bool = False,
 ) -> LandedTable:
     """Transcode a published PDF's text to Parquet via the adapter's reading of it
-    (Milestone 36).
+    (Milestones 36 and 37).
 
-    Landing extracts the text, page by page, which is a matter of the format; what the
-    lines mean is the adapter's (`pdf_records`), as `to_records` is for JSON.
+    Landing extracts the text with Poppler's `pdftotext -layout`; what the lines mean is
+    the adapter's (`pdf_records`), as `to_records` is for JSON. Not pypdf, which M36
+    first used: on the Table of Equalized Valuations its default mode cut 2022's Rocky
+    Hill line off mid-number and its layout mode scrambled 2024's Bernardsville, while
+    `pdftotext` read every line of every table and list (ARCHITECTURE #290).
     """
-    from pypdf import PdfReader
+    return _land_records(
+        release,
+        lambda: adapter.pdf_records(pdf_text(release.path), release.ref),
+        parquet_dir=parquet_dir,
+        overwrite=overwrite,
+    )
 
-    def records() -> list[dict[str, object]]:
-        reader = PdfReader(str(release.path))
-        text = "\n".join(page.extract_text() or "" for page in reader.pages)
-        return adapter.pdf_records(text, release.ref)
 
-    return _land_records(release, records, parquet_dir=parquet_dir, overwrite=overwrite)
+def pdf_text(path: Path) -> str:
+    """A PDF's text, laid out as printed, from Poppler's `pdftotext`."""
+    import shutil
+    import subprocess
+
+    tool = shutil.which("pdftotext")
+    if tool is None:
+        raise RuntimeError(
+            "PDF sources need Poppler's pdftotext: `brew install poppler` on macOS, "
+            "`apt install poppler-utils` on Debian or Ubuntu."
+        )
+    result = subprocess.run(
+        [tool, "-layout", "-enc", "UTF-8", str(path), "-"],
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+    return result.stdout
 
 
 def _land_records(

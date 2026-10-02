@@ -415,7 +415,7 @@ export default async function RegionPage({
         )
       )}
 
-      <HomeSales name={name} level={region.level} levels={packet.levels} />
+      <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} />
 
       <ForYourHousehold
         regionName={name}

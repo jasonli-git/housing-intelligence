@@ -39,6 +39,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import text
 
 from hip.api.main import app
+from hip.config import get_settings
+from hip.parcels import export as export_parcels
+from hip.sources.base import read_discovery
 from hip.warehouse.db import get_engine
 
 # The window this milestone publishes. A tuple rather than a constant because the path
@@ -331,6 +334,27 @@ def publish(root: Path) -> Result:
                     source=api_path,
                     bytes=len(payload),
                     sha256=hashlib.sha256(payload).hexdigest(),
+                )
+            )
+
+    # The property-tax lookup's files (Milestone 37): one per town, rendered from the
+    # landed parcels rather than through the API, which has no parcel endpoint and
+    # should not — 3 million rows are a download, not a query (ARCHITECTURE #289).
+    settings = get_settings()
+    discovery = read_discovery(settings.raw_dir, "nj_modiv")
+    if discovery is not None and discovery.newest.isdigit():
+        for parcel_file in export_parcels(
+            root,
+            parquet_dir=settings.parquet_dir,
+            engine=get_engine(),
+            tax_year=int(discovery.newest),
+        ):
+            result.artifacts.append(
+                Artifact(
+                    path=parcel_file.path,
+                    source="parcels",
+                    bytes=parcel_file.bytes,
+                    sha256=parcel_file.sha256,
                 )
             )
 

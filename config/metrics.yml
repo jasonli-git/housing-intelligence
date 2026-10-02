@@ -315,10 +315,12 @@ metrics:
     frequency: annual
     direction: lower_is_better
     description: >-
-      Tax per $100 of *market* value, as published by the NJ Division of Taxation.
-      Comparable across municipalities, which the general rate is not, because it
-      restates the levy against equalized rather than assessed value. Ingested, never
-      derived -- see nj_director_ratio.
+      Tax per $100 of *market* value, as published by the NJ Division of Taxation for
+      each municipality. Comparable across municipalities, which the general rate is
+      not, because it restates the levy against equalized rather than assessed value.
+      Ingested, never derived, for a municipality; a county's and the state's are its
+      towns' rates weighted by equalized valuation from the Table of Equalized
+      Valuations (Milestone 37) -- see nj_director_ratio.
     source_id: nj_tax_rates
     record_type: determination
 

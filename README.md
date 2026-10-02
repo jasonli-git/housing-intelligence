@@ -52,9 +52,11 @@ layer only explains metrics that were already computed.
 > for the number of bedrooms they need, each labelled for what it measures. Milestone 36
 > (2026-10-01) shows how homes sell in each town and county — the spread of prices, the
 > sample behind them, price per square foot, the age of what sold — and when the town
-> last revalued, from the state's own lists.
+> last revalued, from the state's own lists. Milestone 37 (2026-10-02) adds a property
+> tax lookup — any property by address or block and lot, its assessment and last year's
+> tax set against its town — and county and statewide effective tax rates.
 >
-> **Next.** Milestone 37: property tax, what you'd actually pay. See
+> **Next.** Milestone 38: approved vs built. See
 > [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
@@ -291,6 +293,12 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   rule, a typical range, a rule of thumb or the reader's own; a total missing a part says
   *partial estimate*. A reader can enter their own figures, and their personal ones follow
   them from town to town in their browser.
+- **Property tax lookup** (M37, built) — `/tax`: any New Jersey property by address or
+  block and lot, with its assessment, last year's tax, the market value the state's
+  ratio implies, its place among the town's parcels of the same class, and the town's
+  revaluation context. Served as one file per town from object storage; owner names and
+  mailing addresses are never collected. County and statewide effective tax rates,
+  weighted by equalized valuation.
 - **How homes sell here** (M36, built) — from the state's deed records, per town and
   county: the number of usable sales, the median and middle half of prices, a
   twelve-month median, price per square foot, the age of what sold and assessed value
@@ -448,6 +456,8 @@ The reasoning behind each of these, and what was rejected, is in the Decisions L
 - [`uv`](https://docs.astral.sh/uv/) — installs the pinned Python 3.12.13 itself
 - Node.js 20+ for the dashboard
 - Docker Desktop, for Postgres + PostGIS (`brew install --cask docker-desktop`)
+- Poppler's `pdftotext`, for the state's revaluation lists and Table of Equalized
+  Valuations (`brew install poppler`; `apt install poppler-utils` on Debian or Ubuntu)
 - Free API keys in `.env`: `CENSUS_API_KEY` and `FRED_API_KEY` are required (neither has
   a usable anonymous tier), `BLS_API_KEY` is strongly recommended — without it BLS
   returns 3 years of history instead of 20. Links are in `.env.example`.
