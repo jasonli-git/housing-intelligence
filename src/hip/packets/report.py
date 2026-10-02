@@ -36,6 +36,7 @@ NO_SAMPLING_ERROR = "no sampling error"
 # for both, so the dashboard classifies by metric (ARCHITECTURE #124) and so does this.
 SHARE_METRICS = frozenset(
     {
+        "sr1a_median_sales_ratio",
         "acs_renter_severe_burden",
         "acs_owner_severe_burden",
         "acs_share_detached",

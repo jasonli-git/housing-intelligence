@@ -1237,3 +1237,105 @@ metrics:
     source_id: hud_fmr
     record_type: determination
     ranked: false
+
+  # Milestone 36: how homes change hands, and when a town last revalued. Shown as
+  # levels; only price per square foot is ranked (ARCHITECTURE #288).
+
+  sr1a_sales_count:
+    label: Usable home sales, three years
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Usable one- to four-family sales recorded in the three years shown, from the
+      state's SR1A file: the sample every sales figure here rests on.
+    source_id: nj_sr1a
+    record_type: administrative
+    ranked: false
+
+  sr1a_price_lower_quartile:
+    label: Sale price, lower quarter
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      The price a quarter of usable one- to four-family sales fell below, over three
+      years, from the state's SR1A file.
+    source_id: nj_sr1a
+    record_type: administrative
+    ranked: false
+
+  sr1a_price_upper_quartile:
+    label: Sale price, upper quarter
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      The price a quarter of usable one- to four-family sales rose above, over three
+      years, from the state's SR1A file.
+    source_id: nj_sr1a
+    record_type: administrative
+    ranked: false
+
+  sr1a_median_sale_price_12m:
+    label: Median sale price, last twelve months
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      The median of usable one- to four-family sales over the twelve months to the
+      newest deed on file, from the state's SR1A file. Published only where a place had
+      50 or more such sales.
+    source_id: nj_sr1a
+    record_type: administrative
+    ranked: false
+
+  sr1a_median_year_built_sold:
+    label: Median year built, homes sold
+    unit: year
+    frequency: annual
+    direction: neutral
+    description: >-
+      The median year built of the one- to four-family homes that sold in three years,
+      from the state's SR1A file: the age of what changed hands, not of every home.
+    source_id: nj_sr1a
+    record_type: administrative
+    ranked: false
+
+  sr1a_median_price_per_sqft:
+    label: Sale price per square foot
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      The median of sale price over living area, among usable one- to four-family sales
+      in three years that record their living area, from the state's SR1A file.
+      Published only where 20 or more such sales do.
+    source_id: nj_sr1a
+    record_type: administrative
+
+  sr1a_median_sales_ratio:
+    label: Assessed value to sale price
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The median of the Division of Taxation's sales ratio — a home's assessed value
+      over its sale price — among usable one- to four-family sales in three years. Below
+      100% where assessments trail the market.
+    source_id: nj_sr1a
+    record_type: administrative
+    ranked: false
+
+  nj_revaluation_year:
+    label: Revaluation or reassessment
+    unit: year
+    frequency: annual
+    direction: neutral
+    description: >-
+      A tax year the Division of Taxation recognized a revaluation or reassessment in
+      this town, bringing assessments back toward market value. Its lists begin with
+      2017.
+    source_id: nj_revaluations
+    record_type: determination
+    ranked: false

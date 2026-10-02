@@ -49,9 +49,12 @@ layer only explains metrics that were already computed.
 > condition of the homes, vacancy, heating fuel, households and commuting — each with
 > its margin. Milestone 35 (2026-10-01) sizes answers to a reader's household: where
 > their income sits against HUD's lines for their household size, and every rent figure
-> for the number of bedrooms they need, each labelled for what it measures.
+> for the number of bedrooms they need, each labelled for what it measures. Milestone 36
+> (2026-10-01) shows how homes sell in each town and county — the spread of prices, the
+> sample behind them, price per square foot, the age of what sold — and when the town
+> last revalued, from the state's own lists.
 >
-> **Next.** Milestone 36: how homes change hands. See
+> **Next.** Milestone 37: property tax, what you'd actually pay. See
 > [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
@@ -288,6 +291,11 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   rule, a typical range, a rule of thumb or the reader's own; a total missing a part says
   *partial estimate*. A reader can enter their own figures, and their personal ones follow
   them from town to town in their browser.
+- **How homes sell here** (M36, built) — from the state's deed records, per town and
+  county: the number of usable sales, the median and middle half of prices, a
+  twelve-month median, price per square foot, the age of what sold and assessed value
+  against sale price; and the tax year a town last revalued, from the state's approval
+  lists. Counties come from their deeds, never from town medians.
 - **For your household** (M35, built) — on every county, town and ZIP page, a reader's
   household size and income set against HUD's 30%, 50% and 80% lines for the county,
   said plainly and never as eligibility; and rents by bedroom count side by side — what

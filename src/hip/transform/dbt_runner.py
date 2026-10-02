@@ -45,6 +45,7 @@ KEYED_MODELS = (
     "stg_nj_modiv",
     "stg_nj_sr1a",
     "stg_nj_tax_rates",
+    "stg_nj_revaluations",
 )
 
 # Not a metric model: it feeds region_crosswalk, not fact_metric_observation.

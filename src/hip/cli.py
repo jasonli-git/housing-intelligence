@@ -52,6 +52,7 @@ from hip.landing.tabular import (
     land_fixed_width,
     land_json,
     land_ndjson,
+    land_pdf,
     land_xlsx,
     parquet_path,
 )
@@ -698,6 +699,13 @@ def land(
                 table = land_xlsx(
                     release,
                     adapter.landing_sheet(release.ref),
+                    parquet_dir=settings.parquet_dir,
+                    overwrite=overwrite,
+                )
+            elif adapter.landing_format == "pdf":
+                table = land_pdf(
+                    release,
+                    type(adapter),
                     parquet_dir=settings.parquet_dir,
                     overwrite=overwrite,
                 )

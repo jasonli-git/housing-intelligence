@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import tempfile
 import zipfile
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -172,20 +172,58 @@ def land_json(
     data differently and that is publisher knowledge. Landing still adds no business
     logic: it writes exactly the rows the adapter reports, with the keys it reports.
     """
+    return _land_records(
+        release,
+        lambda: adapter.to_records(json.loads(release.path.read_text()), release.ref),
+        parquet_dir=parquet_dir,
+        overwrite=overwrite,
+    )
+
+
+def land_pdf(
+    release: Release,
+    adapter: type[SourceAdapter],
+    *,
+    parquet_dir: Path,
+    overwrite: bool = False,
+) -> LandedTable:
+    """Transcode a published PDF's text to Parquet via the adapter's reading of it
+    (Milestone 36).
+
+    Landing extracts the text, page by page, which is a matter of the format; what the
+    lines mean is the adapter's (`pdf_records`), as `to_records` is for JSON.
+    """
+    from pypdf import PdfReader
+
+    def records() -> list[dict[str, object]]:
+        reader = PdfReader(str(release.path))
+        text = "\n".join(page.extract_text() or "" for page in reader.pages)
+        return adapter.pdf_records(text, release.ref)
+
+    return _land_records(release, records, parquet_dir=parquet_dir, overwrite=overwrite)
+
+
+def _land_records(
+    release: Release,
+    records: Callable[[], list[dict[str, object]]],
+    *,
+    parquet_dir: Path,
+    overwrite: bool,
+) -> LandedTable:
+    """Write the rows an adapter reports to Parquet, unless already landed."""
     out = parquet_path(release, parquet_dir)
     out.parent.mkdir(parents=True, exist_ok=True)
 
     with duckdb_session() as con:
         if needs_landing(release, out, overwrite):
-            payload = json.loads(release.path.read_text())
-            records = adapter.to_records(payload, release.ref)
-            if not records:
+            rows = records()
+            if not rows:
                 raise ValueError(f"{release.ref.source_id}/{release.ref.key}: no rows")
             # Register the records as a DuckDB relation via a temporary JSON file
             # rather than building a giant INSERT: types are inferred once, and the
             # column set follows the adapter without being declared twice.
             staging = out.with_suffix(".ndjson")
-            staging.write_text("\n".join(json.dumps(r) for r in records))
+            staging.write_text("\n".join(json.dumps(r) for r in rows))
             con.execute(
                 f"COPY (SELECT * FROM read_json_auto('{staging}')) "
                 f"TO '{out}' (FORMAT PARQUET, COMPRESSION ZSTD)"

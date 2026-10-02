@@ -30,6 +30,16 @@ FMR_METRICS = frozenset(
         "fmr_to_income",
     }
 )
+# Milestone 36: what the deeds say, and what a median of them can and cannot.
+SALE_PRICE_METRICS = frozenset(
+    {
+        "sr1a_median_sale_price",
+        "sr1a_median_sale_price_12m",
+        "sr1a_price_lower_quartile",
+        "sr1a_price_upper_quartile",
+        "sr1a_median_price_per_sqft",
+    }
+)
 SAFMR_METRICS = frozenset(
     {"hud_safmr_0br", "hud_safmr_1br", "hud_safmr_2br", "hud_safmr_3br", "hud_safmr_4br"}
 )
@@ -107,6 +117,22 @@ TEXTS: dict[str, str] = {
         "Census builds from census blocks to approximate the ZIP's delivery routes; the "
         "two can differ. ZCTA figures begin with the 2016-2020 survey, the first drawn "
         "on 2020's ZCTAs, so none shows a five-year change yet."
+    ),
+    # Milestone 36, each a guardrail ROADMAP set and a test pins.
+    "sales_composition": (
+        "Sale prices describe the one- to four-family homes that sold, not every home: a "
+        "median that rises can mean pricier homes changed hands rather than homes "
+        "becoming worth more. Counties and the state are computed from the deeds "
+        "themselves, never from town medians."
+    ),
+    "sales_ratio": (
+        "The sales ratio is a home's assessed value over its sale price. Below 100% "
+        "means assessments trail the market, which they do more the longer since a town "
+        "last revalued; it is not a tax rate and says nothing alone about a bill."
+    ),
+    "revaluation_lists": (
+        "The state's revaluation and reassessment lists begin with tax year 2017; a town "
+        "on none of them has not revalued since at least then."
     ),
     # Milestone 35.
     "hud_safmr": (
@@ -231,6 +257,12 @@ def scoped_caveats(
         add("hud_county_ami", ami)
     if present & FMR_METRICS:
         add("hud_fmr_area", present & FMR_METRICS)
+    if present & SALE_PRICE_METRICS:
+        add("sales_composition", present & SALE_PRICE_METRICS)
+    if "sr1a_median_sales_ratio" in present:
+        add("sales_ratio", {"sr1a_median_sales_ratio"})
+    if "nj_revaluation_year" in present:
+        add("revaluation_lists", {"nj_revaluation_year"})
     if present & SAFMR_METRICS:
         add("hud_safmr", present & SAFMR_METRICS)
     if present & CHAS_METRICS:

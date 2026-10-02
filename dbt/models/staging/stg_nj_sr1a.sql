@@ -32,6 +32,18 @@ with deeds as (
         lpad(county_code, 2, '0') || lpad(district_code, 2, '0') as cd_code,
         '34' || lpad((2 * county_code::int - 1)::varchar, 3, '0') as county_geoid,
         verified_sales_price::bigint as price,
+        -- Milestone 36. Year built and living area are filled for 97% and 96% of usable
+        -- class-2 deeds; a blank or a zero is unknown, never a figure.
+        case when try_cast(year_built as int) between 1700 and 2026
+             then try_cast(year_built as int) end as year_built,
+        case when try_cast(living_space as int) > 0
+             then try_cast(living_space as int) end as living_area,
+        -- The Division's own sales ratio, assessed value over price, printed as a
+        -- percentage with two implied decimals ("08558" is 85.58%). Not recomputed
+        -- from `assessed_value_total`, which reads differently before the 2025 archive
+        -- (a median of $142,400 against $268,900 after) — ARCHITECTURE #288.
+        case when try_cast(sales_ratio as double) > 0
+             then try_cast(sales_ratio as double) / 10000 end as sales_ratio,
         -- YYMMDD with a two-digit year. Every published archive is 2020 or later and
         -- the observed prefixes run 18 to 26, so the pivot is never exercised in
         -- practice -- but a deed can be recorded decades after it is signed, and
@@ -103,17 +115,20 @@ with deeds as (
     -- identifier table; a county row does not, because the county half of the CD code
     -- is arithmetic -- so the ten municipalities whose names never matched still reach
     -- their county's median, exactly as ARCHITECTURE #141 describes for the tax bill.
-    select price, deed_on, release_vintage,
+    select price, year_built, living_area, sales_ratio, deed_on, release_vintage,
            municipality_geoid as geoid, 'municipality' as level
     from located where municipality_geoid is not null
     union all
-    select price, deed_on, release_vintage, county_geoid, 'county' from located
+    select price, year_built, living_area, sales_ratio, deed_on, release_vintage,
+           county_geoid, 'county' from located
     union all
-    select price, deed_on, release_vintage, '34', 'state' from located
+    select price, year_built, living_area, sales_ratio, deed_on, release_vintage,
+           '34', 'state' from located
 
 ), placed as (
 
-    select l.price, l.release_vintage, l.geoid, l.level, w.end_year
+    select l.price, l.year_built, l.living_area, l.sales_ratio, l.release_vintage,
+           l.geoid, l.level, w.end_year
     from levelled l
     join windows w
       on year(l.deed_on) between w.end_year - 2 and w.end_year
@@ -126,27 +141,89 @@ with deeds as (
         end_year,
         count(*) as sales,
         median(price) as median_price,
+        -- Milestone 36: the spread, the age of what sold, price per square foot where
+        -- living area is filled in (with its own count, which must clear the same bar),
+        -- and the state's sales ratio. Every one from the deeds at its own level, never
+        -- from the level below (ARCHITECTURE #288).
+        -- Discrete quartiles: a price someone actually paid, not one between two sales.
+        quantile_disc(price, 0.25) as price_q1,
+        quantile_disc(price, 0.75) as price_q3,
+        median(year_built) as median_year_built,
+        median(price::double / living_area) as price_per_sqft,
+        count(living_area) as sqft_sales,
+        median(sales_ratio) as sales_ratio,
         max(release_vintage) as release_vintage
     from placed
     group by 1, 2, 3
+
+), recent as (
+
+    -- The last twelve months of deeds, where a place has the sales to say something
+    -- about them alone: fresher than the three-year window, and noisier, so the bar is
+    -- 50 sales rather than 20.
+    select l.geoid, l.level, count(*) as sales, median(l.price) as median_price,
+           max(l.release_vintage) as release_vintage
+    from levelled l cross join bounds b
+    where l.deed_on > b.latest_deed - interval 12 month
+    group by 1, 2
+    having count(*) >= 50
+
+), measured as (
+
+    select geoid, level, end_year, 'sr1a_median_sale_price' as metric_id,
+           median_price::double as value, sales, release_vintage from aggregated
+    union all
+    select geoid, level, end_year, 'sr1a_sales_count', sales, sales, release_vintage
+    from aggregated
+    union all
+    select geoid, level, end_year, 'sr1a_price_lower_quartile', price_q1, sales,
+           release_vintage from aggregated
+    union all
+    select geoid, level, end_year, 'sr1a_price_upper_quartile', price_q3, sales,
+           release_vintage from aggregated
+    union all
+    select geoid, level, end_year, 'sr1a_median_year_built_sold', median_year_built,
+           sales, release_vintage from aggregated where median_year_built is not null
+    union all
+    select geoid, level, end_year, 'sr1a_median_price_per_sqft', price_per_sqft,
+           sqft_sales, release_vintage from aggregated
+    union all
+    select geoid, level, end_year, 'sr1a_median_sales_ratio', sales_ratio, sales,
+           release_vintage from aggregated where sales_ratio is not null
 
 )
 
 select
     'nj_sr1a' as source_id,
-    'sr1a_median_sale_price' as metric_id,
-    a.geoid,
-    a.level,
-    make_date(a.end_year - 2, 1, 1) as period_start,
+    m.metric_id,
+    m.geoid,
+    m.level,
+    make_date(m.end_year - 2, 1, 1) as period_start,
     -- Never claims a date the data does not reach. For a closed year this is 31
     -- December; for the year in progress it is the newest deed on file.
-    least(make_date(a.end_year, 12, 31), b.latest_deed) as period_end,
-    a.median_price::double as value,
+    least(make_date(m.end_year, 12, 31), b.latest_deed) as period_end,
+    m.value::double as value,
     'nj_cd_code' as match_method,
     'sales' as release_layer,
-    a.release_vintage
-from aggregated a
+    m.release_vintage
+from measured m
 cross join bounds b
 -- Below 20 usable sales a median is an anecdote. Suppressed rather than published with
--- a caveat, because a figure on a page is read whether or not its caveat is.
-where a.sales >= 20
+-- a caveat, because a figure on a page is read whether or not its caveat is. For price
+-- per square foot the count is of sales with living area filled in.
+where m.sales >= 20
+union all
+-- The last twelve months, dated as exactly that span.
+select
+    'nj_sr1a',
+    'sr1a_median_sale_price_12m',
+    r.geoid,
+    r.level,
+    (b.latest_deed - interval 12 month + interval 1 day)::date,
+    b.latest_deed,
+    r.median_price::double,
+    'nj_cd_code',
+    'sales',
+    r.release_vintage
+from recent r
+cross join bounds b

@@ -102,6 +102,11 @@ SAME_THING: tuple[frozenset[str], ...] = (
             "fhfa_hpi",
             "fhfa_hpi_all_transactions",
             "sr1a_median_sale_price",
+            # Milestone 36's views of the same deeds.
+            "sr1a_median_sale_price_12m",
+            "sr1a_price_lower_quartile",
+            "sr1a_price_upper_quartile",
+            "sr1a_median_price_per_sqft",
             "modiv_median_assessed_value",
         }
     ),

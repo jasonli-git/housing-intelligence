@@ -164,6 +164,23 @@ export const GROUPS: readonly Group[] = [
     ],
   },
   {
+    // How homes change hands (Milestone 36): what the deeds say, beside the median sale
+    // price in "Prices", and when the town last brought assessments back to market.
+    key: "sales",
+    title: "How homes sell",
+    ramp: "prices",
+    metrics: [
+      "sr1a_median_sale_price_12m",
+      "sr1a_price_lower_quartile",
+      "sr1a_price_upper_quartile",
+      "sr1a_sales_count",
+      "sr1a_median_price_per_sqft",
+      "sr1a_median_year_built_sold",
+      "sr1a_median_sales_ratio",
+      "nj_revaluation_year",
+    ],
+  },
+  {
     // Who lives here and how they get around (Milestone 34).
     key: "people",
     title: "Households and getting around",

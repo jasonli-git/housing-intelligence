@@ -4,10 +4,18 @@ import { GROUPS, groupRows, rampFor } from "@/lib/groups";
 
 // The metric catalog as `GET /metrics` returned it on 2026-09-20, with Milestone 33's six
 // running costs, Milestone 34's fifty ACS figures and Milestone 35's nine Fair Market
-// Rents added 2026-10-01. A metric added to
+// Rents and Milestone 36's eight sales figures added 2026-10-01. A metric added to
 // `config/metrics.yml` belongs here and in a group; until it is, it renders under "Other
 // measures" rather than disappearing.
 const CATALOG = [
+  "sr1a_sales_count",
+  "sr1a_price_lower_quartile",
+  "sr1a_price_upper_quartile",
+  "sr1a_median_sale_price_12m",
+  "sr1a_median_year_built_sold",
+  "sr1a_median_price_per_sqft",
+  "sr1a_median_sales_ratio",
+  "nj_revaluation_year",
   "hud_fmr_0br",
   "hud_fmr_1br",
   "hud_fmr_3br",
