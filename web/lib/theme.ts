@@ -1,5 +1,6 @@
 /**
- * The reader's theme: follow the system, or choose light or dark (ARCHITECTURE #134).
+ * The reader's theme: follow the system, or choose light or dark (ARCHITECTURE #134,
+ * #292).
  *
  * Kept in `localStorage` under one key and applied as `data-theme` on `<html>`, which
  * `tokens.css` already honours: `:root[data-theme="dark"]` forces the dark palette, and
@@ -13,13 +14,27 @@
 
 export type Theme = "system" | "light" | "dark";
 
-export const THEMES: readonly Theme[] = ["system", "light", "dark"];
-
 export const THEME_KEY = "housing-theme";
 
 /** A stored value as a theme. Anything unrecognised — or nothing — is "system". */
 export function parseTheme(stored: string | null | undefined): Theme {
   return stored === "light" || stored === "dark" ? stored : "system";
+}
+
+/** The theme the page shows: a choice, or the system's when there is none. */
+export function shown(theme: Theme, systemDark: boolean): "light" | "dark" {
+  return theme === "system" ? (systemDark ? "dark" : "light") : theme;
+}
+
+/**
+ * What one press of the toggle chooses: the other of light and dark from what is shown.
+ * A press that lands on the system's own theme returns to following the system rather
+ * than pinning it, so a reader who flips and flips back is following their system again
+ * — and the site follows it the next time it changes (ARCHITECTURE #292).
+ */
+export function toggled(theme: Theme, systemDark: boolean): Theme {
+  const next = shown(theme, systemDark) === "dark" ? "light" : "dark";
+  return next === shown("system", systemDark) ? "system" : next;
 }
 
 type Root = {

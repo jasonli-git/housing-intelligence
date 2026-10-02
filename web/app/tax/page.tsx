@@ -33,7 +33,7 @@ export default async function TaxPage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} />
+      <Masthead affordability={{ kind: "route" }} taxActive />
       <main className="shell atlas-page atlas-tool">
         <header className="page-head" data-kind="tool">
           <div>

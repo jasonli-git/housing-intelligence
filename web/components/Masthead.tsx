@@ -20,9 +20,18 @@ const REPOSITORY = "https://github.com/jasonli-git/housing-intelligence";
  * `Jason Li` navigates in place, as jasonli.app's own project links do: the two are one
  * ecosystem, not a site and an external one. Search replaced the county picker in
  * Milestone 23, and the GitHub mark joined it so a reader can reach the repository behind
- * every figure from any page.
+ * every figure from any page. The property-tax lookup (Milestone 37) is the one page
+ * linked from the bar, as a short pill beside the icons; the theme is one button since
+ * #292.
  */
-export function Masthead({ affordability }: { affordability: AffordabilityControl }) {
+export function Masthead({
+  affordability,
+  taxActive = false,
+}: {
+  affordability: AffordabilityControl;
+  /** On the property-tax lookup itself, whose link the bar marks as the current page. */
+  taxActive?: boolean;
+}) {
   return (
     <>
       <nav className="bar print-hide" aria-label="Sites">
@@ -39,11 +48,22 @@ export function Masthead({ affordability }: { affordability: AffordabilityContro
               Housing
             </Link>
           </div>
-          {/* Theme and the code stay on the trail's row at every width — nothing a
+          {/* The tax link, theme and the code stay on the trail's row at every width — nothing a
               reader needs mid-search. Search and the affordability switch are the pair
               that wraps to its own row on a phone, since together they are wider than
               the trail leaves room for (#204, mobile masthead collision). */}
           <div className="bar-controls">
+            <Link
+              className="bar-link"
+              href="/tax"
+              aria-label="Property tax lookup"
+              aria-current={taxActive ? "page" : undefined}
+            >
+              <span className="bar-link-long">Property tax</span>
+              <span className="bar-link-short" aria-hidden="true">
+                Tax
+              </span>
+            </Link>
             <ThemeToggle />
             <a
               className="bar-icon"

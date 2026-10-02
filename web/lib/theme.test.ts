@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { THEME_KEY, THEME_SCRIPT, applyTheme, parseTheme } from "@/lib/theme";
+import { THEME_KEY, THEME_SCRIPT, applyTheme, parseTheme, shown, toggled } from "@/lib/theme";
 
 function fakeRoot() {
   const attributes = new Map<string, string>();
@@ -62,5 +62,24 @@ describe("the pre-paint script", () => {
 
   it("lets the page render when storage cannot be read", () => {
     expect(() => runScript("dark", { throws: true })).not.toThrow();
+  });
+});
+
+describe("toggled", () => {
+  it("switches to the other of what is shown", () => {
+    // A dark system, not overridden: shown dark, a press chooses light.
+    expect(shown("system", true)).toBe("dark");
+    expect(toggled("system", true)).toBe("light");
+    expect(toggled("system", false)).toBe("dark");
+  });
+
+  it("returns to following the system when a press lands on the system's theme", () => {
+    expect(toggled("light", true)).toBe("system");
+    expect(toggled("dark", false)).toBe("system");
+  });
+
+  it("keeps a choice that differs from the system", () => {
+    expect(toggled("dark", true)).toBe("light");
+    expect(toggled("light", false)).toBe("dark");
   });
 });

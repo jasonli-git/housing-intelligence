@@ -136,19 +136,34 @@ main.shell { padding-bottom: 2rem; }
 }
 .wordmark:hover { text-decoration: none; color: var(--series-1); }
 .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--jl-live); }
-/* The theme control: three icon buttons in one pill, the chosen one raised, like the
-   New Jersey page's window control, so it reads as a choice of three (#134). */
-.theme {
-  display: inline-flex; border: 1px solid var(--border); border-radius: 8px;
-  padding: 2px; background: var(--surface-2);
+/* The theme toggle: one button, its icon picked by CSS from the theme the page shows — a
+   sun on a dark page, a moon on a light one, each where a press leads (#292). Done in CSS
+   so the first paint is right before React knows the theme. */
+.theme-toggle { cursor: pointer; }
+.theme-toggle svg { fill: none; }
+.theme-toggle .theme-sun { display: none; }
+:root[data-theme="dark"] .theme-toggle .theme-sun { display: block; }
+:root[data-theme="dark"] .theme-toggle .theme-moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-toggle .theme-sun { display: block; }
+  :root:not([data-theme="light"]) .theme-toggle .theme-moon { display: none; }
 }
-.theme button {
-  width: 30px; height: 28px; padding: 0; justify-content: center;
-  border: 0; border-radius: 6px; background: transparent; color: var(--text-muted);
+
+/* The property-tax lookup's way in (Milestone 37): a short text link beside the icons,
+   in their size and border, so the bar gains one compact pill rather than a menu. */
+.bar-link {
+  display: inline-flex; align-items: center; height: 32px; padding: 0 0.7rem;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2);
+  color: var(--text-muted); font-size: var(--text-small); text-decoration: none;
+  white-space: nowrap;
 }
-.theme button:hover { color: var(--text-primary); background: transparent; }
-.theme button[aria-checked="true"] {
-  background: var(--surface-1); color: var(--text-primary); box-shadow: 0 0 0 1px var(--border);
+.bar-link:hover { color: var(--text-primary); }
+.bar-link[aria-current="page"] { color: var(--text-primary); border-color: var(--text-muted); }
+/* On a phone the full label pushes the icons off the trail's row (#204), so it shortens. */
+.bar-link-short { display: none; }
+@media (max-width: 480px) {
+  .bar-link-long { display: none; }
+  .bar-link-short { display: inline; }
 }
 
 /* The non-commercial terms, across the page under the bar (#128, #133, #135, #136).
