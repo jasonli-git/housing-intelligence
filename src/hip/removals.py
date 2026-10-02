@@ -10,9 +10,15 @@ back into one.
 
 Each entry is held twice — by block and lot, and by house number and normalised street —
 and a parcel matching either is dropped, so renumbering a lot or respelling a street
-cannot bring a withdrawn address back. The file is machine-local and never committed
-(`Settings.address_removals`): a public list of protected addresses would itself be the
-disclosure.
+cannot bring a withdrawn address back. The file lives in iCloud Drive beside the refresh
+toggle (`Settings.removals_file`), outside the repository: synced and backed up, and
+never committed, since a public list of protected addresses would itself be the
+disclosure (ARCHITECTURE #295, #296).
+
+**A missing list is an error, not an empty one.** An empty list would publish every
+withdrawn address again, so the list's folder must exist and the file must be on disk,
+not an iCloud placeholder still to download; `require` says which. Before the first
+notice the folder exists and the file does not, which is the one state read as "none".
 """
 
 from __future__ import annotations
@@ -36,14 +42,36 @@ class Removal:
     received: str
 
 
+class RemovalListUnavailable(RuntimeError):
+    """The removal list cannot be read, so publishing could put addresses back."""
+
+
+def require(path: Path) -> None:
+    """Refuse unless `path`'s folder is here and the list, if it exists, is downloaded."""
+    if not path.parent.is_dir():
+        raise RemovalListUnavailable(
+            f"the Daniel's Law removal list's folder, {path.parent}, is not on this "
+            "machine. Publishing without it would put withdrawn addresses back: sign in "
+            "to iCloud Drive and let it sync, or set HIP_ADDRESS_REMOVALS."
+        )
+    placeholder = path.with_name(f".{path.name}.icloud")
+    if placeholder.exists() and not path.exists():
+        raise RemovalListUnavailable(
+            f"{path.name} is in iCloud but not downloaded to this Mac yet. Open the "
+            "folder in Finder to download it, then try again."
+        )
+
+
 def read(path: Path) -> list[Removal]:
-    """The withdrawn parcels; none when the file does not exist yet."""
+    """The withdrawn parcels, after `require`; none before the first notice."""
+    require(path)
     if not path.exists():
         return []
     return [Removal(**entry) for entry in json.loads(path.read_text())]
 
 
 def write(path: Path, removals: list[Removal]) -> None:
+    require(path)
     path.write_text(json.dumps([asdict(r) for r in removals], indent=2) + "\n")
 
 

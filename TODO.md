@@ -14,15 +14,14 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 38 built; PR awaiting review (2026-10-02)
+## Now — Milestone 38 live; the removal list moves to iCloud (2026-10-02)
 
-On `milestone/m38-statewide-tax-search` (0.34.0): statewide address search, county
-links, and Daniel's Law removal (ARCHITECTURE #293–#295). **Before it goes live:** the
-owner sets up `privacy@jasonli.app` (Cloudflare Email Routing to their inbox), since the
-page names it. Then `make publish deploy` and `make check-live`, whose new statewide
-search check has not yet run against the live site.
+Milestone 38 deployed as 0.34.0 and `check-live` passed, statewide search included.
+Merged and **not yet deployed**: 0.34.1, affordability mode starting at the budget tool
+(PR #72). On `change/removals-in-icloud` (0.34.2): the Daniel's Law list defaults to
+iCloud Drive and a publish refuses without it (ARCHITECTURE #296).
 
-Milestone 39, approved vs built, follows.
+Milestone 39, approved vs built, is next.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -273,10 +272,12 @@ first raised, not where it must be done.
       worked by hand on 2026-10-02; a county moving its search would leave a dead link
       until someone notices. `check-live` could request each, at the cost of 21 requests
       to county servers per deploy.
-- [ ] **The Daniel's Law removal list has one copy.** (M38, #295) `address-removals.local`
-      is machine-local by design; a publish from a machine without it would put
-      withdrawn addresses back. Needs a private backup and, ideally, a publish that
-      refuses to run when a list once existed and is now missing.
+- [ ] **A removal list deleted inside iCloud reads as "no removals".** (#296) Publishing
+      refuses when the list's folder is missing or the file is an undownloaded
+      placeholder, but a list deleted outright (iCloud keeps it 30 days in Recently
+      Deleted) looks like the state before the first notice. A count of withdrawals
+      recorded in the published manifest, checked against the next publish, would catch
+      it.
 
 - [ ] **The site's status link cannot say when a check last succeeded.** (PR #45, #251)
       It names the Friday schedule and the build date; a quiet Friday that found nothing
@@ -439,6 +440,10 @@ first raised, not where it must be done.
       map layer would be an enormous download.
 
 ## Parked / needs user input
+
+- [ ] **Advanced Data Protection for the removal list.** (#296) The list holds protected
+      addresses in iCloud Drive, which Apple can read unless Advanced Data Protection is
+      on (System Settings → Apple Account → iCloud). Tabled by the owner 2026-10-02.
 
 - [ ] **Readings stale only when the figures they cite change?** Zillow's monthly
       release moves every packet's content hash, so every reading is rewritten monthly

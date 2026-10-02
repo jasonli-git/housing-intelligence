@@ -198,14 +198,13 @@ class Settings(BaseSettings):
         Path.home() / "Library/Mobile Documents/com~apple~CloudDocs/HousingPipeline"
     )
     # Addresses withdrawn from the property-tax lookup at a covered person's request under
-    # Daniel's Law (Milestone 38, `hip.removals`). Machine-local and never committed — a
-    # public list of protected addresses would be the disclosure the law forbids — so the
-    # default name ends in `.local`, which `.gitignore` excludes.
-    address_removals: Path = REPO_ROOT / "address-removals.local"
+    # Daniel's Law (Milestone 38, `hip.removals`). Unset, it is `removals_file` in
+    # `gate_dir`: synced and backed up by iCloud, followed to any Mac signed in, and
+    # outside the repository, so it can never be committed — a public list of protected
+    # addresses would be the disclosure the law forbids (ARCHITECTURE #296).
+    address_removals: Path | None = None
 
-    @field_validator(
-        "data_dir", "config_dir", "reports_dir", "gate_dir", "address_removals"
-    )
+    @field_validator("data_dir", "config_dir", "reports_dir", "gate_dir")
     @classmethod
     def _expand(cls, value: Path) -> Path:
         """Expand `~` and resolve, so a hand-written .env path behaves like a shell one.
@@ -214,6 +213,14 @@ class Settings(BaseSettings):
         directory literally named `~` in the repo root the first time a stage ran.
         """
         return value.expanduser().resolve()
+
+    @property
+    def removals_file(self) -> Path:
+        """The Daniel's Law removal list: `address_removals`, or beside the refresh
+        toggle in `gate_dir`."""
+        if self.address_removals is not None:
+            return self.address_removals.expanduser().resolve()
+        return self.gate_dir / "address-removals.json"
 
     @property
     def raw_dir(self) -> Path:

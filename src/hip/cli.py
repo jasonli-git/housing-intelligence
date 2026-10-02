@@ -69,7 +69,7 @@ from hip.packets import (
 from hip.parcels import find_by_address as find_parcels_by_address
 from hip.publish import publish as run_publish
 from hip.refresh import AcquireReport
-from hip.removals import Removal
+from hip.removals import Removal, RemovalListUnavailable
 from hip.removals import read as read_removals
 from hip.removals import write as write_removals
 from hip.sources.base import Discovery, Release, SourceAdapter, SourceError, redact
@@ -282,7 +282,11 @@ def publish_command(
     root = out or settings.data_dir / "publish"
     root.mkdir(parents=True, exist_ok=True)
 
-    result = run_publish(root)
+    try:
+        result = run_publish(root)
+    except RemovalListUnavailable as error:
+        typer.secho(f"Not published: {error}", fg=typer.colors.RED)
+        raise typer.Exit(1) from error
 
     typer.echo(f"{len(result.artifacts):>7,} artifacts")
     typer.echo(f"{human_bytes(result.total_bytes):>7} on disk")
@@ -306,9 +310,9 @@ def remove_address_command(
 ) -> None:
     """Withdraw an address from the property-tax lookup under Daniel's Law.
 
-    Adds every parcel at the address to the machine-local removal list. The address
+    Adds every parcel at the address to the removal list in iCloud Drive. The address
     leaves the live site at the next `make publish deploy`, which must follow within ten
-    business days of the notice (ARCHITECTURE #295).
+    business days of the notice (ARCHITECTURE #295, #296).
     """
     settings = get_settings()
     engine = get_engine()
@@ -339,7 +343,11 @@ def remove_address_command(
         raise typer.Exit(1)
     day = date.fromisoformat(received) if received else date.today()
     parsed = parse_address(address)
-    existing = read_removals(settings.address_removals)
+    try:
+        existing = read_removals(settings.removals_file)
+    except RemovalListUnavailable as error:
+        typer.secho(f"Not recorded: {error}", fg=typer.colors.RED)
+        raise typer.Exit(1) from error
     added = [
         Removal(
             geoid=geoid,
@@ -353,7 +361,7 @@ def remove_address_command(
         for block, lot, qualifier, _ in parcels
     ]
     new = [r for r in added if r not in existing]
-    write_removals(settings.address_removals, existing + new)
+    write_removals(settings.removals_file, existing + new)
     for block, lot, qualifier, spelled in parcels:
         unit = f", {qualifier}" if qualifier else ""
         typer.echo(f"withdrawn  {spelled} · block {block}, lot {lot}{unit} · {name}")

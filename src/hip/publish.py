@@ -42,6 +42,7 @@ from hip.api.main import app
 from hip.config import get_settings
 from hip.parcels import export as export_parcels
 from hip.removals import read as read_removals
+from hip.removals import require as require_removals
 from hip.sources.base import read_discovery
 from hip.warehouse.db import get_engine
 
@@ -299,6 +300,9 @@ def publish(root: Path) -> Result:
     answered did not, and publishing a tree with a silent hole in it is worse than
     failing the run.
     """
+    # Before anything renders: a publish that cannot read the Daniel's Law removal list
+    # would put withdrawn addresses back, so it stops here rather than an hour in (#296).
+    require_removals(get_settings().removals_file)
     with get_engine().connect() as conn:
         region_ids = _regions_with_data(conn)
         keys = _ranking_keys(conn)
@@ -351,7 +355,7 @@ def publish(root: Path) -> Result:
             tax_year=int(discovery.newest),
             # Daniel's Law withdrawals (Milestone 38): left out of the town files and
             # the street index alike.
-            removals=read_removals(settings.address_removals),
+            removals=read_removals(settings.removals_file),
         ):
             result.artifacts.append(
                 Artifact(
