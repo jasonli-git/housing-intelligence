@@ -14,13 +14,21 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 37 live; the lookup's CORS fix awaiting review (2026-10-02)
+## Now — Milestone 38: find any property in New Jersey (2026-10-02)
 
-On `fix/r2-cors-for-tax-lookup` (0.33.1): the bucket rule already applied with the
-owner's approval, kept in `deploy/r2-cors.json` with `make r2-cors`, and a live check
-that reads a parcel file as the page does (ARCHITECTURE #291). Nothing to redeploy.
+On `milestone/m38-statewide-tax-search`. Tasks, in order:
 
-Milestone 38, approved vs built, is next.
+- [ ] Daniel's Law: what it protects, what the state still publishes, whether the lookup
+      needs a removal route — report to the owner before building on it
+- [ ] Address normalisation (USPS Pub. 28 suffixes and directionals), shared by the
+      index builder and the page, with tests
+- [ ] Street index: `parcels/streets/<prefix>.json`, written by `hip.parcels.export`
+- [ ] `/tax`: one statewide search box; ZIP ranks towns via the HUD crosswalk; block and
+      lot still take a town; no-house-number records explained
+- [ ] County lookup links, each checked by hand; none where a county has none
+- [ ] `check-live` searches statewide; docs pass; PR
+
+Milestone 39, approved vs built, follows.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -233,7 +241,7 @@ first raised, not where it must be done.
 
 - [ ] **The site does not say which questions it declines.** (M27 completeness run)
       ROADMAP decided on 2026-09-13 not to forecast prices or give investment advice,
-      and schedules schools, commutes, crime and flood risk for Milestones 39–45, but no
+      and schedules schools, commutes, crime and flood risk for Milestones 40–46, but no
       page tells a reader; the check counts 7 of its 17 questions as neither answered
       nor declined. A short statement on the site would move them to declined.
 - [ ] **Report a problem is on a region's two full metric tables only.** (M27, #221)
@@ -408,7 +416,7 @@ first raised, not where it must be done.
       same adapter, already anticipated.
 - [ ] **LEHD LODES** — jobs by workplace and residence per census block, supporting
       jobs-housing balance and commute-shed analysis. Large but static files.
-      **Scheduled: Milestone 43.**
+      **Scheduled: Milestone 44.**
 - [ ] **Zillow's home value reaches 388 of 564 municipalities (69%)** — a ceiling, not a
       bug. (M2, updated at M7; recounted 2026-09-27, when it was 403 before) MOD-IV landed
       and `region_identifiers` holds 554 NJ codes, so a crosswalk exists, but routing

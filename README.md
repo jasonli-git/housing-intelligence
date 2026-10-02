@@ -56,7 +56,7 @@ layer only explains metrics that were already computed.
 > tax lookup — any property by address or block and lot, its assessment and last year's
 > tax set against its town — and county and statewide effective tax rates.
 >
-> **Next.** Milestone 38: approved vs built. See
+> **Next.** Milestone 39: approved vs built. See
 > [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
