@@ -54,7 +54,9 @@ layer only explains metrics that were already computed.
 > sample behind them, price per square foot, the age of what sold — and when the town
 > last revalued, from the state's own lists. Milestone 37 (2026-10-02) adds a property
 > tax lookup — any property by address or block and lot, its assessment and last year's
-> tax set against its town — and county and statewide effective tax rates.
+> tax set against its town — and county and statewide effective tax rates. Milestone 38
+> (2026-10-02) lets that lookup find an address anywhere in the state without knowing its
+> town, links each county's own record, and adds removal on request under Daniel's Law.
 >
 > **Next.** Milestone 39: approved vs built. See
 > [ROADMAP.md](ROADMAP.md) for what is planned and
@@ -293,11 +295,14 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   rule, a typical range, a rule of thumb or the reader's own; a total missing a part says
   *partial estimate*. A reader can enter their own figures, and their personal ones follow
   them from town to town in their browser.
-- **Property tax lookup** (M37, built) — `/tax`: any New Jersey property by address or
-  block and lot, with its assessment, last year's tax, the market value the state's
-  ratio implies, its place among the town's parcels of the same class, and the town's
-  revaluation context. Served as one file per town from object storage; owner names and
-  mailing addresses are never collected. County and statewide effective tax rates,
+- **Property tax lookup** (M37–M38, built) — `/tax`: type an address
+  anywhere in New Jersey, no town needed, or a block and lot with its town. Shows the
+  assessment, last year's tax, the market value the state's ratio implies, its place
+  among the town's parcels of the same class, the town's revaluation context, and a link
+  to the county's own record. Abbreviations and condominium units match ("4 Danby Ct"
+  finds "4 DANBY COURT"). Served from object storage as a street index plus one file per
+  town; owner names and mailing addresses are never collected, and an address is removed
+  on request under Daniel's Law (below). County and statewide effective tax rates,
   weighted by equalized valuation.
 - **How homes sell here** (M36, built) — from the state's deed records, per town and
   county: the number of usable sales, the median and middle half of prices, a
@@ -696,7 +701,27 @@ make r2-cors   # once per bucket: let the site's pages read the artifacts (the /
 
 `make r2-cors` applies `deploy/r2-cors.json`, which lets `housing.jasonli.app` — and no
 other origin — read the bucket from a browser: GET and HEAD only. The property-tax
-lookup needs it to load a town's parcels; `make check-live` fails without it.
+lookup needs it to load a town's parcels; `make check-live` fails without it, and also
+types an address into the live lookup with no town chosen and expects it found.
+
+### Removing an address under Daniel's Law
+
+A judge, prosecutor or police officer, or a member of their household, can ask for their
+home address to come off the property-tax lookup; the page gives `privacy@jasonli.app`.
+The law allows **ten business days** from the notice (ARCHITECTURE #295).
+
+```bash
+uv run hip remove-address "4 Danby Ct" --town Montgomery --received 2026-10-02
+```
+
+```bash
+make publish deploy
+```
+
+The first records every parcel at the address on `address-removals.local` (machine-local,
+git-ignored, `HIP_ADDRESS_REMOVALS` to move it) and prints the deadline; the second drops
+those parcels from the published files. Keep the list backed up: it is the only record,
+and a publish from a machine without it would put the addresses back.
 
 Two directories because they go to two hosts, and that split is forced by measurement
 rather than taste (ARCHITECTURE #68): the export is three times the size of the data it

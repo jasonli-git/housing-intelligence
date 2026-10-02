@@ -14,19 +14,13 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 38: find any property in New Jersey (2026-10-02)
+## Now — Milestone 38 built; PR awaiting review (2026-10-02)
 
-On `milestone/m38-statewide-tax-search`. Tasks, in order:
-
-- [ ] Daniel's Law: what it protects, what the state still publishes, whether the lookup
-      needs a removal route — report to the owner before building on it
-- [ ] Address normalisation (USPS Pub. 28 suffixes and directionals), shared by the
-      index builder and the page, with tests
-- [ ] Street index: `parcels/streets/<prefix>.json`, written by `hip.parcels.export`
-- [ ] `/tax`: one statewide search box; ZIP ranks towns via the HUD crosswalk; block and
-      lot still take a town; no-house-number records explained
-- [ ] County lookup links, each checked by hand; none where a county has none
-- [ ] `check-live` searches statewide; docs pass; PR
+On `milestone/m38-statewide-tax-search` (0.34.0): statewide address search, county
+links, and Daniel's Law removal (ARCHITECTURE #293–#295). **Before it goes live:** the
+owner sets up `privacy@jasonli.app` (Cloudflare Email Routing to their inbox), since the
+page names it. Then `make publish deploy` and `make check-live`, whose new statewide
+search check has not yet run against the live site.
 
 Milestone 39, approved vs built, follows.
 
@@ -275,6 +269,15 @@ first raised, not where it must be done.
 
 ### Publication
 
+- [ ] **The county lookup links are not checked automatically.** (M38, #293) All 21
+      worked by hand on 2026-10-02; a county moving its search would leave a dead link
+      until someone notices. `check-live` could request each, at the cost of 21 requests
+      to county servers per deploy.
+- [ ] **The Daniel's Law removal list has one copy.** (M38, #295) `address-removals.local`
+      is machine-local by design; a publish from a machine without it would put
+      withdrawn addresses back. Needs a private backup and, ideally, a publish that
+      refuses to run when a list once existed and is now missing.
+
 - [ ] **The site's status link cannot say when a check last succeeded.** (PR #45, #251)
       It names the Friday schedule and the build date; a quiet Friday that found nothing
       leaves the build date where it was, and nothing published records the run itself.
@@ -327,6 +330,10 @@ first raised, not where it must be done.
 
 ### Housekeeping
 
+- [ ] **`search()`'s address branch in `web/lib/parcels.ts` is no longer reached.** (M38)
+      `/tax` finds addresses through `web/lib/addressSearch.ts` and calls `search` only
+      for block and lot; the address half and its tests can go.
+
 - [ ] **Nothing runs `ruff` automatically.** `make lint` exists and is run by hand, so
       a violation reaches `main` whenever someone runs `make test` and stops there —
       which happened on 2026-09-19, when the README features check landed in 0.18.x with
@@ -344,6 +351,10 @@ first raised, not where it must be done.
       it becomes an error.
 
 ### Open decisions — not scheduled, not decided
+
+- [ ] **A lawyer's read of the lookup under Daniel's Law.** (M38, #295) The removal route
+      takes the cautious reading; whether an address with no name is covered, and whether
+      the lookup needs more, is unsettled and was not reviewed by counsel.
 
 - [ ] **How should a cross-region comparison handle two price sources?** (M25, opened
       2026-09-20 by the decision in ARCHITECTURE #187) The cost card may now be priced

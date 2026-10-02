@@ -153,13 +153,14 @@ def test_one_towns_parcel_file(tmp_path: Path) -> None:  # type: ignore[no-untyp
     ).fetchall()
     if "PROP_LOC" not in {row[0] for row in landed}:
         pytest.skip("MOD-IV landed before Milestone 37's fields")
-    [written] = export(
+    files = export(
         tmp_path,
         parquet_dir=get_settings().parquet_dir,
         engine=get_engine(),
         tax_year=2024,
         towns={"3401732250"},
     )
+    [written] = [f for f in files if not f.path.startswith("parcels/streets/")]
     data = json.loads((tmp_path / written.path).read_text())
     assert data["municipality"] == "Hoboken"
     assert data["columns"] == list(COLUMNS)
