@@ -3,6 +3,28 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.32.0] — 2026-10-01
+
+Milestone 36, how homes change hands.
+
+### Added
+
+- **How homes sell here**, on every town and county page (ARCHITECTURE #288): how many
+  usable one- to four-family sales there were over three years, the median and the
+  middle half of prices, the last twelve months' median where there were 50 or more
+  sales, price per square foot, the median age of the homes that sold, and assessed
+  value as a share of sale price beside the state's Director's Ratio.
+- **When a town last revalued** (#287), from the state's approval lists, 2017 to 2026:
+  "for tax year 2024", or "none since at least 2017". 268 towns revalued or reassessed
+  in that time. A new source, `nj_revaluations`, read from the lists' PDFs.
+- Eight figures behind them, in a "How homes sell" table section; only price per square
+  foot is ranked.
+
+### Changed
+
+- Every sale-price figure says a rising median may mean pricier homes sold, and county
+  figures say they come from the deeds, never from town medians.
+
 ## [0.31.0] — 2026-10-01
 
 Milestone 35, household-sized answers.

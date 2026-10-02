@@ -505,6 +505,31 @@ sources:
       per $100 of value. Municipality level only -- a county rate needs levy weights
       these workbooks do not carry.
 
+  nj_revaluations:
+    name: Approved revaluations and reassessments
+    publisher: New Jersey Division of Taxation
+    license: Open public record
+    licence_class: public_record
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        As nj_sr1a: New Jersey's legal statement, and nothing marked on the lists.
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-10-01
+    terms_note: >-
+      As nj_sr1a: the statement lets anyone view, copy or distribute State information
+      unless the material says otherwise, and neither the page nor the 2024 list does.
+    url: https://www.nj.gov/treasury/taxation/lpt/reval.shtml
+    cadence: annual
+    adapter: hip.sources.nj_revaluations:NjRevaluationsAdapter
+    fallback: >-
+      The Division of Taxation's revaluation page links each year's list; otherwise keep
+      the lists already held, which do not change once published.
+    notes: >-
+      One PDF a year from 2017, each naming the taxing districts recognized in that
+      year's Director's Table for a revaluation or reassessment. Milestone 36 (#287).
+
   njgin_parcels:
     name: NJ statewide parcel boundaries
     publisher: NJ Office of GIS (NJGIN)

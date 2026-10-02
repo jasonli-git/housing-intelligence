@@ -20,6 +20,7 @@ from hip.sources.fred import FredAdapter
 from hip.sources.hud import HudAdapter, HudChasAdapter, HudFmrAdapter
 from hip.sources.irs_migration import MigrationAdapter
 from hip.sources.nj_modiv import ModivAdapter
+from hip.sources.nj_revaluations import NjRevaluationsAdapter
 from hip.sources.nj_sr1a import Sr1aAdapter
 from hip.sources.nj_tax_rates import NjTaxRatesAdapter
 from hip.sources.tiger import TigerAdapter
@@ -68,6 +69,7 @@ IMPLEMENTED: tuple[str, ...] = (
     ModivAdapter.source_id,
     Sr1aAdapter.source_id,
     NjTaxRatesAdapter.source_id,
+    NjRevaluationsAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -88,6 +90,7 @@ METRIC_SOURCES: tuple[str, ...] = (
     ModivAdapter.source_id,
     Sr1aAdapter.source_id,
     NjTaxRatesAdapter.source_id,
+    NjRevaluationsAdapter.source_id,
 )
 
 
@@ -154,6 +157,8 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return Sr1aAdapter()
     if source_id == NjTaxRatesAdapter.source_id:
         return NjTaxRatesAdapter(end_year=NJ_TAX_END_YEAR)
+    if source_id == NjRevaluationsAdapter.source_id:
+        return NjRevaluationsAdapter()
     if (milestone := PLANNED.get(source_id)) is not None:
         raise UnknownSourceError(
             f"'{source_id}' has no adapter yet — it ships in Milestone {milestone}. "

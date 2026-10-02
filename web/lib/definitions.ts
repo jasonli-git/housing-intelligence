@@ -382,6 +382,38 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "HUD’s rent standard for a modest four-bedroom home in this ZIP code, utilities included, set ZIP by ZIP where HUD prices the metro area that way.",
     why: "Where it exists, vouchers pay against it rather than the county figure, so it tracks rents street by street more closely.",
   },
+  sr1a_sales_count: {
+    what: "How many one- to four-family homes sold here in an arm’s-length sale over the three years shown, as the state recorded them.",
+    why: "Every sales figure on this page rests on this many sales: the fewer, the more one sale can move them.",
+  },
+  sr1a_price_lower_quartile: {
+    what: "A quarter of the homes that sold here went for less than this, over three years.",
+    why: "The cheaper end of what actually sells, which a median hides.",
+  },
+  sr1a_price_upper_quartile: {
+    what: "A quarter of the homes that sold here went for more than this, over three years.",
+    why: "With the lower quarter, it shows how wide the range of prices paid is.",
+  },
+  sr1a_median_sale_price_12m: {
+    what: "The middle price paid for homes sold here in the last twelve months on file. Shown only where 50 or more sold.",
+    why: "Fresher than the three-year figure, and noisier, so it is shown only where there are enough sales.",
+  },
+  sr1a_median_year_built_sold: {
+    what: "The middle year built of the homes that sold here over three years — the age of what changed hands, not of every home.",
+    why: "Says whether buyers here are mostly buying older homes or new ones.",
+  },
+  sr1a_median_price_per_sqft: {
+    what: "The middle sale price per square foot of living space, among homes sold here over three years that record their size.",
+    why: "Compares prices across homes of different sizes, which a median price cannot.",
+  },
+  sr1a_median_sales_ratio: {
+    what: "A home’s assessed value as a share of what it sold for, the middle of recent sales here, as the state works it out.",
+    why: "Below 100% means assessments trail the market; how far is why two towns’ tax rates cannot be compared directly.",
+  },
+  nj_revaluation_year: {
+    what: "The latest tax year the state recognized a revaluation or reassessment here, which brings assessments back toward market value. Its lists begin with 2017.",
+    why: "After a revaluation, who pays what share of the tax can change, even if the total does not.",
+  },
   hud_income_limit_80: {
     what: "The income below which HUD counts a family of four as low-income here: 80% of the area median.",
     why: "Many affordable-housing programs start from this line, each with rules of its own, so it is a reference point rather than a test of who qualifies.",

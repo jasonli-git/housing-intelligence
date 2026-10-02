@@ -500,6 +500,18 @@ class SourceAdapter(ABC):
             f"{cls.__name__} lands JSON but does not implement to_records()"
         )
 
+    @classmethod
+    def pdf_records(cls, text: str, ref: ReleaseRef) -> list[dict[str, object]]:
+        """Rows from a published PDF's extracted text.
+
+        Only called when ``landing_format == "pdf"`` (Milestone 36). Landing extracts
+        the text; what its lines mean is the publisher's layout, which is the
+        adapter's knowledge.
+        """
+        raise NotImplementedError(
+            f"{cls.__name__} lands pdf but does not implement pdf_records()"
+        )
+
     def landing_sheet(self, ref: ReleaseRef) -> str:
         """Which worksheet a release lands from, for sources published as workbooks.
 

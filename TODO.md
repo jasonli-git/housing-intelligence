@@ -14,16 +14,16 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 35 built, awaiting review (2026-10-01)
+## Now — Milestone 36 built, awaiting review (2026-10-01)
 
-On `milestone/m35-household-sized-answers` (0.31.0): the income check and the rent
-comparison by bedrooms, on every page (ARCHITECTURE #285, #286). Migration 0022.
+On `milestone/m36-how-homes-change-hands` (0.32.0): how homes sell, from SR1A, and when
+a town last revalued, from a new source (ARCHITECTURE #287, #288). Adds `pypdf`.
 
-**After the merge:** `make migrate`; the county packets gained four Fair Market Rents, so
-`hip explain` regenerates the 21 readings (about $0.19); then `make publish`, deploy and
+**After the merge:** `uv sync`; the county packets gained sales figures, so `hip explain`
+regenerates the 21 readings (about $0.10-0.20); then `make publish`, deploy and
 `make check-live`.
 
-Milestone 36, how homes change hands, is next.
+Milestone 37, property tax: what you'd actually pay, is next.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 

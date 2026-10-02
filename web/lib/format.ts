@@ -37,6 +37,7 @@ export function formatChange(pct: number): string {
  * unclassified new metric fails `make publish` rather than shipping as "0.62" or "413%".
  */
 export const SHARE_METRICS: ReadonlySet<string> = new Set([
+  "sr1a_median_sales_ratio",
   "acs_renter_severe_burden",
   "acs_owner_severe_burden",
   "acs_share_detached",

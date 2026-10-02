@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
+import { HomeSales } from "@/components/HomeSales";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
@@ -413,6 +414,8 @@ export default async function RegionPage({
           </section>
         )
       )}
+
+      <HomeSales name={name} level={region.level} levels={packet.levels} />
 
       <ForYourHousehold
         regionName={name}

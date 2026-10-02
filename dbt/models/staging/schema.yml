@@ -210,3 +210,27 @@ models:
         tests:
           - not_null
           - accepted_range: {min_value: 1000, max_value: 1000000}
+
+  - name: stg_nj_sr1a
+    description: >-
+      Usable one- to four-family sales from SR1A, per municipality, county and state over
+      three-year windows: median, quartiles, count, year built, price per square foot,
+      the state's sales ratio, and a twelve-month median (Milestone 36).
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {min_value: 0, max_value: 1.0e+8}
+
+  - name: stg_nj_revaluations
+    description: >-
+      Towns recognized for a revaluation or reassessment, per tax year, from the
+      Division of Taxation's lists (Milestone 36).
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - accepted_range: {min_value: 2017, max_value: 2100}
