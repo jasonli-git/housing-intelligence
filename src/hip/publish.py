@@ -41,6 +41,7 @@ from sqlalchemy import text
 from hip.api.main import app
 from hip.config import get_settings
 from hip.parcels import export as export_parcels
+from hip.removals import read as read_removals
 from hip.sources.base import read_discovery
 from hip.warehouse.db import get_engine
 
@@ -348,6 +349,9 @@ def publish(root: Path) -> Result:
             parquet_dir=settings.parquet_dir,
             engine=get_engine(),
             tax_year=int(discovery.newest),
+            # Daniel's Law withdrawals (Milestone 38): left out of the town files and
+            # the street index alike.
+            removals=read_removals(settings.address_removals),
         ):
             result.artifacts.append(
                 Artifact(

@@ -14,13 +14,15 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 37 live; the lookup's CORS fix awaiting review (2026-10-02)
+## Now — Milestone 38 built; PR awaiting review (2026-10-02)
 
-On `fix/r2-cors-for-tax-lookup` (0.33.1): the bucket rule already applied with the
-owner's approval, kept in `deploy/r2-cors.json` with `make r2-cors`, and a live check
-that reads a parcel file as the page does (ARCHITECTURE #291). Nothing to redeploy.
+On `milestone/m38-statewide-tax-search` (0.34.0): statewide address search, county
+links, and Daniel's Law removal (ARCHITECTURE #293–#295). **Before it goes live:** the
+owner sets up `privacy@jasonli.app` (Cloudflare Email Routing to their inbox), since the
+page names it. Then `make publish deploy` and `make check-live`, whose new statewide
+search check has not yet run against the live site.
 
-Milestone 38, approved vs built, is next.
+Milestone 39, approved vs built, follows.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -233,7 +235,7 @@ first raised, not where it must be done.
 
 - [ ] **The site does not say which questions it declines.** (M27 completeness run)
       ROADMAP decided on 2026-09-13 not to forecast prices or give investment advice,
-      and schedules schools, commutes, crime and flood risk for Milestones 39–45, but no
+      and schedules schools, commutes, crime and flood risk for Milestones 40–46, but no
       page tells a reader; the check counts 7 of its 17 questions as neither answered
       nor declined. A short statement on the site would move them to declined.
 - [ ] **Report a problem is on a region's two full metric tables only.** (M27, #221)
@@ -266,6 +268,15 @@ first raised, not where it must be done.
       whatever is slow there is a different problem and needs its own look.
 
 ### Publication
+
+- [ ] **The county lookup links are not checked automatically.** (M38, #293) All 21
+      worked by hand on 2026-10-02; a county moving its search would leave a dead link
+      until someone notices. `check-live` could request each, at the cost of 21 requests
+      to county servers per deploy.
+- [ ] **The Daniel's Law removal list has one copy.** (M38, #295) `address-removals.local`
+      is machine-local by design; a publish from a machine without it would put
+      withdrawn addresses back. Needs a private backup and, ideally, a publish that
+      refuses to run when a list once existed and is now missing.
 
 - [ ] **The site's status link cannot say when a check last succeeded.** (PR #45, #251)
       It names the Friday schedule and the build date; a quiet Friday that found nothing
@@ -319,6 +330,10 @@ first raised, not where it must be done.
 
 ### Housekeeping
 
+- [ ] **`search()`'s address branch in `web/lib/parcels.ts` is no longer reached.** (M38)
+      `/tax` finds addresses through `web/lib/addressSearch.ts` and calls `search` only
+      for block and lot; the address half and its tests can go.
+
 - [ ] **Nothing runs `ruff` automatically.** `make lint` exists and is run by hand, so
       a violation reaches `main` whenever someone runs `make test` and stops there —
       which happened on 2026-09-19, when the README features check landed in 0.18.x with
@@ -336,6 +351,10 @@ first raised, not where it must be done.
       it becomes an error.
 
 ### Open decisions — not scheduled, not decided
+
+- [ ] **A lawyer's read of the lookup under Daniel's Law.** (M38, #295) The removal route
+      takes the cautious reading; whether an address with no name is covered, and whether
+      the lookup needs more, is unsettled and was not reviewed by counsel.
 
 - [ ] **How should a cross-region comparison handle two price sources?** (M25, opened
       2026-09-20 by the decision in ARCHITECTURE #187) The cost card may now be priced
@@ -408,7 +427,7 @@ first raised, not where it must be done.
       same adapter, already anticipated.
 - [ ] **LEHD LODES** — jobs by workplace and residence per census block, supporting
       jobs-housing balance and commute-shed analysis. Large but static files.
-      **Scheduled: Milestone 43.**
+      **Scheduled: Milestone 44.**
 - [ ] **Zillow's home value reaches 388 of 564 municipalities (69%)** — a ceiling, not a
       bug. (M2, updated at M7; recounted 2026-09-27, when it was 403 before) MOD-IV landed
       and `region_identifiers` holds 554 NJ codes, so a crosswalk exists, but routing

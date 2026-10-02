@@ -8,14 +8,15 @@ import { api, artifactUrl } from "@/lib/api";
 export const metadata: Metadata = {
   title: "Property tax lookup — Housing",
   description:
-    "Find a New Jersey property by address or block and lot: its assessment, last year's tax, and how it compares with its town.",
+    "Find any New Jersey property by its address, or by block and lot: its assessment, last year's tax, and how it compares with its town.",
 };
 
 /**
- * Property tax: what you'd actually pay (Milestone 37). The towns ride in the page; each
- * town's parcels are a file in object storage, fetched when a reader chooses the town —
- * 3 million parcels as pages would break the static host's file cap 154 times over
- * (ARCHITECTURE #289).
+ * Property tax: what you'd actually pay (Milestone 37), found from one typed address
+ * anywhere in the state (Milestone 38). The towns ride in the page, for block-and-lot
+ * searches; the street index and each town's parcels are files in object storage,
+ * fetched as a search needs them — 3 million parcels as pages would break the static
+ * host's file cap 154 times over (ARCHITECTURE #289, #294).
  */
 export default async function TaxPage() {
   const [municipalities, counties] = await Promise.all([
@@ -41,10 +42,11 @@ export default async function TaxPage() {
             <Kind kind="tool" />
             <h1 className="page-title">Property tax lookup</h1>
             <p className="meta">
-              Any property in New Jersey, by address or by block and lot: what it is
-              assessed at, what it paid in tax last year, what that assessment implies at
-              the state’s ratio, and how it compares with the rest of its town — from the
-              state’s own assessment records. Owner names are never shown.
+              Type an address anywhere in New Jersey — no need to know which town it is in
+              — or a block and lot with its town: what the property is assessed at, what
+              it paid in tax last year, what that assessment implies at the state’s ratio,
+              and how it compares with the rest of its town, from the state’s own
+              assessment records. Owner names are never shown.
             </p>
           </div>
         </header>

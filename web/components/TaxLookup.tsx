@@ -1,7 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import {
+  type Hit,
+  matchStreets,
+  normaliser,
+  type Normaliser,
+  parcelsOn,
+  parseQuery,
+  shardOf,
+  type StreetMeta,
+  placesFor,
+  type StreetShard,
+} from "@/lib/addressSearch";
+import { countyLookup } from "@/lib/countyLookups";
 import { formatValue } from "@/lib/format";
 import {
   classPercentile,
@@ -18,6 +31,14 @@ export type Town = { geoid: string; name: string; county: string };
 
 const APPEALS = "https://www.nj.gov/treasury/taxation/lpt/lpt-appeal.shtml";
 const CHAPTER_123 = "https://www.nj.gov/treasury/taxation/lpt/statdata.shtml";
+/** Where a covered person asks for an address to come off the lookup (ARCHITECTURE #295). */
+export const REMOVAL_EMAIL = "privacy@jasonli.app";
+
+// "12/3", "12, 3", "block 12 lot 3" or "12 lot 3": a block and a lot, which repeat from
+// town to town and so still need one.
+const BLOCK_LOT = /^\s*(?:block\s*)?[0-9a-z.]+\s*(?:\/|,|\s+lot\s+)\s*[0-9a-z.]+\s*$/i;
+// More places than this and the reader picks one, rather than the page fetching them all.
+const FETCH_AT_ONCE = 3;
 
 function usd(value: number | null): string {
   return value === null ? "—" : formatValue(value, "usd");
@@ -28,60 +49,151 @@ function parcelName(parcel: Parcel): string {
   return parcel.address ? `${parcel.address} · ${where}` : where;
 }
 
+type Found = { file: ParcelFile; parcels: Parcel[]; parcel: Parcel };
+
 /**
- * Find a property by address or block and lot, within a town (Milestone 37). The town's
- * file is fetched from object storage only once a town is chosen: 564 of them, a median
- * of about 3,200 parcels each, never pages.
+ * Find any property in New Jersey from one typed address (Milestone 38). The street
+ * index names the towns that have the street and the house number; only those towns'
+ * files are fetched, and only up to `FETCH_AT_ONCE` before the reader is asked to choose.
+ * A block and lot still takes a town, since those numbers repeat across the state.
  */
 export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: string }) {
-  const [townQuery, setTownQuery] = useState("");
-  const [town, setTown] = useState<Town | null>(null);
-  const [file, setFile] = useState<ParcelFile | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [chosen, setChosen] = useState<Parcel | null>(null);
+  const [townQuery, setTownQuery] = useState("");
+  const [meta, setMeta] = useState<StreetMeta | null>(null);
+  const [shard, setShard] = useState<{ key: string; data: StreetShard } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [picked, setPicked] = useState<Hit | null>(null);
+  const [chosen, setChosen] = useState<Found | null>(null);
+  const [, setLoaded] = useState(0);
+  const files = useRef(new Map<string, ParcelFile | "loading" | "failed">());
 
   const label = (t: Town) => `${t.name}, ${t.county} County`;
+  const town = useMemo(
+    () => towns.find((t) => label(t).toLowerCase() === townQuery.trim().toLowerCase()) ?? null,
+    [towns, townQuery],
+  );
   // A town page links here as `/tax?town=<geoid>`, choosing the town for the reader.
   useEffect(() => {
     const geoid = new URLSearchParams(window.location.search).get("town");
     const linked = towns.find((t) => t.geoid === geoid);
     if (linked) setTownQuery(label(linked));
   }, [towns]);
-  useEffect(() => {
-    const match = towns.find((t) => label(t).toLowerCase() === townQuery.trim().toLowerCase());
-    if (match && match.geoid !== town?.geoid) setTown(match);
-  }, [townQuery, towns, town]);
 
   useEffect(() => {
-    if (!town) return;
-    let live = true;
-    setFile(null);
-    setChosen(null);
-    setError(null);
-    fetch(`${artifactUrl}/parcels/${town.geoid}.json`)
+    fetch(`${artifactUrl}/parcels/streets/meta.json`)
       .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
-      .then((data: ParcelFile) => live && setFile(data))
-      .catch(() => live && setError(`The property records for ${town.name} could not be loaded.`));
+      .then((data: StreetMeta) => setMeta(data))
+      .catch(() => setError("The property records could not be loaded."));
+  }, [artifactUrl]);
+  const n: Normaliser | null = useMemo(() => (meta ? normaliser(meta.words) : null), [meta]);
+
+  const fileOf = useCallback(
+    (geoid: string): ParcelFile | null => {
+      const held = files.current.get(geoid);
+      if (held && typeof held === "object") return held;
+      if (!held) {
+        files.current.set(geoid, "loading");
+        fetch(`${artifactUrl}/parcels/${geoid}.json`)
+          .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
+          .then((data: ParcelFile) => files.current.set(geoid, data))
+          .catch(() => files.current.set(geoid, "failed"))
+          .finally(() => setLoaded((x) => x + 1));
+      }
+      return null;
+    },
+    [artifactUrl],
+  );
+
+  const blockLot = BLOCK_LOT.test(query);
+  const parsed = useMemo(() => (n && !blockLot ? parseQuery(query, n) : null), [n, blockLot, query]);
+  const shardKey = parsed ? shardOf(parsed.street.join(" ")) : null;
+
+  useEffect(() => {
+    if (!shardKey || !meta || shard?.key === shardKey) return;
+    if (!meta.shards.includes(shardKey)) {
+      setShard({ key: shardKey, data: {} });
+      return;
+    }
+    let live = true;
+    fetch(`${artifactUrl}/parcels/streets/${shardKey}.json`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(response.status)))
+      .then((data: StreetShard) => live && setShard({ key: shardKey, data }))
+      .catch(() => live && setError("The street index could not be loaded."));
     return () => {
       live = false;
     };
-  }, [town, artifactUrl]);
+  }, [shardKey, meta, shard, artifactUrl]);
 
-  const parcels = useMemo(() => (file ? parcelsOf(file) : []), [file]);
-  const results = useMemo(() => search(parcels, query), [parcels, query]);
+  const hits: Hit[] = useMemo(() => {
+    if (!parsed || !n || !meta || shard?.key !== shardKey) return [];
+    const all = placesFor(matchStreets(shard.data, parsed, n), parsed, meta, n);
+    return town ? all.filter((h) => h.geoid === town.geoid) : all;
+  }, [parsed, n, meta, shard, shardKey, town]);
+
+  // With a house number and only a few places it could be, look in all of them; with
+  // more, or with no number, the reader picks a street and town first.
+  const targets = picked ? [picked] : parsed?.number && hits.length <= FETCH_AT_ONCE ? hits : [];
+  const found: Found[] = [];
+  let waiting = false;
+  if (n) {
+    for (const hit of targets) {
+      const file = fileOf(hit.geoid);
+      if (!file) {
+        waiting ||= files.current.get(hit.geoid) === "loading";
+        continue;
+      }
+      const parcels = parcelsOf(file);
+      for (const parcel of parcelsOn(parcels, hit.street, parsed?.number ?? null, n)) {
+        found.push({ file, parcels, parcel });
+      }
+    }
+  }
+
+  // Block and lot: the chosen town's file, searched as Milestone 37 did.
+  const townFile = town && blockLot ? fileOf(town.geoid) : null;
+  const byLot = useMemo(() => {
+    if (!townFile) return [];
+    const parcels = parcelsOf(townFile);
+    return search(parcels, query).map((parcel) => ({ file: townFile, parcels, parcel }));
+  }, [townFile, query]);
+
+  const place = (geoid: string) => {
+    const [name, county] = meta?.towns[geoid] ?? [geoid, ""];
+    return county ? `${name}, ${county} County` : name;
+  };
+  const results = blockLot ? byLot : found;
+  const typed = query.trim() !== "";
 
   return (
     <div className="tax-lookup">
       <div className="household-inputs">
         <label className="control">
-          <span className="control-label">Town</span>
+          <span className="control-label">Address</span>
+          <input
+            value={query}
+            disabled={!meta}
+            placeholder={meta ? "4 Danby Ct, or block and lot like 2604/19" : "Loading…"}
+            aria-label="Address, or block and lot"
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPicked(null);
+              setChosen(null);
+            }}
+          />
+        </label>
+        <label className="control">
+          <span className="control-label">Town (optional; needed for block and lot)</span>
           <input
             list="tax-towns"
             value={townQuery}
-            placeholder="Start typing a town"
+            placeholder="Anywhere in New Jersey"
             aria-label="Town"
-            onChange={(event) => setTownQuery(event.target.value)}
+            onChange={(event) => {
+              setTownQuery(event.target.value);
+              setPicked(null);
+              setChosen(null);
+            }}
           />
           <datalist id="tax-towns">
             {towns.map((t) => (
@@ -89,44 +201,94 @@ export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: 
             ))}
           </datalist>
         </label>
-        <label className="control">
-          <span className="control-label">Address, or block and lot</span>
-          <input
-            value={query}
-            disabled={!file}
-            placeholder={file ? "250 Lorraine Dr, or 2604/19" : "Choose a town first"}
-            aria-label="Address, or block and lot"
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setChosen(null);
-            }}
-          />
-        </label>
       </div>
 
-      {town && !file && !error && <p className="household-note">Loading {town.name}’s property records…</p>}
       {error && <p className="household-note">{error}</p>}
+      {typed && blockLot && !town && (
+        <p className="household-note">Block and lot numbers repeat from town to town: choose the town too.</p>
+      )}
 
-      {file && !chosen && query.trim() !== "" && (
+      {typed && !chosen && !blockLot && parsed && shard?.key === shardKey && (
+        <>
+          {hits.length === 0 && (
+            <p className="household-note">
+              {parsed.number
+                ? `No ${parsed.number} on a street by that name${town ? ` in ${town.name}` : ""} in the state’s records.`
+                : "No street by that name in the state’s records."}{" "}
+              Try fewer words, or the street’s name alone to see where it is. About 196,000
+              records — rear lots, land off a road — have no house number; find those by block
+              and lot.
+            </p>
+          )}
+          {hits.length > 0 && targets.length === 0 && (
+            <ul className="tax-results" aria-live="polite">
+              <li className="household-note">
+                {hits.length === 1
+                  ? "One place has it:"
+                  : `${hits.length} places have it${parsed.zip || town ? "" : " — add the town or ZIP to narrow them"}. Choose one:`}
+              </li>
+              {hits.slice(0, 40).map((hit) => (
+                <li key={`${hit.street}-${hit.geoid}`}>
+                  <button type="button" onClick={() => setPicked(hit)}>
+                    {parsed.number ? `${parsed.number} ` : ""}
+                    {hit.street}
+                    <small>{place(hit.geoid)}</small>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+
+      {typed && !chosen && (blockLot ? Boolean(townFile) : targets.length > 0) && (
         <ul className="tax-results" aria-live="polite">
-          {results.length === 0 && <li className="household-note">No property matches.</li>}
-          {results.map((parcel, i) => (
-            <li key={`${parcel.block}-${parcel.lot}-${parcel.qualifier}-${i}`}>
-              <button type="button" onClick={() => setChosen(parcel)}>
-                {parcelName(parcel)}
-                <small>{file.classes[parcel.propertyClass] ?? `Class ${parcel.propertyClass}`}</small>
+          {results.length === 0 && !waiting && <li className="household-note">No property matches.</li>}
+          {waiting && <li className="household-note">Loading the town’s property records…</li>}
+          {results.slice(0, 60).map((r, i) => (
+            <li key={`${r.file.geoid}-${r.parcel.block}-${r.parcel.lot}-${r.parcel.qualifier}-${i}`}>
+              <button type="button" onClick={() => setChosen(r)}>
+                {parcelName(r.parcel)}
+                <small>
+                  {place(r.file.geoid)} · {r.file.classes[r.parcel.propertyClass] ?? `Class ${r.parcel.propertyClass}`}
+                </small>
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      {file && chosen && <ParcelCard file={file} parcels={parcels} parcel={chosen} />}
+      {chosen && (
+        <ParcelCard
+          file={chosen.file}
+          parcels={chosen.parcels}
+          parcel={chosen.parcel}
+          countyRecords={countyLookup(chosen.file.county ?? "", meta?.towns[chosen.file.geoid]?.[2] ?? "")}
+        />
+      )}
+
+      <p className="household-note">
+        Owner names are never shown or collected. A judge, prosecutor or police officer, or
+        a member of their household, can ask for their home address to be taken off this
+        lookup under New Jersey’s Daniel’s Law: write to{" "}
+        <a href={`mailto:${REMOVAL_EMAIL}`}>{REMOVAL_EMAIL}</a> with the address and town.
+        It is removed within ten business days.
+      </p>
     </div>
   );
 }
 
-function ParcelCard({ file, parcels, parcel }: { file: ParcelFile; parcels: Parcel[]; parcel: Parcel }) {
+function ParcelCard({
+  file,
+  parcels,
+  parcel,
+  countyRecords,
+}: {
+  file: ParcelFile;
+  parcels: Parcel[];
+  parcel: Parcel;
+  countyRecords: string | null;
+}) {
   const town = file.municipality ?? "this town";
   const implied = impliedValue(parcel.assessed, file.assessment_ratio);
   const percentile = classPercentile(parcels, parcel);
@@ -237,8 +399,17 @@ function ParcelCard({ file, parcels, parcel }: { file: ParcelFile; parcels: Parc
         <a href={CHAPTER_123} target="_blank" rel="noreferrer">
           The state’s common level ranges (Chapter 123)
         </a>
-        . Owner names are not shown, and never collected.
+        .
       </p>
+      {countyRecords && (
+        <p className="household-note">
+          The county’s own record may be newer than the state’s file:{" "}
+          <a href={countyRecords} target="_blank" rel="noreferrer">
+            {file.county} County’s property records
+          </a>
+          .
+        </p>
+      )}
     </article>
   );
 }

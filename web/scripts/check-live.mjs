@@ -176,12 +176,45 @@ async function settle(page) {
   await page.waitForLoadState("networkidle", { timeout });
 }
 
+/**
+ * The local side reads its artifacts from `dist/artifacts`, as the live side reads them
+ * from R2. A page that fetches artifacts — `/tax` since Milestone 38 loads the street
+ * index on arrival — would otherwise ask R2 from a localhost origin the bucket's CORS
+ * rule rightly refuses, and draw an error the live page never shows: the deploy of
+ * 2026-10-02 was correct and failed this check on exactly that.
+ */
+async function serveLocalArtifacts(request) {
+  const requested = decodeURIComponent(new URL(request.url()).pathname);
+  const candidate = path.resolve(artifactsDir, `.${requested}`);
+  if (!candidate.startsWith(artifactsDir + path.sep)) {
+    return { status: 403, body: "" };
+  }
+  try {
+    return {
+      status: 200,
+      body: await readFile(candidate),
+      contentType: candidate.endsWith(".json") ? "application/json" : undefined,
+      headers: { "access-control-allow-origin": "*" },
+    };
+  } catch {
+    return { status: 404, body: "", headers: { "access-control-allow-origin": "*" } };
+  }
+}
+
 async function localMarker(page, route) {
   const file = routeFile(route);
   await access(file);
-  await page.goto(localUrl(route), { waitUntil: "domcontentloaded", timeout });
-  await settle(page);
-  return marker(page);
+  const pattern = `${artifactUrl.origin}/**`;
+  await page.route(pattern, async (intercepted) =>
+    intercepted.fulfill(await serveLocalArtifacts(intercepted.request())),
+  );
+  try {
+    await page.goto(localUrl(route), { waitUntil: "domcontentloaded", timeout });
+    await settle(page);
+    return marker(page);
+  } finally {
+    await page.unroute(pattern);
+  }
 }
 
 async function liveMarker(page, route, expected) {
@@ -344,7 +377,9 @@ async function checkManifest(page) {
  */
 async function checkCrossOrigin(page) {
   const manifest = JSON.parse(await readFile(path.join(artifactsDir, "manifest.json"), "utf8"));
-  const parcel = manifest.artifacts.find((a) => a.path.startsWith("parcels/"));
+  const parcel = manifest.artifacts.find(
+    (a) => a.path.startsWith("parcels/") && !a.path.startsWith("parcels/streets/"),
+  );
   if (!parcel) return;
   await page.goto(liveUrl(siteUrl, "/tax"), { waitUntil: "domcontentloaded", timeout });
   const url = liveUrl(artifactUrl, `/${parcel.path}`).toString();
@@ -364,6 +399,45 @@ async function checkCrossOrigin(page) {
     );
   }
   console.log(`ok cors       ${parcel.path} reads from ${siteUrl.origin} · ${result.rows} parcels`);
+}
+
+/**
+ * The statewide search, driven as a reader would (Milestone 38): an address from a town's
+ * file typed with no town chosen must come back as a result, which takes the street
+ * index's `meta.json`, its shard and the town's file, all read across origins.
+ */
+async function checkStatewideSearch(page) {
+  const manifest = JSON.parse(await readFile(path.join(artifactsDir, "manifest.json"), "utf8"));
+  if (!manifest.artifacts.some((a) => a.path === "parcels/streets/meta.json")) return;
+  const town = manifest.artifacts.find(
+    (a) => a.path.startsWith("parcels/") && !a.path.startsWith("parcels/streets/"),
+  );
+  const file = JSON.parse(await readFile(path.join(artifactsDir, town.path), "utf8"));
+  const at = file.columns.indexOf("address");
+  const address = file.parcels.map((row) => row[at]).find((a) => /^\d+ [A-Z]/.test(a ?? ""));
+  if (!address) return;
+  await page.goto(liveUrl(siteUrl, "/tax"), { waitUntil: "networkidle", timeout });
+  const box = page.getByLabel("Address, or block and lot");
+  await box.waitFor({ state: "visible", timeout });
+  // The box is disabled until the street index's meta.json has loaded.
+  await page.waitForFunction(
+    () => !document.querySelector('input[aria-label="Address, or block and lot"]')?.disabled,
+    null,
+    { timeout },
+  );
+  await box.fill(address);
+  const [number] = address.split(" ");
+  const answer = page.locator(".tax-results button").first();
+  try {
+    await answer.waitFor({ state: "visible", timeout });
+  } catch {
+    throw new Error(`/tax found nothing for "${address}" (${file.municipality}) searched statewide.`);
+  }
+  const text = await answer.innerText();
+  if (!text.startsWith(number)) {
+    throw new Error(`/tax answered "${address}" with "${text.split("\n")[0]}".`);
+  }
+  console.log(`ok search     "${address}" found statewide · ${file.municipality}`);
 }
 
 async function run() {
@@ -386,6 +460,7 @@ async function run() {
     page.setDefaultTimeout(timeout);
     await checkManifest(page);
     await checkCrossOrigin(page);
+    await checkStatewideSearch(page);
 
     for (const sample of await pageSamples()) {
       const expected = await localMarker(page, sample.route);

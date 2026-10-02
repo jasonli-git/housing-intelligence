@@ -3,7 +3,7 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
-## [0.33.4] — 2026-10-02
+## [0.34.1] — 2026-10-02
 
 ### Changed
 
@@ -11,6 +11,30 @@ All notable changes to the Housing Intelligence Platform. Format loosely follows
   pages, switching to affordability now hides the profile, its verdicts, the explore and
   report shortcuts and the statewide notes, so "Start with your budget" follows the
   page's name directly. Switching back brings them back.
+
+## [0.34.0] — 2026-10-02
+
+Milestone 38: find any property in New Jersey.
+
+### Added
+
+- **One search for the whole state** (ARCHITECTURE #294). `/tax` takes an address
+  anywhere in New Jersey with no town chosen: "4 Danby Ct, Princeton NJ 08540" finds the
+  house in Montgomery. A street index — 972 small files beside the town files — says
+  which towns have the street and the number; a ZIP ranks its towns first.
+- **Abbreviations and units match.** "Ct" finds "COURT", "St James Pl" finds "SAINT
+  JAMES PLACE", and a condominium's "#3" or "APT 1A" no longer hides it from its
+  building's address.
+- **Each county's own record**, linked from every property (ARCHITECTURE #293), opened on
+  the town in 19 counties.
+- **Removal under Daniel's Law** (ARCHITECTURE #295). The page says how a covered person
+  asks for their address to be taken off; `hip remove-address` records it on a list that
+  is never committed, and the next publish drops the parcel.
+
+### Changed
+
+- Planned milestones 38–53 are now 39–54; records written before 2026-10-02 keep the old
+  numbers.
 
 ## [0.33.3] — 2026-10-02
 
