@@ -3,6 +3,14 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.34.6] — 2026-10-02
+
+### Changed
+
+- **`make test` runs in about 30 seconds** (ARCHITECTURE #299). Tests that rebuild the
+  analytics or the whole site are marked slow and run by the new `make test-all`, which
+  observes the analytics rebuild once instead of six times: about 11 minutes, from 24.
+
 ## [0.34.5] — 2026-10-02
 
 ### Changed

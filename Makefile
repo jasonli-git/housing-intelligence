@@ -4,7 +4,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
         check-dist check-live deploy api web \
-        test test-py test-web lint format check-config dbt-debug eval clean
+        test test-all test-py test-web lint format check-config dbt-debug eval clean
 
 SITE_PACKAGES = $(wildcard .venv/lib/python*/site-packages)
 
@@ -107,15 +107,21 @@ api:  ## Run the API on http://localhost:8000 (docs at /docs)
 web:  ## Run the dashboard on http://localhost:3000
 	cd web && npm run dev
 
-test:  ## Run both test suites — Python, then the dashboard
-	uv run pytest
+test:  ## Run both test suites, slow Python tests left out (about a minute)
+	uv run pytest -m "not slow"
 	@# The dashboard suite covers the pure chart arithmetic. Skipped rather than failed
 	@# when node_modules is absent, so `make test` still works before `make setup`.
 	@test -d web/node_modules \
 		&& (cd web && npm test --silent) \
 		|| echo "web/node_modules missing — skipping dashboard tests (run make setup)"
 
-test-py:  ## Run the Python test suite alone
+test-all:  ## Every test, the slow analytics and publish ones too — before a merge
+	uv run pytest
+	@test -d web/node_modules \
+		&& (cd web && npm test --silent) \
+		|| echo "web/node_modules missing — skipping dashboard tests (run make setup)"
+
+test-py:  ## Run the Python test suite alone, slow tests included
 	uv run pytest
 
 test-web:  ## Run the dashboard test suite alone

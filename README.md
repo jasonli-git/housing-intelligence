@@ -497,7 +497,8 @@ make pipeline      # acquire → … → analyze → pack, all eight stages
 ```bash
 make api           # http://localhost:8000  (OpenAPI docs at /docs)
 make web           # http://localhost:3000
-make test          # 660 Python + 246 dashboard tests; API tests skip without a warehouse
+make test          # fast: Python and dashboard tests, slow ones left out (about 30 s)
+make test-all      # everything, the analytics and publish rebuilds too (about 11 min)
 make lint          # ruff + ruff format --check + mypy --strict
 ```
 

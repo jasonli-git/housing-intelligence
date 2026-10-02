@@ -82,6 +82,7 @@ def _paired() -> list[tuple[float, float, float]]:
 
 
 @warehouse
+@pytest.mark.slow
 def test_the_effective_rate_tracks_the_prior_years_ratio_not_the_same_years() -> None:
     """The alignment check, and the reason the effective rate is ingested not derived.
 

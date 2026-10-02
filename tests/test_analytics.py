@@ -10,7 +10,9 @@ provenance diff with no figure behind it, and the releases accumulated one per r
 forever.
 
 These tests need a loaded warehouse and rebuild it twice, which is the only way to
-observe the property: it is a statement about two runs, not about one.
+observe the property: it is a statement about two runs, not about one. The pair is run
+once and shared (`two_rebuilds`), and the tests are marked `slow`: `make test` leaves
+them out, `make test-all` runs them.
 """
 
 from __future__ import annotations
@@ -71,47 +73,65 @@ def _derived_releases() -> list[int]:
         return [int(row[0]) for row in conn.execute(DERIVED_RELEASES)]
 
 
-def test_a_rebuild_over_unchanged_data_reuses_its_release() -> None:
-    """Content-addressed, like any other release (ARCHITECTURE #10, #73)."""
+@pytest.fixture(scope="module")
+def two_rebuilds(county_id: int) -> dict[str, object]:
+    """Two rebuilds over unchanged data, observed once for the four tests below.
+
+    Each rebuild takes about three and a half minutes (the rank ranges, TODO.md), and
+    the four tests had run six between them, 20 of the suite's 24 minutes. Every
+    property they check is a statement about this one pair of runs.
+    """
     engine = get_engine()
     rebuild(engine)
-    before = _derived_releases()
+    with Session(engine) as session:
+        first = build_packet(session, county_id, "5y")
+    releases_before = _derived_releases()
 
     rebuild(engine)
+    with Session(engine) as session:
+        second = build_packet(session, county_id, "5y")
+    with engine.connect() as conn:
+        orphans = int(conn.execute(ORPHANS).scalar_one())
+    return {
+        "releases_before": releases_before,
+        "releases_after": _derived_releases(),
+        "hash_before": packet_hash(first),
+        "hash_after": packet_hash(second),
+        "packet": second,
+        "orphans": orphans,
+    }
 
-    assert _derived_releases() == before, (
+
+@pytest.mark.slow
+def test_a_rebuild_over_unchanged_data_reuses_its_release(
+    two_rebuilds: dict[str, object],
+) -> None:
+    """Content-addressed, like any other release (ARCHITECTURE #10, #73)."""
+    assert two_rebuilds["releases_after"] == two_rebuilds["releases_before"], (
         "an analyze run over unchanged data minted a new hip_derived release"
     )
 
 
+@pytest.mark.slow
 def test_a_rebuild_over_unchanged_data_leaves_the_packet_hash_alone(
-    county_id: int,
+    two_rebuilds: dict[str, object],
 ) -> None:
     """The property `region_explanations.packet_sha256` depends on entirely."""
-    engine = get_engine()
-    rebuild(engine)
-    with Session(engine) as session:
-        before = packet_hash(build_packet(session, county_id, "5y"))
-
-    rebuild(engine)
-    with Session(engine) as session:
-        after = packet_hash(build_packet(session, county_id, "5y"))
-
-    assert before == after, "the packet hash moved with no change in the data"
+    assert two_rebuilds["hash_before"] == two_rebuilds["hash_after"], (
+        "the packet hash moved with no change in the data"
+    )
 
 
-def test_the_packet_carries_no_run_timestamp(county_id: int) -> None:
+@pytest.mark.slow
+def test_the_packet_carries_no_run_timestamp(two_rebuilds: dict[str, object]) -> None:
     """A derived release names its content, not the minute it was computed.
 
     The regression this catches is specific: `vintage` used to be
     `to_char(now(), 'YYYY-MM-DD"T"HH24MISS')`, so a packet's own sources table carried
     a wall clock while ARCHITECTURE #44 claimed it carried none.
     """
-    rebuild(get_engine())
-    with Session(get_engine()) as session:
-        packet = build_packet(session, county_id, "5y")
-
-    derived = [s for s in packet.sources if s.source_id == "hip_derived"]
+    packet = two_rebuilds["packet"]
+    derived = [s for s in packet.sources if s.source_id == "hip_derived"]  # type: ignore[attr-defined]
     if not derived:
         pytest.skip("this region quotes no derived metric")
     for source in derived:
@@ -120,12 +140,12 @@ def test_the_packet_carries_no_run_timestamp(county_id: int) -> None:
         )
 
 
-def test_the_rebuild_leaves_no_unreferenced_derived_releases() -> None:
+@pytest.mark.slow
+def test_the_rebuild_leaves_no_unreferenced_derived_releases(
+    two_rebuilds: dict[str, object],
+) -> None:
     """A release no fact cites records that a run happened and nothing else."""
-    rebuild(get_engine())
-
-    with get_engine().connect() as conn:
-        assert int(conn.execute(ORPHANS).scalar_one()) == 0
+    assert two_rebuilds["orphans"] == 0
 
 
 # ------------------------------------------------------ margins of error (M28) ---

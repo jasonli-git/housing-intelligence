@@ -164,7 +164,8 @@ first raised, not where it must be done.
       (M34, measured 2026-10-01) `_rank_ranges` joins each ranking group to itself, so
       a group costs the square of its regions: 598 ZCTAs across 26 more ranked metrics
       and five windows took the step to about three minutes a rebuild, and the Python
-      suite, which rebuilds six times, to well over half an hour. The weekly refresh
+      suite, which rebuilt six times, to well over half an hour (since 2026-10-02 it
+      rebuilds twice, under `make test-all`; #299). The weekly refresh
       rebuilds once, so it is tolerable for New Jersey; at Milestone 14's seven states it
       is not. A sort-based count, or the step moved to DuckDB, are the leads.
 - [ ] **`GET /regions?q=` passes `%` and `_` through to `ILIKE`.** (pre-M12 review) A
