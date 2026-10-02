@@ -718,10 +718,16 @@ uv run hip remove-address "4 Danby Ct" --town Montgomery --received 2026-10-02
 make publish deploy
 ```
 
-The first records every parcel at the address on `address-removals.local` (machine-local,
-git-ignored, `HIP_ADDRESS_REMOVALS` to move it) and prints the deadline; the second drops
-those parcels from the published files. Keep the list backed up: it is the only record,
-and a publish from a machine without it would put the addresses back.
+The first records every parcel at the address and prints the deadline; the second drops
+those parcels from the published files. Requests reach `priority.jasonli@gmail.com`
+through Cloudflare Email Routing, with a Gmail filter keeping them out of spam.
+
+The list is `address-removals.json` in iCloud Drive's `HousingPipeline` folder, beside
+the refresh toggle (ARCHITECTURE #296): synced to any Mac signed in to the same Apple
+Account, and outside the repository, so it cannot be committed. `HIP_ADDRESS_REMOVALS`
+points elsewhere. `make publish` and `hip remove-address` refuse to run when the folder
+is missing or the list is still an iCloud placeholder, since publishing without it would
+put withdrawn addresses back.
 
 Two directories because they go to two hosts, and that split is forced by measurement
 rather than taste (ARCHITECTURE #68): the export is three times the size of the data it

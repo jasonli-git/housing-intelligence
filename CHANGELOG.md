@@ -3,6 +3,16 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.34.2] — 2026-10-02
+
+### Changed
+
+- **The Daniel's Law removal list lives in iCloud Drive** (ARCHITECTURE #296), as
+  `HousingPipeline/address-removals.json` beside the refresh toggle: synced to any Mac
+  signed in, and outside the repository. `make publish` and `hip remove-address` stop if
+  the list's folder is missing or the list has not downloaded, instead of publishing
+  withdrawn addresses again.
+
 ## [0.34.1] — 2026-10-02
 
 ### Changed

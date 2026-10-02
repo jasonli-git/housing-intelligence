@@ -14,8 +14,8 @@ import duckdb
 import pytest
 
 from hip.addresses import Address, parse, shard, street_words
-from hip.config import get_settings
-from hip.removals import Filter, Removal, read, write
+from hip.config import Settings, get_settings
+from hip.removals import Filter, Removal, RemovalListUnavailable, read, write
 
 FIXTURE = Path(__file__).parent / "fixtures" / "address_cases.json"
 CASES = json.loads(FIXTURE.read_text())
@@ -81,21 +81,38 @@ def test_a_withdrawal_that_matches_nothing_is_reported() -> None:
 
 
 def test_the_removal_list_round_trips_and_starts_empty(tmp_path: Path) -> None:
-    path = tmp_path / "address-removals.local"
+    path = tmp_path / "address-removals.json"
     assert read(path) == []
     write(path, [_removal()])
     assert read(path) == [_removal()]
 
 
-def test_the_removal_list_is_never_committed() -> None:
-    """A public list of protected addresses would be the disclosure the law forbids."""
-    import subprocess
+def test_the_removal_list_lives_in_icloud_outside_the_repository() -> None:
+    """Synced and backed up, and never committable: a public list of protected
+    addresses would be the disclosure the law forbids (#296)."""
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert settings.removals_file == settings.gate_dir / "address-removals.json"
+    assert "CloudDocs" in str(settings.removals_file)
+    repo = Path(__file__).resolve().parents[1]
+    assert not settings.removals_file.is_relative_to(repo)
 
-    name = get_settings().address_removals.name
-    ignored = subprocess.run(
-        ["git", "check-ignore", "-q", name], cwd=Path(__file__).parents[1], check=False
-    )
-    assert ignored.returncode == 0, f"{name} is not ignored by git"
+
+def test_a_missing_folder_stops_a_publish_rather_than_emptying_the_list(
+    tmp_path: Path,
+) -> None:
+    """An empty list would put every withdrawn address back on the site."""
+    absent = tmp_path / "not-synced" / "address-removals.json"
+    with pytest.raises(RemovalListUnavailable, match="not on this machine"):
+        read(absent)
+    with pytest.raises(RemovalListUnavailable):
+        write(absent, [_removal()])
+
+
+def test_a_list_still_in_icloud_is_not_read_as_empty(tmp_path: Path) -> None:
+    path = tmp_path / "address-removals.json"
+    (tmp_path / ".address-removals.json.icloud").write_text("")
+    with pytest.raises(RemovalListUnavailable, match="not downloaded"):
+        read(path)
 
 
 def _warehouse_with_parcels() -> None:
