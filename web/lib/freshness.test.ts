@@ -6,6 +6,7 @@ import {
   dayLabel,
   groupByCadence,
   nextLabel,
+  nextRelease,
   sortForDisplay,
   STATUS_COPY,
   builtAgo,
@@ -103,13 +104,45 @@ describe("stillUnderWay", () => {
   });
 });
 
-describe("nextLabel", () => {
-  it("states a next release only where the publisher has", () => {
-    expect(nextLabel(source({ pending: "2027", pending_from: "2026-10-01" }))).toBe(
+describe("nextRelease", () => {
+  const calendar = {
+    calendar_url: "https://example.gov/calendar",
+    expected: [
+      { day: "2026-10-28", precision: "day" as const, covers: "September 2026" },
+      { day: "2027-03-01", precision: "month" as const, covers: "counties" },
+    ],
+  };
+
+  it("puts a release already out and waiting first", () => {
+    expect(nextLabel(source({ pending: "2027", pending_from: "2026-10-01" }), "2026-09-26")).toBe(
       "2027, from Oct 1, 2026",
     );
-    expect(nextLabel(source({ pending: "2027" }))).toBe("2027");
-    expect(nextLabel(source({}))).toBe("—");
+    expect(nextLabel(source({ pending: "2027" }), "2026-09-26")).toBe("2027");
+  });
+
+  it("reads the next date on the publisher's calendar from the reader's day", () => {
+    expect(nextRelease(source(calendar), "2026-10-02")).toEqual({
+      label: "Oct 28, 2026",
+      detail: "September 2026",
+    });
+    expect(nextLabel(source(calendar), "2026-10-28")).toBe("Oct 28, 2026");
+    // A month-precise date stays until its month ends, and prints no day.
+    expect(nextLabel(source(calendar), "2026-10-29")).toBe("Mar 2027");
+    expect(nextLabel(source(calendar), "2027-03-20")).toBe("Mar 2027");
+  });
+
+  it("says no date is announced when a calendar has run out or there is none", () => {
+    expect(nextLabel(source(calendar), "2027-04-01")).toBe("No date announced");
+    expect(nextLabel(source({}), "2026-10-02")).toBe("No date announced");
+  });
+
+  it("counts forward to a weekly release's day", () => {
+    const weekly = source({ expected_weekly: "thursday", calendar_url: "https://x" });
+    expect(nextRelease(weekly, "2026-10-02")).toEqual({
+      label: "Oct 8, 2026",
+      detail: "weekly, Thursdays",
+    });
+    expect(nextLabel(weekly, "2026-10-08")).toBe("Oct 8, 2026");
   });
 });
 

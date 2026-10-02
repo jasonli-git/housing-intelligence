@@ -5,12 +5,12 @@ import { BuiltAgo } from "@/components/BuiltAgo";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
+import { NextRelease } from "@/components/NextRelease";
 import { api } from "@/lib/api";
 import {
   checkedDaysBefore,
   dayLabel,
   groupByCadence,
-  nextLabel,
   STALE_CHECK_DAYS,
   STATUS_COPY,
   stillUnderWay,
@@ -63,7 +63,8 @@ export default async function FreshnessPage() {
             <h1 className="page-title">How current is each source</h1>
             <p className="meta">
               Data through is the period a source describes; Last checked is when we looked for
-              updates. Publishers update at the frequencies below; we check weekly.
+              updates. Publishers update at the frequencies below; we check weekly. Next
+              release is the publisher’s own calendar, linked, where it publishes one.
             </p>
             <p className="meta fresh-built">
               Built {dayLabel(report.generated_at)}
@@ -148,7 +149,9 @@ export default async function FreshnessPage() {
                             )}
                           </td>
                           <td>{dayLabel(source.acquired_at)}</td>
-                          <td>{nextLabel(source)}</td>
+                          <td>
+                            <NextRelease source={source} builtAt={report.generated_at} />
+                          </td>
                         </tr>
                       );
                     })}

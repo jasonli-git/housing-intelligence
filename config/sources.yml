@@ -52,6 +52,15 @@ sources:
       reconciliation. Boundaries are generalized, not survey-grade.
 
   zillow_zhvi:
+    # Zillow's calendar, read where FRED republishes it (Zillow's pages refuse automated
+    # readers, #272): every 2026 release on its month's third Thursday.
+    release_calendar:
+      url: https://fred.stlouisfed.org/releases/calendar?rid=503
+      checked: 2026-10-02
+      dates:
+        - {day: 2026-10-15, covers: September 2026}
+        - {day: 2026-11-19, covers: October 2026}
+        - {day: 2026-12-17, covers: November 2026}
     name: Zillow Home Value Index
     publisher: Zillow Research
     license: Free for non-commercial use with attribution
@@ -101,6 +110,13 @@ sources:
       change history already loaded. See Known Limitations in ARCHITECTURE.md.
 
   zillow_zori:
+    release_calendar:
+      url: https://fred.stlouisfed.org/releases/calendar?rid=503
+      checked: 2026-10-02
+      dates:
+        - {day: 2026-10-15, covers: September 2026}
+        - {day: 2026-11-19, covers: October 2026}
+        - {day: 2026-12-17, covers: November 2026}
     name: Zillow Observed Rent Index
     publisher: Zillow Research
     license: Free for non-commercial use with attribution
@@ -167,6 +183,13 @@ sources:
       not an independent measurement.
 
   census_pep:
+    # Vintage 2026, as of 2026-07-01; the Census Bureau names months, not days.
+    release_calendar:
+      url: https://www.census.gov/programs-surveys/popest/about/schedule.html
+      checked: 2026-10-02
+      dates:
+        - {day: 2027-03-01, precision: month, covers: counties}
+        - {day: 2027-05-01, precision: month, covers: cities and towns}
     name: Population Estimates Program, Vintage 2025
     publisher: U.S. Census Bureau
     license: Public domain (U.S. Government work)
@@ -218,6 +241,15 @@ sources:
       Hub, Building Permit Data).
 
   fhfa_hpi:
+    release_calendar:
+      url: https://www.fhfa.gov/data/hpi
+      checked: 2026-10-02
+      dates:
+        - {day: 2026-11-24, covers: 2026 Q3}
+        - {day: 2027-02-23, covers: 2026 Q4}
+        - {day: 2027-05-25, covers: 2027 Q1}
+        - {day: 2027-08-31, covers: 2027 Q2}
+        - {day: 2027-11-30, covers: 2027 Q3}
     name: House Price Index
     publisher: Federal Housing Finance Agency
     license: Public domain (U.S. Government work)
@@ -239,6 +271,11 @@ sources:
       FRED republishes FHFA's New Jersey series (NJSTHPI).
 
   fred:
+    # Freddie Mac's weekly survey, published Thursdays (moved around holidays).
+    release_calendar:
+      url: https://www.freddiemac.com/pmms
+      checked: 2026-10-02
+      weekly: thursday
     name: Federal Reserve Economic Data
     publisher: Federal Reserve Bank of St. Louis
     license: Free with attribution; series-level terms vary by originator
@@ -277,6 +314,14 @@ sources:
     notes: No anonymous access; a key is required for every request.
 
   bls:
+    # County unemployment arrives with BLS's Metropolitan Area release.
+    release_calendar:
+      url: https://www.bls.gov/schedule/news_release/metro.htm
+      checked: 2026-10-02
+      dates:
+        - {day: 2026-10-28, covers: September 2026}
+        - {day: 2026-12-02, covers: October 2026}
+        - {day: 2026-12-30, covers: November 2026}
     name: Local Area Unemployment Statistics and QCEW
     publisher: U.S. Bureau of Labor Statistics
     license: Public domain (U.S. Government work)
@@ -333,6 +378,12 @@ sources:
       agencies use. Supersedes the area-weighted crosswalk from Milestone 1.
 
   hud_fmr:
+    # HUD's Fair Market Rents take effect each fiscal year on October 1.
+    release_calendar:
+      url: https://www.huduser.gov/portal/datasets/fmr.html
+      checked: 2026-10-02
+      dates:
+        - {day: 2027-10-01, covers: FY2028 rents take effect}
     name: Fair Market Rents
     publisher: U.S. Department of Housing and Urban Development
     license: Public domain (U.S. Government work)

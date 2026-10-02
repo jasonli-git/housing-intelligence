@@ -233,7 +233,8 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   asks first — an `ask`/`auto` setting that starts at `ask`, switchable from the Mac or
   an iPhone Shortcut. Two new pages say what a reader could otherwise only take on
   trust: `/freshness` keeps each source's newest period, release date, last check and
-  download date apart, because checked today is not measured today, and `/changes`
+  download date apart, because checked today is not measured today, and gives the next
+  release from the publisher's own calendar where it publishes one, and `/changes`
   shows figures revised after they were published — 313,536 in the first refresh that
   recorded them, summarised per metric with the places that moved most. Every row of a
   region's full metric tables can open a pre-filled GitHub issue about that figure, and
