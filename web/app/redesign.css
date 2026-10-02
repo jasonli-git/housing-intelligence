@@ -62,6 +62,7 @@ select,
   .bar-afford,
   .bar-mode,
   .bar-icon,
+  .bar-link,
   .seg button,
   .ranks tr {
     transition:
@@ -225,21 +226,15 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
   background: var(--surface-1);
 }
 
-.theme {
+.bar-link {
+  height: 38px;
   border: 0;
-  border-radius: 11px;
-  padding: 2px;
+  border-radius: 10px;
+  background: transparent;
+}
+
+.bar-link:hover {
   background: var(--surface-1);
-}
-
-.theme button {
-  min-height: 32px;
-  border-radius: 9px;
-}
-
-.theme button[aria-checked="true"] {
-  background: var(--surface-card);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
 }
 
 /* ------------------------------------------------------------ licence / location --- */
@@ -2018,3 +2013,4 @@ html[data-housing-mode="afford"] .county-mode-controller[data-mode="state"] ~ .r
 .tax-results small { font: var(--text-label)/1.4 var(--font-mono); color: var(--text-muted); }
 .tax-card h2.household-title { font-size: var(--text-small); }
 .tax-context { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; font-size: var(--text-small); line-height: 1.5; color: var(--text-secondary); }
+.tax-way-in { margin: 0 0 1.5rem; }

@@ -3,6 +3,16 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.33.2] — 2026-10-02
+
+### Changed
+
+- **One theme button** (ARCHITECTURE #292): it switches between light and dark, and the
+  site follows your system until you press it. Pressing back to your system's theme
+  returns to following it.
+- **Property tax in the top bar**, on every page ("Tax" on a phone), and a link from
+  every county and ZIP page as well as every town's.
+
 ## [0.33.1] — 2026-10-02
 
 ### Fixed

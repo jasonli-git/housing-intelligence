@@ -425,6 +425,14 @@ export default async function RegionPage({
         margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))}
       />
 
+      {/* A ZIP has no town of its own to preselect; the lookup asks for one (Milestone 37). */}
+      {region.level === "zip" && (
+        <p className="sales-note tax-way-in">
+          <Link href="/tax">Look up a property here</Link>: its assessment and last year’s
+          tax, found by its town and its address or block and lot.
+        </p>
+      )}
+
       {/* Keep the interpretation visible even when no cost card can be calculated. */}
       {!cost && <ConsumerReading reading={consumer} section="before_moving" />}
 

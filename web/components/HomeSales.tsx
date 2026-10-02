@@ -123,6 +123,12 @@ export function HomeSales({
           assessment, last year’s tax and how it compares with the town’s.
         </p>
       )}
+      {level === "county" && (
+        <p className="sales-note">
+          <Link href="/tax">Look up a property in {name}</Link>, by its town and its
+          address or block and lot: its assessment and last year’s tax.
+        </p>
+      )}
     </section>
   );
 }
