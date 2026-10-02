@@ -57,8 +57,10 @@ layer only explains metrics that were already computed.
 > tax set against its town — and county and statewide effective tax rates. Milestone 38
 > (2026-10-02) lets that lookup find an address anywhere in the state without knowing its
 > town, links each county's own record, and adds removal on request under Daniel's Law.
+> Milestone 39 (2026-10-02) asks whether a place is adding homes or only approving them:
+> permits beside homes completed and demolished, from the state's Construction Reporter.
 >
-> **Next.** Milestone 39: approved vs built. See
+> **Next.** Milestone 40: flood and environmental exposure. See
 > [ROADMAP.md](ROADMAP.md) for what is planned and
 > [CHANGELOG.md](CHANGELOG.md) for what shipped.
 
@@ -305,6 +307,13 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   town; owner names and mailing addresses are never collected, and an address is removed
   on request under Daniel's Law (below). County and statewide effective tax rates,
   weighted by equalized valuation.
+- **Is it adding homes?** (M39, built) — on every town and county page, permits beside
+  homes completed (certificates of occupancy) and homes demolished, by year from 2014,
+  from the state's Construction Reporter; two five-year totals rather than a completion
+  rate, since completions trail permits; net homes added, and per 1,000 homes standing,
+  ranked. A year a town did not report is missing, never zero; a county's total says how
+  many of its towns it covers; 2025 is preliminary, from DCA's December year-to-date
+  report. Proposed and approved stages are named as not published statewide.
 - **How homes sell here** (M36, built) — from the state's deed records, per town and
   county: the number of usable sales, the median and middle half of prices, a
   twelve-month median, price per square foot, the age of what sold and assessed value
@@ -774,7 +783,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.26.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.35.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -791,13 +800,14 @@ Northeast and to every US county was deferred past Version 2 on 2026-09-07.
 Version 3 began as depth on what is already held. On 2026-09-23 it absorbed Version 4
 and the Director Note on accessible, comprehensive and current housing data, and became
 the version that makes the platform current, as complete as public data allows, and
-honest about both. Seven of its milestones have shipped — **24** fresher figures, **25**
-recorded sale prices and a comparable tax rate, **26** current releases, **27** a refresh
-that reaches the reader, **28** figures that say how sure they are, **29** scheduled
-refresh, brought forward out of order once the site was public and had started to decay,
-and **30** readings for every reader. **31** through **50** remain, with the map's standing check; the completeness standing
-check runs at every milestone's close, three times so far. Version 4 holds nowcasts, a local price model
-study and forecasting. Between milestones, the New Jersey landing page and region pages were
+honest about both. Sixteen of its milestones have shipped, **24** through **39** — from
+fresher figures and a refresh that reaches the reader (24–30), through the licence pass
+and the commercial decision (31–32), to the housing decision itself: the full cost of
+owning, household-sized answers, how homes sell, property tax and a statewide property
+lookup, and whether a place is adding homes (33–39). **40** through **51** remain, one
+new source family each, then the decision guides; the completeness standing check runs
+at every milestone's close. Version 4 holds nowcasts, a local price model study and
+forecasting. Between milestones, the New Jersey landing page and region pages were
 redesigned (0.21.1 and 0.21.3).
 
 The notes below are a running commentary on individual milestones rather than a complete

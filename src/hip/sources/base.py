@@ -512,6 +512,19 @@ class SourceAdapter(ABC):
             f"{cls.__name__} lands pdf but does not implement pdf_records()"
         )
 
+    @classmethod
+    def xls_records(
+        cls, cells: list[list[str]], ref: ReleaseRef
+    ) -> list[dict[str, object]]:
+        """Rows from a legacy `.xls` workbook's first sheet, every cell as text.
+
+        Only called when ``landing_format == "xls"`` (Milestone 39). Landing reads the
+        grid; what its rows mean is the publisher's layout, the adapter's knowledge.
+        """
+        raise NotImplementedError(
+            f"{cls.__name__} lands xls but does not implement xls_records()"
+        )
+
     def landing_sheet(self, ref: ReleaseRef) -> str:
         """Which worksheet a release lands from, for sources published as workbooks.
 

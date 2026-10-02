@@ -71,7 +71,8 @@ models:
 
   - name: stg_census_acs_housing
     description: >-
-      ACS vacancy (B25002) and homeownership (B25003) rates, county, municipal and ZCTA.
+      ACS vacancy (B25002) and homeownership (B25003) rates, county, municipal and ZCTA,
+      and since Milestone 39 the housing-unit count itself.
     columns:
       - name: geoid
         tests: [not_null]
@@ -82,7 +83,18 @@ models:
       - name: value
         tests:
           - not_null
-          - accepted_range: {min_value: 0, max_value: 1}
+          - accepted_range:
+              name: stg_census_acs_housing_rates_are_shares
+              min_value: 0
+              max_value: 1
+              config:
+                where: "metric_id <> 'acs_housing_units'"
+          - accepted_range:
+              name: stg_census_acs_housing_units_are_counts
+              min_value: 0
+              max_value: 5000000
+              config:
+                where: "metric_id = 'acs_housing_units'"
       - name: margin_of_error
         tests:
           - accepted_range: {min_value: 0, max_value: 1.0e+15}
@@ -223,6 +235,19 @@ models:
         tests:
           - not_null
           - accepted_range: {min_value: 0, max_value: 1.0e+8}
+
+  - name: stg_nj_construction
+    description: >-
+      Housing units certified and demolished, and net additions, per municipality,
+      county and state and year, from DCA's Construction Reporter, with the share of
+      towns each county and state figure sums (Milestone 39).
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {min_value: -100000, max_value: 100000}
 
   - name: stg_nj_revaluations
     description: >-

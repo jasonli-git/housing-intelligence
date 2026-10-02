@@ -354,6 +354,10 @@ class Metric(BaseModel):
     # The Census's bracketed costs (Milestone 33) carry no margin, so a rank or a change
     # would claim a precision the survey does not give (ARCHITECTURE #279).
     ranked: bool = True
+    # False for a flow counted afresh each year, ranked by its level but given no change
+    # over a window: net homes added per 1,000 (Milestone 39) can swing from 0.0 to 4.0
+    # on one building, and a "+45%" between two such years says nothing (#300).
+    changed: bool = True
 
 
 def metric_licence(

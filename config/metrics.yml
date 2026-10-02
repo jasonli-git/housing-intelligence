@@ -389,6 +389,19 @@ metrics:
     source_id: census_acs
     record_type: survey
 
+  # Milestone 39: the denominator for homes added per 1,000 homes.
+  acs_housing_units:
+    label: Homes, all housing units
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      All housing units, occupied or vacant, ACS 5-year table B25002. The size of the
+      housing stock new construction is measured against.
+    source_id: census_acs
+    record_type: survey
+    ranked: false
+
   fhfa_hpi_all_transactions:
     label: House price index, all transactions
     unit: index
@@ -1341,3 +1354,111 @@ metrics:
     source_id: nj_revaluations
     record_type: determination
     ranked: false
+
+  # Milestone 39 (ARCHITECTURE #300): the end of the construction pipeline, from DCA's
+  # Construction Reporter. Counts are not ranked: they would rank town size.
+  nj_units_certified:
+    label: Homes completed
+    unit: count
+    frequency: annual
+    direction: higher_is_better
+    description: >-
+      Housing units given a certificate of occupancy in the year: complete and ready to
+      live in. Only towns whose construction official reported are counted; a town that
+      did not has no figure, not zero. A county's or the state's is the sum of its towns
+      that reported.
+    source_id: nj_construction
+    record_type: administrative
+    ranked: false
+
+  nj_units_certified_1_2:
+    label: Homes completed, one- and two-family
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: Housing units certified in one- and two-family buildings.
+    source_id: nj_construction
+    record_type: administrative
+    ranked: false
+
+  nj_units_certified_multi:
+    label: Homes completed, multifamily
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: Housing units certified in buildings of three or more homes.
+    source_id: nj_construction
+    record_type: administrative
+    ranked: false
+
+  nj_units_certified_mixed:
+    label: Homes completed, mixed-use
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: Housing units certified in buildings that also hold shops or offices.
+    source_id: nj_construction
+    record_type: administrative
+    ranked: false
+
+  nj_units_demolished:
+    label: Homes demolished
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Dwelling units removed by demolition permits issued in the year. Only towns that
+      reported are counted.
+    source_id: nj_construction
+    record_type: administrative
+    ranked: false
+
+  nj_net_units_added:
+    label: Net homes added
+    unit: count
+    frequency: annual
+    direction: higher_is_better
+    description: >-
+      Homes completed less homes demolished, for a town that reported both that year.
+      A county's or the state's sums the towns that reported both.
+    source_id: nj_construction
+    record_type: calculated
+    ranked: false
+
+  nj_certificates_reporting_share:
+    label: Towns reporting completions
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of a county's or the state's towns whose certificates of occupancy are
+      in the year's file: how much of the area a completions total covers.
+    source_id: nj_construction
+    record_type: calculated
+    ranked: false
+
+  nj_demolitions_reporting_share:
+    label: Towns reporting demolitions
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of a county's or the state's towns whose demolitions are in the year's
+      file.
+    source_id: nj_construction
+    record_type: calculated
+    ranked: false
+
+  nj_net_units_per_1000:
+    label: Net homes added per 1,000 homes
+    unit: per_1000_homes
+    frequency: annual
+    direction: higher_is_better
+    description: >-
+      Net homes added in the year per 1,000 homes already standing (ACS 5-year housing
+      units ending that year): how fast a place is adding homes for its size. One large
+      building moves a small town's figure a long way in a single year.
+    source_id: hip_derived
+    record_type: calculated
+    inputs: [nj_net_units_added, acs_housing_units]
+    changed: false

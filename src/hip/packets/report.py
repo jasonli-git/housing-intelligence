@@ -79,6 +79,9 @@ SHARE_METRICS = frozenset(
         "acs_renter_cost_burden",
         "acs_renters_paying_utilities",
         "acs_vacancy_rate",
+        # Milestone 39: the share of an area's towns a construction total covers.
+        "nj_certificates_reporting_share",
+        "nj_demolitions_reporting_share",
         "chas_owner_cost_burden",
         "chas_renter_cost_burden",
         "chas_renter_severe_burden",
@@ -111,6 +114,9 @@ def format_value(value: float, unit: str) -> str:
         return f"{value:.2f}"
     if unit == "minutes":
         return f"{value:.1f} min"
+    # Milestone 39: net homes added per 1,000 homes standing.
+    if unit == "per_1000_homes":
+        return f"{value:.1f} per 1,000 homes"
     formatted = f"{value:,.1f}"
     return formatted[:-2] if formatted.endswith(".0") else formatted
 

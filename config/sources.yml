@@ -581,6 +581,37 @@ sources:
       One PDF a year from 2017, each naming the taxing districts recognized in that
       year's Director's Table for a revaluation or reassessment. Milestone 36 (#287).
 
+  nj_construction:
+    name: Construction Reporter — housing units certified and demolished
+    publisher: New Jersey Department of Community Affairs
+    license: Open public record
+    licence_class: public_record
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        As nj_sr1a: New Jersey's legal statement, and nothing marked on the Construction
+        Reporter's pages or workbooks.
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-10-02
+    terms_note: >-
+      New Jersey's legal statement (section F): anyone may view, copy or distribute State
+      information without obligation unless it is marked otherwise; the Construction
+      Reporter's pages and the 2024 workbooks mark nothing. DCA's own notice covers only
+      visitors' personal information. Each workbook names its source as the Department
+      of Community Affairs, which the site credits.
+    url: https://www.nj.gov/dca/codes/reporter/
+    cadence: annual
+    adapter: hip.sources.nj_construction:NjConstructionAdapter
+    fallback: >-
+      DCA's Development Trend Viewer (Development_Trend_Viewer.xlsb) carries permits and
+      demolitions per town from 2004, though not certificates; otherwise keep the years
+      held, which change little once the yearly summary posts.
+    notes: >-
+      Yearly summaries 2014-2024; 2025 from December's monthly report, year to date.
+      Monthly reports stop at January 2026 while DCA overhauls the program (its notice,
+      read 2026-10-02). Milestone 39.
+
   nj_equalized:
     name: Table of Equalized Valuations
     publisher: New Jersey Division of Taxation

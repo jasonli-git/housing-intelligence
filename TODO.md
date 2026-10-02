@@ -14,13 +14,11 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones (2026-10-02)
+## Now — Milestone 39 built; PR awaiting review (2026-10-02)
 
-0.34.0 to 0.34.6 are merged: Milestone 38's statewide property search, the removal
-list in iCloud, the Zillow download reminder, publishers' release calendars on
-`/freshness`, a public building as the lookup's example address, and a 30-second
-`make test` with the slow tests behind `make test-all` (about 11 minutes; run it before
-a merge). Milestone 39, approved vs built, is next and not started.
+On `milestone/m39-approved-vs-built` (0.35.0): homes completed and demolished from DCA's
+Construction Reporter beside the Census permits (ARCHITECTURE #300). Milestone 40, flood
+and environmental exposure, follows.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -33,6 +31,19 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
+
+- [ ] **DCA's Construction Reporter has stopped at January 2026.** (M39, #300) DCA says
+      the program is being overhauled. When its 2025 yearly summary posts (one usually
+      does around July), discovery finds it and it replaces the preliminary year to date
+      on its own; if the overhaul changes the files' names or layout, the adapter
+      refuses rather than misreading. Worth a look each quarter.
+- [ ] **Fewer towns report each year.** (M39) Certificates from 559 towns in 2014 and
+      527 in 2024; demolitions from 542 and 465. County and state totals cover less of
+      their area than they did, which the page says, but a long-run line of county
+      totals mixes a real trend with a reporting one. A per-town series is unaffected.
+- [ ] **The New Jersey page has no "Is it adding homes?" section.** (M39) The state's
+      figures are loaded and in its tables; the section is on town and county pages only,
+      because the state page is laid out differently. Add it if the state view needs it.
 
 - [ ] **A packet's `cagr` for a survey figure carries no margin.** (M30, #256) The
       Markdown report and so the readings leave a survey figure's annualised change out,

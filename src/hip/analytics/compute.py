@@ -56,6 +56,10 @@ RATIOS: tuple[tuple[str, str, str, float], ...] = (
     ("rent_to_income", "zori_all", "acs_median_hh_income", 12.0),
     ("price_to_ami", "zhvi_sfr", "hud_area_median_income", 1.0),
     ("fmr_to_income", "hud_fmr_2br", "acs_median_hh_income", 12.0),
+    # Milestone 39: a year's net homes added per 1,000 homes standing, against the ACS
+    # edition ending that year. The numerator is already annual, so its year's mean is
+    # itself; the margin is the housing count's, carried as for income.
+    ("nj_net_units_per_1000", "nj_net_units_added", "acs_housing_units", 1000.0),
 )
 
 
@@ -68,6 +72,13 @@ def unranked_metrics() -> list[str]:
     a reader's cost of owning, shown as levels, not standings (ARCHITECTURE #279).
     """
     return [m for m, metric in load_metrics().items() if not metric.ranked]
+
+
+def unchanged_metrics() -> list[str]:
+    """Metrics given no change over a window: the unranked, and the flows ranked by
+    level alone (`changed: false` in metrics.yml, Milestone 39)."""
+    metrics = load_metrics()
+    return [m for m, metric in metrics.items() if not (metric.ranked and metric.changed)]
 
 
 def survey_metrics() -> list[str]:
@@ -93,7 +104,7 @@ def rebuild(engine: Engine) -> AnalyticsResult:
     with engine.begin() as conn:
         result.derived_observations = _affordability(conn)
         result.pruned_releases = _prune_orphan_derived_releases(conn)
-        result.changes = _changes(conn, unranked, survey_metrics())
+        result.changes = _changes(conn, unchanged_metrics(), survey_metrics())
         # One TRUNCATE for both bases, so the two ranking passes cannot half-rebuild
         # the table and leave a stale basis behind.
         conn.execute(text("TRUNCATE region_rankings"))
