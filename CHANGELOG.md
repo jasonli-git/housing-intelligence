@@ -3,6 +3,15 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.34.3] — 2026-10-02
+
+### Added
+
+- **A monthly reminder to download Zillow** (ARCHITECTURE #297). The Friday refresh
+  notifies you when Zillow has published a month (its third Thursday) that this Mac's
+  files do not hold yet, naming the month held and the six files to fetch. It never
+  contacts Zillow.
+
 ## [0.34.2] — 2026-10-02
 
 ### Changed

@@ -96,6 +96,9 @@ def _run(
     monkeypatch.setattr(script, "_hip", fake_hip)
     monkeypatch.setattr(script, "_run", fake_run)
     monkeypatch.setattr(script, "_notify", fake_notify)
+    if hasattr(script, "_zillow_reminder"):
+        # Read from this machine's files and today's date; its own tests cover it.
+        monkeypatch.setattr(script, "_zillow_reminder", lambda: None)
     if hasattr(script, "_completed_at"):
         monkeypatch.setattr(script, "_completed_at", stamps)
         monkeypatch.setattr(script, "_refresh_mode", lambda: mode)
@@ -370,3 +373,31 @@ def test_ollama_is_never_started_without_a_paid_run(
     ):
         run = _run(monkeypatch, "scheduled_refresh", hip=hip, mode=mode)
         assert "ollama up" not in run.steps
+
+
+def test_the_zillow_reminder_says_what_is_held_and_what_to_fetch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Zillow is fetched by hand (#272): the Friday run names the month held and the
+    files to download, and is silent when nothing is due (#297)."""
+    from datetime import date
+
+    from hip.sources import zillow
+
+    script = _load("scheduled_refresh")
+    notes: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        script, "_notify", lambda title, message, **_: notes.append((title, message))
+    )
+    monkeypatch.setattr(
+        zillow, "due", lambda raw, today: {"zillow_zori": date(2026, 8, 31)}
+    )
+    script._zillow_reminder()
+    [(title, message)] = notes
+    assert title == "Zillow: time to download"
+    assert "August 2026" in message and "data/manual/zillow_zhvi" in message
+
+    notes.clear()
+    monkeypatch.setattr(zillow, "due", lambda raw, today: {})
+    script._zillow_reminder()
+    assert notes == []
