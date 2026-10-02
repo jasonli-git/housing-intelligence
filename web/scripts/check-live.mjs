@@ -176,12 +176,45 @@ async function settle(page) {
   await page.waitForLoadState("networkidle", { timeout });
 }
 
+/**
+ * The local side reads its artifacts from `dist/artifacts`, as the live side reads them
+ * from R2. A page that fetches artifacts — `/tax` since Milestone 38 loads the street
+ * index on arrival — would otherwise ask R2 from a localhost origin the bucket's CORS
+ * rule rightly refuses, and draw an error the live page never shows: the deploy of
+ * 2026-10-02 was correct and failed this check on exactly that.
+ */
+async function serveLocalArtifacts(request) {
+  const requested = decodeURIComponent(new URL(request.url()).pathname);
+  const candidate = path.resolve(artifactsDir, `.${requested}`);
+  if (!candidate.startsWith(artifactsDir + path.sep)) {
+    return { status: 403, body: "" };
+  }
+  try {
+    return {
+      status: 200,
+      body: await readFile(candidate),
+      contentType: candidate.endsWith(".json") ? "application/json" : undefined,
+      headers: { "access-control-allow-origin": "*" },
+    };
+  } catch {
+    return { status: 404, body: "", headers: { "access-control-allow-origin": "*" } };
+  }
+}
+
 async function localMarker(page, route) {
   const file = routeFile(route);
   await access(file);
-  await page.goto(localUrl(route), { waitUntil: "domcontentloaded", timeout });
-  await settle(page);
-  return marker(page);
+  const pattern = `${artifactUrl.origin}/**`;
+  await page.route(pattern, async (intercepted) =>
+    intercepted.fulfill(await serveLocalArtifacts(intercepted.request())),
+  );
+  try {
+    await page.goto(localUrl(route), { waitUntil: "domcontentloaded", timeout });
+    await settle(page);
+    return marker(page);
+  } finally {
+    await page.unroute(pattern);
+  }
 }
 
 async function liveMarker(page, route, expected) {
