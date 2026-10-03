@@ -3,6 +3,14 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.35.1] — 2026-10-02
+
+### Changed
+
+- **`make publish` keeps one copy of the built site.** It moves the export into
+  `dist/site` instead of copying it, and drops Next's build cache, which the next
+  publish rebuilds anyway: about 6.4 GB less on disk.
+
 ## [0.35.0] — 2026-10-02
 
 Milestone 39: approved vs built.

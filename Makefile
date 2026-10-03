@@ -184,7 +184,10 @@ publish:  ## Build both halves of the deployable site into dist/
 	@cd web && NEXT_PUBLIC_ARTIFACT_URL=$(ARTIFACT_URL) npm run build; status=$$?; \
 	  kill $$(cat /tmp/hip-publish-api.pid) 2>/dev/null; rm -f /tmp/hip-publish-api.pid; \
 	  exit $$status
-	mkdir -p dist/site && cp -R web/out/. dist/site/
+	@# Moved, not copied, and Next's build cache dropped: both are rebuilt from scratch
+	@# by the next publish anyway (the `rm -rf` above), and keeping them held two more
+	@# copies of the site, about 6.4 GB of disk at 14,000 pages (2026-10-02).
+	mkdir -p dist && mv web/out dist/site && rm -rf web/.next
 	@echo
 	@echo "dist/artifacts  $$(find dist/artifacts -type f | wc -l | tr -d ' ') files, $$(du -sh dist/artifacts | cut -f1)  -> object storage (R2)"
 	@echo "dist/site       $$(find dist/site -type f | wc -l | tr -d ' ') files, $$(du -sh dist/site | cut -f1)  -> static host (Pages)"
