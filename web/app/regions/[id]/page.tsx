@@ -453,44 +453,6 @@ export default async function RegionPage({
         </p>
       )}
 
-      <section className="local-page-group" aria-labelledby="home-checks-heading">
-      <h2 id="home-checks-heading">Before choosing a home</h2>
-      <div className="local-checks-grid">
-      <FloodRisk
-        name={name}
-        levels={packet.levels}
-        claims={floodClaims[0]}
-        paid={floodClaims[1]}
-        claimsPlace={claimsRegion && claimsRegion.region_id !== regionId ? displayName(claimsRegion) : null}
-      />
-
-      <GroundAndWater name={name} levels={packet.levels} water={water} />
-      </div>
-        <p className="sales-note tax-way-in">
-          <Link href={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"}>Look up a property here</Link>: its assessment and last year’s
-          tax, found by its address, or by block and lot with its town.
-        </p>
-      <ConsumerReading reading={consumer} section="before_moving" />
-      </section>
-
-      {(construction.some((series) => series.length > 0) ||
-        (packet.levels.some((level) => level.metric_id === "sr1a_median_sale_price") &&
-          packet.levels.some((level) => level.metric_id === "sr1a_sales_count"))) && (
-      <section className="local-page-group local-market" aria-labelledby="local-market-heading">
-      <h2 id="local-market-heading">Local market</h2>
-      <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} />
-      <HomesAdded
-        name={name}
-        level={region.level}
-        permitted={construction[0]}
-        completed={construction[1]}
-        demolished={construction[2]}
-        net={construction[3]}
-        levels={packet.levels}
-      />
-      </section>
-      )}
-
       {/* What sets the place apart, in three sentences: the model's lead answer, just above
           the computed rankings it is drawn from and does not author (ARCHITECTURE #275,
           #281). "What's changing?" held this place until 2026-10-01; the page's own
@@ -532,6 +494,44 @@ export default async function RegionPage({
         </details>
       )}
       </ConsumerReading>
+
+      <section className="local-page-group" aria-labelledby="home-checks-heading">
+      <h2 id="home-checks-heading">Before choosing a home</h2>
+      <div className="local-checks-grid">
+      <FloodRisk
+        name={name}
+        levels={packet.levels}
+        claims={floodClaims[0]}
+        paid={floodClaims[1]}
+        claimsPlace={claimsRegion && claimsRegion.region_id !== regionId ? displayName(claimsRegion) : null}
+      />
+
+      <GroundAndWater name={name} levels={packet.levels} water={water} />
+      </div>
+        <p className="sales-note tax-way-in">
+          <Link href={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"}>Look up a property here</Link>: its assessment and last year’s
+          tax, found by its address, or by block and lot with its town.
+        </p>
+      <ConsumerReading reading={consumer} section="before_moving" />
+      </section>
+
+      {(construction.some((series) => series.length > 0) ||
+        (packet.levels.some((level) => level.metric_id === "sr1a_median_sale_price") &&
+          packet.levels.some((level) => level.metric_id === "sr1a_sales_count"))) && (
+      <section className="local-page-group local-market" aria-labelledby="local-market-heading">
+      <h2 id="local-market-heading">Local market</h2>
+      <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} />
+      <HomesAdded
+        name={name}
+        level={region.level}
+        permitted={construction[0]}
+        completed={construction[1]}
+        demolished={construction[2]}
+        net={construction[3]}
+        levels={packet.levels}
+      />
+      </section>
+      )}
 
       <MoreExpander id="region-detailed-data" title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>
         {hasDownloadableFigures([...packet.metrics, ...packet.levels]) && (

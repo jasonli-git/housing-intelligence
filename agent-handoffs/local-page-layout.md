@@ -106,3 +106,11 @@
 - Recommended moving the combined standout section after household/budget comparison and before property checks and Local market. Placement has not changed: the owner asked for advice on that part.
 - Typecheck and 43 files / 399 tests passed; diff whitespace checks passed. Headless checks at 1440px and 390px confirmed distinct styling, no horizontal overflow and no page errors.
 - Static build passed: 2,377 pages, with the expected local artifact-origin warning. No deployment or reading regeneration.
+
+## Approved follow-up: move standout highlights higher
+
+- Moved the complete combined model-highlights/ranked-measures section directly after `For your household` and its contextual budget link, before `Before choosing a home` and `Local market`.
+- Preserved the section's contents, conditional rendering, attribution, citations, carousel interactions and styling. No duplicated section, calculations or reading regeneration. Full reports remain unchanged.
+- Typecheck, 43 test files / 399 tests and diff whitespace checks passed.
+- Local servers were initially stopped: the first browser check could not connect and the first static build failed fetching API data. Restarted `make api` before retrying verification; these were preview-environment availability failures, not asserted app passes.
+- Retry verification passed: 2,377-page static build (expected local artifact-origin warning); headless checks at 1440px and 390px asserted the complete section order, a single highlights section and working rank expansion, with no overflow/page errors. A town without a reading also remained usable. Restarted localhost preview. No deployment.
