@@ -98,3 +98,11 @@
 - Retained source-basis, survey-year and partial-cohort qualifiers. Price/rank uncertainty still controls comparative wording; change uncertainty spanning zero does not become a rise/fall claim. Negative and unchanged changes retain their correct direction. `But` highlights a supported lower-price/faster-rise or higher-price/slower-rise contrast, otherwise the sentence uses `and`.
 - Verification: frontend typecheck and 43 test files / 399 tests passed. Added decline and broad-rank-uncertainty cases, and updated natural-sentence expectations. Headless desktop/mobile checks confirmed one context strip before both extra views, no horizontal overflow or page errors, and the intended Atlantic County sentence. Diff whitespace checks passed. No readings regenerated or deployment.
 - Static production build passed: 2,377 pages generated against the local API, with the expected unset-artifact-origin warning for a local build.
+
+## Follow-up: distinguish the before-moving checklist
+
+- Changed only the local before-moving card styling: a faint warm surface, solid neutral border, muted warm top accent and matching bullet markers. The green dashed/left-accent headline treatment remains reserved for the combined standout highlights.
+- Kept card contents, citations, attribution, layout and height essentially unchanged. Reports are not affected by this local-group selector.
+- Recommended moving the combined standout section after household/budget comparison and before property checks and Local market. Placement has not changed: the owner asked for advice on that part.
+- Typecheck and 43 files / 399 tests passed; diff whitespace checks passed. Headless checks at 1440px and 390px confirmed distinct styling, no horizontal overflow and no page errors.
+- Static build passed: 2,377 pages, with the expected local artifact-origin warning. No deployment or reading regeneration.
