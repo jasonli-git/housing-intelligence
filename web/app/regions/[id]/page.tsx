@@ -43,6 +43,7 @@ import {
 } from "@/lib/uncertainty";
 import {
   housingProfile,
+  verdictHeadline,
   type PaycheckAnswer,
   paycheckAnswers,
   paychecks,
@@ -268,6 +269,7 @@ export default async function RegionPage({
       )
     : null;
   const lead = verdict(peers, packet.metrics, packet.levels, uncertainties);
+  const headline = verdictHeadline(peers, packet.metrics, packet.levels, uncertainties);
   const paid = paychecks(packet.metrics);
   const answers = paycheckAnswers(packet.metrics);
   const trade = tradeoff(peers, packet.levels, uncertainties);
@@ -363,9 +365,14 @@ export default async function RegionPage({
           </div>
           {/* Every rank names its own cohort now — "12th of 21 NJ counties" — so the
               line that named it once for the whole page is gone (Milestone 28). */}
-          <p className="meta">{placeLine(region)}</p>
-          {lead && <p className="verdict">{lead}</p>}
-          {trade && <p className="verdict-more">{trade}</p>}
+          {headline && <p className="verdict region-orientation">{headline}</p>}
+          {(lead || trade) && (
+            <details className="verdict-details orientation-details">
+              <summary className="disclose">Why this headline? <span className="disclose-hint"><span className="when-closed">See the figures</span><span className="when-open">Hide</span></span></summary>
+              {lead && <p className="verdict-more">{lead}</p>}
+              {trade && <p className="verdict-more">{trade}</p>}
+            </details>
+          )}
           {/* The short answers in the line, the sentences behind them a click away: the
               answer is what a reader came for, the working what some go on to. */}
           {paid && answers && (
@@ -488,14 +495,13 @@ export default async function RegionPage({
           the computed rankings it is drawn from and does not author (ARCHITECTURE #275,
           #281). "What's changing?" held this place until 2026-10-01; the page's own
           sentences say what changed. */}
-      <ConsumerReading reading={consumer} section="what_stands_out" />
-
+      <ConsumerReading reading={consumer} section="what_stands_out" heading={`What stands out in ${name}`}>
       {standing.length > 0 && (
         <details className="standouts-disclosure">
           <summary>
             <span className="standouts-disclosure-copy">
               <span className="standouts-disclosure-kicker">Computed rankings</span>
-              <strong>See where {name} stands out</strong>
+              <strong>Explore the ranked measures</strong>
               <span className="standouts-previews">
                 {changePreview && changePreviewMetric && (
                   <span className="standouts-preview">
@@ -525,6 +531,7 @@ export default async function RegionPage({
           />
         </details>
       )}
+      </ConsumerReading>
 
       <MoreExpander id="region-detailed-data" title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>
         {hasDownloadableFigures([...packet.metrics, ...packet.levels]) && (

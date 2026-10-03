@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 
 import type { Binding, Explanation } from "@/lib/api";
 import {
@@ -144,18 +144,22 @@ function Figures({ binding }: { binding: Binding | null }) {
 export function ConsumerReading({
   reading,
   section,
+  heading,
+  children,
 }: {
   reading: Explanation | null;
   section: FocusedConsumerSection;
+  heading?: string;
+  children?: ReactNode;
 }) {
-  if (!reading || !reading.sections?.length) return null;
+  if (!reading || !reading.sections?.length) return children ?? null;
   const { answer, binding } = focusedConsumerAnswer(
     reading.body,
     reading.sections,
     reading.binding ?? null,
     section,
   );
-  if (!answer) return null;
+  if (!answer) return children ?? null;
   const id = `interpretation-${reading.region_id}-${section}`;
   const footnote = (
     <>
@@ -169,7 +173,7 @@ export function ConsumerReading({
   return (
     <section aria-labelledby={id} className={`interpretation consumer-feature consumer-feature-${section}`}>
       <div className="consumer-feature-topline">
-        <span className="consumer-feature-tag">Model interpretation</span>
+        <span className="consumer-feature-tag">{children ? "Highlights · Model interpretation" : "Model interpretation"}</span>
         <span className="interpretation-source">
           written by {reading.model_label}
           <span className="interpretation-runtime"> · {reading.runtime}</span>
@@ -177,7 +181,7 @@ export function ConsumerReading({
       </div>
       <Stale reading={reading} />
       <div className="consumer-feature-main">
-        <h2 id={id}>{answer.heading}</h2>
+        <h2 id={id}>{heading ?? answer.heading}</h2>
         {section === "before_moving" ? (
           <div className="consumer-moving-body">
             <ul className="consumer-feature-answer consumer-moving-list">
@@ -194,6 +198,7 @@ export function ConsumerReading({
         )}
       </div>
       {section !== "before_moving" && footnote}
+      {children}
     </section>
   );
 }

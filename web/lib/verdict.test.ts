@@ -12,6 +12,7 @@ import {
   standingRange,
   tradeoff,
   verdict,
+  verdictHeadline,
 } from "@/lib/verdict";
 
 function metric(metric_id: string, fields: Partial<PacketMetric>): PacketMetric {
@@ -196,6 +197,9 @@ describe("housingProfile", () => {
   it("lists what the region has, in a fixed order", () => {
     const levels = [
       level("permits_total_units", { unit: "count", value: 205, period_end: "2024-12-31" }),
+      level("nj_net_units_per_1000", { unit: "per_1000_homes", value: 6.5, period_end: "2024-12-31" }),
+      level("acs_median_hh_income", { unit: "usd", value: 90000 }),
+      level("acs_renter_cost_burden", { unit: "ratio", value: 0.47 }),
       level("acs_homeownership_rate", { unit: "ratio", value: 0.56 }),
       level("modiv_median_year_built", { unit: "year", value: 1958 }),
       level("modiv_multifamily_share", { unit: "ratio", value: 0.012 }),
@@ -205,11 +209,13 @@ describe("housingProfile", () => {
     const profile = housingProfile(levels);
 
     expect(profile.map((item) => [item.label, item.value])).toEqual([
+      ["Typical household income", "$90,000"],
+      ["Renters spending over 30%", "47.0%"],
       ["Typical home built", "1958"],
       ["Median lot", "0.46 acres"],
       ["Households that own", "56.0%"],
       ["Apartment buildings", "1.2%"],
-      ["Homes permitted in 2024", "205"],
+      ["Net homes added per 100 · 2024", "0.65"],
     ]);
     // Every item says what was counted, because a short label cannot.
     expect(profile.every((item) => item.definition.length > 40)).toBe(true);
@@ -252,6 +258,43 @@ describe("housingProfile", () => {
 
   it("is empty when the region has none of them", () => {
     expect(housingProfile([level("zhvi_sfr", { value: 1 })])).toEqual([]);
+  });
+  it("rescales net additions and their margin without changing rank; discloses partial reporting", () => {
+    const levels = [level("nj_net_units_per_1000", { value: -3, unit: "per_1000_homes", period_end: "2024-12-31", rank: 20, of: 21 }),
+      level("nj_certificates_reporting_share", { value: .8, period_end: "2024-12-31" })];
+    const profile = housingProfile(levels, [], { value: new Map([["nj_net_units_per_1000", { margin: 1.5, best: 19, worst: 21 }]]), change: new Map() });
+    expect(profile[0].value).toBe("-0.30");
+    expect(profile[0].margin).toBe("± 0.15 per 100 homes");
+    expect(profile[0].context?.rank).toEqual({ value: 20, of: 21, best: 19, worst: 21 });
+    expect(profile[0].definition).toContain("Reporting is incomplete");
+    expect(profile[0].definition).toContain("negative value");
+  });
+  it("does not substitute approvals for missing net additions", () => {
+    expect(housingProfile([level("permits_total_units", {value: 20})])).toEqual([]);
+  });
+  it("does not round a positive net-additions margin to zero", () => {
+    const u = { value: new Map([["nj_net_units_per_1000", { margin: .03, best: null, worst: null }]]), change: new Map() };
+    expect(housingProfile([level("nj_net_units_per_1000", { value: 1.3, unit: "per_1000_homes" })], [], u)[0].margin).toBe("± 0.003 per 100 homes");
+  });
+});
+
+describe("verdictHeadline", () => {
+  it("summarizes the price and pace, leaving exact figures in the full verdict", () => {
+    const levels = [level("zhvi_sfr", { rank: 19, of: 21 })];
+    expect(verdictHeadline(COUNTY, [metric("zhvi_sfr", { rank: 1, of: 21, pct_change: 40 })], levels))
+      .toBe("Home values: toward the lower end among New Jersey’s counties. Five-year rise: faster than almost all.");
+  });
+  it("names survey and partial coverage rather than implying a current market index", () => {
+    expect(verdictHeadline(TOWN, [], [level("acs_median_home_value", {rank: 2, of: 100, period_end: "2024-12-31"})]))
+      .toContain("Owner-reported values (2024 survey): toward the higher end among New Jersey’s covered municipalities.");
+  });
+  it("avoids a rise/fall claim when the change margin spans zero", () => {
+    const u = { value: new Map(), change: new Map([["zhvi_sfr", { margin: 4, best: 1, worst: 21 }]]) };
+    expect(verdictHeadline(COUNTY, [metric("zhvi_sfr", {rank: 2, of: 21, pct_change: 2})], [level("zhvi_sfr", {rank: 10, of: 21})], u))
+      .toContain("No clear five-year rise or fall.");
+  });
+  it("is absent without a ranked home value", () => {
+    expect(verdictHeadline(COUNTY, [], [])).toBeNull();
   });
 });
 

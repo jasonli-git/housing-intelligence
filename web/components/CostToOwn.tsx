@@ -127,7 +127,7 @@ type HomeFields = {
 
 const NO_HOME_FIELDS: HomeFields = { price: "", tax: "", rent: "", hoa: "", flood: "", moving: "", repairs: "" };
 
-type View = "upfront" | "gone" | "years";
+type View = "upfront" | "years";
 
 /**
  * The full cost of owning a home here, and of renting one (Milestone 33; cards since
@@ -374,8 +374,7 @@ export function CostToOwn({
   };
 
   const views: Record<View, string> = {
-    upfront: "Up front",
-    gone: "Money gone",
+    upfront: "Cash needed to buy",
     years: `Over ${input.years} years`,
   };
   const showView = (which: View) => !control || view === which;
@@ -714,23 +713,6 @@ export function CostToOwn({
                 a month and a half’s rent — the most a New Jersey landlord may ask ({DEPOSIT_RULE.source}).
               </p>
             )}
-          </div>
-        )}
-
-        {showView("gone") && (
-          <div className="cost-view" role={control ? "tabpanel" : undefined}>
-            <h3 className="cost-view-title">Money gone each month</h3>
-            <p className="cost-view-figure">
-              <b>{money(month.gone)}</b>
-              <span>of {money(month.total)} — the rest, {money(kept)}, pays the loan down</span>
-            </p>
-            <p className="cost-view-note">
-              What a month of owning costs and does not give back: interest, property tax,
-              insurance, any mortgage insurance, utilities and upkeep. Without utilities, which
-              renting pays too, it is {money(goneNoUtilities)}
-              {rentMonth !== null ? `, against ${money(rentMonth)} of rent` : ""}.
-              {partial ? ` It leaves out ${listed(month.missing).toLowerCase()}.` : ""}
-            </p>
           </div>
         )}
 

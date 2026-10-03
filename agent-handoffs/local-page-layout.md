@@ -51,3 +51,35 @@
 - `git diff --check`: passed.
 - Headless Playwright checks on localhost at 1440px and 390px: county and municipality profiles, contextual budget selection, county/all-NJ summaries, state workspace switching, mobile household stacking, report compatibility and horizontal overflow.
 - No frontend lint script is configured; no separate frontend lint pass claimed.
+
+## Approved follow-up: highlights, profile and cost-view refinement
+
+### What changed
+
+- The model highlights and ranked-measure disclosure now share the existing green-accented interpretation card. The label explicitly says `Highlights · Model interpretation`; the disclosure remains labelled `Computed rankings`. Citations, model identity, stale-reading warnings and the interpretation disclaimer remain intact. Missing readings still leave the ranking explorer available.
+- The local introduction now gives one short computed headline, with the full existing verdict and tax tradeoff behind `Why this headline?`. Survey-based home values name their survey year and incomplete cohorts say `covered`; uncertainty crossing zero does not become a confident rise/fall headline. Removed the redundant generic place description from the rendered header.
+- Local profile banners add typical household income and renters spending over 30% of income on rent/utilities. Both retain survey definitions, margins and rank ranges.
+- Replaced raw permits in those banners with net homes added per **100** existing homes, as explicitly requested. The existing `nj_net_units_per_1000` metric remains unchanged in the warehouse, packets, tables and citations: the banner divides its value and margin by 10. Ranks stay unchanged. Small positive margins retain precision instead of rounding to zero. Definitions disclose reporting limits, denominator vintage and negative values; permits remain in Local market.
+- Removed the redundant `Money gone` auxiliary cost view. The monthly total, money-gone figure, principal breakdown and its definition stay in the main card. The remaining views are `Cash needed to buy` and `Over N years`. Full reports also omit the repeated auxiliary block; calculations are unchanged.
+- Publisher notices now form one faint inset with publisher labels, two columns on desktop and one on mobile. Notice wording, links and default visibility are unchanged.
+- Removed obsolete CSS that hid county introductions/profile banners on legacy affordability URLs.
+
+### Additional files
+
+- `web/components/ExplanationPanel.tsx`: optional heading/children slots to join interpretation and rankings without changing generated text.
+- `web/components/SourceFooter.tsx`: publisher-labelled notices.
+- `web/lib/verdict.ts` and tests: concise computed orientation and profile lineup/scaling.
+
+### Decisions and limitations
+
+- Do not imply that ranking cards support every model sentence: a reading can cite the broader data packet. Its original figure citations remain authoritative.
+- Retained home age, lot size, ownership, apartment-building share and vacancy in the profile; each describes a distinct housing-stock feature. No automatic substitution of permits when net additions are missing.
+- Added no new data collection or generated readings. New Jersey's statewide profile remains its existing separate series lineup; these housing-stock lineup changes apply to local profiles.
+
+### Follow-up verification
+
+- `cd web && npm run typecheck`: passed.
+- `cd web && npm test`: 43 files / 397 tests passed, including headline basis/coverage/uncertainty, per-100 conversion, rank preservation, missing additions and tiny-margin precision.
+- `cd web && npm run build`: passed, 2,377 static pages; same expected local artifact-origin warning.
+- `git diff --check`: passed.
+- Headless localhost browser checks cover combined-card expansion, the new profile lineup, desktop/mobile layout, notices and cost views. No reading regeneration or deployment.
