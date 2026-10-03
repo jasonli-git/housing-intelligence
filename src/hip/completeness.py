@@ -230,7 +230,7 @@ QUESTIONS: tuple[Question, ...] = (
     Question(
         "Will prices go up?",
         "unanswered",
-        "decided against 2026-09-13 (a forecast); Milestone 51 is the descriptive answer",
+        "decided against 2026-09-13 (a forecast); Milestone 52 is the descriptive answer",
     ),
     Question(
         "Is it a good investment, or should I buy?",
@@ -238,10 +238,10 @@ QUESTIONS: tuple[Question, ...] = (
         "decided against 2026-09-13 (advice)",
     ),
     Question("Is it at risk of flooding?", "answered", "/regions/[id]"),
-    Question("How long is the commute?", "unanswered", "Milestone 44"),
-    Question("Where is somewhere like here, but cheaper?", "unanswered", "Milestone 45"),
-    Question("What are the schools like?", "unanswered", "Milestone 46"),
-    Question("Is it safe?", "unanswered", "Milestone 46"),
+    Question("How long is the commute?", "unanswered", "Milestone 45"),
+    Question("Where is somewhere like here, but cheaper?", "unanswered", "Milestone 46"),
+    Question("What are the schools like?", "unanswered", "Milestone 47"),
+    Question("Is it safe?", "unanswered", "Milestone 47"),
 )
 
 Right = Literal["yes", "no", "unverified", "inherited"]
