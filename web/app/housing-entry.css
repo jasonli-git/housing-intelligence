@@ -20,6 +20,38 @@
 .state-entry-copy > span:not(.entry-kicker) { font-size: var(--text-small); }
 .state-entry-action { margin-top: .7rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: var(--entry-accent); font-weight: 600; }
 .state-entry-action > span { font-size: 24px; }
+.coverage-entry-map { display: block; margin-top: .5rem; }
+.coverage-entry-map > header { display: flex; align-items: baseline; gap: 1.2rem; margin-bottom: 1rem; }
+.coverage-entry-map > header h2 { margin: 0; }
+.coverage-atlas { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--surface-card); }
+.coverage-map-stage { position: relative; isolation: isolate; background: radial-gradient(ellipse at 55% 55%, light-dark(#eaf1f6, #1c2b3a), light-dark(#f7f9fb, #17202b)); }
+.coverage-map { display: block; width: 100%; height: clamp(250px, 38vw, 460px); touch-action: auto; }
+.coverage-map-caption { position: absolute; top: 1rem; left: 1.2rem; z-index: 1; color: var(--text-muted); font: 500 9px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; pointer-events: none; }
+.coverage-mobile-link { display: none; }
+.coverage-land path { fill: light-dark(#e1e8ed, #253240); stroke: none; }
+.coverage-unavailable { fill: light-dark(#cbd6df, #3a4958); stroke: light-dark(#a9bac8, #566575); stroke-width: .7; vector-effect: non-scaling-stroke; transition: fill 160ms ease; }
+.coverage-unavailable:hover { fill: light-dark(#b4c4d1, #4a5b6c); }
+.coverage-state-top { fill: var(--state-blue); stroke: light-dark(#235b91, #a2ceff); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.coverage-state-wall { fill: #1b4670; }
+.coverage-state-shadow { fill: #18354b; opacity: .25; }
+.coverage-available:hover .coverage-state-top, .coverage-available:focus .coverage-state-top { fill: light-dark(#164f9e, #a2ceff); }
+.coverage-locator { color: light-dark(#164f79, #bedfff); }
+.coverage-locator path { fill: none; stroke: currentColor; stroke-width: 1.2; }
+.coverage-locator circle { fill: var(--state-blue); stroke: var(--surface-card); stroke-width: 2; }
+.coverage-locator rect { fill: var(--surface-card); stroke: color-mix(in srgb, var(--state-blue) 50%, var(--border)); stroke-width: 1; }
+.coverage-locator text { fill: currentColor; font: 600 14px var(--font-text); }
+.coverage-locator:hover rect, .coverage-locator:focus rect { stroke: var(--state-blue); stroke-width: 2; }
+.coverage-map-foot { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; padding: .6rem 1.2rem; color: var(--text-secondary); font-size: 11px; border-top: 1px solid var(--border); }
+.coverage-map-foot > span:last-child { display: flex; align-items: center; gap: .4rem; color: var(--text-muted); }
+.coverage-map-foot i { width: 7px; height: 7px; border-radius: 2px; background: var(--state-blue); }
+.coverage-map-placeholder { display: grid; place-items: center; min-height: 250px; color: var(--text-muted); font-size: var(--text-small); }
+.coverage-state-preview { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.2rem; }
+.coverage-state-preview h3 { margin: 0 0 .3rem; color: var(--entry-ink); font: 650 26px/1.1 var(--font-display); letter-spacing: -.04em; }
+.coverage-state-preview p { margin: 0; font-size: var(--text-small); color: var(--text-secondary); }
+.coverage-state-preview .entry-kicker { margin-bottom: .4rem; font-size: 9px; color: var(--entry-accent); }
+.coverage-state-action { display: flex; gap: 1.5rem; align-items: center; color: var(--entry-ink); border: 1px solid color-mix(in srgb, var(--state-blue) 40%, var(--border)); border-radius: 8px; padding: .7rem .9rem; font-size: var(--text-small); font-weight: 600; text-decoration: none; background: color-mix(in srgb, var(--state-blue) 7%, var(--surface-card)); }
+.coverage-state-action:hover { border-color: var(--state-blue); text-decoration: none; }
+.coverage-map-note { margin: 0; padding: 0 1.2rem .8rem; color: var(--text-muted); font-size: 11px; }
 .national-context { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 2rem; padding: 1.5rem 0; border-block: 1px solid var(--border); }
 .national-rate { display: grid; gap: .4rem; justify-self: end; }
 .national-rate > strong { font: 600 54px/1 var(--font-display); letter-spacing: -.05em; color: var(--entry-ink); }
@@ -52,6 +84,13 @@ html[data-housing-mode="afford"] .nj-page > .state-ticker, html[data-housing-mod
 .nj-page .more-entry { background: #163c60; border-color: #456581; }
 .nj-page .more > summary:hover .more-entry { background: #1e4b73; }
 @media (max-width: 760px) {
+  .coverage-entry-map > header { display: block; }
+  .coverage-map { height: 250px; }
+  .coverage-map-caption { font-size: 8px; left: .8rem; }
+  .coverage-locator { display: none; }
+  .coverage-mobile-link { display: flex; position: absolute; right: .6rem; top: .45rem; z-index: 1; min-height: 44px; align-items: center; padding: 0 .7rem; border-radius: 8px; background: color-mix(in srgb, var(--surface-card) 85%, transparent); color: var(--entry-ink); font-size: 11px; text-decoration: none; }
+  .coverage-state-preview { padding: 1rem; gap: .8rem; }
+  .coverage-state-action { gap: .7rem; padding: .6rem .7rem; }
   .coverage-entry, .national-context { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
   .national-rate { justify-self: start; }
   .state-facts { grid-template-columns: minmax(0, 1fr); }
@@ -66,5 +105,5 @@ html[data-housing-mode="afford"] .nj-page > .state-ticker, html[data-housing-mod
   .state-entry-link { gap: 1rem; }
   .state-entry-monogram { font-size: 60px; }
 }
-@media (prefers-reduced-motion: reduce) { .state-entry-link { transition: none; } .state-entry-link:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .coverage-unavailable, .state-entry-link { transition: none; } .state-entry-link:hover { transform: none; } }
 @media print { .state-workspace-choice { display: none; } .state-facts { display: block; } .state-entry-link { background: transparent; box-shadow: none; } }

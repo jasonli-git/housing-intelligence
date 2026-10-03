@@ -9,6 +9,7 @@
 - Navigation, local-page breadcrumbs and legacy state-region redirects point to the new state route. Existing county, municipality, ZIP, report and standalone affordability URLs remain unchanged.
 - Tax-rate values now explicitly say dollars per $100 instead of displaying a unitless number. Mortgage overview figures retain two decimal places.
 - Follow-up refinement: the national entrance introduces Housing as a public data project, retains the approved tagline, and explicitly says “Free to use · No fees. No subscription.” Repeated coverage text and longer state-card/benchmark descriptions were shortened. This is a free-access statement, not a change to source licensing or the non-commercial notice.
+- National map experiment: replace the monogram/state-card layout with a stationary globe-projected US coverage selector. Only NJ is blue/raised and linked. Unavailable states are neutral and identify themselves on hover. NJ remains reachable via the locator and a normal text action.
 
 ## Files/modules affected
 
@@ -17,6 +18,7 @@
 - Breadcrumbs on local profiles/reports, affordability, tax, freshness and revision history; not-found navigation; `web/public/_redirects`.
 - `HomeSales` and `HomesAdded` accept the fields they actually use rather than requiring unrelated packet provenance fields. Their local-page behavior is unchanged.
 - `web/lib/stateEntry.ts`, its tests, and the shared `rate_per_100` value formatter.
+- Map follow-up: `NationalCoverageMap`, `web/lib/coverageMap.ts` and tests, and the geometry-only `/states.json` static route. Existing `globe.ts`, packing/unpacking and world-land assets are reused without modifying the analytical map.
 
 ## Architectural or implementation decisions
 
@@ -27,6 +29,8 @@
 - The overview price is specifically `sr1a_median_sale_price_12m`. Neither a longer transaction window nor a house-price index substitutes for it when absent.
 - Preliminary construction status is derived from existing construction observation vintages, not a hard-coded year. Reporting coverage is not treated as full coverage.
 - Static-host redirects handle legacy `/regions/1` and `/regions/1/report`; Next's local development server does not process Cloudflare `_redirects`.
+- The coverage map has no measure/color scale and no continuous animation. Its small NJ lift represents availability, never magnitude. State geometry loads near the viewport via IntersectionObserver; the regular state action is server-rendered. No new dependencies, API keys or WebGL requirement.
+- Fixed framing intentionally avoids pan/zoom gesture capture. Mobile has a readable 44px-high NJ link rather than a scaled-down SVG label. Reduced motion removes hover color transitions; unavailable/failed geometry and JavaScript-disabled browsers retain the normal NJ link.
 
 ## Assumptions
 
@@ -41,6 +45,7 @@
 - This does not add a statewide modeled interpretation or cost-to-own scenario: the available statewide measures do not supply all the local cost inputs.
 - No deployment or merge was performed. Live Cloudflare redirect behavior requires deployment verification; the exported redirect file is checked locally.
 - The local build's artifact-origin warning remains: report Markdown downloads resolve to localhost unless `NEXT_PUBLIC_ARTIFACT_URL` is set for deployment.
+- The first national locator shows the contiguous US, not Alaska/Hawaii/Puerto Rico; its label and accessible description say so. It is a stationary selection surface, not a replacement for the full NJ map's pan/zoom controls. World land is decorative context, not data coverage.
 
 ## Verification
 
@@ -49,6 +54,8 @@
 - `git diff --check`: passed.
 - Headless Playwright: root and state pages at 1440px, 390px and 320px had no document horizontal overflow. Light and dark screenshots were inspected.
 - Entry-copy follow-up: type checking, all 404 tests and diff checks passed again; headless checks at 1440px/light, 390px/dark and 320px/light confirmed the tagline/free-access/coverage text, no horizontal overflow or page errors, and working NJ navigation.
+- Map follow-up: type checking and 407 tests across 45 files passed. Headless checks at 1440px, 390px and 320px showed no horizontal overflow; light/dark screenshots inspected. Mobile NJ navigation, page scrolling, reduced-motion mode, request-failure fallback and JS-disabled NJ link verified. No `/map.json` request on the entry; `/states.json` measured 57,770 uncompressed bytes in the local snapshot.
+- Map follow-up production build passed with 2,379 static outputs. Exported `states.json` contains only precision and 52 packed state/backdrop outlines, including NJ; no housing measures.
 - Browser checks: national → state navigation; direct budget URL; mode switching and browser Back; state ticker remains visible in budget mode; local NJ breadcrumb; statewide evidence opens with 28 figure rows and six construction years; no page errors in the navigation check.
 - Focused mobile sale-price definition was wholly within the 390px × 900px viewport (left 33, right 321, top 649, bottom 817). Two initial inspection scripts used incorrect tooltip selectors and failed; the corrected check passed.
 - `npm run build`: passed; generated 2,378 static pages, including `/` and `/states/new-jersey`. Both exported HTML files exist and `out/_redirects` exactly matches the source redirect file. The artifact-origin warning noted above was emitted.

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { Masthead } from "@/components/Masthead";
 import { nationalMortgageRate } from "@/lib/api";
 import { periodLabel } from "@/lib/periods";
@@ -17,12 +17,9 @@ export default async function UnitedStatesPage() {
         <p className="entry-context">Compare housing costs and local conditions, with sources for every figure.</p>
         <p className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg>Free to use <span aria-hidden="true">·</span> <span>No fees. No subscription.</span></p>
       </header>
-      <section className="coverage-entry" aria-labelledby="coverage-heading">
-        <header><p className="entry-kicker">Explore by state</p><h2 id="coverage-heading">Find your place</h2><p>Currently available: New Jersey.</p></header>
-        <Link className="state-entry-link" href="/states/new-jersey">
-          <span className="state-entry-monogram" aria-hidden="true">NJ</span>
-          <span className="state-entry-copy"><span className="entry-kicker">Available now</span><strong>New Jersey</strong><span>Counties, towns and ZIP codes.</span><span className="state-entry-action">Explore New Jersey <span aria-hidden="true">↗</span></span></span>
-        </Link>
+      <section className="coverage-entry coverage-entry-map" aria-labelledby="coverage-heading">
+        <header><p className="entry-kicker">Explore by state</p><h2 id="coverage-heading">Find your place</h2></header>
+        <NationalCoverageMap />
       </section>
       <section className="national-context" aria-labelledby="national-context-heading">
         <div><p className="entry-kicker">National context</p><h2 id="national-context-heading">The cost of borrowing</h2><p>A national benchmark, not a lender quote.</p></div>
