@@ -1,5 +1,6 @@
 import type { Observation, PacketLevel } from "@/lib/api";
 import { FLOOD_MAP } from "@/lib/costRules";
+import { ReaderDetails } from "@/components/ReaderDetails";
 import { formatValue } from "@/lib/format";
 import { claimsSummary, floodLevels, shareText, unmapped } from "@/lib/hazards";
 
@@ -53,9 +54,9 @@ export function FloodRisk({
         </p>
       ) : unmapped(flood) ? (
         <p className="sales-lead">
-          FEMA’s digital flood map covers only {shareText(flood.mapped ?? 0)} of {name}’s
-          homes, so no share in its flood zones is given here: a share over the rest would
-          read as dry. FEMA’s older paper maps still apply there.
+          FEMA’s digital map covers only {shareText(flood.mapped ?? 0)} of {name}’s homes.
+          No flood-zone share is shown: uncounted homes must not look flood-free.
+          Older paper maps still apply.
         </p>
       ) : null}
 
@@ -81,14 +82,19 @@ export function FloodRisk({
           {history.partial.claims > 0
             ? `, and on ${count(history.partial.claims)} so far in ${history.partialYear}`
             : ""}
-          . The worst years since {history.since}:{" "}
-          {history.worst.map((y) => `${y.year} (${count(y.claims)})`).join(", ")}. Only
-          insured owners claim, so this counts insured loss, not every flooded home
-          {claimsPlace ? "; FEMA does not place claims in towns precisely enough to count them here" : ""}
-          .
+          . Insured losses only—not every flooded home.
         </p>
       )}
 
+      <p className="sales-note reader-takeaway">
+        Outside a flood zone does not mean flood-free. Check the address on{" "}
+        <a href={FLOOD_DISCLOSURE_URL} target="_blank" rel="noreferrer">New Jersey’s flood lookup</a>.
+      </p>
+      <ReaderDetails title="Flood-map limits and sources">
+      {history && <p className="sales-note">
+        Worst claim years since {history.since}: {history.worst.map((y) => `${y.year} (${count(y.claims)})`).join(", ")}.
+        {claimsPlace ? " FEMA does not locate claims precisely enough to count them by town; these are county figures." : ""}
+      </p>}
       <p className="sales-note">
         Outside a flood zone is not safe from flooding: many claims come from outside one,
         and the map shows where FEMA has studied, not every street that floods. A share is
@@ -108,6 +114,7 @@ export function FloodRisk({
         Flood zones: FEMA’s National Flood Hazard Layer. Tidal area: New Jersey Department of
         Environmental Protection. Claims: FEMA’s OpenFEMA, not endorsed by FEMA.
       </p>
+      </ReaderDetails>
     </section>
   );
 }

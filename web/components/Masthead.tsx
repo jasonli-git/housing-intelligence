@@ -2,15 +2,15 @@ import Link from "next/link";
 
 import { PlaceSearch } from "@/components/PlaceSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { HousingModeToggle, type AffordabilityControl } from "@/components/HousingModeToggle";
+import type { AffordabilityControl } from "@/components/HousingModeToggle";
 import { LicenceLine } from "@/components/LicenceLine";
 import { SiteStatus } from "@/components/SiteStatus";
 
 const REPOSITORY = "https://github.com/jasonli-git/housing-intelligence";
 
 /**
- * The bar shared with jasonli.app: `Jason Li` leads home to the gateway, then this
- * site's own wordmark, then search, the reader's choice of theme, and the code.
+ * The bar shared with jasonli.app: `JL` leads home to the gateway, then this
+ * site's own wordmark and code link, with search and theme controls alongside.
  *
  * The trail is set in jasonli.app's type and ink, whatever the page below it, because
  * it is the one element that says these are the same person's sites (ARCHITECTURE
@@ -37,8 +37,8 @@ export function Masthead({
       <nav className="bar print-hide" aria-label="Sites">
         <div className="bar-inner">
           <div className="bar-trail">
-            <a className="bar-home" href="https://jasonli.app">
-              Jason Li
+            <a className="bar-home" href="https://jasonli.app" aria-label="Jason Li — portfolio">
+              JL
             </a>
             <span className="bar-sep" aria-hidden="true">
               /
@@ -47,24 +47,6 @@ export function Masthead({
               <span className="live-dot" aria-hidden="true" />
               Housing
             </Link>
-          </div>
-          {/* The tax link, theme and the code stay on the trail's row at every width — nothing a
-              reader needs mid-search. Search and the affordability switch are the pair
-              that wraps to its own row on a phone, since together they are wider than
-              the trail leaves room for (#204, mobile masthead collision). */}
-          <div className="bar-controls">
-            <Link
-              className="bar-link"
-              href="/tax"
-              aria-label="Property tax lookup"
-              aria-current={taxActive ? "page" : undefined}
-            >
-              <span className="bar-link-long">Property tax</span>
-              <span className="bar-link-short" aria-hidden="true">
-                Tax
-              </span>
-            </Link>
-            <ThemeToggle />
             <a
               className="bar-icon"
               href={REPOSITORY}
@@ -78,10 +60,29 @@ export function Masthead({
               </svg>
             </a>
           </div>
+          {/* The tax link and theme stay on the trail's row at every width. Search and
+              the budget link wrap to their own row on a phone (#204). */}
+          <div className="bar-controls">
+            <Link
+              className="bar-link"
+              href="/tax"
+              aria-label="Property tax lookup"
+              aria-current={taxActive ? "page" : undefined}
+            >
+              <span className="bar-link-long">Property tax</span>
+              <span className="bar-link-short" aria-hidden="true">Tax</span>
+            </Link>
+          </div>
           <div className="bar-tools">
             <PlaceSearch />
-            <HousingModeToggle control={affordability} />
+            <Link className="bar-budget" href="/afford" aria-label="Find places within my budget"
+              aria-current={affordability.kind === "route" && affordability.active ? "page" : undefined}>
+              <span className="bar-budget-long">Find within my budget</span>
+              <span className="bar-budget-short" aria-hidden="true">My budget</span>
+              <span aria-hidden="true">→</span>
+            </Link>
           </div>
+          <ThemeToggle />
         </div>
       </nav>
       <div className="site-meta-row">

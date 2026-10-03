@@ -1,4 +1,6 @@
 import { type Measure } from "@/components/CountyExplorer";
+import { SectionJump } from "@/components/SectionJump";
+import { ReaderDetails } from "@/components/ReaderDetails";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Kind } from "@/components/Crumbs";
@@ -170,11 +172,14 @@ export default async function NewJerseyPage() {
       </header>
       <StateProfileTicker items={stateProfile(levels, statewide?.headlines ?? [])} />
       <div className="nj-source-notes">
+        <SectionJump />
+        {statewideNotes.length > 0 && <ReaderDetails title="About these statewide figures">
           {statewideNotes.map((text) => (
             <p key={text} className="table-note">
               {text}
             </p>
           ))}
+        </ReaderDetails>}
       </div>
 
       <div id="nj-explore" className="nj-explore-anchor">

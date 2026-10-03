@@ -20,11 +20,13 @@ export function HomeSales({
   level,
   geoid,
   levels,
+  showLookup = true,
 }: {
   name: string;
   level: string;
   geoid: string;
   levels: PacketLevel[];
+  showLookup?: boolean;
 }) {
   const find = (id: string) => levels.find((l) => l.metric_id === id);
   const median = find("sr1a_median_sale_price");
@@ -111,19 +113,18 @@ export function HomeSales({
         )}
       </dl>
       <p className="sales-note">
-        Only arm’s-length sales the state counts as usable. These describe the homes that
-        sold, not every home: a median that rises can mean pricier homes changed hands
-        rather than homes becoming worth more.
+        Only arm’s-length sales the state accepts. This describes sold homes, not every home.
+        A higher median may mean pricier homes sold—not that each home gained value.
         {level !== "municipality" &&
-          " Worked out from every deed in the area, never from its towns’ medians."}
+          " Calculated from qualifying deeds across the area, not an average of town medians."}
       </p>
-      {level === "municipality" && (
+      {showLookup && level === "municipality" && (
         <p className="sales-note">
           <Link href={`/tax?town=${geoid}`}>Look up a property in {name}</Link>: its
           assessment, last year’s tax and how it compares with the town’s.
         </p>
       )}
-      {level === "county" && (
+      {showLookup && level === "county" && (
         <p className="sales-note">
           <Link href="/tax">Look up a property in {name}</Link> by its address, or by
           block and lot with its town: its assessment and last year’s tax.

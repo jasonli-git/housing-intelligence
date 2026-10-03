@@ -186,6 +186,41 @@ export function verdict(
   return null;
 }
 
+/** A compact orientation; the full verdict retains the figures and exact cohort. */
+export function verdictHeadline(peers: Peers, metrics: PacketMetric[], levels: PacketLevel[], uncertainties?: Uncertainties): string | null {
+  for (const home of HOME_VALUES) {
+    const level = ranked(levels, home.metric_id);
+    if (!level) continue;
+    const range = spread(uncertainties?.value.get(home.metric_id));
+    const position = rankPosition(level.rank, level.of);
+    const low = range ? rankPosition(range.best, level.of) : position;
+    const high = range ? rankPosition(range.worst, level.of) : position;
+    const price = high <= 1 / 3 ? "higher than in most of"
+      : low >= 2 / 3 ? "lower than in most of"
+      : low >= 1 / 3 && high <= 2 / 3 ? "near the middle among" : "difficult to place among";
+    const basis = home.metric_id === "zhvi_sfr" ? `Typical single-family home values in ${peers.name}`
+      : `Owner-reported home values in ${peers.name} (${periodLabel(level.period_end, level.metric_id)} survey)`;
+    const cohort = level.of === peers.count ? `${peers.scope}’s ${peers.noun}`
+      : `the ${peers.noun} ${home.cohort} in ${peers.scope}`;
+    let headline = `${basis} are ${price} ${cohort}`;
+    const change = ranked(metrics, home.metric_id);
+    if (change) {
+      const u = uncertainties?.change.get(change.metric_id);
+      if (u?.margin != null && Math.abs(change.pct_change) <= u.margin) headline += "; their five-year change is too uncertain to call a rise or a fall";
+      else if (change.pct_change < 0) headline += ", and they fell over the past five years";
+      else if (change.pct_change === 0) headline += ", and they were unchanged over the past five years";
+      else {
+        const range = spread(u);
+        const contrast = !range && ((low >= 2 / 3 && rankPosition(change.rank, change.of) <= .4)
+          || (high <= 1 / 3 && rankPosition(change.rank, change.of) >= .6));
+        headline += `, ${contrast ? "but" : "and"} they rose ${range ? paceRange(range.best, range.worst, change.of) : pace(change.rank, change.of)} over the past five years`;
+      }
+    }
+    return `${headline}.`;
+  }
+  return null;
+}
+
 /** Whether a ratio's end moved from its start by more than two percent either way. */
 function outpaced(metric: PacketMetric): "up" | "down" | "even" {
   const moved = metric.end_value / metric.start_value - 1;
@@ -331,6 +366,25 @@ export function housingProfile(
   const find = (id: string) => levels.find((l) => l.metric_id === id);
   const items: ProfileItem[] = [];
 
+  const income = find("acs_median_hh_income");
+  if (income) items.push({
+    metric_id: income.metric_id,
+    label: "Typical household income",
+    value: formatMetric(income.value, income.unit, income.metric_id),
+    margin: marginOf(income),
+    definition: `${definitionOf(income.metric_id)?.what} Before tax, per year; survey years ${surveyYears(income.period_start, income.period_end)}.`,
+    context: among(income, "higher than most", "lower than most", rangeOf(income)),
+  });
+  const burden = find("acs_renter_cost_burden");
+  if (burden) items.push({
+    metric_id: burden.metric_id,
+    label: "Renters spending over 30%",
+    value: formatMetric(burden.value, burden.unit, burden.metric_id),
+    margin: marginOf(burden),
+    definition: `${definitionOf(burden.metric_id)?.what} From the Census survey for ${surveyYears(burden.period_start, burden.period_end)}; not the share of all households.`,
+    context: among(burden, "more than most", "fewer than most", rangeOf(burden)),
+  });
+
   const built = find("modiv_median_year_built");
   if (built) {
     items.push({
@@ -394,17 +448,27 @@ export function housingProfile(
       context: among(empty, "more than most", "fewer than most", rangeOf(empty)),
     });
   }
-  const permits = find("permits_total_units");
-  if (permits) {
+  const net = find("nj_net_units_per_1000");
+  if (net) {
+    const uncertainty = rangeOf(net);
+    const coverage = ["nj_certificates_reporting_share", "nj_demolitions_reporting_share"]
+      .map(find).filter((row) => row && row.period_end === net.period_end)
+      .map((row) => row!.value);
     items.push({
-      metric_id: permits.metric_id,
-      label: `Homes permitted in ${periodLabel(permits.period_end, permits.metric_id)}`,
-      value: formatMetric(permits.value, permits.unit, permits.metric_id),
+      metric_id: net.metric_id,
+      label: `Net homes added per 100 · ${periodLabel(net.period_end, net.metric_id)}`,
+      value: (net.value / 10).toFixed(2),
+      margin: uncertainty?.margin == null
+        ? marginLabel(net.value / 10, null, "per_100_homes", net.metric_id)
+        : uncertainty.margin === 0 ? marginLabel(net.value / 10, 0, "per_100_homes", net.metric_id)
+        : `± ${uncertainty.margin / 10 < .01 ? (uncertainty.margin / 10).toPrecision(1) : (uncertainty.margin / 10).toFixed(2)} per 100 homes`,
       definition:
-        "New homes authorized by building permits that year, counted in units, from the " +
-        "Census Bureau’s Building Permits Survey. A permit is approval to build, not a " +
-        "finished home.",
-      context: among(permits, "more than most", "fewer than most", rangeOf(permits)),
+        "Homes finished minus homes demolished in the year, per 100 existing homes. " +
+        "Uses NJ construction-office reports and the Census housing-unit estimate ending that year. " +
+        "Covers only towns that reported both; a missing report is not zero. " +
+        (coverage.some((share) => share < 1) ? "Reporting is incomplete; see Local market for coverage. " : "") +
+        "A negative value means demolitions exceeded completions. The underlying tables use per 1,000; this banner divides the value and its margin by 10, keeping the same rank.",
+      context: among(net, "more than most", "fewer than most", uncertainty),
     });
   }
   const people = find("acs_population");

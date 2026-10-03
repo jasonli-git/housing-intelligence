@@ -24,6 +24,8 @@ import {
   rentRows,
 } from "@/lib/rentEvidence";
 import { parseAmount } from "@/lib/costScenario";
+import { HousingHelp } from "@/components/HousingHelp";
+import { ReaderDetails } from "@/components/ReaderDetails";
 
 /**
  * Answers sized to the reader's household (Milestone 35): where their income sits against
@@ -97,7 +99,7 @@ export function ForYourHousehold({
 
       {limits && (
         <article className="household-panel">
-          <h3 className="household-title">Your income against HUD’s lines</h3>
+          <h3 className="household-title">Your income vs. local benchmarks</h3>
           {ready && (
             <div className="household-inputs">
               <label className="control">
@@ -161,8 +163,7 @@ export function ForYourHousehold({
               : limits.via === "parent"
                 ? `HUD sets these lines by county; ${regionName} reads ${countyLabel(limits)}’s.`
                 : `HUD sets these lines by county; this ZIP code reads ${countyLabel(limits)}’s, where most of its homes are.`}{" "}
-            Where an income sits against them is not whether a household qualifies for help:
-            each program sets its own rules.{" "}
+            These are income benchmarks, not approval for help. Each program has its own rules.{" "}
             <a
               href="https://www.huduser.gov/portal/datasets/il.html"
               target="_blank"
@@ -179,6 +180,7 @@ export function ForYourHousehold({
               NJ Housing and Mortgage Finance Agency
             </a>
           </p>
+          <HousingHelp />
         </article>
       )}
 
@@ -232,11 +234,12 @@ export function ForYourHousehold({
               </div>
             ))}
           </dl>
-          <p className="household-note">
-            Why they differ: a new lease costs more than a long-standing one, so asking rents
-            run above what tenants pay; HUD’s benchmark sits below the middle of recent
-            movers’ rents by design. None is wrong — each answers a different question.
-          </p>
+          <ReaderDetails title="Why the rent figures differ">
+            <p className="household-note">
+              Asking rent is for a new lease; existing tenants may pay less. HUD’s benchmark
+              is deliberately below the middle of recent movers’ rents. They measure different things.
+            </p>
+          </ReaderDetails>
         </article>
       )}
     </section>

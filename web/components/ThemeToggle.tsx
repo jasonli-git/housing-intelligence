@@ -35,8 +35,15 @@ export function ThemeToggle() {
 
   function press() {
     const next = toggled(theme, window.matchMedia(DARK).matches);
-    setTheme(next);
-    applyTheme(document.documentElement, next);
+    const update = () => {
+      setTheme(next);
+      applyTheme(document.documentElement, next);
+    };
+    if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.startViewTransition(update);
+    } else {
+      update();
+    }
     try {
       if (next === "system") localStorage.removeItem(THEME_KEY);
       else localStorage.setItem(THEME_KEY, next);

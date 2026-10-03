@@ -1,4 +1,5 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
+import { Definition } from "@/components/Definition";
 
 import type { Binding, Explanation } from "@/lib/api";
 import {
@@ -144,32 +145,36 @@ function Figures({ binding }: { binding: Binding | null }) {
 export function ConsumerReading({
   reading,
   section,
+  heading,
+  children,
 }: {
   reading: Explanation | null;
   section: FocusedConsumerSection;
+  heading?: string;
+  children?: ReactNode;
 }) {
-  if (!reading || !reading.sections?.length) return null;
+  if (!reading || !reading.sections?.length) return children ?? null;
   const { answer, binding } = focusedConsumerAnswer(
     reading.body,
     reading.sections,
     reading.binding ?? null,
     section,
   );
-  if (!answer) return null;
+  if (!answer) return children ?? null;
   const id = `interpretation-${reading.region_id}-${section}`;
-  const footnote = (
-    <>
-      <Figures binding={binding} />
-      <p className="interpretation-note">
-        Interpretation of area figures, not a measurement or advice.
-      </p>
-    </>
-  );
+  const figures = <Figures binding={binding} />;
 
   return (
     <section aria-labelledby={id} className={`interpretation consumer-feature consumer-feature-${section}`}>
       <div className="consumer-feature-topline">
-        <span className="consumer-feature-tag">Model interpretation</span>
+        <span className="consumer-feature-tag consumer-ai-badge">
+          <Definition term={{
+            key: `ai-${id}`,
+            title: "AI-written interpretation",
+            phrases: [],
+            definition: "Interpretation of area figures, not a measurement or advice.",
+          }}>AI-written interpretation</Definition>
+        </span>
         <span className="interpretation-source">
           written by {reading.model_label}
           <span className="interpretation-runtime"> · {reading.runtime}</span>
@@ -177,7 +182,7 @@ export function ConsumerReading({
       </div>
       <Stale reading={reading} />
       <div className="consumer-feature-main">
-        <h2 id={id}>{answer.heading}</h2>
+        <h2 id={id}>{heading ?? answer.heading}</h2>
         {section === "before_moving" ? (
           <div className="consumer-moving-body">
             <ul className="consumer-feature-answer consumer-moving-list">
@@ -185,7 +190,7 @@ export function ConsumerReading({
                 <li key={index}><Runs runs={runs} binding={binding} /></li>
               ))}
             </ul>
-            {footnote}
+            {figures}
           </div>
         ) : (
           <p className="consumer-feature-answer">
@@ -193,7 +198,8 @@ export function ConsumerReading({
           </p>
         )}
       </div>
-      {section !== "before_moving" && footnote}
+      {section !== "before_moving" && figures}
+      {children}
     </section>
   );
 }

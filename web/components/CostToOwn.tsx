@@ -3,6 +3,8 @@
 import { type ReactNode, useEffect, useId, useState } from "react";
 
 import { Definition } from "@/components/Definition";
+import { HousingHelp } from "@/components/HousingHelp";
+import { ReaderDetails } from "@/components/ReaderDetails";
 import { DEFAULT_DOWN, DOWN_PAYMENTS, goneAgainstRent, incomeFor } from "@/lib/cost";
 import {
   CLOSING,
@@ -15,7 +17,6 @@ import {
   FLOOD_MAP,
   NJ_TRANSFER_RULE,
   PMI,
-  RELIEF,
   UPKEEP_PCT,
 } from "@/lib/costRules";
 import { type Personal, parseAmount, readPersonal, writePersonal } from "@/lib/costScenario";
@@ -127,7 +128,7 @@ type HomeFields = {
 
 const NO_HOME_FIELDS: HomeFields = { price: "", tax: "", rent: "", hoa: "", flood: "", moving: "", repairs: "" };
 
-type View = "upfront" | "gone" | "years";
+type View = "upfront" | "years";
 
 /**
  * The full cost of owning a home here, and of renting one (Milestone 33; cards since
@@ -164,7 +165,8 @@ export function CostToOwn({
   rateThen,
   control = true,
   beforeMoving,
-}: CostProps & { control?: boolean; beforeMoving?: ReactNode }) {
+  showHelp = true,
+}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean }) {
   const id = useId();
   const [personal, setPersonalState] = useState<Personal>({});
   const [fields, setFields] = useState<HomeFields>(NO_HOME_FIELDS);
@@ -373,8 +375,7 @@ export function CostToOwn({
   };
 
   const views: Record<View, string> = {
-    upfront: "Up front",
-    gone: "Money gone",
+    upfront: "Cash needed to buy",
     years: `Over ${input.years} years`,
   };
   const showView = (which: View) => !control || view === which;
@@ -563,7 +564,7 @@ export function CostToOwn({
                 <dt>
                   {line.label}
                   {line.key === "mortgage" && month.loan.fha ? ", FHA" : ""}{" "}
-                  <small className="src">
+                  <small className={line.value === null && line.conditional ? "src cost-add-prompt" : "src"}>
                     {line.value === null && line.conditional
                       ? "add yours if it applies"
                       : [source(line.key), line.value !== null && line.key !== "mortgage" ? BASIS_WORDS[line.basis] : ""]
@@ -635,19 +636,43 @@ export function CostToOwn({
             </p>
           )}
         </article>
-        {month.optional.length > 0 && (
-          <aside className="cost-evidence-omissions" aria-label="Costs to add if they apply">
-            <p className="cost-evidence-label">
-              <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
-              Add if they apply
-            </p>
-            <p>
-              {listed(month.optional)}
-              {control ? ", under “Your numbers”." : "."} Also left out: what the down payment could earn.
-            </p>
-          </aside>
-        )}
+        <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
+          <p className="cost-evidence-label">
+            <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
+            Not included
+          </p>
+          <p>
+            The monthly owning estimate leaves out {listed([...month.missing, ...month.optional, "what the down payment could earn"])}.
+          </p>
+        </aside>
       </div>
+
+      {control && (
+        <div className="cost-strip cost-evidence">
+          {beforeMoving}
+          <div className="cost-evidence-grid">
+            {rentalCaveat && (
+              <div className="cost-evidence-item">
+                <p className="cost-evidence-label">Comparison caveat</p>
+                <p>{rentalCaveat}</p>
+              </div>
+            )}
+            {history && (
+              <div className="cost-evidence-item">
+                <ReaderDetails title="Five-year history · not a forecast">
+                <p>{history}</p>
+                </ReaderDetails>
+              </div>
+            )}
+            {noTax && (
+              <div className="cost-evidence-item">
+                <p className="cost-evidence-label">Tax caveat</p>
+                <p>{noTax}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="cost-views">
         {control && (
@@ -716,23 +741,6 @@ export function CostToOwn({
           </div>
         )}
 
-        {showView("gone") && (
-          <div className="cost-view" role={control ? "tabpanel" : undefined}>
-            <h3 className="cost-view-title">Money gone each month</h3>
-            <p className="cost-view-figure">
-              <b>{money(month.gone)}</b>
-              <span>of {money(month.total)} — the rest, {money(kept)}, pays the loan down</span>
-            </p>
-            <p className="cost-view-note">
-              What a month of owning costs and does not give back: interest, property tax,
-              insurance, any mortgage insurance, utilities and upkeep. Without utilities, which
-              renting pays too, it is {money(goneNoUtilities)}
-              {rentMonth !== null ? `, against ${money(rentMonth)} of rent` : ""}.
-              {partial ? ` It leaves out ${listed(month.missing).toLowerCase()}.` : ""}
-            </p>
-          </div>
-        )}
-
         {showView("years") && (
           <div className="cost-view" role={control ? "tabpanel" : undefined}>
             <h3 className="cost-view-title">Owning for {input.years} years, then selling</h3>
@@ -788,48 +796,9 @@ export function CostToOwn({
         )}
       </div>
 
-      <aside className="cost-relief" aria-label="Tax relief and help buying">
-        <p className="cost-evidence-label">Relief and help, not subtracted</p>
-        <p>
-          Who qualifies turns on a household’s age, income and history, so these are links,
-          never part of the totals:{" "}
-          {RELIEF.map((r, index) => (
-            <span key={r.url}>
-              <a href={r.url} target="_blank" rel="noreferrer">
-                {r.label}
-              </a>
-              {index < RELIEF.length - 1 ? "; " : "."}
-            </span>
-          ))}{" "}
-          <small className="src">Links checked {RELIEF[0].reviewed}.</small>
-        </p>
-      </aside>
+      {showHelp && <HousingHelp />}
 
-      {control ? (
-        <div className="cost-strip cost-evidence">
-          {beforeMoving}
-          <div className="cost-evidence-grid">
-            {rentalCaveat && (
-              <div className="cost-evidence-item">
-                <p className="cost-evidence-label">Comparison caveat</p>
-                <p>{rentalCaveat}</p>
-              </div>
-            )}
-            {history && (
-              <div className="cost-evidence-item">
-                <p className="cost-evidence-label">Five-year context</p>
-                <p>{history}</p>
-              </div>
-            )}
-            {noTax && (
-              <div className="cost-evidence-item">
-                <p className="cost-evidence-label">Tax caveat</p>
-                <p>{noTax}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
+      {!control && (
         <div className="cost-strip">
           {cashComparison && (
             <p className="cost-strip-big" aria-live="polite">

@@ -142,8 +142,12 @@ export async function SourceFooter() {
             disclaimer. */}
         {notices.length > 0 && (
           <div className="foot-notices" aria-label="Notices the sources require">
+            <h2 className="foot-kicker">Publisher notices</h2>
             {notices.map((notice) => (
-              <p key={notice}>{linked(notice)}</p>
+              <div className="publisher-notice" key={notice}>
+                <span className="publisher-notice-name">{[...new Set(external.filter((source) => source.notices?.includes(notice)).map((source) => shortPublisher(source.publisher)))].join(" · ")}</span>
+                <p>{linked(notice)}</p>
+              </div>
             ))}
           </div>
         )}
