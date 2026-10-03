@@ -14,11 +14,10 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 39 built; PR awaiting review (2026-10-02)
+## Now — Milestone 39 shipped; Milestone 40 not started (2026-10-02)
 
-On `milestone/m39-approved-vs-built` (0.35.0): homes completed and demolished from DCA's
-Construction Reporter beside the Census permits (ARCHITECTURE #300). Milestone 40, flood
-and environmental exposure, follows.
+Milestone 39 merged as 0.35.0 (PR #80) and is deployed. Milestone 40, flood and
+environmental exposure, is next and starts only when asked.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 

@@ -13,56 +13,20 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.26.0, 2026-09-30. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.35.1, 2026-10-02. Versions 1 and 2 complete; Version 3 under way.**
 >
-> **Built and deployed.** New Jersey's geography, housing, economic context, property
-> tax roll and recorded sales are loaded, queryable and public: 3,366 regions, 3.48M
-> parcels, 1.4M deeds, and 414,360 observations across 38 metrics from 16 public sources
-> spanning 1971 to 2026, plus 38,270 computed changes and 53,753 rankings. On each
-> refresh, every source is asked whether anything has moved and every dated source
-> whether a newer release exists. A figure that changes is recorded rather than
-> overwritten: 316,621 such revisions so far. Every value carries its source file and
-> match method, and the Census's survey figures their margins of error; every figure says
-> what kind it is and carries its source's licence, and a region's figures download as a
-> CSV that keeps both. All eight pipeline
-> stages run. The site publishes itself — 5,956 static artifacts and 2,278
-> pre-rendered pages, served with no database and no application server — across four
-> page types: the state, 1,135 region pages, their reports, and an affordability
-> workspace, reachable in place from the state and county pages or at its own address;
-> two more say how current each source is and which published figures were revised.
+> **Built and deployed.** New Jersey's geography, prices, rents, economic context, tax
+> roll and recorded sales, from 16 public sources, published as a static site with no
+> database or application server. Every figure carries its source file, licence and kind,
+> and revisions are recorded rather than overwritten. Full detail under
+> [Project Status](#project-status).
 >
-> **Latest.** Milestone 31 (2026-09-30) is a licence and provenance pass. Every figure
-> now says what kind it is — survey estimate, administrative records, official
-> determination, published benchmark, calculated here, or modelled — beside it in the
-> tables and in its definition. Every source's terms were re-read and its licence
-> recorded, and a figure calculated from a restricted one carries the restriction. A
-> region's figures download as a CSV carrying each one's kind, source and licence;
-> printed pages carry the terms on every sheet; and the notices three data APIs require
-> are on every page. Each county page's model-written reading is one plain-language
-> reading in two answers, *what stands out here?* and *what should I check before
-> moving?*, checked figure by figure before it is published; the longer analyst reading is retired. Milestone 32 (2026-10-01) decided
-> against ads and a paid tier for now. Milestone 33 (2026-10-01) shows the full cost of
-> owning in four views — each month, up front, money gone, and over the years against
-> renting — with every component saying where it came from, and lets a reader put in
-> their own figures. Milestone 34 (2026-10-01) fetches the Census survey for every ZIP
-> code's ZCTA and adds 50 figures — rents by size, owner costs, the age, type and
-> condition of the homes, vacancy, heating fuel, households and commuting — each with
-> its margin. Milestone 35 (2026-10-01) sizes answers to a reader's household: where
-> their income sits against HUD's lines for their household size, and every rent figure
-> for the number of bedrooms they need, each labelled for what it measures. Milestone 36
-> (2026-10-01) shows how homes sell in each town and county — the spread of prices, the
-> sample behind them, price per square foot, the age of what sold — and when the town
-> last revalued, from the state's own lists. Milestone 37 (2026-10-02) adds a property
-> tax lookup — any property by address or block and lot, its assessment and last year's
-> tax set against its town — and county and statewide effective tax rates. Milestone 38
-> (2026-10-02) lets that lookup find an address anywhere in the state without knowing its
-> town, links each county's own record, and adds removal on request under Daniel's Law.
-> Milestone 39 (2026-10-02) asks whether a place is adding homes or only approving them:
-> permits beside homes completed and demolished, from the state's Construction Reporter.
+> **Latest.** Milestone 39 (2026-10-02) shows whether a place is adding homes or only
+> approving them: Census permits beside homes completed and demolished, from the state's
+> Construction Reporter.
 >
 > **Next.** Milestone 40: flood and environmental exposure. See
-> [ROADMAP.md](ROADMAP.md) for what is planned and
-> [CHANGELOG.md](CHANGELOG.md) for what shipped.
+> [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md).
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built.
