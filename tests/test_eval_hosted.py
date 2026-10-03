@@ -11,6 +11,7 @@ which failures are worth retrying.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import pathlib
 import threading
@@ -307,10 +308,11 @@ def test_a_hosted_runtime_reports_no_memory_figure(
 
 
 def test_a_rate_limit_is_retried_and_then_succeeds(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
     monkeypatch.setattr("hip.eval.runners.hosted.time.sleep", lambda _: None)
+    caplog.set_level(logging.INFO, logger="hip.eval.runners.hosted")
     attempts: list[int] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -331,6 +333,9 @@ def test_a_rate_limit_is_retried_and_then_succeeds(
     assert len(attempts) == 3
     assert generation.answer == "done"
     assert generation.error is None
+    # Each retry says why it failed, not only that it did.
+    retries = [r.getMessage() for r in caplog.records if "retrying" in r.getMessage()]
+    assert len(retries) == 2 and all("failed (429)" in m for m in retries)
 
 
 def test_a_bad_request_is_not_retried(monkeypatch: pytest.MonkeyPatch) -> None:

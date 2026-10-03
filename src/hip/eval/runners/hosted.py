@@ -555,22 +555,29 @@ class HostedRunner:
                 if exc.response.status_code not in _RETRY_STATUS:
                     raise
                 last = exc
+                reason = str(exc.response.status_code)
                 delay = self._retry_delay(
                     attempt, exc.response.headers.get("retry-after")
                 )
             except httpx.HTTPError as exc:
                 # Connection and read errors: transient in the same way a 503 is.
                 last = exc
+                reason = type(exc).__name__
                 delay = self._retry_delay(attempt, None)
 
             if attempt == attempts - 1:
                 break
+            # Why, as well as that: a 429 or 503 on the Flex tier is no spare capacity, a
+            # 500 is the provider's fault, a ReadTimeout is ours to wait out. Without it
+            # the regenerate-now run of 2026-10-03 logged 24 failed attempts and no
+            # way to say which.
             log.info(
-                "%s %s: attempt %d/%d failed, retrying in %.1fs",
+                "%s %s: attempt %d/%d failed (%s), retrying in %.1fs",
                 self._provider,
                 model.id,
                 attempt + 1,
                 attempts,
+                reason,
                 delay,
             )
             time.sleep(delay)
