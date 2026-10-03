@@ -424,3 +424,52 @@ section, as given.
 - Already held: the ACS electricity bill (Milestone 33) and heating fuel (Milestone 34).
 
 Terms to be read for every source before it is built.
+
+---
+
+## Outside review of the roadmap (ChatGPT, via the owner)
+
+**Status:** Feedback — not approved for implementation
+**Recorded:** 2026-10-03
+
+The owner had ChatGPT review ROADMAP.md and asked for its feedback to be kept here. Its
+view: the roadmap already covers most obvious housing-data gaps, and only a few
+additions are worth making. None of its factual claims below have been checked.
+
+### Suggested additions
+
+- **Radon risk** (rated a strong add). NJDEP publishes a municipality-level radon
+  potential classification, and homebuyers check radon. Could fit Milestone 40's
+  follow-ups or Milestone 47. Caveat it raised: NJDEP says a town's tier does not
+  predict one home's result and recommends testing every home.
+- **Market turnover and liquidity** (strong add). From the SR1A sales already held and
+  housing-stock counts: how often homes sell here, and whether that is rising or
+  falling. For example sales per 1,000 owner-occupied homes, a rolling three-year
+  turnover, and recent against historical activity. No new source needed.
+- **Affordability sensitivity, not forecasting** (strong add). Show how the monthly
+  cost of owning changes at 5%, 6%, 7% and 8% mortgage rates, other down payments or
+  other prices. Each output is a stated scenario ("at 7%, this costs X; at 6%, Y"),
+  which it judged more defensible than predicting rates or prices. Possibly a
+  deterministic rent-against-buy break-even horizon under stated assumptions.
+- **Evidence-strength indicator** (worth considering). A small per-answer label such as
+  *Strong evidence / Partial coverage / Limited evidence*, set mechanically from
+  freshness, geographic match, margin or sample quality, and source type — not a
+  subjective confidence score — to surface the completeness work to readers without
+  provenance tables.
+
+### A larger idea
+
+- Make Milestone 49's "what should I check before an offer?" much more prominent: a
+  town or ZIP — and an address, if the address-point work clears its legal and data
+  gates — assembling flood, utilities, water, lead service lines, taxes, sales context,
+  schools, environmental issues, radon and transit into one homebuyer due-diligence
+  page. It called this the natural consumer culmination of the project rather than
+  another dataset.
+
+### What it advised against
+
+- Generic amenities, restaurant counts, nightlife, subjective neighbourhood scores,
+  "hotness" scores and broad quality-of-life rankings, as diluting what makes the site
+  distinctive.
+
+Do not implement yet.
