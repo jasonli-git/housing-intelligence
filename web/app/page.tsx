@@ -10,7 +10,7 @@ export default async function UnitedStatesPage() {
   return <>
     <Masthead affordability={{ kind: "disabled", reason: "Choose a covered state first" }} budgetLabel="NJ budget" />
     <main className="shell nation-page">
-      <header className="page-head nation-head" data-kind="state">
+      <header className="page-head nation-head" data-kind="nation">
         <p className="entry-kicker">Housing · a public data project</p>
         <h1>United States</h1>
         <p className="entry-introduction">A clearer picture of the place you could call home.</p>

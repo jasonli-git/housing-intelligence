@@ -11,6 +11,7 @@
 - Follow-up refinement: the national entrance introduces Housing as a public data project, retains the approved tagline, and explicitly says “Free to use · No fees. No subscription.” Repeated coverage text and longer state-card/benchmark descriptions were shortened. This is a free-access statement, not a change to source licensing or the non-commercial notice.
 - National map experiment: replace the monogram/state-card layout with a stationary globe-projected US coverage selector. Only NJ is blue/raised and linked. Unavailable states are neutral and identify themselves on hover. NJ remains reachable via the locator and a normal text action.
 - Map entry transition: activating the NJ shape, desktop locator or mobile map link zooms the geography toward NJ over 520ms, then opens the state page through client navigation. Locator labels fade during the zoom. The ordinary text action below the map remains immediate.
+- National/state color hierarchy: national headings, labels, accent rule and borrowing figure use warm charcoal/ivory. The locator's world land and unavailable states use warm grays. NJ's map highlight, locator, mobile link, preview and state page retain blue. The national header is now correctly marked `data-kind="nation"` rather than `state`.
 
 ## Files/modules affected
 
@@ -60,6 +61,8 @@
 - Map follow-up production build passed with 2,379 static outputs. Exported `states.json` contains only precision and 52 packed state/backdrop outlines, including NJ; no housing measures.
 - Transition follow-up: type checking and all 407 tests passed. Headless checks observed the zoom transform, successful desktop/keyboard/mobile arrivals, clean Back reset, no mobile animation under reduced motion, and no page errors. The first inspection click targeted empty SVG-anchor bounds and timed out; clicking the painted locator rectangle passed.
 - Transition follow-up: modified clicks did not start motion; cancelling motion still reached NJ. `git diff --check` and the production export passed again (2,379 outputs); the existing artifact-origin warning remains.
+- Color hierarchy follow-up: type checking, all 407 tests and diff checks passed. Light/dark desktop and 390px/320px mobile screenshots inspected; computed colors confirm neutral national title/rule/labels and blue NJ preview/state title. No horizontal overflow; mobile NJ navigation still works. An initial mobile test lacked a touch-enabled context; it was corrected and rerun successfully.
+- Color hierarchy production export passed again (2,379 outputs), with the existing artifact-origin warning unchanged.
 - Browser checks: national → state navigation; direct budget URL; mode switching and browser Back; state ticker remains visible in budget mode; local NJ breadcrumb; statewide evidence opens with 28 figure rows and six construction years; no page errors in the navigation check.
 - Focused mobile sale-price definition was wholly within the 390px × 900px viewport (left 33, right 321, top 649, bottom 817). Two initial inspection scripts used incorrect tooltip selectors and failed; the corrected check passed.
 - `npm run build`: passed; generated 2,378 static pages, including `/` and `/states/new-jersey`. Both exported HTML files exist and `out/_redirects` exactly matches the source redirect file. The artifact-origin warning noted above was emitted.

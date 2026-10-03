@@ -1,5 +1,9 @@
 /* State-led information architecture: truthful national coverage, a full NJ profile. */
 .nation-page, .nj-page { --entry-ink: light-dark(#174a6b, #bddcf3); --entry-accent: var(--state-blue); }
+.nation-page { --entry-ink: light-dark(#34312d, #ebe6dc); --entry-accent: light-dark(#6e655b, #c7beb0); }
+.nation-page > .nation-head { --kind: var(--entry-accent); }
+/* The atlas is neutral; its available state destinations retain their blue identity. */
+.coverage-state-preview, .coverage-mobile-link { --entry-ink: light-dark(#174a6b, #bddcf3); --entry-accent: var(--state-blue); }
 .entry-kicker { margin: 0 0 .6rem; color: var(--entry-accent); font: 600 10px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
 .nation-page > .nation-head { display: block; padding-block: 2.3rem 2rem; }
 .nation-head h1 { margin: 0; color: var(--entry-ink); font-size: clamp(50px, 8vw, 106px); letter-spacing: -.07em; line-height: 1; }
@@ -24,7 +28,7 @@
 .coverage-entry-map > header { display: flex; align-items: baseline; gap: 1.2rem; margin-bottom: 1rem; }
 .coverage-entry-map > header h2 { margin: 0; }
 .coverage-atlas { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--surface-card); }
-.coverage-map-stage { position: relative; isolation: isolate; background: radial-gradient(ellipse at 55% 55%, light-dark(#eaf1f6, #1c2b3a), light-dark(#f7f9fb, #17202b)); }
+.coverage-map-stage { position: relative; isolation: isolate; background: radial-gradient(ellipse at 55% 55%, light-dark(#efede8, #292724), light-dark(#f8f7f4, #20201e)); }
 .coverage-map { display: block; width: 100%; height: clamp(250px, 38vw, 460px); touch-action: auto; }
 .coverage-map { overflow: hidden; }
 .coverage-geography { transform-origin: 0 0; transform-box: view-box; }
@@ -32,9 +36,9 @@
 .coverage-map-stage[data-entering="true"] .coverage-locator, .coverage-map-stage[data-entering="true"] .coverage-map-caption, .coverage-map-stage[data-entering="true"] .coverage-mobile-link { opacity: 0; }
 .coverage-map-caption { position: absolute; top: 1rem; left: 1.2rem; z-index: 1; color: var(--text-muted); font: 500 9px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; pointer-events: none; }
 .coverage-mobile-link { display: none; }
-.coverage-land path { fill: light-dark(#e1e8ed, #253240); stroke: none; }
-.coverage-unavailable { fill: light-dark(#cbd6df, #3a4958); stroke: light-dark(#a9bac8, #566575); stroke-width: .7; vector-effect: non-scaling-stroke; transition: fill 160ms ease; }
-.coverage-unavailable:hover { fill: light-dark(#b4c4d1, #4a5b6c); }
+.coverage-land path { fill: light-dark(#e4e1dc, #33322e); stroke: none; }
+.coverage-unavailable { fill: light-dark(#d0cbc2, #484640); stroke: light-dark(#ada89e, #65625b); stroke-width: .7; vector-effect: non-scaling-stroke; transition: fill 160ms ease; }
+.coverage-unavailable:hover { fill: light-dark(#bdb6aa, #59564f); }
 .coverage-state-top { fill: var(--state-blue); stroke: light-dark(#235b91, #a2ceff); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .coverage-state-wall { fill: #1b4670; }
 .coverage-state-shadow { fill: #18354b; opacity: .25; }
