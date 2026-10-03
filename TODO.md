@@ -14,11 +14,11 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 40 built; PR awaiting review (2026-10-02)
+## Now — between milestones (2026-10-03)
 
-On `milestone/m40-flood-environmental` (0.36.0): flood exposure as shares of homes, flood
-claims paid, contaminated sites and drinking water (ARCHITECTURE #301-#304). Milestone
-41, affordable housing and assistance, follows and starts only when asked.
+Milestone 40 is merged (PR #83) and deployed as 0.36.0. Milestone 41, affordable housing
+and assistance, is next and starts only when asked; Milestone 42, utilities, was added
+2026-10-03 and the planned milestones after it renumbered (ROADMAP).
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -38,7 +38,7 @@ first raised, not where it must be done.
       fills in on its own once `fema_mapped_homes_share` reaches 0.95.
 - [ ] **New Jersey's PFAS violations are not counted.** (M40, #304) EPA's SDWIS carries
       no PFAS code for New Jersey in 2021–2026. NJDEP's Drinking Water Watch has them; a
-      reader is sent there. Reading it would need its terms read first.
+      reader is sent there. **Scheduled: Milestone 42**, from EPA's UCMR 5 sampling.
 - [ ] **Flood claims are not placed in towns.** (M40, #302) 11.5% of New Jersey's
       claims are in 2010 block groups. A 2010-to-2020 block group relationship file from
       the Census would place them; until then a town shows its county's.
@@ -256,7 +256,7 @@ first raised, not where it must be done.
 
 - [ ] **The site does not say which questions it declines.** (M27 completeness run)
       ROADMAP decided on 2026-09-13 not to forecast prices or give investment advice,
-      and schedules schools, commutes and crime for Milestones 44–46 (flood risk was
+      and schedules schools, commutes and crime for Milestones 45–47 (flood risk was
       answered by Milestone 40), but no page tells a reader; the check counts 6 of its
       17 questions as neither answered nor declined. A short statement on the site would move them to declined.
 - [ ] **Report a problem is on a region's two full metric tables only.** (M27, #221)
@@ -469,7 +469,7 @@ first raised, not where it must be done.
       same adapter, already anticipated.
 - [ ] **LEHD LODES** — jobs by workplace and residence per census block, supporting
       jobs-housing balance and commute-shed analysis. Large but static files.
-      **Scheduled: Milestone 44.**
+      **Scheduled: Milestone 45.**
 - [ ] **Zillow's home value reaches 388 of 564 municipalities (69%)** — a ceiling, not a
       bug. (M2, updated at M7; recounted 2026-09-27, when it was 403 before) MOD-IV landed
       and `region_identifiers` holds 554 NJ codes, so a crosswalk exists, but routing
