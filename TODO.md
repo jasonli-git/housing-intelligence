@@ -14,10 +14,29 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 39 shipped; Milestone 40 not started (2026-10-02)
+## Now — Milestone 40: flood and environmental exposure — plan awaiting approval (2026-10-02)
 
-Milestone 39 merged as 0.35.0 (PR #80) and is deployed. Milestone 40, flood and
-environmental exposure, is next and starts only when asked.
+On `milestone/m40-flood-environmental`. Researched 2026-10-02; every layer below answered
+a live query. Building waits on the owner's answers.
+
+- FEMA's National Flood Hazard Layer: 57,488 flood-zone polygons in NJ, from FEMA's
+  ArcGIS service. Federal work; FEMA states no licence.
+- NJDEP's tidal climate-adjusted flood elevation (FEMA's 1% flood plus 4 ft, the REAL
+  rules adopted 2026-01-20), 14 coastal counties. NJDEP GIS terms: credit and a fixed
+  disclaimer.
+- NJDEP's Known Contaminated Sites List: 12,600 points, updated daily, with status.
+- NJDEP's purveyor service areas (566), with EPA SDWIS health-based violations.
+- Optional: OpenFEMA's NFIP claims, 202,156 in NJ (by ZIP, tract and county; v3, since
+  v2 is retired on 2026-10-15). Terms require a fixed not-endorsed line and forbid
+  re-identification.
+
+- [ ] Sources and their terms recorded
+- [ ] Metrics: share of homes (or land) in the 1% zone, the 0.2% zone and the tidal
+      climate-adjusted area; known contaminated sites by status; water systems serving
+      the town and their violations; (optional) flood claims
+- [ ] Region pages: "Is it at risk of flooding?", each layer kept separate, and never
+      "safe" outside a mapped zone
+- [ ] Docs pass, tests, PR
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
