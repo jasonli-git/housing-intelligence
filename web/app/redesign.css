@@ -86,9 +86,9 @@ select,
 }
 
 .bar-inner {
-  min-height: 64px;
-  padding-block: 0.7rem;
-  gap: 1rem 1.5rem;
+  min-height: 54px;
+  padding-block: 0.4rem;
+  gap: 0.6rem 1rem;
 }
 
 .bar-trail {
@@ -245,6 +245,31 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 
 .bar-link:hover {
   background: var(--surface-1);
+}
+
+/* Compact navigation labels, with ordinary case retained for typed search terms. */
+.bar .bar-link,
+.bar .bar-budget {
+  font: 600 10px/1.25 var(--font-mono);
+  letter-spacing: .065em;
+  text-transform: uppercase;
+}
+.bar .place-search input {
+  font: 400 12px/1.3 var(--font-text);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.bar .theme-toggle svg { transition: transform 180ms ease; }
+.bar .theme-toggle:active svg { transform: rotate(20deg) scale(.9); }
+
+/* The browser snapshots only the visible page for a short palette crossfade. Older
+   browsers change instantly; reduced-motion readers never start this transition. */
+::view-transition-old(root),
+::view-transition-new(root) { animation-duration: 240ms; animation-timing-function: ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .bar .theme-toggle svg { transition: none; }
+  .bar .theme-toggle:active svg { transform: none; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0s; }
 }
 
 /* ------------------------------------------------------------ licence / location --- */
@@ -1988,6 +2013,7 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 .household-next a { font-weight: 600; }
 .household-next > span { color: var(--text-muted); }
 .local-page-group { margin-top: 56px; }
+.atlas-local .region-standard-content > .cost { margin-top: clamp(1.5rem, 3vw, 2rem); }
 .local-page-group > h2 { margin: 0 0 24px; }
 /* Chapter headers distinguish the main local-page groups from their smaller panels.
    Scoped away from reports and from the detailed tables inside the evidence drawer. */
