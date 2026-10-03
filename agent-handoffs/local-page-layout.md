@@ -152,3 +152,11 @@
 - `web/components/SectionJump.tsx`, `ReaderDetails.tsx`: navigation and supporting-detail presentation.
 - `web/app/page.tsx`, local profile page, Masthead and redesign CSS: placement/responsiveness.
 - CostToOwn, ForYourHousehold, HousingHelp, FloodRisk, GroundAndWater, HomeSales and HomesAdded: concise copy or supporting disclosures.
+
+## Follow-up: section-control polish and explicit AI badges
+
+- Restyled the native section selector as a compact tinted pill, with a list glyph and chevron. Decorative glyphs ignore pointer input; the native select, keyboard operation, accessible label and existing navigation behavior remain intact. The list glyph is omitted on mobile to preserve text space; print hides the entire control wrapper.
+- Added a gap between New Jersey's supporting-navigation row and the map-mode buttons: browser checks measured 24px desktop and about 18px mobile, without adding a new card.
+- Replaced the consumer-reading `Model interpretation` label with a muted violet `AI-written interpretation` badge, visually distinct from the green computed-data badge. Model identity/runtime, generated sentences, citations, disclaimers and stale/unverified warnings are unchanged. This does not regenerate or rewrite any readings.
+- Narrow-mobile visual inspection caught the masthead budget link crowding search at 320px. Below 380px it now reads `My budget`, retaining its destination and a full accessible label; wider screens keep the existing wording.
+- Verification: frontend typecheck, 43 test files / 399 tests, 2,377-page static build (expected local artifact-origin warning), and diff whitespace checks passed. Headless state/county checks at 1440px, 390px and 320px confirmed no overflow/page errors, the two consumer AI badges, distinct state-mode spacing and working evidence navigation. No deployment, canonical-document changes or new dependencies.

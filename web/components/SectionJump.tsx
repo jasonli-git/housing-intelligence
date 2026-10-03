@@ -21,6 +21,10 @@ export function SectionJump() {
   }, []);
 
   return (
+    <span className="section-jump-control">
+    <svg className="section-jump-mark" viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M7 5h9M7 10h9M7 15h9M3 5h.5M3 10h.5M3 15h.5" />
+    </svg>
     <select className="section-jump" aria-label="Jump to section" defaultValue="" disabled={!sections.length}
       onFocus={() => setSections(SECTIONS.filter(([, selector]) => {
         const target = document.querySelector(selector);
@@ -42,5 +46,7 @@ export function SectionJump() {
       <option value="" disabled>Jump to section</option>
       {sections.map(([label, selector]) => <option key={selector} value={selector}>{label}</option>)}
     </select>
+    <svg className="section-jump-chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4" /></svg>
+    </span>
   );
 }

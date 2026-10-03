@@ -75,9 +75,11 @@ export function Masthead({
           </div>
           <div className="bar-tools">
             <PlaceSearch />
-            <Link className="bar-budget" href="/afford"
+            <Link className="bar-budget" href="/afford" aria-label="Find places within my budget"
               aria-current={affordability.kind === "route" && affordability.active ? "page" : undefined}>
-              Find within my budget <span aria-hidden="true">→</span>
+              <span className="bar-budget-long">Find within my budget</span>
+              <span className="bar-budget-short" aria-hidden="true">My budget</span>
+              <span aria-hidden="true">→</span>
             </Link>
           </div>
           <ThemeToggle />

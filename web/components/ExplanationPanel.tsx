@@ -173,7 +173,7 @@ export function ConsumerReading({
   return (
     <section aria-labelledby={id} className={`interpretation consumer-feature consumer-feature-${section}`}>
       <div className="consumer-feature-topline">
-        <span className="consumer-feature-tag">{children ? "Highlights · Model interpretation" : "Model interpretation"}</span>
+        <span className="consumer-feature-tag consumer-ai-badge">AI-written interpretation</span>
         <span className="interpretation-source">
           written by {reading.model_label}
           <span className="interpretation-runtime"> · {reading.runtime}</span>
