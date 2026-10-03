@@ -1,6 +1,5 @@
 import { type Measure } from "@/components/CountyExplorer";
 import { SectionJump } from "@/components/SectionJump";
-import { ReaderDetails } from "@/components/ReaderDetails";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Crumbs, Kind } from "@/components/Crumbs";
@@ -177,7 +176,6 @@ export default async function NewJerseyPage() {
             <h1 className="page-title">New Jersey</h1>
             <ComputedBadge />
           </div>
-          <p className="state-introduction">One state. Different housing markets.</p>
         </div>
         <a className="nj-atlas-entry" href="#nj-explore">
           <span className="nj-atlas-count">{geo.features.length}<span>counties</span></span>
@@ -186,15 +184,9 @@ export default async function NewJerseyPage() {
       </header>
       <StateOverview levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)} />
       <StateProfileTicker items={stateProfile(levels.filter((level) => ["fhfa_hpi", "fhfa_hpi_all_transactions", "nj_effective_tax_rate", "sr1a_median_price_per_sqft", "sr1a_median_year_built_sold", "water_homes_share_public"].includes(level.metric_id)), statewide?.headlines ?? [])} />
-      <div className="nj-source-notes">
+      <div id="state-note-reference" className="nj-source-notes">
         <SectionJump />
-        {statewideNotes.length > 0 && <ReaderDetails title="About these statewide figures">
-          {statewideNotes.map((text) => (
-            <p key={text} className="table-note">
-              {text}
-            </p>
-          ))}
-        </ReaderDetails>}
+        {statewideNotes.length > 0 && <a className="state-note-reference" href="#state-figure-notes" aria-label="Read notes about statewide figures at the bottom of the page" title="Notes about statewide figures">†</a>}
       </div>
 
       <div id="nj-explore" className="nj-explore-anchor">
@@ -226,6 +218,10 @@ export default async function NewJerseyPage() {
           <p className="table-note">Different measures cover different periods. Statewide sale medians describe sold homes, not the value of every home; construction totals include reporting towns only.</p>
         </section>
       </MoreExpander>
+      {statewideNotes.length > 0 && <aside id="state-figure-notes" className="state-figure-notes" aria-labelledby="state-figure-notes-heading" tabIndex={-1}>
+        <h2 id="state-figure-notes-heading"><a href="#state-note-reference" aria-label="Return to the statewide footnote reference">†</a> About the statewide figures</h2>
+        {statewideNotes.map((text) => <p key={text}>{text}</p>)}
+      </aside>}
       </main>
     </>
   );

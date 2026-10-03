@@ -65,7 +65,13 @@
 .national-rate > strong { font: 600 54px/1 var(--font-display); letter-spacing: -.05em; color: var(--entry-ink); }
 .national-rate small, .entry-coverage-note { color: var(--text-muted); font-size: var(--text-small); }
 .entry-coverage-note { margin-top: 1rem; max-width: 75ch; }
-.state-introduction { margin: .8rem 0 0; font: 550 clamp(23px, 3vw, 32px)/1.2 var(--font-display); letter-spacing: -.035em; }
+.state-note-reference { display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; color: var(--state-blue); font-size: 20px; text-decoration: none; }
+.state-note-reference:hover { color: var(--text-primary); }
+.state-figure-notes { margin-top: 1.5rem; color: var(--text-secondary); font-size: var(--text-small); scroll-margin-top: 6rem; }
+.state-figure-notes h2 { font: 500 var(--text-small)/1.5 var(--font-text); margin: 0 0 .4rem; }
+.state-figure-notes h2 a { color: var(--state-blue); display: inline-grid; place-items: center; min-width: 24px; min-height: 24px; }
+.state-figure-notes p { margin: .35rem 0; max-width: 100ch; line-height: 1.5; }
+#state-note-reference { scroll-margin-top: 6rem; }
 .state-overview { margin: .9rem 0 1rem; }
 .state-chapter-head h2 { font-size: clamp(23px, 3vw, 32px); letter-spacing: -.04em; margin: 0 0 .6rem; }
 .state-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--border); border-radius: 12px; background: var(--border); overflow: hidden; }

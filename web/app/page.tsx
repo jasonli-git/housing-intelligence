@@ -15,7 +15,7 @@ export default async function UnitedStatesPage() {
         <h1>United States</h1>
         <p className="entry-introduction">A clearer picture of the place you could call home.</p>
         <p className="entry-context">Compare housing costs and local conditions, with sources for every figure.</p>
-        <p className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg>Free to use <span aria-hidden="true">·</span> <span>No fees. No subscription.</span></p>
+        <p className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg>Free to use <span aria-hidden="true">·</span> <span>No fees. No subscription. Definitely no ads.</span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-labelledby="coverage-heading">
         <header><p className="entry-kicker">Explore by state</p><h2 id="coverage-heading">Find your place</h2></header>
