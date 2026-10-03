@@ -207,7 +207,19 @@ first raised, not where it must be done.
       region pages' cost section now counts insurance, mortgage insurance, utilities and
       upkeep; the workspace that ranks towns by monthly cost does not, so the two can
       disagree for the same town. Bring it onto `ownership.ts`, or say on it what it
-      leaves out.
+      leaves out. Since PR #86 every town and county page links straight into it with
+      the place selected, so the mismatch is one click away.
+- [ ] **The budget explorer's comparison scope is not in its address.** (PR #86, Codex
+      handoff `local-page-layout.md`) A page's link opens `/afford` with its place and
+      county; switching to another county or all New Jersey changes local state only,
+      so a shared or reloaded link returns to the original scope.
+- [ ] **Old affordability links show the normal page.** (PR #86) `?mode=afford` on a
+      county page now renders the profile, not the retired workspace, with no redirect
+      to `/afford`. Bookmarks still work, but land somewhere different.
+- [ ] **Household income and cost assumptions are not shared between tools.** (PR #86)
+      The budget explorer keeps its own default income and own/rent controls; the
+      income a reader enters in "For your household" (`hip.household.v1`) does not
+      carry into it, or back.
 - [ ] **FHA's county loan limits are linked, not held.** (M33, #280) A 3.5%-down card in
       a dear town can price an FHA loan HUD would not insure. HUD publishes the limits by
       county each year; loading them would let the card say so outright.
