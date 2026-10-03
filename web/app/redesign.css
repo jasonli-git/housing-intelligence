@@ -93,6 +93,7 @@ select,
 
 .bar-trail {
   gap: 0.7rem;
+  align-items: center;
 }
 
 .bar-home,
@@ -1988,6 +1989,35 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 .household-next > span { color: var(--text-muted); }
 .local-page-group { margin-top: 56px; }
 .local-page-group > h2 { margin: 0 0 24px; }
+/* Chapter headers distinguish the main local-page groups from their smaller panels.
+   Scoped away from reports and from the detailed tables inside the evidence drawer. */
+.atlas-local .region-standard-content > .cost > .section-head,
+.atlas-local .region-standard-content > .household > .section-head,
+.atlas-local .region-standard-content > .local-page-group > h2 {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--atlas-accent, var(--series-3)) 25%, var(--border));
+}
+.atlas-local .region-standard-content > .cost > .section-head h2,
+.atlas-local .region-standard-content > .cost > h2,
+.atlas-local .region-standard-content > .household > .section-head h2,
+.atlas-local .region-standard-content > .local-page-group > h2,
+.atlas-local .region-standard-content > .consumer-feature-what_stands_out h2 {
+  padding-left: .8rem;
+  border-left: 3px solid var(--atlas-accent, var(--series-3));
+  font: 600 clamp(1.6rem, 2.7vw, 2.15rem)/1.15 var(--font-display);
+  letter-spacing: -.045em;
+  color: var(--atlas-ink, var(--text-primary));
+}
+.atlas-local .region-standard-content > .local-page-group > h2 { padding-bottom: 1rem; }
+.atlas-local .region-standard-content > .consumer-feature-what_stands_out { margin-top: clamp(2.8rem, 6vw, 5rem); }
+.atlas-local .region-standard-content > .more > summary > .more-kicker {
+  padding-left: .8rem;
+  border-left: 3px solid var(--atlas-accent, var(--series-3));
+  margin-bottom: 1rem;
+  font: 600 clamp(1.6rem, 2.7vw, 2.15rem)/1.15 var(--font-display);
+  letter-spacing: -.045em;
+  text-transform: none;
+}
 .local-checks-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; align-items: start; }
 .local-checks-grid > .section, .local-market > .section { margin-top: 0; }
 .local-checks-grid > .section { min-width: 0; }
