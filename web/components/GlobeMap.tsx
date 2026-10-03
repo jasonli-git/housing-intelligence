@@ -26,6 +26,7 @@ import { type MapFile, readingsFor } from "@/lib/mapdata";
 import { paint as paintInto, reserve } from "@/lib/paint";
 import type { MapLayers } from "@/components/useMapFile";
 import { WORLD_LAND } from "@/lib/worldLand";
+import { flightTiming } from "@/lib/mapMotion";
 import {
   classIndex,
   quantileBreaks,
@@ -877,7 +878,7 @@ export function GlobeMap({
    */
   const aim = useRef<Camera | null>(null);
 
-  const flyTo = useCallback((to: Camera) => {
+  const flyTo = useCallback((to: Camera, quick = false) => {
     if (glide.current !== null) cancelAnimationFrame(glide.current);
     glide.current = null;
     if (flight.current !== null) cancelAnimationFrame(flight.current);
@@ -889,14 +890,15 @@ export function GlobeMap({
       globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!from || still) {
       aim.current = null;
+      standing.current = to;
       setCamera(to);
+      setMoving(false);
+      setLive(null);
       return;
     }
     aim.current = to;
 
-    const turns = Math.hypot(to.lon - from.lon, to.lat - from.lat) / 40;
-    const zooms = Math.abs(Math.log(to.scale / from.scale)) / Math.log(8);
-    const span = Math.min(1150, 420 + Math.max(turns, zooms) * 520);
+    const { duration: span, ease } = flightTiming(from, to, quick);
     const started = performance.now();
     // A flight is motion, and until now it was the only motion that did not say so: it
     // re-projected 564 outlines at full precision sixty times a second for up to 1.15
@@ -909,17 +911,15 @@ export function GlobeMap({
 
     const step = (now: number) => {
       const through = Math.min(1, (now - started) / span);
-      // Ease in and out: the eye is given time to leave and time to arrive.
-      const eased =
-        through < 0.5
-          ? 4 * through * through * through
-          : 1 - Math.pow(-2 * through + 2, 3) / 2;
-      setCamera({
+      const eased = ease(through);
+      const next = {
         ...to,
         lon: from.lon + (to.lon - from.lon) * eased,
         lat: from.lat + (to.lat - from.lat) * eased,
         scale: from.scale * Math.pow(to.scale / from.scale, eased),
-      });
+      };
+      standing.current = next;
+      setCamera(next);
       flight.current = through < 1 ? requestAnimationFrame(step) : null;
       if (flight.current === null) {
         aim.current = null;
@@ -976,7 +976,7 @@ export function GlobeMap({
       flyTo({
         ...current,
         scale: Math.max(lowest, Math.min(highest, current.scale * factor)),
-      });
+      }, true);
     },
     [flyTo, framings, commit],
   );
@@ -1275,13 +1275,6 @@ export function GlobeMap({
             commit();
             setMoving(false);
           }}
-          onWheel={(event) => {
-            // Only with a modifier held. A bare wheel over the map is the reader scrolling
-            // the page past it, and swallowing that traps them on a tall map.
-            if (!event.ctrlKey && !event.metaKey) return;
-            event.preventDefault();
-            zoom(Math.pow(0.999, -event.deltaY));
-          }}
         >
           <defs>
               {/* Clear over the middle of the frame, closing to the page's own surface at
@@ -1430,7 +1423,9 @@ export function GlobeMap({
             )}
           </>
         )}
-        <p className="globe-note">
+        <details className="globe-help">
+          <summary>Map controls & reading the map</summary>
+          <p className="globe-note">
           {drawn.highest > drawn.lowest && (
             <>
               The region under the crosshair rises with its own figure, from{" "}
@@ -1440,10 +1435,10 @@ export function GlobeMap({
           )}
           Only New Jersey carries figures; every other state is drawn as ground,
           not as a measurement. Drag to move the map under the crosshair, which
-          reads whatever is beneath it; zoom with the buttons, or hold{" "}
-          {"\u2318"} or Ctrl and scroll.
+          reads whatever is beneath it. Zoom with the buttons; scrolling moves the page.
           {appearance === "atlas" && " Click or tap a county to explore its municipalities."}
         </p>
+        </details>
       </figcaption>
     </figure>
   );

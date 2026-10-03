@@ -335,6 +335,7 @@ export default async function RegionPage({
               ...(county ? [{ href: `/regions/${county.region_id}`, label: displayName(county) }] : []),
             ]}
             here={name}
+            hereKind={kindOf(region.level)}
           />
           <div className="page-head-eyebrow">
             <Kind kind={kindOf(region.level)} />

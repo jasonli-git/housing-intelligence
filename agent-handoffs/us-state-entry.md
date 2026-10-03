@@ -12,6 +12,8 @@
 - National map experiment: replace the monogram/state-card layout with a stationary globe-projected US coverage selector. Only NJ is blue/raised and linked. Unavailable states are neutral and identify themselves on hover. NJ remains reachable via the locator and a normal text action.
 - Map entry transition: activating the NJ shape, desktop locator or mobile map link zooms the geography toward NJ over 520ms, then opens the state page through client navigation. Locator labels fade during the zoom. The ordinary text action below the map remains immediate.
 - National/state color hierarchy: national headings, labels, accent rule and borrowing figure use warm charcoal/ivory. The locator's world land and unavailable states use warm grays. NJ's map highlight, locator, mobile link, preview and state page retain blue. The national header is now correctly marked `data-kind="nation"` rather than `state`.
+- Navigation/compactness follow-up: breadcrumb links hint national warm-neutral, state blue and local teal identities, including current profile crumbs. Removed the redundant NJ orientation sentence and repeated section kickers; tightened snapshot/workspace spacing and the empty gap before NJ provenance without removing qualifiers or county rows.
+- Analytical map follow-up: removed modifier-wheel zoom. +/- controls now use a 160ms ease-out, retargeting from the live camera toward the accumulated click target. Geographic jumps keep their gentler flight. Full controls/height explanation is expandable; the color legend and missing-figure warnings remain visible.
 
 ## Files/modules affected
 
@@ -21,6 +23,7 @@
 - `HomeSales` and `HomesAdded` accept the fields they actually use rather than requiring unrelated packet provenance fields. Their local-page behavior is unchanged.
 - `web/lib/stateEntry.ts`, its tests, and the shared `rate_per_100` value formatter.
 - Map follow-up: `NationalCoverageMap`, `web/lib/coverageMap.ts` and tests, and the geometry-only `/states.json` static route. Existing `globe.ts`, packing/unpacking and world-land assets are reused without modifying the analytical map.
+- Navigation/zoom follow-up: `Crumbs`, shared breadcrumb/help styling in `globals.css`, `GlobeMap`, and `web/lib/mapMotion.ts` with three timing/easing tests.
 
 ## Architectural or implementation decisions
 
@@ -34,6 +37,7 @@
 - The coverage map has no measure/color scale and no continuous animation. Its small NJ lift represents availability, never magnitude. State geometry loads near the viewport via IntersectionObserver; the regular state action is server-rendered. No new dependencies, API keys or WebGL requirement.
 - Fixed framing intentionally avoids pan/zoom gesture capture. Mobile has a readable 44px-high NJ link rather than a scaled-down SVG label. Reduced motion removes hover color transitions; unavailable/failed geometry and JavaScript-disabled browsers retain the normal NJ link.
 - Entry motion uses a compositor transform of the existing SVG group, not per-frame geographic reprojection. The destination is prefetched on activation. Modified clicks, reduced motion, missing geometry and missing animation support retain ordinary links. Duplicate activation is guarded; a 650ms navigation fallback avoids waiting indefinitely for animation completion. Unmount, pageshow and Back reset/cancel the zoom and pending fallback.
+- The full analytical map no longer handles wheel events at all. Normal wheel scrolling belongs to the page; Ctrl/Command-wheel behavior belongs to the browser (which may use it for browser zoom). Drag and geographic jump controls remain. Reduced-motion zoom synchronously updates the camera ref so rapid presses do not lose steps.
 
 ## Assumptions
 
@@ -63,6 +67,8 @@
 - Transition follow-up: modified clicks did not start motion; cancelling motion still reached NJ. `git diff --check` and the production export passed again (2,379 outputs); the existing artifact-origin warning remains.
 - Color hierarchy follow-up: type checking, all 407 tests and diff checks passed. Light/dark desktop and 390px/320px mobile screenshots inspected; computed colors confirm neutral national title/rule/labels and blue NJ preview/state title. No horizontal overflow; mobile NJ navigation still works. An initial mobile test lacked a touch-enabled context; it was corrected and rerun successfully.
 - Color hierarchy production export passed again (2,379 outputs), with the existing artifact-origin warning unchanged.
+- Navigation/zoom follow-up: type checking and 410 tests across 46 files passed; diff check passed. Browser checks at 1440px, 390px and 320px confirmed no NJ/county horizontal overflow, neutral/blue/teal breadcrumb colors, wheel page scrolling, no app interception of synthetic modifier-wheel events, working help expansion, and reduced-motion zoom without a flight. Five rapid zoom clicks settled by the 250ms check; camera ground paths stayed unchanged through a further 400ms. Comparing entire SVG HTML was inconclusive because the separate county rise animation continues; the ground-path check isolates camera movement. All 21 initial county rows and switching to budget mode were verified. Fresh mobile dark screenshot inspected.
+- Navigation/zoom production export passed (2,379 static outputs). The existing artifact-origin warning remains; local development was restarted on port 3000 afterward.
 - Browser checks: national → state navigation; direct budget URL; mode switching and browser Back; state ticker remains visible in budget mode; local NJ breadcrumb; statewide evidence opens with 28 figure rows and six construction years; no page errors in the navigation check.
 - Focused mobile sale-price definition was wholly within the 390px × 900px viewport (left 33, right 321, top 649, bottom 817). Two initial inspection scripts used incorrect tooltip selectors and failed; the corrected check passed.
 - `npm run build`: passed; generated 2,378 static pages, including `/` and `/states/new-jersey`. Both exported HTML files exist and `out/_redirects` exactly matches the source redirect file. The artifact-origin warning noted above was emitted.

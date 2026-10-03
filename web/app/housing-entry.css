@@ -65,16 +65,18 @@
 .national-rate > strong { font: 600 54px/1 var(--font-display); letter-spacing: -.05em; color: var(--entry-ink); }
 .national-rate small, .entry-coverage-note { color: var(--text-muted); font-size: var(--text-small); }
 .entry-coverage-note { margin-top: 1rem; max-width: 75ch; }
-.state-introduction { margin: 1.2rem 0 .5rem; font: 550 clamp(23px, 3vw, 32px)/1.2 var(--font-display); letter-spacing: -.035em; }
-.state-orientation { max-width: 58ch; margin: 0; color: var(--text-secondary); }
-.state-overview { margin: 1.1rem 0 1.5rem; }
-.state-chapter-head h2 { font-size: clamp(23px, 3vw, 32px); letter-spacing: -.04em; margin: 0 0 1rem; }
+.state-introduction { margin: .8rem 0 0; font: 550 clamp(23px, 3vw, 32px)/1.2 var(--font-display); letter-spacing: -.035em; }
+.state-overview { margin: .9rem 0 1rem; }
+.state-chapter-head h2 { font-size: clamp(23px, 3vw, 32px); letter-spacing: -.04em; margin: 0 0 .6rem; }
 .state-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--border); border-radius: 12px; background: var(--border); overflow: hidden; }
-.state-facts article { display: flex; flex-direction: column; align-items: flex-start; padding: 1.3rem; min-width: 0; background: var(--surface-card); }
+.state-facts article { display: flex; flex-direction: column; align-items: flex-start; padding: 1rem; min-width: 0; background: var(--surface-card); }
 .state-facts article > strong { font: 650 clamp(29px, 3.5vw, 42px)/1.15 var(--font-display); letter-spacing: -.045em; color: var(--entry-ink); margin-bottom: .4rem; }
 .state-facts article > small { color: var(--text-muted); font-size: 10px; margin-top: .4rem; }
 .state-facts article > p:last-child { margin: .7rem 0 0; color: var(--text-secondary); font-size: var(--text-small); line-height: 1.5; }
-.state-workspace { margin-top: 2rem; }
+.state-workspace { margin-top: 1.1rem; }
+.nj-page .nj-source-notes { margin-top: .5rem; margin-bottom: .8rem; }
+main.shell.nj-page { padding-bottom: 1.5rem; }
+body:has(.nj-page) > .foot { margin-top: 1.5rem; }
 .state-workspace-head { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
 .state-workspace-head h2 { margin: 0 0 .5rem; font-size: clamp(25px, 3.3vw, 38px); letter-spacing: -.045em; }
 .state-workspace-head p:last-child { color: var(--text-secondary); font-size: var(--text-small); margin: 0; }

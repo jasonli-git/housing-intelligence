@@ -155,7 +155,7 @@ export default async function NewJerseyPage() {
       <main className="shell nj-page">
       <header className="page-head nj-head" data-kind="state">
         <div className="region-head-main">
-          <Crumbs trail={[{ href: "/", label: "United States" }]} here="New Jersey" />
+          <Crumbs trail={[{ href: "/", label: "United States" }]} here="New Jersey" hereKind="state" />
           <div className="page-head-eyebrow">
             <Kind kind="state" />
             {population && (
@@ -178,7 +178,6 @@ export default async function NewJerseyPage() {
             <ComputedBadge />
           </div>
           <p className="state-introduction">One state. Different housing markets.</p>
-          <p className="state-orientation">Start with the statewide picture, then compare counties and find places within your budget.</p>
         </div>
         <a className="nj-atlas-entry" href="#nj-explore">
           <span className="nj-atlas-count">{geo.features.length}<span>counties</span></span>

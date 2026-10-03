@@ -324,6 +324,19 @@ details[open] > summary .when-closed { display: none; }
   border-radius: 6px; background: var(--surface-2);
 }
 .crumbs a:hover { color: var(--text-primary); background: var(--grid); text-decoration: none; }
+.crumbs li[data-level="nation"] { --crumb-accent: light-dark(#6e655b, #c7beb0); }
+.crumbs li[data-level="state"] { --crumb-accent: var(--state-blue); }
+.crumbs li[data-level="local"] { --crumb-accent: var(--series-3); }
+.crumbs li[data-level] { color: var(--crumb-accent); }
+.crumbs li[data-level] a {
+  color: var(--crumb-accent);
+  background: color-mix(in srgb, var(--crumb-accent) 9%, var(--surface-2));
+  box-shadow: inset 0 -1px color-mix(in srgb, var(--crumb-accent) 35%, transparent);
+}
+.crumbs li[data-level] a:hover { background: color-mix(in srgb, var(--crumb-accent) 18%, var(--surface-2)); }
+.globe-help { margin-top: .5rem; color: var(--text-secondary); font-size: var(--text-small); }
+.globe-help summary { cursor: pointer; width: fit-content; }
+.globe-help .globe-note { margin-top: .5rem; }
 
 /* The kind of page: a small label in the page's accent, and the accent as a rule over the
    head — the state's blue, a region's teal, the report's ink, the tool's orange. Related
