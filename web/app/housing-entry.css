@@ -26,6 +26,10 @@
 .coverage-atlas { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--surface-card); }
 .coverage-map-stage { position: relative; isolation: isolate; background: radial-gradient(ellipse at 55% 55%, light-dark(#eaf1f6, #1c2b3a), light-dark(#f7f9fb, #17202b)); }
 .coverage-map { display: block; width: 100%; height: clamp(250px, 38vw, 460px); touch-action: auto; }
+.coverage-map { overflow: hidden; }
+.coverage-geography { transform-origin: 0 0; transform-box: view-box; }
+.coverage-map-stage .coverage-locator, .coverage-map-stage .coverage-map-caption, .coverage-map-stage .coverage-mobile-link { transition: opacity 160ms ease; }
+.coverage-map-stage[data-entering="true"] .coverage-locator, .coverage-map-stage[data-entering="true"] .coverage-map-caption, .coverage-map-stage[data-entering="true"] .coverage-mobile-link { opacity: 0; }
 .coverage-map-caption { position: absolute; top: 1rem; left: 1.2rem; z-index: 1; color: var(--text-muted); font: 500 9px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; pointer-events: none; }
 .coverage-mobile-link { display: none; }
 .coverage-land path { fill: light-dark(#e1e8ed, #253240); stroke: none; }
@@ -105,5 +109,5 @@ html[data-housing-mode="afford"] .nj-page > .state-ticker, html[data-housing-mod
   .state-entry-link { gap: 1rem; }
   .state-entry-monogram { font-size: 60px; }
 }
-@media (prefers-reduced-motion: reduce) { .coverage-unavailable, .state-entry-link { transition: none; } .state-entry-link:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .coverage-map-stage .coverage-locator, .coverage-map-stage .coverage-map-caption, .coverage-map-stage .coverage-mobile-link, .coverage-unavailable, .state-entry-link { transition: none; } .state-entry-link:hover { transform: none; } }
 @media print { .state-workspace-choice { display: none; } .state-facts { display: block; } .state-entry-link { background: transparent; box-shadow: none; } }

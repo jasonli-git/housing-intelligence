@@ -10,6 +10,7 @@
 - Tax-rate values now explicitly say dollars per $100 instead of displaying a unitless number. Mortgage overview figures retain two decimal places.
 - Follow-up refinement: the national entrance introduces Housing as a public data project, retains the approved tagline, and explicitly says “Free to use · No fees. No subscription.” Repeated coverage text and longer state-card/benchmark descriptions were shortened. This is a free-access statement, not a change to source licensing or the non-commercial notice.
 - National map experiment: replace the monogram/state-card layout with a stationary globe-projected US coverage selector. Only NJ is blue/raised and linked. Unavailable states are neutral and identify themselves on hover. NJ remains reachable via the locator and a normal text action.
+- Map entry transition: activating the NJ shape, desktop locator or mobile map link zooms the geography toward NJ over 520ms, then opens the state page through client navigation. Locator labels fade during the zoom. The ordinary text action below the map remains immediate.
 
 ## Files/modules affected
 
@@ -31,6 +32,7 @@
 - Static-host redirects handle legacy `/regions/1` and `/regions/1/report`; Next's local development server does not process Cloudflare `_redirects`.
 - The coverage map has no measure/color scale and no continuous animation. Its small NJ lift represents availability, never magnitude. State geometry loads near the viewport via IntersectionObserver; the regular state action is server-rendered. No new dependencies, API keys or WebGL requirement.
 - Fixed framing intentionally avoids pan/zoom gesture capture. Mobile has a readable 44px-high NJ link rather than a scaled-down SVG label. Reduced motion removes hover color transitions; unavailable/failed geometry and JavaScript-disabled browsers retain the normal NJ link.
+- Entry motion uses a compositor transform of the existing SVG group, not per-frame geographic reprojection. The destination is prefetched on activation. Modified clicks, reduced motion, missing geometry and missing animation support retain ordinary links. Duplicate activation is guarded; a 650ms navigation fallback avoids waiting indefinitely for animation completion. Unmount, pageshow and Back reset/cancel the zoom and pending fallback.
 
 ## Assumptions
 
@@ -56,6 +58,8 @@
 - Entry-copy follow-up: type checking, all 404 tests and diff checks passed again; headless checks at 1440px/light, 390px/dark and 320px/light confirmed the tagline/free-access/coverage text, no horizontal overflow or page errors, and working NJ navigation.
 - Map follow-up: type checking and 407 tests across 45 files passed. Headless checks at 1440px, 390px and 320px showed no horizontal overflow; light/dark screenshots inspected. Mobile NJ navigation, page scrolling, reduced-motion mode, request-failure fallback and JS-disabled NJ link verified. No `/map.json` request on the entry; `/states.json` measured 57,770 uncompressed bytes in the local snapshot.
 - Map follow-up production build passed with 2,379 static outputs. Exported `states.json` contains only precision and 52 packed state/backdrop outlines, including NJ; no housing measures.
+- Transition follow-up: type checking and all 407 tests passed. Headless checks observed the zoom transform, successful desktop/keyboard/mobile arrivals, clean Back reset, no mobile animation under reduced motion, and no page errors. The first inspection click targeted empty SVG-anchor bounds and timed out; clicking the painted locator rectangle passed.
+- Transition follow-up: modified clicks did not start motion; cancelling motion still reached NJ. `git diff --check` and the production export passed again (2,379 outputs); the existing artifact-origin warning remains.
 - Browser checks: national → state navigation; direct budget URL; mode switching and browser Back; state ticker remains visible in budget mode; local NJ breadcrumb; statewide evidence opens with 28 figure rows and six construction years; no page errors in the navigation check.
 - Focused mobile sale-price definition was wholly within the 390px × 900px viewport (left 33, right 321, top 649, bottom 817). Two initial inspection scripts used incorrect tooltip selectors and failed; the corrected check passed.
 - `npm run build`: passed; generated 2,378 static pages, including `/` and `/states/new-jersey`. Both exported HTML files exist and `out/_redirects` exactly matches the source redirect file. The artifact-origin warning noted above was emitted.
