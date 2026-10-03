@@ -366,3 +366,61 @@ options would include retrying Flex later instead of falling back, or Gemini's B
 API. Nothing has been decided.
 
 Do not implement yet.
+
+---
+
+## Utilities and drinking water: closing Milestone 40's limits
+
+**Status:** Possible direction — recorded in Milestone 42's scope (ROADMAP), not yet built
+**Recorded:** 2026-10-03
+
+After Milestone 40, the owner asked how useful the water section is and what could be
+done about electricity. Milestone 42 (utilities) was added to the roadmap the same day.
+These are Claude's recommendations for the four limits of Milestone 40's water
+section, as given.
+
+### 1. Answers are town-level only
+
+- Find out first whether a property's own answers are possible; build them only if so.
+- The parcel data has addresses but no locations. New Jersey's statewide address points
+  (NJOGIS) would place an address, so the property lookup could say which flood zone,
+  water system and electric utility a home is in.
+- Read the address-point terms and Daniel's Law's reach before anything is built. If
+  either rules it out, stay at town level and keep linking New Jersey's flood disclosure
+  lookup for one address.
+
+### 2. A violation is a past period, not the water today
+
+- Show whether each violation was returned to compliance, and when ("resolved June
+  2024" or "still open"). EPA records the date (`rtc_date`), already downloaded.
+- Link each system's annual water quality report (Consumer Confidence Report), the
+  closest public thing to "the water today".
+
+### 3. New Jersey's PFAS limits are missing
+
+- Use EPA's UCMR 5 sampling (2023–2025): measured PFAS for every public system serving
+  more than about 3,300 people, federal and free to reuse, set against EPA's limits.
+- EPA's PFAS compliance deadlines are years away, so there are no violations to show
+  yet; measured levels are the honest figure.
+- Not reading NJDEP's Drinking Water Watch directly: no data feed, and its terms would
+  have to be read first.
+
+### 4. No lead service lines
+
+- Use NJDEP's service line inventory: per water system, the share of lines that are
+  lead, galvanized or of unknown material, against New Jersey's 2031 replacement
+  deadline.
+- The most actionable of the four: a buyer can ask the utility about one address, and
+  some utilities replace a lead line free of charge.
+- Its terms and fields have not been read yet.
+
+### Electricity and gas (the same milestone)
+
+- Which electric and gas utility serves each town, from New Jersey's utility service
+  territories.
+- Each utility's average residential price per kWh and its outage frequency and
+  duration from EIA Form 861, beside the BPU's own reliability reports.
+- Energy burden from DOE's LEAD tool, moved from Milestone 47.
+- Already held: the ACS electricity bill (Milestone 33) and heating fuel (Milestone 34).
+
+Terms to be read for every source before it is built.
