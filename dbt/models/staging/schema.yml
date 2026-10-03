@@ -259,3 +259,89 @@ models:
       - name: value
         tests:
           - accepted_range: {min_value: 2017, max_value: 2100}
+
+  # Milestone 40: flood and environmental exposure (ARCHITECTURE #301-#304).
+  - name: stg_block_homes
+    description: >-
+      The 2020 census blocks that hold homes, each placed in its municipality and ZCTA
+      by its interior point.
+    columns:
+      - name: block_geoid
+        tests: [not_null, unique]
+      - name: municipality_geoid
+        tests: [not_null]
+      - name: homes
+        tests:
+          - not_null
+          - accepted_range: {min_value: 1, max_value: 100000}
+
+  - name: stg_flood_blocks
+    description: >-
+      Each home-bearing block's share in FEMA's 1% and 0.2% zones, in what FEMA's
+      digital map determines, and in NJDEP's tidal climate-adjusted area.
+    columns:
+      - name: block_geoid
+        tests: [not_null, unique]
+      - name: high
+        tests:
+          - accepted_range: {name: stg_flood_blocks_high_is_a_share, min_value: 0, max_value: 1}
+      - name: mapped
+        tests:
+          - accepted_range: {name: stg_flood_blocks_mapped_is_a_share, min_value: 0, max_value: 1}
+
+  - name: stg_flood_exposure
+    description: >-
+      Shares and counts of homes in each flood area, per municipality, county, ZIP code
+      and the state; FEMA's zone shares only where its digital map covers 95% of homes.
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_flood_exposure_in_range, min_value: 0, max_value: 4000000}
+
+  - name: stg_fema_claims
+    description: >-
+      NFIP claims paid and amounts paid, per county, ZIP code and the state, by year of
+      loss.
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_fema_claims_not_negative, min_value: 0, max_value: 10000000000}
+
+  - name: stg_njdep_sites
+    description: >-
+      Known contaminated sites by status, per municipality, county, ZIP code and the
+      state, a zero where there are none.
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_njdep_sites_counts, min_value: 0, max_value: 20000}
+
+  - name: stg_water_quality
+    description: >-
+      Shares of homes on public water, and on a system with a recent health-based
+      violation.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_water_quality_is_a_share, min_value: 0, max_value: 1}
+
+  - name: stg_water_systems
+    description: >-
+      The community water systems serving each municipality and ZIP code, with their
+      health-based violations over five calendar years.
+    columns:
+      - name: pwsid
+        tests: [not_null]
+      - name: share_of_homes
+        tests:
+          - accepted_range: {name: stg_water_systems_share, min_value: 0, max_value: 1.000001}

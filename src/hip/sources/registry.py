@@ -13,8 +13,11 @@ from hip.config import GeographyScope
 from hip.sources.base import SourceAdapter, read_discovery
 from hip.sources.bls import BlsAdapter
 from hip.sources.census_acs import AcsAdapter
+from hip.sources.census_blocks import BlocksAdapter
 from hip.sources.census_pep import PepAdapter
 from hip.sources.census_permits import PermitsAdapter
+from hip.sources.epa_sdwis import SdwisAdapter
+from hip.sources.fema import NfhlAdapter, NfipClaimsAdapter
 from hip.sources.fhfa import HpiAdapter
 from hip.sources.fred import FredAdapter
 from hip.sources.hud import HudAdapter, HudChasAdapter, HudFmrAdapter
@@ -25,6 +28,7 @@ from hip.sources.nj_modiv import ModivAdapter
 from hip.sources.nj_revaluations import NjRevaluationsAdapter
 from hip.sources.nj_sr1a import Sr1aAdapter
 from hip.sources.nj_tax_rates import NjTaxRatesAdapter
+from hip.sources.njdep import CafeAdapter, KcslAdapter, WaterAreasAdapter
 from hip.sources.tiger import TigerAdapter
 from hip.sources.zillow import ZhviAdapter, ZoriAdapter
 
@@ -74,6 +78,14 @@ IMPLEMENTED: tuple[str, ...] = (
     NjRevaluationsAdapter.source_id,
     NjEqualizedAdapter.source_id,
     NjConstructionAdapter.source_id,
+    # Milestone 40.
+    NfhlAdapter.source_id,
+    CafeAdapter.source_id,
+    NfipClaimsAdapter.source_id,
+    KcslAdapter.source_id,
+    WaterAreasAdapter.source_id,
+    SdwisAdapter.source_id,
+    BlocksAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -97,6 +109,13 @@ METRIC_SOURCES: tuple[str, ...] = (
     NjRevaluationsAdapter.source_id,
     NjEqualizedAdapter.source_id,
     NjConstructionAdapter.source_id,
+    # Milestone 40.
+    NfhlAdapter.source_id,
+    CafeAdapter.source_id,
+    NfipClaimsAdapter.source_id,
+    KcslAdapter.source_id,
+    WaterAreasAdapter.source_id,
+    SdwisAdapter.source_id,
 )
 
 
@@ -169,6 +188,20 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return NjEqualizedAdapter()
     if source_id == NjConstructionAdapter.source_id:
         return NjConstructionAdapter()
+    if source_id == BlocksAdapter.source_id:
+        return BlocksAdapter(states=scope.states)
+    if source_id == NfhlAdapter.source_id:
+        return NfhlAdapter()
+    if source_id == CafeAdapter.source_id:
+        return CafeAdapter()
+    if source_id == NfipClaimsAdapter.source_id:
+        return NfipClaimsAdapter()
+    if source_id == KcslAdapter.source_id:
+        return KcslAdapter()
+    if source_id == WaterAreasAdapter.source_id:
+        return WaterAreasAdapter()
+    if source_id == SdwisAdapter.source_id:
+        return SdwisAdapter()
     if (milestone := PLANNED.get(source_id)) is not None:
         raise UnknownSourceError(
             f"'{source_id}' has no adapter yet — it ships in Milestone {milestone}. "

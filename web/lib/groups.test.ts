@@ -8,6 +8,19 @@ import { GROUPS, groupRows, rampFor } from "@/lib/groups";
 // `config/metrics.yml` belongs here and in a group; until it is, it renders under "Other
 // measures" rather than disappearing.
 const CATALOG = [
+  // Milestone 40
+  "fema_flood_homes_share",
+  "fema_flood_homes_share_moderate",
+  "fema_flood_homes",
+  "fema_mapped_homes_share",
+  "njdep_tidal_homes_share",
+  "fema_flood_claims",
+  "fema_flood_claims_paid",
+  "njdep_sites_open",
+  "njdep_sites_post_remedy",
+  "njdep_sites_heating_oil",
+  "water_homes_share_public",
+  "water_homes_share_violation",
   // Milestone 39
   "nj_units_certified",
   "nj_units_certified_1_2",

@@ -85,6 +85,13 @@ export const SHARE_METRICS: ReadonlySet<string> = new Set([
   // Milestone 39: the share of an area's towns a construction total covers.
   "nj_certificates_reporting_share",
   "nj_demolitions_reporting_share",
+  // Milestone 40: shares of homes in a flood area, and on public water.
+  "fema_flood_homes_share",
+  "fema_flood_homes_share_moderate",
+  "fema_mapped_homes_share",
+  "njdep_tidal_homes_share",
+  "water_homes_share_public",
+  "water_homes_share_violation",
   "chas_owner_cost_burden",
   "chas_renter_cost_burden",
   "chas_renter_severe_burden",

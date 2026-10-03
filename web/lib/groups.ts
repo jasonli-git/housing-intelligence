@@ -211,6 +211,27 @@ export const GROUPS: readonly Group[] = [
       "acs_commute_60plus_share",
     ],
   },
+  {
+    // Flood, contamination and drinking water (Milestone 40). Shares of homes are
+    // estimates over 2020's homes; counts of sites are never ranked (ARCHITECTURE #303).
+    key: "hazards",
+    title: "Flood and environment",
+    ramp: "affordability",
+    metrics: [
+      "fema_flood_homes_share",
+      "fema_flood_homes_share_moderate",
+      "fema_flood_homes",
+      "fema_mapped_homes_share",
+      "njdep_tidal_homes_share",
+      "fema_flood_claims",
+      "fema_flood_claims_paid",
+      "njdep_sites_open",
+      "njdep_sites_post_remedy",
+      "njdep_sites_heating_oil",
+      "water_homes_share_public",
+      "water_homes_share_violation",
+    ],
+  },
 ];
 
 export const OTHER: Omit<Group, "metrics"> = {

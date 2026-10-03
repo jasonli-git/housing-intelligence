@@ -566,6 +566,80 @@ def load_income_limits(
         return int(conn.execute(text("SELECT count(*) FROM income_limits")).scalar_one())
 
 
+def load_water_systems(
+    engine: Engine,
+    duckdb_path: Path,
+    *,
+    staging_table: str = "main_staging.stg_water_systems",
+) -> int:
+    """Replace `water_systems` from the staged list (Milestone 40, ARCHITECTURE #304).
+
+    Replaced whole, as `income_limits` is. Each row cites the newest SDWIS violations
+    release; a region the warehouse does not hold is dropped. Returns 0, changing
+    nothing, when the model has not been staged.
+    """
+    schema, table = staging_table.split(".")
+    with duckdb_session(duckdb_path) as duck:
+        staged = {
+            row[0]
+            for row in duck.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = ?",
+                [schema],
+            ).fetchall()
+        }
+        if table not in staged:
+            return 0
+        rows = duck.execute(
+            f"""
+            SELECT geoid, level, pwsid, system_name, homes, share_of_homes, violations,
+                   first_year, last_year, latest_violation, latest_violation_what,
+                   violation_kinds, release_vintage
+            FROM {staging_table}
+            """
+        ).fetchall()
+
+    keys = (
+        "geoid",
+        "level",
+        "pwsid",
+        "name",
+        "homes",
+        "share",
+        "violations",
+        "first_year",
+        "last_year",
+        "latest",
+        "latest_what",
+        "kinds",
+        "vintage",
+    )
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM water_systems"))
+        conn.execute(
+            text(
+                """
+                INSERT INTO water_systems
+                    (region_id, pwsid, name, homes, share_of_homes, violations,
+                     first_year, last_year, latest_violation, latest_violation_what,
+                     violation_kinds, release_id)
+                SELECT r.region_id, :pwsid, :name, :homes, :share, :violations,
+                       :first_year, :last_year, :latest, :latest_what, :kinds,
+                       sr.release_id
+                FROM regions r
+                JOIN LATERAL (
+                    SELECT release_id FROM source_releases
+                    WHERE source_id = 'epa_sdwis' AND layer = 'violations'
+                      AND vintage = :vintage
+                    ORDER BY fetched_at DESC LIMIT 1
+                ) sr ON true
+                WHERE r.level = CAST(:level AS region_level) AND r.geoid = :geoid
+                """
+            ),
+            [dict(zip(keys, row, strict=True)) for row in rows],
+        )
+        return int(conn.execute(text("SELECT count(*) FROM water_systems")).scalar_one())
+
+
 def load_region_identifiers(
     engine: Engine, duckdb_path: Path, *, staging_table: str = "stg_nj_municipal_codes"
 ) -> int:

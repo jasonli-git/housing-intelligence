@@ -48,6 +48,11 @@ KEYED_MODELS = (
     "stg_nj_revaluations",
     "stg_nj_county_tax_rates",
     "stg_nj_construction",
+    # Milestone 40.
+    "stg_flood_exposure",
+    "stg_fema_claims",
+    "stg_njdep_sites",
+    "stg_water_quality",
 )
 
 # Not a metric model: it feeds region_crosswalk, not fact_metric_observation.
@@ -97,7 +102,32 @@ def dbt_vars(
         # The MOD-IV tax year acquisition read from NJOGIS's metadata (Milestone 26).
         # None before discovery has run, when staging keeps the parcel-publication date.
         "modiv_tax_year": _modiv_tax_year(settings.raw_dir),
+        # The year each layer republished in place was read (Milestone 40, #301): a
+        # flood map or a site list has no period of its own, so its figures are dated
+        # by the year the platform read the copy they came from.
+        "read_years": {
+            source_id: _read_year(settings.raw_dir, source_id) for source_id in READ_DATED
+        },
     }
+
+
+# Sources republished in place whose figures are dated by the year they were read.
+READ_DATED = ("fema_nfhl", "njdep_cafe", "njdep_kcsl", "njdep_water_areas", "epa_sdwis")
+
+
+def _read_year(raw_dir: Path, source_id: str) -> int | None:
+    """The year the newest cached release of a source was fetched, or None."""
+    import json
+
+    index = raw_dir / source_id / "index.json"
+    if not index.exists():
+        return None
+    years = []
+    for sha in json.loads(index.read_text()).values():
+        manifest = raw_dir / source_id / sha[:16] / "manifest.json"
+        if manifest.exists():
+            years.append(int(json.loads(manifest.read_text())["fetched_at"][:4]))
+    return max(years) if years else None
 
 
 def _modiv_tax_year(raw_dir: Path) -> int | None:

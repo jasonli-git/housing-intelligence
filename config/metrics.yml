@@ -1462,3 +1462,170 @@ metrics:
     record_type: calculated
     inputs: [nj_net_units_added, acs_housing_units]
     changed: false
+
+  # Milestone 40: flood and environmental exposure (ARCHITECTURE #301-#304). Shares of
+  # homes are estimates over the 2020 Census's homes, each block's spread evenly over it.
+
+  fema_flood_homes_share:
+    label: Homes in FEMA's 1% flood zone
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      The share of homes inside FEMA's Special Flood Hazard Area, where a flood has at
+      least a 1% chance each year (26% over a 30-year mortgage) and a federally backed
+      mortgage requires flood insurance. Estimated from the 2020 Census's homes by
+      block, against the flood map in force when read. Outside the zone is not safe:
+      many flood claims come from outside it.
+    source_id: fema_nfhl
+    record_type: calculated
+    changed: false
+
+  fema_flood_homes_share_moderate:
+    label: Homes in FEMA's 0.2% flood zone
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      The share of homes in FEMA's moderate flood hazard area, a 0.2% chance each year
+      (the "500-year" flood), or behind a levee. Insurance is not required there, and
+      not cheap to go without.
+    source_id: fema_nfhl
+    record_type: calculated
+    changed: false
+
+  fema_flood_homes:
+    label: Homes in FEMA's 1% flood zone (count)
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      The number of homes, as counted in 2020, estimated to be inside FEMA's 1% flood
+      zone.
+    source_id: fema_nfhl
+    record_type: calculated
+    ranked: false
+
+  fema_mapped_homes_share:
+    label: Homes FEMA's flood map determines
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of homes where FEMA's digital flood map, the National Flood Hazard
+      Layer, gives a flood zone at all. The rest are in zone D, where the hazard was
+      never studied, or where FEMA's map is not digital: most of Morris County, on
+      2026-10-02. The zone shares are published only where this is at least 95%.
+    source_id: fema_nfhl
+    record_type: calculated
+    ranked: false
+
+  njdep_tidal_homes_share:
+    label: Homes in the climate-adjusted tidal flood area
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      The share of homes inside NJDEP's tidal climate-adjusted flood area: FEMA's
+      coastal 1% flood plus four feet of sea-level rise, the elevation New Jersey's
+      2026 REAL rules plan new coastal building for. An approximate planning layer
+      for 14 counties, not a flood map in force; a town elsewhere has no figure.
+    source_id: njdep_cafe
+    record_type: calculated
+    changed: false
+
+  fema_flood_claims:
+    label: Flood insurance claims paid
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      National Flood Insurance Program claims on which anything was paid, by the year
+      of the flood. Only insured homes and businesses claim, so this counts insured
+      loss, not every flooded home. Published by county and ZIP code; FEMA's finer
+      locations do not place a claim in a town.
+    source_id: fema_nfip_claims
+    record_type: administrative
+    ranked: false
+    changed: false
+
+  fema_flood_claims_paid:
+    label: Flood insurance paid
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      What the National Flood Insurance Program paid on buildings and contents for
+      floods in the year, in that year's dollars.
+    source_id: fema_nfip_claims
+    record_type: administrative
+    ranked: false
+    changed: false
+
+  njdep_sites_open:
+    label: Contaminated sites, cleanup open
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Sites on NJDEP's Known Contaminated Sites List whose remediation is under way or
+      not yet begun. A count, not a measure of risk: what each site is and how near
+      it is to a home is on NJDEP's own map.
+    source_id: njdep_kcsl
+    record_type: administrative
+    ranked: false
+    changed: false
+
+  njdep_sites_post_remedy:
+    label: Contaminated sites, cleaned up with controls
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Sites remediated with controls that stay in place, such as a deed notice or a
+      limit on ground water use.
+    source_id: njdep_kcsl
+    record_type: administrative
+    ranked: false
+    changed: false
+
+  njdep_sites_heating_oil:
+    label: Home heating-oil tank cleanups
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Leaking home heating-oil tanks under remediation, nearly all at houses.
+    source_id: njdep_kcsl
+    record_type: administrative
+    ranked: false
+    changed: false
+
+  water_homes_share_public:
+    label: Homes on public water
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of homes inside a community water system's service area. Most of the
+      rest draw from private wells, which New Jersey requires to be tested when a home
+      is sold or leased.
+    source_id: njdep_water_areas
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  water_homes_share_violation:
+    label: Homes on a system with a recent health-based violation
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of homes served by a community water system with at least one
+      health-based violation (a contaminant over its limit, or required treatment not
+      done) in the five calendar years before the year read. A period the water broke
+      a rule, not a measure of the water today.
+    source_id: epa_sdwis
+    record_type: calculated
+    ranked: false
+    changed: false

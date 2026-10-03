@@ -117,6 +117,7 @@ def land_ndjson(
     *,
     parquet_dir: Path,
     overwrite: bool = False,
+    row_group_size: int | None = None,
 ) -> LandedTable:
     """Transcode newline-delimited JSON to Parquet without going through Python.
 
@@ -130,6 +131,11 @@ def land_ndjson(
     out.parent.mkdir(parents=True, exist_ok=True)
 
     with duckdb_session() as con:
+        # A layer of polygons lands in small row groups (`row_group_size`): DuckDB
+        # spreads a scan over row groups, and a 58,000-row layer in one group repaired
+        # its invalid polygons on one core for twelve minutes, against 13.5 seconds on
+        # ten (Milestone 40).
+        groups = f", ROW_GROUP_SIZE {row_group_size}" if row_group_size else ""
         if needs_landing(release, out, overwrite):
             # sample_size=-1 for the same reason as the CSV lander: MOD-IV leaves
             # numeric columns null for long runs of unmatched parcels, and a sampled
@@ -141,7 +147,7 @@ def land_ndjson(
                     SELECT * FROM read_json_auto('{release.path}',
                                                  format='newline_delimited',
                                                  sample_size=-1)
-                ) TO '{out}' (FORMAT PARQUET, COMPRESSION ZSTD)
+                ) TO '{out}' (FORMAT PARQUET, COMPRESSION ZSTD{groups})
                 """
             )
             record_landed(release, out)
