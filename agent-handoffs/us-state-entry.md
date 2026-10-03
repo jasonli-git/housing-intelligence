@@ -8,6 +8,7 @@
 - Supporting evidence includes existing sales and construction presentations plus every available statewide summary figure. Transaction windows and pooled survey periods retain both endpoints; survey margins are preserved.
 - Navigation, local-page breadcrumbs and legacy state-region redirects point to the new state route. Existing county, municipality, ZIP, report and standalone affordability URLs remain unchanged.
 - Tax-rate values now explicitly say dollars per $100 instead of displaying a unitless number. Mortgage overview figures retain two decimal places.
+- Follow-up refinement: the national entrance introduces Housing as a public data project, retains the approved tagline, and explicitly says “Free to use · No fees. No subscription.” Repeated coverage text and longer state-card/benchmark descriptions were shortened. This is a free-access statement, not a change to source licensing or the non-commercial notice.
 
 ## Files/modules affected
 
@@ -47,6 +48,7 @@
 - `npm test`: 44 files, 404 tests passed, including five new state-entry tests.
 - `git diff --check`: passed.
 - Headless Playwright: root and state pages at 1440px, 390px and 320px had no document horizontal overflow. Light and dark screenshots were inspected.
+- Entry-copy follow-up: type checking, all 404 tests and diff checks passed again; headless checks at 1440px/light, 390px/dark and 320px/light confirmed the tagline/free-access/coverage text, no horizontal overflow or page errors, and working NJ navigation.
 - Browser checks: national → state navigation; direct budget URL; mode switching and browser Back; state ticker remains visible in budget mode; local NJ breadcrumb; statewide evidence opens with 28 figure rows and six construction years; no page errors in the navigation check.
 - Focused mobile sale-price definition was wholly within the 390px × 900px viewport (left 33, right 321, top 649, bottom 817). Two initial inspection scripts used incorrect tooltip selectors and failed; the corrected check passed.
 - `npm run build`: passed; generated 2,378 static pages, including `/` and `/states/new-jersey`. Both exported HTML files exist and `out/_redirects` exactly matches the source redirect file. The artifact-origin warning noted above was emitted.

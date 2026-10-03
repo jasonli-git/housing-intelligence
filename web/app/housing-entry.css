@@ -5,6 +5,9 @@
 .nation-head h1 { margin: 0; color: var(--entry-ink); font-size: clamp(50px, 8vw, 106px); letter-spacing: -.07em; line-height: 1; }
 .entry-introduction { max-width: 35ch; margin: 1.2rem 0 .7rem; font: 550 clamp(22px, 3vw, 34px)/1.2 var(--font-display); letter-spacing: -.035em; }
 .entry-context { max-width: 65ch; color: var(--text-secondary); margin: 0; }
+.entry-free { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: 1rem 0 0; color: var(--text-secondary); font-size: var(--text-small); }
+.entry-free svg { width: 16px; height: 16px; fill: none; stroke: var(--series-3); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.entry-free > span:last-child { color: var(--text-muted); }
 .coverage-entry { display: grid; grid-template-columns: minmax(0, .7fr) minmax(0, 1.3fr); gap: 2rem; align-items: center; margin: 1rem 0 2.5rem; }
 .coverage-entry h2, .national-context h2 { margin: 0 0 .65rem; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.04em; }
 .coverage-entry header > p:last-child, .national-context p:last-child { max-width: 40ch; color: var(--text-secondary); }
