@@ -113,11 +113,10 @@ export function HomeSales({
         )}
       </dl>
       <p className="sales-note">
-        Only arm’s-length sales the state counts as usable. These describe the homes that
-        sold, not every home: a median that rises can mean pricier homes changed hands
-        rather than homes becoming worth more.
+        Only arm’s-length sales the state accepts. This describes sold homes, not every home.
+        A higher median may mean pricier homes sold—not that each home gained value.
         {level !== "municipality" &&
-          " Worked out from every deed in the area, never from its towns’ medians."}
+          " Calculated from qualifying deeds across the area, not an average of town medians."}
       </p>
       {showLookup && level === "municipality" && (
         <p className="sales-note">

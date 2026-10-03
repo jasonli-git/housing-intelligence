@@ -1,4 +1,5 @@
 import type { Observation, PacketLevel } from "@/lib/api";
+import { ReaderDetails } from "@/components/ReaderDetails";
 import { byYear, constructionYears, fiveYears } from "@/lib/construction";
 import { formatValue } from "@/lib/format";
 
@@ -98,6 +99,11 @@ export function HomesAdded({
         </table>
       </div>
       <p className="sales-note">
+        Permits are permission to build, not finished homes. Missing reports are not zero;
+        totals include only towns that reported.
+      </p>
+      <ReaderDetails title="Building activity: coverage and sources">
+      <p className="sales-note">
         A permit is permission to build; a certificate of occupancy says a home is finished
         and ready to live in. Completions trail permits by a year or more, and some permits
         are never built, so the two totals are not a completion rate. Proposed and approved
@@ -118,6 +124,7 @@ export function HomesAdded({
           ? ` ${preliminary.year} is preliminary, from DCA’s December year-to-date report: its yearly summary has not been published, and its monthly reports stop at January 2026 while DCA reworks the program.`
           : ""}
       </p>
+      </ReaderDetails>
     </section>
   );
 }

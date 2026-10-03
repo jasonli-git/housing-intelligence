@@ -72,7 +72,6 @@ export function Masthead({
               <span className="bar-link-long">Property tax</span>
               <span className="bar-link-short" aria-hidden="true">Tax</span>
             </Link>
-            <ThemeToggle />
           </div>
           <div className="bar-tools">
             <PlaceSearch />
@@ -81,6 +80,7 @@ export function Masthead({
               Find within my budget <span aria-hidden="true">→</span>
             </Link>
           </div>
+          <ThemeToggle />
         </div>
       </nav>
       <div className="site-meta-row">

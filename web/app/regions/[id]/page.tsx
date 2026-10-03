@@ -16,8 +16,9 @@ import { IndexedComparison } from "@/components/IndexedComparison";
 import { Glossed } from "@/components/Glossed";
 import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Ledger, Margin, TableNotes } from "@/components/Ledger";
-import { DetailedDataJump, MoreExpander } from "@/components/MoreExpander";
+import { MoreExpander } from "@/components/MoreExpander";
 import { Masthead } from "@/components/Masthead";
+import { SectionJump } from "@/components/SectionJump";
 import { RankOverview } from "@/components/RankOverview";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
 import { TrendsExplorer } from "@/components/TrendsExplorer";
@@ -391,7 +392,7 @@ export default async function RegionPage({
           )}
         </div>
         <div className="actions">
-          <DetailedDataJump targetId="region-detailed-data" />
+          <SectionJump key={regionId} />
           <Link className="button report-action" href={`/regions/${regionId}/report`}>
             <svg viewBox="0 0 20 20" aria-hidden="true">
               <path d="M5.5 2.75h6l3 3v11.5h-9Z" />

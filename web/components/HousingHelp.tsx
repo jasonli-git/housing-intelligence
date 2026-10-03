@@ -6,8 +6,7 @@ export function HousingHelp() {
     <aside className="cost-relief" aria-label="Tax relief and help buying">
       <p className="cost-evidence-label">Relief and help, not subtracted</p>
       <p>
-        Who qualifies turns on a household’s age, income and history, so these are links,
-        never part of the totals:{" "}
+        Help depends on your age, income and circumstances. It is not deducted here:{" "}
         {RELIEF.map((r, index) => (
           <span key={r.url}>
             <a href={r.url} target="_blank" rel="noreferrer">{r.label}</a>

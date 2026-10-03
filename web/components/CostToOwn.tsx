@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useId, useState } from "react";
 
 import { Definition } from "@/components/Definition";
 import { HousingHelp } from "@/components/HousingHelp";
+import { ReaderDetails } from "@/components/ReaderDetails";
 import { DEFAULT_DOWN, DOWN_PAYMENTS, goneAgainstRent, incomeFor } from "@/lib/cost";
 import {
   CLOSING,
@@ -658,8 +659,9 @@ export function CostToOwn({
             )}
             {history && (
               <div className="cost-evidence-item">
-                <p className="cost-evidence-label">Five-year context</p>
+                <ReaderDetails title="Five-year history · not a forecast">
                 <p>{history}</p>
+                </ReaderDetails>
               </div>
             )}
             {noTax && (

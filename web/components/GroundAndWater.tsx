@@ -1,4 +1,5 @@
 import type { PacketLevel, WaterSystems } from "@/lib/api";
+import { ReaderDetails } from "@/components/ReaderDetails";
 import { formatValue } from "@/lib/format";
 import { shareText, systemReportUrl } from "@/lib/hazards";
 
@@ -101,6 +102,13 @@ export function GroundAndWater({
       )}
 
       {water && (
+        <p className="sales-note reader-takeaway">
+          These are past violations, not today’s water quality. For New Jersey’s PFAS results, check{" "}
+          <a href={DRINKING_WATER_WATCH} target="_blank" rel="noreferrer">Drinking Water Watch</a>.
+        </p>
+      )}
+      <ReaderDetails title="Water records and sources">
+      {water && (
         <p className="sales-note">
           A health-based violation is a contaminant over its legal limit, or treatment the
           law requires not done, in a period that began from {water.first_year} to{" "}
@@ -119,6 +127,7 @@ export function GroundAndWater({
         Violations: EPA’s Safe Drinking Water Information System. Homes served are estimated
         from the 2020 Census.
       </p>
+      </ReaderDetails>
     </section>
   );
 }
