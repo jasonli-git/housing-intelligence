@@ -1579,6 +1579,13 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 }
 
 .consumer-feature-before_moving .consumer-feature-tag { color: var(--text-muted); }
+.local-page-group > .consumer-feature-before_moving {
+  padding: clamp(1rem, 2vw, 1.4rem);
+  border: 1px dashed color-mix(in srgb, var(--atlas-accent, var(--series-3)) 25%, var(--border));
+  border-left: 3px solid color-mix(in srgb, var(--atlas-accent, var(--series-3)) 55%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--atlas-accent, var(--series-3)) 3%, var(--surface-card));
+}
 .consumer-feature-before_moving .interpretation-note {
   margin-top: 0.85rem;
   padding-top: 0;

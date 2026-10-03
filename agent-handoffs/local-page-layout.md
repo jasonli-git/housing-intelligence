@@ -83,3 +83,10 @@
 - `cd web && npm run build`: passed, 2,377 static pages; same expected local artifact-origin warning.
 - `git diff --check`: passed.
 - Headless localhost browser checks cover combined-card expansion, the new profile lineup, desktop/mobile layout, notices and cost views. No reading regeneration or deployment.
+
+## Follow-up: before-moving card
+
+- Restored a distinct, softly tinted card around `What should I check before moving?` within the local home-checks group. Retained its compact desktop title/bullet layout, mobile stack, model identity, citations and disclaimer.
+- Scoped the styling to local page groups; report rendering and other interpretation cards are unchanged.
+- The owner also asked for advice on moving the comparison caveat/five-year context and warming the computed introduction. Those remain recommendations, not implemented changes in this follow-up.
+- Verification: typecheck passed; 43 test files / 397 tests passed; static build generated 2,377 pages with the expected local artifact-origin warning; diff whitespace checks passed. Headless checks at 1440px and 390px found no overflow or page errors and confirmed the card border. No deployment.
