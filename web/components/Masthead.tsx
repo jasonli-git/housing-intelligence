@@ -2,14 +2,14 @@ import Link from "next/link";
 
 import { PlaceSearch } from "@/components/PlaceSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { HousingModeToggle, type AffordabilityControl } from "@/components/HousingModeToggle";
+import type { AffordabilityControl } from "@/components/HousingModeToggle";
 import { LicenceLine } from "@/components/LicenceLine";
 import { SiteStatus } from "@/components/SiteStatus";
 
 const REPOSITORY = "https://github.com/jasonli-git/housing-intelligence";
 
 /**
- * The bar shared with jasonli.app: `Jason Li` leads home to the gateway, then this
+ * The bar shared with jasonli.app: `JL` leads home to the gateway, then this
  * site's own wordmark, then search, the reader's choice of theme, and the code.
  *
  * The trail is set in jasonli.app's type and ink, whatever the page below it, because
@@ -37,8 +37,8 @@ export function Masthead({
       <nav className="bar print-hide" aria-label="Sites">
         <div className="bar-inner">
           <div className="bar-trail">
-            <a className="bar-home" href="https://jasonli.app">
-              Jason Li
+            <a className="bar-home" href="https://jasonli.app" aria-label="Jason Li — portfolio">
+              JL
             </a>
             <span className="bar-sep" aria-hidden="true">
               /
@@ -49,7 +49,7 @@ export function Masthead({
             </Link>
           </div>
           {/* The tax link, theme and the code stay on the trail's row at every width — nothing a
-              reader needs mid-search. Search and the affordability switch are the pair
+              reader needs mid-search. Search and the budget link are the pair
               that wraps to its own row on a phone, since together they are wider than
               the trail leaves room for (#204, mobile masthead collision). */}
           <div className="bar-controls">
@@ -80,7 +80,10 @@ export function Masthead({
           </div>
           <div className="bar-tools">
             <PlaceSearch />
-            <HousingModeToggle control={affordability} />
+            <Link className="bar-budget" href="/afford"
+              aria-current={affordability.kind === "route" && affordability.active ? "page" : undefined}>
+              Find within my budget <span aria-hidden="true">→</span>
+            </Link>
           </div>
         </div>
       </nav>

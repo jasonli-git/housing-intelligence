@@ -2,7 +2,7 @@
 
 import { AffordExplorer } from "@/components/AffordExplorer";
 import { CountyExplorer, type Measure } from "@/components/CountyExplorer";
-import { useHousingMode } from "@/components/useHousingMode";
+import { pushHousingMode, useHousingMode } from "@/components/useHousingMode";
 import type { AffordData } from "@/lib/affordData";
 import type { Section } from "@/lib/groups";
 
@@ -17,6 +17,10 @@ export function StateModeWorkspace({ frame, counties, sections, initial, afford 
 
   return (
     <div className={mode === "afford" ? "nj-mode nj-afford-mode" : "nj-mode"} data-mode={mode}>
+      <div className="workspace-mode-tabs" aria-label="Map view">
+        <button type="button" aria-pressed={mode === "state"} onClick={() => pushHousingMode("state")}>Housing trends</button>
+        <button type="button" aria-pressed={mode === "afford"} onClick={() => pushHousingMode("afford")}>Within my budget</button>
+      </div>
       <div key={mode} className="mode-panel">
         {mode === "afford" ? afford ? (
           <>

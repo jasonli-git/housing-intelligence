@@ -24,6 +24,7 @@ import {
   rentRows,
 } from "@/lib/rentEvidence";
 import { parseAmount } from "@/lib/costScenario";
+import { HousingHelp } from "@/components/HousingHelp";
 
 /**
  * Answers sized to the reader's household (Milestone 35): where their income sits against
@@ -179,6 +180,7 @@ export function ForYourHousehold({
               NJ Housing and Mortgage Finance Agency
             </a>
           </p>
+          <HousingHelp />
         </article>
       )}
 

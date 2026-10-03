@@ -20,11 +20,13 @@ export function HomeSales({
   level,
   geoid,
   levels,
+  showLookup = true,
 }: {
   name: string;
   level: string;
   geoid: string;
   levels: PacketLevel[];
+  showLookup?: boolean;
 }) {
   const find = (id: string) => levels.find((l) => l.metric_id === id);
   const median = find("sr1a_median_sale_price");
@@ -117,13 +119,13 @@ export function HomeSales({
         {level !== "municipality" &&
           " Worked out from every deed in the area, never from its towns’ medians."}
       </p>
-      {level === "municipality" && (
+      {showLookup && level === "municipality" && (
         <p className="sales-note">
           <Link href={`/tax?town=${geoid}`}>Look up a property in {name}</Link>: its
           assessment, last year’s tax and how it compares with the town’s.
         </p>
       )}
-      {level === "county" && (
+      {showLookup && level === "county" && (
         <p className="sales-note">
           <Link href="/tax">Look up a property in {name}</Link> by its address, or by
           block and lot with its town: its assessment and last year’s tax.

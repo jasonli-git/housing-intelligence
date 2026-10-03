@@ -7,7 +7,6 @@ import { FloodRisk } from "@/components/FloodRisk";
 import { GroundAndWater } from "@/components/GroundAndWater";
 import { HomesAdded } from "@/components/HomesAdded";
 import { ComputedBadge } from "@/components/ComputedBadge";
-import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
 import { DataDownload, hasDownloadableFigures } from "@/components/DataDownload";
@@ -25,7 +24,6 @@ import { TrendsExplorer } from "@/components/TrendsExplorer";
 import { api, type PacketLevel, type PacketMetric, type Region, regionsWithData } from "@/lib/api";
 import { indexedComparison } from "@/lib/chartInsights";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
-import { affordData, affordabilityForCounty } from "@/lib/affordData";
 import { costInputs, homePrice } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
 import type { Term } from "@/lib/glossary";
@@ -200,7 +198,7 @@ export default async function RegionPage({
     region.level === "municipality"
       ? (region.ancestors.find((a) => a.level === "county") ?? null)
       : region;
-  const [series, cost, affordability, incomeLimits, construction, floodClaims, water] = await Promise.all([
+  const [series, cost, incomeLimits, construction, floodClaims, water] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -209,9 +207,6 @@ export default async function RegionPage({
       })),
     ),
     costInputs(region.level, packet.levels, packet.metrics),
-    region.level === "county"
-      ? affordData().then((data) => data ? affordabilityForCounty(data, regionId) : null)
-      : Promise.resolve(null),
     api.incomeLimits(regionId),
     // Milestone 39: permits beside DCA's completions and demolitions, year by year.
     Promise.all(
@@ -412,16 +407,12 @@ export default async function RegionPage({
         peerLabel={peerNoun(peer_level)}
       />
 
-      {region.level === "county" && (
-        <CountyModeWorkspace countyId={regionId} countyName={name} afford={affordability} />
-      )}
-
       <div className="region-standard-content">
 
       {cost ? (
         <CostToOwn
           {...cost}
-          beforeMoving={<ConsumerReading reading={consumer} section="before_moving" />}
+          showHelp={!incomeLimits}
         />
       ) : (
         // Said rather than left out, so a thinner page reads as designed, not broken: the
@@ -439,18 +430,25 @@ export default async function RegionPage({
         )
       )}
 
-      <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} />
-
-      <HomesAdded
-        name={name}
-        level={region.level}
-        permitted={construction[0]}
-        completed={construction[1]}
-        demolished={construction[2]}
-        net={construction[3]}
+      <ForYourHousehold
+        regionName={name}
+        limits={incomeLimits}
         levels={packet.levels}
+        countyLevels={countyLevels}
+        margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))}
       />
+      {region.level !== "zip" && (
+        <p className="household-next">
+          <Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
+            {region.level === "county" ? `Compare towns in ${name}` : "Compare nearby places"} <span aria-hidden="true">→</span>
+          </Link>
+          <span>Find places within your budget, here or across New Jersey.</span>
+        </p>
+      )}
 
+      <section className="local-page-group" aria-labelledby="home-checks-heading">
+      <h2 id="home-checks-heading">Before choosing a home</h2>
+      <div className="local-checks-grid">
       <FloodRisk
         name={name}
         levels={packet.levels}
@@ -460,25 +458,31 @@ export default async function RegionPage({
       />
 
       <GroundAndWater name={name} levels={packet.levels} water={water} />
-
-      <ForYourHousehold
-        regionName={name}
-        limits={incomeLimits}
-        levels={packet.levels}
-        countyLevels={countyLevels}
-        margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))}
-      />
-
-      {/* A ZIP has no town of its own to preselect; the lookup asks for one (Milestone 37). */}
-      {region.level === "zip" && (
+      </div>
         <p className="sales-note tax-way-in">
-          <Link href="/tax">Look up a property here</Link>: its assessment and last year’s
+          <Link href={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"}>Look up a property here</Link>: its assessment and last year’s
           tax, found by its address, or by block and lot with its town.
         </p>
-      )}
+      <ConsumerReading reading={consumer} section="before_moving" />
+      </section>
 
-      {/* Keep the interpretation visible even when no cost card can be calculated. */}
-      {!cost && <ConsumerReading reading={consumer} section="before_moving" />}
+      {(construction.some((series) => series.length > 0) ||
+        (packet.levels.some((level) => level.metric_id === "sr1a_median_sale_price") &&
+          packet.levels.some((level) => level.metric_id === "sr1a_sales_count"))) && (
+      <section className="local-page-group local-market" aria-labelledby="local-market-heading">
+      <h2 id="local-market-heading">Local market</h2>
+      <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} />
+      <HomesAdded
+        name={name}
+        level={region.level}
+        permitted={construction[0]}
+        completed={construction[1]}
+        demolished={construction[2]}
+        net={construction[3]}
+        levels={packet.levels}
+      />
+      </section>
+      )}
 
       {/* What sets the place apart, in three sentences: the model's lead answer, just above
           the computed rankings it is drawn from and does not author (ARCHITECTURE #275,

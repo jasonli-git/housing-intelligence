@@ -1949,12 +1949,39 @@ html[data-housing-mode="afford"] .page-head[data-kind="county"] ~ .region-profil
 }
 
 /* ------------------------------------- Milestone 35, for your household --- */
+/* The budget tool is a destination; map modes live beside the map, not in the masthead. */
+.bar-budget { display: inline-flex; gap: .5rem; align-items: center; flex-shrink: 0; padding: .6rem .75rem; border: 1px solid var(--rule); border-radius: 7px; color: var(--text-primary); font-size: 12px; text-decoration: none; }
+.bar-budget:hover, .bar-budget[aria-current="page"] { border-color: var(--series-3); background: color-mix(in srgb, var(--series-3) 8%, transparent); }
+.workspace-mode-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 20px; }
+.workspace-mode-tabs button { padding: .65rem 1rem; border: 1px solid var(--rule); border-radius: 6px; background: transparent; color: var(--text-muted); font: inherit; cursor: pointer; }
+.workspace-mode-tabs button[aria-pressed="true"] { color: var(--text-primary); border-color: var(--series-2); background: color-mix(in srgb, var(--series-2) 12%, transparent); }
+.household-next { display: flex; flex-wrap: wrap; gap: .4rem 1rem; align-items: baseline; margin-top: 20px; font-size: var(--text-small); }
+.household-next a { font-weight: 600; }
+.household-next > span { color: var(--text-muted); }
+.local-page-group { margin-top: 56px; }
+.local-page-group > h2 { margin: 0 0 24px; }
+.local-checks-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; align-items: start; }
+.local-checks-grid > .section, .local-market > .section { margin-top: 0; }
+.local-checks-grid > .section { min-width: 0; }
+.local-checks-grid > .section:only-child { grid-column: 1 / -1; }
+.local-checks-grid .section-head h2, .local-market .section-head h2 { font-size: 20px; }
+.local-market > .section + .section { margin-top: 32px; }
+.local-page-group .tax-way-in { margin-top: 24px; }
+.household-panel:only-of-type { grid-column: 1 / -1; }
+@media (max-width: 760px) {
+  .household, .local-checks-grid { grid-template-columns: minmax(0, 1fr); }
+  .local-page-group { margin-top: 40px; }
+  .bar-budget { font-size: 11px; padding-inline: .55rem; }
+}
 
 /* Two panels in the cost card's idiom: the income check and the rents by size. Side by
    side where there is room, stacked on a phone. */
 .household { display: grid; gap: 14px; }
 .household .section-head { margin-bottom: 0; }
-.household { grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.household { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 760px) {
+  .household { grid-template-columns: minmax(0, 1fr); }
+}
 .household .section-head { grid-column: 1 / -1; }
 .household-panel {
   display: grid; gap: 0.8rem; align-content: start; padding: 1.1rem 1.25rem;

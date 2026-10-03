@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect, useId, useState } from "react";
 
 import { Definition } from "@/components/Definition";
+import { HousingHelp } from "@/components/HousingHelp";
 import { DEFAULT_DOWN, DOWN_PAYMENTS, goneAgainstRent, incomeFor } from "@/lib/cost";
 import {
   CLOSING,
@@ -15,7 +16,6 @@ import {
   FLOOD_MAP,
   NJ_TRANSFER_RULE,
   PMI,
-  RELIEF,
   UPKEEP_PCT,
 } from "@/lib/costRules";
 import { type Personal, parseAmount, readPersonal, writePersonal } from "@/lib/costScenario";
@@ -164,7 +164,8 @@ export function CostToOwn({
   rateThen,
   control = true,
   beforeMoving,
-}: CostProps & { control?: boolean; beforeMoving?: ReactNode }) {
+  showHelp = true,
+}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean }) {
   const id = useId();
   const [personal, setPersonalState] = useState<Personal>({});
   const [fields, setFields] = useState<HomeFields>(NO_HOME_FIELDS);
@@ -788,22 +789,7 @@ export function CostToOwn({
         )}
       </div>
 
-      <aside className="cost-relief" aria-label="Tax relief and help buying">
-        <p className="cost-evidence-label">Relief and help, not subtracted</p>
-        <p>
-          Who qualifies turns on a household’s age, income and history, so these are links,
-          never part of the totals:{" "}
-          {RELIEF.map((r, index) => (
-            <span key={r.url}>
-              <a href={r.url} target="_blank" rel="noreferrer">
-                {r.label}
-              </a>
-              {index < RELIEF.length - 1 ? "; " : "."}
-            </span>
-          ))}{" "}
-          <small className="src">Links checked {RELIEF[0].reviewed}.</small>
-        </p>
-      </aside>
+      {showHelp && <HousingHelp />}
 
       {control ? (
         <div className="cost-strip cost-evidence">

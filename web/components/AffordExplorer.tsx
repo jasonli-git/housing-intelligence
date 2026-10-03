@@ -17,6 +17,7 @@ import { formatValue } from "@/lib/format";
 import { type Focus, GlobeMap } from "@/components/GlobeMap";
 import { useMapFile } from "@/components/useMapFile";
 import type { SearchEntry } from "@/lib/search";
+import { affordScope } from "@/lib/affordScope";
 
 const DEFAULT_INCOME = "100000";
 // The municipalities listed before "Show all": enough to answer, short enough to scan.
@@ -105,7 +106,7 @@ export function AffordExplorer({
   rate,
   asOf,
   appearance = "classic",
-  scope,
+  scope: initialScope,
 }: {
   counties: Place[];
   towns: Place[];
@@ -120,7 +121,11 @@ export function AffordExplorer({
   const [allTowns, setAllTowns] = useState(false);
   // A county profile has already answered "which place?". Start its local affordability
   // mode with that county selected instead of asking the reader to type it again.
-  const [picked, setPicked] = useState<number | null>(scope?.countyId ?? null);
+  const [picked, setPicked] = useState<number | null>(initialScope?.countyId ?? null);
+  const [countyId, setCountyId] = useState<number | null>(initialScope?.countyId ?? null);
+  const [frameTarget, setFrameTarget] = useState<number | null>(initialScope?.countyId ?? null);
+  const selectedCounty = counties.find((place) => place.id === countyId);
+  const scope = selectedCounty ? { countyId: selectedCounty.id, countyName: selectedCounty.name } : undefined;
   const id = useId();
   const { file, layers, failed } = useMapFile();
   const [centre, setCentre] = useState<Focus | null>(null);
@@ -143,14 +148,19 @@ export function AffordExplorer({
     const params = new URLSearchParams(window.location.search);
     const income = params.get("income")?.replace(/[^0-9]/g, "");
     if (income) setIncomeText(income);
-    const place = Number(params.get("place"));
-    if (place && places.some((p) => p.id === place)) setPicked(place);
+    const context = affordScope(params, places);
+    if (context.pickedId !== null) setPicked(context.pickedId);
+    if (params.has("place") || params.has("county")) {
+      setCountyId(context.countyId);
+      setFrameTarget(context.pickedId ?? context.countyId);
+    }
   }, [places]);
 
   const income = Number(incomeText.replace(/[^0-9.]/g, "")) || 0;
   const options = { mode, income, downPct: down, ratePct: rate.value };
   const countyRows = income > 0 ? reach(counties, options) : [];
-  const townRows = income > 0 ? reach(towns, options) : [];
+  const allTownRows = income > 0 ? reach(towns, options) : [];
+  const townRows = scope ? allTownRows.filter((row) => row.place.parentId === scope.countyId) : allTownRows;
   const townsWithin = townRows.filter((row) => row.within);
   const countiesWithin = countyRows.filter((row) => row.within).length;
   const shownTowns = allTowns ? townsWithin : townsWithin.slice(0, FIRST_TOWNS);
@@ -165,8 +175,8 @@ export function AffordExplorer({
   // disagree about whether a place is within reach.
   const byPlace = useMemo(
     () =>
-      new Map([...countyRows, ...townRows].map((row) => [row.place.id, row])),
-    [countyRows, townRows],
+      new Map([...countyRows, ...allTownRows].map((row) => [row.place.id, row])),
+    [countyRows, allTownRows],
   );
   const paintReach = (id: number | string) => {
     const row = byPlace.get(Number(id));
@@ -199,6 +209,20 @@ export function AffordExplorer({
   return (
     <section className="afford" aria-labelledby={`${id}-summary`}>
       <div className="afford-controls">
+        <label className="control" htmlFor={`${id}-scope`}>
+          <span className="control-label">Compare places in</span>
+          <select id={`${id}-scope`} value={countyId ?? "all"} onChange={(event) => {
+            const next = event.target.value === "all" ? null : Number(event.target.value);
+            setCountyId(next);
+            setFrameTarget(next);
+            setAllTowns(false);
+            setCentre(null);
+            if (next !== null) setPicked(next);
+          }}>
+            <option value="all">All New Jersey</option>
+            {counties.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}
+          </select>
+        </label>
         <label className="control" htmlFor={`${id}-income`}>
           <span className="control-label">
             Household income, a year before tax
@@ -265,7 +289,12 @@ export function AffordExplorer({
             key={picked ?? "none"}
             className="place-search"
             entries={entries}
-            onPick={(entry) => setPicked(entry.id)}
+            onPick={(entry) => {
+              setPicked(entry.id);
+              setFrameTarget(entry.id);
+              const place = places.find((place) => place.id === entry.id);
+              if (scope && place) setCountyId(place.level === "county" ? place.id : place.parentId ?? null);
+            }}
             label="A town or county to check"
             placeholder="Type a town or county"
             name="check-place"
@@ -332,6 +361,7 @@ export function AffordExplorer({
               Milestone 16 (#144). Painted in three states rather than by quantile — a town
               a few dollars over the line must not share a color with one a few under. */}
           <GlobeMap
+            key={countyId ?? "statewide"}
             appearance={appearance}
             width={MAP_WIDTH}
             height={MAP_HEIGHT}
@@ -362,7 +392,7 @@ export function AffordExplorer({
             // Searching a place moves the map to it: the question on this page is where
             // a reader could live, and answering "can I afford Montclair?" while leaving
             // the map over somewhere else makes them find it themselves.
-            frameOn={picked ?? scope?.countyId ?? null}
+            frameOn={frameTarget}
             mute={false}
             onView={(state) => setCentre(state.focus)}
           />
