@@ -114,3 +114,10 @@
 - Typecheck, 43 test files / 399 tests and diff whitespace checks passed.
 - Local servers were initially stopped: the first browser check could not connect and the first static build failed fetching API data. Restarted `make api` before retrying verification; these were preview-environment availability failures, not asserted app passes.
 - Retry verification passed: 2,377-page static build (expected local artifact-origin warning); headless checks at 1440px and 390px asserted the complete section order, a single highlights section and working rank expansion, with no overflow/page errors. A town without a reading also remained usable. Restarted localhost preview. No deployment.
+
+## Follow-up: omission warning and inline input prompts
+
+- Returned the yellow strip to a `Not included` warning about costs excluded from the monthly owning estimate, removing the input instructions there. Highlighted the existing `add yours if it applies` prompts beside missing conditional cost rows inside the owning card.
+- The warning includes missing required estimates as well as optional fees/flood insurance, and always discloses the excluded earnings on the down payment. Entering conditional costs removes them from the warning and removes their prompts. Calculations are unchanged; insurance/upkeep already included in the estimate are not described as missing.
+- Verification: `npm run typecheck`, `npm test` (43 files / 399 tests), and `git diff --check` passed. Headless checks at 1440px and 390px found two highlighted prompts, the intended warning, no horizontal overflow and no page errors. Entering $100/month HOA fees and $600/year flood insurance removed both prompts and left only the down-payment earnings warning.
+- One additional browser assertion initially timed out because the QA script used the wrong warning selector; the corrected `.cost-evidence-omissions` check passed. Static build passed with 2,377 pages and the expected local artifact-origin warning. No deployment or reading regeneration.

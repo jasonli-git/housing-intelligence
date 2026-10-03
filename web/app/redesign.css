@@ -1139,6 +1139,16 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
   font-weight: 600;
 }
 .cost-lines .missing dd { color: var(--text-muted); }
+.cost-lines .cost-add-prompt {
+  display: block;
+  width: fit-content;
+  margin-top: .25rem;
+  padding: .12rem .4rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--notice) 13%, var(--surface-card));
+  color: var(--notice-text);
+  font-weight: 600;
+}
 
 /* The other three views share one panel; on screen a tab chooses which, and in print and
    the report all three stand one after another. */

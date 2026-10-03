@@ -563,7 +563,7 @@ export function CostToOwn({
                 <dt>
                   {line.label}
                   {line.key === "mortgage" && month.loan.fha ? ", FHA" : ""}{" "}
-                  <small className="src">
+                  <small className={line.value === null && line.conditional ? "src cost-add-prompt" : "src"}>
                     {line.value === null && line.conditional
                       ? "add yours if it applies"
                       : [source(line.key), line.value !== null && line.key !== "mortgage" ? BASIS_WORDS[line.basis] : ""]
@@ -635,18 +635,15 @@ export function CostToOwn({
             </p>
           )}
         </article>
-        {month.optional.length > 0 && (
-          <aside className="cost-evidence-omissions" aria-label="Costs to add if they apply">
-            <p className="cost-evidence-label">
-              <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
-              Add if they apply
-            </p>
-            <p>
-              {listed(month.optional)}
-              {control ? ", under “Your numbers”." : "."} Also left out: what the down payment could earn.
-            </p>
-          </aside>
-        )}
+        <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
+          <p className="cost-evidence-label">
+            <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
+            Not included
+          </p>
+          <p>
+            The monthly owning estimate leaves out {listed([...month.missing, ...month.optional, "what the down payment could earn"])}.
+          </p>
+        </aside>
       </div>
 
       {control && (
