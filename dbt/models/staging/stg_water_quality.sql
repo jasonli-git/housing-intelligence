@@ -48,7 +48,7 @@ shares as (
 )
 select source_id, metric_id, geoid, level,
        make_date(y, 1, 1) as period_start, make_date(y, 12, 31) as period_end,
-       value, 'block_overlay' as match_method, release_layer,
+       value, 'block_overlay' as match_method, layer as release_layer,
        'current' as release_vintage
 from shares
 cross join lateral (
@@ -56,4 +56,4 @@ cross join lateral (
             {{ var('read_years')['njdep_water_areas'] }}),
            ('epa_sdwis', 'water_homes_share_violation', violation, 'violations',
             {{ var('read_years')['epa_sdwis'] }})
-) as v(source_id, metric_id, value, release_layer, y)
+) as v(source_id, metric_id, value, layer, y)

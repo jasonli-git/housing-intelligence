@@ -267,6 +267,12 @@ LICENCE_RIGHTS: dict[str, Rights] = {
     ),
     "Open public record": Rights("yes", "unverified", "unverified", "unverified"),
     "Open data": Rights("yes", "unverified", "unverified", "unverified"),
+    # Milestone 40. NJDEP's agreement conditions use on its credit and disclaimer and on
+    # keeping the metadata with the data, and sets no commercial limit (#303).
+    "NJDEP Data Distribution Agreement": Rights("yes", "yes", "yes", "yes"),
+    # OpenFEMA's terms forbid re-identification and describe the data as for statistical
+    # research or a reporting record; commerce is not addressed in words (#302).
+    "OpenFEMA Terms and Conditions": Rights("yes", "yes", "yes", "unverified"),
     "Derived from cited sources": Rights(
         "inherited", "inherited", "inherited", "inherited"
     ),
