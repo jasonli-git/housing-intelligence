@@ -11,6 +11,7 @@ export function formatValue(value: number, unit: string): string {
     return `$${Math.round(value).toLocaleString()}`;
   }
   if (unit === "percent") return `${value.toFixed(1)}%`;
+  if (unit === "rate_per_100") return `$${value.toFixed(2)} per $100`;
   if (unit === "ratio") return value.toFixed(2);
   if (unit === "count") return Math.round(value).toLocaleString();
   // A year is a label, not a quantity: "1,955" is wrong.

@@ -28,7 +28,7 @@ export function HomesAdded({
   completed: Observation[];
   demolished: Observation[];
   net: Observation[];
-  levels: PacketLevel[];
+  levels: Pick<PacketLevel, "metric_id" | "value" | "period_start" | "period_end">[];
 }) {
   const rows = constructionYears({ permitted, completed, demolished, net });
   if (rows.length === 0) return null;

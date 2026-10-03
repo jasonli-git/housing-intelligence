@@ -9,8 +9,10 @@ const SECTIONS = [
   ["Before choosing a home", "#home-checks-heading"],
   ["Local market", "#local-market-heading"],
   ["Explore the evidence", "#region-detailed-data"],
+  ["Statewide overview", "#state-overview"],
   ["State profile", ".nj-page > .state-ticker"],
   ["Map & county comparison", "#nj-explore"],
+  ["Statewide evidence", "#state-detailed-data"],
 ] as const;
 
 /** Only offer sections actually present on this page, including thinner profiles. */

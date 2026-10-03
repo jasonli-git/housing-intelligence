@@ -27,10 +27,12 @@ const REPOSITORY = "https://github.com/jasonli-git/housing-intelligence";
 export function Masthead({
   affordability,
   taxActive = false,
+  budgetLabel = "Find within my budget",
 }: {
   affordability: AffordabilityControl;
   /** On the property-tax lookup itself, whose link the bar marks as the current page. */
   taxActive?: boolean;
+  budgetLabel?: string;
 }) {
   return (
     <>
@@ -75,10 +77,9 @@ export function Masthead({
           </div>
           <div className="bar-tools">
             <PlaceSearch />
-            <Link className="bar-budget" href="/afford" aria-label="Find places within my budget"
-              aria-current={affordability.kind === "route" && affordability.active ? "page" : undefined}>
-              <span className="bar-budget-long">Find within my budget</span>
-              <span className="bar-budget-short" aria-hidden="true">My budget</span>
+            <Link className="bar-budget" href="/states/new-jersey?mode=afford#nj-explore" aria-label="Find places within my budget in New Jersey">
+              <span className="bar-budget-long">{budgetLabel}</span>
+              <span className="bar-budget-short" aria-hidden="true">{budgetLabel === "Find within my budget" ? "My budget" : budgetLabel}</span>
               <span aria-hidden="true">→</span>
             </Link>
           </div>

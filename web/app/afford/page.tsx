@@ -32,7 +32,7 @@ export default async function AffordPage() {
           <h1 className="page-title">What can I afford?</h1>
           <p className="meta">
             The API is unreachable, so there is nothing to show.{" "}
-            <Link href="/">Back to New Jersey</Link>.
+            <Link href="/states/new-jersey">Back to New Jersey</Link>.
           </p>
         </main>
       </>
@@ -46,7 +46,7 @@ export default async function AffordPage() {
       <header className="page-head" data-kind="tool">
         <div>
           <Crumbs
-            trail={[{ href: "/", label: "New Jersey" }]}
+            trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]}
             here="What can I afford?"
           />
           <Kind kind="tool" />

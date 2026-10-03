@@ -187,7 +187,7 @@ export default async function RegionPage({
         <main className="shell">
           <h1 className="page-title">Region not found</h1>
           <p className="meta">
-            No region {id}, or the API is unreachable. <Link href="/">Back to New Jersey</Link>.
+            No region {id}, or the API is unreachable. <Link href="/states/new-jersey">Back to New Jersey</Link>.
           </p>
         </main>
       </>
@@ -330,7 +330,8 @@ export default async function RegionPage({
         <div className="region-head-main">
           <Crumbs
             trail={[
-              { href: "/", label: "New Jersey" },
+              { href: "/", label: "United States" },
+              { href: "/states/new-jersey", label: "New Jersey" },
               ...(county ? [{ href: `/regions/${county.region_id}`, label: displayName(county) }] : []),
             ]}
             here={name}

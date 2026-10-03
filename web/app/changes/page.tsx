@@ -31,7 +31,7 @@ export default async function ChangesPage() {
           <h1 className="page-title">Figures revised after they were published</h1>
           <p className="meta">
             The API is unreachable, so there is nothing to show.{" "}
-            <Link href="/">Back to New Jersey</Link>.
+            <Link href="/states/new-jersey">Back to New Jersey</Link>.
           </p>
         </main>
       </>
@@ -46,7 +46,7 @@ export default async function ChangesPage() {
       <main className="shell atlas-page atlas-ledger">
         <header className="page-head" data-kind="data">
           <div>
-            <Crumbs trail={[{ href: "/", label: "New Jersey" }]} here="What changed" />
+            <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="What changed" />
             <Kind kind="data" />
             <h1 className="page-title">Figures revised after they were published</h1>
             <p className="meta">

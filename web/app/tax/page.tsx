@@ -38,7 +38,7 @@ export default async function TaxPage() {
       <main className="shell atlas-page atlas-tool">
         <header className="page-head" data-kind="tool">
           <div>
-            <Crumbs trail={[{ href: "/", label: "New Jersey" }]} here="Property tax lookup" />
+            <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Property tax lookup" />
             <Kind kind="tool" />
             <h1 className="page-title">Property tax lookup</h1>
             <p className="meta">

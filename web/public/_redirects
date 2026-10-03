@@ -2,6 +2,7 @@
 # cannot redirect on its own (Next's `redirects` need a server), so the host does it.
 #
 # The state's own region page folded into the New Jersey page at Milestone 18
-# (ARCHITECTURE #127): its figures are on `/` now, and neither page is exported.
-/regions/1         /  301
-/regions/1/report  /  301
+# (ARCHITECTURE #127). Its figures now live at the explicit state destination;
+# `/` is the United States coverage entry. Neither legacy region page is exported.
+/regions/1         /states/new-jersey  301
+/regions/1/report  /states/new-jersey  301

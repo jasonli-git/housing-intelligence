@@ -9,7 +9,7 @@ export default function NotFound() {
       <main className="shell">
         <h1 className="page-title">Page not found</h1>
         <p className="meta">
-          This address does not point to a published housing page. <Link href="/">Back to New Jersey</Link>.
+          This address does not point to a published housing page. <Link href="/">Back to United States</Link>.
         </p>
       </main>
     </>
