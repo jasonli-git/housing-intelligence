@@ -649,6 +649,32 @@ export function CostToOwn({
         )}
       </div>
 
+      {control && (
+        <div className="cost-strip cost-evidence">
+          {beforeMoving}
+          <div className="cost-evidence-grid">
+            {rentalCaveat && (
+              <div className="cost-evidence-item">
+                <p className="cost-evidence-label">Comparison caveat</p>
+                <p>{rentalCaveat}</p>
+              </div>
+            )}
+            {history && (
+              <div className="cost-evidence-item">
+                <p className="cost-evidence-label">Five-year context</p>
+                <p>{history}</p>
+              </div>
+            )}
+            {noTax && (
+              <div className="cost-evidence-item">
+                <p className="cost-evidence-label">Tax caveat</p>
+                <p>{noTax}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="cost-views">
         {control && (
           <div className="cost-view-tabs" role="tablist" aria-label="Other views of the cost">
@@ -773,31 +799,7 @@ export function CostToOwn({
 
       {showHelp && <HousingHelp />}
 
-      {control ? (
-        <div className="cost-strip cost-evidence">
-          {beforeMoving}
-          <div className="cost-evidence-grid">
-            {rentalCaveat && (
-              <div className="cost-evidence-item">
-                <p className="cost-evidence-label">Comparison caveat</p>
-                <p>{rentalCaveat}</p>
-              </div>
-            )}
-            {history && (
-              <div className="cost-evidence-item">
-                <p className="cost-evidence-label">Five-year context</p>
-                <p>{history}</p>
-              </div>
-            )}
-            {noTax && (
-              <div className="cost-evidence-item">
-                <p className="cost-evidence-label">Tax caveat</p>
-                <p>{noTax}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
+      {!control && (
         <div className="cost-strip">
           {cashComparison && (
             <p className="cost-strip-big" aria-live="polite">

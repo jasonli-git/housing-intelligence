@@ -195,23 +195,28 @@ export function verdictHeadline(peers: Peers, metrics: PacketMetric[], levels: P
     const position = rankPosition(level.rank, level.of);
     const low = range ? rankPosition(range.best, level.of) : position;
     const high = range ? rankPosition(range.worst, level.of) : position;
-    const price = high <= 1 / 3 ? "toward the higher end"
-      : low >= 2 / 3 ? "toward the lower end"
-      : low >= 1 / 3 && high <= 2 / 3 ? "near the middle" : "hard to place";
-    const basis = home.metric_id === "zhvi_sfr" ? "Home values" : `Owner-reported values (${periodLabel(level.period_end, level.metric_id)} survey)`;
-    let headline = `${basis}: ${price} among ${peers.scope}’s ${level.of === peers.count ? peers.noun : `covered ${peers.noun}`}.`;
+    const price = high <= 1 / 3 ? "higher than in most of"
+      : low >= 2 / 3 ? "lower than in most of"
+      : low >= 1 / 3 && high <= 2 / 3 ? "near the middle among" : "difficult to place among";
+    const basis = home.metric_id === "zhvi_sfr" ? `Typical single-family home values in ${peers.name}`
+      : `Owner-reported home values in ${peers.name} (${periodLabel(level.period_end, level.metric_id)} survey)`;
+    const cohort = level.of === peers.count ? `${peers.scope}’s ${peers.noun}`
+      : `the ${peers.noun} ${home.cohort} in ${peers.scope}`;
+    let headline = `${basis} are ${price} ${cohort}`;
     const change = ranked(metrics, home.metric_id);
     if (change) {
       const u = uncertainties?.change.get(change.metric_id);
-      if (u?.margin != null && Math.abs(change.pct_change) <= u.margin) headline += " No clear five-year rise or fall.";
-      else if (change.pct_change < 0) headline += " Values fell over five years.";
-      else if (change.pct_change === 0) headline += " Values were unchanged over five years.";
+      if (u?.margin != null && Math.abs(change.pct_change) <= u.margin) headline += "; their five-year change is too uncertain to call a rise or a fall";
+      else if (change.pct_change < 0) headline += ", and they fell over the past five years";
+      else if (change.pct_change === 0) headline += ", and they were unchanged over the past five years";
       else {
         const range = spread(u);
-        headline += ` Five-year rise: ${range ? paceRange(range.best, range.worst, change.of) : pace(change.rank, change.of)}.`;
+        const contrast = !range && ((low >= 2 / 3 && rankPosition(change.rank, change.of) <= .4)
+          || (high <= 1 / 3 && rankPosition(change.rank, change.of) >= .6));
+        headline += `, ${contrast ? "but" : "and"} they rose ${range ? paceRange(range.best, range.worst, change.of) : pace(change.rank, change.of)} over the past five years`;
       }
     }
-    return headline;
+    return `${headline}.`;
   }
   return null;
 }

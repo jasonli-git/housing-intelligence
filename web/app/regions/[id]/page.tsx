@@ -368,7 +368,7 @@ export default async function RegionPage({
           {headline && <p className="verdict region-orientation">{headline}</p>}
           {(lead || trade) && (
             <details className="verdict-details orientation-details">
-              <summary className="disclose">Why this headline? <span className="disclose-hint"><span className="when-closed">See the figures</span><span className="when-open">Hide</span></span></summary>
+              <summary className="disclose">See the figures behind this <span className="disclose-hint"><span className="when-closed">Details</span><span className="when-open">Hide</span></span></summary>
               {lead && <p className="verdict-more">{lead}</p>}
               {trade && <p className="verdict-more">{trade}</p>}
             </details>

@@ -282,19 +282,28 @@ describe("verdictHeadline", () => {
   it("summarizes the price and pace, leaving exact figures in the full verdict", () => {
     const levels = [level("zhvi_sfr", { rank: 19, of: 21 })];
     expect(verdictHeadline(COUNTY, [metric("zhvi_sfr", { rank: 1, of: 21, pct_change: 40 })], levels))
-      .toBe("Home values: toward the lower end among New Jersey’s counties. Five-year rise: faster than almost all.");
+      .toBe("Typical single-family home values in Mercer County are lower than in most of New Jersey’s counties, but they rose faster than almost all over the past five years.");
   });
   it("names survey and partial coverage rather than implying a current market index", () => {
     expect(verdictHeadline(TOWN, [], [level("acs_median_home_value", {rank: 2, of: 100, period_end: "2024-12-31"})]))
-      .toContain("Owner-reported values (2024 survey): toward the higher end among New Jersey’s covered municipalities.");
+      .toContain("Owner-reported home values in Princeton (2024 survey) are higher than in most of the municipalities with an ACS estimate in New Jersey.");
   });
   it("avoids a rise/fall claim when the change margin spans zero", () => {
     const u = { value: new Map(), change: new Map([["zhvi_sfr", { margin: 4, best: 1, worst: 21 }]]) };
     expect(verdictHeadline(COUNTY, [metric("zhvi_sfr", {rank: 2, of: 21, pct_change: 2})], [level("zhvi_sfr", {rank: 10, of: 21})], u))
-      .toContain("No clear five-year rise or fall.");
+      .toContain("their five-year change is too uncertain to call a rise or a fall");
   });
   it("is absent without a ranked home value", () => {
     expect(verdictHeadline(COUNTY, [], [])).toBeNull();
+  });
+  it("does not describe a decline as a rise", () => {
+    expect(verdictHeadline(COUNTY, [metric("zhvi_sfr", {rank: 20, of: 21, pct_change: -3})], [level("zhvi_sfr", {rank: 10, of: 21})]))
+      .toContain("and they fell over the past five years.");
+  });
+  it("retains the uncertainty of the value and change ranks", () => {
+    const u = { value: new Map([["zhvi_sfr", { margin: 30000, best: 1, worst: 21 }]]), change: new Map([["zhvi_sfr", {margin: 2, best: 1, worst: 21}]]) };
+    expect(verdictHeadline(COUNTY, [metric("zhvi_sfr", {rank: 2, of: 21, pct_change: 30})], [level("zhvi_sfr", {rank: 10, of: 21})], u))
+      .toContain("are difficult to place among New Jersey’s counties, and they rose at a pace that can’t be told apart from most");
   });
 });
 

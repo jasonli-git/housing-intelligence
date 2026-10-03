@@ -90,3 +90,11 @@
 - Scoped the styling to local page groups; report rendering and other interpretation cards are unchanged.
 - The owner also asked for advice on moving the comparison caveat/five-year context and warming the computed introduction. Those remain recommendations, not implemented changes in this follow-up.
 - Verification: typecheck passed; 43 test files / 397 tests passed; static build generated 2,377 pages with the expected local artifact-origin warning; diff whitespace checks passed. Headless checks at 1440px and 390px found no overflow or page errors and confirmed the card border. No deployment.
+
+## Approved follow-up: cost context placement and warmer introduction
+
+- Moved the existing comparison caveat, five-year context and applicable tax caveat into a supporting strip immediately after the monthly cost card, before cash-up-front/long-term views. No duplicate context block, calculations or historical text changes. Full report ordering remains unchanged.
+- Replaced the shorthand `Home values: … Five-year rise: …` opening with a natural computed sentence. The complete price/rank/change/tax detail remains expandable under `See the figures behind this`.
+- Retained source-basis, survey-year and partial-cohort qualifiers. Price/rank uncertainty still controls comparative wording; change uncertainty spanning zero does not become a rise/fall claim. Negative and unchanged changes retain their correct direction. `But` highlights a supported lower-price/faster-rise or higher-price/slower-rise contrast, otherwise the sentence uses `and`.
+- Verification: frontend typecheck and 43 test files / 399 tests passed. Added decline and broad-rank-uncertainty cases, and updated natural-sentence expectations. Headless desktop/mobile checks confirmed one context strip before both extra views, no horizontal overflow or page errors, and the intended Atlantic County sentence. Diff whitespace checks passed. No readings regenerated or deployment.
+- Static production build passed: 2,377 pages generated against the local API, with the expected unset-artifact-origin warning for a local build.
