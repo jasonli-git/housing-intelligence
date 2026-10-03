@@ -178,7 +178,11 @@ def test_skipped_entries_are_explanations_not_data(published: Path) -> None:
     unexpected = [
         path
         for path in manifest["skipped_404"]
-        if "/explanation" not in path and "/income-limits" not in path
+        if "/explanation" not in path
+        and "/income-limits" not in path
+        # Milestone 40: no system is listed for a county or the state, nor for a town
+        # whose homes are all on private wells.
+        and "/water-systems" not in path
     ]
     assert not unexpected, f"unexpected 404s: {unexpected[:5]}"
     # Milestone 35: only a region with no county — the state, the nation — has no income

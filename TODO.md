@@ -14,10 +14,11 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 39 shipped; Milestone 40 not started (2026-10-02)
+## Now — Milestone 40 built; PR awaiting review (2026-10-02)
 
-Milestone 39 merged as 0.35.0 (PR #80) and is deployed. Milestone 40, flood and
-environmental exposure, is next and starts only when asked.
+On `milestone/m40-flood-environmental` (0.36.0): flood exposure as shares of homes, flood
+claims paid, contaminated sites and drinking water (ARCHITECTURE #301-#304). Milestone
+41, affordable housing and assistance, follows and starts only when asked.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -30,6 +31,17 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
+
+- [ ] **Most of Morris County has no flood zone share.** (M40, #301) FEMA's digital map
+      covers 14.6% of its homes and Atlantic's 53%; the share is withheld below 95%.
+      Morris's paper FIRMs are not read. Re-check when FEMA's coverage moves: the page
+      fills in on its own once `fema_mapped_homes_share` reaches 0.95.
+- [ ] **New Jersey's PFAS violations are not counted.** (M40, #304) EPA's SDWIS carries
+      no PFAS code for New Jersey in 2021–2026. NJDEP's Drinking Water Watch has them; a
+      reader is sent there. Reading it would need its terms read first.
+- [ ] **Flood claims are not placed in towns.** (M40, #302) 11.5% of New Jersey's
+      claims are in 2010 block groups. A 2010-to-2020 block group relationship file from
+      the Census would place them; until then a town shows its county's.
 
 - [ ] **DCA's Construction Reporter has stopped at January 2026.** (M39, #300) DCA says
       the program is being overhauled. When its 2025 yearly summary posts (one usually
@@ -244,9 +256,9 @@ first raised, not where it must be done.
 
 - [ ] **The site does not say which questions it declines.** (M27 completeness run)
       ROADMAP decided on 2026-09-13 not to forecast prices or give investment advice,
-      and schedules schools, commutes, crime and flood risk for Milestones 40–46, but no
-      page tells a reader; the check counts 7 of its 17 questions as neither answered
-      nor declined. A short statement on the site would move them to declined.
+      and schedules schools, commutes and crime for Milestones 44–46 (flood risk was
+      answered by Milestone 40), but no page tells a reader; the check counts 6 of its
+      17 questions as neither answered nor declined. A short statement on the site would move them to declined.
 - [ ] **Report a problem is on a region's two full metric tables only.** (M27, #221)
       The cost cards, the verdict sentence, the New Jersey rankings and `/afford` quote
       figures without it. ROADMAP's row asked for every figure.

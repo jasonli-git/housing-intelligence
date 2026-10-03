@@ -51,7 +51,8 @@ def test_a_ratio_takes_the_least_permissive_right_of_its_inputs() -> None:
 
 def test_what_survives_each_use_today() -> None:
     """Measured 2026-10-01: Zillow's two indexes, Freddie Mac's rate and the three ratios
-    built on Zillow are the only figures not cleared for either use."""
+    built on Zillow are the only figures not cleared for either use. Milestone 40 adds
+    OpenFEMA's flood claims, whose terms do not address commercial use in words."""
     metrics, sources = load_metrics(), load_sources()
     restricted = {
         use: sorted(
@@ -68,6 +69,8 @@ def test_what_survives_each_use_today() -> None:
             "price_to_income",
             "rent_to_income",
             "price_to_ami",
+            "fema_flood_claims",
+            "fema_flood_claims_paid",
         ]
     )
     assert restricted == {"ads": expected, "paid": expected}

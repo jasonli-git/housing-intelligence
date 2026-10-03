@@ -135,6 +135,24 @@ export type Ranking = {
   items: RankedRegion[];
 };
 
+export type WaterSystem = {
+  pwsid: string;
+  name: string;
+  homes: number;
+  share_of_homes: number;
+  violations: number;
+  latest_violation: string | null;
+  latest_violation_what: string | null;
+  violation_kinds: string | null;
+};
+
+export type WaterSystems = {
+  region_id: number;
+  first_year: number;
+  last_year: number;
+  systems: WaterSystem[];
+};
+
 export type Observation = {
   metric_id: string;
   period_start: string;
@@ -486,6 +504,12 @@ export const api = {
    * (Milestone 35). Null for the state, and for a ZIP the crosswalk does not place.
    */
   incomeLimits: (id: number) => tryGet<IncomeLimits>(`/regions/${id}/income-limits`),
+  /**
+   * The community water systems serving a town or ZIP code, with their health-based
+   * violations over five calendar years (Milestone 40). Null for a county or the state,
+   * and for a town whose homes are all on private wells.
+   */
+  waterSystems: (id: number) => tryGet<WaterSystems>(`/regions/${id}/water-systems`),
   /** The metric catalog, for the New Jersey page's measure picker. */
   metrics: () => tryGet<MetricEntry[]>(`/metrics`),
 };

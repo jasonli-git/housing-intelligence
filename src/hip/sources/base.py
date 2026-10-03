@@ -326,6 +326,10 @@ class SourceAdapter(ABC):
     # publisher knowledge, like `csv_read_options`, so it sits beside it rather than
     # behind a method. Empty for every source that is not fixed-width.
     fixed_width_fields: ClassVar[tuple[tuple[str, int, int], ...]] = ()
+    # Rows per Parquet row group when landed, for a layer whose rows each cost real
+    # work downstream (polygons to repair and cut): DuckDB parallelises over row groups.
+    # None keeps DuckDB's default. NDJSON landing only (Milestone 40).
+    row_group_size: ClassVar[int | None] = None
     # Seconds to leave between this adapter's downloads; cached releases never wait.
     # Zero for publishers that state no limit. HUD User answers 429 past 60 requests a
     # minute (`x-ratelimit-limit: 60`), which 571 municipal CHAS calls reach in about

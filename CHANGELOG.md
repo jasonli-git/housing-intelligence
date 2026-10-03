@@ -3,6 +3,29 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.36.0] — 2026-10-02
+
+Milestone 40: flood and environmental exposure.
+
+### Added
+
+- **Is it at risk of flooding?** (ARCHITECTURE #301, #302) On every town, county and ZIP
+  page: the share of homes in FEMA's 1% and 0.2% flood zones, the share inside New
+  Jersey's tidal planning line with four feet of sea-level rise, and flood insurance
+  claims paid (the town page shows its county's). Shares are of homes, estimated from
+  the 2020 Census by block. Where FEMA's digital map covers under 95% of homes, most of
+  Morris County, no share is given and the page says why. Outside a zone is never
+  called safe; one address is checked on New Jersey's disclosure lookup or FEMA's map.
+- **What's in the ground and the water?** (#303, #304) NJDEP's open contaminated-site
+  cases counted by status, never ranked; the share of homes on public water; and the
+  community water systems serving a town or ZIP, each with its health-based violations
+  from 2021 to 2025, linked to EPA's record.
+- Twelve metrics, and seven sources: `fema_nfhl`, `njdep_cafe`, `fema_nfip_claims`,
+  `njdep_kcsl`, `njdep_water_areas`, `epa_sdwis`, `census_blocks`.
+- `GET /regions/{id}/water-systems`, and the `water_systems` table (migration 0023).
+- A shared reader for ArcGIS layers (`hip.sources.arcgis`), and NDJSON landing in small
+  row groups for layers whose rows each cost real work (`row_group_size`).
+
 ## [0.35.1] — 2026-10-02
 
 ### Changed

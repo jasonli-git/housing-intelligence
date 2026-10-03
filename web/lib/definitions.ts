@@ -504,6 +504,56 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "The middle lot size of one- to four-family homes here, in acres. An acre is 43,560 square feet.",
     why: "Bigger lots mean more space and fewer homes to a street, and usually a higher price per home.",
   },
+
+  // Flood and environment (Milestone 40)
+  fema_flood_homes_share: {
+    what: "The share of homes inside FEMA’s 1%-a-year flood zone, estimated from the 2020 Census’s homes against FEMA’s map in force.",
+    why: "A flood there has at least a 26% chance over a 30-year mortgage, and a federally backed mortgage requires flood insurance. Outside the zone is not safe.",
+  },
+  fema_flood_homes_share_moderate: {
+    what: "The share of homes in FEMA’s 0.2%-a-year flood zone, or behind a levee.",
+    why: "Insurance is not required there, but floods still reach it.",
+  },
+  fema_flood_homes: {
+    what: "How many homes, as counted in 2020, are estimated to be in FEMA’s 1% flood zone.",
+    why: "The number behind the share.",
+  },
+  fema_mapped_homes_share: {
+    what: "The share of homes where FEMA’s digital flood map gives a flood zone at all.",
+    why: "Below 95%, no share in the zones is given: a share over homes the map does not reach would read as dry. Most of Morris County is in that position.",
+  },
+  njdep_tidal_homes_share: {
+    what: "The share of homes in NJDEP’s tidal flood area with four feet of sea-level rise added, for the 14 counties NJDEP mapped.",
+    why: "New Jersey plans new coastal building for this line; it is a planning layer, not a flood map in force.",
+  },
+  fema_flood_claims: {
+    what: "Flood insurance claims the National Flood Insurance Program paid on, by the year of the flood.",
+    why: "Where floods have actually cost insured owners. Only insured homes claim, so it undercounts.",
+  },
+  fema_flood_claims_paid: {
+    what: "What the National Flood Insurance Program paid for floods in the year, in that year’s dollars.",
+    why: "How costly a flood year was here.",
+  },
+  njdep_sites_open: {
+    what: "Contaminated sites NJDEP lists whose cleanup is under way or not yet begun.",
+    why: "A count, not a risk: where each site is, and what it is, is on NJDEP’s map.",
+  },
+  njdep_sites_post_remedy: {
+    what: "Sites cleaned up with controls that stay, such as a deed notice or a limit on using the ground water.",
+    why: "The land is usable, with conditions that pass to the next owner.",
+  },
+  njdep_sites_heating_oil: {
+    what: "Leaking home heating-oil tanks being cleaned up, nearly all at houses.",
+    why: "Common where homes were heated with oil; worth asking about when buying an older house.",
+  },
+  water_homes_share_public: {
+    what: "The share of homes inside a public water system’s service area.",
+    why: "The rest mostly drink from private wells, which New Jersey has tested only when a home is sold or leased.",
+  },
+  water_homes_share_violation: {
+    what: "The share of homes whose water system had a health-based violation in the last five full years: a contaminant over its limit, or treatment not done.",
+    why: "A period the water broke a rule, not a measure of the water today; each system’s record says what happened.",
+  },
 };
 
 /** A metric's definition, or null for one the dictionary does not know yet. */

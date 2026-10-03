@@ -3,6 +3,8 @@ import Link from "next/link";
 import { CostToOwn } from "@/components/CostToOwn";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { HomeSales } from "@/components/HomeSales";
+import { FloodRisk } from "@/components/FloodRisk";
+import { GroundAndWater } from "@/components/GroundAndWater";
 import { HomesAdded } from "@/components/HomesAdded";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { CountyModeWorkspace } from "@/components/CountyModeWorkspace";
@@ -192,7 +194,13 @@ export default async function RegionPage({
     );
   }
 
-  const [series, cost, affordability, incomeLimits, construction] = await Promise.all([
+  // Flood claims are FEMA's by county and ZIP code, so a town reads its county's
+  // (Milestone 40, ARCHITECTURE #302).
+  const claimsRegion =
+    region.level === "municipality"
+      ? (region.ancestors.find((a) => a.level === "county") ?? null)
+      : region;
+  const [series, cost, affordability, incomeLimits, construction, floodClaims, water] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -211,6 +219,15 @@ export default async function RegionPage({
         async (metricId) => (await api.observations(regionId, metricId))?.observations ?? [],
       ),
     ),
+    // Milestone 40: flood claims paid by year, and the water systems serving the place.
+    Promise.all(
+      ["fema_flood_claims", "fema_flood_claims_paid"].map(async (metricId) =>
+        claimsRegion
+          ? ((await api.observations(claimsRegion.region_id, metricId))?.observations ?? [])
+          : [],
+      ),
+    ),
+    api.waterSystems(regionId),
   ]);
   // A town or ZIP reads HUD's county Fair Market Rents from its county's packet: HUD sets
   // them for the county's area, and only a county page carries them (Milestone 35).
@@ -433,6 +450,16 @@ export default async function RegionPage({
         net={construction[3]}
         levels={packet.levels}
       />
+
+      <FloodRisk
+        name={name}
+        levels={packet.levels}
+        claims={floodClaims[0]}
+        paid={floodClaims[1]}
+        claimsPlace={claimsRegion && claimsRegion.region_id !== regionId ? displayName(claimsRegion) : null}
+      />
+
+      <GroundAndWater name={name} levels={packet.levels} water={water} />
 
       <ForYourHousehold
         regionName={name}

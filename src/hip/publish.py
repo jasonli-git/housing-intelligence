@@ -224,6 +224,12 @@ def _plan(
             f"/regions/{region_id}/income-limits",
             f"regions/{region_id}/income-limits.json",
         )
+        # The water systems serving a town or ZIP code (Milestone 40). A 404 — a county,
+        # the state, or a town all on private wells — is a skip.
+        yield (
+            f"/regions/{region_id}/water-systems",
+            f"regions/{region_id}/water-systems.json",
+        )
         for window in PUBLISHED_WINDOWS:
             base = f"/regions/{region_id}"
             out = f"regions/{region_id}"

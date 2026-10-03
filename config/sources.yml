@@ -656,3 +656,218 @@ sources:
     fallback: >-
       Not fetched: the MOD-IV composite carries parcel geometry already.
     notes: Roughly 3.5M parcels statewide; never loaded row-wise into Postgres.
+
+  # Milestone 40: flood and environmental exposure (ARCHITECTURE #301-#304).
+
+  fema_nfhl:
+    name: National Flood Hazard Layer — flood hazard zones
+    publisher: Federal Emergency Management Agency
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105); FEMA's
+        flood map pages state no licence and no limit on use.
+    terms_url: https://www.fema.gov/flood-maps/national-flood-hazard-layer
+    terms_checked: 2026-10-02
+    terms_note: >-
+      FEMA's NFHL page states no licence; the layer is read from FEMA's own public map
+      service (hazards.fema.gov), New Jersey being the rows whose DFIRM_ID begins 34.
+    url: https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28
+    homepage: https://www.fema.gov/flood-maps/national-flood-hazard-layer
+    cadence: irregular
+    adapter: hip.sources.fema:NfhlAdapter
+    fallback: >-
+      FEMA's Map Service Center offers the same layer as a statewide download
+      (msc.fema.gov, "Search All Products"); NJOGIS republishes it.
+    notes: >-
+      The flood map in force: every effective FIRM and the Letters of Map Revision since,
+      updated continuously. Preliminary maps not yet in force are not in it.
+
+  njdep_cafe:
+    name: Tidal Climate Adjusted Flood Elevation (sea-level rise 4 ft)
+    publisher: New Jersey Department of Environmental Protection
+    license: NJDEP Data Distribution Agreement
+    licence_class: attribution
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        NJDEP's Data Distribution Agreement conditions use on credit, its disclaimer and
+        keeping the metadata with the data; it sets no limit on commercial use.
+    terms_url: https://www.arcgis.com/home/item.html?id=d5ac1d8353b946b7ab67d4bc04ae9f3c
+    terms_checked: 2026-10-02
+    terms_note: >-
+      The agreement is on the layer's portal entry, owned by NJDEPBGIS, NJDEP's GIS
+      bureau, whose data URL is the service read. Products credit NJDEP with its fixed
+      disclaimer (below), and the data is never redistributed without its metadata, so
+      the site links the metadata rather than republishing the layer. nj.gov's zip
+      downloads answer scripts with Imperva's 403; the service answers them.
+    notices:
+      - >-
+        This (map/publication/report) was developed using New Jersey Department of
+        Environmental Protection Geographic Information System digital data, but this
+        secondary product has not been verified by NJDEP and is not state-authorized or
+        endorsed.
+    url: https://services1.arcgis.com/QWdNfRs7lkPq4g4Q/arcgis/rest/services/Tidal_Climate_Adjusted_Flood_Elevation_CAFE_SLR_4ft/FeatureServer/23
+    homepage: https://gisdata-njdep.opendata.arcgis.com/datasets/njdep::tidal-climate-adjusted-flood-elevation-cafe-slr-4ft-for-new-jersey
+    cadence: irregular
+    adapter: hip.sources.njdep:CafeAdapter
+    fallback: >-
+      NJDEP's open data portal and NJOGIS carry the same layer; Rutgers' NJADAPT maps
+      it too.
+    notes: >-
+      FEMA's coastal 1% flood plus 4 ft, the planning elevation of the REAL rules
+      adopted 2026-01-20. Approximate, from FEMA's 2013-2016 preliminary coastal
+      studies, for 14 counties.
+
+  fema_nfip_claims:
+    name: NFIP Redacted Claims (v3)
+    publisher: Federal Emergency Management Agency (OpenFEMA)
+    license: OpenFEMA Terms and Conditions
+    licence_class: attribution
+    commercial:
+      ads: unclear
+      paid: unclear
+      note: >-
+        OpenFEMA's terms set no commercial limit in words, but describe the redacted
+        NFIP data as for statistical research or as a reporting record, and forbid using
+        it to re-identify anyone or to make a determination about one.
+    terms_url: https://www.fema.gov/about/openfema/terms-conditions
+    terms_checked: 2026-10-02
+    terms_note: >-
+      Requires citing the dataset and the notice below, and forbids re-identification;
+      the site publishes counts and sums by year and place only, never a claim.
+    notices:
+      - >-
+        This product uses the Federal Emergency Management Agency's OpenFEMA API, but is
+        not endorsed by FEMA. The Federal Government or FEMA cannot vouch for the data or
+        analyses derived from these data.
+    url: https://www.fema.gov/api/open/v3/NfipClaims
+    homepage: https://www.fema.gov/openfema-data-page/nfip-redacted-claims-v3
+    cadence: monthly
+    adapter: hip.sources.fema:NfipClaimsAdapter
+    fallback: >-
+      OpenFEMA's full-file downloads (CSV, Parquet) of the same dataset.
+    notes: >-
+      Every NFIP claim since 1978, redacted to block group, ZIP code and county. v2
+      froze 2026-06-01 and is removed 2026-10-15.
+
+  njdep_kcsl:
+    name: Known Contaminated Sites List
+    publisher: New Jersey Department of Environmental Protection
+    license: NJDEP Data Distribution Agreement
+    licence_class: attribution
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        NJDEP's Data Distribution Agreement conditions use on credit, its disclaimer and
+        keeping the metadata with the data; it sets no limit on commercial use.
+    terms_url: https://www.arcgis.com/home/item.html?id=b167bb2ae09c43f8ab9e954700be45d9
+    terms_checked: 2026-10-02
+    terms_note: >-
+      As njdep_cafe. The portal entry, owned by NJDEPBGIS, points at the
+      Environmental_NJEMS service read here; 12,600 sites on 2026-10-02, last loaded
+      2026-09-30, against 12,597 in the published metadata. Site names and streets are
+      not requested: the list includes homes with a leaking heating-oil tank.
+    notices:
+      - >-
+        This (map/publication/report) was developed using New Jersey Department of
+        Environmental Protection Geographic Information System digital data, but this
+        secondary product has not been verified by NJDEP and is not state-authorized or
+        endorsed.
+    url: https://mapsdep.nj.gov/arcgis/rest/services/Features/Environmental_NJEMS/MapServer/0
+    homepage: https://experience.arcgis.com/experience/f26272f8a41c4aeea77ac6f9b3c80ebb
+    cadence: weekly
+    adapter: hip.sources.njdep:KcslAdapter
+    fallback: >-
+      NJDEP's Data Miner publishes the same list as a report; the open data portal
+      carries the layer.
+    notes: >-
+      Open remediation cases only; a site with a final remedy and no ongoing controls
+      leaves the list.
+
+  njdep_water_areas:
+    name: Public Community Water Purveyor Service Areas
+    publisher: New Jersey Department of Environmental Protection
+    license: NJDEP Data Distribution Agreement
+    licence_class: attribution
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        NJDEP's Data Distribution Agreement conditions use on credit, its disclaimer and
+        keeping the metadata with the data; it sets no limit on commercial use.
+    terms_url: https://gisdata-njdep.opendata.arcgis.com/datasets/njdep::purveyor-service-areas-of-new-jersey/about
+    terms_checked: 2026-10-02
+    terms_note: >-
+      As njdep_cafe. The Utilities service, layer 13, 566 areas on 2026-10-02; its
+      water system ids (PWID) are the ones EPA's SDWIS keys on.
+    notices:
+      - >-
+        This (map/publication/report) was developed using New Jersey Department of
+        Environmental Protection Geographic Information System digital data, but this
+        secondary product has not been verified by NJDEP and is not state-authorized or
+        endorsed.
+    url: https://mapsdep.nj.gov/arcgis/rest/services/Features/Utilities/MapServer/13
+    homepage: https://dep.nj.gov/watersupply/drinking-water-consumers/your-utility-its-water/
+    cadence: annual
+    adapter: hip.sources.njdep:WaterAreasAdapter
+    fallback: >-
+      EPA's Community Water System Service Area Boundaries carry New Jersey's areas.
+    notes: >-
+      Where each community water system delivers; a home in none is most likely on a
+      private well.
+
+  epa_sdwis:
+    name: Safe Drinking Water Information System — violations
+    publisher: U.S. Environmental Protection Agency
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105).
+    terms_url: https://www.epa.gov/web-policies-and-procedures/epa-disclaimers
+    terms_checked: 2026-10-02
+    terms_note: >-
+      EPA's disclaimers: its information may be freely distributed unless marked as
+      copyrighted, which SDWIS is not, and EPA endorses no outside site, so none is
+      claimed. Violations from Envirofacts;
+      their codes' names from SDWA_REF_CODE_VALUES.csv in ECHO's SDWA download, read by
+      byte range.
+    url: https://data.epa.gov/efservice/VIOLATION
+    homepage: https://www.epa.gov/enviro/sdwis-overview
+    cadence: quarterly
+    adapter: hip.sources.epa_sdwis:SdwisAdapter
+    fallback: >-
+      ECHO's SDWA download (the whole file), or NJDEP's Drinking Water Watch.
+    notes: >-
+      Health-based violations only. New Jersey's own PFAS limits are not in it; the
+      site says so and links Drinking Water Watch.
+
+  census_blocks:
+    name: TIGER/Line 2020 census blocks
+    publisher: U.S. Census Bureau
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105); its
+        terms set no limit on commercial use.
+    terms_url: https://www.census.gov/about/policies/open-gov/open-data.html
+    terms_checked: 2026-10-02
+    url: https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/
+    cadence: irregular
+    adapter: hip.sources.census_blocks:BlocksAdapter
+    fallback: >-
+      The 2020 redistricting file (PL 94-171) carries the same counts by block.
+    notes: >-
+      Housing units per 2020 block, the weights behind every share of homes. Pinned
+      to 2020; redrawn once a decade.
