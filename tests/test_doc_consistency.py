@@ -81,3 +81,41 @@ def test_the_features_list_does_not_claim_unshipped_milestones() -> None:
         f"mark them done: {', '.join(f'M{n}' for n in unshipped)}. Either the roadmap "
         "row is stale or the README is describing work that has not shipped."
     )
+
+
+# The README's status block: `> **Latest.** ...` up to the next `> **` paragraph.
+_LATEST = re.compile(
+    r"^> \*\*Latest\.\*\*(.*?)(?=^>\s*\n> \*\*|\Z)", re.MULTILINE | re.DOTALL
+)
+_STATUS_VERSION = re.compile(r"^> \*\*Status — v(\d+\.\d+\.\d+)", re.MULTILINE)
+_CHANGELOG_TOP = re.compile(r"^## \[(\d+\.\d+\.\d+)\]", re.MULTILINE)
+_LATEST_WORDS = 60
+
+
+def test_the_readme_status_names_the_newest_release() -> None:
+    """The status line said v0.26.0 for nine releases (until 2026-10-02)."""
+    status = _STATUS_VERSION.search(README.read_text())
+    newest = _CHANGELOG_TOP.search((ROOT / "CHANGELOG.md").read_text())
+    assert status and newest
+    assert status.group(1) == newest.group(1), (
+        f"README.md's status says v{status.group(1)}; CHANGELOG.md's newest release is "
+        f"{newest.group(1)}."
+    )
+
+
+def test_the_readme_latest_is_only_the_newest_milestone_and_short() -> None:
+    """Latest grew to eight milestones in one paragraph; older ones belong in
+    CHANGELOG.md and the Project Status section, not the top of the README."""
+    latest = _LATEST.search(README.read_text())
+    assert latest, "README.md's status block has no `**Latest.**` paragraph."
+    text = latest.group(1).replace(">", " ")
+    words = len(text.split())
+    assert words <= _LATEST_WORDS, (
+        f"README.md's Latest is {words} words; keep it to {_LATEST_WORDS} — the newest "
+        "milestone only."
+    )
+    named = {int(n) for n in re.findall(r"Milestone (\d+)", text)}
+    assert named == {max(_roadmap_shipped())}, (
+        f"README.md's Latest names milestones {sorted(named)}; it should name only the "
+        f"newest shipped one, M{max(_roadmap_shipped())}."
+    )
