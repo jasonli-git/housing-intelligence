@@ -169,8 +169,6 @@ export function NationalCoverageMap() {
       {drawing && <>
         <div className="globe-controls globe-controls-jumps coverage-jumps" role="group" aria-label="United States map framing">
           <button type="button" aria-label="Show the United States map" onClick={() => { if (!flight.current) setViewport(COVERAGE_HOME); }}>United States</button>
-          <span className="globe-divider" aria-hidden="true" />
-          <button type="button" aria-label="Center the map on New Jersey" onClick={() => { if (!flight.current) setViewport(zoomCoverage(COVERAGE_HOME, 4, drawing.locator)); }}>New Jersey</button>
         </div>
         <div className="globe-controls globe-controls-zoom coverage-zoom" role="group" aria-label="United States map zoom controls">
           <button type="button" aria-label="Zoom out United States map" disabled={viewport.scale === 1} onClick={() => zoomMap(1 / 1.4)}>−</button>
