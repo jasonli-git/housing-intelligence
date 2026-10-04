@@ -253,6 +253,17 @@ The raw/manual workbook stays outside Git. Any separate machine running the refr
 pipeline must receive the same owner-downloaded file (or its immutable acquired cache)
 before activating this version; pushing the code does not transfer that data.
 
+### Download cleanup note (October 4, 2026)
+
+The owner reports deleting `~/Downloads/lihtcpub` after integration. The property
+workbook remains in `data/manual/hud_lihtc/LIHTCPUB_2024.xlsx` and its content-addressed
+`data/raw/hud_lihtc/` cache; pipeline runs do not depend on the deleted folder.
+The accompanying data dictionary PDF, building-address workbook and Access database
+were inspected/listed but not archived into the project. If needed for further source
+review or building-address integration, download the official HUD ZIP again. The
+coverage, field interpretations and inspected counts are recorded in this handoff;
+a future ZIP may contain a newer release, so verify its dictionary before use.
+
 If HUD's page becomes machine-readable, the existing scheduled refresh can discover
 newer completed coverage and its acquire log will request the correctly year-named
 file. This change does not add email/push notifications or a scheduled reminder.
