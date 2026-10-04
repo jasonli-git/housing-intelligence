@@ -4,12 +4,16 @@
  *
  * Within reach means the typical monthly cost is at most 30% of gross income — HUD's
  * cost-burden line, decided with the owner at the start of the milestone (TODO). Owning
- * is `costToOwn` at the reader's down payment; renting is the observed rent. A place
+ * uses the profile's full ownership calculation and shared assumptions; renting is observed rent only. A place
  * lacking a figure the mode needs is left out rather than guessed: owning without a tax
- * bill would flatter every place in the state with the highest property taxes.
+ * bill would flatter every place in the state with the highest property taxes. Other
+ * required missing costs remain visible as incomplete, never marked within budget.
  */
 
-import { BURDEN_SHARE, costToOwn } from "@/lib/cost";
+import { BURDEN_SHARE } from "@/lib/cost";
+import { eachMonth, upFront } from "./ownership";
+import { ownershipInputs } from "./budgetScenario";
+import type { Personal } from "./costScenario";
 
 export type Place = {
   id: number;
@@ -22,6 +26,8 @@ export type Place = {
   home: number | null;
   tax: number | null;
   rent: number | null;
+  insurance?: number | null;
+  utilities?: number | null;
 };
 
 export type Mode = "own" | "rent";
@@ -33,6 +39,8 @@ export type Reached = {
   within: boolean;
   /** The monthly cost as a share of monthly gross income. */
   share: number;
+  missing: string[];
+  upfront: { low: number; high: number } | null;
 };
 
 /** The most a month's housing may cost at this income and stay within reach. */
@@ -43,7 +51,7 @@ export function monthlyBudget(income: number): number {
 /** Every place with the figures the mode needs, cheapest first, each marked within reach or not. */
 export function reach(
   places: Place[],
-  options: { mode: Mode; income: number; downPct: number; ratePct: number },
+  options: { mode: Mode; income: number; downPct: number; ratePct: number; personal?: Personal },
 ): Reached[] {
   const { mode, income, downPct, ratePct } = options;
   const budget = monthlyBudget(income);
@@ -51,14 +59,22 @@ export function reach(
   return places
     .flatMap((place): Reached[] => {
       let monthly: number;
+      let missing: string[] = [];
+      let upfront: Reached["upfront"] = null;
       if (mode === "own") {
         if (place.home === null || place.tax === null) return [];
-        monthly = costToOwn({ homeValue: place.home, ratePct, downPct, annualTax: place.tax }).total;
+        const input = ownershipInputs({ price: place.home, ratePct, taxYear: place.tax,
+          insuranceYear: place.insurance ?? null, utilitiesMonth: place.utilities ?? null, rentMonth: place.rent,
+        }, { ...options.personal, downPct });
+        const month = eachMonth(input);
+        monthly = month.total;
+        missing = month.missing;
+        upfront = upFront(input);
       } else {
         if (place.rent === null) return [];
         monthly = place.rent;
       }
-      return [{ place, monthly, within: monthly <= budget, share: monthly / monthlyIncome }];
+      return [{ place, monthly, within: monthly <= budget && missing.length === 0, share: monthly / monthlyIncome, missing, upfront }];
     })
     .sort((a, b) => a.monthly - b.monthly);
 }
@@ -69,7 +85,7 @@ export function reach(
  */
 export function checkPlace(
   place: Place,
-  options: { income: number; downPct: number; ratePct: number },
+  options: { income: number; downPct: number; ratePct: number; personal?: Personal },
 ): { own: Reached | null; rent: Reached | null } {
   const [own] = reach([place], { ...options, mode: "own" });
   const [rent] = reach([place], { ...options, mode: "rent" });

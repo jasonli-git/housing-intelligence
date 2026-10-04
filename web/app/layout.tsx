@@ -28,8 +28,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Housing — New Jersey housing data",
-  description: "New Jersey housing, county by county: prices, rents, incomes and affordability, every figure traced to its source.",
+  title: "Housing — United States",
+  description: "Explore housing data by state. Detailed coverage starts with New Jersey: costs, local conditions and figures traced to their sources.",
 };
 
 export default function RootLayout({

@@ -2,24 +2,34 @@ import Link from "next/link";
 
 export type Crumb = { href: string; label: string };
 
+function linkedLevel(href: string) {
+  if (href === "/") return "nation";
+  if (href.startsWith("/states/")) return "state";
+  if (href.startsWith("/regions/")) return "local";
+  return undefined;
+}
+
 /**
  * Where a page sits, as navigation rather than a line of text (Milestone 23): mono labels,
  * "›" between them, a back arrow on the first, and the current page last, unlinked. The
  * owner found "New Jersey / Somerset County / Report" read as generic text.
  */
-export function Crumbs({ trail, here }: { trail: Crumb[]; here?: string }) {
+export function Crumbs({ trail, here, hereKind }: { trail: Crumb[]; here?: string; hereKind?: PageKind }) {
+  const hereLevel = hereKind === "state" ? "state"
+    : hereKind === "county" || hereKind === "municipality" || hereKind === "zip" ? "local"
+    : undefined;
   return (
     <nav className="crumbs print-hide" aria-label="Breadcrumb">
       <ol>
         {trail.map((crumb, index) => (
-          <li key={crumb.href}>
+          <li key={crumb.href} data-level={linkedLevel(crumb.href)}>
             <Link href={crumb.href}>
               {index === 0 && <span aria-hidden="true">‹ </span>}
               {crumb.label}
             </Link>
           </li>
         ))}
-        {here && <li aria-current="page">{here}</li>}
+        {here && <li aria-current="page" data-level={hereLevel}>{here}</li>}
       </ol>
     </nav>
   );

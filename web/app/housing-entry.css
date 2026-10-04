@@ -1,0 +1,140 @@
+/* State-led information architecture: truthful national coverage, a full NJ profile. */
+.nation-page, .nj-page { --entry-ink: light-dark(#174a6b, #bddcf3); --entry-accent: var(--state-blue); }
+.nation-page { --entry-ink: light-dark(#34312d, #ebe6dc); --entry-accent: light-dark(#6e655b, #c7beb0); }
+.nation-page > .nation-head { --kind: var(--entry-accent); }
+/* The atlas is neutral; its available state destinations retain their blue identity. */
+.coverage-state-preview, .coverage-mobile-link { --entry-ink: light-dark(#174a6b, #bddcf3); --entry-accent: var(--state-blue); }
+.entry-kicker { margin: 0 0 .6rem; color: var(--entry-accent); font: 600 10px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.nation-page > .nation-head { display: block; padding-block: 2.3rem 2rem; }
+.nation-head h1 { margin: 0; color: var(--entry-ink); font-size: clamp(50px, 8vw, 106px); letter-spacing: -.07em; line-height: 1; }
+.entry-introduction { max-width: 35ch; margin: 1.2rem 0 .7rem; font: 550 clamp(22px, 3vw, 34px)/1.2 var(--font-display); letter-spacing: -.035em; }
+.entry-context { max-width: 65ch; color: var(--text-secondary); margin: 0; }
+.entry-free { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin: 1rem 0 0; color: var(--text-secondary); font-size: var(--text-small); }
+.entry-free svg { width: 16px; height: 16px; fill: none; stroke: var(--series-3); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.entry-free > span:last-child { color: var(--text-muted); }
+.coverage-entry { display: grid; grid-template-columns: minmax(0, .7fr) minmax(0, 1.3fr); gap: 2rem; align-items: center; margin: 1rem 0 2.5rem; }
+.coverage-entry h2, .national-context h2 { margin: 0 0 .65rem; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.04em; }
+.coverage-entry header > p:last-child, .national-context p:last-child { max-width: 40ch; color: var(--text-secondary); }
+.state-entry-link { display: flex; align-items: center; gap: clamp(1rem, 3vw, 2rem); padding: clamp(1.3rem, 3vw, 2.5rem); border: 1px solid color-mix(in srgb, var(--entry-accent) 25%, var(--border)); border-radius: 14px; background: linear-gradient(125deg, color-mix(in srgb, var(--entry-accent) 10%, var(--surface-card)), var(--surface-card)); color: var(--text-primary); text-decoration: none; transition: border-color 180ms ease, transform 180ms ease; }
+.state-entry-link:hover { border-color: var(--entry-accent); transform: translateY(-2px); text-decoration: none; }
+.state-entry-monogram { flex: 0 0 auto; font: 700 clamp(64px, 7vw, 112px)/1 var(--font-display); letter-spacing: -.07em; color: color-mix(in srgb, var(--entry-ink) 28%, var(--surface-card)); }
+.state-entry-copy { display: grid; gap: .55rem; min-width: 0; }
+.state-entry-copy .entry-kicker { margin: 0; }
+.state-entry-copy > strong { font: 650 clamp(25px, 3vw, 38px)/1.1 var(--font-display); letter-spacing: -.05em; color: var(--entry-ink); }
+.state-entry-copy > span:not(.entry-kicker) { font-size: var(--text-small); }
+.state-entry-action { margin-top: .7rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: var(--entry-accent); font-weight: 600; }
+.state-entry-action > span { font-size: 24px; }
+.coverage-entry-map { display: block; margin-top: .5rem; }
+.coverage-entry-map > header { display: flex; align-items: baseline; gap: 1.2rem; margin-bottom: 1rem; }
+.coverage-entry-map > header h2 { margin: 0; }
+.coverage-atlas { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--surface-card); }
+.coverage-map-stage { position: relative; isolation: isolate; background: radial-gradient(ellipse at 55% 55%, light-dark(#efede8, #292724), light-dark(#f8f7f4, #20201e)); }
+.coverage-map { display: block; width: 100%; height: clamp(250px, 38vw, 460px); touch-action: pan-y pinch-zoom; }
+.coverage-map { overflow: hidden; }
+.coverage-geography { transform-origin: 0 0; transform-box: view-box; }
+.coverage-viewport { transform-origin: 0 0; transform-box: view-box; transition: transform 160ms ease-out; }
+.coverage-map[data-zoomed="true"] { cursor: grab; }
+.coverage-map[data-dragging="true"] { cursor: grabbing; }
+.coverage-map[data-dragging="true"] .coverage-viewport { transition: none; }
+.coverage-map-window { position: relative; }
+.nation-page .coverage-zoom { top: auto; bottom: 14px; }
+@media (max-width: 760px) {
+  .nation-page .coverage-zoom { top: 12px; bottom: auto; }
+  .nation-page .coverage-mobile-link { left: 14px; right: auto; top: 2.4rem; }
+}
+.coverage-zoom button:disabled { color: var(--text-muted); opacity: .45; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .coverage-viewport { transition: none; } }
+@media print { .coverage-zoom, .coverage-locator { display: none; } .coverage-viewport { transform: none !important; } }
+.coverage-map-stage .coverage-locator, .coverage-map-stage .coverage-map-caption, .coverage-map-stage .coverage-mobile-link { transition: opacity 160ms ease; }
+.coverage-map-stage[data-entering="true"] .coverage-locator, .coverage-map-stage[data-entering="true"] .coverage-map-caption, .coverage-map-stage[data-entering="true"] .coverage-mobile-link { opacity: 0; }
+.coverage-map-caption { position: absolute; top: 1rem; left: 1.2rem; z-index: 1; color: var(--text-muted); font: 500 9px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; pointer-events: none; }
+.coverage-mobile-link { display: none; }
+.coverage-land path { fill: light-dark(#e4e1dc, #33322e); stroke: none; }
+.coverage-unavailable { fill: light-dark(#d0cbc2, #484640); stroke: light-dark(#ada89e, #65625b); stroke-width: .7; vector-effect: non-scaling-stroke; transition: fill 160ms ease; }
+.coverage-unavailable:hover { fill: light-dark(#bdb6aa, #59564f); }
+.coverage-state-top { fill: var(--state-blue); stroke: light-dark(#235b91, #a2ceff); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.coverage-state-wall { fill: #1b4670; }
+.coverage-state-shadow { fill: #18354b; opacity: .25; }
+.coverage-available:hover .coverage-state-top, .coverage-available:focus .coverage-state-top { fill: light-dark(#164f9e, #a2ceff); }
+.coverage-locator { color: light-dark(#164f79, #bedfff); }
+.coverage-locator path { fill: none; stroke: currentColor; stroke-width: 1.2; }
+.coverage-locator circle { fill: var(--state-blue); stroke: var(--surface-card); stroke-width: 2; }
+.coverage-locator rect { fill: var(--surface-card); stroke: color-mix(in srgb, var(--state-blue) 50%, var(--border)); stroke-width: 1; }
+.coverage-locator text { fill: currentColor; font: 600 14px var(--font-text); }
+.coverage-locator:hover rect, .coverage-locator:focus rect { stroke: var(--state-blue); stroke-width: 2; }
+.coverage-map-foot { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; padding: .6rem 1.2rem; color: var(--text-secondary); font-size: 11px; border-top: 1px solid var(--border); }
+.coverage-map-foot > span:last-child { display: flex; align-items: center; gap: .4rem; color: var(--text-muted); }
+.coverage-map-foot i { width: 7px; height: 7px; border-radius: 2px; background: var(--state-blue); }
+.coverage-map-placeholder { display: grid; place-items: center; min-height: 250px; color: var(--text-muted); font-size: var(--text-small); }
+.coverage-state-preview { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.2rem; }
+.coverage-state-preview h3 { margin: 0 0 .3rem; color: var(--entry-ink); font: 650 26px/1.1 var(--font-display); letter-spacing: -.04em; }
+.coverage-state-preview p { margin: 0; font-size: var(--text-small); color: var(--text-secondary); }
+.coverage-state-preview .entry-kicker { margin-bottom: .4rem; font-size: 9px; color: var(--entry-accent); }
+.coverage-state-action { display: flex; gap: 1.5rem; align-items: center; color: var(--entry-ink); border: 1px solid color-mix(in srgb, var(--state-blue) 40%, var(--border)); border-radius: 8px; padding: .7rem .9rem; font-size: var(--text-small); font-weight: 600; text-decoration: none; background: color-mix(in srgb, var(--state-blue) 7%, var(--surface-card)); }
+.coverage-state-action:hover { border-color: var(--state-blue); text-decoration: none; }
+.coverage-map-note { margin: 0; padding: 0 1.2rem .8rem; color: var(--text-muted); font-size: 11px; }
+.national-context { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 2rem; padding: 1.5rem 0; border-block: 1px solid var(--border); }
+.national-rate { display: grid; gap: .4rem; justify-self: end; }
+.national-rate > strong { font: 600 54px/1 var(--font-display); letter-spacing: -.05em; color: var(--entry-ink); }
+.national-rate small, .entry-coverage-note { color: var(--text-muted); font-size: var(--text-small); }
+.entry-coverage-note { margin-top: 1rem; max-width: 75ch; }
+.state-note-reference { position: relative; display: inline-grid; place-items: center; width: 18px; height: 18px; color: var(--state-blue); font: 500 14px/1 var(--font-text); text-decoration: none; }
+.state-note-reference::before { content: ""; position: absolute; inset: -13px; }
+.state-note-reference:hover { color: var(--text-primary); }
+.state-note-marker { margin-left: .2rem; font-size: 14px; line-height: 0; vertical-align: super; }
+.state-figure-notes { margin-top: 1.5rem; color: var(--text-secondary); font-size: var(--text-small); scroll-margin-top: 6rem; }
+.state-figure-notes h2 { font: 500 var(--text-small)/1.5 var(--font-text); margin: 0 0 .4rem; }
+.state-figure-notes h2 a { color: var(--state-blue); display: inline-grid; place-items: center; min-width: 24px; min-height: 24px; }
+.state-figure-notes p { margin: .35rem 0; max-width: 100ch; line-height: 1.5; }
+#state-note-reference { scroll-margin-top: 6rem; }
+.state-overview { margin: .9rem 0 1rem; }
+.state-chapter-head h2 { font-size: clamp(23px, 3vw, 32px); letter-spacing: -.04em; margin: 0 0 .6rem; }
+.state-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--border); border-radius: 12px; background: var(--border); overflow: hidden; }
+.state-facts article { display: flex; flex-direction: column; align-items: flex-start; padding: 1rem; min-width: 0; background: var(--surface-card); }
+.state-facts article > strong { font: 650 clamp(29px, 3.5vw, 42px)/1.15 var(--font-display); letter-spacing: -.045em; color: var(--entry-ink); margin-bottom: .4rem; }
+.state-facts article > small { color: var(--text-muted); font-size: 10px; margin-top: .4rem; }
+.state-facts article > p:last-child { margin: .7rem 0 0; color: var(--text-secondary); font-size: var(--text-small); line-height: 1.5; }
+.state-workspace { margin-top: 1.1rem; }
+.nj-page .nj-source-notes { margin-top: .5rem; margin-bottom: .8rem; }
+main.shell.nj-page { padding-bottom: 1.5rem; }
+body:has(.nj-page) > .foot { margin-top: 1.5rem; }
+.state-workspace-head { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.state-workspace-head h2 { margin: 0 0 .5rem; font-size: clamp(25px, 3.3vw, 38px); letter-spacing: -.045em; }
+.state-workspace-head p:last-child { color: var(--text-secondary); font-size: var(--text-small); margin: 0; }
+.state-workspace-choice { display: flex; padding: 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; gap: 3px; }
+.state-workspace-choice button { padding: .65rem .9rem; border: 0; border-radius: 999px; background: transparent; color: var(--text-secondary); font: 550 12px/1.3 var(--font-text); cursor: pointer; }
+.state-workspace-choice button[aria-pressed="true"] { background: var(--entry-accent); color: #fff; box-shadow: 0 1px 4px rgb(0 0 0 / 12%); }
+.nj-afford-mode .state-workspace-choice button[aria-pressed="true"] { background: var(--series-2); }
+.state-figures { width: 100%; min-width: 38rem; font-size: var(--text-small); }
+.state-figures th, .state-figures td { padding: .7rem .5rem; border-bottom: 1px solid var(--border); text-align: left; }
+.state-figures tbody th { font-weight: 500; }
+.state-figures .num { text-align: right; font-variant-numeric: tabular-nums; }
+.state-figure-margin { display: block; color: var(--text-muted); }
+html[data-housing-mode="afford"] .nj-page > .state-ticker, html[data-housing-mode="afford"] .nj-page > .nj-source-notes { display: flex; }
+.nj-page:has(.nj-afford-mode) .nj-head { --kind: var(--state-blue); }
+.nj-page .more-entry { background: #163c60; border-color: #456581; }
+.nj-page .more > summary:hover .more-entry { background: #1e4b73; }
+@media (max-width: 760px) {
+  .coverage-entry-map > header { display: block; }
+  .coverage-map { height: 250px; }
+  .coverage-map-caption { font-size: 8px; left: .8rem; }
+  .coverage-locator { display: none; }
+  .coverage-mobile-link { display: flex; position: absolute; right: .6rem; top: .45rem; z-index: 1; min-height: 44px; align-items: center; padding: 0 .7rem; border-radius: 8px; background: color-mix(in srgb, var(--surface-card) 85%, transparent); color: var(--entry-ink); font-size: 11px; text-decoration: none; }
+  .coverage-state-preview { padding: 1rem; gap: .8rem; }
+  .coverage-state-action { gap: .7rem; padding: .6rem .7rem; }
+  .coverage-entry, .national-context { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .national-rate { justify-self: start; }
+  .state-facts { grid-template-columns: minmax(0, 1fr); }
+  .state-facts article { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .25rem .75rem; padding: 1rem; }
+  .state-facts article > strong { grid-column: 2; grid-row: 1 / 3; align-self: center; margin: 0; font-size: 30px; }
+  .state-facts article > .entry-kicker { margin: 0; font-size: 9px; }
+  .state-facts article > small, .state-facts article > p:last-child { grid-column: 1 / -1; }
+  .state-workspace-head { align-items: start; }
+  .state-workspace-choice { width: 100%; }
+  .state-workspace-choice button { flex: 1; }
+  .nation-page > .nation-head { padding-block: 1.5rem; }
+  .state-entry-link { gap: 1rem; }
+  .state-entry-monogram { font-size: 60px; }
+}
+@media (prefers-reduced-motion: reduce) { .coverage-map-stage .coverage-locator, .coverage-map-stage .coverage-map-caption, .coverage-map-stage .coverage-mobile-link, .coverage-unavailable, .state-entry-link { transition: none; } .state-entry-link:hover { transform: none; } }
+@media print { .state-workspace-choice { display: none; } .state-facts { display: block; } .state-entry-link { background: transparent; box-shadow: none; } }

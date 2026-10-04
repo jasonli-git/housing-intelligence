@@ -25,7 +25,7 @@ export function HomeSales({
   name: string;
   level: string;
   geoid: string;
-  levels: PacketLevel[];
+  levels: Pick<PacketLevel, "metric_id" | "value" | "period_start" | "period_end">[];
   showLookup?: boolean;
 }) {
   const find = (id: string) => levels.find((l) => l.metric_id === id);

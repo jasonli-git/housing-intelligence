@@ -466,6 +466,11 @@ export const api = {
     tryGet<{ observations: Observation[] }>(
       `/regions/${id}/metrics?metric_id=${metricId}`,
     ),
+  /** Build-time only: unranked annual ACS cost inputs, in ascending survey order. */
+  costObservations: (metricId: string, ids: number[]) =>
+    tryGet<{ regions: { region_id: number; series: { period_start: string; value: number }[] }[] }>(
+      `/compare?metric_id=${encodeURIComponent(metricId)}` + ids.map((id) => `&region_ids=${id}`).join(""),
+    ),
   packet: (id: number, window: string) =>
     tryGet<Packet>(`/regions/${id}/packet?window=${window}`),
   geo: (level: string, simplify?: number) =>

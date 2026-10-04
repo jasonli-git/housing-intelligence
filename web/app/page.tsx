@@ -1,201 +1,30 @@
-import { type Measure } from "@/components/CountyExplorer";
-import { SectionJump } from "@/components/SectionJump";
-import { ReaderDetails } from "@/components/ReaderDetails";
-import { ComputedBadge } from "@/components/ComputedBadge";
-import { StateModeWorkspace } from "@/components/StateModeWorkspace";
-import { Kind } from "@/components/Crumbs";
-import { StateProfileTicker } from "@/components/StateProfileTicker";
-import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
+import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { Masthead } from "@/components/Masthead";
-import { api } from "@/lib/api";
-import { formatMetric } from "@/lib/format";
-import { groupRows } from "@/lib/groups";
+import { nationalMortgageRate } from "@/lib/api";
 import { periodLabel } from "@/lib/periods";
-import { WINDOWS } from "@/lib/windows";
-import { definitionOf } from "@/lib/definitions";
-import { stateProfile } from "@/lib/stateProfile";
-import { affordData } from "@/lib/affordData";
-import "./new-jersey.css";
+import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
+import "./housing-entry.css";
 
-// The figure most readers arrive for. It is where the page opens, not a limit on it.
-const DEFAULT_MEASURE = "zhvi_sfr";
-
-// The box the map is drawn in. New Jersey is taller than it is wide. Larger since
-// Milestone 23: at 420 wide the page read as zoomed out. Since Milestone 16 the outlines
-// themselves arrive from `map.json` in the browser, so this is the frame and nothing
-// else — the page no longer projects anything.
-const MAP_WIDTH = 540;
-const MAP_HEIGHT = 580;
-
-// Metrics whose caveat their definition already carries: both FHFA indexes say they are
-// published for the state only. The packet's caveat is unchanged; on this page it is
-// there for a reader who asks (ARCHITECTURE #146).
-const CAVEAT_IN_DEFINITION: ReadonlySet<string> = new Set([
-  "fhfa_hpi",
-  "fhfa_hpi_all_transactions",
-]);
-
-/**
- * The New Jersey page: the state's counties, compared on whichever measure and window
- * the reader picks.
- *
- * Since Milestone 18 this is also the state's own page. `/regions/1` carried two FHFA
- * index values, their caveat and the footer; its figures are here now, and
- * `public/_redirects` sends the old URL to this one (ARCHITECTURE #127).
- *
- * Every published county ranking is fetched at build and handed to the explorer, so the
- * reader's choices are answered in the browser with no request (#126). The outlines are
- * not here at all: the map fetches `map.json` on use, so 48,000 coordinates stay out of
- * this page's payload (#163).
- */
-export default async function NewJerseyPage() {
-  const [geo, catalog, states, affordability] = await Promise.all([
-    api.geo("county"),
-    api.metrics(),
-    api.regions("level=state&state=NJ&limit=1"),
-    affordData(),
-  ]);
-  const state = states?.items[0] ?? null;
-  const statewide = state ? await api.summary(state.region_id, "5y") : null;
-
-  if (!geo || !catalog) {
-    return (
-      <>
-        <Masthead affordability={{ kind: "local" }} />
-        <main className="shell">
-          <h1 className="page-title">New Jersey</h1>
-          <p className="meta">
-            The API is unreachable, so there is nothing to show. Start it with{" "}
-            <code>make api</code>, and check the warehouse is loaded with{" "}
-            <code>make pipeline</code>.
-          </p>
-        </main>
-      </>
-    );
-  }
-
-  const measures = (
-    await Promise.all(
-      catalog.map(async (metric): Promise<Measure | null> => {
-        const windows: Measure["windows"] = {};
-        await Promise.all(
-          WINDOWS.map(async ({ key }) => {
-            const ranking = await api.rankings(
-              metric.metric_id,
-              "county",
-              key,
-              25,
-            );
-            const items = ranking?.items ?? [];
-            if (items.length === 0) return;
-            windows[key] = {
-              start: items[0].window_start,
-              end: items[0].window_end,
-              rows: items.map((item) => ({
-                id: item.region_id,
-                name: item.name,
-                rank: item.rank,
-                of: item.of,
-                change: item.value,
-                latest: item.end_value,
-                // The ranks a survey measure's margins leave it (Milestone 28).
-                best: item.rank_best ?? null,
-                worst: item.rank_worst ?? null,
-                // And the margins of its change and its latest value (0018).
-                changeMargin: item.margin_of_error ?? null,
-                latestMargin: item.end_margin ?? null,
-              })),
-            };
-          }),
-        );
-        return Object.keys(windows).length > 0
-          ? {
-              metric_id: metric.metric_id,
-              label: metric.label,
-              unit: metric.unit,
-              direction: metric.direction,
-              windows,
-            }
-          : null;
-      }),
-    )
-  ).filter((measure): measure is Measure => measure !== null);
-
-  const sections = groupRows(measures);
-  const initial = measures.some((m) => m.metric_id === DEFAULT_MEASURE)
-    ? DEFAULT_MEASURE
-    : measures[0]?.metric_id;
-  const levels = statewide?.levels ?? [];
-  const population = levels.find((level) => level.metric_id === "pep_population")
-    ?? levels.find((level) => level.metric_id === "acs_population");
-  const statewideNotes = (statewide?.caveat_scopes ?? [])
-    .filter((scope) =>
-      scope.metric_ids.some((id) => levels.some((l) => l.metric_id === id)),
-    )
-    .filter(
-      (scope) => !scope.metric_ids.every((id) => CAVEAT_IN_DEFINITION.has(id)),
-    )
-    .map((scope) => scope.text);
-
-  return (
-    <>
-      <Masthead affordability={{ kind: "local" }} />
-      <main className="shell nj-page">
-      <header className="page-head nj-head" data-kind="state">
-        <div className="region-head-main">
-          <div className="page-head-eyebrow">
-            <Kind kind="state" />
-            {population && (
-              <aside className="population-badge" aria-label="Population">
-                <span className="population-badge-label">Population</span>
-                <strong>{formatMetric(population.value, population.unit, population.metric_id)}</strong>
-                <span className="population-badge-year">
-                  <FloatingMetricTerm
-                    metricId={population.metric_id}
-                    label={`${periodLabel(population.period_end, population.metric_id)} estimate`}
-                    definition={definitionOf(population.metric_id)?.what ?? population.label}
-                    why={null}
-                  />
-                </span>
-              </aside>
-            )}
-          </div>
-          <div className="page-title-row">
-            <h1 className="page-title">New Jersey</h1>
-            <ComputedBadge />
-          </div>
-        </div>
-        <a className="nj-atlas-entry" href="#nj-explore">
-          <span className="nj-atlas-count">{geo.features.length}<span>counties</span></span>
-          <span className="nj-atlas-entry-label">Explore the differences <span aria-hidden="true">↘</span></span>
-        </a>
+export default async function UnitedStatesPage() {
+  const rate = await nationalMortgageRate();
+  return <>
+    <Masthead affordability={{ kind: "disabled", reason: "Choose a covered state first" }} budgetLabel="NJ budget" />
+    <main className="shell nation-page">
+      <header className="page-head nation-head" data-kind="nation">
+        <p className="entry-kicker">Housing · a public data project</p>
+        <h1>United States</h1>
+        <p className="entry-introduction">A clearer picture of the place you could call home.</p>
+        <p className="entry-context">Compare housing costs and local conditions, with sources for every figure.</p>
+        <p className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg>Free to use <span aria-hidden="true">·</span> <span>No fees. No subscription. Definitely no ads.</span></p>
       </header>
-      <StateProfileTicker items={stateProfile(levels, statewide?.headlines ?? [])} />
-      <div className="nj-source-notes">
-        <SectionJump />
-        {statewideNotes.length > 0 && <ReaderDetails title="About these statewide figures">
-          {statewideNotes.map((text) => (
-            <p key={text} className="table-note">
-              {text}
-            </p>
-          ))}
-        </ReaderDetails>}
-      </div>
-
-      <div id="nj-explore" className="nj-explore-anchor">
-        {initial ? (
-          <StateModeWorkspace
-            frame={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
-            counties={geo.features.length}
-            sections={sections}
-            initial={initial}
-            afford={affordability}
-          />
-        ) : (
-          <p className="meta">No county rankings are published yet.</p>
-        )}
-      </div>
-      </main>
-    </>
-  );
+      <section className="coverage-entry coverage-entry-map" aria-labelledby="coverage-heading">
+        <header><p className="entry-kicker">Explore by state</p><h2 id="coverage-heading">Find your place</h2></header>
+        <NationalCoverageMap />
+      </section>
+      <section className="national-context" aria-labelledby="national-context-heading">
+        <div><p className="entry-kicker">National context</p><h2 id="national-context-heading">The cost of borrowing</h2><p>A national benchmark, not a lender quote.</p></div>
+        {rate ? <div className="national-rate"><strong>{rate.value.toFixed(2)}%</strong><FloatingMetricTerm metricId={rate.metric_id} label="30-year fixed mortgage" /><small>Freddie Mac · {periodLabel(rate.period_start, rate.metric_id)}</small></div> : <p>Mortgage-rate data is unavailable in this snapshot.</p>}
+      </section>
+    </main>
+  </>;
 }

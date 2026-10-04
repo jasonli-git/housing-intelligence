@@ -16,25 +16,25 @@ export function StateModeWorkspace({ frame, counties, sections, initial, afford 
   const mode = useHousingMode();
 
   return (
-    <div className={mode === "afford" ? "nj-mode nj-afford-mode" : "nj-mode"} data-mode={mode}>
-      <div className="workspace-mode-tabs" aria-label="Map view">
-        <button type="button" aria-pressed={mode === "state"} onClick={() => pushHousingMode("state")}>Housing trends</button>
-        <button type="button" aria-pressed={mode === "afford"} onClick={() => pushHousingMode("afford")}>Within my budget</button>
-      </div>
+    <section className={mode === "afford" ? "nj-mode nj-afford-mode state-workspace" : "nj-mode state-workspace"} data-mode={mode} aria-labelledby="state-workspace-heading">
+      <header className="state-workspace-head">
+        <div><h2 id="state-workspace-heading">Find your part of New Jersey</h2>
+          <p>{mode === "state" ? `Compare ${counties} counties on housing prices, rents and change.` : "Set your income and compare places against your budget. Estimates, not loan approvals."}</p>
+        </div>
+        <div className="state-workspace-choice" role="group" aria-label="County exploration view">
+          <button type="button" aria-pressed={mode === "state"} onClick={() => pushHousingMode("state")}>Compare counties</button>
+          <button type="button" aria-pressed={mode === "afford"} onClick={() => pushHousingMode("afford")}>Use my budget</button>
+        </div>
+      </header>
       <div key={mode} className="mode-panel">
         {mode === "afford" ? afford ? (
           <>
-            <header className="nj-afford-intro">
-              <p className="eyebrow">Start with your budget</p>
-              <h2>What does this mean for you?</h2>
-              <p>Set an income, choose owning or renting, and the same map becomes a practical view of the places within reach.</p>
-            </header>
             <AffordExplorer {...afford} appearance="atlas" />
           </>
         ) : <p className="meta">Affordability figures are unavailable right now.</p> : (
           <CountyExplorer frame={frame} counties={counties} sections={sections} initial={initial} />
         )}
       </div>
-    </div>
+    </section>
   );
 }

@@ -31,6 +31,7 @@
 import type { CostProps, HomePrice } from "@/components/CostToOwn";
 import { nationalMortgageRate, nationalMortgageRateIn, type PacketLevel, type PacketMetric } from "@/lib/api";
 import { changePerMonth, monthsBetween } from "@/lib/cost";
+import { utilityTotal } from "./budgetScenario";
 import { monthLabel, periodLabel } from "@/lib/periods";
 
 /**
@@ -110,7 +111,6 @@ export async function costInputs(
   const electricity = find("acs_median_electricity");
   const gas = find("acs_median_gas");
   const water = find("acs_median_water_sewer");
-  const billed = [electricity?.value, gas?.value, water ? water.value / 12 : undefined];
 
   return {
     home,
@@ -121,7 +121,7 @@ export async function costInputs(
     // figure to stand behind; gas and water join it where the survey gives them.
     utilities: electricity
       ? {
-          month: billed.reduce<number>((sum, part) => sum + (part ?? 0), 0),
+          month: utilityTotal(electricity.value, gas?.value ?? null, water?.value ?? null)!,
           electricity: electricity.value,
           gas: gas?.value ?? null,
           waterYear: water?.value ?? null,

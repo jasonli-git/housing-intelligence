@@ -158,7 +158,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <div>
           <Crumbs
             trail={[
-              { href: "/", label: "New Jersey" },
+              { href: "/", label: "United States" },
+              { href: "/states/new-jersey", label: "New Jersey" },
               ...(region.parent && region.parent.level !== "state"
                 ? [{ href: `/regions/${region.parent.region_id}`, label: displayName(region.parent) }]
                 : []),

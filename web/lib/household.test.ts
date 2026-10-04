@@ -100,4 +100,11 @@ describe("the remembered household", () => {
     };
     expect(readHousehold()).toEqual({});
   });
+  it("remembers available cash, including zero, but not invalid amounts", () => {
+    (globalThis as { window?: unknown }).window = { localStorage: storage };
+    writeHousehold({ income: 100000, cash: 0 });
+    expect(readHousehold()).toEqual({ income: 100000, cash: 0 });
+    store.set("hip.household.v1", JSON.stringify({ cash: -1, income: 100000 }));
+    expect(readHousehold()).toEqual({ income: 100000 });
+  });
 });

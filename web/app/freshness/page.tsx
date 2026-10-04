@@ -43,7 +43,7 @@ export default async function FreshnessPage() {
           <h1 className="page-title">How current is each source</h1>
           <p className="meta">
             The API is unreachable, so there is nothing to show.{" "}
-            <Link href="/">Back to New Jersey</Link>.
+            <Link href="/states/new-jersey">Back to New Jersey</Link>.
           </p>
         </main>
       </>
@@ -58,7 +58,7 @@ export default async function FreshnessPage() {
       <main className="shell atlas-page atlas-ledger">
         <header className="page-head" data-kind="data">
           <div>
-            <Crumbs trail={[{ href: "/", label: "New Jersey" }]} here="Data freshness" />
+            <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Data freshness" />
             <Kind kind="data" />
             <h1 className="page-title">How current is each source</h1>
             <p className="meta">

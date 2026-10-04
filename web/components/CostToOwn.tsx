@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 
 import { Definition } from "@/components/Definition";
 import { HousingHelp } from "@/components/HousingHelp";
@@ -19,10 +19,12 @@ import {
   PMI,
   UPKEEP_PCT,
 } from "@/lib/costRules";
-import { type Personal, parseAmount, readPersonal, writePersonal } from "@/lib/costScenario";
+import { type Personal, parseAmount } from "@/lib/costScenario";
 import { formatValue } from "@/lib/format";
 import type { Term } from "@/lib/glossary";
 import { type Basis, eachMonth, type Inputs, overYears, upFront } from "@/lib/ownership";
+import { ownershipInputs, cashFit, DEFAULT_YEARS } from "@/lib/budgetScenario";
+import { useBudgetScenario } from "@/components/useBudgetScenario";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
 export type Dated = { value: number; asOf: string };
@@ -114,7 +116,7 @@ const PART_COLOURS: Record<string, string> = {
 };
 
 /** The holding period the long view starts at, until the reader sets one. */
-export const DEFAULT_YEARS = 10;
+export { DEFAULT_YEARS } from "@/lib/budgetScenario";
 
 type HomeFields = {
   price: string;
@@ -166,23 +168,18 @@ export function CostToOwn({
   control = true,
   beforeMoving,
   showHelp = true,
-}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean }) {
+  comparePlaceId,
+}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number }) {
   const id = useId();
-  const [personal, setPersonalState] = useState<Personal>({});
+  const { personal, household, savePersonal, saveHousehold } = useBudgetScenario(control);
   const [fields, setFields] = useState<HomeFields>(NO_HOME_FIELDS);
   const [view, setView] = useState<View>("upfront");
-
-  // After the first render, so the server's page and the browser's first paint agree.
-  useEffect(() => {
-    if (control) setPersonalState(readPersonal());
-  }, [control]);
 
   const setPersonal = (key: keyof Personal, value: number | null) => {
     const next = { ...personal };
     if (value === null) delete next[key];
     else next[key] = value;
-    setPersonalState(next);
-    writePersonal(next);
+    savePersonal(next);
   };
   const setField = (key: keyof HomeFields, text: string) => setFields({ ...fields, [key]: text });
 
@@ -190,26 +187,19 @@ export function CostToOwn({
   const typedTax = parseAmount(fields.tax);
   const typedRent = parseAmount(fields.rent);
   const down = personal.downPct ?? DEFAULT_DOWN;
-  const input: Inputs = {
+  const input: Inputs = ownershipInputs({
+    price: home.value, ratePct: rate.value, taxYear: tax?.value ?? null,
+    insuranceYear: insurance?.value ?? null, utilitiesMonth: utilities?.month ?? null,
+    rentMonth: rent?.value ?? null,
+  }, personal, {
     price: typedPrice ?? home.value,
-    downPct: down,
-    ratePct: personal.ratePct ?? rate.value,
     taxYear: typedTax ?? tax?.value ?? null,
-    insuranceYear: personal.insuranceYear ?? insurance?.value ?? null,
-    utilitiesMonth: utilities?.month ?? null,
     hoaMonth: parseAmount(fields.hoa),
     floodYear: parseAmount(fields.flood),
-    pmiPct: personal.pmiPct ?? null,
-    upkeepPct: personal.upkeepPct ?? UPKEEP_PCT,
-    closingPct: personal.closingPct ?? null,
     movingCost: parseAmount(fields.moving),
     repairsCost: parseAmount(fields.repairs),
-    years: personal.years ?? DEFAULT_YEARS,
-    appreciationPct: personal.appreciationPct ?? 0,
-    rentGrowthPct: personal.rentGrowthPct ?? 0,
-    commissionPct: personal.commissionPct ?? COMMISSION_PCT,
     rentMonth: typedRent ?? rent?.value ?? null,
-  };
+  });
   const month = eachMonth(input, {
     tax: typedTax !== null ? "reader" : "source",
     insurance: personal.insuranceYear !== undefined ? "reader" : "source",
@@ -443,8 +433,7 @@ export function CostToOwn({
                   type="button"
                   className="cost-yours-reset"
                   onClick={() => {
-                    setPersonalState({});
-                    writePersonal({});
+                    savePersonal({});
                     setFields(NO_HOME_FIELDS);
                   }}
                 >
@@ -455,6 +444,28 @@ export function CostToOwn({
           </div>
         </details>
       )}
+
+      {control && comparePlaceId !== undefined && <aside className="cost-budget-fit" aria-label="Your budget fit">
+        <details>
+          <summary>Your budget{household.income && household.income > 0 ? ` · Owning uses ${Math.round(month.total / (household.income / 12) * 100)}% of your income${partial ? " on included costs" : ""}` : " · Add your income to check"}</summary>
+          <div className="budget-inputs">
+            <label className="control">Yearly household income before tax<input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={(event) => saveHousehold({ ...household, income: parseAmount(event.target.value) ?? undefined })} /></label>
+            <label className="control">Cash available for buying<input inputMode="decimal" value={household.cash ?? ""} placeholder="optional" onChange={(event) => saveHousehold({ ...household, cash: parseAmount(event.target.value) ?? undefined })} /></label>
+          </div>
+          <p>Uses cash paid each month, including principal—not the lower “money gone” figure. The comparison line is 30% of income, not loan approval.</p>
+        </details>
+        {household.income !== undefined && household.income > 0 && <p>
+          {month.total > household.income / 12 * .3
+            ? `${money(month.total - household.income / 12 * .3)} a month above the 30% comparison line.`
+            : partial ? "Below the 30% line on included costs; the estimate is incomplete." : "Within the 30% monthly comparison line."}
+          {partial && ` Missing: ${listed(month.missing)}.`}
+          {rentMonth !== null && ` Rent alone uses ${Math.round(rentMonth / (household.income / 12) * 100)}% of your income.`}
+        </p>}
+        <p>Buying upfront: {money(up.low)}–{money(up.high)} · {cashFit(household.cash, up.low, up.high)}.</p>
+        <a href={`/states/new-jersey?mode=afford&place=${comparePlaceId}${household.income ? `&income=${household.income}` : ""}#nj-explore`}>Compare typical homes elsewhere →</a>
+        {Object.values(fields).some(Boolean) && <small>Your home’s price, tax and fees stay here; comparisons use each area’s figures.</small>}
+        {home.basis === "transactions" && <small>This sale-price scenario is not included in cross-place ownership rankings.</small>}
+      </aside>}
 
       {control && cashComparison && (
         <div className="cost-monthly-headline" aria-label="Monthly cash comparison">
