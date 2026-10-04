@@ -233,9 +233,16 @@ async function liveMarker(page, route, expected) {
       waitUntil: "domcontentloaded",
       timeout,
     });
-    await page
-      .getByRole("heading", { name: expected.heading, exact: true })
-      .waitFor({ timeout });
+    // The first h1's text, as `marker` reads it: an accessible-name match missed the
+    // tax page's "Find a property.<br />See its tax picture." (PR #89), whose name
+    // gains a space the text content does not have.
+    await page.waitForFunction(
+      (heading) =>
+        (document.querySelector("h1")?.textContent ?? "").replace(/\s+/g, " ").trim() ===
+        heading,
+      expected.heading,
+      { timeout },
+    );
     await settle(page);
     if (navigationStatus !== 200) {
       throw new Error(
