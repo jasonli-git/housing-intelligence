@@ -166,11 +166,22 @@ export function NationalCoverageMap() {
           <text x={locator[0] - 154} y={locator[1] - 62}>New Jersey ↗</text>
         </a>}
       </svg> : <div className="coverage-map-placeholder"><p>{failed ? "Map unavailable. Explore New Jersey below." : "Loading the state map…"}</p></div>}
-      {drawing && <div className="coverage-zoom" role="group" aria-label="United States map zoom controls">
-        <button type="button" aria-label="Zoom out United States map" disabled={viewport.scale === 1} onClick={() => zoomMap(1 / 1.5)}>−</button>
-        <button type="button" aria-label="Zoom in United States map" disabled={viewport.scale === 5} onClick={() => zoomMap(1.5)}>+</button>
-        <button type="button" aria-label="Reset United States map" disabled={viewport.scale === 1} onClick={() => { if (!flight.current) setViewport(COVERAGE_HOME); }}>Reset</button>
-      </div>}
+      {drawing && <>
+        <div className="globe-controls globe-controls-jumps coverage-jumps" role="group" aria-label="United States map framing">
+          <button type="button" aria-label="Show the United States map" onClick={() => { if (!flight.current) setViewport(COVERAGE_HOME); }}>United States</button>
+          <span className="globe-divider" aria-hidden="true" />
+          <button type="button" aria-label="Center the map on New Jersey" onClick={() => { if (!flight.current) setViewport(zoomCoverage(COVERAGE_HOME, 4, drawing.locator)); }}>New Jersey</button>
+        </div>
+        <div className="globe-controls globe-controls-zoom coverage-zoom" role="group" aria-label="United States map zoom controls">
+          <button type="button" aria-label="Zoom out United States map" disabled={viewport.scale === 1} onClick={() => zoomMap(1 / 1.4)}>−</button>
+          <span className="globe-divider" aria-hidden="true" />
+          <button type="button" aria-label="Zoom in United States map" disabled={viewport.scale === 5} onClick={() => zoomMap(1.4)}>+</button>
+          <span className="globe-divider" aria-hidden="true" />
+          <button type="button" className="globe-icon" aria-label="Reset United States map" title="Reset map" disabled={viewport.scale === 1} onClick={() => { if (!flight.current) setViewport(COVERAGE_HOME); }}>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 5a5.5 5.5 0 1 1-.4 5M3 1.5V5h3.5" /></svg>
+          </button>
+        </div>
+      </>}
       </div>
       <div className="coverage-map-foot"><span>{hovered}</span><span><i aria-hidden="true" />Blue = available{viewport.scale > 1 && " · Drag to move"}</span></div>
     </div>

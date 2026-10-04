@@ -37,12 +37,12 @@
 .coverage-map[data-dragging="true"] { cursor: grabbing; }
 .coverage-map[data-dragging="true"] .coverage-viewport { transition: none; }
 .coverage-map-window { position: relative; }
-.coverage-zoom { position: absolute; bottom: .8rem; right: .8rem; display: flex; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-card); box-shadow: 0 2px 8px rgb(0 0 0 / 10%); overflow: hidden; }
-.coverage-zoom button { min-width: 44px; min-height: 44px; padding: 0 .65rem; border: 0; background: transparent; color: var(--text-primary); cursor: pointer; font: 500 18px/1 var(--font-text); }
-.coverage-zoom button:last-child { font-size: 11px; }
-.coverage-zoom button + button { border-left: 1px solid var(--border); }
+.nation-page .coverage-zoom { top: auto; bottom: 14px; }
+@media (max-width: 760px) {
+  .nation-page .coverage-zoom { top: 12px; bottom: auto; }
+  .nation-page .coverage-mobile-link { left: 14px; right: auto; top: 2.4rem; }
+}
 .coverage-zoom button:disabled { color: var(--text-muted); opacity: .45; cursor: default; }
-.coverage-zoom button:not(:disabled):hover { background: var(--surface-2); }
 @media (prefers-reduced-motion: reduce) { .coverage-viewport { transition: none; } }
 @media print { .coverage-zoom, .coverage-locator { display: none; } .coverage-viewport { transform: none !important; } }
 .coverage-map-stage .coverage-locator, .coverage-map-stage .coverage-map-caption, .coverage-map-stage .coverage-mobile-link { transition: opacity 160ms ease; }
@@ -78,9 +78,10 @@
 .national-rate > strong { font: 600 54px/1 var(--font-display); letter-spacing: -.05em; color: var(--entry-ink); }
 .national-rate small, .entry-coverage-note { color: var(--text-muted); font-size: var(--text-small); }
 .entry-coverage-note { margin-top: 1rem; max-width: 75ch; }
-.state-note-reference { display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; color: var(--state-blue); font-size: 20px; text-decoration: none; }
+.state-note-reference { position: relative; display: inline-grid; place-items: center; width: 18px; height: 18px; color: var(--state-blue); font: 500 14px/1 var(--font-text); text-decoration: none; }
+.state-note-reference::before { content: ""; position: absolute; inset: -13px; }
 .state-note-reference:hover { color: var(--text-primary); }
-.state-chapter-head .state-note-reference { font: 500 20px/1 var(--font-text); vertical-align: middle; }
+.state-note-marker { margin-left: .2rem; font-size: 14px; line-height: 0; vertical-align: super; }
 .state-figure-notes { margin-top: 1.5rem; color: var(--text-secondary); font-size: var(--text-small); scroll-margin-top: 6rem; }
 .state-figure-notes h2 { font: 500 var(--text-small)/1.5 var(--font-text); margin: 0 0 .4rem; }
 .state-figure-notes h2 a { color: var(--state-blue); display: inline-grid; place-items: center; min-width: 24px; min-height: 24px; }
