@@ -145,6 +145,80 @@ export type WaterSystem = {
   latest_violation: string | null;
   latest_violation_what: string | null;
   violation_kinds: string | null;
+  resolved_violations?: number | null;
+  latest_return_to_compliance?: string | null;
+  release_id?: number;
+  file_sha256?: string;
+  fetched_at?: string;
+  lead_inventory?: InfrastructureRecord<LeadInventory> | null;
+  pfas_samples?: InfrastructureRecord<PfasSamples>[];
+};
+
+export type InfrastructureRecord<T> = {
+  source_id: string;
+  kind: string;
+  entity_id: string;
+  record_id: string;
+  payload: T;
+  release_id: number;
+  vintage: string;
+  file_sha256: string;
+  fetched_at: string;
+};
+
+export type LeadInventory = {
+  name: string;
+  lead: number | null;
+  galvanized: number | null;
+  lead_connectors: number | null;
+  unknown: number | null;
+  non_lead: number | null;
+  submission_year: number;
+  category_updated: string | null;
+  inventory_url: string | null;
+};
+
+export type PfasSamples = {
+  contaminant: string;
+  first_sample: string;
+  last_sample: string;
+  samples: number;
+  detections: number;
+  maximum_ng_l: number | null;
+  minimum_reporting_limit_ng_l: number;
+  maximum_reporting_limit_ng_l: number;
+  reference_ng_l: number | null;
+  samples_above_reference: number;
+};
+
+export type ElectricUtility = {
+  name: string;
+  year: number;
+  sales: { service_type: string; data_type: string; revenue_thousand: number | null;
+    mwh: number | null; customers: number | null }[];
+  method?: string;
+  saidi_all?: number | null;
+  saifi_all?: number | null;
+  saidi_normal?: number | null;
+  saifi_normal?: number | null;
+};
+
+export type EnergyContext = {
+  name: string;
+  year: number;
+  acs_window: string;
+  annual_energy: number | null;
+  mean_annual_income: number | null;
+  burden: number | null;
+  quality_note: string | null;
+};
+
+export type Utilities = {
+  region_id: number;
+  providers: { fuel: string; provider: string; approximate_share: number;
+    territory: InfrastructureRecord<{ fuel: string; provider: string; eia_id: string | null }>;
+    electricity: InfrastructureRecord<ElectricUtility> | null }[];
+  energy_context: InfrastructureRecord<EnergyContext> | null;
 };
 
 export type WaterSystems = {
@@ -517,6 +591,7 @@ export const api = {
    * and for a town whose homes are all on private wells.
    */
   waterSystems: (id: number) => tryGet<WaterSystems>(`/regions/${id}/water-systems`),
+  utilities: (id: number) => tryGet<Utilities>(`/regions/${id}/utilities`),
   /** The metric catalog, for the New Jersey page's measure picker. */
   metrics: () => tryGet<MetricEntry[]>(`/metrics`),
 };

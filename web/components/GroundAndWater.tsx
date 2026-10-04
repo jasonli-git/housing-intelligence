@@ -2,6 +2,7 @@ import type { PacketLevel, WaterSystems } from "@/lib/api";
 import { ReaderDetails } from "@/components/ReaderDetails";
 import { formatValue } from "@/lib/format";
 import { shareText, systemReportUrl } from "@/lib/hazards";
+import { pfasResult, publisherUrl, resolutionText } from "@/lib/infrastructure";
 
 /** NJDEP's map of every known contaminated site, with what each one is. */
 const SITES_MAP = "https://experience.arcgis.com/experience/f26272f8a41c4aeea77ac6f9b3c80ebb";
@@ -88,11 +89,18 @@ export function GroundAndWater({
                     </a>
                   </th>
                   <td className="num">{shareText(s.share_of_homes)}</td>
-                  <td className="num">{s.violations === 0 ? "none" : count(s.violations)}</td>
+                  <td className="num">{s.violations === 0 ? "none" : count(s.violations)}
+                    <div className="sales-note">{resolutionText(s)}</div>
+                  </td>
                   <td>
                     {s.latest_violation && s.latest_violation_what
                       ? `${s.latest_violation_what}, ${s.latest_violation.slice(0, 7)}`
                       : "—"}
+                    {s.latest_violation && <div className="sales-note">
+                      {s.latest_return_to_compliance
+                        ? `Return to compliance reported ${s.latest_return_to_compliance}`
+                        : "No return-to-compliance date recorded for this violation"}
+                    </div>}
                   </td>
                 </tr>
               ))}
@@ -101,9 +109,44 @@ export function GroundAndWater({
         </div>
       )}
 
+      {water && <ReaderDetails title="Lead pipes and measured PFAS · by water system">
+        <p className="sales-note">System records, not one home’s tap water. No sample or inventory is not a clean result.</p>
+        {water.systems.map((s) => {
+          const lead = s.lead_inventory?.payload;
+          const url = publisherUrl(lead?.inventory_url);
+          return <details className="reader-details" key={s.pwsid}>
+            <summary>{s.name}</summary>
+            <div className="reader-details-body">
+              {lead ? <>
+                <p className="sales-note">Service-line inventory, submission {lead.submission_year}{lead.category_updated ? ` · category data updated ${lead.category_updated}` : ""}.</p>
+                <dl className="utility-reliability">
+                  {([["Lead", lead.lead], ["Galvanized", lead.galvanized], ["Lead connectors", lead.lead_connectors], ["Material unknown", lead.unknown], ["Non-lead", lead.non_lead]] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value === null ? "Not reported" : count(value)}</dd></div>)}
+                </dl>
+                {url && <p className="sales-note"><a href={url} target="_blank" rel="noreferrer">Supplier’s service-line inventory</a></p>}
+              </> : <p className="sales-note">No service-line inventory matched to this system.</p>}
+              {(s.pfas_samples?.length ?? 0) > 0 ? <>
+                <p className="sales-note">UCMR 5 entry-point samples, not current tap-water testing. Highest single measurements—not regulatory averages or violations.</p>
+                <div className="scroll-x"><table className="change-places">
+                  <caption>Measured PFAS · ng/L (parts per trillion)</caption>
+                  <thead><tr><th scope="col">Chemical</th><th scope="col">Results</th><th scope="col">Sample dates</th><th scope="col">EPA reference</th></tr></thead>
+                  <tbody>{s.pfas_samples!.map((r) => <tr key={r.record_id}>
+                    <th scope="row">{r.payload.contaminant}</th>
+                    <td>{pfasResult(r.payload)}<div className="sales-note">{r.payload.detections} detections in {r.payload.samples} results</div></td>
+                    <td>{r.payload.first_sample}–{r.payload.last_sample}</td>
+                    <td>{r.payload.reference_ng_l === null ? "Not compared here" : <>{r.payload.reference_ng_l} ng/L · {r.payload.samples_above_reference} single result{r.payload.samples_above_reference === 1 ? "" : "s"} above</>}</td>
+                  </tr>)}</tbody>
+                </table></div>
+              </> : <p className="sales-note">No UCMR 5 entry-point samples matched. Many small systems and all private wells are outside this dataset.</p>}
+            </div>
+          </details>;
+        })}
+        <p className="sales-note">NJ requires lead-line identification and replacement by 2031; extensions may apply. <a href="https://dep.nj.gov/lead/replacement/">NJDEP replacement programme</a>. These counts do not measure lead concentration.</p>
+        <p className="sales-note">EPA references shown for PFOA and PFOS only (4 ng/L, reviewed October 2026); proposals affect other PFAS rules. Compliance uses running annual averages, not the maxima above. <a href="https://www.epa.gov/sdwa/and-polyfluoroalkyl-substances-pfas">EPA rules</a> · <a href="https://www.epa.gov/dwucmr/fifth-unregulated-contaminant-monitoring-rule-data-finder">EPA UCMR Data Finder</a>. <a href="https://www.epa.gov/ccr">Find an annual water-quality report</a>, or ask the supplier for its Consumer Confidence Report and current results.</p>
+      </ReaderDetails>}
+
       {water && (
         <p className="sales-note reader-takeaway">
-          These are past violations, not today’s water quality. For New Jersey’s PFAS results, check{" "}
+          These are system-wide past violations, not today’s water quality or a count of affected homes. A missing resolution date does not prove the issue is still unresolved. For current New Jersey results, check{" "}
           <a href={DRINKING_WATER_WATCH} target="_blank" rel="noreferrer">Drinking Water Watch</a>.
         </p>
       )}

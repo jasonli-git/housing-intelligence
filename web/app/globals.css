@@ -1496,3 +1496,12 @@ tr[data-status="pending"] .fresh-status {
   background: var(--surface-2); border: 1px solid var(--border); color: inherit;
 }
 @media print { .frame-meter { display: none; } }
+/* Company/system context stays quiet; detail is available without a long new feed. */
+.ground-water, .utility-context { grid-template-columns: minmax(0, 1fr); }
+.ground-water > *, .utility-context > * { min-width: 0; }
+.utility-provider { padding-block: .65rem; border-bottom: 1px solid var(--border); }
+.utility-provider > p { margin-block: .25rem; }
+.utility-reliability { margin-block: .6rem; }
+.utility-reliability > div { display: flex; justify-content: space-between; gap: 1rem; padding-block: .3rem; }
+.utility-reliability dt { color: var(--text-muted); }
+.utility-reliability dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
