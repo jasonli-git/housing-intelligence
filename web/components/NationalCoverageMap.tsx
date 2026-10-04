@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { unpack, type PackedOutline } from "@/lib/mapdata";
 import { scene, type Outline } from "@/lib/globe";
 import { WORLD_LAND } from "@/lib/worldLand";
-import { coverageScene, STATE_DESTINATIONS } from "@/lib/coverageMap";
+import { boundCoverage, COVERAGE_HOME, coverageScene, STATE_DESTINATIONS, zoomCoverage, type CoverageViewport } from "@/lib/coverageMap";
 
-/** Stationary globe geometry: no pan capture, spinning loop or local-data download. */
+/** Zoomable coverage geometry without continuous reprojection or local-data downloads. */
 export function NationalCoverageMap() {
   const router = useRouter();
   const stage = useRef<HTMLDivElement>(null);
@@ -17,6 +17,10 @@ export function NationalCoverageMap() {
   const [outlines, setOutlines] = useState<Outline[]>([]);
   const [failed, setFailed] = useState(false);
   const [hovered, setHovered] = useState("New Jersey · Available now");
+  const [viewport, setViewport] = useState(COVERAGE_HOME);
+  const [dragging, setDragging] = useState(false);
+  const drag = useRef<{ id: number; x: number; y: number; start: CoverageViewport; pixels: number; moved: boolean } | null>(null);
+  const suppressClick = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -71,7 +75,8 @@ export function NationalCoverageMap() {
     if (flight.current) return;
     const destination = STATE_DESTINATIONS.NJ;
     router.prefetch(destination);
-    const [x, y] = drawing.locator;
+    const x = viewport.x + drawing.locator[0] * viewport.scale;
+    const y = viewport.y + drawing.locator[1] * viewport.scale;
     const zoom = 4;
     let animation: Animation;
     try {
@@ -97,14 +102,52 @@ export function NationalCoverageMap() {
     void animation.finished.then(arrive, arrive);
   };
 
+  const zoomMap = (factor: number) => {
+    if (!drawing || flight.current) return;
+    setViewport((current) => zoomCoverage(current, factor, drawing.locator));
+  };
+  const locator = drawing ? [viewport.x + drawing.locator[0] * viewport.scale, viewport.y + drawing.locator[1] * viewport.scale] : null;
+
   return <div className="coverage-atlas">
     <div ref={stage} className="coverage-map-stage" onMouseLeave={() => setHovered("New Jersey · Available now")}>
       <span className="coverage-map-caption">Contiguous United States</span>
       <Link className="coverage-mobile-link" href="/states/new-jersey" onClick={enterState}>New Jersey ↗</Link>
-      {drawing ? <svg className="coverage-map" viewBox="0 0 900 480" role="group" aria-labelledby="coverage-map-title coverage-map-description">
+      <div className="coverage-map-window">
+      {drawing ? <svg className="coverage-map" data-zoomed={viewport.scale > 1} data-dragging={dragging} viewBox="0 0 900 480" role="group" aria-labelledby="coverage-map-title coverage-map-description"
+        onPointerDown={(event) => {
+          suppressClick.current = false;
+          if (viewport.scale === 1 || event.button !== 0 || !event.isPrimary || flight.current) return;
+          drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, start: viewport, pixels: event.currentTarget.getScreenCTM()?.a ?? 1, moved: false };
+        }}
+        onPointerMove={(event) => {
+          const held = drag.current;
+          if (!held || held.id !== event.pointerId) return;
+          const dx = event.clientX - held.x, dy = event.clientY - held.y;
+          if (!held.moved && Math.hypot(dx, dy) < 6) return;
+          if (!held.moved && event.pointerType === "touch" && Math.abs(dy) >= Math.abs(dx)) {
+            drag.current = null;
+            return;
+          }
+          held.moved = true;
+          suppressClick.current = true;
+          event.currentTarget.setPointerCapture(event.pointerId);
+          setDragging(true);
+          setViewport(boundCoverage({ ...held.start, x: held.start.x + dx / held.pixels, y: held.start.y + dy / held.pixels }));
+        }}
+        onPointerUp={() => { drag.current = null; setDragging(false); }}
+        onPointerCancel={() => { drag.current = null; setDragging(false); }}
+        onLostPointerCapture={(event) => {
+          // Touch starts with implicit capture on the state path. Its release bubbles
+          // when capture transfers to the SVG; that is not the end of this drag.
+          if (event.target === event.currentTarget) { drag.current = null; setDragging(false); }
+        }}
+        onClickCapture={(event) => {
+          if (suppressClick.current && event.detail > 0) { event.preventDefault(); event.stopPropagation(); }
+        }}>
         <title id="coverage-map-title">Explore housing coverage by state</title>
-        <desc id="coverage-map-description">New Jersey is blue and available. All other states are unavailable. Alaska and Hawaii are outside this view. Use the New Jersey link to explore.</desc>
+        <desc id="coverage-map-description">New Jersey is blue and available. All other states are unavailable. Alaska and Hawaii are outside this view. Zoom with the buttons; drag the enlarged map, or swipe sideways on mobile. Vertical scrolling moves the page. Use the New Jersey link to explore.</desc>
         <g ref={geography} className="coverage-geography">
+        <g className="coverage-viewport" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})` }}>
         <g className="coverage-land" aria-hidden="true">{land.map((part) => <path key={part.id} d={part.base} />)}</g>
         {drawing.states.map((state) => {
           const destination = STATE_DESTINATIONS[String(state.id)];
@@ -115,14 +158,21 @@ export function NationalCoverageMap() {
           </a> : <path key={state.id} className="coverage-unavailable" d={state.base} aria-hidden="true" onMouseEnter={() => setHovered(`${state.name} · Not available yet`)}><title>{state.name} — Not available yet</title></path>;
         })}
         </g>
-        {drawing.states.some((state) => state.id === "NJ") && <a href={STATE_DESTINATIONS.NJ} onClick={enterState} className="coverage-locator" aria-label="Explore New Jersey housing data">
-          <path d={`M${drawing.locator[0]},${drawing.locator[1]} L${drawing.locator[0] - 26},${drawing.locator[1] - 48} H${drawing.locator[0] - 154}`} />
-          <circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="4" />
-          <rect x={drawing.locator[0] - 167} y={drawing.locator[1] - 84} width="158" height="34" rx="8" />
-          <text x={drawing.locator[0] - 154} y={drawing.locator[1] - 62}>New Jersey ↗</text>
+        </g>
+        {locator && locator[0] > 0 && locator[0] < 900 && locator[1] > 0 && locator[1] < 480 && drawing.states.some((state) => state.id === "NJ") && <a href={STATE_DESTINATIONS.NJ} onClick={enterState} className="coverage-locator" aria-label="Explore New Jersey housing data">
+          <path d={`M${locator[0]},${locator[1]} L${locator[0] - 26},${locator[1] - 48} H${locator[0] - 154}`} />
+          <circle cx={locator[0]} cy={locator[1]} r="4" />
+          <rect x={locator[0] - 167} y={locator[1] - 84} width="158" height="34" rx="8" />
+          <text x={locator[0] - 154} y={locator[1] - 62}>New Jersey ↗</text>
         </a>}
       </svg> : <div className="coverage-map-placeholder"><p>{failed ? "Map unavailable. Explore New Jersey below." : "Loading the state map…"}</p></div>}
-      <div className="coverage-map-foot"><span>{hovered}</span><span><i aria-hidden="true" />Blue = available</span></div>
+      {drawing && <div className="coverage-zoom" role="group" aria-label="United States map zoom controls">
+        <button type="button" aria-label="Zoom out United States map" disabled={viewport.scale === 1} onClick={() => zoomMap(1 / 1.5)}>−</button>
+        <button type="button" aria-label="Zoom in United States map" disabled={viewport.scale === 5} onClick={() => zoomMap(1.5)}>+</button>
+        <button type="button" aria-label="Reset United States map" disabled={viewport.scale === 1} onClick={() => { if (!flight.current) setViewport(COVERAGE_HOME); }}>Reset</button>
+      </div>}
+      </div>
+      <div className="coverage-map-foot"><span>{hovered}</span><span><i aria-hidden="true" />Blue = available{viewport.scale > 1 && " · Drag to move"}</span></div>
     </div>
     <div className="coverage-state-preview">
       <div><p className="entry-kicker">Available now</p><h3>New Jersey</h3><p>Counties, towns and ZIP codes.</p></div>

@@ -182,11 +182,10 @@ export default async function NewJerseyPage() {
           <span className="nj-atlas-entry-label">Compare places <span aria-hidden="true">↘</span></span>
         </a>
       </header>
-      <StateOverview levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)} />
+      <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)} />
       <StateProfileTicker items={stateProfile(levels.filter((level) => ["fhfa_hpi", "fhfa_hpi_all_transactions", "nj_effective_tax_rate", "sr1a_median_price_per_sqft", "sr1a_median_year_built_sold", "water_homes_share_public"].includes(level.metric_id)), statewide?.headlines ?? [])} />
-      <div id="state-note-reference" className="nj-source-notes">
+      <div className="nj-source-notes">
         <SectionJump />
-        {statewideNotes.length > 0 && <a className="state-note-reference" href="#state-figure-notes" aria-label="Read notes about statewide figures at the bottom of the page" title="Notes about statewide figures">†</a>}
       </div>
 
       <div id="nj-explore" className="nj-explore-anchor">
