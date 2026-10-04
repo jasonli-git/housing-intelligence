@@ -178,6 +178,11 @@ def build_report(
                     UNION ALL
                     SELECT source_id, snapshot, snapshot
                     FROM affordable_housing_records
+                    UNION ALL
+                    SELECT source_id,
+                           coalesce((payload->>'first_sample')::date, snapshot),
+                           coalesce((payload->>'last_sample')::date, snapshot)
+                    FROM infrastructure_records
                 ) observed
                 GROUP BY source_id
                 """

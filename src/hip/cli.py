@@ -93,6 +93,7 @@ from hip.transform.dbt_runner import (
 from hip.validate.gate import run_checks, write_report
 from hip.warehouse.db import get_engine
 from hip.warehouse.discoveries import load_discoveries
+from hip.warehouse.infrastructure import load_infrastructure
 from hip.warehouse.load import (
     ReleaseAttributionError,
     ReleaseProvenance,
@@ -535,13 +536,17 @@ def prune_raw(
                     "              WHERE r.old_release_id = sr.release_id "
                     "                 OR r.new_release_id = sr.release_id) "
                     "   OR EXISTS (SELECT 1 FROM affordable_housing_records a "
-                    "              WHERE a.release_id = sr.release_id)"
+                    "              WHERE a.release_id = sr.release_id) "
+                    "   OR EXISTS (SELECT 1 FROM infrastructure_records i "
+                    "              WHERE i.release_id = sr.release_id) "
+                    "   OR EXISTS (SELECT 1 FROM water_systems w "
+                    "              WHERE w.release_id = sr.release_id)"
                 )
             ).all()
             if row[0]
         }
     typer.echo(
-        f"{len(cited):,} release(s) cited by facts or housing records — never removed"
+        f"{len(cited):,} release(s) cited by facts or inventory records — never removed"
     )
 
     found = refresh.superseded_releases(settings.raw_dir, cited)
@@ -1172,11 +1177,17 @@ def load(
     income_lines = load_income_limits(get_engine(), settings.duckdb_path)
     # The water systems serving each town and ZIP code (Milestone 40), after the facts
     # for the same reason: each row cites the SDWIS release the load recorded.
-    water_rows = load_water_systems(get_engine(), settings.duckdb_path)
+    water_rows = load_water_systems(
+        get_engine(), settings.duckdb_path, releases=fact_provenance
+    )
     assistance_rows = load_affordable_housing(
         get_engine(), settings.duckdb_path, releases=fact_provenance
     )
     typer.echo(f"affordable housing records: {assistance_rows:,}")
+    infrastructure_rows = load_infrastructure(
+        get_engine(), settings.duckdb_path, releases=fact_provenance
+    )
+    typer.echo(f"infrastructure records: {infrastructure_rows:,}")
     typer.echo("")
     for metric_id, count in sorted(facts.by_metric.items()):
         typer.echo(f"{metric_id:<14} {count:>9,} observations")

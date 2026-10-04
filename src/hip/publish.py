@@ -230,6 +230,7 @@ def _plan(
             f"/regions/{region_id}/water-systems",
             f"regions/{region_id}/water-systems.json",
         )
+        yield f"/regions/{region_id}/utilities", f"regions/{region_id}/utilities.json"
         yield (
             f"/regions/{region_id}/affordable-housing",
             f"regions/{region_id}/affordable-housing.json",

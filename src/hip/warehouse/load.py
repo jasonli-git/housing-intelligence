@@ -572,12 +572,13 @@ def load_water_systems(
     engine: Engine,
     duckdb_path: Path,
     *,
+    releases: Sequence[ReleaseProvenance],
     staging_table: str = "main_staging.stg_water_systems",
 ) -> int:
     """Replace `water_systems` from the staged list (Milestone 40, ARCHITECTURE #304).
 
-    Replaced whole, as `income_limits` is. Each row cites the newest SDWIS violations
-    release; a region the warehouse does not hold is dropped. Returns 0, changing
+    Replaced whole, as `income_limits` is. Each row cites this run's exact SDWIS
+    violations file. An unresolvable region aborts the replacement. Returns 0, changing
     nothing, when the model has not been staged.
     """
     schema, table = staging_table.split(".")
@@ -595,7 +596,8 @@ def load_water_systems(
             f"""
             SELECT geoid, level, pwsid, system_name, homes, share_of_homes, violations,
                    first_year, last_year, latest_violation, latest_violation_what,
-                   violation_kinds, release_vintage
+                   violation_kinds, release_vintage, resolved_violations,
+                   latest_return_to_compliance
             FROM {staging_table}
             """
         ).fetchall()
@@ -614,31 +616,40 @@ def load_water_systems(
         "latest_what",
         "kinds",
         "vintage",
+        "resolved",
+        "returned",
     )
     with engine.begin() as conn:
+        release_ids = _release_ids(conn, releases)
+        bound_rows = [dict(zip(keys, row, strict=True)) for row in rows]
+        if not bound_rows:
+            raise ValueError("water systems: empty staged inventory")
+        for row in bound_rows:
+            key = ("epa_sdwis", "violations", str(row["vintage"]))
+            if key not in release_ids:
+                raise ValueError("water systems: missing exact release")
+            row["release_id"] = release_ids[key]
         conn.execute(text("DELETE FROM water_systems"))
-        conn.execute(
-            text(
-                """
+        for row in bound_rows:
+            count = conn.execute(
+                text(
+                    """
                 INSERT INTO water_systems
                     (region_id, pwsid, name, homes, share_of_homes, violations,
                      first_year, last_year, latest_violation, latest_violation_what,
-                     violation_kinds, release_id)
+                     violation_kinds, release_id, resolved_violations,
+                     latest_return_to_compliance)
                 SELECT r.region_id, :pwsid, :name, :homes, :share, :violations,
                        :first_year, :last_year, :latest, :latest_what, :kinds,
-                       sr.release_id
+                       :release_id, :resolved, :returned
                 FROM regions r
-                JOIN LATERAL (
-                    SELECT release_id FROM source_releases
-                    WHERE source_id = 'epa_sdwis' AND layer = 'violations'
-                      AND vintage = :vintage
-                    ORDER BY fetched_at DESC LIMIT 1
-                ) sr ON true
                 WHERE r.level = CAST(:level AS region_level) AND r.geoid = :geoid
                 """
-            ),
-            [dict(zip(keys, row, strict=True)) for row in rows],
-        )
+                ),
+                row,
+            ).rowcount
+            if count != 1:
+                raise ValueError(f"water systems: missing region {row['geoid']}")
         return int(conn.execute(text("SELECT count(*) FROM water_systems")).scalar_one())
 
 

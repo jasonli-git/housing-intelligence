@@ -1,4 +1,4 @@
--- The community water systems serving each municipality and ZIP code, with their
+-- The community water systems serving each municipality, ZIP, county and state, with their
 -- health-based violations over the five years before the year read (Milestone 40,
 -- ARCHITECTURE #304). Feeds the `water_systems` table behind each page's list, not the
 -- observations.
@@ -25,6 +25,7 @@ violations as (
     select v.pwsid,
            v.violation_id,
            v.compl_per_begin_date::date as began,
+           nullif(v.rtc_date::varchar, '')::date as returned,
            coalesce(c.value_description, f.value_description, 'Other') as what
     from read_parquet('{{ var("parquet_dir") }}/epa_sdwis/current/violations.parquet') v
     cross join window_years w
@@ -38,14 +39,18 @@ violations as (
 by_system as (
     select pwsid,
            count(distinct violation_id) as violations,
-           max(began) as latest,
-           arg_max(what, began) as latest_what,
+           count(distinct violation_id) filter (where returned is not null) as resolved,
            string_agg(distinct what, '; ' order by what) as kinds
     from violations
     group by 1
 ),
+latest_record as (
+    select pwsid, began, what, returned
+    from violations
+    qualify row_number() over (partition by pwsid order by began desc, violation_id desc) = 1
+),
 served as (
-    select h.municipality_geoid, h.zcta_geoid, w.pwsid, w.system_name,
+    select h.municipality_geoid, h.zcta_geoid, h.county_geoid, w.pwsid, w.system_name,
            h.homes * w.share as homes
     from {{ ref('stg_water_blocks') }} w
     join {{ ref('stg_block_homes') }} h using (block_geoid)
@@ -57,19 +62,31 @@ places as (
     union all
     select zcta_geoid, 'zip', pwsid, any_value(system_name), sum(homes)
     from served group by 1, 2, 3
+    union all
+    select county_geoid, 'county', pwsid, any_value(system_name), sum(homes)
+    from served group by 1, 2, 3
+    union all
+    select '34', 'state', pwsid, any_value(system_name), sum(homes)
+    from served group by 1, 2, 3
 ),
 totals as (
     select municipality_geoid as geoid, 'municipality' as level, sum(homes) as homes
     from {{ ref('stg_block_homes') }} group by 1
     union all
     select zcta_geoid, 'zip', sum(homes) from {{ ref('stg_block_homes') }} group by 1
+    union all
+    select county_geoid, 'county', sum(homes) from {{ ref('stg_block_homes') }} group by 1
+    union all
+    select '34', 'state', sum(homes) from {{ ref('stg_block_homes') }}
 )
 select p.geoid, p.level, p.pwsid, p.system_name,
        round(p.homes) as homes,
        p.homes / t.homes as share_of_homes,
        coalesce(s.violations, 0) as violations,
-       s.latest as latest_violation,
-       s.latest_what as latest_violation_what,
+       coalesce(s.resolved, 0) as resolved_violations,
+       l.began as latest_violation,
+       l.what as latest_violation_what,
+       l.returned as latest_return_to_compliance,
        s.kinds as violation_kinds,
        w.first_year, w.last_year,
        'current' as release_vintage
@@ -77,4 +94,5 @@ from places p
 join totals t using (geoid, level)
 cross join window_years w
 left join by_system s on s.pwsid = p.pwsid
+left join latest_record l on l.pwsid = p.pwsid
 where p.homes / t.homes >= 0.01 or p.homes >= 50
