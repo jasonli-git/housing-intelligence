@@ -1,0 +1,418 @@
+/* Local/state experiment: the familiar atlas layout, softened by the editorial direction. */
+@media screen {
+  body:has(.quiet-county) {
+    --surface-1: light-dark(#f7f8f5, #171c1a);
+    --surface-2: light-dark(#ffffff, #222a25);
+    --surface-card: var(--surface-2);
+    --text-primary: light-dark(#29332f, #e6eae7);
+    --text-secondary: light-dark(#57615b, #bdc6bf);
+    --text-muted: light-dark(#657068, #abb7af);
+    --border: light-dark(#d9e2da, #3e4e43);
+    background: var(--surface-1);
+  }
+  body:has(.quiet-county) .bar { background: var(--surface-1); box-shadow: none; }
+  .quiet-county { max-width: 1160px; --atlas-accent: light-dark(#377762, #a6d9c0); --atlas-ink: var(--text-primary); }
+  .quiet-county > .page-head { display: block; padding-block: 1.3rem 1.7rem; margin-top: 0; border-top: 1px solid var(--border); }
+  .quiet-county .page-title { font: 500 clamp(45px, 5.7vw, 72px)/1.06 Georgia, "Times New Roman", serif; letter-spacing: -0.045em; color: var(--text-primary); }
+  .quiet-county .region-orientation { font-size: 16px; line-height: 1.7; max-width: 72ch; }
+  .quiet-county .verdict-details { font-size: 12px; }
+  .quiet-county .verdict-more { line-height: 1.75; }
+  .quiet-county .page-head > .actions { position: static; justify-content: flex-start; align-self: start; margin: 1.15rem 0 0; width: 100%; }
+  .quiet-county .page-head .report-action { border-left: 1px solid var(--border); }
+  .quiet-county .population-badge { background: transparent; border-color: var(--border); }
+  .quiet-county .population-badge-label { font-family: var(--font-text); text-transform: none; letter-spacing: 0; color: var(--text-muted); }
+  .quiet-county .page-head :is(.crumbs, .kind, .computed-badge) { font-size: 10px; color: var(--text-muted); }
+  .quiet-county .page-head .population-badge { font-size: 11px; }
+  .quiet-county .verdict-details > summary { color: var(--text-secondary); font-size: 11px; }
+  .quiet-profile { padding: 1.25rem 0 0.8rem; border: 0; border-radius: 0; background: none; }
+  .quiet-label { font: 10px/1.5 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+  .quiet-profile-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.6rem; margin: 0.8rem 0; }
+  .quiet-profile-grid article { min-width: 0; }
+  .quiet-profile-grid article + article { padding-left: 1.4rem; border-left: 1px solid color-mix(in srgb, var(--atlas-accent) 20%, transparent); }
+  .quiet-profile-grid p { margin: 0 0 0.35rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; }
+  .quiet-profile-grid strong { font-size: clamp(23px, 3vw, 31px); font-weight: 550; letter-spacing: -0.035em; }
+  .quiet-margin { color: var(--text-muted); font-size: 11px; }
+  .quiet-profile-grid .term { color: var(--text-primary); font-size: 12px; }
+  .quiet-profile-grid small { display: block; font-size: 11px; color: var(--text-secondary); line-height: 1.6; margin-top: 0.3rem; }
+  .quiet-profile-more summary { color: var(--text-secondary); font-size: 11px; cursor: pointer; padding-block: 0.4rem; }
+  .quiet-portrait-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 0; margin: 1rem 0 0.5rem; background: linear-gradient(120deg, color-mix(in srgb, var(--atlas-accent) 9%, transparent), transparent 75%); }
+  .quiet-portrait-grid article { position: relative; padding: 1.15rem 1.4rem; isolation: isolate; }
+  .quiet-portrait-grid article:only-child { grid-column: 1 / -1; }
+  .quiet-portrait-grid article + article { padding-left: 1.4rem; border-left: 0; }
+  .quiet-portrait-grid article[data-metric="acs_median_hh_income"] { grid-row: span 2; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid var(--border); }
+  .quiet-portrait-grid article[data-metric="acs_median_hh_income"] strong { font: 500 clamp(36px, 5vw, 64px)/1.1 Georgia, serif; letter-spacing: -0.06em; }
+  .quiet-portrait-grid article[data-metric="acs_renter_cost_burden"] { padding-right: 8rem; }
+  .quiet-portrait-grid article[data-metric="modiv_median_year_built"] { border-top: 1px solid var(--border); }
+  .quiet-portrait-grid article[data-metric="modiv_median_year_built"] strong { font: 500 40px/1.1 Georgia, serif; }
+  .quiet-portrait-dots { position: absolute; right: 1.4rem; top: 1.4rem; display: grid; grid-template-columns: repeat(10, 4px); gap: 4px; }
+  .quiet-portrait-dots i { width: 4px; height: 4px; border-radius: 50%; background: color-mix(in srgb, var(--atlas-accent) 16%, transparent); }
+  .quiet-portrait-dots .filled { background: color-mix(in srgb, var(--atlas-accent) 65%, transparent); }
+  .quiet-portrait-house { position: absolute; right: 0.5rem; bottom: 0; width: 48%; height: 100%; stroke: var(--atlas-accent); stroke-width: 1; opacity: 0.13; z-index: -1; pointer-events: none; }
+  .quiet-county :is(#quiet-cost, #quiet-highlights, #region-detailed-data) { scroll-margin-top: 110px; }
+  .quiet-county .section.cost { display: flex; flex-direction: column; margin: 2.8rem 0 1.2rem; }
+  .quiet-county .cost > .section-head { order: 0; padding: 0 0 0.85rem; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border); }
+  .quiet-county .section-head h2 { font: 500 clamp(23px, 2.8vw, 30px)/1.25 var(--font-display); letter-spacing: -0.03em; padding: 0; border: 0; }
+  .quiet-county .cost-yours { order: 1; border: 0; margin: 0 0 0.7rem; }
+  .quiet-county .cost-monthly-headline { order: 2; margin: 0; padding: 0.85rem 1.35rem; background: light-dark(#f2f4f1, #292f2b); border: 1px solid var(--border); border-bottom: 0; border-radius: 10px 10px 0 0; }
+  .quiet-county .cost-monthly-headline-copy { font-size: 14px; line-height: 1.7; }
+  .quiet-county .cost-monthly-headline .cost-evidence-label { font-size: 10px; }
+  .quiet-county .cost-cards { order: 3; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 0; border: 1px solid var(--border); border-radius: 10px; overflow: visible; background: var(--surface-2); }
+  .quiet-county .cost-monthly-headline + .cost-cards { border-radius: 0 0 10px 10px; }
+  .quiet-county .cost-card { padding: 1.25rem 1.35rem 1.1rem; gap: 0.7rem; }
+  .quiet-county .cost-card + .cost-card { border-top: 0; border-left: 1px solid var(--border); }
+  .quiet-county .cost-card-label { font: 12px/1.6 var(--font-text); text-transform: none; letter-spacing: 0; min-height: 1.6em; }
+  .quiet-county .cost-figure { display: block; }
+  .quiet-county .cost-figure b { font-size: clamp(35px, 4.5vw, 52px); font-weight: 550; letter-spacing: -0.045em; color: var(--text-primary); }
+  .quiet-county .cost-figure span { display: block; font-size: 12px; margin-top: 0.4rem; min-height: 1.5em; }
+  .quiet-county .cost-estimate-note { font: 11px/1.5 var(--font-text); text-transform: none; letter-spacing: 0; }
+  .quiet-county .gone-kept-bar { height: 6px; }
+  .quiet-county .quiet-receipt { display: flex; justify-content: space-between; gap: 1rem; padding: 0.65rem 0 0.4rem; border-bottom: 1px dashed var(--border); font-size: 11px; color: var(--text-secondary); }
+  .quiet-receipt span { display: flex; flex-direction: column; gap: 0.2rem; }
+  .quiet-receipt span:last-child { text-align: right; }
+  .quiet-receipt b { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+  #quiet-highlights { position: relative; isolation: isolate; }
+  #quiet-highlights:not(:has(.consumer-feature-what_stands_out)) > .quiet-linework { display: none; }
+  .quiet-linework { position: absolute; right: 0.7rem; top: 0.7rem; width: 110px; height: 74px; stroke: var(--atlas-accent); stroke-width: 1; opacity: 0.15; pointer-events: none; z-index: 1; }
+  .quiet-county .consumer-feature-topline { padding-right: 100px; }
+  .quiet-check-topics { display: flex; flex-wrap: wrap; gap: 1.5rem; padding-block: 0.5rem 1.2rem; }
+  .quiet-check-topics span { display: flex; align-items: center; gap: 0.5rem; font-size: 11px; color: var(--text-secondary); }
+  .quiet-check-topics svg { width: 22px; height: 30px; stroke: var(--atlas-accent); stroke-width: 1.2; }
+  .quiet-county .quiet-market-figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-block: 1rem; padding-block: 1rem; border-block: 1px solid var(--border); background: linear-gradient(115deg, color-mix(in srgb, var(--atlas-accent) 6%, transparent), transparent); }
+  .quiet-market-figures > div { padding-inline: 1rem; min-width: 0; }
+  .quiet-market-figures > div + div { border-left: 1px solid var(--border); }
+  .quiet-market-figures strong { display: block; font: 500 clamp(27px, 3.5vw, 44px)/1.2 Georgia, serif; letter-spacing: -0.04em; }
+  .quiet-market-figures span, .quiet-market-figures small { display: block; margin-top: 0.4rem; font-size: 12px; }
+  .quiet-market-figures small { font-size: 10px; color: var(--text-muted); }
+  .quiet-net-chart { margin: 1.5rem 0; padding: 1rem; border-block: 1px solid var(--border); }
+  .quiet-net-chart figcaption { font-size: 13px; }
+  .quiet-net-chart small { display: block; font-size: 10px; color: var(--text-secondary); margin-top: 0.4rem; }
+  .quiet-net-years { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.6rem; margin-top: 1rem; text-align: center; }
+  .quiet-net-track { position: relative; height: 100px; background: linear-gradient(to bottom, transparent 49%, var(--border) 49%, var(--border) 50%, transparent 50%); }
+  .quiet-net-track i { position: absolute; width: 35%; left: 32.5%; background: color-mix(in srgb, var(--atlas-accent) 50%, transparent); }
+  .quiet-net-track .positive { bottom: 50%; }
+  .quiet-net-track .negative { top: 50%; background: var(--text-muted); }
+  .quiet-net-years b, .quiet-net-years span { display: block; font-size: 11px; font-weight: 400; overflow-wrap: anywhere; margin-top: 0.4rem; }
+  .quiet-county .gone-kept-key { display: none; } /* Full breakdown and accessible bar label retain every component. */
+  .quiet-county .cost-evidence-omissions { grid-column: 1 / -1; padding: 0.8rem 1.35rem; margin: 0; border: 0; border-top: 1px solid var(--border); border-radius: 0 0 10px 10px; background: light-dark(#fcfaf4, #302d23); }
+  .quiet-county .cost-evidence-omissions > p { font-size: 12px; line-height: 1.65; }
+  .quiet-county .cost-evidence-omissions .cost-evidence-label { color: light-dark(#775a21, #e5c781); }
+  .quiet-county .cost-evidence { order: 4; margin: 0; padding: 1.1rem 0; border: 0; background: none; }
+  .quiet-county .cost-evidence-grid { gap: 1.4rem; }
+  .quiet-county .cost-evidence-item p { font-size: 12px; line-height: 1.7; }
+  .quiet-county .cost > .quiet-tool-group { order: 5; }
+  .quiet-county .quiet-tool-group { padding: 1.15rem 1.3rem 0.15rem; margin-top: 0.7rem; background: light-dark(#f1f3f0, #222a24); border-radius: 9px; }
+  .quiet-county .quiet-tool-group > h3 { margin: 0 0 0.7rem; font: 500 16px/1.5 var(--font-text); letter-spacing: -0.015em; }
+  .quiet-county .quiet-tool-group .quiet-disclosure > summary { font-size: 13px; padding-block: 0.85rem; }
+  .quiet-county .cost-budget-fit { margin: 0; border: 0; }
+  .quiet-county .quiet-tool-group .cost-budget-fit > details > summary { display: none; }
+  .quiet-county .page-head .report-action-copy small { font-family: var(--font-text); text-transform: none; letter-spacing: 0; font-size: 11px; }
+  .quiet-county .quiet-disclosure { margin: 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: none; }
+  .quiet-disclosure > summary { display: flex; justify-content: space-between; align-items: center; gap: 1rem; list-style: none; padding: 1.05rem 0; font-size: 15px; color: var(--text-primary); cursor: pointer; }
+  .quiet-disclosure > summary::-webkit-details-marker { display: none; }
+  .quiet-disclosure > summary small { display: block; margin-top: 0.25rem; font-size: 11px; font-weight: 400; line-height: 1.5; color: var(--text-muted); }
+  .quiet-plus { font-size: 23px; font-weight: 300; color: var(--text-muted); transition: transform 160ms; }
+  .quiet-disclosure[open] > summary .quiet-plus { transform: rotate(45deg); }
+  .quiet-disclosure-body { padding: 0.15rem 0 1.3rem; }
+  .quiet-disclosure > summary { border-radius: 5px; transition: background-color 150ms, color 150ms; min-height: 44px; }
+  .quiet-disclosure > summary:hover { background: color-mix(in srgb, var(--atlas-accent) 5%, transparent); }
+  .quiet-disclosure[open] > .quiet-disclosure-body { animation: quiet-reveal 180ms ease-out; }
+  .quiet-profile-more[open] > .quiet-profile-grid { animation: quiet-reveal 180ms ease-out; }
+  @keyframes quiet-reveal { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .quiet-county .quiet-tool-group .quiet-disclosure:has(#home-checks-heading) > summary { align-items: start; }
+  .quiet-county .quiet-tool-group .quiet-disclosure:has(#home-checks-heading) > summary > span:first-child::before { content: "✓"; margin-right: 0.5rem; color: var(--atlas-accent); }
+  .quiet-county .quiet-tool-group .quiet-disclosure:has(#home-checks-heading) > summary small { margin-left: 1.4rem; }
+  .quiet-county .quiet-disclosure:has(.local-market) { border-top: 0; padding-left: 1rem; border-left: 2px solid var(--border); margin-block: 1.5rem; }
+  .quiet-county .cost-card .quiet-disclosure > summary { font-size: 12px; padding: 0.7rem 0 0; }
+  .quiet-county .cost-card .quiet-disclosure > summary small { display: none; }
+  .quiet-county .cost-card .quiet-plus { font-size: 19px; }
+  .quiet-county .consumer-feature-what_stands_out { margin: 2.7rem 0 1.8rem; padding: 1.7rem; border: 1px solid var(--border); border-radius: 10px; background: light-dark(#fafafa, #232725); box-shadow: none; }
+  .quiet-county .consumer-feature-main h2 { font: 500 29px/1.2 Georgia, serif; color: var(--text-primary); border: 0; padding: 0; letter-spacing: -0.025em; }
+  .quiet-county .consumer-feature-answer { font-size: 15px; line-height: 1.85; max-width: 72ch; }
+  .quiet-county .consumer-feature-topline { margin-bottom: 1rem; }
+  .quiet-county .consumer-feature .interpretation-source { display: block; margin-top: 0.4rem; font-size: 11px; }
+  .quiet-county .consumer-feature .reading-citations { font-size: 11px; line-height: 1.6; }
+  .quiet-county .standouts-disclosure { border: 0; border-top: 1px solid var(--border); border-radius: 0; background: none; margin-top: 1.3rem; box-shadow: none; }
+  .quiet-county .standouts-disclosure summary { padding: 0.85rem 0; }
+  .quiet-county .standouts-previews { display: none; }
+  .quiet-county .standouts-disclosure-kicker { display: none; }
+  .quiet-county .standouts-disclosure-copy strong { font-size: 13px; }
+  .quiet-county .standouts-disclosure-cue { font-size: 11px; }
+  .quiet-county .local-page-group { margin-top: 0; }
+  .quiet-county .local-page-group > h2 { font-size: 19px; padding: 0; border: 0; }
+  .quiet-county :is(.cost .control-label, .cost-yours-hint, .cost-evidence-item .cost-evidence-label, .consumer-feature .interpretation-source, .standouts-disclosure-cue) { font-family: var(--font-text); text-transform: none; letter-spacing: 0; font-size: 12px; }
+  .quiet-county .cost-evidence-item .cost-evidence-label { font-weight: 550; margin-bottom: 0.35rem; }
+  .quiet-county .more { margin-top: 2rem; border: 1px solid var(--border); border-radius: 10px; background: light-dark(#eef2f2, #242e2c); box-shadow: none; }
+  .quiet-county .more > summary { padding: 1.5rem; background-image: linear-gradient(color-mix(in srgb, var(--atlas-accent) 5%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--atlas-accent) 5%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
+  .quiet-county .region-standard-content > .more > summary > .more-kicker { font: 10px/1.5 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; border: 0; padding: 0; margin-bottom: 0.6rem; color: var(--text-muted); }
+  .quiet-county .more-entry { --text-primary: light-dark(#263c34, #e6eee8); --text-secondary: light-dark(#53635a, #bdcbbf); --atlas-ink: var(--text-primary); --atlas-accent: light-dark(#377762, #a6d9c0); display: grid; grid-template-columns: minmax(0, 1fr) auto; border: 0; padding: 0; background: none; }
+  .quiet-county .more > summary:hover .more-entry { background: none; }
+  .quiet-county .more > summary { transition: background-color 160ms; }
+  .quiet-county .more > summary:hover { background: color-mix(in srgb, var(--atlas-accent) 6%, transparent); }
+  .quiet-county .more[open] > .more-body { animation: quiet-reveal 180ms ease-out; }
+  .quiet-county .more > summary .more-title { font: 500 28px/1.2 Georgia, serif; letter-spacing: -0.025em; }
+  .quiet-county .more-sub { font-size: 12px; }
+  .quiet-county .more-index { display: none; }
+  .quiet-county .more-open-icon { width: 35px; height: 35px; }
+  .quiet-county .more-body { padding: 1.5rem; }
+  .quiet-county { padding-bottom: 1rem; }
+  body:has(.quiet-county) .foot { margin-top: 2.5rem; background: none; }
+  body:has(.quiet-county) .foot-inner { max-width: 1160px; padding-top: 0.5rem; }
+  .quiet-county :focus-visible { outline: 2px solid var(--atlas-accent); outline-offset: 5px; }
+  .nj-page.quiet-state { --atlas-accent: light-dark(#386888, #abcfe9); --atlas-ink: var(--text-primary); --entry-ink: var(--text-primary); }
+  body:has(.quiet-state) { --surface-1: light-dark(#f5f7f8, #181d22); --surface-2: light-dark(#ffffff, #232a30); --border: light-dark(#d9e1e7, #3f4d59); }
+  .nj-page.quiet-state > .nj-head { align-items: center; display: flex; }
+  .nj-page.quiet-state .page-title { font: 500 clamp(48px, 6vw, 78px)/1.06 Georgia, serif; letter-spacing: -0.045em; color: var(--text-primary); }
+  .nj-page.quiet-state .nj-atlas-entry { border-color: var(--border); color: var(--atlas-accent); }
+  .nj-page.quiet-state .nj-atlas-count { font: 500 52px/1 Georgia, serif; }
+  .nj-page.quiet-state .state-chapter-head h2 { font: 500 25px/1.3 Georgia, serif; }
+  .nj-page.quiet-state .state-facts { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 0; border: 0; border-radius: 0; overflow: visible; background: linear-gradient(120deg, color-mix(in srgb, var(--atlas-accent) 9%, transparent), transparent); }
+  .nj-page.quiet-state .state-facts article { display: flex; flex-direction: column; background: none; padding: 1.3rem 1.4rem; }
+  .nj-page.quiet-state .state-facts article:first-child { grid-row: span 2; justify-content: center; border-right: 1px solid var(--border); }
+  .nj-page.quiet-state .state-facts article:last-child { border-top: 1px solid var(--border); }
+  .nj-page.quiet-state .state-facts article > strong { color: var(--text-primary); font: 500 36px/1.15 Georgia, serif; letter-spacing: -0.04em; }
+  .nj-page.quiet-state .state-facts article:first-child > strong { font-size: clamp(38px, 5vw, 64px); }
+  .nj-page.quiet-state .state-facts .entry-kicker { font: 11px/1.5 var(--font-text); text-transform: none; letter-spacing: 0; color: var(--text-muted); }
+  .nj-page.quiet-state .state-facts article > p:last-child { font-size: 12px; max-width: 45ch; }
+  .nj-page.quiet-state .quiet-state-profile { padding-top: 0.75rem; }
+  .nj-page.quiet-state .quiet-state-profile .quiet-portrait-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); background: none; }
+  .nj-page.quiet-state .quiet-state-profile .quiet-portrait-grid article { padding: 0.7rem 1rem; }
+  .nj-page.quiet-state .quiet-state-profile .quiet-portrait-grid article + article { border-left: 1px solid var(--border); }
+  .nj-page.quiet-state .quiet-state-profile strong { font: 500 28px/1.2 Georgia, serif; }
+  .nj-page.quiet-state .state-workspace-head h2 { font: 500 28px/1.3 Georgia, serif; letter-spacing: -0.025em; }
+  .nj-page.quiet-state .state-workspace-head > div > p { font-size: 12px; }
+  .nj-page.quiet-state .state-workspace-choice { border-radius: 6px; box-shadow: none; }
+  .nj-page.quiet-state .explorer { box-shadow: none; background: var(--surface-2); }
+  .nj-page.quiet-state .measure-card { background: var(--surface-2); }
+  .nj-page.quiet-state .measure-name { font: 500 27px/1.25 Georgia, serif; }
+  .nj-page.quiet-state .more-entry { --atlas-accent: light-dark(#386888, #abcfe9); --text-primary: light-dark(#29343c, #e6ecf1); --text-secondary: light-dark(#56616c, #bdc7d0); color: var(--text-primary); background: none; }
+  .nj-page.quiet-state .more > summary:hover .more-entry { background: none; }
+  .nj-page.quiet-state .more > summary > .more-kicker { color: var(--text-muted); background: none; border: 0; font: 10px/1.5 var(--font-mono); padding: 0; margin-bottom: 0.6rem; }
+  .nj-page.quiet-state .state-figure-notes { background: none; border-top: 1px solid var(--border); }
+  .nj-page.quiet-state .state-facts { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .nj-page.quiet-state .state-facts article:first-child { grid-row: auto; }
+  .nj-page.quiet-state .state-facts article:last-child { border-top: 0; border-left: 1px solid var(--border); }
+  .nj-page.quiet-state .state-facts article { padding-block: 1rem; }
+  .nj-page.quiet-state .state-facts article:first-child > strong { font-size: clamp(36px, 4vw, 52px); }
+  .state-extra-figures { border-bottom: 1px solid var(--border); }
+  .state-extra-figures > summary, .quiet-state .state-figure-notes > summary { cursor: pointer; font-size: 12px; padding-block: 0.8rem; min-height: 44px; }
+  .state-extra-figures > summary { display: flex; justify-content: space-between; list-style: none; }
+  .state-extra-figures > summary::-webkit-details-marker { display: none; }
+  .state-extra-figures[open] > summary span { transform: rotate(45deg); }
+  .nj-page.quiet-state .state-extra-figures .quiet-label { display: none; }
+  .nj-page.quiet-state .state-workspace-head { gap: 1rem; padding-block: 0.5rem; margin-bottom: 0.5rem; }
+  .nj-page.quiet-state .state-workspace-head > div:first-child { flex: 1; }
+  .nj-page.quiet-state .state-workspace-head h2 { font-size: 25px; }
+  .nj-page.quiet-state .state-workspace-head .section-jump-control { flex: 0 0 auto; font-size: 11px; }
+  .nj-page.quiet-state .state-workspace-head .section-jump { padding-block: 0.65rem; }
+  .nj-page.quiet-state .measure-card { margin-top: 0.5rem; padding-block: 0.8rem; }
+  .window-more > summary { font-size: 11px; padding-block: 0.4rem; cursor: pointer; }
+  .county-preview-toggle { display: none; }
+  .nj-page.quiet-state .state-figure-notes { scroll-margin-top: 100px; padding-block: 0; }
+  .nj-page.quiet-state .state-figure-notes p { max-width: 80ch; font-size: 12px; line-height: 1.7; }
+  .nj-page.quiet-state .state-figure-notes a { font-size: 12px; }
+  @media (max-width: 600px) {
+    .nj-page.quiet-state .state-workspace-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.6rem; }
+    .nj-page.quiet-state .state-workspace-head > div:first-child { grid-column: 1 / -1; }
+    .nj-page.quiet-state .state-workspace-head .state-workspace-choice { min-width: 0; }
+    .nj-page.quiet-state .state-workspace-choice button { font-size: 11px; padding: 0.65rem 0.5rem; min-height: 44px; }
+    .nj-page.quiet-state .state-workspace-head .section-jump-control { max-width: 130px; }
+    .nj-page.quiet-state .state-workspace-head .section-jump { font-size: 10px; min-height: 44px; }
+    .nj-page.quiet-state .county-preview .county-preview-extra { display: none; }
+    .nj-page.quiet-state .county-preview-toggle { display: block; width: 100%; padding: 0.75rem; margin-top: 0.7rem; font-size: 12px; min-height: 44px; border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--atlas-accent); cursor: pointer; }
+    .nj-page.quiet-state .measure-card .explorer-controls { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 0.7rem; }
+    .nj-page.quiet-state .explorer-controls .control { display: flex; flex-direction: column; align-items: stretch; }
+    .nj-page.quiet-state .explorer-controls .control-label { flex: 0 0 auto; }
+    .nj-page.quiet-state .explorer-controls .control select { width: 100%; min-height: 44px; flex: none; }
+    .nj-page.quiet-state .explorer-controls .control:last-child { grid-column: 1 / -1; flex-direction: row; align-items: center; }
+    .nj-page.quiet-state .explorer-controls .seg button { min-height: 44px; }
+    .nj-page.quiet-state .state-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .nj-page.quiet-state .state-facts article { padding: 1rem 0.75rem; }
+    .nj-page.quiet-state .state-facts article:first-child { grid-row: auto; }
+    .nj-page.quiet-state .state-facts article:last-child { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--border); }
+    .nj-page.quiet-state .state-facts article:first-child > strong { font-size: clamp(30px, 8vw, 44px); }
+    .nj-page.quiet-state .state-facts article > strong { font-size: 30px; }
+    .nj-page.quiet-state .quiet-state-profile .quiet-portrait-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .nj-page.quiet-state .quiet-state-profile .quiet-portrait-grid article:last-child:nth-child(odd) { border-left: 0; border-top: 1px solid var(--border); }
+    .quiet-county .page-title { font-size: clamp(42px, 11vw, 54px); }
+    .quiet-county .region-orientation { font-size: 14px; }
+    .quiet-county .page-head .actions { width: 100%; margin-top: 0.75rem; }
+    .quiet-profile { padding: 1rem 0; }
+    .quiet-profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .quiet-profile-grid article + article { padding-left: 0; border-left: 0; }
+    .quiet-profile-grid article:last-child:nth-child(odd) { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; column-gap: 1rem; align-items: center; }
+    .quiet-profile-grid article:last-child:nth-child(odd) p { grid-row: 1 / 3; }
+    .quiet-profile-grid strong { font-size: 25px; }
+    .quiet-profile-grid small { font-size: 10px; }
+    .quiet-portrait-grid { gap: 0; }
+    .quiet-portrait-grid article, .quiet-portrait-grid article + article { padding: 0.9rem 0.75rem; }
+    .quiet-portrait-grid article[data-metric="acs_median_hh_income"] { grid-row: auto; }
+    .quiet-portrait-grid article[data-metric="acs_median_hh_income"] strong { font-size: clamp(27px, 7.3vw, 40px); }
+    .quiet-portrait-grid article[data-metric="acs_renter_cost_burden"] { padding-right: 0.75rem; }
+    .quiet-portrait-grid article[data-metric="modiv_median_year_built"] { grid-column: 1 / -1; }
+    .quiet-portrait-grid article[data-metric="modiv_median_year_built"] strong { font-size: 32px; }
+    .quiet-portrait-dots { position: static; grid-template-columns: repeat(20, 3px); gap: 3px; margin-bottom: 0.65rem; }
+    .quiet-portrait-dots i { width: 3px; height: 3px; }
+    .quiet-portrait-house { width: 42%; }
+    .quiet-county .quiet-market-figures strong { font-size: clamp(23px, 6.5vw, 32px); }
+    .quiet-market-figures > div { padding-inline: 0.5rem; }
+    .quiet-net-chart { padding-inline: 0; }
+    .quiet-net-years { gap: 0.3rem; }
+    .quiet-check-topics { gap: 0.8rem; }
+    .quiet-county .cost > .section-head { display: flex; flex-direction: row; align-items: start; gap: 0.75rem; flex-wrap: nowrap; }
+    .quiet-county .cost > .section-head > .control { flex: 0 0 auto; width: auto; min-width: 0; }
+    .quiet-county .section-head h2 { font-size: 23px; max-width: 14ch; }
+    .quiet-county .cost-card { padding: 1rem 0.8rem; }
+    .quiet-county .cost-figure b { font-size: clamp(30px, 9vw, 40px); }
+    .quiet-county .cost-card-label { font-size: 11px; }
+    .quiet-county .cost-card-label { min-height: 3.2em; }
+    .quiet-county .cost-monthly-headline { display: block; padding: 1rem; }
+    .quiet-county .cost-monthly-headline .cost-evidence-label { margin-bottom: 0.4rem; }
+    .quiet-county .cost-monthly-headline-copy { font-size: 13px; }
+    .quiet-county .quiet-tool-group { padding: 1rem 1rem 0; }
+    .quiet-county .cost-evidence-omissions { padding: 0.8rem 1rem; }
+    .quiet-county .cost-cards:has(.quiet-disclosure[open]) { grid-template-columns: minmax(0, 1fr); }
+    .quiet-county .cost-cards:has(.quiet-disclosure[open]) .cost-card + .cost-card { border-left: 0; border-top: 1px solid var(--border); }
+    .quiet-county .cost-card .tip { position: fixed; left: 16px; right: 16px; top: 28vh; width: auto; max-height: 60vh; overflow-y: auto; }
+    .quiet-county .consumer-feature-what_stands_out { padding: 1.1rem; }
+    .quiet-county .consumer-feature-main h2 { font-size: 26px; }
+    .quiet-county .consumer-feature-answer { font-size: 14px; }
+    .quiet-county .more > summary { padding: 1.1rem; }
+    .quiet-county .more-body { padding: 1.1rem; }
+    .quiet-county .more > summary .more-title { font-size: 25px; }
+    .quiet-county .values { table-layout: fixed; width: 100%; font-size: 12px; }
+    .quiet-county .values th:first-child { width: 34%; }
+    .quiet-county .values td, .quiet-county .values th { overflow-wrap: anywhere; white-space: normal; }
+    .quiet-county .values td + td, .quiet-county .values th + th { padding-left: 0.4rem; }
+    .quiet-county .values .strip { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .quiet-plus, .quiet-disclosure > summary, .quiet-county .more > summary { transition: none; }
+    .quiet-disclosure[open] > .quiet-disclosure-body, .quiet-profile-more[open] > .quiet-profile-grid, .quiet-county .more[open] > .more-body { animation: none; }
+  }
+  @media (max-width: 380px) {
+    .quiet-county .cost > .section-head > .control { display: flex; flex-direction: column; align-items: end; gap: 0.2rem; }
+    .quiet-county .cost > .section-head h2 { max-width: none; font-size: 21px; }
+    .quiet-county .cost > .section-head .control-label { font-size: 10px; }
+  }
+}
+@media print {
+  .state-extra-figures > :not(summary), .state-figure-notes > :not(summary) { display: block !important; }
+  .quiet-disclosure > :not(summary), .quiet-profile-more > :not(summary) { display: block !important; }
+  .quiet-plus { display: none; }
+  .quiet-profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .nation-portrait { display: none; }
+  .history-explainer > :not(summary) { display: block !important; }
+}
+
+/* The public atlas is warm-neutral; source history uses an understated ink-blue ledger. */
+@media screen {
+  body:has(.quiet-nation) { --surface-1: light-dark(#f8f6f1, #201f1c); --surface-2: light-dark(#fffefa, #292823); --border: light-dark(#ded9cf, #49463f); background: var(--surface-1); }
+  body:has(.quiet-nation) .bar { background: var(--surface-1); box-shadow: none; }
+  .nation-page.quiet-nation { max-width: 1160px; --text-primary: light-dark(#34322e, #ebe7df); --text-secondary: light-dark(#625e55, #c5bfb3); }
+  .quiet-nation > .nation-head { position: relative; isolation: isolate; padding-block: 2.2rem 2rem; border-top: 1px solid var(--border); border-bottom: 0; }
+  .quiet-nation .nation-head h1 { font: 500 clamp(58px, 6.5vw, 84px)/1.04 Georgia, serif; letter-spacing: -0.055em; max-width: 72%; }
+  .quiet-nation .entry-introduction { font: 400 clamp(25px, 3vw, 37px)/1.3 Georgia, serif; letter-spacing: -0.025em; max-width: 26ch; margin-block: 1rem 0.75rem; }
+  .quiet-nation .entry-context { font-size: 13px; max-width: 55ch; }
+  .quiet-nation .entry-free { font-size: 12px; gap: 0.45rem; padding-top: 0.6rem; }
+  .quiet-nation .entry-free svg { stroke: var(--entry-accent); }
+  .nation-portrait { position: absolute; right: 0; top: 0; width: 28%; height: 100%; stroke: var(--entry-accent); stroke-width: 0.8; opacity: 0.2; pointer-events: none; z-index: -1; }
+  .nation-portrait circle { fill: var(--state-blue); stroke: none; opacity: 1; }
+  .quiet-nation .coverage-entry-map > header { padding-bottom: 0.7rem; margin-bottom: 0; border-bottom: 1px solid var(--border); }
+  .quiet-nation .coverage-entry h2, .quiet-nation .national-context h2 { font: 500 29px/1.2 Georgia, serif; letter-spacing: -0.025em; }
+  .quiet-nation .coverage-atlas { border: 0; border-radius: 0; background: none; }
+  .quiet-nation .coverage-map-stage { background: radial-gradient(ellipse at 55% 50%, light-dark(#ece7dd, #302d26), transparent 80%); border-bottom: 1px solid var(--border); }
+  .quiet-nation .coverage-map { height: clamp(300px, 36vw, 445px); }
+  .quiet-nation .coverage-map-foot { border: 0; padding-inline: 0; }
+  .quiet-nation .coverage-state-preview { border-block: 1px solid var(--border); padding: 1.1rem 0; }
+  .quiet-nation .coverage-state-preview h3 { font: 500 31px/1.2 Georgia, serif; }
+  .quiet-nation .coverage-state-action { border-radius: 4px; background: transparent; min-height: 44px; }
+  .quiet-nation .coverage-map-note { padding: 0.7rem 0 0; }
+  .quiet-nation .national-context { margin-bottom: 0.5rem; background: linear-gradient(110deg, color-mix(in srgb, var(--entry-accent) 6%, transparent), transparent); padding: 0.9rem 1.2rem; }
+  .quiet-nation .national-context h2 { font: 500 17px/1.4 var(--font-text); letter-spacing: -0.015em; margin-bottom: 0.3rem; }
+  .quiet-nation .national-context p { font-size: 12px; }
+  .quiet-nation .national-rate { justify-self: end; border-left: 1px solid var(--border); padding-left: 2rem; }
+  .quiet-nation .national-rate > strong { font: 500 42px/1 Georgia, serif; }
+  .quiet-nation :focus-visible { outline: 2px solid var(--entry-accent); outline-offset: 4px; }
+  body:has(.quiet-nation) .foot { margin-top: 2rem; background: none; }
+  body:has(.quiet-nation) .foot-inner { max-width: 1160px; padding-top: 0.5rem; }
+  main.quiet-nation { padding-bottom: 1rem; }
+
+  .quiet-history { --atlas-accent: light-dark(#4e6575, #b7cbd9); }
+  .quiet-history > .page-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2rem; align-items: center; }
+  .quiet-history .page-title { font-size: clamp(35px, 4.8vw, 59px); max-width: 23ch; }
+  .quiet-history .history-intro { font-size: 14px; line-height: 1.7; margin-block: 1rem 0.8rem; }
+  .history-tabs { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-block: 0.8rem; }
+  .history-tabs a { padding-block: 0.5rem; color: var(--text-secondary); font-size: 12px; text-decoration: none; min-height: 44px; }
+  .history-tabs a[aria-current="page"] { color: var(--text-primary); border-bottom: 1px solid var(--atlas-accent); }
+  .history-tabs a:hover { color: var(--atlas-accent); }
+  .history-portrait { display: flex; flex-direction: column; gap: 0.5rem; border-left: 1px solid var(--border); padding: 1rem 1.5rem; background: linear-gradient(110deg, color-mix(in srgb, var(--atlas-accent) 7%, transparent), transparent); }
+  .history-portrait strong { font: 500 76px/1 Georgia, serif; letter-spacing: -0.05em; }
+  .history-portrait span { font-size: 12px; }
+  .history-portrait small { color: var(--text-muted); font-size: 10px; max-width: 22ch; }
+  .history-explainer summary { font-size: 12px; cursor: pointer; padding-block: 0.5rem; min-height: 44px; }
+  .quiet-history .fresh-built { font-family: var(--font-text); letter-spacing: 0; font-size: 11px; line-height: 1.7; margin-block: 0.5rem 0; }
+  .quiet-history .fresh-cadence-group, .quiet-history .change-batch { border: 0; border-radius: 0; background: transparent; padding: 1.2rem 0; border-top: 1px solid var(--border); margin-top: 0.75rem; }
+  .quiet-history .fresh-cadence-heading, .quiet-history .change-day { font: 500 25px/1.4 Georgia, serif; border: 0; padding-bottom: 0.5rem; }
+  .quiet-history .fresh-cadence-heading > span, .quiet-history .change-day-count { font: 400 11px/1.5 var(--font-text); color: var(--text-muted); }
+  .quiet-history .change-metric { font: 500 20px/1.4 var(--font-text); }
+  .quiet-history .change-summary { font-size: 13px; line-height: 1.7; max-width: 75ch; }
+  .quiet-history .change-note { font-size: 12px; line-height: 1.7; }
+  .quiet-history .change-group { border-top-style: dashed; }
+  .quiet-history .freshness, .quiet-history .change-places { font-size: 12px; }
+  .quiet-history .freshness thead th, .quiet-history .change-places thead th { font-family: var(--font-text); letter-spacing: 0; text-transform: none; font-size: 11px; }
+  .quiet-tax { --atlas-accent: light-dark(#8d684a, #dec3a7); max-width: 980px; }
+  .quiet-tax > .page-head { text-align: center; border-top-color: color-mix(in srgb, var(--atlas-accent) 40%, var(--border)); padding-bottom: 1.2rem; }
+  .quiet-tax .page-head .crumbs { justify-content: center; }
+  .quiet-tax .page-title { font-size: clamp(39px, 5vw, 62px); line-height: 1.12; margin-block: 0.7rem; }
+  .quiet-tax .page-head .meta { margin-inline: auto; max-width: 60ch; font-size: 13px; line-height: 1.7; }
+  .tax-about > summary { font-size: 11px; color: var(--text-secondary); padding-block: 0.7rem; cursor: pointer; min-height: 44px; }
+  .quiet-tax .tax-lookup { max-width: 800px; margin-inline: auto; gap: 1.2rem; }
+  .quiet-tax .tax-lookup > .household-inputs { display: block; margin: 0; background: none; border: 0; padding: 0; }
+  .quiet-tax .tax-lookup > .household-inputs > .control > .control-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .tax-search-field { display: flex; align-items: center; gap: 0.8rem; border: 1px solid color-mix(in srgb, var(--atlas-accent) 40%, var(--border)); border-radius: 14px; background: var(--surface-2); padding: 0.6rem 1.15rem; box-shadow: 0 6px 24px color-mix(in srgb, var(--atlas-accent) 8%, transparent); }
+  .tax-search-field svg { flex: 0 0 23px; width: 23px; height: 23px; stroke: var(--atlas-accent); stroke-width: 1.5; }
+  .quiet-tax .tax-search-field input { border: 0; box-shadow: none; background: transparent; padding: 0.6rem 0; font-size: 17px; min-height: 48px; min-width: 0; }
+  .tax-search-field:focus-within { border-color: var(--atlas-accent); outline: 2px solid color-mix(in srgb, var(--atlas-accent) 20%, transparent); outline-offset: 3px; }
+  .tax-search-hint { display: block; margin-top: 0.65rem; color: var(--text-muted); font-size: 11px; line-height: 1.6; }
+  .tax-town-filter { margin-top: 1rem; padding-inline: 0.3rem; }
+  .tax-town-filter > summary { display: flex; justify-content: space-between; gap: 1rem; list-style: none; font-size: 12px; min-height: 44px; padding-block: 0.65rem; cursor: pointer; color: var(--text-secondary); }
+  .tax-town-filter > summary::-webkit-details-marker { display: none; }
+  .tax-town-filter[open] > summary span { transform: rotate(45deg); }
+  .tax-town-filter .control-label { font: 11px/1.6 var(--font-text); letter-spacing: 0; text-transform: none; }
+  .tax-town-filter input { min-height: 44px; font-size: 16px; }
+  .tax-clear-town { padding: 0.65rem 0; min-height: 44px; font-size: 11px; color: var(--atlas-accent); border: 0; background: none; cursor: pointer; }
+  .quiet-tax .tax-results { border-top: 1px solid var(--border); gap: 0; }
+  .quiet-tax .tax-results button { padding: 1rem 0.8rem; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: none; min-height: 44px; }
+  .quiet-tax .tax-results button:hover { background: color-mix(in srgb, var(--atlas-accent) 5%, transparent); }
+  .quiet-tax .tax-results small { font: 11px/1.6 var(--font-text); }
+  .quiet-tax .tax-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+  .quiet-tax .tax-card h2.household-title { font: 500 27px/1.25 Georgia, serif; }
+  .quiet-tax .tax-card .sum dd { font: 500 28px/1.3 Georgia, serif; }
+  .quiet-tax .tax-lookup > .household-note:last-child { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 11px; line-height: 1.7; }
+  @media (max-width: 600px) {
+    .quiet-tax .page-title { font-size: clamp(34px, 9vw, 46px); }
+    .tax-search-field { padding-inline: 0.8rem; gap: 0.6rem; }
+    .quiet-tax .tax-search-field input { font-size: 16px; }
+    .quiet-tax .tax-card { padding: 1rem; }
+    .quiet-tax .tax-card > * { min-width: 0; }
+    .quiet-tax .tax-card .cost-lines > div { flex-wrap: wrap; gap: 0.3rem 0.75rem; }
+    .quiet-tax .tax-card .cost-lines dd { white-space: normal; }
+    .quiet-tax .tax-card h2.household-title { font-size: 23px; overflow-wrap: anywhere; }
+    .quiet-nation > .nation-head { padding-block: 1.5rem; }
+    .quiet-nation .nation-head h1 { font-size: clamp(42px, 11vw, 62px); max-width: none; }
+    .quiet-nation .entry-introduction { font-size: 27px; }
+    .nation-portrait { right: 0; top: 0.7rem; width: 40%; height: 85px; opacity: 0.08; }
+    .quiet-nation .coverage-entry-map > header { gap: 0.7rem; flex-wrap: wrap; }
+    .quiet-nation .coverage-entry-map > header .entry-kicker { font-size: 9px; }
+    .quiet-nation .national-context { grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; padding: 1rem 0; }
+    .quiet-nation .national-context h2 { font-size: 15px; }
+    .quiet-nation .national-rate { padding-left: 1rem; max-width: 145px; }
+    .quiet-nation .national-rate > strong { font-size: 34px; }
+    .quiet-nation .national-rate :is(.term, small) { font-size: 10px; }
+    .quiet-history > .page-head { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+    .quiet-history .page-title { font-size: clamp(33px, 8.5vw, 45px); }
+    .history-portrait { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 0.8rem; padding: 0.8rem 1rem; }
+    .history-portrait strong { font-size: 36px; }
+    .history-portrait small { max-width: none; }
+  }
+}

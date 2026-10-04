@@ -184,7 +184,7 @@ export function NationalCoverageMap() {
       <div className="coverage-map-foot"><span>{hovered}</span><span><i aria-hidden="true" />Blue = available{viewport.scale > 1 && " · Drag to move"}</span></div>
     </div>
     <div className="coverage-state-preview">
-      <div><p className="entry-kicker">Available now</p><h3>New Jersey</h3><p>Counties, towns and ZIP codes.</p></div>
+      <div><p className="entry-kicker">Detailed coverage available now</p><h3>New Jersey</h3><p>Counties, towns and ZIP codes.</p></div>
       <Link href="/states/new-jersey" className="coverage-state-action">Explore New Jersey <span aria-hidden="true">↗</span></Link>
     </div>
     <p className="coverage-map-note">New Jersey only for now. Other states aren’t available yet.</p>

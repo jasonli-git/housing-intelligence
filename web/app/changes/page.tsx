@@ -27,7 +27,7 @@ export default async function ChangesPage() {
     return (
       <>
         <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
-        <main className="shell atlas-page atlas-ledger">
+        <main className="shell atlas-page atlas-ledger quiet-county quiet-history">
           <h1 className="page-title">Figures revised after they were published</h1>
           <p className="meta">
             The API is unreachable, so there is nothing to show.{" "}
@@ -43,16 +43,17 @@ export default async function ChangesPage() {
   return (
     <>
       <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
-      <main className="shell atlas-page atlas-ledger">
+      <main className="shell atlas-page atlas-ledger quiet-county quiet-history">
         <header className="page-head" data-kind="data">
           <div>
             <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="What changed" />
             <Kind kind="data" />
             <h1 className="page-title">Figures revised after they were published</h1>
-            <p className="meta">
+            <p className="meta history-intro">
               Publishers sometimes revise figures already shown here. Compare the earlier and
               updated values by refresh, newest first.
             </p>
+            <nav className="history-tabs" aria-label="Source history"><Link href="/freshness">Source freshness <span aria-hidden="true">↗</span></Link><Link href="/changes" aria-current="page">Revised figures</Link></nav>
             <p className="meta fresh-built">
               {report.recorded_since
                 ? `Earlier values kept since ${dayLabel(report.recorded_since)}`
@@ -62,6 +63,7 @@ export default async function ChangesPage() {
               to the earlier value
             </p>
           </div>
+          <aside className="history-portrait" aria-label="Revision history"><strong>{report.total_batches.toLocaleString("en-US")}</strong><span>refreshes with revisions</span><small>{report.batches.length} most recent shown</small></aside>
         </header>
 
         {report.batches.length === 0 && (

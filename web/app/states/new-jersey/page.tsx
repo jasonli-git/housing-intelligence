@@ -1,5 +1,5 @@
 import { type Measure } from "@/components/CountyExplorer";
-import { SectionJump } from "@/components/SectionJump";
+import { StateFigureNotes } from "@/components/StateFigureNotes";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Crumbs, Kind } from "@/components/Crumbs";
@@ -7,7 +7,7 @@ import { StateOverview } from "@/components/StateOverview";
 import { MoreExpander } from "@/components/MoreExpander";
 import { HomeSales } from "@/components/HomeSales";
 import { HomesAdded } from "@/components/HomesAdded";
-import { StateProfileTicker } from "@/components/StateProfileTicker";
+import { QuietProfile } from "@/components/QuietCounty";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
 import { api, nationalMortgageRate } from "@/lib/api";
@@ -151,7 +151,7 @@ export default async function NewJerseyPage() {
   return (
     <>
       <Masthead affordability={{ kind: "local" }} />
-      <main className="shell nj-page">
+      <main className="shell nj-page quiet-county quiet-state">
       <header className="page-head nj-head" data-kind="state">
         <div className="region-head-main">
           <Crumbs trail={[{ href: "/", label: "United States" }]} here="New Jersey" hereKind="state" />
@@ -182,11 +182,11 @@ export default async function NewJerseyPage() {
           <span className="nj-atlas-entry-label">Compare places <span aria-hidden="true">↘</span></span>
         </a>
       </header>
-      <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)} />
-      <StateProfileTicker items={stateProfile(levels.filter((level) => ["fhfa_hpi", "fhfa_hpi_all_transactions", "nj_effective_tax_rate", "sr1a_median_price_per_sqft", "sr1a_median_year_built_sold", "water_homes_share_public"].includes(level.metric_id)), statewide?.headlines ?? [])} />
-      <div className="nj-source-notes">
-        <SectionJump />
-      </div>
+      <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
+        <details className="state-extra-figures"><summary>More statewide figures <span aria-hidden="true">＋</span></summary>
+          <QuietProfile statewide allMetrics items={stateProfile(levels.filter((level) => ["fhfa_hpi", "fhfa_hpi_all_transactions", "nj_effective_tax_rate", "sr1a_median_price_per_sqft", "sr1a_median_year_built_sold", "water_homes_share_public"].includes(level.metric_id)), statewide?.headlines ?? [])} />
+        </details>
+      </StateOverview>
 
       <div id="nj-explore" className="nj-explore-anchor">
         {initial ? (
@@ -202,8 +202,8 @@ export default async function NewJerseyPage() {
         )}
       </div>
       <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Sales, building activity and every available state figure, with dates and definitions.">
-        <HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} />
-        <HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} />
+        <HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait />
+        <HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} portrait />
         <section className="section" aria-labelledby="state-figures-heading">
           <div className="section-head"><h2 id="state-figures-heading">All statewide figures</h2></div>
           <div className="scroll-x"><table className="state-figures">
@@ -217,10 +217,7 @@ export default async function NewJerseyPage() {
           <p className="table-note">Different measures cover different periods. Statewide sale medians describe sold homes, not the value of every home; construction totals include reporting towns only.</p>
         </section>
       </MoreExpander>
-      {statewideNotes.length > 0 && <aside id="state-figure-notes" className="state-figure-notes" aria-labelledby="state-figure-notes-heading" tabIndex={-1}>
-        <h2 id="state-figure-notes-heading"><a href="#state-note-reference" aria-label="Return to the statewide footnote reference">†</a> About the statewide figures</h2>
-        {statewideNotes.map((text) => <p key={text}>{text}</p>)}
-      </aside>}
+      {statewideNotes.length > 0 && <StateFigureNotes notes={statewideNotes} />}
       </main>
     </>
   );

@@ -39,7 +39,7 @@ export default async function FreshnessPage() {
     return (
       <>
         <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
-        <main className="shell atlas-page atlas-ledger">
+        <main className="shell atlas-page atlas-ledger quiet-county quiet-history">
           <h1 className="page-title">How current is each source</h1>
           <p className="meta">
             The API is unreachable, so there is nothing to show.{" "}
@@ -55,23 +55,26 @@ export default async function FreshnessPage() {
   return (
     <>
       <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
-      <main className="shell atlas-page atlas-ledger">
+      <main className="shell atlas-page atlas-ledger quiet-county quiet-history">
         <header className="page-head" data-kind="data">
           <div>
             <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Data freshness" />
             <Kind kind="data" />
             <h1 className="page-title">How current is each source</h1>
-            <p className="meta">
+            <p className="meta history-intro">Data dates and update checks, kept separate.</p>
+            <nav className="history-tabs" aria-label="Source history"><Link href="/freshness" aria-current="page">Source freshness</Link><Link href="/changes">Revised figures <span aria-hidden="true">↗</span></Link></nav>
+            <details className="history-explainer"><summary>How to read these dates</summary><p className="meta">
               Data through is the period a source describes; Last checked is when we looked for
               updates. Publishers update at the frequencies below; we check weekly. Next
               release is the publisher’s own calendar, linked, where it publishes one.
-            </p>
+            </p></details>
             <p className="meta fresh-built">
               Built {dayLabel(report.generated_at)}
               <BuiltAgo at={report.generated_at} /> · site version {report.site_version} ·
               dates are UTC
             </p>
           </div>
+          <aside className="history-portrait" aria-label="Source coverage"><strong>{report.sources.length}</strong><span>sources tracked</span><small>Source checks scheduled Fridays</small></aside>
         </header>
 
         <section className="section" aria-labelledby="fresh-heading">

@@ -5,24 +5,33 @@ import { periodLabel } from "@/lib/periods";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import "./housing-entry.css";
 
-export default async function UnitedStatesPage() {
+export const metadata = {
+  title: "Housing Intelligence — Find your place",
+  description: "A clearer picture of the place you could call home. Free housing data with sources for every figure; detailed coverage starts with New Jersey.",
+};
+
+export default async function HousingLandingPage() {
   const rate = await nationalMortgageRate();
   return <>
     <Masthead affordability={{ kind: "disabled", reason: "Choose a covered state first" }} budgetLabel="NJ budget" />
-    <main className="shell nation-page">
+    <main className="shell nation-page quiet-nation">
       <header className="page-head nation-head" data-kind="nation">
-        <p className="entry-kicker">Housing · a public data project</p>
-        <h1>United States</h1>
+        <svg className="nation-portrait" viewBox="0 0 360 300" fill="none" aria-hidden="true">
+          <path d="M20 254H340M47 254V125L136 60L225 125V254M33 135L136 60L239 135M112 254V183H151V254M70 145H96V174H70ZM176 145H202V174H176ZM104 82V37H119V72M225 254V166L283 124L332 160V254M213 175L283 124L344 168M250 189H275V217H250ZM298 189H320V217H298Z" />
+          <path d="M47 276H225M47 270V282M225 270V282M20 254V125M14 125H26M14 254H26" strokeDasharray="3 5" />
+        </svg>
+        <p className="entry-kicker">A public data project</p>
+        <h1>Housing Intelligence</h1>
         <p className="entry-introduction">A clearer picture of the place you could call home.</p>
-        <p className="entry-context">Compare housing costs and local conditions, with sources for every figure.</p>
+        <p className="entry-context">Housing costs and local conditions, traced to their sources.</p>
         <p className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg>Free to use <span aria-hidden="true">·</span> <span>No fees. No subscription. Definitely no ads.</span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-labelledby="coverage-heading">
-        <header><p className="entry-kicker">Explore by state</p><h2 id="coverage-heading">Find your place</h2></header>
+        <header><p className="entry-kicker">United States · Explore by state</p><h2 id="coverage-heading">Find your place</h2></header>
         <NationalCoverageMap />
       </section>
       <section className="national-context" aria-labelledby="national-context-heading">
-        <div><p className="entry-kicker">National context</p><h2 id="national-context-heading">The cost of borrowing</h2><p>A national benchmark, not a lender quote.</p></div>
+        <div><h2 id="national-context-heading">National borrowing benchmark</h2><p>National average—not a lender quote.</p></div>
         {rate ? <div className="national-rate"><strong>{rate.value.toFixed(2)}%</strong><FloatingMetricTerm metricId={rate.metric_id} label="30-year fixed mortgage" /><small>Freddie Mac · {periodLabel(rate.period_start, rate.metric_id)}</small></div> : <p>Mortgage-rate data is unavailable in this snapshot.</p>}
       </section>
     </main>

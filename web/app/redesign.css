@@ -273,31 +273,32 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
   letter-spacing: 0;
   text-transform: none;
 }
-.bar .theme-toggle svg { transition: transform 180ms ease; }
-.bar .theme-toggle:active svg { transform: rotate(20deg) scale(.9); }
-.bar .theme-toggle { position: relative; overflow: hidden; }
-.bar .theme-toggle svg {
-  display: block !important;
-  position: absolute;
-  inset: 9px;
-  transition: opacity 180ms ease, transform 420ms cubic-bezier(.2,.8,.2,1);
-}
-.bar .theme-toggle .theme-sun { opacity: 0; transform: rotate(-100deg) scale(.25); }
-.bar .theme-toggle .theme-moon { opacity: 1; transform: rotate(0) scale(1); }
-:root[data-theme="dark"] .bar .theme-toggle .theme-sun { opacity: 1; transform: rotate(0) scale(1); }
-:root[data-theme="dark"] .bar .theme-toggle .theme-moon { opacity: 0; transform: rotate(70deg) scale(.25); }
+.bar .theme-toggle { --eclipse-cut: 0px; --eclipse-rays: 0; --eclipse-turn: -45deg; --eclipse-glow: #aaaec8; position: relative; overflow: visible; isolation: isolate; }
+:root[data-theme="dark"] .bar .theme-toggle { --eclipse-cut: 12px; --eclipse-rays: 1; --eclipse-turn: 0deg; --eclipse-glow: #d8b57b; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .bar .theme-toggle .theme-sun { opacity: 1; transform: rotate(0) scale(1); }
-  :root:not([data-theme="light"]) .bar .theme-toggle .theme-moon { opacity: 0; transform: rotate(70deg) scale(.25); }
+  :root:not([data-theme="light"]) .bar .theme-toggle { --eclipse-cut: 12px; --eclipse-rays: 1; --eclipse-turn: 0deg; --eclipse-glow: #d8b57b; }
 }
+.bar .theme-toggle::before { content: ""; position: absolute; inset: 3px; z-index: -1; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--eclipse-glow) 28%, transparent), transparent 72%); opacity: 0; transform: scale(.6); transition: opacity 220ms, transform 350ms; }
+.bar .theme-toggle:is(:hover, :focus-visible)::before { opacity: 1; transform: scale(1.35); }
+.bar .theme-toggle .theme-eclipse { display: block; overflow: visible; transition: transform 400ms cubic-bezier(.2,.8,.2,1); }
+.bar .theme-toggle:active .theme-eclipse { transform: scale(.88); }
+.eclipse-shadow { transform: translate(var(--eclipse-cut), calc(-1 * var(--eclipse-cut))); transition: transform 420ms cubic-bezier(.22,1,.36,1); }
+.eclipse-rays { opacity: var(--eclipse-rays); transform: rotate(var(--eclipse-turn)) scale(calc(.6 + var(--eclipse-rays) * .4)); transform-origin: 12px 12px; transition: opacity 240ms, transform 460ms cubic-bezier(.22,1,.36,1); }
+.eclipse-orbit { opacity: 0; transform-origin: 12px 12px; }
+:root[data-theme-reveal] .eclipse-orbit { animation: eclipse-orbit 450ms ease-out; }
+@keyframes eclipse-orbit { 0% { opacity: 0; transform: rotate(-80deg); } 25% { opacity: .7; } 100% { opacity: 0; transform: rotate(80deg); } }
 
 /* The browser snapshots only the visible page for a short palette crossfade. Older
    browsers change instantly; reduced-motion readers never start this transition. */
 ::view-transition-old(root),
 ::view-transition-new(root) { animation-duration: 240ms; animation-timing-function: ease-out; }
+:root[data-theme-reveal]::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
+:root[data-theme-reveal]::view-transition-new(root) { animation: theme-reveal 520ms cubic-bezier(.22,.68,.2,1) both; mix-blend-mode: normal; }
+@keyframes theme-reveal { from { clip-path: circle(0px at var(--theme-x) var(--theme-y)); } to { clip-path: circle(var(--theme-radius) at var(--theme-x) var(--theme-y)); } }
 @media (prefers-reduced-motion: reduce) {
-  .bar .theme-toggle svg { transition: none; }
+  .bar .theme-toggle :is(svg, .eclipse-shadow, .eclipse-rays), .bar .theme-toggle::before { transition: none; }
   .bar .theme-toggle:active svg { transform: none; }
+  .eclipse-orbit { animation: none !important; }
   ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0s; }
 }
 

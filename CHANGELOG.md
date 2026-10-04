@@ -3,6 +3,17 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.37.1] — 2026-10-04
+
+### Changed
+
+- **A quieter layout for county, town, state, national, source-history and tax pages**
+  (PR #89, a Codex experiment, owner-directed). A still housing snapshot replaces the
+  moving ticker on county pages; owning and renting totals sit side by side with their
+  exclusions visible; household tools, property checks and the local market open as
+  expandable sections. Presentation only: no figure, formula or reading changed. ZIP
+  pages and reports keep their layout.
+
 ## [0.37.0] — 2026-10-03
 
 Two owner-directed redesigns built by Codex and reviewed before merge (PR #86, PR #88).

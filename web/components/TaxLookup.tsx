@@ -60,6 +60,7 @@ type Found = { file: ParcelFile; parcels: Parcel[]; parcel: Parcel };
 export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: string }) {
   const [query, setQuery] = useState("");
   const [townQuery, setTownQuery] = useState("");
+  const townFilter = useRef<HTMLDetailsElement>(null);
   const [meta, setMeta] = useState<StreetMeta | null>(null);
   const [shard, setShard] = useState<{ key: string; data: StreetShard } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +78,7 @@ export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: 
   useEffect(() => {
     const geoid = new URLSearchParams(window.location.search).get("town");
     const linked = towns.find((t) => t.geoid === geoid);
-    if (linked) setTownQuery(label(linked));
+    if (linked) { setTownQuery(label(linked)); if (townFilter.current) townFilter.current.open = true; }
   }, [towns]);
 
   useEffect(() => {
@@ -169,21 +170,27 @@ export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: 
     <div className="tax-lookup">
       <div className="household-inputs">
         <label className="control">
-          <span className="control-label">Address</span>
+          <span className="control-label">Find a property</span>
+          <span className="tax-search-field"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="6" /><path d="m15 15 6 6" /></svg>
           <input
             value={query}
             disabled={!meta}
-            placeholder={meta ? "100 Community Dr, or block and lot like 2604/19" : "Loading…"}
+            placeholder={meta ? "Street address, e.g. 100 Community Dr" : "Loading property records…"}
             aria-label="Address, or block and lot"
             onChange={(event) => {
               setQuery(event.target.value);
+              if (BLOCK_LOT.test(event.target.value) && townFilter.current) townFilter.current.open = true;
               setPicked(null);
               setChosen(null);
             }}
           />
+          </span>
+          <span className="tax-search-hint">Results appear as you type. You can add a town or ZIP in this field.</span>
         </label>
+        <details className="tax-town-filter" ref={townFilter}>
+          <summary>{town ? `Town filter: ${label(town)}` : "Town filter or block & lot"} <span aria-hidden="true">＋</span></summary>
         <label className="control">
-          <span className="control-label">Town (optional; needed for block and lot)</span>
+          <span className="control-label">Town · required for block &amp; lot, otherwise optional</span>
           <input
             list="tax-towns"
             value={townQuery}
@@ -201,6 +208,9 @@ export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: 
             ))}
           </datalist>
         </label>
+        {townQuery && <button type="button" className="tax-clear-town" onClick={() => { setTownQuery(""); setPicked(null); setChosen(null); }}>Clear town filter</button>}
+        <p className="tax-search-hint">For block &amp; lot, enter numbers such as 2604/19 in the search above, then choose the town here.</p>
+        </details>
       </div>
 
       {error && <p className="household-note">{error}</p>}

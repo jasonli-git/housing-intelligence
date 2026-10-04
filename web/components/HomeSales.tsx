@@ -21,12 +21,14 @@ export function HomeSales({
   geoid,
   levels,
   showLookup = true,
+  portrait = false,
 }: {
   name: string;
   level: string;
   geoid: string;
   levels: Pick<PacketLevel, "metric_id" | "value" | "period_start" | "period_end">[];
   showLookup?: boolean;
+  portrait?: boolean;
 }) {
   const find = (id: string) => levels.find((l) => l.metric_id === id);
   const median = find("sr1a_median_sale_price");
@@ -49,6 +51,10 @@ export function HomeSales({
       <div className="section-head">
         <h2 id="sales-heading">How homes sell here</h2>
       </div>
+      {portrait && <div className="quiet-market-figures">
+        <div><strong>{Math.round(count.value).toLocaleString("en-US")}</strong><span>Qualifying sales</span><small>{monthLabel(count.period_start)} to {monthLabel(count.period_end)}</small></div>
+        <div><strong>{usd(median.value)}</strong><span>Median sale price</span><small>{span} · sold homes, not all homes</small></div>
+      </div>}
       <p className="sales-lead">
         {Math.round(count.value).toLocaleString("en-US")} usable sales of one- to four-family
         homes in {name} from {span}, at a median of <b>{usd(median.value)}</b>

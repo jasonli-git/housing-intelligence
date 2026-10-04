@@ -25,6 +25,7 @@ import type { Term } from "@/lib/glossary";
 import { type Basis, eachMonth, type Inputs, overYears, upFront } from "@/lib/ownership";
 import { ownershipInputs, cashFit, DEFAULT_YEARS } from "@/lib/budgetScenario";
 import { useBudgetScenario } from "@/components/useBudgetScenario";
+import { QuietDisclosure, QuietToolGroup } from "@/components/QuietCounty";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
 export type Dated = { value: number; asOf: string };
@@ -169,7 +170,9 @@ export function CostToOwn({
   beforeMoving,
   showHelp = true,
   comparePlaceId,
-}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number }) {
+  quiet = false,
+  householdTools,
+}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode }) {
   const id = useId();
   const { personal, household, savePersonal, saveHousehold } = useBudgetScenario(control);
   const [fields, setFields] = useState<HomeFields>(NO_HOME_FIELDS);
@@ -370,6 +373,30 @@ export function CostToOwn({
   };
   const showView = (which: View) => !control || view === which;
 
+  const budgetFit = <QuietDisclosure enabled={quiet} title="Check your monthly budget">
+      {control && comparePlaceId !== undefined && <aside className="cost-budget-fit" aria-label="Your budget fit">
+        <details open={quiet || undefined}>
+          <summary>Your budget{household.income && household.income > 0 ? ` · Owning uses ${Math.round(month.total / (household.income / 12) * 100)}% of your income${partial ? " on included costs" : ""}` : " · Add your income to check"}</summary>
+          <div className="budget-inputs">
+            <label className="control">Yearly household income before tax<input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={(event) => saveHousehold({ ...household, income: parseAmount(event.target.value) ?? undefined })} /></label>
+            <label className="control">Cash available for buying<input inputMode="decimal" value={household.cash ?? ""} placeholder="optional" onChange={(event) => saveHousehold({ ...household, cash: parseAmount(event.target.value) ?? undefined })} /></label>
+          </div>
+          <p>Uses cash paid each month, including principal—not the lower “money gone” figure. The comparison line is 30% of income, not loan approval.</p>
+        </details>
+        {household.income !== undefined && household.income > 0 && <p>
+          {month.total > household.income / 12 * .3
+            ? `${money(month.total - household.income / 12 * .3)} a month above the 30% comparison line.`
+            : partial ? "Below the 30% line on included costs; the estimate is incomplete." : "Within the 30% monthly comparison line."}
+          {partial && ` Missing: ${listed(month.missing)}.`}
+          {rentMonth !== null && ` Rent alone uses ${Math.round(rentMonth / (household.income / 12) * 100)}% of your income.`}
+        </p>}
+        <p>Buying upfront: {money(up.low)}–{money(up.high)} · {cashFit(household.cash, up.low, up.high)}.</p>
+        <a href={`/states/new-jersey?mode=afford&place=${comparePlaceId}${household.income ? `&income=${household.income}` : ""}#nj-explore`}>Compare typical homes elsewhere →</a>
+        {Object.values(fields).some(Boolean) && <small>Your home’s price, tax and fees stay here; comparisons use each area’s figures.</small>}
+        {home.basis === "transactions" && <small>This sale-price scenario is not included in cross-place ownership rankings.</small>}
+      </aside>}
+      </QuietDisclosure>;
+
   return (
     <section className="section cost" aria-labelledby={`${id}-heading`}>
       <div className="section-head">
@@ -445,27 +472,7 @@ export function CostToOwn({
         </details>
       )}
 
-      {control && comparePlaceId !== undefined && <aside className="cost-budget-fit" aria-label="Your budget fit">
-        <details>
-          <summary>Your budget{household.income && household.income > 0 ? ` · Owning uses ${Math.round(month.total / (household.income / 12) * 100)}% of your income${partial ? " on included costs" : ""}` : " · Add your income to check"}</summary>
-          <div className="budget-inputs">
-            <label className="control">Yearly household income before tax<input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={(event) => saveHousehold({ ...household, income: parseAmount(event.target.value) ?? undefined })} /></label>
-            <label className="control">Cash available for buying<input inputMode="decimal" value={household.cash ?? ""} placeholder="optional" onChange={(event) => saveHousehold({ ...household, cash: parseAmount(event.target.value) ?? undefined })} /></label>
-          </div>
-          <p>Uses cash paid each month, including principal—not the lower “money gone” figure. The comparison line is 30% of income, not loan approval.</p>
-        </details>
-        {household.income !== undefined && household.income > 0 && <p>
-          {month.total > household.income / 12 * .3
-            ? `${money(month.total - household.income / 12 * .3)} a month above the 30% comparison line.`
-            : partial ? "Below the 30% line on included costs; the estimate is incomplete." : "Within the 30% monthly comparison line."}
-          {partial && ` Missing: ${listed(month.missing)}.`}
-          {rentMonth !== null && ` Rent alone uses ${Math.round(rentMonth / (household.income / 12) * 100)}% of your income.`}
-        </p>}
-        <p>Buying upfront: {money(up.low)}–{money(up.high)} · {cashFit(household.cash, up.low, up.high)}.</p>
-        <a href={`/states/new-jersey?mode=afford&place=${comparePlaceId}${household.income ? `&income=${household.income}` : ""}#nj-explore`}>Compare typical homes elsewhere →</a>
-        {Object.values(fields).some(Boolean) && <small>Your home’s price, tax and fees stay here; comparisons use each area’s figures.</small>}
-        {home.basis === "transactions" && <small>This sale-price scenario is not included in cross-place ownership rankings.</small>}
-      </aside>}
+      {!quiet && budgetFit}
 
       {control && cashComparison && (
         <div className="cost-monthly-headline" aria-label="Monthly cash comparison">
@@ -531,6 +538,7 @@ export function CostToOwn({
               ))}
               <i style={{ width: share(kept, month.total), background: "var(--good)" }} />
             </div>
+            {quiet && <p className="quiet-receipt"><span>Money gone <b>{money(month.gone)}</b></span><span>Into the home <b>{money(kept)}</b></span></p>}
             <p className="gone-kept-key" aria-hidden="true">
               {parts.map((p) => (
                 <span key={p.key}>
@@ -544,6 +552,7 @@ export function CostToOwn({
               </span>
             </p>
           </div>
+          <QuietDisclosure enabled={quiet} title="See the owning breakdown" note="The costs, assumptions and sources">
           <dl className="cost-lines">
             <div className="sum">
               <dt>
@@ -593,6 +602,7 @@ export function CostToOwn({
               <dd>{money(incomeFor(month.total))} a year</dd>
             </div>
           </dl>
+          </QuietDisclosure>
         </article>
 
         <article className="cost-card">
@@ -605,6 +615,7 @@ export function CostToOwn({
                 <b>{money(rentMonth)}</b>
                 <span>a month, all of it gone</span>
               </p>
+              <QuietDisclosure enabled={quiet} title="See the renting breakdown" note="The rent figure and what it leaves out">
               <dl className="cost-lines">
                 <div className="sum">
                   <dt>Money gone each month</dt>
@@ -639,6 +650,7 @@ export function CostToOwn({
                   <dd>{money(incomeFor(rentMonth))} a year</dd>
                 </div>
               </dl>
+              </QuietDisclosure>
             </>
           ) : (
             <p className="cost-missing">
@@ -685,6 +697,9 @@ export function CostToOwn({
         </div>
       )}
 
+      <QuietToolGroup enabled={quiet}>
+      {quiet && budgetFit}
+      <QuietDisclosure enabled={quiet} title="Upfront cash & a longer-term scenario">
       <div className="cost-views">
         {control && (
           <div className="cost-view-tabs" role="tablist" aria-label="Other views of the cost">
@@ -806,6 +821,9 @@ export function CostToOwn({
           </div>
         )}
       </div>
+      </QuietDisclosure>
+      {householdTools}
+      </QuietToolGroup>
 
       {showHelp && <HousingHelp />}
 
