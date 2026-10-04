@@ -1,0 +1,37 @@
+version: 2
+models:
+  - name: stg_nj_affordable_records
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: record_id
+        tests: [not_null]
+      - name: snapshot
+        tests: [not_null]
+      - name: release_layer
+        tests:
+          - accepted_values:
+              arguments:
+                values: [need, projects, trust_funds]
+  - name: stg_hud_assisted_records
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: record_id
+        tests: [not_null]
+      - name: snapshot
+        tests: [not_null]
+  - name: stg_hud_lihtc_records
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: record_id
+        tests: [unique, not_null]
+      - name: snapshot
+        tests: [not_null]
+  - name: stg_nj_affordable
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests: [not_null]

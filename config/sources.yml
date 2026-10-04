@@ -9,6 +9,73 @@
 # procedure it plugs into is README's "When a source stops answering".
 
 sources:
+  nj_affordable:
+    name: Affordable housing calculations and municipal status reports
+    publisher: NJ Department of Community Affairs
+    license: Open public record
+    licence_class: public_record
+    commercial: {ads: allowed, paid: allowed, note: State information may be copied and distributed.}
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-10-04
+    terms_note: >-
+      Section F permits copying and distributing State information unless marked otherwise.
+      These offered workbooks carry no separate reuse restriction. The public download
+      listing is read only to discover the newest offered municipal reporting workbook.
+    url: https://www.nj.gov/dca/dlps/hss/MuniStatusReporting.shtml
+    cadence: annual
+    adapter: hip.sources.nj_affordable:NjAffordableAdapter
+    fallback: Keep the last report and its date; a missing submission is not zero.
+    notes: >-
+      Fourth-round 2025–2035 figures are DCA non-binding calculations published October
+      2024, not final court-approved obligations. Municipal self-reports span rounds;
+      completed units cannot be divided by fourth-round need. Fund balances exclude
+      unspent commitments. The July 2026 workbook's fund caption and cutoff differ.
+
+  hud_assisted:
+    name: Multifamily assistance properties and Section 8 contracts
+    publisher: U.S. Department of Housing and Urban Development
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial: {ads: allowed, paid: allowed, note: Federal agency administrative data.}
+    terms_url: https://www.hud.gov/hud-partners/multifamily-assist-section8-database
+    terms_checked: 2026-10-04
+    terms_note: >-
+      HUD offers the property and contract workbooks for public use; its disclaimer
+      disclaims completeness and warranty, without a reuse restriction. No HUD User API
+      is used. Only property/program fields land, never owner or agent personal details.
+    url: https://www.hud.gov/hud-partners/multifamily-assist-section8-database
+    cadence: monthly
+    adapter: hip.sources.hud_assistance:HudAssistedAdapter
+    fallback: Retain the last dated snapshot, never claim present vacancies or eligibility.
+    notes: >-
+      Contract counts are not property counts. Each contract's assisted units are kept
+      separate from the whole property's units. County codes are explicit; mailing cities
+      are not matched to municipalities. Contract end dates can be extended or renewed.
+
+  hud_lihtc:
+    name: Low-Income Housing Tax Credit public map inventory
+    publisher: U.S. Department of Housing and Urban Development
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial: {ads: allowed, paid: allowed, note: Federal agency administrative data.}
+    terms_url: https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/LIHTC/FeatureServer
+    terms_checked: 2026-10-04
+    terms_note: >-
+      HUD's hosted public FeatureServer offers a documented query service and credits HUD
+      and Census, without separate reuse restrictions. Only property/program fields are
+      requested, never contact names or company details. It is not the HUD User API.
+    url: https://www.huduser.gov/portal/datasets/lihtc/property.html
+    cadence: annual
+    adapter: hip.sources.hud_assistance:HudLihtcAdapter
+    fallback: >-
+      HUD's newer offered LIHTCPUB.ZIP (through 2024) currently answers automated requests
+      with a bot-check page. Do not bypass it; an owner-downloaded file is the next route.
+    notes: >-
+      The public map copy's NJ dated entries extend through 2020, verified 2026-10-04.
+      It is a historical project inventory, not a count of currently restricted or vacant
+      homes. Targeting disabled residents does not establish physical accessibility.
+      No expiry is inferred from a placed-in-service year. NHPD is not acquired: a signed
+      data licence is required for public redistribution.
   hip_derived:
     name: Computed by the platform
     publisher: Housing Intelligence Platform

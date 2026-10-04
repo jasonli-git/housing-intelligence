@@ -169,12 +169,17 @@ def build_report(
         for row in session.execute(
             text(
                 """
-                SELECT m.source_id,
-                       min(f.period_start)::text AS start,
-                       max(f.period_end)::text AS "end"
-                FROM fact_metric_observation f
-                JOIN metrics m ON m.metric_id = f.metric_id
-                GROUP BY m.source_id
+                SELECT source_id, min(period_start)::text AS start,
+                       max(period_end)::text AS "end"
+                FROM (
+                    SELECT m.source_id, f.period_start, f.period_end
+                    FROM fact_metric_observation f
+                    JOIN metrics m ON m.metric_id = f.metric_id
+                    UNION ALL
+                    SELECT source_id, snapshot, snapshot
+                    FROM affordable_housing_records
+                ) observed
+                GROUP BY source_id
                 """
             )
         ).mappings()

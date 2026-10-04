@@ -529,6 +529,11 @@ class SourceAdapter(ABC):
             f"{cls.__name__} lands xls but does not implement xls_records()"
         )
 
+    @classmethod
+    def xlsx_records(cls, path: Path, ref: ReleaseRef) -> list[dict[str, object]]:
+        """Publisher-specific rows from a sparse or multi-sheet offered workbook."""
+        raise NotImplementedError(f"{cls.__name__} must implement xlsx_records()")
+
     def landing_sheet(self, ref: ReleaseRef) -> str:
         """Which worksheet a release lands from, for sources published as workbooks.
 

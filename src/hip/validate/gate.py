@@ -24,6 +24,13 @@ from hip.geography.matching import OBSERVATION_TABLE, REJECT_TABLE
 # A home value index below this is a data error, not a cheap house. Deliberately wide:
 # the gate is here to catch a file whose shape changed, not to second-guess Zillow.
 VALUE_BOUNDS = {
+    "hud_area_median_income": (5_000.0, 500_000.0),
+    "hud_income_limit_80": (5_000.0, 500_000.0),
+    "nj_ah_present_need": (0.0, 1_000_000.0),
+    "nj_ah_prospective_need": (0.0, 1_000_000.0),
+    "nj_ah_completed_units": (0.0, 1_000_000.0),
+    # Preserve negative municipal reports, not abs() or a zero clamp.
+    "nj_ah_trust_balance": (-10_000_000_000.0, 10_000_000_000.0),
     "zhvi_sfr": (1_000.0, 100_000_000.0),
     "zori_all": (100.0, 100_000.0),
     "acs_median_hh_income": (5_000.0, 500_000.0),

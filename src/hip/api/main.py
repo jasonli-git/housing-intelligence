@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from hip import __version__
 from hip.api.routers import (
+    affordable_housing,
     analytics,
     explanations,
     freshness,
@@ -49,3 +50,4 @@ app.include_router(freshness.router)
 app.include_router(revisions.router)
 app.include_router(income_limits.router)
 app.include_router(water_systems.router)
+app.include_router(affordable_housing.router)

@@ -126,7 +126,8 @@ def test_every_revision_names_the_release_on_both_sides(figure) -> None:  # type
     with Session(get_engine()) as session:
         session.execute(
             text(
-                "UPDATE fact_metric_observation SET value = value * 2 "
+                # The fixture can select a valid zero; doubling it changes nothing.
+                "UPDATE fact_metric_observation SET value = value + 1 "
                 "WHERE region_id = :r AND metric_id = :m AND period_start = :p"
             ),
             {"r": figure[0], "m": figure[1], "p": figure[2]},

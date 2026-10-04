@@ -56,6 +56,7 @@ from hip.landing.tabular import (
     land_pdf,
     land_xls,
     land_xlsx,
+    land_xlsx_records,
     parquet_path,
 )
 from hip.packets import (
@@ -96,6 +97,7 @@ from hip.warehouse.load import (
     ReleaseAttributionError,
     ReleaseProvenance,
     SourceRecord,
+    load_affordable_housing,
     load_facts,
     load_income_limits,
     load_region_identifiers,
@@ -531,12 +533,16 @@ def prune_raw(
                     "              WHERE f.release_id = sr.release_id) "
                     "   OR EXISTS (SELECT 1 FROM fact_revision r "
                     "              WHERE r.old_release_id = sr.release_id "
-                    "                 OR r.new_release_id = sr.release_id)"
+                    "                 OR r.new_release_id = sr.release_id) "
+                    "   OR EXISTS (SELECT 1 FROM affordable_housing_records a "
+                    "              WHERE a.release_id = sr.release_id)"
                 )
             ).all()
             if row[0]
         }
-    typer.echo(f"{len(cited):,} release(s) cited by facts — these are never removed")
+    typer.echo(
+        f"{len(cited):,} release(s) cited by facts or housing records — never removed"
+    )
 
     found = refresh.superseded_releases(settings.raw_dir, cited)
     if not found:
@@ -786,6 +792,13 @@ def land(
                 )
             elif adapter.landing_format == "fixed_width":
                 table = land_fixed_width(
+                    release,
+                    type(adapter),
+                    parquet_dir=settings.parquet_dir,
+                    overwrite=overwrite,
+                )
+            elif adapter.landing_format == "xlsx_records":
+                table = land_xlsx_records(
                     release,
                     type(adapter),
                     parquet_dir=settings.parquet_dir,
@@ -1160,6 +1173,10 @@ def load(
     # The water systems serving each town and ZIP code (Milestone 40), after the facts
     # for the same reason: each row cites the SDWIS release the load recorded.
     water_rows = load_water_systems(get_engine(), settings.duckdb_path)
+    assistance_rows = load_affordable_housing(
+        get_engine(), settings.duckdb_path, releases=fact_provenance
+    )
+    typer.echo(f"affordable housing records: {assistance_rows:,}")
     typer.echo("")
     for metric_id, count in sorted(facts.by_metric.items()):
         typer.echo(f"{metric_id:<14} {count:>9,} observations")
