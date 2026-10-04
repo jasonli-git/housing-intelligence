@@ -3,6 +3,28 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.37.0] — 2026-10-03
+
+Two owner-directed redesigns built by Codex and reviewed before merge (PR #86, PR #88).
+
+### Changed
+
+- **`/` is a United States entry** (ARCHITECTURE #305). A coverage map with New Jersey
+  the only state available, and the national mortgage benchmark; New Jersey's own page
+  moves to `/states/new-jersey`, and `/regions/1` redirects there. Old `/?mode=afford`
+  bookmarks now open the national entry.
+- **The budget explorer prices homes like the cost cards** (#306): insurance,
+  utilities, upkeep and mortgage insurance as well as the mortgage and tax. Fewer places
+  fall within the same income than before. A place missing an input is marked
+  incomplete rather than priced without it. Income, buying cash and personal quotes are
+  shared between the explorer, the cost cards and "For your household".
+- **Local pages are reordered** (PR #86): costs, then the household, highlights,
+  home checks (flood, water, the property lookup) and the local market, with a
+  section-jump menu, a "Find within my budget" link from every town and county, and
+  supporting method notes folded into expandable details. AI-written readings carry an
+  explicit badge.
+- Removed the separate "Money gone" cost view; the figure stays in the monthly card.
+
 ## [0.36.0] — 2026-10-02
 
 Milestone 40: flood and environmental exposure.

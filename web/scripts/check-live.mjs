@@ -282,7 +282,11 @@ async function pageSamples() {
   const searchPath = path.join(siteDir, "search.json");
   const entries = JSON.parse(await readFile(searchPath, "utf8"));
   const byId = new Map(entries.map((entry) => [entry.id, entry]));
-  const samples = [{ label: "site", route: "/" }];
+  // `/` is the United States entry and New Jersey's own page its first state (PR #88).
+  const samples = [
+    { label: "site", route: "/" },
+    { label: "state", route: "/states/new-jersey" },
+  ];
 
   for (const level of ["county", "zip"]) {
     const entry = entries.find((candidate) => candidate.level === level);
