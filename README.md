@@ -13,20 +13,20 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.37.1, 2026-10-04. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.38.0, 2026-10-04. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, prices, rents, economic context, tax
-> roll, recorded sales, and flood and environmental exposure, from 26 public sources,
+> roll, recorded sales, and flood and environmental exposure, from 29 public sources,
 > published as a static site with no database or application server. Every figure
 > carries its source file, licence and kind, and revisions are recorded rather than
 > overwritten. Full detail under
 > [Project Status](#project-status).
 >
-> **Latest.** Milestone 40 (2026-10-02) asks whether a place floods: the share of homes
-> in FEMA's flood zones and New Jersey's sea-level-rise line, flood claims paid, open
-> contaminated sites, and the water systems serving it with their recent violations.
+> **Latest.** Milestone 41 (2026-10-04) adds affordable housing: what DCA calculates each
+> town should provide, what towns report building, a searchable inventory of assisted
+> homes, and where to apply.
 >
-> **Next.** Milestone 41: affordable housing and assistance. See
+> **Next.** Milestone 42: utilities — power, gas and what's in the pipes. See
 > [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md).
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
@@ -272,6 +272,10 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   town; owner names and mailing addresses are never collected, and an address is removed
   on request under Daniel's Law (below). County and statewide effective tax rates,
   weighted by equalized valuation.
+- **Affordable housing and assistance** (M41, built) — on county, town and state pages,
+  DCA's non-binding fourth-round need, the affordable units towns report completed and
+  their trust-fund balances, and a searchable inventory of HUD assisted properties and
+  LIHTC projects, each kept apart; official routes for where to apply.
 - **Is it at risk of flooding?** (M40, built) — on every town, county and ZIP page, the
   share of homes in FEMA's 1% and 0.2% flood zones and inside New Jersey's tidal
   planning line with four feet of sea-level rise, estimated from the 2020 Census by
@@ -755,7 +759,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.37.1 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.38.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable

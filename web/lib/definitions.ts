@@ -18,6 +18,22 @@ export type MetricDefinition = {
 
 export const DEFINITIONS: Record<string, MetricDefinition> = {
   // Prices
+  nj_ah_present_need: {
+    what: "DCA’s non-binding calculation of existing affordable housing need for the 2025–2035 round, published in October 2024.",
+    why: "A planning baseline, not a final court-approved obligation or a count of available homes.",
+  },
+  nj_ah_prospective_need: {
+    what: "DCA’s non-binding calculation of added need for 2025–2035, with its published 1,000-home/20% cap.",
+    why: "Shows the state’s planning calculation, not the town’s final legal obligation.",
+  },
+  nj_ah_completed_units: {
+    what: "Affordable units in municipal reports that mark a certificate of occupancy granted. Missing counts and unknown completion statuses are left out.",
+    why: "A partial reported inventory across rounds, including rehabilitation. It cannot measure completion of the fourth-round need.",
+  },
+  nj_ah_trust_balance: {
+    what: "The balance towns report in their affordable housing trust funds. Missing submissions are omitted, not treated as zero.",
+    why: "Unspent commitments are not deducted, so this is not the amount freely available for new projects. Negative reports stay negative.",
+  },
   zhvi_sfr: {
     what: "Zillow’s estimate of what a typical single-family house here is worth: one in the middle of the local market, not the cheapest or the dearest.",
     why: "It is the closest thing to “what a house costs here”, the figure a buyer’s budget starts from.",
@@ -475,6 +491,10 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
   acs_homeownership_rate: {
     what: "The share of occupied homes lived in by their owners rather than rented out.",
     why: "It shows whether a place is mostly owners or has plenty of rentals.",
+  },
+  pep_population: {
+    what: "The Census Bureau’s estimate of residents as of July 1, using the last census plus births, deaths and migration. Not a survey average.",
+    why: "A newer population snapshot. Survey-based population stays the denominator of this site’s calculated ratios.",
   },
   acs_population: {
     what: "How many people live here, from the Census Bureau’s survey, pooled over five years.",

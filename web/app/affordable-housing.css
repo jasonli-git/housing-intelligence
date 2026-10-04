@@ -1,0 +1,23 @@
+#housing-assistance { scroll-margin-top: 110px; }
+.housing-assistance { margin: 1.5rem 0; padding: clamp(16px, 3vw, 24px); border: 1px solid var(--border); border-radius: 18px; background: var(--surface-card); }
+.housing-assistance h3 { margin: .35rem 0; font-size: 1.2rem; letter-spacing: -.025em; }
+.housing-assistance-head p, .assistance-note { color: var(--text-secondary); font-size: .8rem; line-height: 1.6; }
+.assistance-routes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 16px 0 10px; }
+.assistance-routes a { display: flex; flex-direction: column; gap: 7px; padding: 15px; border-radius: 12px; text-decoration: none; color: var(--text-primary); background: color-mix(in srgb, var(--series-3) 7%, var(--surface-1)); border: 1px solid color-mix(in srgb, var(--series-3) 15%, var(--border)); }
+.assistance-routes a:hover { border-color: var(--series-3); }
+.assistance-routes small { color: var(--text-muted); font: .65rem var(--font-mono); }
+.assistance-routes strong { font-size: .87rem; }.assistance-routes span { font-size: .75rem; line-height: 1.5; color: var(--text-secondary); }
+.housing-assistance details { padding: 12px 0; border-top: 1px solid var(--border); }
+.housing-assistance summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+.housing-assistance summary span { margin-left: 8px; font-size: .7rem; font-weight: 400; color: var(--text-muted); }
+.assistance-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+.assistance-facts div { display: grid; gap: 8px; }.assistance-facts small { font-size: .7rem; color: var(--text-secondary); }.assistance-facts strong { font-size: 1.5rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.assistance-filter { display: flex; flex-wrap: wrap; gap: 12px; margin: 18px 0; }.assistance-filter label { display: grid; gap: 5px; font-size: .72rem; flex: 1; min-width: 160px; }
+.assistance-filter input, .assistance-filter select { min-height: 40px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); background: var(--surface-1); min-width: 0; width: 100%; font: inherit; }
+.assistance-filter .assistance-end-filter { display: flex; align-items: center; gap: 8px; flex-basis: 100%; }.assistance-end-filter input { width: 18px; min-height: 18px; }
+.assistance-properties { list-style: none; padding: 0; margin: 0; }.assistance-property { padding: 16px 0; border-bottom: 1px solid var(--border); }.assistance-property header { display: grid; gap: 5px; }.assistance-property header > span { color: var(--series-3); font: .6rem var(--font-mono); text-transform: uppercase; letter-spacing: .06em; }.assistance-property small { color: var(--text-muted); font-size: .75rem; }
+.assistance-property-facts { display: grid; gap: 5px; margin: 10px 0; font-size: .77rem; color: var(--text-secondary); line-height: 1.5; }.assistance-property footer { display: flex; flex-wrap: wrap; gap: 12px; font: .65rem var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }.assistance-property strong { overflow-wrap: anywhere; }
+.assistance-pages { display: flex; justify-content: space-between; align-items: center; padding: 15px 0 0; font-size: .8rem; }.assistance-pages button { min-height: 40px; padding: 6px 14px; border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); background: var(--surface-1); }.assistance-pages button:disabled { opacity: .4; }.assistance-result-count, .assistance-method { font-size: .75rem; line-height: 1.6; color: var(--text-secondary); }
+@media (max-width: 640px) { .assistance-routes { grid-template-columns: 1fr; }.assistance-routes a { padding: 12px; gap: 4px; }.assistance-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }.housing-assistance summary span { display: block; margin: 5px 0 0 17px; }.housing-assistance { padding: 16px; }.assistance-filter label { flex-basis: 100%; } }
+@media print { .assistance-filter, .assistance-pages { display: none; } }
+@media (max-width: 640px) { .assistance-facts div:last-child strong { font-size: 1.1rem; } }

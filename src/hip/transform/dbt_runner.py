@@ -53,6 +53,7 @@ KEYED_MODELS = (
     "stg_fema_claims",
     "stg_njdep_sites",
     "stg_water_quality",
+    "stg_nj_affordable",
 )
 
 # Not a metric model: it feeds region_crosswalk, not fact_metric_observation.

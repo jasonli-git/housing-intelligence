@@ -55,8 +55,13 @@ SUBJECTS = (
 # the economy rather than the housing (income, population, jobs, migration, and the
 # cost-burden shares, which are outcomes of price and rent rather than either). A ratio
 # takes its numerator's subject. HUD's income limits are eligibility thresholds for
-# assistance, not assistance: no count of assisted homes or vouchers is held.
+# assistance, not a count of assisted homes or vouchers. M41's delivery metrics
+# describe municipal reports, separately from these income thresholds.
 METRIC_SUBJECTS: dict[str, str] = {
+    "nj_ah_present_need": "assistance",
+    "nj_ah_prospective_need": "assistance",
+    "nj_ah_completed_units": "assistance",
+    "nj_ah_trust_balance": "assistance",
     "zhvi_sfr": "price",
     "acs_median_home_value": "price",
     "fhfa_hpi": "price",

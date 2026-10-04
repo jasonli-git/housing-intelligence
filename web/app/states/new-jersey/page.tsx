@@ -5,6 +5,7 @@ import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { StateOverview } from "@/components/StateOverview";
 import { MoreExpander } from "@/components/MoreExpander";
+import { AffordableHousing } from "@/components/AffordableHousing";
 import { HomeSales } from "@/components/HomeSales";
 import { HomesAdded } from "@/components/HomesAdded";
 import { QuietProfile } from "@/components/QuietCounty";
@@ -67,6 +68,7 @@ export default async function NewJerseyPage() {
   ]);
   const state = states?.items[0] ?? null;
   const statewide = state ? await api.summary(state.region_id, "5y") : null;
+  const housingHelp = state ? await api.affordableHousing(state.region_id) : null;
   const construction = await Promise.all(["permits_total_units", "nj_units_certified", "nj_units_demolished", "nj_net_units_added"].map(
     async (metric) => state ? (await api.observations(state.region_id, metric))?.observations ?? [] : [],
   ));
@@ -202,6 +204,7 @@ export default async function NewJerseyPage() {
         )}
       </div>
       <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Sales, building activity and every available state figure, with dates and definitions.">
+        <div id="housing-assistance"><AffordableHousing data={housingHelp} /></div>
         <HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait />
         <HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} portrait />
         <section className="section" aria-labelledby="state-figures-heading">

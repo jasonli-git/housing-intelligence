@@ -23,6 +23,22 @@ from hip.sources.base import Release, SourceAdapter
 XLSX_RANGE = "A1:BZ900"
 
 
+def land_xlsx_records(
+    release: Release,
+    adapter: type[SourceAdapter],
+    *,
+    parquet_dir: Path,
+    overwrite: bool = False,
+) -> LandedTable:
+    """Read the publisher's sparse workbook without the generic 900-row range."""
+    return _land_records(
+        release,
+        lambda: adapter.xlsx_records(release.path, release.ref),
+        parquet_dir=parquet_dir,
+        overwrite=overwrite,
+    )
+
+
 def parquet_path(release: Release, parquet_dir: Path) -> Path:
     ref = release.ref
     name = f"{ref.layer}_{ref.scope}" if ref.scope else ref.layer

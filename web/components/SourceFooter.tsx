@@ -58,6 +58,19 @@ export async function SourceFooter() {
   return (
     <footer className="foot" aria-labelledby="sources-heading">
       <div className="foot-inner">
+        {/* Required publisher statements stay visible, before the source disclosure. */}
+        {notices.length > 0 && (
+          <div className="foot-notices" aria-label="Notices the sources require">
+            <h2 className="foot-kicker">Publisher notices</h2>
+            {notices.map((notice) => (
+              <div className="publisher-notice" key={notice}>
+                <span className="publisher-notice-name">{[...new Set(external.filter((source) => source.notices?.includes(notice)).map((source) => shortPublisher(source.publisher)))].join(" · ")}</span>
+                <p>{linked(notice)}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
         <details className="foot-sources">
           <summary className="foot-head disclose">
             <span className="foot-title-block">
@@ -135,22 +148,6 @@ export async function SourceFooter() {
             ))}
           </ul>
         </details>
-
-        {/* The statements the sources' terms require, word for word and "prominently" —
-            so outside the disclosure, on every page (Milestone 31). Census, HUD User and
-            FRED each require one of an application using their API; BLS asks for its
-            disclaimer. */}
-        {notices.length > 0 && (
-          <div className="foot-notices" aria-label="Notices the sources require">
-            <h2 className="foot-kicker">Publisher notices</h2>
-            {notices.map((notice) => (
-              <div className="publisher-notice" key={notice}>
-                <span className="publisher-notice-name">{[...new Set(external.filter((source) => source.notices?.includes(notice)).map((source) => shortPublisher(source.publisher)))].join(" · ")}</span>
-                <p>{linked(notice)}</p>
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* Outside the disclosure, so the pages about the data are reachable without
             opening the source list first (Milestone 27). */}

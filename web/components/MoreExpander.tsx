@@ -56,12 +56,17 @@ export function MoreExpander({ id, title, sub, children }: { id?: string; title:
     } catch {
       // Storage refused — a private window, blocked site data: it opens closed.
     }
+    if (window.location.hash === "#housing-assistance" && ref.current?.querySelector("#housing-assistance")) {
+      ref.current.open = true;
+      requestAnimationFrame(() => document.getElementById("housing-assistance")?.scrollIntoView({block: "start"}));
+    }
   }, []);
 
   return (
     <details
       id={id}
       ref={ref}
+      suppressHydrationWarning
       className="more"
       onToggle={(event) => {
         try {

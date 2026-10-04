@@ -11,6 +11,8 @@ ids would silently repoint every metric in the warehouse at the wrong place.
 
 from __future__ import annotations
 
+import json
+import math
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -638,6 +640,88 @@ def load_water_systems(
             [dict(zip(keys, row, strict=True)) for row in rows],
         )
         return int(conn.execute(text("SELECT count(*) FROM water_systems")).scalar_one())
+
+
+def load_affordable_housing(
+    engine: Engine, duckdb_path: Path, *, releases: Sequence[ReleaseProvenance]
+) -> int:
+    """Replace each fully staged inventory atomically, refusing uncited/unlocated rows.
+
+    Ancillary inventories do not go through the metric gate. Unlike silently dropping
+    an unresolvable property, an invalid row here aborts and preserves the old inventory.
+    Missing models leave their source's previously loaded data alone.
+    """
+    staged_rows: list[tuple[str, list[dict[str, object]]]] = []
+    with duckdb_session(duckdb_path) as duck:
+        tables = {
+            r[0]
+            for r in duck.execute(
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_schema = 'main_staging'"
+            ).fetchall()
+        }
+        for source in ("nj_affordable", "hud_assisted", "hud_lihtc"):
+            model = f"stg_{source}_records"
+            if model not in tables:
+                continue
+            result = duck.execute(
+                "SELECT source_id, record_id, geoid, level, kind, payload, snapshot, "
+                f"release_layer, release_vintage FROM main_staging.{model}"
+            )
+            keys = [c[0] for c in result.description]
+            rows = [dict(zip(keys, row, strict=True)) for row in result.fetchall()]
+            if not rows or any(not r["geoid"] for r in rows):
+                raise ValueError(f"{source}: empty inventory or unmapped municipality")
+            for row in rows:
+                payload = json.loads(str(row["payload"]))
+                for field in (
+                    "units",
+                    "low_income_units",
+                    "present_need",
+                    "prospective_need",
+                ):
+                    value = payload.get(field)
+                    if value is not None and (not math.isfinite(value) or value < 0):
+                        raise ValueError(f"{source}/{row['record_id']}: invalid {field}")
+            staged_rows.append((source, rows))
+    loaded = 0
+    with engine.begin() as conn:
+        # Bind rows to this run's exact content hash, not the most recently fetched
+        # version of a mutable URL. A newer failed acquisition must not steal credit
+        # for the previous staged file (the same safeguard the metric loader uses).
+        release_ids = _release_ids(conn, releases)
+        for source, rows in staged_rows:
+            for row in rows:
+                key = (source, str(row["release_layer"]), str(row["release_vintage"]))
+                if key not in release_ids:
+                    raise ValueError(
+                        f"{source}/{row['record_id']}: missing exact release"
+                    )
+                row["release_id"] = release_ids[key]
+        for source, rows in staged_rows:
+            conn.execute(
+                text("DELETE FROM affordable_housing_records WHERE source_id = :s"),
+                {"s": source},
+            )
+            for row in rows:
+                count = conn.execute(
+                    text("""
+                    INSERT INTO affordable_housing_records
+                        (region_id, source_id, kind, record_id, payload, snapshot,
+                         release_id)
+                    SELECT r.region_id, :source_id, :kind, :record_id,
+                           CAST(:payload AS jsonb), :snapshot, :release_id
+                    FROM regions r
+                    WHERE r.geoid = :geoid AND r.level = CAST(:level AS region_level)
+                """),
+                    row,
+                ).rowcount
+                if count != 1:
+                    raise ValueError(
+                        f"{source}/{row['record_id']}: missing region or release"
+                    )
+                loaded += 1
+    return loaded
 
 
 def load_region_identifiers(

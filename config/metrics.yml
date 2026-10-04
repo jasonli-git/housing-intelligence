@@ -13,6 +13,50 @@
 # originator: who owns a series its source redistributes, credited beside the source.
 
 metrics:
+  nj_ah_present_need:
+    label: DCA fourth-round present need, non-binding
+    unit: count
+    frequency: irregular
+    direction: neutral
+    description: DCA October 2024 calculation for the 2025–2035 round, not a final legal obligation.
+    source_id: nj_affordable
+    record_type: modelled
+    ranked: false
+
+  nj_ah_prospective_need:
+    label: DCA fourth-round prospective need, capped and non-binding
+    unit: count
+    frequency: irregular
+    direction: neutral
+    description: DCA October 2024 calculation with the published 1,000/20% cap. Not final obligations.
+    source_id: nj_affordable
+    record_type: modelled
+    ranked: false
+
+  nj_ah_completed_units:
+    label: Affordable units in projects reported completed
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      DCA municipal self-reports with a granted certificate of occupancy. Across rounds,
+      including rehabilitation; missing units and unknown completion statuses are omitted.
+      A partial inventory, not fourth-round compliance or net new homes.
+    source_id: nj_affordable
+    record_type: administrative
+    ranked: false
+
+  nj_ah_trust_balance:
+    label: Reported affordable housing trust fund balance
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      DCA municipal self-reports, including signed balances as published. Missing
+      submissions are omitted; sums are partial. Commitments not yet spent are not deducted.
+    source_id: nj_affordable
+    record_type: administrative
+    ranked: false
   zhvi_sfr:
     label: Home value index, single-family
     unit: usd

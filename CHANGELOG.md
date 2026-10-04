@@ -3,6 +3,25 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.38.0] — 2026-10-04
+
+Milestone 41: affordable housing and assistance (built by Codex, PR #91 and its
+replacement after the branch was renamed).
+
+### Added
+
+- **Affordable housing on county, town and state pages** (ARCHITECTURE #307): DCA's
+  non-binding fourth-round present and prospective need; the affordable units towns
+  report as completed and their trust-fund balances; and a searchable inventory of HUD
+  assisted properties and contracts and 1,760 LIHTC projects, filterable by programme,
+  name, address, town and reported expiry. The three answers are never added together.
+- **Where to apply**: official application routes beside the household income check,
+  without claiming a waiting list is open or a household qualifies. ZIP pages show the
+  routes but no property allocation.
+- Three sources (`nj_affordable`, `hud_assisted`, `hud_lihtc`, the last downloaded by
+  hand), four unranked metrics, `GET /regions/{id}/affordable-housing`, and migration
+  0024.
+
 ## [0.37.1] — 2026-10-04
 
 ### Changed

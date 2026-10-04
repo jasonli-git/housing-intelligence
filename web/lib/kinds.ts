@@ -34,6 +34,10 @@ export const KIND_MEANINGS: Record<RecordType, string> = {
 };
 
 export const KINDS: Record<string, RecordType> = {
+  nj_ah_present_need: "modelled",
+  nj_ah_prospective_need: "modelled",
+  nj_ah_completed_units: "administrative",
+  nj_ah_trust_balance: "administrative",
   acs_median_rent_studio: "survey",
   acs_median_rent_1br: "survey",
   acs_median_rent_2br: "survey",

@@ -183,6 +183,8 @@ def test_skipped_entries_are_explanations_not_data(published: Path) -> None:
         # Milestone 40: no system is listed for a county or the state, nor for a town
         # whose homes are all on private wells.
         and "/water-systems" not in path
+        # Milestone 41: no town inventory is guessed or allocated to ZIP codes.
+        and "/affordable-housing" not in path
     ]
     assert not unexpected, f"unexpected 404s: {unexpected[:5]}"
     # Milestone 35: only a region with no county — the state, the nation — has no income
