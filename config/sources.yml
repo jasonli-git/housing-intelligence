@@ -37,11 +37,14 @@ sources:
     license: Public domain (U.S. Government work)
     licence_class: public_domain
     commercial: {ads: allowed, paid: allowed, note: Federal agency administrative data.}
-    terms_url: https://www.hud.gov/hud-partners/multifamily-assist-section8-database
+    terms_url: https://www.hud.gov/sites/documents/webpubstandards.pdf
     terms_checked: 2026-10-04
     terms_note: >-
-      HUD offers the property and contract workbooks for public use; its disclaimer
-      disclaims completeness and warranty, without a reuse restriction. No HUD User API
+      HUD's Web Publication Procedures and Style Guide (2025-08-27), Section 1.D,
+      states its website content is generally public domain and may be used, subject
+      to marked outside copyrights and the official-emblem exception. The workbook
+      landing page disclaims completeness and warranty without a separate reuse
+      restriction. No HUD User API
       is used. Only property/program fields land, never owner or agent personal details.
     url: https://www.hud.gov/hud-partners/multifamily-assist-section8-database
     cadence: monthly
@@ -58,11 +61,14 @@ sources:
     license: Public domain (U.S. Government work)
     licence_class: public_domain
     commercial: {ads: allowed, paid: allowed, note: Federal agency administrative data.}
-    terms_url: https://www.huduser.gov/portal/datasets/lihtc/property.html
+    terms_url: https://www.hud.gov/sites/documents/webpubstandards.pdf
     terms_checked: 2026-10-04
     terms_note: >-
-      HUD offers the full project database and dictionary for public download without
-      separate reuse restrictions. Only property/program fields land, never personal
+      HUD's Web Publication Procedures and Style Guide (2025-08-27), Section 1.D,
+      states its website content is generally public domain and may be used, subject
+      to marked outside copyrights and the official-emblem exception. HUD offers the
+      full project database and dictionary for public download without separate reuse
+      restrictions. No HUD User API is used. Only property/program fields land, never personal
       contacts. The release page is probed for coverage; the ZIP bot-check is not bypassed.
     url: https://www.huduser.gov/portal/datasets/lihtc/property.html
     cadence: annual

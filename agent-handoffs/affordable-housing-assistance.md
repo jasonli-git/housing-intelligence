@@ -268,6 +268,33 @@ If HUD's page becomes machine-readable, the existing scheduled refresh can disco
 newer completed coverage and its acquire log will request the correctly year-named
 file. This change does not add email/push notifications or a scheduled reminder.
 
+### Licensing evidence and footer-order follow-up (2026-10-04)
+
+- Updated `config/sources.yml` for `hud_assisted` and `hud_lihtc` to cite HUD's
+  Web Publication Procedures and Style Guide, dated 2025-08-27, Section 1.D.
+  This supplies affirmative public-domain/use-policy evidence, rather than relying
+  only on the absence of restrictions on the dataset landing pages. Recorded the
+  exceptions for marked outside copyrights and official emblems. Dataset URLs and
+  acquisition behaviour are unchanged; neither adapter uses the HUD User API.
+- Reordered the shared `web/components/SourceFooter.tsx` cards to Publisher notices,
+  Data provenance, Source history, then Notice. Required publisher statements remain
+  verbatim, visible outside disclosures, and linked as before. No new notices were
+  invented for the workbook sources. Existing styles and responsive layout are kept.
+- Added `web/lib/sourceFooter.test.ts` rendering tests for the card order, visible
+  linked notices and omission of the publisher card when no statements exist.
+- Assumption: existing publisher statements and their styling are unchanged; this is
+  a placement change, not a reinterpretation of any attribution obligation.
+- Limitation: this source-policy review is not legal advice or a blanket commercial
+  clearance for all other sources. Marked exceptions must be rechecked for future
+  material. No protected canonical documentation was edited.
+- Verification: `npm test` passed (433 tests, 50 files); `npm run typecheck` passed;
+  `.venv/bin/hip check-config` passed (31 sources, 137 metrics). Initial sandboxed
+  static build could not reach localhost; retried with local network access.
+  Retry passed: all 2,379 pages exported. The local build warns that
+  `NEXT_PUBLIC_ARTIFACT_URL` is unset; this output is not a deployment artifact.
+  `.venv/bin/pytest tests/test_config.py -q -o addopts=''` passed (18 tests).
+  `git diff --check` passed. No browser visual inspection was run for this reorder.
+
 ### Original milestone verification (before bulk follow-up)
 
 - Real acquisition/landing for all three sources; normal discovery/revalidation checked
