@@ -154,6 +154,8 @@ def build_adapter(
     adapter = _construct(source_id, scope)
     if raw_dir is not None and (recorded := read_discovery(raw_dir, source_id)):
         adapter.newest = recorded.newest
+    if raw_dir is not None and isinstance(adapter, HudLihtcAdapter):
+        adapter.use_cached_vintage(raw_dir)
     return adapter
 
 

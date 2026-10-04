@@ -8,7 +8,7 @@ import {
   type AffordableHousing as HousingData, type HousingRecord,
 } from "@/lib/affordableHousing";
 
-const labels: Record<string, string> = {municipal_project: "Municipal report", lihtc_property: "LIHTC · older inventory", hud_property: "HUD assisted"};
+const labels: Record<string, string> = {municipal_project: "Municipal report", lihtc_property: "LIHTC · bulk inventory", hud_property: "HUD assisted"};
 const n = (v: number | null) => v === null ? "Not reported" : v.toLocaleString("en-US", {maximumFractionDigits: 0});
 const money = (v: number | null) => v === null ? "Not reported" : v.toLocaleString("en-US", {style: "currency", currency: "USD", maximumFractionDigits: 0});
 const month = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", {month: "short", year: "numeric", timeZone: "UTC"});
@@ -98,8 +98,8 @@ export function AffordableHousing({data}: {data: HousingData | null}) {
           <label htmlFor={`${id}-program`}>Inventory<select id={`${id}-program`} value={program} onChange={(e) => {setProgram(e.target.value); setPage(0);}}><option value="all">All inventories · may overlap</option>{Object.entries(labels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
           <label className="assistance-end-filter"><input type="checkbox" checked={soon} onChange={(e) => {setSoon(e.target.checked); setPage(0);}} />Reported end within 5 years of snapshot</label>
         </div>
-        <p className="assistance-note">LIHTC’s public map copy reaches 2020, not the newer 2024 bulk file. Historical, not proof of a current restriction. Inventories overlap; bedroom counts describe reported units, not available homes. Disability targeting does not establish physical accessibility.</p>
-        {data.county_inventory_region_id && <p className="assistance-note">HUD’s assisted-property file identifies counties, not municipalities. <Link href={`/regions/${data.county_inventory_region_id}#housing-assistance`}>See this county’s HUD inventory →</Link></p>}
+        <p className="assistance-note">LIHTC’s bulk inventory is historical, not proof of a current restriction or vacancy. Inventories overlap; bedroom counts describe reported units, not available homes. Disability targeting does not establish physical accessibility.</p>
+        {data.county_inventory_region_id && <p className="assistance-note">HUD’s assisted-property file identifies counties, not municipalities. LIHTC records without a verified town also stay in the county or state inventory. <Link href={`/regions/${data.county_inventory_region_id}#housing-assistance`}>See this county’s inventory →</Link></p>}
         <p className="assistance-result-count" role="status">{properties.length} matching records · displayed separately, never added across programmes</p>
         <ul className="assistance-properties">{shown.map((r) => <Property key={`${r.source_id}-${r.record_id}`} row={r} records={records} />)}</ul>
         {!shown.length && !loading && !error && inventory && <p>No records match. This does not establish that no affordable homes exist here.</p>}
@@ -119,6 +119,13 @@ function Property({row: r, records}: {row: HousingRecord; records: HousingRecord
   return <li className="assistance-property"><header><span>{labels[r.kind]}</span><strong>{p.name || "Unnamed project"}</strong><small>{r.place}{p.address ? ` · ${p.address}, ${p.city ?? ""}` : ""}</small></header>
     <div className="assistance-property-facts"><span>{n(p.units ?? null)} {r.kind === "municipal_project" ? "reported affordable units" : "total property units"}</span>
       {r.kind === "lihtc_property" && <span>{n(p.low_income_units ?? null)} low-income units · placed in service {p.placed_in_service ?? "not reported"}</span>}
+      {r.kind === "lihtc_property" && <>
+        <span>Bulk coverage through {p.coverage_through ?? "not reported"}{p.service_year_status === "after coverage year" ? " · reported service year falls after this release’s coverage" : p.service_year_status === "unconfirmed" ? " · placed-in-service status unconfirmed" : p.service_year_status === "year unknown" ? " · service confirmed, year unknown" : ""}</span>
+        <span>{p.no_longer_monitored === true ? "No longer monitored for LIHTC compliance; continued affordability is not established." : p.no_longer_monitored === false ? "Not flagged as no longer monitored; confirm current restrictions." : "LIHTC monitoring status not reported."}</span>
+        {p.affordability_years != null && <span>Reported affordability period: {p.affordability_years} years · not an expiration date</span>}
+        {p.resyndicated && <span>Reported resyndication; may repeat an earlier development.</span>}
+        {p.location_scope === "county" && <span>Located to county only; municipality not established.</span>}
+      </>}
       {r.kind === "municipal_project" && <span>Completion: {p.completed === true ? "CO granted" : p.completed === false ? "CO not granted" : "not reported"}{p.completion_date ? ` · ${p.completion_date}` : ""}</span>}
       {p.completed && p.completion_date && p.completion_date > r.snapshot && <span>CO date is after this workbook; omitted from the completion total.</span>}
       {beds.length > 0 && <span>Bedrooms: {beds.map(([bed, count]) => `${bed}BR ${n(count)}`).join(" · ")}</span>}

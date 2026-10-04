@@ -53,27 +53,33 @@ sources:
       are not matched to municipalities. Contract end dates can be extended or renewed.
 
   hud_lihtc:
-    name: Low-Income Housing Tax Credit public map inventory
+    name: Low-Income Housing Tax Credit bulk project inventory
     publisher: U.S. Department of Housing and Urban Development
     license: Public domain (U.S. Government work)
     licence_class: public_domain
     commercial: {ads: allowed, paid: allowed, note: Federal agency administrative data.}
-    terms_url: https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/LIHTC/FeatureServer
+    terms_url: https://www.huduser.gov/portal/datasets/lihtc/property.html
     terms_checked: 2026-10-04
     terms_note: >-
-      HUD's hosted public FeatureServer offers a documented query service and credits HUD
-      and Census, without separate reuse restrictions. Only property/program fields are
-      requested, never contact names or company details. It is not the HUD User API.
+      HUD offers the full project database and dictionary for public download without
+      separate reuse restrictions. Only property/program fields land, never personal
+      contacts. The release page is probed for coverage; the ZIP bot-check is not bypassed.
     url: https://www.huduser.gov/portal/datasets/lihtc/property.html
     cadence: annual
     adapter: hip.sources.hud_assistance:HudLihtcAdapter
     fallback: >-
-      HUD's newer offered LIHTCPUB.ZIP (through 2024) currently answers automated requests
-      with a bot-check page. Do not bypass it; an owner-downloaded file is the next route.
+      Keep the last dated inventory. Download LIHTCPUB.ZIP from the official page,
+      verify the dictionary's coverage year, and place its property workbook in
+      data/manual/hud_lihtc/ as LIHTCPUB_<coverage-year>.xlsx. Discovery reports newer
+      releases; missing manual files fail visibly, never relabel the previous file.
     notes: >-
-      The public map copy's NJ dated entries extend through 2020, verified 2026-10-04.
-      It is a historical project inventory, not a count of currently restricted or vacant
-      homes. Targeting disabled residents does not establish physical accessibility.
+      Owner-downloaded April 2026 bulk release covers 1987–2024; exceptional later and
+      unknown service years are labelled separately. Census BPS place-to-MCD relationships
+      establish towns only when unique and valid in the current municipality spine;
+      remaining properties stay at their publisher county or state. No coordinate or
+      mailing-city guesses. This is not a count of currently restricted or vacant homes.
+      No-longer-monitored does not establish continued or lost affordability.
+      Targeting disabled residents does not establish physical accessibility.
       No expiry is inferred from a placed-in-service year. NHPD is not acquired: a signed
       data licence is required for public redistribution.
   hip_derived:

@@ -13,6 +13,9 @@ export type HousingRecord = {
     reported?: boolean; balance?: number | null; table_as_of?: string; metadata_cutoff?: string;
     property_id?: string; status?: string; program?: string; contract_end?: string | null;
     targeted_seniors?: boolean; targeted_disability?: boolean;
+    coverage_through?: number; service_year_status?: string;
+    no_longer_monitored?: boolean | null; affordability_years?: number | null;
+    resyndicated?: boolean | null;
     location_scope?: string;
   };
 };

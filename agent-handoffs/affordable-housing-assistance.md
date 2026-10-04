@@ -35,9 +35,9 @@ loads only when its disclosure opens.
 | Trust-fund rows | 564 | Only 383 report a fund balance |
 | HUD assisted properties | 677 | August 7, 2026 snapshot; county geography |
 | HUD matched contracts | 684 | Separate from property units; contracts may renew |
-| Public LIHTC map properties | 1,260 | Historical dated NJ entries through 2020 |
+| LIHTC bulk project records | 1,760 | Declared coverage through 2024; historical, not current availability |
 
-11,645 inventory records loaded. Four new metrics total 1,837 observations; the local
+12,145 inventory records loaded. Four new metrics total 1,837 observations; the local
 validated warehouse has 864,585 observations overall. State sums are 65,410 present
 need, 80,798 capped prospective need, 30,974 units in projects reported completed,
 and $648,601,046.36 in reported trust balances. These are **not** a supply-gap equation
@@ -78,10 +78,11 @@ All three additions cost $0 and require no credentials or new dependencies.
   this platform downloaded the files. Only selected property/program fields land.
 - **HUD LIHTC:** [official bulk release page](https://www.huduser.gov/portal/datasets/lihtc/property.html)
   advertises data through 2024. Its ZIP returned a bot-check HTML response to automated
-  download, so no protection was bypassed. The fallback is HUD's documented
-  [public map service](https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/LIHTC/FeatureServer/0),
-  whose NJ dated entries were verified to reach only 2020. The UI labels it historical;
-  a dbt guard fails if newer service years arrive before that label is reviewed.
+  download, so no protection was bypassed. The initial historical public-map fallback
+  was replaced after the owner downloaded the official ZIP. Its actual contents include
+  `LIHTCPUB.xlsx`, unlike the CSV named on the webpage. The supplied April 2026 dictionary
+  confirms the 1987–2024 release, 55,345 national project records. No Access dependency
+  is needed. The imported XLSX SHA-256 starts `fd0b1775793b` and is cited as vintage 2024.
 - **NHPD:** [terms](https://preservationdatabase.org/terms-and-conditions/) and
   [data licence application](https://preservationdatabase.org/data-license-application/)
   require a signed licence for redistribution. Not registered, signed or acquired.
@@ -95,8 +96,10 @@ Readers must confirm availability, service area and enrolment with the administr
 ### Missingness, geography and chronology
 
 - Municipal-code crosswalks and exact Census GEOIDs, never mailing-city guesses.
-  1,240 LIHTC rows locate to towns; 20 with no established county remain at state
-  scope. One HUD property with an invalid county and its contract also remain at
+  The newer LIHTC workbook has no MCD field: 1,124 rows resolve via unique Census BPS
+  place-to-MCD relationships and the current municipality spine; 591 remain county-only
+  and 45 state-only. Mailing cities, coordinates without accuracy flags, and CDP names
+  are not town matches. One HUD property with an invalid county and its contract remain at
   state scope. None are silently discarded or assigned to a neighbouring town.
 - Missing submissions/units/statuses remain null, not zero or "incomplete".
   Negative reported fund balances survive. No programme totals are added together:
@@ -127,15 +130,15 @@ Readers must confirm availability, service area and enrolment with the administr
   No raw deletion was performed.
 - HUD raw offered workbooks contain owner/agent columns. They remain only in the local,
   ignored raw cache; none of those personal fields land or are exposed/committed.
-  LIHTC requests never ask for contact names/company fields.
-- State overview is **3,954 bytes**, at most six provenance rows. Full NJ inventory is
-  **6,082,194 bytes uncompressed**, downloaded on demand. Large state searches still
+  LIHTC landing selects programme/property fields, never personal contacts.
+- State overview is **4,442 bytes**, at most six provenance rows. Full NJ inventory is
+  **6,674,123 bytes uncompressed**, downloaded on demand. Large state searches still
   use this full browser-side file; server-side search/chunking is not implemented.
 - Static artifacts: `/regions/{id}/affordable-housing.json` and
   `/regions/{id}/affordable-housing/overview.json`. Live API uses the extensionless
   endpoint and `?overview=true`. No request-time production backend is introduced.
 - Acquired payload sizes: roughly 44.7 MB DCA counting the shared municipal workbook
-  under both layers, 15.7 MB HUD assisted, and 0.4 MB LIHTC. Revalidation returned 304
+  under both layers, 15.7 MB HUD assisted, and 13.0 MB LIHTC bulk XLSX. Revalidation returned 304
   for DCA need and both HUD assisted files; municipal workbooks re-downloaded unchanged.
 
 ### Related TODO / Director Note audit
@@ -168,9 +171,13 @@ dating and broader map/a11y work remain separate tasks.
 
 ## New TODOs / limitations
 
-- A newer owner-downloaded `LIHTCPUB.ZIP` needs a validated bulk importer and refreshed
-  coverage labels. No importer for that ZIP has been built; the current supported
-  route is the explicitly historical map service.
+- LIHTC manual bulk import is now supported. Automatic release-page discovery is
+  implemented and tested, but the real HUD User page currently returns an empty HTTP
+  202 to the application's client. This remains `unreachable` in freshness, not a
+  claim of current coverage. No bot-check evasion or automatic browser downloading.
+- The supplied `LIHTCPUB_BIN.xlsx` has 8,646 NJ building/address rows for 1,638 project
+  IDs. It is not imported: these are not additional projects, and adding addresses
+  requires a second independently cited layer. No building or unit totals are inferred.
 - Obtain final court-approved fourth-round obligations if the product should answer
   the legal obligation question. DCA calculations alone cannot do that.
 - Municipal reporting is incomplete and contains chronology errors. A verified
@@ -193,6 +200,64 @@ dating and broader map/a11y work remain separate tasks.
   diff; no tag, release, merge or deploy was performed by this task.
 
 ## Verification
+
+### Bulk integration follow-up (owner approved, October 4)
+
+- `hip acquire --source hud_lihtc`, `hip land --source hud_lihtc`,
+  `hip stage --select stg_hud_lihtc_records`, `hip load`: imported 1,760 NJ records;
+  all five selected dbt tests passed; 12,145 total inventory records loaded. Existing
+  metric observations remain 864,585, with zero withdrawals. No readings regenerated.
+- API verification: one exact LIHTC release ID (37518 locally), coverage end
+  2024-12-31, 747 `no_longer_monitored=true`; 126 service years in 2021–2024,
+  five in 2025 labelled after coverage, 20 unconfirmed and 109 confirmed/year unknown.
+  Missing monitoring status is unknown, not active. No expiry is inferred from the
+  five reported 45-year periods, and repeated financing is not new construction.
+- New tests cover programme-only extraction, header drift, duplicate IDs, missing
+  numeric '.', truthful discovery of completed coverage, blocked probes, distinct
+  manual filenames, offline provenance after explicit-year acquisition, selection
+  of only the latest bulk vintage, ambiguous place/MCD relationships, CDP refusal,
+  county/state fallback, and displayed monitoring/service-year caveats.
+- Complete non-slow Python suite: **967 passed, 1 skipped, 9 deselected**. The same
+  pre-existing analytics uncertainty skip remains. Local-warehouse API/loader tests
+  passed with database access, rather than being skipped under network restrictions.
+- `ruff check .`, `ruff format --check .`: passed (251 formatted Python files).
+  `mypy src/hip`: 130 source files passed. `npm test`: **431 passed**, 49 files.
+  `npm run typecheck`: passed; production static build exported **2,379 pages**.
+  Build warned that localhost artifact URLs are preview-only; not a deployed build.
+- Live automated HUD page probe: HTTP 202, empty body. Recorded as unreachable;
+  the hand-downloaded file still lands and loads. No claim that release discovery
+  can currently replace a human's annual check.
+- Headless localhost checks at 390px and 1280px: Somerset's LIHTC filter returns
+  46 matching records, ten rows show 2024 bulk coverage, no horizontal overflow and
+  no browser page errors. Mobile screenshot inspected. No deploy, merge, raw pruning
+  or canonical-document edit.
+
+### Future LIHTC update procedure
+
+1. Manually check the [official release page](https://www.huduser.gov/portal/datasets/lihtc/property.html)
+   each spring while automated discovery is blocked. HUD currently announces 2025
+   data collection in fall 2026 and publication in spring 2027; no exact date is given.
+2. Download the offered ZIP and verify its dictionary's coverage year, not its ZIP
+   timestamp or the largest service-year cell. Keep the dictionary with the download.
+3. Copy only the property workbook to `data/manual/hud_lihtc/LIHTCPUB_<year>.xlsx`.
+   For example, the next verified release would be `LIHTCPUB_2025.xlsx`.
+4. Run `PYTHONPATH=src .venv/bin/python -m hip.cli acquire --source hud_lihtc --vintage 2025`
+   after verifying that year. Explicit vintage avoids the blocked page check, without
+   forging a successful discovery. Subsequent ordinary adapters retain the newest
+   cached bulk vintage; a discovered-but-missing newer release still fails visibly.
+5. Run normal land/stage/validate/load and review the header/geography/status guards
+   before publishing. A changed format or dictionary needs review, not a renamed old
+   workbook. Never update coverage to the maximum year found in a service-year cell.
+
+The raw/manual workbook stays outside Git. Any separate machine running the refresh
+pipeline must receive the same owner-downloaded file (or its immutable acquired cache)
+before activating this version; pushing the code does not transfer that data.
+
+If HUD's page becomes machine-readable, the existing scheduled refresh can discover
+newer completed coverage and its acquire log will request the correctly year-named
+file. This change does not add email/push notifications or a scheduled reminder.
+
+### Original milestone verification (before bulk follow-up)
 
 - Real acquisition/landing for all three sources; normal discovery/revalidation checked
   for DCA/HUD assisted. Local migration 0024 and `hip load`: 11,645 inventory records.

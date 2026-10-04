@@ -42,8 +42,12 @@ class AffordableHousing(BaseModel):
         "Inventories overlap. No combined total, vacancies or eligibility is inferred.",
         "HUD assisted properties have county geography only here; "
         "mailing cities are not municipalities.",
-        "HUD's public LIHTC copy covers dated NJ projects through 2020, "
-        "not the newer 2024 bulk release.",
+        "LIHTC is a dated bulk inventory, not verified current availability. "
+        "Unknown and out-of-coverage service years are labelled separately.",
+        "LIHTC towns require a verified Census place-to-municipality relationship; "
+        "unresolved records remain at county or state level.",
+        "No longer monitored for LIHTC compliance does not establish whether "
+        "a property remains affordable. Blank monitoring status is unknown.",
         "Disabled-resident targeting does not establish physical accessibility.",
         "Contract/control dates may be extended; expiry does not predict lost homes.",
         "NHPD is not held: public redistribution needs a signed data licence.",

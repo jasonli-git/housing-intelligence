@@ -1,18 +1,14 @@
-"""HUD assisted contracts (offered XLSX) and its older public LIHTC map inventory.
-
-Only explicitly selected fields land. LIHTC's live service is not the 2024 bulk
-release: its coverage through 2020 is disclosed, not inferred from download time.
-"""
+"""HUD assisted contracts and owner-downloaded, dated LIHTC bulk releases."""
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import date
 from pathlib import Path
 from typing import ClassVar
 from urllib.parse import parse_qs, urlsplit
 
-from hip.sources.arcgis import ArcGisAdapter, ArcGisLayer
 from hip.sources.base import Discovery, ReleaseRef, SourceAdapter, SourceError
 from hip.sources.nj_affordable import excel_date, number, record
 from hip.sources.xlsx import rows, sheets
@@ -133,34 +129,146 @@ class HudAssistedAdapter(SourceAdapter):
         return output
 
 
-class HudLihtcAdapter(ArcGisAdapter):
+LIHTC_PAGE = "https://www.huduser.gov/portal/datasets/lihtc/property.html"
+
+
+class HudLihtcAdapter(SourceAdapter):
+    """Handed in without bypassing HUD User's bot check.
+
+    The filename declares coverage verified against the accompanying dictionary.
+    A newer discovery requests a different filename, so old bytes cannot silently
+    be relabelled as a new release. Workbook dates are not release dates.
+    """
+
     source_id: ClassVar[str] = "hud_lihtc"
-    LAYERS: ClassVar[dict[str, ArcGisLayer]] = {
-        "properties": ArcGisLayer(
-            url="https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/"
-            "LIHTC/FeatureServer/0",
-            fields=(
-                "HUD_ID",
-                "PROJECT",
-                "PROJ_ADD",
-                "PROJ_CTY",
-                "PROJ_ZIP",
-                "N_UNITS",
-                "LI_UNITS",
-                "N_0BR",
-                "N_1BR",
-                "N_2BR",
-                "N_3BR",
-                "N_4BR",
-                "YR_PIS",
-                "TRGT_ELD",
-                "TRGT_DIS",
-                "CURCNTY",
-                "CURCOSUB",
-                "DATANOTE",
-            ),
-            where="PROJ_ST='NJ'",
-            geometry=False,
-            minimum=300,
+    default_vintage: ClassVar[str] = "2024"
+    landing_format: ClassVar[str] = "xlsx_records"
+    manual: ClassVar[bool] = True
+    manual_from: ClassVar[str] = LIHTC_PAGE
+    FIELDS: ClassVar[tuple[str, ...]] = (
+        "hud_id",
+        "project",
+        "proj_add",
+        "proj_cty",
+        "proj_st",
+        "proj_zip",
+        "cnty2020",
+        "place2020",
+        "n_units",
+        "li_units",
+        "n_0br",
+        "n_1br",
+        "n_2br",
+        "n_3br",
+        "n_4br",
+        "yr_pis",
+        "trgt_eld",
+        "trgt_dis",
+        "aff_period",
+        "aff_yrs",
+        "nonprog",
+        "resyndication_cd",
+        "datanote",
+    )
+
+    def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+        year = vintage or self.newest or self.default_vintage
+        if not year.isdigit() or not 2024 <= int(year) <= 2100:
+            raise SourceError("LIHTC bulk coverage year must be 2024–2100")
+        return [
+            ReleaseRef(
+                self.source_id,
+                "properties",
+                year,
+                f"https://www.huduser.gov/lihtc/lihtcpub.zip?coverage_through={year}",
+            )
+        ]
+
+    @classmethod
+    def filename(cls, ref: ReleaseRef) -> str:
+        return f"LIHTCPUB_{ref.vintage}.xlsx"
+
+    def use_cached_vintage(self, raw_dir: Path) -> None:
+        """A verified manual acquisition can advance while discovery is blocked.
+
+        Only files already in the immutable acquisition cache count, not an untested
+        file in Downloads. This also lets `acquire --vintage 2025` flow into ordinary
+        land/stage/load without changing the default year in code or forging a
+        successful publisher check. A discovered but missing newer release still wins.
+        """
+        path = raw_dir / self.source_id / "index.json"
+        if not path.exists():
+            return
+        try:
+            index = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            return
+        if not isinstance(index, dict):
+            return
+        years = [int(self.newest or self.default_vintage)]
+        for key, sha in index.items():
+            match = re.fullmatch(r"properties@(\d{4})", key)
+            if not match or not isinstance(sha, str):
+                continue
+            year = int(match[1])
+            if not 2024 <= year <= 2100:
+                continue
+            ref = self.refs(str(year))[0]
+            release = self._from_cache(ref, raw_dir, sha)
+            if release is not None and release.path.name == self.filename(ref):
+                years.append(year)
+        self.newest = str(max(years))
+
+    def discover(self, today: date) -> Discovery:
+        floor = self.newest or self.default_vintage
+        response = self._ask(LIHTC_PAGE)
+        if response is None or not response.is_success:
+            return self._discovered(floor, reached=False)
+        content = re.sub(r"<[^>]+>", " ", response.text)
+        # Completed database coverage, not the paragraph announcing next spring.
+        match = re.search(
+            r"placed\s+in\s+service\s+between\s+1987\s+and\s+(\d{4})",
+            content,
+            re.IGNORECASE,
         )
-    }
+        if not match or not 2024 <= int(match[1]) <= today.year:
+            return self._discovered(floor, reached=False)
+        return self._discovered(str(max(int(floor), int(match[1]))), reached=True)
+
+    @classmethod
+    def xlsx_records(cls, path: Path, ref: ReleaseRef) -> list[dict[str, object]]:
+        iterator = rows(path, sheets(path)[0])
+        _, original = next(iterator)
+        headers = {col: name.lower() for col, name in original.items()}
+        if not set(cls.FIELDS).issubset(headers.values()):
+            raise SourceError("LIHTC bulk: header changed; verify the data dictionary")
+        output: list[dict[str, object]] = []
+        numeric = {
+            "n_units",
+            "li_units",
+            "n_0br",
+            "n_1br",
+            "n_2br",
+            "n_3br",
+            "n_4br",
+            "aff_yrs",
+        }
+        for _, cells in iterator:
+            c = {field: cells.get(col, "") for col, field in headers.items()}
+            if c.get("proj_st") != "NJ":
+                continue
+            if not c["hud_id"]:
+                raise SourceError("LIHTC bulk: missing project identifier")
+            item: dict[str, object] = {}
+            for field in cls.FIELDS:
+                value = c[field]
+                # Access exports use '.' for missing numeric data.
+                item[field] = (
+                    number(value if value != "." else "") if field in numeric else value
+                )
+            item["coverage_through"] = int(ref.vintage)
+            output.append(item)
+        ids = [r["hud_id"] for r in output]
+        if not ids or len(ids) != len(set(ids)):
+            raise SourceError("LIHTC bulk: empty NJ inventory or duplicate identifiers")
+        return output

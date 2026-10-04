@@ -194,8 +194,8 @@ def test_hud_snapshot_is_from_publisher_not_download_clock() -> None:
 
 
 def test_personal_contacts_not_requested_from_lihtc() -> None:
-    fields = HudLihtcAdapter.LAYERS["properties"].fields
-    assert not {"CONTACT", "COMPANY", "CO_ADD", "CO_TEL"}.intersection(fields)
+    fields = HudLihtcAdapter.FIELDS
+    assert not {"contact", "company", "co_add", "co_tel"}.intersection(fields)
 
 
 def test_unknown_and_nonfinite_numbers_are_not_zero() -> None:

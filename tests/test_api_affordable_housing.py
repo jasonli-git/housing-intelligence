@@ -53,4 +53,4 @@ def test_assistance_is_never_allocated_to_zip_codes(state_id: int) -> None:
 def test_freshness_includes_ancillary_inventory_snapshot(state_id: int) -> None:
     sources = {s["source_id"]: s for s in client.get("/freshness").json()["sources"]}
     assert sources["hud_assisted"]["period_observed_end"] is not None
-    assert sources["hud_lihtc"]["period_observed_end"] == "2020-12-31"
+    assert sources["hud_lihtc"]["period_observed_end"] == "2024-12-31"
