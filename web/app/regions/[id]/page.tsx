@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
+import { AffordableHousing, HousingHelpDisclosure } from "@/components/AffordableHousing";
 import { HomeSales } from "@/components/HomeSales";
 import { FloodRisk } from "@/components/FloodRisk";
 import { GroundAndWater } from "@/components/GroundAndWater";
@@ -201,7 +202,7 @@ export default async function RegionPage({
     region.level === "municipality"
       ? (region.ancestors.find((a) => a.level === "county") ?? null)
       : region;
-  const [series, cost, incomeLimits, construction, floodClaims, water] = await Promise.all([
+  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -226,6 +227,7 @@ export default async function RegionPage({
       ),
     ),
     api.waterSystems(regionId),
+    api.affordableHousing(regionId),
   ]);
   // A town or ZIP reads HUD's county Fair Market Rents from its county's packet: HUD sets
   // them for the county's area, and only a county page carries them (Milestone 35).
@@ -341,15 +343,16 @@ export default async function RegionPage({
     </section>
   </QuietDisclosure>;
 
-  const householdContent = <><QuietDisclosure enabled={quiet} title="Income, housing help & nearby places">
+  const householdContent = <><HousingHelpDisclosure enabled={quiet}>
     <ForYourHousehold regionName={name} limits={incomeLimits} levels={packet.levels} countyLevels={countyLevels}
       margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))} />
+    <div id="housing-assistance"><AffordableHousing data={housingHelp} /></div>
     {region.level !== "zip" && <p className="household-next">
       <Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
         {region.level === "county" ? `Compare towns in ${name}` : "Compare nearby places"} <span aria-hidden="true">→</span>
       </Link><span>Find places within your budget, here or across New Jersey.</span>
     </p>}
-  </QuietDisclosure>{quiet && homeChecks}</>;
+  </HousingHelpDisclosure>{quiet && homeChecks}</>;
 
   return (
     <>

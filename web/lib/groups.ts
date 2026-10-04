@@ -21,6 +21,12 @@ export type Group = {
 
 export const GROUPS: readonly Group[] = [
   {
+    key: "assistance",
+    title: "Affordable housing and assistance",
+    ramp: "affordability",
+    metrics: ["nj_ah_present_need", "nj_ah_prospective_need", "nj_ah_completed_units", "nj_ah_trust_balance"],
+  },
+  {
     key: "prices",
     title: "Prices",
     metrics: [
@@ -134,6 +140,7 @@ export const GROUPS: readonly Group[] = [
       "acs_vacancy_rate",
       "acs_homeownership_rate",
       "acs_population",
+      "pep_population",
       "net_migration_returns",
       "modiv_residential_parcels",
       "modiv_multifamily_share",
