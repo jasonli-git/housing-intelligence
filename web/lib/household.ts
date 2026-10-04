@@ -106,9 +106,10 @@ export function positionSentence(limits: IncomeLimits, size: number, income: num
 // size and income they typed, and the rent they pay now. All three describe the reader,
 // not a home, so they follow the reader across pages — the rule Milestone 33 set
 // (`costScenario.ts`). Guarded like it: storage can be absent or refuse.
-export type Household = { size?: number; income?: number; rent?: number };
+export type Household = { size?: number; income?: number; rent?: number; cash?: number };
 
 const STORE = "hip.household.v1";
+export const HOUSEHOLD_EVENT = "hip:household-change";
 
 export function readHousehold(): Household {
   try {
@@ -122,7 +123,7 @@ export function readHousehold(): Household {
     if (typeof size === "number" && Number.isInteger(size) && size >= 1 && size <= 8) {
       kept.size = size;
     }
-    for (const key of ["income", "rent"] as const) {
+    for (const key of ["income", "rent", "cash"] as const) {
       const value = record[key];
       if (typeof value === "number" && Number.isFinite(value) && value >= 0) kept[key] = value;
     }
@@ -138,5 +139,8 @@ export function writeHousehold(household: Household): void {
     else window.localStorage.setItem(STORE, JSON.stringify(household));
   } catch {
     // A private window or blocked storage: the household holds for this page only.
+  }
+  if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+    window.dispatchEvent(new CustomEvent(HOUSEHOLD_EVENT, { detail: household }));
   }
 }

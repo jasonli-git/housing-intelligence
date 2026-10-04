@@ -12,14 +12,19 @@ import {
   type Reached,
   reach,
 } from "@/lib/afford";
-import { DEFAULT_DOWN, DOWN_PAYMENTS, incomeFor, leftOut } from "@/lib/cost";
+import { DEFAULT_DOWN, DOWN_PAYMENTS, incomeFor } from "@/lib/cost";
+import { useBudgetScenario } from "./useBudgetScenario";
+import { parseAmount } from "@/lib/costScenario";
+import { cashFit } from "@/lib/budgetScenario";
+import { readHousehold } from "@/lib/household";
+import { FHA_DOWN, FHA_LIMITS, UPKEEP_PCT } from "@/lib/costRules";
 import { formatValue } from "@/lib/format";
 import { type Focus, GlobeMap } from "@/components/GlobeMap";
 import { useMapFile } from "@/components/useMapFile";
 import type { SearchEntry } from "@/lib/search";
 import { affordScope } from "@/lib/affordScope";
 
-const DEFAULT_INCOME = "100000";
+const DEFAULT_INCOME = "";
 // The municipalities listed before "Show all": enough to answer, short enough to scan.
 const FIRST_TOWNS = 25;
 
@@ -50,7 +55,7 @@ function listed(items: string[]): string {
 const REACH_KEY: readonly [string, string][] = [
   ["var(--seq-550)", "within reach"],
   ["var(--tick)", "beyond reach"],
-  ["var(--nodata)", "no figure"],
+  ["var(--nodata)", "missing or incomplete estimate"],
 ];
 
 /** One side of "can I afford this place?": its monthly cost, its share of income, the verdict. */
@@ -58,10 +63,12 @@ function CheckCell({
   label,
   row,
   missing,
+  cash,
 }: {
   label: string;
   row: Reached | null;
   missing: string;
+  cash?: number;
 }) {
   if (!row) {
     return (
@@ -80,10 +87,14 @@ function CheckCell({
       </b>
       <span className="check-share">
         {share(row.share)} of your income{" "}
-        <span className={row.within ? "status within" : "status beyond"}>
-          {row.within ? "Within reach" : "Beyond reach"}
+        <span className={row.missing.length > 0 ? "status incomplete" : row.within ? "status within" : "status beyond"}>
+          {row.missing.length > 0 ? "Incomplete estimate" : row.within ? "Within budget on included costs" : "Above budget on included costs"}
         </span>
       </span>
+      {row.missing.length > 0 && <span className="check-need">Missing: {listed(row.missing)}. Not counted as within budget.</span>}
+      {row.upfront && <span className="check-need">Buying upfront: {money(row.upfront.low)}–{money(row.upfront.high)}. {cashFit(cash, row.upfront.low, row.upfront.high)}.</span>}
+      {row.upfront && <span className="check-need">Down payment + estimated closing costs. Moving, repairs and property-specific fees can add more.</span>}
+      {!row.upfront && <span className="check-need">Rental deposits and move-in fees are not checked here.</span>}
       <span className="check-need">
         It takes {money(incomeFor(row.monthly))} a year to keep it at 30%.
       </span>
@@ -111,13 +122,16 @@ export function AffordExplorer({
   counties: Place[];
   towns: Place[];
   rate: { value: number; asOf: string };
-  asOf: { home: string; rent: string; tax: string };
+  asOf: { home: string; rent: string; tax: string; insurance?: string; utilities?: string };
   appearance?: "classic" | "atlas";
   scope?: { countyId: number; countyName: string };
 }) {
   const [incomeText, setIncomeText] = useState(DEFAULT_INCOME);
   const [mode, setMode] = useState<Mode>("own");
   const [down, setDown] = useState<number>(DEFAULT_DOWN);
+  const { personal, household, savePersonal, saveHousehold } = useBudgetScenario();
+  useEffect(() => { setDown(personal.downPct ?? DEFAULT_DOWN); }, [personal.downPct]);
+  useEffect(() => { setIncomeText(household.income === undefined ? "" : String(household.income)); }, [household.income]);
   const [allTowns, setAllTowns] = useState(false);
   // A county profile has already answered "which place?". Start its local affordability
   // mode with that county selected instead of asking the reader to type it again.
@@ -147,7 +161,10 @@ export function AffordExplorer({
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const income = params.get("income")?.replace(/[^0-9]/g, "");
-    if (income) setIncomeText(income);
+    if (income && Number(income) > 0) {
+      setIncomeText(income);
+      saveHousehold({ ...readHousehold(), income: Number(income) });
+    }
     const context = affordScope(params, places);
     if (context.pickedId !== null) setPicked(context.pickedId);
     if (params.has("place") || params.has("county")) {
@@ -157,7 +174,7 @@ export function AffordExplorer({
   }, [places]);
 
   const income = Number(incomeText.replace(/[^0-9.]/g, "")) || 0;
-  const options = { mode, income, downPct: down, ratePct: rate.value };
+  const options = { mode, income, downPct: down, ratePct: personal.ratePct ?? rate.value, personal };
   const countyRows = income > 0 ? reach(counties, options) : [];
   const allTownRows = income > 0 ? reach(towns, options) : [];
   const townRows = scope ? allTownRows.filter((row) => row.place.parentId === scope.countyId) : allTownRows;
@@ -181,16 +198,16 @@ export function AffordExplorer({
   const paintReach = (id: number | string) => {
     const row = byPlace.get(Number(id));
     if (!row) return null;
-    return row.within ? "var(--seq-550)" : "var(--tick)";
+    return row.missing.length > 0 ? "var(--nodata)" : row.within ? "var(--seq-550)" : "var(--tick)";
   };
   const reachOf = (id: number) => {
     const row = byPlace.get(id);
     if (!row) return "no figure for this measure here";
-    return `${money(row.monthly)}/mo, ${share(row.share)} of income — ${row.within ? "within reach" : "beyond reach"}`;
+    return `${money(row.monthly)}/mo, ${share(row.share)} of income — ${row.missing.length > 0 ? `incomplete: ${listed(row.missing)}` : row.within ? "within budget on included costs" : "above budget"}`;
   };
   const check =
     pickedPlace && income > 0
-      ? checkPlace(pickedPlace, { income, downPct: down, ratePct: rate.value })
+      ? checkPlace(pickedPlace, options)
       : null;
 
   function onModeKeys(event: KeyboardEvent<HTMLDivElement>) {
@@ -234,7 +251,10 @@ export function AffordExplorer({
               inputMode="numeric"
               autoComplete="off"
               value={incomeText}
-              onChange={(event) => setIncomeText(event.target.value)}
+              onChange={(event) => {
+                setIncomeText(event.target.value);
+                saveHousehold({ ...household, income: parseAmount(event.target.value) ?? undefined });
+              }}
             />
           </span>
         </label>
@@ -268,7 +288,7 @@ export function AffordExplorer({
             <select
               id={`${id}-down`}
               value={down}
-              onChange={(event) => setDown(Number(event.target.value))}
+              onChange={(event) => { const downPct = Number(event.target.value); setDown(downPct); savePersonal({ ...personal, downPct }); }}
             >
               {DOWN_PAYMENTS.map((pct) => (
                 <option key={pct} value={pct}>
@@ -279,6 +299,16 @@ export function AffordExplorer({
           </label>
         )}
       </div>
+
+      <details className="budget-assumptions">
+        <summary>Your assumptions · {options.ratePct.toFixed(2)}% mortgage rate{mode === "rent" ? " · Rent only" : ""}</summary>
+        <div className="budget-inputs">
+          <label className="control">Cash available for buying<input inputMode="decimal" value={household.cash ?? ""} placeholder="optional" onChange={(event) => saveHousehold({ ...household, cash: parseAmount(event.target.value) ?? undefined })} /></label>
+          {([ ["ratePct", "Mortgage rate, %", rate.value], ["insuranceYear", "Homeowners insurance a year", null], ["upkeepPct", "Upkeep, % of price a year", UPKEEP_PCT] ] as const).map(([key, label, fallback]) => <label className="control" key={key}>{label}<input inputMode="decimal" value={personal[key] ?? ""} placeholder={fallback === null ? "area figure" : String(fallback)} onChange={(event) => { const next = { ...personal }; const value = parseAmount(event.target.value); if (value === null) delete next[key]; else next[key] = value; savePersonal(next); }} /></label>)}
+        </div>
+        <p>Saved in this browser and shared with the cost cards. Property-specific prices, tax bills, HOA fees and flood premiums stay on the home’s profile.</p>
+        {mode === "own" && down === FHA_DOWN && <p>FHA scenario: county loan limits are not checked. <a href={FHA_LIMITS.url} target="_blank" rel="noreferrer">Check the loan limit</a>.</p>}
+      </details>
 
       <section className="check" aria-labelledby={`${id}-check`}>
         <div className="check-head">
@@ -314,14 +344,15 @@ export function AffordExplorer({
               <CheckCell
                 label="To own the typical single-family home"
                 row={check.own}
+                cash={household.cash}
                 missing={
                   pickedPlace.home === null
-                    ? "Zillow has no home value here, so the cost to own is not worked out."
+                    ? "No Zillow home value for this comparison. Check the profile for any separately labelled sale-price scenario."
                     : "There is no property tax figure here, so the cost to own is not worked out."
                 }
               />
               <CheckCell
-                label="To rent the typical home"
+                label="To rent the typical home · rent only"
                 row={check.rent}
                 missing="Zillow publishes no rent figure here."
               />
@@ -336,6 +367,7 @@ export function AffordExplorer({
         )}
       </section>
 
+      <p className="table-note">Monthly results use a 30% income comparison, not loan approval. {mode === "own" ? "Incomplete estimates are not counted as within budget. Buying cash is checked separately for your selected place; HOA fees and flood premiums may add more." : "Rent-only results exclude utilities and renters insurance."}</p>
       <p className="afford-summary" id={`${id}-summary`} aria-live="polite">
         {income > 0 ? (
           scope ? <>
@@ -435,7 +467,7 @@ export function AffordExplorer({
                         <td><Link href={`/regions/${row.place.id}`}>{row.place.name}</Link></td>
                         <td className="num">{money(row.monthly)}</td>
                         <td className="num">{share(row.share)}</td>
-                        <td className="reach-mark">{row.within ? "within reach" : ""}</td>
+                        <td className="reach-mark">{row.missing.length > 0 ? `Incomplete: ${listed(row.missing)}` : row.within ? "within budget*" : ""}</td>
                       </tr>
                     ))}
                   </Fragment>
@@ -453,7 +485,7 @@ export function AffordExplorer({
             <p className="meta">
               None of the {townRows.length} municipalities with figures is
               within reach at this income.
-              {townRows[0] &&
+              {townRows[0] && townRows[0].missing.length === 0 &&
                 ` The least expensive is ${townRows[0].place.name}, at ${money(townRows[0].monthly)} a month — ${share(townRows[0].share)} of it.`}
             </p>
           ) : (
@@ -508,14 +540,13 @@ export function AffordExplorer({
         </section>
       )}
 
-      <p className="table-note afford-notes">
+      <details className="afford-notes"><summary>How these estimates are worked out</summary><p className="table-note">
         {mode === "own" ? (
           <>
             Owning: Zillow’s typical single-family home value ({asOf.home}), a
-            30-year fixed loan at {rate.value.toFixed(2)}% (the national
-            average, {rate.asOf}) with {down}% down, and the typical property
-            tax bill from New Jersey’s assessment records ({asOf.tax}). Left
-            out: {listed(leftOut(down))}. Places without a Zillow value or a
+            30-year fixed loan at {options.ratePct.toFixed(2)}% ({personal.ratePct === undefined ? `national average, ${rate.asOf}` : "your quoted rate"}) with {down}% down, and the typical property
+            tax bill from New Jersey’s assessment records ({asOf.tax}).
+            Included: homeowners insurance ({personal.insuranceYear === undefined ? `Census, ${asOf.insurance ?? "area figure"}` : "your annual quote"}) and utilities (electricity vintage {asOf.utilities ?? "area figure"}, gas and water where supplied), mortgage insurance when applicable, and upkeep ({personal.upkeepPct ?? UPKEEP_PCT}% of price a year, {personal.upkeepPct === undefined ? "a rule of thumb" : "your assumption"}), using the same calculation and saved assumptions as the profile cost cards. See each profile for component dates and definitions. Missing required costs mean an incomplete estimate, never a green result. HOA fees and flood insurance are not included; add them for a specific home on its profile. Places without a Zillow value or a
             matched tax bill are not counted.
           </>
         ) : (
@@ -527,7 +558,7 @@ export function AffordExplorer({
         )}{" "}
         Computed from these figures by fixed rules; not a quote, and not written
         by AI.
-      </p>
+      </p></details>
     </section>
   );
 }

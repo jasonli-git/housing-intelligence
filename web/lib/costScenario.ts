@@ -42,6 +42,7 @@ export const PERSONAL_KEYS: ReadonlyArray<keyof Personal> = [
 ];
 
 const STORE = "hip.cost.personal.v1";
+export const PERSONAL_EVENT = "hip:personal-change";
 
 /** What a reader stored, keeping only known keys holding finite numbers. */
 export function readPersonal(): Personal {
@@ -67,6 +68,9 @@ export function writePersonal(personal: Personal): void {
     else window.localStorage.setItem(STORE, JSON.stringify(personal));
   } catch {
     // A private window or blocked storage: the scenario holds for this page only.
+  }
+  if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+    window.dispatchEvent(new CustomEvent(PERSONAL_EVENT, { detail: personal }));
   }
 }
 

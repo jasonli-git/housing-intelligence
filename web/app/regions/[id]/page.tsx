@@ -422,6 +422,7 @@ export default async function RegionPage({
       {cost ? (
         <CostToOwn
           {...cost}
+          comparePlaceId={region.level === "county" || region.level === "municipality" ? region.region_id : undefined}
           showHelp={!incomeLimits}
         />
       ) : (

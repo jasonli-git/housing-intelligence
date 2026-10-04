@@ -11,9 +11,7 @@ import {
   lineFor,
   positionOf,
   positionSentence,
-  readHousehold,
   SIZES,
-  writeHousehold,
 } from "@/lib/household";
 import {
   BEDROOM_LABELS,
@@ -26,6 +24,7 @@ import {
 import { parseAmount } from "@/lib/costScenario";
 import { HousingHelp } from "@/components/HousingHelp";
 import { ReaderDetails } from "@/components/ReaderDetails";
+import { useBudgetScenario } from "@/components/useBudgetScenario";
 
 /**
  * Answers sized to the reader's household (Milestone 35): where their income sits against
@@ -53,22 +52,19 @@ export function ForYourHousehold({
 }) {
   const id = useId();
   const [ready, setReady] = useState(false);
-  const [house, setHouse] = useState<Household>({});
+  const { household: house, saveHousehold } = useBudgetScenario();
   const [incomeText, setIncomeText] = useState("");
   const [rentText, setRentText] = useState("");
   const [bedrooms, setBedrooms] = useState<Bedrooms>(2);
 
   useEffect(() => {
-    const stored = readHousehold();
-    setHouse(stored);
-    setIncomeText(stored.income === undefined ? "" : String(stored.income));
-    setRentText(stored.rent === undefined ? "" : String(stored.rent));
+    setIncomeText(house.income === undefined ? "" : String(house.income));
+    setRentText(house.rent === undefined ? "" : String(house.rent));
     setReady(true);
-  }, []);
+  }, [house]);
 
   const update = (next: Household) => {
-    setHouse(next);
-    writeHousehold(next);
+    saveHousehold(next);
   };
   const setAmount = (key: "income" | "rent", text: string) => {
     (key === "income" ? setIncomeText : setRentText)(text);
