@@ -19,6 +19,7 @@ import { Ledger, Margin, TableNotes } from "@/components/Ledger";
 import { MoreExpander } from "@/components/MoreExpander";
 import { Masthead } from "@/components/Masthead";
 import { SectionJump } from "@/components/SectionJump";
+import { QuietAnchor, QuietCheckTopics, QuietDisclosure, QuietLinework, QuietProfile } from "@/components/QuietCounty";
 import { RankOverview } from "@/components/RankOverview";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
 import { TrendsExplorer } from "@/components/TrendsExplorer";
@@ -240,6 +241,7 @@ export default async function RegionPage({
   }));
 
   const name = displayName(region);
+  const quiet = region.level === "county" || region.level === "municipality";
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is
@@ -322,10 +324,37 @@ export default async function RegionPage({
         }
       : { kind: "route" as const };
 
+  const homeChecks = <QuietDisclosure enabled={quiet} title="Before choosing a home" note="Check the property, not just the area">
+    <section className="local-page-group" aria-labelledby="home-checks-heading">
+      <h2 id="home-checks-heading">Before choosing a home</h2>
+      {quiet && <QuietCheckTopics />}
+      <div className="local-checks-grid">
+        <FloodRisk name={name} levels={packet.levels} claims={floodClaims[0]} paid={floodClaims[1]}
+          claimsPlace={claimsRegion && claimsRegion.region_id !== regionId ? displayName(claimsRegion) : null} />
+        <GroundAndWater name={name} levels={packet.levels} water={water} />
+      </div>
+      <p className="sales-note tax-way-in">
+        <Link href={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"}>Look up a property here</Link>: its assessment and last year’s
+        tax, found by its address, or by block and lot with its town.
+      </p>
+      <ConsumerReading reading={consumer} section="before_moving" />
+    </section>
+  </QuietDisclosure>;
+
+  const householdContent = <><QuietDisclosure enabled={quiet} title="Income, housing help & nearby places">
+    <ForYourHousehold regionName={name} limits={incomeLimits} levels={packet.levels} countyLevels={countyLevels}
+      margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))} />
+    {region.level !== "zip" && <p className="household-next">
+      <Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
+        {region.level === "county" ? `Compare towns in ${name}` : "Compare nearby places"} <span aria-hidden="true">→</span>
+      </Link><span>Find places within your budget, here or across New Jersey.</span>
+    </p>}
+  </QuietDisclosure>{quiet && homeChecks}</>;
+
   return (
     <>
       <Masthead affordability={affordabilityControl} />
-      <main className="shell atlas-page atlas-local">
+      <main className={`shell atlas-page atlas-local${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
       <header className="page-head" data-kind={kindOf(region.level)}>
         <div className="region-head-main">
           <Crumbs
@@ -409,19 +438,22 @@ export default async function RegionPage({
         </div>
       </header>
 
-      <ProfileTicker
+      {quiet ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : <ProfileTicker
         items={profile}
         title="Housing here"
         ariaLabel={`${name} housing profile`}
         className="region-profile-ticker"
         peerLabel={peerNoun(peer_level)}
-      />
+      />}
 
       <div className="region-standard-content">
 
+      <QuietAnchor enabled={quiet} id="quiet-cost">
       {cost ? (
         <CostToOwn
           {...cost}
+          quiet={quiet}
+          householdTools={quiet ? householdContent : undefined}
           comparePlaceId={region.level === "county" || region.level === "municipality" ? region.region_id : undefined}
           showHelp={!incomeLimits}
         />
@@ -440,28 +472,18 @@ export default async function RegionPage({
           </section>
         )
       )}
+      </QuietAnchor>
 
-      <ForYourHousehold
-        regionName={name}
-        limits={incomeLimits}
-        levels={packet.levels}
-        countyLevels={countyLevels}
-        margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))}
-      />
-      {region.level !== "zip" && (
-        <p className="household-next">
-          <Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
-            {region.level === "county" ? `Compare towns in ${name}` : "Compare nearby places"} <span aria-hidden="true">→</span>
-          </Link>
-          <span>Find places within your budget, here or across New Jersey.</span>
-        </p>
-      )}
+
+      {!quiet && householdContent}
 
       {/* What sets the place apart, in three sentences: the model's lead answer, just above
           the computed rankings it is drawn from and does not author (ARCHITECTURE #275,
           #281). "What's changing?" held this place until 2026-10-01; the page's own
           sentences say what changed. */}
-      <ConsumerReading reading={consumer} section="what_stands_out" heading={`What stands out in ${name}`}>
+      <QuietAnchor enabled={quiet} id="quiet-highlights">
+      {quiet && <QuietLinework />}
+      <ConsumerReading reading={consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`}>
       {standing.length > 0 && (
         <details className="standouts-disclosure">
           <summary>
@@ -498,34 +520,20 @@ export default async function RegionPage({
         </details>
       )}
       </ConsumerReading>
+      </QuietAnchor>
+      {quiet && !cost && householdContent}
 
-      <section className="local-page-group" aria-labelledby="home-checks-heading">
-      <h2 id="home-checks-heading">Before choosing a home</h2>
-      <div className="local-checks-grid">
-      <FloodRisk
-        name={name}
-        levels={packet.levels}
-        claims={floodClaims[0]}
-        paid={floodClaims[1]}
-        claimsPlace={claimsRegion && claimsRegion.region_id !== regionId ? displayName(claimsRegion) : null}
-      />
-
-      <GroundAndWater name={name} levels={packet.levels} water={water} />
-      </div>
-        <p className="sales-note tax-way-in">
-          <Link href={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"}>Look up a property here</Link>: its assessment and last year’s
-          tax, found by its address, or by block and lot with its town.
-        </p>
-      <ConsumerReading reading={consumer} section="before_moving" />
-      </section>
+      {!quiet && homeChecks}
 
       {(construction.some((series) => series.length > 0) ||
         (packet.levels.some((level) => level.metric_id === "sr1a_median_sale_price") &&
           packet.levels.some((level) => level.metric_id === "sr1a_sales_count"))) && (
+      <QuietDisclosure enabled={quiet} title="The local market" note="Homes sold, new building and the detail behind them">
       <section className="local-page-group local-market" aria-labelledby="local-market-heading">
       <h2 id="local-market-heading">Local market</h2>
-      <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} />
+      <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} />
       <HomesAdded
+        portrait={quiet}
         name={name}
         level={region.level}
         permitted={construction[0]}
@@ -535,6 +543,7 @@ export default async function RegionPage({
         levels={packet.levels}
       />
       </section>
+      </QuietDisclosure>
       )}
 
       <MoreExpander id="region-detailed-data" title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>

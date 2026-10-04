@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type KeyboardEvent, useState } from "react";
+import { type KeyboardEvent, useId, useState } from "react";
 
 import { type DetailLevel, type Focus, GlobeMap } from "@/components/GlobeMap";
 import { Margin } from "@/components/Ledger";
@@ -96,6 +96,8 @@ export function CountyExplorer({
   // the whole time the map is open, so it only outlines (ROADMAP).
   const [hovered, setHovered] = useState<number | null>(null);
   const [picked, setPicked] = useState<number | null>(null);
+  const [allCounties, setAllCounties] = useState(false);
+  const tableId = useId();
   // What the map's crosshair is over and which level it is drawing. A region on the
   // level in view also lights its row; a state under the crosshair has no row to light.
   const [centre, setCentre] = useState<Focus | null>(null);
@@ -200,6 +202,8 @@ export function CountyExplorer({
           {/* What a reader needs to read the chosen window, beside the measure it qualifies
               and only while that window is chosen; set apart as a note, not more definition. */}
           {notes.length > 0 && (
+            <details key={`${metricId}-${key}`} className="window-more">
+              <summary>About this measure &amp; window</summary>
             <aside
               className="window-aside"
               aria-label={`About “${windowName}”`}
@@ -209,6 +213,7 @@ export function CountyExplorer({
                 <p key={note}>{note}</p>
               ))}
             </aside>
+            </details>
           )}
         </div>
         <div className="explorer-controls">
@@ -378,7 +383,7 @@ export function CountyExplorer({
           ) : (
             <>
               <div className="scroll-x">
-                <table className="ranks">
+                <table id={tableId} className={`ranks${allCounties ? " county-preview-expanded" : " county-preview"}`}>
                   <thead>
                     <tr>
                       <th scope="col" className="num pos">
@@ -397,10 +402,10 @@ export function CountyExplorer({
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((row) => (
+                    {rows.map((row, index) => (
                       <tr
                         key={row.id}
-                        className={row.id === marked ? "on" : undefined}
+                        className={`${row.id === marked ? "on" : ""}${index >= 5 && row.id !== marked ? " county-preview-extra" : ""}`}
                         onMouseEnter={() => setPicked(row.id)}
                         onMouseLeave={() => setPicked(null)}
                       >
@@ -447,6 +452,9 @@ export function CountyExplorer({
                   </tbody>
                 </table>
               </div>
+              {rows.length > 5 && <button type="button" className="county-preview-toggle" aria-expanded={allCounties} aria-controls={tableId} onClick={() => setAllCounties(!allCounties)}>
+                {allCounties ? "Show fewer counties" : `Show all ${rows.length} counties`}
+              </button>}
             </>
           )}
           {margined && <p className="table-note">{MARGIN_NOTE}</p>}

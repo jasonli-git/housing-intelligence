@@ -21,6 +21,7 @@ export function HomesAdded({
   demolished,
   net,
   levels,
+  portrait = false,
 }: {
   name: string;
   level: string;
@@ -29,6 +30,7 @@ export function HomesAdded({
   demolished: Observation[];
   net: Observation[];
   levels: Pick<PacketLevel, "metric_id" | "value" | "period_start" | "period_end">[];
+  portrait?: boolean;
 }) {
   const rows = constructionYears({ permitted, completed, demolished, net });
   if (rows.length === 0) return null;
@@ -39,12 +41,21 @@ export function HomesAdded({
   const coverage = find("nj_certificates_reporting_share");
   const demolitionCoverage = find("nj_demolitions_reporting_share");
   const preliminary = rows.find((r) => r.preliminary);
+  const maxNet = Math.max(1, ...rows.map((r) => Math.abs(r.net ?? 0)));
 
   return (
     <section className="section sales homes-added" aria-labelledby="homes-added-heading">
       <div className="section-head">
         <h2 id="homes-added-heading">Is it adding homes?</h2>
       </div>
+      {portrait && rows.some((r) => r.net !== null) && <figure className="quiet-net-chart">
+        <figcaption>Net homes added, by year <small>Reported completions minus demolitions · only towns that reported</small></figcaption>
+        <div className="quiet-net-years">{[...rows].reverse().map((r) => <div key={r.year}>
+          <div className="quiet-net-track" aria-hidden="true"><i className={r.net !== null && r.net < 0 ? "negative" : "positive"} style={{height: `${Math.abs(r.net ?? 0) / maxNet * 48}%`}} /></div>
+          <b>{r.net === null ? "Not reported" : formatValue(r.net, "count")}</b><span>{r.year}{r.preliminary ? "*" : ""}</span>
+        </div>)}</div>
+        {preliminary && <small>* Preliminary. Missing reports are not zero.</small>}
+      </figure>}
       {window ? (
         <p className="sales-lead">
           From {window.first} to {window.last}, {name} permitted{" "}

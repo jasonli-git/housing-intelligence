@@ -1,14 +1,16 @@
 import type { LevelReading } from "@/lib/api";
+import type { ReactNode } from "react";
 import { formatMetric } from "@/lib/format";
 import { monthLabel, periodLabel } from "@/lib/periods";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { stateOverviewFigures } from "@/lib/stateEntry";
 
-export function StateOverview({ levels, mortgage, preliminaryYears, hasNotes = false }: {
+export function StateOverview({ levels, mortgage, preliminaryYears, hasNotes = false, children }: {
   levels: LevelReading[];
   mortgage: { value: number; period_start: string; metric_id: string } | null;
   preliminaryYears: number[];
   hasNotes?: boolean;
+  children?: ReactNode;
 }) {
   const { price, added, certified, demolished } = stateOverviewFigures(levels);
   return <section id="state-overview" className="state-overview" aria-labelledby="state-overview-heading">
@@ -19,5 +21,6 @@ export function StateOverview({ levels, mortgage, preliminaryYears, hasNotes = f
       {added && <article><p className="entry-kicker">Reported building activity</p><strong>{formatMetric(added.value, added.unit, added.metric_id)}</strong><FloatingMetricTerm metricId={added.metric_id} label="Net homes added" /><small>{periodLabel(added.period_end, added.metric_id)}{preliminaryYears.includes(Number(added.period_end.slice(0, 4))) ? " (preliminary)" : ""} · NJ construction reports</small><p>Completions minus demolitions; reporting towns only.{certified && demolished ? ` Reporting coverage: ${(certified.value * 100).toFixed(0)}% for completions, ${(demolished.value * 100).toFixed(0)}% for demolitions.` : ""}</p></article>}
     </div>
     {!price && !added && !mortgage && <p>Statewide overview figures are unavailable in this snapshot.</p>}
+    {children}
   </section>;
 }

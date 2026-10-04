@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 
 const SECTIONS = [
-  ["Costs to own & rent", ".region-standard-content > .cost"],
-  ["For your household", ".region-standard-content > .household"],
-  ["Highlights & rankings", ".region-standard-content > .consumer-feature-what_stands_out, .region-standard-content > .standouts-disclosure"],
+  ["Costs to own & rent", ".region-standard-content > .cost, #quiet-cost"],
+  ["For your household", ".region-standard-content > .household, .quiet-disclosure .household"],
+  ["Highlights & rankings", ".region-standard-content > .consumer-feature-what_stands_out, .region-standard-content > .standouts-disclosure, #quiet-highlights"],
   ["Before choosing a home", "#home-checks-heading"],
   ["Local market", "#local-market-heading"],
   ["Explore the evidence", "#region-detailed-data"],
   ["Statewide overview", "#state-overview"],
-  ["State profile", ".nj-page > .state-ticker"],
+  ["State profile", ".nj-page > .state-ticker, .nj-page .quiet-state-profile"],
   ["Map & county comparison", "#nj-explore"],
   ["Statewide evidence", "#state-detailed-data"],
 ] as const;
@@ -30,10 +30,15 @@ export function SectionJump() {
     <select className="section-jump" aria-label="Jump to section" defaultValue="" disabled={!sections.length}
       onFocus={() => setSections(SECTIONS.filter(([, selector]) => {
         const target = document.querySelector(selector);
-        return target?.getClientRects().length && getComputedStyle(target).visibility !== "hidden";
+        return target && (target.getClientRects().length || target.closest("details")) && getComputedStyle(target).visibility !== "hidden";
       }))}
       onChange={(event) => {
         const target = document.querySelector<HTMLElement>(event.currentTarget.value);
+        // County tools may live in native disclosures. Reveal their ancestors before
+        // measuring or focusing, so the shortcut still reaches a closed section.
+        for (let parent = target?.parentElement; parent; parent = parent.parentElement) {
+          if (parent instanceof HTMLDetailsElement) parent.open = true;
+        }
         if (target?.getClientRects().length && getComputedStyle(target).visibility !== "hidden") {
           if (target instanceof HTMLDetailsElement) target.open = true;
           const focus = target.querySelector<HTMLElement>("h2, summary") ?? target;
