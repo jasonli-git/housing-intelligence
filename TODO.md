@@ -14,11 +14,10 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones (2026-10-03)
+## Now — between milestones (2026-10-04)
 
-Milestone 40 is merged (PR #83) and deployed as 0.36.0. Milestone 41, affordable housing
-and assistance, is next and starts only when asked; Milestone 42, utilities, was added
-2026-10-03 and the planned milestones after it renumbered (ROADMAP).
+Milestone 41 is merged and deployed as 0.38.0 (ARCHITECTURE #307). Milestone 42,
+utilities, is next and starts only when asked.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -31,6 +30,17 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
+
+- [ ] **LIHTC is downloaded by hand each spring.** (M41, #307) HUD's release page
+      answers scripts with an empty 202, so discovery reads `unreachable`. When HUD
+      publishes 2025 data (announced for spring 2027), download the ZIP, copy the
+      property workbook to `data/manual/hud_lihtc/LIHTCPUB_2025.xlsx`, and run
+      `hip acquire --source hud_lihtc --vintage 2025`; the handoff
+      (`agent-handoffs/affordable-housing-assistance.md`) has the full steps.
+- [ ] **636 LIHTC projects are not placed in a town.** (M41) 591 resolve only to a
+      county and 45 only to the state, where a Census place spans several towns.
+- [ ] **Readings may be stale after M41.** Four new metrics change the packets; the
+      readings were not regenerated.
 
 - [ ] **Most of Morris County has no flood zone share.** (M40, #301) FEMA's digital map
       covers 14.6% of its homes and Atlantic's 53%; the share is withheld below 95%.
