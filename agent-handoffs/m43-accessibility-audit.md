@@ -1,5 +1,21 @@
 # Milestone 43 — Accessibility audit
 
+## Latest illustration refinement — continuous motion
+
+At the owner's request, the one-time entrance described below is now a repeating
+9-second architectural draw/hold/dissolve cycle. Foundation, walls and windows are
+staggered; measurement guides fade in and a soft backdrop gently breathes. No flashing,
+JavaScript animation loop or new dependency. A native checkbox styled as a small
+pause/play control freezes/resumes all SVG animations, including without JavaScript.
+Reduced motion disables all motion and hides the redundant pause control; print hides
+it too. Files: landing page, accessibility CSS, browser interaction regression script.
+
+Verification: TypeScript passed; 466 tests/59 files passed; 2,379-page static export
+passed (existing local artifact-origin warning). Browser suite confirms infinite
+iteration, a visible finished drawing during the second cycle, pause/resume and static
+reduced motion, along with existing map/definition/mobile reflow checks. Full reports,
+data and canonical documents remain unchanged.
+
 ## Owner-requested follow-up — computed moving checks and presentation
 
 - Replaced the consumer `before_moving` answer on region profiles with `HomeChecks`.

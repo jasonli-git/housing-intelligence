@@ -18,6 +18,19 @@ const axe = async label => {
 };
 try {
   await go('/');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  assert.equal(await page.locator('.portrait-house').evaluate(n => getComputedStyle(n).animationIterationCount), 'infinite', 'House illustration loops');
+  await page.locator('.portrait-house').evaluate(n => { for (const a of n.getAnimations()) a.currentTime = 13500; });
+  assert.equal(await page.locator('.portrait-house').evaluate(n => getComputedStyle(n).opacity), '1', 'Finished house remains visible in second cycle');
+  const drawingPause = page.getByRole('checkbox', { name: 'Pause house illustration animation' });
+  await drawingPause.check();
+  assert.equal(await page.locator('.portrait-house').evaluate(n => getComputedStyle(n).animationPlayState), 'paused', 'Pause freezes the illustration');
+  await drawingPause.uncheck();
+  assert.equal(await page.locator('.portrait-house').evaluate(n => getComputedStyle(n).animationPlayState), 'running', 'Unpause resumes the illustration');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  assert.equal(await page.locator('.portrait-house').evaluate(n => getComputedStyle(n).animationName), 'none', 'Reduced motion is static');
+  assert.equal(await drawingPause.isVisible(), false, 'No redundant motion control in reduced motion');
+  console.log('PASS: looping house illustration, pause/resume and reduced motion');
   await page.locator('.coverage-map-stage').scrollIntoViewIfNeeded();
   await page.locator('.coverage-viewport').waitFor();
   await page.getByRole('button', {name:'Zoom in United States map'}).click();

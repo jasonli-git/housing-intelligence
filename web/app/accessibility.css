@@ -28,15 +28,27 @@ main.atlas-page a:not(.report-action), .quiet-county a:not(.report-action) { col
 .atlas-local .crumbs li[data-level="nation"] { --crumb-accent: var(--text-primary); }
 .atlas-local .crumbs li[data-level="nation"] a { color: var(--text-primary); }
 .quiet-nation .nation-portrait { opacity: .85; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.quiet-nation .nation-portrait .portrait-halo { fill: color-mix(in srgb, var(--entry-accent) 6%, transparent); opacity: 1; stroke: none; animation: house-guides 1.4s ease-out both; }
-.portrait-foundation, .portrait-house, .portrait-windows { stroke-dasharray: 1; animation: house-draw 1.2s cubic-bezier(.22, 1, .36, 1) both; }
-.portrait-house { animation-delay: .15s; }
-.portrait-windows { animation-delay: .5s; fill: color-mix(in srgb, var(--entry-accent) 8%, transparent); }
-.portrait-guides { opacity: .5; animation: house-guides 1.6s ease-out both; }
-@keyframes house-draw { from { stroke-dashoffset: 1; opacity: 0; } to { stroke-dashoffset: 0; opacity: 1; } }
-@keyframes house-guides { 0%, 60% { opacity: 0; } 100% { opacity: 1; } }
-@media (max-width: 600px) { .quiet-nation .nation-portrait { width: 76px; height: 44px; top: .35rem; opacity: .85; stroke-width: 2; } }
-@media (prefers-reduced-motion: reduce) { .nation-portrait path, .quiet-nation .nation-portrait .portrait-halo { animation: none; } }
+.quiet-nation .nation-portrait .portrait-halo { fill: color-mix(in srgb, var(--entry-accent) 6%, transparent); opacity: 1; stroke: none; transform-origin: 185px 157px; animation: house-breathe 9s ease-in-out infinite; }
+.portrait-foundation, .portrait-house, .portrait-windows { stroke-dasharray: 1; animation: house-draw 9s cubic-bezier(.22, 1, .36, 1) infinite; }
+.portrait-house { animation-delay: .25s; }
+.portrait-windows { animation-delay: .65s; fill: color-mix(in srgb, var(--entry-accent) 8%, transparent); }
+.portrait-guides { opacity: .5; animation: house-guides 9s ease-in-out infinite; }
+/* Draw, hold the finished architecture, then gently dissolve into the next cycle. */
+@keyframes house-draw { 0% { stroke-dashoffset: 1; opacity: 0; } 23%, 78% { stroke-dashoffset: 0; opacity: 1; } 94%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes house-guides { 0%, 20%, 94%, 100% { opacity: 0; } 35%, 76% { opacity: .5; } }
+@keyframes house-breathe { 0%, 100% { transform: scale(.92); opacity: .55; } 45%, 65% { transform: scale(1.04); opacity: 1; } }
+.portrait-motion-control { position: absolute; right: .5rem; bottom: 1rem; display: flex; align-items: center; gap: .35rem; min-height: 28px; color: var(--text-secondary); font-size: 10px; cursor: pointer; }
+.portrait-motion-control input { appearance: none; margin: 0; width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--surface-1); color: var(--text-secondary); cursor: pointer; }
+.portrait-motion-control input::before { content: "Ⅱ"; font-size: 12px; }
+.portrait-motion-control input:checked::before { content: "▶"; font-size: 10px; }
+.nation-head:has(.portrait-motion-control input:checked) .nation-portrait * { animation-play-state: paused; }
+@media (max-width: 600px) {
+  .quiet-nation .nation-portrait { width: 76px; height: 44px; top: .35rem; opacity: .85; stroke-width: 2; }
+  .portrait-motion-control { top: .6rem; bottom: auto; right: 82px; }
+  .portrait-motion-control span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
+@media (prefers-reduced-motion: reduce) { .nation-portrait path, .quiet-nation .nation-portrait .portrait-halo { animation: none; } .portrait-motion-control { display: none; } }
+@media print { .portrait-motion-control { display: none; } }
 .assistance-routes small { color: var(--text-secondary); }
 .interpretation-stale { background: light-dark(#f8e7e1, #412e29); color: light-dark(#4f2418, #ffe0d5); }
 .atlas-tool .afford-group-row th { color: var(--budget-accent); }
