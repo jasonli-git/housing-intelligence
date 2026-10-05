@@ -18,7 +18,8 @@ html { scroll-padding-top: 90px; }
 main.atlas-page a:not(.report-action), .quiet-county a:not(.report-action) { color: light-dark(#005ebc, #8dbff4); }
 .atlas-page a.report-action { color: var(--text-primary); }
 .globe-still:focus-visible, .coverage-map:focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
-.quiet-county .consumer-feature-what_stands_out { border-left: 3px solid var(--series-3); background: linear-gradient(120deg, color-mix(in srgb, var(--series-3) 7%, var(--surface-card)), var(--surface-card)); box-shadow: 0 8px 28px rgb(0 0 0 / .045); }
+.quiet-county .consumer-feature-what_stands_out { border-radius: 32px; border-left: 3px solid var(--series-3); background: linear-gradient(120deg, color-mix(in srgb, var(--series-3) 7%, var(--surface-card)), var(--surface-card)); box-shadow: 0 8px 28px rgb(0 0 0 / .045); }
+@media (max-width: 600px) { .quiet-county .consumer-feature-what_stands_out { border-radius: 26px; padding: 1.35rem; } }
 .home-checks { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 .home-checks h3 { margin: .5rem 0 1rem; }
 .home-checks ul { list-style: none; padding: 0; display: grid; gap: 1rem; }

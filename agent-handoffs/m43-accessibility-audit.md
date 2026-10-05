@@ -1,5 +1,14 @@
 # Milestone 43 — Accessibility audit
 
+## Local picture bubble-card refinement
+
+Owner requested stronger rounding: the existing local-picture surface now has 32px
+corners on desktop and 26px on mobile, with slightly more mobile padding. Green left
+accent, content, citations and stale warning unchanged. No overflow clipping added.
+Only accessibility CSS changed. TypeScript and `git diff --check` passed; localhost
+browser confirmed both radii and no 390px horizontal overflow; desktop screenshot
+inspected. Full tests/static export not rerun for this CSS-only radius change.
+
 ## Latest owner direction — remove illustration control
 
 Removed the illustration pause/play control and its CSS at the owner's explicit
