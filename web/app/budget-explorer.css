@@ -1,4 +1,9 @@
 /* One shared budget destination, with quiet header context on place profiles. */
+.bar .bar-budget:disabled { opacity: .5; cursor: not-allowed; background: transparent; border-color: var(--border); box-shadow: none; }
+.foot .foot-notices { padding: .5rem 0 .85rem; background: transparent; border: 0; border-radius: 0; box-shadow: none; gap: .8rem 2rem; font-family: var(--font-text); font-size: 11px; }
+.foot-notices > .foot-kicker { color: var(--text-muted); font: 500 12px/1.5 var(--font-text); text-transform: none; letter-spacing: 0; }
+.foot .publisher-notice-name { color: var(--text-muted); font: 550 11px/1.5 var(--font-text); }
+.foot .publisher-notice p { font-size: 11px; line-height: 1.6; margin-top: .2rem; }
 .page-head .page-head-eyebrow { align-items: center; gap: .65rem; }
 .page-head .population-badge, .quiet-county .page-head .population-badge {
   display: inline-flex; flex-wrap: wrap; margin: 0; padding: 0; min-width: 0;
