@@ -1,5 +1,18 @@
 # Milestone 43 — Accessibility audit
 
+## Latest owner direction — remove illustration control
+
+Removed the illustration pause/play control and its CSS at the owner's explicit
+request. The loop and reduced-motion static alternative remain. This supersedes
+the pause-control description below. Updated the browser regression to assert
+control absence instead of pause/resume. Limitation: there is no longer an on-page
+way to stop the continuous animation; reduced motion alone should not be treated
+as proof of WCAG pause/stop/hide conformance.
+
+Verification for removal: TypeScript and 466 tests passed; static export built 2,379
+pages (existing artifact-origin warning). Diff whitespace and browser-script syntax
+checks passed. Browser interaction suite was updated but not rerun for this removal.
+
 ## Latest illustration refinement — continuous motion
 
 At the owner's request, the one-time entrance described below is now a repeating

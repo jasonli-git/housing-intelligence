@@ -24,10 +24,6 @@ export default async function HousingLandingPage() {
           <path className="portrait-windows" pathLength="1" d="M112 254V183H151V254M70 145H96V174H70ZM176 145H202V174H176ZM250 189H275V217H250ZM298 189H320V217H298Z" />
           <path className="portrait-guides" d="M47 276H225M47 270V282M225 270V282M20 254V125M14 125H26M14 254H26" strokeDasharray="3 5" />
         </svg>
-        <label className="portrait-motion-control">
-          <input type="checkbox" aria-label="Pause house illustration animation" />
-          <span>Pause drawing</span>
-        </label>
         <p className="entry-kicker">A public data project</p>
         <h1>Housing Intelligence</h1>
         <p className="entry-introduction">A clearer picture of the place you could call home.</p>
