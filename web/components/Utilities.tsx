@@ -6,6 +6,7 @@ const TERRITORIES = "https://www.arcgis.com/home/item.html?id=d23845cc51454ee59a
 const EIA = "https://www.eia.gov/electricity/data/eia861/";
 const LEAD = "https://data.openei.org/submissions/6219";
 const BPU = "https://www.nj.gov/bpu/about/divisions/reliability/";
+const BPU_SEARCH = "https://publicaccess.bpu.state.nj.us/";
 const JCPL_BPU = "https://nj.gov/bpu/pdf/boardorders/2025/20250813/2B%20ORDER%20JCP%26L%20Reliability%20Levels.pdf";
 
 /** A compact way into company-wide records, not another cost calculator. */
@@ -40,7 +41,7 @@ export function Utilities({ data }: { data: UtilityData | null }) {
                 </div>)}
               </dl>
               <p className="sales-note">CAIDI is the average restoration time for customer interruptions—not annual minutes per customer (SAIDI). These actual figures are reproduced in <a href={publisherUrl(p.regulatory_reliability![0].payload.url) ?? JCPL_BPU}>BPU’s August 2025 order, Tables 1–3</a>. The table does not specify event exclusions, so it is not treated as the same basis as EIA. This is not a complete BPU annual-report series.</p>
-            </> : <p className="sales-note">BPU annual figures are not imported for this supplier. <a href={p.electricity?.record_id === "963" ? "https://www.atlanticcityelectric.com/cdn/assets/v3/assets/blt407b5f1850a51a1b/blte2a508f06ea1cfda/684320fc2fda0e95b4471da7/ACE_-_2024_Annual_System_Performance_Report.pdf?branch=prod_alias" : BPU}>{p.electricity?.record_id === "963" ? "Read its 2024 BPU filing" : "BPU reliability oversight"}</a>.</p>}
+            </> : <p className="sales-note">BPU annual figures are not imported for this supplier. <a href={p.electricity?.record_id === "963" ? BPU_SEARCH : BPU}>{p.electricity?.record_id === "963" ? "Search BPU public filings" : "BPU reliability oversight"}</a>{p.electricity?.record_id === "963" && " by document title or docket; a newer filing may not appear in search results"}.</p>}
           </ReaderDetails>
         </> : p.fuel === "electric" && <p className="sales-note">No verified EIA company match; price and outages not filled in.</p>}
       </div>;
