@@ -127,7 +127,14 @@ export function NationalCoverageMap() {
       <span className="coverage-map-caption">{region ? `${region} · Geographic view` : "Contiguous United States"}</span>
       <Link className="coverage-mobile-link" href="/states/new-jersey" onClick={enterState}>New Jersey ↗</Link>
       <div className="coverage-map-window">
-      {drawing ? <svg className="coverage-map" data-zoomed={viewport.scale > 1} data-dragging={dragging} viewBox="0 0 900 480" role="group" aria-labelledby="coverage-map-title coverage-map-description"
+      {drawing ? <svg className="coverage-map" data-zoomed={viewport.scale > 1} data-dragging={dragging} viewBox="0 0 900 480" role="group" tabIndex={0} aria-labelledby="coverage-map-title coverage-map-description"
+        onKeyDown={(event) => {
+          if (event.target !== event.currentTarget) return;
+          const delta = ({ ArrowLeft: [-60, 0], ArrowRight: [60, 0], ArrowUp: [0, -60], ArrowDown: [0, 60] } as Record<string, number[]>)[event.key];
+          if (!delta || flight.current) return;
+          event.preventDefault();
+          setViewport((v) => boundCoverage({ ...v, x: v.x - delta[0], y: v.y - delta[1] }));
+        }}
         onPointerDown={(event) => {
           suppressClick.current = false;
           if (viewport.scale === 1 || event.button !== 0 || !event.isPrimary || flight.current) return;
@@ -194,7 +201,7 @@ export function NationalCoverageMap() {
       </>}
       </div>
       <div className="map-pan-controls" role="group" aria-label="Move United States map without dragging">
-        <span>Move map</span>
+        <span>Focus map · Arrow keys to move</span>
         {([[-60, 0, "left", "←"], [0, -60, "up", "↑"], [0, 60, "down", "↓"], [60, 0, "right", "→"]] as const).map(([dx, dy, direction, icon]) => (
           <button key={direction} type="button" disabled={!drawing || viewport.scale === 1} aria-label={`Move map ${direction}`} onClick={() => {
             if (flight.current) return;

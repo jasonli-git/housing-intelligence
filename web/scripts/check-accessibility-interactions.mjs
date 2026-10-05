@@ -25,6 +25,12 @@ try {
   const before = await national.getAttribute('style');
   await page.getByRole('button', {name:'Move map right',exact:true}).click();
   assert.notEqual(await national.getAttribute('style'),before,'National map moves without dragging');
+  const nationalKeys = await national.getAttribute('style');
+  await page.locator('.coverage-map').focus();
+  const nationalScroll = await page.evaluate(() => window.scrollY);
+  await page.keyboard.press('ArrowRight');
+  assert.notEqual(await national.getAttribute('style'), nationalKeys, 'National map responds to physical arrow keys');
+  assert.equal(await page.evaluate(() => window.scrollY), nationalScroll, 'Focused national map does not scroll page');
   const theme = page.getByRole('button', {name:'Switch to the dark theme'});
   await theme.focus(); await page.keyboard.press('Space');
   await page.getByRole('button',{name:'Switch to the light theme'}).waitFor();
@@ -41,6 +47,12 @@ try {
   const shape = await geometry();
   await page.getByRole('button',{name:'Move map right',exact:true}).click();
   await page.waitForFunction(previous => [...document.querySelectorAll('.globe-detail path')].map(n=>n.getAttribute('d')).join('|')!==previous,shape);
+  const keyShape = await geometry();
+  await map.focus();
+  const mapScroll = await page.evaluate(() => window.scrollY);
+  await page.keyboard.press('ArrowDown');
+  await page.waitForFunction(previous => [...document.querySelectorAll('.globe-detail path')].map(n=>n.getAttribute('d')).join('|')!==previous,keyShape);
+  assert.equal(await page.evaluate(() => window.scrollY), mapScroll, 'Focused NJ map does not scroll page');
   console.log('PASS: New Jersey map non-drag movement');
 
   const search = page.locator('.bar input[role="combobox"]');

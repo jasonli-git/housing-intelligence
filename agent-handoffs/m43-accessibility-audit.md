@@ -1,5 +1,47 @@
 # Milestone 43 — Accessibility audit
 
+## Owner-requested follow-up — computed moving checks and presentation
+
+- Replaced the consumer `before_moving` answer on region profiles with `HomeChecks`.
+  Three deterministic checks cover property tax, purchase price and comparable rent.
+  Rules inspect finite packet inputs, prefer Zillow over a transaction median, retain
+  the input's period, and explicitly disclose missing data. No numeric calculation,
+  local risk inference, model call or regeneration is involved. These are informational
+  prompts, not a property assessment. Flood, water, utility and tax tools remain alongside.
+- Kept the AI-written local picture, its citations and stale-data warning. Added a
+  restrained modern surface, rounded border, soft shadow and green left accent.
+- Restored report-action text to the foreground color instead of inheriting the broad
+  blue accessibility link override.
+- Both maps now accept physical arrow keys while their SVG surface is focused, with
+  default scrolling suppressed only for those keys on that surface. Nested controls
+  retain their own behavior. Added a visible focus outline and keyboard hint.
+- Landing architectural illustration draws once on entry; reduced motion is static.
+
+### Follow-up files and decisions
+
+`web/lib/homeChecks.ts` and its tests, `web/components/HomeChecks.tsx`, region page,
+both map components, accessibility styles and the browser interaction check.
+Server-rendered rules require no added runtime dependency. No canonical document or
+stored model output changed. Full reports and generation prompts still retain their
+existing answers; retiring generation of the unused profile answer is a separate
+backend/publication-format decision for Claude. The three priorities are deliberately
+fixed, not a claim to a personalized or exhaustive checklist.
+
+### Follow-up verification
+
+- `npm run typecheck`: passed.
+- `npm test`: 464 tests across 58 files passed, including 3 new rule tests.
+- `npm run build`: 2,379 pages exported. Initial sandboxed run could not reach the
+  local API; rerun with local-network access passed. Existing artifact-origin warning
+  remains; this is a local preview, not a deployment configuration.
+- Static-build `check:a11y:interactions`: passed, including physical arrow-key panning
+  without page scroll, 12 routes at 320px, open-definition axe checks, and no-JS report.
+- Rendered Somerset: three rules checks, no old AI moving section; inspected the local
+  picture screenshot. Existing stale-reading warning retained, not silently refreshed.
+- `git diff --check`: passed. No backend tests rerun; no backend code changed.
+- Full 80-scan matrix not rerun for this follow-up; real device/assistive-technology
+  and manual visual/motion checks remain subject to the original audit limitations.
+
 ## What changed
 
 Branch: `milestone/m43-accessibility-audit`, based on `4710a7b` (main, PR #94).

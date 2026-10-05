@@ -4,6 +4,7 @@ import { CostToOwn } from "@/components/CostToOwn";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { AffordableHousing, HousingHelpDisclosure } from "@/components/AffordableHousing";
 import { HomeSales } from "@/components/HomeSales";
+import { HomeChecks } from "@/components/HomeChecks";
 import { FloodRisk } from "@/components/FloodRisk";
 import { GroundAndWater } from "@/components/GroundAndWater";
 import { Utilities } from "@/components/Utilities";
@@ -342,7 +343,7 @@ export default async function RegionPage({
         <Link href={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"}>Look up a property here</Link>: its assessment and last year’s
         tax, found by its address, or by block and lot with its town.
       </p>
-      <ConsumerReading reading={consumer} section="before_moving" />
+      <HomeChecks levels={packet.levels} />
     </section>
   </QuietDisclosure>;
 
