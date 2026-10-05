@@ -52,6 +52,15 @@ The checked BPU order and manually curated CCR IDs are bounded, reviewed sources
 
 ### Copy-ready requests — unsent
 
+#### User decision — October 4, 2026: defer outreach
+
+The user does not want to send inquiries now. Retain the drafts below for later; do not contact BPU, NJDEP, DOE/NREL or other institutions without separate authorization. No reason beyond the user's choice to defer was stated. The evidence below explains why the inquiries remain useful, not why the user postponed them.
+
+- **BPU:** the user's normal browser accessed the portal and found ACE's public 2023 Annual System Performance Report, submitted May 30, 2024, under ER09080664 and EM14060581. The downloaded PDF's cover confirms that identity. It is not the 2024 report previously reviewed on ACE's website. The user did not locate a newer filing through the suggested searches; that is a search/access gap, not evidence that BPU lacks the filings. A later inquiry should identify this known filing and request newer public document IDs/links and the four-utility catalogue.
+- **Lead:** the user independently queried distinct SUBMISSION_YEAR values in the public layer and received 2022, 2023 and 2024 only. This supports requesting a newer per-system aggregate export. A November 2025 schema edit does not establish 2025 submissions. Do not substitute newer statewide totals for system-level records.
+- **ACE terms follow-up:** Exelon's terms, updated August 10, 2026, explicitly include ACE and restrict automated access, public reuse and deep links without permission. The existing direct supplier PDF link in PR #93 needs review before release. Obtaining an agency-hosted public filing is an alternative acquisition route to assess, not automatic legal clearance or a blanket third-party reuse licence. No ACE scraper/import has been added.
+- **Drinking-water walkthrough:** the user found NJDEP's Integrated Water Quality Assessment Report (2022 cycle). That is surface-water/watershed assessment, not an individual supplier's Consumer Confidence Report. Next help the user identify one town/supplier and its actual annual drinking-water report, slowly, one step at a time. No additional water source was integrated from that page.
+
 **To BPU reliability staff:**
 
 > We are building a free housing-information site for New Jersey. Could you provide the public, non-confidential annual system performance reports for ACE, JCP&L, PSE&G and RECO for 2024 and 2025, or stable public links/a machine-readable summary? We need company-wide actual CAIDI, SAIFI and SAIDI where reported, units, event-exclusion basis, reporting geography and filing/publication dates. Please identify an ongoing public catalogue or notification mechanism and any attribution/reuse restrictions. We do not seek confidential infrastructure details.
