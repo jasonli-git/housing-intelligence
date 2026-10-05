@@ -129,7 +129,7 @@ function asOfTerm(
     definition:
       `The Census Bureau’s American Community Survey population figure covers ` +
       `${surveyYears(population.period_start, population.period_end)}. ` +
-      (compared ? "The percentage in this badge compares it with the figure five years earlier. " : "") +
+      (compared ? "The change compares it with the figure five years earlier. " : "") +
       [marginNote, changeMarginNote].filter(Boolean).join(" "),
   };
 }
@@ -352,8 +352,8 @@ export default async function RegionPage({
     <div id="housing-assistance"><AffordableHousing data={housingHelp} /></div>
     {region.level !== "zip" && <p className="household-next">
       <Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
-        {region.level === "county" ? `Compare towns in ${name}` : "Compare nearby places"} <span aria-hidden="true">→</span>
-      </Link><span>Find places within your budget, here or across New Jersey.</span>
+        {region.level === "county" ? "Find towns within my budget" : "Compare nearby towns"} <span aria-hidden="true">→</span>
+      </Link><span>Starts in {region.level === "county" ? name : county ? displayName(county) : "New Jersey"}. You can search all New Jersey.</span>
     </p>}
   </HousingHelpDisclosure>{quiet && homeChecks}</>;
 
@@ -376,21 +376,16 @@ export default async function RegionPage({
             <Kind kind={kindOf(region.level)} />
             {population && (
               <aside className="population-badge" aria-label="Population">
-                <span className="population-badge-label">Population</span>
-                <strong>{formatMetric(population.value, population.unit, population.metric_id)}</strong>
-                {populationChange && (
-                  <span className="population-badge-change">{changeWords(populationChange.pct_change)}</span>
-                )}
                 <span className="population-badge-year">
                   <FloatingMetricTerm
                     metricId={population.metric_id}
-                    label={`${periodLabel(population.period_end)} estimate`}
-                    definition={asOfTerm(
+                    label={`${formatMetric(population.value, population.unit, population.metric_id)} residents`}
+                    definition={`${periodLabel(population.period_end)} estimate. ${populationChange ? `${changeWords(populationChange.pct_change)} over ${periodLabel(populationChange.window_start)}–${periodLabel(populationChange.window_end)}. ` : ""}${asOfTerm(
                       population,
                       Boolean(populationChange),
                       populationMargin,
                       populationChangeMargin,
-                    ).definition}
+                    ).definition}`}
                     why={null}
                   />
                 </span>

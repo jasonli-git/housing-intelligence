@@ -18,7 +18,6 @@ import { periodLabel } from "@/lib/periods";
 import { WINDOWS } from "@/lib/windows";
 import { definitionOf } from "@/lib/definitions";
 import { stateProfile } from "@/lib/stateProfile";
-import { affordData } from "@/lib/affordData";
 import { stateFigurePeriod } from "@/lib/stateEntry";
 import { marginLabel } from "@/lib/uncertainty";
 import { constructionYears } from "@/lib/construction";
@@ -60,11 +59,10 @@ const CAVEAT_IN_DEFINITION: ReadonlySet<string> = new Set([
  * this page's payload (#163).
  */
 export default async function NewJerseyPage() {
-  const [geo, catalog, states, affordability, mortgage, countyRegions] = await Promise.all([
+  const [geo, catalog, states, mortgage, countyRegions] = await Promise.all([
     api.geo("county"),
     api.metrics(),
     api.regions("level=state&state=NJ&limit=1"),
-    affordData(),
     nationalMortgageRate(),
     api.regions("level=county&state=NJ&has_data=true&limit=100"),
   ]);
@@ -163,13 +161,11 @@ export default async function NewJerseyPage() {
             <Kind kind="state" />
             {population && (
               <aside className="population-badge" aria-label="Population">
-                <span className="population-badge-label">Population</span>
-                <strong>{formatMetric(population.value, population.unit, population.metric_id)}</strong>
                 <span className="population-badge-year">
                   <FloatingMetricTerm
                     metricId={population.metric_id}
-                    label={`${periodLabel(population.period_end, population.metric_id)} estimate`}
-                    definition={definitionOf(population.metric_id)?.what ?? population.label}
+                    label={`${formatMetric(population.value, population.unit, population.metric_id)} residents`}
+                    definition={`${periodLabel(population.period_end, population.metric_id)} estimate. ${definitionOf(population.metric_id)?.what ?? population.label}`}
                     why={null}
                   />
                 </span>
@@ -200,7 +196,6 @@ export default async function NewJerseyPage() {
             countyPages={(countyRegions?.items ?? []).map((county) => ({ id: county.region_id, name: county.name }))}
             sections={sections}
             initial={initial}
-            afford={affordability}
           />
         ) : (
           <p className="meta">No county rankings are published yet.</p>

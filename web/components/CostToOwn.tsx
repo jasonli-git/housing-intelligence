@@ -391,7 +391,7 @@ export function CostToOwn({
           {rentMonth !== null && ` Rent alone uses ${Math.round(rentMonth / (household.income / 12) * 100)}% of your income.`}
         </p>}
         <p>Buying upfront: {money(up.low)}–{money(up.high)} · {cashFit(household.cash, up.low, up.high)}.</p>
-        <a href={`/states/new-jersey?mode=afford&place=${comparePlaceId}${household.income ? `&income=${household.income}` : ""}#nj-explore`}>Compare typical homes elsewhere →</a>
+        <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}` : ""}`}>Compare typical homes across New Jersey →</a>
         {Object.values(fields).some(Boolean) && <small>Your home’s price, tax and fees stay here; comparisons use each area’s figures.</small>}
         {home.basis === "transactions" && <small>This sale-price scenario is not included in cross-place ownership rankings.</small>}
       </aside>}

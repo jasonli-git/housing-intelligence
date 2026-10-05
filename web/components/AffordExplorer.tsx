@@ -133,6 +133,7 @@ export function AffordExplorer({
   useEffect(() => { setDown(personal.downPct ?? DEFAULT_DOWN); }, [personal.downPct]);
   useEffect(() => { setIncomeText(household.income === undefined ? "" : String(household.income)); }, [household.income]);
   const [allTowns, setAllTowns] = useState(false);
+  const [view, setView] = useState<"list" | "map">("list");
   // A county profile has already answered "which place?". Start its local affordability
   // mode with that county selected instead of asking the reader to type it again.
   const [picked, setPicked] = useState<number | null>(initialScope?.countyId ?? null);
@@ -192,8 +193,8 @@ export function AffordExplorer({
   // disagree about whether a place is within reach.
   const byPlace = useMemo(
     () =>
-      new Map([...countyRows, ...allTownRows].map((row) => [row.place.id, row])),
-    [countyRows, allTownRows],
+      new Map([...countyRows, ...townRows].map((row) => [row.place.id, row])),
+    [countyRows, townRows],
   );
   const paintReach = (id: number | string) => {
     const row = byPlace.get(Number(id));
@@ -202,6 +203,7 @@ export function AffordExplorer({
   };
   const reachOf = (id: number) => {
     const row = byPlace.get(id);
+    if (scope && !row && towns.some((town) => town.id === id && town.parentId !== scope.countyId)) return "outside your selected county";
     if (!row) return "no figure for this measure here";
     return `${money(row.monthly)}/mo, ${share(row.share)} of income — ${row.missing.length > 0 ? `incomplete: ${listed(row.missing)}` : row.within ? "within budget on included costs" : "above budget"}`;
   };
@@ -224,17 +226,18 @@ export function AffordExplorer({
   }
 
   return (
-    <section className="afford" aria-labelledby={`${id}-summary`}>
+    <section className="afford budget-explorer" data-view={view} data-has-income={income > 0} aria-labelledby={`${id}-summary`}>
       <div className="afford-controls">
         <label className="control" htmlFor={`${id}-scope`}>
-          <span className="control-label">Compare places in</span>
-          <select id={`${id}-scope`} value={countyId ?? "all"} onChange={(event) => {
+          <span className="control-label">Where</span>
+          <select id={`${id}-scope`} aria-label="Where" value={countyId ?? "all"} onChange={(event) => {
             const next = event.target.value === "all" ? null : Number(event.target.value);
             setCountyId(next);
             setFrameTarget(next);
             setAllTowns(false);
             setCentre(null);
             if (next !== null) setPicked(next);
+            else setPicked(null);
           }}>
             <option value="all">All New Jersey</option>
             {counties.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}
@@ -242,7 +245,7 @@ export function AffordExplorer({
         </label>
         <label className="control" htmlFor={`${id}-income`}>
           <span className="control-label">
-            Household income, a year before tax
+            Yearly household income · before tax
           </span>
           <span className="money-input">
             <span aria-hidden="true">$</span>
@@ -260,7 +263,7 @@ export function AffordExplorer({
         </label>
         <div className="control">
           <span className="control-label" id={`${id}-mode`}>
-            To
+            Looking to
           </span>
           <div
             className="seg"
@@ -300,6 +303,17 @@ export function AffordExplorer({
         )}
       </div>
 
+      <div className="budget-scope-line">
+        <span>Searching <b>{scope?.countyName ?? "all New Jersey"}</b></span>
+        {scope && <button type="button" onClick={() => { setCountyId(null); setFrameTarget(null); setCentre(null); setAllTowns(false); }}>Search all New Jersey <span aria-hidden="true">↗</span></button>}
+      </div>
+
+      <div className="budget-headline" aria-live="polite">
+        <span>Your monthly housing budget</span>
+        <strong>{income > 0 ? money(monthlyBudget(income)) : "Start with your income"}</strong>
+        <p>30% of income before tax. A comparison guide, not loan approval.</p>
+      </div>
+
       <details className="budget-assumptions">
         <summary>Your assumptions · {options.ratePct.toFixed(2)}% mortgage rate{mode === "rent" ? " · Rent only" : ""}</summary>
         <div className="budget-inputs">
@@ -310,6 +324,8 @@ export function AffordExplorer({
         {mode === "own" && down === FHA_DOWN && <p>FHA scenario: county loan limits are not checked. <a href={FHA_LIMITS.url} target="_blank" rel="noreferrer">Check the loan limit</a>.</p>}
       </details>
 
+      <details className="budget-place-check" open={pickedPlace ? true : undefined}>
+      <summary>Check one place{pickedPlace ? ` · ${pickedPlace.name}` : ""}</summary>
       <section className="check" aria-labelledby={`${id}-check`}>
         <div className="check-head">
           <h2 id={`${id}-check`} className="check-title">
@@ -366,16 +382,16 @@ export function AffordExplorer({
           </p>
         )}
       </section>
+      </details>
 
       <p className="table-note">Monthly results use a 30% income comparison, not loan approval. {mode === "own" ? "Incomplete estimates are not counted as within budget. Buying cash is checked separately for your selected place; HOA fees and flood premiums may add more." : "Rent-only results exclude utilities and renters insurance."}</p>
       <p className="afford-summary" id={`${id}-summary`} aria-live="polite">
         {income > 0 ? (
           scope ? <>
-            30% of {money(income)} a year is <b>{money(monthlyBudget(income))} a month</b>. At that, {home} is
+            With this budget, {home} is
             within reach in <b>{townsWithin.length}</b> of {townRows.length} municipalities in {scope.countyName}.
           </> : <>
-            30% of {money(income)} a year is{" "}
-            <b>{money(monthlyBudget(income))} a month</b>. At that, {home} is
+            With this budget, {home} is
             within reach in <b>{countiesWithin}</b> of {countyRows.length}{" "}
             counties and <b>{townsWithin.length}</b> of {townRows.length}{" "}
             municipalities.
@@ -385,7 +401,11 @@ export function AffordExplorer({
         )}
       </p>
 
-      <div className="explorer">
+      <div className="budget-view-choice" role="group" aria-label="Show budget results as">
+        <button type="button" aria-pressed={view === "list"} onClick={() => setView("list")}>List</button>
+        <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}>Map</button>
+      </div>
+      {income > 0 && <div className="explorer">
         <div className="map-panel">
           {/* The globe, at municipal level: this page is about places a reader could
               live, and 564 towns is the answer where 21 counties is a summary. Milestone
@@ -393,6 +413,7 @@ export function AffordExplorer({
               Milestone 16 (#144). Painted in three states rather than by quantile — a town
               a few dollars over the line must not share a color with one a few under. */}
           <GlobeMap
+            controls="budget"
             key={countyId ?? "statewide"}
             appearance={appearance}
             width={MAP_WIDTH}
@@ -408,7 +429,7 @@ export function AffordExplorer({
             format={money}
             formatChange={money}
             paint={paintReach}
-            describe={`Municipalities where ${home} is within reach on this income. The lists below the map carry the same figures.`}
+            describe={`Municipalities in ${scope?.countyName ?? "New Jersey"} where ${home} is within reach on this income. The results list carries the same figures.`}
             legend={
               <p className="globe-ramp">
                 <b>On this income</b>
@@ -418,6 +439,7 @@ export function AffordExplorer({
                     {label}
                   </span>
                 ))}
+                {scope && <span>Towns outside {scope.countyName} are background context.</span>}
               </p>
             }
             active={picked}
@@ -434,7 +456,7 @@ export function AffordExplorer({
             </p>
           )}
         </div>
-        <div className="scroll-x">
+        <div className="scroll-x budget-comparison">
           <table className="ranks">
             <thead>
               <tr>
@@ -464,7 +486,7 @@ export function AffordExplorer({
                         key={row.place.id}
                         className={row.within ? "within" : !scope ? "afford-secondary" : undefined}
                       >
-                        <td><Link href={`/regions/${row.place.id}`}>{row.place.name}</Link></td>
+                        <td><Link href={`/regions/${row.place.id}`}>{row.place.name}</Link><span className="budget-row-status">{row.missing.length > 0 ? `Incomplete: ${listed(row.missing)}` : row.within ? "Within budget on included costs" : "Above budget"}</span></td>
                         <td className="num">{money(row.monthly)}</td>
                         <td className="num">{share(row.share)}</td>
                         <td className="reach-mark">{row.missing.length > 0 ? `Incomplete: ${listed(row.missing)}` : row.within ? "within budget*" : ""}</td>
@@ -476,10 +498,10 @@ export function AffordExplorer({
             </tbody>
           </table>
         </div>
-      </div>
+      </div>}
 
       {income > 0 && !scope && (
-        <section className="section" aria-labelledby={`${id}-towns`}>
+        <section className="section budget-town-results" aria-labelledby={`${id}-towns`}>
           <h2 id={`${id}-towns`}>Municipalities within reach</h2>
           {townsWithin.length === 0 ? (
             <p className="meta">

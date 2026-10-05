@@ -42,7 +42,7 @@ export default async function AffordPage() {
   return (
     <>
       <Masthead affordability={{ kind: "route", active: true }} />
-      <main className="shell atlas-page atlas-tool">
+      <main className="shell atlas-page atlas-tool budget-page">
       <header className="page-head" data-kind="tool">
         <div>
           <Crumbs
@@ -50,16 +50,15 @@ export default async function AffordPage() {
             here="What can I afford?"
           />
           <Kind kind="tool" />
-          <h1 className="page-title">What can I afford?</h1>
+          <h1 className="page-title">Find your fit.</h1>
           <p className="meta">
-            Where the typical home is within reach of a household income — owned
-            or rented — if housing takes at most 30% of it, the line HUD uses
-            for cost burden.
+            A budget, a place, a clearer starting point. Compare typical housing costs in New Jersey.
           </p>
         </div>
       </header>
       <AffordExplorer
         {...data}
+        appearance="atlas"
       />
       </main>
     </>
