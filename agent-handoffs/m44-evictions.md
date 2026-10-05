@@ -2,7 +2,27 @@
 
 Branch: `milestone/m44-evictions`, based on `c9e3b0c` (merged M43).
 Investigated 2026-10-05. **Implementation parked; M44 is not delivered.**
-The owner approved this milestone branch. No inquiry was sent.
+The owner approved this milestone branch. No inquiry was sent by Codex.
+
+## Owner outreach update — October 5, 2026
+
+- Owner supplied the original email: sent September 23, 2026 to
+  `Joseph.Naylor@dca.nj.gov`, requesting aggregate ZIP eviction/warrant downloads,
+  reuse conditions and clarification of the dictionary year discrepancy.
+- Owner reports no reply as of October 5. Joseph is listed as a GIS Specialist in
+  DCA Local Planning Services on its [official staff page](https://www.nj.gov/dca/dlps/contact-us/index.shtml).
+  His ownership of the dashboard is not verified; ask for a referral if appropriate.
+- A concise reply in that existing email thread was drafted in chat. Sending the
+  follow-up has **not** been confirmed; do not record it as sent.
+- **October 13, 2026: if still unanswered, use DCA's general feedback form to request
+  routing to the Municipal Housing Profile data steward.** This date assumes the
+  proposed follow-up is sent October 5; adjust if it is sent later. Mention the
+  September 23 email and actual follow-up date, and attach the original if useful.
+  DCA's [homepage](https://www.nj.gov/dca/) links [the form](https://feedback.dca.nj.gov/)
+  under Contact DCA → Email. The Consumer Affairs address in the form's notice is for
+  a different agency and is not the housing-data route.
+- This is a handoff note, not a scheduled reminder or authorization to submit a form.
+  No outreach, automation, canonical-document edit or data import was performed.
 
 ## What changed
 
@@ -132,7 +152,8 @@ these through inference. A dictionary tab exists, but does not resolve all these
 
 ### Unsent request draft
 
-Suggested recipient: Christopher Wheeler, Chief Data Officer, DCA.
+Alternative contact if a referral is needed: Christopher Wheeler, Chief Data Officer, DCA.
+Use the owner's existing Joseph Naylor thread first rather than duplicate the request.
 `christopher.wheeler@dca.nj.gov` is published in DCA's
 [April 30, 2025 presentation, printed slide 22](https://nj.gov/dca/dhcr/offices/pdf/NPP/NPP%20Coordinator%20Meeting%20Slides%20-%20April%202025.pdf).
 That establishes a public professional contact, not confirmed 2026 inbox availability.
