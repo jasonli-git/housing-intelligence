@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { unpack, type PackedOutline } from "@/lib/mapdata";
 import { scene, type Outline } from "@/lib/globe";
 import { WORLD_LAND } from "@/lib/worldLand";
-import { boundCoverage, COVERAGE_HOME, coverageScene, STATE_DESTINATIONS, zoomCoverage, type CoverageViewport } from "@/lib/coverageMap";
+import { boundCoverage, COVERAGE_HOME, COVERAGE_REGIONS, coverageScene, regionViewport, STATE_DESTINATIONS, zoomCoverage, type CoverageRegion, type CoverageViewport } from "@/lib/coverageMap";
 
 /** Zoomable coverage geometry without continuous reprojection or local-data downloads. */
 export function NationalCoverageMap() {
@@ -18,6 +18,7 @@ export function NationalCoverageMap() {
   const [failed, setFailed] = useState(false);
   const [hovered, setHovered] = useState("New Jersey · Available now");
   const [viewport, setViewport] = useState(COVERAGE_HOME);
+  const [region, setRegion] = useState<CoverageRegion | null>(null);
   const [dragging, setDragging] = useState(false);
   const drag = useRef<{ id: number; x: number; y: number; start: CoverageViewport; pixels: number; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
@@ -104,13 +105,26 @@ export function NationalCoverageMap() {
 
   const zoomMap = (factor: number) => {
     if (!drawing || flight.current) return;
+    setRegion(null);
     setViewport((current) => zoomCoverage(current, factor, drawing.locator));
   };
   const locator = drawing ? [viewport.x + drawing.locator[0] * viewport.scale, viewport.y + drawing.locator[1] * viewport.scale] : null;
 
   return <div className="coverage-atlas">
+    <div className="coverage-region-bar">
+      <span>Look closer</span>
+      <div role="group" aria-label="Browse map by Census region">
+        {(Object.keys(COVERAGE_REGIONS) as CoverageRegion[]).map((name) => <button key={name} type="button"
+          disabled={!drawing} aria-pressed={region === name} onClick={() => {
+            if (flight.current) return;
+            const next = region === name ? COVERAGE_HOME : regionViewport(outlines, name);
+            if (!next) return;
+            setViewport(next); setRegion(region === name ? null : name);
+          }}>{name}</button>)}
+      </div>
+    </div>
     <div ref={stage} className="coverage-map-stage" onMouseLeave={() => setHovered("New Jersey · Available now")}>
-      <span className="coverage-map-caption">Contiguous United States</span>
+      <span className="coverage-map-caption">{region ? `${region} · Geographic view` : "Contiguous United States"}</span>
       <Link className="coverage-mobile-link" href="/states/new-jersey" onClick={enterState}>New Jersey ↗</Link>
       <div className="coverage-map-window">
       {drawing ? <svg className="coverage-map" data-zoomed={viewport.scale > 1} data-dragging={dragging} viewBox="0 0 900 480" role="group" aria-labelledby="coverage-map-title coverage-map-description"
@@ -129,6 +143,7 @@ export function NationalCoverageMap() {
             return;
           }
           held.moved = true;
+          setRegion(null);
           suppressClick.current = true;
           event.currentTarget.setPointerCapture(event.pointerId);
           setDragging(true);
@@ -167,15 +182,12 @@ export function NationalCoverageMap() {
         </a>}
       </svg> : <div className="coverage-map-placeholder"><p>{failed ? "Map unavailable. Explore New Jersey below." : "Loading the state map…"}</p></div>}
       {drawing && <>
-        <div className="globe-controls globe-controls-jumps coverage-jumps" role="group" aria-label="United States map framing">
-          <button type="button" aria-label="Show the United States map" onClick={() => { if (!flight.current) setViewport(COVERAGE_HOME); }}>United States</button>
-        </div>
         <div className="globe-controls globe-controls-zoom coverage-zoom" role="group" aria-label="United States map zoom controls">
           <button type="button" aria-label="Zoom out United States map" disabled={viewport.scale === 1} onClick={() => zoomMap(1 / 1.4)}>−</button>
           <span className="globe-divider" aria-hidden="true" />
           <button type="button" aria-label="Zoom in United States map" disabled={viewport.scale === 5} onClick={() => zoomMap(1.4)}>+</button>
           <span className="globe-divider" aria-hidden="true" />
-          <button type="button" className="globe-icon" aria-label="Reset United States map" title="Reset map" disabled={viewport.scale === 1} onClick={() => { if (!flight.current) setViewport(COVERAGE_HOME); }}>
+          <button type="button" className="globe-icon" aria-label="Reset United States map" title="Reset map" disabled={viewport.scale === 1 && !region} onClick={() => { if (!flight.current) { setViewport(COVERAGE_HOME); setRegion(null); } }}>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 5a5.5 5.5 0 1 1-.4 5M3 1.5V5h3.5" /></svg>
           </button>
         </div>
@@ -187,6 +199,6 @@ export function NationalCoverageMap() {
       <div><p className="entry-kicker">Detailed coverage available now</p><h3>New Jersey</h3><p>Counties, towns and ZIP codes.</p></div>
       <Link href="/states/new-jersey" className="coverage-state-action">Explore New Jersey <span aria-hidden="true">↗</span></Link>
     </div>
-    <p className="coverage-map-note">New Jersey only for now. Other states aren’t available yet.</p>
+    <p className="coverage-map-note">Regions help you browse the map. Only New Jersey has published housing pages. Alaska and Hawaii are outside this view.</p>
   </div>;
 }

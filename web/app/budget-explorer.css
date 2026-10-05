@@ -1,0 +1,82 @@
+/* One shared budget destination, with quiet header context on place profiles. */
+.bar .bar-budget:disabled { opacity: .5; cursor: not-allowed; background: transparent; border-color: var(--border); box-shadow: none; }
+.foot .foot-notices { padding: .5rem 0 .85rem; background: transparent; border: 0; border-radius: 0; box-shadow: none; gap: .8rem 2rem; font-family: var(--font-text); font-size: 11px; }
+.foot-notices > .foot-kicker { color: var(--text-muted); font: 500 12px/1.5 var(--font-text); text-transform: none; letter-spacing: 0; }
+.foot .publisher-notice-name { color: var(--text-muted); font: 550 11px/1.5 var(--font-text); }
+.foot .publisher-notice p { font-size: 11px; line-height: 1.6; margin-top: .2rem; }
+.page-head .page-head-eyebrow { align-items: center; gap: .65rem; }
+.page-head .population-badge, .quiet-county .page-head .population-badge {
+  display: inline-flex; flex-wrap: wrap; margin: 0; padding: 0; min-width: 0;
+  border: 0; border-radius: 0; background: none; box-shadow: none; color: var(--text-muted);
+}
+.page-head .population-badge::before { content: "·"; margin-right: .65rem; color: var(--text-muted); }
+.page-head .population-badge-year { padding: 0; border: 0; font: 12px/1.5 var(--font-text); }
+.page-head .population-badge .term { color: var(--text-muted); text-decoration-color: color-mix(in srgb, var(--text-muted) 35%, transparent); }
+.nj-page.quiet-state .rank-card { padding-inline: .85rem; }
+.nj-page.quiet-state .rank-card .ranks td:nth-child(2) { padding-right: .55rem; }
+.nj-page.quiet-state .rank-card .ranks td.num { padding-inline: .35rem; }
+.state-workspace-choice .state-budget-entry { display: inline-flex; align-items: center; gap: .7rem; min-height: 44px; padding: .4rem .8rem; text-decoration: none; color: var(--entry-ink); font: 12px/1.4 var(--font-text); }
+.budget-page { --budget-accent: light-dark(#a44e34, #edb09b); }
+.budget-page .page-head { padding-block: 1.3rem 1rem; }
+.budget-page .page-title { font: 500 clamp(42px, 6vw, 70px)/1.1 Georgia, serif; letter-spacing: -.045em; }
+.budget-page .page-head .meta { max-width: 50ch; margin-bottom: 0; }
+.budget-page .afford-controls { display: grid; grid-template-columns: 1.25fr 1.4fr .85fr .8fr; gap: 1rem; padding: 1.2rem; border: 1px solid var(--border); border-radius: 12px 12px 0 0; background: var(--surface-card); }
+.budget-page .afford-controls .control { min-width: 0; width: auto; display: flex; flex-direction: column; gap: .45rem; }
+.budget-page .control-label { font: 12px/1.4 var(--font-text); color: var(--text-secondary); letter-spacing: 0; text-transform: none; }
+.budget-page .afford-controls select, .budget-page .money-input, .budget-page .seg { width: 100%; min-height: 44px; box-sizing: border-box; }
+.budget-page .afford-controls select { font-size: 14px; }
+.budget-page .money-input input { min-width: 0; width: 100%; }
+.budget-page .seg { display: flex; }
+.budget-page .seg button { flex: 1; min-height: 44px; }
+.budget-scope-line { display: flex; justify-content: space-between; align-items: center; gap: .7rem; padding: .6rem 1.2rem; border: 1px solid var(--border); border-top: 0; font-size: 12px; color: var(--text-secondary); }
+.budget-scope-line button { border: 0; background: none; color: var(--budget-accent); cursor: pointer; min-height: 44px; font: inherit; padding: 0; }
+.budget-headline { position: relative; overflow: hidden; padding: 1.1rem 1.2rem; background: color-mix(in srgb, var(--budget-accent) 7%, var(--surface-card)); border: 1px solid var(--border); border-top: 0; border-radius: 0 0 12px 12px; }
+.budget-headline::after { content: ""; position: absolute; width: 170px; height: 170px; border: 1px solid color-mix(in srgb, var(--budget-accent) 20%, transparent); border-radius: 50%; right: -35px; top: -70px; pointer-events: none; }
+.budget-headline > span { display: block; font-size: 12px; color: var(--text-muted); }
+.budget-headline strong { display: block; font: 500 clamp(27px, 4vw, 38px)/1.35 Georgia, serif; margin-block: .25rem; }
+.budget-headline p { font-size: 12px; color: var(--text-secondary); margin: 0; }
+.budget-page .budget-assumptions { margin: .65rem 0; padding: .5rem 0; border: 0; background: transparent; }
+.budget-page .budget-assumptions > summary, .budget-place-check > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 13px; color: var(--text-secondary); }
+.budget-page .budget-assumptions > summary::before, .budget-place-check > summary::before { content: "+"; margin-right: .7rem; color: var(--budget-accent); }
+.budget-page details[open] > summary::before { content: "−"; }
+.budget-page .budget-place-check { border-block: 1px solid var(--border); margin-block: .5rem; }
+.budget-page .check { margin: 0 0 1rem; background: var(--surface-card); border: 0; border-radius: 8px; padding: 1rem; }
+.budget-page .check-head { gap: 1rem; }
+.budget-page .check-title { font-size: 18px; }
+.budget-page .afford-summary { font-size: 15px; line-height: 1.55; padding-block: .65rem; margin: .4rem 0; }
+.budget-page .table-note { font-size: 12px; line-height: 1.6; }
+.budget-page .explorer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); border: 1px solid var(--border); border-radius: 12px; background: var(--surface-card); overflow: hidden; }
+.budget-page .map-panel { min-width: 0; padding: 1rem; }
+.budget-page .budget-comparison { min-width: 0; padding: .75rem; }
+.budget-page .ranks { width: 100%; font-size: 13px; }
+.budget-page .ranks td, .budget-page .ranks th { padding: .6rem .35rem; }
+.budget-page .reach-mark { font-size: 11px; white-space: normal; }
+.budget-page .globe-stage { border-radius: 8px; }
+.budget-page .budget-town-results h2 { font: 500 25px/1.3 Georgia, serif; }
+.budget-view-choice { display: none; }
+.budget-row-status { display: none; }
+.budget-page .budget-explorer[data-has-income="false"] .budget-view-choice { display: none; }
+@media (max-width: 760px) {
+  .budget-page .afford-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; padding: .9rem; }
+  .budget-page .afford-controls select, .budget-page .afford-controls input { font-size: 16px; }
+  .budget-scope-line { align-items: start; flex-direction: column; gap: .1rem; padding-inline: .9rem; }
+  .budget-headline { padding: .9rem; }
+  .budget-page .budget-inputs, .budget-page .check-grid { grid-template-columns: minmax(0, 1fr); }
+  .budget-page .check-head { display: block; }
+  .budget-page .place-search { width: 100%; margin-top: .7rem; }
+  .budget-view-choice { display: flex; gap: .3rem; padding: .25rem; border: 1px solid var(--border); border-radius: 8px; width: fit-content; margin-bottom: .65rem; }
+  .budget-view-choice button { min-height: 44px; padding: .4rem 1.2rem; border: 0; background: none; color: var(--text-secondary); border-radius: 5px; cursor: pointer; }
+  .budget-view-choice button[aria-pressed="true"] { background: var(--surface-2); color: var(--text-primary); }
+  .budget-page .explorer { grid-template-columns: minmax(0, 1fr); }
+  .budget-explorer[data-view="list"] .map-panel, .budget-explorer[data-view="map"] .budget-comparison, .budget-explorer[data-view="map"] .budget-town-results { display: none; }
+  .budget-page .budget-comparison { padding: .5rem; }
+  .budget-page .ranks { font-size: 12px; }
+  .budget-page .ranks .num { white-space: nowrap; }
+  .budget-page .scroll-x > table { min-width: 0; }
+  .budget-page .budget-comparison .ranks tr > :nth-child(4) { display: none; }
+  .budget-row-status { display: block; margin-top: .25rem; font-size: 10px; line-height: 1.4; color: var(--text-muted); }
+}
+@media print {
+  .budget-view-choice, .budget-scope-line button { display: none; }
+  .budget-page .budget-explorer .budget-comparison, .budget-page .budget-explorer .budget-town-results { display: block; }
+}

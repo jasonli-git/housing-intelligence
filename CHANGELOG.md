@@ -3,6 +3,19 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.39.1] — 2026-10-05
+
+### Changed
+
+- **`/afford` is the one budget page** (PR #94, a Codex experiment, owner-directed). The
+  New Jersey page links to it instead of embedding the calculator, and old
+  `/states/new-jersey?mode=afford` links forward there. It shows what it is searching
+  (a county or all New Jersey) and the monthly budget first, with a list/map switch on
+  mobile. Calculations are unchanged.
+- State navigation on the national and New Jersey pages frames geography by the Census
+  hierarchy; New Jersey remains the only state destination. Publisher notices are
+  restyled, with their wording and order unchanged.
+
 ## [0.39.0] — 2026-10-04
 
 Milestone 42: utilities and what's in the pipes (built by Codex, PR #93).

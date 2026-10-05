@@ -195,20 +195,18 @@ export function CountyExplorer({
                 ? ` · ${windowLabel(current.start, current.end, measure.metric_id)}`
                 : ""}
             </p>
-            {definition && (
-              <p className="measure-def">{definition}</p>
-            )}
           </div>
           {/* What a reader needs to read the chosen window, beside the measure it qualifies
               and only while that window is chosen; set apart as a note, not more definition. */}
-          {notes.length > 0 && (
+          {(definition || notes.length > 0) && (
             <details key={`${metricId}-${key}`} className="window-more">
-              <summary>About this measure &amp; window</summary>
+              <summary>About this measure</summary>
             <aside
               className="window-aside"
               aria-label={`About “${windowName}”`}
             >
-              <p className="window-aside-label">About “{windowName}”</p>
+              {definition && <p className="measure-def">{definition}</p>}
+              {notes.length > 0 && <p className="window-aside-label">About “{windowName}”</p>}
               {notes.map((note) => (
                 <p key={note}>{note}</p>
               ))}
@@ -217,29 +215,6 @@ export function CountyExplorer({
           )}
         </div>
         <div className="explorer-controls">
-          <label className="control quick-measure">
-            <span className="control-label">Quick view</span>
-            <select
-              aria-label="Quick view"
-              value={[
-                "zhvi_sfr",
-                "zori_all",
-                "price_to_income",
-                "permits_total_units",
-              ].includes(measure.metric_id) ? measure.metric_id : ""}
-              onChange={(event) => setMetricId(event.target.value)}
-            >
-              <option value="" disabled>Popular measures</option>
-              {[
-                ["zhvi_sfr", "Home values"],
-                ["zori_all", "Rents"],
-                ["price_to_income", "Affordability"],
-                ["permits_total_units", "New housing"],
-              ].filter(([id]) => measures.some((candidate) => candidate.metric_id === id)).map(([id, label]) => (
-                <option key={id} value={id}>{label}</option>
-              ))}
-            </select>
-          </label>
           <label className="control">
             <span className="control-label">Measure</span>
             <select
@@ -259,7 +234,7 @@ export function CountyExplorer({
           </label>
           <div className="control">
             <span className="control-label" id="window-label">
-              Change
+              Change over
             </span>
             <div
               className="seg"

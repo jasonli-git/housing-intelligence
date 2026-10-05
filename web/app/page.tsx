@@ -4,6 +4,7 @@ import { nationalMortgageRate } from "@/lib/api";
 import { periodLabel } from "@/lib/periods";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import "./housing-entry.css";
+import "./state-navigation.css";
 
 export const metadata = {
   title: "Housing Intelligence — Find your place",
@@ -13,7 +14,7 @@ export const metadata = {
 export default async function HousingLandingPage() {
   const rate = await nationalMortgageRate();
   return <>
-    <Masthead affordability={{ kind: "disabled", reason: "Choose a covered state first" }} budgetLabel="NJ budget" />
+    <Masthead affordability={{ kind: "disabled", reason: "Choose a covered state first" }} budgetLabel="Find within my budget" />
     <main className="shell nation-page quiet-nation">
       <header className="page-head nation-head" data-kind="nation">
         <svg className="nation-portrait" viewBox="0 0 360 300" fill="none" aria-hidden="true">

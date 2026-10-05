@@ -1,41 +1,42 @@
 "use client";
 
-import { AffordExplorer } from "@/components/AffordExplorer";
+import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { CountyExplorer, type Measure } from "@/components/CountyExplorer";
-import { pushHousingMode, useHousingMode } from "@/components/useHousingMode";
 import { SectionJump } from "@/components/SectionJump";
-import type { AffordData } from "@/lib/affordData";
+import { CountyPicker } from "@/components/CountyPicker";
+import type { CountyDestination } from "@/lib/countyPicker";
 import type { Section } from "@/lib/groups";
 
-export function StateModeWorkspace({ frame, counties, sections, initial, afford }: {
+export function StateModeWorkspace({ frame, counties, countyPages, sections, initial }: {
   frame: { width: number; height: number };
   counties: number;
+  countyPages: CountyDestination[];
   sections: Section<Measure>[];
   initial: string;
-  afford: AffordData | null;
 }) {
-  const mode = useHousingMode();
+  const router = useRouter();
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("mode") !== "afford") return;
+    params.delete("mode");
+    router.replace(`/afford?${params}`);
+  }, [router]);
 
   return (
-    <section className={mode === "afford" ? "nj-mode nj-afford-mode state-workspace" : "nj-mode state-workspace"} data-mode={mode} aria-labelledby="state-workspace-heading">
+    <section className="state-workspace" aria-labelledby="state-workspace-heading">
       <header className="state-workspace-head">
-        <div><h2 id="state-workspace-heading">Find your part of New Jersey</h2>
-          {mode === "afford" && <p>Set your income and compare places against your budget. Estimates, not loan approvals.</p>}
+        <div><h2 id="state-workspace-heading">Find your county</h2>
         </div>
         <div className="state-workspace-choice" role="group" aria-label="County exploration view">
-          <button type="button" aria-pressed={mode === "state"} onClick={() => pushHousingMode("state")}>Compare counties</button>
-          <button type="button" aria-pressed={mode === "afford"} onClick={() => pushHousingMode("afford")}>Use my budget</button>
+          <Link className="state-budget-entry" href="/afford?county=all">Find places within my budget <span aria-hidden="true">↗</span></Link>
         </div>
         <SectionJump />
       </header>
-      <div key={mode} className="mode-panel">
-        {mode === "afford" ? afford ? (
-          <>
-            <AffordExplorer {...afford} appearance="atlas" />
-          </>
-        ) : <p className="meta">Affordability figures are unavailable right now.</p> : (
+      <CountyPicker counties={countyPages} />
+      <div>
           <CountyExplorer frame={frame} counties={counties} sections={sections} initial={initial} />
-        )}
       </div>
     </section>
   );

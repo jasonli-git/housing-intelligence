@@ -27,13 +27,18 @@ const REPOSITORY = "https://github.com/jasonli-git/housing-intelligence";
 export function Masthead({
   affordability,
   taxActive = false,
-  budgetLabel = "Find within my budget",
+  budgetLabel = "Find places · NJ",
 }: {
   affordability: AffordabilityControl;
   /** On the property-tax lookup itself, whose link the bar marks as the current page. */
   taxActive?: boolean;
   budgetLabel?: string;
 }) {
+  const budgetContent = <>
+    <span className="bar-budget-long">{budgetLabel}</span>
+    <span className="bar-budget-short" aria-hidden="true">{budgetLabel === "Find places · NJ" ? "Budget · NJ" : budgetLabel === "Find within my budget" ? "My budget" : budgetLabel}</span>
+    {affordability.kind !== "disabled" && <span aria-hidden="true">→</span>}
+  </>;
   return (
     <>
       <nav className="bar print-hide" aria-label="Sites">
@@ -77,11 +82,8 @@ export function Masthead({
           </div>
           <div className="bar-tools">
             <PlaceSearch />
-            <Link className="bar-budget" href="/states/new-jersey?mode=afford#nj-explore" aria-label="Find places within my budget in New Jersey">
-              <span className="bar-budget-long">{budgetLabel}</span>
-              <span className="bar-budget-short" aria-hidden="true">{budgetLabel === "Find within my budget" ? "My budget" : budgetLabel}</span>
-              <span aria-hidden="true">→</span>
-            </Link>
+            {affordability.kind === "disabled" ? <button className="bar-budget" type="button" disabled title={affordability.reason} aria-label={`${budgetLabel}. ${affordability.reason}`}>{budgetContent}</button> :
+              <Link className="bar-budget" href="/afford?county=all" aria-label="Find places within my budget across all New Jersey">{budgetContent}</Link>}
           </div>
           <ThemeToggle />
         </div>

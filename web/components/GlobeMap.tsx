@@ -130,6 +130,8 @@ export type Focus = {
 };
 
 type Props = {
+  /** Budget exploration stays in NJ; omit national framing and use reset. */
+  controls?: "standard" | "budget";
   /** The NJ landing experiment uses crisp boundaries instead of depth-of-field blur. */
   appearance?: "classic" | "atlas";
   width: number;
@@ -214,6 +216,7 @@ function townLayer(
 }
 
 export function GlobeMap({
+  controls = "standard",
   appearance = "classic",
   width,
   height,
@@ -1328,7 +1331,7 @@ export function GlobeMap({
         </svg>
 
         {appearance === "atlas" && <span className="globe-level-label">{level === "county" ? "County view" : "Municipality view"}</span>}
-        <div className="globe-controls globe-controls-jumps">
+        {controls === "standard" && <div className="globe-controls globe-controls-jumps">
           <button type="button" onClick={() => flyTo(framings.nation)}>
             United States
           </button>
@@ -1336,7 +1339,7 @@ export function GlobeMap({
           <button type="button" onClick={() => flyTo(framings.county)}>
             New Jersey
           </button>
-        </div>
+        </div>}
         {focus && diveTo && (
           <button
             type="button"
@@ -1348,7 +1351,7 @@ export function GlobeMap({
             {appearance === "atlas" && <span aria-hidden="true"> ↗</span>}
           </button>
         )}
-        {exitCounty && (
+        {controls === "standard" && exitCounty && (
           <button
             type="button"
             className="globe-controls globe-controls-dive globe-controls-exit"
@@ -1371,7 +1374,10 @@ export function GlobeMap({
             +
           </button>
           <span className="globe-divider" aria-hidden="true" />
-          <button
+          {controls === "budget" ? <button type="button" className="globe-icon" aria-label="Reset map view" title="Reset map view" onClick={() => {
+            const outline = frameOn == null ? null : layers?.municipality.find((o) => o.id === frameOn) ?? layers?.county.find((o) => o.id === frameOn);
+            flyTo(outline ? framedOn([outline], { width, height, padding: .62 }) : framings.county);
+          }}>↺</button> : <button
             type="button"
             className="globe-icon"
             aria-pressed={crosshair}
@@ -1383,7 +1389,7 @@ export function GlobeMap({
               <circle cx="8" cy="8" r="2.5" />
               <path d="M8 1.8V4.2M8 11.8V14.2M1.8 8H4.2M11.8 8H14.2" />
             </svg>
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -1426,17 +1432,17 @@ export function GlobeMap({
         <details className="globe-help">
           <summary>Map controls & reading the map</summary>
           <p className="globe-note">
-          {drawn.highest > drawn.lowest && (
+          {controls === "standard" && drawn.highest > drawn.lowest && (
             <>
               The region under the crosshair rises with its own figure, from{" "}
               {show(drawn.lowest)} flat to {show(drawn.highest)} at full
               height.{" "}
             </>
           )}
-          Only New Jersey carries figures; every other state is drawn as ground,
+          {controls === "budget" ? <>Drag to explore towns; the place at the map’s centre appears below it. Use + and − to zoom, or reset to return to your selected place. Colours show whether included costs fit your budget, not loan eligibility. Choose your search area with Where above the map.</> : <>Only New Jersey carries figures; every other state is drawn as ground,
           not as a measurement. Drag to move the map under the crosshair, which
           reads whatever is beneath it. Zoom with the buttons; scrolling moves the page.
-          {appearance === "atlas" && " Click or tap a county to explore its municipalities."}
+          {appearance === "atlas" && " Click or tap a county to explore its municipalities."}</>}
         </p>
         </details>
       </figcaption>
