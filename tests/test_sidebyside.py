@@ -65,19 +65,19 @@ def test_a_publishable_reading_is_shown_as_it_would_publish(
 def test_a_refused_reading_is_shown_with_the_rule_it_broke(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    # Four figures, all housing ones, so the figure limit is the only rule broken.
     crowded = (
-        "Home values rose 34.4% to $445,078, incomes rose 24.2% (± 4.0%), and 385,864 "
-        "people live here, with no sampling error."
+        "Home values rose 34.4% to $445,078; that 34.4% rise took the typical home to "
+        "$445,078."
     )
-    _model_writing(_reading({"before_moving": crowded}), monkeypatch)
+    _model_writing(_reading({"what_stands_out": crowded}), monkeypatch)
     result = trial(
         uncertain_packet(), load_evaluation(), "gemini-3.7-flash-low", "consumer"
     )
 
     assert result.status == "refused"
     assert result.reasons == [
-        "4 figures under 'What should I check before moving?', where at most 3 are "
-        "allowed"
+        "4 figures under 'What stands out here?', where at most 3 are allowed"
     ]
     # Sent back once, as `hip explain` would, and refused again for the same rule.
     assert result.refusals == [result.reasons]
@@ -105,7 +105,7 @@ def test_an_unbound_figure_is_a_refusal_and_an_error_a_failure(
 def test_a_reading_published_after_a_revision_says_so(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    answers = iter([_reading({"before_moving": "Check each parcel."}), _reading()])
+    answers = iter([_reading({"what_stands_out": "Check each parcel."}), _reading()])
 
     def run_model(packet: Any, evaluation: Any, model_id: str, **_: Any) -> Any:
         answer = next(answers)

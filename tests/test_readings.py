@@ -55,7 +55,6 @@ ANSWERS = {
     "what_stands_out": (
         "Home values rose 34.4% to $445,078, while incomes rose 24.2% (± 4.0%)."
     ),
-    "before_moving": "These are county figures; a street can differ.",
 }
 
 
@@ -113,15 +112,15 @@ def test_an_answer_on_its_headings_line_and_a_curly_apostrophe_are_understood() 
 
 
 def test_bullets_and_bold_inside_an_answer_are_flattened() -> None:
-    text = _reading({"before_moving": "- Check the **tax bill**.\n- Visit the street."})
+    text = _reading({"what_stands_out": "- Check the **tax bill**.\n- Visit the street."})
     body, sections = shape_consumer(text)
     last = sections[-1]
     assert body[last.start : last.end] == "Check the tax bill. Visit the street."
 
 
 def test_a_missing_heading_is_no_reading() -> None:
-    text = _reading().replace("What should I check before moving?", "Before moving")
-    with pytest.raises(MalformedReading, match="What should I check"):
+    text = _reading().replace("What stands out here?", "Stand-outs")
+    with pytest.raises(MalformedReading, match="What stands out here"):
         shape_consumer(text)
 
 
@@ -146,19 +145,19 @@ def test_a_reading_that_keeps_every_rule_has_no_problems() -> None:
 
 
 def test_a_source_name_is_a_problem() -> None:
-    problems = _problems({"before_moving": "Zillow's figures cover the county."})
+    problems = _problems({"what_stands_out": "Zillow's figures cover the county."})
     assert len(problems) == 1
     assert problems[0].startswith("a source name: 'Zillow' in \"…")
 
 
 def test_the_packets_own_publishers_are_source_names_too() -> None:
-    problems = _problems({"before_moving": "The U.S. Census Bureau measures this."})
+    problems = _problems({"what_stands_out": "The U.S. Census Bureau measures this."})
     assert any("U.S. Census Bureau" in p for p in problems)
 
 
 @pytest.mark.parametrize("word", ["median", "Median", "parcels", "cohort", "index"])
 def test_jargon_is_a_problem(word: str) -> None:
-    problems = _problems({"before_moving": f"The {word} here is a county figure."})
+    problems = _problems({"what_stands_out": f"The {word} here is a county figure."})
     assert problems and problems[0].startswith("jargon:")
 
 
@@ -180,16 +179,19 @@ def test_two_measures_of_the_same_thing_are_a_problem() -> None:
     packet.levels.append(estimate)
     problems = _problems(
         {
-            "before_moving": (
+            "what_stands_out": (
                 "385,864 people live here, with no sampling error. Another count puts "
                 "it at 391,200."
             ),
         },
         packet,
     )
+    # The one answer it has is "What stands out here?", which also refuses population.
     assert problems == [
         "two measures of the same thing: 'Total population' and 'Population "
-        "estimate'; keep the one the reading quotes first"
+        "estimate'; keep the one the reading quotes first",
+        "'What stands out here?' quotes 'Population estimate', 'Total population', "
+        "which is not a housing measure",
     ]
 
 
@@ -223,22 +225,17 @@ def test_what_stands_out_keeps_to_housing() -> None:
     ]
 
 
-def test_population_is_still_allowed_in_other_answers() -> None:
-    assert (
-        _problems({"before_moving": "385,864 people live here, with no sampling error."})
-        == []
-    )
-
-
 def test_more_figures_in_an_answer_than_the_limit_is_a_problem() -> None:
     crowded = (
         "Home values rose 34.4% to $445,078, incomes rose 24.2% (± 4.0%), and 385,864 "
         "people live here, with no sampling error."
     )
-    problems = _problems({"before_moving": crowded})
+    problems = _problems({"what_stands_out": crowded})
     assert problems == [
-        "4 figures under 'What should I check before moving?', where at most "
-        f"{MAX_FIGURES} are allowed"
+        "4 figures under 'What stands out here?', where at most "
+        f"{MAX_FIGURES} are allowed",
+        "'What stands out here?' quotes 'Total population', which is not a housing "
+        "measure",
     ]
 
 
@@ -247,7 +244,7 @@ def test_a_margin_a_range_and_a_quoted_label_do_not_count_as_figures() -> None:
         "Incomes are $100,645, give or take $2,565, between 10th and 12th of 21 "
         "counties; renters pay over 30% of income."
     )
-    problems = _problems({"before_moving": answer})
+    problems = _problems({"what_stands_out": answer})
     assert not [p for p in problems if "figures under" in p]
 
 
@@ -257,8 +254,8 @@ def test_a_figure_stated_twice_counts_twice() -> None:
         "Home values rose 34.4% to $445,078; that 34.4% rise took the typical home to "
         "$445,078."
     )
-    assert _problems({"before_moving": repeated}) == [
-        "4 figures under 'What should I check before moving?', where at most "
+    assert _problems({"what_stands_out": repeated}) == [
+        "4 figures under 'What stands out here?', where at most "
         f"{MAX_FIGURES} are allowed"
     ]
 
@@ -445,7 +442,7 @@ def _scripted(answers: list[str], monkeypatch: pytest.MonkeyPatch) -> list[str |
 def test_a_refused_reading_goes_back_to_its_model_with_the_refusal(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    jargon = _reading({"before_moving": "Check each parcel's tax bill."})
+    jargon = _reading({"what_stands_out": "Check each parcel's tax bill."})
     sent = _scripted([jargon, _reading()], monkeypatch)
 
     body, sections, _, usage, earlier = write_reading(
@@ -463,7 +460,7 @@ def test_a_refused_reading_goes_back_to_its_model_with_the_refusal(
 def test_a_reading_refused_after_its_revisions_carries_what_they_cost(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    jargon = _reading({"before_moving": "Check each parcel's tax bill."})
+    jargon = _reading({"what_stands_out": "Check each parcel's tax bill."})
     evaluation = load_evaluation()
     sent = _scripted([jargon] * 5, monkeypatch)
 
@@ -525,12 +522,16 @@ def test_a_consumer_reading_asking_other_questions_is_stale() -> None:
     assert freshness(row, packet) == "current"
     row.sections = [{"id": "bottom_line"}, *row.sections]
     assert freshness(row, packet) == "stale"
+    # A reading written before "What should I check before moving?" was retired
+    # (2026-10-05) still carries that answer; it is not regenerated just to drop it.
+    row.sections = [*row.sections[1:], {"id": "before_moving"}]
+    assert freshness(row, packet) == "current"
 
 
 def test_a_revision_that_never_reaches_the_model_keeps_the_refused_attempts_cost(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    jargon = _reading({"before_moving": "Check each parcel's tax bill."})
+    jargon = _reading({"what_stands_out": "Check each parcel's tax bill."})
     calls: list[int] = []
 
     def run_model(packet: Any, evaluation: Any, model_id: str, **kwargs: Any) -> Any:

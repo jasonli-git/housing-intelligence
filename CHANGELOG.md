@@ -3,6 +3,29 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.40.0] — 2026-10-05
+
+Milestone 43: accessibility audit (built by Codex, PR #95).
+
+### Added
+
+- **Accessibility fixes across the site** (ARCHITECTURE #309): a skip link; keyboard
+  and button alternatives for dragging the maps and swiping the banners; clearer
+  focus, contrast and larger targets; ZIP pages that fit a 320px screen; and a
+  repeatable audit (`npm run check:a11y`).
+- **Rule-based checks before moving** (#310): property tax, purchase price and
+  comparable rent, in place of the AI-written answer.
+
+### Changed
+
+- The AI reading now answers one question, *what stands out here?*, so each
+  regeneration writes about half as much. Existing readings are not regenerated for it.
+
+### Known gaps
+
+- Not yet reviewed with a screen reader or on a physical iPhone. The home page's
+  looping illustration has no pause control (WCAG 2.2.2), by the owner's choice.
+
 ## [0.39.1] — 2026-10-05
 
 ### Changed

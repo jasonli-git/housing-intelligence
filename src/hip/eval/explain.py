@@ -47,6 +47,7 @@ from hip.eval.formats import (
     ANALYST_QUESTION,
     FORMATS,
     QUESTIONS,
+    RETIRED_QUESTIONS,
     MalformedReading,
     revision_request,
 )
@@ -611,8 +612,12 @@ def freshness(row: RegionExplanation, packet: Packet) -> Freshness:
     `stale` — the figures it describes have changed, or its answers are no longer the
     questions its format asks (#266), so only a new generation will do.
     """
+    # A retired answer (`RETIRED_QUESTIONS`) does not make a reading stale: the page
+    # no longer shows it, and regenerating 21 readings to drop it would pay for nothing.
     if row.audience == "consumer" and [
-        section.get("id") for section in (row.sections or [])
+        section.get("id")
+        for section in (row.sections or [])
+        if section.get("id") not in RETIRED_QUESTIONS
     ] != [question.id for question in QUESTIONS]:
         return "stale"
     if row.packet_sha256 == packet_hash(packet):
