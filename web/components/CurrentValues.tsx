@@ -46,7 +46,8 @@ export function CurrentValues({
   return (
     <div className="values-grid">
       {groupRows(levels).map((section) => (
-        <table key={section.key} className="values">
+        <div key={section.key} className="scroll-x" tabIndex={0} role="region" aria-label={`${section.title} latest values table, scroll horizontally`}>
+        <table className="values">
           <thead>
             {/* The section's name heads the measures column, as in the ledger. */}
             <tr className="colheads">
@@ -113,6 +114,7 @@ export function CurrentValues({
             })}
           </tbody>
         </table>
+        </div>
       ))}
     </div>
   );

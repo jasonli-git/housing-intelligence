@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-05",
+  "environment": "Chromium production static export on localhost:3002; reduced motion; default and expanded native disclosures",
+  "scans": 80,
+  "violations": 0,
+  "pageErrors": 0,
+  "pageOverflows": 0,
+  "needsReviewNodeInstances": {
+    "color-contrast": 13054,
+    "th-has-data-cells": 24
+  },
+  "representativeNeedsReviewNodes": {
+    "color-contrast": {
+      "target": [
+        ".site-status-arrow"
+      ],
+      "failureSummary": "Fix any of the following:\n  Element content contains only non-text characters"
+    },
+    "th-has-data-cells": {
+      "target": [
+        ".budget-comparison > table"
+      ],
+      "failureSummary": "Fix all of the following:\n  Table data cells are missing or empty"
+    }
+  },
+  "routes": [
+    {
+      "path": "/",
+      "scans": 8,
+      "passed": true
+    },
+    {
+      "path": "/states/new-jersey",
+      "scans": 8,
+      "passed": true
+    },
+    {
+      "path": "/regions/5",
+      "scans": 8,
+      "passed": true
+    },
+    {
+      "path": "/regions/194",
+      "scans": 8,
+      "passed": true
+    },
+    {
+      "path": "/regions/2842",
+      "scans": 8,
+      "passed": true
+    },
+    {
+      "path": "/afford?income=120000",
+      "scans": 8,
+      "passed": true
+    },
+    {
+      "path": "/tax",
+      "scans": 8,
+      "passed": true
+    },
+    {
+      "path": "/freshness",
+      "scans": 8,
+      "passed": true
+    },
+    {
+      "path": "/changes",
+      "scans": 8,
+      "passed": true
+    },
+    {
+      "path": "/regions/5/report",
+      "scans": 8,
+      "passed": true
+    }
+  ],
+  "interactionChecks": {
+    "passed": true,
+    "viewportWidths": [
+      390,
+      320
+    ],
+    "additionalRoutes": [
+      "/regions/54",
+      "/regions/51",
+      "/afford?income=120000&county=5"
+    ],
+    "checks": [
+      "keyboard search/navigation",
+      "non-drag map movement",
+      "reduced-motion keyboard theme toggle",
+      "definition bounds and Escape/focus",
+      "section-jump disclosure/focus",
+      "320px expanded axe/reflow/unique IDs",
+      "no-script report definition fallback"
+    ]
+  },
+  "notCertification": true
+}

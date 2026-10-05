@@ -1185,7 +1185,17 @@ export function GlobeMap({
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="globe-still"
-          role="img"
+          role="group"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.target !== event.currentTarget) return;
+            const delta = ({ ArrowLeft: [-60, 0], ArrowRight: [60, 0], ArrowUp: [0, -60], ArrowDown: [0, 60] } as Record<string, number[]>)[event.key];
+            if (!delta) return;
+            event.preventDefault();
+            commit();
+            const from = aim.current ?? standing.current;
+            if (from) flyTo(shifted(from, -delta[0], -delta[1]), true);
+          }}
           aria-label={
             describe ??
             `New Jersey on a map of the United States, showing ${shown} colored by ` +
@@ -1393,6 +1403,16 @@ export function GlobeMap({
         </div>
       </div>
 
+      <div className="map-pan-controls" role="group" aria-label="Move New Jersey map without dragging">
+          <span>Focus map · Arrow keys to move</span>
+        {([[-60, 0, "left", "←"], [0, -60, "up", "↑"], [0, 60, "down", "↓"], [60, 0, "right", "→"]] as const).map(([dx, dy, direction, icon]) => (
+          <button key={direction} type="button" aria-label={`Move map ${direction}`} onClick={() => {
+            commit();
+            const from = aim.current ?? standing.current;
+            if (from) flyTo(shifted(from, -dx, -dy), true);
+          }}>{icon}</button>
+        ))}
+      </div>
       <figcaption className="globe-legend">
         {legend ?? (
           <>

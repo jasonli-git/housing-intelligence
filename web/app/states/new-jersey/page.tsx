@@ -77,7 +77,7 @@ export default async function NewJerseyPage() {
     return (
       <>
         <Masthead affordability={{ kind: "local" }} />
-        <main className="shell">
+        <main id="main-content" tabIndex={-1} className="shell">
           <h1 className="page-title">New Jersey</h1>
           <p className="meta">
             New Jersey’s figures are unavailable right now. Please try again later.
@@ -153,7 +153,7 @@ export default async function NewJerseyPage() {
   return (
     <>
       <Masthead affordability={{ kind: "local" }} />
-      <main className="shell nj-page quiet-county quiet-state">
+      <main id="main-content" tabIndex={-1} className="shell nj-page quiet-county quiet-state">
       <header className="page-head nj-head" data-kind="state">
         <div className="region-head-main">
           <Crumbs trail={[{ href: "/", label: "United States" }]} here="New Jersey" hereKind="state" />
@@ -207,7 +207,7 @@ export default async function NewJerseyPage() {
         <HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} portrait />
         <section className="section" aria-labelledby="state-figures-heading">
           <div className="section-head"><h2 id="state-figures-heading">All statewide figures</h2></div>
-          <div className="scroll-x"><table className="state-figures">
+          <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally"><table className="state-figures">
             <thead><tr><th scope="col">Measure</th><th scope="col" className="num">Value</th><th scope="col">Period</th><th scope="col">Source</th></tr></thead>
             <tbody>{levels.map((level) => <tr key={level.metric_id}>
               <th scope="row"><FloatingMetricTerm metricId={level.metric_id} label={level.label} /></th>

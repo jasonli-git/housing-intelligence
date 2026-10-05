@@ -1,0 +1,58 @@
+/* M43: focus, hoverable definitions and non-drag controls. */
+.skip-link { position: fixed; z-index: 2000; top: 8px; left: 16px; transform: translateY(-150%); background: var(--surface-card); color: var(--text-primary); padding: .7rem 1rem; border: 2px solid var(--focus); border-radius: 6px; }
+.skip-link:focus { transform: none; }
+html { scroll-padding-top: 90px; }
+[tabindex], input, select, button, summary, a { scroll-margin-top: 90px; }
+.gl:hover > .tip, .gl:focus-within > .tip { display: block; }
+.tip::before { content: ""; position: absolute; height: 8px; top: -8px; inset-inline: 0; }
+.tip.up::before { top: auto; bottom: -8px; }
+.gl[data-enhanced="true"] > .tip { display: none; }
+.map-pan-controls { display: flex; gap: 4px; align-items: center; justify-content: end; padding-top: .4rem; }
+.map-pan-controls button { min-width: 32px; min-height: 32px; padding: .2rem; border: 1px solid var(--border); border-radius: 5px; background: var(--surface-card); color: var(--text-primary); cursor: pointer; }
+.map-pan-controls span { font-size: 11px; color: var(--text-muted); margin-right: .4rem; }
+.ticker-step { min-width: 28px; min-height: 28px; }
+.nj-page .county-picker-count, .budget-headline > span { color: var(--text-secondary); }
+.crumbs li[data-level="local"] { --crumb-accent: light-dark(#246b55, #a6d9c0); }
+.interpretation-runtime { opacity: 1; color: var(--text-secondary); }
+.interpretation-matched { opacity: 1; }
+main.atlas-page a:not(.report-action), .quiet-county a:not(.report-action) { color: light-dark(#005ebc, #8dbff4); }
+.atlas-page a.report-action { color: var(--text-primary); }
+.globe-still:focus-visible, .coverage-map:focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
+.quiet-county .consumer-feature-what_stands_out { border-radius: 32px; border-left: 3px solid var(--series-3); background: linear-gradient(120deg, color-mix(in srgb, var(--series-3) 7%, var(--surface-card)), var(--surface-card)); box-shadow: 0 8px 28px rgb(0 0 0 / .045); }
+@media (max-width: 600px) { .quiet-county .consumer-feature-what_stands_out { border-radius: 26px; padding: 1.35rem; } }
+.home-checks { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.home-checks h3 { margin: .5rem 0 1rem; }
+.home-checks ul { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.home-checks li { padding-left: .8rem; border-left: 2px solid var(--border); }
+.home-checks li p { margin: .25rem 0; color: var(--text-secondary); }
+.home-checks small, .home-checks-note { font-size: .78rem; color: var(--text-secondary); }
+.atlas-local .crumbs li[data-level="nation"] { --crumb-accent: var(--text-primary); }
+.atlas-local .crumbs li[data-level="nation"] a { color: var(--text-primary); }
+.quiet-nation .nation-portrait { opacity: .85; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.quiet-nation .nation-portrait .portrait-halo { fill: color-mix(in srgb, var(--entry-accent) 6%, transparent); opacity: 1; stroke: none; transform-origin: 185px 157px; animation: house-breathe 9s ease-in-out infinite; }
+.portrait-foundation, .portrait-house, .portrait-windows { stroke-dasharray: 1; animation: house-draw 9s cubic-bezier(.22, 1, .36, 1) infinite; }
+.portrait-house { animation-delay: .25s; }
+.portrait-windows { animation-delay: .65s; fill: color-mix(in srgb, var(--entry-accent) 8%, transparent); }
+.portrait-guides { opacity: .5; animation: house-guides 9s ease-in-out infinite; }
+/* Draw, hold the finished architecture, then gently dissolve into the next cycle. */
+@keyframes house-draw { 0% { stroke-dashoffset: 1; opacity: 0; } 23%, 78% { stroke-dashoffset: 0; opacity: 1; } 94%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes house-guides { 0%, 20%, 94%, 100% { opacity: 0; } 35%, 76% { opacity: .5; } }
+@keyframes house-breathe { 0%, 100% { transform: scale(.92); opacity: .55; } 45%, 65% { transform: scale(1.04); opacity: 1; } }
+@media (max-width: 600px) {
+  .quiet-nation .nation-portrait { width: 76px; height: 44px; top: .35rem; opacity: .85; stroke-width: 2; }
+}
+@media (prefers-reduced-motion: reduce) { .nation-portrait path, .quiet-nation .nation-portrait .portrait-halo { animation: none; } }
+.assistance-routes small { color: var(--text-secondary); }
+.interpretation-stale { background: light-dark(#f8e7e1, #412e29); color: light-dark(#4f2418, #ffe0d5); }
+.atlas-tool .afford-group-row th { color: var(--budget-accent); }
+.quiet-tax a, .quiet-history a { color: light-dark(#005ebc, #8dbff4); }
+sup a[href*="#note-"] { display: inline-flex; min-width: 24px; min-height: 24px; align-items: center; justify-content: center; }
+.state-ticker-head .ticker-step { display: inline-grid; }
+.scroll-x:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+/* 28 viewBox units need at least 566 CSS pixels across the 660-unit rank plot
+   to retain a 24px target. The existing horizontal scroller preserves reflow. */
+.rank-plot svg { min-width: 576px; }
+.values-grid > .scroll-x { min-width: 0; }
+.values-grid > .scroll-x > table { min-width: 0; }
+.foot .inst a { text-decoration: underline; text-underline-offset: 3px; }
+@media print { .skip-link, .map-pan-controls { display: none; } }

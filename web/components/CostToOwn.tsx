@@ -475,7 +475,7 @@ export function CostToOwn({
       {!quiet && budgetFit}
 
       {control && cashComparison && (
-        <div className="cost-monthly-headline" aria-label="Monthly cash comparison">
+        <div className="cost-monthly-headline" role="group" aria-label="Monthly cash comparison">
           <p className="cost-evidence-label">Monthly cash</p>
           <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>
         </div>

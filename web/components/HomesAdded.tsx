@@ -81,7 +81,7 @@ export function HomesAdded({
           homes for every 1,000 already standing.
         </p>
       )}
-      <div className="scroll-x">
+      <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
         <table className="change-places homes-added-years">
           <caption className="visually-hidden">Homes permitted, completed and demolished in {name}, by year</caption>
           <thead>

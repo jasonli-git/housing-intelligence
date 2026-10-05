@@ -63,7 +63,7 @@ export function PlacePicker({
       setOpen(true);
       if (results.length === 0) return;
       const step = event.key === "ArrowDown" ? 1 : -1;
-      setActive((at) => (at + step + results.length) % results.length);
+      setActive((at) => showing ? (at + step + results.length) % results.length : step === 1 ? 0 : results.length - 1);
     } else if (event.key === "Enter" && showing && results[active]) {
       event.preventDefault();
       pick(results[active]);
@@ -89,8 +89,8 @@ export function PlacePicker({
         spellCheck={false}
         enterKeyHint="go"
         aria-autocomplete="list"
-        aria-expanded={showing}
-        aria-controls={`${id}-list`}
+        aria-expanded={showing && results.length > 0}
+        aria-controls={showing && results.length > 0 ? `${id}-list` : undefined}
         aria-activedescendant={showing && results[active] ? `${id}-option-${active}` : undefined}
         value={query}
         onFocus={() => {
@@ -105,7 +105,7 @@ export function PlacePicker({
         }}
         onKeyDown={onKeyDown}
       />
-      {showing && (
+      {showing && results.length > 0 && (
         <ul id={`${id}-list`} role="listbox" className="search-results" aria-label="Places">
           {results.map((entry, index) => (
             <li
@@ -124,13 +124,11 @@ export function PlacePicker({
               <span className="result-detail">{entry.detail}</span>
             </li>
           ))}
-          {results.length === 0 && (
-            <li className="search-empty" aria-disabled="true">
-              {failed ? "Search is unavailable right now." : entries ? "No place by that name." : "Loading places…"}
-            </li>
-          )}
         </ul>
       )}
+      {showing && results.length === 0 && <div className="search-results search-empty" role="status">
+        {failed ? "Search is unavailable right now." : entries ? "No place by that name." : "Loading places…"}
+      </div>}
     </div>
   );
 }

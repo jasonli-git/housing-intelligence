@@ -14,11 +14,10 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones (2026-10-04)
+## Now — between milestones (2026-10-05)
 
-Milestone 42 is merged and deployed as 0.39.0 (ARCHITECTURE #308). Milestone 43, the
-accessibility audit, is next and starts only when asked. M42's own open items are
-below and in `agent-handoffs/m42-source-followups.md`, its actionability register.
+Milestone 43 is merged and deployed as 0.40.0 (ARCHITECTURE #309, #310). Milestone 44,
+evictions, is next and starts only when asked.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -224,6 +223,17 @@ first raised, not where it must be done.
       [web/lib/api.ts:437](web/lib/api.ts:437). Blocks the Northeast expansion
       (Milestone 14, unscheduled).
 ### Frontend and presentation
+
+- [ ] **Accessibility still needs people, not scripts.** (M43, #309) Screen-reader
+      review with VoiceOver and Safari, and NVDA with Firefox or Chrome; a physical
+      iPhone; true 200% text and 400% zoom; print in Safari and Firefox; and axe's
+      remaining needs-review results. The handoff (`m43-accessibility-audit.md`) lists
+      each.
+- [ ] **The home page's illustration loops with no pause control.** (M43, #309) Removed
+      at the owner's request on 2026-10-05; WCAG 2.2.2 asks for one on anything that
+      moves for more than five seconds. Reduced motion stops it.
+- [ ] **Reports may show the retired "before moving" answer** (#310) from readings
+      written before 2026-10-05, until the next regeneration.
 
 - [ ] **The budget explorer's comparison scope is not in its address.** (PR #86, Codex
       handoff `local-page-layout.md`) A page's link opens `/afford` with its place and

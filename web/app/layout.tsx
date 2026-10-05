@@ -14,6 +14,7 @@ import "./atlas-pages.css";
 import "./quiet-county.css";
 import "./affordable-housing.css";
 import "./budget-explorer.css";
+import "./accessibility.css";
 
 // Self-hosted at build time: next/font downloads each face once and serves it from this
 // site, so a reader's browser never asks Google for anything (ARCHITECTURE #121).
@@ -54,6 +55,7 @@ export default function RootLayout({
         <InlineScript html={HOUSING_MODE_SCRIPT} />
       </head>
       <body>
+        <a href="#main-content" className="skip-link">Skip to content</a>
         {/* Off unless `?perf` is in the address; renders nothing otherwise. */}
         <FrameMeter />
         {children}

@@ -35,7 +35,7 @@ export default async function TaxPage() {
   return (
     <>
       <Masthead affordability={{ kind: "route" }} taxActive />
-      <main className="shell atlas-page atlas-tool quiet-county quiet-tax">
+      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool quiet-county quiet-tax">
         <header className="page-head" data-kind="tool">
           <div>
             <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Property tax lookup" />

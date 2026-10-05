@@ -85,10 +85,14 @@ class Question:
     heading: str
 
 
-QUESTIONS: tuple[Question, ...] = (
-    Question("what_stands_out", "What stands out here?"),
-    Question("before_moving", "What should I check before moving?"),
-)
+QUESTIONS: tuple[Question, ...] = (Question("what_stands_out", "What stands out here?"),)
+
+# Answers the reading no longer asks for. "What should I check before moving?" was
+# retired on 2026-10-05 (Milestone 43): the page answers it with rule-based checks
+# (`web/lib/homeChecks.ts`), so asking a model for it would pay for words no page shows.
+# A stored reading that still carries one is not stale for it (`freshness`), so retiring
+# a question costs no regeneration; new readings simply stop writing it.
+RETIRED_QUESTIONS: frozenset[str] = frozenset({"before_moving"})
 
 # Measures of the same thing. A reading quoting two of one family puts two figures a
 # reader takes for the same quantity side by side, and they disagree: the pilot's first
@@ -240,17 +244,16 @@ You are writing a short, plain-language guide to one place's housing for someone
 deciding whether to live there.
 
 You are given a data packet for the region, already computed by a deterministic
-pipeline. Answer under these two headings, each on its own line, word for word and in
-this order, with a short answer beneath each:
+pipeline. Answer under this heading, on its own line, word for word, with a short
+answer beneath it:
 
 {chr(10).join(q.heading for q in QUESTIONS)}
 
 Rules:
-- Each answer is two or three sentences.
-- Each answer states at most {TARGET_FIGURES} figures: choose the ones that matter most
+- The answer states at most {TARGET_FIGURES} figures: choose the ones that matter most
   for its question and leave the rest out. Every dollar amount, percentage, count or
   rank is a figure; a margin, and a threshold such as "30% of income", are not. Before
-  you finish, count the figures in each answer and cut any beyond {TARGET_FIGURES}.
+  you finish, count the figures in the answer and cut any beyond {TARGET_FIGURES}.
 - Call each measure what its label calls it, in plain words, without narrowing what it
   covers: the vacancy rate counts every empty home, not only rentals.
 - Use only figures from the packet, as the packet writes them or rounded to three
@@ -274,7 +277,7 @@ Rules:
 - Describe; do not advise. Say what the figures show about renting and buying, not which
   the reader should choose.
 - Do not claim causes the packet cannot support.
-- Use one measure for each thing across both answers: never two different
+- Use one measure for each thing: never two different
   measures of home value (a sale price and a typical home value count as one), of
   rent, of income, or of what renters pay. A reader would see two figures for the same
   thing that seem to disagree.
@@ -293,20 +296,10 @@ Rules:
   than a percentage change of a rate. Give a rank only for where the place stands now,
   in words a resident follows (highest, lowest, among the highest, near the middle),
   never for how much a figure changed.
-- Under "What should I check before moving?", write two or three sentences. Each
-  names one thing these figures cannot tell someone about a particular home, street
-  or town, and why, taken from one of the packet's own caveats, in your own words.
-  Prefer caveats about what a resident would pay or get — the tax bill, the rent, the
-  price of a home, the homes themselves — over those about program standards such as
-  income thresholds, and the ones that matter most for this place over the ones every
-  place shares. Where a caveat says what a single address or town depends on, say
-  that too; never say who sets, publishes or keeps anything, or where else it can be
-  found, beyond what the caveat says. Describe what the figures cannot show; never
-  tell the reader what to do: no "you should", "make sure" or "be sure to".
 - No preamble, no bullet lists, no bold.
 """
 
-CONSUMER_QUESTION = "Answer the two questions about this region under their headings."
+CONSUMER_QUESTION = "Answer the question about this region under its heading."
 
 
 def revision_request(answer: str, problems: list[str]) -> str:
@@ -544,6 +537,7 @@ __all__ = [
     "MAX_FIGURES",
     "NOT_HOUSING",
     "QUESTIONS",
+    "RETIRED_QUESTIONS",
     "SAME_THING",
     "TARGET_FIGURES",
     "SOURCE_NAMES",

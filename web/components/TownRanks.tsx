@@ -104,7 +104,7 @@ export function TownRanks({
           ? `${rows.length} of the ${towns.length} municipalities have this measure. `
           : `All ${towns.length} municipalities have this measure. `}
       </p>
-      <div className="scroll-x">
+      <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
         <table className="ranks">
           <thead>
             <tr>

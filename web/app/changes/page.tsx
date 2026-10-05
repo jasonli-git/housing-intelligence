@@ -27,7 +27,7 @@ export default async function ChangesPage() {
     return (
       <>
         <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
-        <main className="shell atlas-page atlas-ledger quiet-county quiet-history">
+        <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history">
           <h1 className="page-title">Figures revised after they were published</h1>
           <p className="meta">
             The API is unreachable, so there is nothing to show.{" "}
@@ -43,7 +43,7 @@ export default async function ChangesPage() {
   return (
     <>
       <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
-      <main className="shell atlas-page atlas-ledger quiet-county quiet-history">
+      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history">
         <header className="page-head" data-kind="data">
           <div>
             <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="What changed" />
@@ -129,7 +129,7 @@ function ChangeGroup({ group, day }: { group: RevisionGroup; day: string }) {
         </p>
       )}
       <p className="change-summary">{summaryLine(group)}</p>
-      <div className="scroll-x">
+      <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
         <table className="change-places">
           <caption className="visually-hidden">
             The places whose {group.label.toLowerCase()} moved most, one row per place

@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.39.1, 2026-10-05. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.40.0, 2026-10-05. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, prices, rents, economic context, tax
 > roll, recorded sales, and flood and environmental exposure, from 35 public sources,
@@ -22,11 +22,11 @@ layer only explains metrics that were already computed.
 > overwritten. Full detail under
 > [Project Status](#project-status).
 >
-> **Latest.** Milestone 42 (2026-10-04) adds utilities: who supplies power and gas, what
-> electricity costs and how often it goes out, and each water system's lead service
-> lines and measured PFAS.
+> **Latest.** Milestone 43 (2026-10-05) is an accessibility audit: keyboard and button
+> alternatives for the maps and banners, contrast and reflow fixes, and a repeatable
+> check, with screen-reader review still to come.
 >
-> **Next.** Milestone 43: accessibility audit. See
+> **Next.** Milestone 44: evictions. See
 > [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md).
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
@@ -272,6 +272,10 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   town; owner names and mailing addresses are never collected, and an address is removed
   on request under Daniel's Law (below). County and statewide effective tax rates,
   weighted by equalized valuation.
+- **Accessibility audit** (M43, built) — a skip link, keyboard and button alternatives for
+  the maps and moving banners, contrast and target-size fixes, 320px reflow, and a
+  repeatable audit (`npm run check:a11y`); rule-based checks before moving replace the
+  AI-written answer. Screen-reader and real-device review are still open.
 - **Utilities and what's in the pipes** (M42, built) — on county, town and ZIP pages,
   the electric and gas suppliers serving the place, each electric utility's residential
   price and outage record, county energy burden, and for each water system its lead
@@ -763,7 +767,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.39.1 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.40.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
