@@ -22,7 +22,17 @@ The owner approved this milestone branch. No inquiry was sent by Codex.
   under Contact DCA → Email. The Consumer Affairs address in the form's notice is for
   a different agency and is not the housing-data route.
 - This is a handoff note, not a scheduled reminder or authorization to submit a form.
-  No outreach, automation, canonical-document edit or data import was performed.
+  No outreach was sent by Codex; no automation, canonical-document edit or data import
+  was performed.
+- Owner confirmed sending separate NJDEP, DOE LEAD and BPU inquiries October 5.
+  Lauren Mattox replied with a records-access referral; the owner then sent BPU's
+  custodian a document-location inquiry, **not a confirmed formal OPRA filing**.
+  Recipient-specific status and remaining gates are in `m42-source-followups.md`.
+- Owner has paused further outreach. No Rutgers, government partnership, foundation
+  or sponsorship approach was sent or approved. Chat explored future collaborations
+  and philanthropic support only; it did not reverse the commercial study's current
+  no-go decision or establish licence clearance, grant eligibility or an institutional
+  endorsement. Do not promote that discussion into requirements or Director Notes.
 
 ## What changed
 
@@ -88,7 +98,8 @@ lookups, seals or agency-logo reuse are needed or proposed.
 
 ## Files/modules affected
 
-- `agent-handoffs/m44-evictions.md` only.
+- `agent-handoffs/m44-evictions.md` and the October 5 correspondence/status update in
+  `agent-handoffs/m42-source-followups.md`; documentation only.
 - Future integration would touch source/metric configuration, acquisition and discovery,
   normalized staging/loading, provenance/coverage, packet/API contracts, definitions,
   ZIP presentation and tests. None were scaffolded before the gate was satisfied.
@@ -213,4 +224,5 @@ a documented, permitted public release already supplies these answers.
   Existing FastAPI/Starlette test-client deprecation warning appeared; no repair attempted.
 - No full pipeline, acquisition, model generation, frontend/backend suite or build run:
   this is a documentation-only gate investigation, not an implemented data milestone.
-- `git diff --check`: run before commit. No outreach sent, merge or deployment performed.
+- `git diff --check`: run before commit. No outreach sent by Codex, merge or deployment
+  performed. Owner-sent inquiries are distinguished from Codex actions above.
