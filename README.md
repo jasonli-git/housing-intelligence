@@ -13,20 +13,20 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.38.0, 2026-10-04. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.39.0, 2026-10-04. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, prices, rents, economic context, tax
-> roll, recorded sales, and flood and environmental exposure, from 29 public sources,
+> roll, recorded sales, and flood and environmental exposure, from 35 public sources,
 > published as a static site with no database or application server. Every figure
 > carries its source file, licence and kind, and revisions are recorded rather than
 > overwritten. Full detail under
 > [Project Status](#project-status).
 >
-> **Latest.** Milestone 41 (2026-10-04) adds affordable housing: what DCA calculates each
-> town should provide, what towns report building, a searchable inventory of assisted
-> homes, and where to apply.
+> **Latest.** Milestone 42 (2026-10-04) adds utilities: who supplies power and gas, what
+> electricity costs and how often it goes out, and each water system's lead service
+> lines and measured PFAS.
 >
-> **Next.** Milestone 42: utilities — power, gas and what's in the pipes. See
+> **Next.** Milestone 43: accessibility audit. See
 > [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md).
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
@@ -272,6 +272,10 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   town; owner names and mailing addresses are never collected, and an address is removed
   on request under Daniel's Law (below). County and statewide effective tax rates,
   weighted by equalized valuation.
+- **Utilities and what's in the pipes** (M42, built) — on county, town and ZIP pages,
+  the electric and gas suppliers serving the place, each electric utility's residential
+  price and outage record, county energy burden, and for each water system its lead
+  and unknown service lines, measured PFAS and whether its violations were resolved.
 - **Affordable housing and assistance** (M41, built) — on county, town and state pages,
   DCA's non-binding fourth-round need, the affordable units towns report completed and
   their trust-fund balances, and a searchable inventory of HUD assisted properties and
@@ -759,7 +763,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.38.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.39.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable

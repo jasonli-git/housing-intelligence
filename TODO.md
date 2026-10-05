@@ -16,8 +16,9 @@ removed entries are in `git show ca49f74:TODO.md`.
 
 ## Now — between milestones (2026-10-04)
 
-Milestone 41 is merged and deployed as 0.38.0 (ARCHITECTURE #307). Milestone 42,
-utilities, is next and starts only when asked.
+Milestone 42 is merged and deployed as 0.39.0 (ARCHITECTURE #308). Milestone 43, the
+accessibility audit, is next and starts only when asked. M42's own open items are
+below and in `agent-handoffs/m42-source-followups.md`, its actionability register.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -30,6 +31,16 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
+
+- [ ] **BPU reliability covers JCP&L only.** (M42, #308) ACE's 2024 annual filing was
+      found but not imported; PSE&G's and Rockland's are unverified, and the BPU portal
+      challenges automated access. EIA-861 covers all four in the meantime.
+- [ ] **NJDEP's public lead-line layer stops at the 2024 submission**, though statewide
+      2025 totals exist. (M42) A newer per-system export would have to be requested.
+- [ ] **Five counties have no DOE energy burden.** (M42) Essex, Hudson, Middlesex,
+      Monmouth and Somerset carry signed weights or costs in DOE's file; withheld, not
+      zeroed, until DOE explains them.
+- [ ] **Readings may be stale after M42.** Not regenerated.
 
 - [ ] **LIHTC is downloaded by hand each spring.** (M41, #307) HUD's release page
       answers scripts with an empty 202, so discovery reads `unreachable`. When HUD
@@ -47,8 +58,9 @@ first raised, not where it must be done.
       Morris's paper FIRMs are not read. Re-check when FEMA's coverage moves: the page
       fills in on its own once `fema_mapped_homes_share` reaches 0.95.
 - [ ] **New Jersey's PFAS violations are not counted.** (M40, #304) EPA's SDWIS carries
-      no PFAS code for New Jersey in 2021–2026. NJDEP's Drinking Water Watch has them; a
-      reader is sent there. **Scheduled: Milestone 42**, from EPA's UCMR 5 sampling.
+      no PFAS code for New Jersey in 2021–2026. Milestone 42 added measured PFAS from
+      EPA's UCMR 5, which is not a violation record; NJDEP's own violations are still
+      not read, and Drinking Water Watch remains the link.
 - [ ] **Flood claims are not placed in towns.** (M40, #302) 11.5% of New Jersey's
       claims are in 2010 block groups. A 2010-to-2020 block group relationship file from
       the Census would place them; until then a town shows its county's.
