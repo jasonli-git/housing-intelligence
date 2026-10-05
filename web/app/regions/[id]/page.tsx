@@ -343,7 +343,7 @@ export default async function RegionPage({
         <Link href={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"}>Look up a property here</Link>: its assessment and last year’s
         tax, found by its address, or by block and lot with its town.
       </p>
-      <HomeChecks levels={packet.levels} />
+      <HomeChecks levels={packet.levels} taxHref={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"} />
     </section>
   </QuietDisclosure>;
 

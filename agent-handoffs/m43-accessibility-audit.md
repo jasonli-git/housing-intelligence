@@ -44,6 +44,22 @@ fixed, not a claim to a personalized or exhaustive checklist.
 
 ## What changed
 
+### Additional owner-requested visual follow-up
+
+- Local profile United States breadcrumbs now use the neutral foreground (white in
+  dark mode), without changing NJ's state accent or national landing colors.
+- Removed the rules tagline from moving checks. The tax check links to the existing
+  lookup, with `town` preselected for municipalities; counties/ZIPs use general lookup.
+- Increased landing illustration visibility; split its architecture into staged
+  foundation, roof/walls, windows and measurement guides with a soft circular backdrop.
+  Motion plays once and is disabled under reduced motion. Mobile places a compact
+  illustration above the title rather than overlaying its text.
+- TypeScript and 466 tests/59 files passed; 2,379-page static export passed. Browser
+  checks confirmed county/municipal lookup destinations, neutral dark breadcrumb,
+  reduced-motion static drawing and no 390px landing overflow. Desktop/mobile
+  screenshots inspected; mobile title overlap found and corrected in final CSS.
+  Existing local artifact-origin build warning remains. `git diff --check` passed.
+
 Branch: `milestone/m43-accessibility-audit`, based on `4710a7b` (main, PR #94).
 Authorized by the owner as the next official milestone. This is an engineering
 audit and remediation pass, **not a WCAG conformance certification**. Human

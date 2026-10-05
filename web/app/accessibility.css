@@ -25,11 +25,18 @@ main.atlas-page a:not(.report-action), .quiet-county a:not(.report-action) { col
 .home-checks li { padding-left: .8rem; border-left: 2px solid var(--border); }
 .home-checks li p { margin: .25rem 0; color: var(--text-secondary); }
 .home-checks small, .home-checks-note { font-size: .78rem; color: var(--text-secondary); }
-.nation-portrait path:first-child { stroke-dasharray: 1800; stroke-dashoffset: 0; animation: house-draw 1.1s ease-out both; }
-.nation-portrait path:last-child { animation: house-guides 1.1s ease-out both; }
-@keyframes house-draw { from { stroke-dashoffset: 1800; opacity: 0; } to { stroke-dashoffset: 0; opacity: 1; } }
+.atlas-local .crumbs li[data-level="nation"] { --crumb-accent: var(--text-primary); }
+.atlas-local .crumbs li[data-level="nation"] a { color: var(--text-primary); }
+.quiet-nation .nation-portrait { opacity: .85; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.quiet-nation .nation-portrait .portrait-halo { fill: color-mix(in srgb, var(--entry-accent) 6%, transparent); opacity: 1; stroke: none; animation: house-guides 1.4s ease-out both; }
+.portrait-foundation, .portrait-house, .portrait-windows { stroke-dasharray: 1; animation: house-draw 1.2s cubic-bezier(.22, 1, .36, 1) both; }
+.portrait-house { animation-delay: .15s; }
+.portrait-windows { animation-delay: .5s; fill: color-mix(in srgb, var(--entry-accent) 8%, transparent); }
+.portrait-guides { opacity: .5; animation: house-guides 1.6s ease-out both; }
+@keyframes house-draw { from { stroke-dashoffset: 1; opacity: 0; } to { stroke-dashoffset: 0; opacity: 1; } }
 @keyframes house-guides { 0%, 60% { opacity: 0; } 100% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .nation-portrait path { animation: none; } }
+@media (max-width: 600px) { .quiet-nation .nation-portrait { width: 76px; height: 44px; top: .35rem; opacity: .85; stroke-width: 2; } }
+@media (prefers-reduced-motion: reduce) { .nation-portrait path, .quiet-nation .nation-portrait .portrait-halo { animation: none; } }
 .assistance-routes small { color: var(--text-secondary); }
 .interpretation-stale { background: light-dark(#f8e7e1, #412e29); color: light-dark(#4f2418, #ffe0d5); }
 .atlas-tool .afford-group-row th { color: var(--budget-accent); }
