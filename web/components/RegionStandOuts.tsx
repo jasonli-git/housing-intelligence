@@ -34,6 +34,7 @@ function StandOutRow({
   const rail = useRef<HTMLUListElement>(null);
   const railId = useId();
   const [overflow, setOverflow] = useState(false);
+  const [manualPaused, setManualPaused] = useState(false);
 
   const readOverflow = useCallback(() => {
     const node = rail.current;
@@ -74,7 +75,7 @@ function StandOutRow({
   }, []);
 
   const autoAdvance = useCallback(() => move(1, true), [move]);
-  const autoplay = useAutoCarousel(overflow, autoAdvance);
+  const autoplay = useAutoCarousel(overflow && !manualPaused, autoAdvance);
   const moveManually = (direction: -1 | 1) => {
     move(direction, true);
     autoplay.restart();
@@ -93,6 +94,9 @@ function StandOutRow({
         </h3>
         {overflow && (
           <div className="standout-nav">
+            {!autoplay.reduceMotion && <button type="button" className="standout-arrow" aria-controls={railId}
+              aria-label={`${manualPaused ? "Play" : "Pause"} ${title.toLowerCase()} measures`} aria-pressed={manualPaused}
+              onClick={() => setManualPaused(paused => !paused)}>{manualPaused ? "▶" : "Ⅱ"}</button>}
             <button
               type="button"
               className="standout-arrow"
@@ -137,7 +141,7 @@ function StandOutRow({
       {overflow && !autoplay.reduceMotion && (
         <CarouselProgress
           cycle={autoplay.cycle}
-          paused={autoplay.paused}
+          paused={autoplay.paused || manualPaused}
           className="standout-progress"
         />
       )}

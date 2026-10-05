@@ -187,7 +187,7 @@ export default async function RegionPage({
     return (
       <>
         <Masthead affordability={{ kind: "route" }} />
-        <main className="shell">
+        <main id="main-content" tabIndex={-1} className="shell">
           <h1 className="page-title">Region not found</h1>
           <p className="meta">
             No region {id}, or the API is unreachable. <Link href="/states/new-jersey">Back to New Jersey</Link>.
@@ -360,7 +360,7 @@ export default async function RegionPage({
   return (
     <>
       <Masthead affordability={affordabilityControl} />
-      <main className={`shell atlas-page atlas-local${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
+      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
       <header className="page-head" data-kind={kindOf(region.level)}>
         <div className="region-head-main">
           <Crumbs
@@ -626,7 +626,7 @@ export default async function RegionPage({
                   table: (
                     <details key={metricId}>
                       <summary>Values and their sources</summary>
-                      <div className="scroll-x">
+                      <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
                         <table>
                           <thead>
                             <tr>

@@ -15,7 +15,7 @@ export default async function HousingLandingPage() {
   const rate = await nationalMortgageRate();
   return <>
     <Masthead affordability={{ kind: "disabled", reason: "Choose a covered state first" }} budgetLabel="Find within my budget" />
-    <main className="shell nation-page quiet-nation">
+    <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
       <header className="page-head nation-head" data-kind="nation">
         <svg className="nation-portrait" viewBox="0 0 360 300" fill="none" aria-hidden="true">
           <path d="M20 254H340M47 254V125L136 60L225 125V254M33 135L136 60L239 135M112 254V183H151V254M70 145H96V174H70ZM176 145H202V174H176ZM104 82V37H119V72M225 254V166L283 124L332 160V254M213 175L283 124L344 168M250 189H275V217H250ZM298 189H320V217H298Z" />

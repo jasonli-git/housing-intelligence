@@ -357,7 +357,7 @@ export function CountyExplorer({
             />
           ) : (
             <>
-              <div className="scroll-x">
+              <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
                 <table id={tableId} className={`ranks${allCounties ? " county-preview-expanded" : " county-preview"}`}>
                   <thead>
                     <tr>

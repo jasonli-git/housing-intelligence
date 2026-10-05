@@ -100,6 +100,17 @@ export function ProfileTicker({
     }
   };
 
+  const step = (direction: -1 | 1) => {
+    if (!stopped) toggleMotion();
+    requestAnimationFrame(() => {
+      const scroller = windowRef.current;
+      const card = trackRef.current?.querySelector("li");
+      if (!scroller || !card) return;
+      scroller.scrollBy({ left: direction * card.getBoundingClientRect().width,
+        behavior: motion.reduceMotion ? "auto" : "smooth" });
+    });
+  };
+
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {
     // The paused strip is a native horizontal scroller on touch devices. Let Safari and
     // other browsers own that gesture instead of fighting it with pointer capture.
@@ -189,6 +200,10 @@ export function ProfileTicker({
     >
       <div className="state-ticker-head">
         <span>PROFILE</span><h2>{title}</h2>
+        {!motion.reduceMotion && <>
+          <button type="button" className="ticker-step" aria-label={`Show earlier ${title.toLowerCase()} metrics`} onClick={() => step(-1)}>‹</button>
+          <button type="button" className="ticker-step" aria-label={`Show later ${title.toLowerCase()} metrics`} onClick={() => step(1)}>›</button>
+        </>}
         <button type="button" onClick={toggleMotion} aria-pressed={stopped}
           disabled={motion.reduceMotion} title={motion.reduceMotion ? "Motion reduced" : stopped ? "Play" : "Pause"}
           aria-label={motion.reduceMotion

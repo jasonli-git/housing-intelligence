@@ -65,7 +65,7 @@ export function GroundAndWater({
       )}
 
       {water && water.systems.length > 0 && (
-        <div className="scroll-x">
+        <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
           <table className="change-places water-systems">
             <caption className="visually-hidden">
               Water systems serving {name}, with health-based violations {water.first_year}–
@@ -130,7 +130,7 @@ export function GroundAndWater({
               </> : <p className="sales-note">No service-line inventory matched to this system.</p>}
               {(s.pfas_samples?.length ?? 0) > 0 ? <>
                 <p className="sales-note">UCMR 5 entry-point samples, not current tap-water testing. Highest single measurements—not regulatory averages or violations.</p>
-                <div className="scroll-x"><table className="change-places">
+                <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally"><table className="change-places">
                   <caption>Measured PFAS · ng/L (parts per trillion)</caption>
                   <thead><tr><th scope="col">Chemical</th><th scope="col">Results</th><th scope="col">Sample dates</th><th scope="col">EPA reference</th></tr></thead>
                   <tbody>{s.pfas_samples!.map((r) => <tr key={r.record_id}>

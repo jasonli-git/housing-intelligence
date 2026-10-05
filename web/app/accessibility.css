@@ -1,0 +1,32 @@
+/* M43: focus, hoverable definitions and non-drag controls. */
+.skip-link { position: fixed; z-index: 2000; top: 8px; left: 16px; transform: translateY(-150%); background: var(--surface-card); color: var(--text-primary); padding: .7rem 1rem; border: 2px solid var(--focus); border-radius: 6px; }
+.skip-link:focus { transform: none; }
+html { scroll-padding-top: 90px; }
+[tabindex], input, select, button, summary, a { scroll-margin-top: 90px; }
+.gl:hover > .tip, .gl:focus-within > .tip { display: block; }
+.tip::before { content: ""; position: absolute; height: 8px; top: -8px; inset-inline: 0; }
+.tip.up::before { top: auto; bottom: -8px; }
+.gl[data-enhanced="true"] > .tip { display: none; }
+.map-pan-controls { display: flex; gap: 4px; align-items: center; justify-content: end; padding-top: .4rem; }
+.map-pan-controls button { min-width: 32px; min-height: 32px; padding: .2rem; border: 1px solid var(--border); border-radius: 5px; background: var(--surface-card); color: var(--text-primary); cursor: pointer; }
+.map-pan-controls span { font-size: 11px; color: var(--text-muted); margin-right: .4rem; }
+.ticker-step { min-width: 28px; min-height: 28px; }
+.nj-page .county-picker-count, .budget-headline > span { color: var(--text-secondary); }
+.crumbs li[data-level="local"] { --crumb-accent: light-dark(#246b55, #a6d9c0); }
+.interpretation-runtime { opacity: 1; color: var(--text-secondary); }
+.interpretation-matched { opacity: 1; }
+main.atlas-page a, .quiet-county a { color: light-dark(#005ebc, #8dbff4); }
+.assistance-routes small { color: var(--text-secondary); }
+.interpretation-stale { background: light-dark(#f8e7e1, #412e29); color: light-dark(#4f2418, #ffe0d5); }
+.atlas-tool .afford-group-row th { color: var(--budget-accent); }
+.quiet-tax a, .quiet-history a { color: light-dark(#005ebc, #8dbff4); }
+sup a[href*="#note-"] { display: inline-flex; min-width: 24px; min-height: 24px; align-items: center; justify-content: center; }
+.state-ticker-head .ticker-step { display: inline-grid; }
+.scroll-x:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+/* 28 viewBox units need at least 566 CSS pixels across the 660-unit rank plot
+   to retain a 24px target. The existing horizontal scroller preserves reflow. */
+.rank-plot svg { min-width: 576px; }
+.values-grid > .scroll-x { min-width: 0; }
+.values-grid > .scroll-x > table { min-width: 0; }
+.foot .inst a { text-decoration: underline; text-underline-offset: 3px; }
+@media print { .skip-link, .map-pan-controls { display: none; } }

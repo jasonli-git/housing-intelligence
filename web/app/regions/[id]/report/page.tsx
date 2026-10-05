@@ -109,7 +109,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     return (
       <>
         <Masthead affordability={{ kind: "route" }} />
-        <main className="shell report">
+        <main id="main-content" tabIndex={-1} className="shell report">
           <h1 className="page-title">No report</h1>
           <p className="meta">
             Region {id} has no analytics for the {WINDOW} window, or the API is unreachable.{" "}
@@ -153,7 +153,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   return (
     <>
       <Masthead affordability={{ kind: "route" }} />
-      <main className="shell report">
+      <main id="main-content" tabIndex={-1} className="shell report">
       <header className="page-head" data-kind="report">
         <div>
           <Crumbs
@@ -227,7 +227,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
       <section className="section">
         <h2>Measures</h2>
-        <div className="scroll-x">
+        <div className="scroll-x" tabIndex={0} role="region" aria-label="Ranked measures table, scroll horizontally">
           <table className="doc">
             <thead>
               <tr>
@@ -243,7 +243,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             {measureSections.map((section) => (
               <tbody key={section.key}>
                 <tr className="group">
-                  <th colSpan={7} scope="colgroup">
+                  <th colSpan={7} scope="rowgroup">
                     {section.title}
                   </th>
                 </tr>
@@ -327,7 +327,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             Ranked by value rather than by change. HUD’s CHAS tables and the MOD-IV
             assessment records are single snapshots, so they appear only here.
           </p>
-          <div className="scroll-x">
+          <div className="scroll-x" tabIndex={0} role="region" aria-label="Latest values table, scroll horizontally">
             <table className="doc">
               <thead>
                 <tr>
@@ -341,7 +341,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               {levelSections.map((section) => (
                 <tbody key={section.key}>
                   <tr className="group">
-                    <th colSpan={5} scope="colgroup">
+                    <th colSpan={5} scope="rowgroup">
                       {section.title}
                     </th>
                   </tr>
@@ -393,7 +393,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
       <section className="section">
         <h2>Sources</h2>
-        <div className="scroll-x">
+        <div className="scroll-x" tabIndex={0} role="region" aria-label="Source citations table, scroll horizontally">
           <table className="doc">
             <thead>
               <tr>

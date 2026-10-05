@@ -282,7 +282,7 @@ export function Ledger({
   const sections = groupRows(metrics);
   const atFoot = new Set(sections.flatMap((s) => s.rows.map((r) => r.metric_id)).slice(-FOOT_ROWS));
   return (
-    <div className="scroll-x">
+    <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
       <table className="ledger">
         <caption className="visually-hidden">
           Changes over five years, by section: each measure’s latest value, its change,

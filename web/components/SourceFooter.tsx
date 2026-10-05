@@ -60,7 +60,7 @@ export async function SourceFooter() {
       <div className="foot-inner">
         {/* Required publisher statements stay visible, before the source disclosure. */}
         {notices.length > 0 && (
-          <div className="foot-notices" aria-label="Notices the sources require">
+          <div className="foot-notices" role="group" aria-label="Notices the sources require">
             <h2 className="foot-kicker">Publisher notices</h2>
             {notices.map((notice) => (
               <div className="publisher-notice" key={notice}>

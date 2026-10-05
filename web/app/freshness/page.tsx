@@ -39,7 +39,7 @@ export default async function FreshnessPage() {
     return (
       <>
         <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
-        <main className="shell atlas-page atlas-ledger quiet-county quiet-history">
+        <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history">
           <h1 className="page-title">How current is each source</h1>
           <p className="meta">
             The API is unreachable, so there is nothing to show.{" "}
@@ -55,7 +55,7 @@ export default async function FreshnessPage() {
   return (
     <>
       <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
-      <main className="shell atlas-page atlas-ledger quiet-county quiet-history">
+      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history">
         <header className="page-head" data-kind="data">
           <div>
             <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Data freshness" />
@@ -91,7 +91,7 @@ export default async function FreshnessPage() {
                   {group.sources.length} {group.sources.length === 1 ? "source" : "sources"}
                 </span>
               </h3>
-              <div className="scroll-x">
+              <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
                 <table className="freshness">
                   <caption className="visually-hidden">
                     {group.label} sources: status, latest data period, last check, download, and

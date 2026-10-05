@@ -193,7 +193,17 @@ export function NationalCoverageMap() {
         </div>
       </>}
       </div>
-      <div className="coverage-map-foot"><span>{hovered}</span><span><i aria-hidden="true" />Blue = available{viewport.scale > 1 && " · Drag to move"}</span></div>
+      <div className="map-pan-controls" role="group" aria-label="Move United States map without dragging">
+        <span>Move map</span>
+        {([[-60, 0, "left", "←"], [0, -60, "up", "↑"], [0, 60, "down", "↓"], [60, 0, "right", "→"]] as const).map(([dx, dy, direction, icon]) => (
+          <button key={direction} type="button" disabled={!drawing || viewport.scale === 1} aria-label={`Move map ${direction}`} onClick={() => {
+            if (flight.current) return;
+            setRegion(null);
+            setViewport(current => boundCoverage({ ...current, x: current.x - dx, y: current.y - dy }));
+          }}>{icon}</button>
+        ))}
+      </div>
+      <div className="coverage-map-foot"><span>{hovered}</span><span><i aria-hidden="true" />Blue = available{viewport.scale > 1 && " · Drag or use move buttons"}</span></div>
     </div>
     <div className="coverage-state-preview">
       <div><p className="entry-kicker">Detailed coverage available now</p><h3>New Jersey</h3><p>Counties, towns and ZIP codes.</p></div>

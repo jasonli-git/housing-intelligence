@@ -41,7 +41,7 @@ export function IndexedComparison({ series }: { series: IndexedInput[] }) {
         <strong id={captionId}>How have housing costs and income moved?</strong>
         <span>Each series starts at 100 from its last {baselineYear} reading. Compare through {sharedEndYear}{latestYear > sharedEndYear ? `; later readings continue to ${latestYear} only where published.` : "."}</span>
       </figcaption>
-      <div className="indexed-chart-scroll">
+      <div className="indexed-chart-scroll" tabIndex={0} role="region" aria-label="Indexed housing costs and income chart, scroll horizontally">
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           role="img"

@@ -1393,6 +1393,16 @@ export function GlobeMap({
         </div>
       </div>
 
+      <div className="map-pan-controls" role="group" aria-label="Move New Jersey map without dragging">
+        <span>Move map</span>
+        {([[-60, 0, "left", "←"], [0, -60, "up", "↑"], [0, 60, "down", "↓"], [60, 0, "right", "→"]] as const).map(([dx, dy, direction, icon]) => (
+          <button key={direction} type="button" aria-label={`Move map ${direction}`} onClick={() => {
+            commit();
+            const from = aim.current ?? standing.current;
+            if (from) flyTo(shifted(from, -dx, -dy), true);
+          }}>{icon}</button>
+        ))}
+      </div>
       <figcaption className="globe-legend">
         {legend ?? (
           <>

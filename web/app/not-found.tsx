@@ -6,7 +6,7 @@ export default function NotFound() {
   return (
     <>
       <Masthead affordability={{ kind: "route" }} />
-      <main className="shell">
+      <main id="main-content" tabIndex={-1} className="shell">
         <h1 className="page-title">Page not found</h1>
         <p className="meta">
           This address does not point to a published housing page. <Link href="/">Back to United States</Link>.

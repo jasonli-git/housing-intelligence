@@ -456,7 +456,7 @@ export function AffordExplorer({
             </p>
           )}
         </div>
-        <div className="scroll-x budget-comparison">
+        <div className="scroll-x budget-comparison" tabIndex={0} role="region" aria-label="Place comparison table, scroll horizontally">
           <table className="ranks">
             <thead>
               <tr>
@@ -489,7 +489,7 @@ export function AffordExplorer({
                         <td><Link href={`/regions/${row.place.id}`}>{row.place.name}</Link><span className="budget-row-status">{row.missing.length > 0 ? `Incomplete: ${listed(row.missing)}` : row.within ? "Within budget on included costs" : "Above budget"}</span></td>
                         <td className="num">{money(row.monthly)}</td>
                         <td className="num">{share(row.share)}</td>
-                        <td className="reach-mark">{row.missing.length > 0 ? `Incomplete: ${listed(row.missing)}` : row.within ? "within budget*" : ""}</td>
+                        <td className="reach-mark">{row.missing.length > 0 ? `Incomplete: ${listed(row.missing)}` : row.within ? "within budget*" : <span className="visually-hidden">Above budget</span>}</td>
                       </tr>
                     ))}
                   </Fragment>
@@ -512,7 +512,7 @@ export function AffordExplorer({
             </p>
           ) : (
             <>
-              <div className="scroll-x">
+              <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
                 <table className="ranks towns">
                   <thead>
                     <tr>

@@ -104,7 +104,7 @@ function Figures({ binding }: { binding: Binding | null }) {
         All {binding.citations.length} figures checked against the data — where each comes
         from
       </summary>
-      <div className="scroll-x">
+      <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
         <table>
           <thead>
             <tr>
