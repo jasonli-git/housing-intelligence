@@ -2,7 +2,36 @@
 
 ## What changed
 
-The follow-up closes part of the BPU import gap and adds two manually verified annual water-quality report links. It does not claim the remaining publisher/access/privacy gates are resolved. No requests below have been sent.
+The follow-up closes part of the BPU import gap and adds two manually verified annual water-quality report links. It does not claim the remaining publisher/access/privacy gates are resolved. The October 4 drafts below are historical; the October 5 outreach register supersedes their unsent status. No email was sent by Codex.
+
+### Owner outreach — October 5, 2026
+
+Sending is confirmed by the owner in chat, not by access to their mailbox. Exact sent
+copies are not archived in the repository; descriptions below reflect the drafts and
+confirmations in chat. Do not assume later replies or attachments exist.
+
+| Institution / recipient | Confirmed action | Status / next step |
+|---|---|---|
+| NJDEP, `LeadInDW@dep.nj.gov` | Owner sent the newer per-system service-line inventory inquiry, linking layer 37. Asked for an aggregate export with system IDs/material counts and, if unavailable, an expected publication date. No residential addresses requested. | Awaiting reply. The sent draft did **not** include the separate CCR catalogue request in the older draft below; that avenue remains unasked. |
+| DOE LEAD team, `LEAD.Tool@hq.doe.gov` | Owner sent the question about negative reporting weights or energy-cost values in Essex, Hudson, Middlesex, Monmouth and Somerset. Asked whether intentional and for an aggregation method or corrected dataset; offered affected rows. | Awaiting reply. No affected-row attachment was confirmed. Preserve originals and continue withholding unsupported derived estimates. The sent draft did not ask about successor releases. |
+| BPU, `Lauren.Mattox@bpu.nj.gov` | Owner sent a request to locate public 2024/2025 Annual System Performance Reports for ACE, JCP&L, PSE&G and Rockland Electric, referencing ACE 2023 dockets EM14060581 and ER09080664. | Lauren replied October 5 at 3:24 PM: search the BPU website; if not found, contact the Board Secretary's Office or file an OPRA request for routing. This is a referral, not rejection, a supplied report or confirmation of report availability. |
+| BPU records custodian, `Records.custodian@bpu.nj.gov` | Owner confirmed sending a **document-location inquiry** after Lauren's referral: requested IDs/public links for those reports and asked to be told if a formal OPRA request is needed. | Awaiting reply. **No formal OPRA request or completed form submission is confirmed.** No records, reuse permission or import clearance received. |
+
+BPU's [records-access instructions](https://www.nj.gov/bpu/bpu/agenda/opra/), checked
+October 5, identify the custodian email for assistance locating documents. They list
+physical mail and an electronic route pointing to `www.nj.gov/grc` for completed forms;
+a working BPU electronic submission endpoint was **not verified**. Earlier chat wording
+suggesting that an emailed attachment necessarily constitutes a formal OPRA filing was
+corrected. If a formal request is required, confirm the accepted submission method or
+use the stated physical-mail process. Do not claim a statutory request clock has begun
+from this informal inquiry. Request existing public records, not a newly created analysis;
+ask for advance notice of fees. Access to records is not blanket third-party reuse clearance.
+
+**Further outreach is paused by the owner.** Do not send additional inquiries, submit
+forms or create follow-up automations. DCA status and the conditional October 13 routing
+plan are recorded in `m44-evictions.md`. NG911/privacy guidance and broad CCR metadata
+requests remain future avenues, not sent requests. None of the technical gates above
+is resolved merely because an email was sent.
 
 ## Files/modules affected
 
@@ -52,7 +81,7 @@ The checked BPU order and manually curated CCR IDs are bounded, reviewed sources
 
 ### Consolidated gap register — status as of October 4, 2026
 
-This register covers known M42 source, integration, interpretation and release limitations, including related existing TODOs. It is a handoff, not approval to implement or a substitute for Claude's roadmap reconciliation. **"Actionable" means a concrete next step exists, not that the user has authorized more work.** None of the agency inquiries below has been sent; outreach is explicitly deferred. Do not label every gap "institutional," "impossible" or "complete."
+This register covers known M42 source, integration, interpretation and release limitations, including related existing TODOs. It is a handoff, not approval to implement or a substitute for Claude's roadmap reconciliation. **"Actionable" means a concrete next step exists, not that the user has authorized more work.** The technical evidence is dated October 4; consult the October 5 outreach register above for current correspondence status. Do not label every gap "institutional," "impossible" or "complete."
 
 #### A. Actionable without an agency response (future bounded work)
 
@@ -72,8 +101,8 @@ This register covers known M42 source, integration, interpretation and release l
 | Gap | Prerequisite / current decision | Allowed next step; what not to do |
 |---|---|---|
 | Automated ACE supplier-site acquisition and public reuse | Exelon terms include ACE and restrict automated access, public reuse and deep links without permission. Direct ACE PDF reader link has already been replaced by BPU search. | Obtain permission or assess an agency-provided public-data route and its applicable rights. An agency copy does not automatically clear third-party rights. Until then, no supplier scraper/production importer from that site. |
-| Newer per-system lead inventory | Checked public map feed reaches submission 2024; user independently received only 2022–2024. Newer statewide totals do not provide newer system-level records. | Locate a permitted replacement export or request it from NJDEP. User has deferred the inquiry. Keep dated records and disclosures; do not allocate statewide totals across systems. This is a verified checked-feed lag, not proof no newer records exist anywhere. |
-| Repair of five DOE county energy estimates | Essex, Hudson, Middlesex, Monmouth and Somerset contain signed reporting weights/costs; no justified repair method has been established. | Obtain documented publisher methodology, a corrected release or a defensible reviewed treatment. Inquiry is deferred. Preserve raw values and withhold derived estimates; no zero-fill, absolute-value conversion or guessed household cost. |
+| Newer per-system lead inventory | Checked public map feed reaches submission 2024; user independently received only 2022–2024. Newer statewide totals do not provide newer system-level records. | Owner sent NJDEP inquiry October 5; awaiting reply. Permitted replacement-export discovery remains possible. Keep dated records and disclosures; do not allocate statewide totals across systems. This is a verified checked-feed lag, not proof no newer records exist anywhere. |
+| Repair of five DOE county energy estimates | Essex, Hudson, Middlesex, Monmouth and Somerset contain signed reporting weights/costs; no justified repair method has been established. | Owner sent DOE inquiry October 5; awaiting reply. Obtain documented publisher methodology, a corrected release or a defensible reviewed treatment. Preserve raw values and withhold derived estimates; no zero-fill, absolute-value conversion or guessed household cost. |
 | Public address-level functionality | Dataset reuse review, Daniel's Law/privacy handling and a suppression/removal design remain unresolved. Address points were not acquired or published. | Obtain appropriate guidance and approve a scoped design before implementation. This is not a blanket legal conclusion that all address points are forbidden. Removing names alone does not clear the gate. |
 | Broad automated CCR ingestion from restricted supplier websites | American Water terms prohibit automated copying/crawling; agency export/permission for a full catalogue is not established. | Seek permitted agency metadata or supplier permission; outreach is deferred. Manual report review does not authorize a scraper or republication of report content. |
 
@@ -93,14 +122,14 @@ This register covers known M42 source, integration, interpretation and release l
 - JCP&L BPU actual-performance import, exact-file provenance and same-page PDF table parsing are implemented and verified.
 - ACE's reader-facing supplier-PDF deep link was removed; BPU search and explicit non-import disclosure are in place. The underlying ACE import/permission gap remains, separately classified above.
 - The user's Princeton walkthrough matched Raritan PWSID `NJ2004002`. Their report screenshot shows lead/copper rows sampled in 2025, including 54 tap-sampled homes. This is user-supplied identity/year evidence, not a new imported dataset or a guarantee for all Princeton homes. Cover year must not override individual sampling years (other rows may be older).
-- Outreach is **deferred by user choice**, not sent, rejected or answered. Requests remain available below; do not invent a reason for the deferral or resume outreach without permission.
+- October 4's outreach deferral was superseded by the owner-sent October 5 inquiries above. Further outreach is now paused again. BPU supplied a routing reply only; no technical gate is cleared and no new outreach is authorized.
 - No new AI generation, raw prune --apply, canonical reconciliation, version bump, merge or deployment is part of this follow-up. These are scope boundaries, not automatically missing features.
 
-### Copy-ready requests — unsent
+### Historical October 4 request drafts — not the exact sent emails
 
 #### User decision — October 4, 2026: defer outreach
 
-The user does not want to send inquiries now. Retain the drafts below for later; do not contact BPU, NJDEP, DOE/NREL or other institutions without separate authorization. No reason beyond the user's choice to defer was stated. The evidence below explains why the inquiries remain useful, not why the user postponed them.
+The user initially deferred inquiries October 4. They later sent the narrower October 5 emails recorded above and paused further outreach. Retain the older drafts for context, not as evidence that every question below was sent. No reason beyond the user's choice to defer was stated.
 
 - **BPU:** the user's normal browser accessed the portal and found ACE's public 2023 Annual System Performance Report, submitted May 30, 2024, under ER09080664 and EM14060581. The downloaded PDF's cover confirms that identity. It is not the 2024 report previously reviewed on ACE's website. The user did not locate a newer filing through the suggested searches; that is a search/access gap, not evidence that BPU lacks the filings. A later inquiry should identify this known filing and request newer public document IDs/links and the four-utility catalogue.
 - **Lead:** the user independently queried distinct SUBMISSION_YEAR values in the public layer and received 2022, 2023 and 2024 only. This supports requesting a newer per-system aggregate export. A November 2025 schema edit does not establish 2025 submissions. Do not substitute newer statewide totals for system-level records.
@@ -130,3 +159,8 @@ Sending these requires separate user authorization. Responses could resolve spec
 Actual BPU acquisition, PDF landing and staging succeeded with three rows; staged inventory guard passed. Detailed final suite/load/build results are recorded in `m42-utilities-water.md`.
 
 Gap-register reconciliation: reviewed both M42 handoffs and subsequent user-supplied portal/query/report evidence; documentation only, no new acquisition, legal clearance or implementation claimed. `git diff --check` run for this edit. No code tests rerun for the documentation-only update.
+
+October 5 outreach reconciliation: reviewed owner sending confirmations and Lauren's
+reply screenshot; verified official DOE contact and BPU directory/OPRA instructions.
+Documentation only; no mailbox access, sending, formal records filing, source acquisition,
+test-suite rerun, merge or deployment. `git diff --check` run before commit.
