@@ -4,6 +4,7 @@ import { nationalMortgageRate } from "@/lib/api";
 import { periodLabel } from "@/lib/periods";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import "./housing-entry.css";
+import "./state-navigation.css";
 
 export const metadata = {
   title: "Housing Intelligence — Find your place",

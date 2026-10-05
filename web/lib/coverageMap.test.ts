@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boundCoverage, COVERAGE_HOME, coverageScene, STATE_DESTINATIONS, zoomCoverage } from "./coverageMap";
+import { boundCoverage, COVERAGE_HOME, COVERAGE_REGIONS, coverageScene, regionViewport, STATE_DESTINATIONS, zoomCoverage } from "./coverageMap";
 import type { Outline } from "./globe";
 
 const box = (id: string, lon: number, lat: number): Outline => ({ id, name: id, rings: [[lon, lat, lon + 1, lat, lon + 1, lat + 1, lon, lat + 1, lon, lat]] });
@@ -38,5 +38,22 @@ describe("national coverage locator", () => {
   it("bounds drag/zoom and restores the whole US at minimum zoom", () => {
     expect(boundCoverage({ scale: 2, x: -10000, y: 10000 })).toEqual({ scale: 2, x: -1350, y: 240 });
     expect(zoomCoverage({ scale: 1.5, x: -600, y: 0 }, .1, [780, 160])).toEqual(COVERAGE_HOME);
+  });
+  it("assigns all states and DC once without implying new coverage", () => {
+    const codes = Object.values(COVERAGE_REGIONS).flat();
+    expect(codes).toHaveLength(51);
+    expect(new Set(codes).size).toBe(51);
+    expect(COVERAGE_REGIONS.Northeast).toContain("NJ");
+    expect(COVERAGE_REGIONS.West).toContain("AK");
+    expect(Object.keys(STATE_DESTINATIONS)).toEqual(["NJ"]);
+  });
+  it("frames region geometry and handles an absent region honestly", () => {
+    const outlines = [box("NJ", -75, 40), box("PA", -78, 40), box("CA", -120, 35), box("AK", -150, 60)];
+    const viewport = regionViewport(outlines, "Northeast")!;
+    expect(viewport.scale).toBeGreaterThan(1);
+    expect(Object.values(viewport).every(Number.isFinite)).toBe(true);
+    expect(regionViewport(outlines, "South")).toBeNull();
+    expect(regionViewport([box("AK", -150, 60)], "West")).toBeNull();
+    expect(regionViewport(outlines, "West")).toEqual(regionViewport(outlines.filter((o) => o.id !== "AK"), "West"));
   });
 });

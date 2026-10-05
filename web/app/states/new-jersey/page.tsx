@@ -24,6 +24,7 @@ import { marginLabel } from "@/lib/uncertainty";
 import { constructionYears } from "@/lib/construction";
 import "../../new-jersey.css";
 import "../../housing-entry.css";
+import "../../state-navigation.css";
 
 export const metadata = { title: "New Jersey — Housing", description: "Statewide housing figures, county comparisons and places within your budget in New Jersey." };
 
@@ -59,12 +60,13 @@ const CAVEAT_IN_DEFINITION: ReadonlySet<string> = new Set([
  * this page's payload (#163).
  */
 export default async function NewJerseyPage() {
-  const [geo, catalog, states, affordability, mortgage] = await Promise.all([
+  const [geo, catalog, states, affordability, mortgage, countyRegions] = await Promise.all([
     api.geo("county"),
     api.metrics(),
     api.regions("level=state&state=NJ&limit=1"),
     affordData(),
     nationalMortgageRate(),
+    api.regions("level=county&state=NJ&has_data=true&limit=100"),
   ]);
   const state = states?.items[0] ?? null;
   const statewide = state ? await api.summary(state.region_id, "5y") : null;
@@ -195,6 +197,7 @@ export default async function NewJerseyPage() {
           <StateModeWorkspace
             frame={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
             counties={geo.features.length}
+            countyPages={(countyRegions?.items ?? []).map((county) => ({ id: county.region_id, name: county.name }))}
             sections={sections}
             initial={initial}
             afford={affordability}

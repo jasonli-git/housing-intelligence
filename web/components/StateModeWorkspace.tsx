@@ -4,12 +4,15 @@ import { AffordExplorer } from "@/components/AffordExplorer";
 import { CountyExplorer, type Measure } from "@/components/CountyExplorer";
 import { pushHousingMode, useHousingMode } from "@/components/useHousingMode";
 import { SectionJump } from "@/components/SectionJump";
+import { CountyPicker } from "@/components/CountyPicker";
+import type { CountyDestination } from "@/lib/countyPicker";
 import type { AffordData } from "@/lib/affordData";
 import type { Section } from "@/lib/groups";
 
-export function StateModeWorkspace({ frame, counties, sections, initial, afford }: {
+export function StateModeWorkspace({ frame, counties, countyPages, sections, initial, afford }: {
   frame: { width: number; height: number };
   counties: number;
+  countyPages: CountyDestination[];
   sections: Section<Measure>[];
   initial: string;
   afford: AffordData | null;
@@ -19,7 +22,7 @@ export function StateModeWorkspace({ frame, counties, sections, initial, afford 
   return (
     <section className={mode === "afford" ? "nj-mode nj-afford-mode state-workspace" : "nj-mode state-workspace"} data-mode={mode} aria-labelledby="state-workspace-heading">
       <header className="state-workspace-head">
-        <div><h2 id="state-workspace-heading">Find your part of New Jersey</h2>
+        <div><h2 id="state-workspace-heading">Find your county</h2>
           {mode === "afford" && <p>Set your income and compare places against your budget. Estimates, not loan approvals.</p>}
         </div>
         <div className="state-workspace-choice" role="group" aria-label="County exploration view">
@@ -28,6 +31,7 @@ export function StateModeWorkspace({ frame, counties, sections, initial, afford 
         </div>
         <SectionJump />
       </header>
+      <CountyPicker counties={countyPages} />
       <div key={mode} className="mode-panel">
         {mode === "afford" ? afford ? (
           <>
