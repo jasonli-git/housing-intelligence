@@ -16,8 +16,8 @@ removed entries are in `git show ca49f74:TODO.md`.
 
 ## Now — between milestones (2026-10-05)
 
-Milestone 43 is merged and deployed as 0.40.0 (ARCHITECTURE #309, #310). Milestone 44,
-evictions, is next and starts only when asked.
+Milestone 43 is deployed as 0.40.0. Milestone 44, evictions, is gated on DCA (Parked,
+below). Milestone 45, getting around, starts only when asked.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -517,6 +517,12 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
+- [ ] **Milestone 44, evictions, waits on DCA.** (2026-10-05, handoff
+      `agent-handoffs/m44-evictions.md`) Needs a downloadable ZIP-level table of filings
+      and warrants, its counting rules and corrected year labels, a release calendar,
+      and reuse terms that cover the court's figures. The owner emailed DCA 2026-09-23;
+      no reply by 2026-10-05. If still none by 2026-10-13, the handoff names DCA's
+      feedback form as the next route. No figures are read off the dashboard meanwhile.
 - [ ] **Advanced Data Protection for the removal list.** (#296) The list holds protected
       addresses in iCloud Drive, which Apple can read unless Advanced Data Protection is
       on (System Settings → Apple Account → iCloud). Tabled by the owner 2026-10-02.
