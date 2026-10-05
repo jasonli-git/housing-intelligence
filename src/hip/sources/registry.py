@@ -22,8 +22,16 @@ from hip.sources.fhfa import HpiAdapter
 from hip.sources.fred import FredAdapter
 from hip.sources.hud import HudAdapter, HudChasAdapter, HudFmrAdapter
 from hip.sources.hud_assistance import HudAssistedAdapter, HudLihtcAdapter
+from hip.sources.infrastructure import (
+    EiaAdapter,
+    EnergyBurdenAdapter,
+    LeadLinesAdapter,
+    UcmrAdapter,
+    UtilityAreasAdapter,
+)
 from hip.sources.irs_migration import MigrationAdapter
 from hip.sources.nj_affordable import NjAffordableAdapter
+from hip.sources.nj_bpu import BpuReliabilityAdapter
 from hip.sources.nj_construction import NjConstructionAdapter
 from hip.sources.nj_equalized import NjEqualizedAdapter
 from hip.sources.nj_modiv import ModivAdapter
@@ -91,6 +99,12 @@ IMPLEMENTED: tuple[str, ...] = (
     NjAffordableAdapter.source_id,
     HudAssistedAdapter.source_id,
     HudLihtcAdapter.source_id,
+    EiaAdapter.source_id,
+    LeadLinesAdapter.source_id,
+    UcmrAdapter.source_id,
+    UtilityAreasAdapter.source_id,
+    EnergyBurdenAdapter.source_id,
+    BpuReliabilityAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -124,6 +138,12 @@ METRIC_SOURCES: tuple[str, ...] = (
     NjAffordableAdapter.source_id,
     HudAssistedAdapter.source_id,
     HudLihtcAdapter.source_id,
+    EiaAdapter.source_id,
+    LeadLinesAdapter.source_id,
+    UcmrAdapter.source_id,
+    UtilityAreasAdapter.source_id,
+    EnergyBurdenAdapter.source_id,
+    BpuReliabilityAdapter.source_id,
 )
 
 
@@ -160,6 +180,16 @@ def build_adapter(
 
 
 def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
+    for builder in (
+        BpuReliabilityAdapter,
+        EiaAdapter,
+        EnergyBurdenAdapter,
+        LeadLinesAdapter,
+        UcmrAdapter,
+        UtilityAreasAdapter,
+    ):
+        if source_id == builder.source_id:
+            return builder()
     if source_id == TigerAdapter.source_id:
         return TigerAdapter(states=scope.states)
     if source_id == ZhviAdapter.source_id:

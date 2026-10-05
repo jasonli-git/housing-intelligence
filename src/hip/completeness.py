@@ -263,6 +263,7 @@ class Rights:
 # Keyed by the licence text in config/sources.yml, so a source whose licence changes
 # falls out of this table and fails the test that requires every licence be classified.
 LICENCE_RIGHTS: dict[str, Rights] = {
+    "Creative Commons Attribution 4.0 International": Rights("yes", "yes", "yes", "yes"),
     "Public domain (U.S. Government work)": Rights("yes", "yes", "yes", "yes"),
     "Free for non-commercial use with attribution": Rights(
         "yes", "unverified", "unverified", "no"

@@ -9,6 +9,114 @@
 # procedure it plugs into is README's "When a source stops answering".
 
 sources:
+  nj_bpu_reliability:
+    name: NJ BPU reported electric reliability performance
+    publisher: New Jersey Board of Public Utilities
+    license: Open public record
+    licence_class: public_record
+    commercial: {ads: unclear, paid: unclear, note: Publish attributed factual figures only; no blanket third-party document licence inferred.}
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-10-04
+    terms_note: State Conditions of Use section F permits copying/distribution of State information, subject to specific restrictions and third-party rights. Publish attributed factual figures only, not scans, signatures or seals; public access is not a blanket third-party document licence.
+    notices:
+      - "Source: NJ Board of Public Utilities, August 13, 2025 order, Docket EO25070453, Tables 1–3. Actual JCP&L performance for 2022–2024. Not a complete annual-report catalogue or today's outage status."
+    url: https://www.nj.gov/bpu/about/divisions/reliability/
+    cadence: irregular
+    adapter: hip.sources.nj_bpu:BpuReliabilityAdapter
+    fallback: Retain the verified order; locate or request public annual reports for all four utilities before extending this reader. No guessed document IDs or confidential filings.
+    notes: CAIDI is minutes per customer interruption, not SAIDI minutes per customer per year. Event exclusions are not specified in the imported table; do not infer an EIA method or calculate SAIDI from rounded values.
+  doe_lead:
+    name: Low Income Energy Affordability Data (LEAD), 2022 county data
+    publisher: U.S. Department of Energy / National Renewable Energy Laboratory
+    license: Creative Commons Attribution 4.0 International
+    licence_class: attribution
+    commercial: {ads: allowed, paid: allowed, note: CC BY 4.0 permits commercial reuse with attribution.}
+    terms_url: https://data.openei.org/submissions/6219
+    terms_checked: 2026-10-04
+    terms_note: Dataset explicitly licensed CC BY 4.0. Credit DOE/NREL, link the dataset and licence, and identify derived aggregation; do not imply endorsement.
+    notices:
+      - "Energy context derived from DOE/NREL Low Income Energy Affordability Data (2024 release, 2018–2022 ACS calibrated to 2022 EIA). Dataset: https://doi.org/10.25984/2504170. Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/. County means and ratios aggregated here."
+    url: https://data.openei.org/submissions/6219
+    cadence: irregular
+    adapter: hip.sources.infrastructure:EnergyBurdenAdapter
+    fallback: Keep the verified 2022 bulk file labelled historical; inspect the DOE download catalogue for a successor before changing the reader.
+    notes: County context only, never a municipal estimate or household bill. Field-specific reporting weights are preserved. Not added to monthly cost cards or rankings.
+
+  eia861:
+    name: Annual electric utility sales and reliability (Form EIA-861)
+    publisher: U.S. Energy Information Administration
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial: {ads: allowed, paid: allowed, note: EIA expressly permits reuse and distribution of its data.}
+    terms_url: https://www.eia.gov/about/copyrights_reuse.php
+    terms_checked: 2026-10-04
+    terms_note: Data may be reused; acknowledge EIA and publication date. Protected third-party material and logos are excluded.
+    notices:
+      - "Source: U.S. Energy Information Administration, Form EIA-861, 2024 final data (publisher update: December 3, 2025). Residential bundled prices calculated here from revenue and sales; outage measures retain the utility's reporting basis."
+    url: https://www.eia.gov/electricity/data/eia861/
+    cadence: annual
+    adapter: hip.sources.infrastructure:EiaAdapter
+    fallback: Keep the dated final release; do not substitute early-release unvalidated data silently.
+    notes: Residential bundled sales are distinct from delivery-only and energy-only sales. Reliability includes the reporting method and major-event-day basis. Neither is one home's bill or outage forecast.
+
+  epa_ucmr5:
+    name: UCMR 5 final occurrence data — PFAS entry-point samples
+    publisher: U.S. Environmental Protection Agency
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial: {ads: allowed, paid: allowed, note: EPA permits distribution unless material is separately copyrighted.}
+    terms_url: https://www.epa.gov/web-policies-and-procedures/epa-disclaimers
+    terms_checked: 2026-10-04
+    terms_note: Public agency data; no separate restriction on the offered bulk occurrence files. No EPA endorsement is implied.
+    url: https://www.epa.gov/dwucmr/occurrence-data-unregulated-contaminant-monitoring-rule
+    cadence: irregular
+    adapter: hip.sources.infrastructure:UcmrAdapter
+    fallback: Keep the final August 2026 release and its actual sample dates; link the EPA Data Finder if the ZIP is unavailable.
+    notes: The 2023–2025 cycle includes 2026 follow-up samples. Below reporting limit is not zero. A single sample above a reference limit is not a regulatory violation or today's tap-water result. Coverage excludes many small systems and private wells.
+
+  njdep_utility_areas:
+    name: Electric and gas utility territory maps
+    publisher: New Jersey Department of Environmental Protection
+    license: NJDEP Data Distribution Agreement
+    licence_class: attribution
+    commercial: {ads: allowed, paid: allowed, note: "NJDEP conditions reuse on attribution and metadata, without a commercial-use limit."}
+    terms_url: https://www.arcgis.com/home/item.html?id=d23845cc51454ee59affd226cff3fcd5
+    terms_checked: 2026-10-04
+    terms_note: >-
+      Both official NJDEPBGIS items (electric d23845cc51454ee59affd226cff3fcd5;
+      gas b6a9f5a46f464711ad7799b5d3f92f80) carry NJDEP's agreement. Only derived
+      town/provider associations are published, with metadata links and the required notice;
+      raw geometry is not redistributed. Electric boundaries originate in small-scale
+      paper maps and are not suitable for exact property-level claims.
+    notices:
+      - This (map/publication/report) was developed using New Jersey Department of Environmental Protection Geographic Information System digital data, but this secondary product has not been verified by NJDEP and is not state-authorized or endorsed.
+    url: https://mapsdep.nj.gov/arcgis/rest/services/Features/Utilities/MapServer
+    homepage: https://www.arcgis.com/home/item.html?id=d23845cc51454ee59affd226cff3fcd5
+    cadence: irregular
+    adapter: hip.sources.infrastructure:UtilityAreasAdapter
+    fallback: Keep the last map labelled approximate; consult BPU or the provider for one address.
+
+  njdep_lead_lines:
+    name: Community water purveyor service line inventory
+    publisher: New Jersey Department of Environmental Protection
+    license: NJDEP Data Distribution Agreement
+    licence_class: attribution
+    commercial: {ads: allowed, paid: allowed, note: "NJDEP conditions reuse on attribution and metadata, without a commercial-use limit."}
+    terms_url: https://www.arcgis.com/home/item.html?id=54dd411b2c8449cc9efb3748143716f2
+    terms_checked: 2026-10-04
+    terms_note: >-
+      Official NJDEPBGIS item and PLEM app both carry NJDEP's agreement. Publish derived
+      summaries with the required notice and metadata link, not raw geometry or addresses.
+      Submission year and category-update date are distinct from download date.
+    notices:
+      - This (map/publication/report) was developed using New Jersey Department of Environmental Protection Geographic Information System digital data, but this secondary product has not been verified by NJDEP and is not state-authorized or endorsed.
+    url: https://services1.arcgis.com/QWdNfRs7lkPq4g4Q/arcgis/rest/services/Public_Community_Water_Purveyor_Service_Line_Inventory_for_New_Jersey/FeatureServer/37
+    homepage: https://dep.nj.gov/lead/map/
+    cadence: annual
+    adapter: hip.sources.infrastructure:LeadLinesAdapter
+    fallback: Keep the dated system inventory and direct readers to their water supplier for an individual line.
+    notes: Lead, galvanized, lead connectors and unknown material are separate counts; these are not lead concentrations or a diagnosis of one property's pipe.
+
   nj_affordable:
     name: Affordable housing calculations and municipal status reports
     publisher: NJ Department of Community Affairs

@@ -3,6 +3,27 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.39.0] — 2026-10-04
+
+Milestone 42: utilities and what's in the pipes (built by Codex, PR #93).
+
+### Added
+
+- **Utilities on county, town and ZIP pages** (ARCHITECTURE #308): which electric and
+  gas companies serve the place, each electric utility's average residential price per
+  kWh and how often and how long its customers lose power (EIA-861; JCP&L's own BPU
+  figures for 2022–2024), and county energy burden from DOE.
+- **What's in the pipes**: each water system's lead, galvanized and unknown service
+  lines from NJDEP's inventory, measured PFAS from EPA's UCMR 5 sampling, and whether
+  each health-based violation was returned to compliance.
+- Six sources, `infrastructure_records` (migrations 0025 and 0026), and
+  `utilities.json`. Water-system lists now cover counties and the state too.
+
+### Not done
+
+- BPU reliability figures for ACE, PSE&G and Rockland; property-level answers, which
+  stay gated on address-point reuse and Daniel's Law.
+
 ## [0.38.0] — 2026-10-04
 
 Milestone 41: affordable housing and assistance (built by Codex, PR #91 and its
