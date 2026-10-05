@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import text
 
 from hip.api.deps import SessionDep
@@ -30,6 +30,7 @@ class UtilityProvider(BaseModel):
     approximate_share: float
     territory: InfrastructureRecord
     electricity: InfrastructureRecord | None = None
+    regulatory_reliability: list[InfrastructureRecord] = Field(default_factory=list)
 
 
 class Utilities(BaseModel):
@@ -80,7 +81,8 @@ def utilities(region_id: int, session: SessionDep) -> Utilities:
     ids = list(
         {f"utility:{r.payload['eia_id']}" for r in territories if r.payload.get("eia_id")}
     )
-    company = {r.record_id: r for r in records_for(session, ids)} if ids else {}
+    utility_records = records_for(session, ids) if ids else []
+    company = {r.record_id: r for r in utility_records if r.kind == "electric_utility"}
     energy = next(
         (r for r in local if r.kind == "energy_burden" and r.entity_id == county), None
     )
@@ -95,6 +97,16 @@ def utilities(region_id: int, session: SessionDep) -> Utilities:
                 approximate_share=float(r.payload["approximate_share"]),
                 territory=r,
                 electricity=company.get(str(r.payload.get("eia_id"))),
+                regulatory_reliability=sorted(
+                    [
+                        c
+                        for c in utility_records
+                        if c.kind == "regulatory_reliability"
+                        and c.entity_id == f"utility:{r.payload.get('eia_id')}"
+                    ],
+                    key=lambda c: int(c.payload["year"]),
+                    reverse=True,
+                ),
             )
             for r in territories
         ],

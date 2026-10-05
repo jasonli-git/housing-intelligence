@@ -1,5 +1,5 @@
 import type { Utilities as UtilityData } from "@/lib/api";
-import { bundledPrice } from "@/lib/infrastructure";
+import { bundledPrice, publisherUrl } from "@/lib/infrastructure";
 import { ReaderDetails } from "@/components/ReaderDetails";
 
 const TERRITORIES = "https://www.arcgis.com/home/item.html?id=d23845cc51454ee59affd226cff3fcd5";
@@ -30,7 +30,17 @@ export function Utilities({ data }: { data: UtilityData | null }) {
               <div><dt>Minutes excluding major-event days</dt><dd>{electric.saidi_normal ?? "Not reported"}</dd></div>
               <div><dt>Interruptions excluding major-event days</dt><dd>{electric.saifi_normal ?? "Not reported"}</dd></div>
             </dl>
-            <p className="sales-note">Utility-wide New Jersey averages across customer classes, not town-specific outages or a prediction. <a href={EIA}>EIA annual records</a> · <a href={p.electricity?.record_id === "9726" ? JCPL_BPU : BPU}>NJ BPU reliability {p.electricity?.record_id === "9726" ? "order (2025)" : "oversight"}</a>. BPU reports are not imported here and may use a different measure.</p>
+            <p className="sales-note">Utility-wide New Jersey averages across customer classes, not town-specific outages or a prediction. <a href={EIA}>EIA annual records</a>.</p>
+            {(p.regulatory_reliability?.length ?? 0) > 0 ? <>
+              <h3>NJ BPU reported performance</h3>
+              <dl className="utility-reliability">
+                {p.regulatory_reliability!.map((r) => <div key={r.record_id}>
+                  <dt>{r.payload.year} actual · company-wide</dt>
+                  <dd>{r.payload.caidi_minutes} minutes per interruption (CAIDI) · {r.payload.saifi} interruptions per customer (SAIFI)</dd>
+                </div>)}
+              </dl>
+              <p className="sales-note">CAIDI is the average restoration time for customer interruptions—not annual minutes per customer (SAIDI). These actual figures are reproduced in <a href={publisherUrl(p.regulatory_reliability![0].payload.url) ?? JCPL_BPU}>BPU’s August 2025 order, Tables 1–3</a>. The table does not specify event exclusions, so it is not treated as the same basis as EIA. This is not a complete BPU annual-report series.</p>
+            </> : <p className="sales-note">BPU annual figures are not imported for this supplier. <a href={p.electricity?.record_id === "963" ? "https://www.atlanticcityelectric.com/cdn/assets/v3/assets/blt407b5f1850a51a1b/blte2a508f06ea1cfda/684320fc2fda0e95b4471da7/ACE_-_2024_Annual_System_Performance_Report.pdf?branch=prod_alias" : BPU}>{p.electricity?.record_id === "963" ? "Read its 2024 BPU filing" : "BPU reliability oversight"}</a>.</p>}
           </ReaderDetails>
         </> : p.fuel === "electric" && <p className="sales-note">No verified EIA company match; price and outages not filled in.</p>}
       </div>;

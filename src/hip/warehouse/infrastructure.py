@@ -10,7 +10,14 @@ from sqlalchemy import Engine, text
 from hip.duck import duckdb_session
 from hip.warehouse.load import ReleaseProvenance, _release_ids
 
-SOURCES = ("eia861", "doe_lead", "njdep_lead_lines", "epa_ucmr5", "njdep_utility_areas")
+SOURCES = (
+    "eia861",
+    "doe_lead",
+    "njdep_lead_lines",
+    "epa_ucmr5",
+    "njdep_utility_areas",
+    "nj_bpu_reliability",
+)
 
 
 def _check_numbers(value: object) -> None:
@@ -48,6 +55,7 @@ def _validate_payload(kind: str, payload: dict[str, object]) -> None:
         "energy_burden": ("annual_energy", "mean_annual_income", "burden"),
         "utility_area": ("approximate_share",),
         "electric_utility": ("saidi_all", "saifi_all", "saidi_normal", "saifi_normal"),
+        "regulatory_reliability": ("caidi_minutes", "saifi"),
     }.get(kind, ())
     for field in fields:
         value = payload.get(field)
@@ -72,6 +80,15 @@ def _validate_payload(kind: str, payload: dict[str, object]) -> None:
                     not isinstance(value, (int, float)) or value < 0
                 ):
                     raise ValueError(f"infrastructure: invalid electricity {field}")
+    if kind == "regulatory_reliability":
+        for field in ("caidi_minutes", "saifi", "year"):
+            value = payload.get(field)
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or value <= 0
+            ):
+                raise ValueError(f"infrastructure: invalid regulatory {field}")
 
 
 def load_infrastructure(

@@ -9,6 +9,22 @@
 # procedure it plugs into is README's "When a source stops answering".
 
 sources:
+  nj_bpu_reliability:
+    name: NJ BPU reported electric reliability performance
+    publisher: New Jersey Board of Public Utilities
+    license: Open public record
+    licence_class: public_record
+    commercial: {ads: unclear, paid: unclear, note: Publish attributed factual figures only; no blanket third-party document licence inferred.}
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-10-04
+    terms_note: State Conditions of Use section F permits copying/distribution of State information, subject to specific restrictions and third-party rights. Publish attributed factual figures only, not scans, signatures or seals; public access is not a blanket third-party document licence.
+    notices:
+      - "Source: NJ Board of Public Utilities, August 13, 2025 order, Docket EO25070453, Tables 1–3. Actual JCP&L performance for 2022–2024. Not a complete annual-report catalogue or today's outage status."
+    url: https://www.nj.gov/bpu/about/divisions/reliability/
+    cadence: irregular
+    adapter: hip.sources.nj_bpu:BpuReliabilityAdapter
+    fallback: Retain the verified order; locate or request public annual reports for all four utilities before extending this reader. No guessed document IDs or confidential filings.
+    notes: CAIDI is minutes per customer interruption, not SAIDI minutes per customer per year. Event exclusions are not specified in the imported table; do not infer an EIA method or calculate SAIDI from rounded values.
   doe_lead:
     name: Low Income Energy Affordability Data (LEAD), 2022 county data
     publisher: U.S. Department of Energy / National Renewable Energy Laboratory

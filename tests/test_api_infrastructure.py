@@ -40,6 +40,26 @@ def test_town_energy_is_explicit_county_context(county: dict) -> None:
     assert data["energy_context"]["payload"]["name"] == "Somerset County"
 
 
+def test_bpu_actuals_have_separate_basis_and_exact_release(county: dict) -> None:
+    data = client.get(f"/regions/{county['region_id']}/utilities").json()
+    jcpl = next(
+        p
+        for p in data["providers"]
+        if p["electricity"] and p["electricity"]["record_id"] == "9726"
+    )
+    records = jcpl["regulatory_reliability"]
+    assert [r["payload"]["year"] for r in records] == [2024, 2023, 2022]
+    assert records[0]["payload"]["caidi_minutes"] == 160.3
+    assert records[0]["payload"]["saifi"] == 1.95
+    for record in records:
+        assert record["source_id"] == "nj_bpu_reliability"
+        assert record["release_id"] > 0
+        assert len(record["file_sha256"]) == 64
+        assert record["vintage"] == "2025"
+        assert "saidi" not in record["payload"]
+        assert "exclusions not specified" in record["payload"]["basis"]
+
+
 def test_county_water_has_separate_measurements_inventory_and_violations(
     county: dict,
 ) -> None:

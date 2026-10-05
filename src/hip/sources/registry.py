@@ -31,6 +31,7 @@ from hip.sources.infrastructure import (
 )
 from hip.sources.irs_migration import MigrationAdapter
 from hip.sources.nj_affordable import NjAffordableAdapter
+from hip.sources.nj_bpu import BpuReliabilityAdapter
 from hip.sources.nj_construction import NjConstructionAdapter
 from hip.sources.nj_equalized import NjEqualizedAdapter
 from hip.sources.nj_modiv import ModivAdapter
@@ -103,6 +104,7 @@ IMPLEMENTED: tuple[str, ...] = (
     UcmrAdapter.source_id,
     UtilityAreasAdapter.source_id,
     EnergyBurdenAdapter.source_id,
+    BpuReliabilityAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -141,6 +143,7 @@ METRIC_SOURCES: tuple[str, ...] = (
     UcmrAdapter.source_id,
     UtilityAreasAdapter.source_id,
     EnergyBurdenAdapter.source_id,
+    BpuReliabilityAdapter.source_id,
 )
 
 
@@ -178,6 +181,7 @@ def build_adapter(
 
 def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     for builder in (
+        BpuReliabilityAdapter,
         EiaAdapter,
         EnergyBurdenAdapter,
         LeadLinesAdapter,

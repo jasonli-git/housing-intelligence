@@ -29,6 +29,15 @@ def test_negative_electricity_values_fail(payload: dict[str, object]) -> None:
         _validate_payload("electric_utility", payload)
 
 
+@pytest.mark.parametrize("field", ["caidi_minutes", "saifi", "year"])
+@pytest.mark.parametrize("bad", [-1, None, True])
+def test_invalid_regulatory_values_fail(field: str, bad: object) -> None:
+    payload = {"caidi_minutes": 160.3, "saifi": 1.95, "year": 2024}
+    payload[field] = bad
+    with pytest.raises(ValueError, match="invalid"):
+        _validate_payload("regulatory_reliability", payload)
+
+
 @pytest.fixture
 def isolated():  # type: ignore[no-untyped-def]
     if not probe().migrated:

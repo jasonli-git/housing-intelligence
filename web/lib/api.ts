@@ -217,7 +217,9 @@ export type Utilities = {
   region_id: number;
   providers: { fuel: string; provider: string; approximate_share: number;
     territory: InfrastructureRecord<{ fuel: string; provider: string; eia_id: string | null }>;
-    electricity: InfrastructureRecord<ElectricUtility> | null }[];
+    electricity: InfrastructureRecord<ElectricUtility> | null;
+    regulatory_reliability?: InfrastructureRecord<{ year: number; caidi_minutes: number;
+      saifi: number; published: string; url: string; basis: string; page: number; table: number }>[] }[];
   energy_context: InfrastructureRecord<EnergyContext> | null;
 };
 

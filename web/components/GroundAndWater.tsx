@@ -3,6 +3,7 @@ import { ReaderDetails } from "@/components/ReaderDetails";
 import { formatValue } from "@/lib/format";
 import { shareText, systemReportUrl } from "@/lib/hazards";
 import { pfasResult, publisherUrl, resolutionText } from "@/lib/infrastructure";
+import { waterQualityReport } from "@/lib/waterReports";
 
 /** NJDEP's map of every known contaminated site, with what each one is. */
 const SITES_MAP = "https://experience.arcgis.com/experience/f26272f8a41c4aeea77ac6f9b3c80ebb";
@@ -114,9 +115,12 @@ export function GroundAndWater({
         {water.systems.map((s) => {
           const lead = s.lead_inventory?.payload;
           const url = publisherUrl(lead?.inventory_url);
+          const report = waterQualityReport(s.pwsid);
           return <details className="reader-details" key={s.pwsid}>
             <summary>{s.name}</summary>
             <div className="reader-details-body">
+              {report ? <p className="sales-note"><a href={report.url} target="_blank" rel="noreferrer">Read this system’s annual water-quality report</a> · system ID matched {report.verified}. Ask the supplier for current results; an annual report is not live testing.</p>
+                : <p className="sales-note">No direct annual-report link verified for this system. <a href="https://ordspub.epa.gov/ords/safewater/f?p=136:103::::103:P103_STATE:NJ" target="_blank" rel="noreferrer">Search EPA’s New Jersey report directory</a> using {s.pwsid} / {s.name}, or ask the supplier.</p>}
               {lead ? <>
                 <p className="sales-note">Service-line inventory, submission {lead.submission_year}{lead.category_updated ? ` · category data updated ${lead.category_updated}` : ""}.</p>
                 <dl className="utility-reliability">
@@ -141,6 +145,7 @@ export function GroundAndWater({
           </details>;
         })}
         <p className="sales-note">NJ requires lead-line identification and replacement by 2031; extensions may apply. <a href="https://dep.nj.gov/lead/replacement/">NJDEP replacement programme</a>. These counts do not measure lead concentration.</p>
+        <p className="sales-note">The current public system-inventory map reaches submission 2024. <a href="https://dep.nj.gov/lead/map/">NJDEP’s 2025 statewide totals</a> are newer, but cannot replace an individual system’s record.</p>
         <p className="sales-note">EPA references shown for PFOA and PFOS only (4 ng/L, reviewed October 2026); proposals affect other PFAS rules. Compliance uses running annual averages, not the maxima above. <a href="https://www.epa.gov/sdwa/and-polyfluoroalkyl-substances-pfas">EPA rules</a> · <a href="https://www.epa.gov/dwucmr/fifth-unregulated-contaminant-monitoring-rule-data-finder">EPA UCMR Data Finder</a>. <a href="https://www.epa.gov/ccr">Find an annual water-quality report</a>, or ask the supplier for its Consumer Confidence Report and current results.</p>
       </ReaderDetails>}
 

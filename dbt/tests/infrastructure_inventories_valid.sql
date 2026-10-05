@@ -1,7 +1,7 @@
 -- These are ancillary records, not metric observations: explicit inventory guards
 -- stop a refresh with impossible counts, duplicate identities or missing citation keys.
 with records as (
-{% for source in ['eia861','doe_lead','njdep_lead_lines','epa_ucmr5','njdep_utility_areas'] %}
+{% for source in ['eia861','doe_lead','njdep_lead_lines','epa_ucmr5','njdep_utility_areas','nj_bpu_reliability'] %}
     select source_id, kind, entity_id, record_id, payload::json as payload,
            release_layer, release_vintage from {{ ref('stg_' ~ source ~ '_records') }}
     {% if not loop.last %}union all{% endif %}
