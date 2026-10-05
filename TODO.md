@@ -229,10 +229,10 @@ first raised, not where it must be done.
       handoff `local-page-layout.md`) A page's link opens `/afford` with its place and
       county; switching to another county or all New Jersey changes local state only,
       so a shared or reloaded link returns to the original scope.
-- [ ] **Old affordability links land elsewhere.** (PR #86, #88, ARCHITECTURE #305)
-      `?mode=afford` on a county page renders the profile, and `/?mode=afford` now opens
-      the United States entry; the budget mode is at `/states/new-jersey?mode=afford`.
-      Neither redirects, since `/` is a real page now.
+- [ ] **`/?mode=afford` bookmarks open the national entry.** (PR #88, #94, #305) Old
+      `/states/new-jersey?mode=afford` links now forward to `/afford`, but the root
+      address cannot, since `/` is a real page; a county page's `?mode=afford` shows
+      the profile.
 - [ ] **FHA's county loan limits are linked, not held.** (M33, #280) A 3.5%-down card in
       a dear town can price an FHA loan HUD would not insure. HUD publishes the limits by
       county each year; loading them would let the card say so outright.
