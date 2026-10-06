@@ -26,6 +26,7 @@ import { type Basis, eachMonth, type Inputs, overYears, upFront } from "@/lib/ow
 import { ownershipInputs, cashFit, DEFAULT_YEARS } from "@/lib/budgetScenario";
 import { useBudgetScenario } from "@/components/useBudgetScenario";
 import { QuietDisclosure, QuietToolGroup } from "@/components/QuietCounty";
+import { CostComposition } from "@/components/DataPortraits";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
 export type Dated = { value: number; asOf: string };
@@ -524,8 +525,9 @@ export function CostToOwn({
             · not a lender quote
           </p>
           <div className="gone-kept">
+            {quiet && <CostComposition parts={parts.map(p => ({...p,color:PART_COLOURS[p.key]}))} principal={kept} missing={month.missing} optional={month.optional} />}
             <div
-              className="gone-kept-bar"
+              className={`gone-kept-bar${quiet ? " composition-replaced-bar" : ""}`}
               role="img"
               aria-label={
                 `Of ${money(month.total)}: ` +
