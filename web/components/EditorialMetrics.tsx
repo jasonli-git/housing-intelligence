@@ -22,12 +22,7 @@ export function EditorialMetrics({items}:{items:ReactNode[]}) {
     return()=>clearInterval(timer);
   },[items.length,engaged,reduced,hidden,index]);
   if(!items.length) return null;
-  return <div className="editorial-carousel" onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)} onFocusCapture={()=>setFocused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false);}}>
+  return <div className="editorial-carousel" role="group" tabIndex={0} aria-label="Computed figures; focus holds the current figure" onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)} onFocusCapture={()=>setFocused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false);}}>
     <div key={index} className="editorial-metric" aria-live="off">{items[index%items.length]}</div>
-    {items.length>1 && <div className="editorial-controls">
-      <button type="button" aria-label="Previous computed figure" onClick={()=>setIndex(i=>(i-1+items.length)%items.length)}>←</button>
-      <span>{index+1}/{items.length}</span>
-      <button type="button" aria-label="Next computed figure" onClick={()=>setIndex(i=>(i+1)%items.length)}>→</button>
-    </div>}
   </div>;
 }

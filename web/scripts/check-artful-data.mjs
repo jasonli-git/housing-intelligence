@@ -18,6 +18,15 @@ try {
         assert(response?.ok(), `${route}: HTTP ${response?.status()}`);
         await page.locator('main h1').waitFor();
         await page.locator('main details').evaluateAll(nodes => nodes.forEach(node => { node.open = true; }));
+        const calculation = page.getByRole('button', { name: 'Show the calculation' });
+        if (await calculation.count()) {
+          assert.equal(await calculation.count(), 1, 'One shared calculation control');
+          await calculation.click();
+          assert.equal(await page.getByRole('button', { name: 'Hide the calculation' }).getAttribute('aria-expanded'), 'true');
+          assert.equal(await page.locator('.shared-calculation details').count(), 0, 'No nested ledger expansion');
+          assert.equal(await page.locator('.shared-calculation').getAttribute('hidden'), null);
+        }
+        assert.equal(await page.locator('.editorial-carousel button').count(), 0, 'Local picture has no carousel buttons');
         assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${route}: ${width}px reflow`);
         assert(await page.locator('.abstract-field').evaluateAll(nodes => nodes.every(node =>
           node.getAttribute('aria-hidden') === 'true' && node.getAttribute('focusable') === 'false' &&

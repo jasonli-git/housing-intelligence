@@ -1,5 +1,14 @@
 /* Decorative echoes of the housing portrait. They never encode a measurement. */
 .abstract-field { display: none; }
+.calculation-toggle { display:flex; align-items:center; justify-content:space-between; gap:1rem; width:100%; padding:.65rem 0; min-height:44px; margin-top:.5rem; background:none; color:var(--text-primary); border:0; border-top:1px solid var(--border); cursor:pointer; font:inherit; font-size:12px; text-align:left; }
+.shared-calculation { grid-column:1 / -1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1.6rem; padding:1.2rem 1.35rem; border-top:1px solid var(--border); }
+.shared-calculation[hidden] { display:none; }
+.shared-calculation > div { min-width:0; }
+.shared-calculation h4 { font:500 20px/1.2 Georgia,serif; margin:0 0 .8rem; }
+.calculation-note { font-size:11px; line-height:1.6; color:var(--text-secondary); margin:0 0 .7rem; }
+.calculation-fallback { grid-column:1 / -1; padding:0 1.35rem; }
+@media(max-width:600px) { .shared-calculation { grid-template-columns:minmax(0,1fr); padding:1rem; } .shared-calculation > div + div { border-top:1px solid var(--border); padding-top:1rem; } }
+@media print { .shared-calculation[hidden] { display:grid; } .calculation-toggle { display:none; } }
 .difference-bridge { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr); gap:.5rem 1rem; align-items:center; position:relative; isolation:isolate; margin-top:.65rem; }
 .difference-bridge > svg { position:absolute; top:1rem; left:0; width:100%; height:55px; fill:none; stroke:var(--atlas-accent); opacity:.2; z-index:-1; }
 .bridge-anchor, .bridge-difference { display:flex; flex-direction:column; gap:.3rem; text-align:center; }
@@ -68,9 +77,9 @@
     position: relative; isolation: isolate;
   }
   .quiet-county .quiet-tool-group {
-    --atlas-accent: light-dark(#776751, #c7b594);
-    background: linear-gradient(115deg, light-dark(#f0ece5, #302d29), light-dark(#f8f5ef, #282622));
-    border: 1px solid light-dark(#d6cec0, #4b463e);
+    --atlas-accent: light-dark(#5e7066, #a1b1a7);
+    background: linear-gradient(115deg, light-dark(#eceeec, #222624), light-dark(#f4f5f4, #1e211f));
+    border: 1px solid light-dark(#ced4d0, #414843);
     border-radius: 45px 14px 14px 14px;
   }
   .quiet-county .quiet-tool-group > h3 { padding-right: 110px; }

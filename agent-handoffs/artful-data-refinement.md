@@ -120,6 +120,39 @@ The current state is documented in the next section.
 - Final static browser suite passed all 30 route/width/theme combinations, mobile
   axe and print checks. Existing artifact-origin preview warning remains unchanged.
 
+## Single calculation expansion and gray household surface
+
+- Owner approved the shared calculation. One button attached to the bridge opens
+  both original ledgers inside the same cost container, beneath the always-visible
+  cash figures. Old separate owning/renting disclosures are removed, not nested.
+  Desktop ledgers are side by side; mobile stacks them. Definitions and source/basis
+  notes stay in the rows. Nonquiet/report output retains the full existing ledgers.
+- Shared section uses a unique `useId`, `aria-controls`, `aria-expanded` and a hidden
+  region. Print exposes its ledger content even when collapsed. Missing rent uses
+  one fallback calculation control and an explicit no-rent message.
+- The cash-payment label now explicitly says it includes principal. An open-ledger
+  note distinguishes utility-inclusive spending there from the utility-exclusive
+  comparison in the bridge. Calculation inputs, sources and arithmetic are unchanged.
+- Household planning now uses cool neutral gray (lighter in light mode, darker in
+  dark mode) with a minimal green tint, replacing the warm stone/bronze treatment.
+- Local-picture previous/next buttons and counter are removed. Ten-second transition
+  remains; the group itself can receive keyboard focus to hold the current figure,
+  without a button. Reduced motion remains static. Other metrics still exist in the
+  page's profile/data tables even when autoplay is disabled.
+- Browser script now opens the shared calculation before axe/reflow checks, asserts
+  one toggle and no nested ledger disclosures, and checks no local-picture buttons.
+- Verification: 479 tests in 62 files, TypeScript, 2,379-page build and diff check
+  passed. County 8 browser verified keyboard open/close, two ledgers with no nested
+  disclosures, persistent headline figures and mobile reflow. Dark mobile screenshots
+  inspected for both ledgers and the gray household surface.
+- Static browser verified reader-entered purchase price updates the ledger, collapsed
+  calculations are exposed for printing, and full reports retain their direct ledgers
+  without a calculation toggle. No model regeneration, source refresh, canonical
+  document edits or dependency changes; existing artifact-origin warning remains.
+- Final static suite passed all 30 route/width/theme combinations with the shared
+  ledgers open, including mobile axe and print. Municipality 317 at 320px verified
+  one fallback control and an explicit no-rent message without horizontal overflow.
+
 ## What changed
 
 - Neutral white/ivory (dark) and readable neutral ink (light) United States breadcrumbs
