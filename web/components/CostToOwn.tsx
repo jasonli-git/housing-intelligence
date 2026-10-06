@@ -462,8 +462,8 @@ export function CostToOwn({
     {calculationOpen ? "Hide the calculation" : "Show the calculation"} <span aria-hidden="true">{calculationOpen ? "−" : "+"}</span>
   </button>;
 
-  const budgetFit = <QuietDisclosure enabled={quiet} title="Check your monthly budget">
-      {control && comparePlaceId !== undefined && <aside className="cost-budget-fit" aria-label="Your budget fit">
+  const budgetFit = control ? <QuietDisclosure enabled={quiet} title="Check your monthly budget">
+      <aside className="cost-budget-fit" aria-label="Your budget fit">
         <details open={quiet || undefined}>
           <summary>Your budget{household.income && household.income > 0 ? ` · Owning uses ${Math.round(month.total / (household.income / 12) * 100)}% of your income${partial ? " on included costs" : ""}` : " · Add your income to check"}</summary>
           <div className="budget-inputs">
@@ -480,11 +480,11 @@ export function CostToOwn({
           {rentMonth !== null && ` Rent alone uses ${Math.round(rentMonth / (household.income / 12) * 100)}% of your income.`}
         </p>}
         <p>Buying upfront: {money(up.low)}–{money(up.high)} · {cashFit(household.cash, up.low, up.high)}.</p>
-        <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}` : ""}`}>Compare typical homes across New Jersey →</a>
+        {comparePlaceId !== undefined && <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}` : ""}`}>Compare typical homes across New Jersey →</a>}
         {Object.values(fields).some(Boolean) && <small>Your home’s price, tax and fees stay here; comparisons use each area’s figures.</small>}
         {home.basis === "transactions" && <small>This sale-price scenario is not included in cross-place ownership rankings.</small>}
-      </aside>}
-      </QuietDisclosure>;
+      </aside>
+      </QuietDisclosure> : null;
 
   return (
     <section className="section cost" aria-labelledby={`${id}-heading`}>

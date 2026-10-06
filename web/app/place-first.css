@@ -7,6 +7,7 @@
   .atlas-local > .page-head { position:relative; isolation:isolate; }
   .atlas-local .state-place-artwork-header { right:1.5%; top:.5rem; width:clamp(160px,24vw,260px); height:240px; opacity:.22; }
   .atlas-local:is([data-region-level="municipality"],[data-region-level="zip"]) :is(.cost-monthly-headline,.more) { background:var(--surface-2); }
+  .atlas-local:is([data-region-level="municipality"],[data-region-level="zip"]) .bridge-difference { background:var(--surface-1); }
   .atlas-local:is([data-region-level="municipality"],[data-region-level="zip"]) .more-entry { --text-primary:inherit; --text-secondary:inherit; }
   body:has(.atlas-local[data-region-level="municipality"]) { --surface-1:light-dark(#eff4f7,#18232d); --surface-2:light-dark(#fbfdff,#25313c); --surface-card:var(--surface-2); --text-primary:light-dark(#29343e,#e7edf3); --text-secondary:light-dark(#4d5c69,#c4ced8); --text-muted:light-dark(#526270,#b7c5d1); --border:light-dark(#d2dde7,#435565); background:var(--surface-1); }
   body:has(.atlas-local[data-region-level="zip"]) { --surface-1:light-dark(#f4f0f8,#231e2c); --surface-2:light-dark(#fdfbff,#302a3a); --surface-card:var(--surface-2); --text-primary:light-dark(#352f40,#eee7f5); --text-secondary:light-dark(#5d526c,#d0c6dc); --text-muted:light-dark(#665973,#c5b7d2); --border:light-dark(#dfd5e9,#554962); background:var(--surface-1); }

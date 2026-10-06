@@ -13,11 +13,11 @@ try {
     for (const width of [1280, 390, 320]) {
       const geographyBackgrounds = [];
       await page.setViewportSize({ width, height: 900 });
-      for (const route of ["/", "/states/new-jersey", "/afford?income=100000", "/regions/12", "/regions/194", "/regions/2842", "/tax", "/freshness", "/changes"]) {
+      for (const route of ["/", "/states/new-jersey", "/afford?income=100000", "/regions/12", "/regions/224", "/regions/2842", "/tax", "/freshness", "/changes"]) {
         const response = await page.goto(origin + route, { waitUntil: "networkidle" });
         assert(response.ok(), route);
         await page.locator("main h1").waitFor();
-        if (["/states/new-jersey", "/regions/12", "/regions/194", "/regions/2842"].includes(route)) {
+        if (["/states/new-jersey", "/regions/12", "/regions/224", "/regions/2842"].includes(route)) {
           geographyBackgrounds.push(await page.locator("body").evaluate(node => getComputedStyle(node).backgroundColor));
         }
         await page.locator("main details").evaluateAll(nodes => nodes.forEach(node => { node.open = true; }));
@@ -43,14 +43,16 @@ try {
         if (route.startsWith("/regions/")) {
           assert.equal(await page.locator(".page-head .state-place-artwork").count(), 1, "NJ local page has the shared header drawing");
         }
-        if (route === "/regions/194" || route === "/regions/2842") {
+        if (route === "/regions/224" || route === "/regions/2842") {
+          assert.equal(await page.locator(".cost-budget-fit").getByLabel("Yearly household income before tax", { exact: true }).count(), 1, "Local budget form is available without cross-place comparison support");
+          assert(await page.locator(".bridge-difference").evaluate(node => getComputedStyle(node).backgroundColor !== getComputedStyle(node.closest(".cost-monthly-headline")).backgroundColor), "Difference inset contrasts with its surrounding panel");
           assert(await page.locator(".cost-monthly-headline, .more").evaluateAll(nodes => nodes.every(node => {
             const sample = document.createElement("span"); sample.style.backgroundColor = "var(--surface-2)";
             node.append(sample); const same = getComputedStyle(sample).backgroundColor === getComputedStyle(node).backgroundColor; sample.remove(); return same;
           })), "Monthly cash and evidence use the page surface palette");
         }
         if (route === "/") assert.equal(await page.locator(".entry-free.computed").count(), 1, "Free-use message uses the provenance badge treatment");
-        if (route === "/regions/194") {
+        if (route === "/regions/224") {
           const colors = await page.locator('.crumbs li[data-level] a').evaluateAll(nodes => nodes.map(node => getComputedStyle(node).color));
           assert(new Set(colors).size === colors.length, "Nation, state and county links have distinct colors");
         }
