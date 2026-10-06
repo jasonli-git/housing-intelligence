@@ -1673,3 +1673,138 @@ metrics:
     record_type: calculated
     ranked: false
     changed: false
+
+  # Milestone 45: getting around (ARCHITECTURE #313-#314). Where residents work is a
+  # share of their jobs in LODES; nearness to transit a share of 2020's homes by block.
+
+  lodes_resident_jobs:
+    label: Jobs held by residents
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Jobs held by people living here, wherever the job is, in the Census Bureau's LODES:
+      jobs covered by unemployment insurance and federal civilian jobs. Self-employment
+      and military jobs are not counted, and a person with two jobs counts twice.
+    source_id: census_lodes
+    record_type: administrative
+    ranked: false
+    changed: false
+
+  lodes_work_same_town_share:
+    label: Residents' jobs in their own town
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of residents' jobs located in the municipality they live in. Part of
+      the home county's share.
+    source_id: census_lodes
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  lodes_work_home_county_share:
+    label: Residents' jobs in their home county
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of residents' jobs located in the county they live in, their own town
+      included. A job is placed where its employer reports it, which for a firm with
+      many sites can be an office rather than where the work is done.
+    source_id: census_lodes
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  lodes_work_other_nj_share:
+    label: Residents' jobs elsewhere in New Jersey
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of residents' jobs in New Jersey but outside their home county.
+    source_id: census_lodes
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  lodes_work_nyc_share:
+    label: Residents' jobs in New York City
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of residents' jobs located in New York City's five boroughs.
+    source_id: census_lodes
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  lodes_work_pennsylvania_share:
+    label: Residents' jobs in Pennsylvania
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of residents' jobs located in Pennsylvania, Philadelphia included.
+    source_id: census_lodes
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  lodes_work_other_state_share:
+    label: Residents' jobs in other states
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of residents' jobs outside New Jersey, New York City and Pennsylvania:
+      the rest of New York, Delaware, Connecticut and beyond. LODES 2023 has no records
+      for Alaska and Michigan, so jobs there are not counted.
+    source_id: census_lodes
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  transit_rail_homes_share:
+    label: Homes within half a mile of a rail stop
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of homes within half a mile, in a straight line, of a commuter rail,
+      PATH, PATCO, subway or light rail stop, from the Bureau of Transportation
+      Statistics' National Transit Map and 2020's homes by block. Nearness to a stop,
+      not how often trains call there.
+    source_id: bts_ntm
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  transit_bus_homes_share:
+    label: Homes within a quarter mile of a bus stop
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of homes within a quarter mile, in a straight line, of a bus stop. A
+      stop served once a day counts the same as one served every ten minutes.
+    source_id: bts_ntm
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  transit_any_homes_share:
+    label: Homes near any transit stop
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of homes within half a mile of a rail stop or a quarter mile of a bus
+      stop.
+    source_id: bts_ntm
+    record_type: calculated
+    ranked: false
+    changed: false

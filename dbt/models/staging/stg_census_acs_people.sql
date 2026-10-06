@@ -5,7 +5,7 @@
 {{ config(materialized='table') }}
 
 {%- set people = ['B08301_001', 'B08301_003', 'B08301_010', 'B08301_019', 'B08301_021',
-                  'B08013_001', 'B08303_001', 'B08303_013',
+                  'B08013_001', 'B08303_001', 'B08303_012', 'B08303_013',
                   'B11001_001', 'B11001_003', 'B11001_008',
                   'B11005_001', 'B11005_002'] %}
 {%- set disabled = ['B18101_004', 'B18101_007', 'B18101_010', 'B18101_013', 'B18101_016',
@@ -36,7 +36,8 @@ unpivoted as (
            case when e_B08303_001 > 0 then e_B08013_001 / e_B08303_001 end,
            {{ acs_ratio_margin('e_B08013_001', 'e_B08303_001', 'm_B08013_001', 'm_B08303_001') }}
     from people_keyed
-    union all {{ acs_share('acs_commute_60plus_share', ['B08303_013'], ['B08303_001'], relation='people_keyed') }}
+    -- An hour or more is two brackets, 60 to 89 minutes and 90 or more (#316).
+    union all {{ acs_share('acs_commute_60plus_share', ['B08303_012', 'B08303_013'], ['B08303_001'], relation='people_keyed') }}
     -- Households.
     union all {{ acs_share('acs_living_alone_share', ['B11001_008'], ['B11001_001'], relation='people_keyed') }}
     union all {{ acs_share('acs_married_couple_share', ['B11001_003'], ['B11001_001'], relation='people_keyed') }}

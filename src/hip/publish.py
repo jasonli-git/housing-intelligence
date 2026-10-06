@@ -230,6 +230,12 @@ def _plan(
             f"/regions/{region_id}/water-systems",
             f"regions/{region_id}/water-systems.json",
         )
+        # Where a place's residents work (Milestone 45). A 404 — a place whose
+        # residents hold under 100 jobs — is a skip.
+        yield (
+            f"/regions/{region_id}/work-destinations",
+            f"regions/{region_id}/work-destinations.json",
+        )
         yield f"/regions/{region_id}/utilities", f"regions/{region_id}/utilities.json"
         yield (
             f"/regions/{region_id}/affordable-housing",

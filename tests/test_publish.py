@@ -186,8 +186,15 @@ def test_skipped_entries_are_explanations_not_data(published: Path) -> None:
         and "/utilities" not in path
         # Milestone 41: no town inventory is guessed or allocated to ZIP codes.
         and "/affordable-housing" not in path
+        # Milestone 45: no list for the nation, nor where residents hold under 100 jobs
+        # or no destination holds 20 of them.
+        and "/work-destinations" not in path
     ]
     assert not unexpected, f"unexpected 404s: {unexpected[:5]}"
+    # 52 on 2026-10-06: the nation, 10 towns and 41 ZIP codes, all small places. Many
+    # more would mean the lists stopped loading.
+    no_destinations = [p for p in manifest["skipped_404"] if "/work-destinations" in p]
+    assert len(no_destinations) <= 60, f"work destinations missing: {no_destinations[:5]}"
     # Milestone 35: only a region with no county — the state, the nation — has no income
     # limits; every county, town and ZIP reads one.
     no_limits = [path for path in manifest["skipped_404"] if "/income-limits" in path]

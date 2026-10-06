@@ -219,6 +219,25 @@ export const GROUPS: readonly Group[] = [
     ],
   },
   {
+    // Where residents work and how near homes are to transit (Milestone 45). Shares of
+    // jobs from LODES and of homes from the National Transit Map, never ranked.
+    key: "getting-around",
+    title: "Where people work and transit nearby",
+    ramp: "incomes",
+    metrics: [
+      "lodes_resident_jobs",
+      "lodes_work_same_town_share",
+      "lodes_work_home_county_share",
+      "lodes_work_other_nj_share",
+      "lodes_work_nyc_share",
+      "lodes_work_pennsylvania_share",
+      "lodes_work_other_state_share",
+      "transit_rail_homes_share",
+      "transit_bus_homes_share",
+      "transit_any_homes_share",
+    ],
+  },
+  {
     // Flood, contamination and drinking water (Milestone 40). Shares of homes are
     // estimates over 2020's homes; counts of sites are never ranked (ARCHITECTURE #303).
     key: "hazards",

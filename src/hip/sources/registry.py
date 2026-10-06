@@ -12,8 +12,10 @@ from pathlib import Path
 from hip.config import GeographyScope
 from hip.sources.base import SourceAdapter, read_discovery
 from hip.sources.bls import BlsAdapter
+from hip.sources.bts_ntm import TransitStopsAdapter
 from hip.sources.census_acs import AcsAdapter
 from hip.sources.census_blocks import BlocksAdapter
+from hip.sources.census_lodes import LodesAdapter
 from hip.sources.census_pep import PepAdapter
 from hip.sources.census_permits import PermitsAdapter
 from hip.sources.epa_sdwis import SdwisAdapter
@@ -105,6 +107,9 @@ IMPLEMENTED: tuple[str, ...] = (
     UtilityAreasAdapter.source_id,
     EnergyBurdenAdapter.source_id,
     BpuReliabilityAdapter.source_id,
+    # Milestone 45.
+    LodesAdapter.source_id,
+    TransitStopsAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -144,6 +149,9 @@ METRIC_SOURCES: tuple[str, ...] = (
     UtilityAreasAdapter.source_id,
     EnergyBurdenAdapter.source_id,
     BpuReliabilityAdapter.source_id,
+    # Milestone 45.
+    LodesAdapter.source_id,
+    TransitStopsAdapter.source_id,
 )
 
 
@@ -248,6 +256,10 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return WaterAreasAdapter()
     if source_id == SdwisAdapter.source_id:
         return SdwisAdapter()
+    if source_id == LodesAdapter.source_id:
+        return LodesAdapter()
+    if source_id == TransitStopsAdapter.source_id:
+        return TransitStopsAdapter()
     if (milestone := PLANNED.get(source_id)) is not None:
         raise UnknownSourceError(
             f"'{source_id}' has no adapter yet — it ships in Milestone {milestone}. "

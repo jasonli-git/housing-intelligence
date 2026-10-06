@@ -171,6 +171,18 @@ export const KINDS: Record<string, RecordType> = {
   njdep_sites_heating_oil: "administrative",
   water_homes_share_public: "calculated",
   water_homes_share_violation: "calculated",
+  // Milestone 45: LODES's count of jobs is the Census Bureau's record; the shares and
+  // nearness to transit are the platform's arithmetic on it and on BTS's stops.
+  lodes_resident_jobs: "administrative",
+  lodes_work_same_town_share: "calculated",
+  lodes_work_home_county_share: "calculated",
+  lodes_work_other_nj_share: "calculated",
+  lodes_work_nyc_share: "calculated",
+  lodes_work_pennsylvania_share: "calculated",
+  lodes_work_other_state_share: "calculated",
+  transit_rail_homes_share: "calculated",
+  transit_bus_homes_share: "calculated",
+  transit_any_homes_share: "calculated",
   unemployment_rate: "modelled",
   zhvi_sfr: "modelled",
   zori_all: "modelled",

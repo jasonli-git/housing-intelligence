@@ -653,6 +653,115 @@ def load_water_systems(
         return int(conn.execute(text("SELECT count(*) FROM water_systems")).scalar_one())
 
 
+def load_work_destinations(
+    engine: Engine,
+    duckdb_path: Path,
+    *,
+    releases: Sequence[ReleaseProvenance],
+    staging_table: str = "main_staging.stg_work_destinations",
+) -> int:
+    """Replace `work_destinations` from the staged lists (Milestone 45, #313).
+
+    Replaced whole, as `water_systems` is. Each row cites the LODES main file of its
+    year, as the shares beside it do. An unresolvable home region or New Jersey
+    destination aborts the replacement. Returns 0, changing nothing, when the model has
+    not been staged.
+    """
+    schema, table = staging_table.split(".")
+    with duckdb_session(duckdb_path) as duck:
+        staged = {
+            row[0]
+            for row in duck.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = ?",
+                [schema],
+            ).fetchall()
+        }
+        if table not in staged:
+            return 0
+        rows = duck.execute(
+            f"""
+            SELECT geoid, level, rank, destination_geoid, destination_name, jobs, share,
+                   total_jobs, year, release_vintage
+            FROM {staging_table}
+            """
+        ).fetchall()
+
+    keys = (
+        "geoid",
+        "level",
+        "rank",
+        "destination_geoid",
+        "destination_name",
+        "jobs",
+        "share",
+        "total_jobs",
+        "year",
+        "vintage",
+    )
+    with engine.begin() as conn:
+        release_ids = _release_ids(conn, releases)
+        bound_rows = [dict(zip(keys, row, strict=True)) for row in rows]
+        if not bound_rows:
+            raise ValueError("work destinations: empty staged lists")
+        for row in bound_rows:
+            key = ("census_lodes", "od_main", str(row["vintage"]))
+            if key not in release_ids:
+                raise ValueError("work destinations: missing exact release")
+            row["release_id"] = release_ids[key]
+            row["jobs"] = int(row["jobs"])
+            row["total_jobs"] = int(row["total_jobs"])
+        conn.execute(text("DELETE FROM work_destinations"))
+        for row in bound_rows:
+            # A destination in New Jersey is a municipality: named from `regions`, so
+            # the list and the town's own page never disagree on what it is called.
+            # Thirty names repeat across New Jersey's towns, so a repeated name takes its
+            # legal type (Boonton town, Boonton township), and one still repeated takes
+            # its county too (Hamilton township, Atlantic County).
+            count = conn.execute(
+                text(
+                    """
+                INSERT INTO work_destinations
+                    (region_id, rank, destination_region_id, destination_name, jobs,
+                     share, total_jobs, year, release_id)
+                SELECT r.region_id, :rank, d.region_id,
+                       COALESCE(
+                           CASE
+                               WHEN NOT EXISTS (
+                                   SELECT 1 FROM regions o
+                                   WHERE o.level = 'municipality' AND o.name = d.name
+                                     AND o.region_id <> d.region_id
+                               ) THEN d.name
+                               WHEN NOT EXISTS (
+                                   SELECT 1 FROM regions o
+                                   WHERE o.level = 'municipality'
+                                     AND o.name_lsad = d.name_lsad
+                                     AND o.region_id <> d.region_id
+                               ) THEN d.name_lsad
+                               ELSE d.name_lsad || ', ' || c.name || ' County'
+                           END,
+                           :destination_name),
+                       :jobs, :share, :total_jobs, :year, :release_id
+                FROM regions r
+                LEFT JOIN regions d
+                  ON d.level = 'municipality' AND d.geoid = :destination_geoid
+                LEFT JOIN regions c ON c.region_id = d.parent_id
+                WHERE r.level = CAST(:level AS region_level) AND r.geoid = :geoid
+                  AND (CAST(:destination_geoid AS text) IS NULL
+                       OR d.region_id IS NOT NULL)
+                """
+                ),
+                row,
+            ).rowcount
+            if count != 1:
+                raise ValueError(
+                    f"work destinations: missing region {row['geoid']} "
+                    f"or destination {row['destination_geoid']}"
+                )
+        return int(
+            conn.execute(text("SELECT count(*) FROM work_destinations")).scalar_one()
+        )
+
+
 def load_affordable_housing(
     engine: Engine, duckdb_path: Path, *, releases: Sequence[ReleaseProvenance]
 ) -> int:

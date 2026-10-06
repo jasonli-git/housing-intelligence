@@ -6,6 +6,7 @@ import { AffordableHousing, HousingHelpDisclosure } from "@/components/Affordabl
 import { HomeSales } from "@/components/HomeSales";
 import { HomeChecks } from "@/components/HomeChecks";
 import { FloodRisk } from "@/components/FloodRisk";
+import { GettingAround } from "@/components/GettingAround";
 import { GroundAndWater } from "@/components/GroundAndWater";
 import { Utilities } from "@/components/Utilities";
 import { HomesAdded } from "@/components/HomesAdded";
@@ -206,7 +207,7 @@ export default async function RegionPage({
     region.level === "municipality"
       ? (region.ancestors.find((a) => a.level === "county") ?? null)
       : region;
-  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities] = await Promise.all([
+  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -233,6 +234,8 @@ export default async function RegionPage({
     api.waterSystems(regionId),
     api.affordableHousing(regionId),
     api.utilities(regionId),
+    // Milestone 45: where residents work.
+    api.workDestinations(regionId),
   ]);
   // A town or ZIP reads HUD's county Fair Market Rents from its county's packet: HUD sets
   // them for the county's area, and only a county page carries them (Milestone 35).
@@ -356,6 +359,7 @@ export default async function RegionPage({
           claimsPlace={claimsRegion && claimsRegion.region_id !== regionId ? displayName(claimsRegion) : null} />
         <GroundAndWater name={name} levels={packet.levels} water={water} />
         <Utilities data={utilities} />
+        <GettingAround name={name} level={region.level} levels={packet.levels} destinations={workDestinations} />
       </div>
       <p className="sales-note tax-way-in">
         <Link href={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"}>Look up a property here</Link>: its assessment and last year’s

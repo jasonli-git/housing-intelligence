@@ -345,3 +345,55 @@ models:
       - name: share_of_homes
         tests:
           - accepted_range: {name: stg_water_systems_share, min_value: 0, max_value: 1.000001}
+
+  # Milestone 45: getting around (ARCHITECTURE #313-#314).
+  - name: stg_lodes_jobs
+    description: >-
+      New Jersey residents' jobs by home block and workplace, from LODES's newest year:
+      New Jersey's main file and every other state's auxiliary file.
+    columns:
+      - name: home_town
+        tests: [not_null]
+      - name: jobs
+        tests:
+          - not_null
+          - accepted_range: {name: stg_lodes_jobs_positive, min_value: 1, max_value: 100000}
+
+  - name: stg_work_flows
+    description: >-
+      Shares of residents' jobs by destination, and the count, per municipality, county,
+      ZIP code and the state; shares only where residents hold 100 jobs or more.
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_work_flows_in_range, min_value: 0, max_value: 5000000}
+
+  - name: stg_work_destinations
+    description: >-
+      Each place's ten destinations holding the most of its residents' jobs.
+    columns:
+      - name: share
+        tests:
+          - not_null
+          - accepted_range: {name: stg_work_destinations_is_a_share, min_value: 0, max_value: 1}
+
+  - name: stg_transit_blocks
+    description: >-
+      Whether each home-bearing block's interior point is within half a mile of a rail
+      stop and a quarter mile of a bus stop.
+    columns:
+      - name: block_geoid
+        tests: [not_null, unique]
+
+  - name: stg_transit_access
+    description: >-
+      Shares of homes near rail, near a bus stop, and near either, per municipality,
+      county, ZIP code and the state.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_transit_access_is_a_share, min_value: 0, max_value: 1}

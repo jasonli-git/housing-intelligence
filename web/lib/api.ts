@@ -230,6 +230,21 @@ export type WaterSystems = {
   systems: WaterSystem[];
 };
 
+/** Where a place's residents work: its ten leading destinations (Milestone 45, #313). */
+export type WorkDestinations = {
+  region_id: number;
+  year: number;
+  total_jobs: number;
+  destinations: {
+    rank: number;
+    name: string;
+    /** The municipality's region, for a destination in New Jersey. */
+    region_id: number | null;
+    jobs: number;
+    share: number;
+  }[];
+};
+
 export type Observation = {
   metric_id: string;
   period_start: string;
@@ -593,6 +608,8 @@ export const api = {
    * and for a town whose homes are all on private wells.
    */
   waterSystems: (id: number) => tryGet<WaterSystems>(`/regions/${id}/water-systems`),
+  workDestinations: (id: number) =>
+    tryGet<WorkDestinations>(`/regions/${id}/work-destinations`),
   utilities: (id: number) => tryGet<Utilities>(`/regions/${id}/utilities`),
   /** The metric catalog, for the New Jersey page's measure picker. */
   metrics: () => tryGet<MetricEntry[]>(`/metrics`),

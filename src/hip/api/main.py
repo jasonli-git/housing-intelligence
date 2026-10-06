@@ -24,6 +24,7 @@ from hip.api.routers import (
     regions,
     revisions,
     water_systems,
+    work_destinations,
 )
 
 app = FastAPI(
@@ -51,5 +52,6 @@ app.include_router(freshness.router)
 app.include_router(revisions.router)
 app.include_router(income_limits.router)
 app.include_router(water_systems.router)
+app.include_router(work_destinations.router)
 app.include_router(infrastructure.router)
 app.include_router(affordable_housing.router)

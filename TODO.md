@@ -14,10 +14,12 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones (2026-10-05)
+## Now — Milestone 45 built, awaiting review (2026-10-06)
 
-Milestone 43 is deployed as 0.40.0. Milestone 44, evictions, is gated on DCA (Parked,
-below). Milestone 45, getting around, starts only when asked.
+Milestone 45, getting around, is on `milestone/m45-getting-around` as 0.43.0 (ARCHITECTURE
+#313–#316): where residents work from LODES, homes near transit from BTS's National
+Transit Map, and the commute; the hour-plus commute share corrected. Not merged or
+deployed. Next after review: Milestone 46, only when asked. Milestone 44 waits on DCA.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -30,6 +32,16 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
+
+- [ ] **`/changes` lists floating-point noise as revisions.** (found 2026-10-06 in
+      Milestone 45) Restaging recomputes a figure from the same release with its sums in
+      a different order, and the revision trigger records any difference: 2,355 figures
+      on 2026-10-06 and 2,451 on 2026-10-04 (Milestone 40's shares of homes), 181 on
+      2026-10-02–03 (`nj_effective_tax_rate`), none larger than 4e-15. `fema_flood_claims_paid`
+      on 2026-10-04 moved by up to 1e-5 (257 above 1e-9). Owner's decision: a tolerance in
+      the trigger (migration), a filter where `/changes` reads them, or both; and whether
+      to delete the noise rows already recorded, which `fact_revision`'s append-only rule
+      would otherwise keep.
 
 - [ ] **BPU reliability covers JCP&L only.** (M42, #308) ACE's 2024 annual filing was
       found but not imported; PSE&G's and Rockland's are unverified, and the BPU portal
@@ -516,9 +528,10 @@ first raised, not where it must be done.
 - [ ] **Zillow's other cuts** — bottom-tier and top-tier ZHVI, SFR-only,
       new-construction sale price, days-to-pending, for-sale inventory. Same CSV host,
       same adapter, already anticipated.
-- [ ] **LEHD LODES** — jobs by workplace and residence per census block, supporting
-      jobs-housing balance and commute-shed analysis. Large but static files.
-      **Scheduled: Milestone 45.**
+- [ ] **Jobs located in a place, from LODES** — Milestone 45 read where residents work
+      (#313), not how many jobs a place holds. LODES's workplace-area (WAC) file, or the
+      origin–destination files already landed summed by workplace, would give a
+      jobs-to-homes balance. Not scheduled.
 - [ ] **Zillow's home value reaches 388 of 564 municipalities (69%)** — a ceiling, not a
       bug. (M2, updated at M7; recounted 2026-09-27, when it was 403 before) MOD-IV landed
       and `region_identifiers` holds 554 NJ codes, so a crosswalk exists, but routing
@@ -530,6 +543,12 @@ first raised, not where it must be done.
       map layer would be an enormous download.
 
 ## Parked / needs user input
+
+- [ ] **NJ TRANSIT service frequency.** (M45, decided 2026-10-06) Only NJ TRANSIT's own
+      GTFS says how often anything runs. It needs a developer account the owner would
+      register, its agreement says the data "is not to be relied on for any commercial
+      purposes", and it asks that the data be used "as-is", which counting trips may
+      not be. Waiting on the owner: register and accept, or leave frequency out.
 
 - [ ] **Milestone 44, evictions, waits on DCA.** (2026-10-05, handoff
       `agent-handoffs/m44-evictions.md`) Needs a downloadable ZIP-level table of filings

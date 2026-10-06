@@ -3,6 +3,35 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.43.0] — 2026-10-06
+
+Milestone 45: getting around.
+
+### Added
+
+- **Where residents work** (ARCHITECTURE #313): on county, town and ZIP pages, the
+  share of residents' jobs in their own town and county, elsewhere in New Jersey, New
+  York City, Pennsylvania and other states, and the ten places holding the most, from
+  the Census Bureau's LODES 2023 (`GET /regions/{id}/work-destinations`). Statewide,
+  10.1% of residents' jobs are in New York City.
+- **Homes near transit** (#314): the share of homes within half a mile of a rail, PATH,
+  subway or light rail stop and a quarter mile of a bus stop, from the Bureau of
+  Transportation Statistics' National Transit Map — 12.8% and 50.0% statewide.
+- Both beside Milestone 34's commute time and mode, in a "How do people here get
+  around?" section.
+
+### Fixed
+
+- **Commutes of an hour or more were undercounted** (#316): the share counted only
+  commutes of 90 minutes or more. It now adds 60 to 89 minutes, and every place's
+  figure rises; `/changes` marks it as the site's correction.
+
+### Not used
+
+- HUD's Location Affordability Index (2012–2016 data) and EPA's Smart Location Database
+  (2017–2018 inputs) (#315). NJ TRANSIT's own schedules, the only source of how often
+  service runs, wait on the owner (TODO.md, Parked).
+
 ## [0.42.0] — 2026-10-06
 
 ### Changed
