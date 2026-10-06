@@ -17,7 +17,8 @@ export function NationalCoverageMap() {
   const [outlines, setOutlines] = useState<Outline[]>([]);
   const [failed, setFailed] = useState(false);
   const [hovered, setHovered] = useState("New Jersey · Available now");
-  const [viewport, setViewport] = useState(COVERAGE_HOME);
+  const home = { scale: 1.12, x: -54, y: -29 };
+  const [viewport, setViewport] = useState(home);
   const [region, setRegion] = useState<CoverageRegion | null>(null);
   const [dragging, setDragging] = useState(false);
   const drag = useRef<{ id: number; x: number; y: number; start: CoverageViewport; pixels: number; moved: boolean } | null>(null);
@@ -194,7 +195,7 @@ export function NationalCoverageMap() {
           <span className="globe-divider" aria-hidden="true" />
           <button type="button" aria-label="Zoom in United States map" disabled={viewport.scale === 5} onClick={() => zoomMap(1.4)}>+</button>
           <span className="globe-divider" aria-hidden="true" />
-          <button type="button" className="globe-icon" aria-label="Reset United States map" title="Reset map" disabled={viewport.scale === 1 && !region} onClick={() => { if (!flight.current) { setViewport(COVERAGE_HOME); setRegion(null); } }}>
+          <button type="button" className="globe-icon" aria-label="Reset United States map" title="Reset map" disabled={viewport.scale === home.scale && viewport.x === home.x && viewport.y === home.y && !region} onClick={() => { if (!flight.current) { setViewport(home); setRegion(null); } }}>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 5a5.5 5.5 0 1 1-.4 5M3 1.5V5h3.5" /></svg>
           </button>
         </div>

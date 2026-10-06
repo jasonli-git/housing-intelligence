@@ -229,9 +229,13 @@ first raised, not where it must be done.
       iPhone; true 200% text and 400% zoom; print in Safari and Firefox; and axe's
       remaining needs-review results. The handoff (`m43-accessibility-audit.md`) lists
       each.
+- [ ] **The NJ map is unmounted, not deleted.** (PR #98, #311) `GlobeMap` and the map
+      data routes remain for a possible return; decide to restore or remove them so
+      unused code does not drift.
 - [ ] **The home page's illustration loops with no pause control.** (M43, #309) Removed
       at the owner's request on 2026-10-05; WCAG 2.2.2 asks for one on anything that
-      moves for more than five seconds. Reduced motion stops it.
+      moves for more than five seconds. Reduced motion stops it. The New Jersey header
+      artwork added 2026-10-06 (#311) loops the same way.
 - [ ] **Reports may show the retired "before moving" answer** (#310) from readings
       written before 2026-10-05, until the next regeneration.
 

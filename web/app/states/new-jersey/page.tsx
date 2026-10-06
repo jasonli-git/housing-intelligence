@@ -4,6 +4,7 @@ import { ComputedBadge } from "@/components/ComputedBadge";
 import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { StateOverview } from "@/components/StateOverview";
+import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { MoreExpander } from "@/components/MoreExpander";
 import { AffordableHousing } from "@/components/AffordableHousing";
 import { HomeSales } from "@/components/HomeSales";
@@ -30,13 +31,6 @@ export const metadata = { title: "New Jersey — Housing", description: "Statewi
 // The figure most readers arrive for. It is where the page opens, not a limit on it.
 const DEFAULT_MEASURE = "zhvi_sfr";
 
-// The box the map is drawn in. New Jersey is taller than it is wide. Larger since
-// Milestone 23: at 420 wide the page read as zoomed out. Since Milestone 16 the outlines
-// themselves arrive from `map.json` in the browser, so this is the frame and nothing
-// else — the page no longer projects anything.
-const MAP_WIDTH = 540;
-const MAP_HEIGHT = 580;
-
 // Metrics whose caveat their definition already carries: both FHFA indexes say they are
 // published for the state only. The packet's caveat is unchanged; on this page it is
 // there for a reader who asks (ARCHITECTURE #146).
@@ -53,18 +47,15 @@ const CAVEAT_IN_DEFINITION: ReadonlySet<string> = new Set([
  * index values, their caveat and the footer; its figures are here now, and
  * `public/_redirects` sends the old URL to this one (ARCHITECTURE #127).
  *
- * Every published county ranking is fetched at build and handed to the explorer, so the
- * reader's choices are answered in the browser with no request (#126). The outlines are
- * not here at all: the map fetches `map.json` on use, so 48,000 coordinates stay out of
- * this page's payload (#163).
+ * County comparisons are embedded at build time. The page now leads with direct place
+ * discovery; comparison lives in a secondary table and no map geometry is requested.
  */
 export default async function NewJerseyPage() {
-  const [geo, catalog, states, mortgage, countyRegions] = await Promise.all([
-    api.geo("county"),
+  const [catalog, states, mortgage, countyRegions] = await Promise.all([
     api.metrics(),
     api.regions("level=state&state=NJ&limit=1"),
     nationalMortgageRate(),
-    api.regions("level=county&state=NJ&has_data=true&limit=100"),
+    api.regions("level=county&state=NJ&limit=100"),
   ]);
   const state = states?.items[0] ?? null;
   const statewide = state ? await api.summary(state.region_id, "5y") : null;
@@ -73,7 +64,7 @@ export default async function NewJerseyPage() {
     async (metric) => state ? (await api.observations(state.region_id, metric))?.observations ?? [] : [],
   ));
 
-  if (!geo || !catalog) {
+  if (!catalog) {
     return (
       <>
         <Masthead affordability={{ kind: "local" }} />
@@ -155,6 +146,7 @@ export default async function NewJerseyPage() {
       <Masthead affordability={{ kind: "local" }} />
       <main id="main-content" tabIndex={-1} className="shell nj-page quiet-county quiet-state">
       <header className="page-head nj-head" data-kind="state">
+        <GardenStateArtwork header />
         <div className="region-head-main">
           <Crumbs trail={[{ href: "/", label: "United States" }]} here="New Jersey" hereKind="state" />
           <div className="page-head-eyebrow">
@@ -174,12 +166,13 @@ export default async function NewJerseyPage() {
           </div>
           <div className="page-title-row">
             <h1 className="page-title">New Jersey</h1>
+            <p className="state-nickname">The Garden State</p>
             <ComputedBadge />
           </div>
         </div>
         <a className="nj-atlas-entry" href="#nj-explore">
-          <span className="nj-atlas-count">{geo.features.length}<span>counties</span></span>
-          <span className="nj-atlas-entry-label">Compare places <span aria-hidden="true">↘</span></span>
+          <span className="nj-atlas-count">{countyRegions?.total ?? 0}<span>counties</span></span>
+          <span className="nj-atlas-entry-label">Find your place <span aria-hidden="true">↘</span></span>
         </a>
       </header>
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
@@ -189,17 +182,11 @@ export default async function NewJerseyPage() {
       </StateOverview>
 
       <div id="nj-explore" className="nj-explore-anchor">
-        {initial ? (
           <StateModeWorkspace
-            frame={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
-            counties={geo.features.length}
             countyPages={(countyRegions?.items ?? []).map((county) => ({ id: county.region_id, name: county.name }))}
             sections={sections}
-            initial={initial}
+            initial={initial ?? DEFAULT_MEASURE}
           />
-        ) : (
-          <p className="meta">No county rankings are published yet.</p>
-        )}
       </div>
       <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Sales, building activity and every available state figure, with dates and definitions.">
         <div id="housing-assistance"><AffordableHousing data={housingHelp} /></div>

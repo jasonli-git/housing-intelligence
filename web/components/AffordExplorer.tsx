@@ -19,8 +19,6 @@ import { cashFit } from "@/lib/budgetScenario";
 import { readHousehold } from "@/lib/household";
 import { FHA_DOWN, FHA_LIMITS, UPKEEP_PCT } from "@/lib/costRules";
 import { formatValue } from "@/lib/format";
-import { type Focus, GlobeMap } from "@/components/GlobeMap";
-import { useMapFile } from "@/components/useMapFile";
 import type { SearchEntry } from "@/lib/search";
 import { affordScope } from "@/lib/affordScope";
 
@@ -28,9 +26,6 @@ const DEFAULT_INCOME = "";
 // The municipalities listed before "Show all": enough to answer, short enough to scan.
 const FIRST_TOWNS = 25;
 
-// The box the map is drawn in, as the New Jersey page's is.
-const MAP_WIDTH = 540;
-const MAP_HEIGHT = 580;
 
 const MODES: { key: Mode; label: string }[] = [
   { key: "own", label: "Own" },
@@ -50,13 +45,6 @@ function listed(items: string[]): string {
     ? items.join("")
     : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
-
-/** The three states the map paints, and what each one means. */
-const REACH_KEY: readonly [string, string][] = [
-  ["var(--seq-550)", "within reach"],
-  ["var(--tick)", "beyond reach"],
-  ["var(--nodata)", "missing or incomplete estimate"],
-];
 
 /** One side of "can I afford this place?": its monthly cost, its share of income, the verdict. */
 function CheckCell({
@@ -133,17 +121,13 @@ export function AffordExplorer({
   useEffect(() => { setDown(personal.downPct ?? DEFAULT_DOWN); }, [personal.downPct]);
   useEffect(() => { setIncomeText(household.income === undefined ? "" : String(household.income)); }, [household.income]);
   const [allTowns, setAllTowns] = useState(false);
-  const [view, setView] = useState<"list" | "map">("list");
   // A county profile has already answered "which place?". Start its local affordability
   // mode with that county selected instead of asking the reader to type it again.
   const [picked, setPicked] = useState<number | null>(initialScope?.countyId ?? null);
   const [countyId, setCountyId] = useState<number | null>(initialScope?.countyId ?? null);
-  const [frameTarget, setFrameTarget] = useState<number | null>(initialScope?.countyId ?? null);
   const selectedCounty = counties.find((place) => place.id === countyId);
   const scope = selectedCounty ? { countyId: selectedCounty.id, countyName: selectedCounty.name } : undefined;
   const id = useId();
-  const { file, layers, failed } = useMapFile();
-  const [centre, setCentre] = useState<Focus | null>(null);
 
   const places = useMemo(() => [...counties, ...towns], [counties, towns]);
   const entries: SearchEntry[] = useMemo(
@@ -170,7 +154,6 @@ export function AffordExplorer({
     if (context.pickedId !== null) setPicked(context.pickedId);
     if (params.has("place") || params.has("county")) {
       setCountyId(context.countyId);
-      setFrameTarget(context.pickedId ?? context.countyId);
     }
   }, [places]);
 
@@ -189,24 +172,6 @@ export function AffordExplorer({
       : "renting the typical home";
   const pickedPlace =
     picked === null ? null : (places.find((p) => p.id === picked) ?? null);
-  // The map paints from the same rows the lists are built from, so the two can never
-  // disagree about whether a place is within reach.
-  const byPlace = useMemo(
-    () =>
-      new Map([...countyRows, ...townRows].map((row) => [row.place.id, row])),
-    [countyRows, townRows],
-  );
-  const paintReach = (id: number | string) => {
-    const row = byPlace.get(Number(id));
-    if (!row) return null;
-    return row.missing.length > 0 ? "var(--nodata)" : row.within ? "var(--seq-550)" : "var(--tick)";
-  };
-  const reachOf = (id: number) => {
-    const row = byPlace.get(id);
-    if (scope && !row && towns.some((town) => town.id === id && town.parentId !== scope.countyId)) return "outside your selected county";
-    if (!row) return "no figure for this measure here";
-    return `${money(row.monthly)}/mo, ${share(row.share)} of income — ${row.missing.length > 0 ? `incomplete: ${listed(row.missing)}` : row.within ? "within budget on included costs" : "above budget"}`;
-  };
   const check =
     pickedPlace && income > 0
       ? checkPlace(pickedPlace, options)
@@ -226,16 +191,14 @@ export function AffordExplorer({
   }
 
   return (
-    <section className="afford budget-explorer" data-view={view} data-has-income={income > 0} aria-labelledby={`${id}-summary`}>
+    <section className="afford budget-explorer" data-view="list" data-has-income={income > 0} aria-labelledby={`${id}-summary`}>
       <div className="afford-controls">
         <label className="control" htmlFor={`${id}-scope`}>
           <span className="control-label">Where</span>
           <select id={`${id}-scope`} aria-label="Where" value={countyId ?? "all"} onChange={(event) => {
             const next = event.target.value === "all" ? null : Number(event.target.value);
             setCountyId(next);
-            setFrameTarget(next);
             setAllTowns(false);
-            setCentre(null);
             if (next !== null) setPicked(next);
             else setPicked(null);
           }}>
@@ -305,7 +268,7 @@ export function AffordExplorer({
 
       <div className="budget-scope-line">
         <span>Searching <b>{scope?.countyName ?? "all New Jersey"}</b></span>
-        {scope && <button type="button" onClick={() => { setCountyId(null); setFrameTarget(null); setCentre(null); setAllTowns(false); }}>Search all New Jersey <span aria-hidden="true">↗</span></button>}
+        {scope && <button type="button" onClick={() => { setCountyId(null); setAllTowns(false); }}>Search all New Jersey <span aria-hidden="true">↗</span></button>}
       </div>
 
       <div className="budget-headline" aria-live="polite">
@@ -337,7 +300,6 @@ export function AffordExplorer({
             entries={entries}
             onPick={(entry) => {
               setPicked(entry.id);
-              setFrameTarget(entry.id);
               const place = places.find((place) => place.id === entry.id);
               if (scope && place) setCountyId(place.level === "county" ? place.id : place.parentId ?? null);
             }}
@@ -401,61 +363,8 @@ export function AffordExplorer({
         )}
       </p>
 
-      <div className="budget-view-choice" role="group" aria-label="Show budget results as">
-        <button type="button" aria-pressed={view === "list"} onClick={() => setView("list")}>List</button>
-        <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}>Map</button>
-      </div>
+      <p className="budget-coverage-note">Missing data does not mean unaffordable. {income > 0 && <>{(scope ? towns.filter(town => town.parentId === scope.countyId).length : towns.length) - townRows.length} municipalities in this search have no comparable {mode === "own" ? "home value or tax bill" : "rent figure"} and are not listed. </>}Other incomplete estimates stay labelled separately; a local profile may offer a sale-price scenario that is not used in this comparison.</p>
       {income > 0 && <div className="explorer">
-        <div className="map-panel">
-          {/* The globe, at municipal level: this page is about places a reader could
-              live, and 564 towns is the answer where 21 counties is a summary. Milestone
-              17 drew it on the two-dimensional county map and left carrying it here to
-              Milestone 16 (#144). Painted in three states rather than by quantile — a town
-              a few dollars over the line must not share a color with one a few under. */}
-          <GlobeMap
-            controls="budget"
-            key={countyId ?? "statewide"}
-            appearance={appearance}
-            width={MAP_WIDTH}
-            height={MAP_HEIGHT}
-            file={file}
-            layers={layers}
-            failed={failed}
-            pin="municipality"
-            metric=""
-            windowKey=""
-            metricLabel="within reach"
-            windowPhrase=""
-            format={money}
-            formatChange={money}
-            paint={paintReach}
-            describe={`Municipalities in ${scope?.countyName ?? "New Jersey"} where ${home} is within reach on this income. The results list carries the same figures.`}
-            legend={
-              <p className="globe-ramp">
-                <b>On this income</b>
-                {REACH_KEY.map(([color, label]) => (
-                  <span key={label}>
-                    <i className="swatch" style={{ background: color }} />
-                    {label}
-                  </span>
-                ))}
-                {scope && <span>Towns outside {scope.countyName} are background context.</span>}
-              </p>
-            }
-            active={picked}
-            // Searching a place moves the map to it: the question on this page is where
-            // a reader could live, and answering "can I afford Montclair?" while leaving
-            // the map over somewhere else makes them find it themselves.
-            frameOn={frameTarget}
-            mute={false}
-            onView={(state) => setCentre(state.focus)}
-          />
-          {centre && (
-            <p className="readout" aria-live="polite">
-              <b>{centre.name}</b> · {reachOf(Number(centre.id))}
-            </p>
-          )}
-        </div>
         <div className="scroll-x budget-comparison" tabIndex={0} role="region" aria-label="Place comparison table, scroll horizontally">
           <table className="ranks">
             <thead>

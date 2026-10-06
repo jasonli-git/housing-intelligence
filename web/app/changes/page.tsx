@@ -43,7 +43,7 @@ export default async function ChangesPage() {
   return (
     <>
       <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
-      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history">
+      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history quiet-revisions">
         <header className="page-head" data-kind="data">
           <div>
             <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="What changed" />

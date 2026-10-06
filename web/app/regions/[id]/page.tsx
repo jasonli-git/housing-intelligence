@@ -10,6 +10,7 @@ import { GroundAndWater } from "@/components/GroundAndWater";
 import { Utilities } from "@/components/Utilities";
 import { HomesAdded } from "@/components/HomesAdded";
 import { ComputedBadge } from "@/components/ComputedBadge";
+import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
 import { DataDownload, hasDownloadableFigures } from "@/components/DataDownload";
@@ -247,7 +248,7 @@ export default async function RegionPage({
   }));
 
   const name = displayName(region);
-  const quiet = region.level === "county" || region.level === "municipality";
+  const quiet = ["county", "municipality", "zip"].includes(region.level);
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is
@@ -380,6 +381,7 @@ export default async function RegionPage({
       <Masthead affordability={affordabilityControl} />
       <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
       <header className="page-head" data-kind={kindOf(region.level)}>
+        {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
         <div className="region-head-main">
           <Crumbs
             trail={[

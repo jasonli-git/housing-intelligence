@@ -3,6 +3,18 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.41.0] — 2026-10-06
+
+### Changed
+
+- **New Jersey's page leads with place search and county links** (ARCHITECTURE #311,
+  PR #98, a Codex experiment, owner-directed). The state and budget maps are removed
+  from view; the county comparison is an optional table, and the budget page says where
+  towns lack comparison data. The national coverage map stays.
+- ZIP pages share the town and county layout; towns and ZIPs get their own page
+  colours; New Jersey headers carry looping garden-and-coast artwork (still under
+  reduced motion). Calculations are unchanged.
+
 ## [0.40.1] — 2026-10-05
 
 ### Changed
