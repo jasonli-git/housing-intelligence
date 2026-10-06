@@ -51,8 +51,8 @@ The current state is documented in the next section.
 ## Latest owner refinement
 
 - Cost ribbon rejected and removed, including its component, tests and animation CSS.
-  The original owning breakdown bar is restored. No monthly-cash replacement built;
-  a typographic difference bridge remains a suggestion for owner review.
+  The original owning breakdown bar is restored. At that stage, a monthly-cash
+  difference bridge was only a suggestion; subsequent approval is recorded below.
 - Household/buying-plans surface now uses warm stone, neutral borders and a muted
   bronze local accent rather than the neighboring cards' green treatment.
 - Editorial metric was hard-coded to renter burden. It now rotates among available
@@ -75,6 +75,29 @@ The current state is documented in the next section.
 - Final static-preview check also passed all 30 route/width/theme combinations,
   mobile axe and print, with assertions that the ribbon and earlier rejected graphs
   remain absent. Existing local artifact-origin warning remains; no deployment.
+
+## Difference bridge and clearer exclusions
+
+- Owner approved the monthly-cash difference bridge. It replaces the headline prose
+  on quiet county/municipality pages, without adding another panel. Two numeric
+  anchors show owning money spent and rent; the center preserves the computed
+  more/less/about-the-same verdict. Decorative arches have no data encoding.
+- Uses existing `goneAgainstRent`, spending excluding utilities, rent and principal;
+  no new arithmetic, threshold, defaults or source data. Utilities are explicitly
+  excluded from both; missing owning costs and separately paid-down principal remain
+  visible. Missing rent retains existing behavior; nonquiet/report copy stays intact.
+- Not-included notice has a stronger yellow surface, amber top edge and emphasized
+  label in both themes. Prose list now lowercases initial title-case letters but
+  preserves initialisms such as HOA. Capitalized Flood insurance originated in the
+  shared calculator field label; form and breakdown labels are intentionally unchanged.
+- Files: `DifferenceBridge.tsx` and tests, `CostToOwn.tsx`, `artful-data.css`.
+- Verification: 478 tests in 62 files, TypeScript and 2,379-page build passed. Four
+  tests cover verdict rendering, source amounts, principal separation, decorative SVG
+  accessibility and sentence case preserving HOA. County 8 mobile dark screenshots
+  inspected; lower-case flood insurance confirmed in rendered notice. No canonical
+  documents, dependencies, acquisition or model regeneration changed.
+- Development and final static-preview suites passed all 30 route/width/theme
+  combinations, mobile axe and print. Existing local artifact-origin warning remains.
 
 ## What changed
 

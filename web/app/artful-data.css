@@ -1,5 +1,25 @@
 /* Decorative echoes of the housing portrait. They never encode a measurement. */
 .abstract-field { display: none; }
+.difference-bridge { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr); gap:.5rem 1rem; align-items:center; position:relative; isolation:isolate; margin-top:.65rem; }
+.difference-bridge > svg { position:absolute; top:1rem; left:0; width:100%; height:55px; fill:none; stroke:var(--atlas-accent); opacity:.2; z-index:-1; }
+.bridge-anchor, .bridge-difference { display:flex; flex-direction:column; gap:.3rem; text-align:center; }
+.bridge-anchor > span, .bridge-anchor > small, .bridge-difference > span { font-size:11px; color:var(--text-secondary); }
+.bridge-anchor > strong { font:500 25px/1.2 Georgia,serif; }
+.bridge-difference { background:var(--surface-card); border-radius:60% 60% 12px 12px; padding:.6rem .3rem; }
+.bridge-difference > strong { font:500 36px/1.15 Georgia,serif; color:var(--atlas-accent); overflow-wrap:anywhere; }
+.bridge-context { grid-column:1 / -1; font-size:12px; line-height:1.6; margin:.5rem 0 0; color:var(--text-secondary); }
+@media screen {
+  .quiet-county .cost-monthly-headline:has(.difference-bridge) { display:block; }
+  .quiet-county .cost-evidence-omissions { background:light-dark(#fff0bc,#40351c); border-top:2px solid light-dark(#d3a027,#bb923e); }
+  .quiet-county .cost-evidence-omissions .cost-evidence-label { color:light-dark(#6b4700,#ffe095); font-weight:700; }
+  .quiet-county .cost-evidence-omissions-mark { background:light-dark(#f5ce67,#80611e); color:light-dark(#533800,#fff0ba); }
+  @media(max-width:600px) {
+    .difference-bridge { gap:.5rem; }
+    .bridge-anchor > strong { font-size:21px; }
+    .bridge-difference > strong { font-size:27px; }
+    .bridge-anchor > span { min-height:2.6em; }
+  }
+}
 .editorial-metric-content { display: flex; flex-direction: column; gap: .45rem; min-height: 195px; }
 .editorial-metric-content > span:not(.quiet-label) { min-height: 3em; }
 .editorial-controls { display: flex; align-items: center; gap: .35rem; margin-top: .4rem; font-size: 11px; color: var(--text-secondary); }

@@ -26,6 +26,7 @@ import { type Basis, eachMonth, type Inputs, overYears, upFront } from "@/lib/ow
 import { ownershipInputs, cashFit, DEFAULT_YEARS } from "@/lib/budgetScenario";
 import { useBudgetScenario } from "@/components/useBudgetScenario";
 import { QuietDisclosure, QuietToolGroup } from "@/components/QuietCounty";
+import {DifferenceBridge,sentenceCostLabel} from "@/components/DifferenceBridge";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
 export type Dated = { value: number; asOf: string };
@@ -477,7 +478,7 @@ export function CostToOwn({
       {control && cashComparison && (
         <div className="cost-monthly-headline" role="group" aria-label="Monthly cash comparison">
           <p className="cost-evidence-label">Monthly cash</p>
-          <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>
+          {quiet && rentMonth !== null && against ? <DifferenceBridge own={goneNoUtilities} rent={rentMonth} principal={kept} kind={against.kind} gap={against.gap} missing={missingBeyondUtilities}/> : <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>}
         </div>
       )}
 
@@ -665,7 +666,7 @@ export function CostToOwn({
             Not included
           </p>
           <p>
-            The monthly owning estimate leaves out {listed([...month.missing, ...month.optional, "what the down payment could earn"])}.
+            The monthly owning estimate leaves out {listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.
           </p>
         </aside>
       </div>
