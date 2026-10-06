@@ -574,6 +574,46 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "The share of homes whose water system had a health-based violation in the last five full years: a contaminant over its limit, or treatment not done.",
     why: "A period the water broke a rule, not a measure of the water today; each system’s record says what happened.",
   },
+  lodes_resident_jobs: {
+    what: "Jobs held by people who live here, wherever the job is: jobs covered by unemployment insurance and federal civilian jobs, from the Census Bureau’s LODES.",
+    why: "The base the work shares are taken of. Self-employment and military jobs are not counted, and two jobs count twice.",
+  },
+  lodes_work_same_town_share: {
+    what: "The share of residents’ jobs located in this town.",
+    why: "A town where few residents work locally is one most people leave each morning.",
+  },
+  lodes_work_home_county_share: {
+    what: "The share of residents’ jobs located in the county they live in, their own town included.",
+    why: "Shows how far most residents’ work reaches.",
+  },
+  lodes_work_other_nj_share: {
+    what: "The share of residents’ jobs in New Jersey but outside their home county.",
+    why: "Part of where residents work.",
+  },
+  lodes_work_nyc_share: {
+    what: "The share of residents’ jobs located in New York City’s five boroughs.",
+    why: "Where many residents work in the city, the trip across the Hudson shapes daily life and costs.",
+  },
+  lodes_work_pennsylvania_share: {
+    what: "The share of residents’ jobs located in Pennsylvania, Philadelphia included.",
+    why: "Part of where residents work.",
+  },
+  lodes_work_other_state_share: {
+    what: "The share of residents’ jobs outside New Jersey, New York City and Pennsylvania.",
+    why: "Part of where residents work. LODES 2023 has no records for Alaska or Michigan.",
+  },
+  transit_rail_homes_share: {
+    what: "The share of homes within half a mile, in a straight line, of a commuter rail, PATH, PATCO, subway or light rail stop.",
+    why: "Nearness to a station, not how often trains call there.",
+  },
+  transit_bus_homes_share: {
+    what: "The share of homes within a quarter mile, in a straight line, of a bus stop.",
+    why: "A stop served once a day counts the same as one served every ten minutes.",
+  },
+  transit_any_homes_share: {
+    what: "The share of homes near a rail stop (half a mile) or a bus stop (a quarter mile).",
+    why: "How much of the place is within a walk of some transit.",
+  },
 };
 
 /** A metric's definition, or null for one the dictionary does not know yet. */

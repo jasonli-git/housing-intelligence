@@ -132,11 +132,13 @@ DEPTH_LAYERS: dict[str, tuple[str, ...]] = {
         *_cells("B25040", *range(1, 11)),
     ),
     # How workers get to work (B08301) and how long it takes (B08013 aggregate minutes,
-    # B08303 brackets); household types (B11001) and households with children (B11005).
+    # B08303 brackets: 60-89 minutes and 90 or more, together an hour or more; until
+    # 2026-10-06 only the second was read, so the share undercounted, #316); household
+    # types (B11001) and households with children (B11005).
     "people_": (
         *_cells("B08301", 1, 3, 10, 19, 21),
         "B08013_001E",
-        *_cells("B08303", 1, 13),
+        *_cells("B08303", 1, 12, 13),
         *_cells("B11001", 1, 3, 8),
         *_cells("B11005", 1, 2),
     ),

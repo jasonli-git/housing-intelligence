@@ -54,6 +54,9 @@ KEYED_MODELS = (
     "stg_njdep_sites",
     "stg_water_quality",
     "stg_nj_affordable",
+    # Milestone 45.
+    "stg_work_flows",
+    "stg_transit_access",
 )
 
 # Not a metric model: it feeds region_crosswalk, not fact_metric_observation.

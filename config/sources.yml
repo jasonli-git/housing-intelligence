@@ -1058,3 +1058,65 @@ sources:
     notes: >-
       Housing units per 2020 block, the weights behind every share of homes. Pinned
       to 2020; redrawn once a decade.
+
+  # Milestone 45: getting around (ARCHITECTURE #313-#314).
+  census_lodes:
+    name: LEHD Origin-Destination Employment Statistics (LODES 8)
+    publisher: U.S. Census Bureau
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105); the LEHD
+        data page asks for a citation and sets no limit on use.
+    terms_url: https://lehd.ces.census.gov/data/
+    terms_checked: 2026-10-06
+    terms_note: >-
+      The LEHD data page gives the citation below and warns that the files are
+      tabulated and modelled administrative data, subject to error. Counts carry
+      deliberate noise for privacy.
+    notices:
+      - >-
+        U.S. Census Bureau, LEHD Origin-Destination Employment Statistics, version 8,
+        https://lehd.ces.census.gov/data/lodes
+    url: https://lehd.ces.census.gov/data/lodes/LODES8/
+    homepage: https://lehd.ces.census.gov/data/
+    cadence: annual
+    adapter: hip.sources.census_lodes:LodesAdapter
+    fallback: >-
+      OnTheMap (onthemap.ces.census.gov) and the LED Extraction Tool serve the same
+      counts interactively.
+    notes: >-
+      Jobs covered by unemployment insurance, plus federal civilian jobs, by home and
+      workplace block. Self-employment and military jobs are not in it. New Jersey's
+      main file plus every other state's auxiliary file; about two years behind.
+
+  bts_ntm:
+    name: National Transit Map — stops
+    publisher: Bureau of Transportation Statistics
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105); data.gov
+        lists it under the public domain label.
+    terms_url: https://catalog.data.gov/dataset/national-transit-map-stops
+    terms_checked: 2026-10-06
+    terms_note: >-
+      Compiled by BTS from each agency's published GTFS schedule; read from BTS's own
+      public map service for a box around New Jersey. bts.gov answers scripts with a
+      403; the catalog entry and the service answer them.
+    url: https://services.arcgis.com/xOi1kZaI0eWDREZv/arcgis/rest/services/NTAD_National_Transit_Map_Stops/FeatureServer/0
+    homepage: https://www.bts.gov/national-transit-map
+    cadence: annual
+    adapter: hip.sources.bts_ntm:TransitStopsAdapter
+    fallback: >-
+      The agencies' own GTFS feeds; NJ TRANSIT's needs a developer account and its
+      agreement (TODO.md, Parked).
+    notes: >-
+      Where service stops and its kind (rail, light rail, subway, bus, ferry), not how
+      often. Compiled 2026-03-09 when first read.

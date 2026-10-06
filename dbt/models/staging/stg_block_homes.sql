@@ -41,7 +41,10 @@ select b.block_geoid,
        t.geoid as municipality_geoid,
        z.geoid as zcta_geoid,
        b.homes,
-       b.geom
+       b.geom,
+       -- The Census's interior point, which Milestone 45 measures distance to transit
+       -- from (`stg_transit_blocks`).
+       b.point
 from blocks b
 left join block_town t on t.block_geoid = b.block_geoid
 left join block_zcta z on z.block_geoid = b.block_geoid
