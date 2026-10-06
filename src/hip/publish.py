@@ -230,6 +230,12 @@ def _plan(
             f"/regions/{region_id}/water-systems",
             f"regions/{region_id}/water-systems.json",
         )
+        # Towns like this one but cheaper (Milestone 46). A 404 — anything but a town
+        # priced on 20 or more sales — is a skip.
+        yield (
+            f"/regions/{region_id}/similar-places",
+            f"regions/{region_id}/similar-places.json",
+        )
         # Where a place's residents work (Milestone 45). A 404 — a place whose
         # residents hold under 100 jobs — is a skip.
         yield (

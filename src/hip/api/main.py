@@ -23,6 +23,7 @@ from hip.api.routers import (
     packets,
     regions,
     revisions,
+    similar_places,
     water_systems,
     work_destinations,
 )
@@ -53,5 +54,6 @@ app.include_router(revisions.router)
 app.include_router(income_limits.router)
 app.include_router(water_systems.router)
 app.include_router(work_destinations.router)
+app.include_router(similar_places.router)
 app.include_router(infrastructure.router)
 app.include_router(affordable_housing.router)

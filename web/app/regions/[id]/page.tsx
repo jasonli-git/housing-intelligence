@@ -8,6 +8,7 @@ import { HomeChecks } from "@/components/HomeChecks";
 import { FloodRisk } from "@/components/FloodRisk";
 import { GettingAround } from "@/components/GettingAround";
 import { GroundAndWater } from "@/components/GroundAndWater";
+import { SimilarPlaces } from "@/components/SimilarPlaces";
 import { Utilities } from "@/components/Utilities";
 import { HomesAdded } from "@/components/HomesAdded";
 import { ComputedBadge } from "@/components/ComputedBadge";
@@ -207,7 +208,7 @@ export default async function RegionPage({
     region.level === "municipality"
       ? (region.ancestors.find((a) => a.level === "county") ?? null)
       : region;
-  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations] = await Promise.all([
+  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations, similar] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -236,6 +237,8 @@ export default async function RegionPage({
     api.utilities(regionId),
     // Milestone 45: where residents work.
     api.workDestinations(regionId),
+    // Milestone 46: towns like this one but cheaper; a town's only.
+    region.level === "municipality" ? api.similarPlaces(regionId) : Promise.resolve(null),
   ]);
   // A town or ZIP reads HUD's county Fair Market Rents from its county's packet: HUD sets
   // them for the county's area, and only a county page carries them (Milestone 35).
@@ -373,6 +376,7 @@ export default async function RegionPage({
     <ForYourHousehold regionName={name} limits={incomeLimits} levels={packet.levels} countyLevels={countyLevels}
       margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))} />
     <div id="housing-assistance"><AffordableHousing data={housingHelp} /></div>
+    <SimilarPlaces name={name} data={similar} />
     {region.level !== "zip" && <p className="household-next">
       <Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
         {region.level === "county" ? "Find towns within my budget" : "Compare nearby towns"} <span aria-hidden="true">→</span>

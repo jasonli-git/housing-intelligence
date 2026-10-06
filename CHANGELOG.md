@@ -3,6 +3,21 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.44.0] — 2026-10-06
+
+Milestone 46: somewhere like here, but cheaper.
+
+### Added
+
+- **Somewhere like here, but cheaper?** (ARCHITECTURE #317): on each town page, up to
+  five towns most like it on four named measures — single-family detached homes,
+  homeownership, households with children, homes within half a mile of a rail stop —
+  whose median recorded sale price is at least 10% lower, from 20 or more sales, and
+  whose workers' commute is at most ten minutes longer, side by side with the town on
+  those measures, price, Zillow's value, commute, tax rate and New York City work share
+  (`GET /regions/{id}/similar-places`). 467 of 526 comparable towns have a match; the
+  59 with none, Hoboken among them, say so.
+
 ## [0.43.0] — 2026-10-06
 
 Milestone 45: getting around.

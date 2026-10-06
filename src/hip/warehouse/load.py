@@ -25,6 +25,7 @@ from sqlalchemy import Engine, text
 
 from hip.config import Metric, Source, metric_licence
 from hip.duck import duckdb_session
+from hip.warehouse.names import municipality_label
 
 # Parents must exist before children, because the parent_id lookup happens inline and
 # ck_regions_parent_by_level rejects an orphan at insert time rather than after.
@@ -719,26 +720,12 @@ def load_work_destinations(
             # its county too (Hamilton township, Atlantic County).
             count = conn.execute(
                 text(
-                    """
+                    f"""
                 INSERT INTO work_destinations
                     (region_id, rank, destination_region_id, destination_name, jobs,
                      share, total_jobs, year, release_id)
                 SELECT r.region_id, :rank, d.region_id,
-                       COALESCE(
-                           CASE
-                               WHEN NOT EXISTS (
-                                   SELECT 1 FROM regions o
-                                   WHERE o.level = 'municipality' AND o.name = d.name
-                                     AND o.region_id <> d.region_id
-                               ) THEN d.name
-                               WHEN NOT EXISTS (
-                                   SELECT 1 FROM regions o
-                                   WHERE o.level = 'municipality'
-                                     AND o.name_lsad = d.name_lsad
-                                     AND o.region_id <> d.region_id
-                               ) THEN d.name_lsad
-                               ELSE d.name_lsad || ', ' || c.name || ' County'
-                           END,
+                       COALESCE({municipality_label("d", "c")},
                            :destination_name),
                        :jobs, :share, :total_jobs, :year, :release_id
                 FROM regions r

@@ -257,7 +257,7 @@ QUESTIONS: tuple[Question, ...] = (
     Question("How long is the commute?", "answered", "/regions/[id]"),
     Question("Where do people who live here work?", "answered", "/regions/[id]"),
     Question("Is it near a train or a bus?", "answered", "/regions/[id]"),
-    Question("Where is somewhere like here, but cheaper?", "unanswered", "Milestone 46"),
+    Question("Where is somewhere like here, but cheaper?", "answered", "/regions/[id]"),
     Question("What are the schools like?", "unanswered", "Milestone 47"),
     Question("Is it safe?", "unanswered", "Milestone 47"),
 )
