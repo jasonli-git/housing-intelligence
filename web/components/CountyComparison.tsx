@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useId, useState } from "react";
-import type { Measure } from "./CountyExplorer";
+import type { Measure } from "@/lib/measures";
 import type { Section } from "@/lib/groups";
 import { formatChange, formatMetric } from "@/lib/format";
 import { WINDOWS, windowNote, type WindowKey } from "@/lib/windows";

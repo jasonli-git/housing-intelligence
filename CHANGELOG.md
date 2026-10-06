@@ -3,6 +3,14 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.41.1] — 2026-10-06
+
+### Removed
+
+- **The New Jersey map's code** (ARCHITECTURE #311), retired from view in 0.41.0 and now
+  deleted at the owner's decision, with its `map.json` file. The national coverage map
+  is unchanged.
+
 ## [0.41.0] — 2026-10-06
 
 ### Changed

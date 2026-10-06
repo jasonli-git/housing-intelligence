@@ -48,20 +48,17 @@ try {
   console.log('PASS: national map non-drag movement; keyboard theme switch with reduced motion');
 
   await go('/states/new-jersey');
-  await page.locator('.globe-stage').scrollIntoViewIfNeeded();
-  const map = page.locator('.globe-still'); await map.waitFor();
-  await page.locator('.globe-detail path').first().waitFor();
-  const geometry = () => page.locator('.globe-detail path').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('d')).join('|'));
-  const shape = await geometry();
-  await page.getByRole('button',{name:'Move map right',exact:true}).click();
-  await page.waitForFunction(previous => [...document.querySelectorAll('.globe-detail path')].map(n=>n.getAttribute('d')).join('|')!==previous,shape);
-  const keyShape = await geometry();
-  await map.focus();
-  const mapScroll = await page.evaluate(() => window.scrollY);
-  await page.keyboard.press('ArrowDown');
-  await page.waitForFunction(previous => [...document.querySelectorAll('.globe-detail path')].map(n=>n.getAttribute('d')).join('|')!==previous,keyShape);
-  assert.equal(await page.evaluate(() => window.scrollY), mapScroll, 'Focused NJ map does not scroll page');
-  console.log('PASS: New Jersey map non-drag movement');
+  assert.equal(await page.locator('.globe-stage').count(), 0, 'New Jersey page has no map');
+  await page.locator('.place-discovery-search input[role="combobox"]').waitFor();
+  const counties = page.getByRole('navigation',{name:'New Jersey counties'}).getByRole('link');
+  assert.equal(await counties.count(), 21, 'All 21 county links');
+  const comparison = page.locator('#county-comparison');
+  assert.equal(await comparison.evaluate(n => n.open), false, 'County comparison starts closed');
+  await comparison.locator('summary').focus(); await page.keyboard.press('Enter');
+  await comparison.locator('table.ranks').waitFor();
+  assert.equal(await comparison.locator('table.ranks tbody th[scope="row"] a').count(), 21, 'Comparison lists every county');
+  await axe('New Jersey place search and county comparison');
+  console.log('PASS: New Jersey place search, county links, keyboard-opened comparison table; axe check');
 
   const search = page.locator('.bar input[role="combobox"]');
   await search.fill('Atlantic');
