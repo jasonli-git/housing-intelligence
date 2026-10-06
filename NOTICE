@@ -6,11 +6,15 @@ them would misstate what a user is permitted to do.
 ## Code
 
 The software — everything under `src/`, `web/`, `dbt/`, and `tests/` — is licensed under
-the MIT License. See [LICENSE](LICENSE).
+the GNU Affero General Public License v3.0. See [LICENSE](LICENSE). Anyone who runs a
+modified version as a network service must offer its users that version's source.
+
+Versions released before 2026-10-06 were MIT licensed, and copies taken under those
+terms keep them.
 
 ## Data, and anything derived from it
 
-**Not covered by the MIT License.** Public data is ingested from the sources below and
+**Not covered by the code's licence.** Public data is ingested from the sources below and
 remains subject to each publisher's terms. That includes derived outputs this repository
 ships or publishes: the county reports under `reports/regions/5y/`, the analysis packets,
 the published artifact tree, and every figure shown on the website.
