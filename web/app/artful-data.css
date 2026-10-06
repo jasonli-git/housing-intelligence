@@ -1,0 +1,62 @@
+/* Decorative echoes of the housing portrait. They never encode a measurement. */
+.abstract-field { display: none; }
+@media screen {
+  :is(.quiet-tax, .quiet-history) .crumbs li[data-level="nation"] {
+    --crumb-accent: var(--text-primary);
+  }
+  :is(.quiet-tax, .quiet-history) .crumbs li[data-level="nation"] a { color: var(--text-primary); }
+  .more-body sup.mk { color: var(--text-secondary); }
+
+  .quiet-county .abstract-field {
+    display: block; position: absolute; right: 0; top: 0; width: 230px; height: 140px;
+    stroke: var(--atlas-accent); stroke-width: 0.8; opacity: 0.22;
+    pointer-events: none; z-index: -1;
+  }
+  .abstract-wash { fill: var(--atlas-accent); stroke: none; opacity: 0.12; }
+  .quiet-county :is(.quiet-tool-group, .more > summary, .quiet-disclosure:has(.local-market) > summary) {
+    position: relative; isolation: isolate;
+  }
+  .quiet-county .quiet-tool-group {
+    background: linear-gradient(115deg, light-dark(#edf2ed, #242e28), light-dark(#f5f5ef, #242a27));
+    border: 1px solid color-mix(in srgb, var(--atlas-accent) 18%, var(--border));
+    border-radius: 18px 18px 8px 8px;
+  }
+  .quiet-county .quiet-tool-group > h3 { padding-right: 110px; }
+  .quiet-county .quiet-tool-group > .abstract-field { width: 155px; height: 90px; top: 2px; }
+  .quiet-county #quiet-highlights > .abstract-field { top: 6px; width: 190px; height: 110px; z-index: 1; opacity: 0.18; }
+  .quiet-county #quiet-highlights:not(:has(.consumer-feature-what_stands_out)) > .abstract-field { display: none; }
+  .quiet-county .consumer-feature-what_stands_out {
+    background: linear-gradient(110deg, light-dark(#f9faf6, #252e29), light-dark(#f1f5ef, #222a26));
+  }
+  .quiet-county .quiet-disclosure:has(.local-market) {
+    border-left: 0; padding-left: 0; border-block: 1px solid var(--border);
+  }
+  .quiet-county .quiet-disclosure:has(.local-market) > summary {
+    padding: 1.15rem 1rem;
+    background: linear-gradient(100deg, color-mix(in srgb, var(--atlas-accent) 7%, transparent), transparent);
+  }
+  .quiet-county .quiet-disclosure:has(.local-market) > summary > span:first-of-type { padding-right: 75px; }
+  .quiet-county .quiet-disclosure:has(.local-market) .abstract-field { height: 85px; width: 180px; }
+  .quiet-county .more {
+    border-radius: 20px 20px 8px 8px;
+    background: light-dark(#edf2f1, #222d2b);
+  }
+  .quiet-county .more > summary {
+    background-image: linear-gradient(110deg, color-mix(in srgb, var(--atlas-accent) 6%, transparent), transparent);
+    background-size: 100% 100%; background-repeat: no-repeat;
+  }
+  .quiet-county .more > summary > .abstract-field { width: 250px; height: 100%; opacity: 0.24; }
+  .quiet-county .more-copy { padding-right: 75px; }
+  /* No clipping container: definition popovers and focus outlines remain unobstructed. */
+  @media (max-width: 600px) {
+    .quiet-county .quiet-tool-group { padding-inline: 1rem; }
+    .quiet-county .quiet-tool-group > h3 { padding-right: 50px; }
+    .quiet-county .quiet-tool-group > .abstract-field { width: 100px; height: 72px; opacity: 0.14; }
+    .quiet-county #quiet-highlights > .abstract-field { width: 115px; height: 80px; opacity: 0.13; }
+    .quiet-county .consumer-feature-topline { padding-right: 40px; }
+    .quiet-county .more-copy { padding-right: 0; }
+    .quiet-county .more > summary > .abstract-field { width: 130px; opacity: 0.12; }
+    .quiet-county .quiet-disclosure:has(.local-market) > summary > span:first-of-type { padding-right: 0; }
+    .quiet-county .quiet-disclosure:has(.local-market) .abstract-field { width: 110px; opacity: 0.12; }
+  }
+}

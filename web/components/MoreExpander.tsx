@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useRef } from "react";
+import { AbstractField } from "./AbstractField";
 
 // One key for every region page: a reader who wants the tables on one page wants them on the next.
 const KEY = "housing:region-more";
@@ -77,6 +78,7 @@ export function MoreExpander({ id, title, sub, children }: { id?: string; title:
       }}
     >
       <summary>
+        <AbstractField kind="evidence" />
         <span className="more-kicker">Explore the evidence</span>
         <span className="more-entry">
           <span className="more-index" aria-hidden="true">↳</span>

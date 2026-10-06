@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { FloatingMetricTerm } from "./FloatingMetricTerm";
 import type { ProfileItem } from "@/lib/verdict";
+import { AbstractField } from "./AbstractField";
 
 export function QuietLinework() {
-  return <svg className="quiet-linework" viewBox="0 0 240 160" fill="none" aria-hidden="true"><path d="M8 145H232M30 145V70L105 16L180 70V145M18 78L105 16L192 78M68 145V96H104V145M125 91H152V118H125ZM180 145V95L213 70L239 91M83 33V8H97V23" /></svg>;
+  return <AbstractField kind="contours" />;
 }
 
 export function QuietCheckTopics() {
@@ -21,6 +22,7 @@ export function QuietAnchor({ enabled, id, children }: { enabled: boolean; id: s
 
 export function QuietToolGroup({ enabled, children }: { enabled: boolean; children: ReactNode }) {
   return enabled ? <div className="quiet-tool-group" role="group" aria-label="Your household and buying plans">
+    <AbstractField kind="household" />
     <h3>Your household &amp; buying plans</h3>{children}
   </div> : <>{children}</>;
 }
@@ -31,7 +33,7 @@ export function QuietDisclosure({ enabled, title, note, children }: {
 }) {
   if (!enabled) return <>{children}</>;
   return <details className="quiet-disclosure">
-    <summary><span>{title}{note && <small>{note}</small>}</span><span className="quiet-plus" aria-hidden="true">+</span></summary>
+    <summary>{title === "The local market" && <AbstractField kind="contours" />}<span>{title}{note && <small>{note}</small>}</span><span className="quiet-plus" aria-hidden="true">+</span></summary>
     <div className="quiet-disclosure-body">{children}</div>
   </details>;
 }
