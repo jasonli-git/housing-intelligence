@@ -238,6 +238,11 @@ first raised, not where it must be done.
       artwork added 2026-10-06 (#311) loops the same way.
 - [ ] **Reports may show the retired "before moving" answer** (#310) from readings
       written before 2026-10-05, until the next regeneration.
+- [ ] **Assisted-housing labels fail contrast on town pages.** (found 2026-10-06, #309)
+      `check:a11y` reports `color-contrast` on `/regions/194` (Absecon) with sections
+      open: the small uppercase label on each assisted property
+      (`.assistance-property header > span`, `--series-3` in `affordable-housing.css`).
+      It fails on `main` as well, and it stops `check:a11y:interactions` there too.
 
 - [ ] **The budget explorer's comparison scope is not in its address.** (PR #86, Codex
       handoff `local-page-layout.md`) A page's link opens `/afford` with its place and
@@ -375,6 +380,11 @@ first raised, not where it must be done.
       guard.
 
 ### Documentation upkeep
+
+- [ ] **`NOTICE` lists 12 of the 37 sources.** It says it is generated from
+      `config/sources.yml`, but no generator exists, so it was hand-edited and has
+      fallen behind (`hip check-config` counts 37). Write the generator the file
+      promises, or say it is maintained by hand and bring it up to date.
 
 - [ ] **Re-read the publishers' release calendars before they run out.** (#298) Recorded
       by hand on 2026-10-02 in `config/sources.yml`: BLS's ends 2026-12-30, Zillow's
