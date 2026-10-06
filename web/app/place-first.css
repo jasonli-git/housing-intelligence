@@ -1,6 +1,13 @@
 /* Geography is a cue, never the only identifier. Utility tools use their own ink. */
 @media print { .state-place-artwork { display:none; } }
 @media screen {
+  .quiet-nation .entry-free.computed { display:inline-flex; flex-wrap:nowrap; align-items:center; width:fit-content; max-width:100%; box-sizing:border-box; padding:.4rem .65rem; border:1px solid var(--border); border-radius:999px; font:10px/1.6 var(--font-mono); letter-spacing:.035em; margin-top:.8rem; }
+  .quiet-nation .entry-free.computed > span { min-width:0; color:var(--text-secondary); }
+  .quiet-nation .entry-free.computed svg { flex-shrink:0; width:13px; height:13px; }
+  .atlas-local > .page-head { position:relative; isolation:isolate; }
+  .atlas-local .state-place-artwork-header { right:1.5%; top:.5rem; width:clamp(160px,24vw,260px); height:240px; opacity:.22; }
+  .atlas-local:is([data-region-level="municipality"],[data-region-level="zip"]) :is(.cost-monthly-headline,.more) { background:var(--surface-2); }
+  .atlas-local:is([data-region-level="municipality"],[data-region-level="zip"]) .more-entry { --text-primary:inherit; --text-secondary:inherit; }
   body:has(.atlas-local[data-region-level="municipality"]) { --surface-1:light-dark(#eff4f7,#18232d); --surface-2:light-dark(#fbfdff,#25313c); --surface-card:var(--surface-2); --text-primary:light-dark(#29343e,#e7edf3); --text-secondary:light-dark(#4d5c69,#c4ced8); --text-muted:light-dark(#526270,#b7c5d1); --border:light-dark(#d2dde7,#435565); background:var(--surface-1); }
   body:has(.atlas-local[data-region-level="zip"]) { --surface-1:light-dark(#f4f0f8,#231e2c); --surface-2:light-dark(#fdfbff,#302a3a); --surface-card:var(--surface-2); --text-primary:light-dark(#352f40,#eee7f5); --text-secondary:light-dark(#5d526c,#d0c6dc); --text-muted:light-dark(#665973,#c5b7d2); --border:light-dark(#dfd5e9,#554962); background:var(--surface-1); }
   body:has(.atlas-local:is([data-region-level="municipality"],[data-region-level="zip"])) .foot-kicker { color:var(--text-secondary); }
@@ -24,10 +31,11 @@
   .quiet-nation .entry-free svg { stroke:light-dark(#25714b,#83cfa3); }
   .quiet-nation .coverage-map-stage { background:light-dark(#eaf0f1,#222c32); }
   @media(prefers-reduced-motion:no-preference) {
-    .state-artwork-trace path { stroke-dasharray:1; animation:state-place-trace 16s ease-in-out infinite; }
-    .state-artwork-wash { transform-origin:229px 126px; animation:state-place-breathe 16s ease-in-out infinite; }
-    .nj-head:is(:hover,:focus-within) :is(.state-artwork-trace path,.state-artwork-wash) { animation-play-state:paused; }
-    @keyframes state-place-trace { 0%,100% { stroke-dashoffset:1; opacity:0; } 38%,75% { stroke-dashoffset:0; opacity:1; } 93% { stroke-dashoffset:0; opacity:0; } }
+    .state-artwork-trace path { stroke-dasharray:1; animation:house-draw 9s cubic-bezier(.22,1,.36,1) infinite both; }
+    .state-artwork-trace path:nth-child(2) { animation-delay:.25s; }
+    .state-artwork-trace path:nth-child(3) { animation-delay:.5s; }
+    .state-artwork-wash { transform-origin:229px 126px; animation:state-place-breathe 9s ease-in-out infinite; }
+    .page-head:is(:hover,:focus-within) :is(.state-artwork-trace path,.state-artwork-wash) { animation-play-state:paused; }
     @keyframes state-place-breathe { 0%,100% { transform:scale(.92); opacity:.06; } 50% { transform:scale(1.06); opacity:.16; } }
   }
   .atlas-local[data-region-level="municipality"] { --atlas-accent: light-dark(#267775, #a2dad5); }
@@ -77,6 +85,7 @@
   .budget-page .explorer { grid-template-columns:minmax(0,1fr); }
   .budget-coverage-note { color:var(--text-secondary); font-size:12px; line-height:1.6; max-width:85ch; }
   @media(max-width:600px) {
+    .atlas-local .state-place-artwork-header { width:110px; height:150px; top:4rem; right:0; opacity:.12; }
     .state-place-artwork-header { right:0; top:4rem; width:140px; opacity:.2; }
     .place-discovery-search { display:block; }
     .place-budget-link { margin-top:.3rem; }

@@ -10,6 +10,7 @@ import { GroundAndWater } from "@/components/GroundAndWater";
 import { Utilities } from "@/components/Utilities";
 import { HomesAdded } from "@/components/HomesAdded";
 import { ComputedBadge } from "@/components/ComputedBadge";
+import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
 import { DataDownload, hasDownloadableFigures } from "@/components/DataDownload";
@@ -380,6 +381,7 @@ export default async function RegionPage({
       <Masthead affordability={affordabilityControl} />
       <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
       <header className="page-head" data-kind={kindOf(region.level)}>
+        {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
         <div className="region-head-main">
           <Crumbs
             trail={[

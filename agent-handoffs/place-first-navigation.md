@@ -70,3 +70,11 @@
 - The same generic link rule overrode county breadcrumb colors. Local breadcrumb links now honor their own geography token: state blue, containing county green, current municipality teal or ZIP violet, nation neutral.
 - Browser regression checks now assert four distinct geographic background colors, neutral county-directory link text, distinct breadcrumb links and header-only decorative artwork.
 - Correction verification: 482 tests, TypeScript and the 2,379-page static build passed. All 54 browser combinations passed, including expanded mobile accessibility and new color/motion assertions. Verified Princeton (region 224) specifically: state link blue, Mercer County link green, Princeton teal, with a blue-gray page background. Inspected its screenshot. Existing local artifact URL warning unchanged.
+
+## Review refinement: shared NJ drawing and aligned surfaces
+
+- Monthly-cash headers and evidence expansions on municipality and ZIP pages had retained hard-coded green fills despite the new body palettes. They now use the page’s own secondary surface; evidence-entry text also inherits the geography’s neutral text colors. Cost computation and semantic warning colors are unchanged.
+- The free-use promise is a compact, non-interactive provenance-style pill with a green check, preserving all no-fee/no-subscription/no-ad wording.
+- NJ linework now uses the homepage’s house-draw keyframes and nine-second draw/hold/fade cycle with staggered garden/house strokes. It appears in NJ county, municipality and ZIP profile headers as well as the NJ state header. No artwork was added to reports or the place directory.
+- Decorative animation still respects reduced motion, holds on header hover/focus, stays outside the accessibility tree, cannot capture pointer input and is hidden in print.
+- Verification: 482 tests, TypeScript, the 2,379-page static build and all 54 browser combinations passed. Browser assertions cover the aligned municipality/ZIP cost and evidence backgrounds, artwork on sampled NJ local headers, the shared nine-second keyframes, reduced motion, print and mobile accessibility. Inspected mobile ZIP cost and free-use badge screenshots and checked the badge’s check/text alignment. localhost:3000 responded HTTP 200; static verification used localhost:3002. Existing artifact-origin warning remains.

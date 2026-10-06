@@ -40,6 +40,16 @@ try {
           assert(await page.locator(".budget-comparison tbody tr").count() > 0);
         }
         if (route === "/regions/2842") assert.equal(await page.locator(".quiet-profile").count(), 1);
+        if (route.startsWith("/regions/")) {
+          assert.equal(await page.locator(".page-head .state-place-artwork").count(), 1, "NJ local page has the shared header drawing");
+        }
+        if (route === "/regions/194" || route === "/regions/2842") {
+          assert(await page.locator(".cost-monthly-headline, .more").evaluateAll(nodes => nodes.every(node => {
+            const sample = document.createElement("span"); sample.style.backgroundColor = "var(--surface-2)";
+            node.append(sample); const same = getComputedStyle(sample).backgroundColor === getComputedStyle(node).backgroundColor; sample.remove(); return same;
+          })), "Monthly cash and evidence use the page surface palette");
+        }
+        if (route === "/") assert.equal(await page.locator(".entry-free.computed").count(), 1, "Free-use message uses the provenance badge treatment");
         if (route === "/regions/194") {
           const colors = await page.locator('.crumbs li[data-level] a').evaluateAll(nodes => nodes.map(node => getComputedStyle(node).color));
           assert(new Set(colors).size === colors.length, "Nation, state and county links have distinct colors");
@@ -62,7 +72,10 @@ try {
     await page.emulateMedia({ media: "screen" });
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.mouse.move(0, 899);
-    assert(await page.locator(".state-artwork-trace path").evaluateAll(nodes => nodes.every(node => getComputedStyle(node).animationIterationCount === "infinite")), "Header artwork loops without controls");
+    assert(await page.locator(".state-artwork-trace path").evaluateAll(nodes => nodes.every(node => {
+      const style = getComputedStyle(node);
+      return style.animationIterationCount === "infinite" && style.animationName === "house-draw" && style.animationDuration === "9s";
+    })), "Header artwork uses the homepage drawing cycle without controls");
     await page.locator(".nj-head a").first().focus();
     assert(await page.locator(".state-artwork-trace path").evaluateAll(nodes => nodes.every(node => getComputedStyle(node).animationPlayState === "paused")), "Keyboard focus holds decorative motion");
     await page.emulateMedia({ reducedMotion: "reduce" });
