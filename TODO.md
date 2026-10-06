@@ -14,12 +14,11 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 45 built, awaiting review (2026-10-06)
+## Now — Milestone 46 built, awaiting review (2026-10-06)
 
-Milestone 45, getting around, is on `milestone/m45-getting-around` as 0.43.0 (ARCHITECTURE
-#313–#316): where residents work from LODES, homes near transit from BTS's National
-Transit Map, and the commute; the hour-plus commute share corrected. Not merged or
-deployed. Next after review: Milestone 46, only when asked. Milestone 44 waits on DCA.
+Milestone 46, somewhere like here but cheaper, is on `milestone/m46-like-here-cheaper`
+as 0.44.0 (ARCHITECTURE #317). Not merged or deployed. Milestone 45 is merged and live.
+Next after review: Milestone 47, only when asked. Milestone 44 waits on DCA.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
 
@@ -235,6 +234,11 @@ first raised, not where it must be done.
       [web/lib/api.ts:437](web/lib/api.ts:437). Blocks the Northeast expansion
       (Milestone 14, unscheduled).
 ### Frontend and presentation
+
+- [ ] **"Somewhere like here, but cheaper" for ZIP codes.** (M46, #317) Towns only: ZIP
+      codes have no recorded-sales price, and matching them on Zillow's or the ACS's
+      value would compare a different measure from towns'. Needs a ZIP-level SR1A price
+      (sales placed by their parcel's ZIP) or a decision to use another measure there.
 
 - [ ] **Accessibility still needs people, not scripts.** (M43, #309) Screen-reader
       review with VoiceOver and Safari, and NVDA with Firefox or Chrome; a physical

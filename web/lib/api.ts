@@ -230,6 +230,30 @@ export type WaterSystems = {
   systems: WaterSystem[];
 };
 
+/** Towns like this one whose homes sold for at least 10% less (Milestone 46, #317). */
+export type SimilarFigure = {
+  metric_id: string;
+  label: string;
+  unit: string;
+  period_end: string | null;
+  value: number | null;
+};
+export type SimilarPlace = { region_id: number; name: string; figures: SimilarFigure[] };
+export type SimilarPlaces = {
+  region_id: number;
+  measures: string[];
+  price: string;
+  commute: string;
+  context: string[];
+  min_sales: number;
+  cheaper_by: number;
+  commute_minutes: number;
+  price_from: string | null;
+  price_to: string | null;
+  here: SimilarPlace;
+  matches: SimilarPlace[];
+};
+
 /** Where a place's residents work: its ten leading destinations (Milestone 45, #313). */
 export type WorkDestinations = {
   region_id: number;
@@ -608,6 +632,7 @@ export const api = {
    * and for a town whose homes are all on private wells.
    */
   waterSystems: (id: number) => tryGet<WaterSystems>(`/regions/${id}/water-systems`),
+  similarPlaces: (id: number) => tryGet<SimilarPlaces>(`/regions/${id}/similar-places`),
   workDestinations: (id: number) =>
     tryGet<WorkDestinations>(`/regions/${id}/work-destinations`),
   utilities: (id: number) => tryGet<Utilities>(`/regions/${id}/utilities`),

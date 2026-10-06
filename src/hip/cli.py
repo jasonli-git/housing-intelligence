@@ -29,6 +29,7 @@ from sqlalchemy.orm import Session
 from hip import __version__, refresh
 from hip.addresses import parse as parse_address
 from hip.analytics.compute import rebuild
+from hip.analytics.similar import rebuild_similar
 from hip.completeness import run as run_completeness
 from hip.config import (
     ConfigError,
@@ -1243,6 +1244,8 @@ def analyze() -> None:
         sync_registry(conn, load_sources(), metric_config)
 
     result = rebuild(engine)
+    # Towns like each one but cheaper (Milestone 46), from the figures just rebuilt.
+    similar = rebuild_similar(engine)
 
     for metric_id, count in sorted(result.derived_observations.items()):
         typer.echo(f"{metric_id:<20} {count:>9,} observations")
@@ -1250,6 +1253,7 @@ def analyze() -> None:
     typer.echo(f"{'change rankings':<20} {result.rankings:>9,}")
     typer.echo(f"{'value rankings':<20} {result.value_rankings:>9,}")
     typer.echo(f"{'with rank ranges':<20} {result.rank_ranges:>9,}")
+    typer.echo(f"{'similar places':<20} {similar:>9,}")
     if result.pruned_releases:
         # Derived releases left behind by runs before #73, which minted one per run.
         typer.echo(
