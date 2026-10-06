@@ -3,6 +3,15 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.40.1] — 2026-10-05
+
+### Changed
+
+- **Town and county pages show a monthly cash bridge and editorial artwork** (PR #97, a
+  Codex experiment, owner-directed): how owning and renting differ month to month,
+  step by step, and abstract artwork drawn from the place's own housing figures.
+  Calculations and AI-written readings are unchanged.
+
 ## [0.40.0] — 2026-10-05
 
 Milestone 43: accessibility audit (built by Codex, PR #95).

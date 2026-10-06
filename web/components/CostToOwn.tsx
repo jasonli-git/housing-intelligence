@@ -26,6 +26,7 @@ import { type Basis, eachMonth, type Inputs, overYears, upFront } from "@/lib/ow
 import { ownershipInputs, cashFit, DEFAULT_YEARS } from "@/lib/budgetScenario";
 import { useBudgetScenario } from "@/components/useBudgetScenario";
 import { QuietDisclosure, QuietToolGroup } from "@/components/QuietCounty";
+import {DifferenceBridge,sentenceCostLabel} from "@/components/DifferenceBridge";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
 export type Dated = { value: number; asOf: string };
@@ -177,6 +178,7 @@ export function CostToOwn({
   const { personal, household, savePersonal, saveHousehold } = useBudgetScenario(control);
   const [fields, setFields] = useState<HomeFields>(NO_HOME_FIELDS);
   const [view, setView] = useState<View>("upfront");
+  const [calculationOpen,setCalculationOpen] = useState(false);
 
   const setPersonal = (key: keyof Personal, value: number | null) => {
     const next = { ...personal };
@@ -373,6 +375,93 @@ export function CostToOwn({
   };
   const showView = (which: View) => !control || view === which;
 
+  const owningLedger = (<dl className="cost-lines">
+            <div className="sum">
+              <dt>
+                <Definition term={terms.gone}>Money gone each month</Definition>
+              </dt>
+              <dd>{money(month.gone)}</dd>
+            </div>
+            <div>
+              <dt>
+                {typedPrice !== null ? "Your purchase price" : home.basis === "index" ? "Typical single-family home" : "Purchase price"}{" "}
+                <small className="src">
+                  {typedPrice !== null
+                    ? "your figure"
+                    : home.basis === "index"
+                      ? `Zillow, ${home.asOf}`
+                      : `NJ SR1A sales, ${home.from} to ${home.to}`}
+                </small>
+              </dt>
+              <dd>{money(input.price)}</dd>
+            </div>
+            <div>
+              <dt>
+                Down payment, {down}% <small className="src">money a renter could invest instead</small>
+              </dt>
+              <dd>{money(month.loan.down)}</dd>
+            </div>
+            {month.lines.map((line) => (
+              <div key={line.key} className={line.value === null ? "missing" : undefined}>
+                <dt>
+                  {line.label}
+                  {line.key === "mortgage" && month.loan.fha ? ", FHA" : ""}{" "}
+                  <small className={line.value === null && line.conditional ? "src cost-add-prompt" : "src"}>
+                    {line.value === null && line.conditional
+                      ? "add yours if it applies"
+                      : [source(line.key), line.value !== null && line.key !== "mortgage" ? BASIS_WORDS[line.basis] : ""]
+                          .filter(Boolean)
+                          .join(" · ")}
+                  </small>
+                </dt>
+                <dd>{line.value === null ? (line.conditional ? "—" : "not included") : `${money(line.value)}/mo`}</dd>
+              </div>
+            ))}
+            <div>
+              <dt>
+                <Definition term={terms.income}>Income to keep it at 30% of pay</Definition>
+              </dt>
+              <dd>{money(incomeFor(month.total))} a year</dd>
+            </div>
+          </dl>);
+  const rentingLedger = rentMonth !== null ? (<dl className="cost-lines">
+                <div className="sum">
+                  <dt>Money gone each month</dt>
+                  <dd>{money(rentMonth)}</dd>
+                </div>
+                <div>
+                  <dt>
+                    {typedRent !== null ? "Your rent" : "Typical rent, any kind of rental home"}{" "}
+                    <small className="src">{typedRent !== null ? "your figure" : `Zillow, ${rent?.asOf} · mostly apartments`}</small>
+                  </dt>
+                  <dd>{money(rentMonth)}/mo</dd>
+                </div>
+                <div>
+                  <dt>
+                    Utilities on top{" "}
+                    <small className="src">
+                      {rentersPayUtilities
+                        ? `${Math.round(rentersPayUtilities.value * 100)}% of renters here pay at least one · Census survey, ${rentersPayUtilities.asOf}`
+                        : "a quoted rent usually leaves them out"}
+                    </small>
+                  </dt>
+                  <dd>not included</dd>
+                </div>
+                <div>
+                  <dt>
+                    Renters insurance <small className="src">no published figure</small>
+                  </dt>
+                  <dd>not included</dd>
+                </div>
+                <div>
+                  <dt>Income to keep it at 30% of pay</dt>
+                  <dd>{money(incomeFor(rentMonth))} a year</dd>
+                </div>
+              </dl>) : null;
+  const calculationToggle = <button type="button" className="calculation-toggle" aria-expanded={calculationOpen} aria-controls={id+"-calculation"} onClick={()=>setCalculationOpen(o=>!o)}>
+    {calculationOpen ? "Hide the calculation" : "Show the calculation"} <span aria-hidden="true">{calculationOpen ? "−" : "+"}</span>
+  </button>;
+
   const budgetFit = <QuietDisclosure enabled={quiet} title="Check your monthly budget">
       {control && comparePlaceId !== undefined && <aside className="cost-budget-fit" aria-label="Your budget fit">
         <details open={quiet || undefined}>
@@ -477,7 +566,8 @@ export function CostToOwn({
       {control && cashComparison && (
         <div className="cost-monthly-headline" role="group" aria-label="Monthly cash comparison">
           <p className="cost-evidence-label">Monthly cash</p>
-          <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>
+          {quiet && rentMonth !== null && against ? <DifferenceBridge own={goneNoUtilities} rent={rentMonth} principal={kept} kind={against.kind} gap={against.gap} missing={missingBeyondUtilities}/> : <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>}
+          {quiet && calculationToggle}
         </div>
       )}
 
@@ -502,7 +592,7 @@ export function CostToOwn({
           )}
           <p className="cost-figure" aria-live="polite">
             <b>{money(month.total)}</b>
-            <span>a month, every cost below</span>
+            <span>{quiet ? "a month, including principal" : "a month, every cost below"}</span>
           </p>
           {month.loan.fha && (
             <p className="cost-basis">
@@ -552,57 +642,7 @@ export function CostToOwn({
               </span>
             </p>
           </div>
-          <QuietDisclosure enabled={quiet} title="See the owning breakdown" note="The costs, assumptions and sources">
-          <dl className="cost-lines">
-            <div className="sum">
-              <dt>
-                <Definition term={terms.gone}>Money gone each month</Definition>
-              </dt>
-              <dd>{money(month.gone)}</dd>
-            </div>
-            <div>
-              <dt>
-                {typedPrice !== null ? "Your purchase price" : home.basis === "index" ? "Typical single-family home" : "Purchase price"}{" "}
-                <small className="src">
-                  {typedPrice !== null
-                    ? "your figure"
-                    : home.basis === "index"
-                      ? `Zillow, ${home.asOf}`
-                      : `NJ SR1A sales, ${home.from} to ${home.to}`}
-                </small>
-              </dt>
-              <dd>{money(input.price)}</dd>
-            </div>
-            <div>
-              <dt>
-                Down payment, {down}% <small className="src">money a renter could invest instead</small>
-              </dt>
-              <dd>{money(month.loan.down)}</dd>
-            </div>
-            {month.lines.map((line) => (
-              <div key={line.key} className={line.value === null ? "missing" : undefined}>
-                <dt>
-                  {line.label}
-                  {line.key === "mortgage" && month.loan.fha ? ", FHA" : ""}{" "}
-                  <small className={line.value === null && line.conditional ? "src cost-add-prompt" : "src"}>
-                    {line.value === null && line.conditional
-                      ? "add yours if it applies"
-                      : [source(line.key), line.value !== null && line.key !== "mortgage" ? BASIS_WORDS[line.basis] : ""]
-                          .filter(Boolean)
-                          .join(" · ")}
-                  </small>
-                </dt>
-                <dd>{line.value === null ? (line.conditional ? "—" : "not included") : `${money(line.value)}/mo`}</dd>
-              </div>
-            ))}
-            <div>
-              <dt>
-                <Definition term={terms.income}>Income to keep it at 30% of pay</Definition>
-              </dt>
-              <dd>{money(incomeFor(month.total))} a year</dd>
-            </div>
-          </dl>
-          </QuietDisclosure>
+          {!quiet && owningLedger}
         </article>
 
         <article className="cost-card">
@@ -615,42 +655,7 @@ export function CostToOwn({
                 <b>{money(rentMonth)}</b>
                 <span>a month, all of it gone</span>
               </p>
-              <QuietDisclosure enabled={quiet} title="See the renting breakdown" note="The rent figure and what it leaves out">
-              <dl className="cost-lines">
-                <div className="sum">
-                  <dt>Money gone each month</dt>
-                  <dd>{money(rentMonth)}</dd>
-                </div>
-                <div>
-                  <dt>
-                    {typedRent !== null ? "Your rent" : "Typical rent, any kind of rental home"}{" "}
-                    <small className="src">{typedRent !== null ? "your figure" : `Zillow, ${rent?.asOf} · mostly apartments`}</small>
-                  </dt>
-                  <dd>{money(rentMonth)}/mo</dd>
-                </div>
-                <div>
-                  <dt>
-                    Utilities on top{" "}
-                    <small className="src">
-                      {rentersPayUtilities
-                        ? `${Math.round(rentersPayUtilities.value * 100)}% of renters here pay at least one · Census survey, ${rentersPayUtilities.asOf}`
-                        : "a quoted rent usually leaves them out"}
-                    </small>
-                  </dt>
-                  <dd>not included</dd>
-                </div>
-                <div>
-                  <dt>
-                    Renters insurance <small className="src">no published figure</small>
-                  </dt>
-                  <dd>not included</dd>
-                </div>
-                <div>
-                  <dt>Income to keep it at 30% of pay</dt>
-                  <dd>{money(incomeFor(rentMonth))} a year</dd>
-                </div>
-              </dl>
-              </QuietDisclosure>
+              {!quiet && rentingLedger}
             </>
           ) : (
             <p className="cost-missing">
@@ -659,13 +664,20 @@ export function CostToOwn({
             </p>
           )}
         </article>
+        {quiet && <>
+          {!(control && cashComparison) && <div className="calculation-fallback">{calculationToggle}</div>}
+          <section id={id+"-calculation"} className="shared-calculation" hidden={!calculationOpen} aria-label="Owning and renting calculation">
+            <div><h4>Owning</h4><p className="calculation-note">Cash payment includes principal and included utilities. Money spent includes utilities here; the bridge excludes them.</p>{owningLedger}</div>
+            <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. Enter one under “Your numbers” to compare.</p>}</div>
+          </section>
+        </>}
         <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
           <p className="cost-evidence-label">
             <span className="cost-evidence-omissions-mark" aria-hidden="true">i</span>
             Not included
           </p>
           <p>
-            The monthly owning estimate leaves out {listed([...month.missing, ...month.optional, "what the down payment could earn"])}.
+            The monthly owning estimate leaves out {listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.
           </p>
         </aside>
       </div>
