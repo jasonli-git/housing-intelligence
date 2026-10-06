@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.41.2, 2026-10-06. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.42.0, 2026-10-06. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, prices, rents, economic context, tax
 > roll, recorded sales, and flood and environmental exposure, from 35 public sources,
@@ -22,9 +22,9 @@ layer only explains metrics that were already computed.
 > overwritten. Full detail under
 > [Project Status](#project-status).
 >
-> **Latest.** Milestone 43 (2026-10-05) is an accessibility audit: keyboard and button
-> alternatives for the maps and banners, contrast and reflow fixes, and a repeatable
-> check, with screen-reader review still to come.
+> **Latest.** The code is now licensed under the GNU AGPL v3.0 (2026-10-06), and the
+> footer says so. Milestone 43 (2026-10-05) added an accessibility audit, with
+> screen-reader review still to come.
 >
 > **Next.** Milestone 44: evictions. See
 > [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md).
@@ -767,7 +767,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.41.2 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.42.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -958,3 +958,12 @@ any more and `ARGS=--apply` removes it — a single run on 2026-09-20 recovered 
 
 New Jersey holds 3,365 regions and 335,263 observations; the `US` nation-level row
 accounts for the remaining 664.
+
+## License
+
+The code is licensed under the [GNU Affero General Public License v3.0](LICENSE)
+(`AGPL-3.0-only`): anyone may use, change and share it, and anyone who distributes a
+modified version, or runs one as a website or service, must offer its source under the
+same licence. Versions before 2026-10-06 were MIT licensed. The data and every figure
+derived from it are not covered: each source keeps its publisher's terms, and Zillow's
+are non-commercial ([NOTICE](NOTICE), ARCHITECTURE #312).

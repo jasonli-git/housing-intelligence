@@ -3,6 +3,15 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.42.0] — 2026-10-06
+
+### Changed
+
+- **The code is licensed under the GNU Affero General Public License v3.0** (ARCHITECTURE
+  #312), replacing MIT. The footer's notice card names the licence and links the source;
+  `NOTICE`, the README and the package metadata say the same. The data's terms are
+  unchanged.
+
 ## [0.41.2] — 2026-10-06
 
 ### Fixed

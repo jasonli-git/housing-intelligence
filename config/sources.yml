@@ -201,7 +201,7 @@ sources:
     publisher: Housing Intelligence Platform
     license: Derived from cited sources
     licence_class: derived
-    terms_url: https://github.com/jasonli-git/housing-intelligence/blob/main/LICENSE
+    terms_url: https://github.com/jasonli-git/housing-intelligence/blob/main/NOTICE
     terms_note: >-
       The platform's own figures, each carrying the most restrictive licence of the metrics it is computed from (ARCHITECTURE #269).
     url: https://github.com/jasonli-git/housing-intelligence

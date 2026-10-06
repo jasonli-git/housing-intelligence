@@ -5,7 +5,9 @@ import { api } from "@/lib/api";
 import { dayLabel } from "@/lib/freshness";
 import { byInstitution, isRestricted, shortPublisher } from "@/lib/sources";
 
-const NOTICE_URL = "https://github.com/jasonli-git/housing-intelligence/blob/main/NOTICE";
+const REPO_URL = "https://github.com/jasonli-git/housing-intelligence";
+const NOTICE_URL = `${REPO_URL}/blob/main/NOTICE`;
+const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
 
 /**
  * Site-wide attribution: every source behind any figure on the page, with its terms.
@@ -186,9 +188,23 @@ export async function SourceFooter() {
             >
               Notice <span aria-hidden="true">↗</span>
             </a>
+            <a
+              className="foot-tab"
+              href={LICENSE_URL}
+              rel="noreferrer noopener"
+              target="_blank"
+              title="The GNU Affero General Public License v3.0, on GitHub"
+            >
+              License: AGPL-3.0 <span aria-hidden="true">↗</span>
+            </a>
+            {/* AGPL section 13: a site running this code offers its users the source. */}
             <span className="foot-intro">
-              Analysis and code are MIT licensed; the data is not ours to relicense, and this
-              site cannot grant terms it was not given.
+              The code is free software under the GNU Affero General Public License v3.0, and{" "}
+              <a href={REPO_URL} rel="noreferrer noopener" target="_blank">
+                its source is public
+              </a>
+              . The data is not ours to relicense, and this site cannot grant terms it was not
+              given.
             </span>
           </div>
         </div>
