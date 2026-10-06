@@ -287,6 +287,14 @@ export default async function RegionPage({
     (item) => item.metric_id !== "acs_population",
   );
   const standing = standOuts(packet, uncertainties);
+  const editorialFigure = quiet ? packet.levels.find(l => l.metric_id === "acs_renter_cost_burden") : null;
+  const editorialAnnotation = editorialFigure && <>
+    <span className="quiet-label">From the data</span>
+    <strong>{formatMetric(editorialFigure.value, editorialFigure.unit, editorialFigure.metric_id)}</strong>
+    <span>Renters spending over 30% of income on housing</span>
+    <small>Census ACS · {surveyYears(editorialFigure.period_start, editorialFigure.period_end)}</small>
+    <small>{uncertainties.value.get(editorialFigure.metric_id)?.margin != null ? `90% margin: ${marginLabel(editorialFigure.value, uncertainties.value.get(editorialFigure.metric_id)!.margin, editorialFigure.unit, editorialFigure.metric_id)}` : "Sampling margin unavailable"}</small>
+  </>;
   const changePreview = standing.find((item) => item.group === "leads")
     ?? standing.find((item) => item.group === "lags");
   const valuePreview = standing.find((item) => item.group === "value" && item.metric_id !== changePreview?.metric_id)
@@ -485,7 +493,7 @@ export default async function RegionPage({
           sentences say what changed. */}
       <QuietAnchor enabled={quiet} id="quiet-highlights">
       {quiet && <QuietLinework />}
-      <ConsumerReading reading={consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`}>
+      <ConsumerReading reading={consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`} annotation={editorialAnnotation}>
       {standing.length > 0 && (
         <details className="standouts-disclosure">
           <summary>

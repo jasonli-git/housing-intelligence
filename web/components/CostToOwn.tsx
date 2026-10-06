@@ -26,6 +26,7 @@ import { type Basis, eachMonth, type Inputs, overYears, upFront } from "@/lib/ow
 import { ownershipInputs, cashFit, DEFAULT_YEARS } from "@/lib/budgetScenario";
 import { useBudgetScenario } from "@/components/useBudgetScenario";
 import { QuietDisclosure, QuietToolGroup } from "@/components/QuietCounty";
+import { CostRibbon } from "@/components/CostRibbon";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
 export type Dated = { value: number; asOf: string };
@@ -524,6 +525,7 @@ export function CostToOwn({
             · not a lender quote
           </p>
           <div className="gone-kept">
+            {quiet ? <CostRibbon parts={parts.map(p=>({key:p.key,value:p.value,color:PART_COLOURS[p.key]}))} principal={kept} label={`Included monthly payment: ${money(month.total)}. ` + parts.map(p=>`${p.label} ${money(p.value)}`).join(", ") + `; principal paid down ${money(kept)}. Band thickness at each end shows its share; missing costs are not included.`} /> : (
             <div
               className="gone-kept-bar"
               role="img"
@@ -538,6 +540,7 @@ export function CostToOwn({
               ))}
               <i style={{ width: share(kept, month.total), background: "var(--good)" }} />
             </div>
+            )}
             {quiet && <p className="quiet-receipt"><span>Money gone <b>{money(month.gone)}</b></span><span>Into the home <b>{money(kept)}</b></span></p>}
             <p className="gone-kept-key" aria-hidden="true">
               {parts.map((p) => (

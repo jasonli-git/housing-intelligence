@@ -11,7 +11,39 @@ Commit `3c1f360` was reverted with a normal revert commit, preserving history an
 initial abstract styling in `4b06162`. Vacancy mosaic, county constellation, stock-flow
 graphic and cost-composition ring are no longer in the branch. The original cost bar,
 local-market disclosure and local-picture surface are restored. Alternative visual
-directions are discussion only; no replacement graphics were implemented.
+directions were initially discussion only. The owner subsequently approved all three
+replacement directions described below.
+
+## Approved replacement direction
+
+- The owning panel's existing bar is replaced by a shallow cost ribbon, not another
+  chart card. Interest and bills split from principal; band end thickness follows the
+  existing unrounded included amounts. Existing totals, omissions and breakdown stay.
+  A 700ms reveal plays once in view; reduced motion and print stay static. No extra controls.
+- The light local-picture surface is retained. Desktop has a computed renter-burden
+  margin annotation beside the unchanged AI prose; mobile uses a compact strip below.
+  The annotation explicitly identifies itself as computed, uses ACS survey dates and
+  a 90% margin from the summary, and is omitted if the metric or reading is absent.
+- Household curves, a decorative stepped local-market silhouette and evidence lattice
+  share an architectural motif. These encode no values and remain aria-hidden and
+  pointer-transparent. Disclosure hover/focus gives a restrained response, disabled
+  for reduced motion. No new standalone sections, dependencies or source fetches.
+- Modules: `CostRibbon.tsx` and tests, `CostToOwn.tsx`, `ExplanationPanel.tsx`, region
+  page, `AbstractField.tsx` and tests, `QuietCounty.tsx`, `artful-data.css`.
+- Earlier reverted mosaic/constellation/stock-flow/donut remain absent. No model text
+  regeneration, new metrics, source refresh or canonical-document changes.
+- Replacement verification: 475 tests in 61 files, TypeScript and 2,379-page static
+  export passed. Three ribbon tests cover proportional end thickness, input updates
+  and missing/zero inputs; architecture motif has its own decorative-accessibility test.
+- Desktop and mobile screenshots inspected on county 20: annotation becomes a compact
+  source-labelled strip, and the owning graphic stays inside the existing panel.
+- Existing local artifact-origin warning remains unchanged; the preview is not deployed.
+- Development and static browser checks passed across five routes, 1280/390/320px,
+  both themes, expanded disclosures, mobile axe and print. The script now asserts
+  the ribbon replaces the bar and the rejected graphic sections remain absent.
+- A browser check exercised the in-view reveal and changing reduced-motion preference
+  after reveal. It caught a specificity issue in the initial override; the corrected
+  override stops animation immediately. Artwork never encodes fabricated data motion.
 
 ## What changed
 

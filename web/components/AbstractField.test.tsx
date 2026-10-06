@@ -6,7 +6,7 @@ import { QuietDisclosure, QuietToolGroup } from "./QuietCounty";
 
 afterEach(cleanup);
 describe("abstract section artwork", () => {
-  it.each(["household", "contours", "evidence"] as const)("keeps %s decorative and out of keyboard navigation", kind => {
+  it.each(["household", "contours", "evidence", "architecture"] as const)("keeps %s decorative and out of keyboard navigation", kind => {
     const { container } = render(<AbstractField kind={kind} />);
     const svg = container.querySelector("svg")!;
     expect(svg.getAttribute("aria-hidden")).toBe("true");
@@ -17,7 +17,7 @@ describe("abstract section artwork", () => {
     const { container } = render(<QuietDisclosure enabled title="The local market" note="Market detail"><p>Actual figures</p></QuietDisclosure>);
     expect(container.querySelector("details > summary")?.textContent).toContain("The local market");
     expect(screen.getByText("Actual figures")).toBeTruthy();
-    expect(container.querySelector(".abstract-field-contours")).not.toBeNull();
+    expect(container.querySelector(".abstract-field-architecture")).not.toBeNull();
   });
   it("does not add experimental wrappers or artwork when disabled", () => {
     const { container } = render(<QuietToolGroup enabled={false}><QuietDisclosure enabled={false} title="The local market"><p>Content</p></QuietDisclosure></QuietToolGroup>);
