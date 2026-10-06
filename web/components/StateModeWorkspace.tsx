@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { type Measure } from "@/components/CountyExplorer";
+import type { Measure } from "@/lib/measures";
 import { SectionJump } from "@/components/SectionJump";
 import { CountyComparison } from "@/components/CountyComparison";
 import { PlaceSearch } from "@/components/PlaceSearch";

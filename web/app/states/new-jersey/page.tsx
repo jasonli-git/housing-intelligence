@@ -1,4 +1,4 @@
-import { type Measure } from "@/components/CountyExplorer";
+import type { Measure } from "@/lib/measures";
 import { StateFigureNotes } from "@/components/StateFigureNotes";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { StateModeWorkspace } from "@/components/StateModeWorkspace";

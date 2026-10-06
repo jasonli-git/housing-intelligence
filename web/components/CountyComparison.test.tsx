@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { CountyComparison } from "./CountyComparison";
-import type { Measure } from "./CountyExplorer";
+import type { Measure } from "@/lib/measures";
 
 afterEach(cleanup);
 const measure: Measure = {
