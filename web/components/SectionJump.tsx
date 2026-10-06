@@ -11,15 +11,29 @@ const SECTIONS = [
   ["Explore the evidence", "#region-detailed-data"],
   ["Statewide overview", "#state-overview"],
   ["State profile", ".nj-page > .state-ticker, .nj-page .quiet-state-profile"],
-  ["Map & county comparison", "#nj-explore"],
+  ["Find your place", "#nj-explore"],
+  ["Compare counties", "#county-comparison"],
+  ["Housing help", "#housing-assistance"],
   ["Statewide evidence", "#state-detailed-data"],
 ] as const;
 
 /** Only offer sections actually present on this page, including thinner profiles. */
 export function SectionJump() {
   const [sections, setSections] = useState<(typeof SECTIONS)[number][]>([]);
+  const [current, setCurrent] = useState("");
   useEffect(() => {
-    setSections(SECTIONS.filter(([, selector]) => document.querySelector(selector)));
+    const present = SECTIONS.filter(([, selector]) => document.querySelector(selector));
+    setSections(present);
+    const update = () => {
+      const bar = document.querySelector(".bar")?.getBoundingClientRect().bottom ?? 0;
+      const visible = present.map(([label, selector]) => ({ label, target: document.querySelector<HTMLElement>(selector) }))
+        .filter(item => item.target?.getClientRects().length)
+        .sort((a, b) => a.target!.getBoundingClientRect().top - b.target!.getBoundingClientRect().top);
+      setCurrent(visible.filter(item => item.target!.getBoundingClientRect().top <= bar + 100).at(-1)?.label ?? "");
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
   }, []);
 
   return (
@@ -50,7 +64,7 @@ export function SectionJump() {
         }
         event.currentTarget.value = "";
       }}>
-      <option value="" disabled>Jump to section</option>
+      <option value="" disabled>{current ? "On this page · " + current : "On this page"}</option>
       {sections.map(([label, selector]) => <option key={selector} value={selector}>{label}</option>)}
     </select>
     <svg className="section-jump-chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4" /></svg>

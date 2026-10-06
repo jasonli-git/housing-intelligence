@@ -1,0 +1,55 @@
+/* Geography is a cue, never the only identifier. Utility tools use their own ink. */
+@media screen {
+  .atlas-local[data-region-level="municipality"] { --atlas-accent: light-dark(#267775, #a2dad5); }
+  .atlas-local[data-region-level="zip"] { --atlas-accent: light-dark(#735e91, #d2bce9); }
+  .atlas-local[data-region-level="municipality"] .page-head { --geo-accent: light-dark(#267775, #a2dad5); }
+  .atlas-local[data-region-level="zip"] .page-head { --geo-accent: light-dark(#735e91, #d2bce9); }
+  .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) .page-head .kind { color:var(--atlas-accent); }
+  .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) .crumbs li[aria-current="page"] { --crumb-accent:var(--atlas-accent); }
+  .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) > .page-head { border-top-color:color-mix(in srgb,var(--atlas-accent) 50%,var(--border)); }
+  .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) :is(.quiet-profile,.more-entry) { --atlas-accent: inherit; }
+  .quiet-tax { --atlas-accent: light-dark(#006977, #8ed9e2); }
+  .quiet-tax .tax-search-field { border-color:var(--atlas-accent); border-radius:16px; background:light-dark(#f0f5f7,#20292e); }
+  .quiet-history.quiet-revisions { --atlas-accent: light-dark(#826438,#d7c19b); }
+  :is(.quiet-tax,.quiet-history,.budget-page) .crumbs li[data-level="nation"] { --crumb-accent:var(--text-primary); }
+  :is(.quiet-tax,.quiet-history,.budget-page) .crumbs li[data-level="nation"] a { color:var(--text-primary); }
+  .quiet-county .quiet-tool-group { --atlas-accent:light-dark(#62666a,#c1c5c8); background:linear-gradient(115deg,light-dark(#eeeeef,#242527),light-dark(#f5f5f6,#202123)); border-color:light-dark(#d0d1d3,#44464a); }
+  .quiet-county .quiet-tool-group .household { background:transparent; }
+  .assistance-routes a { background:light-dark(#f0f1f5,#282a30); border-color:light-dark(#d5d8e1,#474b55); }
+  .assistance-routes a:hover { border-color:light-dark(#626d83,#b2bfd4); }
+  .entry-free svg { color:light-dark(#25714b,#83cfa3); stroke:currentColor; }
+  sup.mk, .more-body sup.mk { color:var(--text-secondary); }
+  .state-nickname { font:italic 18px/1.4 Georgia,serif; color:var(--text-secondary); margin:0 0 .7rem; }
+  .place-first-workspace { margin-top:1.5rem; }
+  .place-discovery { padding:clamp(16px,3vw,28px); background:linear-gradient(120deg,color-mix(in srgb,var(--atlas-accent) 9%,var(--surface-card)),var(--surface-card)); border:1px solid var(--border); border-radius:22px 22px 8px 8px; }
+  .place-discovery > p { margin:0 0 1rem; color:var(--text-secondary); font-size:14px; }
+  .place-discovery .place-search { width:100%; max-width:600px; margin-bottom:1.3rem; position:relative; z-index:2; }
+  .place-discovery .place-search input { width:100%; min-height:48px; font-size:16px; box-sizing:border-box; }
+  .place-county-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px 16px; }
+  .place-county-grid a { display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.65rem .5rem; min-height:44px; box-sizing:border-box; border-bottom:1px solid var(--border); color:var(--text-primary); text-decoration:none; }
+  .place-county-grid a > span { font:500 18px/1.3 Georgia,serif; }
+  .place-county-grid small { font:10px/1.4 var(--font-mono); color:var(--text-secondary); white-space:nowrap; }
+  .place-county-grid a:hover { background:color-mix(in srgb,var(--atlas-accent) 8%,transparent); }
+  .place-comparison { margin-top:1rem; border-block:1px solid var(--border); }
+  .place-comparison > summary { display:flex; align-items:center; gap:1rem; min-height:56px; cursor:pointer; padding:.5rem; list-style:none; }
+  .place-comparison > summary > span:first-child { font:500 21px/1.2 Georgia,serif; }
+  .place-comparison > summary small { flex:1; color:var(--text-secondary); font-size:12px; }
+  .place-comparison-body { padding:1rem .5rem; }
+  .place-comparison-controls { display:flex; flex-wrap:wrap; gap:1rem; }
+  .place-comparison-controls label { display:flex; flex-direction:column; gap:.4rem; min-width:0; max-width:100%; font-size:12px; }
+  .place-comparison-controls select { min-height:44px; max-width:100%; background:var(--surface-card); color:var(--text-primary); border:1px solid var(--border); border-radius:8px; padding:.5rem; font:inherit; }
+  .place-comparison table { width:100%; }
+  .place-comparison td small { display:block; color:var(--text-secondary); font-size:11px; }
+  .budget-page .explorer { grid-template-columns:minmax(0,1fr); }
+  .budget-coverage-note { color:var(--text-secondary); font-size:12px; line-height:1.6; max-width:85ch; }
+  .quiet-nation .coverage-map-stage { background:radial-gradient(ellipse at 50% 50%,light-dark(#e6eef0,#273239),light-dark(#f1f5f5,#20282d)); }
+  @media(max-width:600px) {
+    .place-county-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 12px; }
+    .place-county-grid a { flex-direction:column; align-items:flex-start; gap:.2rem; }
+    .place-county-grid a > span { font-size:17px; }
+    .place-comparison > summary { flex-wrap:wrap; gap:.5rem; }
+    .place-comparison > summary small { flex-basis:60%; }
+    .place-comparison-controls { display:grid; grid-template-columns:minmax(0,1fr); }
+    .place-first-workspace .state-workspace-head { flex-wrap:wrap; }
+  }
+}

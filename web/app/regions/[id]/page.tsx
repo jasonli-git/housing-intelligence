@@ -247,7 +247,7 @@ export default async function RegionPage({
   }));
 
   const name = displayName(region);
-  const quiet = region.level === "county" || region.level === "municipality";
+  const quiet = ["county", "municipality", "zip"].includes(region.level);
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is

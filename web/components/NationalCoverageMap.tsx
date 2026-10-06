@@ -17,7 +17,8 @@ export function NationalCoverageMap() {
   const [outlines, setOutlines] = useState<Outline[]>([]);
   const [failed, setFailed] = useState(false);
   const [hovered, setHovered] = useState("New Jersey · Available now");
-  const [viewport, setViewport] = useState(COVERAGE_HOME);
+  const home = { scale: 1.12, x: -54, y: -29 };
+  const [viewport, setViewport] = useState(home);
   const [region, setRegion] = useState<CoverageRegion | null>(null);
   const [dragging, setDragging] = useState(false);
   const drag = useRef<{ id: number; x: number; y: number; start: CoverageViewport; pixels: number; moved: boolean } | null>(null);
@@ -168,6 +169,10 @@ export function NationalCoverageMap() {
         }}>
         <title id="coverage-map-title">Explore housing coverage by state</title>
         <desc id="coverage-map-description">New Jersey is blue and available. All other states are unavailable. Alaska and Hawaii are outside this view. Zoom with the buttons; drag the enlarged map, or swipe sideways on mobile. Vertical scrolling moves the page. Use the New Jersey link to explore.</desc>
+        <defs>
+          <filter id="coverage-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" /><feColorMatrix type="saturate" values="0" /></filter>
+        </defs>
+        <rect width="900" height="480" filter="url(#coverage-grain)" opacity=".035" pointerEvents="none" aria-hidden="true" />
         <g ref={geography} className="coverage-geography">
         <g className="coverage-viewport" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})` }}>
         <g className="coverage-land" aria-hidden="true">{land.map((part) => <path key={part.id} d={part.base} />)}</g>
@@ -194,7 +199,7 @@ export function NationalCoverageMap() {
           <span className="globe-divider" aria-hidden="true" />
           <button type="button" aria-label="Zoom in United States map" disabled={viewport.scale === 5} onClick={() => zoomMap(1.4)}>+</button>
           <span className="globe-divider" aria-hidden="true" />
-          <button type="button" className="globe-icon" aria-label="Reset United States map" title="Reset map" disabled={viewport.scale === 1 && !region} onClick={() => { if (!flight.current) { setViewport(COVERAGE_HOME); setRegion(null); } }}>
+          <button type="button" className="globe-icon" aria-label="Reset United States map" title="Reset map" disabled={viewport.scale === home.scale && viewport.x === home.x && viewport.y === home.y && !region} onClick={() => { if (!flight.current) { setViewport(home); setRegion(null); } }}>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 5a5.5 5.5 0 1 1-.4 5M3 1.5V5h3.5" /></svg>
           </button>
         </div>
