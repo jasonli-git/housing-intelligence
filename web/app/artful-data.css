@@ -21,6 +21,10 @@
   }
 }
 .editorial-metric-content { display: flex; flex-direction: column; gap: .45rem; min-height: 195px; }
+@media screen and (prefers-reduced-motion:no-preference) {
+  .editorial-metric { animation:editorial-reveal 300ms ease-out both; }
+  @keyframes editorial-reveal { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+}
 .editorial-metric-content > span:not(.quiet-label) { min-height: 3em; }
 .editorial-controls { display: flex; align-items: center; gap: .35rem; margin-top: .4rem; font-size: 11px; color: var(--text-secondary); }
 .editorial-controls button { min-height: 30px; min-width: 30px; padding: 0; border: 1px solid var(--border); border-radius: 50%; background: transparent; color: var(--text-primary); cursor: pointer; }

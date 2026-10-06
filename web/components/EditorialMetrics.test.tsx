@@ -11,11 +11,12 @@ it("keeps reduced motion static but supports previous and next",()=>{
   fireEvent.click(screen.getByRole("button",{name:"Next computed figure"}));expect(screen.getByText("Second figure")).toBeTruthy();
   expect(screen.queryByRole("button",{name:"Pause computed figures"})).toBeNull();
 });
-it("rotates every 12 seconds and pauses for hover and explicit pause",()=>{
+it("rotates every 10 seconds without a pause button and holds while hovered",()=>{
   media(false);vi.useFakeTimers();const {container}=render(<EditorialMetrics items={items}/>);
-  act(()=>vi.advanceTimersByTime(11999));expect(screen.getByText("First figure")).toBeTruthy();
+  act(()=>vi.advanceTimersByTime(9999));expect(screen.getByText("First figure")).toBeTruthy();
   act(()=>vi.advanceTimersByTime(1));expect(screen.getByText("Second figure")).toBeTruthy();
   fireEvent.mouseEnter(container.firstChild!);act(()=>vi.advanceTimersByTime(12000));expect(screen.getByText("Second figure")).toBeTruthy();
-  fireEvent.mouseLeave(container.firstChild!);fireEvent.click(screen.getByRole("button",{name:"Pause computed figures"}));
-  act(()=>vi.advanceTimersByTime(24000));expect(screen.getByText("Second figure")).toBeTruthy();
+  expect(screen.queryByRole("button",{name:"Pause computed figures"})).toBeNull();
+  fireEvent.mouseLeave(container.firstChild!);
+  act(()=>vi.advanceTimersByTime(10000));expect(screen.getByText("First figure")).toBeTruthy();
 });

@@ -99,6 +99,27 @@ The current state is documented in the next section.
 - Development and final static-preview suites passed all 30 route/width/theme
   combinations, mobile axe and print. Existing local artifact-origin warning remains.
 
+## Editorial transition refinement
+
+- Owner requested no explicit pause button. Removed pause/play from the local-picture
+  metric area, shortened the cadence to 10 seconds and added a 300ms fade/6px-rise
+  transition on each change. Previous/next remain; hover/focus and hidden-document
+  suspension remain, and reduced motion disables autoplay and transitions.
+- Bridge and cost-breakdown structure are unchanged. A single shared breakdown
+  expansion beneath the bridge is a recommendation only, not implemented.
+- Suggested structure: one “Show the calculation” trigger attached to the bridge
+  opens both existing ledgers, replacing—not nesting—the owning/renting disclosures.
+  Cash-payment total stays visible because it includes principal (and included
+  utilities), unlike the bridge's spent-money comparison. Source/basis and omissions
+  must remain readable in the single open state; mobile would stack the two ledgers.
+- Verification: 478 tests, TypeScript, 2,379-page export and diff check passed. Real
+  browser confirmed 10-second automatic change, fade/rise animation, absent pause
+  control, live reduced-motion switching and mobile reflow on county 8.
+- Removing explicit pause is owner-directed: hover/focus suspension remains but is
+  not a persistent pause after moving away; reduced motion disables autoplay.
+- Final static browser suite passed all 30 route/width/theme combinations, mobile
+  axe and print checks. Existing artifact-origin preview warning remains unchanged.
+
 ## What changed
 
 - Neutral white/ivory (dark) and readable neutral ink (light) United States breadcrumbs
