@@ -16,6 +16,9 @@ replacement directions described below.
 
 ## Approved replacement direction
 
+Historical implementation below: subsequent owner review removed the cost ribbon.
+The current state is documented in the next section.
+
 - The owning panel's existing bar is replaced by a shallow cost ribbon, not another
   chart card. Interest and bills split from principal; band end thickness follows the
   existing unrounded included amounts. Existing totals, omissions and breakdown stay.
@@ -44,6 +47,34 @@ replacement directions described below.
 - A browser check exercised the in-view reveal and changing reduced-motion preference
   after reveal. It caught a specificity issue in the initial override; the corrected
   override stops animation immediately. Artwork never encodes fabricated data motion.
+
+## Latest owner refinement
+
+- Cost ribbon rejected and removed, including its component, tests and animation CSS.
+  The original owning breakdown bar is restored. No monthly-cash replacement built;
+  a typographic difference bridge remains a suggestion for owner review.
+- Household/buying-plans surface now uses warm stone, neutral borders and a muted
+  bronze local accent rather than the neighboring cards' green treatment.
+- Editorial metric was hard-coded to renter burden. It now rotates among available
+  renter burden, homeownership and vacancy readings from the existing packet every
+  12 seconds. These are computed context, not model-selected highlights. Missing
+  metrics are skipped; no extra API fetch or generation. Every item retains its own
+  ACS period and 90% uncertainty from the summary.
+- `EditorialMetrics.tsx` includes manual previous/next, explicit pause/play, separate
+  hover/focus pause states, hidden-document pause and reduced-motion static behavior.
+  Automatic updates are not announced by a live region. Source labels remain visible.
+- Only one statistic occupies the margin area at a time; mobile uses the existing
+  compact strip. No new standalone chart or card. Architectural artwork is retained.
+- Latest verification: 474 tests in 61 files and TypeScript passed; static build
+  produced 2,379 pages. Carousel tests cover 12-second cadence, reduced motion,
+  manual navigation, hover pause and explicit pause. Development browser checks
+  passed all 30 route/width/theme combinations with mobile axe and print checks.
+- County 8 browser interaction verified metric changes, 12.5-second explicit pause,
+  restored original bar and mobile reflow. Mobile screenshots inspected for the
+  vacancy slide and warm-stone household section. No canonical documents changed.
+- Final static-preview check also passed all 30 route/width/theme combinations,
+  mobile axe and print, with assertions that the ribbon and earlier rejected graphs
+  remain absent. Existing local artifact-origin warning remains; no deployment.
 
 ## What changed
 

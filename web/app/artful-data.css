@@ -1,13 +1,10 @@
 /* Decorative echoes of the housing portrait. They never encode a measurement. */
 .abstract-field { display: none; }
-.cost-ribbon { display: block; width: 100%; height: 105px; }
-.cost-ribbon-wrap { position: relative; }
-.cost-ribbon-wrap > span { position: absolute; right: 0; font-size: 11px; color: var(--text-secondary); }
-.ribbon-spent { top: -3px; }
-.ribbon-principal { bottom: -2px; }
+.editorial-metric-content { display: flex; flex-direction: column; gap: .45rem; min-height: 195px; }
+.editorial-metric-content > span:not(.quiet-label) { min-height: 3em; }
+.editorial-controls { display: flex; align-items: center; gap: .35rem; margin-top: .4rem; font-size: 11px; color: var(--text-secondary); }
+.editorial-controls button { min-height: 30px; min-width: 30px; padding: 0; border: 1px solid var(--border); border-radius: 50%; background: transparent; color: var(--text-primary); cursor: pointer; }
 @media screen {
-  .cost-ribbon.is-revealed { animation: ribbon-reveal 700ms ease-out both; }
-  @keyframes ribbon-reveal { from { clip-path: inset(0 100% 0 0); opacity: .4; } to { clip-path: inset(0); opacity: 1; } }
   .quiet-county .consumer-feature-editorial { display: grid; grid-template-columns: minmax(0,1fr) 210px; column-gap: 2.5rem; align-items: start; }
   .consumer-feature-editorial > h2, .consumer-feature-editorial > .consumer-feature-answer { grid-column: 1; }
   .editorial-annotation { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: .45rem; padding: .5rem 0 .5rem 1.3rem; border-left: 1px solid var(--border); font-size: 12px; line-height: 1.5; }
@@ -21,15 +18,15 @@
   .quiet-county :is(.quiet-disclosure,.more) > summary:is(:hover,:focus-visible) .abstract-field { translate: -8px 0; opacity: .3; }
   @media (max-width: 750px) {
     .quiet-county .consumer-feature-editorial { grid-template-columns: minmax(0,1fr); }
-    .editorial-annotation { grid-column: 1; grid-row: auto; display: grid; grid-template-columns: auto minmax(0,1fr); gap: .3rem 1rem; margin-top: .5rem; padding: .7rem 0; border-left: 0; border-top: 1px solid var(--border); }
+    .editorial-annotation { grid-column: 1; grid-row: auto; display: block; margin-top: .5rem; padding: .7rem 0; border-left: 0; border-top: 1px solid var(--border); }
+    .editorial-metric-content { display: grid; grid-template-columns: auto minmax(0,1fr); gap: .3rem 1rem; min-height: 120px; }
     .editorial-annotation strong { grid-column: 1; grid-row: 2 / span 3; font-size: 42px; }
-    .editorial-annotation > .quiet-label { grid-column: 1 / -1; }
-    .editorial-annotation > span:not(.quiet-label), .editorial-annotation > small { grid-column: 2; }
-    .cost-ribbon { height: 90px; }
+    .editorial-metric-content > .quiet-label { grid-column: 1 / -1; }
+    .editorial-metric-content > span:not(.quiet-label), .editorial-metric-content > small { grid-column: 2; }
   }
 }
-@media print { .cost-ribbon { animation: none !important; clip-path: none !important; print-color-adjust: exact; } }
-@media (prefers-reduced-motion: reduce) { .cost-ribbon.is-revealed, .cost-ribbon { animation: none; } .quiet-county :is(.quiet-disclosure,.more) > summary .abstract-field { transition: none; translate: none !important; } }
+@media print { .editorial-controls { display:none; } }
+@media (prefers-reduced-motion: reduce) { .quiet-county :is(.quiet-disclosure,.more) > summary .abstract-field { transition: none; translate: none !important; } }
 @media screen {
   :is(.quiet-tax, .quiet-history) .crumbs li[data-level="nation"] {
     --crumb-accent: var(--text-primary);
@@ -47,8 +44,9 @@
     position: relative; isolation: isolate;
   }
   .quiet-county .quiet-tool-group {
-    background: linear-gradient(115deg, light-dark(#edf2ed, #242e28), light-dark(#f5f5ef, #242a27));
-    border: 1px solid color-mix(in srgb, var(--atlas-accent) 18%, var(--border));
+    --atlas-accent: light-dark(#776751, #c7b594);
+    background: linear-gradient(115deg, light-dark(#f0ece5, #302d29), light-dark(#f8f5ef, #282622));
+    border: 1px solid light-dark(#d6cec0, #4b463e);
     border-radius: 45px 14px 14px 14px;
   }
   .quiet-county .quiet-tool-group > h3 { padding-right: 110px; }

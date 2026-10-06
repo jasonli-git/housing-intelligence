@@ -14,6 +14,7 @@ import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
 import { DataDownload, hasDownloadableFigures } from "@/components/DataDownload";
 import { ConsumerReading } from "@/components/ExplanationPanel";
+import { EditorialMetrics } from "@/components/EditorialMetrics";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { IndexedComparison } from "@/components/IndexedComparison";
 import { Glossed } from "@/components/Glossed";
@@ -287,14 +288,22 @@ export default async function RegionPage({
     (item) => item.metric_id !== "acs_population",
   );
   const standing = standOuts(packet, uncertainties);
-  const editorialFigure = quiet ? packet.levels.find(l => l.metric_id === "acs_renter_cost_burden") : null;
-  const editorialAnnotation = editorialFigure && <>
+  const editorialItems = quiet ? [
+    ["acs_renter_cost_burden","Renters spending over 30% of income on housing"],
+    ["acs_homeownership_rate","Occupied homes owned by their residents"],
+    ["acs_vacancy_rate","Homes standing empty, including seasonal homes"],
+  ].flatMap(([id,label])=>{
+    const editorialFigure=packet.levels.find(l=>l.metric_id===id);
+    if(!editorialFigure) return [];
+    return [<div key={id} className="editorial-metric-content">
     <span className="quiet-label">From the data</span>
     <strong>{formatMetric(editorialFigure.value, editorialFigure.unit, editorialFigure.metric_id)}</strong>
-    <span>Renters spending over 30% of income on housing</span>
+    <span>{label}</span>
     <small>Census ACS · {surveyYears(editorialFigure.period_start, editorialFigure.period_end)}</small>
     <small>{uncertainties.value.get(editorialFigure.metric_id)?.margin != null ? `90% margin: ${marginLabel(editorialFigure.value, uncertainties.value.get(editorialFigure.metric_id)!.margin, editorialFigure.unit, editorialFigure.metric_id)}` : "Sampling margin unavailable"}</small>
-  </>;
+    </div>];
+  }) : [];
+  const editorialAnnotation = editorialItems.length>0 ? <EditorialMetrics items={editorialItems}/> : null;
   const changePreview = standing.find((item) => item.group === "leads")
     ?? standing.find((item) => item.group === "lags");
   const valuePreview = standing.find((item) => item.group === "value" && item.metric_id !== changePreview?.metric_id)

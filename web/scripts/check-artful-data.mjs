@@ -35,12 +35,7 @@ try {
           }, colors), `${route}: neutral national breadcrumb`);
         } else {
           assert.equal(await page.locator('.data-portrait, .cost-composition').count(), 0, 'Rejected graphic sections remain absent');
-          const ribbon = page.locator('.cost-ribbon');
-          if (await ribbon.count()) {
-            assert.equal(await page.locator('.gone-kept-bar').count(), 0, 'Ribbon replaces, not supplements, the owning bar');
-            assert.match(await ribbon.getAttribute('aria-label'), /principal paid down/);
-            assert.equal(await ribbon.evaluate(node=>getComputedStyle(node).animationName), 'none', 'Reduced motion keeps ribbon static');
-          }
+          assert.equal(await page.locator('.cost-ribbon').count(), 0, 'Rejected ribbon stays absent');
           assert(await page.locator('.more-body sup.mk').evaluateAll(nodes => nodes.every(node => {
             const sample = document.createElement('span'); sample.style.color = 'var(--text-secondary)';
             node.append(sample); const same = getComputedStyle(sample).color === getComputedStyle(node).color; sample.remove(); return same;
