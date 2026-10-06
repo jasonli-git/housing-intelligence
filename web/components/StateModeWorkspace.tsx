@@ -7,7 +7,6 @@ import { type Measure } from "@/components/CountyExplorer";
 import { SectionJump } from "@/components/SectionJump";
 import { CountyComparison } from "@/components/CountyComparison";
 import { PlaceSearch } from "@/components/PlaceSearch";
-import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import type { CountyDestination } from "@/lib/countyPicker";
 import type { Section } from "@/lib/groups";
 
@@ -32,7 +31,6 @@ export function StateModeWorkspace({ countyPages, sections, initial }: {
         <SectionJump />
       </header>
       <div className="place-discovery">
-        <GardenStateArtwork />
         <p>Start with a county, or go straight to a town or ZIP.</p>
         <div className="place-discovery-search"><PlaceSearch />
           <Link className="place-budget-link" href="/afford?county=all">Search by budget <span aria-hidden="true">↗</span></Link>

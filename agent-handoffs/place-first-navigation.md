@@ -61,3 +61,12 @@
 - NJ assistance route cards now inherit the surrounding card instead of using mismatched slate fills.
 - Refinement accessibility checks caught low-contrast footer labels on the light tax background and publisher sublabels on light freshness rows. Corrected utility text tokens and footer kickers. Targeted checks then passed for tax, freshness and changes in both themes.
 - Final refinement verification: 482 unit tests passed; TypeScript and the 2,379-page static build passed. All 54 route/viewport/theme checks passed again, including expanded mobile accessibility, decorative SVG input exclusion, reduced-motion static treatment and print hiding. Inspected national-map and NJ artwork screenshots. Local artifact-origin warning remains; not deployed.
+
+## Review correction: geography surfaces and header-only motion
+
+- Removed the artwork from Find your place. The header motif now loops on a 16-second drawing/breathing cycle with no play/pause buttons. Reduced motion remains static; hovering or focusing existing header navigation holds the decorative motion, and print hides it.
+- Corrected county-directory links to neutral primary text. The generic accessibility link-color rule had overridden their original color.
+- Town/municipality and ZIP backgrounds previously still inherited the green county surface: prior changes only altered accents. Now body, navigation and inherited surfaces use separate cool blue-gray and violet palettes; counties remain green and NJ remains slate-blue.
+- The same generic link rule overrode county breadcrumb colors. Local breadcrumb links now honor their own geography token: state blue, containing county green, current municipality teal or ZIP violet, nation neutral.
+- Browser regression checks now assert four distinct geographic background colors, neutral county-directory link text, distinct breadcrumb links and header-only decorative artwork.
+- Correction verification: 482 tests, TypeScript and the 2,379-page static build passed. All 54 browser combinations passed, including expanded mobile accessibility and new color/motion assertions. Verified Princeton (region 224) specifically: state link blue, Mercer County link green, Princeton teal, with a blue-gray page background. Inspected its screenshot. Existing local artifact URL warning unchanged.

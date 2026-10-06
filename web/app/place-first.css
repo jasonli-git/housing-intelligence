@@ -1,6 +1,9 @@
 /* Geography is a cue, never the only identifier. Utility tools use their own ink. */
 @media print { .state-place-artwork { display:none; } }
 @media screen {
+  body:has(.atlas-local[data-region-level="municipality"]) { --surface-1:light-dark(#eff4f7,#18232d); --surface-2:light-dark(#fbfdff,#25313c); --surface-card:var(--surface-2); --text-primary:light-dark(#29343e,#e7edf3); --text-secondary:light-dark(#4d5c69,#c4ced8); --text-muted:light-dark(#526270,#b7c5d1); --border:light-dark(#d2dde7,#435565); background:var(--surface-1); }
+  body:has(.atlas-local[data-region-level="zip"]) { --surface-1:light-dark(#f4f0f8,#231e2c); --surface-2:light-dark(#fdfbff,#302a3a); --surface-card:var(--surface-2); --text-primary:light-dark(#352f40,#eee7f5); --text-secondary:light-dark(#5d526c,#d0c6dc); --text-muted:light-dark(#665973,#c5b7d2); --border:light-dark(#dfd5e9,#554962); background:var(--surface-1); }
+  body:has(.atlas-local:is([data-region-level="municipality"],[data-region-level="zip"])) .foot-kicker { color:var(--text-secondary); }
   body:has(:is(.quiet-tax,.quiet-history)) { --text-primary:light-dark(#29323a,#e7edf3); --text-secondary:light-dark(#4d5760,#c4ccd2); --text-muted:light-dark(#505b65,#bbc5d0); }
   body:has(.quiet-tax) { --surface-1:light-dark(#f1f4f8,#151b24); --surface-2:light-dark(#fafcff,#202934); --surface-card:var(--surface-2); --border:light-dark(#d3dbe5,#414c5b); background:var(--surface-1); }
   body:has(.quiet-history) { --surface-1:light-dark(#f2f4f6,#191e24); --surface-2:light-dark(#fbfcfd,#252c34); --surface-card:var(--surface-2); --border:light-dark(#d4dce3,#45515d); background:var(--surface-1); }
@@ -21,8 +24,11 @@
   .quiet-nation .entry-free svg { stroke:light-dark(#25714b,#83cfa3); }
   .quiet-nation .coverage-map-stage { background:light-dark(#eaf0f1,#222c32); }
   @media(prefers-reduced-motion:no-preference) {
-    .state-artwork-trace path { stroke-dasharray:1; animation:state-place-trace 2400ms ease-out both; }
-    @keyframes state-place-trace { from { stroke-dashoffset:1; opacity:0; } to { stroke-dashoffset:0; opacity:1; } }
+    .state-artwork-trace path { stroke-dasharray:1; animation:state-place-trace 16s ease-in-out infinite; }
+    .state-artwork-wash { transform-origin:229px 126px; animation:state-place-breathe 16s ease-in-out infinite; }
+    .nj-head:is(:hover,:focus-within) :is(.state-artwork-trace path,.state-artwork-wash) { animation-play-state:paused; }
+    @keyframes state-place-trace { 0%,100% { stroke-dashoffset:1; opacity:0; } 38%,75% { stroke-dashoffset:0; opacity:1; } 93% { stroke-dashoffset:0; opacity:0; } }
+    @keyframes state-place-breathe { 0%,100% { transform:scale(.92); opacity:.06; } 50% { transform:scale(1.06); opacity:.16; } }
   }
   .atlas-local[data-region-level="municipality"] { --atlas-accent: light-dark(#267775, #a2dad5); }
   .atlas-local[data-region-level="zip"] { --atlas-accent: light-dark(#735e91, #d2bce9); }
@@ -30,6 +36,10 @@
   .atlas-local[data-region-level="zip"] .page-head { --geo-accent: light-dark(#735e91, #d2bce9); }
   .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) .page-head .kind { color:var(--atlas-accent); }
   .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) .crumbs li[aria-current="page"] { --crumb-accent:var(--atlas-accent); }
+  .atlas-local .crumbs li[data-level="state"] { --crumb-accent:var(--state-blue); }
+  .atlas-local .crumbs li[data-level="local"]:not([aria-current="page"]) { --crumb-accent:light-dark(#246b55,#a6d9c0); }
+  main.atlas-local .crumbs li[data-level] a { color:var(--crumb-accent); }
+  main.nj-page .place-county-grid a { color:var(--text-primary); }
   .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) > .page-head { border-top-color:color-mix(in srgb,var(--atlas-accent) 50%,var(--border)); }
   .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) :is(.quiet-profile,.more-entry) { --atlas-accent: inherit; }
   .quiet-tax { --atlas-accent: light-dark(#006977, #8ed9e2); }
