@@ -15,7 +15,10 @@ html { scroll-padding-top: 90px; }
 .crumbs li[data-level="local"] { --crumb-accent: light-dark(#246b55, #a6d9c0); }
 .interpretation-runtime { opacity: 1; color: var(--text-secondary); }
 .interpretation-matched { opacity: 1; }
-main.atlas-page a:not(.report-action), .quiet-county a:not(.report-action) { color: light-dark(#005ebc, #8dbff4); }
+/* Footnote letters, report-a-problem icons, the history tabs and the state note marker keep
+   their own quieter colours; the darker blue is for links read as text. `:where` adds
+   no specificity, so the rules that outranked this one before still do. */
+main.atlas-page a:not(.report-action):where(:not(.report-problem, .state-note-reference, sup.mk a, .history-tabs a)), .quiet-county a:not(.report-action):where(:not(.report-problem, .state-note-reference, sup.mk a, .history-tabs a)) { color: light-dark(#005ebc, #8dbff4); }
 .atlas-page a.report-action { color: var(--text-primary); }
 .globe-still:focus-visible, .coverage-map:focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
 .quiet-county .consumer-feature-what_stands_out { border-radius: 32px; border-left: 3px solid var(--series-3); background: linear-gradient(120deg, color-mix(in srgb, var(--series-3) 7%, var(--surface-card)), var(--surface-card)); box-shadow: 0 8px 28px rgb(0 0 0 / .045); }
@@ -45,7 +48,7 @@ main.atlas-page a:not(.report-action), .quiet-county a:not(.report-action) { col
 .assistance-routes small { color: var(--text-secondary); }
 .interpretation-stale { background: light-dark(#f8e7e1, #412e29); color: light-dark(#4f2418, #ffe0d5); }
 .atlas-tool .afford-group-row th { color: var(--budget-accent); }
-.quiet-tax a, .quiet-history a { color: light-dark(#005ebc, #8dbff4); }
+.quiet-tax a:where(:not(.report-problem, .state-note-reference, sup.mk a, .history-tabs a)), .quiet-history a:where(:not(.report-problem, .state-note-reference, sup.mk a, .history-tabs a)) { color: light-dark(#005ebc, #8dbff4); }
 sup a[href*="#note-"] { display: inline-flex; min-width: 24px; min-height: 24px; align-items: center; justify-content: center; }
 .state-ticker-head .ticker-step { display: inline-grid; }
 .scroll-x:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }

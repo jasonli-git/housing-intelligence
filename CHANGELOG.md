@@ -3,6 +3,15 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.41.2] — 2026-10-06
+
+### Fixed
+
+- **Footnote letters, report-a-problem icons, the freshness and revised-figures tabs, and
+  the state page's † marker keep their own colours** (ARCHITECTURE #309). Milestone 43's
+  darker link blue, meant for links read as text, had reached them too. Other links keep
+  it.
+
 ## [0.41.1] — 2026-10-06
 
 ### Removed
