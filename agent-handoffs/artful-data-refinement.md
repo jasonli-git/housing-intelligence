@@ -4,6 +4,15 @@ Branch: `experiment/artful-data-refinement`, created from clean `main` at `2312f
 with explicit owner approval. Frontend presentation only; no refresh, model generation,
 canonical-document edits, merge or deployment.
 
+## Owner review — data-portrait experiment reverted
+
+The owner rejected the follow-up data portraits and deep-green local-picture surface.
+Commit `3c1f360` was reverted with a normal revert commit, preserving history and the
+initial abstract styling in `4b06162`. Vacancy mosaic, county constellation, stock-flow
+graphic and cost-composition ring are no longer in the branch. The original cost bar,
+local-market disclosure and local-picture surface are restored. Alternative visual
+directions are discussion only; no replacement graphics were implemented.
+
 ## What changed
 
 - Neutral white/ivory (dark) and readable neutral ink (light) United States breadcrumbs
