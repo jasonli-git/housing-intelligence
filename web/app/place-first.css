@@ -1,5 +1,29 @@
 /* Geography is a cue, never the only identifier. Utility tools use their own ink. */
+@media print { .state-place-artwork { display:none; } }
 @media screen {
+  body:has(:is(.quiet-tax,.quiet-history)) { --text-primary:light-dark(#29323a,#e7edf3); --text-secondary:light-dark(#4d5760,#c4ccd2); --text-muted:light-dark(#505b65,#bbc5d0); }
+  body:has(.quiet-tax) { --surface-1:light-dark(#f1f4f8,#151b24); --surface-2:light-dark(#fafcff,#202934); --surface-card:var(--surface-2); --border:light-dark(#d3dbe5,#414c5b); background:var(--surface-1); }
+  body:has(.quiet-history) { --surface-1:light-dark(#f2f4f6,#191e24); --surface-2:light-dark(#fbfcfd,#252c34); --surface-card:var(--surface-2); --border:light-dark(#d4dce3,#45515d); background:var(--surface-1); }
+  body:has(.quiet-revisions) { --surface-1:light-dark(#f6f3ef,#201d19); --surface-2:light-dark(#fdfbf8,#2d2923); --surface-card:var(--surface-2); --border:light-dark(#e0d7ca,#554c3f); background:var(--surface-1); }
+  .nj-head { position:relative; isolation:isolate; }
+  .state-place-artwork { position:absolute; right:1rem; top:.4rem; width:220px; height:160px; stroke:var(--atlas-accent); stroke-width:1; opacity:.3; pointer-events:none; z-index:-1; }
+  .state-place-artwork-header { right:17%; top:1rem; width:260px; height:240px; opacity:.32; }
+  body:has(:is(.quiet-tax,.quiet-history)) .foot-kicker { color:var(--text-secondary); }
+  .state-artwork-wash { fill:var(--atlas-accent); stroke:none; opacity:.1; }
+  .state-artwork-points { fill:var(--atlas-accent); stroke:none; }
+  .place-discovery { position:relative; isolation:isolate; }
+  .place-discovery-search { display:flex; align-items:center; gap:1rem; margin-bottom:1.3rem; }
+  .place-discovery-search .place-search { flex:1; margin-bottom:0; }
+  .place-budget-link { color:var(--atlas-accent); font-size:12px; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; gap:.7rem; white-space:nowrap; }
+  .place-budget-link:hover { text-decoration:underline; }
+  .nj-page .place-first-workspace .state-workspace-head { justify-content:space-between; }
+  .nj-page .assistance-routes a { background:transparent; border-color:var(--border); }
+  .quiet-nation .entry-free svg { stroke:light-dark(#25714b,#83cfa3); }
+  .quiet-nation .coverage-map-stage { background:light-dark(#eaf0f1,#222c32); }
+  @media(prefers-reduced-motion:no-preference) {
+    .state-artwork-trace path { stroke-dasharray:1; animation:state-place-trace 2400ms ease-out both; }
+    @keyframes state-place-trace { from { stroke-dashoffset:1; opacity:0; } to { stroke-dashoffset:0; opacity:1; } }
+  }
   .atlas-local[data-region-level="municipality"] { --atlas-accent: light-dark(#267775, #a2dad5); }
   .atlas-local[data-region-level="zip"] { --atlas-accent: light-dark(#735e91, #d2bce9); }
   .atlas-local[data-region-level="municipality"] .page-head { --geo-accent: light-dark(#267775, #a2dad5); }
@@ -42,8 +66,11 @@
   .place-comparison td small { display:block; color:var(--text-secondary); font-size:11px; }
   .budget-page .explorer { grid-template-columns:minmax(0,1fr); }
   .budget-coverage-note { color:var(--text-secondary); font-size:12px; line-height:1.6; max-width:85ch; }
-  .quiet-nation .coverage-map-stage { background:radial-gradient(ellipse at 50% 50%,light-dark(#e6eef0,#273239),light-dark(#f1f5f5,#20282d)); }
   @media(max-width:600px) {
+    .state-place-artwork-header { right:0; top:4rem; width:140px; opacity:.2; }
+    .place-discovery-search { display:block; }
+    .place-budget-link { margin-top:.3rem; }
+    .state-place-artwork:not(.state-place-artwork-header) { width:130px; opacity:.14; }
     .place-county-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 12px; }
     .place-county-grid a { flex-direction:column; align-items:flex-start; gap:.2rem; }
     .place-county-grid a > span { font-size:17px; }

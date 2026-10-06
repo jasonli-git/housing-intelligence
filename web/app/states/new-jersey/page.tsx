@@ -4,6 +4,7 @@ import { ComputedBadge } from "@/components/ComputedBadge";
 import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { StateOverview } from "@/components/StateOverview";
+import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { MoreExpander } from "@/components/MoreExpander";
 import { AffordableHousing } from "@/components/AffordableHousing";
 import { HomeSales } from "@/components/HomeSales";
@@ -145,6 +146,7 @@ export default async function NewJerseyPage() {
       <Masthead affordability={{ kind: "local" }} />
       <main id="main-content" tabIndex={-1} className="shell nj-page quiet-county quiet-state">
       <header className="page-head nj-head" data-kind="state">
+        <GardenStateArtwork header />
         <div className="region-head-main">
           <Crumbs trail={[{ href: "/", label: "United States" }]} here="New Jersey" hereKind="state" />
           <div className="page-head-eyebrow">

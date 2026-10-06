@@ -40,6 +40,12 @@ try {
       }
     }
     await page.goto(origin + "/states/new-jersey", { waitUntil: "networkidle" });
+    assert.equal(await page.locator(".state-place-artwork").count(), 2);
+    assert(await page.locator(".state-place-artwork").evaluateAll(nodes => nodes.every(node => node.getAttribute("aria-hidden") === "true" && getComputedStyle(node).pointerEvents === "none")));
+    assert(await page.locator(".state-artwork-trace path").evaluateAll(nodes => nodes.every(node => getComputedStyle(node).animationName === "none")), "Reduced motion keeps artwork static");
+    await page.emulateMedia({ media: "print" });
+    assert(await page.locator(".state-place-artwork").evaluateAll(nodes => nodes.every(node => getComputedStyle(node).display === "none")));
+    await page.emulateMedia({ media: "screen" });
     await page.locator(".section-jump").selectOption("#county-comparison");
     assert(await page.locator("#county-comparison").evaluate(node => node.open));
     await page.setViewportSize({ width: 1280, height: 900 });

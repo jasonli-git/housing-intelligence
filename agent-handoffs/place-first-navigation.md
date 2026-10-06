@@ -51,3 +51,13 @@
 - Inspected desktop NJ and mobile ZIP screenshots in dark mode. National map retains zoom/pan/navigation controls.
 - The first browser run exposed a test race: the assertion counted search options before the lazy search index loaded. Changed the check to wait for the first result, then reran successfully.
 - No npm lint script is configured. No backend tests run: backend code and methodology unchanged.
+
+## Review refinement: artwork and page backgrounds
+
+- Restored the original single short landing tagline. Removed the full rectangular SVG noise filter and radial wash from the national map; the ocean is now an even background.
+- Moved the NJ budget action from a separate header button into the place-search row as “Search by budget.”
+- Added decorative NJ garden/coast/house linework in the header and discovery card, with a single 2.4-second drawing animation. It stops automatically, is static under reduced motion, does not encode data, does not capture input and is hidden in print. Additional states could supply their own motifs without layout changes; no new states are implemented.
+- Utility colors now affect the full page and inherited surfaces, not merely accent dots: tax navy/graphite, freshness cool slate, revisions warm charcoal, with corresponding light palettes.
+- NJ assistance route cards now inherit the surrounding card instead of using mismatched slate fills.
+- Refinement accessibility checks caught low-contrast footer labels on the light tax background and publisher sublabels on light freshness rows. Corrected utility text tokens and footer kickers. Targeted checks then passed for tax, freshness and changes in both themes.
+- Final refinement verification: 482 unit tests passed; TypeScript and the 2,379-page static build passed. All 54 route/viewport/theme checks passed again, including expanded mobile accessibility, decorative SVG input exclusion, reduced-motion static treatment and print hiding. Inspected national-map and NJ artwork screenshots. Local artifact-origin warning remains; not deployed.

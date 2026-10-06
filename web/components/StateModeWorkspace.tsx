@@ -7,6 +7,7 @@ import { type Measure } from "@/components/CountyExplorer";
 import { SectionJump } from "@/components/SectionJump";
 import { CountyComparison } from "@/components/CountyComparison";
 import { PlaceSearch } from "@/components/PlaceSearch";
+import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import type { CountyDestination } from "@/lib/countyPicker";
 import type { Section } from "@/lib/groups";
 
@@ -28,14 +29,14 @@ export function StateModeWorkspace({ countyPages, sections, initial }: {
       <header className="state-workspace-head">
         <div><h2 id="state-workspace-heading">Find your place</h2>
         </div>
-        <div className="state-workspace-choice" role="group" aria-label="County exploration view">
-          <Link className="state-budget-entry" href="/afford?county=all">Find places within my budget <span aria-hidden="true">↗</span></Link>
-        </div>
         <SectionJump />
       </header>
       <div className="place-discovery">
+        <GardenStateArtwork />
         <p>Start with a county, or go straight to a town or ZIP.</p>
-        <PlaceSearch />
+        <div className="place-discovery-search"><PlaceSearch />
+          <Link className="place-budget-link" href="/afford?county=all">Search by budget <span aria-hidden="true">↗</span></Link>
+        </div>
         <nav aria-label="New Jersey counties" className="place-county-grid">
           {countyPages.map(county => <Link key={county.id} href={`/regions/${county.id}`}><span>{county.name.replace(/ County$/, "")}</span><small>County <span aria-hidden="true">↗</span></small></Link>)}
         </nav>

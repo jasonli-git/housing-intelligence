@@ -169,10 +169,6 @@ export function NationalCoverageMap() {
         }}>
         <title id="coverage-map-title">Explore housing coverage by state</title>
         <desc id="coverage-map-description">New Jersey is blue and available. All other states are unavailable. Alaska and Hawaii are outside this view. Zoom with the buttons; drag the enlarged map, or swipe sideways on mobile. Vertical scrolling moves the page. Use the New Jersey link to explore.</desc>
-        <defs>
-          <filter id="coverage-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" /><feColorMatrix type="saturate" values="0" /></filter>
-        </defs>
-        <rect width="900" height="480" filter="url(#coverage-grain)" opacity=".035" pointerEvents="none" aria-hidden="true" />
         <g ref={geography} className="coverage-geography">
         <g className="coverage-viewport" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})` }}>
         <g className="coverage-land" aria-hidden="true">{land.map((part) => <path key={part.id} d={part.base} />)}</g>
