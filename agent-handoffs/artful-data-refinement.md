@@ -13,13 +13,9 @@ canonical-document edits, merge or deployment.
 - Household planning, local-picture, local-market and evidence entry sections echo the
   housing profile's abstract visual language. Overlapping house/circle linework,
   contours and a curved lattice accompany subtle washes and softened edges.
-- Background artwork is static, decorative, hidden from assistive technology, nonfocusable,
+- Artwork is static, decorative, hidden from assistive technology, nonfocusable,
   pointer-transparent and absent in print. No new text, dependencies or scrolling
-  sections in the initial pass. Existing data, calculations, AI text, definitions and disclosures remain.
-- Follow-up approved data portraits: richer green local-picture surface; a 100-home
-  vacancy mosaic with earlier/latest ACS estimates and a one-time in-view transition;
-  a compact selectable county vacancy constellation; reported construction flow when
-  the three totals reconcile; and a cost-composition ring using existing calculator inputs.
+  sections. Existing data, calculations, AI text, definitions and disclosures remain.
 
 ## Files/modules affected
 
@@ -29,11 +25,6 @@ canonical-document edits, merge or deployment.
 - `web/app/artful-data.css`, imported last from `web/app/layout.tsx`: narrowly scoped
   color fixes, artwork positioning and responsive treatment.
 - `web/scripts/check-artful-data.mjs`: repeatable local/production browser verification.
-- `web/scripts/check-data-portraits.mjs`: manual period selection, county tap-target
-  separation, keyboard selection, cost selection and reconciled/suppressed stock cases.
-- `web/components/DataPortraits.tsx`, its tests and `web/lib/dataPortraits.ts`: computed
-  graphics, period/source gates, accessible buttons, rounded tiles and unrounded cost shares.
-- `web/app/regions/[id]/page.tsx`, `web/components/CostToOwn.tsx`: shared county/town wiring.
 
 ## Architectural or implementation decisions
 
@@ -45,22 +36,10 @@ canonical-document edits, merge or deployment.
 - No clipping wrapper was added: definition popovers and focus outlines remain available.
 - Background dimensions explicitly reset to avoid inheriting the old evidence grid's
   24px repetition, which otherwise tiled the new wash like a checkerboard.
-- Data portraits are distinct from decorative SVG: visible captions identify the
-  source, periods, uncertainty and limitations. No new dependency or browser API fetch.
-  Reduced motion skips automatic playback; manual vacancy selection cancels it.
-- County dots use vacancy alone, exact horizontal positions and responsive collision
-  lanes; vertical positions have no statistical meaning. Dates and margins follow
-  each selected county. This comparison is county-only, not town-versus-county ranking.
-- The cost ring includes principal separately from interest/bills and follows reader
-  inputs. Missing and optional costs remain explicit. It is not appreciation or an all-in quote.
-- Stock flow requires nonmissing nonnegative completed/demolished figures and exact
-  equality to the publisher's net figure. Somerset's latest 667 completed minus 47
-  demolished differs from reported net 619, so no equation is drawn there. No loader
-  repair, substituted net, or older-period fallback was introduced.
 
 ## Assumptions
 
-- Follow-up approval covered computed visuals using existing data; it did not authorize source changes,
+- Approval covered this bounded UI experiment; it did not authorize new data features,
   broader redesign of the cost calculator, Director Notes or changes to canonical docs.
 - The existing housing portrait remains the reference. Mobile decoration is quieter
   and smaller; section copy retains its existing wrapping rather than shrinking type.
@@ -74,18 +53,10 @@ canonical-document edits, merge or deployment.
   resolve to localhost. This export is for preview, not deployment.
 - No lint script exists in `web/package.json`; TypeScript and tests run instead.
 - Existing Next.js 16.3.5/dependency findings were not patched in this UI task.
-- The mosaic is representative, not a parcel map or available-rental inventory; vacancy
-  includes seasonal and for-sale homes. Rounding and ACS five-year pooling are disclosed;
-  change is not presented as statistically significant. Missing five-year pairs suppress it.
-- More build-time observation reads are needed for vacancy; county comparison reuses
-  summary endpoints. No acquisition, refresh or model reading regeneration occurred.
-- The existing AI local-picture prose remains untouched, including its claims about
-  vacancy and competition. Computed visual captions deliberately make no causal claim.
 
 ## Verification
 
-- `npm test`: 477 tests passed in 61 files, including six new data-portrait tests and
-  five artwork/disclosure tests.
+- `npm test`: 471 tests passed in 60 files, including five new artwork/disclosure tests.
 - `npm run typecheck`: passed.
 - `npm run build`: passed; 2,379 static pages. No acquisition or regeneration performed.
 - `node scripts/check-artful-data.mjs`: development checks passed across five routes,
@@ -98,13 +69,3 @@ canonical-document edits, merge or deployment.
 - Screenshots inspected for desktop light household/local-picture/evidence and mobile
   dark local-picture/evidence. Art does not add layout height or occlude controls.
 - `git diff --check`: passed before commit.
-- `node scripts/check-data-portraits.mjs`: development interactions passed at
-  1280/390/320px, including manual selection canceling autoplay. Browser checks caught
-  inherited 38px minimum button height overlapping 32px dot lanes, and focus/hover
-  followed by click deselecting the cost slice; both were fixed before completion.
-- `ART_ORIGIN=http://localhost:3002 node scripts/check-data-portraits.mjs`: final
-  static-export interactions passed at all three widths, including positive net
-  additions (20 − 14 = 6), negative additions (3 − 4 = −1), Somerset suppression,
-  nonoverlapping county targets, keyboard/tap selection and autoplay cancellation.
-- Follow-up screenshots inspected: desktop dark local picture and cost composition,
-  mobile vacancy and stock flow. The final export adds zero dependencies.

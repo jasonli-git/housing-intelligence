@@ -9,9 +9,6 @@ import { FloodRisk } from "@/components/FloodRisk";
 import { GroundAndWater } from "@/components/GroundAndWater";
 import { Utilities } from "@/components/Utilities";
 import { HomesAdded } from "@/components/HomesAdded";
-import { VacancyPortrait, StockFlow, CountyConstellation, type CountyPoint } from "@/components/DataPortraits";
-import { vacancyPair } from "@/lib/dataPortraits";
-import { constructionYears } from "@/lib/construction";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { CurrentValues } from "@/components/CurrentValues";
@@ -250,18 +247,6 @@ export default async function RegionPage({
 
   const name = displayName(region);
   const quiet = region.level === "county" || region.level === "municipality";
-  const vacancy = quiet ? vacancyPair((await api.observations(regionId, "acs_vacancy_rate"))?.observations ?? []) : null;
-  const stock = constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] })[0];
-  const countyPoints: CountyPoint[] = [];
-  if (region.level === "county") {
-    const counties = (await api.regions("level=county&state=NJ&limit=100"))?.items ?? [];
-    const points = await Promise.all(counties.map(async county => {
-      const row = (await api.summary(county.region_id, WINDOW))?.levels.find(l => l.metric_id === "acs_vacancy_rate");
-      return row && Number.isFinite(row.value) && row.value >= 0 && row.value <= 1
-        ? { id: county.region_id, name: county.name, value: row.value, start: row.period_start, end: row.period_end, margin: row.margin_of_error ?? null } : null;
-    }));
-    countyPoints.push(...points.filter((p): p is CountyPoint => p !== null));
-  }
   const county = region.ancestors.find((a) => a.level === "county");
   // The consumer reading alone since 2026-10-01: the analyst reading is retired
   // (ARCHITECTURE #275), and a file published before then that still carries one is
@@ -501,8 +486,6 @@ export default async function RegionPage({
       <QuietAnchor enabled={quiet} id="quiet-highlights">
       {quiet && <QuietLinework />}
       <ConsumerReading reading={consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`}>
-      {vacancy && <VacancyPortrait {...vacancy} />}
-      {countyPoints.length > 0 && <CountyConstellation rows={countyPoints} selected={regionId} />}
       {standing.length > 0 && (
         <details className="standouts-disclosure">
           <summary>
@@ -547,9 +530,7 @@ export default async function RegionPage({
       {(construction.some((series) => series.length > 0) ||
         (packet.levels.some((level) => level.metric_id === "sr1a_median_sale_price") &&
           packet.levels.some((level) => level.metric_id === "sr1a_sales_count"))) && (
-      <>
-      {quiet && stock && <StockFlow row={stock} />}
-      <QuietDisclosure enabled={quiet} title="The local market details" note="Homes sold, new building and the detail behind them">
+      <QuietDisclosure enabled={quiet} title="The local market" note="Homes sold, new building and the detail behind them">
       <section className="local-page-group local-market" aria-labelledby="local-market-heading">
       <h2 id="local-market-heading">Local market</h2>
       <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} />
@@ -565,7 +546,6 @@ export default async function RegionPage({
       />
       </section>
       </QuietDisclosure>
-      </>
       )}
 
       <MoreExpander id="region-detailed-data" title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>

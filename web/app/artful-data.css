@@ -1,68 +1,5 @@
 /* Decorative echoes of the housing portrait. They never encode a measurement. */
 .abstract-field { display: none; }
-.data-portrait { margin: 1.5rem 0; padding: 1.3rem; border: 1px solid var(--border); border-radius: 18px; }
-.data-portrait h3, .cost-composition h3 { margin: .35rem 0; font: 500 24px/1.2 Georgia, serif; }
-.data-portrait figcaption > p, .cost-composition figcaption p, .portrait-note { font-size: 12px; line-height: 1.65; margin: .5rem 0; }
-.portrait-controls { display: flex; flex-wrap: wrap; gap: .5rem; }
-.portrait-controls button, .composition-key button { color: var(--text-primary); background: none; border: 1px solid var(--border); border-radius: 8px; padding: .5rem .65rem; min-height: 44px; cursor: pointer; font: inherit; font-size: 12px; }
-.portrait-controls button[aria-pressed="true"] { background: color-mix(in srgb, var(--atlas-accent) 15%, transparent); border-color: var(--atlas-accent); }
-.portrait-stat { font: 500 38px/1.2 Georgia, serif !important; }
-.portrait-stat span { opacity: .6; padding-inline: .5rem; }
-.home-mosaic { display: grid; grid-template-columns: repeat(20, 1fr); gap: 6px; margin: 1rem 0; max-width: 700px; }
-.home-mosaic i { aspect-ratio: 1; background: var(--atlas-accent); opacity: .2; clip-path: polygon(0 40%, 50% 0, 100% 40%, 88% 40%, 88% 100%, 12% 100%, 12% 40%); transition: opacity 600ms, background-color 600ms; }
-.home-mosaic i[data-empty="true"] { opacity: 1; background: var(--notice); }
-.data-portrait details { font-size: 12px; line-height: 1.7; }
-.data-portrait summary { padding-block: .6rem; min-height: 44px; cursor: pointer; }
-.stock-equation { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1.5rem; margin-block: 1.3rem; }
-.stock-equation > div { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
-.stock-equation strong { font: 500 clamp(24px,4vw,45px)/1.2 Georgia,serif; overflow-wrap: anywhere; }
-.stock-equation span { font-size: 12px; }
-.stock-symbol { color: var(--text-muted); font-size: 24px !important; }
-.stock-band { height: 16px; background: var(--atlas-accent); border-radius: 2px 12px 12px 2px; }
-.stock-band.removed { background: var(--notice); }
-.stock-band.net { opacity: .65; }
-.constellation-axis { display: flex; justify-content: space-between; font-size: 11px; margin-top: 1rem; padding-inline: 5%; }
-.constellation-field { position: relative; background: repeating-linear-gradient(90deg, var(--border) 0 1px, transparent 1px 25%); margin-top: .3rem; }
-.constellation-field button { position: absolute; transform: translateX(-50%); width: 26px; height: 26px; min-height: 26px; min-width: 26px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; border-radius: 50%; cursor: pointer; }
-.constellation-field button span { width: 9px; height: 9px; border: 1px solid var(--atlas-accent); border-radius: 50%; background: var(--surface-2); }
-.constellation-field button.current-county span { background: var(--atlas-accent); width: 14px; height: 14px; }
-.constellation-field button[aria-pressed="true"] { outline: 1px solid var(--atlas-accent); outline-offset: 1px; }
-.constellation-detail { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem 1rem; font-size: 13px; min-height: 3rem; }
-.constellation-detail span { font-size: 11px; width: 100%; }
-.cost-composition { margin: .5rem 0; }
-.cost-composition h3 { font-size: 18px; }
-.composition-layout { display: grid; grid-template-columns: minmax(130px,.8fr) minmax(0,1fr); align-items: center; gap: 1rem; }
-.composition-ring { width: 100%; max-width: 260px; fill: none; }
-.composition-ring circle { transition: stroke-width 180ms, stroke-dasharray 300ms, stroke-dashoffset 300ms; }
-.composition-track { stroke: var(--border); stroke-width: 12px; }
-.composition-ring text { fill: var(--text-primary); font: 10px var(--font-text); }
-.composition-ring .composition-caption { fill: var(--text-secondary); font-size: 4px; }
-.composition-key { display: flex; flex-direction: column; gap: .2rem; }
-.composition-key button { display: flex; align-items: center; gap: .45rem; border-color: transparent; text-align: left; padding: .35rem; font-size: 11px; }
-.composition-key button[aria-pressed="true"] { border-color: var(--atlas-accent); }
-.composition-key button i { flex: 0 0 7px; height: 7px; border-radius: 50%; }
-.composition-key button b { margin-left: auto; white-space: nowrap; }
-.composition-replaced-bar { display: none !important; }
-@media screen {
-  .quiet-county .consumer-feature-what_stands_out {
-    --text-primary: #f3f4e9; --text-secondary: #d0dfd2; --text-muted: #c0d2c6;
-    --atlas-accent: #acd6b9; --border: #587665; --surface-2: #254c3c; --notice: #f1d089;
-    background: linear-gradient(125deg,#183e30,#2a5141); border-color: #648c76;
-    box-shadow: 0 14px 35px light-dark(#23453618,#00000025);
-  }
-  .quiet-county .consumer-feature-main h2 { font-size: clamp(30px,4vw,42px); }
-  .quiet-county .consumer-feature .data-portrait { background: #ffffff05; }
-  .quiet-county .stock-flow { background: linear-gradient(120deg,color-mix(in srgb,var(--atlas-accent) 8%,var(--surface-2)),var(--surface-1)); }
-}
-@media (max-width:600px) {
-  .data-portrait { padding: 1rem; }
-  .home-mosaic { grid-template-columns: repeat(10,1fr); gap: 5px; }
-  .composition-layout { grid-template-columns: minmax(0,1fr); gap: .4rem; }
-  .composition-ring { max-width: 200px; justify-self: center; }
-  .stock-equation { gap: .65rem; }
-}
-@media (prefers-reduced-motion:reduce) { .home-mosaic i, .composition-ring circle { transition:none; } }
-@media print { .portrait-controls, .composition-key button:last-child { display: none; } .home-mosaic i { print-color-adjust: exact; } }
 @media screen {
   :is(.quiet-tax, .quiet-history) .crumbs li[data-level="nation"] {
     --crumb-accent: var(--text-primary);
@@ -88,6 +25,9 @@
   .quiet-county .quiet-tool-group > .abstract-field { width: 155px; height: 90px; top: 2px; }
   .quiet-county #quiet-highlights > .abstract-field { top: 6px; width: 190px; height: 110px; z-index: 1; opacity: 0.18; }
   .quiet-county #quiet-highlights:not(:has(.consumer-feature-what_stands_out)) > .abstract-field { display: none; }
+  .quiet-county .consumer-feature-what_stands_out {
+    background: linear-gradient(110deg, light-dark(#f9faf6, #252e29), light-dark(#f1f5ef, #222a26));
+  }
   .quiet-county .quiet-disclosure:has(.local-market) {
     border-left: 0; padding-left: 0; border-block: 1px solid var(--border);
   }
