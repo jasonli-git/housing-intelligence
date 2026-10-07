@@ -1224,6 +1224,29 @@ def load(
     typer.echo(f"discoveries   {discovered:>8,} sources' release status recorded")
 
 
+@app.command("notice")
+def notice_command(
+    check: bool = typer.Option(False, "--check", help="Fail if NOTICE is out of date."),
+) -> None:
+    """Regenerate NOTICE's list of sources from config/sources.yml."""
+    from hip.config import REPO_ROOT
+    from hip.notice import render
+    from hip.sources.registry import PLANNED
+
+    path = REPO_ROOT / "NOTICE"
+    current = path.read_text()
+    wanted = render(current, load_sources(), set(PLANNED))
+    if check:
+        if wanted != current:
+            typer.secho("NOTICE is out of date: run `hip notice`", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+        typer.echo("NOTICE is current")
+        return
+    path.write_text(wanted)
+    listed = wanted.partition("## Sources")[2].count("\n### ")
+    typer.echo(f"NOTICE written: {listed} sources")
+
+
 @app.command("sync-registry")
 def sync_registry_command() -> None:
     """Write every source's licence, terms and notices and every metric's kind and

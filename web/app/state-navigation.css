@@ -6,28 +6,11 @@
 .coverage-region-bar button:hover { background: color-mix(in srgb, var(--entry-accent) 7%, transparent); }
 .coverage-region-bar button[aria-pressed="true"] { background: color-mix(in srgb, var(--entry-accent) 14%, transparent); color: var(--entry-ink); }
 .coverage-region-bar button:disabled { opacity: .5; cursor: default; }
-.coverage-region-bar button:focus-visible, .county-picker a:focus-visible { outline: 2px solid var(--entry-accent); outline-offset: 2px; }
+.coverage-region-bar button:focus-visible { outline: 2px solid var(--entry-accent); outline-offset: 2px; }
 
 .nj-page.quiet-state .state-workspace { margin-top: 1.2rem; }
 .nj-page.quiet-state .state-workspace-head { align-items: center; border-bottom: 0; margin-bottom: 0; padding: .5rem 0; gap: .75rem; }
 .nj-page.quiet-state .state-workspace-head h2 { margin: 0; }
-.nj-page .county-picker { border-block: 1px solid var(--border); margin: .5rem 0 0; color: var(--text-primary); }
-.county-picker > summary { display: flex; align-items: center; gap: .6rem; min-height: 48px; padding: .55rem .15rem; list-style: none; cursor: pointer; font: 550 13px/1.3 var(--font-text); color: var(--entry-ink); }
-.county-picker > summary::-webkit-details-marker { display: none; }
-.county-picker > summary svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.2; }
-.county-picker-count { font: 11px/1.4 var(--font-mono); padding: .1rem .4rem; border-radius: 4px; background: color-mix(in srgb, var(--state-blue) 9%, transparent); color: var(--text-muted); }
-.county-picker-chevron { margin-left: auto; transition: transform 160ms ease; }
-.county-picker[open] .county-picker-chevron { transform: rotate(180deg); }
-.county-picker-panel { padding: .35rem 0 1rem; }
-.county-picker-search { display: flex; align-items: center; gap: 1rem; }
-.county-picker-search label { font-size: 12px; color: var(--text-secondary); }
-.county-picker-search input { min-height: 44px; min-width: 0; width: min(100%, 300px); box-sizing: border-box; padding: .6rem .8rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-card); color: var(--text-primary); font: 14px/1.3 var(--font-text); }
-.county-picker-hint { color: var(--text-muted); font-size: 12px; margin: .6rem 0 .75rem; }
-.county-picker ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .3rem 1rem; padding: 0; margin: 0; list-style: none; }
-.county-picker li { min-width: 0; }
-.county-picker a { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-height: 44px; padding: .4rem .7rem; box-sizing: border-box; border-radius: 6px; color: var(--text-primary); text-decoration: none; font-size: 13px; }
-.county-picker a span:last-child { color: var(--entry-accent); }
-.county-picker a:hover { background: color-mix(in srgb, var(--state-blue) 7%, transparent); text-decoration: none; }
 
 .nj-page.quiet-state .measure-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: start; margin-top: 0; padding: 1rem 1.15rem; gap: .8rem 1.5rem; border: 1px solid var(--border); border-top: 0; border-bottom: 0; border-radius: 0; background: var(--surface-card); }
 .nj-page.quiet-state .measure-intro { display: block; min-width: 0; }
@@ -59,17 +42,13 @@
   .coverage-region-bar > div { width: 100%; flex-wrap: nowrap; }
   .coverage-region-bar button { flex: 1; padding-inline: .3rem; font-size: 11px; }
   .nj-page.quiet-state .state-workspace-head { grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; }
-  .county-picker ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem; }
-  .county-picker-search { gap: .6rem; }
-  .county-picker-search label { flex: 0 0 auto; }
-  .county-picker a { padding-inline: .4rem; }
   .nj-page.quiet-state .measure-card { grid-template-columns: minmax(0, 1fr); padding: .85rem .75rem; gap: .8rem; }
   .nj-page.quiet-state .measure-card .explorer-controls { gap: .5rem; }
   .nj-page.quiet-state .explorer-controls .control select { font-size: 16px; }
   .nj-page.quiet-state .explorer-controls .seg button { min-height: 44px; }
 }
-@media (prefers-reduced-motion: reduce) { .coverage-region-bar button, .county-picker-chevron { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .coverage-region-bar button { transition: none; } }
 @media print {
-  .coverage-region-bar, .county-picker, .nj-page .explorer-controls { display: none; }
+  .coverage-region-bar, .nj-page .explorer-controls { display: none; }
   .nj-page.quiet-state #state-detailed-data > summary { background: transparent; }
 }

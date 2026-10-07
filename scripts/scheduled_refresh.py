@@ -31,6 +31,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -48,6 +49,23 @@ _PRIORITY_NORMAL = 0
 def _run(cmd: list[str]) -> int:
     print(f"$ {' '.join(cmd)}", flush=True)
     return subprocess.run(cmd, cwd=REPO_ROOT).returncode
+
+
+# How long to wait before checking the live site a second time. A CDN still
+# propagating, or a page-timing race like the one PR #42 fixed, fails the first check
+# and passes a minute later; a real mismatch fails both, and only then is it urgent.
+CHECK_RETRY_WAIT_S = 120
+_sleep = time.sleep
+
+
+def _check_live() -> int:
+    """`make check-live`, run a second time after a wait if the first fails."""
+    code = _run(["make", "check-live"])
+    if code != 0:
+        print(f"check-live failed; checking again in {CHECK_RETRY_WAIT_S}s", flush=True)
+        _sleep(CHECK_RETRY_WAIT_S)
+        code = _run(["make", "check-live"])
+    return code
 
 
 def _hip(*args: str) -> int:
@@ -307,11 +325,12 @@ def main() -> int:
         )
         return 1
 
-    if _run(["make", "check-live"]) != 0:
+    if _check_live() != 0:
         _notify(
             "Weekly refresh: check-live failed after deploy",
             "The site deployed, but check-live could not confirm it matches what "
-            "was built. Check the log on the Mac.",
+            'was built, twice, two minutes apart. See README, Publishing, "When '
+            'check-live fails".',
             priority=_PRIORITY_URGENT,
         )
         return 1

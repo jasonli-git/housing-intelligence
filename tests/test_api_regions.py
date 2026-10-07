@@ -243,3 +243,10 @@ def test_income_limits_read_the_county_for_a_town_and_a_zip(loaded: None) -> Non
 
     state = client.get("/regions?level=state").json()["items"][0]
     assert client.get(f"/regions/{state['region_id']}/income-limits").status_code == 404
+
+
+def test_name_search_is_a_substring_not_a_pattern(loaded: None) -> None:
+    """`%` and `_` are characters to find, not wildcards: no region name contains `%`."""
+    assert client.get("/regions?q=%25").json()["items"] == []
+    assert client.get("/regions?q=_").json()["items"] == []
+    assert client.get("/regions?level=county&q=Mercer").json()["items"]

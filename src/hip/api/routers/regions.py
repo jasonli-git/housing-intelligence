@@ -87,8 +87,11 @@ def list_regions(
         filters.append("parent_id = :parent_id")
         params["parent_id"] = parent_id
     if q:
-        filters.append("name ILIKE :q")
-        params["q"] = f"%{q}%"
+        # The search is a substring, never a pattern: `%`, `_` and the escape itself are
+        # escaped: searching for `%` finds names containing it, not every region.
+        filters.append("name ILIKE :q ESCAPE '\\'")
+        escaped = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        params["q"] = f"%{escaped}%"
     if has_data is not None:
         # EXISTS rather than a join: a region is wanted once, not once per observation,
         # and the planner stops at the first matching row instead of counting 335,927.

@@ -44,11 +44,29 @@ packet for that region answers it precisely.
 
 ## Sources
 
+### Affordable housing calculations and municipal status reports
+
+- Publisher: NJ Department of Community Affairs
+- Terms: Open public record
+- https://www.nj.gov/dca/dlps/hss/MuniStatusReporting.shtml
+
 ### American Community Survey, 5-year estimates
 
 - Publisher: U.S. Census Bureau
 - Terms: Public domain (U.S. Government work)
-- https://api.census.gov/data
+- https://www.census.gov/programs-surveys/acs
+
+### Annual electric utility sales and reliability (Form EIA-861)
+
+- Publisher: U.S. Energy Information Administration
+- Terms: Public domain (U.S. Government work)
+- https://www.eia.gov/electricity/data/eia861/
+
+### Approved revaluations and reassessments
+
+- Publisher: New Jersey Division of Taxation
+- Terms: Open public record
+- https://www.nj.gov/treasury/taxation/lpt/reval.shtml
 
 ### Building Permits Survey
 
@@ -56,11 +74,71 @@ packet for that region answers it precisely.
 - Terms: Public domain (U.S. Government work)
 - https://www.census.gov/construction/bps/
 
+### CDC PLACES — selected health estimates
+
+- Publisher: Centers for Disease Control and Prevention
+- Terms: Public domain (U.S. Government work)
+- https://www.cdc.gov/places/
+
+### Community water purveyor service line inventory
+
+- Publisher: New Jersey Department of Environmental Protection
+- Terms: NJDEP Data Distribution Agreement
+- https://dep.nj.gov/lead/map/
+
+### Comprehensive Housing Affordability Strategy (CHAS)
+
+- Publisher: U.S. Department of Housing and Urban Development
+- Terms: Public domain (U.S. Government work)
+- https://www.huduser.gov/portal/datasets/cp.html
+
+### Construction Reporter — housing units certified and demolished
+
+- Publisher: New Jersey Department of Community Affairs
+- Terms: Open public record
+- https://www.nj.gov/dca/codes/reporter/
+
+### Electric and gas utility territory maps
+
+- Publisher: New Jersey Department of Environmental Protection
+- Terms: NJDEP Data Distribution Agreement
+- https://www.arcgis.com/home/item.html?id=d23845cc51454ee59affd226cff3fcd5
+
+### Fair Market Rents
+
+- Publisher: U.S. Department of Housing and Urban Development
+- Terms: Public domain (U.S. Government work)
+- https://www.huduser.gov/portal/datasets/fmr.html
+
+### FCC Broadband Data Collection — published fixed-broadband summaries
+
+- Publisher: Federal Communications Commission
+- Terms: Public domain (U.S. Government work)
+- https://broadbandmap.fcc.gov/
+
 ### Federal Reserve Economic Data
 
 - Publisher: Federal Reserve Bank of St. Louis
 - Terms: Free with attribution; series-level terms vary by originator
-- https://api.stlouisfed.org/fred
+- https://fred.stlouisfed.org/
+
+### FHA mortgage limits by county
+
+- Publisher: U.S. Department of Housing and Urban Development
+- Terms: Public domain (U.S. Government work)
+- https://entp.hud.gov/idapp/html/hicostlook.cfm
+
+### General and effective tax rates, and the Director's Ratio
+
+- Publisher: New Jersey Division of Taxation
+- Terms: Open public record
+- https://www.nj.gov/treasury/taxation/lpt/statdata.shtml
+
+### Home Mortgage Disclosure Act data (HMDA)
+
+- Publisher: Consumer Financial Protection Bureau (FFIEC)
+- Terms: Public domain (U.S. Government work)
+- https://ffiec.cfpb.gov/data-browser/
 
 ### House Price Index
 
@@ -68,23 +146,107 @@ packet for that region answers it precisely.
 - Terms: Public domain (U.S. Government work)
 - https://www.fhfa.gov/data/hpi
 
+### Known Contaminated Sites List
+
+- Publisher: New Jersey Department of Environmental Protection
+- Terms: NJDEP Data Distribution Agreement
+- https://experience.arcgis.com/experience/f26272f8a41c4aeea77ac6f9b3c80ebb
+
+### LEHD Origin-Destination Employment Statistics (LODES 8)
+
+- Publisher: U.S. Census Bureau
+- Terms: Public domain (U.S. Government work)
+- https://lehd.ces.census.gov/data/
+
 ### Local Area Unemployment Statistics and QCEW
 
 - Publisher: U.S. Bureau of Labor Statistics
 - Terms: Public domain (U.S. Government work)
-- https://api.bls.gov/publicAPI/v2
+- https://www.bls.gov/lau/
 
-### MOD-IV property tax assessment records
+### Low Income Energy Affordability Data (LEAD), 2022 county data
 
-- Publisher: New Jersey Division of Taxation
+- Publisher: U.S. Department of Energy / National Renewable Energy Laboratory
+- Terms: Creative Commons Attribution 4.0 International
+- https://data.openei.org/submissions/6219
+
+### Low-Income Housing Tax Credit bulk project inventory
+
+- Publisher: U.S. Department of Housing and Urban Development
+- Terms: Public domain (U.S. Government work)
+- https://www.huduser.gov/portal/datasets/lihtc/property.html
+
+### MOD-IV property tax assessment records (NJ Division of Taxation)
+
+- Publisher: NJ Office of Information Technology, Office of GIS (NJOGIS)
 - Terms: Open public record
-- https://www.state.nj.us/treasury/taxation/lpt/lptvalue.shtml
+- https://njogis-newjersey.opendata.arcgis.com/datasets/102a9bf3c6da4ca3b9b31f831a1e9f72
 
-### NJ statewide parcel boundaries
+### Multifamily assistance properties and Section 8 contracts
 
-- Publisher: NJ Office of GIS (NJGIN)
-- Terms: Open data
-- https://njogis-newjersey.opendata.arcgis.com/
+- Publisher: U.S. Department of Housing and Urban Development
+- Terms: Public domain (U.S. Government work)
+- https://www.hud.gov/hud-partners/multifamily-assist-section8-database
+
+### National Flood Hazard Layer — flood hazard zones
+
+- Publisher: Federal Emergency Management Agency
+- Terms: Public domain (U.S. Government work)
+- https://www.fema.gov/flood-maps/national-flood-hazard-layer
+
+### National Transit Map — stops
+
+- Publisher: Bureau of Transportation Statistics
+- Terms: Public domain (U.S. Government work)
+- https://www.bts.gov/national-transit-map
+
+### New Jersey school district boundaries
+
+- Publisher: NJ Office of Information Technology, Office of GIS (NJOGIS)
+- Terms: Open public record
+- https://www.arcgis.com/home/item.html?id=26a2a9f9cf0a472d865b367f88833336
+
+### New Jersey School Performance Reports — districts
+
+- Publisher: New Jersey Department of Education
+- Terms: Open public record
+- https://www.nj.gov/education/schoolperformance/
+
+### New Jersey Uniform Crime Report — annual agency reporting
+
+- Publisher: New Jersey State Police
+- Terms: Open public record
+- https://nj.gov/njsp/ucr/uniform-crime-reports.shtml
+
+### NFIP Redacted Claims (v3)
+
+- Publisher: Federal Emergency Management Agency (OpenFEMA)
+- Terms: OpenFEMA Terms and Conditions
+- https://www.fema.gov/openfema-data-page/nfip-redacted-claims-v3
+
+### NJ BPU reported electric reliability performance
+
+- Publisher: New Jersey Board of Public Utilities
+- Terms: Open public record
+- https://www.nj.gov/bpu/about/divisions/reliability/
+
+### Population Estimates Program, Vintage 2025
+
+- Publisher: U.S. Census Bureau
+- Terms: Public domain (U.S. Government work)
+- https://www.census.gov/programs-surveys/popest.html
+
+### Public Community Water Purveyor Service Areas
+
+- Publisher: New Jersey Department of Environmental Protection
+- Terms: NJDEP Data Distribution Agreement
+- https://dep.nj.gov/watersupply/drinking-water-consumers/your-utility-its-water/
+
+### Safe Drinking Water Information System — violations
+
+- Publisher: U.S. Environmental Protection Agency
+- Terms: Public domain (U.S. Government work)
+- https://www.epa.gov/enviro/sdwis-overview
 
 ### SOI county-to-county migration flows
 
@@ -92,17 +254,47 @@ packet for that region answers it precisely.
 - Terms: Public domain (U.S. Government work)
 - https://www.irs.gov/statistics/soi-tax-stats-migration-data
 
+### SR1A sales file
+
+- Publisher: New Jersey Division of Taxation
+- Terms: Open public record
+- https://www.nj.gov/treasury/taxation/lpt/statdata.shtml
+
+### Table of Equalized Valuations
+
+- Publisher: New Jersey Division of Taxation
+- Terms: Open public record
+- https://www.nj.gov/treasury/taxation/lpt/statdata.shtml
+
+### Tidal Climate Adjusted Flood Elevation (sea-level rise 4 ft)
+
+- Publisher: New Jersey Department of Environmental Protection
+- Terms: NJDEP Data Distribution Agreement
+- https://gisdata-njdep.opendata.arcgis.com/datasets/njdep::tidal-climate-adjusted-flood-elevation-cafe-slr-4ft-for-new-jersey
+
+### TIGER/Line 2020 census blocks
+
+- Publisher: U.S. Census Bureau
+- Terms: Public domain (U.S. Government work)
+- https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/
+
 ### TIGER/Line boundary files
 
 - Publisher: U.S. Census Bureau
 - Terms: Public domain (U.S. Government work)
 - https://www2.census.gov/geo/tiger
 
+### UCMR 5 final occurrence data — PFAS entry-point samples
+
+- Publisher: U.S. Environmental Protection Agency
+- Terms: Public domain (U.S. Government work)
+- https://www.epa.gov/dwucmr/occurrence-data-unregulated-contaminant-monitoring-rule
+
 ### USPS ZIP crosswalk and income limits
 
 - Publisher: U.S. Department of Housing and Urban Development
 - Terms: Public domain (U.S. Government work)
-- https://www.huduser.gov/hudapi/public
+- https://www.huduser.gov/portal/datasets/usps_crosswalk.html
 
 ### Zillow Home Value Index
 
@@ -116,9 +308,8 @@ packet for that region answers it precisely.
 - Terms: Free for non-commercial use with attribution
 - https://www.zillow.com/research/data/
 
-
 ---
 
-Generated from `config/sources.yml`, which is the single registry the pipeline, the API,
-the packets, and the website footer all read. Re-generate rather than hand-edit when a
-source is added.
+Everything from `## Sources` on is generated from `config/sources.yml`, the single
+registry the pipeline, the API, the packets and the website footer all read, by
+`hip notice`. Re-run it rather than hand-editing when a source is added.

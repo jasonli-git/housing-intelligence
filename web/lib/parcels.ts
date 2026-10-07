@@ -74,39 +74,25 @@ export function parcelsOf(file: ParcelFile): Parcel[] {
   }));
 }
 
-function normal(text: string): string {
-  return text.toUpperCase().replace(/[^A-Z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function addressMatches(tokens: string[], words: string[]): boolean {
-  const last = words.length - 1;
-  return words.every((word, i) =>
-    i === last ? tokens.some((t) => t.startsWith(word)) : tokens.includes(word),
-  );
-}
-
 // "12/3", "12, 3", "block 12 lot 3" or "12 lot 3": a block and a lot.
 const BLOCK_LOT = /^\s*(?:block\s*)?([0-9a-z.]+)\s*(?:\/|,|\s+lot\s+)\s*([0-9a-z.]+)\s*$/i;
 
 /**
- * Parcels matching a search. A block and lot, written as `BLOCK_LOT` allows, finds that
- * parcel and its qualifiers (condominium units share a block and lot); anything else is
- * an address: every word but the last present whole, and the last as the start of a
- * word, since a reader may still be typing it — "250 lorr" finds "250 LORRAINE DR", and
- * "100 washington" finds 100 Washington St but not 1008. At most `limit` results, in
- * file order, which is block and lot order.
+ * The parcels at a block and lot, written as `BLOCK_LOT` allows ("12/3", "12, 3",
+ * "block 12 lot 3"), qualifiers included, since condominium units share a block and lot.
+ * At most `limit`, in file order. Addresses are found statewide by
+ * `web/lib/addressSearch.ts` (Milestone 38); anything that is not a block and lot finds
+ * nothing here.
  */
 export function search(parcels: Parcel[], query: string, limit = 25): Parcel[] {
   const blockLot = BLOCK_LOT.exec(query);
-  const words = normal(query).split(" ").filter(Boolean);
-  if (!blockLot && words.length === 0) return [];
+  if (!blockLot) return [];
   const found: Parcel[] = [];
   for (const parcel of parcels) {
-    const match = blockLot
-      ? parcel.block.toUpperCase() === blockLot[1].toUpperCase() &&
-        parcel.lot.toUpperCase() === blockLot[2].toUpperCase()
-      : parcel.address !== null && addressMatches(normal(parcel.address).split(" "), words);
-    if (match) {
+    if (
+      parcel.block.toUpperCase() === blockLot[1].toUpperCase() &&
+      parcel.lot.toUpperCase() === blockLot[2].toUpperCase()
+    ) {
       found.push(parcel);
       if (found.length >= limit) break;
     }
