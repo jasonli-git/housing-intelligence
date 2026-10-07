@@ -92,6 +92,7 @@ from hip.transform.dbt_runner import (
     run_dbt,
 )
 from hip.validate.gate import run_checks, write_report
+from hip.warehouse.community import load_community
 from hip.warehouse.db import get_engine
 from hip.warehouse.discoveries import load_discoveries
 from hip.warehouse.infrastructure import load_infrastructure
@@ -539,6 +540,8 @@ def prune_raw(
                     "                 OR r.new_release_id = sr.release_id) "
                     "   OR EXISTS (SELECT 1 FROM affordable_housing_records a "
                     "              WHERE a.release_id = sr.release_id) "
+                    "   OR EXISTS (SELECT 1 FROM community_records c "
+                    "              WHERE c.release_id = sr.release_id) "
                     "   OR EXISTS (SELECT 1 FROM infrastructure_records i "
                     "              WHERE i.release_id = sr.release_id) "
                     "   OR EXISTS (SELECT 1 FROM water_systems w "
@@ -1197,6 +1200,10 @@ def load(
         get_engine(), settings.duckdb_path, releases=fact_provenance
     )
     typer.echo(f"infrastructure records: {infrastructure_rows:,}")
+    community_rows = load_community(
+        get_engine(), settings.duckdb_path, releases=fact_provenance
+    )
+    typer.echo(f"community records: {community_rows:,}")
     typer.echo("")
     for metric_id, count in sorted(facts.by_metric.items()):
         typer.echo(f"{metric_id:<14} {count:>9,} observations")

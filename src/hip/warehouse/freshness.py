@@ -183,6 +183,8 @@ def build_report(
                            coalesce((payload->>'first_sample')::date, snapshot),
                            coalesce((payload->>'last_sample')::date, snapshot)
                     FROM infrastructure_records
+                    UNION ALL
+                    SELECT source_id, snapshot, snapshot FROM community_records
                 ) observed
                 GROUP BY source_id
                 """

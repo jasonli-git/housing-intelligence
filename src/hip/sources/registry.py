@@ -18,6 +18,12 @@ from hip.sources.census_blocks import BlocksAdapter
 from hip.sources.census_lodes import LodesAdapter
 from hip.sources.census_pep import PepAdapter
 from hip.sources.census_permits import PermitsAdapter
+from hip.sources.community import (
+    CrimeAdapter,
+    PlacesAdapter,
+    SchoolBoundariesAdapter,
+    SchoolPerformanceAdapter,
+)
 from hip.sources.epa_sdwis import SdwisAdapter
 from hip.sources.fema import NfhlAdapter, NfipClaimsAdapter
 from hip.sources.fhfa import HpiAdapter
@@ -110,6 +116,10 @@ IMPLEMENTED: tuple[str, ...] = (
     # Milestone 45.
     LodesAdapter.source_id,
     TransitStopsAdapter.source_id,
+    SchoolPerformanceAdapter.source_id,
+    SchoolBoundariesAdapter.source_id,
+    CrimeAdapter.source_id,
+    PlacesAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -152,6 +162,10 @@ METRIC_SOURCES: tuple[str, ...] = (
     # Milestone 45.
     LodesAdapter.source_id,
     TransitStopsAdapter.source_id,
+    SchoolPerformanceAdapter.source_id,
+    SchoolBoundariesAdapter.source_id,
+    CrimeAdapter.source_id,
+    PlacesAdapter.source_id,
 )
 
 
@@ -189,6 +203,10 @@ def build_adapter(
 
 def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
     for builder in (
+        SchoolPerformanceAdapter,
+        SchoolBoundariesAdapter,
+        CrimeAdapter,
+        PlacesAdapter,
         BpuReliabilityAdapter,
         EiaAdapter,
         EnergyBurdenAdapter,

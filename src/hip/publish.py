@@ -202,6 +202,8 @@ def _plan(
     # The attribution the site footer renders. Static like everything else, so the terms
     # travel with the artifacts rather than depending on an API being up.
     yield "/sources", "sources.json"
+    for level in ("county", "tract", "zip"):
+        yield f"/community/health/{level}", f"community/health/{level}.json"
     yield "/sources/unresolved", "sources/unresolved.json"
     # Milestone 27's public freshness and what-changed pages.
     yield "/freshness", "freshness.json"
@@ -243,6 +245,7 @@ def _plan(
             f"regions/{region_id}/work-destinations.json",
         )
         yield f"/regions/{region_id}/utilities", f"regions/{region_id}/utilities.json"
+        yield f"/regions/{region_id}/community", f"regions/{region_id}/community.json"
         yield (
             f"/regions/{region_id}/affordable-housing",
             f"regions/{region_id}/affordable-housing.json",
