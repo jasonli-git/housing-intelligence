@@ -591,9 +591,10 @@ first raised, not where it must be done.
         exactly — every borough (252), city (52), town (15) and village (3), and no
         township (0 of 241) — about 49% of homes. A place counts as a town where 99.5%
         of each's 2020 homes are in the other, by LODES's block crosswalk (ARCHITECTURE
-        #313); the result was the same at 95%. Not built: it would give town figures to
-        boroughs and cities only, so the owner should decide whether a half-covered
-        layer is worth showing. ZIP codes still need the Fabric. One FCC place is not in
+        #313); the result was the same at 95%. Not built, by the owner's choice
+        (2026-10-07): a layer for boroughs and cities only would leave townships on
+        the county figure beside them, so wait for CostQuest; revisit only if the
+        Fabric is refused. ZIP codes still need the Fabric. One FCC place is not in
         the 2020 crosswalk; check which place boundaries the FCC file uses first.
 
 - [ ] **NJ TRANSIT service frequency.** (M45, decided 2026-10-06) Only NJ TRANSIT's own
