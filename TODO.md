@@ -573,11 +573,29 @@ first raised, not where it must be done.
       - **Run `check-dist` once, not twice** (about 25 seconds): `deploy` and
         `check-live` each run it over the 4.3GB tree.
 
-- [ ] **FCC town and ZIP figures, and automatic updates.** (M47, #322) Waiting on the
-      owner's inquiries of 2026-10-07: the FCC (API agreement's public-statement and
-      security clauses) and CostQuest (whether a Research licence to the location Fabric
-      covers publishing town and ZIP summaries). Until then the county summary is
-      imported by hand from the public download; check its selector for a newer edition.
+- [ ] **FCC town and ZIP figures, and automatic updates.** (M47, #322) The county summary
+      is imported by hand from the public download; check its selector for a newer
+      edition. Waiting on the owner's inquiries:
+      - **FCC** (2026-10-07): the API agreement's public-statement and security clauses.
+        No reply yet.
+      - **CostQuest, location Fabric** (2026-10-07): Maggie (NBF Support) replied that
+        Tier 4R is "typically" for academic institutions and government bodies, and
+        asked for context. The owner answered the same day: independent developer, free
+        non-commercial site (#323), Fabric used only to assign FCC records to towns and
+        ZIP areas, aggregates published, never records or addresses; asked whether this
+        qualifies or whether a university partnership or other licence would. Awaiting
+        a reply; follow up after about two weeks. A partner's licence would need to
+        cover publishing on this site.
+      - **Towns without the Fabric, measured 2026-10-07:** the FCC's New Jersey
+        Census-place summary (701 places, owner's download) covers 323 of 564 towns
+        exactly — every borough (252), city (52), town (15) and village (3), and no
+        township (0 of 241) — about 49% of homes. A place counts as a town where 99.5%
+        of each's 2020 homes are in the other, by LODES's block crosswalk (ARCHITECTURE
+        #313); the result was the same at 95%. Not built, by the owner's choice
+        (2026-10-07): a layer for boroughs and cities only would leave townships on
+        the county figure beside them, so wait for CostQuest; revisit only if the
+        Fabric is refused. ZIP codes still need the Fabric. One FCC place is not in
+        the 2020 crosswalk; check which place boundaries the FCC file uses first.
 
 - [ ] **NJ TRANSIT service frequency.** (M45, decided 2026-10-06) Only NJ TRANSIT's own
       GTFS says how often anything runs. It needs a developer account the owner would
