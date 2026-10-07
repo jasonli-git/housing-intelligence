@@ -14,13 +14,11 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 48 built, awaiting review (2026-10-07)
+## Now — between milestones (2026-10-07)
 
-Milestone 48, mortgage lending, is on `milestone/m48-mortgage-lending` as 0.46.0
-(ARCHITECTURE #324–#327). Not merged or deployed. After it: the housekeeping PR the
-owner approved (unused components, place-search escaping, the dead parcel-search
-branch, `NOTICE`). Then Milestone 49 only when asked; Milestone 44 waits on how to read
-DCA's dashboard.
+Milestone 48 is merged and deployed as 0.46.0 (ARCHITECTURE #324–#327). Housekeeping is
+on `change/housekeeping` as 0.46.1, not merged. Next: Milestone 49, decision guides,
+only when asked. Milestone 44 waits on how to read DCA's dashboard.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000. A new
 environment needs the FCC summary ZIP in `data/manual/fcc_bdc/` (ARCHITECTURE #322).
@@ -133,10 +131,6 @@ first raised, not where it must be done.
       see it: `/freshness` shows the source's data "through Dec 2026", marked as a period
       still under way.
 
-- [ ] **The validation gate has no range bounds for the two HUD metrics.**
-      (pre-M12 review) `hud_area_median_income` and `hud_income_limit_80` are absent from
-      `VALUE_BOUNDS` ([gate.py](src/hip/validate/gate.py)), so the one metric family
-      feeding `price_to_ami` passes unchecked. Every other loaded metric has bounds.
 - [ ] **Crosswalk weights carry ~1% area error for polygons with few vertices.** (M1)
       `ST_Transform` reprojects vertices without densifying edges. Negligible for real
       TIGER geometry, which is vertex-dense; it only shows up in synthetic test fixtures.
@@ -148,13 +142,6 @@ first raised, not where it must be done.
       medians comparable when their housing stock differs. Check the field's fill rate
       before scoping it — the median is meaningless if half the deeds leave it blank.
       **Scheduled: Milestone 36.**
-- [ ] **`web/lib/groups.test.ts` pins a hand-copied metric catalog.** (M25, found
-      2026-09-20) The comment says a new metric "shows up there as a failure to
-      classify", but the catalog is a literal list snapshotted from `GET /metrics`, so
-      four new metrics went unclassified without failing anything — they would have
-      rendered under "Other measures" silently. Derive the list from
-      `config/metrics.yml` or from a recorded API response, so the guard guards.
-
 - [ ] **A revalidated source's last check is recorded nowhere the freshness page
       reads.** (M27, #222) Zillow, FRED and FHFA are asked every refresh, but only
       whether a file changed is kept, so `/freshness` says it does not yet record when.
@@ -237,9 +224,6 @@ first raised, not where it must be done.
       rebuilds twice, under `make test-all`; #299). The weekly refresh
       rebuilds once, so it is tolerable for New Jersey; at Milestone 14's seven states it
       is not. A sort-based count, or the step moved to DuckDB, are the leads.
-- [ ] **`GET /regions?q=` passes `%` and `_` through to `ILIKE`.** (pre-M12 review) A
-      caller searching for `%` matches every region. Cosmetic today; worth settling
-      before Milestone 17 builds real search over this endpoint.
 - [ ] **New Jersey is hardcoded in three places**, despite `config/geography.yml` stating
       no state code is hard-coded anywhere in `src/hip`. (pre-M12 review) NJ's
       odd-numbered county FIPS in [registry.py:100](src/hip/sources/registry.py:100),
@@ -259,9 +243,6 @@ first raised, not where it must be done.
       iPhone; true 200% text and 400% zoom; print in Safari and Firefox; and axe's
       remaining needs-review results. The handoff (`m43-accessibility-audit.md`) lists
       each.
-- [ ] **Three components nothing renders any more.** (found 2026-10-06 removing the NJ
-      map) `CountyPicker`, `AffordCta` and `CountyModeWorkspace` were left behind by
-      earlier redesigns; delete them, or record why they stay.
 - [ ] **The home page's illustration loops with no pause control.** (M43, #309) Removed
       at the owner's request on 2026-10-05; WCAG 2.2.2 asks for one on anything that
       moves for more than five seconds. Reduced motion stops it. The New Jersey header
@@ -374,18 +355,6 @@ first raised, not where it must be done.
       `NEXT_PUBLIC_ARTIFACT_URL` the Markdown-report link falls back to the local API;
       `make publish` sets it, so the deployed site is right, but a bare build warns and
       is wrong.
-- [ ] **A failed `check-live` has no written runbook.** (raised 2026-09-26, after 0.24.0's
-      deploy) The Friday run and `hip regenerate-now` send an urgent Pushover alert —
-      "check-live failed after deploy … Check the log on the Mac" — and stop; nothing says
-      what to do next. The steps today: rerun `make check-live`; if it fails again, read
-      which page or manifest it names, fix forward (`make publish`, `make deploy`, `make
-      check-live`), and roll the Pages site back from Cloudflare's dashboard if readers
-      are meanwhile seeing a broken page. Belongs in README's Publishing section.
-- [ ] **`check-live` alerts on its first failure, transient or not.** (raised 2026-09-26)
-      A CDN still propagating, or a page-timing race like the one PR #42 fixed, reads the
-      same as a real mismatch, and the site is already deployed by then. One retry after
-      a short wait, before the urgent alert, would separate the two; a failure to start
-      Chromium is the checker's own problem and could say so.
 - [ ] **The published data files cannot be rolled back.** (raised 2026-09-26) `make
       publish` deletes the previous `dist/`, and `rclone sync` overwrites R2 in place, so
       only the Pages site has a previous deployment to return to — and rolling back the
@@ -401,11 +370,6 @@ first raised, not where it must be done.
       guard.
 
 ### Documentation upkeep
-
-- [ ] **`NOTICE` lists 12 of the 37 sources.** It says it is generated from
-      `config/sources.yml`, but no generator exists, so it was hand-edited and has
-      fallen behind (`hip check-config` counts 37). Write the generator the file
-      promises, or say it is maintained by hand and bring it up to date.
 
 - [ ] **Re-read the publishers' release calendars before they run out.** (#298) Recorded
       by hand on 2026-10-02 in `config/sources.yml`: BLS's ends 2026-12-30, Zillow's
@@ -433,10 +397,6 @@ first raised, not where it must be done.
       were brought up to date in Milestone 30.
 
 ### Housekeeping
-
-- [ ] **`search()`'s address branch in `web/lib/parcels.ts` is no longer reached.** (M38)
-      `/tax` finds addresses through `web/lib/addressSearch.ts` and calls `search` only
-      for block and lot; the address half and its tests can go.
 
 - [ ] **Nothing runs `ruff` automatically.** `make lint` exists and is run by hand, so
       a violation reaches `main` whenever someone runs `make test` or `make test-all`

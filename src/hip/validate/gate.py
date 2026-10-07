@@ -56,6 +56,13 @@ VALUE_BOUNDS = {
     "fhfa_hpi": (1.0, 10_000.0),
     "mortgage_rate_30y": (0.5, 25.0),
     "mortgage_rate_30y_weekly": (0.5, 25.0),
+    # Milestone 48: HMDA's medians and FHA's limit. Rates as reported by lenders; a
+    # loan amount is HMDA's rounded midpoint; the limit sits between HUD's national floor
+    # and ceiling, with room for either to move.
+    "hmda_median_rate": (0.5, 25.0),
+    "hmda_median_loan_amount": (5_000.0, 20_000_000.0),
+    "hmda_median_income": (1_000.0, 100_000_000.0),
+    "hud_fha_limit_1unit": (100_000.0, 3_000_000.0),
     "unemployment_rate": (0.0, 60.0),
     # Net migration is a signed difference and can legitimately be large and negative.
     "net_migration_returns": (-1_000_000.0, 1_000_000.0),

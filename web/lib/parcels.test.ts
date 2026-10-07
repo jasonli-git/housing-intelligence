@@ -38,17 +38,12 @@ describe("search", () => {
     }
   });
 
-  it("finds an address by whole words, the last allowed to be half-typed", () => {
-    expect(search(PARCELS, "250 lorraine").length).toBe(2);
-    expect(search(PARCELS, "250 lorr").length).toBe(2);
-    expect(search(PARCELS, "lorraine ave").map((p) => p.lot)).toEqual(["2"]);
-    expect(search(PARCELS, "50 lorraine")).toEqual([]);
-    // A house number is whole: 25 is not 250 or 252.
-    expect(search(PARCELS, "25 lorraine")).toEqual([]);
+  it("finds nothing for an address, which the statewide address search answers", () => {
+    expect(search(PARCELS, "250 lorraine")).toEqual([]);
   });
 
   it("stops at its limit and finds nothing for an empty query", () => {
-    expect(search(PARCELS, "lorraine", 2).length).toBe(2);
+    expect(search(PARCELS, "12/3", 1).length).toBe(1);
     expect(search(PARCELS, "  ")).toEqual([]);
   });
 });

@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.46.0, 2026-10-06. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.46.1, 2026-10-06. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, prices, rents, economic context, tax
 > roll, recorded sales, flood and environmental exposure, and where residents work and
@@ -716,7 +716,7 @@ The platform has no request-time compute, so production is a set of files rather
 running service. `make publish` builds them; `make deploy` sends them.
 
 ```bash
-make publish   # dist/artifacts (9,488 files, about 0.6 GB) + dist/site (14,276 files, 2.9 GB)
+make publish   # dist/artifacts (16,783 files, about 0.8 GB) + dist/site (14,294 files, 4.3 GB)
 make deploy    # artifacts -> object storage, site -> static host
 make r2-cors   # once per bucket: let the site's pages read the artifacts (the /tax lookup)
 ```
@@ -725,6 +725,28 @@ make r2-cors   # once per bucket: let the site's pages read the artifacts (the /
 other origin — read the bucket from a browser: GET and HEAD only. The property-tax
 lookup needs it to load a town's parcels; `make check-live` fails without it, and also
 types an address into the live lookup with no town chosen and expects it found.
+
+### When check-live fails
+
+`make check-live` compares the live site and data with `dist/`: every artifact's
+checksum against the manifest, the cross-origin read and statewide address search the
+tax lookup needs, and 13 sample pages loaded locally and live. The weekly refresh and
+`hip regenerate-now` run it after deploying, wait two minutes and run it again if it
+fails, and send the urgent alert only when it fails twice. When that alert arrives:
+
+1. Run `make check-live` again. A CDN still settling usually passes by now.
+2. Read what it names. A **manifest mismatch** means R2 holds files from a different
+   build than `dist/`: an interrupted `make deploy` — run `make deploy` again. A
+   **page mismatch** names the page and what differs; if live and local differ, the Pages
+   upload did not finish or went to a preview — run `make deploy` again (it pins the
+   production branch). A **CORS or search failure** means the bucket's CORS setting
+   changed — run `make r2-cors`.
+3. If `dist/` itself is wrong, fix forward: correct the cause, then `make publish`,
+   `make deploy`, `make check-live`.
+4. If readers are meanwhile seeing a broken page, roll the site back in Cloudflare's
+   dashboard (Pages → housing-intelligence → Deployments → an earlier one → Rollback).
+   The data files in R2 cannot be rolled back (TODO.md), so roll back only when the
+   pages, not the data, are what broke.
 
 ### Removing an address under Daniel's Law
 
@@ -788,7 +810,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.46.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.46.1 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable

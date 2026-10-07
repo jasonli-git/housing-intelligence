@@ -50,7 +50,7 @@ def _run(
     name: str,
     *,
     hip: dict[str, int] | None = None,
-    make: dict[str, int] | None = None,
+    make: dict[str, int | list[int]] | None = None,
     moved: bool = True,
     mode: str = "ask",
     problem: str | None = None,
@@ -69,7 +69,9 @@ def _run(
 
     def fake_run(cmd: list[str]) -> int:
         result.steps.append("run " + " ".join(cmd))
-        return make_codes.get(cmd[-1], 0)
+        code = make_codes.get(cmd[-1], 0)
+        # A list is one code per call, for a step that fails and then passes.
+        return code.pop(0) if isinstance(code, list) else code
 
     def fake_notify(title: str, message: str, *, priority: int = 0) -> None:
         result.notes.append((title, priority))
@@ -96,6 +98,7 @@ def _run(
     monkeypatch.setattr(script, "_hip", fake_hip)
     monkeypatch.setattr(script, "_run", fake_run)
     monkeypatch.setattr(script, "_notify", fake_notify)
+    monkeypatch.setattr(script, "_sleep", lambda seconds: result.steps.append("wait"))
     if hasattr(script, "_zillow_reminder"):
         # Read from this machine's files and today's date; its own tests cover it.
         monkeypatch.setattr(script, "_zillow_reminder", lambda: None)
@@ -276,6 +279,24 @@ def test_a_failed_publishing_step_stops_there(
     assert run.code == 1
     assert run.steps[-1] == f"run make {target}"
     assert [priority for _, priority in run.notes] == [1]
+
+
+@pytest.mark.parametrize("script", ["scheduled_refresh", "regenerate_now"])
+def test_check_live_is_retried_once_before_the_urgent_alert(
+    monkeypatch: pytest.MonkeyPatch, script: str
+) -> None:
+    # Regenerate now publishes only when there is something to regenerate.
+    hip = {"explain --dry-run": 3} if script == "regenerate_now" else None
+    # Failing once then passing is a CDN still settling: no alert.
+    passed = _run(monkeypatch, script, hip=hip, make={"check-live": [2, 0]})
+    assert passed.code == 0
+    assert passed.steps[-3:] == ["run make check-live", "wait", "run make check-live"]
+    assert all(priority != 1 for _, priority in passed.notes)
+    # Failing twice is a real mismatch: urgent.
+    failed = _run(monkeypatch, script, hip=hip, make={"check-live": [2, 2]})
+    assert failed.code == 1
+    assert failed.steps[-3:] == ["run make check-live", "wait", "run make check-live"]
+    assert [priority for _, priority in failed.notes] == [1]
 
 
 # ------------------------------------------------------------- regenerate now ---

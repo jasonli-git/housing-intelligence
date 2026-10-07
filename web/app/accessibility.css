@@ -11,7 +11,7 @@ html { scroll-padding-top: 90px; }
 .map-pan-controls button { min-width: 32px; min-height: 32px; padding: .2rem; border: 1px solid var(--border); border-radius: 5px; background: var(--surface-card); color: var(--text-primary); cursor: pointer; }
 .map-pan-controls span { font-size: 11px; color: var(--text-muted); margin-right: .4rem; }
 .ticker-step { min-width: 28px; min-height: 28px; }
-.nj-page .county-picker-count, .budget-headline > span { color: var(--text-secondary); }
+.budget-headline > span { color: var(--text-secondary); }
 .crumbs li[data-level="local"] { --crumb-accent: light-dark(#246b55, #a6d9c0); }
 .interpretation-runtime { opacity: 1; color: var(--text-secondary); }
 .interpretation-matched { opacity: 1; }

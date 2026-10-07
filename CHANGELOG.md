@@ -3,6 +3,29 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.46.1] — 2026-10-07
+
+Housekeeping.
+
+### Changed
+
+- **`NOTICE` lists every source** (44), generated from `config/sources.yml` by the new
+  `hip notice`; a test fails when it falls behind. It had listed 12.
+- **A failed `check-live` is retried once**, two minutes later, before the weekly
+  refresh or `hip regenerate-now` sends its urgent alert; README's Publishing section
+  now says what to do when it fails twice.
+- Validation bounds for HMDA's median rate, loan and income and FHA's limit.
+
+### Fixed
+
+- Place search treats `%` and `_` as characters, not wildcards.
+
+### Removed
+
+- Three components nothing rendered (`CountyPicker`, `AffordCta`,
+  `CountyModeWorkspace`) and their styles; the tax lookup's unreached address search in
+  `web/lib/parcels.ts`, which `addressSearch.ts` replaced in Milestone 38.
+
 ## [0.46.0] — 2026-10-07
 
 Milestone 48: mortgage lending.
