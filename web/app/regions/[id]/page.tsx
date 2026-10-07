@@ -7,6 +7,7 @@ import { HomeSales } from "@/components/HomeSales";
 import { HomeChecks } from "@/components/HomeChecks";
 import { FloodRisk } from "@/components/FloodRisk";
 import { GettingAround } from "@/components/GettingAround";
+import { MortgageLending } from "@/components/MortgageLending";
 import { GroundAndWater } from "@/components/GroundAndWater";
 import { SimilarPlaces } from "@/components/SimilarPlaces";
 import { Utilities } from "@/components/Utilities";
@@ -248,6 +249,9 @@ export default async function RegionPage({
     incomeLimits && incomeLimits.county_id !== regionId
       ? ((await api.packet(incomeLimits.county_id, WINDOW))?.levels ?? [])
       : [];
+  // FHA's county limit (Milestone 48): a county's own packet, or a town's or ZIP's county.
+  const fhaLevel = [...packet.levels, ...countyLevels].find((l) => l.metric_id === "hud_fha_limit_1unit");
+  const fhaLimit = fhaLevel ? { value: fhaLevel.value, year: Number(fhaLevel.period_end.slice(0, 4)) } : null;
   const trends = series.filter((s) => s.observations.length >= 2);
   const indexedInputs = trends.map(({ metricId, short, observations }) => ({
     metricId,
@@ -379,6 +383,7 @@ export default async function RegionPage({
     <ForYourHousehold regionName={name} limits={incomeLimits} levels={packet.levels} countyLevels={countyLevels}
       margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))} />
     <div id="housing-assistance"><AffordableHousing data={housingHelp} /></div>
+    <MortgageLending name={name} levels={packet.levels} />
     <SimilarPlaces name={name} data={similar} />
     {region.level !== "zip" && <p className="household-next">
       <Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
@@ -488,6 +493,7 @@ export default async function RegionPage({
           householdTools={quiet ? householdContent : undefined}
           comparePlaceId={region.level === "county" || region.level === "municipality" ? region.region_id : undefined}
           showHelp={!incomeLimits}
+          fhaLimit={fhaLimit}
         />
       ) : (
         // Said rather than left out, so a thinner page reads as designed, not broken: the

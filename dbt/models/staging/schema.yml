@@ -397,3 +397,24 @@ models:
         tests:
           - not_null
           - accepted_range: {name: stg_transit_access_is_a_share, min_value: 0, max_value: 1}
+
+  # Milestone 48: mortgage lending (ARCHITECTURE #324-#326).
+  - name: stg_hmda_lending
+    description: >-
+      HMDA home-purchase lending by year per county, municipality, ZIP code and the
+      state; towns and ZIPs estimated from tracts.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_hmda_lending_in_range, min_value: 0, max_value: 1000000000}
+
+  - name: stg_hud_fha_limits
+    description: FHA's one-unit loan limit per New Jersey county, by calendar year.
+    columns:
+      - name: geoid
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_hud_fha_limits_in_range, min_value: 400000, max_value: 2000000}

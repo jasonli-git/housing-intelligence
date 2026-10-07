@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.45.1, 2026-10-06. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.46.0, 2026-10-06. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, prices, rents, economic context, tax
 > roll, recorded sales, flood and environmental exposure, and where residents work and
@@ -23,10 +23,11 @@ layer only explains metrics that were already computed.
 > overwritten. Full detail under
 > [Project Status](#project-status).
 >
-> **Latest.** Milestone 47 (2026-10-07): schools, internet, crime reporting and health
-> on region pages, each cited and kept apart — never a neighbourhood score.
+> **Latest.** Milestone 48 (2026-10-07): the mortgages buyers actually took in each
+> place, from HMDA — rates, loan sizes, down payments, loan types and denials — with FHA's
+> county limits and the month at other rates on the cost-of-owning card.
 >
-> **Next.** Milestone 48, mortgage lending; Milestone 44, evictions, waits on DCA. See
+> **Next.** Milestone 49, decision guides; Milestone 44, evictions, waits on DCA. See
 > [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md).
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
@@ -272,6 +273,10 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   town; owner names and mailing addresses are never collected, and an address is removed
   on request under Daniel's Law (below). County and statewide effective tax rates,
   weighted by equalized valuation.
+- **How do people here pay for homes?** (M48, built) — on county, town and ZIP pages,
+  HMDA's home-purchase mortgages: how many, the median rate, loan, down payment and
+  closing costs, loan types and denial reasons, five years held; FHA's county limit and
+  the month at 5–8% on the cost-of-owning card.
 - **Schools and community context** (M47, built) — on county, town and ZIP pages, the
   school districts serving the place with NJDOE's test and attendance figures, the
   FCC's county broadband offers, NJSP's agency crime reporting for the county, and
@@ -783,7 +788,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.45.1 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.46.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable
@@ -800,15 +805,15 @@ Northeast and to every US county was deferred past Version 2 on 2026-09-07.
 Version 3 began as depth on what is already held. On 2026-09-23 it absorbed Version 4
 and the Director Note on accessible, comprehensive and current housing data, and became
 the version that makes the platform current, as complete as public data allows, and
-honest about both. Twenty-three of its milestones have shipped, **24** through **43** and
-**45** through **47** — from fresher figures and a refresh that reaches the reader (24–30), through the
+honest about both. Twenty-four of its milestones have shipped, **24** through **43** and
+**45** through **48** — from fresher figures and a refresh that reaches the reader (24–30), through the
 licence pass and the commercial decision (31–32), to the housing decision itself: the
 full cost of owning, household-sized answers, how homes sell, property tax and a
 statewide property lookup, whether a place is adding homes (33–39), flood and
 environmental exposure, affordable housing, utilities, an accessibility audit, and where
 residents work and how near transit is (40–43, 45), somewhere like here but cheaper
-(46), and schools and community context (47). **44**, evictions, waits on DCA; **48**
-through **52** remain, then Version 4; the completeness standing check runs at
+(46), schools and community context (47), and mortgage lending (48). **44**, evictions,
+waits on DCA; **49** through **52** remain, then Version 4; the completeness standing check runs at
 every milestone's close. Version 4 holds nowcasts, a local price model study and
 forecasting. Between milestones, the New Jersey landing page and region pages were
 redesigned (0.21.1 and 0.21.3).

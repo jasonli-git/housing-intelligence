@@ -57,6 +57,9 @@ KEYED_MODELS = (
     # Milestone 45.
     "stg_work_flows",
     "stg_transit_access",
+    # Milestone 48.
+    "stg_hmda_lending",
+    "stg_hud_fha_limits",
 )
 
 # Not a metric model: it feeds region_crosswalk, not fact_metric_observation.

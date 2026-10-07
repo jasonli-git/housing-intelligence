@@ -3,6 +3,22 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.46.0] — 2026-10-07
+
+Milestone 48: mortgage lending.
+
+### Added
+
+- **How do people here pay for homes?** (ARCHITECTURE #324): on county, town and ZIP
+  pages, the home-purchase mortgages lenders reported under HMDA in 2025 — how many, the
+  median rate, loan and down payment, closing costs, borrowers' income, conventional,
+  FHA and VA shares, and how often applications were denied and why — with five years
+  held. Towns and ZIPs are estimated from their census tracts. Denials are not shown by
+  race, ethnicity or sex (#325).
+- **FHA's county limits** (#326): the cost-of-owning card says when a 3.5%-down loan is
+  over what HUD insures in the county.
+- **The month at 5%, 6%, 7% and 8%** (#327), under the cost-of-owning estimate.
+
 ## [0.45.1] — 2026-10-07
 
 ### Changed

@@ -614,6 +614,62 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "The share of homes near a rail stop (half a mile) or a bus stop (a quarter mile).",
     why: "How much of the place is within a walk of some transit.",
   },
+  hmda_purchase_loans: {
+    what: "Mortgages made to buy an owner-occupied home here in the year, as lenders report them under HMDA.",
+    why: "How active home buying with a mortgage is here. Cash purchases and small lenders below HMDA’s thresholds are not counted.",
+  },
+  hmda_median_rate: {
+    what: "The median interest rate on home-purchase mortgages made here in the year.",
+    why: "What borrowers here actually got, not a rate anyone is offered today.",
+  },
+  hmda_median_loan_amount: {
+    what: "The median amount borrowed to buy a home here.",
+    why: "Published rounded to the middle of each $10,000 range, for privacy.",
+  },
+  hmda_median_ltv: {
+    what: "The median loan as a share of the home’s value.",
+    why: "100% less this is the typical down payment.",
+  },
+  hmda_median_loan_costs: {
+    what: "The median of the loan costs disclosed at closing: origination charges, points and third-party services.",
+    why: "Cash a buyer needs beyond the down payment.",
+  },
+  hmda_median_income: {
+    what: "The median income lenders relied on for home-purchase mortgages here.",
+    why: "Who is buying here with a mortgage.",
+  },
+  hmda_conventional_share: {
+    what: "The share of home-purchase mortgages here that no government program insures.",
+    why: "Part of how buyers here finance.",
+  },
+  hmda_fha_share: {
+    what: "The share of home-purchase mortgages here insured by the FHA, which allows 3.5% down up to a county limit.",
+    why: "A high share means many buyers here put little down.",
+  },
+  hmda_va_share: {
+    what: "The share of home-purchase mortgages here guaranteed by the Department of Veterans Affairs.",
+    why: "Part of how buyers here finance.",
+  },
+  hmda_denial_rate: {
+    what: "Applications denied as a share of those decided.",
+    why: "HMDA has no credit scores, so this is not a measure of who could qualify.",
+  },
+  hmda_denial_dti_share: {
+    what: "The share of denials whose first stated reason was debt-to-income.",
+    why: "The most common reason a purchase loan is denied.",
+  },
+  hmda_denial_value_share: {
+    what: "The share of denials whose first stated reason was the home’s value, usually an appraisal below the price.",
+    why: "Common where prices outrun appraisals.",
+  },
+  hmda_denial_credit_share: {
+    what: "The share of denials whose first stated reason was credit history.",
+    why: "Part of why loans here are denied.",
+  },
+  hud_fha_limit_1unit: {
+    what: "The largest mortgage FHA insures on a one-unit home in this county this year.",
+    why: "Above it, a 3.5%-down FHA loan is not available.",
+  },
 };
 
 /** A metric's definition, or null for one the dictionary does not know yet. */

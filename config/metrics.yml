@@ -1808,3 +1808,193 @@ metrics:
     record_type: calculated
     ranked: false
     changed: false
+
+  # Milestone 48: mortgage lending (ARCHITECTURE #324-#326). HMDA's home-purchase
+  # mortgages by year; a town's or ZIP's figures are estimated from its tracts.
+
+  hmda_purchase_loans:
+    label: Home-purchase mortgages made
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      First-lien mortgages made to buy an owner-occupied one-to-four-family home, as
+      lenders report them under the Home Mortgage Disclosure Act. Lenders below
+      HMDA's reporting thresholds, mostly small banks and credit unions, are not
+      counted, nor are cash purchases. A town's or ZIP's count is estimated from its
+      census tracts by their 2020 homes.
+    source_id: ffiec_hmda
+    record_type: administrative
+    ranked: false
+    changed: false
+
+  hmda_median_rate:
+    label: Median mortgage rate, home purchases
+    unit: percent
+    frequency: annual
+    direction: neutral
+    description: >-
+      The median interest rate on home-purchase mortgages made here in the year, as
+      lenders reported it. What borrowers here actually got, not a rate anyone is
+      offered today.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hmda_median_loan_amount:
+    label: Median mortgage, home purchases
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      The median amount borrowed to buy a home here. HMDA publishes each loan amount
+      as the midpoint of its $10,000 range, for privacy.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hmda_median_ltv:
+    label: Median loan-to-value, home purchases
+    unit: percent
+    frequency: annual
+    direction: neutral
+    description: >-
+      The median loan as a share of the home's value; 100% less this is the typical
+      down payment and any other equity.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hmda_median_loan_costs:
+    label: Median loan costs, home purchases
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      The median of the loan costs lenders disclosed at closing: origination
+      charges, points and third-party services. Not the down payment, taxes or
+      insurance.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hmda_median_income:
+    label: Median borrower income, home purchases
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      The median income lenders relied on for home-purchase mortgages made here.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hmda_conventional_share:
+    label: Conventional loans, home purchases
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of home-purchase mortgages made here that no government program
+      insures or guarantees.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hmda_fha_share:
+    label: FHA loans, home purchases
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of home-purchase mortgages made here insured by the Federal Housing
+      Administration, which allows a 3.5% down payment up to a county limit.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hmda_va_share:
+    label: VA loans, home purchases
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of home-purchase mortgages made here guaranteed by the Department of
+      Veterans Affairs.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hmda_denial_rate:
+    label: Home-purchase applications denied
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Applications denied as a share of those decided (made, approved but not taken,
+      or denied). HMDA has no credit scores or full underwriting, so this is not a
+      measure of who could have qualified.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hmda_denial_dti_share:
+    label: Denials for debt-to-income
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of denied home-purchase applications whose first stated reason was
+      the applicant's debt-to-income ratio.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hmda_denial_value_share:
+    label: Denials for the home's value
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of denied home-purchase applications whose first stated reason was
+      collateral: usually an appraisal below the price.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hmda_denial_credit_share:
+    label: Denials for credit history
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of denied home-purchase applications whose first stated reason was
+      the applicant's credit history.
+    source_id: ffiec_hmda
+    record_type: calculated
+    ranked: false
+    changed: false
+
+  hud_fha_limit_1unit:
+    label: FHA loan limit, one-unit home
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      The largest mortgage FHA insures on a one-unit home in this county for the
+      calendar year, set by HUD between a national floor and a high-cost ceiling.
+    source_id: hud_fha_limits
+    record_type: determination
+    ranked: false
+    changed: false
