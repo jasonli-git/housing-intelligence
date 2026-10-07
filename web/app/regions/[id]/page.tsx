@@ -10,6 +10,7 @@ import { GettingAround } from "@/components/GettingAround";
 import { GroundAndWater } from "@/components/GroundAndWater";
 import { SimilarPlaces } from "@/components/SimilarPlaces";
 import { Utilities } from "@/components/Utilities";
+import { CommunityContext } from "@/components/CommunityContext";
 import { HomesAdded } from "@/components/HomesAdded";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
@@ -208,7 +209,7 @@ export default async function RegionPage({
     region.level === "municipality"
       ? (region.ancestors.find((a) => a.level === "county") ?? null)
       : region;
-  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations, similar] = await Promise.all([
+  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations, similar, community] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -239,6 +240,7 @@ export default async function RegionPage({
     api.workDestinations(regionId),
     // Milestone 46: towns like this one but cheaper; a town's only.
     region.level === "municipality" ? api.similarPlaces(regionId) : Promise.resolve(null),
+    api.community(regionId),
   ]);
   // A town or ZIP reads HUD's county Fair Market Rents from its county's packet: HUD sets
   // them for the county's area, and only a county page carries them (Milestone 35).
@@ -363,6 +365,7 @@ export default async function RegionPage({
         <GroundAndWater name={name} levels={packet.levels} water={water} />
         <Utilities data={utilities} />
         <GettingAround name={name} level={region.level} levels={packet.levels} destinations={workDestinations} />
+        <CommunityContext data={community} level={region.level} />
       </div>
       <p className="sales-note tax-way-in">
         <Link href={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"}>Look up a property here</Link>: its assessment and last year’s

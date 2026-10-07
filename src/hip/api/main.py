@@ -14,6 +14,7 @@ from hip import __version__
 from hip.api.routers import (
     affordable_housing,
     analytics,
+    community,
     explanations,
     freshness,
     health,
@@ -56,4 +57,5 @@ app.include_router(water_systems.router)
 app.include_router(work_destinations.router)
 app.include_router(similar_places.router)
 app.include_router(infrastructure.router)
+app.include_router(community.router)
 app.include_router(affordable_housing.router)

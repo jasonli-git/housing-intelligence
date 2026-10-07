@@ -223,6 +223,37 @@ export type Utilities = {
   energy_context: InfrastructureRecord<EnergyContext> | null;
 };
 
+export type CommunityRecord<T> = {
+  source_id: string; kind: string; entity_id: string; record_id: string;
+  payload: T; snapshot: string | null; release_id: number; release_layer: string;
+  vintage: string; file_sha256: string; fetched_at: string;
+};
+export type SchoolPerformance = {
+  district_id: string; name: string; school_year: string; url: string; notes: string[];
+  indicators: { id: string; label: string; value: number | null; suppression: string | null; basis: string }[];
+};
+export type HealthEstimate = {
+  measure: string; label: string; year: number; release: string; value: number | null;
+  low: number | null; high: number | null; confidence: number; suppression: string | null; basis: string; url: string;
+};
+export type CrimeAgency = {
+  agency: string; ori: string; county: string; year: number; months_reported: number;
+  complete: boolean; reported_offenses: number; counts: Record<string, number>; url: string;
+};
+export type BroadbandSummary = {
+  name: string; technology: string; as_of: string; revision: string;
+  total_units: number; biz_res: string; area_data_type: string;
+  shares: Record<string, number>; basis: string; denominator: string; url: string;
+};
+export type CommunityContext = {
+  region_id: number;
+  districts: { boundary: CommunityRecord<{ district_id: string; name: string; district_type: string; approximate_share: number }>;
+    performance: CommunityRecord<SchoolPerformance> | null }[];
+  health: CommunityRecord<HealthEstimate>[]; health_area: string | null; health_level: string | null;
+  crime: CommunityRecord<CrimeAgency>[]; crime_county: string | null; broadband_status: string;
+  broadband: CommunityRecord<BroadbandSummary>[]; broadband_area: string | null; broadband_level: string | null;
+};
+
 export type WaterSystems = {
   region_id: number;
   first_year: number;
@@ -636,6 +667,7 @@ export const api = {
   workDestinations: (id: number) =>
     tryGet<WorkDestinations>(`/regions/${id}/work-destinations`),
   utilities: (id: number) => tryGet<Utilities>(`/regions/${id}/utilities`),
+  community: (id: number) => tryGet<CommunityContext>(`/regions/${id}/community`),
   /** The metric catalog, for the New Jersey page's measure picker. */
   metrics: () => tryGet<MetricEntry[]>(`/metrics`),
 };

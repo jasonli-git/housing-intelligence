@@ -1059,6 +1059,136 @@ sources:
       Housing units per 2020 block, the weights behind every share of homes. Pinned
       to 2020; redrawn once a decade.
 
+  # Milestone 47: separate community components; never a neighbourhood score.
+  nj_school_performance:
+    name: New Jersey School Performance Reports — districts
+    publisher: New Jersey Department of Education
+    license: Open public record
+    licence_class: public_record
+    commercial:
+      ads: unclear
+      paid: unclear
+      note: State information may be used; no blanket commercial clearance is inferred.
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-10-07
+    terms_note: >-
+      Section F permits use of state information subject to any specific restrictions
+      and third-party rights. Aggregate district figures only; no staff contact data,
+      logos, or endorsement. Suppression and district quality notes are retained.
+    url: https://www.nj.gov/education/spr/download/
+    homepage: https://www.nj.gov/education/schoolperformance/
+    cadence: annual
+    adapter: hip.sources.community:SchoolPerformanceAdapter
+    fallback: District reports on NJDOE's School Performance Reports site.
+    notes: School year is not release year; selected All Students figures, not a school rating.
+
+  nj_school_boundaries:
+    name: New Jersey school district boundaries
+    publisher: NJ Office of Information Technology, Office of GIS (NJOGIS)
+    license: Open public record
+    licence_class: public_record
+    commercial:
+      ads: unclear
+      paid: unclear
+      note: No independent blanket commercial clearance is inferred from public access.
+    terms_url: https://www.arcgis.com/home/item.html?id=26a2a9f9cf0a472d865b367f88833336
+    terms_checked: 2026-10-07
+    terms_note: >-
+      Read unified, elementary and secondary layer metadata. NJOGIS requests credit;
+      data are as-is, not survey data or legal boundaries. State website conditions
+      also apply. Associations do not determine school assignment or enrollment.
+    notices:
+      - >-
+        School district boundaries: NJOGIS, with U.S. Census Bureau and NJDOE source
+        information. Provided as-is; not survey data or legal boundaries. Confirm
+        a property's district and school assignment with the district.
+    url: https://www.nj.gov/njgin/edata/dataproducts/
+    homepage: https://www.arcgis.com/home/item.html?id=26a2a9f9cf0a472d865b367f88833336
+    cadence: annual
+    adapter: hip.sources.community:SchoolBoundariesAdapter
+    fallback: Confirm district responsibility directly; never infer a school assignment.
+    notes: Three overlapping grade-level district types remain distinct; home-weighted approximate associations.
+
+  nj_crime:
+    name: New Jersey Uniform Crime Report — annual agency reporting
+    publisher: New Jersey State Police
+    license: Open public record
+    licence_class: public_record
+    commercial:
+      ads: unclear
+      paid: unclear
+      note: State information may be used; no blanket commercial clearance is inferred.
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-10-07
+    terms_note: >-
+      Aggregate annual workbook, credited to NJSP, under section F state information
+      conditions. Reporting months retained. No individual records, safety score,
+      unreported zero, or assumed municipal police jurisdiction.
+    url: https://nj.gov/njsp/ucr/uniform-crime-reports.shtml
+    homepage: https://nj.gov/njsp/ucr/uniform-crime-reports.shtml
+    cadence: annual
+    adapter: hip.sources.community:CrimeAdapter
+    fallback: NJSP's newer reporting route requires separate completeness and schema review.
+    notes: Reviewed 2023 workbook, published April 2025. Agencies grouped by county, not municipal crime rates.
+
+  cdc_places:
+    name: CDC PLACES — selected health estimates
+    publisher: Centers for Disease Control and Prevention
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: CDC's dataset metadata identifies these data as public domain.
+    terms_url: https://data.cdc.gov/d/swc5-untb
+    terms_checked: 2026-10-07
+    terms_note: >-
+      County, tract and ZCTA metadata label Public Domain. Model-based crude prevalence
+      with 95% intervals, not ACS margins. Release year differs from measurement year;
+      CDC warns against comparing releases as trends or evaluating local policies.
+    notices:
+      - >-
+        Centers for Disease Control and Prevention, PLACES Data. Model-based local
+        estimates; release and measurement years are shown separately. No CDC endorsement.
+    url: https://www.cdc.gov/places/tools/data-portal.html
+    homepage: https://www.cdc.gov/places/
+    cadence: annual
+    adapter: hip.sources.community:PlacesAdapter
+    fallback: CDC PLACES interactive portal.
+    notes: County and tract filtered to NJ; ZIP-area download bounded to 07/08 postal prefixes and matched to existing ZCTAs.
+
+  fcc_bdc:
+    name: FCC Broadband Data Collection — published fixed-broadband summaries
+    publisher: Federal Communications Commission
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: FCC states broadband availability data are free and not subject to copyright restriction; Fabric excluded.
+    terms_url: https://broadbandmap.fcc.gov/about
+    terms_checked: 2026-10-07
+    terms_note: >-
+      Read License and Attribution on the current map. FCC availability data are
+      offered free without copyright restriction; attribution is requested. CostQuest
+      Fabric retains separate rights. Only FCC's public aggregated summaries are
+      imported, never address/coordinate/location Fabric files. Public website
+      downloads worked without login; documented API access requires an FCC account.
+    notices:
+      - >-
+        Source data: FCC Broadband Data Collection. Provider-reported availability
+        and advertised speeds, not measured speed or a guarantee at a home. County
+        shares use FCC's broadband-serviceable unit denominator, not household counts.
+    url: https://broadbandmap.fcc.gov/data-download
+    homepage: https://broadbandmap.fcc.gov/
+    cadence: semiannual
+    adapter: hip.sources.fcc:BroadbandSummaryAdapter
+    fallback: Official FCC address checker; download and import a newer summary when available.
+    notes: >-
+      Manual integration pending documented API setup, not a prohibition on automation.
+      As-of and revision dates are both in the vintage. State/county summaries only;
+      Census places are not municipality boundaries. No claim of automatic Friday refresh.
+
   # Milestone 45: getting around (ARCHITECTURE #313-#314).
   census_lodes:
     name: LEHD Origin-Destination Employment Statistics (LODES 8)
