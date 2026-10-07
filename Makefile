@@ -156,6 +156,10 @@ dbt-debug:  ## Verify dbt can reach both targets
 R2_BUCKET     ?= housing-artifacts
 R2_REMOTE     ?= r2
 PAGES_PROJECT ?= housing-intelligence
+# A clock line before each step of publish, deploy and check-live, so a slow run says
+# which step was slow: on 2026-10-07 a full deploy took 18-27 minutes, and only the two
+# uploads could be timed from their own output.
+STAMP = @echo "[$$(date +%H:%M:%S)] $(1)"
 SITE_URL      ?= https://housing.jasonli.app
 ARTIFACT_URL  ?= https://housing-data.jasonli.app
 
@@ -174,13 +178,15 @@ publish:  ## Build both halves of the deployable site into dist/
 	@# field is served from cache, so on 2026-09-05 every source link in the footer
 	@# rendered with no href at all while the artifact beside it held the right value.
 	@# A publish is not a dev loop: correctness beats the seconds a warm cache saves.
+	$(call STAMP,publish: clean build started)
 	rm -rf dist web/.next web/out
 	uv run hip publish --out dist/artifacts
-	@echo "Starting the API for the export..."
+	$(call STAMP,publish: artifacts written; starting the API for the page export)
 	@uv run uvicorn hip.api.main:app --port 8000 > /tmp/hip-publish-api.log 2>&1 & \
 	  echo $$! > /tmp/hip-publish-api.pid; \
 	  until curl -sf http://localhost:8000/health > /dev/null; do sleep 1; done; \
 	  echo "API ready."
+	$(call STAMP,publish: page export started)
 	@cd web && NEXT_PUBLIC_ARTIFACT_URL=$(ARTIFACT_URL) npm run build; status=$$?; \
 	  kill $$(cat /tmp/hip-publish-api.pid) 2>/dev/null; rm -f /tmp/hip-publish-api.pid; \
 	  exit $$status
@@ -188,6 +194,7 @@ publish:  ## Build both halves of the deployable site into dist/
 	@# by the next publish anyway (the `rm -rf` above), and keeping them held two more
 	@# copies of the site, about 6.4 GB of disk at 14,000 pages (2026-10-02).
 	mkdir -p dist && mv web/out dist/site && rm -rf web/.next
+	$(call STAMP,publish: done)
 	@echo
 	@echo "dist/artifacts  $$(find dist/artifacts -type f | wc -l | tr -d ' ') files, $$(du -sh dist/artifacts | cut -f1)  -> object storage (R2)"
 	@echo "dist/site       $$(find dist/site -type f | wc -l | tr -d ' ') files, $$(du -sh dist/site | cut -f1)  -> static host (Pages)"
@@ -213,7 +220,9 @@ check-dist:  ## Verify dist/ is complete and was built for production
 $$(find dist/site -type f | wc -l | tr -d ' ') site files"
 
 check-live: check-dist  ## Verify the deployed site and artifacts match dist/
+	$(call STAMP,check-live: started)
 	cd web && SITE_URL='$(SITE_URL)' ARTIFACT_URL='$(ARTIFACT_URL)' node scripts/check-live.mjs
+	$(call STAMP,check-live: done)
 
 r2-cors:  ## Let the site's pages read the R2 artifacts (the property-tax lookup needs it)
 	@# A standing bucket setting rather than part of `deploy`: it changes only when this
@@ -221,13 +230,16 @@ r2-cors:  ## Let the site's pages read the R2 artifacts (the property-tax lookup
 	npx wrangler r2 bucket cors set $(R2_BUCKET) --file deploy/r2-cors.json --force
 
 deploy: check-dist  ## Upload artifacts to R2 and the site to Pages
+	$(call STAMP,deploy: artifacts to R2 started)
 	rclone sync dist/artifacts $(R2_REMOTE):$(R2_BUCKET) --progress --checksum
 	@# `--branch` pinned: wrangler otherwise names the deployment after the checked-out git
 	@# branch, and anything but `main` becomes a Preview. On 2026-09-23 a deploy run from a
 	@# docs branch did exactly that — the artifacts above went live, the pages did not, and
 	@# production served old HTML over new artifacts until it was redeployed. The R2 half
 	@# has no preview, so the site half must not have one either.
+	$(call STAMP,deploy: site to Pages started)
 	wrangler pages deploy dist/site --project-name=$(PAGES_PROJECT) --branch=main
+	$(call STAMP,deploy: done)
 
 clean:  ## Remove build artifacts and caches (leaves data/ alone)
 	rm -rf .pytest_cache .mypy_cache .ruff_cache dbt/target dbt/logs web/.next web/out dist
