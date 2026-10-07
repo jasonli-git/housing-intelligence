@@ -2196,7 +2196,7 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 
 /* ---------------------------------------- Milestone 36, how homes sell --- */
 
-.sales { display: grid; gap: 0.8rem; }
+.sales { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8rem; }
 .sales-lead {
   margin: 0; max-width: 70ch; font-size: var(--text-body); line-height: 1.5;
   color: var(--text-primary); text-wrap: pretty;
