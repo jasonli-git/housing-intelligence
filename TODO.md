@@ -554,6 +554,17 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
+- [ ] **Deploy speed-ups, held by the owner 2026-10-07.** Measured that day: a deploy
+      took 18–20 minutes, of which `hip publish` was about 10 (now 1m 51s, run eight
+      requests at once). Two more, each keeping every check:
+      - **Upload only changed pages to Pages** (about 4 minutes to under 1 on most
+        deploys). Every build gives each page a new build ID and "Built" date, so all
+        ~14,250 files upload each time. Needs a build ID derived from code and data, and
+        the owner's choice of what the footer's "Built" date shows (data date, not
+        clock), or every page still changes daily.
+      - **Run `check-dist` once, not twice** (about 25 seconds): `deploy` and
+        `check-live` each run it over the 4.3GB tree.
+
 - [ ] **FCC town and ZIP figures, and automatic updates.** (M47, #322) Waiting on the
       owner's inquiries of 2026-10-07: the FCC (API agreement's public-statement and
       security clauses) and CostQuest (whether a Research licence to the location Fabric
