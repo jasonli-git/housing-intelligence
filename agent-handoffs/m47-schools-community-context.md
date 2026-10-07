@@ -230,8 +230,10 @@ sources are not falsely described as automatically re-read.
   and included as “Source data: FCC Broadband Data Collection.” CostQuest location
   Fabric retains separate rights and is not imported. The [FCC account guide](https://help.bdc.fcc.gov/hc/en-us/articles/20044640394395-How-to-Create-an-FCC-User-Account)
   concerns API access; it is not a prerequisite for the public website ZIPs.
-- No additional Python or npm dependencies, account, paid API, or license upgrade.
-  Repository licensing and existing Zillow noncommercial restrictions are unchanged.
+- No additional Python or npm dependencies, paid API, or license upgrade are required
+  for these imports. Public FCC ZIPs require no account; the owner's account setup
+  concerns an optional API follow-up. Repository licensing and existing Zillow
+  noncommercial restrictions are unchanged.
 - First download about **143.6 MB**: school workbook 119.2 MB, boundaries 18.7 MB,
   CDC 5.5 MB, crime 0.2 MB. Existing pinned-cache and mutable bounded-refresh behavior
   applies. Scoped staging measured about 15–19 seconds locally. Final frontend page
@@ -267,9 +269,11 @@ sources are not falsely described as automatically re-read.
    API access or verify a supported public automation route before promising scheduled
    acquisition. Audit an exact Census-place/MCD crosswalk before town figures; ZIP
    aggregation needs suitable geography and an authorized denominator, not a name join.
-   The [documented API](https://www.fcc.gov/sites/default/files/bdc-public-data-api-spec.pdf)
-   requires an account; location Fabric is separately licensed. Do not make an account,
-   silently acquire a restricted Fabric, or use subscription rates as availability.
+   The [documented API](https://us-fcc.app.box.com/v/bdc-public-data-api-spec)
+   requires an account and token; location Fabric is separately licensed. The owner
+   began account setup but paused API acceptance pending clarification, then sent
+   both inquiries below. Do not generate/use API credentials or acquire Fabric
+   without the next explicit approval; do not use subscriptions as availability.
 2. **Newer crime data / town jurisdictions.** Audit the current public reporting
    route and its missing/delinquent codes before expanding beyond the reviewed 2023
    workbook. A municipal jurisdiction crosswalk requires independent evidence; an
@@ -284,12 +288,14 @@ sources are not falsely described as automatically re-read.
    approved follow-up. A 2022 health tool uses older 2015 tiers; current web publication
    is not necessarily current samples. Even a low-tier town does not rule out a
    home's radon: testing is still the official next step.
-5. **Before merge/deploy:** run the slow analytics/artifact-publish gate in an isolated
-   session. It was not completed here. Apply migration 0030 before using the new router;
-   acquire and land all five sources (FCC requires the manual summary ZIP), stage
-   the five models plus contracts, then load. Without the manual ZIP, FCC acquisition
-   stays pending; the site must not invent availability or mark it current.
-   Use the existing production publish/deploy/check-live workflow after review.
+5. **Production rollout after review:** the slow analytics/artifact-publish gate has
+   now passed locally (see the final verification below). Apply migration 0030 before
+   using the new router in another environment; acquire and land all five sources
+   (FCC requires the manual summary ZIP), stage the five models plus contracts, then
+   load. Without the manual ZIP, FCC acquisition stays pending; the site must not
+   invent availability or mark it current. Production-configured build/publication,
+   deployment and `check-live` remain unperformed; use the existing workflow after
+   review and explicit deployment approval.
 6. **Completeness reporting remains fact-centric.** Its geographic/statistical tables
    do not count ancillary school suppressions, agency months or CDC confidence intervals.
    The separate coverage audit above is necessary; do not read “no suppression flags”
@@ -304,13 +310,48 @@ sources are not falsely described as automatically re-read.
 - A model-based prevalence estimate cannot diagnose a home, a person or local policy;
   a county chapter of agency counts cannot establish neighborhood safety.
 - Prior institutional outreach and gates remain as recorded in
-  `agent-handoffs/m42-source-followups.md` and `m44-evictions.md`; this task sent no
-  new requests and did not resolve DCA, BPU, water-inventory or DOE LEAD gaps.
+  `agent-handoffs/m42-source-followups.md` and `m44-evictions.md`; Codex sent no
+  requests and did not resolve DCA, BPU, water-inventory or DOE LEAD gaps. The owner's
+  new FCC/CostQuest inquiries are recorded below, separately from those earlier gaps.
 
 Claude should reconcile ROADMAP/TODO/ARCHITECTURE and the milestone status after
 review, noting county-only/manual FCC delivery and limited crime geography. The canonical
 documents and DIRECTOR_NOTES were left untouched. Their existing “Now”/milestone
 status may need reconciliation; this handoff is not authoritative documentation.
+
+### Owner-sent outreach — October 7, 2026
+
+These were sent by the owner, not by Codex. Both are awaiting replies; no license
+approval or institutional refusal has been received. No passwords, security answers
+or API tokens are recorded here.
+
+| Inquiry | Recipient / route | Questions and gate |
+|---|---|---|
+| FCC Public Data API terms | BDC Help Center “Get Help” form; category Other | Whether prior written permission for public statements is limited to security incidents or also covers ordinary website/GitHub descriptions; what FIPS 199/NIST controls or assessments a small read-only public-data downloader must satisfy. API acceptance and authenticated automation remain paused. |
+| Fabric eligibility and publication | `NBFsupport@costquest.com`; subject “Fabric licensing for public broadband availability summaries” | Whether independent noncommercial public-policy research can qualify for Tier 4 Research; whether derived municipality/ZIP summaries may be published without exposing raw Fabric records; whether university affiliation would provide a path if required. No application, signed license or Fabric download yet. |
+
+The owner reviewed the API agreement presented during setup. It permits integrations
+that retrieve/display/analyze data, but also includes a broadly worded public-statements
+permission clause in its breach paragraph, security warranties with FIPS/NIST references,
+audit/incident-reporting provisions, indemnification and a prominent nonendorsement
+notice for public applications. These are unresolved API-contract obligations, not
+a finding that public availability summaries are paid or barred from our use.
+Recheck the current agreement when a reply arrives; do not silently resolve its
+ambiguities in our favor. Any API implementation needs explicit approval after that
+review, secure credentials, documented limits, and the specified public notice.
+
+FCC's other-entity Fabric guidance lists challenge/crowdsource use under the Standard
+license and additionally noncommercial academic/public-policy broadband research
+under the Research license. Public guidance does not expressly require a university,
+but independent eligibility and permission to publish our proposed outputs are not
+established. A partner's license would not automatically license this website.
+Sources: [Fabric access](https://help.bdc.fcc.gov/hc/en-us/articles/10419121200923-How-Entities-Can-Access-the-Location-Fabric),
+[Fabric FAQ](https://help.bdc.fcc.gov/hc/en-us/articles/7412732399003-Fabric-FAQs).
+
+Both questions are external-response gates for optional follow-ups. Neither blocks
+the existing manual state/county summary import or release verification for this PR.
+Absent a response timetable, roughly two weeks is a suggested follow-up interval,
+not an agency promise. No reminder or additional outreach was scheduled/sent here.
 
 ## Verification
 
@@ -351,11 +392,13 @@ Initial delivery commands and results (before the approved FCC follow-up):
   is not a currentness guarantee; remaining reuse uncertainty is retained.
 - `git diff --check`: passed; canonical-document and Director Note diff empty.
 
-**Not completed:** unfiltered slow test suite, full artifact publish, a fresh full
-analytics rebuild, production build/deploy, and `check-live`. Two
+**Initial delivery limitation, subsequently closed for the local test gate:** two
 initial unfiltered runs entered expensive slow analytics/publish fixtures and were
-interrupted; database locks cleared and the final normal suite passed afterward.
-Do not interpret the normal suite or Next export as `make test-all` passing.
+interrupted; database locks cleared and the normal suite passed afterward. That
+normal suite and Next export alone did not exercise the full gate. The completed
+unfiltered rerun below now covers fresh analytics rebuilds and a full temporary
+artifact publish. Production-configured build/deploy and `check-live` are still
+unperformed.
 
 ### Approved FCC follow-up — October 7
 
@@ -392,6 +435,37 @@ Do not interpret the normal suite or Next export as `make test-all` passing.
 - Canonical documents and Director Notes remain untouched. No merge, deploy,
   model-reading regeneration, source email, raw pruning or Fabric acquisition.
 
-**Still outstanding before merge:** slow analytics/full artifact-publish test gate,
-production publication and `check-live`. Public downloads solved county acquisition;
-they did not implement unattended refreshes or municipality/ZIP availability.
+### Final full gate and outreach record — October 7
+
+- `.venv/bin/pytest -q -o addopts='' -rs --durations=15
+  --junitxml=/tmp/m47-full-test-gate.xml`: **1,098 passed, 1 skipped**, no slow
+  deselections, in **976.34 seconds (16m 16s)**. The only skip is the existing
+  “every rent carries a margin” case. This exercises the full Python suite selected
+  by `make test-all`; the Make target itself was not invoked.
+- The shared analytics fixture rebuilt the local warehouse twice and passed all
+  four release/packet-hash/idempotency checks; setup took 422.43 seconds. The full
+  publish fixture took 485.83 seconds and wrote to pytest's temporary directory,
+  not the production artifact tree. No model readings were regenerated.
+- Export manifest: **16,782 artifacts**, **820,331,389 bytes**, **4,339 expected
+  404 skips**. The publish tests passed their byte-identity, manifest integrity,
+  file-existence and allowed-404 checks. A separate read-only verification checked
+  the SHA-256 and byte length of **every** manifest artifact.
+- Six M47 artifact responses were additionally compared byte-for-byte with local
+  API responses: Somerset, Princeton and ZIP 08540 community files, and all three
+  CDC health inventories. Somerset has three records for `county:34035`, Princeton
+  three explicitly labelled Mercer county records (`county:34021`), and ZIP 08540
+  is `not_matched` with no county substitute. Health inventories contain
+  63 / 6,507 / 1,761 records respectively.
+- Re-ran frontend `npm test` (**499 passed / 67 files**) and `npm run typecheck`;
+  both passed. Re-ran Ruff check, formatting (**217 files**), mypy (**150 sources**)
+  and `git diff --check`; all passed. The prior FCC-follow-up Next export and
+  accessibility results above were not re-run for this handoff-only update.
+- Recorded both owner-sent inquiries, their open questions and approval gates.
+  No authenticated FCC API calls, credential generation, Fabric application or
+  acquisition, source email, canonical-document edits, raw pruning, merge or deploy.
+
+**Local test gate is closed; production rollout is not performed.** Production
+publication/configuration and `check-live` still belong to the reviewed deployment
+workflow. Public downloads solved county acquisition; they did not implement
+unattended refreshes or municipality/ZIP availability. Replies to the two inquiries
+are gates for optional follow-ups, not blockers for this manual-summary delivery.
