@@ -31,6 +31,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterator, Mapping
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -321,6 +322,12 @@ def _unlicensed(engine_conn) -> list[str]:  # type: ignore[no-untyped-def]
     return [row[0] for row in rows]
 
 
+# Requests rendered at once. Well inside the API engine's pool of 20 connections, and
+# about the cores Postgres can use; more queues at the database rather than finishing
+# sooner.
+PUBLISH_WORKERS = 8
+
+
 def publish(root: Path) -> Result:
     """Render every enumerable endpoint under ``root``.
 
@@ -349,28 +356,41 @@ def publish(root: Path) -> Result:
 
     result = Result(root=root, region_geoids=geoids)
     with TestClient(app) as client:
-        for api_path, out_path in _plan(region_ids, keys, geoids):
+
+        def render(planned: tuple[str, str]) -> tuple[str, str, bytes | None]:
+            api_path, out_path = planned
             response = client.get(api_path)
             if response.status_code == 404:
-                result.skipped.append(api_path)
-                continue
+                return api_path, out_path, None
             if response.status_code != 200:
                 raise RuntimeError(
                     f"{api_path} returned {response.status_code}; refusing to publish "
                     f"a tree with a hole in it"
                 )
-            payload = response.content
             destination = root / out_path
             destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(payload)
-            result.artifacts.append(
-                Artifact(
-                    path=out_path,
-                    source=api_path,
-                    bytes=len(payload),
-                    sha256=hashlib.sha256(payload).hexdigest(),
+            destination.write_bytes(response.content)
+            return api_path, out_path, response.content
+
+        # Several requests at once: each is a few database queries, and one at a time
+        # left the machine 70% idle for ten minutes (measured 2026-10-07). The bytes are
+        # the API's either way, and `map` returns in plan order, so the manifest is the
+        # same as a serial run's. An error in any request is raised here, at its turn.
+        with ThreadPoolExecutor(max_workers=PUBLISH_WORKERS) as pool:
+            for api_path, out_path, payload in pool.map(
+                render, _plan(region_ids, keys, geoids)
+            ):
+                if payload is None:
+                    result.skipped.append(api_path)
+                    continue
+                result.artifacts.append(
+                    Artifact(
+                        path=out_path,
+                        source=api_path,
+                        bytes=len(payload),
+                        sha256=hashlib.sha256(payload).hexdigest(),
+                    )
                 )
-            )
 
     # The property-tax lookup's files (Milestone 37): one per town, rendered from the
     # landed parcels rather than through the API, which has no parcel endpoint and

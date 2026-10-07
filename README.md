@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.45.0, 2026-10-06. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.45.1, 2026-10-06. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, prices, rents, economic context, tax
 > roll, recorded sales, flood and environmental exposure, and where residents work and
@@ -783,7 +783,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.45.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.45.1 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable

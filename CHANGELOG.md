@@ -3,6 +3,15 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.45.1] — 2026-10-07
+
+### Changed
+
+- **`hip publish` renders eight requests at once** instead of one: the data files take
+  1m 51s instead of about 10 minutes, and the publish tests 1m 50s instead of about 8.
+  The files are byte-identical to a serial run's, in the same manifest order. Each
+  step of `make publish`, `deploy` and `check-live` now prints a timestamp.
+
 ## [0.45.0] — 2026-10-07
 
 Milestone 47: schools and community context (built by Codex, PR #104).
