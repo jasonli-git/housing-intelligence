@@ -554,6 +554,14 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
+- [ ] **Revisit: donations or grants under the non-commercial decision?** (owner,
+      2026-10-07) #323 rules out ads, sponsorship and a paid tier for good, and stays as
+      is. To revisit: whether to allow individual donations (nothing shown in return)
+      or a public-interest grant, while still excluding corporate sponsorship. Before
+      any money is taken, check each restricted source's terms (Zillow, FRED, Freddie
+      Mac, and CostQuest if licensed) against that specific arrangement, and keep what
+      licence requests have said ("free, non-commercial") true.
+
 - [ ] **Deploy speed-ups, held by the owner 2026-10-07.** Measured that day: a deploy
       took 18–20 minutes, of which `hip publish` was about 10 (now 1m 51s, run eight
       requests at once). Two more, each keeping every check:
