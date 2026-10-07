@@ -29,8 +29,10 @@ from hip.sources.fcc import BroadbandSummaryAdapter
 from hip.sources.fema import NfhlAdapter, NfipClaimsAdapter
 from hip.sources.fhfa import HpiAdapter
 from hip.sources.fred import FredAdapter
+from hip.sources.hmda import HmdaAdapter
 from hip.sources.hud import HudAdapter, HudChasAdapter, HudFmrAdapter
 from hip.sources.hud_assistance import HudAssistedAdapter, HudLihtcAdapter
+from hip.sources.hud_limits import HudFhaLimitsAdapter
 from hip.sources.infrastructure import (
     EiaAdapter,
     EnergyBurdenAdapter,
@@ -122,6 +124,9 @@ IMPLEMENTED: tuple[str, ...] = (
     CrimeAdapter.source_id,
     PlacesAdapter.source_id,
     BroadbandSummaryAdapter.source_id,
+    # Milestone 48.
+    HmdaAdapter.source_id,
+    HudFhaLimitsAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -169,6 +174,9 @@ METRIC_SOURCES: tuple[str, ...] = (
     CrimeAdapter.source_id,
     PlacesAdapter.source_id,
     BroadbandSummaryAdapter.source_id,
+    # Milestone 48.
+    HmdaAdapter.source_id,
+    HudFhaLimitsAdapter.source_id,
 )
 
 
@@ -284,6 +292,10 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return LodesAdapter()
     if source_id == TransitStopsAdapter.source_id:
         return TransitStopsAdapter()
+    if source_id == HmdaAdapter.source_id:
+        return HmdaAdapter()
+    if source_id == HudFhaLimitsAdapter.source_id:
+        return HudFhaLimitsAdapter()
     if (milestone := PLANNED.get(source_id)) is not None:
         raise UnknownSourceError(
             f"'{source_id}' has no adapter yet — it ships in Milestone {milestone}. "

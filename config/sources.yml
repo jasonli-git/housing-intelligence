@@ -1250,3 +1250,63 @@ sources:
     notes: >-
       Where service stops and its kind (rail, light rail, subway, bus, ferry), not how
       often. Compiled 2026-03-09 when first read.
+
+  # Milestone 48: mortgage lending (ARCHITECTURE #324-#326).
+  ffiec_hmda:
+    name: Home Mortgage Disclosure Act data (HMDA)
+    publisher: Consumer Financial Protection Bureau (FFIEC)
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        The CFPB's website policy: "Information created by the CFPB is in the public
+        domain" and may be reproduced, published or otherwise used without the Bureau's
+        permission; it asks for citation.
+    terms_url: https://www.consumerfinance.gov/privacy/website-privacy-policy/
+    terms_checked: 2026-10-07
+    terms_note: >-
+      The public HMDA records are modified for privacy before release: loan amounts are
+      the midpoint of a $10,000 interval, ages are binned, and some fields are withheld.
+      Read from the FFIEC's data browser, filtered to New Jersey, one file per year.
+    notices:
+      - >-
+        Source: Consumer Financial Protection Bureau, Home Mortgage Disclosure Act data,
+        https://ffiec.cfpb.gov/
+    url: https://ffiec.cfpb.gov/v2/data-browser-api/view/csv
+    homepage: https://ffiec.cfpb.gov/data-browser/
+    cadence: annual
+    adapter: hip.sources.hmda:HmdaAdapter
+    fallback: >-
+      The FFIEC's national snapshot files carry the same records for every state.
+    notes: >-
+      Every application a covered lender acted on, by census tract: loan type, amount,
+      rate, costs, loan-to-value, income, decision and denial reasons. Lenders under
+      HMDA's thresholds are not in it. Published each spring for the year before.
+
+  hud_fha_limits:
+    name: FHA mortgage limits by county
+    publisher: U.S. Department of Housing and Urban Development
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105).
+    terms_url: https://apps.hud.gov/pub/chums/
+    terms_checked: 2026-10-07
+    terms_note: >-
+      HUD's CHUMS page publishes the limits as fixed-width files with their layout. The
+      median price in each record is HUD's input to the limit and, HUD says, may not
+      represent actual home prices; it is not loaded.
+    url: https://apps.hud.gov/pub/chums/
+    homepage: https://entp.hud.gov/idapp/html/hicostlook.cfm
+    cadence: annual
+    adapter: hip.sources.hud_limits:HudFhaLimitsAdapter
+    fallback: >-
+      HUD's FHA Mortgage Limits lookup lists the same limits by county.
+    notes: >-
+      The largest forward mortgage FHA insures, by county and number of units, for the
+      calendar year.

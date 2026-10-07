@@ -20,6 +20,7 @@ import {
   UPKEEP_PCT,
 } from "@/lib/costRules";
 import { type Personal, parseAmount } from "@/lib/costScenario";
+import { type FhaLimit, fhaCheck, rateScenarios } from "@/lib/financing";
 import { formatValue } from "@/lib/format";
 import type { Term } from "@/lib/glossary";
 import { type Basis, eachMonth, type Inputs, overYears, upFront } from "@/lib/ownership";
@@ -76,6 +77,8 @@ export type CostProps = {
   gain: Gain | null;
   /** The national rate when the gain began. */
   rateThen: Dated | null;
+  /** FHA's limit for a one-unit home in this county (Milestone 48), where held. */
+  fhaLimit?: FhaLimit | null;
 };
 
 function money(value: number): string {
@@ -167,6 +170,7 @@ export function CostToOwn({
   noTax,
   gain,
   rateThen,
+  fhaLimit = null,
   control = true,
   beforeMoving,
   showHelp = true,
@@ -213,6 +217,8 @@ export function CostToOwn({
   const up = upFront(input);
   const years = overYears(input);
   const partial = month.missing.length > 0;
+  const fha = fhaCheck(month.loan, fhaLimit);
+  const scenarios = rateScenarios(input);
   const own = typedPrice !== null || Object.keys(personal).length > 0 || Object.values(fields).some(Boolean);
   const rentMonth = input.rentMonth;
   const utilitiesLine = month.lines.find((l) => l.key === "utilities")?.value ?? 0;
@@ -596,9 +602,25 @@ export function CostToOwn({
           </p>
           {month.loan.fha && (
             <p className="cost-basis">
-              An FHA loan, which HUD caps at a limit set for each county;{" "}
+              {fha ? (
+                fha.over ? (
+                  <>
+                    <b>Over FHA’s limit.</b> This loan of {money(fha.base)} is more than the{" "}
+                    {money(fha.limit)} HUD insures on a one-unit home in this county in {fha.year},
+                    so it would not be an FHA loan; a conventional loan at 3.5% down is priced
+                    differently.{" "}
+                  </>
+                ) : (
+                  <>
+                    An FHA loan, within the {money(fha.limit)} HUD insures on a one-unit home in
+                    this county in {fha.year}.{" "}
+                  </>
+                )
+              ) : (
+                <>An FHA loan, which HUD caps at a limit set for each county; </>
+              )}
               <a href={FHA_LIMITS.url} target="_blank" rel="noreferrer">
-                check the limit here
+                {fha ? "HUD’s limits" : "check the limit here"}
               </a>
               .
             </p>
@@ -613,6 +635,32 @@ export function CostToOwn({
             )}{" "}
             · not a lender quote
           </p>
+          {/* Stated assumptions, not a forecast of rates (#327). */}
+          <ReaderDetails title="At other mortgage rates">
+            <table className="change-places rate-scenarios">
+              <caption className="visually-hidden">The month at other mortgage rates, everything else as above</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Rate</th>
+                  <th scope="col" className="num">Principal and interest</th>
+                  <th scope="col" className="num">The month</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map((row) => (
+                  <tr key={row.ratePct}>
+                    <th scope="row">{row.ratePct}%</th>
+                    <td className="num">{money(row.mortgage)}</td>
+                    <td className="num">{money(row.total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="sales-note">
+              The same home, down payment and costs at each rate. Assumptions to compare, not a
+              forecast of where rates go.
+            </p>
+          </ReaderDetails>
           <div className="gone-kept">
             <div
               className="gone-kept-bar"

@@ -14,11 +14,13 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones (2026-10-07)
+## Now — Milestone 48 built, awaiting review (2026-10-07)
 
-Milestone 47 is merged and deployed as 0.45.0 (ARCHITECTURE #318–#322). Next: Milestone
-48, mortgage lending, only when asked. Milestone 44 waits on how to read DCA's
-dashboard (Parked).
+Milestone 48, mortgage lending, is on `milestone/m48-mortgage-lending` as 0.46.0
+(ARCHITECTURE #324–#327). Not merged or deployed. After it: the housekeeping PR the
+owner approved (unused components, place-search escaping, the dead parcel-search
+branch, `NOTICE`). Then Milestone 49 only when asked; Milestone 44 waits on how to read
+DCA's dashboard.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000. A new
 environment needs the FCC summary ZIP in `data/manual/fcc_bdc/` (ARCHITECTURE #322).
@@ -274,9 +276,6 @@ first raised, not where it must be done.
       `/states/new-jersey?mode=afford` links now forward to `/afford`, but the root
       address cannot, since `/` is a real page; a county page's `?mode=afford` shows
       the profile.
-- [ ] **FHA's county loan limits are linked, not held.** (M33, #280) A 3.5%-down card in
-      a dear town can price an FHA loan HUD would not insure. HUD publishes the limits by
-      county each year; loading them would let the card say so outright.
 - [ ] **Re-read the cost rules once a year.** (M33) `web/lib/costRules.ts` carries HUD's
       FHA premiums, NJ's transfer and graduated fees, the CFPB's closing range and Freddie
       Mac's mortgage-insurance range, each with `reviewed: 2026-10-01`. Next: 2027-10-01,

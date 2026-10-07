@@ -238,6 +238,28 @@ export const GROUPS: readonly Group[] = [
     ],
   },
   {
+    // The mortgages buyers here took, from HMDA, and FHA's county limit (Milestone 48).
+    key: "lending",
+    title: "Mortgages",
+    ramp: "incomes",
+    metrics: [
+      "hmda_purchase_loans",
+      "hmda_median_rate",
+      "hmda_median_loan_amount",
+      "hmda_median_ltv",
+      "hmda_median_loan_costs",
+      "hmda_median_income",
+      "hmda_conventional_share",
+      "hmda_fha_share",
+      "hmda_va_share",
+      "hmda_denial_rate",
+      "hmda_denial_dti_share",
+      "hmda_denial_value_share",
+      "hmda_denial_credit_share",
+      "hud_fha_limit_1unit",
+    ],
+  },
+  {
     // Flood, contamination and drinking water (Milestone 40). Shares of homes are
     // estimates over 2020's homes; counts of sites are never ranked (ARCHITECTURE #303).
     key: "hazards",
