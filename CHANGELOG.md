@@ -3,6 +3,34 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.45.0] — 2026-10-07
+
+Milestone 47: schools and community context (built by Codex, PR #104).
+
+### Added
+
+- **Schools** (ARCHITECTURE #319): on county, town and ZIP pages, the school districts
+  serving the place with NJDOE's 2024–25 English, math and chronic-absence figures,
+  suppressions kept. A district is not a school assignment.
+- **Internet** (#322): the FCC's county shares of units offered wired and fiber service
+  at 100/20 and 1,000/100 Mbps, beside the FCC's address check; towns see their
+  county's, labelled.
+- **Crime reporting** (#320): NJSP's 2023 agency counts for the county chapter, totals
+  only for agencies reporting all twelve months. The site does not say whether a place
+  is safe.
+- **Health** (#321): three CDC PLACES estimates with 95% intervals; county, tract and
+  ZIP inventories for download.
+
+### Fixed
+
+- Assisted-housing labels on town pages now meet contrast; an expanded agency table
+  scrolls inside its section on phones.
+
+### Not yet
+
+- FCC figures for towns and ZIP codes, and automatic FCC updates (owner inquiries to the
+  FCC and CostQuest pending); crime newer than 2023.
+
 ## [0.44.0] — 2026-10-06
 
 Milestone 46: somewhere like here, but cheaper.

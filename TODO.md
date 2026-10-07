@@ -14,13 +14,14 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 46 built, awaiting review (2026-10-06)
+## Now — between milestones (2026-10-07)
 
-Milestone 46, somewhere like here but cheaper, is on `milestone/m46-like-here-cheaper`
-as 0.44.0 (ARCHITECTURE #317). Not merged or deployed. Milestone 45 is merged and live.
-Next after review: Milestone 47, only when asked. Milestone 44 waits on DCA.
+Milestone 47 is merged and deployed as 0.45.0 (ARCHITECTURE #318–#322). Next: Milestone
+48, mortgage lending, only when asked. Milestone 44 waits on how to read DCA's
+dashboard (Parked).
 
-**To resume:** `make db-up` for Postgres; `make api` for the API on 8000.
+**To resume:** `make db-up` for Postgres; `make api` for the API on 8000. A new
+environment needs the FCC summary ZIP in `data/manual/fcc_bdc/` (ARCHITECTURE #322).
 
 Open items a planned milestone now covers say so with **Scheduled: Milestone N**. They
 stay here until that milestone starts and takes them into `Now`.
@@ -31,6 +32,17 @@ Every open item, wherever the work originated. The tag in parentheses is where i
 first raised, not where it must be done.
 
 ### Correctness and data integrity
+
+- [ ] **62 school-district associations have no NJDOE performance record.** (M47, #319)
+      Boundary and performance editions or excluded district types; review the publisher
+      IDs. Kept unmatched, never matched by name.
+- [ ] **Crime newer than 2023.** (M47, #320) NJSP's newer reporting route warns a zero
+      can be delinquent reporting; audit its missing-report codes and schema before
+      replacing the reviewed 2023 workbook. A town's own figures need an evidenced
+      agency-to-municipality crosswalk, not names.
+- [ ] **The completeness check counts facts only.** (M47) Its tables do not see the
+      community inventory's suppressions, agency months or CDC intervals; the coverage
+      for those is in the M47 handoff until the check reads `community_records`.
 
 - [ ] **`/changes` lists floating-point noise as revisions.** (found 2026-10-06 in
       Milestone 45) Restaging recomputes a figure from the same release with its sums in
@@ -254,12 +266,6 @@ first raised, not where it must be done.
       artwork added 2026-10-06 (#311) loops the same way.
 - [ ] **Reports may show the retired "before moving" answer** (#310) from readings
       written before 2026-10-05, until the next regeneration.
-- [ ] **Assisted-housing labels fail contrast on town pages.** (found 2026-10-06, #309)
-      `check:a11y` reports `color-contrast` on `/regions/194` (Absecon) with sections
-      open: the small uppercase label on each assisted property
-      (`.assistance-property header > span`, `--series-3` in `affordable-housing.css`).
-      It fails on `main` as well, and it stops `check:a11y:interactions` there too.
-
 - [ ] **The budget explorer's comparison scope is not in its address.** (PR #86, Codex
       handoff `local-page-layout.md`) A page's link opens `/afford` with its place and
       county; switching to another county or all New Jersey changes local state only,
@@ -548,18 +554,25 @@ first raised, not where it must be done.
 
 ## Parked / needs user input
 
+- [ ] **FCC town and ZIP figures, and automatic updates.** (M47, #322) Waiting on the
+      owner's inquiries of 2026-10-07: the FCC (API agreement's public-statement and
+      security clauses) and CostQuest (whether a Research licence to the location Fabric
+      covers publishing town and ZIP summaries). Until then the county summary is
+      imported by hand from the public download; check its selector for a newer edition.
+
 - [ ] **NJ TRANSIT service frequency.** (M45, decided 2026-10-06) Only NJ TRANSIT's own
       GTFS says how often anything runs. It needs a developer account the owner would
       register, its agreement says the data "is not to be relied on for any commercial
       purposes", and it asks that the data be used "as-is", which counting trips may
       not be. Waiting on the owner: register and accept, or leave frequency out.
 
-- [ ] **Milestone 44, evictions, waits on DCA.** (2026-10-05, handoff
-      `agent-handoffs/m44-evictions.md`) Needs a downloadable ZIP-level table of filings
-      and warrants, its counting rules and corrected year labels, a release calendar,
-      and reuse terms that cover the court's figures. The owner emailed DCA 2026-09-23;
-      no reply by 2026-10-05. If still none by 2026-10-13, the handoff names DCA's
-      feedback form as the next route. No figures are read off the dashboard meanwhile.
+- [ ] **Milestone 44, evictions: how to read DCA's dashboard.** (handoff
+      `agent-handoffs/m44-evictions.md`) DCA's Joseph Naylor replied 2026-10-07: the
+      figures are not available as a download, and showing them publicly is no problem.
+      Terms are answered for display; still open: whether the court's (AOC) figures it
+      shows carry their own terms, the corrected year labels, and how to acquire them —
+      the dashboard's own export if it has one, an owner-run manual export like Zillow's,
+      or not at all. Owner's decision.
 - [ ] **Advanced Data Protection for the removal list.** (#296) The list holds protected
       addresses in iCloud Drive, which Apple can read unless Advanced Data Protection is
       on (System Settings → Apple Account → iCloud). Tabled by the owner 2026-10-02.
