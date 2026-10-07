@@ -473,3 +473,24 @@ additions are worth making. None of its factual claims below have been checked.
   distinctive.
 
 Do not implement yet.
+
+---
+
+## Decision: three suggestions from the roadmap review join Milestone 49
+
+**Status:** Approved direction
+**Recorded:** 2026-10-07
+
+Settles part of "Outside review of the roadmap" above; the note itself is left as
+written. The owner promoted three of its suggestions into Milestone 49, decision guides
+(ROADMAP):
+
+- **Market turnover**, from the recorded sales already held.
+- **An evidence-strength label** on each answer, set mechanically, never a judgement.
+- **Radon**, gated on its vintage, a crosswalk to the 564 towns and its terms; where the
+  gate does not clear, the guide links NJDEP and says to test every home.
+
+Affordability at other rates was promoted earlier, into Milestone 48 (ARCHITECTURE
+#327). The note's larger idea — a single due-diligence page — is Milestone 49's own scope;
+what it advised against stays advised against.
+

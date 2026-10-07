@@ -479,6 +479,13 @@ first raised, not where it must be done.
 
 ### Data sources worth adding
 
+- [ ] **NJDEP radon tiers — gated first task of Milestone 49.** (Director Note promoted
+      2026-10-07; researched by Codex in M47) NJDEP's tier report has 540 entries,
+      including combined municipalities, against 564 towns; confirm the tiers' vintage
+      (a 2022 tool used 2015 tiers), build an evidenced crosswalk, and read the terms. A
+      town's tier never predicts one home's result: testing stays the next step.
+      **Scheduled: Milestone 49.**
+
 - [ ] **Milestone 34's ACS depth stops at ZCTA; tracts have none of it.** (M34) The
       warehouse holds 2,181 tracts and the ACS publishes every M34 table for them, but
       no tract page shows Census figures yet. Left out by decision on 2026-10-01; the
