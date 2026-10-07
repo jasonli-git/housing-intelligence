@@ -333,8 +333,8 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   distribution are shown and never ranked.
 - **Commercial rights, recorded** (M32, built) — every source states what its terms
   allow for ads on the site and for a paid tier, inherited by any figure calculated from
-  it; `reports/commercial/viability.md` is the study, and the decision is no-go on both
-  for now.
+  it; `reports/commercial/viability.md` is the study. The site is free and
+  non-commercial for good: no ads, sponsorship or paid tier (decided 2026-10-07).
 - **Licence and provenance** (M31, built) — every figure is tagged with its kind
   (survey estimate, administrative records, official determination, published
   benchmark, calculated, modelled) and carries its source's licence, inherited by any
