@@ -192,6 +192,8 @@ export const GROUPS: readonly Group[] = [
       "sr1a_price_lower_quartile",
       "sr1a_price_upper_quartile",
       "sr1a_sales_count",
+      // Milestone 49: how often homes here change hands, for their number.
+      "sr1a_turnover_per_1000",
       "sr1a_median_price_per_sqft",
       "sr1a_median_year_built_sold",
       "sr1a_median_sales_ratio",

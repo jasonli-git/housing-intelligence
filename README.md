@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.46.1, 2026-10-06. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.47.0, 2026-10-07. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, prices, rents, economic context, tax
 > roll, recorded sales, flood and environmental exposure, and where residents work and
@@ -23,11 +23,11 @@ layer only explains metrics that were already computed.
 > overwritten. Full detail under
 > [Project Status](#project-status).
 >
-> **Latest.** Milestone 48 (2026-10-07): the mortgages buyers actually took in each
-> place, from HMDA — rates, loan sizes, down payments, loan types and denials — with FHA's
-> county limits and the month at other rates on the cost-of-owning card.
+> **Latest.** Milestone 49 (2026-10-07): a buyer's guide for any place — can I afford
+> to buy here, should I rent or buy, and what to check before an offer — each answer
+> computed from published figures with an evidence label, plus how often homes sell.
 >
-> **Next.** Milestone 49, decision guides; Milestone 44, evictions, waits on DCA. See
+> **Next.** Milestone 50, migration-driven demand; Milestone 44, evictions, waits on DCA. See
 > [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md).
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
@@ -273,6 +273,13 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   town; owner names and mailing addresses are never collected, and an address is removed
   on request under Daniel's Law (below). County and statewide effective tax rates,
   weighted by equalized valuation.
+- **Buyer's guide** (M49, built) — `/guide`, linked from every county, town and ZIP
+  page: the cost of owning against the reader's income at HUD's 30% and 50% lines, the
+  year owning first costs less than renting under stated assumptions, and a ten-item
+  check before an offer (flood, water and lead, contaminated sites, radon, utilities,
+  tax, schools, commute, how often homes sell, mortgages), each with its source, its
+  limits, an official next step and a *strong / partial / limited* evidence label set
+  by fixed rules. Read from object storage in the browser, so it adds one page.
 - **How do people here pay for homes?** (M48, built) — on county, town and ZIP pages,
   HMDA's home-purchase mortgages: how many, the median rate, loan, down payment and
   closing costs, loan types and denial reasons, five years held; FHA's county limit and
@@ -718,7 +725,7 @@ running service. `make publish` builds them; `make deploy` sends them.
 ```bash
 make publish   # dist/artifacts (16,783 files, about 0.8 GB) + dist/site (14,294 files, 4.3 GB)
 make deploy    # artifacts -> object storage, site -> static host
-make r2-cors   # once per bucket: let the site's pages read the artifacts (the /tax lookup)
+make r2-cors   # once per bucket: let the site's pages read the artifacts (/tax, /guide)
 ```
 
 `make r2-cors` applies `deploy/r2-cors.json`, which lets `housing.jasonli.app` — and no
@@ -810,7 +817,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.46.1 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.47.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable

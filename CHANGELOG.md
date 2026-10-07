@@ -3,6 +3,37 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.47.0] — 2026-10-07
+
+Milestone 49: decision guides.
+
+### Added
+
+- **Buyer's guide** (`/guide`, ARCHITECTURE #330), linked from every county, town and ZIP
+  page, answering three questions for one place from its published figures:
+  - *Can I afford to buy here?* The full cost of owning the typical home as a share of
+    the reader's income, against HUD's 30% and 50% cost-burden lines (stated as
+    thresholds, not advice), with the FHA limit check, what HMDA borrowers here earned
+    and where the income sits against HUD's income limits.
+  - *Should I rent or buy?* The first year owning, then selling, costs no more than
+    renting, under the assumptions printed with it, and the two totals over the
+    reader's planned stay.
+  - *What should I check before an offer?* Flood, water and lead, contaminated sites,
+    radon, utilities, tax and revaluation, school district, commute and transit, market
+    turnover and mortgage context — each with what the figures say, what they cannot
+    say about one home, the source and period, and an official next step.
+- **Evidence labels** (#329): each answer is *strong*, *partial* or *limited*, set by
+  fixed rules — geography, edition, survey margin, sample — with the reasons listed.
+- **Market turnover** (#328), `sr1a_turnover_per_1000`: usable home sales a year per
+  1,000 residential parcels over each three-year window, ranked by level and shown in
+  "How homes sell"; the guide compares the newest window with the place's own since 2020.
+
+### Not included
+
+- **Radon tiers** (#331). NJDEP's municipal tiers carry no date and appear to be its 2015
+  assignments; the guide says to test every home, as NJDEP recommends, and links its
+  program. The owner has asked NJDEP whether the tiers are current.
+
 ## [0.46.1] — 2026-10-07
 
 Housekeeping.

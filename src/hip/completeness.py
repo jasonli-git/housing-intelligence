@@ -68,6 +68,7 @@ METRIC_SUBJECTS: dict[str, str] = {
     "fhfa_hpi_all_transactions": "price",
     "sr1a_median_sale_price": "price",
     "sr1a_sales_count": "price",
+    "sr1a_turnover_per_1000": "price",
     "sr1a_price_lower_quartile": "price",
     "sr1a_price_upper_quartile": "price",
     "sr1a_median_sale_price_12m": "price",

@@ -360,6 +360,10 @@ export type PacketLevel = {
   // Packet 1.4 (Milestone 31): what kind of figure it is, and the licence it carries.
   record_type?: string | null;
   licence_class?: string | null;
+  // In every packet since 1.3 (Milestone 28); typed here for the decision guide's
+  // evidence rules (Milestone 49), which read them from the published file.
+  survey?: boolean;
+  margin_of_error?: number | null;
 };
 
 export type Packet = {

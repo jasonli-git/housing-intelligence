@@ -18,6 +18,9 @@ export const LOAN_YEARS = 30;
 /** HUD's cost-burden line: housing at more than 30% of gross income is a burden. */
 export const BURDEN_SHARE = 0.3;
 
+/** HUD's severe cost-burden line: housing at more than half of gross income (Milestone 49). */
+export const SEVERE_SHARE = 0.5;
+
 /** Below this down payment a conventional lender requires mortgage insurance. */
 export const NO_PMI_DOWN = 20;
 

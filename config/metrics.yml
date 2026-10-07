@@ -1312,6 +1312,24 @@ metrics:
     record_type: administrative
     ranked: false
 
+  # Milestone 49: market turnover (ARCHITECTURE #328), promoted from the owner's
+  # Director Note. Ranked by level only: its three-year windows overlap, so a change
+  # between two of them would count the same sales twice.
+  sr1a_turnover_per_1000:
+    label: Homes sold a year per 1,000
+    unit: per_1000_homes
+    frequency: annual
+    direction: neutral
+    description: >-
+      Usable one- to four-family sales a year, over the three years shown, per 1,000
+      residential (class-2) parcels: how often homes here change hands. A low rate can
+      mean few listings and stiff competition, or simply that owners stay. The deeds
+      start in 2020, so a place's own history here is its windows since then.
+    source_id: hip_derived
+    record_type: calculated
+    inputs: [sr1a_sales_count, modiv_residential_parcels]
+    changed: false
+
   sr1a_price_lower_quartile:
     label: Sale price, lower quarter
     unit: usd
