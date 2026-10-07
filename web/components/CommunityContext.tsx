@@ -9,6 +9,9 @@ const FCC = "https://broadbandmap.fcc.gov/";
 export function CommunityContext({ data, level }: { data: CommunityData | null; level: string }) {
   if (!data) return null;
   const complete = data.crime.filter((r) => r.payload.complete).length;
+  const broadband = data.broadband ?? [];
+  const wired = broadband.find((r) => r.payload.technology === "All Wired");
+  const fiber = broadband.find((r) => r.payload.technology === "Fiber");
   return <>
     <section className="section sales community-schools" aria-labelledby="community-schools-heading">
       <div className="section-head"><h2 id="community-schools-heading">Schools around here</h2></div>
@@ -32,7 +35,16 @@ export function CommunityContext({ data, level }: { data: CommunityData | null; 
     <section className="section sales community-broadband" aria-labelledby="community-broadband-heading">
       <div className="section-head"><h2 id="community-broadband-heading">Internet at the address</h2></div>
       <p className="sales-note">Check <a href={FCC} target="_blank" rel="noreferrer">FCC’s National Broadband Map</a> for providers and advertised speeds at a home. Availability is not measured speed; confirm the plan with the provider.</p>
-      <ReaderDetails title="Why there is no local availability figure yet"><p className="sales-note">FCC availability data have not been imported. The documented download API requires an FCC account; the location Fabric has separate licensing. Household internet subscriptions are not a substitute for availability.</p></ReaderDetails>
+      {wired ? <ReaderDetails title={`${data.broadband_area} · ${data.broadband_level} availability summary`}>
+        {level === "municipality" && <p className="sales-note">County context, not this town’s availability. Census-place boundaries do not reliably match legal municipalities.</p>}
+        <dl className="utility-reliability">
+          <div><dt>Wired offers · at least 100 down / 20 up Mbps</dt><dd>{(wired.payload.shares.speed_100_20 * 100).toFixed(1)}%</dd></div>
+          <div><dt>Wired offers · at least 1,000 down / 100 up Mbps</dt><dd>{(wired.payload.shares.speed_1000_100 * 100).toFixed(1)}%</dd></div>
+          {fiber && <div><dt>Fiber offers · at least 100 down / 20 up Mbps</dt><dd>{(fiber.payload.shares.speed_100_20 * 100).toFixed(1)}%</dd></div>}
+        </dl>
+        <p className="sales-note">Shares of FCC’s mapped units with residential-service offers—not shares of people, subscribers or households. FCC’s denominator is {wired.payload.total_units.toLocaleString("en-US")} units across broadband-serviceable locations, including multi-unit buildings. Wired and fiber overlap; do not add their percentages.</p>
+        <p className="sales-note">Availability as of {wired.payload.as_of} · revised {wired.payload.revision}. Provider reports, not speed tests, prices or a guarantee at an address. <a href={wired.payload.url} target="_blank" rel="noreferrer">FCC published summaries</a>.</p>
+      </ReaderDetails> : <ReaderDetails title="Why there is no local availability figure yet"><p className="sales-note">{level === "zip" ? "No ZIP-level summary has been matched. ZIP areas can cross county boundaries, so no county figure is substituted." : "No matching availability summary is loaded for this geography."} The public website downloads do not require an account; the documented API does. The location Fabric has separate licensing. Household internet subscriptions are not a substitute for availability.</p></ReaderDetails>}
     </section>
 
     <section className="section sales community-crime" aria-labelledby="community-crime-heading">

@@ -1,10 +1,10 @@
-"""Separately cited school, crime and health context, with explicit geography."""
+"""Separately cited school, broadband, crime and health context."""
 
 from datetime import date, datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import text
 
 from hip.api.deps import SessionDep
@@ -40,6 +40,9 @@ class CommunityContext(BaseModel):
     crime: list[CommunityRecord]
     crime_county: str | None
     broadband_status: str = "pending_download"
+    broadband: list[CommunityRecord] = Field(default_factory=list)
+    broadband_area: str | None = None
+    broadband_level: str | None = None
 
 
 def records_for(session: SessionDep, entities: list[str]) -> list[CommunityRecord]:
@@ -114,6 +117,12 @@ def community(region_id: int, session: SessionDep) -> CommunityContext:
         r for r in local if r.kind == "health_estimate" and r.entity_id == health_entity
     ]
     crime = [r for r in local if r.kind == "crime_agency" and r.entity_id == county]
+    broadband_entity = county if region["level"] == "municipality" else entity
+    broadband = [
+        r
+        for r in local
+        if r.kind == "broadband_summary" and r.entity_id == broadband_entity
+    ]
     return CommunityContext(
         region_id=region_id,
         districts=[
@@ -135,4 +144,20 @@ def community(region_id: int, session: SessionDep) -> CommunityContext:
         else None,
         crime=crime,
         crime_county=region["county_name"] if crime else None,
+        broadband=broadband,
+        broadband_area=(
+            region["county_name"] if region["level"] == "municipality" else region["name"]
+        )
+        if broadband
+        else None,
+        broadband_level="county"
+        if region["level"] == "municipality" and broadband
+        else region["level"]
+        if broadband
+        else None,
+        broadband_status="published_summary"
+        if broadband
+        else "not_matched"
+        if region["level"] == "zip"
+        else "pending_download",
     )

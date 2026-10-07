@@ -36,14 +36,13 @@ export const STATUS_COPY: Record<FreshnessStatus, { label: string; means: string
       "are the figures from the last time it could.",
   },
   not_tracked: {
-    // Not "No release schedule": FRED and Zillow publish to a fixed address and still
-    // keep a calendar, which the Next release column now shows (#298).
-    label: "Latest file, re-read",
+    // Includes mutable files, deliberately pinned editions and manual imports.
+    // No discovery row cannot establish that a publisher was automatically checked.
+    label: "Newer editions not tracked",
     means:
-      "This source publishes to one fixed address and is re-read whenever that file " +
-      "changes, or is held at a chosen edition on purpose. Either way there is no " +
-      "numbered edition to watch for, and this page does not yet record when it was " +
-      "last read.",
+      "The site has no recorded check for newer editions. Some sources use a fixed " +
+      "file address; others are pinned or manually imported. This page does not yet " +
+      "record when it was last read, so this status is not a currentness guarantee.",
   },
 };
 
@@ -64,8 +63,9 @@ export function sortForDisplay(sources: SourceFreshness[]): SourceFreshness[] {
 
 export type CadenceGroup = { cadence: string; label: string; sources: SourceFreshness[] };
 
-const CADENCE_ORDER = ["weekly", "monthly", "quarterly", "annual"];
+const CADENCE_ORDER = ["weekly", "monthly", "quarterly", "semiannual", "annual"];
 const CADENCE_LABELS: Record<string, string> = {
+  semiannual: "Twice a year",
   weekly: "Weekly",
   monthly: "Monthly",
   quarterly: "Quarterly",

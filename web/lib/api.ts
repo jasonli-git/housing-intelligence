@@ -240,12 +240,18 @@ export type CrimeAgency = {
   agency: string; ori: string; county: string; year: number; months_reported: number;
   complete: boolean; reported_offenses: number; counts: Record<string, number>; url: string;
 };
+export type BroadbandSummary = {
+  name: string; technology: string; as_of: string; revision: string;
+  total_units: number; biz_res: string; area_data_type: string;
+  shares: Record<string, number>; basis: string; denominator: string; url: string;
+};
 export type CommunityContext = {
   region_id: number;
   districts: { boundary: CommunityRecord<{ district_id: string; name: string; district_type: string; approximate_share: number }>;
     performance: CommunityRecord<SchoolPerformance> | null }[];
   health: CommunityRecord<HealthEstimate>[]; health_area: string | null; health_level: string | null;
   crime: CommunityRecord<CrimeAgency>[]; crime_county: string | null; broadband_status: string;
+  broadband: CommunityRecord<BroadbandSummary>[]; broadband_area: string | null; broadband_level: string | null;
 };
 
 export type WaterSystems = {

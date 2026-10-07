@@ -1157,6 +1157,38 @@ sources:
     fallback: CDC PLACES interactive portal.
     notes: County and tract filtered to NJ; ZIP-area download bounded to 07/08 postal prefixes and matched to existing ZCTAs.
 
+  fcc_bdc:
+    name: FCC Broadband Data Collection — published fixed-broadband summaries
+    publisher: Federal Communications Commission
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: FCC states broadband availability data are free and not subject to copyright restriction; Fabric excluded.
+    terms_url: https://broadbandmap.fcc.gov/about
+    terms_checked: 2026-10-07
+    terms_note: >-
+      Read License and Attribution on the current map. FCC availability data are
+      offered free without copyright restriction; attribution is requested. CostQuest
+      Fabric retains separate rights. Only FCC's public aggregated summaries are
+      imported, never address/coordinate/location Fabric files. Public website
+      downloads worked without login; documented API access requires an FCC account.
+    notices:
+      - >-
+        Source data: FCC Broadband Data Collection. Provider-reported availability
+        and advertised speeds, not measured speed or a guarantee at a home. County
+        shares use FCC's broadband-serviceable unit denominator, not household counts.
+    url: https://broadbandmap.fcc.gov/data-download
+    homepage: https://broadbandmap.fcc.gov/
+    cadence: semiannual
+    adapter: hip.sources.fcc:BroadbandSummaryAdapter
+    fallback: Official FCC address checker; download and import a newer summary when available.
+    notes: >-
+      Manual integration pending documented API setup, not a prohibition on automation.
+      As-of and revision dates are both in the vintage. State/county summaries only;
+      Census places are not municipality boundaries. No claim of automatic Friday refresh.
+
   # Milestone 45: getting around (ARCHITECTURE #313-#314).
   census_lodes:
     name: LEHD Origin-Destination Employment Statistics (LODES 8)

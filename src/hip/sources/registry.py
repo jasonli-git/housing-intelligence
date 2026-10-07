@@ -25,6 +25,7 @@ from hip.sources.community import (
     SchoolPerformanceAdapter,
 )
 from hip.sources.epa_sdwis import SdwisAdapter
+from hip.sources.fcc import BroadbandSummaryAdapter
 from hip.sources.fema import NfhlAdapter, NfipClaimsAdapter
 from hip.sources.fhfa import HpiAdapter
 from hip.sources.fred import FredAdapter
@@ -120,6 +121,7 @@ IMPLEMENTED: tuple[str, ...] = (
     SchoolBoundariesAdapter.source_id,
     CrimeAdapter.source_id,
     PlacesAdapter.source_id,
+    BroadbandSummaryAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -166,6 +168,7 @@ METRIC_SOURCES: tuple[str, ...] = (
     SchoolBoundariesAdapter.source_id,
     CrimeAdapter.source_id,
     PlacesAdapter.source_id,
+    BroadbandSummaryAdapter.source_id,
 )
 
 
@@ -196,7 +199,9 @@ def build_adapter(
     adapter = _construct(source_id, scope)
     if raw_dir is not None and (recorded := read_discovery(raw_dir, source_id)):
         adapter.newest = recorded.newest
-    if raw_dir is not None and isinstance(adapter, HudLihtcAdapter):
+    if raw_dir is not None and isinstance(
+        adapter, (HudLihtcAdapter, BroadbandSummaryAdapter)
+    ):
         adapter.use_cached_vintage(raw_dir)
     return adapter
 
@@ -207,6 +212,7 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         SchoolBoundariesAdapter,
         CrimeAdapter,
         PlacesAdapter,
+        BroadbandSummaryAdapter,
         BpuReliabilityAdapter,
         EiaAdapter,
         EnergyBurdenAdapter,

@@ -8,14 +8,22 @@ from pathlib import Path
 from sqlalchemy import Engine, text
 
 from hip.duck import duckdb_session
+from hip.sources.fcc import SPEEDS, vintage_dates
 from hip.warehouse.load import ReleaseProvenance, _release_ids
 
-SOURCES = ("nj_school_performance", "nj_school_boundaries", "nj_crime", "cdc_places")
+SOURCES = (
+    "nj_school_performance",
+    "nj_school_boundaries",
+    "nj_crime",
+    "cdc_places",
+    "fcc_bdc",
+)
 KINDS = {
     "nj_school_performance": "school_performance",
     "nj_school_boundaries": "school_area",
     "nj_crime": "crime_agency",
     "cdc_places": "health_estimate",
+    "fcc_bdc": "broadband_summary",
 }
 
 
@@ -29,7 +37,33 @@ def validate_payload(kind: str, payload: dict[str, object]) -> None:
         ):
             raise ValueError("community: invalid percentage")
 
-    if kind == "health_estimate":
+    if kind == "broadband_summary":
+        units = payload.get("total_units")
+        shares = payload.get("shares")
+        if (
+            isinstance(units, bool)
+            or not isinstance(units, int)
+            or units <= 0
+            or payload.get("biz_res") != "R"
+            or payload.get("area_data_type") != "Total"
+            or payload.get("technology") not in {"All Wired", "Fiber", "Cable"}
+            or not isinstance(shares, dict)
+            or set(shares) != set(SPEEDS)
+        ):
+            raise ValueError("community: invalid broadband basis or denominator")
+        for value in shares.values():
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(value)
+                or not 0 <= value <= 1
+            ):
+                raise ValueError("community: invalid broadband share")
+        values = [shares[k] for k in SPEEDS]
+        if any(b > a + 1e-9 for a, b in zip(values, values[1:], strict=False)):
+            raise ValueError("community: invalid broadband tier ordering")
+        vintage_dates(f"{payload.get('as_of')}_{payload.get('revision')}")
+    elif kind == "health_estimate":
         for field in ("value", "low", "high"):
             percentage(payload.get(field))
         if payload.get("confidence") != 95:

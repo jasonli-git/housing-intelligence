@@ -4,16 +4,19 @@ Branch: `milestone/m47-schools-community-context` · base: `aa1096d` (M46).
 Evidence checked and local data acquired: 2026-10-07.
 
 **Partial milestone delivery, not a claim that every M47 source is complete.**
-Schools, reporting-aware historical crime context, and selected CDC health estimates
-are implemented. FCC availability ingestion is deferred by the owner, who answered
-“Walk me through the FCC download later.” The official address-check link is available
-now. Crime is an agency inventory within published county chapters, not municipal
+Schools, reporting-aware historical crime context, selected CDC health estimates,
+and FCC county availability summaries are implemented. FCC was initially deferred
+by the owner (“Walk me through the FCC download later”), then approved after the
+public-download walkthrough on October 7. Automated FCC acquisition and exact
+municipality/ZIP summaries remain pending. The official address checker stays the
+first step for a home. Crime is an agency inventory within published county chapters, not municipal
 crime rates or a neighborhood safety verdict.
 
 ## What changed
 
-- Added four configured, registered sources: NJDOE district performance, NJOGIS
-  school district boundaries, NJSP annual agency crime reporting, and CDC PLACES.
+- Added five configured, registered sources: NJDOE district performance, NJOGIS
+  school district boundaries, NJSP annual agency crime reporting, CDC PLACES, and
+  FCC Broadband Data Collection public summaries.
   They use the existing acquire/land/stage/load/refresh infrastructure.
 - Added a separately cited `community_records` inventory and API components. No
   community indicator was inserted into housing facts, affordability calculations,
@@ -34,7 +37,7 @@ crime rates or a neighborhood safety verdict.
 
 ### Measured coverage
 
-There are **12,144 loaded community records**, separate from the 875,622 existing
+There are **12,210 loaded community records**, separate from the 875,622 existing
 housing observations reported by the successful local load.
 
 | Component | Loaded records | Coverage and limits |
@@ -45,6 +48,7 @@ housing observations reported by the successful local load.
 | CDC county estimates | 63 | Three measures in all 21 counties |
 | CDC tract estimates | 6,507 | Three measures in 2,169 of 2,181 tract geographies |
 | CDC ZIP estimates | 1,761 | Three measures in 587 of 598 ZIP areas |
+| FCC fixed-broadband summaries | 66 | NJ state and all 21 counties × All Wired, Fiber and Cable; residential-service offers, Total area |
 
 The boundary downloads contain 339 unified, 171 elementary and 46 secondary features.
 They are not 556 distinct individual school assignments.
@@ -59,17 +63,20 @@ All loaded CDC entities match the existing geographic spine.
 - `config/sources.yml`: metadata, refresh cadence, adapters, terms and notices.
 - `src/hip/sources/community.py`, `sources/registry.py`: downloads, release discovery,
   bounded CDC queries, workbook parsing, suppression and coverage validation.
+- `src/hip/sources/fcc.py`, `src/hip/config.py`: validated public ZIP import, both
+  as-of/revision dates, cached-vintage advancement and semiannual source cadence.
 - `dbt/models/staging/stg_nj_school_performance_records.sql`,
   `stg_nj_school_boundaries_records.sql`, `stg_nj_crime_records.sql`,
-  `stg_cdc_places_records.sql`; `dbt/tests/community_contracts.sql`.
+  `stg_cdc_places_records.sql`, `stg_fcc_bdc_records.sql`; `dbt/tests/community_contracts.sql`.
 - `src/hip/warehouse/migrations/versions/0030_community_context.py`,
   `warehouse/community.py`, `warehouse/freshness.py`, `cli.py`.
 - `src/hip/api/routers/community.py`, `api/main.py`, `publish.py`, `completeness.py`.
 - `web/lib/api.ts`, `web/components/CommunityContext.tsx`,
   `web/app/regions/[id]/page.tsx`, `redesign.css`, `affordable-housing.css`.
 - `tests/test_community.py`, `tests/test_community_load.py`,
-  `web/components/CommunityContext.test.tsx`.
-- `reports/completeness/2026-10-07.md`: saved standing check.
+  `tests/test_fcc.py`, `web/components/CommunityContext.test.tsx`,
+  `web/lib/freshness.ts`, `web/lib/freshness.test.ts`.
+- `reports/completeness/2026-10-07.md` and `2026-10-07-2.md`: initial and FCC follow-up standing checks.
 
 ## Architectural or implementation decisions
 
@@ -145,6 +152,64 @@ release references; no raw files were pruned in this task.
 Like existing ancillary inventories, this is the current view, not a full revision
 time series of school/health/crime rows.
 
+### FCC: public aggregates, not the licensed location Fabric
+
+The owner downloaded four public ZIPs without signing in. The earlier deferral
+incorrectly conflated the documented authenticated API with the public website's
+downloads. It was not a demonstrated terms barrier or proof that Codex could not
+download these files. No account, API key or Fabric license was required for these
+public downloads; no restricted access or hidden endpoint was used.
+
+Approved county-first import:
+`bdc_us_fixed_broadband_summary_by_geography_D25_29sep2026.zip`, 9.1 MB compressed
+(90.6 MB CSV). As-of **2025-12-31**, publisher revision **2026-09-29**, acquired
+**2026-10-07**. Raw SHA-256:
+`3d47aca350a59dc9ae19dba0144e859dc2c35ef36132ffa093d6f9c1663e075b`.
+The source ZIP was copied into ignored `data/manual/fcc_bdc/` and acquired into
+content-addressed raw storage. No raw ZIP is committed. Downloads were not deleted
+or modified; the other three files (NJ Cable, Fiber and Census-place summaries)
+were inspected but are not imported or needed by the county summary.
+
+Read FCC's [current output dictionary](https://us-fcc.app.box.com/v/bdc-data-downloads-output),
+dated August 11, 2026, fixed-summary section (printed pp. 11–14). `total_units` is
+the sum of units at all broadband-serviceable locations in the geography, including
+multi-unit buildings—not Census households, people, customers or subscribers. The
+published residential-service (`R`) shares retain that FCC denominator. Store the
+published fractions; multiply by 100 only for display. Do not reconstruct a denominator
+from residential rows or sum overlapping technologies.
+
+UI shows wired 100/20 Mbps, wired 1,000/100 Mbps and fiber 100/20 Mbps, in a compact
+expansion beside the address-check link. Somerset: 153,014 FCC units; wired shares
+98.3% and 75.3%, fiber 71.3% at 100/20. These are advertised provider offers, not
+measured speed, price, take-up or a guarantee at a home. All Wired excludes wireless:
+a gap here is not proof that a unit has no internet option.
+
+Use exact state/county GEOIDs. Town profiles show explicitly labelled **county
+context**, never a town estimate. ZIPs get no county fallback. The downloaded place
+file has 701 Census places, versus the platform's 564 legal municipalities; their
+GEOIDs are different geographic types (Princeton place `3460900`, municipality
+`3402160900`). No name-based, prefix-stripping or unverified place-to-town conversion.
+The NJ state summary is retained and available through the community API, but the
+statewide page has not gained a new section in this county-first follow-up.
+
+ZIP member name must match both vintage dates. Schema, finite 0–1 shares, descending
+speed-tier coverage, positive/consistent denominators, duplicate keys and complete
+state-plus-21-county coverage all fail closed. Loader validates the payload too;
+staging/loader bind the exact acquired file hash. No FCC values enter ranked facts,
+affordability or AI packets. Re-import is not an analytics regeneration.
+
+Manual acquisition is an integration choice pending documented API setup, not an
+automation prohibition. A future approved ZIP belongs in `data/manual/fcc_bdc/`;
+run `hip acquire --source fcc_bdc --vintage <as-of>_<revision>`, then land/stage/load
+that same release. Filename and CSV member must match the FCC revision stamp.
+The registry advances from acquired cache entries, not arbitrary Downloads contents.
+Publisher cadence is semiannual, not an asserted publication day. Check the public
+download selector's availability date and last-updated stamp for a newer edition;
+there is **no automated FCC Friday check** in this delivery. Freshness shows the
+measurement date and import date separately; no recorded discovery means newer
+editions are not tracked. The generic status label was corrected so manual/pinned
+sources are not falsely described as automatically re-read.
+
 ### Source terms and cost
 
 - [NJ state conditions, section F](https://www.nj.gov/nj/legal.shtml) support use of
@@ -160,6 +225,11 @@ time series of school/health/crime rows.
   [county](https://data.cdc.gov/d/swc5-untb), [tract](https://data.cdc.gov/d/cwsq-ngmh),
   [ZIP](https://data.cdc.gov/d/qnzd-25i4). Read the [CDC FAQs](https://www.cdc.gov/places/faqs/index.html)
   for modeled-estimate limitations. Source links and notices are included.
+- [FCC License and Attribution](https://broadbandmap.fcc.gov/about) expressly offers
+  BDC availability data free without copyright restriction; attribution is requested
+  and included as “Source data: FCC Broadband Data Collection.” CostQuest location
+  Fabric retains separate rights and is not imported. The [FCC account guide](https://help.bdc.fcc.gov/hc/en-us/articles/20044640394395-How-to-Create-an-FCC-User-Account)
+  concerns API access; it is not a prerequisite for the public website ZIPs.
 - No additional Python or npm dependencies, account, paid API, or license upgrade.
   Repository licensing and existing Zillow noncommercial restrictions are unchanged.
 - First download about **143.6 MB**: school workbook 119.2 MB, boundaries 18.7 MB,
@@ -168,6 +238,11 @@ time series of school/health/crime rows.
   generation took 35.2 seconds; this is not a cloud CI benchmark. Budget roughly
   2–5 minutes for incremental source/stage work and 5–10 minutes cold as estimates,
   dependent on network and machine. Full existing analytics/publish is a separate cost.
+- FCC follow-up adds 9.1 MB raw plus a retained manual copy; ZIP is streamed, not
+  unpacked to a national CSV. It lands only 66 NJ records. Staging/contract execution
+  was under a second after dbt startup locally. No new dependency or fee. Manual
+  download timing, filename/schema changes and stale cached editions are the main
+  added risks; unattended acquisition is explicitly unfinished.
 - Main failure risks: workbook sheet/header changes, publisher outages, revised GIS
   identities, in-place Socrata editions and pagination. Explicit schema/count guards
   fail instead of guessing. The larger workbook is the main first-download cost.
@@ -187,9 +262,11 @@ time series of school/health/crime rows.
 
 ### Actionable follow-ups, with their gates
 
-1. **FCC — owner-deferred, not an institutional refusal.** Walk the owner through
-   the official download/account route later, then inspect the chosen NJ release,
-   geographic joins, provider/technology definitions, update cadence and reuse terms.
+1. **FCC automation and finer geographies — actionable, not an institutional refusal.**
+   County summaries are now loaded after the owner's approval. Configure documented
+   API access or verify a supported public automation route before promising scheduled
+   acquisition. Audit an exact Census-place/MCD crosswalk before town figures; ZIP
+   aggregation needs suitable geography and an authorized denominator, not a name join.
    The [documented API](https://www.fcc.gov/sites/default/files/bdc-public-data-api-spec.pdf)
    requires an account; location Fabric is separately licensed. Do not make an account,
    silently acquire a restricted Fabric, or use subscription rates as availability.
@@ -209,7 +286,9 @@ time series of school/health/crime rows.
    home's radon: testing is still the official next step.
 5. **Before merge/deploy:** run the slow analytics/artifact-publish gate in an isolated
    session. It was not completed here. Apply migration 0030 before using the new router;
-   acquire and land all four sources, stage the four models plus contracts, then load.
+   acquire and land all five sources (FCC requires the manual summary ZIP), stage
+   the five models plus contracts, then load. Without the manual ZIP, FCC acquisition
+   stays pending; the site must not invent availability or mark it current.
    Use the existing production publish/deploy/check-live workflow after review.
 6. **Completeness reporting remains fact-centric.** Its geographic/statistical tables
    do not count ancillary school suppressions, agency months or CDC confidence intervals.
@@ -229,13 +308,13 @@ time series of school/health/crime rows.
   new requests and did not resolve DCA, BPU, water-inventory or DOE LEAD gaps.
 
 Claude should reconcile ROADMAP/TODO/ARCHITECTURE and the milestone status after
-review, noting partial FCC delivery and limited crime geography. The canonical
+review, noting county-only/manual FCC delivery and limited crime geography. The canonical
 documents and DIRECTOR_NOTES were left untouched. Their existing “Now”/milestone
 status may need reconciliation; this handoff is not authoritative documentation.
 
 ## Verification
 
-Commands run and final results:
+Initial delivery commands and results (before the approved FCC follow-up):
 
 - `.venv/bin/hip check-config`: 43 configured sources, 147 metrics; passed.
 - `.venv/bin/alembic upgrade head`: migration 0029 → 0030 applied locally.
@@ -273,7 +352,46 @@ Commands run and final results:
 - `git diff --check`: passed; canonical-document and Director Note diff empty.
 
 **Not completed:** unfiltered slow test suite, full artifact publish, a fresh full
-analytics rebuild, production build/deploy, `check-live`, and FCC acquisition. Two
+analytics rebuild, production build/deploy, and `check-live`. Two
 initial unfiltered runs entered expensive slow analytics/publish fixtures and were
 interrupted; database locks cleared and the final normal suite passed afterward.
 Do not interpret the normal suite or Next export as `make test-all` passing.
+
+### Approved FCC follow-up — October 7
+
+- `.venv/bin/hip check-config`: **44 configured sources**, 147 metrics; passed.
+- Real `hip acquire --source fcc_bdc`, `hip land --source fcc_bdc`: public summary
+  ZIP acquired, 66 validated NJ records landed. `hip stage --select
+  'stg_fcc_bdc_records community_contracts'`: model and contract passed. No other
+  source was re-downloaded and no national per-location CSV was imported.
+- Scoped source/release registration and exact-hash `load_community`: **12,210**
+  records loaded, including 66 FCC summaries. First scoped attempt lacked the newly
+  used source registry row and rolled back on its foreign key; repeated with the
+  same source-upsert step the normal loader uses and succeeded. No workaround to
+  constraints or changes to housing facts.
+- Restarted only the task's existing localhost API. Real HTTP responses: Somerset
+  has three summary records; Princeton has explicitly labelled Mercer county
+  context; ZIP 08540 has `not_matched` and no county substitute.
+- `.venv/bin/pytest -m 'not slow' -o addopts='' -q
+  --junitxml=/tmp/m47-fcc-pytests-final.xml`: **1,089 passed, 1 skipped,
+  9 deselected**, 36.14 seconds; same existing no-margin skip. Includes archive,
+  geography, dates, denominator, share, duplicate, missing-county, cached-vintage,
+  loader-schema and API-context regressions.
+- Ruff check and formatting passed (**217 files**); mypy passed (**150 sources**).
+  Frontend typecheck passed; **499 tests / 67 files** passed. Final Next build
+  exported **2,378 pages**; local artifact URL warning remains, not production-ready
+  deployment configuration.
+- `A11Y_PATHS='/regions/12,/regions/224,/regions/3091,/regions/194'
+  A11Y_OUTPUT=/tmp/m47-fcc-accessibility.json npm run check:a11y`: **32 sampled states**,
+  zero automated violations, overflow or page errors. Manual contrast review still
+  needed; no real-device/conformance claim.
+- `hip completeness --write`: saved `reports/completeness/2026-10-07-2.md`;
+  **41 used sources**, 20 current, 20 not tracked, 1 unreachable; 20 public-domain
+  sources. FCC is not tracked, not automatically declared current. Ancillary
+  coverage remains separately audited above, not included in the fact-only tables.
+- Canonical documents and Director Notes remain untouched. No merge, deploy,
+  model-reading regeneration, source email, raw pruning or Fabric acquisition.
+
+**Still outstanding before merge:** slow analytics/full artifact-publish test gate,
+production publication and `check-live`. Public downloads solved county acquisition;
+they did not implement unattended refreshes or municipality/ZIP availability.

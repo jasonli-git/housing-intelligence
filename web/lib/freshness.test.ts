@@ -52,6 +52,14 @@ describe("sortForDisplay", () => {
 });
 
 describe("groupByCadence", () => {
+  it("puts FCC's twice-yearly publications between quarterly and annual sources", () => {
+    const groups = groupByCadence([
+      source({ name: "ACS", cadence: "annual" }),
+      source({ name: "FCC", cadence: "semiannual" }),
+      source({ name: "Index", cadence: "quarterly" }),
+    ]);
+    expect(groups.map((group) => group.label)).toEqual(["Quarterly", "Twice a year", "Yearly"]);
+  });
   it("shows only represented frequencies and orders attention-needed sources within each", () => {
     const groups = groupByCadence([
       source({ name: "Zillow", cadence: "monthly", status: "current" }),

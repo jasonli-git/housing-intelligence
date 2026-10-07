@@ -4,6 +4,7 @@ with components as (
     union all select * from {{ ref('stg_nj_crime_records') }}
     union all select * from {{ ref('stg_cdc_places_records') }}
     union all select * from {{ ref('stg_nj_school_boundaries_records') }}
+    union all select * from {{ ref('stg_fcc_bdc_records') }}
 ), bad_keys as (
     select source_id,kind,entity_id,record_id
     from components

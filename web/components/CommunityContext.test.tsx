@@ -1,19 +1,20 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { CommunityContext } from "./CommunityContext";
-import type { CommunityContext as Data, CommunityRecord, CrimeAgency, HealthEstimate } from "@/lib/api";
+import type { CommunityContext as Data, CommunityRecord, CrimeAgency, HealthEstimate, BroadbandSummary } from "@/lib/api";
 
 function record<T>(payload: T): CommunityRecord<T> {
   return { source_id: "test", kind: "test", entity_id: "county:34021", record_id: "test", payload, snapshot: null, release_id: 1, release_layer: "test", vintage: "current", file_sha256: "sha", fetched_at: "2026-10-07" };
 }
-const empty: Data = { region_id: 1, districts: [], health: [], health_area: null, health_level: null, crime: [], crime_county: null, broadband_status: "pending_download" };
+const empty: Data = { region_id: 1, districts: [], health: [], health_area: null, health_level: null, crime: [], crime_county: null, broadband_status: "pending_download", broadband: [], broadband_area: null, broadband_level: null };
 
 describe("community components", () => {
   it("states missingness, not safety or availability", () => {
     const html = renderToStaticMarkup(<CommunityContext data={empty} level="zip" />);
     expect(html).toContain("ZIP areas do not identify a police jurisdiction");
     expect(html).toContain("does not mean zero crime");
-    expect(html).toContain("FCC availability data have not been imported");
+    expect(html).toContain("No ZIP-level summary has been matched");
+    expect(html).toContain("public website downloads do not require an account");
   });
   it("hides incomplete annual counts but keeps legitimate reported zero", () => {
     const crime = (complete: boolean, total: number): CrimeAgency => ({ agency: "Agency", ori: complete ? "full" : "partial", county: "Mercer", year: 2023, months_reported: complete ? 12 : 0, complete, reported_offenses: total, counts: {}, url: "https://nj.gov/" });
@@ -40,5 +41,16 @@ describe("community components", () => {
     expect(html).toContain("No matching performance record");
     expect(html).toContain("Publisher caution");
     expect(html).toContain("A district is not a school assignment");
+  });
+  it("labels county broadband as unit shares, not town or household coverage", () => {
+    const summary: BroadbandSummary = { name: "Mercer", technology: "All Wired", as_of: "2025-12-31", revision: "2026-09-29", total_units: 1000, biz_res: "R", area_data_type: "Total", shares: { speed_100_20: 0.98, speed_1000_100: 0 }, basis: "Published", denominator: "FCC units", url: "https://broadbandmap.fcc.gov/data-download" };
+    const html = renderToStaticMarkup(<CommunityContext data={{ ...empty, broadband: [record(summary)], broadband_area: "Mercer", broadband_level: "county", broadband_status: "published_summary" }} level="municipality" />);
+    expect(html).toContain("County context, not this town’s availability");
+    expect(html).toContain("98.0%");
+    expect(html).toContain("0.0%");
+    expect(html).toContain("not shares of people, subscribers or households");
+    expect(html).toContain("Availability as of 2025-12-31");
+    expect(html).toContain("revised 2026-09-29");
+    expect(html).not.toContain("No matching availability summary");
   });
 });
