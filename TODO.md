@@ -14,11 +14,12 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones (2026-10-07)
+## Now — Milestone 49 in review (2026-10-07)
 
-Milestone 48 is merged and deployed as 0.46.0 (ARCHITECTURE #324–#327). Housekeeping is
-on `change/housekeeping` as 0.46.1, not merged. Next: Milestone 49, decision guides,
-only when asked. Milestone 44 waits on how to read DCA's dashboard.
+Milestone 49, decision guides, is built on `milestone/m49-decision-guides` as 0.47.0
+(ARCHITECTURE #328–#331), PR open, not merged. After merge: `make publish` and
+`make deploy`; the warehouse already holds `sr1a_turnover_per_1000` from `hip analyze`.
+Next: Milestone 50, only when asked. Milestone 44 waits on how to read DCA's dashboard.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000. A new
 environment needs the FCC summary ZIP in `data/manual/fcc_bdc/` (ARCHITECTURE #322).
@@ -63,6 +64,8 @@ first raised, not where it must be done.
       Monmouth and Somerset carry signed weights or costs in DOE's file; withheld, not
       zeroed, until DOE explains them.
 - [ ] **Readings may be stale after M42.** Not regenerated.
+- [ ] **Readings may be stale after M49.** `sr1a_turnover_per_1000` joins every packet
+      that has sales; the readings were not regenerated.
 
 - [ ] **LIHTC is downloaded by hand each spring.** (M41, #307) HUD's release page
       answers scripts with an empty 202, so discovery reads `unreachable`. When HUD
@@ -479,13 +482,6 @@ first raised, not where it must be done.
 
 ### Data sources worth adding
 
-- [ ] **NJDEP radon tiers — gated first task of Milestone 49.** (Director Note promoted
-      2026-10-07; researched by Codex in M47) NJDEP's tier report has 540 entries,
-      including combined municipalities, against 564 towns; confirm the tiers' vintage
-      (a 2022 tool used 2015 tiers), build an evidenced crosswalk, and read the terms. A
-      town's tier never predicts one home's result: testing stays the next step.
-      **Scheduled: Milestone 49.**
-
 - [ ] **Milestone 34's ACS depth stops at ZCTA; tracts have none of it.** (M34) The
       warehouse holds 2,181 tracts and the ACS publishes every M34 table for them, but
       no tract page shows Census figures yet. Left out by decision on 2026-10-01; the
@@ -562,6 +558,18 @@ first raised, not where it must be done.
         the county figure beside them, so wait for CostQuest; revisit only if the
         Fabric is refused. ZIP codes still need the Fabric. One FCC place is not in
         the 2020 crosswalk; check which place boundaries the FCC file uses first.
+
+- [ ] **NJDEP radon tiers: waiting on NJDEP.** (M49, #331) The guide shows test-every-home
+      advice and links, not a tier: the tier table is undated, links
+      `radon_tier_2015.pdf` and lists pre-2013 Princeton, and its pages refuse scripts.
+      Terms are answered (nj.gov legal statement, Section F). The owner asked NJDEP
+      through the Radiation Protection contact form on 2026-10-07 whether the tiers have
+      been updated since 2015, whether an update is planned, and for a downloadable file.
+      Recommended, not yet decided by the owner: add a tier only if NJDEP says it is
+      current and gives a file to refresh from — matched to towns by name, type and
+      county (540 entries, combined towns named) and shown beside the test advice —
+      and keep the advice alone if the tiers are still 2015's. Follow up after about two
+      weeks.
 
 - [ ] **NJ TRANSIT service frequency.** (M45, decided 2026-10-06) Only NJ TRANSIT's own
       GTFS says how often anything runs. It needs a developer account the owner would

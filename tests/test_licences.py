@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from hip.analytics.compute import RATIOS
+from hip.analytics.compute import RATES, RATIOS
 from hip.config import (
     LICENCE_ORDER,
     Metric,
@@ -39,7 +39,7 @@ def test_every_calculated_metric_declares_the_inputs_it_is_computed_from() -> No
         for metric_id, metric in metrics.items()
         if metric.inputs
     }
-    computed = {metric_id: sorted([a, b]) for metric_id, a, b, _ in RATIOS}
+    computed = {metric_id: sorted([a, b]) for metric_id, a, b, _ in RATIOS + RATES}
     assert declared == computed
 
 

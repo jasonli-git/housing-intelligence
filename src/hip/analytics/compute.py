@@ -62,6 +62,16 @@ RATIOS: tuple[tuple[str, str, str, float], ...] = (
     ("nj_net_units_per_1000", "nj_net_units_added", "acs_housing_units", 1000.0),
 )
 
+# (computed metric, count over a window, stock, multiplier): a count spread over the
+# years its window spans, per unit of a stock. Milestone 49's market turnover is usable
+# one- to four-family sales a year per 1,000 class-2 parcels — the same property class on
+# both sides, so a sale and a home it could be are counted the same way. MOD-IV is one
+# current snapshot, so every window divides by today's stock; the stock moves a few
+# tenths of a percent a year, far less than turnover does (ARCHITECTURE #328).
+RATES: tuple[tuple[str, str, str, float], ...] = (
+    ("sr1a_turnover_per_1000", "sr1a_sales_count", "modiv_residential_parcels", 1000.0),
+)
+
 
 def unranked_metrics() -> list[str]:
     """Metrics that are neither changed nor ranked (`ranked: false` in metrics.yml).
@@ -217,6 +227,46 @@ def _affordability(conn: object) -> dict[str, int]:
                 "metric_id": metric_id,
                 "numerator": numerator,
                 "denominator": denominator,
+                "multiplier": multiplier,
+            },
+        ).rowcount
+        counts[metric_id] = int(computed)
+
+    for metric_id, count, stock, multiplier in RATES:
+        computed = conn.execute(  # type: ignore[attr-defined]
+            text(
+                """
+                INSERT INTO derived_facts
+                    (region_id, metric_id, period_start, period_end, value,
+                     margin_of_error)
+                SELECT n.region_id, :metric_id, n.period_start, n.period_end,
+                       -- Per year of the window by its days, because the window still
+                       -- open ends at the newest deed rather than on a year's end: the
+                       -- 2024 window held thirty months on 2026-10-07. Numeric and
+                       -- rounded, as the ratios above, so the release digest is stable.
+                       round(
+                           n.value::numeric * 365.25
+                               / (n.period_end - n.period_start + 1)
+                               / s.value::numeric * CAST(:multiplier AS numeric),
+                           6
+                       )::double precision,
+                       NULL
+                FROM fact_metric_observation n
+                JOIN (
+                    -- The newest snapshot of the stock: MOD-IV holds one.
+                    SELECT DISTINCT ON (region_id) region_id, value
+                    FROM fact_metric_observation
+                    WHERE metric_id = :stock
+                    ORDER BY region_id, period_start DESC
+                ) s ON s.region_id = n.region_id
+                WHERE n.metric_id = :count
+                  AND s.value > 0
+                """
+            ),
+            {
+                "metric_id": metric_id,
+                "count": count,
+                "stock": stock,
                 "multiplier": multiplier,
             },
         ).rowcount

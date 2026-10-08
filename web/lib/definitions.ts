@@ -402,6 +402,10 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "How many one- to four-family homes sold here in an arm’s-length sale over the three years shown, as the state recorded them.",
     why: "Every sales figure on this page rests on this many sales: the fewer, the more one sale can move them.",
   },
+  sr1a_turnover_per_1000: {
+    what: "How many homes sold here in a year, on average over the three years shown, for every 1,000 homes on the tax rolls.",
+    why: "How often homes change hands. A low rate can mean few homes come up for sale, or simply that owners stay put.",
+  },
   sr1a_price_lower_quartile: {
     what: "A quarter of the homes that sold here went for less than this, over three years.",
     why: "The cheaper end of what actually sells, which a median hides.",
