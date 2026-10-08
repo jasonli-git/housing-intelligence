@@ -331,6 +331,10 @@ def _effort_note(priced: list[ModelSummary]) -> str:
 # with the name the report prints.
 _IGNORES_TEMPERATURE_WHILE_REASONING = {"deepseek": "DeepSeek"}
 
+# Providers whose models take no temperature at all, so none is sent (2026-10-08: Claude
+# Haiku 5.5 answers one with HTTP 400).
+_REFUSES_TEMPERATURE = {"anthropic": "Anthropic"}
+
 
 @dataclass(frozen=True)
 class _TemperatureAdvice:
@@ -400,8 +404,12 @@ def _sampling_note(
     reasoned: dict[str, list[ModelSummary]] = defaultdict(list)
     held: dict[str, list[ModelSummary]] = defaultdict(list)
     advised: dict[_TemperatureAdvice, list[ModelSummary]] = defaultdict(list)
+    unsent: dict[str, list[ModelSummary]] = defaultdict(list)
     for summary in sorted(summaries.values(), key=lambda s: s.label):
         provider = evaluation.cohorts[evaluation.cohort_of(summary.model_id)].provider
+        if provider is not None and provider in _REFUSES_TEMPERATURE:
+            unsent[provider].append(summary)
+            continue
         if provider is not None and provider in _IGNORES_TEMPERATURE_WHILE_REASONING:
             (reasoned if summary.reasoning_tokens else held)[provider].append(summary)
         ref = evaluation.model(summary.model_id).ref
@@ -431,7 +439,23 @@ def _sampling_note(
             f"{advice.guidance}; {_names(below)} "
             f"{'was' if len(below) == 1 else 'were'} held to the same setting regardless."
         )
-    temperatures = sorted(set().union(*sent.values()))
+    for refusing, models in unsent.items():
+        vendor = _REFUSES_TEMPERATURE[refusing]
+        one = len(models) == 1
+        sentences.append(
+            f"{_names(models)} {'takes' if one else 'take'} no temperature, so none was "
+            f"sent and {'it was' if one else 'they were'} sampled at {vendor}'s own "
+            "setting."
+        )
+    temperatures = sorted(
+        set().union(
+            *(
+                values
+                for model_id, values in sent.items()
+                if not any(model_id == s.model_id for m in unsent.values() for s in m)
+            )
+        )
+    )
     if not sentences or not temperatures:
         return None
 

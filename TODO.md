@@ -145,10 +145,10 @@ first raised, not where it must be done.
       chose a full rubric run before deciding, judged by Claude Opus 5.5, over: Gemini 3.8
       Flash (low thinking), Gemini 3.1 Flash-Lite, DeepSeek Flash (thinking off) and
       Claude Haiku 5.5, with 3.7 Flash's `v3` score as a reference from another judge.
-      Not run until the owner says go. Needs first: Anthropic as a generation provider
-      (a `_Dialect`, its low-thinking control, served-model check, pricing — Haiku 5.5
-      is $0.10 / $0.50 per million tokens to 100,000-token prompts). GLM and Kimi were
-      considered and dropped by the owner (2026-10-08).
+      Not run until the owner says go. Ready: Anthropic is a provider and Haiku 5.5 is
+      configured at low effort (#342); `hip eval models --probe` on 2026-10-08 passed
+      3.8 Flash and Haiku and flagged 3.7 as substituted. GLM and Kimi were considered
+      and dropped by the owner (2026-10-08).
 - [ ] **Salem has no current reading.** (M51) Flash-Lite and DeepSeek were refused by
       the gates (jargon, a population figure, survey figures without margins, four
       figures) and Gemma could not run (below), so Salem's 2026-10-05 reading stays,

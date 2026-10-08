@@ -56,15 +56,12 @@ limits:
   keep_alive: 0
 
 cohorts:
+  # Qwen3 8B (both runtimes) and Qwen3.5 9B left on 2026-10-08: no longer installed, and
+  # Qwen leaves the slate with its hosted provider (ARCHITECTURE #340).
   gguf:
     runner: ollama
     endpoint: http://localhost:11434
     models:
-      - id: qwen3-8b-q4
-        ref: bench-qwen3-8b-q4
-        label: Qwen3 8B
-        quantization: Q4_K_M
-        anchor: qwen3-8b
       - id: gemma-4-e4b-q4
         ref: bench-gemma-4-e4b-q4
         label: Gemma 4 E4B
@@ -81,20 +78,11 @@ cohorts:
   mlx:
     runner: mlx
     models:
-      - id: qwen3-8b-mlx
-        ref: lmstudio-community/Qwen3-8B-MLX-4bit
-        label: Qwen3 8B
-        quantization: 4bit
-        anchor: qwen3-8b
       - id: gemma-4-e4b-mlx
         ref: lmstudio-community/gemma-4-E4B-it-MLX-4bit
         label: Gemma 4 E4B
         quantization: 4bit
         anchor: gemma-4-e4b
-      - id: qwen35-9b-mlx
-        ref: lmstudio-community/Qwen3.5-9B-MLX-4bit
-        label: Qwen3.5 9B
-        quantization: 4bit
       - id: phi-4-mini-mlx
         ref: lmstudio-community/Phi-4-mini-reasoning-MLX-4bit
         label: Phi-4 mini reasoning
@@ -302,6 +290,31 @@ cohorts:
         reasoning_effort: low
         input_usd_per_mtok: 0.75
         output_usd_per_mtok: 3.75
+
+  # Anthropic, added 2026-10-08 for the next rubric benchmark: a US provider other than
+  # Google. Claude Haiku 5.5 at low effort (`output_config.effort`): by default it
+  # thinks (214 output tokens on a two-sentence probe), at `low` it answers directly
+  # (128, no thinking block). It takes no temperature — HTTP 400, "deprecated for this
+  # model" — so it is the one candidate sampled at its provider's own setting, which the
+  # report states. It names exactly the model asked for, so the substitution guard
+  # passes. $0.10 / $0.50 per million tokens for prompts to 100,000 tokens, from
+  # Anthropic's pricing page on 2026-10-08. Unbenchmarked, so not on a preference list.
+  anthropic:
+    runner: hosted
+    provider: anthropic
+    api_key_env: ANTHROPIC_API_KEY
+    generation_limits:
+      context_tokens: 65536
+      max_output_tokens: 24000
+    endpoint: https://api.anthropic.com/v1
+    models:
+      - id: claude-haiku-5-5-low
+        ref: claude-haiku-5-5
+        label: Claude Haiku 5.5 (low effort)
+        quantization: hosted
+        reasoning_effort: low
+        input_usd_per_mtok: 0.10
+        output_usd_per_mtok: 0.50
 
   # Mistral (the EU tier, Milestones 12-22) and Qwen through Alibaba Cloud Model Studio
   # (a second China tier, `v3`) were removed by the owner on 2026-10-08: neither had

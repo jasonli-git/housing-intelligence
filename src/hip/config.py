@@ -476,6 +476,8 @@ SERVICE_TIERS: dict[str, frozenset[str]] = {"gemini": frozenset({"flex"})}
 REASONING_CONTROLS: dict[str, frozenset[str]] = {
     "deepseek": frozenset({"default", "disabled"}),
     "gemini": frozenset({"default", "low"}),
+    # Anthropic's `output_config.effort` (2026-10-08), as the judge sends it.
+    "anthropic": frozenset({"default", "low"}),
 }
 
 
@@ -562,7 +564,7 @@ class Cohort(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     runner: Literal["ollama", "mlx", "hosted"]
-    provider: Literal["deepseek", "gemini"] | None = None
+    provider: Literal["deepseek", "gemini", "anthropic"] | None = None
     api_key_env: str | None = None
     endpoint: str | None = None
     models: list[CandidateModel] = Field(min_length=1)

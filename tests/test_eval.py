@@ -126,7 +126,7 @@ def packet() -> Packet:
 
 
 def _generation(
-    answer: str, model_id: str = "qwen3-8b-q4", **kwargs: object
+    answer: str, model_id: str = "gemma-4-e4b-q4", **kwargs: object
 ) -> Generation:
     defaults: dict[str, object] = {
         "scenario_key": "headline_change:11:json",
@@ -530,7 +530,7 @@ def test_summary_folds_checks_and_judgments_together(
     judgment = _judgment(generation.key, generation.model_id, 3.5, evaluation)
 
     summaries = summarize(evaluation, [generation], [check], [judgment])
-    summary = summaries["qwen3-8b-q4"]
+    summary = summaries["gemma-4-e4b-q4"]
     assert summary.generations == 1
     assert summary.hallucination_rate == 0.0
     assert summary.mean_score == 3.5
@@ -543,14 +543,14 @@ def test_hallucination_rate_is_counted_not_graded(
     generation = _generation("Values reached $612,300.")
     check = check_generation(generation, _scenario(), packet)
     summaries = summarize(evaluation, [generation], [check], [])
-    assert summaries["qwen3-8b-q4"].hallucination_rate == 1.0
+    assert summaries["gemma-4-e4b-q4"].hallucination_rate == 1.0
 
 
 def test_a_fabricating_model_cannot_win_however_well_it_scores(
     packet: Packet, evaluation: EvaluationConfig
 ) -> None:
     """The deterministic gate, which is the point of separating the two layers."""
-    liar = _generation("Values reached $612,300.", model_id="qwen3-8b-q4")
+    liar = _generation("Values reached $612,300.", model_id="gemma-4-e4b-q4")
     honest = _generation(
         "Home values rose 45.97% to $452,500.", model_id="gemma-4-e4b-q4"
     )
@@ -576,11 +576,11 @@ def test_no_winner_when_nothing_has_been_judged(
 
 
 def test_anchor_pairs_span_both_cohorts(evaluation: EvaluationConfig) -> None:
-    gguf = _generation("a", model_id="qwen3-8b-q4")
-    mlx = _generation("b", model_id="qwen3-8b-mlx")
+    gguf = _generation("a", model_id="gemma-4-e4b-q4")
+    mlx = _generation("b", model_id="gemma-4-e4b-mlx")
     mlx = mlx.model_copy(update={"cohort": "mlx"})
     pairs = anchor_pairs(evaluation, summarize(evaluation, [gguf, mlx], [], []))
-    assert [anchor for anchor, _, _ in pairs] == ["qwen3-8b"]
+    assert [anchor for anchor, _, _ in pairs] == ["gemma-4-e4b"]
     _, first, second = pairs[0]
     assert {first.cohort, second.cohort} == {"gguf", "mlx"}
 
@@ -589,8 +589,8 @@ def test_report_leads_with_anchors_then_the_leaderboard(
     packet: Packet, evaluation: EvaluationConfig
 ) -> None:
     """Ordering is the argument: the anchors license the cross-cohort table."""
-    gguf = _generation("Values rose 45.97%.", model_id="qwen3-8b-q4")
-    mlx = _generation("Values rose 45.97%.", model_id="qwen3-8b-mlx").model_copy(
+    gguf = _generation("Values rose 45.97%.", model_id="gemma-4-e4b-q4")
+    mlx = _generation("Values rose 45.97%.", model_id="gemma-4-e4b-mlx").model_copy(
         update={"cohort": "mlx"}
     )
     generations = [gguf, mlx]

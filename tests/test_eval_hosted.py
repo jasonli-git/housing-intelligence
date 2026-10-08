@@ -2856,3 +2856,110 @@ def test_retiring_keeps_a_copy_of_each_reading_it_removes(
     kept = (tmp_path / "retired" / "analyst-readings.jsonl").read_text().splitlines()
     assert [json.loads(line)["body"] for line in kept] == ["Values rose."]
     assert len(executed) == 1  # the delete
+
+
+# --- Anthropic, a generation provider from 2026-10-08 ---------------------------------
+
+
+def _anthropic(monkeypatch: pytest.MonkeyPatch) -> HostedRunner:
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    runner = build_runner(_cohort("anthropic", "https://x/v1"), "anthropic")
+    assert isinstance(runner, HostedRunner)
+    return runner
+
+
+def _claude_answer(**extra: object) -> dict[str, object]:
+    return {
+        "model": "pinned-model-0731",
+        "content": [
+            {"type": "thinking", "thinking": "Weigh the two figures."},
+            {"type": "text", "text": "Values rose 45.97%."},
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+            "input_tokens": 40,
+            "cache_read_input_tokens": 900,
+            "cache_creation_input_tokens": 60,
+            "output_tokens": 120,
+        },
+        **extra,
+    }
+
+
+def test_claude_is_asked_with_its_effort_and_no_temperature(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Claude Haiku 5.5 answers `temperature` with HTTP 400 (probed 2026-10-08), and its
+    low setting is the Messages API's `output_config.effort`, as the judge sends it."""
+    runner = _anthropic(monkeypatch)
+    sent: list[dict[str, Any]] = []
+    headers: list[httpx.Headers] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        sent.append(json.loads(request.content))
+        headers.append(request.headers)
+        return httpx.Response(200, json=_claude_answer())
+
+    _generate_as(runner, _at("anthropic", "low"), handler, monkeypatch)
+    assert sent[0]["output_config"] == {"effort": "low"}
+    assert "temperature" not in sent[0] and "top_p" not in sent[0]
+    assert sent[0]["max_tokens"] == LIMITS.max_output_tokens
+    assert headers[0]["x-api-key"] == "sk-ant-test"
+    assert headers[0]["anthropic-version"] == "2023-06-01"
+    _generate_as(runner, _at("anthropic", "default"), handler, monkeypatch)
+    assert "output_config" not in sent[1]
+
+
+def test_a_claude_answer_is_split_from_its_thinking_and_counted_as_billed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    generation = _generate_as(
+        _anthropic(monkeypatch),
+        _at("anthropic", "default"),
+        _answering(_claude_answer()),
+        monkeypatch,
+    )
+    assert generation.answer == "Values rose 45.97%."
+    assert generation.reasoning == "Weigh the two figures."
+    # The prompt is every input token, cached or not; output already holds the thinking.
+    assert generation.telemetry.prompt_tokens == 1000
+    assert generation.telemetry.cached_tokens == 900
+    assert generation.telemetry.generation_tokens == 120
+    assert generation.telemetry.served_model == "pinned-model-0731"
+
+
+def test_claude_answering_as_another_model_is_a_substitution(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    generation = _generate_as(
+        _anthropic(monkeypatch),
+        _at("anthropic", "default"),
+        _answering(_claude_answer(model="claude-successor")),
+        monkeypatch,
+    )
+    assert generation.answer == ""
+    assert generation.error and "substitution" in generation.error
+
+
+def test_claude_cut_off_before_any_answer_is_truncated(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    body = _claude_answer(stop_reason="max_tokens")
+    body["content"] = [{"type": "thinking", "thinking": "Still weighing."}]
+    generation = _generate_as(
+        _anthropic(monkeypatch),
+        _at("anthropic", "default"),
+        _answering(body),
+        monkeypatch,
+    )
+    assert generation.answer == ""
+    assert generation.truncated_reasoning
+
+
+def test_the_repo_config_benchmarks_haiku_at_low_effort_and_lists_it_nowhere() -> None:
+    evaluation = load_evaluation(CONFIG_DIR)
+    haiku = evaluation.model("claude-haiku-5-5-low")
+    assert (haiku.ref, haiku.reasoning_effort) == ("claude-haiku-5-5", "low")
+    assert (haiku.input_usd_per_mtok, haiku.output_usd_per_mtok) == (0.10, 0.50)
+    for listed in evaluation.generation.preference.values():
+        assert "claude-haiku-5-5-low" not in listed
