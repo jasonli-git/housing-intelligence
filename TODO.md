@@ -139,6 +139,22 @@ first raised, not where it must be done.
       refused for quoting a non-housing measure ('Households with children', 'People per
       household') and fell to Gemini 3.8. Cost $0.11. Watch whether the prompt should say
       so before the next full pass.
+- [ ] **A batch option for Haiku readings.** (#345, owner 2026-10-08) `hip explain`
+      calls Anthropic synchronously at the standard rate; its Batch API bills half
+      ($0.05 / $0.25 per million tokens). At today's 21 counties that saves about $1.60 a
+      year; at every published region, about $90. Open questions before building it:
+      - **Latency.** A batch can take up to 24 hours — `v4`'s judging batches took 7 h 24
+        min and about 2 h — so the Friday 08:00 refresh would wait on it before
+        publishing, or publish the old readings and pick the new ones up on a later run.
+      - **Revisions and fallthrough.** A refused answer goes back for a revision, then to
+        the next model on the list. In a batch each revision round is another batch, and
+        the regions that fall through to Gemini or DeepSeek go synchronously.
+      - **Precedent.** #259 chose Gemini's Flex tier over a batch path for the same
+        discount on a synchronous call; Anthropic has no Flex equivalent, so the trade
+        is waiting time against half the price.
+      - **Where it lives.** The judge already submits and collects Anthropic batches
+        (`hip.eval.judge`, with `--batch-id` recovery), which a batch path in
+        `hip explain` could reuse.
 
 - [ ] **A reading's claims without a figure go unchecked.** (#275, 2026-10-01) Gemini's
       test reading of Hudson said rents take "a particularly large share of household
