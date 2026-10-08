@@ -472,20 +472,12 @@ SERVICE_TIERS: dict[str, frozenset[str]] = {"gemini": frozenset({"flex"})}
 # setting its provider offers answers HTTP 400, which `hip eval models --probe`
 # surfaces before a run.
 #
-# Mistral is `default` only. Its control is `reasoning_effort` `none` | `high`, and
-# `high` turns `message.content` from a string into a list of thinking and text chunks,
-# which the OpenAI-shaped parser would stringify into a Python repr and grade as the
-# answer. `v2` measured no reasoning from either Mistral candidate at the default, so a
-# `none` variant would re-measure one configuration under a second id.
-#
-# Qwen's `disabled` is `enable_thinking: false`, a hard off like DeepSeek's: Qwen 3.5
-# through 3.8 think by default. Measured 2026-09-11 on both 3.7 snapshots, one county
-# packet: reasoning fell from about 2,300 tokens to none, output from about 2,600 to 200.
+# Mistral and Qwen were providers here until 2026-10-08 (ARCHITECTURE #340).
 REASONING_CONTROLS: dict[str, frozenset[str]] = {
     "deepseek": frozenset({"default", "disabled"}),
     "gemini": frozenset({"default", "low"}),
-    "mistral": frozenset({"default"}),
-    "qwen": frozenset({"default", "disabled"}),
+    # Anthropic's `output_config.effort` (2026-10-08), as the judge sends it.
+    "anthropic": frozenset({"default", "low"}),
 }
 
 
@@ -572,7 +564,7 @@ class Cohort(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     runner: Literal["ollama", "mlx", "hosted"]
-    provider: Literal["deepseek", "gemini", "mistral", "qwen"] | None = None
+    provider: Literal["deepseek", "gemini", "anthropic"] | None = None
     api_key_env: str | None = None
     endpoint: str | None = None
     models: list[CandidateModel] = Field(min_length=1)

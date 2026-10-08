@@ -134,15 +134,15 @@ def test_hosted_candidate_prices_a_generation_from_its_own_rates() -> None:
 
 
 def test_cohort_name_comes_from_config_not_from_the_runner_class() -> None:
-    """Three providers share one `HostedRunner`; stamping the class's own name on every
+    """Providers share one `HostedRunner`; stamping the class's own name on every
     generation would collapse them into one column in the report."""
     runner = build_runner(_cohort("gemini", "https://x"), "gemini")
     assert isinstance(runner, HostedRunner)
     assert runner._cohort == "gemini"
 
-    other = build_runner(_cohort("mistral", "https://y"), "mistral")
+    other = build_runner(_cohort("deepseek", "https://y"), "deepseek")
     assert isinstance(other, HostedRunner)
-    assert other._cohort == "mistral"
+    assert other._cohort == "deepseek"
 
 
 def test_ollama_cohort_name_is_also_configurable() -> None:
@@ -284,7 +284,7 @@ def test_a_hosted_runtime_reports_no_memory_figure(
 ) -> None:
     """`memory_basis` exists so a column is never filled with a differently-meaning
     number. The memory of a machine we do not own is not one this evaluation has."""
-    monkeypatch.setenv("MISTRAL_API_KEY", "m-test")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
 
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
@@ -295,7 +295,7 @@ def test_a_hosted_runtime_reports_no_memory_figure(
             },
         )
 
-    runner = build_runner(_cohort("mistral", "https://api.mistral.ai/v1"), "mistral")
+    runner = build_runner(_cohort("deepseek", "https://api.deepseek.com"), "deepseek")
     assert isinstance(runner, HostedRunner)
     generation = _generate(runner, handler, monkeypatch)
     assert generation.telemetry.peak_memory_mb is None
@@ -1506,8 +1506,6 @@ def test_a_local_cohort_cannot_be_given_a_reasoning_effort() -> None:
 @pytest.mark.parametrize(
     ("provider", "effort"),
     [
-        ("mistral", "disabled"),
-        ("mistral", "low"),
         # Gemini 3.7 Flash accepts no off switch; `low` is its floor, a weaker claim.
         ("gemini", "disabled"),
         # Documented by DeepSeek and not the lever — 7% on V4 Pro — so not offered.
@@ -1546,15 +1544,15 @@ def test_a_runner_refuses_a_setting_rather_than_sending_without_it(
     the request without the control and record the answer as though it had."""
     from hip.eval.runners import RunnerUnavailable
 
-    monkeypatch.setenv("MISTRAL_API_KEY", "m-test")
-    runner = build_runner(_cohort("mistral", "https://x/v1"), "mistral")
+    monkeypatch.setenv("GEMINI_API_KEY", "goog-test")
+    runner = build_runner(_cohort("gemini", "https://x/v1beta"), "gemini")
     assert isinstance(runner, HostedRunner)
 
     def never(request: httpx.Request) -> httpx.Response:
         raise AssertionError("a request went out without its reasoning control")
 
     with pytest.raises(RunnerUnavailable, match="offers no reasoning_effort"):
-        _generate_as(runner, _at("mistral", "disabled"), never, monkeypatch)
+        _generate_as(runner, _at("gemini", "disabled"), never, monkeypatch)
 
 
 def test_the_probe_sends_the_configured_setting(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1609,13 +1607,8 @@ def test_the_repo_config_adds_variants_without_touching_a_benchmarked_candidate(
         "gemini-3.7-flash": "default",
         "gemini-3.7-flash-low": "low",
         "gemini-3.1-flash-lite": "default",
-        "mistral-small-4": "default",
         "deepseek-flash": "default",
         "deepseek-flash-nothink": "disabled",
-        "qwen3.7-flash": "default",
-        "qwen3.7-flash-nothink": "disabled",
-        "qwen3.7-plus": "default",
-        "qwen3.7-plus-nothink": "disabled",
         "gemma-4-e4b-q4": "default",
     }
     for model_id in evaluation.generation.preference["analyst"]:
@@ -1627,8 +1620,6 @@ def test_the_repo_config_adds_variants_without_touching_a_benchmarked_candidate(
         "deepseek-v4-pro",
         "gemini-3.1-flash-lite",
         "gemini-3.7-flash",
-        "mistral-small-4",
-        "mistral-large-3",
         "gemma-4-e4b-q4",
     }
     assert {evaluation.model(m).reasoning_effort for m in measured_in_v2} == {"default"}
@@ -2564,115 +2555,6 @@ def test_a_run_the_pinned_temperature_fully_controls_carries_no_sampling_note() 
     assert "temperature" not in text
 
 
-# --- Qwen, the fourth hosted provider, 2026-09-11 ----------------------------------
-
-
-def _qwen(monkeypatch: pytest.MonkeyPatch) -> HostedRunner:
-    monkeypatch.setenv("QWEN_API_KEY", "sk-ws-test")
-    runner = build_runner(_cohort("qwen", "https://x/compatible-mode/v1"), "qwen")
-    assert isinstance(runner, HostedRunner)
-    return runner
-
-
-def test_qwen_disabled_is_sent_as_enable_thinking_false_and_default_sends_nothing(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Qwen 3.5-3.8 think by default. The off switch is a top-level field over plain
-    HTTP — `extra_body` is only how the OpenAI SDK spells it."""
-    sent: list[dict[str, Any]] = []
-    runner = _qwen(monkeypatch)
-    answer = _recording(_openai_body("pinned-model-0731"), sent)
-
-    _generate_as(runner, _at("qwen", "disabled"), answer, monkeypatch)
-    assert sent[-1]["enable_thinking"] is False
-
-    _generate_as(runner, _at("qwen", "default"), answer, monkeypatch)
-    assert "enable_thinking" not in sent[-1]
-
-
-def test_a_qwen_thinking_answer_is_split_and_counted_as_the_provider_bills_it(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The shape `qwen3.7-flash-2026-07-15` returned on 2026-09-11: thinking under
-    `reasoning_content`, counted inside `completion_tokens`, like DeepSeek's."""
-    body = {
-        "model": "pinned-model-0731",
-        "choices": [
-            {
-                "message": {
-                    "content": "Housing is becoming less affordable.",
-                    "reasoning_content": "The packet shows three ratios...",
-                },
-                "finish_reason": "stop",
-            }
-        ],
-        "usage": {
-            "prompt_tokens": 2821,
-            "completion_tokens": 2497,
-            "completion_tokens_details": {"reasoning_tokens": 2268},
-        },
-    }
-    generation = _generate_as(
-        _qwen(monkeypatch), _at("qwen", "default"), _answering(body), monkeypatch
-    )
-
-    assert generation.error is None
-    assert generation.answer == "Housing is becoming less affordable."
-    assert generation.reasoning == "The packet shows three ratios..."
-    assert generation.telemetry.generation_tokens == 2497
-    assert generation.telemetry.reasoning_tokens == 2268
-    assert generation.telemetry.served_model == "pinned-model-0731"
-
-
-def test_the_qwen_candidates_are_pinned_snapshots_at_both_efforts() -> None:
-    """Pinning is what Qwen offers DeepSeek's slot: a dated snapshot, where DeepSeek
-    serves only aliases it repoints."""
-    import re
-
-    evaluation = load_evaluation(CONFIG_DIR)
-    qwen = evaluation.cohorts["qwen"]
-    assert qwen.endpoint is not None
-    # A key is bound to its region, and only Singapore has the free quota.
-    assert qwen.endpoint.startswith("https://dashscope-intl.aliyuncs.com/")
-    for model in qwen.models:
-        assert re.search(r"-\d{4}-\d{2}-\d{2}$", model.ref), model.id
-    efforts: dict[str, set[str]] = {}
-    for model in qwen.models:
-        efforts.setdefault(model.ref, set()).add(model.reasoning_effort)
-    assert list(efforts.values()) == [{"default", "disabled"}] * 2
-
-
-def test_the_report_holds_qwen_to_the_temperature_its_cards_give_for_each_mode() -> None:
-    """Qwen recommends 1.0 when thinking and 0.7 when not, so at the stability mode's 0.7
-    only the candidate that reasoned sits below its recommendation (#104, #105)."""
-    evaluation = load_evaluation(CONFIG_DIR)
-    thinking = _priced_generation("qwen3.7-flash", "qwen", prompt=100, output=40)
-    thinking = thinking.model_copy(
-        update={
-            "mode": "stability",
-            "telemetry": thinking.telemetry.model_copy(update={"reasoning_tokens": 30}),
-        }
-    )
-    direct = _priced_generation("qwen3.7-flash-nothink", "qwen", prompt=100, output=40)
-    direct = direct.model_copy(
-        update={"mode": "stability", "reasoning_effort": "disabled"}
-    )
-
-    text = render_report(evaluation, [_scenario()], [thinking, direct], [], [], run="t")
-    assert "**Every candidate was sent temperature 0.7**" in text
-    assert (
-        "it publishes none for 3.7; **Qwen3.7 Flash** was held to the same setting "
-        "regardless." in text
-    )
-
-    greedy = [g.model_copy(update={"mode": "deterministic"}) for g in (thinking, direct)]
-    text = render_report(evaluation, [_scenario()], greedy, [], [], run="t")
-    assert (
-        "**Qwen3.7 Flash** and **Qwen3.7 Flash (thinking off)** were held to the same "
-        "setting regardless." in text
-    )
-
-
 def test_prune_keeps_each_audiences_list_and_every_model_named_in_the_run(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -2974,3 +2856,110 @@ def test_retiring_keeps_a_copy_of_each_reading_it_removes(
     kept = (tmp_path / "retired" / "analyst-readings.jsonl").read_text().splitlines()
     assert [json.loads(line)["body"] for line in kept] == ["Values rose."]
     assert len(executed) == 1  # the delete
+
+
+# --- Anthropic, a generation provider from 2026-10-08 ---------------------------------
+
+
+def _anthropic(monkeypatch: pytest.MonkeyPatch) -> HostedRunner:
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    runner = build_runner(_cohort("anthropic", "https://x/v1"), "anthropic")
+    assert isinstance(runner, HostedRunner)
+    return runner
+
+
+def _claude_answer(**extra: object) -> dict[str, object]:
+    return {
+        "model": "pinned-model-0731",
+        "content": [
+            {"type": "thinking", "thinking": "Weigh the two figures."},
+            {"type": "text", "text": "Values rose 45.97%."},
+        ],
+        "stop_reason": "end_turn",
+        "usage": {
+            "input_tokens": 40,
+            "cache_read_input_tokens": 900,
+            "cache_creation_input_tokens": 60,
+            "output_tokens": 120,
+        },
+        **extra,
+    }
+
+
+def test_claude_is_asked_with_its_effort_and_no_temperature(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Claude Haiku 5.5 answers `temperature` with HTTP 400 (probed 2026-10-08), and its
+    low setting is the Messages API's `output_config.effort`, as the judge sends it."""
+    runner = _anthropic(monkeypatch)
+    sent: list[dict[str, Any]] = []
+    headers: list[httpx.Headers] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        sent.append(json.loads(request.content))
+        headers.append(request.headers)
+        return httpx.Response(200, json=_claude_answer())
+
+    _generate_as(runner, _at("anthropic", "low"), handler, monkeypatch)
+    assert sent[0]["output_config"] == {"effort": "low"}
+    assert "temperature" not in sent[0] and "top_p" not in sent[0]
+    assert sent[0]["max_tokens"] == LIMITS.max_output_tokens
+    assert headers[0]["x-api-key"] == "sk-ant-test"
+    assert headers[0]["anthropic-version"] == "2023-06-01"
+    _generate_as(runner, _at("anthropic", "default"), handler, monkeypatch)
+    assert "output_config" not in sent[1]
+
+
+def test_a_claude_answer_is_split_from_its_thinking_and_counted_as_billed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    generation = _generate_as(
+        _anthropic(monkeypatch),
+        _at("anthropic", "default"),
+        _answering(_claude_answer()),
+        monkeypatch,
+    )
+    assert generation.answer == "Values rose 45.97%."
+    assert generation.reasoning == "Weigh the two figures."
+    # The prompt is every input token, cached or not; output already holds the thinking.
+    assert generation.telemetry.prompt_tokens == 1000
+    assert generation.telemetry.cached_tokens == 900
+    assert generation.telemetry.generation_tokens == 120
+    assert generation.telemetry.served_model == "pinned-model-0731"
+
+
+def test_claude_answering_as_another_model_is_a_substitution(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    generation = _generate_as(
+        _anthropic(monkeypatch),
+        _at("anthropic", "default"),
+        _answering(_claude_answer(model="claude-successor")),
+        monkeypatch,
+    )
+    assert generation.answer == ""
+    assert generation.error and "substitution" in generation.error
+
+
+def test_claude_cut_off_before_any_answer_is_truncated(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    body = _claude_answer(stop_reason="max_tokens")
+    body["content"] = [{"type": "thinking", "thinking": "Still weighing."}]
+    generation = _generate_as(
+        _anthropic(monkeypatch),
+        _at("anthropic", "default"),
+        _answering(body),
+        monkeypatch,
+    )
+    assert generation.answer == ""
+    assert generation.truncated_reasoning
+
+
+def test_the_repo_config_benchmarks_haiku_at_low_effort_and_lists_it_nowhere() -> None:
+    evaluation = load_evaluation(CONFIG_DIR)
+    haiku = evaluation.model("claude-haiku-5-5-low")
+    assert (haiku.ref, haiku.reasoning_effort) == ("claude-haiku-5-5", "low")
+    assert (haiku.input_usd_per_mtok, haiku.output_usd_per_mtok) == (0.10, 0.50)
+    for listed in evaluation.generation.preference.values():
+        assert "claude-haiku-5-5-low" not in listed

@@ -1,11 +1,11 @@
-"""The hosted cohorts, served by four vendors behind one runner.
+"""The hosted cohorts, served by several vendors behind one runner.
 
-One class rather than four, because what differs between DeepSeek, Gemini, Mistral, and
-Qwen on this task is small and mechanical: the auth header, the path, and where the
-usage counters sit in the response. Everything that is not mechanical — retry policy,
-the error-is-a-finding contract, telemetry normalization, the refusal to invent a memory
-figure — is identical, and having it in one place is why the fourth provider, Qwen, was
-a `_Dialect` entry rather than a new module.
+One class rather than one per vendor, because what differs between them on this task is
+small and mechanical: the auth header, the path, and where the usage counters sit in the
+response. Everything that is not mechanical — retry policy, the error-is-a-finding
+contract, telemetry normalization, the refusal to invent a memory figure — is identical,
+and having it in one place is why a new provider is a `_Dialect` entry rather than a new
+module. Mistral and Qwen were two of them until 2026-10-08 (ARCHITECTURE #340).
 
 Raw `httpx` rather than three vendor SDKs, matching how `OllamaRunner` already talks to
 its runtime. Three SDKs would be three dependency surfaces, three auth abstractions, and
@@ -57,7 +57,7 @@ import random
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 
@@ -93,17 +93,18 @@ _PROBE_SAMPLING = SamplingParams(
 # model that stops this way with no answer was cut off mid-thought — a different finding
 # from a model that declined — and DeepSeek reasons in a separate field that the
 # tag-based check in `split_reasoning` never reads.
-_CUTOFF_REASONS = frozenset({"length", "MAX_TOKENS"})
+_CUTOFF_REASONS = frozenset({"length", "MAX_TOKENS", "max_tokens"})
 
 
 @dataclass(frozen=True)
 class _Dialect:
     """The parts of a provider's HTTP surface that are not shared.
 
-    `openai_compatible` selects the request and response shape: the OpenAI-shaped
-    providers put their token counters under `usage.prompt_tokens` /
-    `usage.completion_tokens`, while Gemini reports `usageMetadata.promptTokenCount` /
-    `candidatesTokenCount`.
+    `shape` selects the request and response format: the OpenAI-shaped providers put
+    their token counters under `usage.prompt_tokens` / `usage.completion_tokens`,
+    Gemini reports `usageMetadata.promptTokenCount` / `candidatesTokenCount`, and
+    Anthropic's Messages API `usage.input_tokens` / `output_tokens` over a list of
+    content blocks. `headers` are sent on every request beside the key.
 
     `reasoning` maps each non-default reasoning setting to the fields it adds — merged
     into the body for an OpenAI-shaped provider, into `generationConfig` for Gemini.
@@ -116,13 +117,18 @@ class _Dialect:
     models_path: str
     auth_header: str
     auth_prefix: str
-    openai_compatible: bool = True
+    shape: Literal["openai", "gemini", "anthropic"] = "openai"
     reasoning: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
+    headers: Mapping[str, str] = field(default_factory=dict)
+
+    @property
+    def openai_compatible(self) -> bool:
+        return bool(self.shape == "openai")
 
 
 _DIALECTS: dict[str, _Dialect] = {
-    # DeepSeek and Mistral both serve an OpenAI-shaped chat completions endpoint as
-    # their primary API, so neither needs a compatibility shim to reach it.
+    # DeepSeek serves an OpenAI-shaped chat completions endpoint as its primary API, so
+    # it needs no compatibility shim to reach it.
     "deepseek": _Dialect(
         chat_path="/chat/completions",
         models_path="/models",
@@ -135,14 +141,6 @@ _DIALECTS: dict[str, _Dialect] = {
         # 7% on `deepseek-v4-pro` (2026-09-06).
         reasoning={"disabled": {"thinking": {"type": "disabled"}}},
     ),
-    # No reasoning control: `high` would change the shape of `message.content`, which
-    # `_extract` does not parse. See `REASONING_CONTROLS` in `hip.config`.
-    "mistral": _Dialect(
-        chat_path="/chat/completions",
-        models_path="/models",
-        auth_header="Authorization",
-        auth_prefix="Bearer ",
-    ),
     # Gemini's native `generateContent` rather than its OpenAI compatibility layer.
     # The compatibility layer is a translation maintained for other people's clients:
     # it is the surface most likely to lag a model launch or to drop a field, and a
@@ -152,7 +150,7 @@ _DIALECTS: dict[str, _Dialect] = {
         models_path="/models",
         auth_header="x-goog-api-key",
         auth_prefix="",
-        openai_compatible=False,
+        shape="gemini",
         # The lowest `thinkingLevel` 3.7 Flash accepts: it refuses the documented
         # `minimal` with HTTP 400. Measured 2026-09-10 on Mercer County's packet, `low`
         # cut output from 2,655 tokens to 545 with no thinking tokens at all. Not the
@@ -161,21 +159,19 @@ _DIALECTS: dict[str, _Dialect] = {
         # published configuration should rest on the control the provider documents.
         reasoning={"low": {"thinkingConfig": {"thinkingLevel": "low"}}},
     ),
-    # Qwen through Alibaba Cloud Model Studio's OpenAI-compatible mode — the provider's
-    # own endpoint, not a shim over it. Its thinking arrives as DeepSeek's does: text
-    # under `reasoning_content`, and tokens counted inside `completion_tokens` with the
-    # share under `completion_tokens_details.reasoning_tokens`, so `_extract` and
-    # `_usage` read it unchanged. `enable_thinking` is a top-level field over plain
-    # HTTP; the OpenAI SDK's `extra_body` is only how a client library spells that.
-    # Measured 2026-09-11, one county packet: `qwen3.7-flash` reasoned for 2,268 of its
-    # 2,497 output tokens by default and for none of 161 with thinking off; Plus, 2,378
-    # of 2,796 against none of 224.
-    "qwen": _Dialect(
-        chat_path="/chat/completions",
+    # Anthropic's Messages API (Milestone 51's benchmark prep, 2026-10-08), for Claude
+    # Haiku 5.5 as a candidate: a US provider other than Google. The judge reaches the
+    # same API through the SDK; candidates come through here, so they are timed, priced,
+    # retried and checked for substitution like every other. `low` is the Messages
+    # API's `output_config.effort`, the control the judge already sends.
+    "anthropic": _Dialect(
+        chat_path="/messages",
         models_path="/models",
-        auth_header="Authorization",
-        auth_prefix="Bearer ",
-        reasoning={"disabled": {"enable_thinking": False}},
+        auth_header="x-api-key",
+        auth_prefix="",
+        shape="anthropic",
+        reasoning={"low": {"output_config": {"effort": "low"}}},
+        headers={"anthropic-version": "2023-06-01"},
     ),
 }
 
@@ -316,6 +312,7 @@ class HostedRunner:
         return {
             self._dialect.auth_header: f"{self._dialect.auth_prefix}{key}",
             "Content-Type": "application/json",
+            **self._dialect.headers,
         }
 
     def _body(
@@ -326,6 +323,16 @@ class HostedRunner:
         limits: EvalLimits,
     ) -> dict[str, Any]:
         reasoning = self._reasoning(model)
+        if self._dialect.shape == "anthropic":
+            # No sampling settings: Claude Haiku 5.5 answers `temperature` with HTTP 400,
+            # "deprecated for this model" (probed 2026-10-08), so it samples at
+            # Anthropic's own setting and the report says so (`_REFUSES_TEMPERATURE`).
+            return {
+                "model": model.ref,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": limits.max_output_tokens,
+                **reasoning,
+            }
         if self._dialect.openai_compatible:
             return {
                 "model": model.ref,
@@ -352,7 +359,7 @@ class HostedRunner:
         Only Gemini does (`hip.config.SERVICE_TIERS`, which config validates against),
         as a top-level `serviceTier` beside `contents`.
         """
-        if tier is None or self._dialect.openai_compatible:
+        if tier is None or self._dialect.shape != "gemini":
             return body
         return {**body, "serviceTier": tier}
 
@@ -418,9 +425,9 @@ class HostedRunner:
         served_model, fingerprint = self._served(data)
         cached_tokens = self._cached(data)
         service_tier = (
-            None
-            if self._dialect.openai_compatible
-            else (data.get("usageMetadata") or {}).get("serviceTier")
+            (data.get("usageMetadata") or {}).get("serviceTier")
+            if self._dialect.shape == "gemini"
+            else None
         )
         elapsed_ms = (time.perf_counter() - started) * 1000
 
@@ -600,6 +607,19 @@ class HostedRunner:
 
     def _extract(self, data: dict[str, Any]) -> tuple[str, str | None, str]:
         """The answer text, any separate reasoning channel, and the finish reason."""
+        if self._dialect.shape == "anthropic":
+            # Content is a list of blocks: `text` is the answer, `thinking` the model's
+            # reasoning, kept apart for the reason DeepSeek's is.
+            blocks = data.get("content") or []
+            text = "".join(
+                str(b.get("text") or "") for b in blocks if b.get("type") == "text"
+            )
+            thinking = "".join(
+                str(b.get("thinking") or "")
+                for b in blocks
+                if b.get("type") == "thinking"
+            )
+            return text, thinking or None, str(data.get("stop_reason") or "")
         if self._dialect.openai_compatible:
             choices = data.get("choices") or []
             if not choices:
@@ -635,6 +655,18 @@ class HostedRunner:
         more here than locally: they are what the bill is computed from, so the cost
         column is derived from the same numbers the invoice is.
         """
+        if self._dialect.shape == "anthropic":
+            # `input_tokens` excludes what the cache served or wrote, so the prompt is
+            # the three together; `output_tokens` already includes any thinking, which
+            # Anthropic does not count separately.
+            usage = data.get("usage") or {}
+            return (
+                int(usage.get("input_tokens") or 0)
+                + int(usage.get("cache_read_input_tokens") or 0)
+                + int(usage.get("cache_creation_input_tokens") or 0),
+                int(usage.get("output_tokens") or 0),
+                0,
+            )
         if self._dialect.openai_compatible:
             usage = data.get("usage") or {}
             details = usage.get("completion_tokens_details") or {}
@@ -669,6 +701,8 @@ class HostedRunner:
         them under `prompt_tokens_details.cached_tokens`; Gemini reports
         `cachedContentTokenCount`, for implicit caching as for an explicit cache.
         """
+        if self._dialect.shape == "anthropic":
+            return int((data.get("usage") or {}).get("cache_read_input_tokens") or 0)
         if self._dialect.openai_compatible:
             usage = data.get("usage") or {}
             details = usage.get("prompt_tokens_details") or {}
@@ -686,7 +720,7 @@ class HostedRunner:
         honest record of which model wrote a paragraph is the one the provider returns.
         OpenAI-shaped providers report it as `model`, Gemini as `modelVersion`.
         """
-        if self._dialect.openai_compatible:
+        if self._dialect.shape != "gemini":
             served = data.get("model")
             fingerprint = data.get("system_fingerprint")
         else:

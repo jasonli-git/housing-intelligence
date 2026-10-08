@@ -87,6 +87,8 @@ class Trial:
     # Why each answer before the last was refused and sent back for revision (#266):
     # empty where the first answer was the one judged.
     refusals: list[list[str]] = field(default_factory=list)
+    # The packet contract the model was given; None in trials kept before 2026-10-08.
+    packet_version: str | None = None
 
     def as_json(self) -> dict[str, object]:
         record = asdict(self)
@@ -238,10 +240,17 @@ def compare(
         for audience in audiences:
             for model_id in models:
                 result = trial(packet, evaluation, model_id, audience)
+                result.packet_version = packet.packet_version
                 trials.append(result)
                 if progress is not None:
                     progress(result)
     return trials
+
+
+def _versions(trials: Sequence[Trial]) -> str:
+    """The packet contracts the trials were given, as "1.5, ", where they recorded it."""
+    versions = sorted({t.packet_version for t in trials if t.packet_version})
+    return f"{', '.join(versions)}, " if versions else ""
 
 
 def _money(usd: float | None) -> str:
@@ -314,7 +323,8 @@ def render(
         f"# Readings side by side — {name}",
         "",
         f"Generated {on.isoformat()} by `hip eval readings`. Each model was given the "
-        "prompt, packet (1.4, with margins and rank ranges), service tier and gates "
+        f"prompt, packet ({_versions(trials)}with margins and rank ranges), service "
+        "tier and gates "
         "`hip explain` would give it, for "
         f"{len(regions)} counties: {', '.join(label for _, label in regions)}. Nothing "
         "was stored; a reading marked *refused* is shown with the rule it broke. "

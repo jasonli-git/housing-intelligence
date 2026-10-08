@@ -140,12 +140,15 @@ first raised, not where it must be done.
 
 ### Evaluation harness
 
-- [ ] **Gemini 3.7 Flash answers as 3.8.** (M51, 2026-10-07) The regeneration's first
-      model was skipped: asked for `gemini-3.7-flash`, Gemini answered as
-      `gemini-3.8-flash`, and the substitution guard refuses prose under the wrong name.
-      Every reading now comes from Flash-Lite, the owner's second choice (#262). Owner's
-      decision: pin 3.8 after a side-by-side (`hip eval readings`), or keep Flash-Lite
-      first.
+- [ ] **The rubric benchmark for the next consumer-reading list.** (M51, #341) Gemini
+      3.7 Flash answers as 3.8, so every reading now comes from Flash-Lite. The owner
+      chose a full rubric run before deciding, judged by Claude Opus 5.5, over: Gemini 3.8
+      Flash (low thinking), Gemini 3.1 Flash-Lite, DeepSeek Flash (thinking off) and
+      Claude Haiku 5.5, with 3.7 Flash's `v3` score as a reference from another judge.
+      Not run until the owner says go. Ready: Anthropic is a provider and Haiku 5.5 is
+      configured at low effort (#342); `hip eval models --probe` on 2026-10-08 passed
+      3.8 Flash and Haiku and flagged 3.7 as substituted. GLM and Kimi were considered
+      and dropped by the owner (2026-10-08).
 - [ ] **Salem has no current reading.** (M51) Flash-Lite and DeepSeek were refused by
       the gates (jargon, a population figure, survey figures without margins, four
       figures) and Gemma could not run (below), so Salem's 2026-10-05 reading stays,
@@ -604,8 +607,10 @@ first raised, not where it must be done.
       below); this is the part that matters and the part only you can do.
 
       **Rotate (yours; these cannot be done here).** Each in its own provider console:
-      **Qwen/DashScope**, pasted 2026-09-11. **DeepSeek**, **Gemini** and **Mistral**,
-      pasted 2026-09-06. **Census**, **FRED**, **BLS** and **Anthropic**, pasted in
+      **Qwen/DashScope**, pasted 2026-09-11, and **Mistral**, pasted 2026-09-06 — both
+      providers were removed on 2026-10-08 (#340), so revoke these rather than rotate,
+      and delete `MISTRAL_API_KEY` and `DASHSCOPE_API_KEY` from `.env`. **DeepSeek** and
+      **Gemini**, pasted 2026-09-06. **Census**, **FRED**, **BLS** and **Anthropic**, pasted in
       earlier sessions. Update `.env` after each.
 
       **The cache half is done, as a side effect.** `hip prune-raw --apply` on

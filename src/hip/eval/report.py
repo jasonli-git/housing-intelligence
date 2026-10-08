@@ -331,6 +331,10 @@ def _effort_note(priced: list[ModelSummary]) -> str:
 # with the name the report prints.
 _IGNORES_TEMPERATURE_WHILE_REASONING = {"deepseek": "DeepSeek"}
 
+# Providers whose models take no temperature at all, so none is sent (2026-10-08: Claude
+# Haiku 5.5 answers one with HTTP 400).
+_REFUSES_TEMPERATURE = {"anthropic": "Anthropic"}
+
 
 @dataclass(frozen=True)
 class _TemperatureAdvice:
@@ -338,7 +342,8 @@ class _TemperatureAdvice:
 
     Matched on the ref, because guidance is for a family of models rather than for
     everything a provider serves. `thinking` applies to a candidate that reasoned and
-    `direct` to one that did not, since Qwen recommends a different value for each.
+    `direct` to one that did not, since a family may recommend a different value for each
+    (Qwen did, until its provider was removed on 2026-10-08).
     """
 
     ref_prefix: str
@@ -354,17 +359,6 @@ _TEMPERATURE_ADVICE = (
         1.0,
         "Google recommends temperature 1.0 for Gemini 3 and warns that lower values can "
         "cause looping",
-    ),
-    # Qwen publishes no sampling guidance for 3.7, which is API-only: Model Studio's
-    # reference gives ranges, not recommendations. Its model cards for 3.6 and 3.8, the
-    # releases either side, agree — 1.0 thinking, 0.7 not — and unlike Qwen3's they do
-    # not warn against greedy decoding. Read 2026-09-11.
-    _TemperatureAdvice(
-        "qwen3.",
-        1.0,
-        0.7,
-        "Qwen recommends temperature 1.0 when thinking and 0.7 when not, in the model "
-        "cards for its 3.6 and 3.8 releases; it publishes none for 3.7",
     ),
 )
 
@@ -387,10 +381,10 @@ def _sampling_note(
     """What the pinned temperature did not control, or None where it controlled it all.
 
     Every candidate is sent one sampling setting, so that no row is sampled differently
-    from the rest (#104), and three providers depart from it: DeepSeek ignores
+    from the rest (#104), and two providers depart from it: DeepSeek ignores
     temperature while its models reason — so a reasoning and a non-reasoning DeepSeek
-    row differ in sampling as well as in reasoning — Google recommends 1.0 for Gemini 3,
-    and Qwen recommends 1.0 when thinking and 0.7 when not (#105). Derived from the
+    row differ in sampling as well as in reasoning — and Google recommends 1.0 for
+    Gemini 3 (#105). Derived from the
     run: the temperature from the sampling mode each generation records, and reasoning
     from its token counts. A run none of them is in, like `v1`, renders as it always
     has.
@@ -410,8 +404,12 @@ def _sampling_note(
     reasoned: dict[str, list[ModelSummary]] = defaultdict(list)
     held: dict[str, list[ModelSummary]] = defaultdict(list)
     advised: dict[_TemperatureAdvice, list[ModelSummary]] = defaultdict(list)
+    unsent: dict[str, list[ModelSummary]] = defaultdict(list)
     for summary in sorted(summaries.values(), key=lambda s: s.label):
         provider = evaluation.cohorts[evaluation.cohort_of(summary.model_id)].provider
+        if provider is not None and provider in _REFUSES_TEMPERATURE:
+            unsent[provider].append(summary)
+            continue
         if provider is not None and provider in _IGNORES_TEMPERATURE_WHILE_REASONING:
             (reasoned if summary.reasoning_tokens else held)[provider].append(summary)
         ref = evaluation.model(summary.model_id).ref
@@ -441,7 +439,23 @@ def _sampling_note(
             f"{advice.guidance}; {_names(below)} "
             f"{'was' if len(below) == 1 else 'were'} held to the same setting regardless."
         )
-    temperatures = sorted(set().union(*sent.values()))
+    for refusing, models in unsent.items():
+        vendor = _REFUSES_TEMPERATURE[refusing]
+        one = len(models) == 1
+        sentences.append(
+            f"{_names(models)} {'takes' if one else 'take'} no temperature, so none was "
+            f"sent and {'it was' if one else 'they were'} sampled at {vendor}'s own "
+            "setting."
+        )
+    temperatures = sorted(
+        set().union(
+            *(
+                values
+                for model_id, values in sent.items()
+                if not any(model_id == s.model_id for m in unsent.values() for s in m)
+            )
+        )
+    )
     if not sentences or not temperatures:
         return None
 
