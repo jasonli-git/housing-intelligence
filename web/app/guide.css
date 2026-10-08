@@ -23,3 +23,5 @@
 .evidence[open] { flex-basis: 100%; }
 .evidence ul { margin: .4rem 0; padding-left: 1.1rem; }
 .evidence-rule { color: var(--text-muted); margin: .3rem 0 0; }
+.guide-picker { position: relative; max-width: 28rem; margin: .6rem 0; }
+.guide-picker input { box-sizing: border-box; width: 100%; font: inherit; font-size: 16px; padding: .55rem .7rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-card); color: var(--text-primary); }

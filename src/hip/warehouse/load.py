@@ -749,6 +749,93 @@ def load_work_destinations(
         )
 
 
+def load_migration_flows(
+    engine: Engine,
+    duckdb_path: Path,
+    *,
+    releases: Sequence[ReleaseProvenance],
+    staging_table: str = "main_staging.stg_migration_flows",
+) -> int:
+    """Replace `migration_flows` from the staged lists (Milestone 50, #333).
+
+    Replaced whole, as `work_destinations` is. Each row cites the IRS file it was read
+    from: the inflow file for arrivals, the outflow file for leavers. An unresolvable
+    county aborts the replacement. Returns 0, changing nothing, when the model has not
+    been staged.
+    """
+    schema, table = staging_table.split(".")
+    with duckdb_session(duckdb_path) as duck:
+        staged = {
+            row[0]
+            for row in duck.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = ?",
+                [schema],
+            ).fetchall()
+        }
+        if table not in staged:
+            return 0
+        rows = duck.execute(
+            f"""
+            SELECT geoid, direction, rank, other_geoid, other_name, returns, people,
+                   agi_per_return, share, total_returns, year, release_layer,
+                   release_vintage
+            FROM {staging_table}
+            """
+        ).fetchall()
+
+    keys = (
+        "geoid",
+        "direction",
+        "rank",
+        "other_geoid",
+        "other_name",
+        "returns",
+        "people",
+        "agi_per_return",
+        "share",
+        "total_returns",
+        "year",
+        "layer",
+        "vintage",
+    )
+    with engine.begin() as conn:
+        release_ids = _release_ids(conn, releases)
+        bound_rows = [dict(zip(keys, row, strict=True)) for row in rows]
+        if not bound_rows:
+            raise ValueError("migration flows: empty staged lists")
+        for row in bound_rows:
+            key = ("irs_migration", str(row["layer"]), str(row["vintage"]))
+            if key not in release_ids:
+                raise ValueError(f"migration flows: missing exact release {key}")
+            row["release_id"] = release_ids[key]
+            for field in ("returns", "people", "total_returns", "year", "rank"):
+                row[field] = int(row[field])
+        conn.execute(text("DELETE FROM migration_flows"))
+        for row in bound_rows:
+            count = conn.execute(
+                text(
+                    """
+                INSERT INTO migration_flows
+                    (region_id, direction, rank, other_region_id, other_geoid,
+                     other_name, returns, people, agi_per_return, share, total_returns,
+                     year, release_id)
+                SELECT r.region_id, :direction, :rank, o.region_id, :other_geoid,
+                       :other_name, :returns, :people, :agi_per_return, :share,
+                       :total_returns, :year, :release_id
+                FROM regions r
+                LEFT JOIN regions o ON o.level = 'county' AND o.geoid = :other_geoid
+                WHERE r.level = 'county' AND r.geoid = :geoid
+                """
+                ),
+                row,
+            ).rowcount
+            if count != 1:
+                raise ValueError(f"migration flows: missing county {row['geoid']}")
+        return int(
+            conn.execute(text("SELECT count(*) FROM migration_flows")).scalar_one()
+        )
+
+
 def load_affordable_housing(
     engine: Engine, duckdb_path: Path, *, releases: Sequence[ReleaseProvenance]
 ) -> int:

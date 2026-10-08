@@ -153,6 +153,15 @@ NOT_HOUSING: frozenset[str] = frozenset(
         "pep_population",
         "unemployment_rate",
         "net_migration_returns",
+        *(
+            "irs_inflow_returns",
+            "irs_outflow_returns",
+            "irs_net_migration_per_1000",
+            "irs_inflow_agi_per_return",
+            "irs_outflow_agi_per_return",
+            "irs_nonmigrant_agi_per_return",
+            "irs_arrival_income_ratio",
+        ),
         # Milestone 34's people and households: who lives here and how they get to
         # work, context for the homes rather than the homes.
         "acs_avg_household_size",

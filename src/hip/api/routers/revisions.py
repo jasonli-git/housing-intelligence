@@ -120,7 +120,7 @@ WITH figure AS (
            r.region_id, r.metric_id, r.period_start,
            (array_agg(r.old_value ORDER BY r.revision_id))[1] AS old_value,
            (array_agg(r.new_value ORDER BY r.revision_id DESC))[1] AS new_value
-    FROM fact_revision r
+    FROM fact_revision_shown r
     WHERE (r.revised_at AT TIME ZONE 'UTC')::date = ANY(:days)
     GROUP BY 1, 2, 3, 4
 ),
@@ -214,7 +214,7 @@ def revision_report(
             """
             SELECT min(revised_at) AS recorded_since,
                    count(DISTINCT (revised_at AT TIME ZONE 'UTC')::date) AS total_batches
-            FROM fact_revision
+            FROM fact_revision_shown
             """
         )
     ).one()
@@ -223,7 +223,7 @@ def revision_report(
             text(
                 """
                 SELECT DISTINCT (revised_at AT TIME ZONE 'UTC')::date AS revised_on
-                FROM fact_revision
+                FROM fact_revision_shown
                 ORDER BY revised_on DESC
                 LIMIT :batches
                 """
@@ -267,7 +267,7 @@ def revision_report(
                 """
                 SELECT m.metric_id, m.note,
                        (SELECT min((r.revised_at AT TIME ZONE 'UTC')::date)
-                        FROM fact_revision r
+                        FROM fact_revision_shown r
                         WHERE r.metric_id = m.metric_id
                           AND (r.revised_at AT TIME ZONE 'UTC')::date >= m.changed_on
                        ) AS applied_on

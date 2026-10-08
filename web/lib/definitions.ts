@@ -508,6 +508,34 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "How many more households moved in than moved out, counted from the addresses on federal tax returns.",
     why: "People moving in add demand for homes; people leaving can be a sign that it has become too dear.",
   },
+  irs_inflow_returns: {
+    what: "Households that moved into the county from somewhere else in the year, counted from federal tax returns.",
+    why: "Every one of them needed a home here. People who file no return, such as many retirees, are not counted.",
+  },
+  irs_outflow_returns: {
+    what: "Households that moved out of the county in the year, counted from federal tax returns.",
+    why: "Set against those moving in, it says whether the county is gaining or losing households.",
+  },
+  irs_net_migration_per_1000: {
+    what: "Households moving in less those moving out, for every 1,000 tax returns filed in the county the year before.",
+    why: "Compares counties of different sizes: a positive figure means the county is gaining households by moves.",
+  },
+  irs_inflow_agi_per_return: {
+    what: "The average income reported by households that moved in, from federal tax returns.",
+    why: "Newcomers with more to spend can bid more for homes. An average, so a few very high earners can lift it.",
+  },
+  irs_outflow_agi_per_return: {
+    what: "The average income reported by households that moved out, from federal tax returns.",
+    why: "Who is leaving: higher earners moving away, or households priced out.",
+  },
+  irs_nonmigrant_agi_per_return: {
+    what: "The average income reported by households that filed in the county both years.",
+    why: "The yardstick for newcomers: what the households already here earn.",
+  },
+  irs_arrival_income_ratio: {
+    what: "The average income of households moving in, as a multiple of the average for those who stayed.",
+    why: "Above 1×, newcomers bring more income than residents have, which can add pressure on prices. It does not show that they caused any rise.",
+  },
   modiv_residential_parcels: {
     what: "How many one- to four-family properties are on the tax roll. A parcel is a lot and what stands on it.",
     why: "It shows how large a place’s stock of houses is, as against its apartments.",

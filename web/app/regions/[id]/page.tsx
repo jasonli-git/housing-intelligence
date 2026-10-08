@@ -5,6 +5,7 @@ import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { AffordableHousing, HousingHelpDisclosure } from "@/components/AffordableHousing";
 import { HomeSales } from "@/components/HomeSales";
 import { HomeChecks } from "@/components/HomeChecks";
+import { WhoIsMoving } from "@/components/WhoIsMoving";
 import { FloodRisk } from "@/components/FloodRisk";
 import { GettingAround } from "@/components/GettingAround";
 import { MortgageLending } from "@/components/MortgageLending";
@@ -210,7 +211,7 @@ export default async function RegionPage({
     region.level === "municipality"
       ? (region.ancestors.find((a) => a.level === "county") ?? null)
       : region;
-  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations, similar, community] = await Promise.all([
+  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations, similar, community, migration] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -242,6 +243,8 @@ export default async function RegionPage({
     // Milestone 46: towns like this one but cheaper; a town's only.
     region.level === "municipality" ? api.similarPlaces(regionId) : Promise.resolve(null),
     api.community(regionId),
+    // Milestone 50: who moves in and out of the place's county.
+    api.migration(regionId),
   ]);
   // A town or ZIP reads HUD's county Fair Market Rents from its county's packet: HUD sets
   // them for the county's area, and only a county page carries them (Milestone 35).
@@ -585,6 +588,12 @@ export default async function RegionPage({
         levels={packet.levels}
       />
       </section>
+      </QuietDisclosure>
+      )}
+
+      {migration && (
+      <QuietDisclosure enabled={quiet} title="Who is moving here" note="Households moving in and out of the county, from tax returns">
+        <WhoIsMoving name={name} data={migration} />
       </QuietDisclosure>
       )}
 

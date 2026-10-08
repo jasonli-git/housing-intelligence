@@ -103,6 +103,7 @@ from hip.warehouse.load import (
     load_affordable_housing,
     load_facts,
     load_income_limits,
+    load_migration_flows,
     load_region_identifiers,
     load_water_systems,
     load_work_destinations,
@@ -547,7 +548,9 @@ def prune_raw(
                     "   OR EXISTS (SELECT 1 FROM water_systems w "
                     "              WHERE w.release_id = sr.release_id) "
                     "   OR EXISTS (SELECT 1 FROM work_destinations d "
-                    "              WHERE d.release_id = sr.release_id)"
+                    "              WHERE d.release_id = sr.release_id) "
+                    "   OR EXISTS (SELECT 1 FROM migration_flows f "
+                    "              WHERE f.release_id = sr.release_id)"
                 )
             ).all()
             if row[0]
@@ -1192,6 +1195,12 @@ def load(
         get_engine(), settings.duckdb_path, releases=fact_provenance
     )
     typer.echo(f"work destinations: {destination_rows:,}")
+    # Where each county's movers came from and went to (Milestone 50), citing the IRS
+    # inflow or outflow file each row was read from.
+    flow_rows = load_migration_flows(
+        get_engine(), settings.duckdb_path, releases=fact_provenance
+    )
+    typer.echo(f"migration flows: {flow_rows:,}")
     assistance_rows = load_affordable_housing(
         get_engine(), settings.duckdb_path, releases=fact_provenance
     )

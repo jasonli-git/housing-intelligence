@@ -20,18 +20,22 @@ const REPOSITORY = "https://github.com/jasonli-git/housing-intelligence";
  * `Jason Li` navigates in place, as jasonli.app's own project links do: the two are one
  * ecosystem, not a site and an external one. Search replaced the county picker in
  * Milestone 23, and the GitHub mark joined it so a reader can reach the repository behind
- * every figure from any page. The property-tax lookup (Milestone 37) is the one page
- * linked from the bar, as a short pill beside the icons; the theme is one button since
- * #292.
+ * every figure from any page. The property-tax lookup (Milestone 37) and the buyer's
+ * guide (Milestone 49) are the pages linked from the bar, as short pills beside the
+ * icons — tools for any place rather than New Jersey's budget finder; the theme is one
+ * button since #292.
  */
 export function Masthead({
   affordability,
   taxActive = false,
+  guideActive = false,
   budgetLabel = "Find places · NJ",
 }: {
   affordability: AffordabilityControl;
   /** On the property-tax lookup itself, whose link the bar marks as the current page. */
   taxActive?: boolean;
+  /** On the buyer's guide itself. */
+  guideActive?: boolean;
   budgetLabel?: string;
 }) {
   const budgetContent = <>
@@ -78,6 +82,15 @@ export function Masthead({
             >
               <span className="bar-link-long">Property tax</span>
               <span className="bar-link-short" aria-hidden="true">Tax</span>
+            </Link>
+            <Link
+              className="bar-link"
+              href="/guide"
+              aria-label="Buyer’s guide"
+              aria-current={guideActive ? "page" : undefined}
+            >
+              <span className="bar-link-long">Buyer’s guide</span>
+              <span className="bar-link-short" aria-hidden="true">Guide</span>
             </Link>
           </div>
           <div className="bar-tools">

@@ -14,11 +14,12 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — between milestones (2026-10-07)
+## Now — Milestone 50 in review (2026-10-07)
 
-Milestone 49 is merged and deployed as 0.47.0 (ARCHITECTURE #328–#331). Next:
-Milestone 50, migration-driven demand, only when asked. Milestone 44 waits on how to read
-DCA's dashboard; radon waits on NJDEP.
+Milestone 50, migration-driven demand, is built on `milestone/m50-migration-demand` as
+0.48.0 (ARCHITECTURE #332–#335), PR open, not merged. The warehouse is migrated (0031,
+0032) and loaded. After merge: `make publish`, `make deploy`, `make check-live`, then
+`make clean-dist`. Next: Milestone 51, relationship facts, only when asked.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000. A new
 environment needs the FCC summary ZIP in `data/manual/fcc_bdc/` (ARCHITECTURE #322).
@@ -44,15 +45,11 @@ first raised, not where it must be done.
       community inventory's suppressions, agency months or CDC intervals; the coverage
       for those is in the M47 handoff until the check reads `community_records`.
 
-- [ ] **`/changes` lists floating-point noise as revisions.** (found 2026-10-06 in
-      Milestone 45) Restaging recomputes a figure from the same release with its sums in
-      a different order, and the revision trigger records any difference: 2,355 figures
-      on 2026-10-06 and 2,451 on 2026-10-04 (Milestone 40's shares of homes), 181 on
-      2026-10-02–03 (`nj_effective_tax_rate`), none larger than 4e-15. `fema_flood_claims_paid`
-      on 2026-10-04 moved by up to 1e-5 (257 above 1e-9). Owner's decision: a tolerance in
-      the trigger (migration), a filter where `/changes` reads them, or both; and whether
-      to delete the noise rows already recorded, which `fact_revision`'s append-only rule
-      would otherwise keep.
+- [ ] **HMDA's weighted median can move without new data.** (found 2026-10-07 in
+      Milestone 50) A reload over unchanged files recorded one revision: a ZIP's 2023
+      `hmda_median_rate` from 6.75 to 6.825. Likely a tie in `stg_hmda_lending`'s
+      weighted median resolved by row order; check its ORDER BY breaks ties
+      deterministically, then label the fix on `/changes` (`method_changes`).
 
 - [ ] **BPU reliability covers JCP&L only.** (M42, #308) ACE's 2024 annual filing was
       found but not imported; PSE&G's and Rockland's are unverified, and the BPU portal
@@ -63,8 +60,9 @@ first raised, not where it must be done.
       Monmouth and Somerset carry signed weights or costs in DOE's file; withheld, not
       zeroed, until DOE explains them.
 - [ ] **Readings may be stale after M42.** Not regenerated.
-- [ ] **Readings may be stale after M49.** `sr1a_turnover_per_1000` joins every packet
-      that has sales; the readings were not regenerated.
+- [ ] **Readings may be stale after M49 and M50.** `sr1a_turnover_per_1000` joins every
+      packet that has sales, and seven `irs_*` figures every county's; the readings were
+      not regenerated (the owner's choice, 2026-10-07).
 
 - [ ] **LIHTC is downloaded by hand each spring.** (M41, #307) HUD's release page
       answers scripts with an empty 202, so discovery reads `unreachable`. When HUD
@@ -204,8 +202,9 @@ first raised, not where it must be done.
 - [ ] **Unit tests for the source adapters.** (M3; narrowed 2026-09-27) Coverage has
       grown: TIGER, MOD-IV, SR1A and the NJ tax rates have their own tests, and
       `tests/test_sources.py` drives the requests of ACS, PEP, permits, Fair Market Rents
-      and CHAS and the parsing of the last two. Zillow's ZHVI and ZORI, FRED, BLS, FHFA
-      and IRS still have nothing that reads a stubbed response, so a publisher changing a
+      and CHAS and the parsing of the last two, and `tests/test_migration.py` the IRS's
+      requests, discovery and file shape (M50). Zillow's ZHVI and ZORI, FRED, BLS and
+      FHFA still have nothing that reads a stubbed response, so a publisher changing a
       file's shape surfaces as a pipeline failure rather than a test failure.
       `test_nj_modiv.py` is the pattern to copy — a `MockTransport` subclass, no network.
 

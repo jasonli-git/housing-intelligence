@@ -66,6 +66,16 @@ VALUE_BOUNDS = {
     "unemployment_rate": (0.0, 60.0),
     # Net migration is a signed difference and can legitimately be large and negative.
     "net_migration_returns": (-1_000_000.0, 1_000_000.0),
+    # Milestone 50. Rates per 1,000 returns: New Jersey's counties ran -20 to +15 from
+    # 2018 to 2023, so 200 either way would be a parse error, not a move. Incomes are
+    # means per return; the ratio is arrivals' over stayers' (0.6 to 1.7 measured).
+    "irs_inflow_returns": (0.0, 1_000_000.0),
+    "irs_outflow_returns": (0.0, 1_000_000.0),
+    "irs_net_migration_per_1000": (-200.0, 200.0),
+    "irs_inflow_agi_per_return": (5_000.0, 5_000_000.0),
+    "irs_outflow_agi_per_return": (5_000.0, 5_000_000.0),
+    "irs_nonmigrant_agi_per_return": (5_000.0, 5_000_000.0),
+    "irs_arrival_income_ratio": (0.1, 10.0),
     # MOD-IV aggregates. An assessment is not a market value, so the floor is well below
     # anything Zillow would report: municipalities that have not revalued in decades
     # carry assessments at a fraction of market.

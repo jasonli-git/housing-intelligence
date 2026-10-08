@@ -22,6 +22,7 @@ export function formatValue(value: number, unit: string): string {
   if (unit === "minutes") return `${value.toFixed(1)} min`;
   // Milestone 39: net homes added per 1,000 homes standing.
   if (unit === "per_1000_homes") return `${value.toFixed(1)} per 1,000 homes`;
+  if (unit === "per_1000_returns") return `${value.toFixed(1)} per 1,000 returns`;
   return value.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
 
@@ -120,7 +121,12 @@ export const SHARE_METRICS: ReadonlySet<string> = new Set([
   "modiv_vacant_land_share",
 ]);
 
-export const MULTIPLE_METRICS: ReadonlySet<string> = new Set(["price_to_income", "price_to_ami"]);
+export const MULTIPLE_METRICS: ReadonlySet<string> = new Set([
+  "price_to_income",
+  "price_to_ami",
+  // Milestone 50: arrivals' mean income over stayers'.
+  "irs_arrival_income_ratio",
+]);
 
 /**
  * A metric's value as the dashboard shows it: a share as a percentage, a multiple with

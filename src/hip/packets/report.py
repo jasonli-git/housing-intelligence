@@ -116,7 +116,10 @@ SHARE_METRICS = frozenset(
         "modiv_vacant_land_share",
     }
 )
-MULTIPLE_METRICS = frozenset({"price_to_income", "price_to_ami"})
+MULTIPLE_METRICS = frozenset(
+    # Milestone 50: arrivals' mean income over stayers'.
+    {"price_to_income", "price_to_ami", "irs_arrival_income_ratio"}
+)
 
 
 def format_value(value: float, unit: str) -> str:
@@ -142,6 +145,9 @@ def format_value(value: float, unit: str) -> str:
     # Milestone 39: net homes added per 1,000 homes standing.
     if unit == "per_1000_homes":
         return f"{value:.1f} per 1,000 homes"
+    # Milestone 50: net moves per 1,000 tax returns.
+    if unit == "per_1000_returns":
+        return f"{value:.1f} per 1,000 returns"
     formatted = f"{value:,.1f}"
     return formatted[:-2] if formatted.endswith(".0") else formatted
 

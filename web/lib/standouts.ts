@@ -32,6 +32,8 @@ const SIZE_COUNTS: ReadonlySet<string> = new Set([
   "modiv_residential_parcels",
   "permits_total_units",
   "net_migration_returns",
+  "irs_inflow_returns",
+  "irs_outflow_returns",
 ]);
 
 export type StandOutGroup = "leads" | "lags" | "value";

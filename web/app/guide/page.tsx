@@ -23,7 +23,7 @@ export default async function GuidePage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} />
+      <Masthead affordability={{ kind: "route" }} guideActive />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool guide-page">
         <header className="page-head" data-kind="tool">
           <div>

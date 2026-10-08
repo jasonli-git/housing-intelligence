@@ -21,6 +21,7 @@ from hip.api.routers import (
     income_limits,
     infrastructure,
     metrics,
+    migration,
     packets,
     regions,
     revisions,
@@ -55,6 +56,7 @@ app.include_router(revisions.router)
 app.include_router(income_limits.router)
 app.include_router(water_systems.router)
 app.include_router(work_destinations.router)
+app.include_router(migration.router)
 app.include_router(similar_places.router)
 app.include_router(infrastructure.router)
 app.include_router(community.router)

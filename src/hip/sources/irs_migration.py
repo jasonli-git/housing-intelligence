@@ -4,10 +4,10 @@ Published as origin→destination pairs: one row per (destination county, origin
 with the number of returns, exemptions, and aggregate AGI that moved. Files are named by
 the two tax years compared — `countyinflow2122.csv` covers 2021→2022.
 
-The warehouse stores only **net returns per county** (`net_migration_returns`), because
-a flow needs two regions and `fact_metric_observation` has one. The full pair matrix
-stays in the Parquet and DuckDB tiers, ready to promote to a `fact_migration_flow` table
-when migration-driven demand analysis needs it — see the note in TODO.md.
+The warehouse holds each county's moves in, out and staying, with the movers' incomes, as
+facts (`stg_irs_migration`), and its ten largest origins and destinations in the newest
+pair as a list (`migration_flows`, from `stg_migration_flows`): a flow needs two regions
+and `fact_metric_observation` has one (Milestone 50, ARCHITECTURE #332-#333).
 
 Both directions are fetched: net is inflow minus outflow, and computing it from one file
 alone is not possible.
