@@ -396,8 +396,8 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
 `reports/` is machine-local output, but two sets are published so the claims above can be
 read without building the warehouse first: the
 [21 county reports](reports/regions/5y/) and the model-evaluation reports for
-[`v1`](reports/evaluation/v1.md), [`v2`](reports/evaluation/v2.md) and
-[`v3`](reports/evaluation/v3.md). All stay rebuildable — the commands below overwrite
+[`v1`](reports/evaluation/v1.md), [`v2`](reports/evaluation/v2.md),
+[`v3`](reports/evaluation/v3.md) and [`v4`](reports/evaluation/v4.md). All stay rebuildable — the commands below overwrite
 them — and the excerpts here link to the full text.
 
 **The region-report excerpt below is dated, and the linked file is the live version.**
@@ -457,14 +457,19 @@ memory, and the criteria each score was graded against.
 | [`v1`](reports/evaluation/v1.md) | 2026-08-14 | 120 generations, 8 local models | Gemma 4 E4B (Q4_K_M, local) | 3.21/4.00 | 0.0% |
 | [`v2`](reports/evaluation/v2.md) | 2026-09-06 | 105 generations, 7 models, hosted providers enter | Gemini 3.7 Flash (hosted) | 3.56/4.00 | 0.0% |
 | [`v3`](reports/evaluation/v3.md) | 2026-09-11 | 165 generations, 11 models, reasoning effort measured | Gemini 3.7 Flash, low thinking | 3.77/4.00 | 0.0% |
+| [`v4`](reports/evaluation/v4.md) | 2026-10-08 | 60 generations, 4 models, new judge (Opus 5.5), packet 1.5 | Gemini 3.8 Flash, low thinking | 3.48/4.00 | 0.0% |
 
-**The story the three runs tell.** `v1` asked which model this machine could run, and
+**The story the four runs tell.** `v1` asked which model this machine could run, and
 answered with a 4-billion-parameter local one — chosen on measured performance, not
 reputation. `v2` opened the question to hosted providers and the score moved 3.21 to
 3.56 while throughput went from 28.6 to 387.4 tokens a second, which is what made
 regenerating a whole state affordable. `v3` stopped treating reasoning as a property of
 a model and started treating it as a setting: the same Gemini tier at *low* thinking
-scored higher than at its default, 3.77 against 3.56, and the run cost about $6.
+scored higher than at its default, 3.77 against 3.56, and the run cost about $6. `v4`
+asked again after Google began serving 3.7 Flash as 3.8: 3.8 at low thinking ranked first
+at 3.48, Claude Haiku 5.5 second at 3.34 for a sixth of the price. The judge and packet
+both changed, so `v4` is not on `v3`'s scale — Flash-Lite held at 3.10 and 3.08 while
+DeepSeek fell from 3.57 to 3.22.
 
 **What did not move is the point.** No selected model has ever stated a figure its packet
 did not carry. The deterministic bar comes first and is counted, not graded — any model

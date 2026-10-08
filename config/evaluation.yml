@@ -31,7 +31,12 @@ limits:
   # Sized to the payload, not to the machine. A county packet is 6,043 tokens as JSON;
   # 4096 silently truncated it with no error and no warning, leaving models to answer
   # from two-thirds of a packet.
-  context_tokens: 12288
+  #
+  # 12,288 → 16,384 on 2026-10-08: Milestones 49-51 grew a county's Markdown packet to
+  # about 8,350 tokens, which with 6,000 reserved for output passed 12,288, so run `v4`
+  # refused every scenario and Gemma, the local last resort in `hip explain`, could not
+  # take Salem's packet. 16,384 holds the largest county packet with its output.
+  context_tokens: 16384
   # Covers reasoning *and* answer, because reasoning models spend it before emitting a
   # word. Raised twice, each time from measurement rather than guesswork:
   #

@@ -14,20 +14,12 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 51 in review (2026-10-07)
+## Now — choosing the consumer-reading model from `v4` (2026-10-08)
 
-Milestone 51, relationship facts, is built on `milestone/m51-relationship-facts` as
-0.49.0 (ARCHITECTURE #336–#339), PR open, not merged. The warehouse is migrated (0033),
-loaded and analysed, and 20 of the 21 county readings were regenerated against packet
-1.5 (see the reading items under Open).
-After merge: `make publish`, `make deploy`, `make check-live`, then `make clean-dist`.
-Next: Milestone 52, historical persistence facts, only when asked.
-
-**To resume:** `make db-up` for Postgres; `make api` for the API on 8000. A new
-environment needs the FCC summary ZIP in `data/manual/fcc_bdc/` (ARCHITECTURE #322).
-
-Open items a planned milestone now covers say so with **Scheduled: Milestone N**. They
-stay here until that milestone starts and takes them into `Now`.
+Milestone 51 is merged and deployed. Benchmark `v4` is judged and on
+`change/benchmark-v4` (ARCHITECTURE #343, `reports/evaluation/v4.md`), PR open. Next: the
+owner picks the preference list, then Salem's reading is retried and the causal gate's
+over-refusals are decided (Open, Evaluation harness). Milestone 52 waits behind them.
 
 ## Open
 
@@ -140,24 +132,28 @@ first raised, not where it must be done.
 
 ### Evaluation harness
 
-- [ ] **The rubric benchmark for the next consumer-reading list.** (M51, #341) Gemini
-      3.7 Flash answers as 3.8, so every reading now comes from Flash-Lite. The owner
-      chose a full rubric run before deciding, judged by Claude Opus 5.5, over: Gemini 3.8
-      Flash (low thinking), Gemini 3.1 Flash-Lite, DeepSeek Flash (thinking off) and
-      Claude Haiku 5.5, with 3.7 Flash's `v3` score as a reference from another judge.
-      Not run until the owner says go. Ready: Anthropic is a provider and Haiku 5.5 is
-      configured at low effort (#342); `hip eval models --probe` on 2026-10-08 passed
-      3.8 Flash and Haiku and flagged 3.7 as substituted. GLM and Kimi were considered
-      and dropped by the owner (2026-10-08).
+- [ ] **Choose the consumer-reading preference list from `v4`.** (#343) Run 2026-10-08,
+      judged by Opus 5.5 (`reports/evaluation/v4.md`): Gemini 3.8 Flash (low) 3.48,
+      Claude Haiku 5.5 (low) 3.34 at a sixth of 3.8's price, DeepSeek Flash (thinking
+      off) 3.22, Gemini 3.1 Flash-Lite 3.08. 3.7 Flash's `v3` 3.77 is from another judge
+      and packet. The owner's decision; `config/evaluation.yml` changes after it.
+- [ ] **The causal gate refuses ratio narration the packet supplies.** (M51, #343) In
+      `v4`, 11 of the 13 flagged sentences explain a ratio's move by its two sides — the
+      one case `ratio_split` allows — but name the ratio by label ("the shift in Home value
+      to household income occurred because…") rather than by figure, which
+      `hip.packets.causal.causal_problems` requires; 2 more are methodological ("because
+      the margin of error exceeds the estimate"). `hip explain` would refuse all 13.
+      Decide whether a ratio's label counts as citing it, and whether a sentence citing
+      only a margin is exempt.
 - [ ] **Salem has no current reading.** (M51) Flash-Lite and DeepSeek were refused by
       the gates (jargon, a population figure, survey figures without margins, four
       figures) and Gemma could not run (below), so Salem's 2026-10-05 reading stays,
       marked out of date. Retry once the first model is settled.
-- [ ] **Gemma's context window no longer holds every packet.** (M51) Packet 1.5's
-      relationships pushed Salem's prompt past `limits.context_tokens` (12,288,
-      `config/evaluation.yml`), so the local last resort failed rather than truncate.
-      Measure the largest county prompt and Gemma's memory at a larger window before
-      raising it.
+- [ ] **Measure Gemma at the 16,384-token window.** (M51, #343) `limits.context_tokens`
+      went from 12,288 to 16,384 so `v4` could hold packet 1.5, and the gguf cohort, which
+      has no `generation_limits`, gets the same window in `hip explain`. Its peak memory
+      there is not yet measured; run Salem through Gemma before relying on it as the last
+      resort.
 
 - [ ] **A reading's claims without a figure go unchecked.** (#275, 2026-10-01) Gemini's
       test reading of Hudson said rents take "a particularly large share of household
