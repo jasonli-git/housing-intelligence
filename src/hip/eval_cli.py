@@ -312,6 +312,13 @@ def judge_command(
             help="Collect an already-submitted batch instead of sending a new one.",
         ),
     ] = None,
+    model: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--model",
+            help="Judge only these model ids, keeping the run's other judgments.",
+        ),
+    ] = None,
 ) -> None:
     """Grade generations against the rubric. This is the only command that costs money."""
     from hip.eval.judge import collect_batch, judge_batch, judge_sync, measured_cost
@@ -329,6 +336,12 @@ def judge_command(
 
     scenarios = {s.key: s for s in load_scenarios(run)}
     generations = [g for g in load_generations(run) if not g.error]
+    # Candidates added to a judged run are judged alone, so the verdicts already paid
+    # for are neither billed again nor re-drawn: the judge is not deterministic, and a
+    # second pass would move scores the run has already reported (#344). `--batch-id`
+    # needs the same `--model` the batch was sent with, since it indexes by position.
+    if model:
+        generations = [g for g in generations if g.model_id in model]
     if limit:
         generations = generations[:limit]
     if not generations:
@@ -346,7 +359,7 @@ def judge_command(
         index = {f"g{i}": generation for i, generation in enumerate(generations)}
         judgments = collect_batch(batch_id, index, evaluation)
         path = run_dir(run) / JUDGMENTS
-        write_records(path, judgments)
+        write_records(path, _kept_judgments(run, model) + judgments)
         scored = [j for j in judgments if not j.error]
         typer.secho(
             f"collected {len(scored)} of {len(judgments)} judgments from {batch_id} "
@@ -373,7 +386,7 @@ def judge_command(
         else judge_batch(generations, scenarios, evaluation)
     )
     path = run_dir(run) / JUDGMENTS
-    write_records(path, judgments)
+    write_records(path, _kept_judgments(run, model) + judgments)
 
     failed = [j for j in judgments if j.error]
     scored = [j for j in judgments if not j.error]
@@ -387,6 +400,15 @@ def judge_command(
         fg=typer.colors.GREEN if not failed else typer.colors.YELLOW,
     )
     _report_billed(judgments, evaluation)
+
+
+def _kept_judgments(run: str, models: list[str] | None) -> list[Judgment]:
+    """The run's judgments of models outside `models`; none when every model is judged."""
+    from hip.eval.store import load_judgments
+
+    if not models:
+        return []
+    return [j for j in load_judgments(run) if j.model_id not in models]
 
 
 def _report_billed(judgments: list[Judgment], evaluation: EvaluationConfig) -> None:

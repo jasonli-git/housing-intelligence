@@ -298,8 +298,9 @@ cohorts:
 
   # Anthropic, added 2026-10-08 for the next rubric benchmark: a US provider other than
   # Google. Claude Haiku 5.5 at low effort (`output_config.effort`): by default it
-  # thinks (214 output tokens on a two-sentence probe), at `low` it answers directly
-  # (128, no thinking block). It takes no temperature — HTTP 400, "deprecated for this
+  # thinks (214 output tokens on a two-sentence probe), at `low` it answered that probe
+  # directly (128, no thinking block) — but on a packet it thinks at every effort, with
+  # the thinking text left out of the response (2026-10-08, ARCHITECTURE #344). It takes no temperature — HTTP 400, "deprecated for this
   # model" — so it is the one candidate sampled at its provider's own setting, which the
   # report states. It names exactly the model asked for, so the substitution guard
   # passes. $0.10 / $0.50 per million tokens for prompts to 100,000 tokens, from
@@ -318,6 +319,24 @@ cohorts:
         label: Claude Haiku 5.5 (low effort)
         quantization: hosted
         reasoning_effort: low
+        input_usd_per_mtok: 0.10
+        output_usd_per_mtok: 0.50
+      # Added to `v4` by the owner on 2026-10-08 to see whether more thinking clears
+      # low effort's flags (7) and its one unsupported figure. A probe on five `v4`
+      # questions measured 1,003 output tokens at low, 1,271 at medium and 1,850 at
+      # high, thinking at all three; the packet dominates the price either way.
+      - id: claude-haiku-5-5-medium
+        ref: claude-haiku-5-5
+        label: Claude Haiku 5.5 (medium effort)
+        quantization: hosted
+        reasoning_effort: medium
+        input_usd_per_mtok: 0.10
+        output_usd_per_mtok: 0.50
+      - id: claude-haiku-5-5-high
+        ref: claude-haiku-5-5
+        label: Claude Haiku 5.5 (high effort)
+        quantization: hosted
+        reasoning_effort: high
         input_usd_per_mtok: 0.10
         output_usd_per_mtok: 0.50
 

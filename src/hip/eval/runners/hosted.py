@@ -162,15 +162,19 @@ _DIALECTS: dict[str, _Dialect] = {
     # Anthropic's Messages API (Milestone 51's benchmark prep, 2026-10-08), for Claude
     # Haiku 5.5 as a candidate: a US provider other than Google. The judge reaches the
     # same API through the SDK; candidates come through here, so they are timed, priced,
-    # retried and checked for substitution like every other. `low` is the Messages
-    # API's `output_config.effort`, the control the judge already sends.
+    # retried and checked for substitution like every other. `low`, `medium` and
+    # `high` are the Messages API's `output_config.effort`, the control the judge
+    # already sends.
     "anthropic": _Dialect(
         chat_path="/messages",
         models_path="/models",
         auth_header="x-api-key",
         auth_prefix="",
         shape="anthropic",
-        reasoning={"low": {"output_config": {"effort": "low"}}},
+        reasoning={
+            effort: {"output_config": {"effort": effort}}
+            for effort in ("low", "medium", "high")
+        },
         headers={"anthropic-version": "2023-06-01"},
     ),
 }
@@ -658,14 +662,17 @@ class HostedRunner:
         if self._dialect.shape == "anthropic":
             # `input_tokens` excludes what the cache served or wrote, so the prompt is
             # the three together; `output_tokens` already includes any thinking, which
-            # Anthropic does not count separately.
+            # `output_tokens_details.thinking_tokens` counts. The count is the only
+            # measure of it: Haiku 5.5 returns its `thinking` blocks with the text left
+            # out, so an empty reasoning string does not mean it did not think.
             usage = data.get("usage") or {}
+            details = usage.get("output_tokens_details") or {}
             return (
                 int(usage.get("input_tokens") or 0)
                 + int(usage.get("cache_read_input_tokens") or 0)
                 + int(usage.get("cache_creation_input_tokens") or 0),
                 int(usage.get("output_tokens") or 0),
-                0,
+                int(details.get("thinking_tokens") or 0),
             )
         if self._dialect.openai_compatible:
             usage = data.get("usage") or {}
