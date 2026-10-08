@@ -457,7 +457,7 @@ memory, and the criteria each score was graded against.
 | [`v1`](reports/evaluation/v1.md) | 2026-08-14 | 120 generations, 8 local models | Gemma 4 E4B (Q4_K_M, local) | 3.21/4.00 | 0.0% |
 | [`v2`](reports/evaluation/v2.md) | 2026-09-06 | 105 generations, 7 models, hosted providers enter | Gemini 3.7 Flash (hosted) | 3.56/4.00 | 0.0% |
 | [`v3`](reports/evaluation/v3.md) | 2026-09-11 | 165 generations, 11 models, reasoning effort measured | Gemini 3.7 Flash, low thinking | 3.77/4.00 | 0.0% |
-| [`v4`](reports/evaluation/v4.md) | 2026-10-08 | 60 generations, 4 models, new judge (Opus 5.5), packet 1.5 | Gemini 3.8 Flash, low thinking | 3.48/4.00 | 0.0% |
+| [`v4`](reports/evaluation/v4.md) | 2026-10-08 | 90 generations, 4 models at 6 settings, new judge (Opus 5.5), packet 1.5 | Claude Haiku 5.5, medium effort | 3.61/4.00 | 0.4% |
 
 **The story the four runs tell.** `v1` asked which model this machine could run, and
 answered with a 4-billion-parameter local one — chosen on measured performance, not
@@ -466,8 +466,10 @@ reputation. `v2` opened the question to hosted providers and the score moved 3.2
 regenerating a whole state affordable. `v3` stopped treating reasoning as a property of
 a model and started treating it as a setting: the same Gemini tier at *low* thinking
 scored higher than at its default, 3.77 against 3.56, and the run cost about $6. `v4`
-asked again after Google began serving 3.7 Flash as 3.8: 3.8 at low thinking ranked first
-at 3.48, Claude Haiku 5.5 second at 3.34 for a sixth of the price. The judge and packet
+asked again after Google began serving 3.7 Flash as 3.8, and brought in a second US
+provider: Claude Haiku 5.5 at medium effort ranked first at 3.61 for a sixth of Gemini 3.8
+Flash's price, ahead of 3.8 at 3.48 — though Haiku stated 2 unsupported figures where 3.8
+stated none, and more effort past medium scored lower. The judge and packet
 both changed, so `v4` is not on `v3`'s scale — Flash-Lite held at 3.10 and 3.08 while
 DeepSeek fell from 3.57 to 3.22.
 

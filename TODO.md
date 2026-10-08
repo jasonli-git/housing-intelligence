@@ -132,11 +132,13 @@ first raised, not where it must be done.
 
 ### Evaluation harness
 
-- [ ] **Choose the consumer-reading preference list from `v4`.** (#343) Run 2026-10-08,
-      judged by Opus 5.5 (`reports/evaluation/v4.md`): Gemini 3.8 Flash (low) 3.48,
-      Claude Haiku 5.5 (low) 3.34 at a sixth of 3.8's price, DeepSeek Flash (thinking
-      off) 3.22, Gemini 3.1 Flash-Lite 3.08. 3.7 Flash's `v3` 3.77 is from another judge
-      and packet. The owner's decision; `config/evaluation.yml` changes after it.
+- [ ] **Choose the consumer-reading preference list from `v4`.** (#343, #344) Run
+      2026-10-08, judged by Opus 5.5 (`reports/evaluation/v4.md`): Claude Haiku 5.5
+      medium 3.61 (0.4% unsupported, 13/15 bound), Gemini 3.8 Flash (low) 3.48 (0.0%,
+      15/15) at about six times Haiku's price, Haiku high 3.44, Haiku low 3.34, DeepSeek
+      Flash (thinking off) 3.22, Gemini 3.1 Flash-Lite 3.08. 3.7 Flash's `v3` 3.77 is from
+      another judge and packet. The owner's decision; `config/evaluation.yml` changes
+      after it.
 - [ ] **The causal gate refuses ratio narration the packet supplies.** (M51, #343) In
       `v4`, 11 of the 13 flagged sentences explain a ratio's move by its two sides — the
       one case `ratio_split` allows — but name the ratio by label ("the shift in Home value
