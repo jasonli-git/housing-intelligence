@@ -44,7 +44,14 @@ first raised, not where it must be done.
       found but not imported; PSE&G's and Rockland's are unverified, and the BPU portal
       challenges automated access. EIA-861 covers all four in the meantime.
 - [ ] **NJDEP's public lead-line layer stops at the 2024 submission**, though statewide
-      2025 totals exist. (M42) A newer per-system export would have to be requested.
+      2025 totals exist. (M42) The owner asked NJDEP's lead-in-drinking-water program;
+      Brandon Carreno (Division of Water Supply & Geoscience) replied 2026-10-08 that the
+      2025 and 2026 per-system submissions exist but are not hosted online, and that the
+      way to get them is an OPRA request (https://www.nj.gov/dep/opra/opraform.html).
+      Next, the owner's: file one for the per-system inventory counts by category, in
+      CSV or Excel. A one-off extract means a new request each year unless NJDEP
+      publishes the layer again; check whether it arrives with any reuse conditions
+      beyond the layer's Data Distribution Agreement (`config/sources.yml`).
 - [ ] **Five counties have no DOE energy burden.** (M42) Essex, Hudson, Middlesex,
       Monmouth and Somerset carry signed weights or costs in DOE's file; withheld, not
       zeroed, until DOE explains them.
