@@ -693,7 +693,7 @@ publisher.
 | NJDEP flood and climate layers, contaminated sites, drinking water | The future flood picture FEMA's maps do not capture, and environmental context | M40 |
 | NJ DCA affordable-housing reporting | Obligations, completed units and trust funds | M41 |
 | HUD LIHTC and assisted-housing inventories, incl. Picture of Subsidized Households | Where subsidised housing is | M41 |
-| NJ DCA Municipal Housing Profile | Eviction filings and warrants by ZIP — **no table or reuse terms yet; asked of DCA 2026-09-23** | M44, gated |
+| NJ DCA Municipal Housing Profile | Eviction filings and warrants by ZIP — **no download; DCA says showing the figures publicly is fine (2026-10-07); how to acquire them is the owner's decision** | M44, gated |
 | Census LEHD / LODES | Where people work against where they live | M45 |
 | NJ TRANSIT GTFS | Transit service — **developer terms to be read** | M45 |
 | EPA Smart Location Database | Walkability, transit access, density — **vintage to be stated** | M45 |
