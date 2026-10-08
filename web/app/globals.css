@@ -1512,3 +1512,12 @@ tr[data-status="pending"] .fresh-status {
 .similar-table thead th.num { vertical-align: bottom; }
 /* Sized by its columns: two fit a phone, six scroll. */
 .scroll-x > table.similar-table { min-width: 0; }
+
+/* Milestone 52: today's price-to-income against the place's own history. */
+.persistence-history { margin: 12px 0 4px; }
+.persistence-history svg { display: block; width: 100%; height: auto; max-width: 40rem; }
+.persistence-median { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.persistence-bar.above { fill: var(--mute); }
+.persistence-bar.below { fill: var(--text-muted); opacity: 0.5; }
+.persistence-bar.latest { fill: var(--up); }
+.persistence-axis { fill: var(--text-muted); font-size: 11px; font-family: var(--font-text); }

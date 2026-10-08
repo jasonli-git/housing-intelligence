@@ -27,6 +27,7 @@ from hip.packets.schema import (
     PacketHighlight,
     PacketLevel,
     PacketMetric,
+    PacketPersistence,
     PacketRelationship,
 )
 
@@ -379,6 +380,65 @@ def _relationship_line(relationship: PacketRelationship) -> str:
     )
 
 
+def _against_median(pct: float) -> str:
+    return f"{abs(pct):.1f}% {'above' if pct >= 0 else 'below'}"
+
+
+def _persistence_lines(persistence: PacketPersistence, label: str) -> list[str]:
+    """Milestone 52 (ARCHITECTURE #348): today against the region's own history."""
+    p = persistence
+    gaps = (
+        f" ({', '.join(str(y) for y in p.missing_years)} not published)"
+        if p.missing_years
+        else ""
+    )
+    place = (
+        f"the {ordinal(p.rank)} highest"
+        if p.rank_best == p.rank_worst
+        else f"between the {ordinal(p.rank_best)} and {ordinal(p.rank_worst)} highest"
+    )
+    lines = [
+        "## How today compares with its own history",
+        "",
+        f"House prices against household income — FHFA's house price index over the "
+        f"Census Bureau's median household income estimate (SAIPE) — for {label}, "
+        f"{p.first_year} to {p.last_year}: {p.years} years with both{gaps}. An index, so "
+        f"it compares {label} with its own other years only, never with another place.",
+        "",
+        f"- In {p.last_year} it was {_against_median(p.vs_median)} its long-run median "
+        f"({_against_median(p.vs_median_low)} to {_against_median(p.vs_median_high)} "
+        f"given the income estimate's 90% margin): {place} of {p.years} years.",
+        f"- Its highest year was {p.peak_year}, "
+        f"{_against_median(p.peak_vs_median)} the median.",
+    ]
+    if p.above_median_since is not None and p.above_median_since < p.last_year:
+        lines.append(
+            f"- It has been above its median every year since {p.above_median_since}."
+        )
+    if p.episodes:
+        spells = "; ".join(
+            f"{e.start}–{e.end} ({e.years} {'year' if e.years == 1 else 'years'}, "
+            f"highest in {e.peak_year} at {_against_median(e.peak_vs_median)} the median"
+            + (
+                f", back at or below the median by {e.back_to_median}"
+                if e.back_to_median is not None
+                else ", not back at the median since"
+            )
+            + ")"
+            for e in p.episodes
+        )
+        lines.append(f"- Earlier spells at or above {p.last_year}'s level: {spells}.")
+    else:
+        lines.append(f"- No earlier year was at or above {p.last_year}'s level.")
+    lines += [
+        "",
+        "This describes what happened before. It is not a forecast: how an earlier spell "
+        "ended says nothing certain about how this one will.",
+        "",
+    ]
+    return lines
+
+
 def render_markdown(packet: Packet) -> str:
     """The full report for one packet."""
     region = packet.region
@@ -505,6 +565,9 @@ def render_markdown(packet: Packet) -> str:
         ]
         lines += [_relationship_line(r) for r in packet.relationships]
         lines.append("")
+
+    if packet.persistence is not None:
+        lines += _persistence_lines(packet.persistence, packet.region.label)
 
     if packet.caveats:
         lines += ["## Caveats", ""]

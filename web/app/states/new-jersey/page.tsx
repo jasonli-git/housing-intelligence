@@ -9,6 +9,7 @@ import { MoreExpander } from "@/components/MoreExpander";
 import { AffordableHousing } from "@/components/AffordableHousing";
 import { HomeSales } from "@/components/HomeSales";
 import { HomesAdded } from "@/components/HomesAdded";
+import { HowUnusual } from "@/components/HowUnusual";
 import { QuietProfile } from "@/components/QuietCounty";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
@@ -60,6 +61,8 @@ export default async function NewJerseyPage() {
   const state = states?.items[0] ?? null;
   const statewide = state ? await api.summary(state.region_id, "5y") : null;
   const housingHelp = state ? await api.affordableHousing(state.region_id) : null;
+  // Milestone 52: today's price-to-income against the state's own history.
+  const persistence = state ? await api.persistence(state.region_id) : null;
   const construction = await Promise.all(["permits_total_units", "nj_units_certified", "nj_units_demolished", "nj_net_units_added"].map(
     async (metric) => state ? (await api.observations(state.region_id, metric))?.observations ?? [] : [],
   ));
@@ -192,6 +195,7 @@ export default async function NewJerseyPage() {
         <div id="housing-assistance"><AffordableHousing data={housingHelp} /></div>
         <HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait />
         <HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} portrait />
+        <HowUnusual name="New Jersey" data={persistence} />
         <section className="section" aria-labelledby="state-figures-heading">
           <div className="section-head"><h2 id="state-figures-heading">All statewide figures</h2></div>
           <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally"><table className="state-figures">

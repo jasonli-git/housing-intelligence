@@ -84,6 +84,21 @@ metrics:
     source_id: census_acs
     record_type: survey
 
+  saipe_median_hh_income:
+    label: Median household income, single-year model estimate
+    unit: usd
+    frequency: annual
+    direction: higher_is_better
+    description: >-
+      Census SAIPE's model-based estimate for one year, with its 90% interval, from
+      1989. The income side of the long-run price-to-income (Milestone 52); the ACS
+      five-year figure above is the one shown.
+    source_id: census_saipe
+    record_type: modelled
+    ranked: false
+    changed: false
+    shown: false
+
   acs_median_gross_rent:
     label: Median gross rent
     unit: usd_month
@@ -530,6 +545,21 @@ metrics:
     source_id: census_acs
     record_type: survey
     ranked: false
+
+  fhfa_hpi_county:
+    label: House price index, county, annual
+    unit: index
+    frequency: annual
+    direction: neutral
+    description: >-
+      FHFA's all-transactions repeat-sales index for the county, base 100 in its first
+      recorded year, from 1975: comparable with the county's own other years only. The
+      price side of the long-run price-to-income (Milestone 52).
+    source_id: fhfa_hpi_county
+    record_type: modelled
+    ranked: false
+    changed: false
+    shown: false
 
   fhfa_hpi_all_transactions:
     label: House price index, all transactions

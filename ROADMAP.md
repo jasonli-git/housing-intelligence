@@ -468,8 +468,7 @@ what was 42–54 is now 43–55. The same records keep the numbers they were wri
 | 49 | ✅ done | **Decision guides** — built 2026-10-07 as 0.47.0: one page, `/guide?place=<id>`, reading a place's published files in the browser (ARCHITECTURE #330) and linked from every county, town and ZIP page. *Can I afford to buy here?* sets the full cost of owning against the reader's income at HUD's 30% and 50% lines, beside what HMDA borrowers here earned and HUD's income limits; *should I rent or buy?* gives the year owning-then-selling first costs no more than renting, under printed assumptions; *what should I check before an offer?* is ten items, each with its finding, limitation, source and official next step. **Market turnover** (#328) is sales a year per 1,000 residential parcels, against the place's own windows since 2020 — the deeds begin then, so not the ten years first proposed. **Evidence labels** (#329) by fixed rules. **Radon** (#331) as test-every-home advice and links: the tiers failed the date and access gates, and the owner asked NJDEP on 2026-10-07. As planned: pages that take a question and assemble the answer from Milestones 33–48: *can I afford to buy here, should I rent or buy, what should I check before an offer*. Every answer shows its source, period, geography, calculation and limitation, and links to the official next step. Computes its answers from those milestones rather than reusing Milestone 30's model-written ones, which no longer ask *harder to afford* or *rent or buy* (decided with the owner 2026-09-30, ARCHITECTURE #266); a guide may still show the consumer reading's *what stands out here?* and *what should I check before moving?* beside its answer (*what's changing?* was retired 2026-10-01, ARCHITECTURE #281). This is the Director Note's *better than a Google search*, and it comes late because it assembles everything before it **Promoted into this milestone by the owner, 2026-10-07**, from the Director Note "Outside review of the roadmap": (1) **market turnover** — how often homes sell here, from the SR1A sales already held (sales per 1,000 owner-occupied homes, a rolling three-year rate, recent against the place's own history), no new source; (2) **an evidence-strength label** on each answer — *strong / partial / limited*, set mechanically from freshness, geographic match, margin or sample size and record kind, never a judgement; (3) **radon** in *what should I check before an offer* — NJDEP's municipal radon tiers if a first task clears their vintage, a crosswalk from NJDEP's 540 entries to the 564 towns, and their terms; otherwise the guide links NJDEP and says to test every home, which NJDEP recommends whatever the tier. |
 | 50 | ✅ done | **Migration-driven demand** — built 2026-10-07 as 0.48.0: each county's households moving in, out and staying from the IRS's own summary rows, 2018–2023, with net moves per 1,000 returns and the movers' mean incomes against stayers' — arrivals' income over stayers' as the demand figure — described, never named a cause of prices (ARCHITECTURE #332); the ten largest origins and destinations of the newest year (#333); "Who is moving here?" on county pages, and on town and ZIP pages as their county's. Also: floating-point noise is no longer recorded as a revision and is hidden from `/changes` (#334); the buyer's guide joins the property-tax lookup in the bar (#335). As planned: IRS county-to-county flows, already loaded, read as demand pressure rather than as a standalone count. *(Old 33.)* |
 | 51 | ✅ done | **Relationship facts** — built 2026-10-07 as 0.49.0: packet 1.5 carries `relationships`, a closed set of three kinds `hip analyze` computes — a ratio split into its two sides, one change outpacing another beyond their margins, a county's homes added beside its net moves — which the report a model reads states and binding covers (ARCHITECTURE #336); causal wording between measures is refused unless a ratio split supports it, and the evaluation counts unsupported causal claims (#337). Also: HMDA's medians and shares are reproducible (#338), survey figures' annualised changes leave the packet (#339), an answer may not end on a question, and 20 of the 21 county readings were regenerated (Salem's was refused by every model that ran). As planned: a section of the packet drawn from a closed set of relation types ("values rose 30% while incomes rose 12%, so price-to-income moved from 3.1 to 3.8"), which Milestone 13's citation binding extends to, so a model can narrate only a relationship that exists as a fact. With it, a check in the evaluation for causal wording — "because", "driven by", "due to" — not backed by a relationship fact. **Not** four chained model calls, one per interpretive function: that multiplies cost and latency, and an unsupported claim from one step becomes evidence for the next, where the evaluation can no longer see where it came from. *(Old 30.)* |
-| 52 | ⬜ planned | **Historical persistence facts** — the descriptive answer to "is this pressure temporary or persistent?", which is the question a forecast would be asked. How far a region's price-to-income sits above its own long-run range, and how long past episodes that far above it lasted. Constrained by history: FHFA reaches back decades, the income side does not, and a range is only as long as its shorter series — which the fact has to say. *(Old 31.)* |
-| MAP | ⬜ planned | **The map's standing check**, plus the debt V2 hands it — the recurring gate defined in [The map's standing check](#the-maps-standing-check). Not a feature, and not a new number: it is the same check every version. V3's run additionally has to clear the three budgets that were red when the gate was written, and **the 504ms input is the named first task**: a single event took half a second to answer with no long task anywhere, which is a defect of a different shape from a slow frame and has never been looked at |
+| 52 | ✅ done | **Historical persistence facts** — built 2026-10-08 as 0.50.0: FHFA's annual county index (1975+) over Census SAIPE's median household income (1989+) gives each county and the state its price-to-income as a distance from its own 1989–2024 median, its place among those years with the range income's margin allows, and the earlier spells at today's level with when each came back (ARCHITECTURE #348). 22 facts; Hudson's is withheld because the index and the page's dollar ratio disagree in direction over 2019–2024. Packet 1.6 carries it, and a no-prediction gate keeps readings from forecasting with it. As planned: the descriptive answer to "is this pressure temporary or persistent?", which is the question a forecast would be asked. How far a region's price-to-income sits above its own long-run range, and how long past episodes that far above it lasted. Constrained by history: FHFA reaches back decades, the income side does not, and a range is only as long as its shorter series — which the fact has to say. *(Old 31.)* |
 | COMPLETE | ✅ first run 2026-09-26 | **The completeness standing check** — the second recurring gate, defined in [The completeness standing check](#the-completeness-standing-check): first run in Milestone 27, re-run at every milestone's close, reported in its completion report |
 
 ### Decisions Version 3 needs from the owner
@@ -530,99 +529,6 @@ the owner returned Milestones 14 and 15 to unscheduled.
 | 53 | ⬜ planned | **Selected nowcasts** — estimates of the current, incompletely observed period for a small number of delayed metrics, each validated against what was later published, labelled *nowcast* with its as-of date and uncertainty, and withheld where the evidence is weak. Never a uniform inflation of old figures, which erases real differences between places behind convincing decimals, and **no projected rankings**: ranking uncertain estimates manufactures precision |
 | 54 | ⬜ planned | **Local price model study** — ends in a **go or no-go**. Whether SR1A can support a home-value index of the platform's own, repeat-sales or hedonic: the first answer to *what homes here are worth*, rather than *what sold*, that does not depend on Zillow. Needs stable property matching, enough repeat sales, a treatment of renovations, and out-of-sample testing. A no is a complete answer |
 | 55 | ⬜ planned | **Affordability forecasting**, behind the four conditions already recorded: it beats a no-change and a straight-line baseline on held-out history or it does not publish; its confidence is an interval whose coverage the backtest measured, never a label, because a model reading "confidence: high" will say it more strongly than it should; it states the lag it inherits, since ACS 5-year estimates overlap by four years and a projection compounds that; and "temporary or persistent" is computed by the module, never concluded by a model. It produces evidence — direction, magnitude, horizon, interval, assumptions — for the interpretation layer to read beside Milestone 52's history. **Needs its own accuracy evaluation**, the way the interpretation layer got one. Backtests run on the figures as they stood at each forecast date, not as since revised — which `fact_revision` (Milestone 29) makes possible — broken down by geography and horizon, with a rule for withholding a forecast where the evidence is weak, and scenarios (*what if rates rise a point?*) before predictions. *(Old 34.)* |
-| MAP | ⬜ planned | **The map's standing check** — the recurring gate defined in [The map's standing check](#the-maps-standing-check). Not a feature, and not a new number: it is the same check every version, run before that version closes |
-
-## The map's standing check
-
-**A gate, not a milestone, and deliberately so.** A milestone is a slice of capability
-that ships once; this is a condition a version has to meet before it closes, and it is
-the *same* condition every time. Giving it a number each version would imply a different
-piece of work each time, and would leave the procedure to be rewritten — and to drift —
-with every version. It sits in each version's table as `MAP` so that it carries a status
-and cannot be quietly skipped, and it is written out once, here.
-
-**Why it recurs.** The map's cost scales with what is on screen, not with the size of the
-codebase, and almost every planned version puts more on screen: Milestone 25 added
-measures to colour by and Milestones 34–48 add more, Milestones 40, 45 and 47 add whole
-layers of context, and the two unscheduled expansions would multiply the outlines by
-twenty. Work that was
-comfortable at 564 municipalities and four measure groups is not automatically
-comfortable after any of those. None of this is caught by the test suite, because none of
-it is a wrong answer — it is a right answer delivered too late.
-
-### Run it on the owner's machine, on the built site
-
-Not in development, and not from an automated browser. Both of those lie, and the record
-of how they lied is in ARCHITECTURE #169 through #172: a development build renders every
-component twice and minifies nothing, and the automated browser this project uses cannot
-be trusted for frame timing — four rounds of map optimisation in September 2026 were
-aimed at the wrong half of the problem because of it. The defect that finally mattered,
-a zoom running at full cost for a second at a time, was found by the owner's own reading
-and by nothing else.
-
-```
-make publish && make deploy      # or a local production build
-open "<the site>/afford?perf"
-```
-
-`?perf` shows `components/FrameMeter.tsx`, which separates frames where a hand was on
-something from everything else. **That component is part of this contract and is not to
-be removed as dead code.**
-
-### The three scenarios, fixed so readings compare
-
-| | What to do | Which numbers it exercises |
-|---|---|---|
-| **Drag** | Ten seconds of dragging on `/afford`, at the framing the page opens at | `HAND-ON` — the slide, the commits, the crosshair |
-| **Zoom** | Five steps in and five out, crossing county into municipalities | `HAND-ON` and `idle` — flights, and the level switch |
-| **Cold** | Load `/afford` fresh with an empty cache | `idle` — the first render of 564 outlines |
-
-### The budgets
-
-| Reading | Budget | 2026-09-18 |
-|---|---|---|
-| `HAND-ON` median | ≤ 20ms | 17.0ms ✅ |
-| `HAND-ON` p95 | ≤ 50ms | 71.0ms ❌ |
-| `idle` p95 | ≤ 80ms | 110.0ms ❌ |
-| slowest input | ≤ 200ms | 504.0ms ❌ |
-| long tasks | 0 | 0 ✅ |
-
-**Three of those five are red today, and that is the point of writing them down.** The map
-is usable and the owner has said so; it is not within the budget this project wants to
-hold it to, and an unexplained half-second input is a defect nobody has looked at yet.
-A version closing red is a decision to be taken in the open, not a number to be moved.
-
-### Debt a version carries in
-
-A run that misses a budget does not stop a version closing — that is the owner's call —
-but the miss is carried forward by name, into the next version's row, until it is cleared
-or consciously written off. A budget quietly dropped between versions is the failure mode
-this whole section exists to prevent.
-
-**Carried into V3, from the run of 2026-09-18:** `HAND-ON` p95 at 71ms against 50ms,
-`idle` p95 at 110ms against 80ms, and the **504ms slowest input**. The last is the one to
-start with. It is not a slow frame — no task blocked the main thread at all — so it is a
-different defect, and the likeliest candidates are a click that forces a large re-render
-and relayout (the town table's "Show all" is 585 rows), or the first interaction landing
-while the map is still doing its one-time work. `FrameMeter` now records which event it
-was, so the investigation starts with a name rather than a number.
-
-### Within a version, not only at the end
-
-Any milestone that adds a **layer**, a **level**, or a **measure group** to the map runs
-the drag scenario before it is called done — the check at the version boundary is a
-backstop, not the only time anyone looks. On present plans that is every one of
-Milestones 34–48 that puts a measure or a layer on the map, and either expansion if it
-is ever scheduled.
-
-### The record
-
-Append one row per run. Never rewrite a row: a budget that was missed and then met is two
-rows, and the pair is the useful thing.
-
-| Date | Version | Drag p95 | Idle p95 | Slowest input | Verdict |
-|---|---|---|---|---|---|
-| 2026-09-18 | V2, after the map's performance work | 71.0ms | 110.0ms | 504.0ms | ❌ three budgets missed; carried into V3 |
 
 ## The completeness standing check
 

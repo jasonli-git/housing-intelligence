@@ -60,6 +60,9 @@ KEYED_MODELS = (
     # Milestone 48.
     "stg_hmda_lending",
     "stg_hud_fha_limits",
+    # Milestone 52.
+    "stg_fhfa_hpi_county",
+    "stg_census_saipe",
 )
 
 # Not a metric model: it feeds region_crosswalk, not fact_metric_observation.
