@@ -25,6 +25,33 @@ sources:
     adapter: hip.sources.nj_bpu:BpuReliabilityAdapter
     fallback: Retain the verified order; locate or request public annual reports for all four utilities before extending this reader. No guessed document IDs or confidential filings.
     notes: CAIDI is minutes per customer interruption, not SAIDI minutes per customer per year. Event exclusions are not specified in the imported table; do not infer an EIA method or calculate SAIDI from rounded values.
+  nj_bpu_reports:
+    name: Electric utilities' annual system performance reports to NJ BPU, 2024 and 2025
+    publisher: New Jersey Board of Public Utilities
+    license: Open public record
+    licence_class: public_record
+    commercial: {ads: unclear, paid: unclear, note: Publish attributed factual figures only; no blanket third-party document licence inferred.}
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-10-08
+    terms_note: >-
+      Released by BPU's Records Custodian under OPRA (request C263585, 2026-10-08) as
+      public records. State Conditions of Use section F permits copying and distribution
+      of State information. Publish attributed company-wide figures only, never the
+      reports, their certification letters, signatures or staff names.
+    notices:
+      - "Source: annual system performance reports of Atlantic City Electric, JCP&L, PSE&G and Rockland Electric to the NJ Board of Public Utilities, 2024 and 2025, released under OPRA request C263585. Company-wide actual CAIDI and SAIFI, not today's outage status or a town's own record."
+    url: https://www.nj.gov/bpu/about/divisions/reliability/
+    cadence: annual
+    adapter: hip.sources.nj_bpu:BpuAnnualReportsAdapter
+    fallback: >-
+      Keep the last reports. Each spring, request the new year's four reports from BPU's
+      Records Custodian under OPRA, drop them into data/manual/nj_bpu_reports/ under the
+      names BPU gives them, and add each to REPORTS in hip.sources.nj_bpu once its tables
+      are reviewed; an unreviewed file fails visibly.
+    notes: >-
+      CAIDI is minutes per customer interruption, not SAIDI. Each figure is the report's
+      company-wide actual against BPU's minimum reliability levels; ACE states major
+      events are excluded, and the others do not restate it beside the figure.
   doe_lead:
     name: Low Income Energy Affordability Data (LEAD), 2022 county data
     publisher: U.S. Department of Energy / National Renewable Energy Laboratory

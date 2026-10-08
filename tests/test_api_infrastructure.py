@@ -48,15 +48,28 @@ def test_bpu_actuals_have_separate_basis_and_exact_release(county: dict) -> None
         if p["electricity"] and p["electricity"]["record_id"] == "9726"
     )
     records = jcpl["regulatory_reliability"]
-    assert [r["payload"]["year"] for r in records] == [2024, 2023, 2022]
-    assert records[0]["payload"]["caidi_minutes"] == 160.3
-    assert records[0]["payload"]["saifi"] == 1.95
+    # One row a year: 2024 and 2025 from JCP&L's own annual reports (OPRA C263585),
+    # 2022 and 2023 from BPU's order, which agrees with the 2024 report (#347).
+    assert [r["payload"]["year"] for r in records] == [2025, 2024, 2023, 2022]
+    assert [r["source_id"] for r in records] == [
+        "nj_bpu_reports",
+        "nj_bpu_reports",
+        "nj_bpu_reliability",
+        "nj_bpu_reliability",
+    ]
+    assert (records[1]["payload"]["caidi_minutes"], records[1]["payload"]["saifi"]) == (
+        160.3,
+        1.95,
+    )
     for record in records:
-        assert record["source_id"] == "nj_bpu_reliability"
         assert record["release_id"] > 0
         assert len(record["file_sha256"]) == 64
-        assert record["vintage"] == "2025"
         assert "saidi" not in record["payload"]
+    for record in records[:2]:
+        assert record["vintage"] == str(record["payload"]["year"])
+        assert record["payload"]["opra_request"] == "C263585"
+    for record in records[2:]:
+        assert record["vintage"] == "2025"
         assert "exclusions not specified" in record["payload"]["basis"]
 
 
