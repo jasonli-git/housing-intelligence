@@ -200,6 +200,7 @@ export function DecisionGuide({
           label="A New Jersey county, town or ZIP code"
           placeholder="Search a county, town or ZIP code"
           name="guide-place"
+          className="guide-picker"
           keepPicked
         />
         {load.state === "loading" && <p className="meta">Loading this place’s figures…</p>}
