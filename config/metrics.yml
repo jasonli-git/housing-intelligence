@@ -192,6 +192,91 @@ metrics:
     source_id: irs_migration
     record_type: administrative
 
+  # Milestone 50: who moves in, out and stays, by county (ARCHITECTURE #332). A return is
+  # a tax return, not a household; AGI is published as a total, so incomes are means.
+  irs_inflow_returns:
+    label: Households moving in, tax returns
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Tax returns filed in this county whose filers lived in another county or abroad
+      the year before (IRS SOI). People who file no return are not counted.
+    source_id: irs_migration
+    record_type: administrative
+    ranked: false
+
+  irs_outflow_returns:
+    label: Households moving out, tax returns
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Tax returns filed elsewhere whose filers lived in this county the year before
+      (IRS SOI). People who file no return are not counted.
+    source_id: irs_migration
+    record_type: administrative
+    ranked: false
+
+  irs_net_migration_per_1000:
+    label: Net moves per 1,000 returns
+    unit: per_1000_returns
+    frequency: annual
+    direction: neutral
+    description: >-
+      Returns moving in less returns moving out, per 1,000 returns filed in the county
+      the year before (those who stayed and those who left): how fast a county gains or
+      loses filers for its size.
+    source_id: irs_migration
+    record_type: administrative
+    changed: false
+
+  irs_inflow_agi_per_return:
+    label: Income of households moving in
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      Adjusted gross income per return of those who moved in, a mean of the IRS's
+      published total: a few very high earners can move it.
+    source_id: irs_migration
+    record_type: administrative
+
+  irs_outflow_agi_per_return:
+    label: Income of households moving out
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      Adjusted gross income per return of those who moved out, a mean of the IRS's
+      published total.
+    source_id: irs_migration
+    record_type: administrative
+
+  irs_nonmigrant_agi_per_return:
+    label: Income of households who stayed
+    unit: usd
+    frequency: annual
+    direction: neutral
+    description: >-
+      Adjusted gross income per return of those who filed in this county both years, a
+      mean of the IRS's published total.
+    source_id: irs_migration
+    record_type: administrative
+
+  irs_arrival_income_ratio:
+    label: Arrivals' income to stayers'
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      Mean income per return of those who moved in, as a multiple of those who stayed.
+      Above 1, newcomers report more income than the households already here and can
+      bid more for the same homes; a description, not a cause of any price change.
+    source_id: irs_migration
+    record_type: administrative
+    changed: false
+
   price_to_income:
     label: Home value to household income
     unit: ratio

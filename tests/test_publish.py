@@ -191,6 +191,8 @@ def test_skipped_entries_are_explanations_not_data(published: Path) -> None:
         and "/work-destinations" not in path
         # Milestone 46: a town's comparison only, and only where 20 homes sold.
         and "/similar-places" not in path
+        # Milestone 50: the state and the nation have no county to read.
+        and "/migration" not in path
     ]
     assert not unexpected, f"unexpected 404s: {unexpected[:5]}"
     # 52 on 2026-10-06: the nation, 10 towns and 41 ZIP codes, all small places. Many

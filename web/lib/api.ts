@@ -286,6 +286,35 @@ export type SimilarPlaces = {
 };
 
 /** Where a place's residents work: its ten leading destinations (Milestone 45, #313). */
+/** Moves in and out of a region's county, from the IRS (Milestone 50, #332-#333). */
+export type MigrationYear = {
+  year: number;
+  inflow_returns: number | null;
+  outflow_returns: number | null;
+  net_returns: number | null;
+  net_per_1000: number | null;
+  inflow_income: number | null;
+  outflow_income: number | null;
+  stayer_income: number | null;
+  arrival_income_ratio: number | null;
+};
+export type MigrationFlow = {
+  rank: number; name: string; region_id: number | null; returns: number; people: number;
+  income_per_return: number | null; share: number;
+};
+export type Migration = {
+  region_id: number;
+  county_id: number;
+  county_name: string;
+  via: "self" | "parent" | "crosswalk";
+  years: MigrationYear[];
+  flows_year: number | null;
+  arrivals: MigrationFlow[];
+  departures: MigrationFlow[];
+  fetched_at: string | null;
+  source: string;
+};
+
 export type WorkDestinations = {
   region_id: number;
   year: number;
@@ -668,6 +697,8 @@ export const api = {
    */
   waterSystems: (id: number) => tryGet<WaterSystems>(`/regions/${id}/water-systems`),
   similarPlaces: (id: number) => tryGet<SimilarPlaces>(`/regions/${id}/similar-places`),
+  /** The region's county's moves (Milestone 50): a town reads its county's. */
+  migration: (id: number) => tryGet<Migration>(`/regions/${id}/migration`),
   workDestinations: (id: number) =>
     tryGet<WorkDestinations>(`/regions/${id}/work-destinations`),
   utilities: (id: number) => tryGet<Utilities>(`/regions/${id}/utilities`),

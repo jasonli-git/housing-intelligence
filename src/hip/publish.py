@@ -245,6 +245,9 @@ def _plan(
             f"/regions/{region_id}/work-destinations",
             f"regions/{region_id}/work-destinations.json",
         )
+        # Who moves in and out of the place's county (Milestone 50). A 404 — the state,
+        # the nation, or a ZIP the crosswalk does not place — is a skip.
+        yield f"/regions/{region_id}/migration", f"regions/{region_id}/migration.json"
         yield f"/regions/{region_id}/utilities", f"regions/{region_id}/utilities.json"
         yield f"/regions/{region_id}/community", f"regions/{region_id}/community.json"
         yield (

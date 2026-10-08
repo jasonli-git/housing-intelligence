@@ -19,6 +19,20 @@ DERIVED_RATIOS = frozenset(
     {"price_to_income", "rent_to_income", "price_to_ami", "fmr_to_income"}
 )
 
+# IRS migration (Milestone 50 added all but the net), under the 2022-2023 method note.
+IRS_MIGRATION_METRICS = frozenset(
+    {
+        "net_migration_returns",
+        "irs_inflow_returns",
+        "irs_outflow_returns",
+        "irs_net_migration_per_1000",
+        "irs_inflow_agi_per_return",
+        "irs_outflow_agi_per_return",
+        "irs_nonmigrant_agi_per_return",
+        "irs_arrival_income_ratio",
+    }
+)
+
 # Milestone 21's HUD figures, each with a caveat of its own below.
 FMR_METRICS = frozenset(
     {
@@ -277,8 +291,8 @@ def scoped_caveats(
         add("chas_one_vintage", present & CHAS_METRICS)
     if "modiv_median_tax_bill" in present:
         add("modiv_tax_bill", {"modiv_median_tax_bill"})
-    if "net_migration_returns" in present:
-        add("irs_matching_2023", {"net_migration_returns"})
+    if present & IRS_MIGRATION_METRICS:
+        add("irs_matching_2023", present & IRS_MIGRATION_METRICS)
 
     if level == "zip":
         # Since Milestone 34 the ACS is fetched for each ZCTA, so its figures are measured

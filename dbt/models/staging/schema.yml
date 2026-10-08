@@ -380,6 +380,19 @@ models:
           - not_null
           - accepted_range: {name: stg_work_destinations_is_a_share, min_value: 0, max_value: 1}
 
+  - name: stg_migration_flows
+    description: >-
+      Each New Jersey county's ten largest origin and destination counties in the IRS's
+      newest year pair (Milestone 50).
+    columns:
+      - name: share
+        tests:
+          - not_null
+          - accepted_range: {name: stg_migration_flows_is_a_share, min_value: 0, max_value: 1}
+      - name: direction
+        tests:
+          - accepted_values: {name: stg_migration_flows_direction, values: ['in', 'out']}
+
   - name: stg_transit_blocks
     description: >-
       Whether each home-bearing block's interior point is within half a mile of a rail

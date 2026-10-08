@@ -44,7 +44,8 @@ class IncomeLimits(BaseModel):
     source: str = "HUD User, Income Limits"
 
 
-_COUNTY_SQL = text(
+# The county a region reads its figures from; shared with `migration` (Milestone 50).
+COUNTY_SQL = text(
     """
     SELECT r.level::text AS level,
            CASE r.level
@@ -83,7 +84,7 @@ _LINES_SQL = text(
 def income_limits(region_id: int, session: SessionDep) -> IncomeLimits:
     """The newest fiscal year's lines. 404 for a region with no county: the state, or a
     ZIP the crosswalk does not place."""
-    found = session.execute(_COUNTY_SQL, {"region_id": region_id}).mappings().first()
+    found = session.execute(COUNTY_SQL, {"region_id": region_id}).mappings().first()
     if found is None:
         raise HTTPException(status_code=404, detail=f"No region {region_id}")
     if found["county_id"] is None:

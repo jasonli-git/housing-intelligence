@@ -3,6 +3,31 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.48.0] — 2026-10-07
+
+Milestone 50: migration-driven demand.
+
+### Added
+
+- **Who is moving here?** (ARCHITECTURE #332–#333): on county pages, and on town and ZIP
+  pages as their county's, the households moving in and out each year from the IRS's
+  tax-return addresses, 2018–2023, with net moves per 1,000 returns, the average income
+  of arrivals, leavers and those who stayed, and the ten counties sending and receiving
+  the most households. Described, never shown as a cause of prices.
+- Seven county figures: `irs_inflow_returns`, `irs_outflow_returns`,
+  `irs_net_migration_per_1000`, `irs_inflow_agi_per_return`,
+  `irs_outflow_agi_per_return`, `irs_nonmigrant_agi_per_return` and
+  `irs_arrival_income_ratio`; `GET /regions/{id}/migration`.
+- **Buyer's guide in the bar**, beside the property-tax lookup (#335).
+- Tests that read the IRS's files in their published shape, from a stubbed publisher.
+
+### Fixed
+
+- **`/changes` no longer lists floating-point noise as revisions** (#334): a recomputed
+  figure within one part in a billion of its recorded value is not recorded, and the
+  6,774 such rows already held are hidden, not deleted.
+- The buyer's guide's place search is full width on a phone.
+
 ## [0.47.0] — 2026-10-07
 
 Milestone 49: decision guides.
