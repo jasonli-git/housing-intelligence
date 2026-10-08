@@ -548,17 +548,17 @@ first raised, not where it must be done.
         Fabric is refused. ZIP codes still need the Fabric. One FCC place is not in
         the 2020 crosswalk; check which place boundaries the FCC file uses first.
 
-- [ ] **NJDEP radon tiers: waiting on NJDEP.** (M49, #331) The guide shows test-every-home
-      advice and links, not a tier: the tier table is undated, links
-      `radon_tier_2015.pdf` and lists pre-2013 Princeton, and its pages refuse scripts.
-      Terms are answered (nj.gov legal statement, Section F). The owner asked NJDEP
-      through the Radiation Protection contact form on 2026-10-07 whether the tiers have
-      been updated since 2015, whether an update is planned, and for a downloadable file.
-      Recommended, not yet decided by the owner: add a tier only if NJDEP says it is
-      current and gives a file to refresh from — matched to towns by name, type and
-      county (540 entries, combined towns named) and shown beside the test advice —
-      and keep the advice alone if the tiers are still 2015's. Follow up after about two
-      weeks.
+- [ ] **NJDEP radon tiers: waiting on NJDEP's new map.** (M49, #331) The guide shows
+      test-every-home advice and links, not a tier. The owner asked NJDEP on 2026-10-07;
+      Charles Renaud, NJDEP Radon Supervisor, replied on 2026-10-08: the 2015 tier map is
+      the most recent, NJDEP is building an updated one — interactive, with information
+      down to the municipality — and he will find out whether its data table can be
+      downloaded and let the owner know. So the advice stays alone: the published tiers
+      are 2015's, and a replacement is coming. Next: on his follow-up, or once the new map
+      is published, check for a downloadable table and its terms (nj.gov legal statement,
+      Section F, answered for the current pages). If there is one, the earlier
+      recommendation stands — match its entries to towns by name, type and county and
+      show the tier beside the test advice — still the owner's decision.
 
 - [ ] **NJ TRANSIT service frequency.** (M45, decided 2026-10-06) Only NJ TRANSIT's own
       GTFS says how often anything runs. It needs a developer account the owner would
