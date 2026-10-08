@@ -139,6 +139,12 @@ describe("revisedValue and changeLabel", () => {
     expect(revisedValue(null, group({}))).toBe("—");
   });
 
+  it("puts a revised survey figure's margin beside it, and nothing where none was kept", () => {
+    const income = group({ metric_id: "acs_median_hh_income" });
+    expect(revisedValue(100645, income, 2565)).toBe("$100,645 ± $2,565");
+    expect(revisedValue(100645, income, null)).toBe("$100,645");
+  });
+
   it("gives the change relative to the earlier value", () => {
     expect(changeLabel(place({ change: -0.4597 }))).toBe("-46.0%");
     expect(changeLabel(place({ change: 0.0649 }))).toBe("+6.5%");

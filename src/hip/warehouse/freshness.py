@@ -57,6 +57,7 @@ from sqlalchemy.orm import Session
 
 from hip import __version__
 from hip.config import REPO_ROOT, ReleaseDate, Source, Weekday
+from hip.warehouse.determinations import income_limits_in_force
 
 Status = Literal["current", "pending", "unreachable", "not_tracked"]
 
@@ -71,6 +72,10 @@ class SourceFreshness(BaseModel):
     # refresh can find a newer release and not yet have processed it.
     period_observed_start: str | None = None
     period_observed_end: str | None = None
+    # For a determination a publisher sets for a year — HUD's income limits — the day
+    # the newest one took effect (#350). Its loaded period runs to 31 December, which a
+    # reader would take for "data through December".
+    in_force_from: str | None = None
     # What the publisher itself said, read at acquisition (`source_discoveries`).
     published: str | None = None
     checked_at: datetime | None = None
@@ -226,6 +231,13 @@ def build_report(
                 status=_status(discovery),
                 period_observed_start=start,
                 period_observed_end=end,
+                in_force_from=(
+                    in_force.isoformat()
+                    if source_id == "hud"
+                    and end
+                    and (in_force := income_limits_in_force(int(end[:4])))
+                    else None
+                ),
                 published=_published_date(discovery["published"]) if discovery else None,
                 checked_at=discovery["checked_at"] if discovery else None,
                 pending=discovery["pending"] if discovery else None,

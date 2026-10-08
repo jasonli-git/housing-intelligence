@@ -14,14 +14,13 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 52 in review (2026-10-08)
+## Now — correctness pass (2026-10-08)
 
-Milestone 52, historical persistence facts, is built on
-`milestone/m52-historical-persistence` as 0.50.0 (ARCHITECTURE #348–#349), PR open, not
-merged. The warehouse is migrated (0035), loaded and analysed, and the 21 county
-readings are regenerated against packet 1.6. After merge: `make publish`, `make deploy`,
-`make check-live`, then `make clean-dist`. Version 3 is complete but for Milestone 44,
-which waits on DCA; Version 4 is next.
+Milestone 52 shipped as 0.50.0. The owner held Version 4 and chose the correctness and
+data-integrity items: four fixed on `change/correctness-pass` (ARCHITECTURE #350), then
+one at a time, CHAS margins from HUD's bulk files, flood claims placed through the
+2010-to-2020 block-group relationship, the completeness check reading the community
+inventory, and the 62 school districts with no performance record.
 
 ## Open
 
@@ -61,8 +60,8 @@ first raised, not where it must be done.
       Brandon Carreno (Division of Water Supply & Geoscience) replied 2026-10-08 that the
       2025 and 2026 per-system submissions exist but are not hosted online, and that the
       way to get them is an OPRA request (https://www.nj.gov/dep/opra/opraform.html).
-      Next, the owner's: file one for the per-system inventory counts by category, in
-      CSV or Excel. A one-off extract means a new request each year unless NJDEP
+      The owner filed one on 2026-10-08 for the per-system inventory counts by category
+      in CSV or Excel; NJDEP has seven business days to answer. A one-off extract means a new request each year unless NJDEP
       publishes the layer again; check whether it arrives with any reuse conditions
       beyond the layer's Data Distribution Agreement (`config/sources.yml`).
 - [ ] **Five counties have no DOE energy burden.** (M42) Essex, Hudson, Middlesex,
@@ -74,8 +73,6 @@ first raised, not where it must be done.
       property workbook to `data/manual/hud_lihtc/LIHTCPUB_2025.xlsx`, and run
       `hip acquire --source hud_lihtc --vintage 2025`; the handoff
       (`agent-handoffs/affordable-housing-assistance.md`) has the full steps.
-- [ ] **636 LIHTC projects are not placed in a town.** (M41) 591 resolve only to a
-      county and 45 only to the state, where a Census place spans several towns.
 - [ ] **Most of Morris County has no flood zone share.** (M40, #301) FEMA's digital map
       covers 14.6% of its homes and Atlantic's 53%; the share is withheld below 95%.
       Morris's paper FIRMs are not read. Re-check when FEMA's coverage moves: the page
@@ -93,63 +90,22 @@ first raised, not where it must be done.
       does around July), discovery finds it and it replaces the preliminary year to date
       on its own; if the overhaul changes the files' names or layout, the adapter
       refuses rather than misreading. Worth a look each quarter.
-- [ ] **Fewer towns report each year.** (M39) Certificates from 559 towns in 2014 and
-      527 in 2024; demolitions from 542 and 465. County and state totals cover less of
-      their area than they did, which the page says, but a long-run line of county
-      totals mixes a real trend with a reporting one. A per-town series is unaffected.
-- [ ] **The New Jersey page has no "Is it adding homes?" section.** (M39) The state's
-      figures are loaded and in its tables; the section is on town and county pages only,
-      because the state page is laid out differently. Add it if the state view needs it.
 
-- [ ] **2,936 revision rows have an `old_release_id` that no longer resolves.**
-      (M29, found in review 2026-09-20) They predate the retention fix in ARCHITECTURE
-      #199: `_prune_orphan_derived_releases` had already deleted the `hip_derived`
-      releases they pointed at before anything protected them. New orphans are now
-      prevented — a full `analyze` under the fix created none — but these cannot be
-      recovered, because the rows they referenced are gone. All 2,936 are derived
-      metrics (2,435 `price_to_income`, 396 `rent_to_income`, 105 `price_to_ami`), where
-      the pointer named the analyze run rather than a publisher's file, so what is lost
-      is which *computation* produced the earlier value and not which source did. Decide
-      whether to null the dangling ids — an unresolvable integer reads as a working
-      reference — or leave them and say so where they are served.
 
-- [ ] **HUD income limits are dated by calendar year, so the newest ends in the
-      future.** (found 2026-09-23, verifying Milestone 26) `stg_hud_income_limits`
-      dates each year 1 January to 31 December, so FY2026's limits run to 2026-12-31 —
-      a date not yet reached — and `price_to_ami` inherits it; the county reports now
-      say their metrics "reach to 2026-12-31". The site labels the period "2026", as HUD
-      names it, so no page misreads. But the dates also claim FY2026 applied from
-      January, when a year's limits apply from the effective date in HUD's annual notice
-      (not checked here). Dating by effective date, as Fair Market Rents are (#106), is
-      the fix to weigh; it moves every AMI ratio's window. Since Milestone 27 a reader can
-      see it: `/freshness` shows the source's data "through Dec 2026", marked as a period
-      still under way.
+- [ ] **HUD income limits are dated by calendar year in the facts.** (found
+      2026-09-23; #350) What a reader sees now names HUD's effective date — `/freshness`
+      says "in force since 1 May 2026", the household section "in force from" — but
+      `stg_hud_income_limits` still dates each year 1 January to 31 December, so the
+      packets' AMI windows and `price_to_ami`'s periods do. Re-dating the facts by
+      effective date means anchoring `price_to_ami`'s pairing on each year's start and
+      accepting windows that end in the following year ("2022–2027"). Owner's decision.
 
-- [ ] **Crosswalk weights carry ~1% area error for polygons with few vertices.** (M1)
-      `ST_Transform` reprojects vertices without densifying edges. Negligible for real
-      TIGER geometry, which is vertex-dense; it only shows up in synthetic test fixtures.
-      Revisit if a source ever supplies coarse polygons.
-- [ ] **SR1A carries four fields the aggregates ignore.** (M25) `assessed_value_total`,
-      `sales_ratio`, `year_built` and `living_space` are landed and unused. `living_space`
-      is the one that matters: a price per square foot on *transactions* is not derivable
-      from anything else the warehouse holds, and it is the figure that makes two towns'
-      medians comparable when their housing stock differs. Check the field's fill rate
-      before scoping it — the median is meaningless if half the deeds leave it blank.
-      **Scheduled: Milestone 36.**
-- [ ] **A revalidated source's last check is recorded nowhere the freshness page
-      reads.** (M27, #222) Zillow, FRED and FHFA are asked every refresh, but only
-      whether a file changed is kept, so `/freshness` says it does not yet record when.
-      Recording the check time per source at `hip refresh` and loading it with the
-      discoveries would let the page show a date it can back.
 
 - [ ] **HUD's CHAS figures carry no margins of error, which SPEC principle 12 requires.**
       (M28, #235, #246) HUD's API publishes none; its bulk CHAS files do (`_moe` columns
       beside each `_est`). Switching the adapter to the bulk files would give the three
       CHAS figures their margins and their ranks ranges; meanwhile each reads "no margin
       available".
-- [ ] **`/changes` shows revised survey figures without margins.** (M28, #246) The
-      revision trigger (#194) records old and new values only; recording the margins
-      beside them would let the page show both, as principle 12 asks.
 
 ### Evaluation harness
 

@@ -12,11 +12,14 @@ this data does not hold.
 
 from __future__ import annotations
 
+from datetime import date
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import text
 
 from hip.api.deps import SessionDep
+from hip.warehouse.determinations import income_limits_in_force
 
 router = APIRouter(tags=["regions"])
 
@@ -38,6 +41,9 @@ class IncomeLimits(BaseModel):
     # How the county was reached: the region itself, its parent, or a ZIP's crosswalk.
     via: str
     fiscal_year: int
+    # The day this fiscal year's limits took effect, from HUD's notice (#350); None for
+    # a year whose notice is not held.
+    in_force_from: date | None = None
     # HUD's area median family income, for a family of four.
     median_income: float | None
     bands: list[IncomeBand]
@@ -109,6 +115,7 @@ def income_limits(region_id: int, session: SessionDep) -> IncomeLimits:
         county_name=str(rows[0]["county_name"]),
         via=via,
         fiscal_year=int(rows[0]["fiscal_year"]),
+        in_force_from=income_limits_in_force(int(rows[0]["fiscal_year"])),
         median_income=rows[0]["median_income"],
         bands=[
             IncomeBand(band=band, hud_name=BAND_NAMES[band], limits=limits)

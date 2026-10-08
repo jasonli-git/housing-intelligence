@@ -36,13 +36,13 @@ export const STATUS_COPY: Record<FreshnessStatus, { label: string; means: string
       "are the figures from the last time it could.",
   },
   not_tracked: {
-    // Includes mutable files, deliberately pinned editions and manual imports.
-    // No discovery row cannot establish that a publisher was automatically checked.
+    // Deliberately pinned editions and manual imports. A source that serves one
+    // file at a fixed address records each check since #350 and reads "Current".
     label: "Newer editions not tracked",
     means:
-      "The site has no recorded check for newer editions. Some sources use a fixed " +
-      "file address; others are pinned or manually imported. This page does not yet " +
-      "record when it was last read, so this status is not a currentness guarantee.",
+      "The site has no recorded check for newer editions: the source is pinned to an " +
+      "edition on purpose, or its files are imported by hand. This status is not a " +
+      "currentness guarantee.",
   },
 };
 

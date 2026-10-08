@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from "react";
 
 import type { PacketLevel } from "@/lib/api";
 import { formatValue } from "@/lib/format";
+import { dayLabel } from "@/lib/freshness";
 import {
   countyLabel,
   type Household,
@@ -131,6 +132,7 @@ export function ForYourHousehold({
           <table className="household-lines">
             <caption>
               HUD’s lines for a household of {size}, {countyLabel(limits)}, FY{limits.fiscal_year}
+              {limits.in_force_from && `, in force from ${dayLabel(limits.in_force_from)}`}
             </caption>
             <thead>
               <tr>
