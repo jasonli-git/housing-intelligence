@@ -14,13 +14,25 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — PR #119 in review (2026-10-08)
+## Now — Milestone 52, historical persistence facts (2026-10-08)
 
-On `change/benchmark-v4`, PR #119: benchmark `v4` and its decisions — the consumer list
-led by Claude Haiku 5.5 at medium effort, generation hosted only (SPEC v1.5), and the
-causal gate loosened (ARCHITECTURE #343–#346). The 21 county consumer readings are
-regenerated in the warehouse, Salem included. After merge: `make publish`, `make deploy`,
-`make check-live`, then `make clean-dist`. Milestone 52 waits behind it.
+On `milestone/m52-historical-persistence`. Approved by the owner 2026-10-08: FHFA's
+county annual index and Census SAIPE median income (1989+); an episode is the years at or
+above today's level; the fact goes into the packet; plus a consumer-prompt line on survey
+margins, and the map standing check leaves ROADMAP.
+
+- [ ] Sources: `fhfa_hpi_county` (FHFA annual county index, 1975+) and `census_saipe`
+      (median household income with its 90% interval, 1989+), as metrics kept out of
+      packets and rankings
+- [ ] `hip.analytics.persistence` and `region_persistence` (migration 0035): position
+      against the region's own median, rank range from income's margin, past episodes
+      at or above today's level and when each returned to the median, validated
+      against the dollar price-to-income for 2015–2024 and withheld where they disagree
+- [ ] Packet 1.6 `persistence`, its report section, binding, and a no-prediction gate
+- [ ] API and publish, county and New Jersey pages
+- [ ] Consumer prompt: state a survey figure's margin beside it
+- [ ] ROADMAP: remove the map standing check
+- [ ] Tests, docs, completeness check, readings regenerated
 
 ## Open
 
