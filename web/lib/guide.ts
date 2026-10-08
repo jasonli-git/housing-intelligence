@@ -94,9 +94,9 @@ export function bandOf(share: number): Band {
 }
 
 export const BAND_TEXT: Record<Band, string> = {
-  within: "at or under 30% of your income, HUD’s line for housing that is not a cost burden",
-  burdened: "over 30% of your income: HUD counts a household paying this as cost-burdened",
-  severe: "over half of your income: HUD counts a household paying this as severely cost-burdened",
+  within: "That is within HUD’s 30% line, under which housing is not counted a cost burden.",
+  burdened: "HUD counts a household paying over 30% of its income for housing as cost-burdened.",
+  severe: "HUD counts a household paying over half its income for housing as severely cost-burdened.",
 };
 
 export type AffordAnswer = {
@@ -445,7 +445,9 @@ function turnoverItem(data: GuideData, placeHref: string): CheckItem {
     title: "How often homes sell",
     finding,
     limitation: "Few sales can mean competition for what comes up, or simply owners who stay. The deeds begin in 2020, and each rate spans three overlapping years.",
-    source: citation(data, level),
+    source: level
+      ? `This site, from the state’s SR1A sales and MOD-IV parcel records, ${periodLabel(level.period_end)}`
+      : null,
     evidence: judged(data, ["turnover", level, salesContext(data)]),
     steps: [{ label: "How homes sell here: prices and sales", href: `${placeHref}#sales-heading` }],
   };

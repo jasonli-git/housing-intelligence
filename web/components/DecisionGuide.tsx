@@ -99,9 +99,9 @@ function Steps({ steps }: { steps: { label: string; href: string }[] }) {
     <ul className="guide-steps">
       {steps.map((step) =>
         step.href.startsWith("/") ? (
-          <li key={step.href}><Link href={step.href}>{step.label}</Link></li>
+          <li key={`${step.label} ${step.href}`}><Link href={step.href}>{step.label}</Link></li>
         ) : (
-          <li key={step.href}><a href={step.href} target="_blank" rel="noreferrer">{step.label} ↗</a></li>
+          <li key={`${step.label} ${step.href}`}><a href={step.href} target="_blank" rel="noreferrer">{step.label} ↗</a></li>
         ),
       )}
     </ul>
@@ -272,8 +272,8 @@ export function DecisionGuide({
                 <p className="guide-lead">
                   The {afford.price.basis === "index" ? "typical home here, valued at" : "median sale here,"}{" "}
                   <b>{usd(afford.price.value)}</b>, would cost about <b>{usd(afford.month.total)} a month</b> to own with{" "}
-                  {downPct}% down at {ratePct.toFixed(2)}%: <b>{Math.round(afford.share * 100)}% of your income</b>,{" "}
-                  {BAND_TEXT[afford.band]}.
+                  {downPct}% down at {ratePct.toFixed(2)}%: <b>{Math.round(afford.share * 100)}% of your income</b>.{" "}
+                  {BAND_TEXT[afford.band]}
                 </p>
                 <dl className="cost-lines">
                   {afford.month.lines.filter((line) => !line.conditional).map((line) => (
