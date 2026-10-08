@@ -27,9 +27,11 @@ from hip.packets.schema import (
     PacketLevel,
     PacketMetric,
     PacketRegion,
+    PacketRelationship,
     PacketSource,
     PacketWindow,
     RegionRef,
+    RelationshipFigure,
 )
 from hip.packets.survey import is_survey
 
@@ -170,6 +172,45 @@ _MULTI_VINTAGE_SQL = text(
 )
 
 
+# The relationships a reading may narrate (Milestone 51), each figure labelled as its
+# metric is. Ordered so a packet built twice is the same packet.
+_RELATIONSHIPS_SQL = text(
+    """
+    SELECT r.relation_id, r.kind, r.period_start, r.period_end, r.figures,
+           r.direction, r.causal
+    FROM region_relationships r
+    WHERE r.region_id = :id
+    ORDER BY r.relation_id
+    """
+)
+
+_LABELS_SQL = text("SELECT metric_id, label FROM metrics")
+
+
+def _relationships(session: Session, region_id: int) -> list[PacketRelationship]:
+    rows = list(session.execute(_RELATIONSHIPS_SQL, {"id": region_id}).mappings())
+    if not rows:
+        return []
+    labels = dict(session.execute(_LABELS_SQL).tuples().all())
+    return [
+        PacketRelationship(
+            relation_id=row["relation_id"],
+            kind=row["kind"],
+            period_start=row["period_start"],
+            period_end=row["period_end"],
+            figures=[
+                RelationshipFigure(
+                    **figure, label=labels.get(figure["metric_id"], figure["metric_id"])
+                )
+                for figure in row["figures"]
+            ],
+            direction=row["direction"],
+            causal=row["causal"],
+        )
+        for row in rows
+    ]
+
+
 class PacketUnavailable(LookupError):
     """No packet can be built — unknown region, or no analytics for that window."""
 
@@ -204,7 +245,15 @@ def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet
         raise PacketUnavailable(f"No region {region_id}")
 
     rows = list(session.execute(_METRICS_SQL, {"id": region_id, "w": window}).mappings())
-    metrics = [PacketMetric(**row, survey=is_survey(row["metric_id"])) for row in rows]
+    # A survey figure's annualised change has no margin — nothing computes one — so it is
+    # left out rather than published bare (SPEC principle 12; TODO, closed in M51).
+    metrics = [
+        PacketMetric(
+            **{**row, "cagr": None if is_survey(row["metric_id"]) else row["cagr"]},
+            survey=is_survey(row["metric_id"]),
+        )
+        for row in rows
+    ]
     levels = [
         PacketLevel(**row, survey=is_survey(row["metric_id"]))
         for row in session.execute(_LEVELS_SQL, {"id": region_id}).mappings()
@@ -285,6 +334,7 @@ def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet
             multi_vintage_sources=multi_vintage,
         ),
         sources=sources,
+        relationships=_relationships(session, region_id),
     )
     return packet
 

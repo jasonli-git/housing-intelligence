@@ -620,6 +620,36 @@ def figure_index(packet: Packet) -> list[Figure]:
         if (twin is None or twin.of != highlight.of) and highlight.of != peers:
             add(f"{key}.of", "cohort", highlight.of, named)
 
+    # Milestone 51: the figures of each relationship — a ratio's two sides over its own
+    # years, two changes compared, homes added beside moves — which the packet carries
+    # nowhere else. A figure equal to one already indexed is the same fact and is not
+    # indexed twice, so a quoted ratio still binds to its metric.
+    indexed = {(f.metric_id, round(f.value, 6)) for f in figures}
+    for relationship in packet.relationships:
+        for figure in relationship.figures:
+            if (figure.metric_id, round(figure.value, 6)) in indexed:
+                continue
+            about = _About(
+                metric_id=figure.metric_id,
+                label=figure.label,
+                unit=figure.unit,
+                period_start=relationship.period_start,
+                period_end=relationship.period_end,
+            )
+            kind: FigureKind = "change" if figure.unit == "percent" else "value"
+            field = f"relationships[{relationship.relation_id}].{figure.role}"
+            add(field, kind, figure.value, about)
+            add_margin(f"{field}.margin", figure.margin, replace(about, unit="percent"))
+            indexed.add((figure.metric_id, round(figure.value, 6)))
+        add_year(
+            f"relationships[{relationship.relation_id}].period_start",
+            relationship.period_start.year,
+        )
+        add_year(
+            f"relationships[{relationship.relation_id}].period_end",
+            relationship.period_end.year,
+        )
+
     for index, source in enumerate(packet.sources):
         # Vintages are quotable provenance: "the 2023 ACS release".
         if source.vintage.isdigit():

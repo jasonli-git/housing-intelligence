@@ -22,7 +22,13 @@ the pipeline. `tests/test_packets.py` holds the two metric lists to the dashboar
 
 from __future__ import annotations
 
-from hip.packets.schema import Packet, PacketHighlight, PacketLevel, PacketMetric
+from hip.packets.schema import (
+    Packet,
+    PacketHighlight,
+    PacketLevel,
+    PacketMetric,
+    PacketRelationship,
+)
 
 # What a survey figure with no margin says in its place, and what a margin of zero says
 # — the Census fixes some figures to its population estimates, and they have no
@@ -316,6 +322,63 @@ def _highlight_line(
     )
 
 
+def _relationship_line(relationship: PacketRelationship) -> str:
+    """One relationship as the report states it (Milestone 51, ARCHITECTURE #336)."""
+    figures = {figure.role: figure for figure in relationship.figures}
+    years = f"{relationship.period_start.year} to {relationship.period_end.year}"
+
+    def change(role: str) -> str:
+        figure = figures[role]
+        return with_margin(
+            format_change(figure.value),
+            change_margin_label(figure.margin, survey=figure.margin is not None),
+        )
+
+    if relationship.kind == "ratio_split":
+        ratio, top, bottom = (
+            figures["ratio_start"],
+            figures["numerator_change"],
+            figures["denominator_change"],
+        )
+
+        def span(role: str) -> str:
+            return (
+                f"{format_value(figures[role + '_start'].value, 'usd')} to "
+                f"{format_value(figures[role + '_end'].value, 'usd')}"
+            )
+
+        return (
+            f"- **{ratio.label}** moved from "
+            f"{format_metric(ratio.value, 'ratio', ratio.metric_id)} to "
+            f"{format_metric(figures['ratio_end'].value, 'ratio', ratio.metric_id)} "
+            f"({years}): over the same years the yearly average of {top.label} "
+            f"changed {change('numerator_change')} ({span('numerator')}) and "
+            f"{bottom.label} {change('denominator_change')} ({span('denominator')}). "
+            "The ratio moved because its two sides did — arithmetic, and the one cause "
+            "this report states."
+        )
+    if relationship.kind == "outpaced":
+        measure, against = figures["measure_change"], figures["against_change"]
+        verdict = {
+            "faster": "the first rose faster, by more than their margins allow",
+            "slower": "the first rose more slowly, by more than their margins allow",
+            "indistinguishable": "the two cannot be told apart within their margins",
+        }[relationship.direction or "indistinguishable"]
+        return (
+            f"- **{measure.label}** changed {change('measure_change')} and "
+            f"**{against.label}** {change('against_change')} over {years}: {verdict}. "
+            "A comparison, not a cause."
+        )
+    homes, moves = figures["homes_per_1000"], figures["moves_per_1000"]
+    return (
+        f"- In {relationship.period_end.year}, **{homes.label}** was "
+        f"{format_value(homes.value, homes.unit)} and **{moves.label}** was "
+        f"{format_value(moves.value, moves.unit)}. Side by side only: moves are one part "
+        "of demand, the two are counted against different totals, and neither explains "
+        "the other."
+    )
+
+
 def render_markdown(packet: Packet) -> str:
     """The full report for one packet."""
     region = packet.region
@@ -430,6 +493,18 @@ def render_markdown(packet: Packet) -> str:
             "annualised change is not shown, because no margin is computed for it.",
             "",
         ]
+
+    if packet.relationships:
+        lines += [
+            "## Relationships between figures",
+            "",
+            "The connections between figures this report supports. Any other link "
+            "between two measures is not in the data, and no cause is but a ratio's own "
+            "arithmetic.",
+            "",
+        ]
+        lines += [_relationship_line(r) for r in packet.relationships]
+        lines.append("")
 
     if packet.caveats:
         lines += ["## Caveats", ""]

@@ -28,8 +28,10 @@ exactly what was wrong:
 - for the consumer reading: the headings in order, each with an answer; no name of
   a source, agency, survey or index; none of the listed jargon; at most three figures
   an answer as written, not counting a margin, a quoted label or a range's second end;
-  never two measures of the same thing; and under "What stands out here?", housing
-  measures only and no opening on a date.
+  never two measures of the same thing; causal wording only where the packet's
+  relationships support it (Milestone 51); no answer ending on a question, as a
+  misspelled next heading written into an answer does; and under "What stands out
+  here?", housing measures only and no opening on a date.
 
 What no check can see — whether an answer advises rather than describes, or reads well
 — is what the owner reads the three-county side-by-side for.
@@ -43,6 +45,7 @@ from typing import Any
 
 from hip.config import Audience
 from hip.packets import Binding, Packet
+from hip.packets.causal import causal_problems
 from hip.packets.margins import describe_problems, joined_as_range, margin_problems
 
 ANALYST_PROMPT = """\
@@ -285,7 +288,10 @@ Rules:
   for a home value index, and "property" for a parcel.
 - Describe; do not advise. Say what the figures show about renting and buying, not which
   the reader should choose.
-- Do not claim causes the packet cannot support.
+- Connect two measures only as the packet's "Relationships between figures" connects
+  them. Use causal words — because, due to, driven by, led to, as a result — only to
+  say a ratio moved because its two sides did, as listed there; describe anything else
+  side by side, never as a cause.
 - Use one measure for each thing: never two different
   measures of home value (a sale price and a typical home value count as one), of
   rent, of income, or of what renters pay. A reader would see two figures for the same
@@ -454,7 +460,8 @@ def consumer_problems(
     body: str, sections: list[Section], binding: Binding, packet: Packet
 ) -> list[str]:
     """What keeps a shaped consumer reading from publication, beyond binding."""
-    problems: list[str] = []
+    # Milestone 51: a cause only where a relationship in the packet makes one.
+    problems: list[str] = causal_problems(body, binding, packet)
     for label, pattern in _banned(packet):
         match = pattern.search(body)
         if match is not None:
@@ -478,6 +485,15 @@ def consumer_problems(
                 "two measures of the same thing: "
                 + " and ".join(f"'{quoted[m]}'" for m in both)
                 + "; keep the one the reading quotes first"
+            )
+    for section in sections:
+        # Cumberland's test reading ended its first answer with the next heading,
+        # misspelled — "What shout I check before moving?" — and passed every other
+        # gate (readings-v8). An answer states; it never ends on a question.
+        if body[section.start : section.end].rstrip().endswith("?"):
+            problems.append(
+                f"'{section.heading}' ends with a question; an answer ends on a "
+                f"statement, and a heading belongs on its own line"
             )
     for section in sections:
         if section.id != "what_stands_out":

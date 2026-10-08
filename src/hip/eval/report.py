@@ -48,6 +48,8 @@ class ModelSummary:
     truncated_reasoning: int = 0
     unsupported_numbers: int = 0
     total_numbers: int = 0
+    # Milestone 51: causal claims between measures no relationship fact supports.
+    unsupported_causal: int = 0
     # Answers with a deterministic check, and those in which every figure bound — what
     # `hip explain` would have stored rather than refused (Milestone 13).
     checked_answers: int = 0
@@ -219,6 +221,7 @@ def summarize(
         if check:
             summary.total_numbers += len(check.numbers)
             summary.unsupported_numbers += check.unsupported_count
+            summary.unsupported_causal += len(check.unsupported_causal)
             summary.checked_answers += 1
             if not check.unsupported_count and not check.empty_answer:
                 summary.bound_answers += 1
@@ -610,10 +613,10 @@ def render_report(
             "",
         ]
     lines += [
-        "| Model | Cohort | Effort | Answers | Figures | Unsupported | "
+        "| Model | Cohort | Effort | Answers | Figures | Unsupported | Causal | "
         + ("Bound | " if bound_column else "")
         + "Empty | Errors | Refusal |",
-        "|---|---|---|---:|---:|---:|"
+        "|---|---|---|---:|---:|---:|---:|"
         + ("---:|" if bound_column else "")
         + "---:|---:|---:|",
     ]
@@ -631,7 +634,8 @@ def render_report(
         lines.append(
             f"| {summary.label} | {summary.cohort} | {summary.effort_label} | "
             f"{summary.generations} | {summary.total_numbers} | "
-            f"{summary.hallucination_rate:.1%} | {bound if bound_column else ''}"
+            f"{summary.hallucination_rate:.1%} | {summary.unsupported_causal} | "
+            f"{bound if bound_column else ''}"
             f"{summary.empty} | {summary.errors} | {refusal} |"
         )
 

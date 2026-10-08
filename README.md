@@ -13,7 +13,7 @@ answer with the source file behind every number. It is not a chatbot and not a l
 site: dashboards, maps, rankings, reports, and an API are the product, and an optional AI
 layer only explains metrics that were already computed.
 
-> **Status — v0.48.0, 2026-10-07. Versions 1 and 2 complete; Version 3 under way.**
+> **Status — v0.49.0, 2026-10-07. Versions 1 and 2 complete; Version 3 under way.**
 >
 > **Built and deployed.** New Jersey's geography, prices, rents, economic context, tax
 > roll, recorded sales, flood and environmental exposure, and where residents work and
@@ -23,11 +23,12 @@ layer only explains metrics that were already computed.
 > overwritten. Full detail under
 > [Project Status](#project-status).
 >
-> **Latest.** Milestone 50 (2026-10-07): who is moving into and out of each county,
-> from tax returns — how many, what they earn against those who stay, and where they
-> came from and went — and `/changes` without floating-point noise.
+> **Latest.** Milestone 51 (2026-10-07): readings may connect figures only as computed
+> relationship facts connect them, and may say "because" only of a ratio explained by
+> its two sides; 20 of the 21 county readings were regenerated.
 >
-> **Next.** Milestone 51, relationship facts; Milestone 44, evictions, waits on DCA. See
+> **Next.** Milestone 52, historical persistence facts; Milestone 44, evictions, waits on
+> DCA. See
 > [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md).
 
 Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
@@ -273,6 +274,11 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   town; owner names and mailing addresses are never collected, and an address is removed
   on request under Daniel's Law (below). County and statewide effective tax rates,
   weighted by equalized valuation.
+- **Readings that state only real relationships** (M51, built) — the readings on
+  county pages may connect two figures only as a computed relationship connects them
+  (a ratio beside its two sides, rents or values outpacing incomes beyond the margins,
+  homes added beside moves), and may say "because" only of a ratio explained by its
+  two sides; a draft that does otherwise is sent back.
 - **Who is moving here?** (M50, built) — on county pages, and on town and ZIP pages as
   their county's: households moving in and out each year from the IRS's tax-return
   addresses, net moves per 1,000, what arrivals, leavers and stayers earn, and the ten
@@ -825,7 +831,7 @@ fetches 1,135 regions from a local API backed by a warehouse that is gitignored 
 
 ## Project Status
 
-v0.48.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
+v0.49.0 — **Versions 1 and 2 are complete; Version 3 is under way.**
 
 Version 1 built the platform: geography, prices, rents, economic context, computed change
 and affordability and rankings, the dashboard, versioned analysis packets with exportable

@@ -166,6 +166,8 @@ class CheckResult(_Strict):
     numbers: list[NumericCheck] = Field(default_factory=list)
     unsupported_count: int = 0
     unsupported_rate: float = 0.0
+    # Milestone 51: sentences with causal wording no relationship in the packet supports.
+    unsupported_causal: list[str] = Field(default_factory=list)
     empty_answer: bool = False
     refused: bool = False
     refusal_expected: bool = False
