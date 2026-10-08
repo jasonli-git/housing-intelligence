@@ -60,6 +60,9 @@ export const GROUPS: readonly Group[] = [
       "hud_safmr_4br",
       "fhfa_hpi",
       "fhfa_hpi_all_transactions",
+      // Milestone 52: inputs to the long-run comparison, `shown: false`; grouped so the
+      // catalog stays whole, never listed on a page.
+      "fhfa_hpi_county",
     ],
   },
   {
@@ -116,6 +119,7 @@ export const GROUPS: readonly Group[] = [
     title: "Incomes and jobs",
     metrics: [
       "acs_median_hh_income",
+      "saipe_median_hh_income",
       "hud_area_median_income",
       "hud_income_limit_80",
       "unemployment_rate",

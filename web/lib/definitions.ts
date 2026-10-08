@@ -70,6 +70,10 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "The same kind of index from FHFA, but counting refinance appraisals as well as sales. An index: 100 is early 1980. Statewide only.",
     why: "It reaches back further than the purchase-only index, so it shows the long run of prices.",
   },
+  fhfa_hpi_county: {
+    what: "FHFA’s index of home prices for the county, each year since 1975, from sales and refinance appraisals. An index: 100 is the county’s first recorded year, so it compares the county only with its own past.",
+    why: "It is the price side of “Is this unusual for here?”, which sets prices against income over decades.",
+  },
 
   // Affordability
   price_to_income: {
@@ -357,6 +361,10 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
   acs_median_hh_income: {
     what: "The income of the household in the middle: half of households here earn more, half less. From the Census Bureau’s survey, pooled over five years.",
     why: "It is the yardstick for affordability; prices only mean something next to what people earn.",
+  },
+  saipe_median_hh_income: {
+    what: "The Census Bureau’s estimate of the middle household income for a single year, made by combining its survey with tax and benefit records. Published each year since 1989, with a margin.",
+    why: "It is the income side of “Is this unusual for here?”; the five-year survey figure is the one shown elsewhere.",
   },
   hud_area_median_income: {
     what: "HUD’s official middle income for families in this area, set each year.",

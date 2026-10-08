@@ -359,10 +359,10 @@ class Metric(BaseModel):
     # on one building, and a "+45%" between two such years says nothing (#300).
     changed: bool = True
     # False for an input to a computed fact that is never itself put before a reader
-    # or a model: Milestone 52's county price index and SAIPE income feed the
-    # persistence fact, and a second median income beside the ACS one in a packet would
-    # invite a reading to quote two incomes for one place (ARCHITECTURE #348).
-    packet: bool = True
+    # or a model — not in a packet, not among a region's figures: Milestone 52's county
+    # price index and SAIPE income feed the persistence fact, and a second median income
+    # beside the ACS one would show two incomes for one place (ARCHITECTURE #348).
+    shown: bool = True
 
 
 def metric_licence(
@@ -911,6 +911,12 @@ def load_sources(config_dir: Path | None = None) -> dict[str, Source]:
 def load_metrics(config_dir: Path | None = None) -> dict[str, Metric]:
     path = (config_dir or get_settings().config_dir) / "metrics.yml"
     return _validate(MetricsConfig, _load_yaml(path), path).metrics
+
+
+@lru_cache(maxsize=1)
+def hidden_metrics() -> frozenset[str]:
+    """Metrics configured `shown: false`, which packets and figure lists leave out."""
+    return frozenset(m for m, metric in load_metrics().items() if not metric.shown)
 
 
 def load_geography(config_dir: Path | None = None) -> GeographyScope:

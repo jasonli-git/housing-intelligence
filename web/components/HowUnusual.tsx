@@ -58,6 +58,8 @@ export function HowUnusual({ name, data }: { name: string; data: Persistence | n
       <div className="section-head">
         <h2 id="how-unusual-heading">Is this unusual for here?</h2>
       </div>
+      {/* SPEC principle 11: say what kind of figure this is where it is read. */}
+      <p className="sales-note">Calculated here from two published estimates — a house price index and yearly income estimates — not counted.</p>
       {data.withheld ? (
         <p className="sales-note">No long-run comparison is shown for {name}. {data.withheld}</p>
       ) : (

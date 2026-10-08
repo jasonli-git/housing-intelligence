@@ -97,7 +97,7 @@ metrics:
     record_type: modelled
     ranked: false
     changed: false
-    packet: false
+    shown: false
 
   acs_median_gross_rent:
     label: Median gross rent
@@ -559,7 +559,7 @@ metrics:
     record_type: modelled
     ranked: false
     changed: false
-    packet: false
+    shown: false
 
   fhfa_hpi_all_transactions:
     label: House price index, all transactions

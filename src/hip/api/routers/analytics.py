@@ -16,6 +16,7 @@ from sqlalchemy import text
 
 from hip.api.deps import SessionDep
 from hip.api.params import LATEST_WINDOW, RankingBasis, RegionLevel, Window
+from hip.config import hidden_metrics
 from hip.packets import scoped_caveats
 
 router = APIRouter(tags=["analytics"])
@@ -373,7 +374,9 @@ def summary(
         ),
         {"id": region_id},
     ).mappings()
-    levels = [Level(**row) for row in level_rows]
+    # Inputs to a computed fact are not figures of their own (Milestone 52, #348).
+    hidden = hidden_metrics()
+    levels = [Level(**row) for row in level_rows if row["metric_id"] not in hidden]
 
     # The same derivation the analysis packet uses (hip.packets.caveats), so the
     # dashboard and a packet reader are told the same things about the same figures.

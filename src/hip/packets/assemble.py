@@ -13,13 +13,12 @@ current would undermine the provenance the packet exists to carry.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from functools import lru_cache
 from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from hip.config import load_metrics
+from hip.config import hidden_metrics
 from hip.packets.caveats import caveats_for
 from hip.packets.schema import (
     PACKET_VERSION,
@@ -254,13 +253,6 @@ def display_label(name: str, level: str, state_code: str) -> str:
     return f"{name}, {state_code}"
 
 
-@lru_cache(maxsize=1)
-def _unpacketed() -> frozenset[str]:
-    """Metrics configured `packet: false`: inputs to a computed fact, never read as
-    figures themselves (Milestone 52, ARCHITECTURE #348)."""
-    return frozenset(m for m, metric in load_metrics().items() if not metric.packet)
-
-
 def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet:
     """One region's packet for one change window.
 
@@ -273,7 +265,7 @@ def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet
     if region is None:
         raise PacketUnavailable(f"No region {region_id}")
 
-    hidden = _unpacketed()
+    hidden = hidden_metrics()
     rows = [
         row
         for row in session.execute(

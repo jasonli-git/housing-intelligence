@@ -3,6 +3,52 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.50.0] — 2026-10-08
+
+Milestone 52: historical persistence facts; and the changes merged since 0.49.0.
+
+### Added
+
+- **Is this unusual for here?** (ARCHITECTURE #348): on county pages and the New Jersey
+  page, home prices against household income each year since 1989 — FHFA's annual county
+  house price index (new source `fhfa_hpi_county`, 1975+) over the Census Bureau's yearly
+  median household income estimates (new source `census_saipe`, 1989+) — as a distance
+  from the place's own usual level, where today ranks among those years with the range
+  income's margin allows, and how long earlier spells at today's level lasted before
+  coming back. 22 facts; Hudson's is withheld, with the reason, because the index and the
+  page's own price-to-income moved opposite ways over 2019–2024.
+- **Packet 1.6** carries the fact, and the report a model reads states it; a
+  **no-prediction gate** refuses forecast wording ("will fall", "is due for") in a
+  sentence that cites it or follows one that does.
+- `GET /regions/{id}/persistence`, published as `regions/{id}/persistence.json`.
+- A metric option, `shown: false`, for inputs to a computed fact: kept with full
+  provenance, never in a packet or a region's list of figures.
+- **BPU reliability for all four electric utilities, 2024–2025** (#347), from their
+  annual reports, released under OPRA request C263585: a manual source,
+  `nj_bpu_reports`.
+- Claude Haiku 5.5 is a generation provider (#342), benchmarked at low, medium and high
+  effort (#344); `hip eval judge --model` judges added candidates alone.
+
+### Changed
+
+- **The consumer readings come from Claude Haiku 5.5 at medium effort**, then Gemini
+  3.8 Flash (low), Flash-Lite and DeepSeek, chosen from benchmark `v4` judged by Claude
+  Opus 5.5 (#343, #345). **Generation is hosted only** (SPEC v1.5): the Gemma fallback
+  and the rule that a list ends at a local model are retired.
+- **The causal gate is looser where it was wrong** (#346): a ratio named by its label or
+  in the sentence before counts as cited, and method clauses, denials and restatements
+  of a packet caveat pass. `v4` went from 14 causal flags to none.
+- The consumer prompt asks for a survey figure's margin every time it appears, and
+  describes the long-run comparison without forecasting.
+- The 21 county readings were regenerated against packet 1.6.
+- The map's standing check left ROADMAP (#349). Mistral and Qwen are no longer
+  providers (#340).
+
+### Fixed
+
+- Anthropic thinking is counted from `output_tokens_details.thinking_tokens`; Haiku
+  returns its thinking with the text left out (#344).
+
 ## [0.49.0] — 2026-10-07
 
 Milestone 51: relationship facts.

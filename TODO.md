@@ -14,25 +14,14 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 52, historical persistence facts (2026-10-08)
+## Now — Milestone 52 in review (2026-10-08)
 
-On `milestone/m52-historical-persistence`. Approved by the owner 2026-10-08: FHFA's
-county annual index and Census SAIPE median income (1989+); an episode is the years at or
-above today's level; the fact goes into the packet; plus a consumer-prompt line on survey
-margins, and the map standing check leaves ROADMAP.
-
-- [ ] Sources: `fhfa_hpi_county` (FHFA annual county index, 1975+) and `census_saipe`
-      (median household income with its 90% interval, 1989+), as metrics kept out of
-      packets and rankings
-- [ ] `hip.analytics.persistence` and `region_persistence` (migration 0035): position
-      against the region's own median, rank range from income's margin, past episodes
-      at or above today's level and when each returned to the median, validated
-      against the dollar price-to-income for 2015–2024 and withheld where they disagree
-- [ ] Packet 1.6 `persistence`, its report section, binding, and a no-prediction gate
-- [ ] API and publish, county and New Jersey pages
-- [ ] Consumer prompt: state a survey figure's margin beside it
-- [ ] ROADMAP: remove the map standing check
-- [ ] Tests, docs, completeness check, readings regenerated
+Milestone 52, historical persistence facts, is built on
+`milestone/m52-historical-persistence` as 0.50.0 (ARCHITECTURE #348–#349), PR open, not
+merged. The warehouse is migrated (0035), loaded and analysed, and the 21 county
+readings are regenerated against packet 1.6. After merge: `make publish`, `make deploy`,
+`make check-live`, then `make clean-dist`. Version 3 is complete but for Milestone 44,
+which waits on DCA; Version 4 is next.
 
 ## Open
 
@@ -41,6 +30,14 @@ first raised, not where it must be done.
 
 ### Correctness and data integrity
 
+- [ ] **Hudson's long-run comparison is withheld.** (M52, #348) FHFA's index over SAIPE
+      income rose 16.3% over 2019–2024 while Zillow's value over ACS income fell 2.3%:
+      Hudson's mix leans to condominiums, which FHFA's mortgage-based index and Zillow's
+      typical value weigh differently. Revisit if a later year brings them into line, or
+      decide whether a disagreement of a few points near zero should withhold at all.
+- [ ] **The long-run comparison stops at the latest income year.** (M52) FHFA's county
+      index reaches 2025 and SAIPE 2024, so the comparison ends in 2024 until SAIPE's
+      2025 estimates (about December 2026).
 - [ ] **62 school-district associations have no NJDOE performance record.** (M47, #319)
       Boundary and performance editions or excluded district types; review the publisher
       IDs. Kept unmatched, never matched by name.
@@ -332,7 +329,7 @@ first raised, not where it must be done.
       it in Markdown. If revived: one page from the latest run, earlier runs listed but
       not merged, since their judging differed.
 
-### Map performance — open leads, for the end of V3
+### Map performance — open leads (no release gate since #349)
 
 - [ ] **Unexplained: `slowest input 504ms`.** A single event took half a second to be
       answered with no long task anywhere. Likeliest candidates are a click forcing a
