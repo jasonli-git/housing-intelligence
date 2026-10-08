@@ -1,5 +1,5 @@
 # Housing Intelligence Platform Specifications
-## Product Specification v1.4
+## Product Specification v1.5
 
 ### Vision
 
@@ -497,17 +497,17 @@ The final model choice should be based on observed performance in the housing-an
 
 ---
 
-The platform should run hosted inference by default and retain a local runtime as a working fallback.
+The platform should run hosted inference. It does not keep a local runtime as a generation fallback.
 
 Hosted inference should be chosen for concurrency rather than for price. Local generation is serial on a machine that cannot hold two models at once, and that does not scale to national coverage.
 
-The local runtime should remain installable and working. It is what keeps the explanation layer durable when a vendor is not.
+When no listed model can write a reading, the reading already published stays, marked out of date, rather than being replaced by prose from an unevaluated or weaker source.
 
 ---
 
 Model selection should resolve through an ordered preference list rather than a single pinned model.
 
-The list should contain only models that have passed the evaluation described above, ordered by preference, with a local model last.
+The list should contain only models that have passed the evaluation described above, ordered by preference.
 
 Generation should use the first model in the list that is currently available. A model that is deprecated, unreachable, or rate-limited should fall through to the next, and the platform should record which model actually produced each explanation.
 
@@ -521,7 +521,7 @@ The platform should accept that hosted generation is not reproducible, and shoul
 
 A local model at a fixed seed reproduces its output indefinitely from a file on disk. A hosted model does not: it can be withdrawn, repriced, or changed behind its identifier.
 
-This is an accepted trade rather than an oversight. Its mitigations are the retained local runtime, the pinned model versions, the model identity stored on every generated row, and the packet hash that marks prose stale when the numbers behind it move.
+This is an accepted trade rather than an oversight. Its mitigations are the pinned model versions, the model identity stored on every generated row, and the packet hash that marks prose stale when the numbers behind it move.
 
 ---
 
@@ -760,3 +760,27 @@ survey data, such as CHAS, stay inside the principle.
 **Reason:** Decided by the owner on 2026-09-30. These figures are used exactly as
 published; "no margin available" would suggest a survey estimate with unknown error,
 which misdescribes them. Milestone 31's record-type labels carry the distinction.
+
+---
+
+### Amendments in v1.5
+
+Recorded 2026-10-08. The sections above are the current specification; this section
+says what changed and why, as the earlier amendment sections do.
+
+#### 1. The local runtime is no longer a generation fallback
+
+**Previous idea:** v1.1 kept a local runtime as a working fallback, required every
+preference list to end at a local model, and named the retained local runtime as a
+mitigation for hosted generation not being reproducible.
+
+**Current version:** Generation is hosted only. A preference list ends wherever its
+evaluated models end. When none can write a reading, the published one stays, marked out
+of date. Local models may still be benchmarked; they no longer write published prose.
+
+**Reason:** Decided by the owner on 2026-10-08, after benchmark `v4`. Gemma 4 E4B, the
+local fallback, had not been measured against packet 1.5 and could no longer hold the
+largest county packet in its window. The hosted list spans three providers in two
+regulatory regimes (Anthropic, Google, DeepSeek), so one vendor decision no longer
+removes every tier, and a stale reading is a better failure than one from a model the
+current benchmark has not measured.

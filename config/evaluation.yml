@@ -286,8 +286,8 @@ cohorts:
         output_usd_per_mtok: 3.75
       # 3.8 Flash at low thinking, added 2026-10-08 when Gemini began answering requests
       # for `gemini-3.7-flash` as `gemini-3.8-flash` (probed that day), though Google's
-      # pages still list 3.7 as supported. Same list price as 3.7; measured in
-      # `readings-v9` before it may join the preference list.
+      # pages still list 3.7 as supported. Same list price as 3.7; second on the
+      # consumer list from `v4`.
       - id: gemini-3.8-flash-low
         ref: gemini-3.8-flash
         label: Gemini 3.8 Flash (low thinking)
@@ -304,7 +304,8 @@ cohorts:
   # model" — so it is the one candidate sampled at its provider's own setting, which the
   # report states. It names exactly the model asked for, so the substitution guard
   # passes. $0.10 / $0.50 per million tokens for prompts to 100,000 tokens, from
-  # Anthropic's pricing page on 2026-10-08. Unbenchmarked, so not on a preference list.
+  # Anthropic's pricing page on 2026-10-08. Medium effort heads the consumer list
+  # from `v4`.
   anthropic:
     runner: hosted
     provider: anthropic
@@ -349,8 +350,9 @@ cohorts:
 # How `hip explain` picks a model, resolved at generation time rather than pinned.
 #
 # Each list is a durability mechanism, not a tuning knob: for each region it falls
-# through to the next model when one cannot write a publishable reading, and it ends
-# at a local model, so no vendor decision can stop `hip explain` from running. Two
+# through to the next model when one cannot write a publishable reading. Since SPEC v1.5
+# (2026-10-08) it is hosted only and ends where its evaluated models do; when none can
+# write, the published reading stays, marked out of date (ARCHITECTURE #345). Two
 # rules keep it from becoming a back door around the benchmark — every entry must be
 # a model some cohort declares (checked by `hip check-config`) and must have passed
 # the evaluation (checked at resolution, where the run results are).
@@ -405,27 +407,29 @@ generation:
       # below — a gap fifteen answers cannot separate — because the list must end on
       # this machine.
       - gemini-3.1-flash-lite
-      # Last, and a working model rather than a degraded one: Gemma 4 E4B [3.13]
-      # outscored two hosted candidates again.
-      - gemma-4-e4b-q4
-    # Chosen by the owner on 2026-09-27 from the three-county side-by-side,
-    # reports/evaluation/readings-v1.md (ARCHITECTURE #262), not from the benchmark,
-    # which measured the analyst task. Consumer readings published, of three:
+      # Gemma 4 E4B [3.13] ended this list until the local fallback was dropped on
+      # 2026-10-08 (SPEC v1.5).
+    # Chosen by the owner on 2026-10-08 from benchmark `v4`, judged by Opus 5.5
+    # (reports/evaluation/v4.md, ARCHITECTURE #343-#345). Rubric score, share of stated
+    # figures unsupported, and answers whose every figure bound:
     #
-    #   Gemini 3.7 Flash (low thinking)   2 (3 at three figures an answer), the
-    #                                     only one answering with the comparisons the
-    #                                     questions ask for
-    #   Gemini 3.1 Flash-Lite             3, but thin, repeating one pair of figures
-    #   DeepSeek V4.1 Flash (thinking off) 0: bare survey figures, too many of them
-    #   Gemma 4 E4B                       1
+    #   Claude Haiku 5.5 (medium effort)    3.61  0.4%  13/15
+    #   Gemini 3.8 Flash (low thinking)     3.48  0.0%  15/15
+    #   Gemini 3.1 Flash-Lite               3.08  0.0%  15/15
+    #   DeepSeek V4.1 Flash (thinking off)  3.22  0.0%  15/15
     #
-    # DeepSeek stays above the local model for what it is on the analyst list: the one
-    # tier outside Google, if Google is unreachable. It ends on this machine.
+    # Haiku leads at about a sixth of 3.8's price; an answer the gates refuse goes back
+    # for revision before the list falls through to 3.8, which stated no unsupported
+    # figure. Flash-Lite sits above DeepSeek despite scoring lower: it has written every
+    # reading since 3.7 Flash became 3.8, and DeepSeek stays as the one tier outside the
+    # United States. Haiku at high effort [3.44] scored below medium and is not listed.
+    # The previous list (2026-09-27, readings-v1) began with Gemini 3.7 Flash, which
+    # Google now serves as 3.8, and ended at Gemma 4 E4B.
     consumer:
-      - gemini-3.7-flash-low
+      - claude-haiku-5-5-medium
+      - gemini-3.8-flash-low
       - gemini-3.1-flash-lite
       - deepseek-flash-nothink
-      - gemma-4-e4b-q4
   # In-flight requests per hosted cohort. Hosted inference is on this milestone for
   # concurrency, but an unbounded fan-out earns 429s that look like model failures,
   # and the retry that follows costs more wall-clock than the parallelism saved.

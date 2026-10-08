@@ -12,7 +12,7 @@ Versions 3 and 4 are below — scheduled on 2026-09-18 as three versions, and re
 into two on 2026-09-23.** The
 platform is published: New Jersey is served from a public domain with no database and no
 application server, and its interpretation is written by hosted models behind a preference
-list that ends on this machine. Since 18, 17 and 23 it has a design language of its own
+list spanning three providers (hosted only since 2026-10-08, SPEC v1.5). Since 18, 17 and 23 it has a design language of its own
 and answers the questions people bring; since 16 it does so on a navigable globe of the
 United States, where only New Jersey carries figures and the map says so. Expansion past
 New Jersey was deferred on 2026-09-07. Everything it runs on — the warehouse schema, the

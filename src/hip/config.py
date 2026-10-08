@@ -1002,15 +1002,9 @@ def evaluation_problems(evaluation: EvaluationConfig) -> list[str]:
             f"evaluation.yml: duplicate entry '{dup}' in {where}"
             for dup in _duplicates(preference)
         ]
-        # SPEC requires each list to end at the local runtime: it is what keeps the
-        # explanation layer working when every vendor is not.
-        last = preference[-1]
-        if last in declared and evaluation.cohort_for(last).runner == "hosted":
-            problems.append(
-                f"evaluation.yml: {where} ends at '{last}', which is hosted. The list "
-                f"must end at a local model so that no vendor decision can stop "
-                f"`hip explain` from running."
-            )
+        # Until SPEC v1.5 (2026-10-08) each list had to end at a local model. It now ends
+        # wherever its evaluated models do: when none can write, the published reading
+        # stays, marked out of date (ARCHITECTURE #345).
 
     # A pin, not an alias. A withdrawn pin fails loudly and falls through; a repointed
     # alias changes published prose with nothing in the output to show it happened.

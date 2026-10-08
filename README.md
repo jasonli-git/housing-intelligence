@@ -247,8 +247,9 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
   rather than re-querying the warehouse is what makes the bytes on disk the same bytes
   the API serves.
 - **Hosted inference behind a preference list** (M12, built) — generation runs against
-  hosted providers in a configured order that ends on this machine, so no vendor decision
-  can stop it. Every candidate is pinned, and `hip eval models --probe` calls each one
+  hosted providers in a configured order across three of them — Anthropic, Google and
+  DeepSeek — and when none can write, the published reading stays, marked out of date.
+  The local fallback that ended the list until 2026-10-08 is retired (SPEC v1.5). Every candidate is pinned, and `hip eval models --probe` calls each one
   because a listed model is not always a callable one.
 - **Substitution detection** (M22, built) — a provider answering with a different model
   than the one requested is caught at runtime and recorded, since not every provider

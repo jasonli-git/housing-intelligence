@@ -14,12 +14,13 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — choosing the consumer-reading model from `v4` (2026-10-08)
+## Now — PR #119 in review (2026-10-08)
 
-Milestone 51 is merged and deployed. Benchmark `v4` is judged and on
-`change/benchmark-v4` (ARCHITECTURE #343, `reports/evaluation/v4.md`), PR open. Next: the
-owner picks the preference list, then Salem's reading is retried and the causal gate's
-over-refusals are decided (Open, Evaluation harness). Milestone 52 waits behind them.
+On `change/benchmark-v4`, PR #119: benchmark `v4` and its decisions — the consumer list
+led by Claude Haiku 5.5 at medium effort, generation hosted only (SPEC v1.5), and the
+causal gate loosened (ARCHITECTURE #343–#346). The 21 county consumer readings are
+regenerated in the warehouse, Salem included. After merge: `make publish`, `make deploy`,
+`make check-live`, then `make clean-dist`. Milestone 52 waits behind it.
 
 ## Open
 
@@ -132,29 +133,12 @@ first raised, not where it must be done.
 
 ### Evaluation harness
 
-- [ ] **Choose the consumer-reading preference list from `v4`.** (#343, #344) Run
-      2026-10-08, judged by Opus 5.5 (`reports/evaluation/v4.md`): Claude Haiku 5.5
-      medium 3.61 (0.4% unsupported, 13/15 bound), Gemini 3.8 Flash (low) 3.48 (0.0%,
-      15/15) at about six times Haiku's price, Haiku high 3.44, Haiku low 3.34, DeepSeek
-      Flash (thinking off) 3.22, Gemini 3.1 Flash-Lite 3.08. 3.7 Flash's `v3` 3.77 is from
-      another judge and packet. The owner's decision; `config/evaluation.yml` changes
-      after it.
-- [ ] **The causal gate refuses ratio narration the packet supplies.** (M51, #343) In
-      `v4`, 11 of the 13 flagged sentences explain a ratio's move by its two sides — the
-      one case `ratio_split` allows — but name the ratio by label ("the shift in Home value
-      to household income occurred because…") rather than by figure, which
-      `hip.packets.causal.causal_problems` requires; 2 more are methodological ("because
-      the margin of error exceeds the estimate"). `hip explain` would refuse all 13.
-      Decide whether a ratio's label counts as citing it, and whether a sentence citing
-      only a margin is exempt.
-- [ ] **Salem has no current reading.** (M51) Flash-Lite and DeepSeek were refused by
-      the gates (jargon, a population figure, survey figures without margins, four
-      figures) and Gemma could not run (below), so Salem's 2026-10-05 reading stays,
-      marked out of date. Retry once the first model is settled.
-- [ ] **Drop the Gemma fallback.** (#343) Decided by the owner 2026-10-08: the reading
-      preference lists no longer end on this machine. Remove `gemma-4-e4b-q4` from
-      `generation.preference` with the `v4` preference-list change, and record the
-      reversal of "the list must end on this machine" in ARCHITECTURE.
+- [ ] **Haiku 5.5 states survey figures without their margins.** (#345) The first
+      regeneration under the `v4` list, 2026-10-08: of 21 county readings Haiku wrote 18,
+      7 of them only after a revision for a survey figure without its margin, and 3 were
+      refused for quoting a non-housing measure ('Households with children', 'People per
+      household') and fell to Gemini 3.8. Cost $0.11. Watch whether the prompt should say
+      so before the next full pass.
 
 - [ ] **A reading's claims without a figure go unchecked.** (#275, 2026-10-01) Gemini's
       test reading of Hudson said rents take "a particularly large share of household

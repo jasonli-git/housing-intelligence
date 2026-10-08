@@ -2982,14 +2982,21 @@ def test_claude_cut_off_before_any_answer_is_truncated(
     assert generation.truncated_reasoning
 
 
-def test_the_repo_config_benchmarks_haiku_at_three_efforts_and_lists_it_nowhere() -> None:
+def test_the_repo_config_lists_haiku_at_medium_effort_first() -> None:
     evaluation = load_evaluation(CONFIG_DIR)
     for effort in ("low", "medium", "high"):
         haiku = evaluation.model(f"claude-haiku-5-5-{effort}")
         assert (haiku.ref, haiku.reasoning_effort) == ("claude-haiku-5-5", effort)
         assert (haiku.input_usd_per_mtok, haiku.output_usd_per_mtok) == (0.10, 0.50)
-        for listed in evaluation.generation.preference.values():
-            assert haiku.id not in listed
+    # The consumer list from `v4` (2026-10-08), hosted only since SPEC v1.5.
+    assert evaluation.generation.preference["consumer"] == [
+        "claude-haiku-5-5-medium",
+        "gemini-3.8-flash-low",
+        "gemini-3.1-flash-lite",
+        "deepseek-flash-nothink",
+    ]
+    for listed in evaluation.generation.preference.values():
+        assert all(evaluation.cohort_for(m).runner == "hosted" for m in listed)
 
 
 def test_judging_added_models_keeps_the_verdicts_already_paid_for(

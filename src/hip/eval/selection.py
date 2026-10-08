@@ -17,9 +17,11 @@ Four rules, each of them a SPEC requirement rather than a convenience:
   around Milestone 8's discipline. `benchmark_problem` is the gate, and `hip explain
   --all` and `--model` apply it too (#102): until 2026-09-11 they published from any
   model they could reach.
-- **The list ends at a local model**, enforced at config load. A hosted tail would mean
-  a vendor decision could stop `hip explain` from running, which is the single failure
-  mode the list exists to prevent.
+- **Exhausting the list keeps the published reading.** Until SPEC v1.5 (2026-10-08)
+  the list had to end at a local model, so no vendor decision could stop `hip explain`.
+  It is hosted only now: when no entry can write, the region's existing reading stays,
+  marked out of date, rather than being replaced from a source the benchmark has not
+  measured (ARCHITECTURE #345).
 - **Eligibility belongs to a configuration, not to a name** (Milestone 20). A model the
   benchmark measured at one reasoning effort, and that config now sets to another, is
   skipped: prose under its id would come from a configuration nobody measured.

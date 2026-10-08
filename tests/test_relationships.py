@@ -96,6 +96,49 @@ def test_the_report_states_every_relationship(hudson: Packet) -> None:
         ),
         # Side by side is not a cause.
         ("Median gross rent rose 36.2% while incomes rose 28.9%.", False),
+        # Loosened 2026-10-08 (#346): the ratio named by its label, in the sentence
+        # before, or in a shorter spoken form, rather than by its figure.
+        (
+            "The shift in **Home value to household income** occurred because home "
+            "values rose 26% while incomes rose 28.9%.",
+            False,
+        ),
+        (
+            "Home value to household income slipped from 6.81 to 6.65. This happened "
+            "because incomes rose 28.9% while home values rose 26%.",
+            False,
+        ),
+        (
+            "The value-to-income ratio fell because home values rose 26% while incomes "
+            "rose 28.9%.",
+            False,
+        ),
+        # Method at the head of the clause; a denial; the packet's own caveat.
+        (
+            "Because the margin of error (± 3.1%) is wide, incomes rose 28.9% at best "
+            "roughly.",
+            False,
+        ),
+        (
+            "Values rose 26%, but a sale median can rise because pricier homes sold, "
+            "not because homes became worth more.",
+            False,
+        ),
+        # Still refused: the sides with no ratio named are a cause between measures.
+        ("Home values rose 26% because incomes rose 28.9%.", True),
+        # A ratio named, but explained by a measure that is not one of its sides.
+        ("Home value to household income fell because rents rose 36.2%.", True),
+        (
+            "Home value to household income slipped from 6.81 to 6.65. Median gross "
+            "rent rose 36.2% due to incomes rising 28.9%.",
+            True,
+        ),
+        # A method word late in the clause does not make the claim about method.
+        (
+            "Median gross rent rose 36.2% because incomes rose 28.9%, within the survey "
+            "margins.",
+            True,
+        ),
     ],
 )
 def test_causal_wording_needs_a_relationship_that_supports_it(

@@ -724,7 +724,13 @@ def _cost_lines(run: _Run, evaluation: EvaluationConfig) -> list[str]:
         elif cohort.generation_tier:
             how = ", ".join(f"{tier} ×{count}" for tier, count in sorted(tiers.items()))
         else:
-            how = f"synchronous: {cohort.provider} offers no batch API or discounted tier"
+            # Anthropic has a Batch API at half price; `hip explain` calls synchronously,
+            # so its readings bill at the standard rate (ARCHITECTURE #345).
+            how = (
+                "synchronous at the standard rate: its Batch API is not used here"
+                if cohort.provider == "anthropic"
+                else f"synchronous: {cohort.provider} offers no batch API or discount"
+            )
             off_peak = sum(1 for u in usages if u.off_peak)
             if off_peak:
                 how += f"; {off_peak} at its off-peak rate"
