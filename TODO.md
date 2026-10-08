@@ -573,6 +573,17 @@ first raised, not where it must be done.
       shows carry their own terms, the corrected year labels, and how to acquire them —
       the dashboard's own export if it has one, an owner-run manual export like Zillow's,
       or not at all. Owner's decision.
+
+      **Checked by the owner 2026-10-08:** no export. The right-click menu offers *Show as
+      a table* and copies cells one at a time (Cmd-click; neither Shift nor Cmd+A selects
+      a range). The Evictions tab's tables are by *postal city name* ("Blackwood",
+      "Avenel", "Unknown"), filtered by ZIP and year (2022–2025) — no county or town
+      filter — and County Highlights carries rents, sale prices, ownership and the
+      homeless count, not evictions. So no geography the platform publishes can be read
+      off it without a lossy postal-name match. Statewide totals are readable: filings
+      90,093 / 97,907 / 109,313 / 115,063 and warrants of removal 19,413 / 39,546 /
+      39,161 / 37,323 for 2022–2025. Recommended: ask DCA for the underlying table by ZIP
+      and year as a file; failing that, statewide only or park the milestone.
 - [ ] **Advanced Data Protection for the removal list.** (#296) The list holds protected
       addresses in iCloud Drive, which Apple can read unless Advanced Data Protection is
       on (System Settings → Apple Account → iCloud). Tabled by the owner 2026-10-02.
