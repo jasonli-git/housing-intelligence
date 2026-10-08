@@ -149,11 +149,10 @@ first raised, not where it must be done.
       the gates (jargon, a population figure, survey figures without margins, four
       figures) and Gemma could not run (below), so Salem's 2026-10-05 reading stays,
       marked out of date. Retry once the first model is settled.
-- [ ] **Measure Gemma at the 16,384-token window.** (M51, #343) `limits.context_tokens`
-      went from 12,288 to 16,384 so `v4` could hold packet 1.5, and the gguf cohort, which
-      has no `generation_limits`, gets the same window in `hip explain`. Its peak memory
-      there is not yet measured; run Salem through Gemma before relying on it as the last
-      resort.
+- [ ] **Drop the Gemma fallback.** (#343) Decided by the owner 2026-10-08: the reading
+      preference lists no longer end on this machine. Remove `gemma-4-e4b-q4` from
+      `generation.preference` with the `v4` preference-list change, and record the
+      reversal of "the list must end on this machine" in ARCHITECTURE.
 
 - [ ] **A reading's claims without a figure go unchecked.** (#275, 2026-10-01) Gemini's
       test reading of Hudson said rents take "a particularly large share of household
