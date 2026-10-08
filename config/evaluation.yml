@@ -31,7 +31,12 @@ limits:
   # Sized to the payload, not to the machine. A county packet is 6,043 tokens as JSON;
   # 4096 silently truncated it with no error and no warning, leaving models to answer
   # from two-thirds of a packet.
-  context_tokens: 12288
+  #
+  # 12,288 → 16,384 on 2026-10-08: Milestones 49-51 grew a county's Markdown packet to
+  # about 8,350 tokens, which with 6,000 reserved for output passed 12,288, so run `v4`
+  # refused every scenario and Gemma, the local last resort in `hip explain`, could not
+  # take Salem's packet. 16,384 holds the largest county packet with its output.
+  context_tokens: 16384
   # Covers reasoning *and* answer, because reasoning models spend it before emitting a
   # word. Raised twice, each time from measurement rather than guesswork:
   #
@@ -281,8 +286,8 @@ cohorts:
         output_usd_per_mtok: 3.75
       # 3.8 Flash at low thinking, added 2026-10-08 when Gemini began answering requests
       # for `gemini-3.7-flash` as `gemini-3.8-flash` (probed that day), though Google's
-      # pages still list 3.7 as supported. Same list price as 3.7; measured in
-      # `readings-v9` before it may join the preference list.
+      # pages still list 3.7 as supported. Same list price as 3.7; second on the
+      # consumer list from `v4`.
       - id: gemini-3.8-flash-low
         ref: gemini-3.8-flash
         label: Gemini 3.8 Flash (low thinking)
@@ -293,12 +298,14 @@ cohorts:
 
   # Anthropic, added 2026-10-08 for the next rubric benchmark: a US provider other than
   # Google. Claude Haiku 5.5 at low effort (`output_config.effort`): by default it
-  # thinks (214 output tokens on a two-sentence probe), at `low` it answers directly
-  # (128, no thinking block). It takes no temperature — HTTP 400, "deprecated for this
+  # thinks (214 output tokens on a two-sentence probe), at `low` it answered that probe
+  # directly (128, no thinking block) — but on a packet it thinks at every effort, with
+  # the thinking text left out of the response (2026-10-08, ARCHITECTURE #344). It takes no temperature — HTTP 400, "deprecated for this
   # model" — so it is the one candidate sampled at its provider's own setting, which the
   # report states. It names exactly the model asked for, so the substitution guard
   # passes. $0.10 / $0.50 per million tokens for prompts to 100,000 tokens, from
-  # Anthropic's pricing page on 2026-10-08. Unbenchmarked, so not on a preference list.
+  # Anthropic's pricing page on 2026-10-08. Medium effort heads the consumer list
+  # from `v4`.
   anthropic:
     runner: hosted
     provider: anthropic
@@ -315,6 +322,24 @@ cohorts:
         reasoning_effort: low
         input_usd_per_mtok: 0.10
         output_usd_per_mtok: 0.50
+      # Added to `v4` by the owner on 2026-10-08 to see whether more thinking clears
+      # low effort's flags (7) and its one unsupported figure. A probe on five `v4`
+      # questions measured 1,003 output tokens at low, 1,271 at medium and 1,850 at
+      # high, thinking at all three; the packet dominates the price either way.
+      - id: claude-haiku-5-5-medium
+        ref: claude-haiku-5-5
+        label: Claude Haiku 5.5 (medium effort)
+        quantization: hosted
+        reasoning_effort: medium
+        input_usd_per_mtok: 0.10
+        output_usd_per_mtok: 0.50
+      - id: claude-haiku-5-5-high
+        ref: claude-haiku-5-5
+        label: Claude Haiku 5.5 (high effort)
+        quantization: hosted
+        reasoning_effort: high
+        input_usd_per_mtok: 0.10
+        output_usd_per_mtok: 0.50
 
   # Mistral (the EU tier, Milestones 12-22) and Qwen through Alibaba Cloud Model Studio
   # (a second China tier, `v3`) were removed by the owner on 2026-10-08: neither had
@@ -325,8 +350,9 @@ cohorts:
 # How `hip explain` picks a model, resolved at generation time rather than pinned.
 #
 # Each list is a durability mechanism, not a tuning knob: for each region it falls
-# through to the next model when one cannot write a publishable reading, and it ends
-# at a local model, so no vendor decision can stop `hip explain` from running. Two
+# through to the next model when one cannot write a publishable reading. Since SPEC v1.5
+# (2026-10-08) it is hosted only and ends where its evaluated models do; when none can
+# write, the published reading stays, marked out of date (ARCHITECTURE #345). Two
 # rules keep it from becoming a back door around the benchmark — every entry must be
 # a model some cohort declares (checked by `hip check-config`) and must have passed
 # the evaluation (checked at resolution, where the run results are).
@@ -381,27 +407,29 @@ generation:
       # below — a gap fifteen answers cannot separate — because the list must end on
       # this machine.
       - gemini-3.1-flash-lite
-      # Last, and a working model rather than a degraded one: Gemma 4 E4B [3.13]
-      # outscored two hosted candidates again.
-      - gemma-4-e4b-q4
-    # Chosen by the owner on 2026-09-27 from the three-county side-by-side,
-    # reports/evaluation/readings-v1.md (ARCHITECTURE #262), not from the benchmark,
-    # which measured the analyst task. Consumer readings published, of three:
+      # Gemma 4 E4B [3.13] ended this list until the local fallback was dropped on
+      # 2026-10-08 (SPEC v1.5).
+    # Chosen by the owner on 2026-10-08 from benchmark `v4`, judged by Opus 5.5
+    # (reports/evaluation/v4.md, ARCHITECTURE #343-#345). Rubric score, share of stated
+    # figures unsupported, and answers whose every figure bound:
     #
-    #   Gemini 3.7 Flash (low thinking)   2 (3 at three figures an answer), the
-    #                                     only one answering with the comparisons the
-    #                                     questions ask for
-    #   Gemini 3.1 Flash-Lite             3, but thin, repeating one pair of figures
-    #   DeepSeek V4.1 Flash (thinking off) 0: bare survey figures, too many of them
-    #   Gemma 4 E4B                       1
+    #   Claude Haiku 5.5 (medium effort)    3.61  0.4%  13/15
+    #   Gemini 3.8 Flash (low thinking)     3.48  0.0%  15/15
+    #   Gemini 3.1 Flash-Lite               3.08  0.0%  15/15
+    #   DeepSeek V4.1 Flash (thinking off)  3.22  0.0%  15/15
     #
-    # DeepSeek stays above the local model for what it is on the analyst list: the one
-    # tier outside Google, if Google is unreachable. It ends on this machine.
+    # Haiku leads at about a sixth of 3.8's price; an answer the gates refuse goes back
+    # for revision before the list falls through to 3.8, which stated no unsupported
+    # figure. Flash-Lite sits above DeepSeek despite scoring lower: it has written every
+    # reading since 3.7 Flash became 3.8, and DeepSeek stays as the one tier outside the
+    # United States. Haiku at high effort [3.44] scored below medium and is not listed.
+    # The previous list (2026-09-27, readings-v1) began with Gemini 3.7 Flash, which
+    # Google now serves as 3.8, and ended at Gemma 4 E4B.
     consumer:
-      - gemini-3.7-flash-low
+      - claude-haiku-5-5-medium
+      - gemini-3.8-flash-low
       - gemini-3.1-flash-lite
       - deepseek-flash-nothink
-      - gemma-4-e4b-q4
   # In-flight requests per hosted cohort. Hosted inference is on this milestone for
   # concurrency, but an unbounded fan-out earns 429s that look like model failures,
   # and the retry that follows costs more wall-clock than the parallelism saved.

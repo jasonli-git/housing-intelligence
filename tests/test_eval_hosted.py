@@ -2881,6 +2881,7 @@ def _claude_answer(**extra: object) -> dict[str, object]:
             "cache_read_input_tokens": 900,
             "cache_creation_input_tokens": 60,
             "output_tokens": 120,
+            "output_tokens_details": {"thinking_tokens": 70},
         },
         **extra,
     }
@@ -2908,6 +2909,9 @@ def test_claude_is_asked_with_its_effort_and_no_temperature(
     assert headers[0]["anthropic-version"] == "2023-06-01"
     _generate_as(runner, _at("anthropic", "default"), handler, monkeypatch)
     assert "output_config" not in sent[1]
+    for effort in ("medium", "high"):
+        _generate_as(runner, _at("anthropic", effort), handler, monkeypatch)
+        assert sent[-1]["output_config"] == {"effort": effort}
 
 
 def test_a_claude_answer_is_split_from_its_thinking_and_counted_as_billed(
@@ -2925,7 +2929,29 @@ def test_a_claude_answer_is_split_from_its_thinking_and_counted_as_billed(
     assert generation.telemetry.prompt_tokens == 1000
     assert generation.telemetry.cached_tokens == 900
     assert generation.telemetry.generation_tokens == 120
+    assert generation.telemetry.reasoning_tokens == 70
     assert generation.telemetry.served_model == "pinned-model-0731"
+
+
+def test_claude_thinking_with_its_text_left_out_is_still_counted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Haiku 5.5 returns a `thinking` block with an empty `thinking` string (probed
+    2026-10-08), so the count in `output_tokens_details` is the only sign it thought."""
+    answer = _claude_answer()
+    answer["content"] = [
+        {"type": "thinking", "thinking": "", "signature": "sig"},
+        {"type": "text", "text": "Values rose 45.97%."},
+    ]
+    generation = _generate_as(
+        _anthropic(monkeypatch),
+        _at("anthropic", "low"),
+        _answering(answer),
+        monkeypatch,
+    )
+    assert generation.answer == "Values rose 45.97%."
+    assert not generation.reasoning
+    assert generation.telemetry.reasoning_tokens == 70
 
 
 def test_claude_answering_as_another_model_is_a_substitution(
@@ -2956,10 +2982,40 @@ def test_claude_cut_off_before_any_answer_is_truncated(
     assert generation.truncated_reasoning
 
 
-def test_the_repo_config_benchmarks_haiku_at_low_effort_and_lists_it_nowhere() -> None:
+def test_the_repo_config_lists_haiku_at_medium_effort_first() -> None:
     evaluation = load_evaluation(CONFIG_DIR)
-    haiku = evaluation.model("claude-haiku-5-5-low")
-    assert (haiku.ref, haiku.reasoning_effort) == ("claude-haiku-5-5", "low")
-    assert (haiku.input_usd_per_mtok, haiku.output_usd_per_mtok) == (0.10, 0.50)
+    for effort in ("low", "medium", "high"):
+        haiku = evaluation.model(f"claude-haiku-5-5-{effort}")
+        assert (haiku.ref, haiku.reasoning_effort) == ("claude-haiku-5-5", effort)
+        assert (haiku.input_usd_per_mtok, haiku.output_usd_per_mtok) == (0.10, 0.50)
+    # The consumer list from `v4` (2026-10-08), hosted only since SPEC v1.5.
+    assert evaluation.generation.preference["consumer"] == [
+        "claude-haiku-5-5-medium",
+        "gemini-3.8-flash-low",
+        "gemini-3.1-flash-lite",
+        "deepseek-flash-nothink",
+    ]
     for listed in evaluation.generation.preference.values():
-        assert "claude-haiku-5-5-low" not in listed
+        assert all(evaluation.cohort_for(m).runner == "hosted" for m in listed)
+
+
+def test_judging_added_models_keeps_the_verdicts_already_paid_for(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Candidates added to a judged run are judged alone (#344): the run's other
+    verdicts are kept as they were, neither billed again nor re-drawn."""
+    from hip.eval.store import JUDGMENTS, run_dir, write_records
+    from hip.eval_cli import _kept_judgments
+
+    monkeypatch.setattr("hip.eval.store.get_settings", lambda: _settings_at(tmp_path))
+    evaluation = _evaluation(["gemini-test"])
+    kept = _judged(
+        _priced_generation("gemini-test", "gemini", prompt=1, output=1), 3.0, evaluation
+    )
+    redone = _judged(
+        _priced_generation("haiku-test", "anthropic", prompt=1, output=1), 2.0, evaluation
+    )
+    write_records(run_dir("v4") / JUDGMENTS, [kept, redone])
+
+    assert _kept_judgments("v4", ["haiku-test"]) == [kept]
+    assert _kept_judgments("v4", None) == []

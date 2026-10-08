@@ -448,8 +448,10 @@ class EvalLimits(BaseModel):
 # additive and deliberately absent until something measures them: a value config
 # accepts but no model has been seen to honour is the same unverified claim as a pin
 # copied from a blog. `minimal` was exactly that — documented for Gemini 3 Flash, and
-# refused by 3.7 Flash with HTTP 400 on 2026-09-10.
-ReasoningEffort = Literal["default", "disabled", "low"]
+# refused by 3.7 Flash with HTTP 400 on 2026-09-10. `medium` and `high` are Claude
+# Haiku 5.5's `output_config.effort` settings, probed 2026-10-08: accepted, and each
+# thinks longer than the last on a packet (ARCHITECTURE #344).
+ReasoningEffort = Literal["default", "disabled", "low", "medium", "high"]
 
 # Who a reading is written for (Milestone 30). The analyst reading is the interpretation
 # the site has always carried; the consumer reading answers fixed questions in plain
@@ -477,7 +479,7 @@ REASONING_CONTROLS: dict[str, frozenset[str]] = {
     "deepseek": frozenset({"default", "disabled"}),
     "gemini": frozenset({"default", "low"}),
     # Anthropic's `output_config.effort` (2026-10-08), as the judge sends it.
-    "anthropic": frozenset({"default", "low"}),
+    "anthropic": frozenset({"default", "low", "medium", "high"}),
 }
 
 
@@ -1000,15 +1002,9 @@ def evaluation_problems(evaluation: EvaluationConfig) -> list[str]:
             f"evaluation.yml: duplicate entry '{dup}' in {where}"
             for dup in _duplicates(preference)
         ]
-        # SPEC requires each list to end at the local runtime: it is what keeps the
-        # explanation layer working when every vendor is not.
-        last = preference[-1]
-        if last in declared and evaluation.cohort_for(last).runner == "hosted":
-            problems.append(
-                f"evaluation.yml: {where} ends at '{last}', which is hosted. The list "
-                f"must end at a local model so that no vendor decision can stop "
-                f"`hip explain` from running."
-            )
+        # Until SPEC v1.5 (2026-10-08) each list had to end at a local model. It now ends
+        # wherever its evaluated models do: when none can write, the published reading
+        # stays, marked out of date (ARCHITECTURE #345).
 
     # A pin, not an alias. A withdrawn pin fails loudly and falls through; a repointed
     # alias changes published prose with nothing in the output to show it happened.

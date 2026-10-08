@@ -14,20 +14,13 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 51 in review (2026-10-07)
+## Now — PR #119 in review (2026-10-08)
 
-Milestone 51, relationship facts, is built on `milestone/m51-relationship-facts` as
-0.49.0 (ARCHITECTURE #336–#339), PR open, not merged. The warehouse is migrated (0033),
-loaded and analysed, and 20 of the 21 county readings were regenerated against packet
-1.5 (see the reading items under Open).
-After merge: `make publish`, `make deploy`, `make check-live`, then `make clean-dist`.
-Next: Milestone 52, historical persistence facts, only when asked.
-
-**To resume:** `make db-up` for Postgres; `make api` for the API on 8000. A new
-environment needs the FCC summary ZIP in `data/manual/fcc_bdc/` (ARCHITECTURE #322).
-
-Open items a planned milestone now covers say so with **Scheduled: Milestone N**. They
-stay here until that milestone starts and takes them into `Now`.
+On `change/benchmark-v4`, PR #119: benchmark `v4` and its decisions — the consumer list
+led by Claude Haiku 5.5 at medium effort, generation hosted only (SPEC v1.5), and the
+causal gate loosened (ARCHITECTURE #343–#346). The 21 county consumer readings are
+regenerated in the warehouse, Salem included. After merge: `make publish`, `make deploy`,
+`make check-live`, then `make clean-dist`. Milestone 52 waits behind it.
 
 ## Open
 
@@ -140,24 +133,12 @@ first raised, not where it must be done.
 
 ### Evaluation harness
 
-- [ ] **The rubric benchmark for the next consumer-reading list.** (M51, #341) Gemini
-      3.7 Flash answers as 3.8, so every reading now comes from Flash-Lite. The owner
-      chose a full rubric run before deciding, judged by Claude Opus 5.5, over: Gemini 3.8
-      Flash (low thinking), Gemini 3.1 Flash-Lite, DeepSeek Flash (thinking off) and
-      Claude Haiku 5.5, with 3.7 Flash's `v3` score as a reference from another judge.
-      Not run until the owner says go. Ready: Anthropic is a provider and Haiku 5.5 is
-      configured at low effort (#342); `hip eval models --probe` on 2026-10-08 passed
-      3.8 Flash and Haiku and flagged 3.7 as substituted. GLM and Kimi were considered
-      and dropped by the owner (2026-10-08).
-- [ ] **Salem has no current reading.** (M51) Flash-Lite and DeepSeek were refused by
-      the gates (jargon, a population figure, survey figures without margins, four
-      figures) and Gemma could not run (below), so Salem's 2026-10-05 reading stays,
-      marked out of date. Retry once the first model is settled.
-- [ ] **Gemma's context window no longer holds every packet.** (M51) Packet 1.5's
-      relationships pushed Salem's prompt past `limits.context_tokens` (12,288,
-      `config/evaluation.yml`), so the local last resort failed rather than truncate.
-      Measure the largest county prompt and Gemma's memory at a larger window before
-      raising it.
+- [ ] **Haiku 5.5 states survey figures without their margins.** (#345) The first
+      regeneration under the `v4` list, 2026-10-08: of 21 county readings Haiku wrote 18,
+      7 of them only after a revision for a survey figure without its margin, and 3 were
+      refused for quoting a non-housing measure ('Households with children', 'People per
+      household') and fell to Gemini 3.8. Cost $0.11. Watch whether the prompt should say
+      so before the next full pass.
 
 - [ ] **A reading's claims without a figure go unchecked.** (#275, 2026-10-01) Gemini's
       test reading of Hudson said rents take "a particularly large share of household
