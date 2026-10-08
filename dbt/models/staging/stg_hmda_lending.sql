@@ -36,13 +36,23 @@ placed as (
     from {{ ref('stg_hmda_loans') }} l join shares s using (tract)
 ),
 -- Weighted median: the first value at which half the weight is reached.
+--
+-- In exact decimals, over every row tied at a value at once (a RANGE frame, not ROWS).
+-- Summed as doubles row by row, the running weight depended on the order rows arrived
+-- in, and a median sitting exactly at half the weight flipped between two rates on a
+-- reload over unchanged files: a ZIP's 2023 rate moved from 6.75 to 6.825 on
+-- 2026-10-07 (Milestone 51).
 medians as (
     select year, level, geoid, metric_id, min(value) as value
     from (
         select year, level, geoid, metric_id, value,
-               sum(w) over (partition by year, level, geoid, metric_id order by value
-                            rows unbounded preceding) as running,
-               sum(w) over (partition by year, level, geoid, metric_id) as total
+               sum(w::decimal(38, 12)) over (
+                   partition by year, level, geoid, metric_id order by value
+                   range between unbounded preceding and current row
+               ) as running,
+               sum(w::decimal(38, 12)) over (
+                   partition by year, level, geoid, metric_id
+               ) as total
         from placed,
              lateral (values ('hmda_median_rate', interest_rate),
                              ('hmda_median_loan_amount', loan_amount),
@@ -54,17 +64,19 @@ medians as (
     where running >= total / 2
     group by all
 ),
+-- Exact sums for the same reason as the medians: summed as doubles, the counts and
+-- shares moved in their last digits on every rebuild.
 counts as (
     select year, level, geoid, any_value(match_method) as match_method,
-           sum(w) filter (where action_taken = '1') as made,
-           sum(w) filter (where action_taken in ('1', '2', '3')) as decided,
-           sum(w) filter (where action_taken = '3') as denied,
-           sum(w) filter (where action_taken = '1' and loan_type = '1') as conventional,
-           sum(w) filter (where action_taken = '1' and loan_type = '2') as fha,
-           sum(w) filter (where action_taken = '1' and loan_type = '3') as va,
-           sum(w) filter (where action_taken = '3' and denial_reason = '1') as for_dti,
-           sum(w) filter (where action_taken = '3' and denial_reason = '4') as for_value,
-           sum(w) filter (where action_taken = '3' and denial_reason = '3') as for_credit
+           sum(w::decimal(38, 12)) filter (where action_taken = '1') as made,
+           sum(w::decimal(38, 12)) filter (where action_taken in ('1', '2', '3')) as decided,
+           sum(w::decimal(38, 12)) filter (where action_taken = '3') as denied,
+           sum(w::decimal(38, 12)) filter (where action_taken = '1' and loan_type = '1') as conventional,
+           sum(w::decimal(38, 12)) filter (where action_taken = '1' and loan_type = '2') as fha,
+           sum(w::decimal(38, 12)) filter (where action_taken = '1' and loan_type = '3') as va,
+           sum(w::decimal(38, 12)) filter (where action_taken = '3' and denial_reason = '1') as for_dti,
+           sum(w::decimal(38, 12)) filter (where action_taken = '3' and denial_reason = '4') as for_value,
+           sum(w::decimal(38, 12)) filter (where action_taken = '3' and denial_reason = '3') as for_credit
     from placed group by 1, 2, 3
 ),
 long as (

@@ -29,6 +29,7 @@ from __future__ import annotations
 from hip.eval.normalize import looks_like_refusal
 from hip.eval.types import CheckResult, Generation, NumericCheck, Scenario
 from hip.packets import Packet, bind
+from hip.packets.causal import causal_problems
 from hip.packets.citations import licensed_values, stated_numbers, strip_dates
 
 
@@ -111,6 +112,7 @@ def check_generation(
         numbers=checks,
         unsupported_count=unsupported,
         unsupported_rate=unsupported / len(checks) if checks else 0.0,
+        unsupported_causal=causal_problems(answer, binding, packet),
         empty_answer=not answer,
         refused=looks_like_refusal(answer),
         refusal_expected=scenario.expects_refusal,

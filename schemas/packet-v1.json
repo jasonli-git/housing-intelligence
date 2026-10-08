@@ -624,6 +624,75 @@
       "title": "PacketRegion",
       "type": "object"
     },
+    "PacketRelationship": {
+      "additionalProperties": false,
+      "description": "A connection between figures that exists as a fact (Milestone 51).\n\nA reading may state a relationship between two measures only where one is listed\nhere, and causal wording only where `causal` is true: a ratio's change split into\nits sides, which is arithmetic. Since 1.5.",
+      "properties": {
+        "causal": {
+          "description": "Whether causal wording may describe the relationship.",
+          "title": "Causal",
+          "type": "boolean"
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "enum": [
+                "faster",
+                "slower",
+                "indistinguishable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For `outpaced`: whether the first change exceeded the second by more than their combined margin, fell short by more, or could not be told apart.",
+          "title": "Direction"
+        },
+        "figures": {
+          "items": {
+            "$ref": "#/$defs/RelationshipFigure"
+          },
+          "title": "Figures",
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "ratio_split",
+            "outpaced",
+            "supply_and_moves"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "period_end": {
+          "format": "date",
+          "title": "Period End",
+          "type": "string"
+        },
+        "period_start": {
+          "format": "date",
+          "title": "Period Start",
+          "type": "string"
+        },
+        "relation_id": {
+          "title": "Relation Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "relation_id",
+        "kind",
+        "period_start",
+        "period_end",
+        "figures",
+        "causal"
+      ],
+      "title": "PacketRelationship",
+      "type": "object"
+    },
     "PacketSource": {
       "additionalProperties": false,
       "description": "One source release behind the numbers, so a claim can be traced to a file.",
@@ -750,6 +819,55 @@
       ],
       "title": "RegionRef",
       "type": "object"
+    },
+    "RelationshipFigure": {
+      "additionalProperties": false,
+      "description": "One number in a relationship, and the part it plays there.",
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "margin": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The survey margin at 90%, where the figure has one.",
+          "title": "Margin"
+        },
+        "metric_id": {
+          "title": "Metric Id",
+          "type": "string"
+        },
+        "role": {
+          "description": "What the number is in the relationship: `ratio_start`, `numerator_change`, `measure_change`, `homes_per_1000`.",
+          "title": "Role",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "role",
+        "metric_id",
+        "label",
+        "value",
+        "unit"
+      ],
+      "title": "RelationshipFigure",
+      "type": "object"
     }
   },
   "$id": "packet-v1.json",
@@ -792,13 +910,21 @@
         "1.1",
         "1.2",
         "1.3",
-        "1.4"
+        "1.4",
+        "1.5"
       ],
       "title": "Packet Version",
       "type": "string"
     },
     "region": {
       "$ref": "#/$defs/PacketRegion"
+    },
+    "relationships": {
+      "items": {
+        "$ref": "#/$defs/PacketRelationship"
+      },
+      "title": "Relationships",
+      "type": "array"
     },
     "sources": {
       "items": {

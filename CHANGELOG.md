@@ -3,6 +3,39 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.49.0] — 2026-10-07
+
+Milestone 51: relationship facts.
+
+### Added
+
+- **Relationship facts** (ARCHITECTURE #336): packet 1.5 carries `relationships`, the
+  connections between figures a reading may state, computed by `hip analyze` —
+  a ratio split into its two sides (home values and incomes behind price-to-income,
+  rents behind rent-to-income, home values and HUD's median behind price-to-AMI); rents
+  or home values outpacing incomes, only beyond their margins; and a county's homes
+  added beside its net moves. The report a model reads lists them, and binding covers
+  their figures. 1,583 on 2026-10-07.
+- **Causal wording is checked** (#337): a reading saying one measure moved *because*
+  of another is refused unless the measure is a ratio explained by its two sides. The
+  evaluation counts such claims in a new "Causal" column.
+- An answer that ends on a question — a misspelled next heading written into it — is
+  refused.
+
+### Changed
+
+- 20 of the 21 county readings were regenerated against packet 1.5, all by Gemini 3.1
+  Flash-Lite: Gemini 3.7 Flash now answers as 3.8 and was skipped, and Salem's was
+  refused by every model that ran, so its 2026-10-05 reading stays, marked out of date.
+  The causal gate sent one draft back ("driven by" with the vacancy rate). $0.07.
+- A survey figure's annualised change is no longer in the packet, which had stated it
+  without a margin (#339).
+
+### Fixed
+
+- **HMDA's medians and shares are reproducible** (#338): summed in exact decimals, they no
+  longer move when unchanged files are reloaded.
+
 ## [0.48.0] — 2026-10-07
 
 Milestone 50: migration-driven demand.

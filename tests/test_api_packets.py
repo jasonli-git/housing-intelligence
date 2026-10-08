@@ -31,7 +31,7 @@ def test_packet_endpoint_serves_the_published_contract(county_id: int) -> None:
 
     assert response.status_code == 200
     body = response.json()
-    assert body["packet_version"] == "1.4"
+    assert body["packet_version"] == "1.5"
     jsonschema.validate(body, json.loads(SCHEMA_PATH.read_text()))
 
 

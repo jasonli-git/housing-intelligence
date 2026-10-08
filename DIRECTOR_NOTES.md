@@ -494,3 +494,17 @@ Affordability at other rates was promoted earlier, into Milestone 48 (ARCHITECTU
 #327). The note's larger idea — a single due-diligence page — is Milestone 49's own scope;
 what it advised against stays advised against.
 
+---
+
+## Decision: relationship facts settle the grounded-synthesis note's evidence rule
+
+**Status:** Approved direction
+**Recorded:** 2026-10-07
+
+Settles part of "Grounded synthesis beyond the automated data summary" above; the note
+itself is left as written. The owner agreed that Milestone 51 delivers its rule that a
+reading connect only time-compatible, cited evidence and make no unsupported claim
+about causes: readings may now connect two figures only as a computed relationship fact
+connects them, and say "because" only of a ratio explained by its two sides
+(ARCHITECTURE #336–#337). The note's pilot had already become "What stands out here?"
+(#275). Nothing else in the note is promoted.

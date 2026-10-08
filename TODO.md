@@ -14,12 +14,14 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 50 in review (2026-10-07)
+## Now — Milestone 51 in review (2026-10-07)
 
-Milestone 50, migration-driven demand, is built on `milestone/m50-migration-demand` as
-0.48.0 (ARCHITECTURE #332–#335), PR open, not merged. The warehouse is migrated (0031,
-0032) and loaded. After merge: `make publish`, `make deploy`, `make check-live`, then
-`make clean-dist`. Next: Milestone 51, relationship facts, only when asked.
+Milestone 51, relationship facts, is built on `milestone/m51-relationship-facts` as
+0.49.0 (ARCHITECTURE #336–#339), PR open, not merged. The warehouse is migrated (0033),
+loaded and analysed, and 20 of the 21 county readings were regenerated against packet
+1.5 (see the reading items under Open).
+After merge: `make publish`, `make deploy`, `make check-live`, then `make clean-dist`.
+Next: Milestone 52, historical persistence facts, only when asked.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000. A new
 environment needs the FCC summary ZIP in `data/manual/fcc_bdc/` (ARCHITECTURE #322).
@@ -45,12 +47,6 @@ first raised, not where it must be done.
       community inventory's suppressions, agency months or CDC intervals; the coverage
       for those is in the M47 handoff until the check reads `community_records`.
 
-- [ ] **HMDA's weighted median can move without new data.** (found 2026-10-07 in
-      Milestone 50) A reload over unchanged files recorded one revision: a ZIP's 2023
-      `hmda_median_rate` from 6.75 to 6.825. Likely a tie in `stg_hmda_lending`'s
-      weighted median resolved by row order; check its ORDER BY breaks ties
-      deterministically, then label the fix on `/changes` (`method_changes`).
-
 - [ ] **BPU reliability covers JCP&L only.** (M42, #308) ACE's 2024 annual filing was
       found but not imported; PSE&G's and Rockland's are unverified, and the BPU portal
       challenges automated access. EIA-861 covers all four in the meantime.
@@ -59,11 +55,6 @@ first raised, not where it must be done.
 - [ ] **Five counties have no DOE energy burden.** (M42) Essex, Hudson, Middlesex,
       Monmouth and Somerset carry signed weights or costs in DOE's file; withheld, not
       zeroed, until DOE explains them.
-- [ ] **Readings may be stale after M42.** Not regenerated.
-- [ ] **Readings may be stale after M49 and M50.** `sr1a_turnover_per_1000` joins every
-      packet that has sales, and seven `irs_*` figures every county's; the readings were
-      not regenerated (the owner's choice, 2026-10-07).
-
 - [ ] **LIHTC is downloaded by hand each spring.** (M41, #307) HUD's release page
       answers scripts with an empty 202, so discovery reads `unreachable`. When HUD
       publishes 2025 data (announced for spring 2027), download the ZIP, copy the
@@ -72,9 +63,6 @@ first raised, not where it must be done.
       (`agent-handoffs/affordable-housing-assistance.md`) has the full steps.
 - [ ] **636 LIHTC projects are not placed in a town.** (M41) 591 resolve only to a
       county and 45 only to the state, where a Census place spans several towns.
-- [ ] **Readings may be stale after M41.** Four new metrics change the packets; the
-      readings were not regenerated.
-
 - [ ] **Most of Morris County has no flood zone share.** (M40, #301) FEMA's digital map
       covers 14.6% of its homes and Atlantic's 53%; the share is withheld below 95%.
       Morris's paper FIRMs are not read. Re-check when FEMA's coverage moves: the page
@@ -99,13 +87,6 @@ first raised, not where it must be done.
 - [ ] **The New Jersey page has no "Is it adding homes?" section.** (M39) The state's
       figures are loaded and in its tables; the section is on town and county pages only,
       because the state page is laid out differently. Add it if the state view needs it.
-
-- [ ] **A packet's `cagr` for a survey figure carries no margin.** (M30, #256) The
-      Markdown report and so the readings leave a survey figure's annualised change out,
-      because nothing computes its margin, but the packet's JSON still carries the
-      number — an API response stating a survey figure without its margin, short of
-      SPEC principle 12. Either compute the margin in `hip analyze` (the Census ratio
-      formula carried through the root) or null the field for survey figures.
 
 - [ ] **2,936 revision rows have an `old_release_id` that no longer resolves.**
       (M29, found in review 2026-09-20) They predate the retention fix in ARCHITECTURE
@@ -159,6 +140,22 @@ first raised, not where it must be done.
 
 ### Evaluation harness
 
+- [ ] **Gemini 3.7 Flash answers as 3.8.** (M51, 2026-10-07) The regeneration's first
+      model was skipped: asked for `gemini-3.7-flash`, Gemini answered as
+      `gemini-3.8-flash`, and the substitution guard refuses prose under the wrong name.
+      Every reading now comes from Flash-Lite, the owner's second choice (#262). Owner's
+      decision: pin 3.8 after a side-by-side (`hip eval readings`), or keep Flash-Lite
+      first.
+- [ ] **Salem has no current reading.** (M51) Flash-Lite and DeepSeek were refused by
+      the gates (jargon, a population figure, survey figures without margins, four
+      figures) and Gemma could not run (below), so Salem's 2026-10-05 reading stays,
+      marked out of date. Retry once the first model is settled.
+- [ ] **Gemma's context window no longer holds every packet.** (M51) Packet 1.5's
+      relationships pushed Salem's prompt past `limits.context_tokens` (12,288,
+      `config/evaluation.yml`), so the local last resort failed rather than truncate.
+      Measure the largest county prompt and Gemma's memory at a larger window before
+      raising it.
+
 - [ ] **A reading's claims without a figure go unchecked.** (#275, 2026-10-01) Gemini's
       test reading of Hudson said rents take "a particularly large share of household
       budgets" under *What stands out here?* with no figure behind the words
@@ -168,14 +165,10 @@ first raised, not where it must be done.
       a gate that refuses comparative words ("large share", "highest", "among the")
       in a sentence that cites no figure for the measure named; or the judge's
       `factual_accuracy` run on a sample of published readings after each regeneration.
+      Milestone 51 (#337) refuses causal wording between *cited* measures; a causal
+      claim between measures named only in words is the same blind spot.
       A second case on the packets of Milestone 34 (`reports/evaluation/readings-v8.md`):
       Cumberland's reading called Zillow's home value a five-year survey estimate.
-
-- [ ] **A garbled heading inside an answer publishes.** (M34, 2026-10-01) Cumberland's
-      test reading ended its first answer with "What shout I check before moving?" — the
-      next heading, misspelled, written into the answer — and passed every gate
-      (`reports/evaluation/readings-v8.md`). A gate refusing a question-shaped sentence
-      that ends an answer, or one close to another heading's text, would catch it.
 
 - [ ] **`import_gguf.sh` was lost, so nothing in the repo rebuilds the local models.**
       (M8 prep; found lost 2026-09-23) It and `kvbench.sh` lived in a `/private/tmp`
@@ -248,8 +241,6 @@ first raised, not where it must be done.
       at the owner's request on 2026-10-05; WCAG 2.2.2 asks for one on anything that
       moves for more than five seconds. Reduced motion stops it. The New Jersey header
       artwork added 2026-10-06 (#311) loops the same way.
-- [ ] **Reports may show the retired "before moving" answer** (#310) from readings
-      written before 2026-10-05, until the next regeneration.
 - [ ] **The budget explorer's comparison scope is not in its address.** (PR #86, Codex
       handoff `local-page-layout.md`) A page's link opens `/afford` with its place and
       county; switching to another county or all New Jersey changes local state only,

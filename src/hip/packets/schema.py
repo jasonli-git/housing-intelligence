@@ -47,7 +47,12 @@ from pydantic import BaseModel, ConfigDict, Field
 # of a redistributed series as `originator`, and each source's licence class and the
 # notices its terms require. Additive, and outside the content hash: they say what a
 # figure is and what may be done with it, not what it says, so no reading goes stale.
-PACKET_VERSION = "1.4"
+#
+# 1.5 adds `relationships` (Milestone 51, ARCHITECTURE #336): the connections between
+# figures a reading may narrate, each a fact `hip analyze` computed — a ratio beside its
+# two sides, one change against another of the same kind, homes added beside moves.
+# Additive and inside the content hash: each is something a reading may say.
+PACKET_VERSION = "1.5"
 
 # The published contract. Resolved from the source tree, which is where this project
 # runs from (ARCHITECTURE #13 — local-first, no packaged deployment yet).
@@ -255,6 +260,49 @@ class PacketHighlight(_Strict):
     rank_worst: int | None = Field(default=None, description=_RANK_WORST)
 
 
+class RelationshipFigure(_Strict):
+    """One number in a relationship, and the part it plays there."""
+
+    role: str = Field(
+        description=(
+            "What the number is in the relationship: `ratio_start`, `numerator_change`, "
+            "`measure_change`, `homes_per_1000`."
+        )
+    )
+    metric_id: str
+    label: str
+    value: float
+    unit: str
+    margin: float | None = Field(
+        default=None, description="The survey margin at 90%, where the figure has one."
+    )
+
+
+class PacketRelationship(_Strict):
+    """A connection between figures that exists as a fact (Milestone 51).
+
+    A reading may state a relationship between two measures only where one is listed
+    here, and causal wording only where `causal` is true: a ratio's change split into
+    its sides, which is arithmetic. Since 1.5.
+    """
+
+    relation_id: str
+    kind: Literal["ratio_split", "outpaced", "supply_and_moves"]
+    period_start: date
+    period_end: date
+    figures: list[RelationshipFigure]
+    direction: Literal["faster", "slower", "indistinguishable"] | None = Field(
+        default=None,
+        description=(
+            "For `outpaced`: whether the first change exceeded the second by more than "
+            "their combined margin, fell short by more, or could not be told apart."
+        ),
+    )
+    causal: bool = Field(
+        description="Whether causal wording may describe the relationship."
+    )
+
+
 class PacketSource(_Strict):
     """One source release behind the numbers, so a claim can be traced to a file."""
 
@@ -279,7 +327,7 @@ class PacketSource(_Strict):
 class Packet(_Strict):
     # 1.1 still parses. Every 1.2 and 1.3 addition is optional, and the evaluation reads
     # the 1.1 packets frozen into run `v2`'s scenarios as the ground truth for its checks.
-    packet_version: Literal["1.1", "1.2", "1.3", "1.4"]
+    packet_version: Literal["1.1", "1.2", "1.3", "1.4", "1.5"]
     region: PacketRegion
     window: PacketWindow
     metrics: list[PacketMetric]
@@ -288,6 +336,7 @@ class Packet(_Strict):
     highlights: list[PacketHighlight]
     caveats: list[str]
     sources: list[PacketSource]
+    relationships: list[PacketRelationship] = Field(default_factory=list)
 
 
 def packet_hash(packet: Packet) -> str:
