@@ -3,7 +3,7 @@
 
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
-        check-dist check-live deploy api web \
+        check-dist check-live clean-dist deploy api web \
         test test-all test-py test-web lint format check-config dbt-debug eval clean
 
 SITE_PACKAGES = $(wildcard .venv/lib/python*/site-packages)
@@ -223,6 +223,14 @@ check-live: check-dist  ## Verify the deployed site and artifacts match dist/
 	$(call STAMP,check-live: started)
 	cd web && SITE_URL='$(SITE_URL)' ARTIFACT_URL='$(ARTIFACT_URL)' node scripts/check-live.mjs
 	$(call STAMP,check-live: done)
+
+clean-dist:  ## Delete dist/ once a deploy has passed check-live (about 5 GB)
+	@# `make publish` deletes and rebuilds dist/ from scratch, so between deploys it only
+	@# serves a re-run of `make check-live`. Measured 2026-10-07: 5.3 GB on disk, the
+	@# largest thing in the checkout. Run it after check-live passes, never before: the
+	@# runbook's retry compares the live site with this tree.
+	@if [ -d dist ]; then echo "Removing dist/ ($$(du -sh dist | cut -f1))"; rm -rf dist; \
+	  else echo "dist/ is already gone"; fi
 
 r2-cors:  ## Let the site's pages read the R2 artifacts (the property-tax lookup needs it)
 	@# A standing bucket setting rather than part of `deploy`: it changes only when this

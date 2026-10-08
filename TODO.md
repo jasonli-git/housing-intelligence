@@ -14,12 +14,11 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — Milestone 49 in review (2026-10-07)
+## Now — between milestones (2026-10-07)
 
-Milestone 49, decision guides, is built on `milestone/m49-decision-guides` as 0.47.0
-(ARCHITECTURE #328–#331), PR open, not merged. After merge: `make publish` and
-`make deploy`; the warehouse already holds `sr1a_turnover_per_1000` from `hip analyze`.
-Next: Milestone 50, only when asked. Milestone 44 waits on how to read DCA's dashboard.
+Milestone 49 is merged and deployed as 0.47.0 (ARCHITECTURE #328–#331). Next:
+Milestone 50, migration-driven demand, only when asked. Milestone 44 waits on how to read
+DCA's dashboard; radon waits on NJDEP.
 
 **To resume:** `make db-up` for Postgres; `make api` for the API on 8000. A new
 environment needs the FCC summary ZIP in `data/manual/fcc_bdc/` (ARCHITECTURE #322).

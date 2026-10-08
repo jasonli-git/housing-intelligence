@@ -723,8 +723,9 @@ The platform has no request-time compute, so production is a set of files rather
 running service. `make publish` builds them; `make deploy` sends them.
 
 ```bash
-make publish   # dist/artifacts (16,783 files, about 0.8 GB) + dist/site (14,294 files, 4.3 GB)
+make publish   # dist/artifacts (16,785 files, about 0.8 GB) + dist/site (14,303 files, 4.4 GB)
 make deploy    # artifacts -> object storage, site -> static host
+make clean-dist  # after check-live passes: free the ~5 GB dist/ until the next publish
 make r2-cors   # once per bucket: let the site's pages read the artifacts (/tax, /guide)
 ```
 
@@ -741,7 +742,9 @@ tax lookup needs, and 13 sample pages loaded locally and live. The weekly refres
 `hip regenerate-now` run it after deploying, wait two minutes and run it again if it
 fails, and send the urgent alert only when it fails twice. When that alert arrives:
 
-1. Run `make check-live` again. A CDN still settling usually passes by now.
+1. Run `make check-live` again. A CDN still settling usually passes by now. If `dist/`
+   was already removed with `make clean-dist`, `make publish` first: it rebuilds them
+   from the same warehouse.
 2. Read what it names. A **manifest mismatch** means R2 holds files from a different
    build than `dist/`: an interrupted `make deploy` — run `make deploy` again. A
    **page mismatch** names the page and what differs; if live and local differ, the Pages
