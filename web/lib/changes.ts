@@ -9,6 +9,7 @@
 
 import type { RevisedPlace, RevisionGroup } from "@/lib/api";
 import { formatChange, formatMetric } from "@/lib/format";
+import { marginLabel } from "@/lib/uncertainty";
 import { displayName } from "@/lib/names";
 import { periodLabel } from "@/lib/periods";
 
@@ -80,10 +81,18 @@ export function summaryLine(group: RevisionGroup): string {
  * mortgage-rate average moves by hundredths as each week's reading arrives, and
  * "6.8% → 6.9%" would overstate a move from 6.81 to 6.86.
  */
-export function revisedValue(value: number | null, group: RevisionGroup): string {
+export function revisedValue(
+  value: number | null,
+  group: RevisionGroup,
+  margin: number | null = null,
+): string {
   if (value === null) return "—";
-  if (group.unit === "percent") return `${value.toFixed(2)}%`;
-  return formatMetric(value, group.unit, group.metric_id);
+  const shown = group.unit === "percent" ? `${value.toFixed(2)}%` : formatMetric(value, group.unit, group.metric_id);
+  // A survey figure's margin beside it, as everywhere else on the site (#350). A
+  // revision recorded before 2026-10-08 kept no margin; the page says so once.
+  if (margin === null) return shown;
+  const label = marginLabel(value, margin, group.unit, group.metric_id);
+  return label ? `${shown} ${label}` : shown;
 }
 
 /** The change relative to the earlier value: "+6.5%", "-46.0%"; "—" where there is none. */

@@ -853,6 +853,8 @@ export type SourceFreshness = {
   /** The newest period actually loaded, not merely discovered. ISO dates. */
   period_observed_start: string | null;
   period_observed_end: string | null;
+  /** For HUD's income limits, the day the newest year's took effect (#350). */
+  in_force_from?: string | null;
   /** What the publisher itself said, when it said anything. */
   published: string | null;
   /** When the publisher was last asked. ISO timestamp. */
@@ -890,6 +892,9 @@ export type RevisedPlace = {
   period_end: string;
   old_value: number | null;
   new_value: number | null;
+  /** Survey margins at 90% beside each value; null before 2026-10-08, when none were kept. */
+  old_margin?: number | null;
+  new_margin?: number | null;
   /** (new − old) / |old|, a fraction; null when either side is missing or old is zero. */
   change: number | null;
   /** How many of this place's periods moved in this group. */

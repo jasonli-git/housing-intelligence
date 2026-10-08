@@ -135,9 +135,17 @@ export default async function FreshnessPage() {
                             </span>
                           </td>
                           <td>
-                            {throughLabel(source.period_observed_end)}
-                            {stillUnderWay(report.generated_at, source.period_observed_end) && (
-                              <span className="fresh-sub">a period still under way</span>
+                            {source.in_force_from ? (
+                              // HUD's income limits: a year set in advance, in force from
+                              // HUD's own date rather than "through December" (#350).
+                              <>FY{source.period_observed_end?.slice(0, 4)} limits<span className="fresh-sub">in force since {dayLabel(source.in_force_from)}</span></>
+                            ) : (
+                              <>
+                                {throughLabel(source.period_observed_end)}
+                                {stillUnderWay(report.generated_at, source.period_observed_end) && (
+                                  <span className="fresh-sub">a period still under way</span>
+                                )}
+                              </>
                             )}
                             {source.published && (
                               <span className="fresh-sub">released {dayLabel(source.published)}</span>

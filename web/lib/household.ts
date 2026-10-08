@@ -23,6 +23,8 @@ export type IncomeLimits = {
   /** How the county was reached: the region itself, its parent, or a ZIP's crosswalk. */
   via: "self" | "parent" | "crosswalk";
   fiscal_year: number;
+  /** The day this fiscal year's limits took effect, from HUD's notice (#350). */
+  in_force_from?: string | null;
   median_income: number | null;
   bands: IncomeBand[];
   source: string;

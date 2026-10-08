@@ -479,3 +479,71 @@ def test_only_a_clean_main_may_run_the_schedule(tmp_path: Path) -> None:
 
 def test_a_directory_that_is_not_a_repository_may_not_run(tmp_path: Path) -> None:
     assert (refresh.checkout_problem(tmp_path) or "").startswith("git could not be read")
+
+
+def test_a_current_file_source_records_when_its_publisher_was_last_asked(
+    tmp_path: Path,
+) -> None:
+    """Zillow, FRED and FHFA have no `discover()`, so a refresh that asked them whether
+    their file changed recorded nothing the freshness page could date (#222, #350)."""
+    from hip.sources.base import read_discovery
+
+    class Current(Flaky):
+        def __init__(self) -> None:
+            super().__init__(failing="")
+            self.reachable = True
+
+        def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+            return [
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer="a",
+                    vintage="current",
+                    url="https://example.invalid/a.csv",
+                )
+            ]
+
+        def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
+            destination.write_bytes(b"col\n1\n")
+            self._last_validators = {"etag": '"v1"'}
+
+        def _revalidate(self, release):  # type: ignore[no-untyped-def]
+            return None if not self.reachable else True
+
+    adapter = Current()
+    refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+    first = read_discovery(tmp_path, adapter.source_id)
+    assert first is not None
+    assert (first.newest, first.outcome) == ("current", "confirmed")
+
+    adapter.reachable = False
+    refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+    second = read_discovery(tmp_path, adapter.source_id)
+    assert second is not None and second.outcome == "unreachable"
+
+
+def test_a_dated_source_is_left_to_its_own_discovery(tmp_path: Path) -> None:
+    """A release with a year in it is `discover()`'s to record: this would not know
+    which release is newest."""
+    from hip.sources.base import read_discovery
+
+    class Dated(Flaky):
+        def __init__(self) -> None:
+            super().__init__(failing="")
+
+        def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+            return [
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer="a",
+                    vintage="2025",
+                    url="https://example.invalid/a.csv",
+                )
+            ]
+
+        def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
+            destination.write_bytes(b"col\n1\n")
+
+    adapter = Dated()
+    refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+    assert read_discovery(tmp_path, adapter.source_id) is None

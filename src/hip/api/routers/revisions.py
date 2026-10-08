@@ -66,6 +66,11 @@ class RevisedPlace(BaseModel):
     period_end: date
     old_value: float | None = None
     new_value: float | None = None
+    # The survey margins at 90% beside each value (migration 0036, #350). None for a
+    # figure with no margin, and for any revision recorded before 2026-10-08, when the
+    # margins were not yet kept.
+    old_margin: float | None = None
+    new_margin: float | None = None
     # (new − old) / |old|, a fraction. None when either side is missing or old is zero.
     change: float | None = None
     # How many of this place's periods moved in this group.
@@ -119,14 +124,16 @@ WITH figure AS (
     SELECT (r.revised_at AT TIME ZONE 'UTC')::date AS revised_on,
            r.region_id, r.metric_id, r.period_start,
            (array_agg(r.old_value ORDER BY r.revision_id))[1] AS old_value,
-           (array_agg(r.new_value ORDER BY r.revision_id DESC))[1] AS new_value
+           (array_agg(r.new_value ORDER BY r.revision_id DESC))[1] AS new_value,
+           (array_agg(r.old_margin ORDER BY r.revision_id))[1] AS old_margin,
+           (array_agg(r.new_margin ORDER BY r.revision_id DESC))[1] AS new_margin
     FROM fact_revision_shown r
     WHERE (r.revised_at AT TIME ZONE 'UTC')::date = ANY(:days)
     GROUP BY 1, 2, 3, 4
 ),
 scored AS (
     SELECT f.revised_on, f.region_id, f.metric_id, f.period_start,
-           f.old_value, f.new_value,
+           f.old_value, f.new_value, f.old_margin, f.new_margin,
            COALESCE(m.label, f.metric_id) AS label,
            COALESCE(m.unit, '') AS unit,
            m.frequency,
@@ -175,7 +182,7 @@ per_place AS (
     -- DISTINCT ON runs after the window, so `periods` counts every row first.
     SELECT DISTINCT ON (revised_on, metric_id, under_way, region_id)
            revised_on, metric_id, under_way, region_id, period_start, period_end,
-           old_value, new_value, change,
+           old_value, new_value, old_margin, new_margin, change,
            count(*) OVER (PARTITION BY revised_on, metric_id, under_way, region_id)
                AS periods
     FROM scored
@@ -191,7 +198,8 @@ ranked AS (
     FROM per_place p
 )
 SELECT k.revised_on, k.metric_id, k.under_way, k.region_id,
-       k.period_start, k.period_end, k.old_value, k.new_value, k.change, k.periods,
+       k.period_start, k.period_end, k.old_value, k.new_value,
+       k.old_margin, k.new_margin, k.change, k.periods,
        g.name, g.level, c.name AS county,
        -- The same test the static build uses to decide which region pages exist.
        (g.level IS NOT NULL AND g.level <> 'state' AND EXISTS (
@@ -250,6 +258,8 @@ def revision_report(
                 period_end=row["period_end"],
                 old_value=row["old_value"],
                 new_value=row["new_value"],
+                old_margin=row["old_margin"],
+                new_margin=row["new_margin"],
                 change=row["change"],
                 periods=row["periods"],
             )

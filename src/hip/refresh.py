@@ -129,6 +129,31 @@ class AcquireReport:
         return not self.failures and not self.unreachable and not self.undiscovered
 
 
+def _revalidation_record(source_id: str, fetched: list[Release]) -> Discovery | None:
+    """When the publisher of a source that always serves "the current file" was last
+    asked whether it changed (#222, #350).
+
+    Zillow, FRED and FHFA publish no dated releases, so they have no `discover()` and
+    nothing recorded when a refresh asked them — the freshness page could say a file
+    had not changed, never when it last checked. A refresh that downloaded the file, or
+    reached the publisher and heard "unchanged", now records the check like a
+    discovery. A source with any dated release is left alone: its record is
+    `discover()`'s, and its `newest` names a release this would not know.
+    """
+    if not fetched or not all(r.ref.mutable for r in fetched):
+        return None
+    asked = [r for r in fetched if not r.from_cache or r.revalidation != "not_asked"]
+    if not asked:
+        return None
+    reached = all(r.revalidation != "unreachable" for r in asked)
+    return Discovery(
+        source_id=source_id,
+        newest=fetched[0].ref.vintage,
+        checked_at=datetime.now(UTC),
+        outcome="confirmed" if reached else "unreachable",
+    )
+
+
 def acquire(
     adapters: Iterable[SourceAdapter],
     *,
@@ -154,6 +179,7 @@ def acquire(
     """
     today = today or datetime.now(UTC).date()
     for adapter in adapters:
+        discovery = None
         if vintage is None:
             try:
                 discovery = adapter.discover(today)
@@ -173,12 +199,14 @@ def acquire(
         except (SourceError, OSError) as exc:
             yield adapter, RefFailure.of(adapter.source_id, "refs()", exc)
             continue
+        fetched: list[Release] = []
         for ref in refs:
             try:
                 release = adapter.fetch(ref, raw_dir=raw_dir, force=force)
             except (SourceError, OSError) as exc:
                 yield adapter, RefFailure.of(adapter.source_id, ref.key, exc)
                 continue
+            fetched.append(release)
             yield adapter, release
             # Refs that only exist once their parent is on disk — HUD's 571 municipal
             # CHAS files are named by a directory this loop just fetched. Driving
@@ -197,6 +225,12 @@ def acquire(
                     yield adapter, adapter.fetch(child, raw_dir=raw_dir, force=force)
                 except (SourceError, OSError) as exc:
                     yield adapter, RefFailure.of(adapter.source_id, child.key, exc)
+        if (
+            vintage is None
+            and discovery is None
+            and (checked := _revalidation_record(adapter.source_id, fetched))
+        ):
+            write_discovery(raw_dir, checked)
 
 
 def _keep_published(discovery: Discovery, recorded: Discovery | None) -> Discovery:

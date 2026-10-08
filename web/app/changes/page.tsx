@@ -51,7 +51,9 @@ export default async function ChangesPage() {
             <h1 className="page-title">Figures revised after they were published</h1>
             <p className="meta history-intro">
               Publishers sometimes revise figures already shown here. Compare the earlier and
-              updated values by refresh, newest first.
+              updated values by refresh, newest first. A survey figure shows its margin beside
+              each value for revisions recorded from 8 October 2026; earlier ones kept the values
+              alone.
             </p>
             <nav className="history-tabs" aria-label="Source history"><Link href="/freshness">Source freshness <span aria-hidden="true">↗</span></Link><Link href="/changes" aria-current="page">Revised figures</Link></nav>
             <p className="meta fresh-built">
@@ -171,8 +173,8 @@ function ChangeGroup({ group, day }: { group: RevisionGroup; day: string }) {
                     </span>
                   </th>
                   <td className="change-period">{period}</td>
-                  <td className="num">{revisedValue(place.old_value, group)}</td>
-                  <td className="num">{revisedValue(place.new_value, group)}</td>
+                  <td className="num">{revisedValue(place.old_value, group, place.old_margin ?? null)}</td>
+                  <td className="num">{revisedValue(place.new_value, group, place.new_margin ?? null)}</td>
                   <td className="num">{changeLabel(place)}</td>
                 </tr>
               );

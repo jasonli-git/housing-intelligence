@@ -163,10 +163,11 @@ describe("checkedDaysBefore", () => {
 });
 
 describe("STATUS_COPY", () => {
-  it("never claims a source with no release schedule was checked", () => {
-    // The page cannot back "checked" for a revalidated source: that timestamp is not
-    // recorded anywhere it reads from (hip/warehouse/freshness.py).
-    expect(STATUS_COPY.not_tracked.means).toContain("does not yet record when it was last read");
+  it("never claims an untracked source was checked", () => {
+    // Since #350 a fixed-address source records its checks and reads "Current"; what
+    // is left untracked is pinned or imported by hand, and nothing checks it.
+    expect(STATUS_COPY.not_tracked.means).toContain("no recorded check");
+    expect(STATUS_COPY.not_tracked.means).not.toMatch(/\bchecked\b/);
   });
 });
 
