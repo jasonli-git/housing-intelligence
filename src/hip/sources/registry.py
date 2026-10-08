@@ -18,6 +18,7 @@ from hip.sources.census_blocks import BlocksAdapter
 from hip.sources.census_lodes import LodesAdapter
 from hip.sources.census_pep import PepAdapter
 from hip.sources.census_permits import PermitsAdapter
+from hip.sources.census_saipe import SaipeAdapter
 from hip.sources.community import (
     CrimeAdapter,
     PlacesAdapter,
@@ -27,7 +28,7 @@ from hip.sources.community import (
 from hip.sources.epa_sdwis import SdwisAdapter
 from hip.sources.fcc import BroadbandSummaryAdapter
 from hip.sources.fema import NfhlAdapter, NfipClaimsAdapter
-from hip.sources.fhfa import HpiAdapter
+from hip.sources.fhfa import HpiAdapter, HpiCountyAdapter
 from hip.sources.fred import FredAdapter
 from hip.sources.hmda import HmdaAdapter
 from hip.sources.hud import HudAdapter, HudChasAdapter, HudFmrAdapter
@@ -84,6 +85,9 @@ IMPLEMENTED: tuple[str, ...] = (
     ZhviAdapter.source_id,
     ZoriAdapter.source_id,
     HpiAdapter.source_id,
+    # Milestone 52.
+    HpiCountyAdapter.source_id,
+    SaipeAdapter.source_id,
     PermitsAdapter.source_id,
     MigrationAdapter.source_id,
     AcsAdapter.source_id,
@@ -136,6 +140,9 @@ METRIC_SOURCES: tuple[str, ...] = (
     ZhviAdapter.source_id,
     ZoriAdapter.source_id,
     HpiAdapter.source_id,
+    # Milestone 52.
+    HpiCountyAdapter.source_id,
+    SaipeAdapter.source_id,
     PermitsAdapter.source_id,
     MigrationAdapter.source_id,
     AcsAdapter.source_id,
@@ -241,6 +248,10 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return ZoriAdapter()
     if source_id == HpiAdapter.source_id:
         return HpiAdapter()
+    if source_id == HpiCountyAdapter.source_id:
+        return HpiCountyAdapter(states=scope.states)
+    if source_id == SaipeAdapter.source_id:
+        return SaipeAdapter(states=scope.states)
     if source_id == PermitsAdapter.source_id:
         return PermitsAdapter(states=scope.states)
     if source_id == MigrationAdapter.source_id:

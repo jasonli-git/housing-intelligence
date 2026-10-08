@@ -6,6 +6,7 @@ import { AffordableHousing, HousingHelpDisclosure } from "@/components/Affordabl
 import { HomeSales } from "@/components/HomeSales";
 import { HomeChecks } from "@/components/HomeChecks";
 import { WhoIsMoving } from "@/components/WhoIsMoving";
+import { HowUnusual } from "@/components/HowUnusual";
 import { FloodRisk } from "@/components/FloodRisk";
 import { GettingAround } from "@/components/GettingAround";
 import { MortgageLending } from "@/components/MortgageLending";
@@ -211,7 +212,7 @@ export default async function RegionPage({
     region.level === "municipality"
       ? (region.ancestors.find((a) => a.level === "county") ?? null)
       : region;
-  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations, similar, community, migration] = await Promise.all([
+  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations, similar, community, migration, persistence] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -245,6 +246,8 @@ export default async function RegionPage({
     api.community(regionId),
     // Milestone 50: who moves in and out of the place's county.
     api.migration(regionId),
+    // Milestone 52: today's price-to-income against the county's own history.
+    region.level === "county" ? api.persistence(regionId) : Promise.resolve(null),
   ]);
   // A town or ZIP reads HUD's county Fair Market Rents from its county's packet: HUD sets
   // them for the county's area, and only a county page carries them (Milestone 35).
@@ -519,6 +522,11 @@ export default async function RegionPage({
       )}
       </QuietAnchor>
 
+      {persistence && (
+      <QuietDisclosure enabled={quiet} title="Is this unusual for here?" note="Home prices against income, against the county's own past">
+        <HowUnusual name={name} data={persistence} />
+      </QuietDisclosure>
+      )}
 
       {!quiet && householdContent}
 

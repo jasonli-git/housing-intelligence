@@ -47,6 +47,7 @@ from hip.config import Audience
 from hip.packets import Binding, Packet
 from hip.packets.causal import causal_problems
 from hip.packets.margins import describe_problems, joined_as_range, margin_problems
+from hip.packets.prediction import prediction_problems
 
 ANALYST_PROMPT = """\
 You are a housing-market analyst writing a short explanatory note for a dashboard.
@@ -278,6 +279,9 @@ Rules:
   packet says a figure has no sampling error, or that no margin is available, say so.
   A figure the packet shows with none of these is not a survey estimate: state it
   plainly, with nothing about margins.
+  Before you finish, check each figure you kept: a share of homes owned or rented, an
+  income, a home value or a rent printed with ± needs its margin in the same sentence,
+  every time it appears.
 - Where the packet gives a rank as a range, say where the range sits ("near the middle
   of New Jersey's 21 counties") rather than any single rank.
 - Write for someone with no background in housing data: no names of sources, agencies,
@@ -292,6 +296,11 @@ Rules:
   them. Use causal words — because, due to, driven by, led to, as a result — only to
   say a ratio moved because its two sides did, as listed there; describe anything else
   side by side, never as a cause.
+- The packet's "How today compares with its own history" says how far housing costs
+  against income sit from this place's own usual level over the years, and how long
+  earlier spells this high lasted. Say "its usual level over the years" for its
+  long-run median. Describe the past only: never say or suggest what will happen next —
+  nothing that will fall, is likely to, is due for or should come back.
 - Use one measure for each thing: never two different
   measures of home value (a sale price and a typical home value count as one), of
   rent, of income, or of what renters pay. A reader would see two figures for the same
@@ -462,6 +471,8 @@ def consumer_problems(
     """What keeps a shaped consumer reading from publication, beyond binding."""
     # Milestone 51: a cause only where a relationship in the packet makes one.
     problems: list[str] = causal_problems(body, binding, packet)
+    # Milestone 52: no forecast from the long-run comparison.
+    problems += prediction_problems(body, binding, packet)
     for label, pattern in _banned(packet):
         match = pattern.search(body)
         if match is not None:

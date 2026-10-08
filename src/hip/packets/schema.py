@@ -52,7 +52,12 @@ from pydantic import BaseModel, ConfigDict, Field
 # figures a reading may narrate, each a fact `hip analyze` computed — a ratio beside its
 # two sides, one change against another of the same kind, homes added beside moves.
 # Additive and inside the content hash: each is something a reading may say.
-PACKET_VERSION = "1.5"
+#
+# 1.6 adds `persistence` (Milestone 52, ARCHITECTURE #348): where the region's
+# price-to-income sits against its own long-run median, and how long earlier spells at
+# today's level lasted. Descriptive only; a reading that cites it may not forecast
+# (`hip.packets.prediction`). Additive and inside the content hash.
+PACKET_VERSION = "1.6"
 
 # The published contract. Resolved from the source tree, which is where this project
 # runs from (ARCHITECTURE #13 — local-first, no packaged deployment yet).
@@ -303,6 +308,57 @@ class PacketRelationship(_Strict):
     )
 
 
+class PersistenceEpisode(_Strict):
+    """An earlier unbroken spell of years at or above the latest year's level."""
+
+    start: int
+    end: int
+    years: int
+    peak_year: int
+    peak_vs_median: float = Field(
+        description="The spell's highest year, in percent above the long-run median."
+    )
+    back_to_median: int | None = Field(
+        description=(
+            "The first later year at or below the median; null if none has been since."
+        )
+    )
+
+
+class PacketPersistence(_Strict):
+    """How today's price-to-income compares with the region's own history (Milestone
+    52). An index — FHFA's house price index over SAIPE median household income — so
+    it compares the region with its own other years only, never with another region.
+    Describes the past; says nothing about what comes next. Since 1.6.
+    """
+
+    fact_id: str
+    first_year: int
+    last_year: int
+    years: int = Field(description="Years with both a price and an income estimate.")
+    missing_years: list[int] = Field(
+        description="Years inside the range with no income estimate published."
+    )
+    vs_median: float = Field(
+        description="The last year, in percent above (or below) the long-run median."
+    )
+    vs_median_low: float = Field(
+        description="The low end of `vs_median` given the last income's 90% margin."
+    )
+    vs_median_high: float = Field(
+        description="The high end of `vs_median` given the last income's 90% margin."
+    )
+    rank: int = Field(description="The last year's place among all years, highest first.")
+    rank_best: int
+    rank_worst: int
+    peak_year: int
+    peak_vs_median: float
+    above_median_since: int | None = Field(
+        description="First year of the unbroken run above the median reaching the last."
+    )
+    episodes: list[PersistenceEpisode]
+
+
 class PacketSource(_Strict):
     """One source release behind the numbers, so a claim can be traced to a file."""
 
@@ -327,7 +383,7 @@ class PacketSource(_Strict):
 class Packet(_Strict):
     # 1.1 still parses. Every 1.2 and 1.3 addition is optional, and the evaluation reads
     # the 1.1 packets frozen into run `v2`'s scenarios as the ground truth for its checks.
-    packet_version: Literal["1.1", "1.2", "1.3", "1.4", "1.5"]
+    packet_version: Literal["1.1", "1.2", "1.3", "1.4", "1.5", "1.6"]
     region: PacketRegion
     window: PacketWindow
     metrics: list[PacketMetric]
@@ -337,6 +393,7 @@ class Packet(_Strict):
     caveats: list[str]
     sources: list[PacketSource]
     relationships: list[PacketRelationship] = Field(default_factory=list)
+    persistence: PacketPersistence | None = None
 
 
 def packet_hash(packet: Packet) -> str:

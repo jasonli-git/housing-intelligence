@@ -13,11 +13,13 @@ current would undermine the provenance the packet exists to carry.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from functools import lru_cache
 from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from hip.config import load_metrics
 from hip.packets.caveats import caveats_for
 from hip.packets.schema import (
     PACKET_VERSION,
@@ -26,6 +28,7 @@ from hip.packets.schema import (
     PacketHighlight,
     PacketLevel,
     PacketMetric,
+    PacketPersistence,
     PacketRegion,
     PacketRelationship,
     PacketSource,
@@ -211,6 +214,25 @@ def _relationships(session: Session, region_id: int) -> list[PacketRelationship]
     ]
 
 
+# Milestone 52: where the region's price-to-income sits in its own history. A withheld
+# fact — the long-run index and the dollar ratio moved opposite ways — never reaches a
+# packet, so a reading cannot quote what the page does not show.
+_PERSISTENCE_SQL = text(
+    """
+    SELECT fact_id, first_year, last_year, years, missing_years, vs_median,
+           vs_median_low, vs_median_high, rank, rank_best, rank_worst, peak_year,
+           peak_vs_median, above_median_since, episodes
+    FROM region_persistence
+    WHERE region_id = :id AND withheld IS NULL
+    """
+)
+
+
+def _persistence(session: Session, region_id: int) -> PacketPersistence | None:
+    row = session.execute(_PERSISTENCE_SQL, {"id": region_id}).mappings().one_or_none()
+    return PacketPersistence(**row) if row else None
+
+
 class PacketUnavailable(LookupError):
     """No packet can be built — unknown region, or no analytics for that window."""
 
@@ -232,6 +254,13 @@ def display_label(name: str, level: str, state_code: str) -> str:
     return f"{name}, {state_code}"
 
 
+@lru_cache(maxsize=1)
+def _unpacketed() -> frozenset[str]:
+    """Metrics configured `packet: false`: inputs to a computed fact, never read as
+    figures themselves (Milestone 52, ARCHITECTURE #348)."""
+    return frozenset(m for m, metric in load_metrics().items() if not metric.packet)
+
+
 def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet:
     """One region's packet for one change window.
 
@@ -244,7 +273,14 @@ def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet
     if region is None:
         raise PacketUnavailable(f"No region {region_id}")
 
-    rows = list(session.execute(_METRICS_SQL, {"id": region_id, "w": window}).mappings())
+    hidden = _unpacketed()
+    rows = [
+        row
+        for row in session.execute(
+            _METRICS_SQL, {"id": region_id, "w": window}
+        ).mappings()
+        if row["metric_id"] not in hidden
+    ]
     # A survey figure's annualised change has no margin — nothing computes one — so it is
     # left out rather than published bare (SPEC principle 12; TODO, closed in M51).
     metrics = [
@@ -257,6 +293,7 @@ def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet
     levels = [
         PacketLevel(**row, survey=is_survey(row["metric_id"]))
         for row in session.execute(_LEVELS_SQL, {"id": region_id}).mappings()
+        if row["metric_id"] not in hidden
     ]
     # A region with observations but no change rows is a real case, not an error: it is
     # what a place covered only by a single-vintage source looks like. Refusing it here
@@ -335,6 +372,7 @@ def build_packet(session: Session, region_id: int, window: str = "5y") -> Packet
         ),
         sources=sources,
         relationships=_relationships(session, region_id),
+        persistence=_persistence(session, region_id),
     )
     return packet
 

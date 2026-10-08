@@ -358,6 +358,11 @@ class Metric(BaseModel):
     # over a window: net homes added per 1,000 (Milestone 39) can swing from 0.0 to 4.0
     # on one building, and a "+45%" between two such years says nothing (#300).
     changed: bool = True
+    # False for an input to a computed fact that is never itself put before a reader
+    # or a model: Milestone 52's county price index and SAIPE income feed the
+    # persistence fact, and a second median income beside the ACS one in a packet would
+    # invite a reading to quote two incomes for one place (ARCHITECTURE #348).
+    packet: bool = True
 
 
 def metric_licence(

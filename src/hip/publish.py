@@ -248,6 +248,12 @@ def _plan(
         # Who moves in and out of the place's county (Milestone 50). A 404 — the state,
         # the nation, or a ZIP the crosswalk does not place — is a skip.
         yield f"/regions/{region_id}/migration", f"regions/{region_id}/migration.json"
+        # The long-run price-to-income comparison (Milestone 52): counties and the
+        # state; any other region's 404 is a skip.
+        yield (
+            f"/regions/{region_id}/persistence",
+            f"regions/{region_id}/persistence.json",
+        )
         yield f"/regions/{region_id}/utilities", f"regions/{region_id}/utilities.json"
         yield f"/regions/{region_id}/community", f"regions/{region_id}/community.json"
         yield (

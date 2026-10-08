@@ -700,6 +700,8 @@ export const api = {
   similarPlaces: (id: number) => tryGet<SimilarPlaces>(`/regions/${id}/similar-places`),
   /** The region's county's moves (Milestone 50): a town reads its county's. */
   migration: (id: number) => tryGet<Migration>(`/regions/${id}/migration`),
+  /** Today's price-to-income against its own history (Milestone 52): counties and the state. */
+  persistence: (id: number) => tryGet<Persistence>(`/regions/${id}/persistence`),
   workDestinations: (id: number) =>
     tryGet<WorkDestinations>(`/regions/${id}/work-destinations`),
   utilities: (id: number) => tryGet<Utilities>(`/regions/${id}/utilities`),
@@ -932,4 +934,37 @@ export type RevisionReport = {
   total_batches: number;
   /** The most recent refreshes that revised anything, newest first. */
   batches: RevisionBatch[];
+};
+
+/** Today's price-to-income against the region's own history (Milestone 52). */
+export type PersistenceEpisode = {
+  start: number;
+  end: number;
+  years: number;
+  peak_year: number;
+  peak_vs_median: number;
+  back_to_median: number | null;
+};
+
+export type Persistence = {
+  region_id: number;
+  first_year: number;
+  last_year: number;
+  years: number;
+  missing_years: number[];
+  vs_median: number | null;
+  vs_median_low: number | null;
+  vs_median_high: number | null;
+  rank: number | null;
+  rank_best: number | null;
+  rank_worst: number | null;
+  peak_year: number | null;
+  peak_vs_median: number | null;
+  above_median_since: number | null;
+  episodes: PersistenceEpisode[];
+  series: { year: number; vs_median: number }[];
+  validation: { from: number; to: number; index_change: number; dollar_change: number; agrees: boolean } | null;
+  withheld: string | null;
+  fetched_at: string | null;
+  sources: string[];
 };

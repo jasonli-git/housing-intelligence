@@ -650,6 +650,37 @@ def figure_index(packet: Packet) -> list[Figure]:
             relationship.period_end.year,
         )
 
+    # Milestone 52: today's price-to-income against the region's own history, every
+    # figure the report states about it — the distance from the median and its range,
+    # the place among the years, the peak, and each earlier spell's years and peak.
+    if packet.persistence is not None:
+        p = packet.persistence
+        about = _About(
+            metric_id=p.fact_id,
+            label="House prices against household income, against its own history",
+            unit="percent",
+            period_start=date(p.first_year, 1, 1),
+            period_end=date(p.last_year, 12, 31),
+        )
+        add("persistence.vs_median", "change", p.vs_median, about)
+        add("persistence.vs_median_low", "change", p.vs_median_low, about)
+        add("persistence.vs_median_high", "change", p.vs_median_high, about)
+        _add_rank(add, "persistence", p.rank, p.rank_best, p.rank_worst, about)
+        add("persistence.years", "cohort", p.years, about)
+        add("persistence.peak_vs_median", "change", p.peak_vs_median, about)
+        for name in ("first_year", "last_year", "peak_year", "above_median_since"):
+            if (year := getattr(p, name)) is not None:
+                add_year(f"persistence.{name}", year)
+        for year in p.missing_years:
+            add_year("persistence.missing_years", year)
+        for index, episode in enumerate(p.episodes):
+            key = f"persistence.episodes[{index}]"
+            add(f"{key}.years", "value", episode.years, about, plain=True)
+            add(f"{key}.peak_vs_median", "change", episode.peak_vs_median, about)
+            for name in ("start", "end", "peak_year", "back_to_median"):
+                if (year := getattr(episode, name)) is not None:
+                    add_year(f"{key}.{name}", year)
+
     for index, source in enumerate(packet.sources):
         # Vintages are quotable provenance: "the 2023 ACS release".
         if source.vintage.isdigit():

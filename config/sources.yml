@@ -484,6 +484,62 @@ sources:
     fallback: >-
       FRED republishes FHFA's New Jersey series (NJSTHPI).
 
+  fhfa_hpi_county:
+    name: House Price Index for counties, annual (developmental)
+    publisher: Federal Housing Finance Agency
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105); its
+        terms set no limit on commercial use.
+    terms_url: https://www.fhfa.gov/data/hpi
+    terms_checked: 2026-10-08
+    terms_note: >-
+      The HPI page states no terms; FHFA is a federal agency and its data a U.S. Government
+      work. FHFA labels the county indexes developmental and may revise them.
+    url: https://www.fhfa.gov/data/hpi/datasets?tab=additional-data
+    cadence: annual
+    adapter: hip.sources.fhfa:HpiCountyAdapter
+    fallback: >-
+      FRED republishes each county's series (ATNHPIUS<fips>A, e.g. ATNHPIUS34003A for
+      Bergen). Keep the last workbook until one is reachable.
+    notes: >-
+      All-transactions index, base 100 in each county's first recorded year: comparable
+      only with the same county's other years, never with another county's level.
+
+  census_saipe:
+    name: Small Area Income and Poverty Estimates, median household income
+    publisher: U.S. Census Bureau
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        The Census Bureau Data API terms (read 2026-10-01) let a service "search,
+        display, analyze" its data and require only the no-endorsement notice. A U.S.
+        Government work.
+    terms_url: https://www.census.gov/data/developers/about/terms-of-service.html
+    terms_checked: 2026-10-08
+    notices:
+      - >-
+        This product uses the Census Bureau Data API but is not endorsed or certified by the Census Bureau.
+    url: https://api.census.gov/data/timeseries/poverty/saipe
+    homepage: https://www.census.gov/programs-surveys/saipe.html
+    cadence: annual
+    adapter: hip.sources.census_saipe:SaipeAdapter
+    fallback: >-
+      SAIPE's yearly state-and-county files at
+      www2.census.gov/programs-surveys/saipe/datasets carry the same estimates.
+    api_key_env: CENSUS_API_KEY
+    notes: >-
+      Model-based single-year estimates with a published 90% confidence interval, from
+      1989; 1990-1992 and 1994 are not published, nor 1996 for counties. Not the ACS five-year figure shown
+      elsewhere, and never shown as a second median income beside it.
+
   fred:
     # Freddie Mac's weekly survey, published Thursdays (moved around holidays).
     release_calendar:
