@@ -97,18 +97,29 @@ def utilities(region_id: int, session: SessionDep) -> Utilities:
                 approximate_share=float(r.payload["approximate_share"]),
                 territory=r,
                 electricity=company.get(str(r.payload.get("eia_id"))),
-                regulatory_reliability=sorted(
+                regulatory_reliability=_one_per_year(
                     [
                         c
                         for c in utility_records
                         if c.kind == "regulatory_reliability"
                         and c.entity_id == f"utility:{r.payload.get('eia_id')}"
-                    ],
-                    key=lambda c: int(c.payload["year"]),
-                    reverse=True,
+                    ]
                 ),
             )
             for r in territories
         ],
         energy_context=energy,
     )
+
+
+def _one_per_year(records: list[InfrastructureRecord]) -> list[InfrastructureRecord]:
+    """A utility's BPU figures, newest year first, one per year. A year both the
+    utility's own annual report and a BPU order carry is shown from the report, the
+    primary document; the two agree where they overlap (JCP&L 2024, ARCHITECTURE #347).
+    """
+    by_year: dict[int, InfrastructureRecord] = {}
+    for record in records:
+        year = int(record.payload["year"])
+        if year not in by_year or record.source_id == "nj_bpu_reports":
+            by_year[year] = record
+    return [by_year[year] for year in sorted(by_year, reverse=True)]

@@ -42,7 +42,7 @@ from hip.sources.infrastructure import (
 )
 from hip.sources.irs_migration import MigrationAdapter
 from hip.sources.nj_affordable import NjAffordableAdapter
-from hip.sources.nj_bpu import BpuReliabilityAdapter
+from hip.sources.nj_bpu import BpuAnnualReportsAdapter, BpuReliabilityAdapter
 from hip.sources.nj_construction import NjConstructionAdapter
 from hip.sources.nj_equalized import NjEqualizedAdapter
 from hip.sources.nj_modiv import ModivAdapter
@@ -116,6 +116,7 @@ IMPLEMENTED: tuple[str, ...] = (
     UtilityAreasAdapter.source_id,
     EnergyBurdenAdapter.source_id,
     BpuReliabilityAdapter.source_id,
+    BpuAnnualReportsAdapter.source_id,
     # Milestone 45.
     LodesAdapter.source_id,
     TransitStopsAdapter.source_id,
@@ -166,6 +167,7 @@ METRIC_SOURCES: tuple[str, ...] = (
     UtilityAreasAdapter.source_id,
     EnergyBurdenAdapter.source_id,
     BpuReliabilityAdapter.source_id,
+    BpuAnnualReportsAdapter.source_id,
     # Milestone 45.
     LodesAdapter.source_id,
     TransitStopsAdapter.source_id,
@@ -222,6 +224,7 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         PlacesAdapter,
         BroadbandSummaryAdapter,
         BpuReliabilityAdapter,
+        BpuAnnualReportsAdapter,
         EiaAdapter,
         EnergyBurdenAdapter,
         LeadLinesAdapter,

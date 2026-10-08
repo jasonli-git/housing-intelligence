@@ -17,6 +17,7 @@ SOURCES = (
     "epa_ucmr5",
     "njdep_utility_areas",
     "nj_bpu_reliability",
+    "nj_bpu_reports",
 )
 
 

@@ -40,9 +40,13 @@ first raised, not where it must be done.
       community inventory's suppressions, agency months or CDC intervals; the coverage
       for those is in the M47 handoff until the check reads `community_records`.
 
-- [ ] **BPU reliability covers JCP&L only.** (M42, #308) ACE's 2024 annual filing was
-      found but not imported; PSE&G's and Rockland's are unverified, and the BPU portal
-      challenges automated access. EIA-861 covers all four in the meantime.
+- [ ] **BPU's reliability reports are requested each spring.** (M42, #347) The 2024 and
+      2025 reports for all four electric utilities came from OPRA request C263585
+      (2026-10-08). The 2026 reports are filed with BPU around the end of May 2027: then
+      request them from BPU's Records Custodian, drop them into
+      `data/manual/nj_bpu_reports/` under BPU's names, review each company-wide table and
+      add it to `REPORTS` in `hip.sources.nj_bpu`, then `hip acquire --source
+      nj_bpu_reports`.
 - [ ] **NJDEP's public lead-line layer stops at the 2024 submission**, though statewide
       2025 totals exist. (M42) The owner asked NJDEP's lead-in-drinking-water program;
       Brandon Carreno (Division of Water Supply & Geoscience) replied 2026-10-08 that the
