@@ -1,11 +1,11 @@
-"""The hosted cohorts, served by four vendors behind one runner.
+"""The hosted cohorts, served by several vendors behind one runner.
 
-One class rather than four, because what differs between DeepSeek, Gemini, Mistral, and
-Qwen on this task is small and mechanical: the auth header, the path, and where the
-usage counters sit in the response. Everything that is not mechanical — retry policy,
-the error-is-a-finding contract, telemetry normalization, the refusal to invent a memory
-figure — is identical, and having it in one place is why the fourth provider, Qwen, was
-a `_Dialect` entry rather than a new module.
+One class rather than one per vendor, because what differs between them on this task is
+small and mechanical: the auth header, the path, and where the usage counters sit in the
+response. Everything that is not mechanical — retry policy, the error-is-a-finding
+contract, telemetry normalization, the refusal to invent a memory figure — is identical,
+and having it in one place is why a new provider is a `_Dialect` entry rather than a new
+module. Mistral and Qwen were two of them until 2026-10-08 (ARCHITECTURE #340).
 
 Raw `httpx` rather than three vendor SDKs, matching how `OllamaRunner` already talks to
 its runtime. Three SDKs would be three dependency surfaces, three auth abstractions, and
@@ -121,8 +121,8 @@ class _Dialect:
 
 
 _DIALECTS: dict[str, _Dialect] = {
-    # DeepSeek and Mistral both serve an OpenAI-shaped chat completions endpoint as
-    # their primary API, so neither needs a compatibility shim to reach it.
+    # DeepSeek serves an OpenAI-shaped chat completions endpoint as its primary API, so
+    # it needs no compatibility shim to reach it.
     "deepseek": _Dialect(
         chat_path="/chat/completions",
         models_path="/models",
@@ -134,14 +134,6 @@ _DIALECTS: dict[str, _Dialect] = {
         # `reasoning_effort: low` is not offered because it is not the lever — it saved
         # 7% on `deepseek-v4-pro` (2026-09-06).
         reasoning={"disabled": {"thinking": {"type": "disabled"}}},
-    ),
-    # No reasoning control: `high` would change the shape of `message.content`, which
-    # `_extract` does not parse. See `REASONING_CONTROLS` in `hip.config`.
-    "mistral": _Dialect(
-        chat_path="/chat/completions",
-        models_path="/models",
-        auth_header="Authorization",
-        auth_prefix="Bearer ",
     ),
     # Gemini's native `generateContent` rather than its OpenAI compatibility layer.
     # The compatibility layer is a translation maintained for other people's clients:
@@ -160,22 +152,6 @@ _DIALECTS: dict[str, _Dialect] = {
         # for backward compatibility only, with no documented meaning on Gemini 3: a
         # published configuration should rest on the control the provider documents.
         reasoning={"low": {"thinkingConfig": {"thinkingLevel": "low"}}},
-    ),
-    # Qwen through Alibaba Cloud Model Studio's OpenAI-compatible mode — the provider's
-    # own endpoint, not a shim over it. Its thinking arrives as DeepSeek's does: text
-    # under `reasoning_content`, and tokens counted inside `completion_tokens` with the
-    # share under `completion_tokens_details.reasoning_tokens`, so `_extract` and
-    # `_usage` read it unchanged. `enable_thinking` is a top-level field over plain
-    # HTTP; the OpenAI SDK's `extra_body` is only how a client library spells that.
-    # Measured 2026-09-11, one county packet: `qwen3.7-flash` reasoned for 2,268 of its
-    # 2,497 output tokens by default and for none of 161 with thinking off; Plus, 2,378
-    # of 2,796 against none of 224.
-    "qwen": _Dialect(
-        chat_path="/chat/completions",
-        models_path="/models",
-        auth_header="Authorization",
-        auth_prefix="Bearer ",
-        reasoning={"disabled": {"enable_thinking": False}},
     ),
 }
 

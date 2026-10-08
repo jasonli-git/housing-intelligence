@@ -338,7 +338,8 @@ class _TemperatureAdvice:
 
     Matched on the ref, because guidance is for a family of models rather than for
     everything a provider serves. `thinking` applies to a candidate that reasoned and
-    `direct` to one that did not, since Qwen recommends a different value for each.
+    `direct` to one that did not, since a family may recommend a different value for each
+    (Qwen did, until its provider was removed on 2026-10-08).
     """
 
     ref_prefix: str
@@ -354,17 +355,6 @@ _TEMPERATURE_ADVICE = (
         1.0,
         "Google recommends temperature 1.0 for Gemini 3 and warns that lower values can "
         "cause looping",
-    ),
-    # Qwen publishes no sampling guidance for 3.7, which is API-only: Model Studio's
-    # reference gives ranges, not recommendations. Its model cards for 3.6 and 3.8, the
-    # releases either side, agree — 1.0 thinking, 0.7 not — and unlike Qwen3's they do
-    # not warn against greedy decoding. Read 2026-09-11.
-    _TemperatureAdvice(
-        "qwen3.",
-        1.0,
-        0.7,
-        "Qwen recommends temperature 1.0 when thinking and 0.7 when not, in the model "
-        "cards for its 3.6 and 3.8 releases; it publishes none for 3.7",
     ),
 )
 
@@ -387,10 +377,10 @@ def _sampling_note(
     """What the pinned temperature did not control, or None where it controlled it all.
 
     Every candidate is sent one sampling setting, so that no row is sampled differently
-    from the rest (#104), and three providers depart from it: DeepSeek ignores
+    from the rest (#104), and two providers depart from it: DeepSeek ignores
     temperature while its models reason — so a reasoning and a non-reasoning DeepSeek
-    row differ in sampling as well as in reasoning — Google recommends 1.0 for Gemini 3,
-    and Qwen recommends 1.0 when thinking and 0.7 when not (#105). Derived from the
+    row differ in sampling as well as in reasoning — and Google recommends 1.0 for
+    Gemini 3 (#105). Derived from the
     run: the temperature from the sampling mode each generation records, and reasoning
     from its token counts. A run none of them is in, like `v1`, renders as it always
     has.
