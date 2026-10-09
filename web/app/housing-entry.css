@@ -138,3 +138,19 @@ html[data-housing-mode="afford"] .nj-page > .state-ticker, html[data-housing-mod
 }
 @media (prefers-reduced-motion: reduce) { .coverage-map-stage .coverage-locator, .coverage-map-stage .coverage-map-caption, .coverage-map-stage .coverage-mobile-link, .coverage-unavailable, .state-entry-link { transition: none; } .state-entry-link:hover { transform: none; } }
 @media print { .state-workspace-choice { display: none; } .state-facts { display: block; } .state-entry-link { background: transparent; box-shadow: none; } }
+
+/* "Find your town": the home page's one main action. The bar's search is left out on this
+   page, so this is the only search a first visit sees. */
+.home-find { margin: 1.6rem 0 0; max-width: 36rem; }
+.home-find h2 { margin: 0 0 .55rem; font-size: clamp(20px, 2.4vw, 26px); letter-spacing: -.03em; }
+.place-search-hero { width: 100%; }
+.place-search-hero input {
+  min-height: 56px; padding: .8rem 1rem; font-size: 18px;
+  border: 1.5px solid var(--entry-accent, var(--border)); border-radius: 14px;
+}
+.place-search-hero input:focus-visible { outline: 3px solid var(--entry-accent, var(--focus, currentColor)); outline-offset: 2px; }
+/* Under the box and as wide as it, not anchored to the right as the bar's list is. */
+.place-search-hero .search-results { left: 0; right: auto; width: 100%; max-width: none; }
+.place-search-hero .search-results li { padding: .6rem .9rem; font-size: var(--text-body, 16px); }
+.home-find-hint { margin: .6rem 0 0; color: var(--text-secondary); font-size: var(--text-small); }
+.home-find-hint a { white-space: nowrap; }

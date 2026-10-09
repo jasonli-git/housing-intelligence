@@ -16,8 +16,16 @@ import type { SearchEntry } from "@/lib/search";
  * request, though "ZIP" is what draws iOS's offer of the reader's own postal code
  * (ARCHITECTURE #150): the picker reopens its list for any value AutoFill types, so the
  * offer is an annoyance rather than a dead end.
+ *
+ * The home page carries a second, larger one as its main action ("Find your town"), and
+ * the bar's is left out there so the page has one search, not two.
  */
-export function PlaceSearch() {
+export function PlaceSearch({
+  variant = "bar",
+}: {
+  /** "hero": the home page's own search, larger and labelled "Find your town". */
+  variant?: "bar" | "hero";
+} = {}) {
   const [entries, setEntries] = useState<SearchEntry[] | null>(null);
   const [failed, setFailed] = useState(false);
   const requested = useRef(false);
@@ -34,15 +42,15 @@ export function PlaceSearch() {
 
   return (
     <PlacePicker
-      className="place-search"
+      className={variant === "hero" ? "place-search place-search-hero" : "place-search"}
       role="search"
       entries={entries}
       failed={failed}
       onFocus={load}
       onPick={(entry) => router.push(`/regions/${entry.id}`)}
       label="Search by town, county or ZIP code"
-      placeholder="Search town, county or ZIP"
-      name="place-query"
+      placeholder={variant === "hero" ? "Town, county or ZIP code" : "Search town, county or ZIP"}
+      name={variant === "hero" ? "home-place-query" : "place-query"}
     />
   );
 }
