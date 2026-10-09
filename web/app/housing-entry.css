@@ -139,7 +139,7 @@ html[data-housing-mode="afford"] .nj-page > .state-ticker, html[data-housing-mod
 @media (prefers-reduced-motion: reduce) { .coverage-map-stage .coverage-locator, .coverage-map-stage .coverage-map-caption, .coverage-map-stage .coverage-mobile-link, .coverage-unavailable, .state-entry-link { transition: none; } .state-entry-link:hover { transform: none; } }
 @media print { .state-workspace-choice { display: none; } .state-facts { display: block; } .state-entry-link { background: transparent; box-shadow: none; } }
 
-/* "Find your town": the home page's one main action. The bar's search is left out on this
+/* "Find your place": the home page's one main action. The bar's search is left out on this
    page, so this is the only search a first visit sees. */
 .home-find { margin: 1.6rem 0 0; max-width: 36rem; }
 .home-find h2 { margin: 0 0 .55rem; font-size: clamp(20px, 2.4vw, 26px); letter-spacing: -.03em; }

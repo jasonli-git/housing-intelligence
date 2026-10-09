@@ -193,6 +193,10 @@ Not open work: each comes round on a date. The steps live where the row says.
       `/compare` is in the publish manifest's `unpublishable` list, since an arbitrary
       set of ids is combinatorial, so the page reads each place's published files in the
       browser, as `/guide` does.
+- [ ] **Search results name no state.** (#362) Counties, towns and ZIPs read "County",
+      "Township in Mercer County": unambiguous while New Jersey is the only state, not
+      once a second one shares a county name (Mercer is in NJ and PA). Add the state's
+      code to each `detail` in `searchEntries` when the second state lands.
 - [ ] **The budget explorer's comparison scope is not in its address.** (PR #86, Codex
       handoff `local-page-layout.md`) A page's link opens `/afford` with its place and
       county; switching to another county or all New Jersey changes local state only,

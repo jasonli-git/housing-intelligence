@@ -17,13 +17,13 @@ import { entryPath, type SearchEntry } from "@/lib/search";
  * (ARCHITECTURE #150): the picker reopens its list for any value AutoFill types, so the
  * offer is an annoyance rather than a dead end.
  *
- * The home page carries a second, larger one as its main action ("Find your town"), and
+ * The home page carries a second, larger one as its main action ("Find your place"), and
  * the bar's is left out there so the page has one search, not two.
  */
 export function PlaceSearch({
   variant = "bar",
 }: {
-  /** "hero": the home page's own search, larger and labelled "Find your town". */
+  /** "hero": the home page's own search, larger and labelled "Find your place". */
   variant?: "bar" | "hero";
 } = {}) {
   const [entries, setEntries] = useState<SearchEntry[] | null>(null);
