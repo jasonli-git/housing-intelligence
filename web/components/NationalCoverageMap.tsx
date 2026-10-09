@@ -214,8 +214,7 @@ export function NationalCoverageMap() {
       <div className="coverage-map-foot"><span>{hovered}</span><span><i aria-hidden="true" />Blue = available{viewport.scale > 1 && " · Drag or use move buttons"}</span></div>
     </div>
     <div className="coverage-state-preview">
-      <div><p className="entry-kicker">Detailed coverage available now</p><h3>New Jersey</h3><p>Counties, towns and ZIP codes.</p></div>
-      <Link href="/states/new-jersey" className="coverage-state-action">Explore New Jersey <span aria-hidden="true">↗</span></Link>
+      <div><p className="entry-kicker">Detailed coverage available now</p><h3><Link href="/states/new-jersey" className="coverage-state-title">New Jersey <span aria-hidden="true">→</span></Link></h3><p>Counties, towns and ZIP codes.</p></div>
     </div>
     <p className="coverage-map-note">Regions help you browse the map. Only New Jersey has published housing pages. Alaska and Hawaii are outside this view.</p>
   </div>;

@@ -13,6 +13,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - US-page follow-up: soften the tagline colour without changing its size, and shorten the free-use badge to “Free · No fees, subscriptions or ads.” Use editorial serif headings for the bottom cards, distinct from the publisher notices. Align the Notice shield with its heading and group its policy links separately from the legal/source paragraph.
 - Subsequent placement/accent adjustment: put the free-use badge directly after the tagline, before the place search, and restore the shared Notice shield to the existing yellow warning token (`--notice-text`) in both themes. Keep the new icon alignment and footer structure.
 - Replace only the Notice heading's font-dependent ↗ glyph with a decorative 13px SVG external-link icon. The yellow shield, heading font, link destination and other links remain unchanged.
+- Match the Notice heading to the yellow shield. Make the large New Jersey title in the coverage preview an internal link with a small right arrow; remove the separate right-side “Explore New Jersey” button. Keep the map's other navigation links intact.
 
 ## Files/modules affected
 
@@ -23,6 +24,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - `web/app/icon.svg`, favicon, apple icon, both public preview PNGs; `web/scripts/make-site-images.mjs`; `web/lib/meta.ts` and metadata tests.
 - `web/scripts/check-ui-refinement.mjs` and its package script: reproducible checks for the new shortcuts, share assets, 404 and screenshots.
 - `web/components/SourceFooter.tsx` and `web/lib/sourceFooter.test.ts`: shared footer structure and regression checks preserving policy links, source-code access and the data-relicensing caveat.
+- `web/components/NationalCoverageMap.tsx`: consolidate the coverage preview's New Jersey title and call to action into one title link.
 
 ## Architectural or implementation decisions
 
@@ -47,6 +49,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - Automated accessibility checks supplement, not replace, reader review. There is no claim of a specific scrolling reduction or exhaustive device/screen-reader coverage.
 - Development/static local previews are not deployment. The static-preview helper serves `/404.html` explicitly rather than emulate the host’s unknown-route fallback.
 - Canonical documentation and Director Notes were not modified. Claude can reconcile any documentation references to the preview artwork if needed.
+- National-metric discussion only: consider a compact strip with the existing mortgage benchmark, annual FHFA US home-price change (not the raw index level), and optionally Census HVS rental vacancy. No additional national data was acquired or rendered; integration would need explicit scope and validated national coverage/source dates.
 
 ## Verification
 
@@ -71,3 +74,4 @@ Earlier exploratory audits caught and led to fixes for footer target size, the n
 - `git diff --check`: passed. No acquisition, model regeneration, canonical-document edits, deployment or merge.
 - Badge-placement/yellow-shield follow-up: reran typecheck (passed), all 553 tests (passed), static build (2,386 pages) and `check:ui-refinement` (passed). Added checks for the badge's position between tagline/search and the Notice shield's warning-token colour at all three widths in both themes. Inspected fresh mobile screenshots. The broader 56-state audit above predates these two small adjustments; it was not rerun for them.
 - Notice external-link icon follow-up: typecheck, 553 tests, 2,386-page static build and `check:ui-refinement` passed again. Added fixed 13×13px icon checks at 1280/390/320px in both themes; inspected the updated mobile Notice screenshot. No broader accessibility-matrix rerun for this decorative-icon substitution.
+- Yellow-title/state-link follow-up: typecheck, all 553 tests, 2,386-page build and `check:ui-refinement` passed. Added checks for the New Jersey title link's destination, removal of the redundant button and matching Notice title/shield colours at 1280/390/320px in both themes. Inspected fresh mobile state-link and Notice screenshots; no broader accessibility-matrix rerun for this adjustment.
