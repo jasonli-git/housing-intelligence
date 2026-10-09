@@ -23,14 +23,13 @@ were records rather than work, moved to the file that owns each (Zillow's covera
 ceiling and parcel geometry to ARCHITECTURE's limitations, the model-comparison page to
 ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 
-## Now — correctness pass complete (2026-10-09)
+## Now — launch readiness (2026-10-09)
 
-Milestone 52 shipped as 0.50.0. The owner held Version 4 and chose the correctness and
-data-integrity items; all eight are done: four on `change/correctness-pass`
-(ARCHITECTURE #350), then CHAS margins (#353), flood claims in towns (#354), the
-completeness check reading the community records (#355) and the school districts with
-no results explained from NCES's directory (#356). The next focus is the owner's to
-choose; Version 4 stays held.
+The correctness pass (ARCHITECTURE #350, #353–#356), the terms and privacy pages (#357),
+site metadata (#358) and the reliability work (#359) have shipped. On 2026-10-09 the
+owner parked the four data additions (below, under Parked) rather than build them:
+none answers a reader question the site cannot already answer. The next focus is the
+owner's to choose; Version 4 stays held.
 
 ## Open
 
@@ -362,7 +361,13 @@ Not open work: each comes round on a date. The steps live where the row says.
       model is given, and a change to it is a change to every reading's input, which
       wants its own side-by-side.
 
-### Data sources worth adding
+## Parked / needs user input
+
+### Data additions — parked by the owner 2026-10-09
+
+Each deepens the site without answering a new reader question, so none is built until
+the owner un-parks it. Of the four, Zillow's other cuts (buyer-relevant, cheap) and
+tracts (most new insight, about 2,000 more pages) were the strongest cases.
 
 - [ ] **Milestone 34's ACS depth stops at ZCTA; tracts have none of it.** (M34) The
       warehouse holds 2,181 tracts and the ACS publishes every M34 table for them, but
@@ -380,7 +385,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       (#313), not how many jobs a place holds. LODES's workplace-area (WAC) file, or the
       origin–destination files already landed summed by workplace, would give a
       jobs-to-homes balance. Not scheduled.
-## Parked / needs user input
 
 - [ ] **Revisit: donations or grants under the non-commercial decision?** (owner,
       2026-10-07) #323 rules out ads, sponsorship and a paid tier for good, and stays as
