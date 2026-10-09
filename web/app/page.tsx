@@ -5,6 +5,7 @@ import { nationalMortgageRate } from "@/lib/api";
 import { periodLabel } from "@/lib/periods";
 import { pageMetadata } from "@/lib/meta";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
+import { PlaceSearch } from "@/components/PlaceSearch";
 import "./housing-entry.css";
 import "./state-navigation.css";
 
@@ -17,7 +18,7 @@ export const metadata: Metadata = pageMetadata({
 export default async function HousingLandingPage() {
   const rate = await nationalMortgageRate();
   return <>
-    <Masthead affordability={{ kind: "disabled", reason: "Choose a covered state first" }} budgetLabel="Find within my budget" />
+    <Masthead affordability={{ kind: "disabled", reason: "Choose a covered state first" }} budgetLabel="Find within my budget" search={false} />
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
       <header className="page-head nation-head" data-kind="nation">
         <svg className="nation-portrait" viewBox="0 0 360 300" fill="none" aria-hidden="true">
@@ -30,10 +31,15 @@ export default async function HousingLandingPage() {
         <p className="entry-kicker">A public data project</p>
         <h1>Housing Intelligence</h1>
         <p className="entry-introduction">A clearer picture of the place you could call home.</p>
+        <section className="home-find" aria-labelledby="home-find-heading">
+          <h2 id="home-find-heading">Find your place</h2>
+          <PlaceSearch variant="hero" />
+          <p className="home-find-hint">Any state, county, town or ZIP code the site covers. Detailed coverage starts with New Jersey: try NJ, Princeton or 07030. <a href="#coverage-heading">Or browse the map ↓</a></p>
+        </section>
         <p className="entry-free computed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free to use · No fees. No subscription. Definitely no ads.</span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-labelledby="coverage-heading">
-        <header><p className="entry-kicker">United States · Explore by state</p><h2 id="coverage-heading">Find your place</h2></header>
+        <header><p className="entry-kicker">United States · Explore by state</p><h2 id="coverage-heading">Browse by state</h2></header>
         <NationalCoverageMap />
       </section>
       <section className="national-context" aria-labelledby="national-context-heading">

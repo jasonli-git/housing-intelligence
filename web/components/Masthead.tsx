@@ -30,6 +30,7 @@ export function Masthead({
   taxActive = false,
   guideActive = false,
   budgetLabel = "Find places · NJ",
+  search = true,
 }: {
   affordability: AffordabilityControl;
   /** On the property-tax lookup itself, whose link the bar marks as the current page. */
@@ -37,6 +38,8 @@ export function Masthead({
   /** On the buyer's guide itself. */
   guideActive?: boolean;
   budgetLabel?: string;
+  /** False on the home page, whose own search is the page's main action. */
+  search?: boolean;
 }) {
   const budgetContent = <>
     <span className="bar-budget-long">{budgetLabel}</span>
@@ -94,7 +97,7 @@ export function Masthead({
             </Link>
           </div>
           <div className="bar-tools">
-            <PlaceSearch />
+            {search && <PlaceSearch />}
             {affordability.kind === "disabled" ? <button className="bar-budget" type="button" disabled title={affordability.reason} aria-label={`${budgetLabel}. ${affordability.reason}`}>{budgetContent}</button> :
               <Link className="bar-budget" href="/afford?county=all" aria-label="Find places within my budget across all New Jersey">{budgetContent}</Link>}
           </div>

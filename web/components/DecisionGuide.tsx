@@ -152,7 +152,8 @@ export function DecisionGuide({
     if (household.size) setSize(household.size);
     fetch("/search.json")
       .then((r) => (r.ok ? r.json() : null))
-      .then((list: SearchEntry[] | null) => setEntries(list ?? []))
+      // The guide reads one place's files; a state has none of its own here.
+      .then((list: SearchEntry[] | null) => setEntries((list ?? []).filter((e) => e.level !== "state")))
       .catch(() => setEntries([]));
   }, []);
 

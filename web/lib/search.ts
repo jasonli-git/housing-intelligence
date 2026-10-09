@@ -9,18 +9,27 @@
  */
 
 import type { Region } from "@/lib/api";
+import { STATE_DESTINATIONS } from "@/lib/coverageMap";
 import { displayName, legalType } from "@/lib/names";
 
-export type SearchEntry = { id: number; name: string; detail: string; level: string };
+/** `code` is a state's postal code, carried so "nj" finds New Jersey; only states have one. */
+export type SearchEntry = { id: number; name: string; detail: string; level: string; code?: string };
 
-// The order results of equal fit are listed in: a county before a town before a ZIP.
-const LEVEL_ORDER: Record<string, number> = { county: 0, municipality: 1, zip: 2 };
+// The order results of equal fit are listed in: a state before a county before a town
+// before a ZIP. States are searchable because the platform is not New Jersey's alone;
+// New Jersey is simply the first state it covers.
+const LEVEL_ORDER: Record<string, number> = { state: 0, county: 1, municipality: 2, zip: 3 };
+
+/** Where picking an entry goes: a covered state's own page, otherwise the region page. */
+export function entryPath(entry: SearchEntry): string {
+  return (entry.code && STATE_DESTINATIONS[entry.code]) || `/regions/${entry.id}`;
+}
 
 function capitalised(text: string): string {
   return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
 }
 
-/** One entry per searchable region: counties, municipalities and ZIP codes with data. */
+/** One entry per searchable region: states, counties, municipalities and ZIP codes with data. */
 export function searchEntries(regions: Region[]): SearchEntry[] {
   const counties = new Map(
     regions.filter((r) => r.level === "county").map((r) => [r.region_id, displayName(r)]),
@@ -28,6 +37,7 @@ export function searchEntries(regions: Region[]): SearchEntry[] {
   return regions
     .filter((r) => r.level in LEVEL_ORDER)
     .map((r) => {
+      if (r.level === "state") return { id: r.region_id, name: r.name, detail: "State", level: r.level, code: r.state_code };
       if (r.level === "county") return { id: r.region_id, name: displayName(r), detail: "County", level: r.level };
       if (r.level === "zip") return { id: r.region_id, name: displayName(r), detail: "ZIP code", level: r.level };
       const kind = capitalised(legalType(r) ?? "municipality");
@@ -57,7 +67,7 @@ export function matchEntries(entries: SearchEntry[], query: string, limit = 8): 
   const scored: [number, SearchEntry][] = [];
   for (const entry of entries) {
     const name = normalised(entry.name);
-    const fit = name.startsWith(q)
+    const fit = name.startsWith(q) || (entry.code !== undefined && entry.code.toLowerCase() === q)
       ? 0
       : name.split(" ").some((word) => word.startsWith(q))
         ? 1
