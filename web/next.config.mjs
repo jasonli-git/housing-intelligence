@@ -1,19 +1,14 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const ARTIFACT_URL = process.env.NEXT_PUBLIC_ARTIFACT_URL ?? API_URL;
 
-// A static export bakes every URL into the HTML, so an unset artifact origin is not a
-// misconfiguration the site recovers from at runtime — it ships 1,135 pages whose
-// "Download Markdown" link points at the builder's own laptop. Warned rather than
-// thrown, because building locally against `make api` is a legitimate thing to do and
-// is how the export gets checked at all.
-if (process.env.NODE_ENV === "production" && ARTIFACT_URL.includes("localhost")) {
-  console.warn(
-    `\n  WARNING  NEXT_PUBLIC_ARTIFACT_URL is unset, so artifact links resolve to ` +
-      `${ARTIFACT_URL}.\n           Every report page's Markdown download points at ` +
-      `localhost in this build.\n           Set it to the published artifact origin ` +
-      `before deploying.\n`,
-  );
-}
+// The published artifact origin, which a production build defaults to (#359). A static
+// export bakes every URL into the HTML, and until 2026-10-09 a bare `npm run build` fell
+// back to the API's localhost, shipping report links that point at the builder's laptop;
+// `make check-dist` caught it, but only for a build headed for a deploy. A development
+// server still reads artifacts from the local API, where they are rendered.
+const PUBLISHED_ARTIFACTS = "https://housing-data.jasonli.app";
+const ARTIFACT_URL =
+  process.env.NEXT_PUBLIC_ARTIFACT_URL ??
+  (process.env.NODE_ENV === "production" ? PUBLISHED_ARTIFACTS : API_URL);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

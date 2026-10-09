@@ -1,0 +1,27 @@
+#!/bin/sh
+# Runs ruff on the Python files a commit stages, so a lint or format slip stops at the
+# commit rather than reaching `main` (ARCHITECTURE #359). Installed by `make hooks`, which
+# points git at this directory; every agent working in this checkout gets it.
+#
+# Checks the staged content, not the working tree: a file fixed after `git add` but not
+# re-added is checked as it will be committed. Skip once with `git commit --no-verify`.
+set -eu
+
+files=$(git diff --cached --name-only --diff-filter=ACMR -- '*.py' '*.pyi')
+[ -z "$files" ] && exit 0
+
+# Each file's index version goes to ruff on stdin under its real path, run from the repo
+# root, so the repo's config, per-file ignores and first-party packages (`src/hip`) apply
+# exactly as they do to the checkout. A copy in a temp directory loses the last of these.
+failed=0
+for f in $files; do
+  git show ":$f" | uv run ruff check --quiet --stdin-filename "$f" - || failed=1
+  git show ":$f" | uv run ruff format --check --quiet --stdin-filename "$f" - \
+    || { echo "would reformat: $f"; failed=1; }
+done
+if [ "$failed" -ne 0 ]; then
+  echo
+  echo "pre-commit: ruff found problems in the staged files above."
+  echo "  Fix with 'make format', re-stage, and commit again."
+  exit 1
+fi

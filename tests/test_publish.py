@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 from hip.api.main import app
+from hip.config import get_settings
 from hip.publish import (
     PUBLISHED_WINDOWS,
     UNPUBLISHABLE,
@@ -115,10 +117,19 @@ warehouse = pytest.mark.skipif(not probe().migrated, reason="needs a migrated wa
 
 
 @pytest.fixture(scope="module")
-def published(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def published(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
     root = tmp_path_factory.mktemp("publish")
-    publish(root)
-    return root
+    # A removal list of the test's own: a publish records what it honoured beside the
+    # list (#359), and a test must never write into the owner's iCloud folder.
+    removals = tmp_path_factory.mktemp("removals") / "address-removals.json"
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv("HIP_ADDRESS_REMOVALS", str(removals))
+        get_settings.cache_clear()
+        try:
+            publish(root)
+        finally:
+            get_settings.cache_clear()
+    yield root
 
 
 @warehouse

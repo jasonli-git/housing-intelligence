@@ -2,7 +2,7 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup setup-eval venv-fix data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
+.PHONY: help setup setup-eval venv-fix hooks rollback data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
         check-dist check-live clean-dist deploy api web \
         test test-all test-py test-web lint format check-config dbt-debug eval clean
 
@@ -27,6 +27,7 @@ setup:  ## Install Python and Node dependencies, create local data dirs
 	$(MAKE) data-dirs
 	cd web && npm install
 	@test -f .env || (cp .env.example .env && echo "Created .env from .env.example")
+	$(MAKE) hooks
 
 setup-eval:  ## Also install the optional mlx + eval groups (Milestone 8, Apple silicon)
 	@# `uv sync` makes the environment match exactly the groups named, so syncing
@@ -127,6 +128,11 @@ test-py:  ## Run the Python test suite alone, slow tests included
 test-web:  ## Run the dashboard test suite alone
 	cd web && npm test
 
+hooks:  ## Run ruff on staged Python files before each commit (once per checkout)
+	@# A setting in this checkout's git config, so it covers every agent working here.
+	git config core.hooksPath .githooks
+	@echo "pre-commit hook active: ruff checks staged Python files"
+
 lint:  ## Lint and type-check
 	uv run ruff check .
 	uv run ruff format --check .
@@ -155,6 +161,9 @@ dbt-debug:  ## Verify dbt can reach both targets
 # wrong bucket does not merely upload badly, it erases whatever was there.
 R2_BUCKET     ?= housing-artifacts
 R2_REMOTE     ?= r2
+# Private: what the last deploy replaced, for `make rollback` (#359). Never served — it
+# can hold addresses withdrawn under Daniel's Law since.
+R2_BACKUP_BUCKET ?= housing-artifacts-previous
 PAGES_PROJECT ?= housing-intelligence
 # A clock line before each step of publish, deploy and check-live, so a slow run says
 # which step was slow: on 2026-10-07 a full deploy took 18-27 minutes, and only the two
@@ -238,8 +247,21 @@ r2-cors:  ## Let the site's pages read the R2 artifacts (the property-tax lookup
 	npx wrangler r2 bucket cors set $(R2_BUCKET) --file deploy/r2-cors.json --force
 
 deploy: check-dist  ## Upload artifacts to R2 and the site to Pages
+	@# Keep a way back (#359): the private backup bucket is emptied, then given the list of
+	@# keys live now and, through `--backup-dir`, every file this sync replaces or deletes.
+	@# `make rollback` restores from it. Refuses up front if the bucket is unreachable,
+	@# rather than deploying with no way back.
+	@rclone lsf $(R2_REMOTE):$(R2_BACKUP_BUCKET) --max-depth 1 > /dev/null 2>&1 || { \
+	  echo "The backup bucket $(R2_BACKUP_BUCKET) is not reachable. Create it (private, no"; \
+	  echo "public domain) and give rclone's R2 token read and write on it; ARCHITECTURE #359."; \
+	  exit 1; }
+	$(call STAMP,deploy: backing up the live artifacts)
+	rclone delete $(R2_REMOTE):$(R2_BACKUP_BUCKET)
+	rclone lsf -R --files-only $(R2_REMOTE):$(R2_BUCKET) > /tmp/hip-live-keys.txt
+	rclone copyto /tmp/hip-live-keys.txt $(R2_REMOTE):$(R2_BACKUP_BUCKET)/_keys.txt
 	$(call STAMP,deploy: artifacts to R2 started)
-	rclone sync dist/artifacts $(R2_REMOTE):$(R2_BUCKET) --progress --checksum
+	rclone sync dist/artifacts $(R2_REMOTE):$(R2_BUCKET) --progress --checksum \
+	  --backup-dir $(R2_REMOTE):$(R2_BACKUP_BUCKET)/files
 	@# `--branch` pinned: wrangler otherwise names the deployment after the checked-out git
 	@# branch, and anything but `main` becomes a Preview. On 2026-09-23 a deploy run from a
 	@# docs branch did exactly that — the artifacts above went live, the pages did not, and
@@ -248,6 +270,12 @@ deploy: check-dist  ## Upload artifacts to R2 and the site to Pages
 	$(call STAMP,deploy: site to Pages started)
 	wrangler pages deploy dist/site --project-name=$(PAGES_PROJECT) --branch=main
 	$(call STAMP,deploy: done)
+
+rollback:  ## Restore the published data to the build before the last deploy (ARGS=--yes)
+	@# Data half only, and never past a Daniel's Law removal; it prints how to roll the
+	@# pages back to match in Cloudflare's dashboard (#359).
+	uv run hip rollback --remote $(R2_REMOTE) --bucket $(R2_BUCKET) \
+	  --backup $(R2_BACKUP_BUCKET) $(ARGS)
 
 clean:  ## Remove build artifacts and caches (leaves data/ alone)
 	rm -rf .pytest_cache .mypy_cache .ruff_cache dbt/target dbt/logs web/.next web/out dist

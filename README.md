@@ -550,6 +550,7 @@ make web           # http://localhost:3000
 make test          # fast: Python and dashboard tests, slow ones left out (about 30 s)
 make test-all      # everything, the analytics and publish rebuilds too (about 11 min)
 make lint          # ruff + ruff format --check + mypy --strict
+make hooks         # once per checkout (setup runs it): ruff checks staged files at each commit
 ```
 
 Try it:
@@ -753,10 +754,17 @@ running service. `make publish` builds them; `make deploy` sends them.
 
 ```bash
 make publish   # dist/artifacts (16,785 files, about 0.8 GB) + dist/site (14,303 files, 4.4 GB)
-make deploy    # artifacts -> object storage, site -> static host
+make deploy    # artifacts -> object storage (keeping what it replaces), site -> static host
 make clean-dist  # after check-live passes: free the ~5 GB dist/ until the next publish
 make r2-cors   # once per bucket: let the site's pages read the artifacts (/tax, /guide)
+make rollback  # say what restoring the previous build's data would do; ARGS=--yes to do it
 ```
+
+`make deploy` first copies whatever it is about to replace or delete in R2 into a private
+bucket, `housing-artifacts-previous`, so the data half has a way back too. That bucket is
+never served: it can hold addresses withdrawn under Daniel's Law since. `make rollback`
+restores from it, but refuses if the removal list has changed since that build, because
+restoring it would publish a withdrawn address again.
 
 `make r2-cors` applies `deploy/r2-cors.json`, which lets `housing.jasonli.app` — and no
 other origin — read the bucket from a browser: GET and HEAD only. The property-tax
@@ -782,10 +790,11 @@ fails, and send the urgent alert only when it fails twice. When that alert arriv
    changed — run `make r2-cors`.
 3. If `dist/` itself is wrong, fix forward: correct the cause, then `make publish`,
    `make deploy`, `make check-live`.
-4. If readers are meanwhile seeing a broken page, roll the site back in Cloudflare's
-   dashboard (Pages → housing-intelligence → Deployments → an earlier one → Rollback).
-   The data files in R2 cannot be rolled back (TODO.md), so roll back only when the
-   pages, not the data, are what broke.
+4. If readers are meanwhile seeing a broken page, roll back both halves together:
+   `make rollback ARGS=--yes` restores the previous build's data, then roll the site back
+   in Cloudflare's dashboard (Pages → housing-intelligence → Deployments → the one before
+   → Rollback), as the command prints. It refuses if a Daniel's Law removal was recorded
+   since that build; then fix forward instead.
 
 ### Removing an address under Daniel's Law
 

@@ -42,3 +42,17 @@ it("keeps towns without indexed prices or rents selectable without substituting 
   expect(data?.towns).toHaveLength(95);
   expect(data?.towns[0]).toMatchObject({ home: null, rent: null });
 });
+
+it("prices every place from one source, Zillow's index, never mixing in recorded sales (#359)", async () => {
+  // The comparison ranks towns against each other, so every price must be the same
+  // measure: Zillow's typical home value. A town priced from its recorded sales (#187)
+  // would be a different measure on the same scale. Any metric added here fails this
+  // test until someone decides the comparison can hold it.
+  await affordData();
+  const read = new Set(vi.mocked(api.rankings).mock.calls.map(([metric]) => metric));
+  expect([...read].sort()).toEqual(["modiv_median_tax_bill", "zhvi_sfr", "zori_all"]);
+  for (const [metric] of vi.mocked(api.costObservations).mock.calls) {
+    expect(metric).toMatch(/^acs_median_(home_insurance|electricity|gas|water_sewer)$/);
+  }
+});
+
