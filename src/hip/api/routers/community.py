@@ -28,7 +28,12 @@ class CommunityRecord(BaseModel):
 
 class DistrictContext(BaseModel):
     boundary: CommunityRecord
+    # The district's own NJDOE results, or — for a district NCES lists as closed into a
+    # reviewed successor (#356) — the successor's, named by `status.payload.successor`.
     performance: CommunityRecord | None
+    # NCES's directory entry, which says why a district has no results of its own: it
+    # runs no schools, or it closed into another.
+    status: CommunityRecord | None = None
 
 
 class CommunityContext(BaseModel):
@@ -109,7 +114,24 @@ def community(region_id: int, session: SessionDep) -> CommunityContext:
         if boundaries
         else []
     )
+    statuses = {r.record_id: r for r in districts if r.kind == "district_status"}
+    successors = {
+        str(s.payload["successor"]["district_id"])
+        for s in statuses.values()
+        if s.payload.get("successor")
+    }
+    if successors:
+        districts += records_for(session, [f"district:{d}" for d in successors])
     performance = {r.record_id: r for r in districts if r.kind == "school_performance"}
+
+    def results(district_id: str) -> CommunityRecord | None:
+        own = performance.get(district_id)
+        if own is not None:
+            return own
+        status = statuses.get(district_id)
+        successor = status.payload.get("successor") if status else None
+        return performance.get(str(successor["district_id"])) if successor else None
+
     # County context is explicitly labelled for towns, never silently relabelled as
     # a town estimate. ZIPs cross county boundaries and receive no county fallback.
     health_entity = county if region["level"] == "municipality" else entity
@@ -127,7 +149,9 @@ def community(region_id: int, session: SessionDep) -> CommunityContext:
         region_id=region_id,
         districts=[
             DistrictContext(
-                boundary=r, performance=performance.get(str(r.payload["district_id"]))
+                boundary=r,
+                performance=results(str(r.payload["district_id"])),
+                status=statuses.get(str(r.payload["district_id"])),
             )
             for r in boundaries
         ],

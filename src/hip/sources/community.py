@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import math
 import re
+import zipfile
 from datetime import date
 from pathlib import Path
 from typing import Any, ClassVar
@@ -493,3 +496,113 @@ class PlacesAdapter(SourceAdapter):
                 )
             )
         return result
+
+
+# NCES's Common Core of Data, school district (LEA) directory (#356). It says which of a
+# boundary's districts runs no schools of its own and which closed into another, so a
+# district NJDOE publishes no results for is explained rather than left a blank.
+CCD_FILES = "https://nces.ed.gov/ccd/files.asp"
+CCD_LEA = {
+    "2024-25": "https://nces.ed.gov/ccd/Data/zip/ccd_lea_029_2425_w_1a_073025.zip",
+}
+# Districts that closed into another, reviewed by hand, never matched by name (#356). Each
+# is checked against the directory on every read: the predecessor must be Closed, and its
+# successor open with schools in the same county, or the file is refused.
+#
+# Atlantic Highlands, Highlands and Henry Hudson Regional (7-12) regionalized into a
+# PreK-12 Henry Hudson Regional on 1 July 2024, approved by both boroughs' voters in
+# September 2023; the 2024-25 directory lists the three as Closed and 25-1456 as New, and
+# NJDOE's 2024-25 results report under 25-1456.
+DISTRICT_SUCCESSORS = {
+    "25-0130": "25-1456",
+    "25-2120": "25-1456",
+    "25-2160": "25-1456",
+}
+_CCD_FIELDS = (
+    "SCHOOL_YEAR",
+    "ST",
+    "ST_LEAID",
+    "LEAID",
+    "LEA_NAME",
+    "SY_STATUS_TEXT",
+    "LEA_TYPE_TEXT",
+    "OPERATIONAL_SCHOOLS",
+    "GSLO",
+    "GSHI",
+)
+
+
+class DistrictDirectoryAdapter(SourceAdapter):
+    """Each New Jersey school district's status in NCES's directory, by NJDOE code."""
+
+    source_id: ClassVar[str] = "nces_ccd_lea"
+    default_vintage: ClassVar[str] = "2024-25"
+    landing_format: ClassVar[str] = "xlsx_records"
+
+    def __init__(self, states: list[str]) -> None:
+        self.states = states
+
+    def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+        year = vintage or self.newest or self.default_vintage
+        if year not in CCD_LEA:
+            raise SourceError(f"CCD {year}: no reviewed directory file")
+        return [
+            ReleaseRef(self.source_id, "districts", year, CCD_LEA[year], scope=state)
+            for state in self.states
+        ]
+
+    @classmethod
+    def xlsx_records(cls, path: Path, ref: ReleaseRef) -> list[dict[str, object]]:
+        state = ref.scope or ""
+        districts: dict[str, dict[str, Any]] = {}
+        with zipfile.ZipFile(path) as archive:
+            members = [n for n in archive.namelist() if n.lower().endswith(".csv")]
+            if len(members) != 1:
+                raise SourceError(f"{ref.key}: expected one directory CSV")
+            with archive.open(members[0]) as raw:
+                table = csv.DictReader(io.TextIOWrapper(raw, encoding="latin-1"))
+                if not set(_CCD_FIELDS) <= set(table.fieldnames or []):
+                    raise SourceError(f"{ref.key}: directory columns changed")
+                for r in table:
+                    if r["ST"] != state:
+                        continue
+                    if r["SCHOOL_YEAR"] != f"{ref.vintage[:4]}-20{ref.vintage[-2:]}":
+                        raise SourceError(f"{ref.key}: a row is for {r['SCHOOL_YEAR']}")
+                    code = r["ST_LEAID"].removeprefix(f"{state}-")
+                    if not re.fullmatch(r"\d{6}", code):
+                        continue  # charter and state agencies carry other codes
+                    key = f"{code[:2]}-{code[2:]}"
+                    if key in districts:
+                        raise SourceError(f"{ref.key}: duplicate district {key}")
+                    districts[key] = {
+                        "district_id": key,
+                        "nces_id": r["LEAID"],
+                        "name": r["LEA_NAME"],
+                        "status": r["SY_STATUS_TEXT"],
+                        "agency_type": r["LEA_TYPE_TEXT"],
+                        "operational_schools": int(r["OPERATIONAL_SCHOOLS"] or 0),
+                        "grades": f"{r['GSLO']}-{r['GSHI']}",
+                        "school_year": ref.vintage,
+                        "url": CCD_FILES,
+                    }
+        if len(districts) < 500:
+            raise SourceError(f"{ref.key}: directory unexpectedly small for {state}")
+        for old, new in DISTRICT_SUCCESSORS.items():
+            before, after = districts.get(old), districts.get(new)
+            if (
+                before is None
+                or after is None
+                or before["status"] != "Closed"
+                or after["status"] not in ("New", "Open")
+                or after["operational_schools"] < 1
+                or old[:2] != new[:2]
+            ):
+                raise SourceError(
+                    f"{ref.key}: {old} no longer reads as closed into {new}; review "
+                    "DISTRICT_SUCCESSORS"
+                )
+            before["successor"] = {"district_id": new, "name": after["name"]}
+        return [
+            record("district_status", f"district:{key}", key, d, None)
+            for key, d in sorted(districts.items())
+        ]

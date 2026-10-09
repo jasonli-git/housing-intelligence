@@ -551,13 +551,28 @@ def measure_community(session: Session) -> list[CommunityCoverage]:
               (SELECT count(*) FROM community_records r,
                       jsonb_array_elements(r.payload -> 'indicators') i
                WHERE r.kind = 'school_performance') AS school_indicators,
+              -- A district area with no results of its own that NCES's directory does
+              -- not explain (#356): not a district running no schools, and not one
+              -- closed into a successor whose results are loaded.
               (SELECT count(*) FROM community_records a
+               LEFT JOIN community_records d
+                 ON d.kind = 'district_status'
+                AND d.record_id = a.payload ->> 'district_id'
                WHERE a.kind = 'school_area'
                  AND NOT EXISTS (
                      SELECT 1 FROM community_records p
                      WHERE p.kind = 'school_performance'
-                       AND p.payload ->> 'district_id' = a.payload ->> 'district_id'))
+                       AND p.record_id IN (a.payload ->> 'district_id',
+                                           d.payload -> 'successor' ->> 'district_id'))
+                 AND NOT (coalesce(d.payload ->> 'status', 'Closed') <> 'Closed'
+                          AND (d.payload ->> 'operational_schools')::int = 0))
                 AS areas_unmatched,
+              (SELECT count(DISTINCT d.record_id) FROM community_records d
+               JOIN community_records a
+                 ON a.kind = 'school_area'
+                AND a.payload ->> 'district_id' = d.record_id
+               WHERE d.kind = 'district_status' AND d.payload ->> 'status' = 'Closed'
+                 AND d.payload -> 'successor' IS NULL) AS closed_unmapped,
               (SELECT count(*) FROM community_records
                WHERE kind = 'crime_agency'
                  AND (payload ->> 'months_reported')::int < 12) AS agencies_partial,
@@ -588,7 +603,13 @@ def measure_community(session: Session) -> list[CommunityCoverage]:
             "school_area",
             "School district areas",
             gaps["areas_unmatched"],
-            "district areas with no NJDOE results record",
+            "district areas with no NJDOE results that NCES's directory does not explain",
+        ),
+        (
+            "district_status",
+            "School district status (NCES)",
+            gaps["closed_unmapped"],
+            "closed districts still on the boundary map with no reviewed successor",
         ),
         (
             "crime_agency",

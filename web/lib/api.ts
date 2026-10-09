@@ -233,6 +233,12 @@ export type SchoolPerformance = {
   district_id: string; name: string; school_year: string; url: string; notes: string[];
   indicators: { id: string; label: string; value: number | null; suppression: string | null; basis: string }[];
 };
+/** NCES's directory entry for a district (#356): why it may have no results of its own. */
+export type DistrictStatus = {
+  district_id: string; nces_id: string; name: string; status: string; agency_type: string;
+  operational_schools: number; grades: string; school_year: string; url: string;
+  successor?: { district_id: string; name: string };
+};
 export type HealthEstimate = {
   measure: string; label: string; year: number; release: string; value: number | null;
   low: number | null; high: number | null; confidence: number; suppression: string | null; basis: string; url: string;
@@ -249,7 +255,8 @@ export type BroadbandSummary = {
 export type CommunityContext = {
   region_id: number;
   districts: { boundary: CommunityRecord<{ district_id: string; name: string; district_type: string; approximate_share: number }>;
-    performance: CommunityRecord<SchoolPerformance> | null }[];
+    performance: CommunityRecord<SchoolPerformance> | null;
+    status?: CommunityRecord<DistrictStatus> | null }[];
   health: CommunityRecord<HealthEstimate>[]; health_area: string | null; health_level: string | null;
   crime: CommunityRecord<CrimeAgency>[]; crime_county: string | null; broadband_status: string;
   broadband: CommunityRecord<BroadbandSummary>[]; broadband_area: string | null; broadband_level: string | null;

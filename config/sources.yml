@@ -1221,6 +1221,31 @@ sources:
     fallback: District reports on NJDOE's School Performance Reports site.
     notes: School year is not release year; selected All Students figures, not a school rating.
 
+  nces_ccd_lea:
+    name: Common Core of Data, school district (LEA) directory
+    publisher: National Center for Education Statistics
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105); its
+        terms set no limit on commercial use.
+    terms_url: https://nces.ed.gov/ccd/aboutCCD.asp
+    terms_checked: 2026-10-09
+    url: https://nces.ed.gov/ccd/files.asp
+    cadence: annual
+    adapter: hip.sources.community:DistrictDirectoryAdapter
+    fallback: >-
+      Keep the last directory. A new school year's file is added to CCD_LEA in
+      hip.sources.community once reviewed; DISTRICT_SUCCESSORS is rechecked against it
+      on every read.
+    notes: >-
+      Each district's status, schools operated and grade span, keyed by NJDOE's county
+      and district code. Explains a school district area with no NJDOE results: it
+      runs no schools of its own, or closed into a reviewed successor (#356).
+
   nj_school_boundaries:
     name: New Jersey school district boundaries
     publisher: NJ Office of Information Technology, Office of GIS (NJOGIS)

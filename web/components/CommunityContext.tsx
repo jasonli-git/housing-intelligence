@@ -1,5 +1,6 @@
 import type { CommunityContext as CommunityData } from "@/lib/api";
 import { ReaderDetails } from "@/components/ReaderDetails";
+import { districtCards, districtResults } from "@/lib/schools";
 
 const SPR = "https://www.nj.gov/education/schoolperformance/";
 const BOUNDARIES = "https://www.arcgis.com/home/item.html?id=26a2a9f9cf0a472d865b367f88833336";
@@ -12,22 +13,31 @@ export function CommunityContext({ data, level }: { data: CommunityData | null; 
   const broadband = data.broadband ?? [];
   const wired = broadband.find((r) => r.payload.technology === "All Wired");
   const fiber = broadband.find((r) => r.payload.technology === "Fiber");
+  const districts = districtCards(data.districts);
   return <>
     <section className="section sales community-schools" aria-labelledby="community-schools-heading">
       <div className="section-head"><h2 id="community-schools-heading">Schools around here</h2></div>
       <p className="sales-note">A district is not a school assignment. Confirm the address, grade and enrollment rules with the district.</p>
-      {data.districts.length ? <ReaderDetails title={`${data.districts.length} district association${data.districts.length === 1 ? "" : "s"} · see the figures`}>
+      {districts.length ? <ReaderDetails title={`${districts.length} district association${districts.length === 1 ? "" : "s"} · see the figures`}>
         <p className="sales-note">Approximate overlaps of NJOGIS district boundaries with 2020 home-bearing census blocks. Elementary, secondary and unified districts can overlap; these are not pupil shares or legal boundaries.</p>
-        {data.districts.map(({ boundary, performance }) => <div className="utility-provider" key={boundary.record_id}>
-          <p><b>{boundary.payload.name}</b> <span className="meta">{boundary.payload.district_type} · {boundary.payload.district_id}</span></p>
+        {districts.map(({ boundary, performance, status, formerly }) => {
+          const results = districtResults(boundary.payload.district_id, performance, status);
+          return <div className="utility-provider" key={boundary.record_id}>
+          {results.kind === "merged"
+            ? <p><b>{results.into}</b> <span className="meta">{performance!.payload.district_id}</span></p>
+            : <p><b>{boundary.payload.name}</b> <span className="meta">{boundary.payload.district_type} · {boundary.payload.district_id}</span></p>}
+          {results.kind === "merged" && <p className="sales-note">Formerly {formerly.map((b) => `${b.payload.name} (${b.payload.district_type})`).join(" and ")}, which closed and joined it from the {results.year} school year, by NCES’s directory. The state’s boundary map still draws the former {formerly.length === 1 ? "district" : "districts"}.</p>}
           {performance ? <>
             <p className="sales-note">NJDOE · school year {performance.payload.school_year} · district-wide, all students.</p>
             {performance.payload.indicators.length ? <dl className="utility-reliability">
               {performance.payload.indicators.map((i) => <div key={i.id}><dt>{i.label}</dt><dd>{i.value === null ? (i.suppression ?? "Not published") : `${i.value.toFixed(1)}%`}</dd></div>)}
             </dl> : <p className="sales-note">No selected indicators published for this district and year.</p>}
             {performance.payload.notes.length > 0 && <ReaderDetails title="Publisher’s data-quality notes"><ul>{performance.payload.notes.map((note, i) => <li key={i}>{note}</li>)}</ul></ReaderDetails>}
-          </> : <p className="sales-note">No matching performance record in this release. That is not a low score.</p>}
-        </div>)}
+          </> : results.kind === "no_schools"
+            ? <p className="sales-note">This district runs no schools of its own (NCES, {results.year}): its students attend another district’s schools under an agreement, so NJDOE publishes no results for it.</p>
+            : <p className="sales-note">No matching performance record in this release. That is not a low score.</p>}
+        </div>;
+        })}
         <p className="sales-note">Test figures cover participating grades; attendance covers the district’s reported students. They are not a measure of every school or an individual child’s likely outcome. <a href={SPR} target="_blank" rel="noreferrer">NJDOE reports</a> · <a href={BOUNDARIES} target="_blank" rel="noreferrer">NJOGIS boundaries and terms</a>.</p>
       </ReaderDetails> : <p className="sales-note">No district association matched this boundary copy—not evidence that there is no school service. <a href={SPR} target="_blank" rel="noreferrer">Check NJDOE’s reports</a>.</p>}
     </section>

@@ -2,6 +2,7 @@
 
 import json
 import math
+import re
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -17,6 +18,7 @@ SOURCES = (
     "nj_crime",
     "cdc_places",
     "fcc_bdc",
+    "nces_ccd_lea",
 )
 KINDS = {
     "nj_school_performance": "school_performance",
@@ -24,6 +26,7 @@ KINDS = {
     "nj_crime": "crime_agency",
     "cdc_places": "health_estimate",
     "fcc_bdc": "broadband_summary",
+    "nces_ccd_lea": "district_status",
 }
 
 
@@ -107,6 +110,17 @@ def validate_payload(kind: str, payload: dict[str, object]) -> None:
             or sum(counts.values()) != payload.get("reported_offenses")
         ):
             raise ValueError("community: invalid offense counts")
+    elif kind == "district_status":
+        schools = payload.get("operational_schools")
+        if isinstance(schools, bool) or not isinstance(schools, int) or schools < 0:
+            raise ValueError("community: invalid district status")
+        successor = payload.get("successor")
+        if successor is not None and (
+            payload.get("status") != "Closed"
+            or not isinstance(successor, dict)
+            or not re.fullmatch(r"\d{2}-\d{4}", str(successor.get("district_id")))
+        ):
+            raise ValueError("community: invalid district successor")
     else:
         raise ValueError("community: unknown component kind")
 

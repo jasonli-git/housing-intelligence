@@ -14,14 +14,14 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
-## Now — correctness pass (2026-10-08)
+## Now — correctness pass complete (2026-10-09)
 
 Milestone 52 shipped as 0.50.0. The owner held Version 4 and chose the correctness and
-data-integrity items: four fixed on `change/correctness-pass` (ARCHITECTURE #350), then
-one at a time: CHAS margins from HUD's bulk files (done, #353), flood claims placed in
-towns through the 2010-to-2020 block relationship (done, #354), the completeness check
-reading the community inventory (done, #355), and the 62 school districts with no
-performance record.
+data-integrity items; all eight are done: four on `change/correctness-pass`
+(ARCHITECTURE #350), then CHAS margins (#353), flood claims in towns (#354), the
+completeness check reading the community records (#355) and the school districts with
+no results explained from NCES's directory (#356). The next focus is the owner's to
+choose; Version 4 stays held.
 
 ## Open
 
@@ -38,9 +38,13 @@ first raised, not where it must be done.
 - [ ] **The long-run comparison stops at the latest income year.** (M52) FHFA's county
       index reaches 2025 and SAIPE 2024, so the comparison ends in 2024 until SAIPE's
       2025 estimates (about December 2026).
-- [ ] **62 school-district associations have no NJDOE performance record.** (M47, #319)
-      Boundary and performance editions or excluded district types; review the publisher
-      IDs. Kept unmatched, never matched by name.
+- [ ] **NCES's district directory is added by hand each school year.** (#356) The
+      2024-25 file is reviewed. When NCES posts the next (its preliminary directory
+      usually comes out in late summer), add its URL to `CCD_LEA` in
+      `hip.sources.community`; `DISTRICT_SUCCESSORS` is rechecked against it on read and
+      refuses the file if a merger no longer reads as one. If NJOGIS redraws the Henry
+      Hudson Regional merger on its boundary map, the three successor rows become unused
+      and can be removed.
 - [ ] **Crime newer than 2023.** (M47, #320) NJSP's newer reporting route warns a zero
       can be delinquent reporting; audit its missing-report codes and schema before
       replacing the reviewed 2023 workbook. A town's own figures need an evidenced
