@@ -58,7 +58,7 @@ export function Masthead({
               /
             </span>
             <Link className="wordmark" href="/">
-              <span className="live-dot" aria-hidden="true" />
+              <img className="housing-mark" src="/icon.svg" width="24" height="24" alt="" />
               Housing
             </Link>
             <a

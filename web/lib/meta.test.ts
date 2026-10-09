@@ -26,7 +26,8 @@ describe("pageMetadata (#358)", () => {
     const meta = pageMetadata({ title: "T", description: "D", path: "/regions/5" });
     expect(meta.openGraph).toMatchObject({ title: "T", description: "D", url: "/regions/5" });
     expect(meta.twitter).toMatchObject({ title: "T", description: "D", card: "summary_large_image" });
-    expect(meta.openGraph).toMatchObject({ siteName: "Housing Intelligence", images: [{ url: "/og-image.png" }] });
+    expect(meta.openGraph).toMatchObject({ siteName: "Housing Intelligence", images: [{ url: "/housing-preview.png", width: 1200, height: 630 }] });
+    expect(meta.twitter).toMatchObject({ images: [{ url: "/housing-preview.png" }] });
     expect(meta.alternates).toEqual({ canonical: "/regions/5" });
   });
 });
