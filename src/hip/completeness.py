@@ -8,7 +8,11 @@ run's full report is kept (`reports/completeness/`) so the next can be compared 
 not name is.**
 
 Three dimensions are measured from the warehouse: geographic coverage, the three dates
-per source (through the freshness report, Milestone 27), and match quality. The other
+per source (through the freshness report, Milestone 27), and match quality. The
+community records (Milestone 47: schools, crime, health, broadband) are not figures in
+`fact_metric_observation` but documents in `community_records`, so their coverage and
+quality — suppressed school results, agencies reporting part of a year, CDC intervals —
+are measured on their own (`measure_community`, #355). The other
 three are judgments, and they are recorded here as data rather than re-judged each run,
 because a judgment made afresh every time is not a measurement:
 
@@ -26,6 +30,7 @@ An inspection command, not a pipeline stage, like `hip footprint`: it reads and 
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 from typing import Literal
@@ -473,9 +478,163 @@ def measure_coverage(session: Session) -> tuple[Totals, list[Coverage]]:
     return Totals(totals.municipalities, totals.zips, totals.counties), coverage
 
 
+@dataclass(frozen=True)
+class CommunityCoverage:
+    """One community component's records, the places they reach and their gaps."""
+
+    component: str
+    records: int
+    # (level, places reached, places at that level), in the order a reader goes down.
+    reach: tuple[tuple[str, int, int], ...]
+    # What the publisher withheld or left partial, counted, and what the count means.
+    gaps: int
+    gaps_mean: str
+
+
+# The levels a component reaches, as `community_records.entity_id` prefixes them, and the
+# `regions` level each counts against. Tracts are regions too (Milestone 47's spine).
+_COMMUNITY_LEVELS = (
+    ("state", "state"),
+    ("county", "county"),
+    ("municipality", "municipality"),
+    ("zip", "zip"),
+    ("tract", "tract"),
+    # School districts are not regions; their count stands alone.
+    ("district", "district"),
+)
+
+
+def measure_community(session: Session) -> list[CommunityCoverage]:
+    """Milestone 47's community records: what each holds, where, and what it lacks.
+
+    Counted from the payloads as loaded, so a publisher suppressing more school results
+    or an agency reporting fewer months shows here on the next run, and a missing place
+    is a place not reached rather than a zero. Empty where nothing is loaded.
+    """
+    totals = {
+        row["level"]: row["n"]
+        for row in session.execute(
+            text("SELECT level, count(*) AS n FROM regions GROUP BY level")
+        ).mappings()
+    }
+    reached: dict[str, dict[str, int]] = {}
+    records: dict[str, int] = {}
+    for row in session.execute(
+        text(
+            """
+            SELECT kind, split_part(entity_id, ':', 1) AS level,
+                   count(*) AS records, count(DISTINCT entity_id) AS places
+            FROM community_records GROUP BY 1, 2
+            """
+        )
+    ).mappings():
+        reached.setdefault(row["kind"], {})[row["level"]] = row["places"]
+        records[row["kind"]] = records.get(row["kind"], 0) + row["records"]
+
+    def reach(kind: str) -> tuple[tuple[str, int, int], ...]:
+        return tuple(
+            (level, reached[kind][prefix], totals.get(level, 0))
+            for prefix, level in _COMMUNITY_LEVELS
+            if prefix in reached.get(kind, {})
+        )
+
+    gaps = (
+        session.execute(
+            text(
+                """
+            SELECT
+              (SELECT count(*) FROM community_records r,
+                      jsonb_array_elements(r.payload -> 'indicators') i
+               WHERE r.kind = 'school_performance'
+                 AND (i ->> 'suppression' IS NOT NULL OR i ->> 'value' IS NULL))
+                AS school_withheld,
+              (SELECT count(*) FROM community_records r,
+                      jsonb_array_elements(r.payload -> 'indicators') i
+               WHERE r.kind = 'school_performance') AS school_indicators,
+              (SELECT count(*) FROM community_records a
+               WHERE a.kind = 'school_area'
+                 AND NOT EXISTS (
+                     SELECT 1 FROM community_records p
+                     WHERE p.kind = 'school_performance'
+                       AND p.payload ->> 'district_id' = a.payload ->> 'district_id'))
+                AS areas_unmatched,
+              (SELECT count(*) FROM community_records
+               WHERE kind = 'crime_agency'
+                 AND (payload ->> 'months_reported')::int < 12) AS agencies_partial,
+              -- `->>` reads a JSON null as SQL NULL, as it does a missing key.
+              (SELECT count(*) FROM community_records
+               WHERE kind = 'health_estimate'
+                 AND (payload ->> 'low' IS NULL OR payload ->> 'high' IS NULL))
+                AS health_no_interval,
+              (SELECT count(*) FROM community_records
+               WHERE kind = 'broadband_summary'
+                 AND NOT (payload -> 'shares' ? 'speed_100_20')) AS broadband_missing
+            """
+            )
+        )
+        .mappings()
+        .one()
+    )
+
+    components = (
+        (
+            "school_performance",
+            "School results (NJDOE)",
+            gaps["school_withheld"],
+            f"of {gaps['school_indicators']:,} district results suppressed or "
+            "not reported",
+        ),
+        (
+            "school_area",
+            "School district areas",
+            gaps["areas_unmatched"],
+            "district areas with no NJDOE results record",
+        ),
+        (
+            "crime_agency",
+            "Crime by agency (NJSP)",
+            gaps["agencies_partial"],
+            "agencies reporting fewer than 12 months",
+        ),
+        (
+            "health_estimate",
+            "Health estimates (CDC PLACES)",
+            gaps["health_no_interval"],
+            "estimates without their 95% interval",
+        ),
+        (
+            "broadband_summary",
+            "Broadband (FCC)",
+            gaps["broadband_missing"],
+            "summaries without the 100/20 Mbps share",
+        ),
+    )
+    return [
+        CommunityCoverage(
+            component=label,
+            records=records[kind],
+            reach=reach(kind),
+            gaps=count,
+            gaps_mean=means,
+        )
+        for kind, label, count, means in components
+        if kind in records
+    ]
+
+
 # Matched on a code the publisher and the spine share, as against a name, which is the
 # one method here that can pick the wrong place (four NJ pairs share a name and county).
 _BY_NAME = {"name_county"}
+
+
+_PLURAL = {
+    "state": "state",
+    "county": "counties",
+    "municipality": "towns",
+    "zip": "ZIP codes",
+    "tract": "tracts",
+    "district": "districts",
+}
 
 
 def _pct(share: float | None) -> str:
@@ -485,6 +644,7 @@ def _pct(share: float | None) -> str:
 def render(session: Session, sources: dict[str, Source], run_on: date) -> str:
     """The full report, as Markdown: one section per dimension."""
     totals, coverage = measure_coverage(session)
+    community = measure_community(session)
     freshness = build_report(session, sources)
     discoveries = {
         row["source_id"]: row
@@ -519,7 +679,7 @@ def render(session: Session, sources: dict[str, Source], run_on: date) -> str:
         "",
         "## Summary",
         "",
-        summary(coverage, totals, freshness.sources, sources),
+        summary(coverage, totals, freshness.sources, sources, community),
         "",
         "## Geographic",
         "",
@@ -580,8 +740,9 @@ def render(session: Session, sources: dict[str, Source], run_on: date) -> str:
         "",
         "How each observation was matched to its region, and — since Milestone 28 — "
         "the share of each metric's newest figures that carry a 90% margin of error. "
-        "Only the Census's survey publishes margins, and the ratios divided by its "
-        "income inherit them. No sample counts or suppression flags are loaded.",
+        "The Census's survey and HUD's tabulation of it publish margins, and the ratios "
+        "divided by its income inherit them. No sample counts are loaded; suppression "
+        "is counted for the community records, below.",
         "",
         "| Metric | Matched by | With a margin |",
         "|---|---|---:|",
@@ -593,6 +754,30 @@ def render(session: Session, sources: dict[str, Source], run_on: date) -> str:
         )
         margin = f"{c.margin_share:.0%}" if c.margin_share else "—"
         lines.append(f"| `{c.metric_id}` | {methods} | {margin} |")
+
+    lines += [
+        "",
+        "## Community records",
+        "",
+        "Milestone 47's schools, crime, health and broadband are records rather than "
+        "figures, so the tables above do not count them. Each component's records, the "
+        "places they reach, and what the publisher withheld or left partial — counted, "
+        "never filled.",
+        "",
+        "| Component | Records | Reaches | Gaps |",
+        "|---|---:|---|---|",
+    ]
+    for part in community:
+        reach = "; ".join(
+            f"{covered:,} of {total:,} {_PLURAL[level]}"
+            if total
+            else f"{covered:,} {_PLURAL[level]}"
+            for level, covered, total in part.reach
+        )
+        lines.append(
+            f"| {part.component} | {part.records:,} | {reach} "
+            f"| {part.gaps:,} {part.gaps_mean} |"
+        )
 
     lines += ["", "## Usability", "", "| Question | Status | Where |", "|---|---|---|"]
     for q in QUESTIONS:
@@ -623,6 +808,7 @@ def summary(
     totals: Totals,
     freshness: list[SourceFreshness],
     sources: dict[str, Source],
+    community: Sequence[CommunityCoverage] = (),
 ) -> str:
     """One paragraph per run, for the ROADMAP record."""
     municipal = [c for c in coverage if c.municipalities]
@@ -653,8 +839,17 @@ def summary(
         f"{', '.join(missing) or 'none'} not held. "
         f"**Statistical quality:** match method on every observation, {by_name} "
         f"metrics partly matched by name; margins of error on {margined} metrics — the "
-        "survey's, and the ratios built on it; no sample counts or suppression flags. "
-        f"**Usability:** {answered} of {len(QUESTIONS)} fixed questions answered, "
+        "survey's and HUD's tabulation of it, and the ratios built on them; no sample "
+        "counts. "
+        + (
+            f"**Community records:** {sum(c.records for c in community):,} in "
+            f"{len(community)} components; "
+            + "; ".join(f"{c.gaps:,} {c.gaps_mean}" for c in community)
+            + ". "
+            if community
+            else ""
+        )
+        + f"**Usability:** {answered} of {len(QUESTIONS)} fixed questions answered, "
         f"{declined} declined on the site, "
         f"{len(QUESTIONS) - answered - declined} neither. "
         f"**Reuse rights:** {public} of {len(freshness)} sources public domain; the rest "
