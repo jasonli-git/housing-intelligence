@@ -8,7 +8,11 @@ import { pushHousingMode, useHousingMode } from "@/components/useHousingMode";
 export type AffordabilityControl =
   | { kind: "local"; fallbackHref?: string }
   | { kind: "route"; active?: boolean }
-  | { kind: "disabled"; reason: string };
+  | { kind: "disabled"; reason: string }
+  // Not shown at all: on a page about no one state (the home page, the site's own
+  // policy and source-history pages), a New Jersey shortcut does not belong (owner,
+  // 2026-10-09). "disabled" stays for a page where the control belongs but cannot work.
+  | { kind: "hidden" };
 
 /**
  * Global affordability control. It is a real link wherever navigation is possible, so
@@ -20,6 +24,7 @@ export function HousingModeToggle({ control }: { control: AffordabilityControl }
   const mode = useHousingMode(control.kind === "route" && control.active ? "afford" : "state");
   const afford = control.kind === "disabled" ? false : mode === "afford";
 
+  if (control.kind === "hidden") return null;
   if (control.kind === "disabled") {
     return (
       <button

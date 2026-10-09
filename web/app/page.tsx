@@ -18,7 +18,7 @@ export const metadata: Metadata = pageMetadata({
 export default async function HousingLandingPage() {
   const rate = await nationalMortgageRate();
   return <>
-    <Masthead affordability={{ kind: "disabled", reason: "Choose a covered state first" }} budgetLabel="Find within my budget" search={false} />
+    <Masthead affordability={{ kind: "hidden" }} search={false} />
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
       <header className="page-head nation-head" data-kind="nation">
         <svg className="nation-portrait" viewBox="0 0 360 300" fill="none" aria-hidden="true">

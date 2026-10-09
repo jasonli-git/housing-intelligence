@@ -15,6 +15,12 @@ describe("budget entry availability", () => {
     expect(html).not.toContain("Budget · NJ");
     expect(html).not.toContain('href="/afford?county=all"');
   });
+  it("shows no New Jersey entry at all on a page about no one state", () => {
+    const html = renderToStaticMarkup(createElement(Masthead, { affordability: { kind: "hidden" } }));
+    expect(html).not.toContain("bar-budget");
+    expect(html).not.toContain("Find places · NJ");
+    expect(html).not.toContain('href="/afford?county=all"');
+  });
   it("keeps the statewide entry navigable on supported pages", () => {
     const html = renderToStaticMarkup(createElement(Masthead, { affordability: { kind: "route" } }));
     expect(html).toContain('href="/afford?county=all"');

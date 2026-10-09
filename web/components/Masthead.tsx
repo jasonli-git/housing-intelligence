@@ -98,7 +98,7 @@ export function Masthead({
           </div>
           <div className="bar-tools">
             {search && <PlaceSearch />}
-            {affordability.kind === "disabled" ? <button className="bar-budget" type="button" disabled title={affordability.reason} aria-label={`${budgetLabel}. ${affordability.reason}`}>{budgetContent}</button> :
+            {affordability.kind === "hidden" ? null : affordability.kind === "disabled" ? <button className="bar-budget" type="button" disabled title={affordability.reason} aria-label={`${budgetLabel}. ${affordability.reason}`}>{budgetContent}</button> :
               <Link className="bar-budget" href="/afford?county=all" aria-label="Find places within my budget across all New Jersey">{budgetContent}</Link>}
           </div>
           <ThemeToggle />
