@@ -21,6 +21,7 @@ from hip.sources.census_permits import PermitsAdapter
 from hip.sources.census_saipe import SaipeAdapter
 from hip.sources.community import (
     CrimeAdapter,
+    DistrictDirectoryAdapter,
     PlacesAdapter,
     SchoolBoundariesAdapter,
     SchoolPerformanceAdapter,
@@ -135,6 +136,8 @@ IMPLEMENTED: tuple[str, ...] = (
     TransitStopsAdapter.source_id,
     SchoolPerformanceAdapter.source_id,
     SchoolBoundariesAdapter.source_id,
+    # Why a district has no NJDOE results (#356).
+    DistrictDirectoryAdapter.source_id,
     CrimeAdapter.source_id,
     PlacesAdapter.source_id,
     BroadbandSummaryAdapter.source_id,
@@ -191,6 +194,8 @@ METRIC_SOURCES: tuple[str, ...] = (
     TransitStopsAdapter.source_id,
     SchoolPerformanceAdapter.source_id,
     SchoolBoundariesAdapter.source_id,
+    # Why a district has no NJDOE results (#356).
+    DistrictDirectoryAdapter.source_id,
     CrimeAdapter.source_id,
     PlacesAdapter.source_id,
     BroadbandSummaryAdapter.source_id,
@@ -253,6 +258,8 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
             return builder()
     if source_id == TigerAdapter.source_id:
         return TigerAdapter(states=scope.states)
+    if source_id == DistrictDirectoryAdapter.source_id:
+        return DistrictDirectoryAdapter(states=scope.states)
     if source_id == ZhviAdapter.source_id:
         return ZhviAdapter()
     if source_id == ZoriAdapter.source_id:
