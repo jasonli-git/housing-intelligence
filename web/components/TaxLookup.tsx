@@ -26,13 +26,14 @@ import {
   revaluationIndicated,
   search,
 } from "@/lib/parcels";
+import { PRIVACY_EMAIL } from "@/lib/site";
 
 export type Town = { geoid: string; name: string; county: string };
 
 const APPEALS = "https://www.nj.gov/treasury/taxation/lpt/lpt-appeal.shtml";
 const CHAPTER_123 = "https://www.nj.gov/treasury/taxation/lpt/statdata.shtml";
 /** Where a covered person asks for an address to come off the lookup (ARCHITECTURE #295). */
-export const REMOVAL_EMAIL = "privacy@jasonli.app";
+export const REMOVAL_EMAIL = PRIVACY_EMAIL;
 
 // "12/3", "12, 3", "block 12 lot 3" or "12 lot 3": a block and a lot, which repeat from
 // town to town and so still need one.

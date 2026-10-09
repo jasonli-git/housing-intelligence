@@ -3,9 +3,9 @@ import Link from "next/link";
 import { BuiltAgo } from "@/components/BuiltAgo";
 import { api } from "@/lib/api";
 import { dayLabel } from "@/lib/freshness";
+import { CONTACT_EMAIL, REPO_URL } from "@/lib/site";
 import { byInstitution, isRestricted, shortPublisher } from "@/lib/sources";
 
-const REPO_URL = "https://github.com/jasonli-git/housing-intelligence";
 const NOTICE_URL = `${REPO_URL}/blob/main/NOTICE`;
 const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
 
@@ -188,6 +188,12 @@ export async function SourceFooter() {
             >
               Notice <span aria-hidden="true">↗</span>
             </a>
+            <Link className="foot-tab" href="/terms">
+              Terms of use
+            </Link>
+            <Link className="foot-tab" href="/privacy">
+              Privacy
+            </Link>
             <a
               className="foot-tab"
               href={LICENSE_URL}
@@ -204,7 +210,8 @@ export async function SourceFooter() {
                 its source is public
               </a>
               . The data is not ours to relicense, and this site cannot grant terms it was not
-              given.
+              given. Questions or corrections:{" "}
+              <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
             </span>
           </div>
         </div>

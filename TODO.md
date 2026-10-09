@@ -313,6 +313,15 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Housekeeping
 
+- [ ] **Reply as housing@ and privacy@ from Gmail.** (#357, owner 2026-10-09) Both
+      addresses are Cloudflare Email Routing forwards, which only receive, so a reply
+      today shows the owner's personal address. Chosen: keep the forwards and add an
+      outgoing mail service (e.g. SMTP2GO or Resend, free tiers), then Gmail's *Send mail
+      as* for each address with that service's SMTP login. Add the service's SPF and DKIM
+      records to jasonli.app (SPF joins Cloudflare's `include` in the one TXT record), and
+      a DMARC record, which the domain has none of, starting at `p=none` with reports,
+      so mail sent as the domain is harder to spoof. Test a reply from each address to
+      an outside account before relying on it.
 - [ ] **Nothing runs `ruff` automatically.** `make lint` exists and is run by hand, so
       a violation reaches `main` whenever someone runs `make test` or `make test-all`
       and stops there —
@@ -379,12 +388,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       `config/geography.yml` already warns the identifier system is expensive to change
       once fact rows reference it.
 
-- [ ] **The site owes FRED a sentence in a terms of use it doesn't have.** (M32,
-      #278) FRED's API terms: an application for other users must "explicitly state in
-      your application's terms of use that, by using your application, your users are
-      agreeing to be bound by the FRED® API Terms of Use". The site shows FRED's notice
-      and links its terms, but has no terms of use. A short terms page linked from the
-      footer, saying that and nothing it can't keep, settles it.
 - [ ] **The Markdown report does not carry each figure's kind or licence.** (M31) The
       report page and the CSV do, and the downloadable Markdown closes with the terms and
       notices and leaves display-only figures out (`render_report`). The kind and licence

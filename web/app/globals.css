@@ -1521,3 +1521,16 @@ tr[data-status="pending"] .fresh-status {
 .persistence-bar.below { fill: var(--text-muted); opacity: 0.5; }
 .persistence-bar.latest { fill: var(--up); }
 .persistence-axis { fill: var(--text-muted); font-size: 11px; font-family: var(--font-text); }
+
+/* The terms and privacy pages (#357): prose, so a reading measure rather than the
+   ledger's full width, and list items spaced like paragraphs. */
+.legal-page .section > p,
+.legal-page .section > ul {
+  max-width: 68ch;
+}
+.legal-page .section > ul {
+  padding-left: 1.25rem;
+}
+.legal-page .section > ul > li + li {
+  margin-top: 0.5rem;
+}
