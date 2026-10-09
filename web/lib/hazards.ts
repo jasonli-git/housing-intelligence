@@ -6,6 +6,9 @@
  *   are missing, the page says why rather than showing nothing or a zero.
  * - Flood claims are complete, so a year with none paid is a zero; the newest year in
  *   the data is still filling and is reported "so far", never compared as a whole year.
+ * - A town's claims are estimated from FEMA's block groups (#354). Where FEMA's codes
+ *   leave too many unplaceable between a town and its neighbours, the page shows the
+ *   county's instead and says why.
  * - Counts of contaminated sites and water violations are listed, never scored.
  */
 
@@ -52,10 +55,47 @@ export type ClaimsSummary = {
   /** Every year since records begin, the worst three by claims. */
   since: number;
   worst: ClaimYear[];
+  /** Claims over the same ten years that may be this town's but cannot be placed. */
+  unplaced: number;
 };
 
-/** Claims and payments by year, zero-filled, summed over the last ten whole years. */
-export function claimsSummary(claims: Observation[], paid: Observation[]): ClaimsSummary | null {
+/**
+ * At or above this share of a town's claims left unplaceable — over every year, against
+ * the placed and unplaceable together — its own figure says too little to stand alone.
+ */
+export const UNPLACED_CEILING = 0.1;
+
+const total = (observations: Observation[]) => observations.reduce((a, o) => a + o.value, 0);
+
+/**
+ * Whether a town's own claims can be shown, rather than its county's (#354): some were
+ * placed in it, and the claims FEMA's codes cannot place between it and a neighbour are
+ * under a tenth of what it might have.
+ */
+export function ownClaimsUsable(claims: Observation[], unplaced: Observation[]): boolean {
+  const placed = total(claims);
+  const maybe = total(unplaced);
+  return placed > 0 && maybe / (placed + maybe) < UNPLACED_CEILING;
+}
+
+/** Whether a town has claims that might be its own and cannot be placed. */
+export function hasUnplaced(unplaced: Observation[]): boolean {
+  return total(unplaced) > 0;
+}
+
+/**
+ * Claims and payments by year, zero-filled, summed over the last ten whole years.
+ *
+ * `newestYear` is the dataset's newest year, still filling. A town's or ZIP code's own
+ * newest year with a claim can be years older, and taking it instead would call a whole
+ * year "so far" and shift the window back; the county's newest year is the dataset's.
+ */
+export function claimsSummary(
+  claims: Observation[],
+  paid: Observation[],
+  unplaced: Observation[] = [],
+  newestYear: number | null = null,
+): ClaimsSummary | null {
   if (claims.length === 0) return null;
   const years = new Map<number, ClaimYear>();
   const at = (year: number) => {
@@ -65,7 +105,7 @@ export function claimsSummary(claims: Observation[], paid: Observation[]): Claim
   };
   for (const o of claims) at(Number(o.period_end.slice(0, 4))).claims += o.value;
   for (const o of paid) at(Number(o.period_end.slice(0, 4))).paid += o.value;
-  const partialYear = Math.max(...years.keys());
+  const partialYear = Math.max(newestYear ?? 0, ...years.keys());
   const last = partialYear - 1;
   const first = last - 9;
   const window = [...years.values()].filter((y) => y.year >= first && y.year <= last);
@@ -79,6 +119,12 @@ export function claimsSummary(claims: Observation[], paid: Observation[]): Claim
     paid: window.reduce((a, y) => a + y.paid, 0),
     since: Math.min(...years.keys()),
     worst: whole.sort((a, b) => b.claims - a.claims || b.year - a.year).slice(0, 3),
+    unplaced: total(
+      unplaced.filter((o) => {
+        const y = Number(o.period_end.slice(0, 4));
+        return y >= first && y <= last;
+      }),
+    ),
   };
 }
 

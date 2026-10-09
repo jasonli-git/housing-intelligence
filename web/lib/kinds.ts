@@ -176,6 +176,7 @@ export const KINDS: Record<string, RecordType> = {
   njdep_tidal_homes_share: "calculated",
   fema_flood_claims: "administrative",
   fema_flood_claims_paid: "administrative",
+  fema_flood_claims_unplaced: "administrative",
   njdep_sites_open: "administrative",
   njdep_sites_post_remedy: "administrative",
   njdep_sites_heating_oil: "administrative",

@@ -1719,8 +1719,9 @@ metrics:
     description: >-
       National Flood Insurance Program claims on which anything was paid, by the year
       of the flood. Only insured homes and businesses claim, so this counts insured
-      loss, not every flooded home. Published by county and ZIP code; FEMA's finer
-      locations do not place a claim in a town.
+      loss, not every flooded home. Exact by county and ZIP code; a town's is estimated
+      from the census block group FEMA places each claim in, shared by where its homes
+      are.
     source_id: fema_nfip_claims
     record_type: administrative
     ranked: false
@@ -1738,6 +1739,22 @@ metrics:
     record_type: administrative
     ranked: false
     changed: false
+
+  fema_flood_claims_unplaced:
+    label: Flood insurance claims that may be this town's
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Paid claims FEMA places in a census block group whose code means different areas in
+      the 2010 and 2020 Censuses, areas that put its homes in different towns. FEMA does
+      not say which census it used, so these are not counted in any town; each town they
+      could belong to shows them as the most its figure could be short by.
+    source_id: fema_nfip_claims
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
 
   njdep_sites_open:
     label: Contaminated sites, cleanup open

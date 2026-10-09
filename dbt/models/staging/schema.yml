@@ -303,8 +303,9 @@ models:
 
   - name: stg_fema_claims
     description: >-
-      NFIP claims paid and amounts paid, per county, ZIP code and the state, by year of
-      loss.
+      NFIP claims paid and amounts paid, per county, ZIP code, town (estimated, #354) and
+      the state, by year of loss; and per town, the claims that might be its own but cannot
+      be placed.
     columns:
       - name: geoid
         tests: [not_null]
