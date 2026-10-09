@@ -20,8 +20,8 @@ Milestone 52 shipped as 0.50.0. The owner held Version 4 and chose the correctne
 data-integrity items: four fixed on `change/correctness-pass` (ARCHITECTURE #350), then
 one at a time: CHAS margins from HUD's bulk files (done, #353), flood claims placed in
 towns through the 2010-to-2020 block relationship (done, #354), the completeness check
-reading the community inventory, and the 62 school districts with no performance
-record.
+reading the community inventory (done, #355), and the 62 school districts with no
+performance record.
 
 ## Open
 
@@ -45,10 +45,6 @@ first raised, not where it must be done.
       can be delinquent reporting; audit its missing-report codes and schema before
       replacing the reviewed 2023 workbook. A town's own figures need an evidenced
       agency-to-municipality crosswalk, not names.
-- [ ] **The completeness check counts facts only.** (M47) Its tables do not see the
-      community inventory's suppressions, agency months or CDC intervals; the coverage
-      for those is in the M47 handoff until the check reads `community_records`.
-
 - [ ] **BPU's reliability reports are requested each spring.** (M42, #347) The 2024 and
       2025 reports for all four electric utilities came from OPRA request C263585
       (2026-10-08). The 2026 reports are filed with BPU around the end of May 2027: then

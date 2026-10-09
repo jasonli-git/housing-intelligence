@@ -19,6 +19,7 @@ from hip.completeness import (
     METRIC_SUBJECTS,
     QUESTIONS,
     SUBJECTS,
+    measure_community,
     measure_coverage,
 )
 from hip.config import REPO_ROOT, load_metrics, load_sources
@@ -93,6 +94,7 @@ def test_the_report_covers_all_six_dimensions() -> None:
         "## Temporal",
         "## Subject",
         "## Statistical quality",
+        "## Community records",
         "## Usability",
         "## Reuse rights",
     ):
@@ -101,3 +103,24 @@ def test_the_report_covers_all_six_dimensions() -> None:
     # backfilled from 2017, which a fetched-last rule reported as what was acquired.
     fmr = next(line for line in report.splitlines() if line.startswith("| `hud_fmr` |"))
     assert "2017" not in fmr
+
+
+@needs_warehouse
+def test_community_records_are_counted_with_their_gaps() -> None:
+    """Milestone 47's records live outside the facts, so the check reads them itself
+    (#355): a component's places are counted against the regions at its level, and what
+    the publisher withheld is counted, never filled."""
+    with Session(get_engine()) as session:
+        community = measure_community(session)
+    if not community:
+        pytest.skip("no community records loaded")
+    by_name = {c.component: c for c in community}
+    for c in community:
+        assert c.records > 0 and c.gaps >= 0
+        for _level, covered, total in c.reach:
+            assert total == 0 or covered <= total
+    crime = by_name["Crime by agency (NJSP)"]
+    assert crime.gaps < crime.records
+    assert "fewer than 12 months" in crime.gaps_mean
+    areas = by_name["School district areas"]
+    assert {level for level, _, _ in areas.reach} >= {"county", "municipality", "zip"}
