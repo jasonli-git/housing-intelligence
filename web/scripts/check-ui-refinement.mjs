@@ -46,6 +46,26 @@ try {
   assert.equal(await jump.isVisible(), false, 'Screen shortcut stays out of printed report');
   await page.emulateMedia({ media: 'screen' });
   await go('/');
+  const search = page.getByRole('combobox', { name: 'Search by state, town, county or ZIP code', exact: true });
+  assert.equal(await search.count(), 1, 'Only one place search');
+  assert(await page.locator('#coverage-map-content').evaluate(n => n.inert && n.getAttribute('aria-hidden') === 'true'), 'Preview map is not interactive or announced behind search');
+  assert.equal(await page.getByText('Try Princeton or 07030.', { exact: false }).count(), 0);
+  await search.fill('Somerset');
+  await page.getByRole('option').first().waitFor();
+  await page.getByRole('button', { name: 'Explore by state', exact: true }).click();
+  assert(await page.locator('.coverage-map').evaluate(n => n === document.activeElement), 'Reveal transfers focus to map');
+  assert.equal(await search.isVisible(), false);
+  assert.equal(await page.locator('#coverage-map-content').evaluate(n => n.inert), false);
+  await page.getByRole('button', { name: 'Zoom in United States map', exact: true }).click();
+  const zoomed = await page.locator('.coverage-viewport').getAttribute('style');
+  await page.getByRole('button', { name: 'Search for a place', exact: false }).click();
+  assert(await search.evaluate(n => n === document.activeElement), 'Return transfers focus to search');
+  assert.equal(await search.inputValue(), 'Somerset', 'Switching preserves the query');
+  await page.getByRole('button', { name: 'Explore by state', exact: true }).click();
+  assert.equal(await page.locator('.coverage-viewport').getAttribute('style'), zoomed, 'Switching preserves map position');
+  await page.getByRole('button', { name: 'Search for a place', exact: false }).click();
+  await search.fill('');
+  await search.blur();
   const prices = page.locator('section', { has: page.getByRole('heading', { name: 'Home prices over the past year', exact: true }) });
   assert.match(await prices.locator('.national-rate > strong').textContent(), /^[+-]?\d+\.\d%$/);
   assert.match(await prices.locator('small').textContent(), /[A-Z][a-z]{2} \d{4} → [A-Z][a-z]{2} \d{4} · FHFA HPI/);
@@ -72,7 +92,19 @@ try {
       assert.equal(await stateLink.getAttribute('href'), '/states/new-jersey');
       assert.equal(await page.locator('.coverage-state-action').count(), 0, 'No redundant right-hand state button');
       assert(await page.locator('.foot-notice-head').evaluate(n => getComputedStyle(n.querySelector('svg')).stroke === getComputedStyle(n.querySelector('a')).color), 'Notice title matches yellow shield');
-      assert(await page.locator('.entry-free').evaluate(n => n.previousElementSibling?.classList.contains('entry-introduction') && n.nextElementSibling?.classList.contains('home-find')), 'Free badge sits between tagline and place search');
+      assert(await page.locator('.entry-free').evaluate(n => n.previousElementSibling?.classList.contains('entry-introduction')), 'Free badge sits below tagline');
+      assert(await page.locator('.coverage-state-preview .entry-kicker').evaluate(n => getComputedStyle(n).color !== getComputedStyle(n.parentElement.querySelector('h3')).color), 'Availability label is distinct from New Jersey blue');
+      assert.equal(await page.locator('.coverage-search-panel input').isVisible(), true);
+      await page.locator('.coverage-search-stage').screenshot({ path: `${output}/search-map-${width}-${theme}.png` });
+      await page.getByRole('button', { name: 'Explore by state', exact: true }).click();
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${width} ${theme}: revealed map does not overflow`);
+      if (width === 390) {
+        const mapAudit = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+        assert.deepEqual(mapAudit.violations.map(v => v.id), [], `${theme}: revealed map accessibility`);
+        await page.locator('.coverage-search-stage').screenshot({ path: `${output}/revealed-map-${theme}.png` });
+      }
+      await page.getByRole('button', { name: 'Search for a place', exact: false }).click();
+      await search.blur();
       assert(await page.locator('.foot-notice-head > svg').evaluate(n => {
         const probe = document.createElement('span');
         probe.style.color = 'var(--notice-text)';

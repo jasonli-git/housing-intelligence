@@ -26,6 +26,7 @@ try {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   assert.equal(await page.locator('.portrait-house').evaluate(n => getComputedStyle(n).animationName), 'none', 'Reduced motion is static');
   console.log('PASS: looping house illustration without a control; reduced motion');
+  await page.getByRole('button', { name: 'Explore by state', exact: true }).click();
   await page.locator('.coverage-map-stage').scrollIntoViewIfNeeded();
   await page.locator('.coverage-viewport').waitFor();
   await page.getByRole('button', {name:'Zoom in United States map'}).click();

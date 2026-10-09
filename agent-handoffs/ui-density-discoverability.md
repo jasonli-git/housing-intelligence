@@ -15,6 +15,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - Replace only the Notice heading's font-dependent ↗ glyph with a decorative 13px SVG external-link icon. The yellow shield, heading font, link destination and other links remain unchanged.
 - Match the Notice heading to the yellow shield. Make the large New Jersey title in the coverage preview an internal link with a small right arrow; remove the separate right-side “Explore New Jersey” button. Keep the map's other navigation links intact.
 - Approved national home-price follow-up: see `agent-handoffs/national-home-price-benchmark.md`. That bounded addition introduces a monthly national series and corrects FHFA attribution/cadence; the frontend-only/no-new-figures statements below describe the earlier UI pass, not this subsequent work.
+- Subsequent landing experiment combines place search and map in a search-first area; see `agent-handoffs/search-first-landing.md`. It supersedes the separate upper search and earlier free-badge-before-search adjacency without changing the badge's position below the tagline.
 
 ## Files/modules affected
 
