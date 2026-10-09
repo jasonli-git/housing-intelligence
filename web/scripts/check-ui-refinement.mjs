@@ -88,6 +88,8 @@ try {
     for (const theme of ['light', 'dark']) {
       await page.emulateMedia({ colorScheme: theme });
       assert.equal(await page.locator('.entry-free span').textContent(), 'Free · No fees, subscriptions or ads');
+      assert(await page.locator('.entry-free span').evaluate(n => getComputedStyle(n).color !== getComputedStyle(document.querySelector('.entry-introduction')).color), 'Free badge has stronger hierarchy than tagline');
+      await page.locator('.nation-head').screenshot({ path: `${output}/landing-head-${width}-${theme}.png` });
       const stateLink = page.locator('.coverage-state-preview h3').getByRole('link', { name: 'New Jersey', exact: true });
       assert.equal(await stateLink.getAttribute('href'), '/states/new-jersey');
       assert.equal(await page.locator('.coverage-state-action').count(), 0, 'No redundant right-hand state button');

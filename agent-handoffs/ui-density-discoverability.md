@@ -16,6 +16,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - Match the Notice heading to the yellow shield. Make the large New Jersey title in the coverage preview an internal link with a small right arrow; remove the separate right-side “Explore New Jersey” button. Keep the map's other navigation links intact.
 - Approved national home-price follow-up: see `agent-handoffs/national-home-price-benchmark.md`. That bounded addition introduces a monthly national series and corrects FHFA attribution/cadence; the frontend-only/no-new-figures statements below describe the earlier UI pass, not this subsequent work.
 - Subsequent landing experiment combines place search and map in a search-first area; see `agent-handoffs/search-first-landing.md`. It supersedes the separate upper search and earlier free-badge-before-search adjacency without changing the badge's position below the tagline.
+- Landing hierarchy follow-up: reduce the tagline to a responsive 22–30px and soften its colour while retaining comfortable contrast. Strengthen the unchanged free-use badge with primary-colour text, a green check and faint green border/background. Keep its size and one-line mobile wording. A shared national-backdrop strip with short labels and real-data trends is only a proposed direction, not implemented.
 
 ## Files/modules affected
 
@@ -64,6 +65,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - `curl -I http://localhost:3000/ui-refinement-missing`: HTTP 404 from Next development server.
 - `A11Y_ORIGIN=http://localhost:3002 A11Y_PATHS='/,/states/new-jersey,/regions/12,/regions/224,/regions/3091,/afford?income=120000,/guide,/tax,/freshness,/changes,/regions/12/report,/terms,/privacy' A11Y_OUTPUT=/tmp/ui-density-final-a11y.json npm run check:a11y`: passed. 104 states (13 routes × 1440/390px × light/dark × closed/expanded), no axe violations, application errors or horizontal page overflow. Axe’s separate incomplete/manual-review results are not claimed as automated passes.
 - `git diff --check`: passed. No separate frontend linter is configured; Python tests/lint and warehouse rebuild are not run for this frontend-only change.
+- Final tagline/free-badge hierarchy revision: typecheck, 556 frontend tests/78 files, 2,386-page static build and focused UI checks passed. Badge remains one line at 1280/390/320px in both themes; new heading screenshots reviewed. `A11Y_ORIGIN=http://localhost:3002 A11Y_PATHS='/' A11Y_OUTPUT=/tmp/landing-hierarchy-a11y.json npm run check:a11y` passed all eight landing states with no automated axe violations, application errors or overflow. Manual/incomplete checks remain manual. No national metric layout/data changes were made in this revision.
 
 Earlier exploratory audits caught and led to fixes for footer target size, the narrow GitHub target and low-contrast national-map helper text. A dev-server audit was interrupted by live reloads; final verification uses the stable static export instead.
 
