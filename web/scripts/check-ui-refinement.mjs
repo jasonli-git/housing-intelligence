@@ -63,6 +63,15 @@ try {
     for (const theme of ['light', 'dark']) {
       await page.emulateMedia({ colorScheme: theme });
       assert.equal(await page.locator('.entry-free span').textContent(), 'Free · No fees, subscriptions or ads');
+      assert(await page.locator('.entry-free').evaluate(n => n.previousElementSibling?.classList.contains('entry-introduction') && n.nextElementSibling?.classList.contains('home-find')), 'Free badge sits between tagline and place search');
+      assert(await page.locator('.foot-notice-head > svg').evaluate(n => {
+        const probe = document.createElement('span');
+        probe.style.color = 'var(--notice-text)';
+        n.parentElement.appendChild(probe);
+        const expected = getComputedStyle(probe).color;
+        probe.remove();
+        return getComputedStyle(n).stroke === expected;
+      }), `${theme}: Notice shield uses the warning accent`);
       assert(await page.locator('.entry-free span').evaluate(n => {
         const range = document.createRange();
         range.selectNodeContents(n);

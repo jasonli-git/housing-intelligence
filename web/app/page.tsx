@@ -31,12 +31,12 @@ export default async function HousingLandingPage() {
         <p className="entry-kicker">A public data project</p>
         <h1>Housing Intelligence</h1>
         <p className="entry-introduction">A clearer picture of the place you could call home.</p>
+        <p className="entry-free computed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees, subscriptions or ads</span></p>
         <section className="home-find" aria-labelledby="home-find-heading">
           <h2 id="home-find-heading">Find your place</h2>
           <PlaceSearch variant="hero" />
           <p className="home-find-hint">Detailed coverage starts with New Jersey. Try Princeton or 07030. <a href="#coverage-heading">Browse states ↓</a></p>
         </section>
-        <p className="entry-free computed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees, subscriptions or ads</span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-labelledby="coverage-heading">
         <header><p className="entry-kicker">United States · Explore by state</p><h2 id="coverage-heading">Browse by state</h2></header>

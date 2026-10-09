@@ -11,6 +11,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - A designed 404 recovery page offers one place search and routes into New Jersey or the landing page. Preserve Next’s not-found/noindex behavior.
 - Preserve comfortable footer tap targets, improve landing map-label contrast and keep narrow navigation from squeezing the GitHub control.
 - US-page follow-up: soften the tagline colour without changing its size, and shorten the free-use badge to “Free · No fees, subscriptions or ads.” Use editorial serif headings for the bottom cards, distinct from the publisher notices. Align the Notice shield with its heading and group its policy links separately from the legal/source paragraph.
+- Subsequent placement/accent adjustment: put the free-use badge directly after the tagline, before the place search, and restore the shared Notice shield to the existing yellow warning token (`--notice-text`) in both themes. Keep the new icon alignment and footer structure.
 
 ## Files/modules affected
 
@@ -67,3 +68,4 @@ Earlier exploratory audits caught and led to fixes for footer target size, the n
 - `npm run check:ui-refinement`: passed against the fresh export at port 3002. Added one-line badge, centred Notice shield, three policy links and page-reflow checks at 1280/390/320px in both light and dark themes. Existing navigation/assets/404 checks also pass. Visually inspected the generated mobile landing, desktop footer and mobile Notice screenshots in `/tmp/housing-ui-refinement/`.
 - `A11Y_ORIGIN=http://localhost:3002 A11Y_PATHS='/,/regions/12,/regions/224,/regions/3091,/tax,/freshness,/changes' A11Y_OUTPUT=/tmp/us-footer-a11y.json npm run check:a11y`: passed; 56 states (seven routes, 1440/390px, light/dark, closed/expanded), no automated axe violations, application errors or horizontal page overflow. Manual/incomplete findings remain separate from automated passes.
 - `git diff --check`: passed. No acquisition, model regeneration, canonical-document edits, deployment or merge.
+- Badge-placement/yellow-shield follow-up: reran typecheck (passed), all 553 tests (passed), static build (2,386 pages) and `check:ui-refinement` (passed). Added checks for the badge's position between tagline/search and the Notice shield's warning-token colour at all three widths in both themes. Inspected fresh mobile screenshots. The broader 56-state audit above predates these two small adjustments; it was not rerun for them.
