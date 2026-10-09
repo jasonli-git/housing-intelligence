@@ -2988,8 +2988,10 @@ def test_the_repo_config_lists_haiku_at_medium_effort_first() -> None:
         haiku = evaluation.model(f"claude-haiku-5-5-{effort}")
         assert (haiku.ref, haiku.reasoning_effort) == ("claude-haiku-5-5", effort)
         assert (haiku.input_usd_per_mtok, haiku.output_usd_per_mtok) == (0.10, 0.50)
-    # The consumer list from `v4` (2026-10-08), hosted only since SPEC v1.5.
+    # The consumer list from `v4` (2026-10-08), hosted only since SPEC v1.5; GPT-6 Luna
+    # heads it since #352.
     assert evaluation.generation.preference["consumer"] == [
+        "gpt-6-luna",
         "claude-haiku-5-5-medium",
         "gemini-3.8-flash-low",
         "gemini-3.1-flash-lite",

@@ -455,12 +455,16 @@ generation:
     # (reports/evaluation/v4.md, ARCHITECTURE #343-#345). Rubric score, share of stated
     # figures unsupported, and answers whose every figure bound:
     #
+    #   GPT-6 Luna                          3.64  0.0%  15/15
     #   Claude Haiku 5.5 (medium effort)    3.61  0.4%  13/15
     #   Gemini 3.8 Flash (low thinking)     3.48  0.0%  15/15
     #   Gemini 3.1 Flash-Lite               3.08  0.0%  15/15
     #   DeepSeek V4.1 Flash (thinking off)  3.22  0.0%  15/15
     #
-    # Haiku leads at about a sixth of 3.8's price; an answer the gates refuse goes back
+    # Luna at its default setting heads the list from 2026-10-08 (owner, ARCHITECTURE
+    # #352): the top rubric score, no unsupported figure, every answer bound, at about
+    # two thirds of Haiku's price. Its low setting [3.62] is not listed. Haiku, second,
+    # leads 3.8 at about a sixth of its price; an answer the gates refuse goes back
     # for revision before the list falls through to 3.8, which stated no unsupported
     # figure. Flash-Lite sits above DeepSeek despite scoring lower: it has written every
     # reading since 3.7 Flash became 3.8, and DeepSeek stays as the one tier outside the
@@ -468,6 +472,7 @@ generation:
     # The previous list (2026-09-27, readings-v1) began with Gemini 3.7 Flash, which
     # Google now serves as 3.8, and ended at Gemma 4 E4B.
     consumer:
+      - gpt-6-luna
       - claude-haiku-5-5-medium
       - gemini-3.8-flash-low
       - gemini-3.1-flash-lite

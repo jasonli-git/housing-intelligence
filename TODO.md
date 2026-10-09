@@ -389,13 +389,6 @@ first raised, not where it must be done.
 
 ### Open decisions — not scheduled, not decided
 
-- [ ] **Whether GPT-6 Luna joins the consumer list, and where.** (#351, 2026-10-08) In
-      `v4` it scored 3.64 at its default setting and 3.62 at low reasoning, against Haiku
-      medium's 3.61, with no unsupported figures and every answer bound, at about two
-      thirds of Haiku's price. 15 answers per setting is a small sample, and it is
-      weakest on completeness (2.9 against 3.3). Options: head the list, sit second
-      behind Haiku, or stay benchmark-only. A third provider (OpenAI) also widens the
-      list's spread of vendors.
 - [ ] **Revisit the refresh's hour when generation costs scale.** (2026-10-02, #259) The
       Friday 08:00 run is kept for now. Some Gemini Flex calls fall back to the standard
       price (4 of 23 on 2026-10-02), costing cents a run; if more states multiply the
