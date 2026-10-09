@@ -2988,8 +2988,10 @@ def test_the_repo_config_lists_haiku_at_medium_effort_first() -> None:
         haiku = evaluation.model(f"claude-haiku-5-5-{effort}")
         assert (haiku.ref, haiku.reasoning_effort) == ("claude-haiku-5-5", effort)
         assert (haiku.input_usd_per_mtok, haiku.output_usd_per_mtok) == (0.10, 0.50)
-    # The consumer list from `v4` (2026-10-08), hosted only since SPEC v1.5.
+    # The consumer list from `v4` (2026-10-08), hosted only since SPEC v1.5; GPT-6 Luna
+    # heads it since #352.
     assert evaluation.generation.preference["consumer"] == [
+        "gpt-6-luna",
         "claude-haiku-5-5-medium",
         "gemini-3.8-flash-low",
         "gemini-3.1-flash-lite",
@@ -3019,3 +3021,114 @@ def test_judging_added_models_keeps_the_verdicts_already_paid_for(
 
     assert _kept_judgments("v4", ["haiku-test"]) == [kept]
     assert _kept_judgments("v4", None) == []
+
+
+# --- OpenAI, a generation provider from 2026-10-08 ------------------------------------
+
+
+def _openai(
+    monkeypatch: pytest.MonkeyPatch, service_tier: str | None = None
+) -> HostedRunner:
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    runner = build_runner(
+        _cohort("openai", "https://x/v1"), "openai", service_tier=service_tier
+    )
+    assert isinstance(runner, HostedRunner)
+    return runner
+
+
+def _luna_answer(**extra: object) -> dict[str, object]:
+    return {
+        "model": "pinned-model-0731",
+        "service_tier": "default",
+        "choices": [
+            {"message": {"content": "Values rose 45.97%."}, "finish_reason": "stop"}
+        ],
+        "usage": {
+            "prompt_tokens": 1000,
+            "completion_tokens": 120,
+            "prompt_tokens_details": {"cached_tokens": 900},
+            "completion_tokens_details": {"reasoning_tokens": 70},
+        },
+        **extra,
+    }
+
+
+def test_luna_is_asked_with_its_budget_field_and_no_temperature(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """GPT-6 Luna refuses `max_tokens` and any temperature but 1 while it reasons
+    (probed 2026-10-08); `none` reasoning is offered as `disabled`."""
+    runner = _openai(monkeypatch)
+    sent: list[dict[str, Any]] = []
+    _generate_as(
+        runner, _at("openai", "default"), _recording(_luna_answer(), sent), monkeypatch
+    )
+    assert sent[0]["max_completion_tokens"] == LIMITS.max_output_tokens
+    assert not {"max_tokens", "temperature", "top_p", "reasoning_effort"} & set(sent[0])
+    assert "service_tier" not in sent[0]
+    for effort, sent_as in (("disabled", "none"), ("low", "low")):
+        _generate_as(
+            runner, _at("openai", effort), _recording(_luna_answer(), sent), monkeypatch
+        )
+        assert sent[-1]["reasoning_effort"] == sent_as
+
+
+def test_a_luna_answer_is_counted_as_billed(monkeypatch: pytest.MonkeyPatch) -> None:
+    generation = _generate_as(
+        _openai(monkeypatch),
+        _at("openai", "default"),
+        _answering(_luna_answer()),
+        monkeypatch,
+    )
+    assert generation.answer == "Values rose 45.97%."
+    assert generation.telemetry.prompt_tokens == 1000
+    assert generation.telemetry.cached_tokens == 900
+    assert generation.telemetry.generation_tokens == 120
+    assert generation.telemetry.reasoning_tokens == 70
+    assert generation.telemetry.service_tier == "default"
+
+
+def test_luna_on_flex_asks_for_the_tier_and_records_what_served_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sent: list[dict[str, Any]] = []
+    generation = _generate_as(
+        _openai(monkeypatch, "flex"),
+        _at("openai", "default"),
+        _recording(_luna_answer(service_tier="flex"), sent),
+        monkeypatch,
+    )
+    assert sent[-1]["service_tier"] == "flex"
+    assert generation.telemetry.service_tier == "flex"
+
+
+def test_deepseek_records_no_tier_it_was_never_asked_for(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """OpenAI-shaped, but without tiers: a `service_tier` it happened to send would
+    read as a tier the cost column then prices."""
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    runner = build_runner(_cohort("deepseek", "https://x/v1"), "deepseek")
+    assert isinstance(runner, HostedRunner)
+    generation = _generate_as(
+        runner,
+        _at("deepseek", "default"),
+        _answering(_luna_answer(service_tier="flex")),
+        monkeypatch,
+    )
+    assert generation.telemetry.service_tier is None
+
+
+def test_the_repo_config_lists_luna_at_three_settings_with_flex() -> None:
+    evaluation = load_evaluation(CONFIG_DIR)
+    openai = evaluation.cohorts["openai"]
+    assert (openai.generation_tier, openai.tier_rates) == ("flex", {"flex": 0.5})
+    for model_id, effort in (
+        ("gpt-6-luna", "default"),
+        ("gpt-6-luna-low", "low"),
+        ("gpt-6-luna-nothink", "disabled"),
+    ):
+        luna = evaluation.model(model_id)
+        assert (luna.ref, luna.reasoning_effort) == ("gpt-6-luna", effort)
+        assert (luna.input_usd_per_mtok, luna.output_usd_per_mtok) == (0.10, 0.50)

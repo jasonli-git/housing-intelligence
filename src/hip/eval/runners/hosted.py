@@ -111,6 +111,11 @@ class _Dialect:
     `default` has no entry because it adds nothing. Its keys must equal what
     `hip.config.REASONING_CONTROLS` declares for the provider, less `default`; config
     validates against that table, and a test holds the two together.
+
+    `max_tokens_field` names the output budget in an OpenAI-shaped body, and `sampling`
+    says whether temperature and top-p are sent at all. `tier_field` is the request
+    field that asks for a service tier, for a provider that takes one
+    (`hip.config.SERVICE_TIERS`).
     """
 
     chat_path: str
@@ -120,6 +125,9 @@ class _Dialect:
     shape: Literal["openai", "gemini", "anthropic"] = "openai"
     reasoning: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
     headers: Mapping[str, str] = field(default_factory=dict)
+    max_tokens_field: str = "max_tokens"
+    sampling: bool = True
+    tier_field: str | None = None
 
     @property
     def openai_compatible(self) -> bool:
@@ -158,6 +166,7 @@ _DIALECTS: dict[str, _Dialect] = {
         # for backward compatibility only, with no documented meaning on Gemini 3: a
         # published configuration should rest on the control the provider documents.
         reasoning={"low": {"thinkingConfig": {"thinkingLevel": "low"}}},
+        tier_field="serviceTier",
     ),
     # Anthropic's Messages API (Milestone 51's benchmark prep, 2026-10-08), for Claude
     # Haiku 5.5 as a candidate: a US provider other than Google. The judge reaches the
@@ -176,6 +185,27 @@ _DIALECTS: dict[str, _Dialect] = {
             for effort in ("low", "medium", "high")
         },
         headers={"anthropic-version": "2023-06-01"},
+    ),
+    # OpenAI's chat completions (2026-10-08), for GPT-6 Luna as a candidate: a second
+    # US provider beside Anthropic, priced as Haiku is. Probed on 2026-10-08 against
+    # `gpt-6-luna`: it refuses `max_tokens` ("Use 'max_completion_tokens' instead") and
+    # any temperature but 1 while it reasons, so no sampling settings are sent and the
+    # report says so. `reasoning_effort: none` is a hard off — no reasoning tokens — and
+    # the lowest setting it accepts besides; `minimal` is refused with HTTP 400. Its
+    # Flex tier is `service_tier: flex` on the same call, at half price, and the
+    # response names the tier that served it.
+    "openai": _Dialect(
+        chat_path="/chat/completions",
+        models_path="/models",
+        auth_header="Authorization",
+        auth_prefix="Bearer ",
+        reasoning={
+            "disabled": {"reasoning_effort": "none"},
+            "low": {"reasoning_effort": "low"},
+        },
+        max_tokens_field="max_completion_tokens",
+        sampling=False,
+        tier_field="service_tier",
     ),
 }
 
@@ -338,13 +368,17 @@ class HostedRunner:
                 **reasoning,
             }
         if self._dialect.openai_compatible:
+            sampled = (
+                {"temperature": sampling.temperature, "top_p": sampling.top_p}
+                if self._dialect.sampling
+                else {}
+            )
             return {
                 "model": model.ref,
                 "messages": [{"role": "user", "content": prompt}],
                 "stream": False,
-                "temperature": sampling.temperature,
-                "top_p": sampling.top_p,
-                "max_tokens": limits.max_output_tokens,
+                **sampled,
+                self._dialect.max_tokens_field: limits.max_output_tokens,
                 **reasoning,
             }
         return {
@@ -360,12 +394,12 @@ class HostedRunner:
     def _tiered(self, body: dict[str, Any], tier: str | None) -> dict[str, Any]:
         """`body` asking for `tier`, where the dialect takes one on the request.
 
-        Only Gemini does (`hip.config.SERVICE_TIERS`, which config validates against),
-        as a top-level `serviceTier` beside `contents`.
+        Gemini and OpenAI do (`hip.config.SERVICE_TIERS`, which config validates
+        against), as a top-level field named by the dialect's `tier_field`.
         """
-        if tier is None or self._dialect.shape != "gemini":
+        if tier is None or self._dialect.tier_field is None:
             return body
-        return {**body, "serviceTier": tier}
+        return {**body, self._dialect.tier_field: tier}
 
     def _reasoning(self, model: CandidateModel) -> dict[str, Any]:
         """The request fields that carry `model`'s reasoning setting; none for `default`.
@@ -428,11 +462,7 @@ class HostedRunner:
         prompt_tokens, generation_tokens, reasoning_tokens = self._usage(data)
         served_model, fingerprint = self._served(data)
         cached_tokens = self._cached(data)
-        service_tier = (
-            (data.get("usageMetadata") or {}).get("serviceTier")
-            if self._dialect.shape == "gemini"
-            else None
-        )
+        service_tier = self._tier_served(data)
         elapsed_ms = (time.perf_counter() - started) * 1000
 
         telemetry = Telemetry(
@@ -554,7 +584,10 @@ class HostedRunner:
     ) -> dict[str, Any]:
         url = self._url(model)
         headers = self._headers(key)
-        timeout = _FLEX_TIMEOUT if body.get("serviceTier") == "flex" else _TIMEOUT
+        tier_field = self._dialect.tier_field
+        timeout = (
+            _FLEX_TIMEOUT if tier_field and body.get(tier_field) == "flex" else _TIMEOUT
+        )
         last: httpx.HTTPError | None = None
 
         for attempt in range(attempts):
@@ -700,6 +733,18 @@ class HostedRunner:
             int(usage.get("candidatesTokenCount") or 0) + thoughts,
             thoughts,
         )
+
+    def _tier_served(self, data: dict[str, Any]) -> str | None:
+        """The service tier the response says served it, for a provider that has tiers.
+
+        Gemini reports it in `usageMetadata.serviceTier`, OpenAI as a top-level
+        `service_tier` — on every call, `default` when no tier was asked for.
+        """
+        if self._dialect.tier_field is None:
+            return None
+        if self._dialect.shape == "gemini":
+            return (data.get("usageMetadata") or {}).get("serviceTier")
+        return data.get("service_tier")
 
     def _cached(self, data: dict[str, Any]) -> int:
         """Prompt tokens served from the provider's cache, as its response reports them.

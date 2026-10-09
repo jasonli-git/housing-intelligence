@@ -366,6 +366,10 @@ first raised, not where it must be done.
 
 ### Housekeeping
 
+- [ ] **Renew the OpenAI key before it expires.** (#351, 2026-10-08) A restricted
+      service-account key (List models: Read; Chat completions: Request) with the
+      expiry set at creation; renew in the OpenAI console and replace `OPENAI_API_KEY`
+      in `.env`. Credit: $5 prepaid, auto-recharge off.
 - [ ] **Nothing runs `ruff` automatically.** `make lint` exists and is run by hand, so
       a violation reaches `main` whenever someone runs `make test` or `make test-all`
       and stops there —

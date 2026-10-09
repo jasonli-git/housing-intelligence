@@ -332,8 +332,8 @@ def _effort_note(priced: list[ModelSummary]) -> str:
 _IGNORES_TEMPERATURE_WHILE_REASONING = {"deepseek": "DeepSeek"}
 
 # Providers whose models take no temperature at all, so none is sent (2026-10-08: Claude
-# Haiku 5.5 answers one with HTTP 400).
-_REFUSES_TEMPERATURE = {"anthropic": "Anthropic"}
+# Haiku 5.5 answers one with HTTP 400, and GPT-6 Luna any value but 1 while it reasons).
+_REFUSES_TEMPERATURE = {"anthropic": "Anthropic", "openai": "OpenAI"}
 
 
 @dataclass(frozen=True)

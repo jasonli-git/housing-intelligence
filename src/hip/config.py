@@ -455,7 +455,9 @@ class EvalLimits(BaseModel):
 # copied from a blog. `minimal` was exactly that — documented for Gemini 3 Flash, and
 # refused by 3.7 Flash with HTTP 400 on 2026-09-10. `medium` and `high` are Claude
 # Haiku 5.5's `output_config.effort` settings, probed 2026-10-08: accepted, and each
-# thinks longer than the last on a packet (ARCHITECTURE #344).
+# thinks longer than the last on a packet (ARCHITECTURE #344). OpenAI's
+# `reasoning_effort: none` is a hard off and is offered as `disabled`; its `low` is a
+# level (ARCHITECTURE #351).
 ReasoningEffort = Literal["default", "disabled", "low", "medium", "high"]
 
 # Who a reading is written for (Milestone 30). The analyst reading is the interpretation
@@ -467,8 +469,12 @@ AUDIENCES: tuple[Audience, ...] = ("analyst", "consumer")
 # The service tiers a provider can be asked for on a synchronous call, beyond its
 # standard one. Gemini's Flex tier bills at the Batch API's discount, answers on the
 # same `generateContent` call and says in `usageMetadata.serviceTier` which tier served
-# it — measured 2026-09-27 on both Gemini candidates (ARCHITECTURE #259).
-SERVICE_TIERS: dict[str, frozenset[str]] = {"gemini": frozenset({"flex"})}
+# it — measured 2026-09-27 on both Gemini candidates (ARCHITECTURE #259). OpenAI's Flex
+# is the same bargain as `service_tier: flex`, measured 2026-10-08 on GPT-6 Luna.
+SERVICE_TIERS: dict[str, frozenset[str]] = {
+    "gemini": frozenset({"flex"}),
+    "openai": frozenset({"flex"}),
+}
 
 # Which settings each hosted provider can express. The wire format lives beside each
 # dialect in `hip.eval.runners.hosted`; this is what config validates against at load,
@@ -485,6 +491,8 @@ REASONING_CONTROLS: dict[str, frozenset[str]] = {
     "gemini": frozenset({"default", "low"}),
     # Anthropic's `output_config.effort` (2026-10-08), as the judge sends it.
     "anthropic": frozenset({"default", "low", "medium", "high"}),
+    # OpenAI's `reasoning_effort` (2026-10-08): `none` and `low`, probed on GPT-6 Luna.
+    "openai": frozenset({"default", "disabled", "low"}),
 }
 
 
@@ -571,7 +579,7 @@ class Cohort(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     runner: Literal["ollama", "mlx", "hosted"]
-    provider: Literal["deepseek", "gemini", "anthropic"] | None = None
+    provider: Literal["deepseek", "gemini", "anthropic", "openai"] | None = None
     api_key_env: str | None = None
     endpoint: str | None = None
     models: list[CandidateModel] = Field(min_length=1)
