@@ -28,7 +28,7 @@ export default async function ChangesPage() {
   if (!report) {
     return (
       <>
-        <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
+        <Masthead affordability={{ kind: "hidden" }} />
         <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history">
           <h1 className="page-title">Figures revised after they were published</h1>
           <p className="meta">
@@ -44,7 +44,7 @@ export default async function ChangesPage() {
 
   return (
     <>
-      <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on source history pages" }} />
+      <Masthead affordability={{ kind: "hidden" }} />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history quiet-revisions">
         <header className="page-head" data-kind="data">
           <div>

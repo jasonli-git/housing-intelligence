@@ -25,7 +25,7 @@ export const metadata: Metadata = pageMetadata({
 export default function TermsPage() {
   return (
     <>
-      <Masthead affordability={{ kind: "disabled", reason: "Affordability mode is not available on this page" }} />
+      <Masthead affordability={{ kind: "hidden" }} />
       <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history legal-page">
         <header className="page-head">
           <div>
