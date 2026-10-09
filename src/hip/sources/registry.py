@@ -31,7 +31,12 @@ from hip.sources.fema import NfhlAdapter, NfipClaimsAdapter
 from hip.sources.fhfa import HpiAdapter, HpiCountyAdapter
 from hip.sources.fred import FredAdapter
 from hip.sources.hmda import HmdaAdapter
-from hip.sources.hud import HudAdapter, HudChasAdapter, HudFmrAdapter
+from hip.sources.hud import (
+    HudAdapter,
+    HudChasAdapter,
+    HudChasBulkAdapter,
+    HudFmrAdapter,
+)
 from hip.sources.hud_assistance import HudAssistedAdapter, HudLihtcAdapter
 from hip.sources.hud_limits import HudFhaLimitsAdapter
 from hip.sources.infrastructure import (
@@ -97,6 +102,8 @@ IMPLEMENTED: tuple[str, ...] = (
     HudAdapter.source_id,
     HudFmrAdapter.source_id,
     HudChasAdapter.source_id,
+    # Margins for HUD's CHAS figures (#353).
+    HudChasBulkAdapter.source_id,
     ModivAdapter.source_id,
     Sr1aAdapter.source_id,
     NjTaxRatesAdapter.source_id,
@@ -152,6 +159,8 @@ METRIC_SOURCES: tuple[str, ...] = (
     HudAdapter.source_id,
     HudFmrAdapter.source_id,
     HudChasAdapter.source_id,
+    # Margins for HUD's CHAS figures (#353).
+    HudChasBulkAdapter.source_id,
     ModivAdapter.source_id,
     Sr1aAdapter.source_id,
     NjTaxRatesAdapter.source_id,
@@ -270,6 +279,8 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return HudFmrAdapter(states=scope.states)
     if source_id == HudChasAdapter.source_id:
         return HudChasAdapter(states=scope.states, county_fips=_county_fips(scope))
+    if source_id == HudChasBulkAdapter.source_id:
+        return HudChasBulkAdapter(states=scope.states)
     if source_id == ModivAdapter.source_id:
         return ModivAdapter()
     if source_id == Sr1aAdapter.source_id:

@@ -23,6 +23,20 @@
     sqrt({% for m in margins %}({{ m }}) ^ 2{% if not loop.last %} + {% endif %}{% endfor %})
 {%- endmacro %}
 
+-- The margin of a sum of HUD's bulk CHAS cells, by Table 8 column number (#353): the
+-- root sum of squares, except that of the cells whose estimate is zero only the largest
+-- margin counts (ACS General Handbook, ch. 8, which says to use the largest zero
+-- margin once rather than each). HUD gives every zero cell a margin of 32, so summing
+-- them all would widen a burden margin by 32 for each empty income band.
+{% macro chas_sum_margin(cells) -%}
+    sqrt(
+        {% for c in cells %}case when json['T8_est{{ c }}']::double <> 0
+            then json['T8_moe{{ c }}']::double ^ 2 else 0 end + {% endfor %}
+        coalesce(list_max([{% for c in cells %}case when json['T8_est{{ c }}']::double = 0
+            then json['T8_moe{{ c }}']::double end{% if not loop.last %}, {% endif %}{% endfor %}]), 0) ^ 2
+    )
+{%- endmacro %}
+
 -- The margin of a share X / Y where X is a subset of Y — renters cost-burdened among
 -- renters, vacant units among all units. The Census's approximation:
 -- sqrt(MOE_X^2 - p^2 * MOE_Y^2) / Y, and when the term under the root is negative,
