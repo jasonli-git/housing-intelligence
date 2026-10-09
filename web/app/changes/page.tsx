@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BuiltAgo } from "@/components/BuiltAgo";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
+import { SectionJump } from "@/components/SectionJump";
 import { api, type RevisionGroup } from "@/lib/api";
 import { changeLabel, otherPeriods, placeName, revisedValue, summaryLine } from "@/lib/changes";
 import { dayLabel } from "@/lib/freshness";
@@ -52,12 +53,10 @@ export default async function ChangesPage() {
             <Kind kind="data" />
             <h1 className="page-title">Figures revised after they were published</h1>
             <p className="meta history-intro">
-              Publishers sometimes revise figures already shown here. Compare the earlier and
-              updated values by refresh, newest first. A survey figure shows its margin beside
-              each value for revisions recorded from 8 October 2026; earlier ones kept the values
-              alone.
+              Earlier and updated figures, grouped by refresh. Newest first.
             </p>
-            <nav className="history-tabs" aria-label="Source history"><Link href="/freshness">Source freshness <span aria-hidden="true">↗</span></Link><Link href="/changes" aria-current="page">Revised figures</Link></nav>
+            <nav className="history-tabs" aria-label="Source history"><Link href="/freshness">Source freshness <span aria-hidden="true">↗</span></Link><Link href="/changes" aria-current="page">Revised figures</Link><span className="page-section-nav"><SectionJump /></span></nav>
+            <details className="history-explainer"><summary>About revisions and survey margins</summary><p className="meta">Publishers can revise previously published figures. Survey margins are retained for revisions recorded from 8 October 2026; earlier records kept values alone. Changes are relative to the earlier value.</p></details>
             <p className="meta fresh-built">
               {report.recorded_since
                 ? `Earlier values kept since ${dayLabel(report.recorded_since)}`
@@ -78,6 +77,8 @@ export default async function ChangesPage() {
           <section
             key={batch.revised_on}
             className="section change-batch"
+            id={`refresh-${batch.revised_on}`}
+            data-jump-label={dayLabel(batch.revised_on)}
             aria-labelledby={`batch-${batch.revised_on}`}
           >
             <h2 id={`batch-${batch.revised_on}`} className="change-day">

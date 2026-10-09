@@ -9,6 +9,7 @@ import { KindTag } from "@/components/KindTag";
 import { MetricTerm } from "@/components/MetricTerm";
 import { Masthead } from "@/components/Masthead";
 import { PrintButton } from "@/components/PrintButton";
+import { SectionJump } from "@/components/SectionJump";
 import { StandOuts } from "@/components/StandOuts";
 import { api, artifactUrl, type Packet, regionsWithData } from "@/lib/api";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
@@ -205,6 +206,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           )}
         </div>
         <div className="actions print-hide">
+          <SectionJump />
           <PrintButton />
           {/*
             The published artifact path, not the API's. A static file cannot vary on
@@ -239,7 +241,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         items={standOuts(packet, uncertainties)}
       />
 
-      <section className="section">
+      <section className="section" id="report-measures" data-jump-label="Measures">
         <h2>Measures</h2>
         <div className="scroll-x" tabIndex={0} role="region" aria-label="Ranked measures table, scroll horizontally">
           <table className="doc">
@@ -335,7 +337,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </section>
 
       {packet.levels.length > 0 && (
-        <section className="section">
+        <section className="section" id="report-current" data-jump-label="Current values">
           <h2>Current values</h2>
           <p className="table-note">
             Ranked by value rather than by change. HUD’s CHAS tables and the MOD-IV
@@ -405,7 +407,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </section>
       )}
 
-      <section className="section">
+      <section className="section" id="report-sources" data-jump-label="Sources">
         <h2>Sources</h2>
         <div className="scroll-x" tabIndex={0} role="region" aria-label="Source citations table, scroll horizontally">
           <table className="doc">

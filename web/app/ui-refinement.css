@@ -1,0 +1,153 @@
+/* Compact rhythm, explicit destinations. Presentation only; retain print's full detail. */
+@media screen {
+  .housing-mark { flex: 0 0 auto; border-radius: 6px; }
+  .bar-inner { padding-block: .55rem; }
+  .bar .bar-link { font-size: 11px; letter-spacing: .055em; }
+  .site-meta-row { padding-block: .15rem; }
+  main.shell { --section-space: clamp(1.4rem, 2.8vw, 2.1rem); }
+  main.shell > .page-head { padding-block: 1.1rem 1.2rem; }
+  .quiet-county > .page-head .region-orientation { margin-block: .7rem .25rem; font-size: 15px; line-height: 1.6; max-width: 74ch; }
+  .quiet-county .page-head > .actions { margin-top: .75rem; gap: .7rem; }
+  .quiet-county .page-head .page-title { margin-block: .5rem; }
+  .quiet-county .quiet-profile { padding-block: .8rem .4rem; }
+  .quiet-county .quiet-portrait-grid { margin-top: .65rem; }
+  .quiet-county .quiet-portrait-grid article { padding-block: .9rem; }
+  .quiet-county .quiet-portrait-grid article[data-metric="acs_median_hh_income"] strong { font-size: clamp(34px, 4.6vw, 56px); }
+  .quiet-county .section.cost { margin-top: var(--section-space); }
+  .quiet-county .cost > .section-head { padding-bottom: .65rem; }
+  .quiet-county .cost-card { padding-block: 1rem; }
+  .quiet-county .cost-evidence { padding-block: .85rem; }
+  .quiet-county .cost-evidence-item p { line-height: 1.65; }
+  .quiet-county .quiet-tool-group { padding-top: .9rem; }
+  .quiet-county .quiet-tool-group > h3 { margin-bottom: .4rem; }
+  .quiet-county .quiet-tool-group .quiet-disclosure > summary { min-height: 48px; padding-block: .7rem; }
+  .quiet-disclosure-copy { min-width: 0; }
+  .quiet-disclosure-title { font-weight: 550; }
+  .quiet-county .quiet-disclosure > summary small { color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+  .quiet-county .quiet-disclosure > summary { min-height: 48px; padding-block: .85rem; }
+  .quiet-county .quiet-disclosure-body { padding-bottom: 1rem; }
+  .quiet-county .quiet-disclosure:has(.local-market) { margin-block: var(--section-space); }
+  .quiet-county .consumer-feature-what_stands_out { margin-block: var(--section-space) 1.3rem; padding: clamp(1.1rem, 2.5vw, 1.5rem); }
+  .quiet-county .consumer-feature-topline { margin-bottom: .65rem; }
+  .quiet-county .consumer-feature-answer { line-height: 1.7; }
+  .quiet-county .standouts-disclosure { margin-top: .9rem; }
+  .quiet-county .more { margin-top: var(--section-space); }
+  .quiet-county .more > summary { padding: clamp(1rem, 2.4vw, 1.35rem); }
+  .quiet-county .more-sub { line-height: 1.5; max-width: 72ch; }
+  .quiet-county .more-body { padding: clamp(1rem, 2.5vw, 1.5rem); }
+  .quiet-county .local-checks-grid { gap: 1.3rem; }
+  .quiet-county .local-checks-grid .section { margin-block: 1rem; }
+  .quiet-county .local-checks-grid .sales-note { font-size: 13px; line-height: 1.6; }
+  .quiet-county .local-checks-grid .section-head h2 { font-size: 21px; }
+  .reader-details > summary { min-height: 44px; display: flex; align-items: center; gap: .65rem; color: var(--text-primary); }
+  .reader-details > summary::after { content: "+"; margin-left: auto; font-size: 20px; font-weight: 400; color: var(--text-secondary); }
+  .reader-details[open] > summary::after { content: "−"; }
+  .reader-details > summary { list-style: none; }
+  .reader-details > summary::-webkit-details-marker { display: none; }
+  .reader-details-body { padding-bottom: .3rem; }
+  .reader-details-body > :last-child { margin-bottom: .3rem; }
+  .section-jump-control { border-radius: 12px; background: color-mix(in srgb, var(--surface-card) 70%, transparent); box-shadow: none; }
+  .section-jump-control .section-jump { min-height: 44px; max-width: 100%; padding-block: .65rem; font-size: 12px; }
+  .page-section-nav { margin-top: .65rem; }
+  .quiet-state .nj-head { padding-bottom: .7rem; }
+  .nj-page.quiet-state .nj-head .page-title-row { gap: .4rem; }
+  .nj-page.quiet-state .state-nickname { margin-bottom: .2rem; }
+  .nj-page.quiet-state .state-entry { margin-block: .7rem; }
+  .nj-page.quiet-state .state-facts article { padding-block: 1rem; }
+  .nj-page.quiet-state .state-workspace { margin-top: 1rem; }
+  .nj-page.quiet-state .place-discovery { padding: clamp(16px, 2.3vw, 24px); }
+  .nj-page.quiet-state .place-discovery-search { margin-bottom: .8rem; }
+  .nj-page.quiet-state .place-county-grid a { padding-block: .4rem; }
+  .nj-page.quiet-state .state-workspace-head { padding-bottom: .55rem; }
+  .quiet-nation > .nation-head { padding-block: 1.5rem 1rem; }
+  .quiet-nation .entry-introduction { margin-block: .6rem .8rem; }
+  .quiet-nation .home-find { margin-top: 1.1rem; }
+  .quiet-nation .home-find-hint { max-width: 64ch; font-size: 13px; line-height: 1.6; }
+  .quiet-nation .home-find-hint a { color: var(--text-primary); text-decoration: underline; text-underline-offset: 3px; }
+  .quiet-nation .coverage-map-foot > span:last-child { color: var(--text-primary); }
+  .quiet-nation .map-pan-controls > span { color: var(--text-primary); }
+  .quiet-nation .coverage-entry { margin-top: 1.2rem; }
+  .quiet-nation .entry-free.computed { margin-top: .65rem; }
+  .guide-page > .page-head .meta { max-width: 66ch; font-size: 15px; line-height: 1.6; }
+  .guide-about > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-secondary); font-size: 13px; }
+  .guide-page .decision-guide { gap: 1.25rem; margin-top: .9rem; }
+  .guide-page .decision-guide .section { margin: 0; }
+  .guide-page .guide-answer { padding-top: .75rem; border-top: 1px solid var(--border); }
+  .budget-page > .page-head { padding-bottom: .7rem; }
+  .budget-page .budget-explorer { margin-top: .8rem; }
+  .budget-page .afford-controls { gap: .85rem; }
+  .quiet-tax > .page-head { padding-bottom: .7rem; }
+  .quiet-tax .page-title { font-size: clamp(36px, 4.5vw, 54px); }
+  .quiet-tax .tax-lookup { gap: 1rem; }
+  .quiet-history > .page-head .page-title { font-size: clamp(34px, 4.2vw, 52px); max-width: 24ch; line-height: 1.12; }
+  .quiet-history .history-intro { margin-block: .65rem .4rem; }
+  .quiet-history .history-tabs { gap: 1rem; margin-block: .4rem; align-items: center; }
+  .quiet-history .history-tabs .page-section-nav { margin: 0 0 0 auto; }
+  .quiet-history .history-portrait { padding: .85rem 1.2rem; }
+  .quiet-history .fresh-cadence-group, .quiet-history .change-batch { padding-top: 1rem; margin-top: .5rem; }
+  .quiet-history .fresh-cadence-heading, .quiet-history .change-day { font-size: 23px; }
+  .quiet-history .freshness :is(th, td) { padding-block: .7rem; }
+  .legal-page { max-width: 960px; }
+  .legal-page > .section { max-width: 74ch; margin-block: var(--section-space); line-height: 1.7; }
+  .legal-page > .section h2 { font-size: 23px; margin-bottom: .65rem; }
+  .legal-page :is(p, li) { overflow-wrap: anywhere; }
+  .report > .page-head .actions { flex-wrap: wrap; gap: .65rem; }
+  .report > .section { margin-top: 1.5rem; }
+  .report .section h2 { margin-bottom: .7rem; }
+  .foot { margin-top: 1.8rem; }
+  .foot-inner { gap: .8rem; }
+  .foot .foot-notices { padding: 0; gap: .75rem 1.5rem; background: none; border: 0; }
+  .foot .publisher-notice p { font: 12px/1.6 var(--font-text); }
+  .foot .publisher-notice-name { font: 550 12px/1.5 var(--font-text); }
+  .foot .foot-links { padding-block: .8rem; }
+  .foot .foot-tab { display: inline-flex; min-height: 44px; align-items: center; gap: .3rem; }
+  .foot .foot-notice { padding-block: .85rem; }
+  .recovery-page { position: relative; isolation: isolate; max-width: 960px; padding-top: clamp(2rem, 7vh, 5rem); padding-bottom: 2rem; min-height: 50vh; }
+  .recovery-page > .page-head { border: 0; max-width: 38rem; }
+  .recovery-page .page-title { font: 500 clamp(38px, 5vw, 64px)/1.1 Georgia, serif; letter-spacing: -.035em; }
+  .recovery-art { position: absolute; right: 0; top: 1.5rem; display: flex; align-items: center; gap: 1rem; z-index: -1; opacity: .12; pointer-events: none; }
+  .recovery-art > span { font: 500 clamp(90px, 13vw, 160px)/1 Georgia, serif; }
+  .recovery-art img { border-radius: 24px; }
+  .recovery-search { max-width: 38rem; }
+  .recovery-search .place-search { width: 100%; }
+  .recovery-search input { min-height: 52px; font-size: 16px; }
+  .recovery-search p { font-size: 13px; margin-top: .65rem; }
+  .recovery-routes { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.2rem; }
+  .recovery-routes a { min-height: 44px; padding: .6rem .85rem; display: inline-flex; align-items: center; gap: 1rem; border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); text-decoration: none; }
+  .recovery-routes a:hover { background: var(--surface-card); }
+  @media (max-width: 600px) {
+    main.shell { --section-space: 1.35rem; }
+    .bar-inner { padding-block: .45rem; }
+    .bar-controls { gap: .25rem; }
+    .bar .bar-link { font-size: 10px; padding-inline: .55rem; }
+    .site-meta-row { padding-block: .1rem; }
+    .quiet-county > .page-head { padding-block: .85rem 1rem; }
+    .quiet-county .page-head .page-title { font-size: clamp(38px, 9.7vw, 52px); line-height: 1.08; }
+    .quiet-county .region-orientation { font-size: 14px; line-height: 1.6; }
+    .quiet-county .quiet-portrait-grid article { padding-block: .8rem; }
+    .quiet-county .quiet-portrait-grid article[data-metric="acs_median_hh_income"] strong { font-size: 38px; }
+    .quiet-county .cost-card { padding-block: .9rem; }
+    .quiet-county .section-head h2 { font-size: 23px; line-height: 1.2; }
+    .quiet-county .local-checks-grid .section-head h2 { max-width: none; font-size: 21px; }
+    .quiet-county .cost-evidence-grid { gap: .8rem; }
+    .quiet-county .quiet-disclosure > summary { padding-block: .75rem; gap: .6rem; }
+    .quiet-county .quiet-disclosure > summary small { font-size: 12px; }
+    .quiet-county .consumer-feature-answer { font-size: 14px; line-height: 1.7; }
+    .quiet-nation > .nation-head { padding-top: 1.1rem; }
+    .quiet-history .history-tabs { gap: .6rem; }
+    .quiet-history .history-tabs .page-section-nav { flex-basis: 100%; margin: 0; }
+    .quiet-history .history-portrait { padding: .65rem .8rem; }
+    .legal-page > .section { font-size: 15px; }
+    .recovery-page { padding-top: 1.5rem; }
+    .recovery-art { top: .5rem; opacity: .08; }
+    .recovery-art img { display: none; }
+    .recovery-routes { display: grid; grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 380px) {
+    .bar-trail { gap: .3rem; }
+    .bar-trail .wordmark { font-size: 14px; gap: .25rem; }
+    .bar-trail .housing-mark { width: 20px; height: 20px; }
+    .bar-trail .bar-icon { flex-shrink: 0; width: 28px; min-width: 28px; }
+    .bar .bar-link { padding-inline: .4rem; }
+  }
+}

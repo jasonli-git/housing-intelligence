@@ -33,7 +33,7 @@ export function QuietDisclosure({ enabled, title, note, children }: {
 }) {
   if (!enabled) return <>{children}</>;
   return <details className="quiet-disclosure">
-    <summary>{title === "The local market" && <AbstractField kind="architecture" />}<span>{title}{note && <small>{note}</small>}</span><span className="quiet-plus" aria-hidden="true">+</span></summary>
+    <summary>{title === "The local market" && <AbstractField kind="architecture" />}<span className="quiet-disclosure-copy"><span className="quiet-disclosure-title">{title}</span>{note && <small>{note}</small>}</span><span className="quiet-plus" aria-hidden="true">+</span></summary>
     <div className="quiet-disclosure-body">{children}</div>
   </details>;
 }

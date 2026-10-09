@@ -418,7 +418,7 @@ export default async function RegionPage({
         }
       : { kind: "route" as const };
 
-  const homeChecks = <QuietDisclosure enabled={quiet} title="Before choosing a home" note="Check the property, not just the area">
+  const homeChecks = <QuietDisclosure enabled={quiet} title="Before choosing a home" note="Flood, schools, internet, tax & more — check the property">
     <section className="local-page-group" aria-labelledby="home-checks-heading">
       <h2 id="home-checks-heading">Before choosing a home</h2>
       {quiet && <QuietCheckTopics />}

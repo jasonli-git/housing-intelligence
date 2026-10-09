@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { Crumbs } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
+import { SectionJump } from "@/components/SectionJump";
 import { dayLabel } from "@/lib/freshness";
 import { CONTACT_EMAIL, FRED_TERMS_URL, OPERATOR, POLICIES_UPDATED, PRIVACY_EMAIL, REPO_URL } from "@/lib/site";
 import { pageMetadata } from "@/lib/meta";
@@ -32,6 +33,7 @@ export default function TermsPage() {
             <Crumbs trail={[{ href: "/", label: "United States" }]} here="Terms of use" />
             <h1 className="page-title">Terms of use</h1>
             <p className="meta">Last updated {dayLabel(POLICIES_UPDATED)}. See also the <Link href="/privacy">privacy policy</Link>.</p>
+            <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>
           </div>
         </header>
 

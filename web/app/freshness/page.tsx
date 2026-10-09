@@ -5,6 +5,7 @@ import { BuiltAgo } from "@/components/BuiltAgo";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
+import { SectionJump } from "@/components/SectionJump";
 import { NextRelease } from "@/components/NextRelease";
 import { api } from "@/lib/api";
 import { pageMetadata } from "@/lib/meta";
@@ -64,7 +65,7 @@ export default async function FreshnessPage() {
             <Kind kind="data" />
             <h1 className="page-title">How current is each source</h1>
             <p className="meta history-intro">Data dates and update checks, kept separate.</p>
-            <nav className="history-tabs" aria-label="Source history"><Link href="/freshness" aria-current="page">Source freshness</Link><Link href="/changes">Revised figures <span aria-hidden="true">↗</span></Link></nav>
+            <nav className="history-tabs" aria-label="Source history"><Link href="/freshness" aria-current="page">Source freshness</Link><Link href="/changes">Revised figures <span aria-hidden="true">↗</span></Link><span className="page-section-nav"><SectionJump /></span></nav>
             <details className="history-explainer"><summary>How to read these dates</summary><p className="meta">
               Data through is the period a source describes; Last checked is when we looked for
               updates. Publishers update at the frequencies below; we check weekly. Next
@@ -85,6 +86,8 @@ export default async function FreshnessPage() {
             <section
               key={group.cadence}
               className="fresh-cadence-group"
+              id={`cadence-${index}`}
+              data-jump-label={group.label}
               aria-labelledby={`fresh-group-${index}`}
             >
               <h3 id={`fresh-group-${index}`} className="fresh-cadence-heading">
