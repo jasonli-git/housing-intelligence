@@ -315,10 +315,16 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Open decisions — not scheduled, not decided
 
-- [ ] **Adopt TIGER 2026?** (2026-10-09, #360) Census published TIGER2026; the refresh
-      now reports it as waiting and keeps 2025. Moving redraws the region spine every
-      fact row is keyed to: compare the 564 municipalities, ZIPs and tracts between the
-      two years first, then move `TigerAdapter.default_vintage` and rebuild.
+- [ ] **Adopt TIGER 2026 — not yet (owner, 2026-10-09).** (#360) Census published
+      TIGER2026; the refresh reports it as waiting and keeps 2025. Compared for New Jersey's
+      569 county subdivisions on 2026-10-09: **one code changed** — South Orange Village
+      township (3401369274) is now South Orange village (3401369270); Eatontown gained about
+      36 acres from Oceanport; 440 land areas moved by land/water reclassification and 11
+      shapes were redrawn, none material. Every source joined by town code (ACS 2024, the
+      ZIP and HUD crosswalks) still uses South Orange's old code, so adopting now would strip
+      its page. **Adopt when ACS moves to the new code** (likely ACS 2026, late 2027), with
+      an old-to-new mapping for South Orange as `DISTRICT_SUCCESSORS` does for school
+      districts, then move `TigerAdapter.default_vintage` and rebuild.
 - [ ] **Revisit the refresh's hour when generation costs scale.** (2026-10-02, #259) The
       Friday 08:00 run is kept for now. Some Gemini Flex calls fall back to the standard
       price (4 of 23 on 2026-10-02), costing cents a run; if more states multiply the
