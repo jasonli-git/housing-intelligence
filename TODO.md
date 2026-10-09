@@ -18,9 +18,9 @@ removed entries are in `git show ca49f74:TODO.md`.
 
 Milestone 52 shipped as 0.50.0. The owner held Version 4 and chose the correctness and
 data-integrity items: four fixed on `change/correctness-pass` (ARCHITECTURE #350), then
-one at a time, CHAS margins from HUD's bulk files, flood claims placed through the
-2010-to-2020 block-group relationship, the completeness check reading the community
-inventory, and the 62 school districts with no performance record.
+one at a time: CHAS margins from HUD's bulk files (done, #353), flood claims placed
+through the 2010-to-2020 block-group relationship, the completeness check reading the
+community inventory, and the 62 school districts with no performance record.
 
 ## Open
 
@@ -67,6 +67,15 @@ first raised, not where it must be done.
 - [ ] **Five counties have no DOE energy burden.** (M42) Essex, Hudson, Middlesex,
       Monmouth and Somerset carry signed weights or costs in DOE's file; withheld, not
       zeroed, until DOE explains them.
+- [ ] **CHAS margins are downloaded by hand with each CHAS release.** (#353) HUD
+      published 2018–2022 on 2025-12-23; the next release usually follows about a year
+      later. When `hud_chas` discovers it, download the county (050) and minor civil
+      division (060) CSV ZIPs and the release's data dictionary from
+      https://www.huduser.gov/portal/datasets/cp.html into
+      `data/manual/hud_chas_bulk/`, check Table 8's columns against the dictionary, add
+      the release to `CHAS_BULK_REVIEWED` in `hip.sources.hud`, then
+      `hip acquire --source hud_chas_bulk`. Until then the new figures read "no margin
+      available".
 - [ ] **LIHTC is downloaded by hand each spring.** (M41, #307) HUD's release page
       answers scripts with an empty 202, so discovery reads `unreachable`. When HUD
       publishes 2025 data (announced for spring 2027), download the ZIP, copy the
@@ -101,11 +110,6 @@ first raised, not where it must be done.
       accepting windows that end in the following year ("2022–2027"). Owner's decision.
 
 
-- [ ] **HUD's CHAS figures carry no margins of error, which SPEC principle 12 requires.**
-      (M28, #235, #246) HUD's API publishes none; its bulk CHAS files do (`_moe` columns
-      beside each `_est`). Switching the adapter to the bulk files would give the three
-      CHAS figures their margins and their ranks ranges; meanwhile each reads "no margin
-      available".
 
 ### Evaluation harness
 

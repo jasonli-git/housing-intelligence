@@ -717,6 +717,37 @@ sources:
       relative to area median, and cost burden. Published a year behind the ACS release
       it tabulates, at county and municipal (MCD) level.
 
+  hud_chas_bulk:
+    name: CHAS bulk data, Table 8 (margins of error)
+    publisher: U.S. Department of Housing and Urban Development
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work with no copyright to licence (17 U.S.C. 105). The same
+        tabulation hud_chas reads through the API; HUD User's dataset page sets no
+        further terms on the bulk files.
+    terms_url: https://www.huduser.gov/portal/datasets/cp.html
+    terms_checked: 2026-10-08
+    terms_note: >-
+      The CHAS dataset page states no terms of its own for the bulk downloads; a U.S.
+      Government work.
+    url: https://www.huduser.gov/portal/datasets/cp.html
+    cadence: annual
+    adapter: hip.sources.hud:HudChasBulkAdapter
+    fallback: >-
+      Downloaded by hand: HUD's page answers scripts with an empty 202. For each new
+      CHAS release, download the county (050) and minor civil division (060) CSV ZIPs
+      into data/manual/hud_chas_bulk/ under HUD's names, read that release's data
+      dictionary for Table 8, and add the release to CHAS_BULK_REVIEWED in
+      hip.sources.hud. Until then the newer API figures read "no margin available".
+    notes: >-
+      Only the margins are used. stg_hud_chas sums Table 8's income bands into the
+      API's burden counts and attaches a margin only where the two agree exactly; a
+      dbt test fails if any differ. HUD rounds counts to the nearest 5.
+
   irs_migration:
     name: SOI county-to-county migration flows
     publisher: Internal Revenue Service

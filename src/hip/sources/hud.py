@@ -26,13 +26,23 @@ derives from B25070.
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import os
+import zipfile
 from datetime import date, timedelta
+from pathlib import Path
 from typing import ClassVar
 
 from hip.config import ConfigError, fips_for
-from hip.sources.base import Discovery, Release, ReleaseRef, SourceAdapter
+from hip.sources.base import (
+    Discovery,
+    Release,
+    ReleaseRef,
+    SourceAdapter,
+    SourceError,
+)
 
 BASE_URL = "https://www.huduser.gov/hudapi/public"
 
@@ -517,3 +527,140 @@ class HudChasAdapter(SourceAdapter):
             for row in payload
             if isinstance(row, dict)
         ]
+
+
+# HUD's bulk CHAS files (#353): the same tabulation as the API, with a 90% margin of
+# error beside every count, which the API leaves out. HUD's download page answers a
+# script with an empty 202, so they are downloaded by hand, one ZIP per summary level.
+CHAS_PAGE = "https://www.huduser.gov/portal/datasets/cp.html"
+CHAS_BULK_LEVELS = {"050": "county", "060": "mcd"}
+# Releases whose Table 8 layout was read against HUD's data dictionary for that release
+# (`CHAS-data-dictionary-18-22.xlsx`, 2026-10-08). Another release fails until its
+# dictionary is read, so a renumbered column cannot attach a margin to the wrong count.
+CHAS_BULK_REVIEWED = frozenset({"2018-2022"})
+CHAS_TABLE8_COLUMNS = 133
+# Table 8: tenure by household income by cost burden. Each income band's subtotal is
+# followed by its burden subtotals at +1 (up to 30%), +4 (30-50%), +7 (over 50%) and +10
+# (not computed); owners' five bands start at 3, renters' at 69.
+CHAS_OWNER_BANDS = (3, 16, 29, 42, 55)
+CHAS_RENTER_BANDS = (69, 82, 95, 108, 121)
+# HUD rounds every count to the nearest 5, so a subtotal and the sum of its parts can
+# differ by a few households: up to 11 in New Jersey's 2018-2022 files. A shifted or
+# renumbered column misses by far more.
+CHAS_ROUNDING_SLACK = 15.0
+
+
+class HudChasBulkAdapter(SourceAdapter):
+    """Table 8 of HUD's bulk CHAS files, for the margins the API does not carry.
+
+    Every Table 8 count and margin is kept for the configured states, as HUD sends it;
+    `stg_hud_chas` sums the income bands into the API's burden counts and attaches a
+    margin only where the two agree exactly (`dbt/tests/chas_bulk_matches_api.sql`).
+    """
+
+    source_id: ClassVar[str] = "hud_chas_bulk"
+    default_vintage: ClassVar[str] = CHAS_VINTAGE
+    landing_format: ClassVar[str] = "xlsx_records"
+    manual: ClassVar[bool] = True
+    manual_from: ClassVar[str | None] = f"HUD User's CHAS page ({CHAS_PAGE})"
+
+    def __init__(self, states: list[str]) -> None:
+        self.states = states
+
+    def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+        year = vintage or self.newest or self.default_vintage
+        if year not in CHAS_BULK_REVIEWED:
+            raise SourceError(
+                f"CHAS {year}: Table 8 is not reviewed against that release's dictionary"
+            )
+        return [
+            ReleaseRef(
+                self.source_id, level, year, CHAS_PAGE, scope=",".join(self.states)
+            )
+            for level in CHAS_BULK_LEVELS
+        ]
+
+    @classmethod
+    def filename(cls, ref: ReleaseRef) -> str:
+        first, last = ref.vintage.split("-")
+        return f"{first}thru{last}-{ref.layer}-csv.zip"
+
+    @classmethod
+    def xlsx_records(cls, path: Path, ref: ReleaseRef) -> list[dict[str, object]]:
+        if ref.vintage not in CHAS_BULK_REVIEWED or ref.layer not in CHAS_BULK_LEVELS:
+            raise SourceError(f"hud_chas_bulk/{ref.key}: not a reviewed release")
+        states = {fips_for(s).lstrip("0") for s in (ref.scope or "").split(",") if s}
+        if not states:
+            raise SourceError(f"hud_chas_bulk/{ref.key}: no states in scope")
+        counts = [f"T8_est{i}" for i in range(1, CHAS_TABLE8_COLUMNS + 1)]
+        margins = [f"T8_moe{i}" for i in range(1, CHAS_TABLE8_COLUMNS + 1)]
+        source = ref.vintage.replace("-", "thru")
+        level = CHAS_BULK_LEVELS[ref.layer]
+        with zipfile.ZipFile(path) as archive:
+            members = [n for n in archive.namelist() if n.split("/")[-1] == "Table8.csv"]
+            if len(members) != 1:
+                raise SourceError(f"hud_chas_bulk/{ref.key}: expected one Table8.csv")
+            with archive.open(members[0]) as raw:
+                rows = csv.DictReader(io.TextIOWrapper(raw, encoding="latin-1"))
+                header = set(rows.fieldnames or [])
+                if (
+                    not {"source", "sumlevel", "geoid", "name", "st", *counts, *margins}
+                    <= header
+                ):
+                    raise SourceError(f"hud_chas_bulk/{ref.key}: Table 8 columns changed")
+                records = []
+                for row in rows:
+                    if row["st"].lstrip("0") not in states:
+                        continue
+                    if row["source"] != source or row["sumlevel"] != ref.layer:
+                        raise SourceError(
+                            f"hud_chas_bulk/{ref.key}: a row reads {row['source']} "
+                            f"level {row['sumlevel']}"
+                        )
+                    cls._check_numbers(row, counts + margins, ref)
+                    cls._check_sums(row, ref)
+                    # `0500000US34021` → `34021`; `0600000US3402100100` → state and MCD
+                    # code, `3400100`, the key the API's municipal releases carry.
+                    geo = row["geoid"].split("US", 1)[1]
+                    geo_key = geo if level == "county" else geo[:2] + geo[5:]
+                    records.append(
+                        {
+                            "level": level,
+                            "geo_key": geo_key,
+                            "name": row["name"],
+                            **{c: row[c] for c in counts + margins},
+                        }
+                    )
+        if not records:
+            raise SourceError(f"hud_chas_bulk/{ref.key}: no rows for {sorted(states)}")
+        return records
+
+    @staticmethod
+    def _check_numbers(row: dict[str, str], columns: list[str], ref: ReleaseRef) -> None:
+        """Every count and margin is a non-negative number; HUD uses no special codes."""
+        for column in columns:
+            try:
+                ok = float(row[column]) >= 0
+            except ValueError:
+                ok = False
+            if not ok:
+                raise SourceError(
+                    f"hud_chas_bulk/{ref.key}: {row['geoid']} {column} is not a number"
+                )
+
+    @staticmethod
+    def _check_sums(row: dict[str, str], ref: ReleaseRef) -> None:
+        """Refuse a table whose parts do not add up to its subtotals within rounding."""
+
+        def count(i: int) -> float:
+            return float(row[f"T8_est{i}"])
+
+        checks = [(count(1), [count(2), count(68)])]
+        for total, bands in ((2, CHAS_OWNER_BANDS), (68, CHAS_RENTER_BANDS)):
+            checks.append((count(total), [count(b) for b in bands]))
+            checks += [(count(b), [count(b + k) for k in (1, 4, 7, 10)]) for b in bands]
+        for whole, parts in checks:
+            if abs(whole - sum(parts)) > CHAS_ROUNDING_SLACK:
+                raise SourceError(
+                    f"hud_chas_bulk/{ref.key}: {row['geoid']} Table 8 does not add up"
+                )

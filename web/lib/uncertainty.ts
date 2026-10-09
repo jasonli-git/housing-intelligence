@@ -197,7 +197,7 @@ export const SURVEY_METRICS = new Set([
 
 /**
  * What a survey figure without a margin says in its place: a Census special code, or
- * HUD's CHAS figures, whose margins the HUD source this site reads does not carry.
+ * a HUD CHAS release newer than the bulk files that carry its margins (#353).
  */
 export const NO_MARGIN = "no margin available";
 
@@ -328,5 +328,4 @@ export const MARGIN_NOTE =
   "cannot tell a place from its neighbours, its rank reads as a range. “No sampling " +
   "error” marks a figure the Census fixes to its population estimates rather than " +
   "estimating from the survey, such as a county’s population. HUD’s CHAS " +
-  "figures come from the same survey, but the HUD source this site reads carries no " +
-  "margins, so they show none yet and their ranks read as single places.";
+  "figures come from the same survey and carry HUD’s margins the same way.";
