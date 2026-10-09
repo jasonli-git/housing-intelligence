@@ -36,6 +36,10 @@ describe("the privacy policy (#357)", () => {
     expect(words).toContain(PRIVACY_EMAIL);
   });
 
+  it("keeps nothing about how a reader browses", () => {
+    expect(words).toContain("Nothing about how you browse, such as which sections you open, is kept");
+  });
+
   it("says the typed address never leaves the browser", () => {
     expect(words).toContain("the full address you type is never sent");
   });

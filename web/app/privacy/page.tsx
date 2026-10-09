@@ -15,8 +15,9 @@ export const metadata: Metadata = {
 
 /**
  * The privacy policy (ARCHITECTURE #357). Every claim here is a fact about the code: the
- * three things kept in browser storage (`lib/household.ts`, `lib/costScenario.ts`, the
- * theme and a disclosure's state), the tax lookup's requests (`TaxLookup.tsx`: a street
+ * two things kept in browser storage (the theme, and what a reader types into the
+ * affordability tools: `lib/household.ts`, `lib/costScenario.ts`); a section's open state
+ * is not kept (`MoreExpander`), the tax lookup's requests (`TaxLookup.tsx`: a street
  * index file by its first two letters, then a town's file, never the typed address), and
  * the removal list kept off the site and out of the repository (#295, #296). A change to
  * any of those changes this page.
@@ -45,16 +46,16 @@ export default function PrivacyPage() {
         <section className="section" aria-labelledby="privacy-browser">
           <h2 id="privacy-browser">What stays in your browser</h2>
           <p>
-            A few choices are saved in your own browser&rsquo;s storage so they carry from page to
-            page. They are never sent to this site or anyone else:
+            Two things are saved in your own browser&rsquo;s storage so they carry from page to
+            page, and only when you set them. They are never sent to this site or anyone else.
+            Nothing about how you browse, such as which sections you open, is kept:
           </p>
           <ul>
-            <li>the light or dark theme you picked;</li>
+            <li>the light or dark theme you picked, if you picked one;</li>
             <li>
               your household&rsquo;s size, income, rent and savings, and the mortgage assumptions you
-              set, if you type them into the affordability tools;
+              set, if you type them into the affordability tools.
             </li>
-            <li>whether you left a page&rsquo;s extra figures open.</li>
           </ul>
           <p>
             Clearing this site&rsquo;s data in your browser&rsquo;s settings removes them. A private

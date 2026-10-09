@@ -3,19 +3,19 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import { AbstractField } from "./AbstractField";
 
-// One key for every region page: a reader who wants the tables on one page wants them on the next.
-const KEY = "housing:region-more";
+// Where the open state was remembered until 2026-10-09 (#357). Cleared on load, so a
+// returning reader's browser stops holding it too.
+const RETIRED_KEY = "housing:region-more";
 
 /**
  * The data expander on a region page (Milestone 23, layout B): tables and trends behind
  * one click, under the answers a reader came for. The automated data summary has its own
  * disclosure beside it, so neither is buried inside the other.
  *
- * Closed by default and remembered once opened — in the reader's own browser, never sent
- * anywhere — so a data-minded reader finds it open on the next page, and closing it is
- * remembered too. A native <details>, so it opens with no script, from the keyboard, and for
- * find-in-page; the page is rendered closed and opened after load, because a static page
- * cannot know its reader. Print opens it (globals.css).
+ * Closed on every page and not remembered: the owner chose on 2026-10-09 that the site
+ * keeps nothing about how a reader browses, only what they type into its tools (#357). A
+ * native <details>, so it opens with no script, from the keyboard, and for find-in-page;
+ * a link to `#housing-assistance` opens it. Print opens it (globals.css).
  */
 function openAndScroll(targetId: string) {
   const details = document.getElementById(targetId);
@@ -53,9 +53,9 @@ export function MoreExpander({ id, title, sub, children }: { id?: string; title:
 
   useEffect(() => {
     try {
-      if (window.localStorage.getItem(KEY) === "open" && ref.current) ref.current.open = true;
+      window.localStorage.removeItem(RETIRED_KEY);
     } catch {
-      // Storage refused — a private window, blocked site data: it opens closed.
+      // Storage refused — a private window, blocked site data: there is nothing held.
     }
     if (window.location.hash === "#housing-assistance" && ref.current?.querySelector("#housing-assistance")) {
       ref.current.open = true;
@@ -69,13 +69,6 @@ export function MoreExpander({ id, title, sub, children }: { id?: string; title:
       ref={ref}
       suppressHydrationWarning
       className="more"
-      onToggle={(event) => {
-        try {
-          window.localStorage.setItem(KEY, event.currentTarget.open ? "open" : "closed");
-        } catch {
-          // As above: nothing to remember with.
-        }
-      }}
     >
       <summary>
         <AbstractField kind="evidence" />
