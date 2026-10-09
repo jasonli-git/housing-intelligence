@@ -39,6 +39,7 @@ import { indexedComparison } from "@/lib/chartInsights";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
 import { costInputs, homePrice } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
+import { pageMetadata, regionTitle } from "@/lib/meta";
 import { hasUnplaced, ownClaimsUsable } from "@/lib/hazards";
 import type { Term } from "@/lib/glossary";
 import { groupRows } from "@/lib/groups";
@@ -92,6 +93,24 @@ const TREND_METRICS = [
 export async function generateStaticParams() {
   const regions = await regionsWithData();
   return regions.filter((r) => r.level !== "state").map((r) => ({ id: String(r.region_id) }));
+}
+
+/**
+ * Each place's own title and description (#358), so a browser tab, a search result and a
+ * shared link name the town rather than "Housing — United States" on every page.
+ */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const region = await api.region(Number(id));
+  if (!region) return {};
+  const place = regionTitle(region);
+  return pageMetadata({
+    title: `${place} — Housing`,
+    description:
+      `${placeLine(region)}: home values, rents, what it costs to own or rent, and local ` +
+      "conditions, with every figure traced to its public source.",
+    path: `/regions/${id}`,
+  });
 }
 
 /** What kind of place this is, in the words a reader uses: "Township in Somerset County". */

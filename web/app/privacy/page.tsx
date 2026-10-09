@@ -5,13 +5,15 @@ import { Crumbs } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { dayLabel } from "@/lib/freshness";
 import { CONTACT_EMAIL, OPERATOR, POLICIES_UPDATED, PRIVACY_EMAIL } from "@/lib/site";
+import { pageMetadata } from "@/lib/meta";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Privacy policy — Housing",
   description:
     "No accounts, cookies, analytics, ads or trackers. What stays in your browser, what the " +
     "host sees, and what happens to an email or a Daniel's Law removal request.",
-};
+  path: "/privacy",
+});
 
 /**
  * The privacy policy (ARCHITECTURE #357). Every claim here is a fact about the code: the

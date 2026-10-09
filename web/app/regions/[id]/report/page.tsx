@@ -15,6 +15,7 @@ import { placeCaveats, scopesFor } from "@/lib/caveats";
 import { costInputs } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
 import { groupRows } from "@/lib/groups";
+import { pageMetadata, regionTitle } from "@/lib/meta";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, windowLabel } from "@/lib/periods";
 import { RANK_HEADING, rankBasis } from "@/lib/ranks";
@@ -97,6 +98,19 @@ export async function generateStaticParams() {
  * control, and the same stand-out cards; on screen it is set as a sheet of paper, the
  * report's own look among the page types (globals.css).
  */
+/** The printable report's own title (#358), named for its place like the region page. */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const region = await api.region(Number(id));
+  if (!region) return {};
+  const place = regionTitle(region);
+  return pageMetadata({
+    title: `${place} — housing report`,
+    description: `A printable housing report for ${place}: every figure, its period and its source.`,
+    path: `/regions/${id}/report`,
+  });
+}
+
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const regionId = Number(id);

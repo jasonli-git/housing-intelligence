@@ -4,12 +4,14 @@ import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { type Town, TaxLookup } from "@/components/TaxLookup";
 import { api, artifactUrl } from "@/lib/api";
+import { pageMetadata } from "@/lib/meta";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Property tax lookup — Housing",
   description:
     "Find any New Jersey property by its address, or by block and lot: its assessment, last year's tax, and how it compares with its town.",
-};
+  path: "/tax",
+});
 
 /**
  * Property tax: what you'd actually pay (Milestone 37), found from one typed address

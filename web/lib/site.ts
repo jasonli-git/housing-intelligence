@@ -21,3 +21,7 @@ export const POLICIES_UPDATED = "2026-10-09";
 
 export const REPO_URL = "https://github.com/jasonli-git/housing-intelligence";
 export const FRED_TERMS_URL = "https://fred.stlouisfed.org/docs/api/terms_of_use.html";
+
+/** The deployed origin, which every canonical address, sitemap entry and preview names. */
+export const SITE_URL = "https://housing.jasonli.app";
+export const SITE_NAME = "Housing Intelligence";

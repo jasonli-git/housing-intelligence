@@ -8,13 +8,15 @@ import { api, type RevisionGroup } from "@/lib/api";
 import { changeLabel, otherPeriods, placeName, revisedValue, summaryLine } from "@/lib/changes";
 import { dayLabel } from "@/lib/freshness";
 import { periodLabel } from "@/lib/periods";
+import { pageMetadata } from "@/lib/meta";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "What changed — Housing",
   description:
     "Figures this site had already published that a later refresh revised: how many, " +
     "which way, by how much, and the places that moved most.",
-};
+  path: "/changes",
+});
 
 /**
  * What changed (Milestone 27): the `fact_revision` rows Milestone 29 began recording,

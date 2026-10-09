@@ -7,6 +7,7 @@ import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
 import { NextRelease } from "@/components/NextRelease";
 import { api } from "@/lib/api";
+import { pageMetadata } from "@/lib/meta";
 import {
   checkedDaysBefore,
   dayLabel,
@@ -17,12 +18,13 @@ import {
   throughLabel,
 } from "@/lib/freshness";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "How current is each source — Housing",
   description:
     "For every public source behind this site: how recent its data is, when the site last " +
     "asked for something newer, and what is waiting to take effect.",
-};
+  path: "/freshness",
+});
 
 /**
  * The public freshness page (Milestone 27): every source's newest period, when it was

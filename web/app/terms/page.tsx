@@ -5,13 +5,15 @@ import { Crumbs } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { dayLabel } from "@/lib/freshness";
 import { CONTACT_EMAIL, FRED_TERMS_URL, OPERATOR, POLICIES_UPDATED, PRIVACY_EMAIL, REPO_URL } from "@/lib/site";
+import { pageMetadata } from "@/lib/meta";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Terms of use — Housing",
   description:
     "Who runs this site, what its figures are and are not, the terms each data source sets, " +
     "and the FRED® API terms every visitor agrees to.",
-};
+  path: "/terms",
+});
 
 /**
  * The site's terms of use (ARCHITECTURE #357). Written to say only what the site keeps:
