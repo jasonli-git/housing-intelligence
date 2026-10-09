@@ -58,6 +58,37 @@ try {
     }
   }
   await page.screenshot({ path: `${output}/landing-desktop.png` });
+  for (const width of [1280, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    for (const theme of ['light', 'dark']) {
+      await page.emulateMedia({ colorScheme: theme });
+      assert.equal(await page.locator('.entry-free span').textContent(), 'Free · No fees, subscriptions or ads');
+      assert(await page.locator('.entry-free span').evaluate(n => {
+        const range = document.createRange();
+        range.selectNodeContents(n);
+        return range.getClientRects().length === 1;
+      }), `${width} ${theme}: free badge stays on one line`);
+      assert(await page.locator('.foot-notice-head').evaluate(n => {
+        const icon = n.querySelector('svg').getBoundingClientRect();
+        const title = n.querySelector('a').getBoundingClientRect();
+        return Math.abs(icon.top + icon.height / 2 - title.top - title.height / 2) < 1;
+      }), `${width} ${theme}: Notice shield is centred on heading`);
+      assert.equal(await page.getByRole('navigation', { name: 'Site policies', exact: true }).getByRole('link').count(), 3);
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width} ${theme}: landing/footer reflow`);
+      if (theme === 'dark' && width !== 320) {
+        await page.evaluate(() => {
+          if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+          scrollTo(0, 0);
+        });
+        await page.screenshot({ path: `${output}/us-landing-${width}.png` });
+        await page.locator('.foot-notice').scrollIntoViewIfNeeded();
+        await page.screenshot({ path: `${output}/us-footer-${width}.png` });
+        await page.locator('.foot-notice').screenshot({ path: `${output}/us-notice-${width}.png` });
+      }
+    }
+  }
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.emulateMedia({ colorScheme: 'light' });
   await go('/404.html'); // Preview helper serves the exported document, not a host's 404 routing.
   assert.match(await page.locator('meta[name="robots"]').getAttribute('content'), /noindex/);
   assert.equal(await page.getByRole('combobox', { name: 'Search by state, town, county or ZIP code' }).count(), 1, 'One useful recovery search');
@@ -74,7 +105,7 @@ try {
   await page.screenshot({ path: `${output}/county-mobile.png` });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile county reflow');
   assert.deepEqual(errors, [], 'No application errors');
-  console.log(`PASS: closed-section jumps, freshness/legal/report navigation, print exclusion, metadata, five assets, 404 recovery, mobile reflow. Screenshots: ${output}`);
+  console.log(`PASS: closed-section jumps, freshness/legal/report navigation, print exclusion, metadata, five assets, 404 recovery, mobile reflow, single-line free badge and centred Notice icon at 1280/390/320px in both themes. Screenshots: ${output}`);
 } finally {
   await browser.close();
 }

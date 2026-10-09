@@ -10,6 +10,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - A new charcoal/ivory/green roofline-and-bars mark replaces the small masthead dot and generic favicon. Regenerate SVG-derived browser/iOS icons and a cream editorial 1200×630 share card. Metadata names `/housing-preview.png`; `/og-image.png` remains available with the new artwork for old links.
 - A designed 404 recovery page offers one place search and routes into New Jersey or the landing page. Preserve Next’s not-found/noindex behavior.
 - Preserve comfortable footer tap targets, improve landing map-label contrast and keep narrow navigation from squeezing the GitHub control.
+- US-page follow-up: soften the tagline colour without changing its size, and shorten the free-use badge to “Free · No fees, subscriptions or ads.” Use editorial serif headings for the bottom cards, distinct from the publisher notices. Align the Notice shield with its heading and group its policy links separately from the legal/source paragraph.
 
 ## Files/modules affected
 
@@ -19,6 +20,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - Page markup: home, not-found, regions and their reports, guide, afford, freshness, changes, terms and privacy. No changes to legal-policy text or published figures.
 - `web/app/icon.svg`, favicon, apple icon, both public preview PNGs; `web/scripts/make-site-images.mjs`; `web/lib/meta.ts` and metadata tests.
 - `web/scripts/check-ui-refinement.mjs` and its package script: reproducible checks for the new shortcuts, share assets, 404 and screenshots.
+- `web/components/SourceFooter.tsx` and `web/lib/sourceFooter.test.ts`: shared footer structure and regression checks preserving policy links, source-code access and the data-relicensing caveat.
 
 ## Architectural or implementation decisions
 
@@ -28,6 +30,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - Screen reports gain navigation but retain their full content and static/print definitions. The shortcut disappears in print.
 - Icons/share assets are generated from repo-native SVG and the existing image script. No new package, remote font, image service, API, analytics or tracker.
 - Branding bars are symbolic artwork, not plotted measurements. Page-specific share titles/descriptions/canonical URLs remain unchanged.
+- Footer follow-up uses the existing Georgia serif and text font, not a new font dependency. Preserve the full existing Notice paragraph and all required publisher notices. The footer presentation is shared across pages; the tagline and free-use wording changes apply only to the US landing page. The badge fits one line at 320px without forcing nowrap or reducing its font size.
 
 ## Assumptions
 
@@ -56,3 +59,11 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - `git diff --check`: passed. No separate frontend linter is configured; Python tests/lint and warehouse rebuild are not run for this frontend-only change.
 
 Earlier exploratory audits caught and led to fixes for footer target size, the narrow GitHub target and low-contrast national-map helper text. A dev-server audit was interrupted by live reloads; final verification uses the stable static export instead.
+
+### US landing/footer follow-up verification (October 9, 2026)
+
+- `npm run typecheck` and `npm test`: passed; 553 tests across 77 files, including the expanded footer assertions.
+- `npm run build`: passed; 2,386 static pages. An initial sandboxed build could not reach the local API; the retry with local-network access completed successfully.
+- `npm run check:ui-refinement`: passed against the fresh export at port 3002. Added one-line badge, centred Notice shield, three policy links and page-reflow checks at 1280/390/320px in both light and dark themes. Existing navigation/assets/404 checks also pass. Visually inspected the generated mobile landing, desktop footer and mobile Notice screenshots in `/tmp/housing-ui-refinement/`.
+- `A11Y_ORIGIN=http://localhost:3002 A11Y_PATHS='/,/regions/12,/regions/224,/regions/3091,/tax,/freshness,/changes' A11Y_OUTPUT=/tmp/us-footer-a11y.json npm run check:a11y`: passed; 56 states (seven routes, 1440/390px, light/dark, closed/expanded), no automated axe violations, application errors or horizontal page overflow. Manual/incomplete findings remain separate from automated passes.
+- `git diff --check`: passed. No acquisition, model regeneration, canonical-document edits, deployment or merge.

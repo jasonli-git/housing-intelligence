@@ -36,7 +36,7 @@ export default async function HousingLandingPage() {
           <PlaceSearch variant="hero" />
           <p className="home-find-hint">Detailed coverage starts with New Jersey. Try Princeton or 07030. <a href="#coverage-heading">Browse states ↓</a></p>
         </section>
-        <p className="entry-free computed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free to use · No fees. No subscription. Definitely no ads.</span></p>
+        <p className="entry-free computed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees, subscriptions or ads</span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-labelledby="coverage-heading">
         <header><p className="entry-kicker">United States · Explore by state</p><h2 id="coverage-heading">Browse by state</h2></header>
