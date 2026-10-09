@@ -313,6 +313,15 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Housekeeping
 
+- [ ] **Reply as housing@ and privacy@ from Gmail.** (#357, owner 2026-10-09) Both
+      addresses are Cloudflare Email Routing forwards, which only receive, so a reply
+      today shows the owner's personal address. Chosen: keep the forwards and add an
+      outgoing mail service (e.g. SMTP2GO or Resend, free tiers), then Gmail's *Send mail
+      as* for each address with that service's SMTP login. Add the service's SPF and DKIM
+      records to jasonli.app (SPF joins Cloudflare's `include` in the one TXT record), and
+      a DMARC record, which the domain has none of, starting at `p=none` with reports,
+      so mail sent as the domain is harder to spoof. Test a reply from each address to
+      an outside account before relying on it.
 - [ ] **Nothing runs `ruff` automatically.** `make lint` exists and is run by hand, so
       a violation reaches `main` whenever someone runs `make test` or `make test-all`
       and stops there —
