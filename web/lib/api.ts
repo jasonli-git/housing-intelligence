@@ -18,6 +18,7 @@
 
 import type { IncomeLimits } from "./household";
 import type { AffordableHousing } from "./affordableHousing";
+import { annualHomePriceChange } from "./nationalBenchmarks";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -778,6 +779,11 @@ function nationalRateSeries(metricId: string): Promise<Observation[] | null> {
     nationalRates.set(metricId, series);
   }
   return series;
+}
+
+/** A calculated annual change from the exact monthly national FHFA index series. */
+export async function nationalHomePriceChange() {
+  return annualHomePriceChange((await nationalRateSeries("fhfa_hpi_us_monthly")) ?? []);
 }
 
 /**

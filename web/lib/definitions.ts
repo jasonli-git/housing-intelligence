@@ -66,6 +66,10 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "The Federal Housing Finance Agency’s measure of how prices change for the same homes when they sell again. An index, not a price: 100 is early 1991. Statewide only.",
     why: "Because it follows the same homes, it shows true price growth rather than a change in what kinds of homes sold.",
   },
+  fhfa_hpi_us_monthly: {
+    what: "FHFA’s monthly U.S. index of repeat home sales financed by Fannie Mae or Freddie Mac mortgages. Purchase-only, seasonally adjusted, not inflation-adjusted. Not a dollar price.",
+    why: "National price-change context, not an estimate for an individual home.",
+  },
   fhfa_hpi_all_transactions: {
     what: "The same kind of index from FHFA, but counting refinance appraisals as well as sales. An index: 100 is early 1980. Statewide only.",
     why: "It reaches back further than the purchase-only index, so it shows the long run of prices.",

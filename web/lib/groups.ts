@@ -59,6 +59,7 @@ export const GROUPS: readonly Group[] = [
       "hud_safmr_3br",
       "hud_safmr_4br",
       "fhfa_hpi",
+      "fhfa_hpi_us_monthly",
       "fhfa_hpi_all_transactions",
       // Milestone 52: inputs to the long-run comparison, `shown: false`; grouped so the
       // catalog stays whole, never listed on a page.

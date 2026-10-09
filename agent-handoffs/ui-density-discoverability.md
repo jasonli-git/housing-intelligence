@@ -14,6 +14,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - Subsequent placement/accent adjustment: put the free-use badge directly after the tagline, before the place search, and restore the shared Notice shield to the existing yellow warning token (`--notice-text`) in both themes. Keep the new icon alignment and footer structure.
 - Replace only the Notice heading's font-dependent ↗ glyph with a decorative 13px SVG external-link icon. The yellow shield, heading font, link destination and other links remain unchanged.
 - Match the Notice heading to the yellow shield. Make the large New Jersey title in the coverage preview an internal link with a small right arrow; remove the separate right-side “Explore New Jersey” button. Keep the map's other navigation links intact.
+- Approved national home-price follow-up: see `agent-handoffs/national-home-price-benchmark.md`. That bounded addition introduces a monthly national series and corrects FHFA attribution/cadence; the frontend-only/no-new-figures statements below describe the earlier UI pass, not this subsequent work.
 
 ## Files/modules affected
 
@@ -49,7 +50,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - Automated accessibility checks supplement, not replace, reader review. There is no claim of a specific scrolling reduction or exhaustive device/screen-reader coverage.
 - Development/static local previews are not deployment. The static-preview helper serves `/404.html` explicitly rather than emulate the host’s unknown-route fallback.
 - Canonical documentation and Director Notes were not modified. Claude can reconcile any documentation references to the preview artwork if needed.
-- National-metric discussion only: consider a compact strip with the existing mortgage benchmark, annual FHFA US home-price change (not the raw index level), and optionally Census HVS rental vacancy. No additional national data was acquired or rendered; integration would need explicit scope and validated national coverage/source dates.
+- National-metric follow-up: annual FHFA US home-price change is now implemented with explicit user approval; see the separate benchmark handoff. Census HVS rental vacancy remains only a possible future addition, not implemented or acquired.
 
 ## Verification
 

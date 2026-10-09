@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { Masthead } from "@/components/Masthead";
-import { nationalMortgageRate } from "@/lib/api";
+import { nationalHomePriceChange, nationalMortgageRate } from "@/lib/api";
 import { periodLabel } from "@/lib/periods";
 import { pageMetadata } from "@/lib/meta";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
@@ -16,7 +16,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function HousingLandingPage() {
-  const rate = await nationalMortgageRate();
+  const [rate, homePrices] = await Promise.all([nationalMortgageRate(), nationalHomePriceChange()]);
   return <>
     <Masthead affordability={{ kind: "hidden" }} search={false} />
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
@@ -42,10 +42,16 @@ export default async function HousingLandingPage() {
         <header><p className="entry-kicker">United States · Explore by state</p><h2 id="coverage-heading">Browse by state</h2></header>
         <NationalCoverageMap />
       </section>
+      <div className="national-benchmarks">
       <section className="national-context" aria-labelledby="national-context-heading">
         <div><h2 id="national-context-heading">National borrowing benchmark</h2><p>National average—not a lender quote.</p></div>
         {rate ? <div className="national-rate"><strong>{rate.value.toFixed(2)}%</strong><FloatingMetricTerm metricId={rate.metric_id} label="30-year fixed mortgage" /><small>Freddie Mac · {periodLabel(rate.period_start, rate.metric_id)}</small></div> : <p>Mortgage-rate data is unavailable in this snapshot.</p>}
       </section>
+      <section className="national-context" aria-labelledby="national-home-prices-heading">
+        <div><h2 id="national-home-prices-heading">Home prices over the past year</h2><p>United States · Single-family homes</p></div>
+        {homePrices ? <div className="national-rate"><strong>{homePrices.pct_change > 0 ? "+" : ""}{homePrices.pct_change.toFixed(1)}%</strong><FloatingMetricTerm metricId="fhfa_hpi_us_monthly" label="Annual price change" definition="Calculated from FHFA’s national purchase-only house price index: the latest published month compared with the same month a year earlier. Seasonally adjusted, not adjusted for inflation. Covers homes financed with mortgages bought or securitized by Fannie Mae or Freddie Mac—not every home or your home's value. Historical figures may be revised." why={null} /><small>{periodLabel(homePrices.period_start, "fhfa_hpi_us_monthly")} → {periodLabel(homePrices.period_end, "fhfa_hpi_us_monthly")} · <a href="https://www.fhfa.gov/data/hpi/datasets?tab=monthly-data" target="_blank" rel="noreferrer noopener">FHFA HPI®</a></small></div> : <p>A full year of comparable home-price data is unavailable.</p>}
+      </section>
+      </div>
     </main>
   </>;
 }

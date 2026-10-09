@@ -165,6 +165,15 @@ metrics:
     source_id: fhfa_hpi
     record_type: modelled
 
+  fhfa_hpi_us_monthly:
+    label: U.S. house price index, purchase-only
+    unit: index
+    frequency: monthly
+    direction: neutral
+    description: FHFA national repeat-sales index of single-family homes with conforming mortgages, purchase-only, seasonally adjusted and nominal. Not a dollar-valued home estimate.
+    source_id: fhfa_hpi
+    record_type: modelled
+
   mortgage_rate_30y:
     label: 30-year fixed mortgage rate
     unit: percent

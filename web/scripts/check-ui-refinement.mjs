@@ -46,6 +46,11 @@ try {
   assert.equal(await jump.isVisible(), false, 'Screen shortcut stays out of printed report');
   await page.emulateMedia({ media: 'screen' });
   await go('/');
+  const prices = page.locator('section', { has: page.getByRole('heading', { name: 'Home prices over the past year', exact: true }) });
+  assert.match(await prices.locator('.national-rate > strong').textContent(), /^[+-]?\d+\.\d%$/);
+  assert.match(await prices.locator('small').textContent(), /[A-Z][a-z]{2} \d{4} → [A-Z][a-z]{2} \d{4} · FHFA HPI/);
+  assert.equal(await prices.getByRole('link', { name: 'FHFA HPI®', exact: true }).getAttribute('href'), 'https://www.fhfa.gov/data/hpi/datasets?tab=monthly-data');
+  assert.equal(await page.locator('.publisher-notice p').filter({ hasText: 'This product uses FHFA data but is neither endorsed nor certified by FHFA.' }).count(), 1, 'Required FHFA notice displayed once');
   const image = await page.locator('meta[property="og:image"]').getAttribute('content');
   assert.equal(image, 'https://housing.jasonli.app/housing-preview.png');
   for (const path of ['/housing-preview.png', '/og-image.png', '/apple-icon.png', '/icon.svg', '/favicon.ico']) {
@@ -97,6 +102,7 @@ try {
         });
         await page.screenshot({ path: `${output}/us-landing-${width}.png` });
         await page.locator('.coverage-state-preview').screenshot({ path: `${output}/us-state-link-${width}.png` });
+        await page.locator('.national-benchmarks').screenshot({ path: `${output}/us-benchmarks-${width}.png` });
         await page.locator('.foot-notice').scrollIntoViewIfNeeded();
         await page.screenshot({ path: `${output}/us-footer-${width}.png` });
         await page.locator('.foot-notice').screenshot({ path: `${output}/us-notice-${width}.png` });

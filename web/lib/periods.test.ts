@@ -30,6 +30,8 @@ describe("periodLabel", () => {
   });
 
   it("names an FHFA index by quarter", () => {
+    expect(periodLabel("2026-07-31", "fhfa_hpi_us_monthly")).toBe("Jul 2026");
+    expect(periodLabel("2025-12-31", "fhfa_hpi_us_monthly")).toBe("Dec 2025");
     expect(periodLabel("2026-06-30", "fhfa_hpi")).toBe("Q2 2026");
     expect(periodLabel("2025-12-31", "fhfa_hpi_all_transactions")).toBe("Q4 2025");
   });

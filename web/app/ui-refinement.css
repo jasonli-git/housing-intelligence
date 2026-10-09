@@ -68,6 +68,10 @@
   .quiet-nation .map-pan-controls > span { color: var(--text-primary); }
   .quiet-nation .coverage-entry { margin-top: 1.2rem; }
   .quiet-nation .entry-free.computed { margin-top: .65rem; }
+  .national-benchmarks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+  .quiet-nation .national-benchmarks .national-context { grid-template-columns: minmax(0, 1fr) auto; gap: .75rem; margin: 0; padding: .85rem 1rem; }
+  .quiet-nation .national-benchmarks .national-rate { padding-left: .85rem; max-width: 190px; }
+  @media (max-width: 850px) { .national-benchmarks { grid-template-columns: minmax(0, 1fr); } }
   .guide-page > .page-head .meta { max-width: 66ch; font-size: 15px; line-height: 1.6; }
   .guide-about > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-secondary); font-size: 13px; }
   .guide-page .decision-guide { gap: 1.25rem; margin-top: .9rem; }

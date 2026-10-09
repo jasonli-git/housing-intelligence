@@ -31,6 +31,7 @@ export function periodLabel(date: string, metricId?: string): string {
     return `${MONTHS[month - 1]} ${Number(date.slice(8, 10))}, ${year}`;
   }
   if (metricId?.startsWith("hud_fmr") || metricId?.startsWith("hud_safmr")) return `FY${year}`;
+  if (metricId === "fhfa_hpi_us_monthly") return `${MONTHS[month - 1]} ${year}`;
   if (metricId?.startsWith("fhfa_")) return `Q${Math.ceil(month / 3)} ${year}`;
   const monthly = MONTHLY_PREFIXES.some((prefix) => metricId?.startsWith(prefix));
   if (date.slice(5, 10) === "12-31" && !monthly) return year;
