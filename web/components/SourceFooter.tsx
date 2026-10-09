@@ -186,7 +186,10 @@ export async function SourceFooter() {
               target="_blank"
               title="The full terms for the site's code and data, on GitHub"
             >
-              Notice <span aria-hidden="true">↗</span>
+              Notice
+              <svg className="notice-external-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path d="M9.5 2.5h4v4M13.5 2.5 7 9M6.5 3.5h-4v10h10v-4" />
+              </svg>
             </a>
           </div>
           <nav className="foot-policy-links" aria-label="Site policies">

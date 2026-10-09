@@ -34,6 +34,7 @@ describe("SourceFooter", () => {
     expect(html).not.toContain("foot-notices");
     expect(html).toContain("Data provenance");
     expect(html).toContain('class="foot-notice-head"');
+    expect(html).toContain('class="notice-external-icon"');
     expect(html).toContain('aria-label="Site policies"');
     expect(html).toContain('href="/terms"');
     expect(html).toContain('href="/privacy"');

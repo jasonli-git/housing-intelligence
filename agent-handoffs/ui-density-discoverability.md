@@ -12,6 +12,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - Preserve comfortable footer tap targets, improve landing map-label contrast and keep narrow navigation from squeezing the GitHub control.
 - US-page follow-up: soften the tagline colour without changing its size, and shorten the free-use badge to “Free · No fees, subscriptions or ads.” Use editorial serif headings for the bottom cards, distinct from the publisher notices. Align the Notice shield with its heading and group its policy links separately from the legal/source paragraph.
 - Subsequent placement/accent adjustment: put the free-use badge directly after the tagline, before the place search, and restore the shared Notice shield to the existing yellow warning token (`--notice-text`) in both themes. Keep the new icon alignment and footer structure.
+- Replace only the Notice heading's font-dependent ↗ glyph with a decorative 13px SVG external-link icon. The yellow shield, heading font, link destination and other links remain unchanged.
 
 ## Files/modules affected
 
@@ -69,3 +70,4 @@ Earlier exploratory audits caught and led to fixes for footer target size, the n
 - `A11Y_ORIGIN=http://localhost:3002 A11Y_PATHS='/,/regions/12,/regions/224,/regions/3091,/tax,/freshness,/changes' A11Y_OUTPUT=/tmp/us-footer-a11y.json npm run check:a11y`: passed; 56 states (seven routes, 1440/390px, light/dark, closed/expanded), no automated axe violations, application errors or horizontal page overflow. Manual/incomplete findings remain separate from automated passes.
 - `git diff --check`: passed. No acquisition, model regeneration, canonical-document edits, deployment or merge.
 - Badge-placement/yellow-shield follow-up: reran typecheck (passed), all 553 tests (passed), static build (2,386 pages) and `check:ui-refinement` (passed). Added checks for the badge's position between tagline/search and the Notice shield's warning-token colour at all three widths in both themes. Inspected fresh mobile screenshots. The broader 56-state audit above predates these two small adjustments; it was not rerun for them.
+- Notice external-link icon follow-up: typecheck, 553 tests, 2,386-page static build and `check:ui-refinement` passed again. Added fixed 13×13px icon checks at 1280/390/320px in both themes; inspected the updated mobile Notice screenshot. No broader accessibility-matrix rerun for this decorative-icon substitution.

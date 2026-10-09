@@ -83,6 +83,8 @@ try {
         return Math.abs(icon.top + icon.height / 2 - title.top - title.height / 2) < 1;
       }), `${width} ${theme}: Notice shield is centred on heading`);
       assert.equal(await page.getByRole('navigation', { name: 'Site policies', exact: true }).getByRole('link').count(), 3);
+      const externalIcon = await page.locator('.notice-external-icon').boundingBox();
+      assert(externalIcon && externalIcon.width === 13 && externalIcon.height === 13, 'Notice external-link icon stays 13px');
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width} ${theme}: landing/footer reflow`);
       if (theme === 'dark' && width !== 320) {
         await page.evaluate(() => {
