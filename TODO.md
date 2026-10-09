@@ -29,7 +29,7 @@ The correctness pass (ARCHITECTURE #350, #353–#356), the terms and privacy pag
 site metadata (#358) and the reliability work (#359) have shipped. On 2026-10-09 the
 owner parked the four data additions (below, under Parked) rather than build them:
 none answers a reader question the site cannot already answer. The next focus is the
-owner's to choose; Version 4 stays held.
+owner's to choose. Version 3 is complete and Version 4 optional (owner, 2026-10-09).
 
 ## Open
 
@@ -45,6 +45,8 @@ Not open work: each comes round on a date. The steps live where the row says.
 | Each January | Re-read the publishers' release calendars (BLS's ends 2026-12-30, Zillow's 2026-12-17; FHFA, PEP and HUD's run to 2027); add the ACS edition's date when announced (#298) | `config/sources.yml` `release_calendar` |
 | 2027-01-01 | Gemini 3.6–3.8 Flash's introductory price ends: $1.50 / $7.50 per million tokens (Flex half); update `config/evaluation.yml` the same day | — |
 | Each quarter | Look at DCA's Construction Reporter, stopped at January 2026 while DCA overhauls it; discovery picks up the yearly summary (usually July) on its own, and a changed layout is refused (#300) | `config/sources.yml` `nj_construction` |
+| Each June and December | FCC's broadband summaries (`fcc_bdc`) are downloaded by hand, so no refresh notices a new filing (#360). Look for an as-of date or revision newer than the one held | Download the county and place summaries from FCC's data download into `data/manual/fcc_bdc/`, then `hip acquire --source fcc_bdc --vintage <as-of>_<revision>` |
+| Each January | DOE's LEAD energy burden (`doe_lead`) is pinned to its 2022 data, and a newer edition would be a new OpenEI submission at a new address (#360). Look for one | If there is one, review its county file against `EnergyBurdenAdapter` before moving the URL |
 | About December 2026 | SAIPE's 2025 income estimates extend the long-run comparison past 2024 (#348) | automatic on refresh |
 | With each CHAS release (about a year after 2025-12-23) | Download the county and town ZIPs and the dictionary; review Table 8; add to `CHAS_BULK_REVIEWED` (#353) | `config/sources.yml` `hud_chas_bulk` |
 | Spring 2027 | LIHTC 2025: download by hand to `data/manual/hud_lihtc/LIHTCPUB_2025.xlsx`, then `hip acquire --source hud_lihtc --vintage 2025` (#307) | `agent-handoffs/affordable-housing-assistance.md` |
@@ -183,6 +185,14 @@ Not open work: each comes round on a date. The steps live where the row says.
       at the owner's request on 2026-10-05; WCAG 2.2.2 asks for one on anything that
       moves for more than five seconds. Reduced motion stops it. The New Jersey header
       artwork added 2026-10-06 (#311) loops the same way.
+- [ ] **A compare page shared by its link.** (owner, 2026-10-09, from an outside
+      review) `/compare?places=194,330,112`: a few towns side by side, the choice held in
+      the address so it can be bookmarked or sent, and nothing stored in the browser.
+      Milestone 46's side-by-side comparison is the likely base. Also Milestone 17's
+      second user path (a place you are moving to against where you live now). The API's
+      `/compare` is in the publish manifest's `unpublishable` list, since an arbitrary
+      set of ids is combinatorial, so the page reads each place's published files in the
+      browser, as `/guide` does.
 - [ ] **The budget explorer's comparison scope is not in its address.** (PR #86, Codex
       handoff `local-page-layout.md`) A page's link opens `/afford` with its place and
       county; switching to another county or all New Jersey changes local state only,
@@ -301,6 +311,10 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Open decisions — not scheduled, not decided
 
+- [ ] **Adopt TIGER 2026?** (2026-10-09, #360) Census published TIGER2026; the refresh
+      now reports it as waiting and keeps 2025. Moving redraws the region spine every
+      fact row is keyed to: compare the 564 municipalities, ZIPs and tracts between the
+      two years first, then move `TigerAdapter.default_vintage` and rebuild.
 - [ ] **Revisit the refresh's hour when generation costs scale.** (2026-10-02, #259) The
       Friday 08:00 run is kept for now. Some Gemini Flex calls fall back to the standard
       price (4 of 23 on 2026-10-02), costing cents a run; if more states multiply the
@@ -335,12 +349,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       leaves them alone (it packs without `--report`, #227), so they drift between
       such passes. Either regenerate and commit them whenever the data moves, or
       stop tracking them and link the published reports. **Not decided.**
-- [ ] **Milestone 17's second user path needs a query the static tree cannot answer.**
-      Someone evaluating a place they are moving to wants it compared against where they
-      live now, which is `/compare` — one of three endpoints in the publish manifest's
-      `unpublishable` list, because an arbitrary set of region ids is combinatorial. The
-      consumer entry point therefore carries a dependency on a browser-side query layer
-      over published data, and is larger than its roadmap row suggests.
 - [ ] **`place` versus `cousub` outside the strong-MCD states.** Not yet a live
       decision — the Northeast states of Milestone 14 are all strong-MCD, Milestone 15
       stops at county level, and both are unscheduled. It becomes blocking the first time municipality-level data is wanted

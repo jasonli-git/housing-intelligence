@@ -180,15 +180,23 @@ def test_build_report_reads_known_sources_correctly() -> None:
             session,
             sources={
                 "census_tiger": _source(name="TIGER", fallback="Pinned on purpose."),
+                "hud_chas_bulk": _source(name="CHAS bulk", fallback="By hand."),
                 "hud_fmr": _source(name="Fair Market Rents", cadence="annual"),
             },
         )
 
     assert isinstance(report, FreshnessReport)
     by_id = {s.source_id: s for s in report.sources}
-    # TIGER's adapter never implements discover() (ARCHITECTURE #206): no row exists.
-    assert by_id["census_tiger"].status == "not_tracked"
-    assert by_id["census_tiger"].checked_at is None
+    # A hand-imported source has no discovery and records no check: no row exists.
+    assert by_id["hud_chas_bulk"].status == "not_tracked"
+    assert by_id["hud_chas_bulk"].checked_at is None
+    # TIGER is pinned, but since #360 asked about newer years: one found waits as
+    # pending, and it is never the edition in use.
+    tiger = by_id["census_tiger"]
+    assert tiger.checked_at is not None
+    assert tiger.status in ("current", "pending", "unreachable")
+    if tiger.pending is not None:
+        assert tiger.status == "pending" and tiger.pending_from is None
     # HUD FMR: a fiscal year published before it takes effect waits as pending until
     # its 1 October, and is current from then. Pinned to FY2027 pending when written;
     # on 2026-10-01 it took effect, so the check follows the calendar, not one day.

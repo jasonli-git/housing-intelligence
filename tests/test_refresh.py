@@ -9,6 +9,8 @@ promising per-ref isolation that `fetch_all` never provided.
 from __future__ import annotations
 
 import json
+from dataclasses import replace
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar
 
@@ -520,6 +522,89 @@ def test_a_current_file_source_records_when_its_publisher_was_last_asked(
     refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
     second = read_discovery(tmp_path, adapter.source_id)
     assert second is not None and second.outcome == "unreachable"
+
+
+def test_a_source_refetched_on_age_is_dated_by_its_last_download(tmp_path: Path) -> None:
+    """A publisher that sends no validators is asked only when the copy ages out, so a
+    week that asks nobody still has a last check to show: the download (#360)."""
+    from datetime import timedelta
+
+    from hip.sources.base import read_discovery, write_discovery
+
+    class Aging(Flaky):
+        revalidate_after = timedelta(days=30)
+
+        def __init__(self) -> None:
+            super().__init__(failing="")
+
+        def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+            return [
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer="a",
+                    vintage="current",
+                    url="https://example.invalid/a.csv",
+                )
+            ]
+
+        def _fetch_bytes(self, ref: ReleaseRef, destination: Path) -> None:
+            destination.write_bytes(b"col\n1\n")
+            self._last_validators = {}
+
+    adapter = Aging()
+    refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+    downloaded = read_discovery(tmp_path, adapter.source_id)
+    assert downloaded is not None
+
+    # The record is lost (or predates #350); the next run asks nobody, and still
+    # records the download rather than claiming a check today.
+    (tmp_path / adapter.source_id / "releases.json").unlink()
+    refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+    seeded = read_discovery(tmp_path, adapter.source_id)
+    assert seeded is not None and seeded.checked_at <= downloaded.checked_at
+
+    # A real check already recorded is never replaced by an older download.
+    later = replace(seeded, checked_at=seeded.checked_at + timedelta(days=3))
+    write_discovery(tmp_path, later)
+    refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+    kept = read_discovery(tmp_path, adapter.source_id)
+    assert kept is not None and kept.checked_at == later.checked_at
+
+
+def test_a_hand_imported_source_records_no_check(tmp_path: Path) -> None:
+    """Copying in the owner's file is not asking the publisher anything."""
+    from hip.sources.base import read_discovery
+
+    class Manual(Flaky):
+        manual = True
+
+        def __init__(self) -> None:
+            super().__init__(failing="")
+
+        def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+            return [
+                ReleaseRef(
+                    source_id=self.source_id,
+                    layer="a",
+                    vintage="current",
+                    url="https://example.invalid/a.csv",
+                )
+            ]
+
+        def fetch(self, ref, *, raw_dir, force=False):  # type: ignore[no-untyped-def]
+            from hip.sources.base import Release
+
+            return Release(
+                ref=ref,
+                path=raw_dir / "a.csv",
+                sha256="0" * 64,
+                size_bytes=1,
+                fetched_at=datetime.now(UTC),
+            )
+
+    adapter = Manual()
+    refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
+    assert read_discovery(tmp_path, adapter.source_id) is None
 
 
 def test_a_dated_source_is_left_to_its_own_discovery(tmp_path: Path) -> None:

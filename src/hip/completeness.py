@@ -670,7 +670,10 @@ def render(session: Session, sources: dict[str, Source], run_on: date) -> str:
     discoveries = {
         row["source_id"]: row
         for row in session.execute(
-            text("SELECT source_id, newest, pending FROM source_discoveries")
+            text(
+                "SELECT source_id, newest, pending, pending_reason "
+                "FROM source_discoveries"
+            )
         ).mappings()
     }
     # The newest vintage held, preferring a dated one: HUD's crosswalk is `current` and
@@ -738,7 +741,13 @@ def render(session: Session, sources: dict[str, Source], run_on: date) -> str:
         if found is None:
             available = "not tracked"
         elif found["pending"]:
-            available = f"{found['pending']} (in force from {s.pending_from})"
+            # Waiting on a date (HUD's fiscal year), or on a review before use (TIGER).
+            waiting = (
+                f"in force from {s.pending_from}"
+                if s.pending_from
+                else found["pending_reason"] or "not yet used"
+            )
+            available = f"{found['pending']} ({waiting})"
         else:
             available = found["newest"] or "—"
         acquired = s.acquired_at.date().isoformat() if s.acquired_at else "—"

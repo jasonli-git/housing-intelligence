@@ -13,10 +13,11 @@ national files — including the 529MB ZCTA file, which has had no state partiti
 
 from __future__ import annotations
 
+from datetime import date
 from typing import ClassVar, Literal
 
 from hip.config import fips_for
-from hip.sources.base import ReleaseRef, SourceAdapter
+from hip.sources.base import Discovery, ReleaseRef, SourceAdapter
 
 LayerScope = Literal["national", "state"]
 
@@ -27,10 +28,11 @@ class TigerAdapter(SourceAdapter):
     """Fetches the five TIGER layers that make up the geography spine."""
 
     source_id: ClassVar[str] = "census_tiger"
-    # Pinned on purpose, and the one dated source Milestone 26 does not discover: a new
-    # TIGER vintage redraws the region spine every fact row is keyed to, so moving to
-    # it is a decision to take and check by hand, not one a scheduled refresh should
-    # make on its own. TIGER2026 answered 404 on 2026-09-23.
+    # Pinned on purpose: a new TIGER vintage redraws the region spine every fact row is
+    # keyed to, so moving to it is a decision to take and check by hand, not one a
+    # scheduled refresh should make on its own. `discover` reports a newer vintage as
+    # waiting and never adopts it (#360). TIGER2026 answered 404 on 2026-09-23 and 200
+    # on 2026-10-09.
     default_vintage: ClassVar[str] = "2025"
     landing_format: ClassVar[str] = "shapefile"
 
@@ -74,6 +76,32 @@ class TigerAdapter(SourceAdapter):
                     )
                 )
         return refs
+
+    def discover(self, today: date) -> Discovery:
+        """Whether Census has published a TIGER year after the pinned one.
+
+        The national county file stands for the year: every layer this adapter reads
+        is released together. A newer year is `pending`, never `newest`, so the refs
+        stay on the pinned vintage until someone moves `default_vintage` by hand.
+        """
+
+        def exists(year: int) -> tuple[bool | None, str | None]:
+            return self._probe(f"{BASE_URL}/TIGER{year}/COUNTY/tl_{year}_us_county.zip")
+
+        pinned = int(self.default_vintage)
+        year, published, reached = self._probe_forward(pinned, exists)
+        newer = str(year) if year > pinned else None
+        return self._discovered(
+            self.default_vintage,
+            reached=reached,
+            published=published,
+            pending=newer,
+            pending_reason=(
+                "A new TIGER year redraws every region; adopting it is reviewed by hand"
+                if newer
+                else None
+            ),
+        )
 
 
 def shapefile_member(ref: ReleaseRef) -> str:
