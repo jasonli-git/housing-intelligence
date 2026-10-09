@@ -6,6 +6,8 @@ import { FrameMeter } from "@/components/FrameMeter";
 import { PrintFooter } from "@/components/PrintFooter";
 import { SourceFooter } from "@/components/SourceFooter";
 import { HOUSING_MODE_SCRIPT } from "@/lib/housingMode";
+import { SHARE_DEFAULTS } from "@/lib/meta";
+import { SITE_URL } from "@/lib/site";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./tokens.css";
 import "./globals.css";
@@ -34,9 +36,14 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
+// The defaults every page starts from (#358): the origin canonical and preview addresses
+// resolve against, and the site's share card. Pages set their own title and description
+// through `pageMetadata`, which carries the same card.
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Housing — United States",
   description: "Explore housing data by state. Detailed coverage starts with New Jersey: costs, local conditions and figures traced to their sources.",
+  ...SHARE_DEFAULTS,
 };
 
 export default function RootLayout({

@@ -1,15 +1,18 @@
+import type { Metadata } from "next";
 import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { Masthead } from "@/components/Masthead";
 import { nationalMortgageRate } from "@/lib/api";
 import { periodLabel } from "@/lib/periods";
+import { pageMetadata } from "@/lib/meta";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import "./housing-entry.css";
 import "./state-navigation.css";
 
-export const metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Housing Intelligence — Find your place",
   description: "A clearer picture of the place you could call home. Free housing data with sources for every figure; detailed coverage starts with New Jersey.",
-};
+  path: "/",
+});
 
 export default async function HousingLandingPage() {
   const rate = await nationalMortgageRate();

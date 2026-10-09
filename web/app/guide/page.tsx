@@ -5,12 +5,14 @@ import { DecisionGuide } from "@/components/DecisionGuide";
 import { Masthead } from "@/components/Masthead";
 import { api, artifactUrl, nationalMortgageRate } from "@/lib/api";
 import { periodLabel } from "@/lib/periods";
+import { pageMetadata } from "@/lib/meta";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Buyer’s guide — Housing",
   description:
     "Can I afford to buy here, should I rent or buy, and what should I check before an offer: answered for any New Jersey place from public data.",
-};
+  path: "/guide",
+});
 
 /**
  * The decision guides (Milestone 49, ARCHITECTURE #330). One page: the national rate and

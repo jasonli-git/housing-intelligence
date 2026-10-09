@@ -5,12 +5,14 @@ import { AffordExplorer } from "@/components/AffordExplorer";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { affordData } from "@/lib/affordData";
+import { pageMetadata } from "@/lib/meta";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "What can I afford? — Housing",
   description:
     "The New Jersey counties and municipalities where the typical home is within reach of an income.",
-};
+  path: "/afford",
+});
 
 /**
  * "What can I afford here" (Milestone 17): an income in, the places within reach out.

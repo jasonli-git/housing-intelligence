@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { Measure } from "@/lib/measures";
 import { StateFigureNotes } from "@/components/StateFigureNotes";
 import { ComputedBadge } from "@/components/ComputedBadge";
@@ -23,11 +24,12 @@ import { stateProfile } from "@/lib/stateProfile";
 import { stateFigurePeriod } from "@/lib/stateEntry";
 import { marginLabel } from "@/lib/uncertainty";
 import { constructionYears } from "@/lib/construction";
+import { pageMetadata } from "@/lib/meta";
 import "../../new-jersey.css";
 import "../../housing-entry.css";
 import "../../state-navigation.css";
 
-export const metadata = { title: "New Jersey — Housing", description: "Statewide housing figures, county comparisons and places within your budget in New Jersey." };
+export const metadata: Metadata = pageMetadata({ title: "New Jersey — Housing", description: "Statewide housing figures, county comparisons and places within your budget in New Jersey.", path: "/states/new-jersey" });
 
 // The figure most readers arrive for. It is where the page opens, not a limit on it.
 const DEFAULT_MEASURE = "zhvi_sfr";
