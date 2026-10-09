@@ -685,6 +685,10 @@ and the three entries below are one chain: nothing after the first can start bef
   exist; what is missing is a place to run it, since the site is static, and a judge,
   which is a paid call the visitor would supply a key for. The deterministic half needs
   neither and is the honest place to start. **Trigger: the owner schedules it.**
+- **A model-comparison page** — dropped from Milestone 31 by the owner on 2026-09-30;
+  `reports/evaluation/` and the readings side-by-sides cover it in Markdown. If revived:
+  one page from the latest run, earlier runs listed but not merged, since their judging
+  differed. **Trigger: the owner revives it.**
 - **A Spanish edition** — a go / no-go study first: every definition, label and generated
   reading would need a translation kept in step with the English, so it is a standing
   cost rather than a one-off. **Trigger: the owner schedules the study.**
