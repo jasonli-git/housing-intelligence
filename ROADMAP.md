@@ -18,6 +18,12 @@ United States, where only New Jersey carries figures and the map says so. Expans
 New Jersey was deferred on 2026-09-07. Everything it runs on — the warehouse schema, the
 analytics layer, the packet contract — is what Version 1 built.
 
+**Version 3 is complete — declared by the owner on 2026-10-09.** Milestones 24–52 have
+shipped, between 2026-09-23 and 2026-10-08; 44 (evictions) stays gated on data access and
+does not hold the version open. **Version 4 is optional research**, not a condition of the
+platform being finished: 53–55 are built only if the owner chooses one. Work after
+Version 3 is polish and reliability, tracked in [TODO.md](TODO.md).
+
 Two milestones ran out of numeric order. Milestone 9 was built before Milestone 5,
 because it corrects numbers the dashboard displays and fixing them afterwards would have
 meant re-checking every chart. Milestone 8 closed last, on 2026-08-14: eight local models
@@ -398,7 +404,7 @@ later.
   it to answer; measured on 2026-09-18 and answered under "The file cap, measured" below,
   where it belongs — it constrains expansion and nothing in Versions 3 or 4.
 
-## Version 3 Milestones (current, complete, and checkable)
+## Version 3 Milestones (current, complete, and checkable) — complete 2026-10-09
 
 **Scheduled 2026-09-18 from the owner's draft; restructured 2026-09-23.** Version 2
 finished the *reach* of the platform — where it runs, what writes its prose, what it looks
@@ -516,6 +522,10 @@ written; this table resolves them.
 
 ## Version 4 Milestones (what the platform is willing to claim)
 
+**Optional since 2026-10-09.** The owner declared Version 3 complete and the platform
+finished without these; each milestone below is research to take up by choice, not
+remaining work.
+
 Was Version 5 until 2026-09-23. Every milestone here would publish a figure that is
 modelled rather than measured, so each has to meet principle 11 — labelled, dated, with
 its method, its validation, its uncertainty and a path back to the observations beneath
@@ -563,6 +573,7 @@ Append one row per run, never rewriting one. The first is Milestone 27's.
 | 2026-09-26 | Milestone 27 | First run ([report](reports/completeness/2026-09-26.md)). **Geographic:** 38 metrics; 27 reach municipalities, 22 of them at least 95% of the 564 — home values 388 and rents 188, at the newest month. **Temporal:** 16 sources — 10 current, 1 pending (HUD's FY2027 Fair Market Rents, in force 2026-10-01), 5 revalidated or pinned rather than discovered. **Subject:** 6 of 9 held; assistance, hazards and access are not. **Statistical quality:** a match method on every observation, and ZHVI and ZORI partly matched to municipalities by name (40% and 37%); no margins of error, sample counts or suppression flags loaded. **Usability:** 10 of 17 fixed reader questions answered; the other 7 are neither answered nor declined on the site — the questions decided against on 2026-09-13 are recorded here, not said to a reader. **Reuse rights:** 10 of 16 sources public domain; FRED, the three NJ sources and both Zillow indexes leave at least one use unverified. |
 | 2026-09-26 | Milestone 28 | Second run ([report](reports/completeness/2026-09-26-2.md)). **Statistical quality** is the one dimension that moved: margins of error on 10 metrics — the survey's seven, on 97–100% of their newest figures, and the three ratios on its income — where there were none; still no sample counts or suppression flags, and HUD's CHAS figures still carry no margins. Every other dimension is as Milestone 27 left it: 38 metrics, 6 of 9 subjects held, 10 of 17 reader questions answered, 10 of 16 sources public domain. |
 | 2026-10-08 | Correctness pass, item 7 | The check reads Milestone 47's community records (#355) ([report](reports/completeness/2026-10-08-2.md)). **Geographic:** 172 metrics; 140 reach municipalities, 84 of them at least 95% of the 564. **Temporal:** 47 sources — 22 current, 24 not tracked, 1 unreachable. **Subject:** 10 of 10 held; none not held. **Statistical quality:** match method on every observation, 2 metrics partly matched by name; margins of error on 66 metrics — the survey's and HUD's tabulation of it, and the ratios built on them; no sample counts. **Community records:** 12,210 in 5 components; 19 of 1,944 district results suppressed or not reported; 62 district areas with no NJDOE results record; 50 agencies reporting fewer than 12 months; 0 estimates without their 95% interval; 0 summaries without the 100/20 Mbps share. **Usability:** 17 of 20 fixed questions answered, 1 declined on the site, 2 neither. **Reuse rights:** 25 of 47 sources public domain; the rest carry at least one use the recorded licence leaves unverified. |
+| 2026-10-09 | Source watch (#360) | Re-fetched sources dated by their last download, TIGER discovered ([report](reports/completeness/2026-10-09.md)). **Temporal:** 48 sources — 38 current, 8 not tracked, 1 pending, 1 unreachable. Down from 24 not tracked: the eight left are imported or requested by hand, each on TODO's calendar but BPU's single 2025 order; TIGER2026 waits for review; HUD User's LIHTC page answers automated requests with an empty 202. Other dimensions unchanged. |
 
 ## Source register
 
