@@ -74,9 +74,12 @@ from hip.packets import (
 from hip.parcels import find_by_address as find_parcels_by_address
 from hip.publish import publish as run_publish
 from hip.refresh import AcquireReport
-from hip.removals import Removal, RemovalListUnavailable
+from hip.removals import Removal, RemovalListShrank, RemovalListUnavailable
 from hip.removals import read as read_removals
 from hip.removals import write as write_removals
+from hip.rollback import RollbackRefused
+from hip.rollback import plan as rollback_plan
+from hip.rollback import run as run_rollback
 from hip.sources.base import Discovery, Release, SourceAdapter, SourceError, redact
 from hip.sources.registry import (
     IMPLEMENTED,
@@ -295,7 +298,7 @@ def publish_command(
 
     try:
         result = run_publish(root)
-    except RemovalListUnavailable as error:
+    except (RemovalListUnavailable, RemovalListShrank) as error:
         typer.secho(f"Not published: {error}", fg=typer.colors.RED)
         raise typer.Exit(1) from error
 
@@ -305,6 +308,48 @@ def publish_command(
         # Overwhelmingly explanations: only the 21 counties have one.
         typer.echo(f"{len(result.skipped):>7,} skipped (404, mostly explanations)")
     typer.secho(f"published to {root}", fg=typer.colors.GREEN)
+
+
+@app.command("rollback")
+def rollback_command(
+    remote: Annotated[str, typer.Option(help="The rclone remote for R2.")] = "r2",
+    bucket: Annotated[str, typer.Option(help="The live artifact bucket.")] = (
+        "housing-artifacts"
+    ),
+    backup: Annotated[str, typer.Option(help="The private backup bucket.")] = (
+        "housing-artifacts-previous"
+    ),
+    yes: Annotated[
+        bool,
+        typer.Option("--yes", help="Restore, rather than only say what would happen."),
+    ] = False,
+) -> None:
+    """Restore the published data to the build before the last deploy (#359).
+
+    Refuses if the Daniel's Law removal list has changed since that build. Restores the
+    R2 half only; the pages are rolled back in Cloudflare's dashboard, as it prints.
+    """
+    settings = get_settings()
+    try:
+        planned = rollback_plan(remote, bucket, backup, settings.removals_file)
+    except (RollbackRefused, RemovalListUnavailable) as error:
+        typer.secho(f"Not rolled back: {error}", fg=typer.colors.RED)
+        raise typer.Exit(1) from error
+    typer.echo(
+        f"restores build {planned.built}: {planned.restore:,} files back from {backup}"
+    )
+    typer.echo(f"and deletes {len(planned.delete):,} files the last deploy added")
+    if not yes:
+        typer.echo("Nothing changed. Run again with --yes to restore.")
+        return
+    run_rollback(remote, bucket, backup, planned)
+    typer.secho(f"data restored to build {planned.built}", fg=typer.colors.GREEN)
+    typer.echo(
+        "Now roll the pages back to match: Cloudflare dashboard → Workers & Pages → "
+        "housing-intelligence → Deployments → the production deployment before the "
+        f"last one (built around {planned.built}) → Rollback. Then `make check-live` "
+        "against a dist/ of that build, or spot-check the site."
+    )
 
 
 @app.command("remove-address")

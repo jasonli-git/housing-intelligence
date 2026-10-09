@@ -1,5 +1,7 @@
 """M42 read-only API coverage against a loaded local warehouse."""
 
+from datetime import date
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -94,6 +96,8 @@ def test_county_water_has_separate_measurements_inventory_and_violations(
 
 def test_freshness_dates_samples_not_downloads(county: dict) -> None:
     sources = {s["source_id"]: s for s in client.get("/freshness").json()["sources"]}
-    assert sources["eia861"]["period_observed_end"] == "2024-12-31"
+    # A survey year's end, not the download date: EIA-861 for year Y lands late in Y+1.
+    eia_end = sources["eia861"]["period_observed_end"]
+    assert eia_end.endswith("-12-31") and eia_end < date.today().isoformat()
     assert sources["doe_lead"]["period_observed_end"] == "2022-12-31"
     assert sources["epa_ucmr5"]["period_observed_end"].startswith("2026-")

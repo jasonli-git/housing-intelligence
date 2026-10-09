@@ -266,35 +266,10 @@ Not open work: each comes round on a date. The steps live where the row says.
       worked by hand on 2026-10-02; a county moving its search would leave a dead link
       until someone notices. `check-live` could request each, at the cost of 21 requests
       to county servers per deploy.
-- [ ] **A removal list deleted inside iCloud reads as "no removals".** (#296) Publishing
-      refuses when the list's folder is missing or the file is an undownloaded
-      placeholder, but a list deleted outright (iCloud keeps it 30 days in Recently
-      Deleted) looks like the state before the first notice. A count of withdrawals
-      recorded in the published manifest, checked against the next publish, would catch
-      it.
-
 - [ ] **The site's status link cannot say when a check last succeeded.** (PR #45, #251)
       It names the Friday schedule and the build date; a quiet Friday that found nothing
       leaves the build date where it was, and nothing published records the run itself.
       Publishing the last successful check apart from the snapshot would let it say so.
-- [ ] **`npm run build` alone points report links at localhost.** (PR #45) Without
-      `NEXT_PUBLIC_ARTIFACT_URL` the Markdown-report link falls back to the local API;
-      `make publish` sets it, so the deployed site is right, but a bare build warns and
-      is wrong.
-- [ ] **The published data files cannot be rolled back.** (raised 2026-09-26) `make
-      publish` deletes the previous `dist/`, and `rclone sync` overwrites R2 in place, so
-      only the Pages site has a previous deployment to return to — and rolling back the
-      site alone would leave it beside the new artifacts. Keeping the last good build
-      (or versioned artifact paths) would give both halves a way back.
-
-- [ ] **Nothing stops `/afford` from acquiring a second price source.** (found
-      2026-09-20) The comparison page reads `latest("zhvi_sfr", …)` directly rather than
-      going through the warehouse ratios, so the test that keeps the transaction median
-      out of `price_to_income` does not protect it — a map mixing Zillow-priced and
-      deed-priced towns would render without failing anything. Verified Zillow-only on
-      2026-09-20 by reading `web/app/afford/page.tsx`; that is a fact about today, not a
-      guard.
-
 ### Documentation upkeep
 
 - [ ] **Which README figures are mechanically derivable has never been settled.** The
@@ -322,14 +297,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       a DMARC record, which the domain has none of, starting at `p=none` with reports,
       so mail sent as the domain is harder to spoof. Test a reply from each address to
       an outside account before relying on it.
-- [ ] **Nothing runs `ruff` automatically.** `make lint` exists and is run by hand, so
-      a violation reaches `main` whenever someone runs `make test` or `make test-all`
-      and stops there —
-      which happened on 2026-09-19, when the README features check landed in 0.18.x with
-      an E501 and was only caught by the next milestone. Options considered and not
-      chosen yet: a test that shells out to `ruff check`, which couples the suite to a
-      linter version; or CI, which the repository does not have. Recorded rather than
-      decided.
 - [ ] **`hip check-config` exits 1 on a clean checkout** because three source API keys
       are unset. (M0) Correct behaviour, but it means `check-config` cannot be wired into
       `make lint` or CI until the keys exist.

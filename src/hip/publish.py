@@ -42,7 +42,9 @@ from sqlalchemy import text
 from hip.api.main import app
 from hip.config import get_settings
 from hip.parcels import export as export_parcels
+from hip.removals import check_not_shrunk as check_removals_not_shrunk
 from hip.removals import read as read_removals
+from hip.removals import record as record_removals
 from hip.removals import require as require_removals
 from hip.sources.base import read_discovery
 from hip.warehouse.db import get_engine
@@ -348,7 +350,11 @@ def publish(root: Path) -> Result:
     """
     # Before anything renders: a publish that cannot read the Daniel's Law removal list
     # would put withdrawn addresses back, so it stops here rather than an hour in (#296).
-    require_removals(get_settings().removals_file)
+    removals_file = get_settings().removals_file
+    require_removals(removals_file)
+    # Nor if the list has lost an entry an earlier publish honoured (#359).
+    removals = read_removals(removals_file)
+    check_removals_not_shrunk(removals_file, removals)
     with get_engine().connect() as conn:
         region_ids = _regions_with_data(conn)
         keys = _ranking_keys(conn)
@@ -414,7 +420,7 @@ def publish(root: Path) -> Result:
             tax_year=int(discovery.newest),
             # Daniel's Law withdrawals (Milestone 38): left out of the town files and
             # the street index alike.
-            removals=read_removals(settings.removals_file),
+            removals=removals,
         ):
             result.artifacts.append(
                 Artifact(
@@ -425,11 +431,14 @@ def publish(root: Path) -> Result:
                 )
             )
 
-    _write_manifest(result)
+    built = _write_manifest(result)
+    # What this build honoured, so the next publish can tell if the list shrinks and a
+    # rollback can tell whether restoring it would bring an address back (#359).
+    record_removals(removals_file, removals, built)
     return result
 
 
-def _write_manifest(result: Result) -> None:
+def _write_manifest(result: Result) -> str:
     """Record what was published, with hashes, and what deliberately was not.
 
     Hashes are for verification and drift detection, not for cache-busting: the artifact
@@ -437,8 +446,9 @@ def _write_manifest(result: Result) -> None:
     is reachable at the path its endpoint implies. A content-addressed URL would defeat
     that.
     """
+    built = datetime.now(UTC).isoformat(timespec="seconds")
     manifest = {
-        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "generated_at": built,
         "windows": list(PUBLISHED_WINDOWS),
         "artifact_count": len(result.artifacts),
         "total_bytes": result.total_bytes,
@@ -455,3 +465,4 @@ def _write_manifest(result: Result) -> None:
     (result.root / "manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
     )
+    return built

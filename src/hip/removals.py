@@ -19,11 +19,20 @@ disclosure (ARCHITECTURE #295, #296).
 withdrawn address again, so the list's folder must exist and the file must be on disk,
 not an iCloud placeholder still to download; `require` says which. Before the first
 notice the folder exists and the file does not, which is the one state read as "none".
+
+**Nor may it shrink unnoticed** (#359). A list deleted inside iCloud, or an entry lost to
+an edit, looks like the state before the first notice. So each publish records which
+entries it honoured in a ledger beside the list — a short hash of each, never the
+address — and the next publish refuses if any of them is gone, unless lifting one was
+meant (`HIP_ALLOW_REMOVAL_SHRINK=1`). The same ledger lets a rollback refuse to restore
+a build that predates a removal (`hip.rollback`).
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -44,6 +53,93 @@ class Removal:
 
 class RemovalListUnavailable(RuntimeError):
     """The removal list cannot be read, so publishing could put addresses back."""
+
+
+class RemovalListShrank(RuntimeError):
+    """Entries an earlier publish honoured are missing from the list."""
+
+
+# Builds remembered in the ledger: enough to roll back past several deploys.
+LEDGER_KEEP = 20
+
+
+def ledger_path(path: Path) -> Path:
+    """The ledger of what each publish honoured, beside the list in its private folder."""
+    return path.with_name(f"{path.stem}.published.json")
+
+
+def _key(removal: Removal) -> str:
+    """A short hash of one entry's parcel and address: enough to tell entries apart,
+    not to read an address back from the ledger."""
+    identity = [
+        removal.geoid,
+        removal.block,
+        removal.lot,
+        removal.qualifier,
+        removal.number,
+        removal.street,
+    ]
+    return hashlib.sha256(json.dumps(identity).encode()).hexdigest()[:16]
+
+
+def fingerprint(removals: list[Removal]) -> str:
+    """One hash for the whole list, the same whatever order its entries are in."""
+    keys = ",".join(sorted(_key(r) for r in removals))
+    return hashlib.sha256(keys.encode()).hexdigest()
+
+
+def _ledger(path: Path) -> list[dict[str, object]]:
+    ledger = ledger_path(path)
+    if not ledger.exists():
+        return []
+    entries = json.loads(ledger.read_text())
+    if not isinstance(entries, list):
+        raise RemovalListUnavailable(f"{ledger.name} is not a list of publishes")
+    return entries
+
+
+def check_not_shrunk(path: Path, removals: list[Removal]) -> None:
+    """Refuse if any entry the last publish honoured is missing from `removals`."""
+    entries = _ledger(path)
+    if not entries:
+        return
+    keys = entries[-1].get("keys")
+    if not isinstance(keys, list):
+        raise RemovalListUnavailable(f"{ledger_path(path).name} has no keys to check")
+    honoured = {str(k) for k in keys}
+    missing = honoured - {_key(r) for r in removals}
+    if missing and os.environ.get("HIP_ALLOW_REMOVAL_SHRINK") != "1":
+        one = len(missing) == 1
+        raise RemovalListShrank(
+            f"{len(missing)} entr{'y' if one else 'ies'} the last publish "
+            f"({entries[-1]['built']}) withdrew {'is' if one else 'are'} no "
+            f"longer in {path.name}. Publishing would put those addresses back. If the "
+            "file was deleted or overwritten, restore it from iCloud Drive's Recently "
+            "Deleted or a backup; if a removal was lifted on purpose, publish with "
+            "HIP_ALLOW_REMOVAL_SHRINK=1."
+        )
+
+
+def record(path: Path, removals: list[Removal], built: str) -> None:
+    """Note that the build stamped `built` honoured exactly `removals`."""
+    entries = _ledger(path)
+    entries.append(
+        {
+            "built": built,
+            "count": len(removals),
+            "fingerprint": fingerprint(removals),
+            "keys": sorted(_key(r) for r in removals),
+        }
+    )
+    ledger_path(path).write_text(json.dumps(entries[-LEDGER_KEEP:], indent=2) + "\n")
+
+
+def honoured_by(path: Path, built: str) -> str | None:
+    """The fingerprint of the list the build stamped `built` honoured, if recorded."""
+    for entry in reversed(_ledger(path)):
+        if entry["built"] == built:
+            return str(entry["fingerprint"])
+    return None
 
 
 def require(path: Path) -> None:
