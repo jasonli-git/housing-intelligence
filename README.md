@@ -323,7 +323,7 @@ against [ROADMAP.md](ROADMAP.md) rather than believed.
 - **Accessibility audit** (M43, built) — a skip link, keyboard and button alternatives for
   the maps and moving banners, contrast and target-size fixes, 320px reflow, and a
   repeatable audit (`npm run check:a11y`); rule-based checks before moving replace the
-  AI-written answer. Screen-reader and real-device review are still open.
+  AI-written answer.
 - **Utilities and what's in the pipes** (M42, built) — on county, town and ZIP pages,
   the electric and gas suppliers serving the place, each electric utility's residential
   price and outage record, county energy burden, and for each water system its lead

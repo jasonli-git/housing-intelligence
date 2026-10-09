@@ -26,8 +26,9 @@ export const STATUS_COPY: Record<FreshnessStatus, { label: string; means: string
   pending: {
     label: "Newer release waiting",
     means:
-      "When this page was built, the publisher had released a newer edition that had not " +
-      "taken effect yet. The site keeps showing the edition in force until it does.",
+      "When this page was built, the publisher had released a newer edition the site does " +
+      "not use yet: it takes effect on a later date, or it is reviewed by hand first. The " +
+      "site keeps showing the edition it has until then.",
   },
   unreachable: {
     label: "Could not reach",

@@ -129,7 +129,9 @@ class AcquireReport:
         return not self.failures and not self.unreachable and not self.undiscovered
 
 
-def _revalidation_record(source_id: str, fetched: list[Release]) -> Discovery | None:
+def _revalidation_record(
+    source_id: str, fetched: list[Release], recorded: Discovery | None = None
+) -> Discovery | None:
     """When the publisher of a source that always serves "the current file" was last
     asked whether it changed (#222, #350).
 
@@ -139,12 +141,25 @@ def _revalidation_record(source_id: str, fetched: list[Release]) -> Discovery | 
     reached the publisher and heard "unchanged", now records the check like a
     discovery. A source with any dated release is left alone: its record is
     `discover()`'s, and its `newest` names a release this would not know.
+
+    A source whose publisher sends no validators is re-fetched only once its copy is
+    older than `revalidate_after` (7 or 30 days), so most weeks nobody is asked and
+    nothing is recorded. Until its first re-fetch after #350 it had no record at all,
+    and 17 sources that are in fact re-fetched read "not tracked" (#360). With no
+    record yet, the last download is the last time the publisher was asked, so that is
+    what is recorded: dated by the download, never by this run.
     """
     if not fetched or not all(r.ref.mutable for r in fetched):
         return None
     asked = [r for r in fetched if not r.from_cache or r.revalidation != "not_asked"]
     if not asked:
-        return None
+        if recorded is not None:
+            return None
+        return Discovery(
+            source_id=source_id,
+            newest=fetched[0].ref.vintage,
+            checked_at=max(r.fetched_at for r in fetched),
+        )
     reached = all(r.revalidation != "unreachable" for r in asked)
     return Discovery(
         source_id=source_id,
@@ -225,10 +240,19 @@ def acquire(
                     yield adapter, adapter.fetch(child, raw_dir=raw_dir, force=force)
                 except (SourceError, OSError) as exc:
                     yield adapter, RefFailure.of(adapter.source_id, child.key, exc)
+        # A hand-imported file says when the owner copied it in, not when anyone asked
+        # the publisher, so a manual source gets no record from this.
         if (
             vintage is None
             and discovery is None
-            and (checked := _revalidation_record(adapter.source_id, fetched))
+            and not adapter.manual
+            and (
+                checked := _revalidation_record(
+                    adapter.source_id,
+                    fetched,
+                    read_discovery(raw_dir, adapter.source_id),
+                )
+            )
         ):
             write_discovery(raw_dir, checked)
 

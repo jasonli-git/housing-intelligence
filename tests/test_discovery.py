@@ -32,6 +32,7 @@ from hip.sources.irs_migration import MigrationAdapter, year_pairs
 from hip.sources.nj_sr1a import Sr1aAdapter, vintages
 from hip.sources.nj_tax_rates import NjTaxRatesAdapter
 from hip.sources.registry import build_adapter
+from hip.sources.tiger import TigerAdapter
 
 TODAY = date(2026, 9, 23)
 
@@ -503,3 +504,34 @@ def test_staging_receives_the_recorded_tax_year(tmp_path: Path) -> None:
         Discovery("nj_modiv", "2024", datetime(2026, 9, 23, tzinfo=UTC)),
     )
     assert _modiv_tax_year(tmp_path) == 2024
+
+
+# ----------------------------------------------------------------------- TIGER ---
+
+
+def test_a_newer_tiger_year_waits_and_the_pinned_one_stays_in_use() -> None:
+    """A new TIGER year redraws every region, so it is reported, never adopted (#360)."""
+    adapter = TigerAdapter(states=["NJ"])
+    adapter.probe_transport = _publisher({"TIGER2026/COUNTY/tl_2026_us_county": _ok()})
+
+    found = adapter.discover(TODAY)
+
+    assert (found.newest, found.pending, found.outcome) == ("2025", "2026", "confirmed")
+    assert found.pending_reason
+    assert {r.vintage for r in adapter.refs()} == {"2025"}
+
+
+def test_no_newer_tiger_year_is_current() -> None:
+    adapter = TigerAdapter(states=["NJ"])
+    adapter.probe_transport = _publisher({})
+
+    found = adapter.discover(TODAY)
+
+    assert (found.newest, found.pending, found.outcome) == ("2025", None, "confirmed")
+
+
+def test_an_unreachable_census_is_not_no_newer_tiger_year() -> None:
+    adapter = TigerAdapter(states=["NJ"])
+    adapter.probe_transport = _publisher({"TIGER2026": httpx.ConnectError("no route")})
+
+    assert adapter.discover(TODAY).outcome == "unreachable"
