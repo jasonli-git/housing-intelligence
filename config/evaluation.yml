@@ -341,6 +341,48 @@ cohorts:
         input_usd_per_mtok: 0.10
         output_usd_per_mtok: 0.50
 
+  # OpenAI, added 2026-10-08 for `v4`: GPT-6 Luna, a second US provider at Haiku's
+  # price. Probed that day: the ref is served under exactly this name, which the
+  # response repeats, so the substitution guard passes. It takes no temperature while it
+  # reasons (any value but 1 is HTTP 400), so like Haiku it is sampled at its provider's
+  # own setting and the report states it. `none` reasoning is offered as `disabled`, a
+  # hard off; `minimal` is refused. $0.10 / $0.50 per million tokens for prompts to
+  # 272,000 tokens, $0.05 / $0.25 on Flex, from OpenAI's pricing page on 2026-10-08.
+  openai:
+    runner: hosted
+    provider: openai
+    api_key_env: OPENAI_API_KEY
+    generation_limits:
+      context_tokens: 65536
+      max_output_tokens: 24000
+    # The same bargain as Gemini's (ARCHITECTURE #259): `service_tier: flex` on the
+    # synchronous call bills at half, and the response names the tier that served it.
+    generation_tier: flex
+    tier_rates:
+      flex: 0.5
+    endpoint: https://api.openai.com/v1
+    models:
+      - id: gpt-6-luna
+        ref: gpt-6-luna
+        label: GPT-6 Luna
+        quantization: hosted
+        input_usd_per_mtok: 0.10
+        output_usd_per_mtok: 0.50
+      - id: gpt-6-luna-low
+        ref: gpt-6-luna
+        label: GPT-6 Luna (low reasoning)
+        quantization: hosted
+        reasoning_effort: low
+        input_usd_per_mtok: 0.10
+        output_usd_per_mtok: 0.50
+      - id: gpt-6-luna-nothink
+        ref: gpt-6-luna
+        label: GPT-6 Luna (no reasoning)
+        quantization: hosted
+        reasoning_effort: disabled
+        input_usd_per_mtok: 0.10
+        output_usd_per_mtok: 0.50
+
   # Mistral (the EU tier, Milestones 12-22) and Qwen through Alibaba Cloud Model Studio
   # (a second China tier, `v3`) were removed by the owner on 2026-10-08: neither had
   # written a reading since September — Mistral Small 4 scored below the local model in

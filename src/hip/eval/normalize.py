@@ -76,6 +76,13 @@ _REFUSAL_MARKERS = (
     "insufficient",
     "outside the packet",
     "not supported by",
+    # GPT-6 Luna's wording in `v4` (2026-10-08): "The packet does not report median
+    # household income for 1985 … so it cannot establish the crisis's effect". It
+    # declined all three times and was counted 0/3 until these were added.
+    "does not report",
+    "doesn't report",
+    "cannot establish",
+    "can't establish",
 )
 
 # Above this, the model is writing an essay; any disclaimer inside it is a hedge

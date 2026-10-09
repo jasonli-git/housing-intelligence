@@ -209,6 +209,10 @@ def test_both_runtimes_yield_the_same_answer_for_the_same_model() -> None:
         "The packet does not contain data for 1985.",
         "I cannot answer that from this packet.",
         "No information about 2008 permits is available in the packet.",
+        # GPT-6 Luna, `v4` (2026-10-08).
+        "The packet does not report median household income for 1985 or construction "
+        "permits around the 2008 financial crisis, so it cannot establish the crisis's "
+        "effect on local permits.",
     ],
 )
 def test_declines_are_recognized(text: str) -> None:
