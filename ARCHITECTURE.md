@@ -1171,6 +1171,11 @@ Accepted for Version 1, written down so they are not rediscovered as bugs.
   margins into the packets (#240); the packets, the readings and the Markdown report
   carry no margins until then.
 - **ZIP-level metrics are allocated, not observed** (see the schema section).
+- **Zillow's home value reaches 388 of 564 municipalities** — a ceiling of Zillow's
+  coverage, not a matching bug. MOD-IV's codes give a crosswalk, but routing Zillow
+  through it needs a Zillow-name-to-code mapping MOD-IV does not supply. The ACS covers
+  all 564, and since Milestone 25 a town without a Zillow value is priced from its
+  recorded sales where it has them (#187).
 - **Parcel data is not queryable through the API** (#16). All 3.48M NJ parcels exist in
   Parquet and DuckDB; only six municipality-level aggregates reach Postgres. There is no
   parcel endpoint and no parcel map layer.

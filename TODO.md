@@ -14,6 +14,15 @@ record lives in CHANGELOG or ARCHITECTURE — one of which hid an open decision,
 under Open decisions. The rest were checked and, where they had drifted, rewritten. The
 removed entries are in `git show ca49f74:TODO.md`.
 
+**Triaged on 2026-10-09**, with the owner: ten dated chores moved into the Calendar
+table under Open, and seven items closed — two the code had already done (ZIP pages'
+insurance and utility figures, and the housing-stock tables, both Milestone 34), two
+overtaken (the lost `import_gguf.sh`, since generation is hosted only, #345; a batch path
+for Haiku, since GPT-6 Luna heads the list on Flex at half price, #352), and three that
+were records rather than work, moved to the file that owns each (Zillow's coverage
+ceiling and parcel geometry to ARCHITECTURE's limitations, the model-comparison page to
+ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
+
 ## Now — correctness pass complete (2026-10-09)
 
 Milestone 52 shipped as 0.50.0. The owner held Version 4 and chose the correctness and
@@ -28,6 +37,23 @@ choose; Version 4 stays held.
 Every open item, wherever the work originated. The tag in parentheses is where it was
 first raised, not where it must be done.
 
+### Calendar — dated and recurring chores
+
+Not open work: each comes round on a date. The steps live where the row says.
+
+| When | Chore | Steps |
+|---|---|---|
+| Each January | Re-read the publishers' release calendars (BLS's ends 2026-12-30, Zillow's 2026-12-17; FHFA, PEP and HUD's run to 2027); add the ACS edition's date when announced (#298) | `config/sources.yml` `release_calendar` |
+| 2027-01-01 | Gemini 3.6–3.8 Flash's introductory price ends: $1.50 / $7.50 per million tokens (Flex half); update `config/evaluation.yml` the same day | — |
+| Each quarter | Look at DCA's Construction Reporter, stopped at January 2026 while DCA overhauls it; discovery picks up the yearly summary (usually July) on its own, and a changed layout is refused (#300) | `config/sources.yml` `nj_construction` |
+| About December 2026 | SAIPE's 2025 income estimates extend the long-run comparison past 2024 (#348) | automatic on refresh |
+| With each CHAS release (about a year after 2025-12-23) | Download the county and town ZIPs and the dictionary; review Table 8; add to `CHAS_BULK_REVIEWED` (#353) | `config/sources.yml` `hud_chas_bulk` |
+| Spring 2027 | LIHTC 2025: download by hand to `data/manual/hud_lihtc/LIHTCPUB_2025.xlsx`, then `hip acquire --source hud_lihtc --vintage 2025` (#307) | `agent-handoffs/affordable-housing-assistance.md` |
+| About June 2027 | Request the four utilities' 2026 reliability reports from BPU's Records Custodian; review each table into `REPORTS` (#347) | `config/sources.yml` `nj_bpu_reports` |
+| Late summer each year | Add NCES's next district directory to `CCD_LEA`; `DISTRICT_SUCCESSORS` is rechecked on read, and its rows can go once NJOGIS redraws the Henry Hudson merger (#356) | `hip.sources.community` |
+| 2027-10-01 | Re-read the cost rules in `web/lib/costRules.ts` (HUD's FHA premiums, NJ's transfer fees, the CFPB's closing range, Freddie Mac's mortgage-insurance range), or sooner on a HUD mortgagee letter on premiums | `web/lib/costRules.ts` |
+| Before it expires | Renew the restricted OpenAI key (List models: Read; Chat completions: Request) and replace `OPENAI_API_KEY` in `.env`; $5 prepaid, auto-recharge off (#351) | OpenAI console |
+
 ### Correctness and data integrity
 
 - [ ] **Hudson's long-run comparison is withheld.** (M52, #348) FHFA's index over SAIPE
@@ -35,27 +61,10 @@ first raised, not where it must be done.
       Hudson's mix leans to condominiums, which FHFA's mortgage-based index and Zillow's
       typical value weigh differently. Revisit if a later year brings them into line, or
       decide whether a disagreement of a few points near zero should withhold at all.
-- [ ] **The long-run comparison stops at the latest income year.** (M52) FHFA's county
-      index reaches 2025 and SAIPE 2024, so the comparison ends in 2024 until SAIPE's
-      2025 estimates (about December 2026).
-- [ ] **NCES's district directory is added by hand each school year.** (#356) The
-      2024-25 file is reviewed. When NCES posts the next (its preliminary directory
-      usually comes out in late summer), add its URL to `CCD_LEA` in
-      `hip.sources.community`; `DISTRICT_SUCCESSORS` is rechecked against it on read and
-      refuses the file if a merger no longer reads as one. If NJOGIS redraws the Henry
-      Hudson Regional merger on its boundary map, the three successor rows become unused
-      and can be removed.
 - [ ] **Crime newer than 2023.** (M47, #320) NJSP's newer reporting route warns a zero
       can be delinquent reporting; audit its missing-report codes and schema before
       replacing the reviewed 2023 workbook. A town's own figures need an evidenced
       agency-to-municipality crosswalk, not names.
-- [ ] **BPU's reliability reports are requested each spring.** (M42, #347) The 2024 and
-      2025 reports for all four electric utilities came from OPRA request C263585
-      (2026-10-08). The 2026 reports are filed with BPU around the end of May 2027: then
-      request them from BPU's Records Custodian, drop them into
-      `data/manual/nj_bpu_reports/` under BPU's names, review each company-wide table and
-      add it to `REPORTS` in `hip.sources.nj_bpu`, then `hip acquire --source
-      nj_bpu_reports`.
 - [ ] **NJDEP's public lead-line layer stops at the 2024 submission**, though statewide
       2025 totals exist. (M42) The owner asked NJDEP's lead-in-drinking-water program;
       Brandon Carreno (Division of Water Supply & Geoscience) replied 2026-10-08 that the
@@ -68,21 +77,6 @@ first raised, not where it must be done.
 - [ ] **Five counties have no DOE energy burden.** (M42) Essex, Hudson, Middlesex,
       Monmouth and Somerset carry signed weights or costs in DOE's file; withheld, not
       zeroed, until DOE explains them.
-- [ ] **CHAS margins are downloaded by hand with each CHAS release.** (#353) HUD
-      published 2018–2022 on 2025-12-23; the next release usually follows about a year
-      later. When `hud_chas` discovers it, download the county (050) and minor civil
-      division (060) CSV ZIPs and the release's data dictionary from
-      https://www.huduser.gov/portal/datasets/cp.html into
-      `data/manual/hud_chas_bulk/`, check Table 8's columns against the dictionary, add
-      the release to `CHAS_BULK_REVIEWED` in `hip.sources.hud`, then
-      `hip acquire --source hud_chas_bulk`. Until then the new figures read "no margin
-      available".
-- [ ] **LIHTC is downloaded by hand each spring.** (M41, #307) HUD's release page
-      answers scripts with an empty 202, so discovery reads `unreachable`. When HUD
-      publishes 2025 data (announced for spring 2027), download the ZIP, copy the
-      property workbook to `data/manual/hud_lihtc/LIHTCPUB_2025.xlsx`, and run
-      `hip acquire --source hud_lihtc --vintage 2025`; the handoff
-      (`agent-handoffs/affordable-housing-assistance.md`) has the full steps.
 - [ ] **Most of Morris County has no flood zone share.** (M40, #301) FEMA's digital map
       covers 14.6% of its homes and Atlantic's 53%; the share is withheld below 95%.
       Morris's paper FIRMs are not read. Re-check when FEMA's coverage moves: the page
@@ -97,13 +91,6 @@ first raised, not where it must be done.
       its rounded coordinates, would settle them; recheck when OpenFEMA's dictionary
       changes.
 
-- [ ] **DCA's Construction Reporter has stopped at January 2026.** (M39, #300) DCA says
-      the program is being overhauled. When its 2025 yearly summary posts (one usually
-      does around July), discovery finds it and it replaces the preliminary year to date
-      on its own; if the overhaul changes the files' names or layout, the adapter
-      refuses rather than misreading. Worth a look each quarter.
-
-
 - [ ] **HUD income limits are dated by calendar year in the facts.** (found
       2026-09-23; #350) What a reader sees now names HUD's effective date — `/freshness`
       says "in force since 1 May 2026", the household section "in force from" — but
@@ -112,32 +99,15 @@ first raised, not where it must be done.
       effective date means anchoring `price_to_ami`'s pairing on each year's start and
       accepting windows that end in the following year ("2022–2027"). Owner's decision.
 
-
-
 ### Evaluation harness
 
-- [ ] **Haiku 5.5 states survey figures without their margins.** (#345) The first
-      regeneration under the `v4` list, 2026-10-08: of 21 county readings Haiku wrote 18,
-      7 of them only after a revision for a survey figure without its margin, and 3 were
-      refused for quoting a non-housing measure ('Households with children', 'People per
-      household') and fell to Gemini 3.8. Cost $0.11. Watch whether the prompt should say
-      so before the next full pass.
-- [ ] **A batch option for Haiku readings.** (#345, owner 2026-10-08) `hip explain`
-      calls Anthropic synchronously at the standard rate; its Batch API bills half
-      ($0.05 / $0.25 per million tokens). At today's 21 counties that saves about $1.60 a
-      year; at every published region, about $90. Open questions before building it:
-      - **Latency.** A batch can take up to 24 hours — `v4`'s judging batches took 7 h 24
-        min and about 2 h — so the Friday 08:00 refresh would wait on it before
-        publishing, or publish the old readings and pick the new ones up on a later run.
-      - **Revisions and fallthrough.** A refused answer goes back for a revision, then to
-        the next model on the list. In a batch each revision round is another batch, and
-        the regions that fall through to Gemini or DeepSeek go synchronously.
-      - **Precedent.** #259 chose Gemini's Flex tier over a batch path for the same
-        discount on a synchronous call; Anthropic has no Flex equivalent, so the trade
-        is waiting time against half the price.
-      - **Where it lives.** The judge already submits and collects Anthropic batches
-        (`hip.eval.judge`, with `--batch-id` recovery), which a batch path in
-        `hip explain` could reuse.
+- [ ] **Watch the first regeneration under GPT-6 Luna.** (#345, #352) Under Haiku, the
+      first regeneration of the `v4` list (2026-10-08) needed a revision on 7 of 18
+      readings for a survey figure stated without its margin, and 3 fell to Gemini for
+      quoting a non-housing measure. Luna heads the list since #352 and was benchmarked
+      on 15 answers, its weakest criterion completeness; the next full pass is its first
+      on live packets. Read its revisions and fallthroughs, and decide then whether the
+      prompt should name margins.
 
 - [ ] **A reading's claims without a figure go unchecked.** (#275, 2026-10-01) Gemini's
       test reading of Hudson said rents take "a particularly large share of household
@@ -152,14 +122,6 @@ first raised, not where it must be done.
       claim between measures named only in words is the same blind spot.
       A second case on the packets of Milestone 34 (`reports/evaluation/readings-v8.md`):
       Cumberland's reading called Zillow's home value a five-year survey estimate.
-
-- [ ] **`import_gguf.sh` was lost, so nothing in the repo rebuilds the local models.**
-      (M8 prep; found lost 2026-09-23) It and `kvbench.sh` lived in a `/private/tmp`
-      scratchpad and did not survive a reboot around 2026-09-15. The four
-      `bench-*` models in Ollama still work, so this matters only when one is next
-      imported — and then the script has to be rewritten with the passthrough-template
-      defect fixed (ARCHITECTURE #62). `kvbench.sh` is not needed: the KV-cache question it
-      served was settled without a change (#215).
 
 ### Test coverage
 
@@ -232,12 +194,6 @@ first raised, not where it must be done.
       `/states/new-jersey?mode=afford` links now forward to `/afford`, but the root
       address cannot, since `/` is a real page; a county page's `?mode=afford` shows
       the profile.
-- [ ] **Re-read the cost rules once a year.** (M33) `web/lib/costRules.ts` carries HUD's
-      FHA premiums, NJ's transfer and graduated fees, the CFPB's closing range and Freddie
-      Mac's mortgage-insurance range, each with `reviewed: 2026-10-01`. Next: 2027-10-01,
-      or when HUD issues a mortgagee letter on premiums.
-- [ ] **ZIP pages have no insurance or utility figures.** (M33, #279) The ACS is not
-      fetched by ZIP (Milestone 34), so a ZIP's cost card reads as a partial estimate.
 
 - [ ] **The paused-banner swipe and the atlas redesign are unverified on a real iPhone.**
       (PR #46, PR #48) Both were checked in Chromium only, the swipe with its touch
@@ -277,20 +233,15 @@ first raised, not where it must be done.
 
 - [ ] **The site does not say which questions it declines.** (M27 completeness run)
       ROADMAP decided on 2026-09-13 not to forecast prices or give investment advice,
-      and schedules schools, commutes and crime for Milestones 45–47 (flood risk was
-      answered by Milestone 40), but no page tells a reader; the check counts 6 of its
-      17 questions as neither answered nor declined. A short statement on the site would move them to declined.
+      but no page tells a reader, so the check counts those two of its 20 questions as
+      neither answered nor declined (2026-10-09). A short statement on the site would
+      move them to declined.
 - [ ] **Report a problem is on a region's two full metric tables only.** (M27, #221)
       The cost cards, the verdict sentence, the New Jersey rankings and `/afford` quote
       figures without it. ROADMAP's row asked for every figure.
 - [ ] **A figure's own history of values is not shown.** (M27, #224) `/changes`
       summarises each refresh; a region page neither marks a revised figure nor shows its
       earlier values, which `fact_revision` holds.
-
-- [ ] **A model-comparison page on the site.** Dropped from Milestone 31 by the owner
-      (2026-09-30); `reports/evaluation/v1.md`–`v3.md` and the readings side-by-sides cover
-      it in Markdown. If revived: one page from the latest run, earlier runs listed but
-      not merged, since their judging differed.
 
 ### Map performance — open leads (no release gate since #349)
 
@@ -346,17 +297,6 @@ first raised, not where it must be done.
 
 ### Documentation upkeep
 
-- [ ] **Re-read the publishers' release calendars before they run out.** (#298) Recorded
-      by hand on 2026-10-02 in `config/sources.yml`: BLS's ends 2026-12-30, Zillow's
-      2026-12-17, FHFA's 2027-11-30, the Census Bureau's population estimates May 2027,
-      HUD's rents 2027-10-01. Past the last date the page says "No date announced",
-      which is true but less useful. Check each January; add the ACS edition's date when
-      the Census Bureau announces it.
-- [ ] **Gemini Flash prices double on 2027-01-01.** Gemini 3.6–3.8 Flash's introductory
-      $0.75 / $3.75 per million tokens ends 2026-12-31 and becomes $1.50 / $7.50 (Flex
-      half of each). Update `config/evaluation.yml` that day, or `hip explain`'s cost
-      line will under-report by half.
-
 - [ ] **Which README figures are mechanically derivable has never been settled.** The
       status counts (regions, observations, metrics, sources), the Tech Stack, the
       evaluation table and the resource and storage figures all have a queryable or
@@ -373,10 +313,6 @@ first raised, not where it must be done.
 
 ### Housekeeping
 
-- [ ] **Renew the OpenAI key before it expires.** (#351, 2026-10-08) A restricted
-      service-account key (List models: Read; Chat completions: Request) with the
-      expiry set at creation; renew in the OpenAI console and replace `OPENAI_API_KEY`
-      in `.env`. Credit: $5 prepaid, auto-recharge off.
 - [ ] **Nothing runs `ruff` automatically.** `make lint` exists and is run by hand, so
       a violation reaches `main` whenever someone runs `make test` or `make test-all`
       and stops there —
@@ -426,9 +362,9 @@ first raised, not where it must be done.
 - [ ] **The 21 committed county reports are a snapshot that goes stale silently.**
       (M6; restated 2026-09-27) `reports/**` is gitignored, but the three evaluation
       reports and the 21 county reports were force-added and are tracked. The county
-      reports were last regenerated on 2026-09-25, so they predate Milestone 28's
-      renter cost burden fix, and the weekly run leaves them alone (it packs without
-      `--report`, #227). Either regenerate and commit them whenever the data moves, or
+      reports were last regenerated on 2026-10-08 (#128, #129), by hand; the weekly run
+      leaves them alone (it packs without `--report`, #227), so they drift between
+      such passes. Either regenerate and commit them whenever the data moves, or
       stop tracking them and link the published reports. **Not decided.**
 - [ ] **Milestone 17's second user path needs a query the static tree cannot answer.**
       Someone evaluating a place they are moving to wants it compared against where they
@@ -463,12 +399,6 @@ first raised, not where it must be done.
       no tract page shows Census figures yet. Left out by decision on 2026-10-01; the
       adapter would take a `tract` level beside `county` and `cousub`.
 
-- [ ] **ACS housing-stock tables** — B25002 and B25003 landed in Milestone 21 as vacancy
-      and homeownership rates; **B25024 (units in structure) and B25034 (year built)
-      remain.** Same `CENSUS_API_KEY`, same adapter. Note the raw cache keys on the
-      layer, so a table needs a new layer (ARCHITECTURE #108) — "a `metrics.yml` entry
-      and a column" turned out wrong.
-      **Scheduled: Milestone 34.**
 - [ ] **FRED housing series** — `NJSTHPI` landed in Milestone 21 from FHFA's master file
       rather than FRED (ARCHITECTURE #109); **the three national series remain**: `HOUST`
       (housing starts), `RRVRUSQ156N` (rental vacancy), `MSPUS` (national median sale
@@ -480,16 +410,6 @@ first raised, not where it must be done.
       (#313), not how many jobs a place holds. LODES's workplace-area (WAC) file, or the
       origin–destination files already landed summed by workplace, would give a
       jobs-to-homes balance. Not scheduled.
-- [ ] **Zillow's home value reaches 388 of 564 municipalities (69%)** — a ceiling, not a
-      bug. (M2, updated at M7; recounted 2026-09-27, when it was 403 before) MOD-IV landed
-      and `region_identifiers` holds 554 NJ codes, so a crosswalk exists, but routing
-      Zillow through it still needs a Zillow-name-to-CD_CODE mapping MOD-IV does not
-      supply. ACS closed the gap to 564/564 separately, and since Milestone 25 a town
-      without a Zillow value is priced from its recorded sales where it has them.
-- [ ] **NJ Parcels geometry (`njgin_parcels`)** — **blocked.** No key needed, but the
-      REST path Milestone 7 uses returns attributes only, and the geometry for a parcel
-      map layer would be an enormous download.
-
 ## Parked / needs user input
 
 - [ ] **Revisit: donations or grants under the non-commercial decision?** (owner,
