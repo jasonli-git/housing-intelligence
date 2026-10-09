@@ -320,6 +320,8 @@ async function pageSamples() {
   // Milestone 37's property-tax lookup; its per-town files are artifacts, checked with
   // the rest of the manifest.
   samples.push({ label: "tax", route: "/tax" });
+  samples.push({ label: "terms", route: "/terms" });
+  samples.push({ label: "privacy", route: "/privacy" });
   return samples;
 }
 

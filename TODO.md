@@ -379,12 +379,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       `config/geography.yml` already warns the identifier system is expensive to change
       once fact rows reference it.
 
-- [ ] **The site owes FRED a sentence in a terms of use it doesn't have.** (M32,
-      #278) FRED's API terms: an application for other users must "explicitly state in
-      your application's terms of use that, by using your application, your users are
-      agreeing to be bound by the FRED® API Terms of Use". The site shows FRED's notice
-      and links its terms, but has no terms of use. A short terms page linked from the
-      footer, saying that and nothing it can't keep, settles it.
 - [ ] **The Markdown report does not carry each figure's kind or licence.** (M31) The
       report page and the CSV do, and the downloadable Markdown closes with the terms and
       notices and leaves display-only figures out (`render_report`). The kind and licence
