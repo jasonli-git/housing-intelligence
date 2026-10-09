@@ -176,11 +176,9 @@ Not open work: each comes round on a date. The steps live where the row says.
       value would compare a different measure from towns'. Needs a ZIP-level SR1A price
       (sales placed by their parcel's ZIP) or a decision to use another measure there.
 
-- [ ] **Accessibility still needs people, not scripts.** (M43, #309) Screen-reader
-      review with VoiceOver and Safari, and NVDA with Firefox or Chrome; a physical
-      iPhone; true 200% text and 400% zoom; print in Safari and Firefox; and axe's
-      remaining needs-review results. The handoff (`m43-accessibility-audit.md`) lists
-      each.
+- [ ] **Accessibility checks the audit script cannot make.** (M43, #309) True 200%
+      text and 400% zoom, print in Safari and Firefox, and axe's remaining needs-review
+      results. The handoff (`m43-accessibility-audit.md`) lists each.
 - [ ] **The home page's illustration loops with no pause control.** (M43, #309) Removed
       at the owner's request on 2026-10-05; WCAG 2.2.2 asks for one on anything that
       moves for more than five seconds. Reduced motion stops it. The New Jersey header
@@ -194,10 +192,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       address cannot, since `/` is a real page; a county page's `?mode=afford` shows
       the profile.
 
-- [ ] **The paused-banner swipe and the atlas redesign are unverified on a real iPhone.**
-      (PR #46, PR #48) Both were checked in Chromium only, the swipe with its touch
-      emulation; iOS Safari's scrolling, pointer events and sticky table headers differ
-      enough to be worth one pass on a device.
 - [ ] **15 municipality pages priced from deeds show a caveat about Zillow's home
       value.** (M25/#187, found 2026-09-21 while reviewing the region redesign) Where
       Zillow publishes no home value, the cost card is priced from SR1A transactions —
@@ -362,6 +356,12 @@ Not open work: each comes round on a date. The steps live where the row says.
       wants its own side-by-side.
 
 ## Parked / needs user input
+
+- [ ] **Measure load speed — parked by the owner 2026-10-09.** From the launch
+      checklist: the site's load speed has never been measured. When un-parked, run
+      Lighthouse on one page of each kind (home, county, town, ZIP, `/afford`, `/guide`)
+      and fix only what it flags. No photos to compress; the maps and the region JSON are
+      the likely weight.
 
 ### Data additions — parked by the owner 2026-10-09
 
