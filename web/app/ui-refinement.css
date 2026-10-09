@@ -70,10 +70,36 @@
   .quiet-nation .entry-free.computed { margin-top: .65rem; border-color: color-mix(in srgb, var(--series-3) 35%, var(--border)); background: color-mix(in srgb, var(--series-3) 6%, var(--surface-card)); }
   .quiet-nation .entry-free.computed > span { color: var(--text-primary); font-weight: 550; }
   .quiet-nation .entry-free.computed svg { stroke: var(--series-3); }
-  .national-benchmarks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
-  .quiet-nation .national-benchmarks .national-context { grid-template-columns: minmax(0, 1fr) auto; gap: .75rem; margin: 0; padding: .85rem 1rem; }
-  .quiet-nation .national-benchmarks .national-rate { padding-left: .85rem; max-width: 190px; }
-  @media (max-width: 850px) { .national-benchmarks { grid-template-columns: minmax(0, 1fr); } }
+  .national-backdrop { border-block: 1px solid var(--border); padding: 1rem 0 .7rem; }
+  .national-backdrop > header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
+  .national-backdrop h2 { margin: 0; font: 500 24px/1.2 Georgia, serif; letter-spacing: -.025em; }
+  .national-backdrop > header > span { color: var(--text-secondary); font: 500 10px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: .08em; }
+  .national-backdrop-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .national-benchmark { min-width: 0; padding: .3rem 1.5rem .3rem 0; }
+  .national-benchmark + .national-benchmark { border-left: 1px solid var(--border); padding-inline: 1.5rem 0; }
+  .national-benchmark h3 { margin: 0 0 .6rem; font: 500 15px/1.4 var(--font-text); }
+  .quiet-nation .national-backdrop .national-rate { display: flex; justify-content: space-between; justify-self: stretch; align-items: baseline; flex-wrap: wrap; gap: .4rem .8rem; width: 100%; max-width: none; padding: 0; border: 0; }
+  .quiet-nation .national-backdrop .national-rate > strong { font: 500 clamp(38px, 4vw, 52px)/1.05 Georgia, serif; letter-spacing: -.055em; }
+  .quiet-nation .national-backdrop .national-rate small { font-size: 11px; }
+  .national-backdrop .national-rate small a { color: var(--text-primary); text-decoration: underline; text-underline-offset: 3px; }
+  .national-benchmark-definition { margin-top: .4rem; font-size: 12px; color: var(--text-secondary); }
+  .national-trend { margin: .7rem 0 0; }
+  .national-trend-plot { display: grid; grid-template-columns: 45px minmax(0, 1fr); gap: .35rem; }
+  .national-trend-scale { display: flex; flex-direction: column; justify-content: space-between; padding-block: 14px; color: var(--text-secondary); font: 10px/1.2 var(--font-mono); }
+  .national-trend svg { display: block; width: 100%; height: 86px; overflow: visible; }
+  .national-trend-guide { stroke: var(--border); stroke-dasharray: 1 4; }
+  .national-trend-line { fill: none; stroke: var(--entry-accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .national-trend-dot { fill: var(--entry-accent); opacity: .5; }
+  .national-trend-end { fill: var(--entry-ink); stroke: var(--surface-card); stroke-width: 1.5; }
+  .national-trend figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .2rem .5rem; color: var(--text-secondary); font: 10px/1.4 var(--font-mono); }
+  .national-backdrop-note, .national-trend-unavailable { margin: .75rem 0 0; color: var(--text-secondary); font-size: 11px; line-height: 1.5; }
+  @media (max-width: 600px) {
+    .national-backdrop-grid { grid-template-columns: minmax(0, 1fr); }
+    .national-benchmark, .national-benchmark + .national-benchmark { padding: .35rem 0 .8rem; border-left: 0; }
+    .national-benchmark + .national-benchmark { border-top: 1px solid var(--border); padding-top: .9rem; }
+    .national-trend svg { height: 72px; }
+    .national-backdrop h2 { font-size: 22px; }
+  }
   .guide-page > .page-head .meta { max-width: 66ch; font-size: 15px; line-height: 1.6; }
   .guide-about > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-secondary); font-size: 13px; }
   .guide-page .decision-guide { gap: 1.25rem; margin-top: .9rem; }

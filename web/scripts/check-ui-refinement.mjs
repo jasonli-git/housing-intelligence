@@ -66,9 +66,20 @@ try {
   await page.getByRole('button', { name: 'Search for a place', exact: false }).click();
   await search.fill('');
   await search.blur();
-  const prices = page.locator('section', { has: page.getByRole('heading', { name: 'Home prices over the past year', exact: true }) });
+  const prices = page.locator('.national-benchmark', { has: page.getByRole('heading', { name: 'Home prices · past year', exact: true }) });
   assert.match(await prices.locator('.national-rate > strong').textContent(), /^[+-]?\d+\.\d%$/);
-  assert.match(await prices.locator('small').textContent(), /[A-Z][a-z]{2} \d{4} → [A-Z][a-z]{2} \d{4} · FHFA HPI/);
+  assert.match(await prices.locator('.national-rate small').textContent(), /[A-Z][a-z]{2} \d{4} → [A-Z][a-z]{2} \d{4} · FHFA HPI/);
+  assert.equal(await page.getByRole('heading', { name: 'The national backdrop', exact: true }).count(), 1);
+  assert.equal(await page.locator('.national-trend').count(), 2);
+  assert.equal(await page.locator('.national-trend-line').count(), 2);
+  assert(await page.locator('.national-trend-line').first().getAttribute('d'), 'Actual mortgage history drawn');
+  assert(await page.locator('.national-trend-line').last().getAttribute('d'), 'Actual annual price changes drawn');
+  for (const card of await page.locator('.national-benchmark').all()) {
+    const headline = Number((await card.locator('.national-rate > strong').textContent()).replace('%', ''));
+    const latest = Number((await card.locator('.national-trend-dot').last().locator('title').textContent()).split(': ')[1].replace('%', ''));
+    const digits = await card.getAttribute('aria-labelledby') === 'national-home-prices-heading' ? 1 : 2;
+    assert.equal(Number(latest.toFixed(digits)), Number(headline.toFixed(digits)), 'Latest plotted observation matches its headline');
+  }
   assert.equal(await prices.getByRole('link', { name: 'FHFA HPI®', exact: true }).getAttribute('href'), 'https://www.fhfa.gov/data/hpi/datasets?tab=monthly-data');
   assert.equal(await page.locator('.publisher-notice p').filter({ hasText: 'This product uses FHFA data but is neither endorsed nor certified by FHFA.' }).count(), 1, 'Required FHFA notice displayed once');
   const image = await page.locator('meta[property="og:image"]').getAttribute('content');
@@ -139,7 +150,7 @@ try {
         });
         await page.screenshot({ path: `${output}/us-landing-${width}.png` });
         await page.locator('.coverage-state-preview').screenshot({ path: `${output}/us-state-link-${width}.png` });
-        await page.locator('.national-benchmarks').screenshot({ path: `${output}/us-benchmarks-${width}.png` });
+        await page.locator('.national-backdrop').screenshot({ path: `${output}/us-benchmarks-${width}.png` });
         await page.locator('.foot-notice').scrollIntoViewIfNeeded();
         await page.screenshot({ path: `${output}/us-footer-${width}.png` });
         await page.locator('.foot-notice').screenshot({ path: `${output}/us-notice-${width}.png` });

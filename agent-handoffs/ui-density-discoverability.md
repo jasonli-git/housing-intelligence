@@ -16,7 +16,7 @@ Branch: `experiment/ui-density-discoverability`. Frontend experiment, not a mile
 - Match the Notice heading to the yellow shield. Make the large New Jersey title in the coverage preview an internal link with a small right arrow; remove the separate right-side “Explore New Jersey” button. Keep the map's other navigation links intact.
 - Approved national home-price follow-up: see `agent-handoffs/national-home-price-benchmark.md`. That bounded addition introduces a monthly national series and corrects FHFA attribution/cadence; the frontend-only/no-new-figures statements below describe the earlier UI pass, not this subsequent work.
 - Subsequent landing experiment combines place search and map in a search-first area; see `agent-handoffs/search-first-landing.md`. It supersedes the separate upper search and earlier free-badge-before-search adjacency without changing the badge's position below the tagline.
-- Landing hierarchy follow-up: reduce the tagline to a responsive 22–30px and soften its colour while retaining comfortable contrast. Strengthen the unchanged free-use badge with primary-colour text, a green check and faint green border/background. Keep its size and one-line mobile wording. A shared national-backdrop strip with short labels and real-data trends is only a proposed direction, not implemented.
+- Landing hierarchy follow-up: reduce the tagline to a responsive 22–30px and soften its colour while retaining comfortable contrast. Strengthen the unchanged free-use badge with primary-colour text, a green check and faint green border/background. Keep its size and one-line mobile wording. The subsequently approved shared metric strip and actual-data trends are documented in `agent-handoffs/national-backdrop.md`.
 
 ## Files/modules affected
 
