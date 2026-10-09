@@ -594,6 +594,10 @@ export const DEFINITIONS: Record<string, MetricDefinition> = {
     what: "What the National Flood Insurance Program paid for floods in the year, in that year’s dollars.",
     why: "How costly a flood year was here.",
   },
+  fema_flood_claims_unplaced: {
+    what: "Paid flood claims that may be this town’s but that FEMA’s records cannot place between it and a neighbour.",
+    why: "The most a town’s estimated claims could be short by.",
+  },
   njdep_sites_open: {
     what: "Contaminated sites NJDEP lists whose cleanup is under way or not yet begun.",
     why: "A count, not a risk: where each site is, and what it is, is on NJDEP’s map.",

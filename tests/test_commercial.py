@@ -71,6 +71,7 @@ def test_what_survives_each_use_today() -> None:
             "price_to_ami",
             "fema_flood_claims",
             "fema_flood_claims_paid",
+            "fema_flood_claims_unplaced",
         ]
     )
     assert restricted == {"ads": expected, "paid": expected}

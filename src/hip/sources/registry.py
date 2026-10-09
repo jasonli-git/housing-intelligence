@@ -14,7 +14,7 @@ from hip.sources.base import SourceAdapter, read_discovery
 from hip.sources.bls import BlsAdapter
 from hip.sources.bts_ntm import TransitStopsAdapter
 from hip.sources.census_acs import AcsAdapter
-from hip.sources.census_blocks import BlocksAdapter
+from hip.sources.census_blocks import BlockRelationshipAdapter, BlocksAdapter
 from hip.sources.census_lodes import LodesAdapter
 from hip.sources.census_pep import PepAdapter
 from hip.sources.census_permits import PermitsAdapter
@@ -118,6 +118,8 @@ IMPLEMENTED: tuple[str, ...] = (
     WaterAreasAdapter.source_id,
     SdwisAdapter.source_id,
     BlocksAdapter.source_id,
+    # 2010 block groups placed among 2020 blocks, for flood claims (#354).
+    BlockRelationshipAdapter.source_id,
     NjAffordableAdapter.source_id,
     HudAssistedAdapter.source_id,
     HudLihtcAdapter.source_id,
@@ -301,6 +303,8 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return HudLihtcAdapter()
     if source_id == BlocksAdapter.source_id:
         return BlocksAdapter(states=scope.states)
+    if source_id == BlockRelationshipAdapter.source_id:
+        return BlockRelationshipAdapter(states=scope.states)
     if source_id == NfhlAdapter.source_id:
         return NfhlAdapter()
     if source_id == CafeAdapter.source_id:

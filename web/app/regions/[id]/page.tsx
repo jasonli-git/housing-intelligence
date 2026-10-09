@@ -39,6 +39,7 @@ import { indexedComparison } from "@/lib/chartInsights";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
 import { costInputs, homePrice } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
+import { hasUnplaced, ownClaimsUsable } from "@/lib/hazards";
 import type { Term } from "@/lib/glossary";
 import { groupRows } from "@/lib/groups";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
@@ -206,12 +207,51 @@ export default async function RegionPage({
     );
   }
 
-  // Flood claims are FEMA's by county and ZIP code, so a town reads its county's
-  // (Milestone 40, ARCHITECTURE #302).
-  const claimsRegion =
-    region.level === "municipality"
-      ? (region.ancestors.find((a) => a.level === "county") ?? null)
-      : region;
+  // Flood claims: exact by county and ZIP code; a town's estimated from FEMA's block
+  // groups (#354), and its county's instead where FEMA's codes leave too many of its
+  // claims unplaceable between it and a neighbour (`ownClaimsUsable`).
+  const claimsOf = async (id: number, metricIds: string[]) =>
+    Promise.all(metricIds.map(async (m) => (await api.observations(id, m))?.observations ?? []));
+  const floodClaimsFor = async () => {
+    const county = region.ancestors.find((a) => a.level === "county") ?? null;
+    // The dataset's newest year, still filling, is the state's: a county, town or ZIP code
+    // may have had no claim since years before (`claimsSummary`). A ZIP code has no
+    // ancestors, so the state is found by its code.
+    const stateId = async () =>
+      region.level === "state"
+        ? region.region_id
+        : (region.ancestors.find((a) => a.level === "state")?.region_id ??
+          (await api.regions(`level=state`))?.items.find((r) => r.state_code === region.state_code)?.region_id ??
+          null);
+    const newestYear = async () => {
+      const id = await stateId();
+      const observations = id === null ? [] : ((await api.observations(id, "fema_flood_claims"))?.observations ?? []);
+      return observations.length ? Math.max(...observations.map((o) => Number(o.period_end.slice(0, 4)))) : null;
+    };
+    if (region.level === "municipality") {
+      const [[claims, paid, unplaced], newest] = await Promise.all([
+        claimsOf(regionId, ["fema_flood_claims", "fema_flood_claims_paid", "fema_flood_claims_unplaced"]),
+        newestYear(),
+      ]);
+      if (ownClaimsUsable(claims, unplaced) || !county) {
+        return { claims, paid, unplaced, newest, place: null, unseparable: false };
+      }
+      const [countyClaims, countyPaid] = await claimsOf(county.region_id, ["fema_flood_claims", "fema_flood_claims_paid"]);
+      return {
+        claims: countyClaims,
+        paid: countyPaid,
+        unplaced: [],
+        newest,
+        place: displayName(county),
+        unseparable: hasUnplaced(unplaced),
+      };
+    }
+    const [[claims, paid], newest] = await Promise.all([
+      claimsOf(regionId, ["fema_flood_claims", "fema_flood_claims_paid"]),
+      newestYear(),
+    ]);
+    return { claims, paid, unplaced: [], newest, place: null, unseparable: false };
+  };
   const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations, similar, community, migration, persistence] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
@@ -229,13 +269,7 @@ export default async function RegionPage({
       ),
     ),
     // Milestone 40: flood claims paid by year, and the water systems serving the place.
-    Promise.all(
-      ["fema_flood_claims", "fema_flood_claims_paid"].map(async (metricId) =>
-        claimsRegion
-          ? ((await api.observations(claimsRegion.region_id, metricId))?.observations ?? [])
-          : [],
-      ),
-    ),
+    floodClaimsFor(),
     api.waterSystems(regionId),
     api.affordableHousing(regionId),
     api.utilities(regionId),
@@ -370,8 +404,10 @@ export default async function RegionPage({
       <h2 id="home-checks-heading">Before choosing a home</h2>
       {quiet && <QuietCheckTopics />}
       <div className="local-checks-grid">
-        <FloodRisk name={name} levels={packet.levels} claims={floodClaims[0]} paid={floodClaims[1]}
-          claimsPlace={claimsRegion && claimsRegion.region_id !== regionId ? displayName(claimsRegion) : null} />
+        <FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid}
+          unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place}
+          estimated={region.level === "municipality" && floodClaims.place === null}
+          unseparable={floodClaims.unseparable} />
         <GroundAndWater name={name} levels={packet.levels} water={water} />
         <Utilities data={utilities} />
         <GettingAround name={name} level={region.level} levels={packet.levels} destinations={workDestinations} />

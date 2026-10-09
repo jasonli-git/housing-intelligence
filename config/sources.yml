@@ -1173,6 +1173,31 @@ sources:
       Housing units per 2020 block, the weights behind every share of homes. Pinned
       to 2020; redrawn once a decade.
 
+  census_block_rel:
+    name: 2010 to 2020 tabulation block relationship files
+    publisher: U.S. Census Bureau
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105); its
+        terms set no limit on commercial use.
+    terms_url: https://www.census.gov/about/policies/open-gov/open-data.html
+    terms_checked: 2026-10-08
+    url: https://www2.census.gov/geo/docs/maps-data/data/rel2020/t10t20/
+    homepage: https://www.census.gov/geographies/reference-files/time-series/geo/relationship-files.html
+    cadence: irregular
+    adapter: hip.sources.census_blocks:BlockRelationshipAdapter
+    fallback: >-
+      The block group relationship file (rel2020/blkgrp) relates the same geography by
+      land area alone, without the blocks that carry homes.
+    notes: >-
+      Each 2010 block's land overlap with each 2020 block. Places flood claims FEMA
+      codes to 2010 block groups among 2020 blocks, and so in towns (#354). Published
+      once, for the 2020 redraw.
+
   # Milestone 47: separate community components; never a neighbourhood score.
   nj_school_performance:
     name: New Jersey School Performance Reports — districts

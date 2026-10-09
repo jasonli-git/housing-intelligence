@@ -287,6 +287,7 @@ export const GROUPS: readonly Group[] = [
       "njdep_tidal_homes_share",
       "fema_flood_claims",
       "fema_flood_claims_paid",
+      "fema_flood_claims_unplaced",
       "njdep_sites_open",
       "njdep_sites_post_remedy",
       "njdep_sites_heating_oil",

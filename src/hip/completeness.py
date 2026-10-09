@@ -133,6 +133,7 @@ METRIC_SUBJECTS: dict[str, str] = {
     "njdep_tidal_homes_share": "hazards",
     "fema_flood_claims": "hazards",
     "fema_flood_claims_paid": "hazards",
+    "fema_flood_claims_unplaced": "hazards",
     "njdep_sites_open": "hazards",
     "njdep_sites_post_remedy": "hazards",
     "njdep_sites_heating_oil": "hazards",

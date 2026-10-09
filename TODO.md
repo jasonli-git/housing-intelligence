@@ -18,9 +18,10 @@ removed entries are in `git show ca49f74:TODO.md`.
 
 Milestone 52 shipped as 0.50.0. The owner held Version 4 and chose the correctness and
 data-integrity items: four fixed on `change/correctness-pass` (ARCHITECTURE #350), then
-one at a time: CHAS margins from HUD's bulk files (done, #353), flood claims placed
-through the 2010-to-2020 block-group relationship, the completeness check reading the
-community inventory, and the 62 school districts with no performance record.
+one at a time: CHAS margins from HUD's bulk files (done, #353), flood claims placed in
+towns through the 2010-to-2020 block relationship (done, #354), the completeness check
+reading the community inventory, and the 62 school districts with no performance
+record.
 
 ## Open
 
@@ -90,9 +91,11 @@ first raised, not where it must be done.
       no PFAS code for New Jersey in 2021–2026. Milestone 42 added measured PFAS from
       EPA's UCMR 5, which is not a violation record; NJDEP's own violations are still
       not read, and Drinking Water Watch remains the link.
-- [ ] **Flood claims are not placed in towns.** (M40, #302) 11.5% of New Jersey's
-      claims are in 2010 block groups. A 2010-to-2020 block group relationship file from
-      the Census would place them; until then a town shows its county's.
+- [ ] **27 towns show their county's flood claims.** (#354) FEMA's block-group codes
+      cannot separate their claims from a neighbour's (the Wildwoods, parts of Warren
+      County). A claim-level field that names the census vintage, if FEMA adds one, or
+      its rounded coordinates, would settle them; recheck when OpenFEMA's dictionary
+      changes.
 
 - [ ] **DCA's Construction Reporter has stopped at January 2026.** (M39, #300) DCA says
       the program is being overhauled. When its 2025 yearly summary posts (one usually

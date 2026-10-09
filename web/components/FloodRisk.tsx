@@ -21,17 +21,29 @@ export function FloodRisk({
   levels,
   claims,
   paid,
+  unplaced = [],
+  newestYear = null,
   claimsPlace,
+  estimated = false,
+  unseparable = false,
 }: {
   name: string;
   levels: PacketLevel[];
   claims: Observation[];
   paid: Observation[];
-  /** Whose claims these are, when not the region's own: a town reads its county's. */
+  /** A town's claims that may be its own but cannot be placed (#354). */
+  unplaced?: Observation[];
+  /** The dataset's newest year, when the place's own claims may stop short of it. */
+  newestYear?: number | null;
+  /** Whose claims these are, when not the region's own: a town can read its county's. */
   claimsPlace: string | null;
+  /** A town's own claims, estimated from FEMA's block groups rather than counted. */
+  estimated?: boolean;
+  /** Why a town reads its county's: FEMA's codes cannot separate it from a neighbour. */
+  unseparable?: boolean;
 }) {
   const flood = floodLevels(levels);
-  const history = claimsSummary(claims, paid);
+  const history = claimsSummary(claims, paid, unplaced, newestYear);
   if (flood.mapped === null && !history) return null;
   const count = (n: number) => formatValue(n, "count");
 
@@ -77,10 +89,13 @@ export function FloodRisk({
       {history && (
         <p className="sales-note">
           {claimsPlace ? `In ${claimsPlace}, ` : ""}the National Flood Insurance Program paid
-          on {count(history.claims)} flood claims from {history.first} to {history.last}, a
-          total of {formatValue(history.paid, "usd")}
+          on {estimated ? "about " : ""}{count(history.claims)} flood claims from {history.first} to{" "}
+          {history.last}, a total of {estimated ? "about " : ""}{formatValue(history.paid, "usd")}
           {history.partial.claims > 0
             ? `, and on ${count(history.partial.claims)} so far in ${history.partialYear}`
+            : ""}
+          {history.unplaced > 0
+            ? `, and up to ${count(history.unplaced)} more that FEMA’s records cannot place between ${name} and a neighbour`
             : ""}
           . Insured losses only—not every flooded home.
         </p>
@@ -93,7 +108,13 @@ export function FloodRisk({
       <ReaderDetails title="Flood-map limits and sources">
       {history && <p className="sales-note">
         Worst claim years since {history.since}: {history.worst.map((y) => `${y.year} (${count(y.claims)})`).join(", ")}.
-        {claimsPlace ? " FEMA does not locate claims precisely enough to count them by town; these are county figures." : ""}
+        {claimsPlace
+          ? unseparable
+            ? ` FEMA’s records cannot separate ${name}’s claims from its neighbours’: the census area they name means different places in 2010 and 2020. These are county figures.`
+            : ` No claim FEMA located falls in ${name}; these are county figures.`
+          : estimated
+            ? " A town’s claims are estimated: FEMA places each in a census block group, and a group’s claims are shared among towns by where its homes are. Under 1% of claims carry no usable location and are counted in no town."
+            : ""}
       </p>}
       <p className="sales-note">
         Outside a flood zone is not safe from flooding: many claims come from outside one,
