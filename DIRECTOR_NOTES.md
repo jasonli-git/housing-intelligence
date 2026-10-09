@@ -508,3 +508,27 @@ about causes: readings may now connect two figures only as a computed relationsh
 connects them, and say "because" only of a ratio explained by its two sides
 (ARCHITECTURE #336–#337). The note's pilot had already become "What stands out here?"
 (#275). Nothing else in the note is promoted.
+
+---
+
+## Follow-up: Milestone 42 built most of the utilities note
+
+**Status:** Feedback — records what was built; the note above is left as written
+**Recorded:** 2026-10-09
+
+Milestone 42 (0.39.0, 2026-10-04) and later work built points 2–4 and the electricity
+and gas section of "Utilities and drinking water: closing Milestone 40's limits":
+
+- Each water violation says whether it was returned to compliance, and systems link
+  their annual water quality report.
+- Measured PFAS from EPA's UCMR 5.
+- NJDEP's service-line inventory by water system, through its 2024 submission; 2025–26
+  is requested under OPRA.
+- Electric and gas utilities by town, EIA-861 prices and outages, BPU's reliability
+  reports for 2024–2025 (released under OPRA), and DOE's energy burden, with five
+  counties withheld.
+
+Still open from the note: point 1, answers for a property's own address. That stays
+gated on NJOGIS's address-point terms and on Daniel's Law (ROADMAP's source register;
+TODO's open decision on a lawyer's read).
+
