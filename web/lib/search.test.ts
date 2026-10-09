@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Region } from "@/lib/api";
-import { matchEntries, searchEntries } from "@/lib/search";
+import { entryPath, matchEntries, searchEntries } from "@/lib/search";
 
 function region(region_id: number, level: string, name: string, name_lsad: string, parent_id: number | null = null): Region {
   return { region_id, geoid: String(region_id), level, name, name_lsad, state_code: "NJ", parent_id };
@@ -28,17 +28,30 @@ describe("searchEntries", () => {
     ]);
   });
 
-  it("names counties and ZIPs as a reader does, and leaves the state out", () => {
+  it("names counties and ZIPs as a reader does, and finds states too", () => {
     const entries = searchEntries(REGIONS);
 
     expect(entries.find((e) => e.id === 11)).toEqual({ id: 11, name: "Mercer County", detail: "County", level: "county" });
     expect(entries.find((e) => e.id === 3091)?.name).toBe("ZIP 08540");
-    expect(entries.some((e) => e.level === "state")).toBe(false);
+    expect(entries.find((e) => e.level === "state")).toEqual({ id: 1, name: "New Jersey", detail: "State", level: "state", code: "NJ" });
+  });
+
+  it("opens a covered state's own page and every other place's region page", () => {
+    const entries = searchEntries(REGIONS);
+
+    expect(entryPath(entries.find((e) => e.id === 1)!)).toBe("/states/new-jersey");
+    expect(entryPath(entries.find((e) => e.id === 11)!)).toBe("/regions/11");
+    expect(entryPath({ id: 9, name: "Ohio", detail: "State", level: "state", code: "OH" })).toBe("/regions/9");
   });
 });
 
 describe("matchEntries", () => {
   const entries = searchEntries(REGIONS);
+
+  it("finds a state by its postal code, ahead of places that merely contain it", () => {
+    expect(matchEntries(entries, "nj")[0]?.name).toBe("New Jersey");
+    expect(matchEntries(entries, "new j")[0]?.name).toBe("New Jersey");
+  });
 
   it("ranks a name that starts with the query above one that merely contains it", () => {
     expect(matchEntries(entries, "mercer").map((e) => e.name)).toEqual(["Mercer County", "Mercerville"]);

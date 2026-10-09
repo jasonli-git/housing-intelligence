@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { PlacePicker } from "@/components/PlacePicker";
-import type { SearchEntry } from "@/lib/search";
+import { entryPath, type SearchEntry } from "@/lib/search";
 
 /**
  * Find a county, municipality or ZIP code by name (Milestone 17), in the shared bar since
@@ -47,9 +47,9 @@ export function PlaceSearch({
       entries={entries}
       failed={failed}
       onFocus={load}
-      onPick={(entry) => router.push(`/regions/${entry.id}`)}
-      label="Search by town, county or ZIP code"
-      placeholder={variant === "hero" ? "Town, county or ZIP code" : "Search town, county or ZIP"}
+      onPick={(entry) => router.push(entryPath(entry))}
+      label="Search by state, town, county or ZIP code"
+      placeholder={variant === "hero" ? "State, town, county or ZIP code" : "Search town, county or ZIP"}
       name={variant === "hero" ? "home-place-query" : "place-query"}
     />
   );

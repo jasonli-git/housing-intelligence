@@ -34,7 +34,7 @@ export default async function HousingLandingPage() {
         <section className="home-find" aria-labelledby="home-find-heading">
           <h2 id="home-find-heading">Find your town</h2>
           <PlaceSearch variant="hero" />
-          <p className="home-find-hint">Every New Jersey town, county and ZIP code. Try Princeton, Ocean County or 07030. <a href="#coverage-heading">Or browse the map ↓</a></p>
+          <p className="home-find-hint">Any state, county, town or ZIP code the site covers. Detailed coverage starts with New Jersey: try NJ, Princeton or 07030. <a href="#coverage-heading">Or browse the map ↓</a></p>
         </section>
         <p className="entry-free computed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free to use · No fees. No subscription. Definitely no ads.</span></p>
       </header>
