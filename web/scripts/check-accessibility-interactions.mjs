@@ -26,7 +26,11 @@ try {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   assert.equal(await page.locator('.portrait-house').evaluate(n => getComputedStyle(n).animationName), 'none', 'Reduced motion is static');
   console.log('PASS: looping house illustration without a control; reduced motion');
-  await page.getByRole('button', { name: 'Explore by state', exact: true }).click();
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  assert.equal(await page.locator('.atlas-travelling-line').evaluate(n => getComputedStyle(n).animationIterationCount), 'infinite', 'Atlas accent moves without animating the map camera');
+  assert.equal(await page.locator('.coverage-unavailable').first().evaluate(n => getComputedStyle(n).animationName), 'atlas-outline-draw', 'Atlas boundaries trace into place');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.getByRole('button', { name: 'Explore the map', exact: true }).click();
   await page.locator('.coverage-map-stage').scrollIntoViewIfNeeded();
   await page.locator('.coverage-viewport').waitFor();
   await page.getByRole('button', {name:'Zoom in United States map'}).click();

@@ -116,25 +116,46 @@
   .coverage-state-title:hover { text-decoration: underline; text-underline-offset: 4px; }
   .quiet-nation .coverage-state-preview .entry-kicker { color: var(--text-secondary); }
   .coverage-search-stage { position: relative; }
-  .coverage-map-content { transition: filter 300ms ease, opacity 300ms ease; }
-  .coverage-search-stage[data-exploring="false"] .coverage-map-content { filter: blur(7px); opacity: .45; pointer-events: none; user-select: none; }
-  .coverage-search-overlay { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 1.5rem; background: color-mix(in srgb, var(--surface-card) 28%, transparent); }
+  .coverage-map-content { transition: opacity 300ms ease; }
+  .coverage-search-stage[data-exploring="false"] .coverage-map-content { pointer-events: none; user-select: none; }
+  .coverage-search-stage[data-exploring="false"] :is(.coverage-region-bar, .coverage-map-caption, .coverage-mobile-link, .coverage-zoom, .map-pan-controls, .coverage-map-foot, .coverage-locator) { visibility: hidden; }
+  .coverage-search-stage[data-exploring="false"] .coverage-map-stage { background: var(--surface-card); }
+  .coverage-search-stage[data-exploring="false"] .coverage-land { opacity: 0; }
+  .coverage-search-stage[data-exploring="false"] .coverage-unavailable { fill: url(#coverage-atlas-stipple); stroke: color-mix(in srgb, var(--entry-accent) 58%, var(--surface-card)); stroke-width: .7; stroke-dasharray: 1; animation: atlas-outline-draw 2.2s ease both; }
+  #coverage-atlas-stipple circle { fill: var(--entry-accent); opacity: .22; }
+  .coverage-search-stage[data-exploring="false"] .coverage-state-top { fill: color-mix(in srgb, var(--state-blue) 24%, var(--surface-card)); stroke: var(--state-blue); stroke-dasharray: 1; animation: atlas-outline-draw 2.2s ease both; }
+  .coverage-search-stage[data-exploring="false"] :is(.coverage-state-wall, .coverage-state-shadow) { opacity: 0; }
+  .coverage-unavailable, .coverage-state-top, .coverage-state-wall, .coverage-state-shadow, .coverage-land { transition: fill 300ms ease, stroke 300ms ease, opacity 300ms ease; }
+  .coverage-atlas-guides { display: none; fill: none; stroke: var(--entry-accent); stroke-width: .7; pointer-events: none; }
+  .coverage-search-stage[data-exploring="false"] .coverage-atlas-guides { display: block; }
+  .atlas-guide-line { opacity: .18; }
+  .atlas-travelling-line { stroke-dasharray: .08 .92; animation: atlas-travel 14s linear infinite; opacity: .38; }
+  @keyframes atlas-outline-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes atlas-travel { from { stroke-dashoffset: 1; } to { stroke-dashoffset: -1; } }
+  .coverage-search-overlay { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 1.5rem; background: radial-gradient(ellipse at center, var(--surface-card) 0%, var(--surface-card) 22%, transparent 68%); }
   .coverage-search-overlay[hidden] { display: none; }
-  .coverage-search-panel { width: min(100%, 35rem); padding: 1.5rem; border: 1px solid var(--border); border-radius: 18px; background: color-mix(in srgb, var(--surface-card) 94%, transparent); box-shadow: 0 16px 50px rgb(0 0 0 / 8%); }
+  .coverage-search-panel { width: min(100%, 35rem); padding: 1.5rem; }
   .coverage-search-panel .home-find-hint { margin: .8rem 0 1rem; }
   .coverage-explore-button, .coverage-search-return { display: inline-flex; align-items: center; justify-content: space-between; gap: 1.3rem; min-height: 44px; padding: .6rem .9rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-card); color: var(--text-primary); font: 550 13px/1.4 var(--font-text); cursor: pointer; }
   .coverage-explore-button:hover, .coverage-search-return:hover { border-color: var(--entry-accent); }
+  .coverage-explore-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linejoin: round; }
+  .coverage-explore-button { gap: .65rem; }
+  .coverage-explore-button > span { margin-left: .7rem; }
   .coverage-search-return { margin: .65rem .9rem; }
   .quiet-nation .coverage-atlas:has(.coverage-search-stage) { overflow: visible; }
   .coverage-search-stage { border-radius: 14px 14px 0 0; }
   .coverage-search-stage .coverage-map-content { overflow: hidden; border-radius: inherit; }
   @media (max-width: 760px) {
     .coverage-search-overlay { padding: .9rem; }
-    .coverage-search-panel { padding: 1rem; border-radius: 12px; }
+    .coverage-search-panel { padding: 1rem 0; }
     .coverage-search-panel .place-search-hero input { font-size: 16px; min-height: 50px; padding-inline: .8rem; }
     .coverage-search-stage[data-exploring="false"] .coverage-map-content { min-height: 340px; }
   }
-  @media (prefers-reduced-motion: reduce) { .coverage-map-content { transition: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .coverage-map-content, .coverage-unavailable, .coverage-state-top, .coverage-state-wall, .coverage-state-shadow, .coverage-land { transition: none; }
+    .coverage-search-stage[data-exploring="false"] .coverage-unavailable, .coverage-search-stage[data-exploring="false"] .coverage-state-top, .atlas-travelling-line { animation: none; }
+    .atlas-travelling-line { opacity: .15; }
+  }
   .foot .notice-external-icon { flex: none; width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
   .foot-policy-links { display: flex; flex-wrap: wrap; gap: .1rem 1rem; }
   .foot .foot-policy-links .foot-tab { font: 500 11px/1.4 var(--font-text); color: var(--text-secondary); text-transform: none; letter-spacing: 0; }

@@ -52,7 +52,7 @@ try {
   assert.equal(await page.getByText('Try Princeton or 07030.', { exact: false }).count(), 0);
   await search.fill('Somerset');
   await page.getByRole('option').first().waitFor();
-  await page.getByRole('button', { name: 'Explore by state', exact: true }).click();
+  await page.getByRole('button', { name: 'Explore the map', exact: true }).click();
   assert(await page.locator('.coverage-map').evaluate(n => n === document.activeElement), 'Reveal transfers focus to map');
   assert.equal(await search.isVisible(), false);
   assert.equal(await page.locator('#coverage-map-content').evaluate(n => n.inert), false);
@@ -61,7 +61,7 @@ try {
   await page.getByRole('button', { name: 'Search for a place', exact: false }).click();
   assert(await search.evaluate(n => n === document.activeElement), 'Return transfers focus to search');
   assert.equal(await search.inputValue(), 'Somerset', 'Switching preserves the query');
-  await page.getByRole('button', { name: 'Explore by state', exact: true }).click();
+  await page.getByRole('button', { name: 'Explore the map', exact: true }).click();
   assert.equal(await page.locator('.coverage-viewport').getAttribute('style'), zoomed, 'Switching preserves map position');
   await page.getByRole('button', { name: 'Search for a place', exact: false }).click();
   await search.fill('');
@@ -96,7 +96,10 @@ try {
       assert(await page.locator('.coverage-state-preview .entry-kicker').evaluate(n => getComputedStyle(n).color !== getComputedStyle(n.parentElement.querySelector('h3')).color), 'Availability label is distinct from New Jersey blue');
       assert.equal(await page.locator('.coverage-search-panel input').isVisible(), true);
       await page.locator('.coverage-search-stage').screenshot({ path: `${output}/search-map-${width}-${theme}.png` });
-      await page.getByRole('button', { name: 'Explore by state', exact: true }).click();
+      assert.equal(await page.locator('#coverage-map-content').evaluate(n => getComputedStyle(n).filter), 'none', 'No unlock-style blur');
+      assert(await page.locator('.coverage-search-panel').evaluate(n => getComputedStyle(n).boxShadow === 'none' && parseFloat(getComputedStyle(n).borderTopWidth) === 0), 'Search is integrated rather than a blocking card');
+      assert.equal(await page.locator('.atlas-travelling-line').evaluate(n => getComputedStyle(n).animationName), 'none', 'Reduced-motion atlas stays static');
+      await page.getByRole('button', { name: 'Explore the map', exact: true }).click();
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${width} ${theme}: revealed map does not overflow`);
       if (width === 390) {
         const mapAudit = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();

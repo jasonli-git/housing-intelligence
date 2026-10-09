@@ -186,6 +186,9 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
         }}>
         <title id="coverage-map-title">Explore housing coverage by state</title>
         <desc id="coverage-map-description">New Jersey is blue and available. All other states are unavailable. Alaska and Hawaii are outside this view. Zoom with the buttons; drag the enlarged map, or swipe sideways on mobile. Vertical scrolling moves the page. Use the New Jersey link to explore.</desc>
+        <defs>
+          <pattern id="coverage-atlas-stipple" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".55" /></pattern>
+        </defs>
         <g ref={geography} className="coverage-geography">
         <g className="coverage-viewport" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})` }}>
         <g className="coverage-land" aria-hidden="true">{land.map((part) => <path key={part.id} d={part.base} />)}</g>
@@ -194,10 +197,15 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
           return destination ? <a key={state.id} href={destination} onClick={enterState} aria-label={`Explore ${state.name} housing data`} className="coverage-available" onFocus={() => setHovered(`${state.name} · Available now`)} onMouseEnter={() => setHovered(`${state.name} · Available now`)}>
             <path className="coverage-state-shadow" d={state.base} />
             <path className="coverage-state-wall" d={state.walls} />
-            <path className="coverage-state-top" d={state.top} />
-          </a> : <path key={state.id} className="coverage-unavailable" d={state.base} aria-hidden="true" onMouseEnter={() => setHovered(`${state.name} · Not available yet`)}><title>{state.name} — Not available yet</title></path>;
+            <path className="coverage-state-top" pathLength="1" d={state.top} />
+          </a> : <path key={state.id} className="coverage-unavailable" pathLength="1" d={state.base} aria-hidden="true" onMouseEnter={() => setHovered(`${state.name} · Not available yet`)}><title>{state.name} — Not available yet</title></path>;
         })}
         </g>
+        </g>
+        <g className="coverage-atlas-guides" aria-hidden="true">
+          <path className="atlas-guide-line" d="M38 393H862M86 44V425M814 44V425" />
+          <path className="atlas-guide-line" d="M72 393v-10m28 10v-5m28 5v-5m28 5v-10m28 10v-5m28 5v-5M688 393v-10m28 10v-5m28 5v-5m28 5v-10m28 10v-5m28 5v-5" />
+          <path className="atlas-travelling-line" pathLength="1" d="M45 295C180 60 375 55 530 188S740 325 855 138" />
         </g>
         {locator && locator[0] > 0 && locator[0] < 900 && locator[1] > 0 && locator[1] < 480 && drawing.states.some((state) => state.id === "NJ") && <a href={STATE_DESTINATIONS.NJ} onClick={enterState} className="coverage-locator" aria-label="Explore New Jersey housing data">
           <path d={`M${locator[0]},${locator[1]} L${locator[0] - 26},${locator[1] - 48} H${locator[0] - 154}`} />
@@ -235,7 +243,7 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
       <div className="coverage-search-panel">
         <PlaceSearch variant="hero" />
         <p className="home-find-hint">Detailed coverage starts with New Jersey.</p>
-        <button className="coverage-explore-button" type="button" aria-controls="coverage-map-content" onClick={() => changeMode(true)}>Explore by state <span aria-hidden="true">→</span></button>
+        <button className="coverage-explore-button" type="button" aria-controls="coverage-map-content" onClick={() => changeMode(true)}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m2 4 5-2 6 2 5-2v14l-5 2-6-2-5 2ZM7 2v14m6-12v14" /></svg>Explore the map <span aria-hidden="true">→</span></button>
       </div>
     </div>}
     </div>
