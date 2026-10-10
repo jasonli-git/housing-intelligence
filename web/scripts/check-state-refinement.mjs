@@ -32,7 +32,7 @@ try {
       await page.waitForFunction(() => ![...document.querySelectorAll('.section-jump option')].some(n => n.textContent === 'Compare counties'));
       await page.getByRole('button', { name: 'Compare counties', exact: true }).click();
       if (options.length > 1) assert.equal(await measure.inputValue(), options[1]);
-      assert.equal(await page.locator('#state-detailed-data .housing-assistance, #state-detailed-data .homes-added, #state-detailed-data .how-unusual, #state-detailed-data .sales').count(), 0);
+      assert.equal(await page.locator('#state-detailed-data .housing-assistance, #state-detailed-data .homes-added, #state-detailed-data .how-unusual, #state-detailed-data .section.sales:not(.mortgage-lending):not(.getting-around)').count(), 0);
       assert.equal(await page.locator('#housing-assistance .state-help-links a').count(), 3);
       assert.equal(await page.locator('.history-exhibit .persistence-history').isVisible(), true);
       assert.equal(await page.locator('#housing-assistance > details').count(), 1);
@@ -45,6 +45,12 @@ try {
         }
       }
       assert.ok(await page.locator('#county-comparison tbody tr').count() > 0);
+      assert.equal(await page.locator('.state-supporting-context > details').count(), 3);
+      const contextDetails = page.locator('.state-supporting-context > details');
+      for (let i = 0; i < await contextDetails.count(); i++) await contextDetails.nth(i).locator(':scope > summary').click();
+      assert.equal(await page.locator('.work-destinations tbody tr').count(), 10);
+      assert.match(await page.locator('.state-broadband').textContent(), /not households or people/);
+      assert.match(await page.locator('.mortgage-lending').textContent(), /not.*qualify/);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
       assert.deepEqual(results.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => ({ target: n.target, reason: n.failureSummary })) })), []);
