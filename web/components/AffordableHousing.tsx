@@ -1,5 +1,6 @@
 "use client";
 
+import { regionPath } from "@/lib/placeRoutes";
 import { createContext, useCallback, useContext, type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { artifactUrl, publicApiUrl } from "@/lib/api";
@@ -105,7 +106,7 @@ export function AffordableHousing({data, hideRoutes = false}: {data: HousingData
           <label className="assistance-end-filter"><input type="checkbox" checked={soon} onChange={(e) => {setSoon(e.target.checked); setPage(0);}} />Reported end within 5 years of snapshot</label>
         </div>
         <p className="assistance-note">LIHTC’s bulk inventory is historical, not proof of a current restriction or vacancy. Inventories overlap; bedroom counts describe reported units, not available homes. Disability targeting does not establish physical accessibility.</p>
-        {data.county_inventory_region_id && <p className="assistance-note">HUD’s assisted-property file identifies counties, not municipalities. LIHTC records without a verified town also stay in the county or state inventory. <Link href={`/regions/${data.county_inventory_region_id}#housing-assistance`}>See this county’s inventory →</Link></p>}
+        {data.county_inventory_region_id && <p className="assistance-note">HUD’s assisted-property file identifies counties, not municipalities. LIHTC records without a verified town also stay in the county or state inventory. <Link href={`${regionPath(data.county_inventory_region_id)}#housing-assistance`}>See this county’s inventory →</Link></p>}
         <p className="assistance-result-count" role="status">{properties.length} matching records · displayed separately, never added across programmes</p>
         <ul className="assistance-properties">{shown.map((r) => <Property key={`${r.source_id}-${r.record_id}`} row={r} records={records} />)}</ul>
         {!shown.length && !loading && !error && inventory && <p>No records match. This does not establish that no affordable homes exist here.</p>}

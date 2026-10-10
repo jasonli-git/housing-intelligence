@@ -1,5 +1,6 @@
 "use client";
 
+import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -49,7 +50,7 @@ export function StateModeWorkspace({ countyPages, sections, initial }: {
         <div className="place-discovery-search"><PlaceSearch /></div>
         <h3 id="county-directory-heading" className="county-directory-heading">Explore {countyPages.length} counties</h3>
         <nav aria-labelledby="county-directory-heading" className="place-county-grid">
-          {countyPages.map(county => <Link className="destination-county" key={county.id} href={`/regions/${county.id}`} aria-label={`Explore ${county.name}`}><span>{county.name.replace(/ County$/, "")}</span><small aria-hidden="true">↗</small></Link>)}
+          {countyPages.map(county => <Link className="destination-county" key={county.id} href={regionPath(county.id)} aria-label={`Explore ${county.name}`}><span>{county.name.replace(/ County$/, "")}</span><small aria-hidden="true">↗</small></Link>)}
         </nav>
         {!countyPages.length && <p>County pages are unavailable in this snapshot. Try the place search.</p>}
         </div>

@@ -40,8 +40,8 @@ describe("searchEntries", () => {
     const entries = searchEntries(REGIONS);
 
     expect(entryPath(entries.find((e) => e.id === 1)!)).toBe("/states/new-jersey");
-    expect(entryPath(entries.find((e) => e.id === 11)!)).toBe("/regions/11");
-    expect(entryPath({ id: 9, name: "Ohio", detail: "State", level: "state", code: "OH" })).toBe("/regions/9");
+    expect(entryPath(entries.find((e) => e.id === 11)!)).toBe("/nj/mercer-county");
+    expect(entryPath({ id: 99999, name: "Ohio", detail: "State", level: "state", code: "OH" })).toBe("/regions/99999");
   });
 });
 

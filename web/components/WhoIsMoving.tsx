@@ -1,3 +1,4 @@
+import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 
 import type { Migration, MigrationFlow } from "@/lib/api";
@@ -25,7 +26,7 @@ function Flows({ flows, caption, heading }: { flows: MigrationFlow[]; caption: s
         <tbody>
           {flows.map((f) => (
             <tr key={f.rank}>
-              <th scope="row">{f.region_id !== null ? <Link href={`/regions/${f.region_id}`}>{f.name}</Link> : f.name}</th>
+              <th scope="row">{f.region_id !== null ? <Link href={regionPath(f.region_id)}>{f.name}</Link> : f.name}</th>
               <td className="num">{formatReturns(f.returns)}</td>
               <td className="num">{shareText(f.share)}</td>
               <td className="num">{f.income_per_return !== null ? formatIncome(f.income_per_return) : "—"}</td>

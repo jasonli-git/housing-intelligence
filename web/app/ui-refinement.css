@@ -24,11 +24,11 @@
   main a[href^="/tax"]:not(.button) { color: light-dark(#006977, #8ed9e2); }
   main .home-action-checks a[href^="#"] { color: light-dark(#246b55, #a6d9c0); }
   main.atlas-local:is([data-region-level="municipality"], [data-region-level="zip"]) .home-action-checks a[href^="#"] { color: var(--atlas-accent); }
-  main a.destination-county[href^="/regions/"] { color: light-dark(#246b55, #a6d9c0); }
+  main a.destination-county { color: light-dark(#246b55, #a6d9c0); }
   main a[href^="/states/"]:not(.crumbs a) { color: var(--state-blue); }
   main .crumbs li[data-level] a:is([href^="/"], [href^="#"]) { color: var(--crumb-accent, var(--text-primary)); }
   main a[href^="/guide"]:not(.button) { color: light-dark(#925460, #d7a3ad); }
-  main .county-town-links a[href^="/regions/"] { color: light-dark(#267775, #a2dad5); }
+  main .county-town-links a { color: light-dark(#267775, #a2dad5); }
   .quiet-county .consumer-feature-what_stands_out:has(.local-picture-note) { background: transparent; border: 0; border-radius: 0; padding: 0; box-shadow: none; }
   .local-picture-note { --text-primary: light-dark(#303632, #e8ece6); --text-muted: light-dark(#626761, #b9bfb6); --text-secondary: light-dark(#545c55, #c5ccc1); --surface-1: light-dark(#f7f6f2, #2b2e30); --surface-2: light-dark(#fffefa, #303437); --surface-card: var(--surface-2); --border: light-dark(#d5d8d0, #505758); --atlas-accent: light-dark(#326e58, #a6d9c0); color: var(--text-primary); position: relative; margin: 1.3rem .2rem 1.5rem; padding: 2rem 1.4rem 1.6rem; background: repeating-linear-gradient(0deg, light-dark(#48504503, #ffffff03) 0 1px, transparent 1px 4px), linear-gradient(115deg, light-dark(#fffefa, #2b2e30), light-dark(#f4f3ed, #25282a)); border: 1px solid var(--border); border-radius: 1px 2px 2px 1px; box-shadow: 1px 2px 2px #0002, 0 12px 19px -12px #0007, inset 0 1px light-dark(#fff, #ffffff12); transform: rotate(-.45deg); }
   .local-picture-note::before { content: ""; position: absolute; width: 100px; height: 30px; top: -14px; left: 38%; background: repeating-linear-gradient(90deg, #fff1 0 1px, transparent 1px 5px), light-dark(#d9d9c79e, #afb6ac38); box-shadow: 0 1px 2px #0002, inset 0 1px #fff3; clip-path: polygon(2% 0, 98% 2%, 96% 15%, 100% 28%, 97% 43%, 100% 59%, 96% 76%, 99% 100%, 1% 97%, 3% 83%, 0 68%, 3% 49%, 0 30%, 3% 14%); transform: rotate(4deg); pointer-events: none; }

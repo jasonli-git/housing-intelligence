@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { readablePlaceHref } from "@/lib/placeRoutes";
 
 export type Crumb = { href: string; label: string };
 
@@ -23,7 +24,7 @@ export function Crumbs({ trail, here, hereKind }: { trail: Crumb[]; here?: strin
       <ol>
         {trail.map((crumb, index) => (
           <li key={crumb.href} data-level={linkedLevel(crumb.href)}>
-            <Link href={crumb.href}>
+            <Link href={readablePlaceHref(crumb.href)}>
               {index === 0 && <span aria-hidden="true">‹ </span>}
               {crumb.label}
             </Link>

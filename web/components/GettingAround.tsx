@@ -1,3 +1,4 @@
+import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 
 import type { PacketLevel, WorkDestinations } from "@/lib/api";
@@ -120,7 +121,7 @@ export function GettingAround({
               {destinations.destinations.map((d) => (
                 <tr key={d.rank}>
                   <th scope="row">
-                    {d.region_id !== null ? <Link href={`/regions/${d.region_id}`}>{d.name}</Link> : d.name}
+                    {d.region_id !== null ? <Link href={regionPath(d.region_id)}>{d.name}</Link> : d.name}
                   </th>
                   <td className="num">{shareText(d.share)}</td>
                   <td className="num">{count(d.jobs)}</td>

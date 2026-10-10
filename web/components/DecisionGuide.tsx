@@ -1,5 +1,6 @@
 "use client";
 
+import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -186,7 +187,7 @@ export function DecisionGuide({
   const years = personal.years ?? 10;
   const yearly = parseAmount(income);
   const data = load.state === "ready" ? load.data : null;
-  const placeHref = data ? `/regions/${data.region.region_id}` : "/";
+  const placeHref = data ? regionPath(data.region.region_id) : "/";
   const taxHref = data?.region.level === "municipality" ? `/tax?town=${data.region.geoid}` : "/tax";
   const afford = data && yearly ? affordAnswer(data, { income: yearly, size, ratePct, personal: { ...personal, downPct } }) : null;
   const choice = data ? rentOrBuy(data, { ratePct, personal: { ...personal, downPct, years }, rent: parseAmount(rent) }) : null;

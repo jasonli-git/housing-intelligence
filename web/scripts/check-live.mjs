@@ -289,6 +289,14 @@ async function pageSamples() {
   const searchPath = path.join(siteDir, "search.json");
   const entries = JSON.parse(await readFile(searchPath, "utf8"));
   const byId = new Map(entries.map((entry) => [entry.id, entry]));
+  let publicPaths = {};
+  try {
+    publicPaths = JSON.parse(await readFile(path.join(siteDir, "place-routes.json"), "utf8"));
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    // Old publish trees predate readable URLs and still use numeric routes.
+  }
+  const placePath = (entry) => publicPaths[entry.id] ?? `/regions/${entry.id}`;
   // `/` is the United States entry and New Jersey's own page its first state (PR #88).
   const samples = [
     { label: "site", route: "/" },
@@ -298,7 +306,7 @@ async function pageSamples() {
   for (const level of ["county", "zip"]) {
     const entry = entries.find((candidate) => candidate.level === level);
     if (!entry) throw new Error(`${searchPath} has no ${level} entry`);
-    samples.push({ label: level, route: `/regions/${entry.id}` });
+    samples.push({ label: level, route: placePath(entry) });
   }
 
   for (const { label, id } of COST_CARD_SHAPES) {
@@ -309,11 +317,11 @@ async function pageSamples() {
           "removed; find its replacement in the warehouse and update COST_CARD_SHAPES",
       );
     }
-    samples.push({ label, route: `/regions/${id}` });
+    samples.push({ label, route: placePath(entry) });
   }
 
   const county = entries.find((entry) => entry.level === "county");
-  samples.push({ label: "report", route: `/regions/${county.id}/report` });
+  samples.push({ label: "report", route: `${placePath(county)}/report` });
   // The two pages about the data (Milestone 27), which no region sample reaches.
   samples.push({ label: "freshness", route: "/freshness" });
   samples.push({ label: "changes", route: "/changes" });

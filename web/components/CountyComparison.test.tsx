@@ -16,7 +16,7 @@ describe("table-only county comparison", () => {
   it("keeps source uncertainty and rank basis visible without a map", () => {
     const { container } = render(createElement(CountyComparison, { initial: measure.metric_id, sections: [{ key: "incomes", title: "Incomes", rows: [measure] }] }));
     container.querySelector("details")!.open = true;
-    expect(screen.getByRole("link", { name: "Atlantic County" }).getAttribute("href")).toBe("/regions/5");
+    expect(screen.getByRole("link", { name: "Atlantic County" }).getAttribute("href")).toBe("/nj/atlantic-county");
     expect(container.textContent).toContain("1–8 / 21");
     expect(container.textContent).toContain("± $1,000");
     expect(container.textContent).toContain("± 2.0%");

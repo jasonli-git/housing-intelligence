@@ -1,0 +1,7100 @@
+{
+  "2": {
+    "slug": "ocean-county",
+    "state": "nj",
+    "geoid": "34029",
+    "level": "county"
+  },
+  "3": {
+    "slug": "monmouth-county",
+    "state": "nj",
+    "geoid": "34025",
+    "level": "county"
+  },
+  "4": {
+    "slug": "hudson-county",
+    "state": "nj",
+    "geoid": "34017",
+    "level": "county"
+  },
+  "5": {
+    "slug": "atlantic-county",
+    "state": "nj",
+    "geoid": "34001",
+    "level": "county"
+  },
+  "6": {
+    "slug": "gloucester-county",
+    "state": "nj",
+    "geoid": "34015",
+    "level": "county"
+  },
+  "7": {
+    "slug": "essex-county",
+    "state": "nj",
+    "geoid": "34013",
+    "level": "county"
+  },
+  "8": {
+    "slug": "bergen-county",
+    "state": "nj",
+    "geoid": "34003",
+    "level": "county"
+  },
+  "9": {
+    "slug": "middlesex-county",
+    "state": "nj",
+    "geoid": "34023",
+    "level": "county"
+  },
+  "10": {
+    "slug": "burlington-county",
+    "state": "nj",
+    "geoid": "34005",
+    "level": "county"
+  },
+  "11": {
+    "slug": "mercer-county",
+    "state": "nj",
+    "geoid": "34021",
+    "level": "county"
+  },
+  "12": {
+    "slug": "somerset-county",
+    "state": "nj",
+    "geoid": "34035",
+    "level": "county"
+  },
+  "13": {
+    "slug": "morris-county",
+    "state": "nj",
+    "geoid": "34027",
+    "level": "county"
+  },
+  "14": {
+    "slug": "sussex-county",
+    "state": "nj",
+    "geoid": "34037",
+    "level": "county"
+  },
+  "15": {
+    "slug": "camden-county",
+    "state": "nj",
+    "geoid": "34007",
+    "level": "county"
+  },
+  "16": {
+    "slug": "cumberland-county",
+    "state": "nj",
+    "geoid": "34011",
+    "level": "county"
+  },
+  "17": {
+    "slug": "passaic-county",
+    "state": "nj",
+    "geoid": "34031",
+    "level": "county"
+  },
+  "18": {
+    "slug": "warren-county",
+    "state": "nj",
+    "geoid": "34041",
+    "level": "county"
+  },
+  "19": {
+    "slug": "cape-may-county",
+    "state": "nj",
+    "geoid": "34009",
+    "level": "county"
+  },
+  "20": {
+    "slug": "hunterdon-county",
+    "state": "nj",
+    "geoid": "34019",
+    "level": "county"
+  },
+  "21": {
+    "slug": "union-county",
+    "state": "nj",
+    "geoid": "34039",
+    "level": "county"
+  },
+  "22": {
+    "slug": "salem-county",
+    "state": "nj",
+    "geoid": "34033",
+    "level": "county"
+  },
+  "23": {
+    "slug": "manville",
+    "state": "nj",
+    "geoid": "3403543620",
+    "level": "municipality"
+  },
+  "24": {
+    "slug": "millstone-borough-somerset-county",
+    "state": "nj",
+    "geoid": "3403546590",
+    "level": "municipality"
+  },
+  "25": {
+    "slug": "raritan-borough-somerset-county",
+    "state": "nj",
+    "geoid": "3403561980",
+    "level": "municipality"
+  },
+  "26": {
+    "slug": "rocky-hill",
+    "state": "nj",
+    "geoid": "3403564320",
+    "level": "municipality"
+  },
+  "27": {
+    "slug": "somerville",
+    "state": "nj",
+    "geoid": "3403568460",
+    "level": "municipality"
+  },
+  "28": {
+    "slug": "south-bound-brook",
+    "state": "nj",
+    "geoid": "3403568730",
+    "level": "municipality"
+  },
+  "29": {
+    "slug": "buena",
+    "state": "nj",
+    "geoid": "3400108680",
+    "level": "municipality"
+  },
+  "30": {
+    "slug": "voorhees",
+    "state": "nj",
+    "geoid": "3400776220",
+    "level": "municipality"
+  },
+  "31": {
+    "slug": "lindenwold",
+    "state": "nj",
+    "geoid": "3400740440",
+    "level": "municipality"
+  },
+  "32": {
+    "slug": "haddon",
+    "state": "nj",
+    "geoid": "3400728740",
+    "level": "municipality"
+  },
+  "33": {
+    "slug": "island-heights",
+    "state": "nj",
+    "geoid": "3402934530",
+    "level": "municipality"
+  },
+  "34": {
+    "slug": "lakehurst",
+    "state": "nj",
+    "geoid": "3402937770",
+    "level": "municipality"
+  },
+  "35": {
+    "slug": "lavallette",
+    "state": "nj",
+    "geoid": "3402939390",
+    "level": "municipality"
+  },
+  "36": {
+    "slug": "mantoloking",
+    "state": "nj",
+    "geoid": "3402943380",
+    "level": "municipality"
+  },
+  "37": {
+    "slug": "ocean-gate",
+    "state": "nj",
+    "geoid": "3402954450",
+    "level": "municipality"
+  },
+  "38": {
+    "slug": "pine-beach",
+    "state": "nj",
+    "geoid": "3402958590",
+    "level": "municipality"
+  },
+  "39": {
+    "slug": "woodbridge",
+    "state": "nj",
+    "geoid": "3402382000",
+    "level": "municipality"
+  },
+  "40": {
+    "slug": "spotswood",
+    "state": "nj",
+    "geoid": "3402369810",
+    "level": "municipality"
+  },
+  "41": {
+    "slug": "berkeley-heights",
+    "state": "nj",
+    "geoid": "3403905320",
+    "level": "municipality"
+  },
+  "42": {
+    "slug": "linden",
+    "state": "nj",
+    "geoid": "3403940350",
+    "level": "municipality"
+  },
+  "43": {
+    "slug": "scotch-plains",
+    "state": "nj",
+    "geoid": "3403966060",
+    "level": "municipality"
+  },
+  "44": {
+    "slug": "summit",
+    "state": "nj",
+    "geoid": "3403971430",
+    "level": "municipality"
+  },
+  "45": {
+    "slug": "clark",
+    "state": "nj",
+    "geoid": "3403913150",
+    "level": "municipality"
+  },
+  "46": {
+    "slug": "englewood-cliffs",
+    "state": "nj",
+    "geoid": "3400321510",
+    "level": "municipality"
+  },
+  "47": {
+    "slug": "fairview",
+    "state": "nj",
+    "geoid": "3400322560",
+    "level": "municipality"
+  },
+  "48": {
+    "slug": "fort-lee",
+    "state": "nj",
+    "geoid": "3400324420",
+    "level": "municipality"
+  },
+  "49": {
+    "slug": "franklin-lakes",
+    "state": "nj",
+    "geoid": "3400324990",
+    "level": "municipality"
+  },
+  "50": {
+    "slug": "sussex",
+    "state": "nj",
+    "geoid": "3403771670",
+    "level": "municipality"
+  },
+  "51": {
+    "slug": "walpack",
+    "state": "nj",
+    "geoid": "3403776640",
+    "level": "municipality"
+  },
+  "52": {
+    "slug": "hanover",
+    "state": "nj",
+    "geoid": "3402729550",
+    "level": "municipality"
+  },
+  "53": {
+    "slug": "kinnelon",
+    "state": "nj",
+    "geoid": "3402737110",
+    "level": "municipality"
+  },
+  "54": {
+    "slug": "parsippany-troy-hills",
+    "state": "nj",
+    "geoid": "3402756460",
+    "level": "municipality"
+  },
+  "55": {
+    "slug": "victory-gardens",
+    "state": "nj",
+    "geoid": "3402775890",
+    "level": "municipality"
+  },
+  "56": {
+    "slug": "mount-ephraim",
+    "state": "nj",
+    "geoid": "3400748750",
+    "level": "municipality"
+  },
+  "57": {
+    "slug": "oaklyn",
+    "state": "nj",
+    "geoid": "3400753880",
+    "level": "municipality"
+  },
+  "58": {
+    "slug": "runnemede",
+    "state": "nj",
+    "geoid": "3400765160",
+    "level": "municipality"
+  },
+  "59": {
+    "slug": "somerdale",
+    "state": "nj",
+    "geoid": "3400768340",
+    "level": "municipality"
+  },
+  "60": {
+    "slug": "pine-hill",
+    "state": "nj",
+    "geoid": "3400758770",
+    "level": "municipality"
+  },
+  "61": {
+    "slug": "montvale",
+    "state": "nj",
+    "geoid": "3400347610",
+    "level": "municipality"
+  },
+  "62": {
+    "slug": "moonachie",
+    "state": "nj",
+    "geoid": "3400347700",
+    "level": "municipality"
+  },
+  "63": {
+    "slug": "north-arlington",
+    "state": "nj",
+    "geoid": "3400352320",
+    "level": "municipality"
+  },
+  "64": {
+    "slug": "norwood",
+    "state": "nj",
+    "geoid": "3400353610",
+    "level": "municipality"
+  },
+  "65": {
+    "slug": "folsom",
+    "state": "nj",
+    "geoid": "3400123940",
+    "level": "municipality"
+  },
+  "66": {
+    "slug": "longport",
+    "state": "nj",
+    "geoid": "3400141370",
+    "level": "municipality"
+  },
+  "67": {
+    "slug": "margate-city",
+    "state": "nj",
+    "geoid": "3400143890",
+    "level": "municipality"
+  },
+  "68": {
+    "slug": "northfield",
+    "state": "nj",
+    "geoid": "3400152950",
+    "level": "municipality"
+  },
+  "69": {
+    "slug": "cape-may",
+    "state": "nj",
+    "geoid": "3400910270",
+    "level": "municipality"
+  },
+  "70": {
+    "slug": "cape-may-point",
+    "state": "nj",
+    "geoid": "3400910330",
+    "level": "municipality"
+  },
+  "71": {
+    "slug": "north-wildwood",
+    "state": "nj",
+    "geoid": "3400953490",
+    "level": "municipality"
+  },
+  "72": {
+    "slug": "ocean-city",
+    "state": "nj",
+    "geoid": "3400954360",
+    "level": "municipality"
+  },
+  "73": {
+    "slug": "stone-harbor",
+    "state": "nj",
+    "geoid": "3400971010",
+    "level": "municipality"
+  },
+  "74": {
+    "slug": "west-cape-may",
+    "state": "nj",
+    "geoid": "3400978530",
+    "level": "municipality"
+  },
+  "75": {
+    "slug": "barnegat",
+    "state": "nj",
+    "geoid": "3402903050",
+    "level": "municipality"
+  },
+  "76": {
+    "slug": "jackson",
+    "state": "nj",
+    "geoid": "3402934680",
+    "level": "municipality"
+  },
+  "77": {
+    "slug": "lakewood",
+    "state": "nj",
+    "geoid": "3402938550",
+    "level": "municipality"
+  },
+  "78": {
+    "slug": "little-egg-harbor",
+    "state": "nj",
+    "geoid": "3402940560",
+    "level": "municipality"
+  },
+  "79": {
+    "slug": "west-orange",
+    "state": "nj",
+    "geoid": "3401379800",
+    "level": "municipality"
+  },
+  "80": {
+    "slug": "long-beach",
+    "state": "nj",
+    "geoid": "3402941250",
+    "level": "municipality"
+  },
+  "81": {
+    "slug": "ocean-township-ocean-county",
+    "state": "nj",
+    "geoid": "3402954300",
+    "level": "municipality"
+  },
+  "82": {
+    "slug": "plumsted",
+    "state": "nj",
+    "geoid": "3402959790",
+    "level": "municipality"
+  },
+  "83": {
+    "slug": "surf-city",
+    "state": "nj",
+    "geoid": "3402971640",
+    "level": "municipality"
+  },
+  "84": {
+    "slug": "tuckerton",
+    "state": "nj",
+    "geoid": "3402974210",
+    "level": "municipality"
+  },
+  "85": {
+    "slug": "cherry-hill",
+    "state": "nj",
+    "geoid": "3400712280",
+    "level": "municipality"
+  },
+  "86": {
+    "slug": "waterford",
+    "state": "nj",
+    "geoid": "3400777630",
+    "level": "municipality"
+  },
+  "87": {
+    "slug": "camden",
+    "state": "nj",
+    "geoid": "3400710000",
+    "level": "municipality"
+  },
+  "88": {
+    "slug": "atlantic-highlands",
+    "state": "nj",
+    "geoid": "3402502110",
+    "level": "municipality"
+  },
+  "89": {
+    "slug": "brielle",
+    "state": "nj",
+    "geoid": "3402507750",
+    "level": "municipality"
+  },
+  "90": {
+    "slug": "eatontown",
+    "state": "nj",
+    "geoid": "3402519840",
+    "level": "municipality"
+  },
+  "91": {
+    "slug": "freehold-township-monmouth-county",
+    "state": "nj",
+    "geoid": "3402525230",
+    "level": "municipality"
+  },
+  "92": {
+    "slug": "hazlet",
+    "state": "nj",
+    "geoid": "3402530690",
+    "level": "municipality"
+  },
+  "93": {
+    "slug": "howell",
+    "state": "nj",
+    "geoid": "3402533300",
+    "level": "municipality"
+  },
+  "94": {
+    "slug": "keansburg",
+    "state": "nj",
+    "geoid": "3402536480",
+    "level": "municipality"
+  },
+  "95": {
+    "slug": "keyport",
+    "state": "nj",
+    "geoid": "3402536810",
+    "level": "municipality"
+  },
+  "96": {
+    "slug": "loch-arbour",
+    "state": "nj",
+    "geoid": "3402541010",
+    "level": "municipality"
+  },
+  "97": {
+    "slug": "long-branch",
+    "state": "nj",
+    "geoid": "3402541310",
+    "level": "municipality"
+  },
+  "98": {
+    "slug": "far-hills",
+    "state": "nj",
+    "geoid": "3403522890",
+    "level": "municipality"
+  },
+  "99": {
+    "slug": "hillsborough",
+    "state": "nj",
+    "geoid": "3403531890",
+    "level": "municipality"
+  },
+  "100": {
+    "slug": "montgomery",
+    "state": "nj",
+    "geoid": "3403547580",
+    "level": "municipality"
+  },
+  "101": {
+    "slug": "matawan",
+    "state": "nj",
+    "geoid": "3402544520",
+    "level": "municipality"
+  },
+  "102": {
+    "slug": "millstone-township-monmouth-county",
+    "state": "nj",
+    "geoid": "3402546560",
+    "level": "municipality"
+  },
+  "103": {
+    "slug": "neptune-city",
+    "state": "nj",
+    "geoid": "3402549920",
+    "level": "municipality"
+  },
+  "104": {
+    "slug": "ocean-township-monmouth-county",
+    "state": "nj",
+    "geoid": "3402554270",
+    "level": "municipality"
+  },
+  "105": {
+    "slug": "tinton-falls",
+    "state": "nj",
+    "geoid": "3402573020",
+    "level": "municipality"
+  },
+  "106": {
+    "slug": "upper-freehold",
+    "state": "nj",
+    "geoid": "3402574900",
+    "level": "municipality"
+  },
+  "107": {
+    "slug": "west-long-branch",
+    "state": "nj",
+    "geoid": "3402579310",
+    "level": "municipality"
+  },
+  "108": {
+    "slug": "caldwell",
+    "state": "nj",
+    "geoid": "3401309250",
+    "level": "municipality"
+  },
+  "109": {
+    "slug": "cedar-grove",
+    "state": "nj",
+    "geoid": "3401311200",
+    "level": "municipality"
+  },
+  "110": {
+    "slug": "andover-township-sussex-county",
+    "state": "nj",
+    "geoid": "3403701360",
+    "level": "municipality"
+  },
+  "111": {
+    "slug": "branchville",
+    "state": "nj",
+    "geoid": "3403707300",
+    "level": "municipality"
+  },
+  "112": {
+    "slug": "frankford",
+    "state": "nj",
+    "geoid": "3403724810",
+    "level": "municipality"
+  },
+  "113": {
+    "slug": "bloomsbury",
+    "state": "nj",
+    "geoid": "3401906370",
+    "level": "municipality"
+  },
+  "114": {
+    "slug": "califon",
+    "state": "nj",
+    "geoid": "3401909280",
+    "level": "municipality"
+  },
+  "115": {
+    "slug": "clinton-town-hunterdon-county",
+    "state": "nj",
+    "geoid": "3401913720",
+    "level": "municipality"
+  },
+  "116": {
+    "slug": "closter",
+    "state": "nj",
+    "geoid": "3400313810",
+    "level": "municipality"
+  },
+  "117": {
+    "slug": "old-tappan",
+    "state": "nj",
+    "geoid": "3400354870",
+    "level": "municipality"
+  },
+  "118": {
+    "slug": "jefferson",
+    "state": "nj",
+    "geoid": "3402734980",
+    "level": "municipality"
+  },
+  "119": {
+    "slug": "wallington",
+    "state": "nj",
+    "geoid": "3400376490",
+    "level": "municipality"
+  },
+  "120": {
+    "slug": "washington-township-bergen-county",
+    "state": "nj",
+    "geoid": "3400377135",
+    "level": "municipality"
+  },
+  "121": {
+    "slug": "wyckoff",
+    "state": "nj",
+    "geoid": "3400383050",
+    "level": "municipality"
+  },
+  "122": {
+    "slug": "randolph",
+    "state": "nj",
+    "geoid": "3402761890",
+    "level": "municipality"
+  },
+  "123": {
+    "slug": "mahwah",
+    "state": "nj",
+    "geoid": "3400342750",
+    "level": "municipality"
+  },
+  "124": {
+    "slug": "hightstown",
+    "state": "nj",
+    "geoid": "3402131620",
+    "level": "municipality"
+  },
+  "125": {
+    "slug": "hopewell-borough-mercer-county",
+    "state": "nj",
+    "geoid": "3402133150",
+    "level": "municipality"
+  },
+  "126": {
+    "slug": "haledon",
+    "state": "nj",
+    "geoid": "3403129070",
+    "level": "municipality"
+  },
+  "127": {
+    "slug": "fair-lawn",
+    "state": "nj",
+    "geoid": "3400322470",
+    "level": "municipality"
+  },
+  "128": {
+    "slug": "northvale",
+    "state": "nj",
+    "geoid": "3400353430",
+    "level": "municipality"
+  },
+  "129": {
+    "slug": "paramus",
+    "state": "nj",
+    "geoid": "3400355950",
+    "level": "municipality"
+  },
+  "130": {
+    "slug": "river-edge",
+    "state": "nj",
+    "geoid": "3400363360",
+    "level": "municipality"
+  },
+  "131": {
+    "slug": "rockleigh",
+    "state": "nj",
+    "geoid": "3400364170",
+    "level": "municipality"
+  },
+  "132": {
+    "slug": "westwood",
+    "state": "nj",
+    "geoid": "3400380270",
+    "level": "municipality"
+  },
+  "133": {
+    "slug": "cliffside-park",
+    "state": "nj",
+    "geoid": "3400313570",
+    "level": "municipality"
+  },
+  "134": {
+    "slug": "rochelle-park",
+    "state": "nj",
+    "geoid": "3400363990",
+    "level": "municipality"
+  },
+  "135": {
+    "slug": "rutherford",
+    "state": "nj",
+    "geoid": "3400365280",
+    "level": "municipality"
+  },
+  "136": {
+    "slug": "saddle-river",
+    "state": "nj",
+    "geoid": "3400365400",
+    "level": "municipality"
+  },
+  "137": {
+    "slug": "south-hackensack",
+    "state": "nj",
+    "geoid": "3400368970",
+    "level": "municipality"
+  },
+  "138": {
+    "slug": "hamilton-township-mercer-county",
+    "state": "nj",
+    "geoid": "3402129310",
+    "level": "municipality"
+  },
+  "139": {
+    "slug": "hopewell-township-mercer-county",
+    "state": "nj",
+    "geoid": "3402133180",
+    "level": "municipality"
+  },
+  "140": {
+    "slug": "robbinsville",
+    "state": "nj",
+    "geoid": "3402163850",
+    "level": "municipality"
+  },
+  "141": {
+    "slug": "jersey-city",
+    "state": "nj",
+    "geoid": "3401736000",
+    "level": "municipality"
+  },
+  "142": {
+    "slug": "secaucus",
+    "state": "nj",
+    "geoid": "3401766570",
+    "level": "municipality"
+  },
+  "143": {
+    "slug": "fanwood",
+    "state": "nj",
+    "geoid": "3403922860",
+    "level": "municipality"
+  },
+  "144": {
+    "slug": "rahway",
+    "state": "nj",
+    "geoid": "3403961530",
+    "level": "municipality"
+  },
+  "145": {
+    "slug": "roselle",
+    "state": "nj",
+    "geoid": "3403964620",
+    "level": "municipality"
+  },
+  "146": {
+    "slug": "roselle-park",
+    "state": "nj",
+    "geoid": "3403964650",
+    "level": "municipality"
+  },
+  "147": {
+    "slug": "springfield-township-union-county",
+    "state": "nj",
+    "geoid": "3403970020",
+    "level": "municipality"
+  },
+  "148": {
+    "slug": "winfield",
+    "state": "nj",
+    "geoid": "3403981650",
+    "level": "municipality"
+  },
+  "149": {
+    "slug": "carteret",
+    "state": "nj",
+    "geoid": "3402310750",
+    "level": "municipality"
+  },
+  "150": {
+    "slug": "dunellen",
+    "state": "nj",
+    "geoid": "3402318490",
+    "level": "municipality"
+  },
+  "151": {
+    "slug": "city-of-orange",
+    "state": "nj",
+    "geoid": "3401313045",
+    "level": "municipality"
+  },
+  "152": {
+    "slug": "east-orange",
+    "state": "nj",
+    "geoid": "3401319390",
+    "level": "municipality"
+  },
+  "153": {
+    "slug": "essex-fells",
+    "state": "nj",
+    "geoid": "3401321840",
+    "level": "municipality"
+  },
+  "154": {
+    "slug": "glen-ridge",
+    "state": "nj",
+    "geoid": "3401326610",
+    "level": "municipality"
+  },
+  "155": {
+    "slug": "irvington",
+    "state": "nj",
+    "geoid": "3401334450",
+    "level": "municipality"
+  },
+  "156": {
+    "slug": "mount-arlington",
+    "state": "nj",
+    "geoid": "3402748690",
+    "level": "municipality"
+  },
+  "157": {
+    "slug": "netcong",
+    "state": "nj",
+    "geoid": "3402750130",
+    "level": "municipality"
+  },
+  "158": {
+    "slug": "riverdale",
+    "state": "nj",
+    "geoid": "3402763300",
+    "level": "municipality"
+  },
+  "159": {
+    "slug": "midland-park",
+    "state": "nj",
+    "geoid": "3400346110",
+    "level": "municipality"
+  },
+  "160": {
+    "slug": "madison",
+    "state": "nj",
+    "geoid": "3402742510",
+    "level": "municipality"
+  },
+  "161": {
+    "slug": "mendham-borough-morris-county",
+    "state": "nj",
+    "geoid": "3402745330",
+    "level": "municipality"
+  },
+  "162": {
+    "slug": "mine-hill",
+    "state": "nj",
+    "geoid": "3402746860",
+    "level": "municipality"
+  },
+  "163": {
+    "slug": "morris",
+    "state": "nj",
+    "geoid": "3402748090",
+    "level": "municipality"
+  },
+  "164": {
+    "slug": "morris-plains",
+    "state": "nj",
+    "geoid": "3402748210",
+    "level": "municipality"
+  },
+  "165": {
+    "slug": "mountain-lakes",
+    "state": "nj",
+    "geoid": "3402748480",
+    "level": "municipality"
+  },
+  "166": {
+    "slug": "garfield",
+    "state": "nj",
+    "geoid": "3400325770",
+    "level": "municipality"
+  },
+  "167": {
+    "slug": "glen-rock",
+    "state": "nj",
+    "geoid": "3400326640",
+    "level": "municipality"
+  },
+  "168": {
+    "slug": "harrington-park",
+    "state": "nj",
+    "geoid": "3400330150",
+    "level": "municipality"
+  },
+  "169": {
+    "slug": "hopatcong",
+    "state": "nj",
+    "geoid": "3403732910",
+    "level": "municipality"
+  },
+  "170": {
+    "slug": "newton",
+    "state": "nj",
+    "geoid": "3403751930",
+    "level": "municipality"
+  },
+  "171": {
+    "slug": "wantage",
+    "state": "nj",
+    "geoid": "3403776790",
+    "level": "municipality"
+  },
+  "172": {
+    "slug": "stillwater",
+    "state": "nj",
+    "geoid": "3403770890",
+    "level": "municipality"
+  },
+  "173": {
+    "slug": "little-silver",
+    "state": "nj",
+    "geoid": "3402540770",
+    "level": "municipality"
+  },
+  "174": {
+    "slug": "manasquan",
+    "state": "nj",
+    "geoid": "3402543050",
+    "level": "municipality"
+  },
+  "175": {
+    "slug": "monmouth-beach",
+    "state": "nj",
+    "geoid": "3402547130",
+    "level": "municipality"
+  },
+  "176": {
+    "slug": "red-bank",
+    "state": "nj",
+    "geoid": "3402562430",
+    "level": "municipality"
+  },
+  "177": {
+    "slug": "rumson",
+    "state": "nj",
+    "geoid": "3402565130",
+    "level": "municipality"
+  },
+  "178": {
+    "slug": "pilesgrove",
+    "state": "nj",
+    "geoid": "3403358530",
+    "level": "municipality"
+  },
+  "179": {
+    "slug": "mannington",
+    "state": "nj",
+    "geoid": "3403343200",
+    "level": "municipality"
+  },
+  "180": {
+    "slug": "quinton",
+    "state": "nj",
+    "geoid": "3403361470",
+    "level": "municipality"
+  },
+  "181": {
+    "slug": "carneys-point",
+    "state": "nj",
+    "geoid": "3403310610",
+    "level": "municipality"
+  },
+  "182": {
+    "slug": "cranbury",
+    "state": "nj",
+    "geoid": "3402315550",
+    "level": "municipality"
+  },
+  "183": {
+    "slug": "franklin-township-warren-county",
+    "state": "nj",
+    "geoid": "3404124960",
+    "level": "municipality"
+  },
+  "184": {
+    "slug": "hackettstown",
+    "state": "nj",
+    "geoid": "3404128710",
+    "level": "municipality"
+  },
+  "185": {
+    "slug": "washington-township-warren-county",
+    "state": "nj",
+    "geoid": "3404177300",
+    "level": "municipality"
+  },
+  "186": {
+    "slug": "pohatcong",
+    "state": "nj",
+    "geoid": "3404159820",
+    "level": "municipality"
+  },
+  "187": {
+    "slug": "boonton-town-morris-county",
+    "state": "nj",
+    "geoid": "3402706610",
+    "level": "municipality"
+  },
+  "188": {
+    "slug": "boonton-township-morris-county",
+    "state": "nj",
+    "geoid": "3402706640",
+    "level": "municipality"
+  },
+  "189": {
+    "slug": "chatham-borough-morris-county",
+    "state": "nj",
+    "geoid": "3402712100",
+    "level": "municipality"
+  },
+  "190": {
+    "slug": "dover",
+    "state": "nj",
+    "geoid": "3402718070",
+    "level": "municipality"
+  },
+  "191": {
+    "slug": "florham-park",
+    "state": "nj",
+    "geoid": "3402723910",
+    "level": "municipality"
+  },
+  "192": {
+    "slug": "lincoln-park",
+    "state": "nj",
+    "geoid": "3402740290",
+    "level": "municipality"
+  },
+  "193": {
+    "slug": "englewood",
+    "state": "nj",
+    "geoid": "3400321480",
+    "level": "municipality"
+  },
+  "194": {
+    "slug": "absecon",
+    "state": "nj",
+    "geoid": "3400100100",
+    "level": "municipality"
+  },
+  "195": {
+    "slug": "harmony",
+    "state": "nj",
+    "geoid": "3404130090",
+    "level": "municipality"
+  },
+  "196": {
+    "slug": "hope",
+    "state": "nj",
+    "geoid": "3404133060",
+    "level": "municipality"
+  },
+  "197": {
+    "slug": "liberty",
+    "state": "nj",
+    "geoid": "3404140110",
+    "level": "municipality"
+  },
+  "198": {
+    "slug": "lopatcong",
+    "state": "nj",
+    "geoid": "3404141490",
+    "level": "municipality"
+  },
+  "199": {
+    "slug": "oxford",
+    "state": "nj",
+    "geoid": "3404155530",
+    "level": "municipality"
+  },
+  "200": {
+    "slug": "colts-neck",
+    "state": "nj",
+    "geoid": "3402514560",
+    "level": "municipality"
+  },
+  "201": {
+    "slug": "englishtown",
+    "state": "nj",
+    "geoid": "3402521570",
+    "level": "municipality"
+  },
+  "202": {
+    "slug": "middletown",
+    "state": "nj",
+    "geoid": "3402545990",
+    "level": "municipality"
+  },
+  "203": {
+    "slug": "neptune",
+    "state": "nj",
+    "geoid": "3402549890",
+    "level": "municipality"
+  },
+  "204": {
+    "slug": "oceanport",
+    "state": "nj",
+    "geoid": "3402554570",
+    "level": "municipality"
+  },
+  "205": {
+    "slug": "shrewsbury-borough-monmouth-county",
+    "state": "nj",
+    "geoid": "3402567350",
+    "level": "municipality"
+  },
+  "206": {
+    "slug": "wall",
+    "state": "nj",
+    "geoid": "3402576460",
+    "level": "municipality"
+  },
+  "207": {
+    "slug": "bass-river",
+    "state": "nj",
+    "geoid": "3400503370",
+    "level": "municipality"
+  },
+  "208": {
+    "slug": "bordentown-township-burlington-county",
+    "state": "nj",
+    "geoid": "3400506700",
+    "level": "municipality"
+  },
+  "209": {
+    "slug": "burlington-township-burlington-county",
+    "state": "nj",
+    "geoid": "3400508950",
+    "level": "municipality"
+  },
+  "210": {
+    "slug": "chesterfield",
+    "state": "nj",
+    "geoid": "3400512670",
+    "level": "municipality"
+  },
+  "211": {
+    "slug": "cinnaminson",
+    "state": "nj",
+    "geoid": "3400512940",
+    "level": "municipality"
+  },
+  "212": {
+    "slug": "hainesport",
+    "state": "nj",
+    "geoid": "3400529010",
+    "level": "municipality"
+  },
+  "213": {
+    "slug": "lumberton",
+    "state": "nj",
+    "geoid": "3400542060",
+    "level": "municipality"
+  },
+  "214": {
+    "slug": "maple-shade",
+    "state": "nj",
+    "geoid": "3400543740",
+    "level": "municipality"
+  },
+  "215": {
+    "slug": "medford",
+    "state": "nj",
+    "geoid": "3400545120",
+    "level": "municipality"
+  },
+  "216": {
+    "slug": "medford-lakes",
+    "state": "nj",
+    "geoid": "3400545210",
+    "level": "municipality"
+  },
+  "217": {
+    "slug": "mount-laurel",
+    "state": "nj",
+    "geoid": "3400549020",
+    "level": "municipality"
+  },
+  "218": {
+    "slug": "pemberton-township-burlington-county",
+    "state": "nj",
+    "geoid": "3400557510",
+    "level": "municipality"
+  },
+  "219": {
+    "slug": "shamong",
+    "state": "nj",
+    "geoid": "3400566810",
+    "level": "municipality"
+  },
+  "220": {
+    "slug": "tabernacle",
+    "state": "nj",
+    "geoid": "3400572060",
+    "level": "municipality"
+  },
+  "221": {
+    "slug": "westampton",
+    "state": "nj",
+    "geoid": "3400578200",
+    "level": "municipality"
+  },
+  "222": {
+    "slug": "woodland",
+    "state": "nj",
+    "geoid": "3400582420",
+    "level": "municipality"
+  },
+  "223": {
+    "slug": "pennington",
+    "state": "nj",
+    "geoid": "3402157600",
+    "level": "municipality"
+  },
+  "224": {
+    "slug": "princeton",
+    "state": "nj",
+    "geoid": "3402160900",
+    "level": "municipality"
+  },
+  "225": {
+    "slug": "belleville",
+    "state": "nj",
+    "geoid": "3401304695",
+    "level": "municipality"
+  },
+  "226": {
+    "slug": "bloomfield",
+    "state": "nj",
+    "geoid": "3401306260",
+    "level": "municipality"
+  },
+  "227": {
+    "slug": "holland",
+    "state": "nj",
+    "geoid": "3401932460",
+    "level": "municipality"
+  },
+  "228": {
+    "slug": "raritan-township-hunterdon-county",
+    "state": "nj",
+    "geoid": "3401961920",
+    "level": "municipality"
+  },
+  "229": {
+    "slug": "chester-borough-morris-county",
+    "state": "nj",
+    "geoid": "3402712580",
+    "level": "municipality"
+  },
+  "230": {
+    "slug": "chester-township-morris-county",
+    "state": "nj",
+    "geoid": "3402712610",
+    "level": "municipality"
+  },
+  "231": {
+    "slug": "denville",
+    "state": "nj",
+    "geoid": "3402717650",
+    "level": "municipality"
+  },
+  "232": {
+    "slug": "east-hanover",
+    "state": "nj",
+    "geoid": "3402719210",
+    "level": "municipality"
+  },
+  "233": {
+    "slug": "harding",
+    "state": "nj",
+    "geoid": "3402729700",
+    "level": "municipality"
+  },
+  "234": {
+    "slug": "long-hill",
+    "state": "nj",
+    "geoid": "3402741362",
+    "level": "municipality"
+  },
+  "235": {
+    "slug": "mendham-township-morris-county",
+    "state": "nj",
+    "geoid": "3402745360",
+    "level": "municipality"
+  },
+  "236": {
+    "slug": "montville",
+    "state": "nj",
+    "geoid": "3402747670",
+    "level": "municipality"
+  },
+  "237": {
+    "slug": "morristown",
+    "state": "nj",
+    "geoid": "3402748300",
+    "level": "municipality"
+  },
+  "238": {
+    "slug": "east-windsor",
+    "state": "nj",
+    "geoid": "3402119780",
+    "level": "municipality"
+  },
+  "239": {
+    "slug": "ewing",
+    "state": "nj",
+    "geoid": "3402122185",
+    "level": "municipality"
+  },
+  "240": {
+    "slug": "trenton",
+    "state": "nj",
+    "geoid": "3402174000",
+    "level": "municipality"
+  },
+  "241": {
+    "slug": "west-windsor",
+    "state": "nj",
+    "geoid": "3402180240",
+    "level": "municipality"
+  },
+  "242": {
+    "slug": "allenhurst",
+    "state": "nj",
+    "geoid": "3402500730",
+    "level": "municipality"
+  },
+  "243": {
+    "slug": "allentown",
+    "state": "nj",
+    "geoid": "3402500760",
+    "level": "municipality"
+  },
+  "244": {
+    "slug": "asbury-park",
+    "state": "nj",
+    "geoid": "3402501960",
+    "level": "municipality"
+  },
+  "245": {
+    "slug": "avon-by-the-sea",
+    "state": "nj",
+    "geoid": "3402502440",
+    "level": "municipality"
+  },
+  "246": {
+    "slug": "belmar",
+    "state": "nj",
+    "geoid": "3402504930",
+    "level": "municipality"
+  },
+  "247": {
+    "slug": "bradley-beach",
+    "state": "nj",
+    "geoid": "3402506970",
+    "level": "municipality"
+  },
+  "248": {
+    "slug": "atlantic-city",
+    "state": "nj",
+    "geoid": "3400102080",
+    "level": "municipality"
+  },
+  "249": {
+    "slug": "corbin-city",
+    "state": "nj",
+    "geoid": "3400115160",
+    "level": "municipality"
+  },
+  "250": {
+    "slug": "egg-harbor-city",
+    "state": "nj",
+    "geoid": "3400120350",
+    "level": "municipality"
+  },
+  "251": {
+    "slug": "galloway",
+    "state": "nj",
+    "geoid": "3400125560",
+    "level": "municipality"
+  },
+  "252": {
+    "slug": "hamilton-township-atlantic-county",
+    "state": "nj",
+    "geoid": "3400129280",
+    "level": "municipality"
+  },
+  "253": {
+    "slug": "linwood",
+    "state": "nj",
+    "geoid": "3400140530",
+    "level": "municipality"
+  },
+  "254": {
+    "slug": "weymouth",
+    "state": "nj",
+    "geoid": "3400180330",
+    "level": "municipality"
+  },
+  "255": {
+    "slug": "alloway",
+    "state": "nj",
+    "geoid": "3403300880",
+    "level": "municipality"
+  },
+  "256": {
+    "slug": "elmer",
+    "state": "nj",
+    "geoid": "3403321240",
+    "level": "municipality"
+  },
+  "257": {
+    "slug": "buena-vista",
+    "state": "nj",
+    "geoid": "3400108710",
+    "level": "municipality"
+  },
+  "258": {
+    "slug": "brooklawn",
+    "state": "nj",
+    "geoid": "3400708170",
+    "level": "municipality"
+  },
+  "259": {
+    "slug": "chesilhurst",
+    "state": "nj",
+    "geoid": "3400712550",
+    "level": "municipality"
+  },
+  "260": {
+    "slug": "clementon",
+    "state": "nj",
+    "geoid": "3400713420",
+    "level": "municipality"
+  },
+  "261": {
+    "slug": "collingswood",
+    "state": "nj",
+    "geoid": "3400714260",
+    "level": "municipality"
+  },
+  "262": {
+    "slug": "gibbsboro",
+    "state": "nj",
+    "geoid": "3400726070",
+    "level": "municipality"
+  },
+  "263": {
+    "slug": "bernardsville",
+    "state": "nj",
+    "geoid": "3403505590",
+    "level": "municipality"
+  },
+  "264": {
+    "slug": "brick",
+    "state": "nj",
+    "geoid": "3402907420",
+    "level": "municipality"
+  },
+  "265": {
+    "slug": "manchester",
+    "state": "nj",
+    "geoid": "3402943140",
+    "level": "municipality"
+  },
+  "266": {
+    "slug": "seaside-park",
+    "state": "nj",
+    "geoid": "3402966480",
+    "level": "municipality"
+  },
+  "267": {
+    "slug": "mansfield-township-burlington-county",
+    "state": "nj",
+    "geoid": "3400543290",
+    "level": "municipality"
+  },
+  "268": {
+    "slug": "moorestown",
+    "state": "nj",
+    "geoid": "3400547880",
+    "level": "municipality"
+  },
+  "269": {
+    "slug": "new-hanover",
+    "state": "nj",
+    "geoid": "3400551510",
+    "level": "municipality"
+  },
+  "270": {
+    "slug": "paulsboro",
+    "state": "nj",
+    "geoid": "3401557150",
+    "level": "municipality"
+  },
+  "271": {
+    "slug": "pitman",
+    "state": "nj",
+    "geoid": "3401559070",
+    "level": "municipality"
+  },
+  "272": {
+    "slug": "swedesboro",
+    "state": "nj",
+    "geoid": "3401571850",
+    "level": "municipality"
+  },
+  "273": {
+    "slug": "wenonah",
+    "state": "nj",
+    "geoid": "3401578110",
+    "level": "municipality"
+  },
+  "274": {
+    "slug": "westville",
+    "state": "nj",
+    "geoid": "3401580120",
+    "level": "municipality"
+  },
+  "275": {
+    "slug": "bayonne",
+    "state": "nj",
+    "geoid": "3401703580",
+    "level": "municipality"
+  },
+  "276": {
+    "slug": "east-newark",
+    "state": "nj",
+    "geoid": "3401719360",
+    "level": "municipality"
+  },
+  "277": {
+    "slug": "guttenberg",
+    "state": "nj",
+    "geoid": "3401728650",
+    "level": "municipality"
+  },
+  "278": {
+    "slug": "harrison-town-hudson-county",
+    "state": "nj",
+    "geoid": "3401730210",
+    "level": "municipality"
+  },
+  "279": {
+    "slug": "union-city",
+    "state": "nj",
+    "geoid": "3401774630",
+    "level": "municipality"
+  },
+  "280": {
+    "slug": "weehawken",
+    "state": "nj",
+    "geoid": "3401777930",
+    "level": "municipality"
+  },
+  "281": {
+    "slug": "west-new-york",
+    "state": "nj",
+    "geoid": "3401779610",
+    "level": "municipality"
+  },
+  "282": {
+    "slug": "allendale",
+    "state": "nj",
+    "geoid": "3400300700",
+    "level": "municipality"
+  },
+  "283": {
+    "slug": "alpine",
+    "state": "nj",
+    "geoid": "3400301090",
+    "level": "municipality"
+  },
+  "284": {
+    "slug": "bergenfield",
+    "state": "nj",
+    "geoid": "3400305170",
+    "level": "municipality"
+  },
+  "285": {
+    "slug": "carlstadt",
+    "state": "nj",
+    "geoid": "3400310480",
+    "level": "municipality"
+  },
+  "286": {
+    "slug": "cresskill",
+    "state": "nj",
+    "geoid": "3400315820",
+    "level": "municipality"
+  },
+  "287": {
+    "slug": "demarest",
+    "state": "nj",
+    "geoid": "3400317530",
+    "level": "municipality"
+  },
+  "288": {
+    "slug": "franklin-borough-sussex-county",
+    "state": "nj",
+    "geoid": "3403724930",
+    "level": "municipality"
+  },
+  "289": {
+    "slug": "fredon",
+    "state": "nj",
+    "geoid": "3403725140",
+    "level": "municipality"
+  },
+  "290": {
+    "slug": "green",
+    "state": "nj",
+    "geoid": "3403727420",
+    "level": "municipality"
+  },
+  "291": {
+    "slug": "hamburg",
+    "state": "nj",
+    "geoid": "3403729220",
+    "level": "municipality"
+  },
+  "292": {
+    "slug": "deerfield",
+    "state": "nj",
+    "geoid": "3401116900",
+    "level": "municipality"
+  },
+  "293": {
+    "slug": "ho-ho-kus",
+    "state": "nj",
+    "geoid": "3400332310",
+    "level": "municipality"
+  },
+  "294": {
+    "slug": "leonia",
+    "state": "nj",
+    "geoid": "3400340020",
+    "level": "municipality"
+  },
+  "295": {
+    "slug": "little-ferry",
+    "state": "nj",
+    "geoid": "3400340680",
+    "level": "municipality"
+  },
+  "296": {
+    "slug": "lodi",
+    "state": "nj",
+    "geoid": "3400341100",
+    "level": "municipality"
+  },
+  "297": {
+    "slug": "maywood",
+    "state": "nj",
+    "geoid": "3400344880",
+    "level": "municipality"
+  },
+  "298": {
+    "slug": "haworth",
+    "state": "nj",
+    "geoid": "3400330540",
+    "level": "municipality"
+  },
+  "299": {
+    "slug": "prospect-park",
+    "state": "nj",
+    "geoid": "3403161170",
+    "level": "municipality"
+  },
+  "300": {
+    "slug": "woodbury",
+    "state": "nj",
+    "geoid": "3401582120",
+    "level": "municipality"
+  },
+  "301": {
+    "slug": "woodbury-heights",
+    "state": "nj",
+    "geoid": "3401582180",
+    "level": "municipality"
+  },
+  "302": {
+    "slug": "washington-township-gloucester-county",
+    "state": "nj",
+    "geoid": "3401577180",
+    "level": "municipality"
+  },
+  "303": {
+    "slug": "monroe-township-gloucester-county",
+    "state": "nj",
+    "geoid": "3401547250",
+    "level": "municipality"
+  },
+  "304": {
+    "slug": "south-plainfield",
+    "state": "nj",
+    "geoid": "3402369390",
+    "level": "municipality"
+  },
+  "305": {
+    "slug": "south-river",
+    "state": "nj",
+    "geoid": "3402369420",
+    "level": "municipality"
+  },
+  "306": {
+    "slug": "edison",
+    "state": "nj",
+    "geoid": "3402320230",
+    "level": "municipality"
+  },
+  "307": {
+    "slug": "west-milford",
+    "state": "nj",
+    "geoid": "3403179460",
+    "level": "municipality"
+  },
+  "308": {
+    "slug": "audubon",
+    "state": "nj",
+    "geoid": "3400702200",
+    "level": "municipality"
+  },
+  "309": {
+    "slug": "audubon-park",
+    "state": "nj",
+    "geoid": "3400702230",
+    "level": "municipality"
+  },
+  "310": {
+    "slug": "barrington",
+    "state": "nj",
+    "geoid": "3400703250",
+    "level": "municipality"
+  },
+  "311": {
+    "slug": "berlin-borough-camden-county",
+    "state": "nj",
+    "geoid": "3400705440",
+    "level": "municipality"
+  },
+  "312": {
+    "slug": "berlin-township-camden-county",
+    "state": "nj",
+    "geoid": "3400705470",
+    "level": "municipality"
+  },
+  "313": {
+    "slug": "delaware",
+    "state": "nj",
+    "geoid": "3401917170",
+    "level": "municipality"
+  },
+  "314": {
+    "slug": "east-amwell",
+    "state": "nj",
+    "geoid": "3401918820",
+    "level": "municipality"
+  },
+  "315": {
+    "slug": "franklin-township-hunterdon-county",
+    "state": "nj",
+    "geoid": "3401924870",
+    "level": "municipality"
+  },
+  "316": {
+    "slug": "kingwood",
+    "state": "nj",
+    "geoid": "3401937065",
+    "level": "municipality"
+  },
+  "317": {
+    "slug": "readington",
+    "state": "nj",
+    "geoid": "3401962250",
+    "level": "municipality"
+  },
+  "318": {
+    "slug": "union-township-hunterdon-county",
+    "state": "nj",
+    "geoid": "3401974420",
+    "level": "municipality"
+  },
+  "319": {
+    "slug": "beachwood",
+    "state": "nj",
+    "geoid": "3402904180",
+    "level": "municipality"
+  },
+  "320": {
+    "slug": "eagleswood",
+    "state": "nj",
+    "geoid": "3402918670",
+    "level": "municipality"
+  },
+  "321": {
+    "slug": "harvey-cedars",
+    "state": "nj",
+    "geoid": "3402930390",
+    "level": "municipality"
+  },
+  "322": {
+    "slug": "old-bridge",
+    "state": "nj",
+    "geoid": "3402354705",
+    "level": "municipality"
+  },
+  "323": {
+    "slug": "plainsboro",
+    "state": "nj",
+    "geoid": "3402359280",
+    "level": "municipality"
+  },
+  "324": {
+    "slug": "alexandria",
+    "state": "nj",
+    "geoid": "3401900550",
+    "level": "municipality"
+  },
+  "325": {
+    "slug": "clinton-township-hunterdon-county",
+    "state": "nj",
+    "geoid": "3401913750",
+    "level": "municipality"
+  },
+  "326": {
+    "slug": "glen-gardner",
+    "state": "nj",
+    "geoid": "3401926550",
+    "level": "municipality"
+  },
+  "327": {
+    "slug": "lebanon-township-hunterdon-county",
+    "state": "nj",
+    "geoid": "3401939660",
+    "level": "municipality"
+  },
+  "328": {
+    "slug": "north-bergen",
+    "state": "nj",
+    "geoid": "3401752470",
+    "level": "municipality"
+  },
+  "329": {
+    "slug": "bethlehem",
+    "state": "nj",
+    "geoid": "3401905650",
+    "level": "municipality"
+  },
+  "330": {
+    "slug": "toms-river",
+    "state": "nj",
+    "geoid": "3402973125",
+    "level": "municipality"
+  },
+  "331": {
+    "slug": "lacey",
+    "state": "nj",
+    "geoid": "3402937380",
+    "level": "municipality"
+  },
+  "332": {
+    "slug": "oldmans",
+    "state": "nj",
+    "geoid": "3403354810",
+    "level": "municipality"
+  },
+  "333": {
+    "slug": "lower-alloways-creek",
+    "state": "nj",
+    "geoid": "3403341640",
+    "level": "municipality"
+  },
+  "334": {
+    "slug": "pittsgrove",
+    "state": "nj",
+    "geoid": "3403359130",
+    "level": "municipality"
+  },
+  "335": {
+    "slug": "upper-pittsgrove",
+    "state": "nj",
+    "geoid": "3403375110",
+    "level": "municipality"
+  },
+  "336": {
+    "slug": "fairfield-township-essex-county",
+    "state": "nj",
+    "geoid": "3401322385",
+    "level": "municipality"
+  },
+  "337": {
+    "slug": "livingston",
+    "state": "nj",
+    "geoid": "3401340890",
+    "level": "municipality"
+  },
+  "338": {
+    "slug": "newark",
+    "state": "nj",
+    "geoid": "3401351000",
+    "level": "municipality"
+  },
+  "339": {
+    "slug": "dennis",
+    "state": "nj",
+    "geoid": "3400917560",
+    "level": "municipality"
+  },
+  "340": {
+    "slug": "lower",
+    "state": "nj",
+    "geoid": "3400941610",
+    "level": "municipality"
+  },
+  "341": {
+    "slug": "middle",
+    "state": "nj",
+    "geoid": "3400945810",
+    "level": "municipality"
+  },
+  "342": {
+    "slug": "sea-isle-city",
+    "state": "nj",
+    "geoid": "3400966390",
+    "level": "municipality"
+  },
+  "343": {
+    "slug": "upper",
+    "state": "nj",
+    "geoid": "3400974810",
+    "level": "municipality"
+  },
+  "344": {
+    "slug": "hoboken",
+    "state": "nj",
+    "geoid": "3401732250",
+    "level": "municipality"
+  },
+  "345": {
+    "slug": "kearny",
+    "state": "nj",
+    "geoid": "3401736510",
+    "level": "municipality"
+  },
+  "346": {
+    "slug": "gloucester-city",
+    "state": "nj",
+    "geoid": "3400726820",
+    "level": "municipality"
+  },
+  "347": {
+    "slug": "haddon-heights",
+    "state": "nj",
+    "geoid": "3400728800",
+    "level": "municipality"
+  },
+  "348": {
+    "slug": "hi-nella",
+    "state": "nj",
+    "geoid": "3400732220",
+    "level": "municipality"
+  },
+  "349": {
+    "slug": "laurel-springs",
+    "state": "nj",
+    "geoid": "3400739210",
+    "level": "municipality"
+  },
+  "350": {
+    "slug": "lawnside",
+    "state": "nj",
+    "geoid": "3400739420",
+    "level": "municipality"
+  },
+  "351": {
+    "slug": "magnolia",
+    "state": "nj",
+    "geoid": "3400742630",
+    "level": "municipality"
+  },
+  "352": {
+    "slug": "merchantville",
+    "state": "nj",
+    "geoid": "3400745510",
+    "level": "municipality"
+  },
+  "353": {
+    "slug": "warren",
+    "state": "nj",
+    "geoid": "3403576940",
+    "level": "municipality"
+  },
+  "354": {
+    "slug": "watchung",
+    "state": "nj",
+    "geoid": "3403577600",
+    "level": "municipality"
+  },
+  "355": {
+    "slug": "stow-creek",
+    "state": "nj",
+    "geoid": "3401171160",
+    "level": "municipality"
+  },
+  "356": {
+    "slug": "upper-deerfield",
+    "state": "nj",
+    "geoid": "3401174870",
+    "level": "municipality"
+  },
+  "357": {
+    "slug": "fairfield-township-cumberland-county",
+    "state": "nj",
+    "geoid": "3401122350",
+    "level": "municipality"
+  },
+  "358": {
+    "slug": "lawrence-township-cumberland-county",
+    "state": "nj",
+    "geoid": "3401139450",
+    "level": "municipality"
+  },
+  "359": {
+    "slug": "commercial",
+    "state": "nj",
+    "geoid": "3401114710",
+    "level": "municipality"
+  },
+  "360": {
+    "slug": "flemington",
+    "state": "nj",
+    "geoid": "3401923700",
+    "level": "municipality"
+  },
+  "361": {
+    "slug": "frenchtown",
+    "state": "nj",
+    "geoid": "3401925350",
+    "level": "municipality"
+  },
+  "362": {
+    "slug": "hampton-borough-hunterdon-county",
+    "state": "nj",
+    "geoid": "3401929460",
+    "level": "municipality"
+  },
+  "363": {
+    "slug": "lambertville",
+    "state": "nj",
+    "geoid": "3401938610",
+    "level": "municipality"
+  },
+  "364": {
+    "slug": "lebanon-borough-hunterdon-county",
+    "state": "nj",
+    "geoid": "3401939630",
+    "level": "municipality"
+  },
+  "365": {
+    "slug": "milford",
+    "state": "nj",
+    "geoid": "3401946260",
+    "level": "municipality"
+  },
+  "366": {
+    "slug": "stockton",
+    "state": "nj",
+    "geoid": "3401970980",
+    "level": "municipality"
+  },
+  "367": {
+    "slug": "tewksbury",
+    "state": "nj",
+    "geoid": "3401972510",
+    "level": "municipality"
+  },
+  "368": {
+    "slug": "west-amwell",
+    "state": "nj",
+    "geoid": "3401978230",
+    "level": "municipality"
+  },
+  "369": {
+    "slug": "high-bridge",
+    "state": "nj",
+    "geoid": "3401931320",
+    "level": "municipality"
+  },
+  "370": {
+    "slug": "pequannock",
+    "state": "nj",
+    "geoid": "3402758110",
+    "level": "municipality"
+  },
+  "371": {
+    "slug": "rockaway-township-morris-county",
+    "state": "nj",
+    "geoid": "3402764080",
+    "level": "municipality"
+  },
+  "372": {
+    "slug": "roxbury",
+    "state": "nj",
+    "geoid": "3402764980",
+    "level": "municipality"
+  },
+  "373": {
+    "slug": "washington-township-morris-county",
+    "state": "nj",
+    "geoid": "3402777240",
+    "level": "municipality"
+  },
+  "374": {
+    "slug": "west-wildwood",
+    "state": "nj",
+    "geoid": "3400980210",
+    "level": "municipality"
+  },
+  "375": {
+    "slug": "wildwood",
+    "state": "nj",
+    "geoid": "3400981170",
+    "level": "municipality"
+  },
+  "376": {
+    "slug": "wildwood-crest",
+    "state": "nj",
+    "geoid": "3400981200",
+    "level": "municipality"
+  },
+  "377": {
+    "slug": "greenwich-township-gloucester-county",
+    "state": "nj",
+    "geoid": "3401528185",
+    "level": "municipality"
+  },
+  "378": {
+    "slug": "national-park",
+    "state": "nj",
+    "geoid": "3401549680",
+    "level": "municipality"
+  },
+  "379": {
+    "slug": "newfield",
+    "state": "nj",
+    "geoid": "3401551390",
+    "level": "municipality"
+  },
+  "380": {
+    "slug": "park-ridge",
+    "state": "nj",
+    "geoid": "3400356130",
+    "level": "municipality"
+  },
+  "381": {
+    "slug": "ridgefield",
+    "state": "nj",
+    "geoid": "3400362910",
+    "level": "municipality"
+  },
+  "382": {
+    "slug": "ridgefield-park",
+    "state": "nj",
+    "geoid": "3400362940",
+    "level": "municipality"
+  },
+  "383": {
+    "slug": "roosevelt",
+    "state": "nj",
+    "geoid": "3402564410",
+    "level": "municipality"
+  },
+  "384": {
+    "slug": "helmetta",
+    "state": "nj",
+    "geoid": "3402330840",
+    "level": "municipality"
+  },
+  "385": {
+    "slug": "highland-park",
+    "state": "nj",
+    "geoid": "3402331470",
+    "level": "municipality"
+  },
+  "386": {
+    "slug": "jamesburg",
+    "state": "nj",
+    "geoid": "3402334890",
+    "level": "municipality"
+  },
+  "387": {
+    "slug": "metuchen",
+    "state": "nj",
+    "geoid": "3402345690",
+    "level": "municipality"
+  },
+  "388": {
+    "slug": "milltown",
+    "state": "nj",
+    "geoid": "3402346620",
+    "level": "municipality"
+  },
+  "389": {
+    "slug": "perth-amboy",
+    "state": "nj",
+    "geoid": "3402358200",
+    "level": "municipality"
+  },
+  "390": {
+    "slug": "south-amboy",
+    "state": "nj",
+    "geoid": "3402368550",
+    "level": "municipality"
+  },
+  "391": {
+    "slug": "millburn",
+    "state": "nj",
+    "geoid": "3401346380",
+    "level": "municipality"
+  },
+  "392": {
+    "slug": "verona",
+    "state": "nj",
+    "geoid": "3401375815",
+    "level": "municipality"
+  },
+  "393": {
+    "slug": "maplewood",
+    "state": "nj",
+    "geoid": "3401343800",
+    "level": "municipality"
+  },
+  "394": {
+    "slug": "montclair",
+    "state": "nj",
+    "geoid": "3401347500",
+    "level": "municipality"
+  },
+  "395": {
+    "slug": "north-caldwell",
+    "state": "nj",
+    "geoid": "3401352620",
+    "level": "municipality"
+  },
+  "396": {
+    "slug": "nutley",
+    "state": "nj",
+    "geoid": "3401353680",
+    "level": "municipality"
+  },
+  "397": {
+    "slug": "bernards",
+    "state": "nj",
+    "geoid": "3403505560",
+    "level": "municipality"
+  },
+  "398": {
+    "slug": "roseland",
+    "state": "nj",
+    "geoid": "3401364590",
+    "level": "municipality"
+  },
+  "399": {
+    "slug": "hampton-township-sussex-county",
+    "state": "nj",
+    "geoid": "3403729490",
+    "level": "municipality"
+  },
+  "400": {
+    "slug": "bridgeton",
+    "state": "nj",
+    "geoid": "3401107600",
+    "level": "municipality"
+  },
+  "401": {
+    "slug": "shiloh",
+    "state": "nj",
+    "geoid": "3401167020",
+    "level": "municipality"
+  },
+  "402": {
+    "slug": "vineland",
+    "state": "nj",
+    "geoid": "3401176070",
+    "level": "municipality"
+  },
+  "403": {
+    "slug": "maurice-river",
+    "state": "nj",
+    "geoid": "3401144580",
+    "level": "municipality"
+  },
+  "404": {
+    "slug": "millville",
+    "state": "nj",
+    "geoid": "3401146680",
+    "level": "municipality"
+  },
+  "405": {
+    "slug": "pompton-lakes",
+    "state": "nj",
+    "geoid": "3403160090",
+    "level": "municipality"
+  },
+  "406": {
+    "slug": "beverly",
+    "state": "nj",
+    "geoid": "3400505740",
+    "level": "municipality"
+  },
+  "407": {
+    "slug": "bordentown-city-burlington-county",
+    "state": "nj",
+    "geoid": "3400506670",
+    "level": "municipality"
+  },
+  "408": {
+    "slug": "burlington-city-burlington-county",
+    "state": "nj",
+    "geoid": "3400508920",
+    "level": "municipality"
+  },
+  "409": {
+    "slug": "delanco",
+    "state": "nj",
+    "geoid": "3400517080",
+    "level": "municipality"
+  },
+  "410": {
+    "slug": "riverside",
+    "state": "nj",
+    "geoid": "3400563510",
+    "level": "municipality"
+  },
+  "411": {
+    "slug": "riverton",
+    "state": "nj",
+    "geoid": "3400563660",
+    "level": "municipality"
+  },
+  "412": {
+    "slug": "washington-township-burlington-county",
+    "state": "nj",
+    "geoid": "3400577150",
+    "level": "municipality"
+  },
+  "413": {
+    "slug": "southampton",
+    "state": "nj",
+    "geoid": "3400568610",
+    "level": "municipality"
+  },
+  "414": {
+    "slug": "palisades-park",
+    "state": "nj",
+    "geoid": "3400355770",
+    "level": "municipality"
+  },
+  "415": {
+    "slug": "aberdeen",
+    "state": "nj",
+    "geoid": "3402500070",
+    "level": "municipality"
+  },
+  "416": {
+    "slug": "holmdel",
+    "state": "nj",
+    "geoid": "3402532640",
+    "level": "municipality"
+  },
+  "417": {
+    "slug": "manalapan",
+    "state": "nj",
+    "geoid": "3402542990",
+    "level": "municipality"
+  },
+  "418": {
+    "slug": "marlboro",
+    "state": "nj",
+    "geoid": "3402544070",
+    "level": "municipality"
+  },
+  "419": {
+    "slug": "union-beach",
+    "state": "nj",
+    "geoid": "3402574540",
+    "level": "municipality"
+  },
+  "420": {
+    "slug": "deal",
+    "state": "nj",
+    "geoid": "3402516660",
+    "level": "municipality"
+  },
+  "421": {
+    "slug": "fair-haven",
+    "state": "nj",
+    "geoid": "3402522440",
+    "level": "municipality"
+  },
+  "422": {
+    "slug": "monroe-township-middlesex-county",
+    "state": "nj",
+    "geoid": "3402347280",
+    "level": "municipality"
+  },
+  "423": {
+    "slug": "south-brunswick",
+    "state": "nj",
+    "geoid": "3402368790",
+    "level": "municipality"
+  },
+  "424": {
+    "slug": "paterson",
+    "state": "nj",
+    "geoid": "3403157000",
+    "level": "municipality"
+  },
+  "425": {
+    "slug": "wanaque",
+    "state": "nj",
+    "geoid": "3403176730",
+    "level": "municipality"
+  },
+  "426": {
+    "slug": "clifton",
+    "state": "nj",
+    "geoid": "3403113690",
+    "level": "municipality"
+  },
+  "427": {
+    "slug": "wayne",
+    "state": "nj",
+    "geoid": "3403177840",
+    "level": "municipality"
+  },
+  "428": {
+    "slug": "bloomingdale",
+    "state": "nj",
+    "geoid": "3403106340",
+    "level": "municipality"
+  },
+  "429": {
+    "slug": "knowlton",
+    "state": "nj",
+    "geoid": "3404137320",
+    "level": "municipality"
+  },
+  "430": {
+    "slug": "alpha",
+    "state": "nj",
+    "geoid": "3404101030",
+    "level": "municipality"
+  },
+  "431": {
+    "slug": "belvidere",
+    "state": "nj",
+    "geoid": "3404104990",
+    "level": "municipality"
+  },
+  "432": {
+    "slug": "blairstown",
+    "state": "nj",
+    "geoid": "3404106160",
+    "level": "municipality"
+  },
+  "433": {
+    "slug": "greenwich-township-warren-county",
+    "state": "nj",
+    "geoid": "3404128260",
+    "level": "municipality"
+  },
+  "434": {
+    "slug": "lawrence-township-mercer-county",
+    "state": "nj",
+    "geoid": "3402139510",
+    "level": "municipality"
+  },
+  "435": {
+    "slug": "hawthorne",
+    "state": "nj",
+    "geoid": "3403130570",
+    "level": "municipality"
+  },
+  "436": {
+    "slug": "little-falls",
+    "state": "nj",
+    "geoid": "3403140620",
+    "level": "municipality"
+  },
+  "437": {
+    "slug": "north-haledon",
+    "state": "nj",
+    "geoid": "3403153040",
+    "level": "municipality"
+  },
+  "438": {
+    "slug": "passaic",
+    "state": "nj",
+    "geoid": "3403156550",
+    "level": "municipality"
+  },
+  "439": {
+    "slug": "ringwood",
+    "state": "nj",
+    "geoid": "3403163150",
+    "level": "municipality"
+  },
+  "440": {
+    "slug": "totowa",
+    "state": "nj",
+    "geoid": "3403173140",
+    "level": "municipality"
+  },
+  "441": {
+    "slug": "woodland-park",
+    "state": "nj",
+    "geoid": "3403182423",
+    "level": "municipality"
+  },
+  "442": {
+    "slug": "barnegat-light",
+    "state": "nj",
+    "geoid": "3402903130",
+    "level": "municipality"
+  },
+  "443": {
+    "slug": "bay-head",
+    "state": "nj",
+    "geoid": "3402903520",
+    "level": "municipality"
+  },
+  "444": {
+    "slug": "beach-haven",
+    "state": "nj",
+    "geoid": "3402903940",
+    "level": "municipality"
+  },
+  "445": {
+    "slug": "delran",
+    "state": "nj",
+    "geoid": "3400517440",
+    "level": "municipality"
+  },
+  "446": {
+    "slug": "eastampton",
+    "state": "nj",
+    "geoid": "3400518790",
+    "level": "municipality"
+  },
+  "447": {
+    "slug": "fieldsboro",
+    "state": "nj",
+    "geoid": "3400523250",
+    "level": "municipality"
+  },
+  "448": {
+    "slug": "mount-holly",
+    "state": "nj",
+    "geoid": "3400548900",
+    "level": "municipality"
+  },
+  "449": {
+    "slug": "pemberton-borough-burlington-county",
+    "state": "nj",
+    "geoid": "3400557480",
+    "level": "municipality"
+  },
+  "450": {
+    "slug": "springfield-township-burlington-county",
+    "state": "nj",
+    "geoid": "3400569990",
+    "level": "municipality"
+  },
+  "451": {
+    "slug": "wrightstown",
+    "state": "nj",
+    "geoid": "3400582960",
+    "level": "municipality"
+  },
+  "452": {
+    "slug": "evesham",
+    "state": "nj",
+    "geoid": "3400522110",
+    "level": "municipality"
+  },
+  "453": {
+    "slug": "north-hanover",
+    "state": "nj",
+    "geoid": "3400553070",
+    "level": "municipality"
+  },
+  "454": {
+    "slug": "willingboro",
+    "state": "nj",
+    "geoid": "3400581440",
+    "level": "municipality"
+  },
+  "455": {
+    "slug": "clayton",
+    "state": "nj",
+    "geoid": "3401513360",
+    "level": "municipality"
+  },
+  "456": {
+    "slug": "elk",
+    "state": "nj",
+    "geoid": "3401521060",
+    "level": "municipality"
+  },
+  "457": {
+    "slug": "farmingdale",
+    "state": "nj",
+    "geoid": "3402522950",
+    "level": "municipality"
+  },
+  "458": {
+    "slug": "freehold-borough-monmouth-county",
+    "state": "nj",
+    "geoid": "3402525200",
+    "level": "municipality"
+  },
+  "459": {
+    "slug": "highlands",
+    "state": "nj",
+    "geoid": "3402531500",
+    "level": "municipality"
+  },
+  "460": {
+    "slug": "interlaken",
+    "state": "nj",
+    "geoid": "3402534200",
+    "level": "municipality"
+  },
+  "461": {
+    "slug": "west-caldwell",
+    "state": "nj",
+    "geoid": "3401378510",
+    "level": "municipality"
+  },
+  "462": {
+    "slug": "south-orange-village",
+    "state": "nj",
+    "geoid": "3401369274",
+    "level": "municipality"
+  },
+  "463": {
+    "slug": "woodbine",
+    "state": "nj",
+    "geoid": "3400981890",
+    "level": "municipality"
+  },
+  "464": {
+    "slug": "franklin-township-gloucester-county",
+    "state": "nj",
+    "geoid": "3401524840",
+    "level": "municipality"
+  },
+  "465": {
+    "slug": "east-greenwich",
+    "state": "nj",
+    "geoid": "3401519180",
+    "level": "municipality"
+  },
+  "466": {
+    "slug": "woolwich",
+    "state": "nj",
+    "geoid": "3401582840",
+    "level": "municipality"
+  },
+  "467": {
+    "slug": "deptford",
+    "state": "nj",
+    "geoid": "3401517710",
+    "level": "municipality"
+  },
+  "468": {
+    "slug": "west-deptford",
+    "state": "nj",
+    "geoid": "3401578800",
+    "level": "municipality"
+  },
+  "469": {
+    "slug": "logan",
+    "state": "nj",
+    "geoid": "3401541160",
+    "level": "municipality"
+  },
+  "470": {
+    "slug": "harrison-township-gloucester-county",
+    "state": "nj",
+    "geoid": "3401530180",
+    "level": "municipality"
+  },
+  "471": {
+    "slug": "glassboro",
+    "state": "nj",
+    "geoid": "3401526340",
+    "level": "municipality"
+  },
+  "472": {
+    "slug": "south-harrison",
+    "state": "nj",
+    "geoid": "3401569030",
+    "level": "municipality"
+  },
+  "473": {
+    "slug": "point-pleasant",
+    "state": "nj",
+    "geoid": "3402959880",
+    "level": "municipality"
+  },
+  "474": {
+    "slug": "point-pleasant-beach",
+    "state": "nj",
+    "geoid": "3402959910",
+    "level": "municipality"
+  },
+  "475": {
+    "slug": "seaside-heights",
+    "state": "nj",
+    "geoid": "3402966450",
+    "level": "municipality"
+  },
+  "476": {
+    "slug": "ship-bottom",
+    "state": "nj",
+    "geoid": "3402967110",
+    "level": "municipality"
+  },
+  "477": {
+    "slug": "south-toms-river",
+    "state": "nj",
+    "geoid": "3402969510",
+    "level": "municipality"
+  },
+  "478": {
+    "slug": "stafford",
+    "state": "nj",
+    "geoid": "3402970320",
+    "level": "municipality"
+  },
+  "479": {
+    "slug": "mount-olive",
+    "state": "nj",
+    "geoid": "3402749080",
+    "level": "municipality"
+  },
+  "480": {
+    "slug": "dumont",
+    "state": "nj",
+    "geoid": "3400318400",
+    "level": "municipality"
+  },
+  "481": {
+    "slug": "east-rutherford",
+    "state": "nj",
+    "geoid": "3400319510",
+    "level": "municipality"
+  },
+  "482": {
+    "slug": "edgewater",
+    "state": "nj",
+    "geoid": "3400320020",
+    "level": "municipality"
+  },
+  "483": {
+    "slug": "elmwood-park",
+    "state": "nj",
+    "geoid": "3400321300",
+    "level": "municipality"
+  },
+  "484": {
+    "slug": "emerson",
+    "state": "nj",
+    "geoid": "3400321450",
+    "level": "municipality"
+  },
+  "485": {
+    "slug": "lafayette",
+    "state": "nj",
+    "geoid": "3403737440",
+    "level": "municipality"
+  },
+  "486": {
+    "slug": "montague",
+    "state": "nj",
+    "geoid": "3403747430",
+    "level": "municipality"
+  },
+  "487": {
+    "slug": "sandyston",
+    "state": "nj",
+    "geoid": "3403765700",
+    "level": "municipality"
+  },
+  "488": {
+    "slug": "sparta",
+    "state": "nj",
+    "geoid": "3403769690",
+    "level": "municipality"
+  },
+  "489": {
+    "slug": "stanhope",
+    "state": "nj",
+    "geoid": "3403770380",
+    "level": "municipality"
+  },
+  "490": {
+    "slug": "lyndhurst",
+    "state": "nj",
+    "geoid": "3400342090",
+    "level": "municipality"
+  },
+  "491": {
+    "slug": "ridgewood",
+    "state": "nj",
+    "geoid": "3400363000",
+    "level": "municipality"
+  },
+  "492": {
+    "slug": "bogota",
+    "state": "nj",
+    "geoid": "3400306490",
+    "level": "municipality"
+  },
+  "493": {
+    "slug": "new-milford",
+    "state": "nj",
+    "geoid": "3400351660",
+    "level": "municipality"
+  },
+  "494": {
+    "slug": "ramsey",
+    "state": "nj",
+    "geoid": "3400361680",
+    "level": "municipality"
+  },
+  "495": {
+    "slug": "saddle-brook",
+    "state": "nj",
+    "geoid": "3400365340",
+    "level": "municipality"
+  },
+  "496": {
+    "slug": "hackensack",
+    "state": "nj",
+    "geoid": "3400328680",
+    "level": "municipality"
+  },
+  "497": {
+    "slug": "hillsdale",
+    "state": "nj",
+    "geoid": "3400331920",
+    "level": "municipality"
+  },
+  "498": {
+    "slug": "wood-ridge",
+    "state": "nj",
+    "geoid": "3400382570",
+    "level": "municipality"
+  },
+  "499": {
+    "slug": "hasbrouck-heights",
+    "state": "nj",
+    "geoid": "3400330420",
+    "level": "municipality"
+  },
+  "500": {
+    "slug": "river-vale",
+    "state": "nj",
+    "geoid": "3400363690",
+    "level": "municipality"
+  },
+  "501": {
+    "slug": "woodcliff-lake",
+    "state": "nj",
+    "geoid": "3400382300",
+    "level": "municipality"
+  },
+  "502": {
+    "slug": "greenwich-township-cumberland-county",
+    "state": "nj",
+    "geoid": "3401128170",
+    "level": "municipality"
+  },
+  "503": {
+    "slug": "stratford",
+    "state": "nj",
+    "geoid": "3400771220",
+    "level": "municipality"
+  },
+  "504": {
+    "slug": "woodlynne",
+    "state": "nj",
+    "geoid": "3400782450",
+    "level": "municipality"
+  },
+  "505": {
+    "slug": "bellmawr",
+    "state": "nj",
+    "geoid": "3400704750",
+    "level": "municipality"
+  },
+  "506": {
+    "slug": "gloucester",
+    "state": "nj",
+    "geoid": "3400726760",
+    "level": "municipality"
+  },
+  "507": {
+    "slug": "haddonfield",
+    "state": "nj",
+    "geoid": "3400728770",
+    "level": "municipality"
+  },
+  "508": {
+    "slug": "pennsauken",
+    "state": "nj",
+    "geoid": "3400757660",
+    "level": "municipality"
+  },
+  "509": {
+    "slug": "tavistock",
+    "state": "nj",
+    "geoid": "3400772240",
+    "level": "municipality"
+  },
+  "510": {
+    "slug": "winslow",
+    "state": "nj",
+    "geoid": "3400781740",
+    "level": "municipality"
+  },
+  "511": {
+    "slug": "hardwick",
+    "state": "nj",
+    "geoid": "3404129820",
+    "level": "municipality"
+  },
+  "512": {
+    "slug": "frelinghuysen",
+    "state": "nj",
+    "geoid": "3404125320",
+    "level": "municipality"
+  },
+  "513": {
+    "slug": "independence",
+    "state": "nj",
+    "geoid": "3404133930",
+    "level": "municipality"
+  },
+  "514": {
+    "slug": "allamuchy",
+    "state": "nj",
+    "geoid": "3404100670",
+    "level": "municipality"
+  },
+  "515": {
+    "slug": "washington-borough-warren-county",
+    "state": "nj",
+    "geoid": "3404177270",
+    "level": "municipality"
+  },
+  "516": {
+    "slug": "white",
+    "state": "nj",
+    "geoid": "3404180570",
+    "level": "municipality"
+  },
+  "517": {
+    "slug": "downe",
+    "state": "nj",
+    "geoid": "3401118220",
+    "level": "municipality"
+  },
+  "518": {
+    "slug": "hopewell-township-cumberland-county",
+    "state": "nj",
+    "geoid": "3401133120",
+    "level": "municipality"
+  },
+  "519": {
+    "slug": "union-township-union-county",
+    "state": "nj",
+    "geoid": "3403974480",
+    "level": "municipality"
+  },
+  "520": {
+    "slug": "westfield",
+    "state": "nj",
+    "geoid": "3403979040",
+    "level": "municipality"
+  },
+  "521": {
+    "slug": "plainfield",
+    "state": "nj",
+    "geoid": "3403959190",
+    "level": "municipality"
+  },
+  "522": {
+    "slug": "rockaway-borough-morris-county",
+    "state": "nj",
+    "geoid": "3402764050",
+    "level": "municipality"
+  },
+  "523": {
+    "slug": "wharton",
+    "state": "nj",
+    "geoid": "3402780390",
+    "level": "municipality"
+  },
+  "524": {
+    "slug": "oakland",
+    "state": "nj",
+    "geoid": "3400353850",
+    "level": "municipality"
+  },
+  "525": {
+    "slug": "oradell",
+    "state": "nj",
+    "geoid": "3400354990",
+    "level": "municipality"
+  },
+  "526": {
+    "slug": "edgewater-park",
+    "state": "nj",
+    "geoid": "3400520050",
+    "level": "municipality"
+  },
+  "527": {
+    "slug": "florence",
+    "state": "nj",
+    "geoid": "3400523850",
+    "level": "municipality"
+  },
+  "528": {
+    "slug": "palmyra",
+    "state": "nj",
+    "geoid": "3400555800",
+    "level": "municipality"
+  },
+  "529": {
+    "slug": "bound-brook",
+    "state": "nj",
+    "geoid": "3403506790",
+    "level": "municipality"
+  },
+  "530": {
+    "slug": "franklin-township-somerset-county",
+    "state": "nj",
+    "geoid": "3403524900",
+    "level": "municipality"
+  },
+  "531": {
+    "slug": "branchburg",
+    "state": "nj",
+    "geoid": "3403507180",
+    "level": "municipality"
+  },
+  "532": {
+    "slug": "bridgewater",
+    "state": "nj",
+    "geoid": "3403507720",
+    "level": "municipality"
+  },
+  "533": {
+    "slug": "green-brook",
+    "state": "nj",
+    "geoid": "3403527510",
+    "level": "municipality"
+  },
+  "534": {
+    "slug": "peapack-and-gladstone",
+    "state": "nj",
+    "geoid": "3403557300",
+    "level": "municipality"
+  },
+  "535": {
+    "slug": "bedminster",
+    "state": "nj",
+    "geoid": "3403504450",
+    "level": "municipality"
+  },
+  "536": {
+    "slug": "north-plainfield",
+    "state": "nj",
+    "geoid": "3403553280",
+    "level": "municipality"
+  },
+  "537": {
+    "slug": "mantua",
+    "state": "nj",
+    "geoid": "3401543440",
+    "level": "municipality"
+  },
+  "538": {
+    "slug": "sea-bright",
+    "state": "nj",
+    "geoid": "3402566240",
+    "level": "municipality"
+  },
+  "539": {
+    "slug": "sea-girt",
+    "state": "nj",
+    "geoid": "3402566330",
+    "level": "municipality"
+  },
+  "540": {
+    "slug": "shrewsbury-township-monmouth-county",
+    "state": "nj",
+    "geoid": "3402567365",
+    "level": "municipality"
+  },
+  "541": {
+    "slug": "spring-lake",
+    "state": "nj",
+    "geoid": "3402570110",
+    "level": "municipality"
+  },
+  "542": {
+    "slug": "spring-lake-heights",
+    "state": "nj",
+    "geoid": "3402570140",
+    "level": "municipality"
+  },
+  "543": {
+    "slug": "east-brunswick",
+    "state": "nj",
+    "geoid": "3402319000",
+    "level": "municipality"
+  },
+  "544": {
+    "slug": "middlesex",
+    "state": "nj",
+    "geoid": "3402345900",
+    "level": "municipality"
+  },
+  "545": {
+    "slug": "new-brunswick",
+    "state": "nj",
+    "geoid": "3402351210",
+    "level": "municipality"
+  },
+  "546": {
+    "slug": "north-brunswick",
+    "state": "nj",
+    "geoid": "3402352560",
+    "level": "municipality"
+  },
+  "547": {
+    "slug": "piscataway",
+    "state": "nj",
+    "geoid": "3402359010",
+    "level": "municipality"
+  },
+  "548": {
+    "slug": "sayreville",
+    "state": "nj",
+    "geoid": "3402365790",
+    "level": "municipality"
+  },
+  "549": {
+    "slug": "lake-como",
+    "state": "nj",
+    "geoid": "3402537560",
+    "level": "municipality"
+  },
+  "550": {
+    "slug": "phillipsburg",
+    "state": "nj",
+    "geoid": "3404158350",
+    "level": "municipality"
+  },
+  "551": {
+    "slug": "mansfield-township-warren-county",
+    "state": "nj",
+    "geoid": "3404143320",
+    "level": "municipality"
+  },
+  "552": {
+    "slug": "teaneck",
+    "state": "nj",
+    "geoid": "3400372360",
+    "level": "municipality"
+  },
+  "553": {
+    "slug": "tenafly",
+    "state": "nj",
+    "geoid": "3400372420",
+    "level": "municipality"
+  },
+  "554": {
+    "slug": "butler",
+    "state": "nj",
+    "geoid": "3402709040",
+    "level": "municipality"
+  },
+  "555": {
+    "slug": "chatham-township-morris-county",
+    "state": "nj",
+    "geoid": "3402712130",
+    "level": "municipality"
+  },
+  "556": {
+    "slug": "teterboro",
+    "state": "nj",
+    "geoid": "3400372480",
+    "level": "municipality"
+  },
+  "557": {
+    "slug": "upper-saddle-river",
+    "state": "nj",
+    "geoid": "3400375140",
+    "level": "municipality"
+  },
+  "558": {
+    "slug": "waldwick",
+    "state": "nj",
+    "geoid": "3400376400",
+    "level": "municipality"
+  },
+  "559": {
+    "slug": "garwood",
+    "state": "nj",
+    "geoid": "3403925800",
+    "level": "municipality"
+  },
+  "560": {
+    "slug": "hillside",
+    "state": "nj",
+    "geoid": "3403931980",
+    "level": "municipality"
+  },
+  "561": {
+    "slug": "kenilworth",
+    "state": "nj",
+    "geoid": "3403936690",
+    "level": "municipality"
+  },
+  "562": {
+    "slug": "mountainside",
+    "state": "nj",
+    "geoid": "3403948510",
+    "level": "municipality"
+  },
+  "563": {
+    "slug": "new-providence",
+    "state": "nj",
+    "geoid": "3403951810",
+    "level": "municipality"
+  },
+  "564": {
+    "slug": "ventnor-city",
+    "state": "nj",
+    "geoid": "3400175620",
+    "level": "municipality"
+  },
+  "565": {
+    "slug": "estell-manor",
+    "state": "nj",
+    "geoid": "3400121870",
+    "level": "municipality"
+  },
+  "566": {
+    "slug": "cranford",
+    "state": "nj",
+    "geoid": "3403915640",
+    "level": "municipality"
+  },
+  "567": {
+    "slug": "elizabeth",
+    "state": "nj",
+    "geoid": "3403921000",
+    "level": "municipality"
+  },
+  "568": {
+    "slug": "pleasantville",
+    "state": "nj",
+    "geoid": "3400159640",
+    "level": "municipality"
+  },
+  "569": {
+    "slug": "avalon",
+    "state": "nj",
+    "geoid": "3400902320",
+    "level": "municipality"
+  },
+  "570": {
+    "slug": "berkeley",
+    "state": "nj",
+    "geoid": "3402905305",
+    "level": "municipality"
+  },
+  "571": {
+    "slug": "penns-grove",
+    "state": "nj",
+    "geoid": "3403357750",
+    "level": "municipality"
+  },
+  "572": {
+    "slug": "pennsville",
+    "state": "nj",
+    "geoid": "3403357870",
+    "level": "municipality"
+  },
+  "573": {
+    "slug": "salem",
+    "state": "nj",
+    "geoid": "3403365490",
+    "level": "municipality"
+  },
+  "574": {
+    "slug": "woodstown",
+    "state": "nj",
+    "geoid": "3403382720",
+    "level": "municipality"
+  },
+  "575": {
+    "slug": "elsinboro",
+    "state": "nj",
+    "geoid": "3403321330",
+    "level": "municipality"
+  },
+  "576": {
+    "slug": "andover-borough-sussex-county",
+    "state": "nj",
+    "geoid": "3403701330",
+    "level": "municipality"
+  },
+  "577": {
+    "slug": "byram",
+    "state": "nj",
+    "geoid": "3403709160",
+    "level": "municipality"
+  },
+  "578": {
+    "slug": "hardyston",
+    "state": "nj",
+    "geoid": "3403729850",
+    "level": "municipality"
+  },
+  "579": {
+    "slug": "ogdensburg",
+    "state": "nj",
+    "geoid": "3403754660",
+    "level": "municipality"
+  },
+  "580": {
+    "slug": "vernon",
+    "state": "nj",
+    "geoid": "3403775740",
+    "level": "municipality"
+  },
+  "581": {
+    "slug": "brigantine",
+    "state": "nj",
+    "geoid": "3400107810",
+    "level": "municipality"
+  },
+  "582": {
+    "slug": "egg-harbor",
+    "state": "nj",
+    "geoid": "3400120290",
+    "level": "municipality"
+  },
+  "583": {
+    "slug": "hammonton",
+    "state": "nj",
+    "geoid": "3400129430",
+    "level": "municipality"
+  },
+  "584": {
+    "slug": "mullica",
+    "state": "nj",
+    "geoid": "3400149410",
+    "level": "municipality"
+  },
+  "585": {
+    "slug": "port-republic",
+    "state": "nj",
+    "geoid": "3400160600",
+    "level": "municipality"
+  },
+  "586": {
+    "slug": "somers-point",
+    "state": "nj",
+    "geoid": "3400168430",
+    "level": "municipality"
+  },
+  "2768": {
+    "slug": "zip-07060",
+    "state": "nj",
+    "geoid": "07060",
+    "level": "zip"
+  },
+  "2769": {
+    "slug": "zip-07663",
+    "state": "nj",
+    "geoid": "07663",
+    "level": "zip"
+  },
+  "2770": {
+    "slug": "zip-08232",
+    "state": "nj",
+    "geoid": "08232",
+    "level": "zip"
+  },
+  "2771": {
+    "slug": "zip-07407",
+    "state": "nj",
+    "geoid": "07407",
+    "level": "zip"
+  },
+  "2772": {
+    "slug": "zip-08829",
+    "state": "nj",
+    "geoid": "08829",
+    "level": "zip"
+  },
+  "2773": {
+    "slug": "zip-07003",
+    "state": "nj",
+    "geoid": "07003",
+    "level": "zip"
+  },
+  "2774": {
+    "slug": "zip-07208",
+    "state": "nj",
+    "geoid": "07208",
+    "level": "zip"
+  },
+  "2775": {
+    "slug": "zip-07502",
+    "state": "nj",
+    "geoid": "07502",
+    "level": "zip"
+  },
+  "2776": {
+    "slug": "zip-07024",
+    "state": "nj",
+    "geoid": "07024",
+    "level": "zip"
+  },
+  "2777": {
+    "slug": "zip-08244",
+    "state": "nj",
+    "geoid": "08244",
+    "level": "zip"
+  },
+  "2778": {
+    "slug": "zip-07828",
+    "state": "nj",
+    "geoid": "07828",
+    "level": "zip"
+  },
+  "2779": {
+    "slug": "zip-07043",
+    "state": "nj",
+    "geoid": "07043",
+    "level": "zip"
+  },
+  "2780": {
+    "slug": "zip-07928",
+    "state": "nj",
+    "geoid": "07928",
+    "level": "zip"
+  },
+  "2781": {
+    "slug": "zip-07070",
+    "state": "nj",
+    "geoid": "07070",
+    "level": "zip"
+  },
+  "2782": {
+    "slug": "zip-08403",
+    "state": "nj",
+    "geoid": "08403",
+    "level": "zip"
+  },
+  "2783": {
+    "slug": "zip-08620",
+    "state": "nj",
+    "geoid": "08620",
+    "level": "zip"
+  },
+  "2784": {
+    "slug": "zip-07801",
+    "state": "nj",
+    "geoid": "07801",
+    "level": "zip"
+  },
+  "2785": {
+    "slug": "zip-08901",
+    "state": "nj",
+    "geoid": "08901",
+    "level": "zip"
+  },
+  "2786": {
+    "slug": "zip-08230",
+    "state": "nj",
+    "geoid": "08230",
+    "level": "zip"
+  },
+  "2787": {
+    "slug": "zip-08098",
+    "state": "nj",
+    "geoid": "08098",
+    "level": "zip"
+  },
+  "2788": {
+    "slug": "zip-08861",
+    "state": "nj",
+    "geoid": "08861",
+    "level": "zip"
+  },
+  "2789": {
+    "slug": "zip-08512",
+    "state": "nj",
+    "geoid": "08512",
+    "level": "zip"
+  },
+  "2790": {
+    "slug": "zip-07603",
+    "state": "nj",
+    "geoid": "07603",
+    "level": "zip"
+  },
+  "2791": {
+    "slug": "zip-07946",
+    "state": "nj",
+    "geoid": "07946",
+    "level": "zip"
+  },
+  "2792": {
+    "slug": "zip-07105",
+    "state": "nj",
+    "geoid": "07105",
+    "level": "zip"
+  },
+  "2793": {
+    "slug": "zip-08850",
+    "state": "nj",
+    "geoid": "08850",
+    "level": "zip"
+  },
+  "2794": {
+    "slug": "zip-08349",
+    "state": "nj",
+    "geoid": "08349",
+    "level": "zip"
+  },
+  "2795": {
+    "slug": "zip-07021",
+    "state": "nj",
+    "geoid": "07021",
+    "level": "zip"
+  },
+  "2796": {
+    "slug": "zip-08323",
+    "state": "nj",
+    "geoid": "08323",
+    "level": "zip"
+  },
+  "2797": {
+    "slug": "zip-07444",
+    "state": "nj",
+    "geoid": "07444",
+    "level": "zip"
+  },
+  "2798": {
+    "slug": "zip-07452",
+    "state": "nj",
+    "geoid": "07452",
+    "level": "zip"
+  },
+  "2799": {
+    "slug": "zip-07440",
+    "state": "nj",
+    "geoid": "07440",
+    "level": "zip"
+  },
+  "2800": {
+    "slug": "zip-07857",
+    "state": "nj",
+    "geoid": "07857",
+    "level": "zip"
+  },
+  "2801": {
+    "slug": "zip-07863",
+    "state": "nj",
+    "geoid": "07863",
+    "level": "zip"
+  },
+  "2802": {
+    "slug": "zip-07874",
+    "state": "nj",
+    "geoid": "07874",
+    "level": "zip"
+  },
+  "2803": {
+    "slug": "zip-08329",
+    "state": "nj",
+    "geoid": "08329",
+    "level": "zip"
+  },
+  "2804": {
+    "slug": "zip-08887",
+    "state": "nj",
+    "geoid": "08887",
+    "level": "zip"
+  },
+  "2805": {
+    "slug": "zip-08310",
+    "state": "nj",
+    "geoid": "08310",
+    "level": "zip"
+  },
+  "2806": {
+    "slug": "zip-08320",
+    "state": "nj",
+    "geoid": "08320",
+    "level": "zip"
+  },
+  "2807": {
+    "slug": "zip-08110",
+    "state": "nj",
+    "geoid": "08110",
+    "level": "zip"
+  },
+  "2808": {
+    "slug": "zip-08102",
+    "state": "nj",
+    "geoid": "08102",
+    "level": "zip"
+  },
+  "2809": {
+    "slug": "zip-08085",
+    "state": "nj",
+    "geoid": "08085",
+    "level": "zip"
+  },
+  "2810": {
+    "slug": "zip-07842",
+    "state": "nj",
+    "geoid": "07842",
+    "level": "zip"
+  },
+  "2811": {
+    "slug": "zip-07512",
+    "state": "nj",
+    "geoid": "07512",
+    "level": "zip"
+  },
+  "2812": {
+    "slug": "zip-08312",
+    "state": "nj",
+    "geoid": "08312",
+    "level": "zip"
+  },
+  "2813": {
+    "slug": "zip-08322",
+    "state": "nj",
+    "geoid": "08322",
+    "level": "zip"
+  },
+  "2814": {
+    "slug": "zip-07422",
+    "state": "nj",
+    "geoid": "07422",
+    "level": "zip"
+  },
+  "2815": {
+    "slug": "zip-07827",
+    "state": "nj",
+    "geoid": "07827",
+    "level": "zip"
+  },
+  "2816": {
+    "slug": "zip-08096",
+    "state": "nj",
+    "geoid": "08096",
+    "level": "zip"
+  },
+  "2817": {
+    "slug": "zip-07881",
+    "state": "nj",
+    "geoid": "07881",
+    "level": "zip"
+  },
+  "2818": {
+    "slug": "zip-07302",
+    "state": "nj",
+    "geoid": "07302",
+    "level": "zip"
+  },
+  "2819": {
+    "slug": "zip-07735",
+    "state": "nj",
+    "geoid": "07735",
+    "level": "zip"
+  },
+  "2820": {
+    "slug": "zip-08828",
+    "state": "nj",
+    "geoid": "08828",
+    "level": "zip"
+  },
+  "2821": {
+    "slug": "zip-07670",
+    "state": "nj",
+    "geoid": "07670",
+    "level": "zip"
+  },
+  "2822": {
+    "slug": "zip-08801",
+    "state": "nj",
+    "geoid": "08801",
+    "level": "zip"
+  },
+  "2823": {
+    "slug": "zip-08822",
+    "state": "nj",
+    "geoid": "08822",
+    "level": "zip"
+  },
+  "2824": {
+    "slug": "zip-07002",
+    "state": "nj",
+    "geoid": "07002",
+    "level": "zip"
+  },
+  "2825": {
+    "slug": "zip-08886",
+    "state": "nj",
+    "geoid": "08886",
+    "level": "zip"
+  },
+  "2826": {
+    "slug": "zip-07430",
+    "state": "nj",
+    "geoid": "07430",
+    "level": "zip"
+  },
+  "2827": {
+    "slug": "zip-07083",
+    "state": "nj",
+    "geoid": "07083",
+    "level": "zip"
+  },
+  "2828": {
+    "slug": "zip-07035",
+    "state": "nj",
+    "geoid": "07035",
+    "level": "zip"
+  },
+  "2829": {
+    "slug": "zip-07882",
+    "state": "nj",
+    "geoid": "07882",
+    "level": "zip"
+  },
+  "2830": {
+    "slug": "zip-08827",
+    "state": "nj",
+    "geoid": "08827",
+    "level": "zip"
+  },
+  "2831": {
+    "slug": "zip-08854",
+    "state": "nj",
+    "geoid": "08854",
+    "level": "zip"
+  },
+  "2832": {
+    "slug": "zip-07202",
+    "state": "nj",
+    "geoid": "07202",
+    "level": "zip"
+  },
+  "2833": {
+    "slug": "zip-07086",
+    "state": "nj",
+    "geoid": "07086",
+    "level": "zip"
+  },
+  "2834": {
+    "slug": "zip-07042",
+    "state": "nj",
+    "geoid": "07042",
+    "level": "zip"
+  },
+  "2835": {
+    "slug": "zip-07632",
+    "state": "nj",
+    "geoid": "07632",
+    "level": "zip"
+  },
+  "2836": {
+    "slug": "zip-08629",
+    "state": "nj",
+    "geoid": "08629",
+    "level": "zip"
+  },
+  "2837": {
+    "slug": "zip-07647",
+    "state": "nj",
+    "geoid": "07647",
+    "level": "zip"
+  },
+  "2838": {
+    "slug": "zip-08846",
+    "state": "nj",
+    "geoid": "08846",
+    "level": "zip"
+  },
+  "2839": {
+    "slug": "zip-07677",
+    "state": "nj",
+    "geoid": "07677",
+    "level": "zip"
+  },
+  "2840": {
+    "slug": "zip-07011",
+    "state": "nj",
+    "geoid": "07011",
+    "level": "zip"
+  },
+  "2841": {
+    "slug": "zip-07073",
+    "state": "nj",
+    "geoid": "07073",
+    "level": "zip"
+  },
+  "2842": {
+    "slug": "zip-07001",
+    "state": "nj",
+    "geoid": "07001",
+    "level": "zip"
+  },
+  "2843": {
+    "slug": "zip-07876",
+    "state": "nj",
+    "geoid": "07876",
+    "level": "zip"
+  },
+  "2844": {
+    "slug": "zip-07660",
+    "state": "nj",
+    "geoid": "07660",
+    "level": "zip"
+  },
+  "2845": {
+    "slug": "zip-07865",
+    "state": "nj",
+    "geoid": "07865",
+    "level": "zip"
+  },
+  "2846": {
+    "slug": "zip-07924",
+    "state": "nj",
+    "geoid": "07924",
+    "level": "zip"
+  },
+  "2847": {
+    "slug": "zip-07977",
+    "state": "nj",
+    "geoid": "07977",
+    "level": "zip"
+  },
+  "2848": {
+    "slug": "zip-07076",
+    "state": "nj",
+    "geoid": "07076",
+    "level": "zip"
+  },
+  "2849": {
+    "slug": "zip-07866",
+    "state": "nj",
+    "geoid": "07866",
+    "level": "zip"
+  },
+  "2850": {
+    "slug": "zip-07435",
+    "state": "nj",
+    "geoid": "07435",
+    "level": "zip"
+  },
+  "2851": {
+    "slug": "zip-07960",
+    "state": "nj",
+    "geoid": "07960",
+    "level": "zip"
+  },
+  "2852": {
+    "slug": "zip-07950",
+    "state": "nj",
+    "geoid": "07950",
+    "level": "zip"
+  },
+  "2853": {
+    "slug": "zip-08836",
+    "state": "nj",
+    "geoid": "08836",
+    "level": "zip"
+  },
+  "2854": {
+    "slug": "zip-07675",
+    "state": "nj",
+    "geoid": "07675",
+    "level": "zip"
+  },
+  "2855": {
+    "slug": "zip-07014",
+    "state": "nj",
+    "geoid": "07014",
+    "level": "zip"
+  },
+  "2856": {
+    "slug": "zip-08648",
+    "state": "nj",
+    "geoid": "08648",
+    "level": "zip"
+  },
+  "2857": {
+    "slug": "zip-07054",
+    "state": "nj",
+    "geoid": "07054",
+    "level": "zip"
+  },
+  "2858": {
+    "slug": "zip-07601",
+    "state": "nj",
+    "geoid": "07601",
+    "level": "zip"
+  },
+  "2859": {
+    "slug": "zip-07640",
+    "state": "nj",
+    "geoid": "07640",
+    "level": "zip"
+  },
+  "2860": {
+    "slug": "zip-07838",
+    "state": "nj",
+    "geoid": "07838",
+    "level": "zip"
+  },
+  "2861": {
+    "slug": "zip-08242",
+    "state": "nj",
+    "geoid": "08242",
+    "level": "zip"
+  },
+  "2862": {
+    "slug": "zip-07423",
+    "state": "nj",
+    "geoid": "07423",
+    "level": "zip"
+  },
+  "2863": {
+    "slug": "zip-07432",
+    "state": "nj",
+    "geoid": "07432",
+    "level": "zip"
+  },
+  "2864": {
+    "slug": "zip-08007",
+    "state": "nj",
+    "geoid": "08007",
+    "level": "zip"
+  },
+  "2865": {
+    "slug": "zip-08039",
+    "state": "nj",
+    "geoid": "08039",
+    "level": "zip"
+  },
+  "2866": {
+    "slug": "zip-08059",
+    "state": "nj",
+    "geoid": "08059",
+    "level": "zip"
+  },
+  "2867": {
+    "slug": "zip-08086",
+    "state": "nj",
+    "geoid": "08086",
+    "level": "zip"
+  },
+  "2868": {
+    "slug": "zip-08554",
+    "state": "nj",
+    "geoid": "08554",
+    "level": "zip"
+  },
+  "2869": {
+    "slug": "zip-08011",
+    "state": "nj",
+    "geoid": "08011",
+    "level": "zip"
+  },
+  "2870": {
+    "slug": "zip-08641",
+    "state": "nj",
+    "geoid": "08641",
+    "level": "zip"
+  },
+  "2871": {
+    "slug": "zip-08750",
+    "state": "nj",
+    "geoid": "08750",
+    "level": "zip"
+  },
+  "2872": {
+    "slug": "zip-08095",
+    "state": "nj",
+    "geoid": "08095",
+    "level": "zip"
+  },
+  "2873": {
+    "slug": "zip-07716",
+    "state": "nj",
+    "geoid": "07716",
+    "level": "zip"
+  },
+  "2874": {
+    "slug": "zip-08048",
+    "state": "nj",
+    "geoid": "08048",
+    "level": "zip"
+  },
+  "2875": {
+    "slug": "zip-08734",
+    "state": "nj",
+    "geoid": "08734",
+    "level": "zip"
+  },
+  "2876": {
+    "slug": "zip-07746",
+    "state": "nj",
+    "geoid": "07746",
+    "level": "zip"
+  },
+  "2877": {
+    "slug": "zip-07739",
+    "state": "nj",
+    "geoid": "07739",
+    "level": "zip"
+  },
+  "2878": {
+    "slug": "zip-08535",
+    "state": "nj",
+    "geoid": "08535",
+    "level": "zip"
+  },
+  "2879": {
+    "slug": "zip-07720",
+    "state": "nj",
+    "geoid": "07720",
+    "level": "zip"
+  },
+  "2880": {
+    "slug": "zip-07480",
+    "state": "nj",
+    "geoid": "07480",
+    "level": "zip"
+  },
+  "2881": {
+    "slug": "zip-08033",
+    "state": "nj",
+    "geoid": "08033",
+    "level": "zip"
+  },
+  "2882": {
+    "slug": "zip-08327",
+    "state": "nj",
+    "geoid": "08327",
+    "level": "zip"
+  },
+  "2883": {
+    "slug": "zip-08316",
+    "state": "nj",
+    "geoid": "08316",
+    "level": "zip"
+  },
+  "2884": {
+    "slug": "zip-08857",
+    "state": "nj",
+    "geoid": "08857",
+    "level": "zip"
+  },
+  "2885": {
+    "slug": "zip-07945",
+    "state": "nj",
+    "geoid": "07945",
+    "level": "zip"
+  },
+  "2886": {
+    "slug": "zip-08873",
+    "state": "nj",
+    "geoid": "08873",
+    "level": "zip"
+  },
+  "2887": {
+    "slug": "zip-08037",
+    "state": "nj",
+    "geoid": "08037",
+    "level": "zip"
+  },
+  "2888": {
+    "slug": "zip-07604",
+    "state": "nj",
+    "geoid": "07604",
+    "level": "zip"
+  },
+  "2889": {
+    "slug": "zip-08825",
+    "state": "nj",
+    "geoid": "08825",
+    "level": "zip"
+  },
+  "2890": {
+    "slug": "zip-07033",
+    "state": "nj",
+    "geoid": "07033",
+    "level": "zip"
+  },
+  "2891": {
+    "slug": "zip-07081",
+    "state": "nj",
+    "geoid": "07081",
+    "level": "zip"
+  },
+  "2892": {
+    "slug": "zip-07206",
+    "state": "nj",
+    "geoid": "07206",
+    "level": "zip"
+  },
+  "2893": {
+    "slug": "zip-07204",
+    "state": "nj",
+    "geoid": "07204",
+    "level": "zip"
+  },
+  "2894": {
+    "slug": "zip-07853",
+    "state": "nj",
+    "geoid": "07853",
+    "level": "zip"
+  },
+  "2895": {
+    "slug": "zip-07093",
+    "state": "nj",
+    "geoid": "07093",
+    "level": "zip"
+  },
+  "2896": {
+    "slug": "zip-08817",
+    "state": "nj",
+    "geoid": "08817",
+    "level": "zip"
+  },
+  "2897": {
+    "slug": "zip-07403",
+    "state": "nj",
+    "geoid": "07403",
+    "level": "zip"
+  },
+  "2898": {
+    "slug": "zip-08610",
+    "state": "nj",
+    "geoid": "08610",
+    "level": "zip"
+  },
+  "2899": {
+    "slug": "zip-07005",
+    "state": "nj",
+    "geoid": "07005",
+    "level": "zip"
+  },
+  "2900": {
+    "slug": "zip-07932",
+    "state": "nj",
+    "geoid": "07932",
+    "level": "zip"
+  },
+  "2901": {
+    "slug": "zip-08904",
+    "state": "nj",
+    "geoid": "08904",
+    "level": "zip"
+  },
+  "2902": {
+    "slug": "zip-08691",
+    "state": "nj",
+    "geoid": "08691",
+    "level": "zip"
+  },
+  "2903": {
+    "slug": "zip-07008",
+    "state": "nj",
+    "geoid": "07008",
+    "level": "zip"
+  },
+  "2904": {
+    "slug": "zip-07058",
+    "state": "nj",
+    "geoid": "07058",
+    "level": "zip"
+  },
+  "2905": {
+    "slug": "zip-08869",
+    "state": "nj",
+    "geoid": "08869",
+    "level": "zip"
+  },
+  "2906": {
+    "slug": "zip-07847",
+    "state": "nj",
+    "geoid": "07847",
+    "level": "zip"
+  },
+  "2907": {
+    "slug": "zip-07114",
+    "state": "nj",
+    "geoid": "07114",
+    "level": "zip"
+  },
+  "2908": {
+    "slug": "zip-08069",
+    "state": "nj",
+    "geoid": "08069",
+    "level": "zip"
+  },
+  "2909": {
+    "slug": "zip-07026",
+    "state": "nj",
+    "geoid": "07026",
+    "level": "zip"
+  },
+  "2910": {
+    "slug": "zip-07039",
+    "state": "nj",
+    "geoid": "07039",
+    "level": "zip"
+  },
+  "2911": {
+    "slug": "zip-08520",
+    "state": "nj",
+    "geoid": "08520",
+    "level": "zip"
+  },
+  "2912": {
+    "slug": "zip-07933",
+    "state": "nj",
+    "geoid": "07933",
+    "level": "zip"
+  },
+  "2913": {
+    "slug": "zip-08318",
+    "state": "nj",
+    "geoid": "08318",
+    "level": "zip"
+  },
+  "2914": {
+    "slug": "zip-08001",
+    "state": "nj",
+    "geoid": "08001",
+    "level": "zip"
+  },
+  "2915": {
+    "slug": "zip-08056",
+    "state": "nj",
+    "geoid": "08056",
+    "level": "zip"
+  },
+  "2916": {
+    "slug": "zip-08041",
+    "state": "nj",
+    "geoid": "08041",
+    "level": "zip"
+  },
+  "2917": {
+    "slug": "zip-08518",
+    "state": "nj",
+    "geoid": "08518",
+    "level": "zip"
+  },
+  "2918": {
+    "slug": "zip-08064",
+    "state": "nj",
+    "geoid": "08064",
+    "level": "zip"
+  },
+  "2919": {
+    "slug": "zip-08097",
+    "state": "nj",
+    "geoid": "08097",
+    "level": "zip"
+  },
+  "2920": {
+    "slug": "zip-08722",
+    "state": "nj",
+    "geoid": "08722",
+    "level": "zip"
+  },
+  "2921": {
+    "slug": "zip-08073",
+    "state": "nj",
+    "geoid": "08073",
+    "level": "zip"
+  },
+  "2922": {
+    "slug": "zip-07450",
+    "state": "nj",
+    "geoid": "07450",
+    "level": "zip"
+  },
+  "2923": {
+    "slug": "zip-07661",
+    "state": "nj",
+    "geoid": "07661",
+    "level": "zip"
+  },
+  "2924": {
+    "slug": "zip-07111",
+    "state": "nj",
+    "geoid": "07111",
+    "level": "zip"
+  },
+  "2925": {
+    "slug": "zip-07047",
+    "state": "nj",
+    "geoid": "07047",
+    "level": "zip"
+  },
+  "2926": {
+    "slug": "zip-07074",
+    "state": "nj",
+    "geoid": "07074",
+    "level": "zip"
+  },
+  "2927": {
+    "slug": "zip-07606",
+    "state": "nj",
+    "geoid": "07606",
+    "level": "zip"
+  },
+  "2928": {
+    "slug": "zip-08802",
+    "state": "nj",
+    "geoid": "08802",
+    "level": "zip"
+  },
+  "2929": {
+    "slug": "zip-07504",
+    "state": "nj",
+    "geoid": "07504",
+    "level": "zip"
+  },
+  "2930": {
+    "slug": "zip-07631",
+    "state": "nj",
+    "geoid": "07631",
+    "level": "zip"
+  },
+  "2931": {
+    "slug": "zip-07067",
+    "state": "nj",
+    "geoid": "07067",
+    "level": "zip"
+  },
+  "2932": {
+    "slug": "zip-08611",
+    "state": "nj",
+    "geoid": "08611",
+    "level": "zip"
+  },
+  "2933": {
+    "slug": "zip-08638",
+    "state": "nj",
+    "geoid": "08638",
+    "level": "zip"
+  },
+  "2934": {
+    "slug": "zip-07306",
+    "state": "nj",
+    "geoid": "07306",
+    "level": "zip"
+  },
+  "2935": {
+    "slug": "zip-07836",
+    "state": "nj",
+    "geoid": "07836",
+    "level": "zip"
+  },
+  "2936": {
+    "slug": "zip-07063",
+    "state": "nj",
+    "geoid": "07063",
+    "level": "zip"
+  },
+  "2937": {
+    "slug": "zip-07040",
+    "state": "nj",
+    "geoid": "07040",
+    "level": "zip"
+  },
+  "2938": {
+    "slug": "zip-07620",
+    "state": "nj",
+    "geoid": "07620",
+    "level": "zip"
+  },
+  "2939": {
+    "slug": "zip-07304",
+    "state": "nj",
+    "geoid": "07304",
+    "level": "zip"
+  },
+  "2940": {
+    "slug": "zip-08360",
+    "state": "nj",
+    "geoid": "08360",
+    "level": "zip"
+  },
+  "2941": {
+    "slug": "zip-07936",
+    "state": "nj",
+    "geoid": "07936",
+    "level": "zip"
+  },
+  "2942": {
+    "slug": "zip-07885",
+    "state": "nj",
+    "geoid": "07885",
+    "level": "zip"
+  },
+  "2943": {
+    "slug": "zip-07850",
+    "state": "nj",
+    "geoid": "07850",
+    "level": "zip"
+  },
+  "2944": {
+    "slug": "zip-08344",
+    "state": "nj",
+    "geoid": "08344",
+    "level": "zip"
+  },
+  "2945": {
+    "slug": "zip-08070",
+    "state": "nj",
+    "geoid": "08070",
+    "level": "zip"
+  },
+  "2946": {
+    "slug": "zip-08210",
+    "state": "nj",
+    "geoid": "08210",
+    "level": "zip"
+  },
+  "2947": {
+    "slug": "zip-08226",
+    "state": "nj",
+    "geoid": "08226",
+    "level": "zip"
+  },
+  "2948": {
+    "slug": "zip-08248",
+    "state": "nj",
+    "geoid": "08248",
+    "level": "zip"
+  },
+  "2949": {
+    "slug": "zip-08023",
+    "state": "nj",
+    "geoid": "08023",
+    "level": "zip"
+  },
+  "2950": {
+    "slug": "zip-08882",
+    "state": "nj",
+    "geoid": "08882",
+    "level": "zip"
+  },
+  "2951": {
+    "slug": "zip-08560",
+    "state": "nj",
+    "geoid": "08560",
+    "level": "zip"
+  },
+  "2952": {
+    "slug": "zip-08223",
+    "state": "nj",
+    "geoid": "08223",
+    "level": "zip"
+  },
+  "2953": {
+    "slug": "zip-08872",
+    "state": "nj",
+    "geoid": "08872",
+    "level": "zip"
+  },
+  "2954": {
+    "slug": "zip-07930",
+    "state": "nj",
+    "geoid": "07930",
+    "level": "zip"
+  },
+  "2955": {
+    "slug": "zip-07311",
+    "state": "nj",
+    "geoid": "07311",
+    "level": "zip"
+  },
+  "2956": {
+    "slug": "zip-08826",
+    "state": "nj",
+    "geoid": "08826",
+    "level": "zip"
+  },
+  "2957": {
+    "slug": "zip-08311",
+    "state": "nj",
+    "geoid": "08311",
+    "level": "zip"
+  },
+  "2958": {
+    "slug": "zip-08852",
+    "state": "nj",
+    "geoid": "08852",
+    "level": "zip"
+  },
+  "2959": {
+    "slug": "zip-07064",
+    "state": "nj",
+    "geoid": "07064",
+    "level": "zip"
+  },
+  "2960": {
+    "slug": "zip-08212",
+    "state": "nj",
+    "geoid": "08212",
+    "level": "zip"
+  },
+  "2961": {
+    "slug": "zip-08810",
+    "state": "nj",
+    "geoid": "08810",
+    "level": "zip"
+  },
+  "2962": {
+    "slug": "zip-08561",
+    "state": "nj",
+    "geoid": "08561",
+    "level": "zip"
+  },
+  "2963": {
+    "slug": "zip-07726",
+    "state": "nj",
+    "geoid": "07726",
+    "level": "zip"
+  },
+  "2964": {
+    "slug": "zip-08109",
+    "state": "nj",
+    "geoid": "08109",
+    "level": "zip"
+  },
+  "2965": {
+    "slug": "zip-07508",
+    "state": "nj",
+    "geoid": "07508",
+    "level": "zip"
+  },
+  "2966": {
+    "slug": "zip-08721",
+    "state": "nj",
+    "geoid": "08721",
+    "level": "zip"
+  },
+  "2967": {
+    "slug": "zip-08880",
+    "state": "nj",
+    "geoid": "08880",
+    "level": "zip"
+  },
+  "2968": {
+    "slug": "zip-07935",
+    "state": "nj",
+    "geoid": "07935",
+    "level": "zip"
+  },
+  "2969": {
+    "slug": "zip-07470",
+    "state": "nj",
+    "geoid": "07470",
+    "level": "zip"
+  },
+  "2970": {
+    "slug": "zip-07456",
+    "state": "nj",
+    "geoid": "07456",
+    "level": "zip"
+  },
+  "2971": {
+    "slug": "zip-08021",
+    "state": "nj",
+    "geoid": "08021",
+    "level": "zip"
+  },
+  "2972": {
+    "slug": "zip-08027",
+    "state": "nj",
+    "geoid": "08027",
+    "level": "zip"
+  },
+  "2973": {
+    "slug": "zip-08015",
+    "state": "nj",
+    "geoid": "08015",
+    "level": "zip"
+  },
+  "2974": {
+    "slug": "zip-08075",
+    "state": "nj",
+    "geoid": "08075",
+    "level": "zip"
+  },
+  "2975": {
+    "slug": "zip-08004",
+    "state": "nj",
+    "geoid": "08004",
+    "level": "zip"
+  },
+  "2976": {
+    "slug": "zip-08077",
+    "state": "nj",
+    "geoid": "08077",
+    "level": "zip"
+  },
+  "2977": {
+    "slug": "zip-08527",
+    "state": "nj",
+    "geoid": "08527",
+    "level": "zip"
+  },
+  "2978": {
+    "slug": "zip-07825",
+    "state": "nj",
+    "geoid": "07825",
+    "level": "zip"
+  },
+  "2979": {
+    "slug": "zip-07642",
+    "state": "nj",
+    "geoid": "07642",
+    "level": "zip"
+  },
+  "2980": {
+    "slug": "zip-07860",
+    "state": "nj",
+    "geoid": "07860",
+    "level": "zip"
+  },
+  "2981": {
+    "slug": "zip-07656",
+    "state": "nj",
+    "geoid": "07656",
+    "level": "zip"
+  },
+  "2982": {
+    "slug": "zip-07645",
+    "state": "nj",
+    "geoid": "07645",
+    "level": "zip"
+  },
+  "2983": {
+    "slug": "zip-08314",
+    "state": "nj",
+    "geoid": "08314",
+    "level": "zip"
+  },
+  "2984": {
+    "slug": "zip-08105",
+    "state": "nj",
+    "geoid": "08105",
+    "level": "zip"
+  },
+  "2985": {
+    "slug": "zip-07506",
+    "state": "nj",
+    "geoid": "07506",
+    "level": "zip"
+  },
+  "2986": {
+    "slug": "zip-07821",
+    "state": "nj",
+    "geoid": "07821",
+    "level": "zip"
+  },
+  "2987": {
+    "slug": "zip-07846",
+    "state": "nj",
+    "geoid": "07846",
+    "level": "zip"
+  },
+  "2988": {
+    "slug": "zip-07831",
+    "state": "nj",
+    "geoid": "07831",
+    "level": "zip"
+  },
+  "2989": {
+    "slug": "zip-07934",
+    "state": "nj",
+    "geoid": "07934",
+    "level": "zip"
+  },
+  "2990": {
+    "slug": "zip-07420",
+    "state": "nj",
+    "geoid": "07420",
+    "level": "zip"
+  },
+  "2991": {
+    "slug": "zip-08823",
+    "state": "nj",
+    "geoid": "08823",
+    "level": "zip"
+  },
+  "2992": {
+    "slug": "zip-08328",
+    "state": "nj",
+    "geoid": "08328",
+    "level": "zip"
+  },
+  "2993": {
+    "slug": "zip-07418",
+    "state": "nj",
+    "geoid": "07418",
+    "level": "zip"
+  },
+  "2994": {
+    "slug": "zip-08251",
+    "state": "nj",
+    "geoid": "08251",
+    "level": "zip"
+  },
+  "2995": {
+    "slug": "zip-08319",
+    "state": "nj",
+    "geoid": "08319",
+    "level": "zip"
+  },
+  "2996": {
+    "slug": "zip-08501",
+    "state": "nj",
+    "geoid": "08501",
+    "level": "zip"
+  },
+  "2997": {
+    "slug": "zip-08752",
+    "state": "nj",
+    "geoid": "08752",
+    "level": "zip"
+  },
+  "2998": {
+    "slug": "zip-08103",
+    "state": "nj",
+    "geoid": "08103",
+    "level": "zip"
+  },
+  "2999": {
+    "slug": "zip-08346",
+    "state": "nj",
+    "geoid": "08346",
+    "level": "zip"
+  },
+  "3000": {
+    "slug": "zip-07844",
+    "state": "nj",
+    "geoid": "07844",
+    "level": "zip"
+  },
+  "3001": {
+    "slug": "zip-08740",
+    "state": "nj",
+    "geoid": "08740",
+    "level": "zip"
+  },
+  "3002": {
+    "slug": "zip-07057",
+    "state": "nj",
+    "geoid": "07057",
+    "level": "zip"
+  },
+  "3003": {
+    "slug": "zip-07461",
+    "state": "nj",
+    "geoid": "07461",
+    "level": "zip"
+  },
+  "3004": {
+    "slug": "zip-08080",
+    "state": "nj",
+    "geoid": "08080",
+    "level": "zip"
+  },
+  "3005": {
+    "slug": "zip-07439",
+    "state": "nj",
+    "geoid": "07439",
+    "level": "zip"
+  },
+  "3006": {
+    "slug": "zip-07421",
+    "state": "nj",
+    "geoid": "07421",
+    "level": "zip"
+  },
+  "3007": {
+    "slug": "zip-07851",
+    "state": "nj",
+    "geoid": "07851",
+    "level": "zip"
+  },
+  "3008": {
+    "slug": "zip-08093",
+    "state": "nj",
+    "geoid": "08093",
+    "level": "zip"
+  },
+  "3009": {
+    "slug": "zip-08089",
+    "state": "nj",
+    "geoid": "08089",
+    "level": "zip"
+  },
+  "3010": {
+    "slug": "zip-08061",
+    "state": "nj",
+    "geoid": "08061",
+    "level": "zip"
+  },
+  "3011": {
+    "slug": "zip-07641",
+    "state": "nj",
+    "geoid": "07641",
+    "level": "zip"
+  },
+  "3012": {
+    "slug": "zip-08247",
+    "state": "nj",
+    "geoid": "08247",
+    "level": "zip"
+  },
+  "3013": {
+    "slug": "zip-07006",
+    "state": "nj",
+    "geoid": "07006",
+    "level": "zip"
+  },
+  "3014": {
+    "slug": "zip-07624",
+    "state": "nj",
+    "geoid": "07624",
+    "level": "zip"
+  },
+  "3015": {
+    "slug": "zip-07627",
+    "state": "nj",
+    "geoid": "07627",
+    "level": "zip"
+  },
+  "3016": {
+    "slug": "zip-07832",
+    "state": "nj",
+    "geoid": "07832",
+    "level": "zip"
+  },
+  "3017": {
+    "slug": "zip-07605",
+    "state": "nj",
+    "geoid": "07605",
+    "level": "zip"
+  },
+  "3018": {
+    "slug": "zip-08853",
+    "state": "nj",
+    "geoid": "08853",
+    "level": "zip"
+  },
+  "3019": {
+    "slug": "zip-08352",
+    "state": "nj",
+    "geoid": "08352",
+    "level": "zip"
+  },
+  "3020": {
+    "slug": "zip-07643",
+    "state": "nj",
+    "geoid": "07643",
+    "level": "zip"
+  },
+  "3021": {
+    "slug": "zip-07820",
+    "state": "nj",
+    "geoid": "07820",
+    "level": "zip"
+  },
+  "3022": {
+    "slug": "zip-08890",
+    "state": "nj",
+    "geoid": "08890",
+    "level": "zip"
+  },
+  "3023": {
+    "slug": "zip-07416",
+    "state": "nj",
+    "geoid": "07416",
+    "level": "zip"
+  },
+  "3024": {
+    "slug": "zip-07419",
+    "state": "nj",
+    "geoid": "07419",
+    "level": "zip"
+  },
+  "3025": {
+    "slug": "zip-08030",
+    "state": "nj",
+    "geoid": "08030",
+    "level": "zip"
+  },
+  "3026": {
+    "slug": "zip-08020",
+    "state": "nj",
+    "geoid": "08020",
+    "level": "zip"
+  },
+  "3027": {
+    "slug": "zip-08051",
+    "state": "nj",
+    "geoid": "08051",
+    "level": "zip"
+  },
+  "3028": {
+    "slug": "zip-08042",
+    "state": "nj",
+    "geoid": "08042",
+    "level": "zip"
+  },
+  "3029": {
+    "slug": "zip-08022",
+    "state": "nj",
+    "geoid": "08022",
+    "level": "zip"
+  },
+  "3030": {
+    "slug": "zip-08010",
+    "state": "nj",
+    "geoid": "08010",
+    "level": "zip"
+  },
+  "3031": {
+    "slug": "zip-08057",
+    "state": "nj",
+    "geoid": "08057",
+    "level": "zip"
+  },
+  "3032": {
+    "slug": "zip-08755",
+    "state": "nj",
+    "geoid": "08755",
+    "level": "zip"
+  },
+  "3033": {
+    "slug": "zip-08533",
+    "state": "nj",
+    "geoid": "08533",
+    "level": "zip"
+  },
+  "3034": {
+    "slug": "zip-08055",
+    "state": "nj",
+    "geoid": "08055",
+    "level": "zip"
+  },
+  "3035": {
+    "slug": "zip-08087",
+    "state": "nj",
+    "geoid": "08087",
+    "level": "zip"
+  },
+  "3036": {
+    "slug": "zip-08733",
+    "state": "nj",
+    "geoid": "08733",
+    "level": "zip"
+  },
+  "3037": {
+    "slug": "zip-08758",
+    "state": "nj",
+    "geoid": "08758",
+    "level": "zip"
+  },
+  "3038": {
+    "slug": "zip-08050",
+    "state": "nj",
+    "geoid": "08050",
+    "level": "zip"
+  },
+  "3039": {
+    "slug": "zip-08738",
+    "state": "nj",
+    "geoid": "08738",
+    "level": "zip"
+  },
+  "3040": {
+    "slug": "zip-07733",
+    "state": "nj",
+    "geoid": "07733",
+    "level": "zip"
+  },
+  "3041": {
+    "slug": "zip-07704",
+    "state": "nj",
+    "geoid": "07704",
+    "level": "zip"
+  },
+  "3042": {
+    "slug": "zip-08510",
+    "state": "nj",
+    "geoid": "08510",
+    "level": "zip"
+  },
+  "3043": {
+    "slug": "zip-07756",
+    "state": "nj",
+    "geoid": "07756",
+    "level": "zip"
+  },
+  "3044": {
+    "slug": "zip-08215",
+    "state": "nj",
+    "geoid": "08215",
+    "level": "zip"
+  },
+  "3045": {
+    "slug": "zip-07649",
+    "state": "nj",
+    "geoid": "07649",
+    "level": "zip"
+  },
+  "3046": {
+    "slug": "zip-07843",
+    "state": "nj",
+    "geoid": "07843",
+    "level": "zip"
+  },
+  "3047": {
+    "slug": "zip-08063",
+    "state": "nj",
+    "geoid": "08063",
+    "level": "zip"
+  },
+  "3048": {
+    "slug": "zip-08084",
+    "state": "nj",
+    "geoid": "08084",
+    "level": "zip"
+  },
+  "3049": {
+    "slug": "zip-08031",
+    "state": "nj",
+    "geoid": "08031",
+    "level": "zip"
+  },
+  "3050": {
+    "slug": "zip-08045",
+    "state": "nj",
+    "geoid": "08045",
+    "level": "zip"
+  },
+  "3051": {
+    "slug": "zip-08090",
+    "state": "nj",
+    "geoid": "08090",
+    "level": "zip"
+  },
+  "3052": {
+    "slug": "zip-08032",
+    "state": "nj",
+    "geoid": "08032",
+    "level": "zip"
+  },
+  "3053": {
+    "slug": "zip-08016",
+    "state": "nj",
+    "geoid": "08016",
+    "level": "zip"
+  },
+  "3054": {
+    "slug": "zip-08068",
+    "state": "nj",
+    "geoid": "08068",
+    "level": "zip"
+  },
+  "3055": {
+    "slug": "zip-08052",
+    "state": "nj",
+    "geoid": "08052",
+    "level": "zip"
+  },
+  "3056": {
+    "slug": "zip-08515",
+    "state": "nj",
+    "geoid": "08515",
+    "level": "zip"
+  },
+  "3057": {
+    "slug": "zip-08753",
+    "state": "nj",
+    "geoid": "08753",
+    "level": "zip"
+  },
+  "3058": {
+    "slug": "zip-08724",
+    "state": "nj",
+    "geoid": "08724",
+    "level": "zip"
+  },
+  "3059": {
+    "slug": "zip-08019",
+    "state": "nj",
+    "geoid": "08019",
+    "level": "zip"
+  },
+  "3060": {
+    "slug": "zip-07718",
+    "state": "nj",
+    "geoid": "07718",
+    "level": "zip"
+  },
+  "3061": {
+    "slug": "zip-07758",
+    "state": "nj",
+    "geoid": "07758",
+    "level": "zip"
+  },
+  "3062": {
+    "slug": "zip-07701",
+    "state": "nj",
+    "geoid": "07701",
+    "level": "zip"
+  },
+  "3063": {
+    "slug": "zip-07737",
+    "state": "nj",
+    "geoid": "07737",
+    "level": "zip"
+  },
+  "3064": {
+    "slug": "zip-07757",
+    "state": "nj",
+    "geoid": "07757",
+    "level": "zip"
+  },
+  "3065": {
+    "slug": "zip-07727",
+    "state": "nj",
+    "geoid": "07727",
+    "level": "zip"
+  },
+  "3066": {
+    "slug": "zip-07723",
+    "state": "nj",
+    "geoid": "07723",
+    "level": "zip"
+  },
+  "3067": {
+    "slug": "zip-07703",
+    "state": "nj",
+    "geoid": "07703",
+    "level": "zip"
+  },
+  "3068": {
+    "slug": "zip-08831",
+    "state": "nj",
+    "geoid": "08831",
+    "level": "zip"
+  },
+  "3069": {
+    "slug": "zip-07010",
+    "state": "nj",
+    "geoid": "07010",
+    "level": "zip"
+  },
+  "3070": {
+    "slug": "zip-07103",
+    "state": "nj",
+    "geoid": "07103",
+    "level": "zip"
+  },
+  "3071": {
+    "slug": "zip-07626",
+    "state": "nj",
+    "geoid": "07626",
+    "level": "zip"
+  },
+  "3072": {
+    "slug": "zip-07066",
+    "state": "nj",
+    "geoid": "07066",
+    "level": "zip"
+  },
+  "3073": {
+    "slug": "zip-07608",
+    "state": "nj",
+    "geoid": "07608",
+    "level": "zip"
+  },
+  "3074": {
+    "slug": "zip-08723",
+    "state": "nj",
+    "geoid": "08723",
+    "level": "zip"
+  },
+  "3075": {
+    "slug": "zip-08088",
+    "state": "nj",
+    "geoid": "08088",
+    "level": "zip"
+  },
+  "3076": {
+    "slug": "zip-08008",
+    "state": "nj",
+    "geoid": "08008",
+    "level": "zip"
+  },
+  "3077": {
+    "slug": "zip-07748",
+    "state": "nj",
+    "geoid": "07748",
+    "level": "zip"
+  },
+  "3078": {
+    "slug": "zip-08036",
+    "state": "nj",
+    "geoid": "08036",
+    "level": "zip"
+  },
+  "3079": {
+    "slug": "zip-07760",
+    "state": "nj",
+    "geoid": "07760",
+    "level": "zip"
+  },
+  "3080": {
+    "slug": "zip-07753",
+    "state": "nj",
+    "geoid": "07753",
+    "level": "zip"
+  },
+  "3081": {
+    "slug": "zip-07764",
+    "state": "nj",
+    "geoid": "07764",
+    "level": "zip"
+  },
+  "3082": {
+    "slug": "zip-07751",
+    "state": "nj",
+    "geoid": "07751",
+    "level": "zip"
+  },
+  "3083": {
+    "slug": "zip-07722",
+    "state": "nj",
+    "geoid": "07722",
+    "level": "zip"
+  },
+  "3084": {
+    "slug": "zip-07755",
+    "state": "nj",
+    "geoid": "07755",
+    "level": "zip"
+  },
+  "3085": {
+    "slug": "zip-08720",
+    "state": "nj",
+    "geoid": "08720",
+    "level": "zip"
+  },
+  "3086": {
+    "slug": "zip-07702",
+    "state": "nj",
+    "geoid": "07702",
+    "level": "zip"
+  },
+  "3087": {
+    "slug": "zip-08240",
+    "state": "nj",
+    "geoid": "08240",
+    "level": "zip"
+  },
+  "3088": {
+    "slug": "zip-07747",
+    "state": "nj",
+    "geoid": "07747",
+    "level": "zip"
+  },
+  "3089": {
+    "slug": "zip-07102",
+    "state": "nj",
+    "geoid": "07102",
+    "level": "zip"
+  },
+  "3090": {
+    "slug": "zip-08558",
+    "state": "nj",
+    "geoid": "08558",
+    "level": "zip"
+  },
+  "3091": {
+    "slug": "zip-08540",
+    "state": "nj",
+    "geoid": "08540",
+    "level": "zip"
+  },
+  "3092": {
+    "slug": "zip-07920",
+    "state": "nj",
+    "geoid": "07920",
+    "level": "zip"
+  },
+  "3093": {
+    "slug": "zip-08046",
+    "state": "nj",
+    "geoid": "08046",
+    "level": "zip"
+  },
+  "3094": {
+    "slug": "zip-08562",
+    "state": "nj",
+    "geoid": "08562",
+    "level": "zip"
+  },
+  "3095": {
+    "slug": "zip-07762",
+    "state": "nj",
+    "geoid": "07762",
+    "level": "zip"
+  },
+  "3096": {
+    "slug": "zip-08701",
+    "state": "nj",
+    "geoid": "08701",
+    "level": "zip"
+  },
+  "3097": {
+    "slug": "zip-08514",
+    "state": "nj",
+    "geoid": "08514",
+    "level": "zip"
+  },
+  "3098": {
+    "slug": "zip-08742",
+    "state": "nj",
+    "geoid": "08742",
+    "level": "zip"
+  },
+  "3099": {
+    "slug": "zip-08005",
+    "state": "nj",
+    "geoid": "08005",
+    "level": "zip"
+  },
+  "3100": {
+    "slug": "zip-07732",
+    "state": "nj",
+    "geoid": "07732",
+    "level": "zip"
+  },
+  "3101": {
+    "slug": "zip-08732",
+    "state": "nj",
+    "geoid": "08732",
+    "level": "zip"
+  },
+  "3102": {
+    "slug": "zip-08736",
+    "state": "nj",
+    "geoid": "08736",
+    "level": "zip"
+  },
+  "3103": {
+    "slug": "zip-08555",
+    "state": "nj",
+    "geoid": "08555",
+    "level": "zip"
+  },
+  "3104": {
+    "slug": "zip-08205",
+    "state": "nj",
+    "geoid": "08205",
+    "level": "zip"
+  },
+  "3105": {
+    "slug": "zip-08034",
+    "state": "nj",
+    "geoid": "08034",
+    "level": "zip"
+  },
+  "3106": {
+    "slug": "zip-08009",
+    "state": "nj",
+    "geoid": "08009",
+    "level": "zip"
+  },
+  "3107": {
+    "slug": "zip-08340",
+    "state": "nj",
+    "geoid": "08340",
+    "level": "zip"
+  },
+  "3108": {
+    "slug": "zip-08217",
+    "state": "nj",
+    "geoid": "08217",
+    "level": "zip"
+  },
+  "3109": {
+    "slug": "zip-07458",
+    "state": "nj",
+    "geoid": "07458",
+    "level": "zip"
+  },
+  "3110": {
+    "slug": "zip-07870",
+    "state": "nj",
+    "geoid": "07870",
+    "level": "zip"
+  },
+  "3111": {
+    "slug": "zip-08071",
+    "state": "nj",
+    "geoid": "08071",
+    "level": "zip"
+  },
+  "3112": {
+    "slug": "zip-08028",
+    "state": "nj",
+    "geoid": "08028",
+    "level": "zip"
+  },
+  "3113": {
+    "slug": "zip-07442",
+    "state": "nj",
+    "geoid": "07442",
+    "level": "zip"
+  },
+  "3114": {
+    "slug": "zip-07424",
+    "state": "nj",
+    "geoid": "07424",
+    "level": "zip"
+  },
+  "3115": {
+    "slug": "zip-07822",
+    "state": "nj",
+    "geoid": "07822",
+    "level": "zip"
+  },
+  "3116": {
+    "slug": "zip-08043",
+    "state": "nj",
+    "geoid": "08043",
+    "level": "zip"
+  },
+  "3117": {
+    "slug": "zip-08014",
+    "state": "nj",
+    "geoid": "08014",
+    "level": "zip"
+  },
+  "3118": {
+    "slug": "zip-08035",
+    "state": "nj",
+    "geoid": "08035",
+    "level": "zip"
+  },
+  "3119": {
+    "slug": "zip-08505",
+    "state": "nj",
+    "geoid": "08505",
+    "level": "zip"
+  },
+  "3120": {
+    "slug": "zip-08091",
+    "state": "nj",
+    "geoid": "08091",
+    "level": "zip"
+  },
+  "3121": {
+    "slug": "zip-08224",
+    "state": "nj",
+    "geoid": "08224",
+    "level": "zip"
+  },
+  "3122": {
+    "slug": "zip-08731",
+    "state": "nj",
+    "geoid": "08731",
+    "level": "zip"
+  },
+  "3123": {
+    "slug": "zip-07734",
+    "state": "nj",
+    "geoid": "07734",
+    "level": "zip"
+  },
+  "3124": {
+    "slug": "zip-07730",
+    "state": "nj",
+    "geoid": "07730",
+    "level": "zip"
+  },
+  "3125": {
+    "slug": "zip-07738",
+    "state": "nj",
+    "geoid": "07738",
+    "level": "zip"
+  },
+  "3126": {
+    "slug": "zip-07712",
+    "state": "nj",
+    "geoid": "07712",
+    "level": "zip"
+  },
+  "3127": {
+    "slug": "zip-07711",
+    "state": "nj",
+    "geoid": "07711",
+    "level": "zip"
+  },
+  "3128": {
+    "slug": "zip-07731",
+    "state": "nj",
+    "geoid": "07731",
+    "level": "zip"
+  },
+  "3129": {
+    "slug": "zip-08902",
+    "state": "nj",
+    "geoid": "08902",
+    "level": "zip"
+  },
+  "3130": {
+    "slug": "zip-07666",
+    "state": "nj",
+    "geoid": "07666",
+    "level": "zip"
+  },
+  "3131": {
+    "slug": "zip-07069",
+    "state": "nj",
+    "geoid": "07069",
+    "level": "zip"
+  },
+  "3132": {
+    "slug": "zip-08530",
+    "state": "nj",
+    "geoid": "08530",
+    "level": "zip"
+  },
+  "3133": {
+    "slug": "zip-07018",
+    "state": "nj",
+    "geoid": "07018",
+    "level": "zip"
+  },
+  "3134": {
+    "slug": "zip-08867",
+    "state": "nj",
+    "geoid": "08867",
+    "level": "zip"
+  },
+  "3135": {
+    "slug": "zip-08809",
+    "state": "nj",
+    "geoid": "08809",
+    "level": "zip"
+  },
+  "3136": {
+    "slug": "zip-08889",
+    "state": "nj",
+    "geoid": "08889",
+    "level": "zip"
+  },
+  "3137": {
+    "slug": "zip-07088",
+    "state": "nj",
+    "geoid": "07088",
+    "level": "zip"
+  },
+  "3138": {
+    "slug": "zip-08865",
+    "state": "nj",
+    "geoid": "08865",
+    "level": "zip"
+  },
+  "3139": {
+    "slug": "zip-07646",
+    "state": "nj",
+    "geoid": "07646",
+    "level": "zip"
+  },
+  "3140": {
+    "slug": "zip-07514",
+    "state": "nj",
+    "geoid": "07514",
+    "level": "zip"
+  },
+  "3141": {
+    "slug": "zip-07840",
+    "state": "nj",
+    "geoid": "07840",
+    "level": "zip"
+  },
+  "3142": {
+    "slug": "zip-07830",
+    "state": "nj",
+    "geoid": "07830",
+    "level": "zip"
+  },
+  "3143": {
+    "slug": "zip-07052",
+    "state": "nj",
+    "geoid": "07052",
+    "level": "zip"
+  },
+  "3144": {
+    "slug": "zip-07050",
+    "state": "nj",
+    "geoid": "07050",
+    "level": "zip"
+  },
+  "3145": {
+    "slug": "zip-07410",
+    "state": "nj",
+    "geoid": "07410",
+    "level": "zip"
+  },
+  "3146": {
+    "slug": "zip-07032",
+    "state": "nj",
+    "geoid": "07032",
+    "level": "zip"
+  },
+  "3147": {
+    "slug": "zip-07107",
+    "state": "nj",
+    "geoid": "07107",
+    "level": "zip"
+  },
+  "3148": {
+    "slug": "zip-08401",
+    "state": "nj",
+    "geoid": "08401",
+    "level": "zip"
+  },
+  "3149": {
+    "slug": "zip-08837",
+    "state": "nj",
+    "geoid": "08837",
+    "level": "zip"
+  },
+  "3150": {
+    "slug": "zip-08225",
+    "state": "nj",
+    "geoid": "08225",
+    "level": "zip"
+  },
+  "3151": {
+    "slug": "zip-07078",
+    "state": "nj",
+    "geoid": "07078",
+    "level": "zip"
+  },
+  "3152": {
+    "slug": "zip-07110",
+    "state": "nj",
+    "geoid": "07110",
+    "level": "zip"
+  },
+  "3153": {
+    "slug": "zip-07648",
+    "state": "nj",
+    "geoid": "07648",
+    "level": "zip"
+  },
+  "3154": {
+    "slug": "zip-07856",
+    "state": "nj",
+    "geoid": "07856",
+    "level": "zip"
+  },
+  "3155": {
+    "slug": "zip-07082",
+    "state": "nj",
+    "geoid": "07082",
+    "level": "zip"
+  },
+  "3156": {
+    "slug": "zip-07446",
+    "state": "nj",
+    "geoid": "07446",
+    "level": "zip"
+  },
+  "3157": {
+    "slug": "zip-07463",
+    "state": "nj",
+    "geoid": "07463",
+    "level": "zip"
+  },
+  "3158": {
+    "slug": "zip-07662",
+    "state": "nj",
+    "geoid": "07662",
+    "level": "zip"
+  },
+  "3159": {
+    "slug": "zip-08260",
+    "state": "nj",
+    "geoid": "08260",
+    "level": "zip"
+  },
+  "3160": {
+    "slug": "zip-07004",
+    "state": "nj",
+    "geoid": "07004",
+    "level": "zip"
+  },
+  "3161": {
+    "slug": "zip-07112",
+    "state": "nj",
+    "geoid": "07112",
+    "level": "zip"
+  },
+  "3162": {
+    "slug": "zip-07077",
+    "state": "nj",
+    "geoid": "07077",
+    "level": "zip"
+  },
+  "3163": {
+    "slug": "zip-07034",
+    "state": "nj",
+    "geoid": "07034",
+    "level": "zip"
+  },
+  "3164": {
+    "slug": "zip-08067",
+    "state": "nj",
+    "geoid": "08067",
+    "level": "zip"
+  },
+  "3165": {
+    "slug": "zip-08816",
+    "state": "nj",
+    "geoid": "08816",
+    "level": "zip"
+  },
+  "3166": {
+    "slug": "zip-07849",
+    "state": "nj",
+    "geoid": "07849",
+    "level": "zip"
+  },
+  "3167": {
+    "slug": "zip-07310",
+    "state": "nj",
+    "geoid": "07310",
+    "level": "zip"
+  },
+  "3168": {
+    "slug": "zip-07457",
+    "state": "nj",
+    "geoid": "07457",
+    "level": "zip"
+  },
+  "3169": {
+    "slug": "zip-07878",
+    "state": "nj",
+    "geoid": "07878",
+    "level": "zip"
+  },
+  "3170": {
+    "slug": "zip-07644",
+    "state": "nj",
+    "geoid": "07644",
+    "level": "zip"
+  },
+  "3171": {
+    "slug": "zip-07823",
+    "state": "nj",
+    "geoid": "07823",
+    "level": "zip"
+  },
+  "3172": {
+    "slug": "zip-07961",
+    "state": "nj",
+    "geoid": "07961",
+    "level": "zip"
+  },
+  "3173": {
+    "slug": "zip-08003",
+    "state": "nj",
+    "geoid": "08003",
+    "level": "zip"
+  },
+  "3174": {
+    "slug": "zip-08083",
+    "state": "nj",
+    "geoid": "08083",
+    "level": "zip"
+  },
+  "3175": {
+    "slug": "zip-08106",
+    "state": "nj",
+    "geoid": "08106",
+    "level": "zip"
+  },
+  "3176": {
+    "slug": "zip-08029",
+    "state": "nj",
+    "geoid": "08029",
+    "level": "zip"
+  },
+  "3177": {
+    "slug": "zip-08107",
+    "state": "nj",
+    "geoid": "08107",
+    "level": "zip"
+  },
+  "3178": {
+    "slug": "zip-08074",
+    "state": "nj",
+    "geoid": "08074",
+    "level": "zip"
+  },
+  "3179": {
+    "slug": "zip-08049",
+    "state": "nj",
+    "geoid": "08049",
+    "level": "zip"
+  },
+  "3180": {
+    "slug": "zip-08066",
+    "state": "nj",
+    "geoid": "08066",
+    "level": "zip"
+  },
+  "3181": {
+    "slug": "zip-08054",
+    "state": "nj",
+    "geoid": "08054",
+    "level": "zip"
+  },
+  "3182": {
+    "slug": "zip-08060",
+    "state": "nj",
+    "geoid": "08060",
+    "level": "zip"
+  },
+  "3183": {
+    "slug": "zip-08053",
+    "state": "nj",
+    "geoid": "08053",
+    "level": "zip"
+  },
+  "3184": {
+    "slug": "zip-08092",
+    "state": "nj",
+    "geoid": "08092",
+    "level": "zip"
+  },
+  "3185": {
+    "slug": "zip-07724",
+    "state": "nj",
+    "geoid": "07724",
+    "level": "zip"
+  },
+  "3186": {
+    "slug": "zip-07719",
+    "state": "nj",
+    "geoid": "07719",
+    "level": "zip"
+  },
+  "3187": {
+    "slug": "zip-08884",
+    "state": "nj",
+    "geoid": "08884",
+    "level": "zip"
+  },
+  "3188": {
+    "slug": "zip-08203",
+    "state": "nj",
+    "geoid": "08203",
+    "level": "zip"
+  },
+  "3189": {
+    "slug": "zip-07848",
+    "state": "nj",
+    "geoid": "07848",
+    "level": "zip"
+  },
+  "3190": {
+    "slug": "zip-07826",
+    "state": "nj",
+    "geoid": "07826",
+    "level": "zip"
+  },
+  "3191": {
+    "slug": "zip-08844",
+    "state": "nj",
+    "geoid": "08844",
+    "level": "zip"
+  },
+  "3192": {
+    "slug": "zip-07501",
+    "state": "nj",
+    "geoid": "07501",
+    "level": "zip"
+  },
+  "3193": {
+    "slug": "zip-07055",
+    "state": "nj",
+    "geoid": "07055",
+    "level": "zip"
+  },
+  "3194": {
+    "slug": "zip-07059",
+    "state": "nj",
+    "geoid": "07059",
+    "level": "zip"
+  },
+  "3195": {
+    "slug": "zip-08876",
+    "state": "nj",
+    "geoid": "08876",
+    "level": "zip"
+  },
+  "3196": {
+    "slug": "zip-07901",
+    "state": "nj",
+    "geoid": "07901",
+    "level": "zip"
+  },
+  "3197": {
+    "slug": "zip-08804",
+    "state": "nj",
+    "geoid": "08804",
+    "level": "zip"
+  },
+  "3198": {
+    "slug": "zip-07065",
+    "state": "nj",
+    "geoid": "07065",
+    "level": "zip"
+  },
+  "3199": {
+    "slug": "zip-07027",
+    "state": "nj",
+    "geoid": "07027",
+    "level": "zip"
+  },
+  "3200": {
+    "slug": "zip-07016",
+    "state": "nj",
+    "geoid": "07016",
+    "level": "zip"
+  },
+  "3201": {
+    "slug": "zip-07028",
+    "state": "nj",
+    "geoid": "07028",
+    "level": "zip"
+  },
+  "3202": {
+    "slug": "zip-08830",
+    "state": "nj",
+    "geoid": "08830",
+    "level": "zip"
+  },
+  "3203": {
+    "slug": "zip-08840",
+    "state": "nj",
+    "geoid": "08840",
+    "level": "zip"
+  },
+  "3204": {
+    "slug": "zip-08820",
+    "state": "nj",
+    "geoid": "08820",
+    "level": "zip"
+  },
+  "3205": {
+    "slug": "zip-07106",
+    "state": "nj",
+    "geoid": "07106",
+    "level": "zip"
+  },
+  "3206": {
+    "slug": "zip-07203",
+    "state": "nj",
+    "geoid": "07203",
+    "level": "zip"
+  },
+  "3207": {
+    "slug": "zip-07013",
+    "state": "nj",
+    "geoid": "07013",
+    "level": "zip"
+  },
+  "3208": {
+    "slug": "zip-07628",
+    "state": "nj",
+    "geoid": "07628",
+    "level": "zip"
+  },
+  "3209": {
+    "slug": "zip-08534",
+    "state": "nj",
+    "geoid": "08534",
+    "level": "zip"
+  },
+  "3210": {
+    "slug": "zip-08832",
+    "state": "nj",
+    "geoid": "08832",
+    "level": "zip"
+  },
+  "3211": {
+    "slug": "zip-08848",
+    "state": "nj",
+    "geoid": "08848",
+    "level": "zip"
+  },
+  "3212": {
+    "slug": "zip-08202",
+    "state": "nj",
+    "geoid": "08202",
+    "level": "zip"
+  },
+  "3213": {
+    "slug": "zip-07068",
+    "state": "nj",
+    "geoid": "07068",
+    "level": "zip"
+  },
+  "3214": {
+    "slug": "zip-08536",
+    "state": "nj",
+    "geoid": "08536",
+    "level": "zip"
+  },
+  "3215": {
+    "slug": "zip-08824",
+    "state": "nj",
+    "geoid": "08824",
+    "level": "zip"
+  },
+  "3216": {
+    "slug": "zip-07460",
+    "state": "nj",
+    "geoid": "07460",
+    "level": "zip"
+  },
+  "3217": {
+    "slug": "zip-08038",
+    "state": "nj",
+    "geoid": "08038",
+    "level": "zip"
+  },
+  "3218": {
+    "slug": "zip-08559",
+    "state": "nj",
+    "geoid": "08559",
+    "level": "zip"
+  },
+  "3219": {
+    "slug": "zip-07921",
+    "state": "nj",
+    "geoid": "07921",
+    "level": "zip"
+  },
+  "3220": {
+    "slug": "zip-08350",
+    "state": "nj",
+    "geoid": "08350",
+    "level": "zip"
+  },
+  "3221": {
+    "slug": "zip-07503",
+    "state": "nj",
+    "geoid": "07503",
+    "level": "zip"
+  },
+  "3222": {
+    "slug": "zip-08528",
+    "state": "nj",
+    "geoid": "08528",
+    "level": "zip"
+  },
+  "3223": {
+    "slug": "zip-07721",
+    "state": "nj",
+    "geoid": "07721",
+    "level": "zip"
+  },
+  "3224": {
+    "slug": "zip-08002",
+    "state": "nj",
+    "geoid": "08002",
+    "level": "zip"
+  },
+  "3225": {
+    "slug": "zip-08751",
+    "state": "nj",
+    "geoid": "08751",
+    "level": "zip"
+  },
+  "3226": {
+    "slug": "zip-07505",
+    "state": "nj",
+    "geoid": "07505",
+    "level": "zip"
+  },
+  "3227": {
+    "slug": "zip-08245",
+    "state": "nj",
+    "geoid": "08245",
+    "level": "zip"
+  },
+  "3228": {
+    "slug": "zip-07970",
+    "state": "nj",
+    "geoid": "07970",
+    "level": "zip"
+  },
+  "3229": {
+    "slug": "zip-08062",
+    "state": "nj",
+    "geoid": "08062",
+    "level": "zip"
+  },
+  "3230": {
+    "slug": "zip-08012",
+    "state": "nj",
+    "geoid": "08012",
+    "level": "zip"
+  },
+  "3231": {
+    "slug": "zip-08081",
+    "state": "nj",
+    "geoid": "08081",
+    "level": "zip"
+  },
+  "3232": {
+    "slug": "zip-07871",
+    "state": "nj",
+    "geoid": "07871",
+    "level": "zip"
+  },
+  "3233": {
+    "slug": "zip-08108",
+    "state": "nj",
+    "geoid": "08108",
+    "level": "zip"
+  },
+  "3234": {
+    "slug": "zip-08078",
+    "state": "nj",
+    "geoid": "08078",
+    "level": "zip"
+  },
+  "3235": {
+    "slug": "zip-08026",
+    "state": "nj",
+    "geoid": "08026",
+    "level": "zip"
+  },
+  "3236": {
+    "slug": "zip-08348",
+    "state": "nj",
+    "geoid": "08348",
+    "level": "zip"
+  },
+  "3237": {
+    "slug": "zip-08858",
+    "state": "nj",
+    "geoid": "08858",
+    "level": "zip"
+  },
+  "3238": {
+    "slug": "zip-08757",
+    "state": "nj",
+    "geoid": "08757",
+    "level": "zip"
+  },
+  "3239": {
+    "slug": "zip-08104",
+    "state": "nj",
+    "geoid": "08104",
+    "level": "zip"
+  },
+  "3240": {
+    "slug": "zip-08341",
+    "state": "nj",
+    "geoid": "08341",
+    "level": "zip"
+  },
+  "3241": {
+    "slug": "zip-08343",
+    "state": "nj",
+    "geoid": "08343",
+    "level": "zip"
+  },
+  "3242": {
+    "slug": "zip-08246",
+    "state": "nj",
+    "geoid": "08246",
+    "level": "zip"
+  },
+  "3243": {
+    "slug": "zip-07833",
+    "state": "nj",
+    "geoid": "07833",
+    "level": "zip"
+  },
+  "3244": {
+    "slug": "zip-08759",
+    "state": "nj",
+    "geoid": "08759",
+    "level": "zip"
+  },
+  "3245": {
+    "slug": "zip-08741",
+    "state": "nj",
+    "geoid": "08741",
+    "level": "zip"
+  },
+  "3246": {
+    "slug": "zip-07104",
+    "state": "nj",
+    "geoid": "07104",
+    "level": "zip"
+  },
+  "3247": {
+    "slug": "zip-08234",
+    "state": "nj",
+    "geoid": "08234",
+    "level": "zip"
+  },
+  "3248": {
+    "slug": "zip-08330",
+    "state": "nj",
+    "geoid": "08330",
+    "level": "zip"
+  },
+  "3249": {
+    "slug": "zip-07017",
+    "state": "nj",
+    "geoid": "07017",
+    "level": "zip"
+  },
+  "3250": {
+    "slug": "zip-07436",
+    "state": "nj",
+    "geoid": "07436",
+    "level": "zip"
+  },
+  "3251": {
+    "slug": "zip-07205",
+    "state": "nj",
+    "geoid": "07205",
+    "level": "zip"
+  },
+  "3252": {
+    "slug": "zip-08812",
+    "state": "nj",
+    "geoid": "08812",
+    "level": "zip"
+  },
+  "3253": {
+    "slug": "zip-07524",
+    "state": "nj",
+    "geoid": "07524",
+    "level": "zip"
+  },
+  "3254": {
+    "slug": "zip-07087",
+    "state": "nj",
+    "geoid": "07087",
+    "level": "zip"
+  },
+  "3255": {
+    "slug": "zip-07020",
+    "state": "nj",
+    "geoid": "07020",
+    "level": "zip"
+  },
+  "3256": {
+    "slug": "zip-08402",
+    "state": "nj",
+    "geoid": "08402",
+    "level": "zip"
+  },
+  "3257": {
+    "slug": "zip-08221",
+    "state": "nj",
+    "geoid": "08221",
+    "level": "zip"
+  },
+  "3258": {
+    "slug": "zip-08609",
+    "state": "nj",
+    "geoid": "08609",
+    "level": "zip"
+  },
+  "3259": {
+    "slug": "zip-08618",
+    "state": "nj",
+    "geoid": "08618",
+    "level": "zip"
+  },
+  "3260": {
+    "slug": "zip-08619",
+    "state": "nj",
+    "geoid": "08619",
+    "level": "zip"
+  },
+  "3261": {
+    "slug": "zip-08361",
+    "state": "nj",
+    "geoid": "08361",
+    "level": "zip"
+  },
+  "3262": {
+    "slug": "zip-08807",
+    "state": "nj",
+    "geoid": "08807",
+    "level": "zip"
+  },
+  "3263": {
+    "slug": "zip-07931",
+    "state": "nj",
+    "geoid": "07931",
+    "level": "zip"
+  },
+  "3264": {
+    "slug": "zip-07401",
+    "state": "nj",
+    "geoid": "07401",
+    "level": "zip"
+  },
+  "3265": {
+    "slug": "zip-07080",
+    "state": "nj",
+    "geoid": "07080",
+    "level": "zip"
+  },
+  "3266": {
+    "slug": "zip-07031",
+    "state": "nj",
+    "geoid": "07031",
+    "level": "zip"
+  },
+  "3267": {
+    "slug": "zip-07075",
+    "state": "nj",
+    "geoid": "07075",
+    "level": "zip"
+  },
+  "3268": {
+    "slug": "zip-07023",
+    "state": "nj",
+    "geoid": "07023",
+    "level": "zip"
+  },
+  "3269": {
+    "slug": "zip-07803",
+    "state": "nj",
+    "geoid": "07803",
+    "level": "zip"
+  },
+  "3270": {
+    "slug": "zip-08270",
+    "state": "nj",
+    "geoid": "08270",
+    "level": "zip"
+  },
+  "3271": {
+    "slug": "zip-07041",
+    "state": "nj",
+    "geoid": "07041",
+    "level": "zip"
+  },
+  "3272": {
+    "slug": "zip-07980",
+    "state": "nj",
+    "geoid": "07980",
+    "level": "zip"
+  },
+  "3273": {
+    "slug": "zip-08821",
+    "state": "nj",
+    "geoid": "08821",
+    "level": "zip"
+  },
+  "3274": {
+    "slug": "zip-07044",
+    "state": "nj",
+    "geoid": "07044",
+    "level": "zip"
+  },
+  "3275": {
+    "slug": "zip-08079",
+    "state": "nj",
+    "geoid": "08079",
+    "level": "zip"
+  },
+  "3276": {
+    "slug": "zip-08542",
+    "state": "nj",
+    "geoid": "08542",
+    "level": "zip"
+  },
+  "3277": {
+    "slug": "zip-07979",
+    "state": "nj",
+    "geoid": "07979",
+    "level": "zip"
+  },
+  "3278": {
+    "slug": "zip-08628",
+    "state": "nj",
+    "geoid": "08628",
+    "level": "zip"
+  },
+  "3279": {
+    "slug": "zip-08321",
+    "state": "nj",
+    "geoid": "08321",
+    "level": "zip"
+  },
+  "3280": {
+    "slug": "zip-07071",
+    "state": "nj",
+    "geoid": "07071",
+    "level": "zip"
+  },
+  "3281": {
+    "slug": "zip-07201",
+    "state": "nj",
+    "geoid": "07201",
+    "level": "zip"
+  },
+  "3282": {
+    "slug": "zip-08201",
+    "state": "nj",
+    "geoid": "08201",
+    "level": "zip"
+  },
+  "3283": {
+    "slug": "zip-07030",
+    "state": "nj",
+    "geoid": "07030",
+    "level": "zip"
+  },
+  "3284": {
+    "slug": "zip-07307",
+    "state": "nj",
+    "geoid": "07307",
+    "level": "zip"
+  },
+  "3285": {
+    "slug": "zip-07095",
+    "state": "nj",
+    "geoid": "07095",
+    "level": "zip"
+  },
+  "3286": {
+    "slug": "zip-07650",
+    "state": "nj",
+    "geoid": "07650",
+    "level": "zip"
+  },
+  "3287": {
+    "slug": "zip-07046",
+    "state": "nj",
+    "geoid": "07046",
+    "level": "zip"
+  },
+  "3288": {
+    "slug": "zip-08332",
+    "state": "nj",
+    "geoid": "08332",
+    "level": "zip"
+  },
+  "3289": {
+    "slug": "zip-07940",
+    "state": "nj",
+    "geoid": "07940",
+    "level": "zip"
+  },
+  "3290": {
+    "slug": "zip-07045",
+    "state": "nj",
+    "geoid": "07045",
+    "level": "zip"
+  },
+  "3291": {
+    "slug": "zip-08805",
+    "state": "nj",
+    "geoid": "08805",
+    "level": "zip"
+  },
+  "3292": {
+    "slug": "zip-07981",
+    "state": "nj",
+    "geoid": "07981",
+    "level": "zip"
+  },
+  "3293": {
+    "slug": "zip-07927",
+    "state": "nj",
+    "geoid": "07927",
+    "level": "zip"
+  },
+  "3294": {
+    "slug": "zip-07922",
+    "state": "nj",
+    "geoid": "07922",
+    "level": "zip"
+  },
+  "3295": {
+    "slug": "zip-07976",
+    "state": "nj",
+    "geoid": "07976",
+    "level": "zip"
+  },
+  "3296": {
+    "slug": "zip-08243",
+    "state": "nj",
+    "geoid": "08243",
+    "level": "zip"
+  },
+  "3297": {
+    "slug": "zip-07621",
+    "state": "nj",
+    "geoid": "07621",
+    "level": "zip"
+  },
+  "3298": {
+    "slug": "zip-08863",
+    "state": "nj",
+    "geoid": "08863",
+    "level": "zip"
+  },
+  "3299": {
+    "slug": "zip-08690",
+    "state": "nj",
+    "geoid": "08690",
+    "level": "zip"
+  },
+  "3300": {
+    "slug": "zip-07009",
+    "state": "nj",
+    "geoid": "07009",
+    "level": "zip"
+  },
+  "3301": {
+    "slug": "zip-07072",
+    "state": "nj",
+    "geoid": "07072",
+    "level": "zip"
+  },
+  "3302": {
+    "slug": "zip-08859",
+    "state": "nj",
+    "geoid": "08859",
+    "level": "zip"
+  },
+  "3303": {
+    "slug": "zip-08345",
+    "state": "nj",
+    "geoid": "08345",
+    "level": "zip"
+  },
+  "3304": {
+    "slug": "zip-07834",
+    "state": "nj",
+    "geoid": "07834",
+    "level": "zip"
+  },
+  "3305": {
+    "slug": "zip-08241",
+    "state": "nj",
+    "geoid": "08241",
+    "level": "zip"
+  },
+  "3306": {
+    "slug": "zip-07880",
+    "state": "nj",
+    "geoid": "07880",
+    "level": "zip"
+  },
+  "3307": {
+    "slug": "zip-08326",
+    "state": "nj",
+    "geoid": "08326",
+    "level": "zip"
+  },
+  "3308": {
+    "slug": "zip-08735",
+    "state": "nj",
+    "geoid": "08735",
+    "level": "zip"
+  },
+  "3309": {
+    "slug": "zip-08317",
+    "state": "nj",
+    "geoid": "08317",
+    "level": "zip"
+  },
+  "3310": {
+    "slug": "zip-08094",
+    "state": "nj",
+    "geoid": "08094",
+    "level": "zip"
+  },
+  "3311": {
+    "slug": "zip-08324",
+    "state": "nj",
+    "geoid": "08324",
+    "level": "zip"
+  },
+  "3312": {
+    "slug": "zip-08544",
+    "state": "nj",
+    "geoid": "08544",
+    "level": "zip"
+  },
+  "3313": {
+    "slug": "zip-08353",
+    "state": "nj",
+    "geoid": "08353",
+    "level": "zip"
+  },
+  "3314": {
+    "slug": "zip-07513",
+    "state": "nj",
+    "geoid": "07513",
+    "level": "zip"
+  },
+  "3315": {
+    "slug": "zip-08072",
+    "state": "nj",
+    "geoid": "08072",
+    "level": "zip"
+  },
+  "3316": {
+    "slug": "zip-07926",
+    "state": "nj",
+    "geoid": "07926",
+    "level": "zip"
+  },
+  "3317": {
+    "slug": "zip-07939",
+    "state": "nj",
+    "geoid": "07939",
+    "level": "zip"
+  },
+  "3318": {
+    "slug": "zip-07462",
+    "state": "nj",
+    "geoid": "07462",
+    "level": "zip"
+  },
+  "3319": {
+    "slug": "zip-08835",
+    "state": "nj",
+    "geoid": "08835",
+    "level": "zip"
+  },
+  "3320": {
+    "slug": "zip-07094",
+    "state": "nj",
+    "geoid": "07094",
+    "level": "zip"
+  },
+  "3321": {
+    "slug": "zip-07092",
+    "state": "nj",
+    "geoid": "07092",
+    "level": "zip"
+  },
+  "3322": {
+    "slug": "zip-07481",
+    "state": "nj",
+    "geoid": "07481",
+    "level": "zip"
+  },
+  "3323": {
+    "slug": "zip-07676",
+    "state": "nj",
+    "geoid": "07676",
+    "level": "zip"
+  },
+  "3324": {
+    "slug": "zip-07657",
+    "state": "nj",
+    "geoid": "07657",
+    "level": "zip"
+  },
+  "3325": {
+    "slug": "zip-07852",
+    "state": "nj",
+    "geoid": "07852",
+    "level": "zip"
+  },
+  "3326": {
+    "slug": "zip-07465",
+    "state": "nj",
+    "geoid": "07465",
+    "level": "zip"
+  },
+  "3327": {
+    "slug": "zip-07108",
+    "state": "nj",
+    "geoid": "07108",
+    "level": "zip"
+  },
+  "3328": {
+    "slug": "zip-08204",
+    "state": "nj",
+    "geoid": "08204",
+    "level": "zip"
+  },
+  "3329": {
+    "slug": "zip-07417",
+    "state": "nj",
+    "geoid": "07417",
+    "level": "zip"
+  },
+  "3330": {
+    "slug": "zip-08550",
+    "state": "nj",
+    "geoid": "08550",
+    "level": "zip"
+  },
+  "3331": {
+    "slug": "zip-08525",
+    "state": "nj",
+    "geoid": "08525",
+    "level": "zip"
+  },
+  "3332": {
+    "slug": "zip-07405",
+    "state": "nj",
+    "geoid": "07405",
+    "level": "zip"
+  },
+  "3333": {
+    "slug": "zip-07438",
+    "state": "nj",
+    "geoid": "07438",
+    "level": "zip"
+  },
+  "3334": {
+    "slug": "zip-08065",
+    "state": "nj",
+    "geoid": "08065",
+    "level": "zip"
+  },
+  "3335": {
+    "slug": "zip-08511",
+    "state": "nj",
+    "geoid": "08511",
+    "level": "zip"
+  },
+  "3336": {
+    "slug": "zip-08640",
+    "state": "nj",
+    "geoid": "08640",
+    "level": "zip"
+  },
+  "3337": {
+    "slug": "zip-08006",
+    "state": "nj",
+    "geoid": "08006",
+    "level": "zip"
+  },
+  "3338": {
+    "slug": "zip-07750",
+    "state": "nj",
+    "geoid": "07750",
+    "level": "zip"
+  },
+  "3339": {
+    "slug": "zip-07740",
+    "state": "nj",
+    "geoid": "07740",
+    "level": "zip"
+  },
+  "3340": {
+    "slug": "zip-07728",
+    "state": "nj",
+    "geoid": "07728",
+    "level": "zip"
+  },
+  "3341": {
+    "slug": "zip-08730",
+    "state": "nj",
+    "geoid": "08730",
+    "level": "zip"
+  },
+  "3342": {
+    "slug": "zip-07717",
+    "state": "nj",
+    "geoid": "07717",
+    "level": "zip"
+  },
+  "3343": {
+    "slug": "zip-08302",
+    "state": "nj",
+    "geoid": "08302",
+    "level": "zip"
+  },
+  "3344": {
+    "slug": "zip-07305",
+    "state": "nj",
+    "geoid": "07305",
+    "level": "zip"
+  },
+  "3345": {
+    "slug": "zip-08879",
+    "state": "nj",
+    "geoid": "08879",
+    "level": "zip"
+  },
+  "3346": {
+    "slug": "zip-08502",
+    "state": "nj",
+    "geoid": "08502",
+    "level": "zip"
+  },
+  "3347": {
+    "slug": "zip-08833",
+    "state": "nj",
+    "geoid": "08833",
+    "level": "zip"
+  },
+  "3348": {
+    "slug": "zip-08551",
+    "state": "nj",
+    "geoid": "08551",
+    "level": "zip"
+  },
+  "3349": {
+    "slug": "zip-07607",
+    "state": "nj",
+    "geoid": "07607",
+    "level": "zip"
+  },
+  "3350": {
+    "slug": "zip-07974",
+    "state": "nj",
+    "geoid": "07974",
+    "level": "zip"
+  },
+  "3351": {
+    "slug": "zip-07062",
+    "state": "nj",
+    "geoid": "07062",
+    "level": "zip"
+  },
+  "3352": {
+    "slug": "zip-07090",
+    "state": "nj",
+    "geoid": "07090",
+    "level": "zip"
+  },
+  "3353": {
+    "slug": "zip-08553",
+    "state": "nj",
+    "geoid": "08553",
+    "level": "zip"
+  },
+  "3354": {
+    "slug": "zip-07022",
+    "state": "nj",
+    "geoid": "07022",
+    "level": "zip"
+  },
+  "3355": {
+    "slug": "zip-08406",
+    "state": "nj",
+    "geoid": "08406",
+    "level": "zip"
+  },
+  "3356": {
+    "slug": "zip-07109",
+    "state": "nj",
+    "geoid": "07109",
+    "level": "zip"
+  },
+  "3357": {
+    "slug": "zip-07079",
+    "state": "nj",
+    "geoid": "07079",
+    "level": "zip"
+  },
+  "3358": {
+    "slug": "zip-08608",
+    "state": "nj",
+    "geoid": "08608",
+    "level": "zip"
+  },
+  "3359": {
+    "slug": "zip-07036",
+    "state": "nj",
+    "geoid": "07036",
+    "level": "zip"
+  },
+  "3360": {
+    "slug": "zip-07522",
+    "state": "nj",
+    "geoid": "07522",
+    "level": "zip"
+  },
+  "3361": {
+    "slug": "zip-07012",
+    "state": "nj",
+    "geoid": "07012",
+    "level": "zip"
+  },
+  "3362": {
+    "slug": "zip-07630",
+    "state": "nj",
+    "geoid": "07630",
+    "level": "zip"
+  },
+  "3363": {
+    "slug": "zip-07029",
+    "state": "nj",
+    "geoid": "07029",
+    "level": "zip"
+  },
+  "3364": {
+    "slug": "zip-07869",
+    "state": "nj",
+    "geoid": "07869",
+    "level": "zip"
+  },
+  "3365": {
+    "slug": "zip-07652",
+    "state": "nj",
+    "geoid": "07652",
+    "level": "zip"
+  }
+}

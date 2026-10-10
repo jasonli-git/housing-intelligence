@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { regionsWithData } from "@/lib/api";
 import { SITE_URL } from "@/lib/site";
+import { placeRouteParams, regionPath } from "@/lib/placeRoutes";
 
 // Written once at build, like every page of the static export.
 export const dynamic = "force-static";
@@ -25,9 +26,10 @@ const PAGES = [
  * No dates: a build date would say every page changed on every deploy.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const regions = (await regionsWithData()).filter((r) => r.level !== "state");
+  const regions = (await regionsWithData()).filter((r) => r.level !== "state" && r.level !== "nation");
+  placeRouteParams(regions); // Fail rather than publish unregistered/numeric new places.
   return [
     ...PAGES.map((path) => ({ url: `${SITE_URL}${path}` })),
-    ...regions.map((r) => ({ url: `${SITE_URL}/regions/${r.region_id}` })),
+    ...regions.map((r) => ({ url: `${SITE_URL}${regionPath(r.region_id)}` })),
   ];
 }

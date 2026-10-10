@@ -1,3 +1,5 @@
+import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Fragment } from "react";
 
@@ -79,7 +81,7 @@ function bySource(sources: Packet["sources"]): SourceGroup[] {
  */
 export async function generateStaticParams() {
   const regions = await regionsWithData();
-  return regions.filter((r) => r.level !== "state").map((r) => ({ id: String(r.region_id) }));
+  return placeRouteParams(regions);
 }
 
 /**
@@ -101,21 +103,24 @@ export async function generateStaticParams() {
  * report's own look among the page types (globals.css).
  */
 /** The printable report's own title (#358), named for its place like the region page. */
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const region = await api.region(Number(id));
+export async function generateMetadata({ params }: { params: Promise<{ state: string; place: string }> }) {
+  const { state, place: slug } = await params;
+  const regionId = resolvePlace(state, slug);
+  if (regionId === null) return {};
+  const region = await api.region(regionId);
   if (!region) return {};
   const place = regionTitle(region);
   return pageMetadata({
     title: `${place} — housing report`,
     description: `A printable housing report for ${place}: every figure, its period and its source.`,
-    path: `/regions/${id}/report`,
+    path: `${regionPath(regionId)}/report`,
   });
 }
 
-export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const regionId = Number(id);
+export default async function ReportPage({ params }: { params: Promise<{ state: string; place: string }> }) {
+  const { state, place: slug } = await params;
+  const regionId = resolvePlace(state, slug);
+  if (regionId === null) notFound();
   const [packet, summary] = await Promise.all([
     api.packet(regionId, WINDOW),
     api.summary(regionId, WINDOW),
@@ -128,8 +133,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <main id="main-content" tabIndex={-1} className="shell report">
           <h1 className="page-title">No report</h1>
           <p className="meta">
-            Region {id} has no analytics for the {WINDOW} window, or the API is unreachable.{" "}
-            <Link href={`/regions/${id}`}>Back to the region</Link>.
+            Region {regionId} has no analytics for the {WINDOW} window, or the API is unreachable.{" "}
+            <Link href={regionPath(regionId)}>Back to the region</Link>.
           </p>
         </main>
       </>
@@ -177,9 +182,9 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
               { href: "/", label: "United States" },
               { href: "/states/new-jersey", label: "New Jersey" },
               ...(region.parent && region.parent.level !== "state"
-                ? [{ href: `/regions/${region.parent.region_id}`, label: displayName(region.parent) }]
+                ? [{ href: regionPath(region.parent.region_id), label: displayName(region.parent) }]
                 : []),
-              { href: `/regions/${regionId}`, label: name },
+              { href: regionPath(regionId), label: name },
             ]}
             here="Report"
           />

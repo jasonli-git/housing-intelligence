@@ -194,6 +194,14 @@ Not open work: each comes round on a date. The steps live where the row says.
       `/compare` is in the publish manifest's `unpublishable` list, since an arbitrary
       set of ids is combinatorial, so the page reads each place's published files in the
       browser, as `/guide` does.
+- [ ] **A second state will not fit Pages' limits as built.** (#367) 16,682 exported files
+      of 20,000 and 1,772 redirect rules of 2,000 for New Jersey alone. Before a second
+      state: move the numeric-link compatibility to Bulk Redirects or a Worker, and decide
+      whether ZIP pages are all published.
+- [ ] **A place newly gaining data stops the Friday build.** (#367) Its page has no pinned
+      address, so the build refuses rather than publish one that could change; the
+      scheduled run then reports a failed build. Fix: `cd web && npm run routes:refresh`,
+      review and commit. Rare: every place with any observation already has an address.
 - [ ] **Search results name no state.** (#362) Counties, towns and ZIPs read "County",
       "Township in Mercer County": unambiguous while New Jersey is the only state, not
       once a second one shares a county name (Mercer is in NJ and PA). Add the state's
