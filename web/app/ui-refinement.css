@@ -23,6 +23,7 @@
   main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not(.home-action-checks a[href^="#"]):not(.destination-town):not(.destination-county):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
   main a[href^="/tax"]:not(.button) { color: light-dark(#006977, #8ed9e2); }
   main .home-action-checks a[href^="#"] { color: light-dark(#246b55, #a6d9c0); }
+  main.atlas-local:is([data-region-level="municipality"], [data-region-level="zip"]) .home-action-checks a[href^="#"] { color: var(--atlas-accent); }
   main a.destination-county[href^="/regions/"] { color: light-dark(#246b55, #a6d9c0); }
   main a[href^="/states/"]:not(.crumbs a) { color: var(--state-blue); }
   main .crumbs li[data-level] a:is([href^="/"], [href^="#"]) { color: var(--crumb-accent, var(--text-primary)); }
