@@ -28,6 +28,7 @@ export function CountyComparison({ sections, initial, embedded = false }: { sect
     {!embedded && <summary><span>Compare counties</span><small>Differences between places, with dates and uncertainty</small><span aria-hidden="true">＋</span></summary>}
     <div className="place-comparison-body">
       <div className="comparison-intro">
+      {notes.length > 0 && <aside className="window-aside"><p className="window-aside-label">About “Since 2019”</p>{notes.map(note => <p key={note}>{note}</p>)}</aside>}
       <div>
       <div className="place-comparison-controls">
         <label htmlFor={id}>Measure<select id={id} value={measure.metric_id} onChange={event => setMetric(event.target.value)}>
@@ -40,7 +41,6 @@ export function CountyComparison({ sections, initial, embedded = false }: { sect
       <p className="meta">{rankBasis("change", measure.direction, key ? WINDOWS.find(item => item.key === key)!.phrase : "")}. {reading?.start && reading.end ? windowLabel(reading.start, reading.end, measure.metric_id) : "Dates not published"}.</p>
       <p className="meta">{mapDefinitionOf(measure.metric_id)}</p>
       </div>
-      {notes.length > 0 && <aside className="window-aside"><p className="window-aside-label">About “Since 2019”</p>{notes.map(note => <p key={note}>{note}</p>)}</aside>}
       </div>
       <div className="scroll-x" tabIndex={0} role="region" aria-label="County comparison, scroll horizontally">
         <table className="ranks"><thead><tr><th scope="col">County</th><th scope="col">Latest value</th><th scope="col">Change</th><th scope="col">Change rank</th></tr></thead>

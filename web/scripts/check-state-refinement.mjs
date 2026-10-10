@@ -31,6 +31,11 @@ try {
       await changeWindow.selectOption('since_2019');
       assert.equal(await page.locator('.comparison-intro .window-aside').isVisible(), true);
       assert.match(await page.locator('.comparison-intro .window-aside').textContent(), /before COVID/);
+      const noteBox = await page.locator('.comparison-intro .window-aside').boundingBox();
+      const controlsBox = await page.locator('.place-comparison-controls').boundingBox();
+      const introBox = await page.locator('.comparison-intro').boundingBox();
+      assert.ok(noteBox.y + noteBox.height <= controlsBox.y);
+      assert.ok(Math.abs(controlsBox.width - introBox.width) < 2);
       assert.equal(await page.locator('#county-comparison > .place-comparison-body > .meta').filter({ hasText: 'before COVID' }).count(), 0);
       await page.getByRole('button', { name: 'Explore places', exact: true }).click();
       assert.equal(await page.locator('.place-county-grid').isVisible(), true);

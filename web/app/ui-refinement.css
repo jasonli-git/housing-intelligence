@@ -97,7 +97,8 @@
   .state-discovery-modes button[aria-pressed="true"] { background: color-mix(in srgb, var(--state-blue) 12%, var(--surface-card)); color: var(--text-primary); }
   .nj-page.quiet-state .place-comparison[data-embedded] { margin: 0; border: 0; background: none; }
   .nj-page.quiet-state .place-comparison[data-embedded] .place-comparison-body { padding: 0; }
-  .nj-page .comparison-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 21rem); gap: 1.5rem; align-items: start; margin-bottom: 1.2rem; }
+  .nj-page .comparison-intro { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; align-items: start; margin-bottom: 1.2rem; }
+  .nj-page .comparison-intro .window-aside { width: min(100%, 24rem); box-sizing: border-box; justify-self: end; }
   .nj-page .comparison-intro > :only-child { grid-column: 1 / -1; }
   .nj-page .comparison-intro .meta { max-width: 65ch; line-height: 1.55; }
   .nj-page .comparison-intro .window-aside { border-color: color-mix(in srgb, var(--state-blue) 50%, var(--border)); background: color-mix(in srgb, var(--state-blue) 5%, var(--surface-card)); }

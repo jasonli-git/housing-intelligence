@@ -2,7 +2,7 @@
 
 ## What changed
 - Refined New Jersey's comparison controls, numeric table and subdued blue header/hover treatment.
-- Moved the selected Since 2019 explanation from below the table into a dashed-outline note beside the controls. It stacks above the table on mobile.
+- Moved the selected Since 2019 explanation from below the table into a dashed-outline note in its own row above the controls, right-aligned on desktop. Dropdowns retain the full available width.
 
 ## Files/modules affected
 - web/components/CountyComparison.tsx
