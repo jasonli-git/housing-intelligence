@@ -27,7 +27,10 @@ try {
     assert.equal(await town.evaluate(n => getComputedStyle(n).color), theme === 'dark' ? 'rgb(162, 218, 213)' : 'rgb(38, 119, 117)');
     const guide = page.locator('.household-next a[href^="/guide"]');
     assert.equal(await guide.evaluate(n => getComputedStyle(n).color), theme === 'dark' ? 'rgb(215, 163, 173)' : 'rgb(146, 84, 96)');
-    assert.equal(await page.locator('.local-picture-note .standouts-disclosure, .local-picture-note .editorial-annotation').count(), 0);
+    assert.equal(await page.locator('.local-picture-note .standouts-disclosure').count(), 1);
+    assert.equal(await page.locator('.local-picture-note .editorial-annotation').count(), 1);
+    assert.equal(await page.locator('.local-picture-note .cited').first().evaluate(n => getComputedStyle(n).color), 'rgb(48, 54, 50)');
+    await page.locator('.local-picture-note .standouts-disclosure').evaluate(n => {n.open = true;});
     for (const panel of await page.locator('.quiet-disclosure[data-treatment]').all()) await panel.evaluate(n => {n.open = true;});
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     assert.deepEqual(errors, []);
@@ -35,7 +38,7 @@ try {
     assert.deepEqual(results.violations.map(v => ({id: v.id, targets: v.nodes.map(n => n.target)})), []);
     await page.locator('.quiet-tool-group').scrollIntoViewIfNeeded();
     await page.screenshot({path: `/tmp/card-polish-${width}-${theme}.png`});
-    await page.locator('.local-picture-note').scrollIntoViewIfNeeded();
+    await page.locator('.local-picture-note').evaluate(n => {n.scrollIntoView({block: 'start'}); window.scrollBy(0, -90);});
     await page.screenshot({path: `/tmp/local-note-${width}-${theme}.png`});
     await page.goto('http://localhost:3002/states/new-jersey', {waitUntil: 'networkidle'});
     const county = page.locator('a.destination-county').first();

@@ -27,11 +27,14 @@
   main a[href^="/guide"]:not(.button) { color: light-dark(#925460, #d7a3ad); }
   main .county-town-links a[href^="/regions/"] { color: light-dark(#267775, #a2dad5); }
   .quiet-county .consumer-feature-what_stands_out:has(.local-picture-note) { background: transparent; border: 0; border-radius: 0; padding: 0; box-shadow: none; }
-  .local-picture-note { --text-muted: light-dark(#625b4d, #c6bfab); --text-secondary: light-dark(#5c574c, #d0c8b7); position: relative; margin: 1rem .2rem 1.5rem; padding: 1.65rem 1.4rem 1.2rem; background: light-dark(#f3eddc, #302f27); border: 1px solid light-dark(#d9cfb6, #575342); border-radius: 3px 3px 12px 3px; box-shadow: 0 5px 13px #0000000d; transform: rotate(-.35deg); }
-  .local-picture-note::before { content: ""; position: absolute; width: 76px; height: 22px; top: -10px; left: 38%; background: light-dark(#d5d8c8a8, #b9beaa38); border: 1px solid light-dark(#c4c8b855, #c4c8b825); transform: rotate(3deg); pointer-events: none; }
+  .local-picture-note { color-scheme: light; --text-primary: #303632; --text-muted: #626761; --text-secondary: #545c55; --surface-1: #f7f6f2; --surface-2: #fffefa; --surface-card: #fffefa; --border: #d5d8d0; --atlas-accent: #326e58; color: var(--text-primary); position: relative; margin: 1.3rem .2rem 1.5rem; padding: 2rem 1.4rem 1.6rem; background: repeating-linear-gradient(0deg, #48504503 0 1px, transparent 1px 4px), linear-gradient(115deg, #fffefa, #f4f3ed); border: 1px solid #dedfd6; border-radius: 1px 2px 2px 1px; box-shadow: 1px 2px 2px #0002, 0 12px 19px -12px #0007, inset 0 1px #fff; transform: rotate(-.45deg); }
+  .local-picture-note::before { content: ""; position: absolute; width: 100px; height: 30px; top: -14px; left: 38%; background: repeating-linear-gradient(90deg, #fff2 0 1px, transparent 1px 5px), #d9d9c79e; box-shadow: 0 1px 2px #0002, inset 0 1px #fff6; clip-path: polygon(2% 0, 98% 2%, 96% 15%, 100% 28%, 97% 43%, 100% 59%, 96% 76%, 99% 100%, 1% 97%, 3% 83%, 0 68%, 3% 49%, 0 30%, 3% 14%); transform: rotate(4deg); pointer-events: none; }
+  .local-picture-note::after { content: ""; position: absolute; bottom: 0; right: 0; width: 23px; height: 23px; background: linear-gradient(135deg, #dedfd7 0%, #ecece4 49%, #b8beb44a 51%, #f7f6f2 70%); clip-path: polygon(100% 0, 100% 100%, 0 100%); pointer-events: none; }
   .local-picture-note .consumer-feature-main h2 { margin-top: .7rem; }
-  .local-picture-measured { padding: .6rem 1rem; border-left: 2px solid var(--border); margin-block: 0 1rem; }
+  .local-picture-measured { padding: .8rem 1rem; border-left: 2px solid var(--border); margin-block: 1.2rem 1rem; }
   .local-picture-measured strong { font-size: 38px; }
+  .quiet-county .local-picture-note .standouts-disclosure-cue { color: var(--text-secondary); }
+  .quiet-county .local-picture-note .cited { color: #303632; }
   @media (max-width: 700px) { .local-picture-note { transform: none; margin-inline: 0; padding-inline: 1rem; } }
   .quiet-county .local-understand-group .quiet-disclosure[data-treatment] { position: relative; overflow: visible; border-radius: 0; background: transparent; border-inline: 0; box-shadow: none; }
   .quiet-county .local-understand-group .quiet-disclosure[data-treatment="history"] { border-top: 1px dashed var(--border); }

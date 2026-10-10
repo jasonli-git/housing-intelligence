@@ -206,9 +206,10 @@ export function ConsumerReading({
     </>;
   return (
     <section aria-labelledby={id} className={`interpretation consumer-feature consumer-feature-${section}`}>
-      {paperNote ? <div className="local-picture-note">{content}</div> : content}
-      {paperNote && annotation && <aside className="editorial-annotation local-picture-measured" aria-label="Computed figure, separate from the AI interpretation">{annotation}</aside>}
-      {children}
+      {paperNote ? <div className="local-picture-note">{content}
+        {annotation && <aside className="editorial-annotation local-picture-measured" aria-label="Computed figure, separate from the AI interpretation">{annotation}</aside>}
+        {children}
+      </div> : <>{content}{children}</>}
     </section>
   );
 }
