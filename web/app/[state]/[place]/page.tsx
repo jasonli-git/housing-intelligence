@@ -1,6 +1,5 @@
-import { placeRouteParams, regionPath, resolveRegionId } from "@/lib/placeRoutes";
+import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { notFound } from "next/navigation";
-import { LegacyPlaceAddress } from "@/components/LegacyPlaceAddress";
 import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
@@ -107,9 +106,9 @@ export async function generateStaticParams() {
  * Each place's own title and description (#358), so a browser tab, a search result and a
  * shared link name the town rather than "Housing — United States" on every page.
  */
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const regionId = resolveRegionId(id);
+export async function generateMetadata({ params }: { params: Promise<{ state: string; place: string }> }) {
+  const { state, place: slug } = await params;
+  const regionId = resolvePlace(state, slug);
   if (regionId === null) return {};
   const region = await api.region(regionId);
   if (!region) return {};
@@ -119,7 +118,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     description:
       `${placeLine(region)}: home values, rents, what it costs to own or rent, and local ` +
       "conditions, with every figure traced to its public source.",
-    path: regionPath(id),
+    path: regionPath(regionId),
   });
 }
 
@@ -207,10 +206,10 @@ export default async function RegionPage({
   params,
 }: {
   // Next 16 makes route params a promise; awaiting is required, not optional.
-  params: Promise<{ id: string }>;
+  params: Promise<{ state: string; place: string }>;
 }) {
-  const { id } = await params;
-  const regionId = resolveRegionId(id);
+  const { state, place: slug } = await params;
+  const regionId = resolvePlace(state, slug);
   if (regionId === null) notFound();
 
   // The explanations are fetched alongside the data and are allowed to be absent: the
@@ -230,7 +229,7 @@ export default async function RegionPage({
         <main id="main-content" tabIndex={-1} className="shell">
           <h1 className="page-title">Region not found</h1>
           <p className="meta">
-            No region {id}, or the API is unreachable. <Link href="/states/new-jersey">Back to New Jersey</Link>.
+            No region {regionId}, or the API is unreachable. <Link href="/states/new-jersey">Back to New Jersey</Link>.
           </p>
         </main>
       </>
@@ -476,7 +475,6 @@ export default async function RegionPage({
     <>
       <Masthead affordability={affordabilityControl} />
       <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
-        {/^\d+$/.test(id) && <LegacyPlaceAddress target={regionPath(regionId)} />}
       <header className="page-head" data-kind={kindOf(region.level)}>
         {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
         <div className="region-head-main">
@@ -726,7 +724,7 @@ export default async function RegionPage({
               defined={defined}
               regionLabel={name}
               sources={packet.sources}
-              path={regionPath(id)}
+              path={regionPath(regionId)}
               uncertainties={uncertainties}
               peers={peers}
             />
@@ -843,7 +841,7 @@ export default async function RegionPage({
               defined={defined}
               regionLabel={name}
               sources={packet.sources}
-              path={regionPath(id)}
+              path={regionPath(regionId)}
               uncertainties={uncertainties}
               peers={peers}
             />

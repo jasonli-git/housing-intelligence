@@ -771,6 +771,21 @@ other origin — read the bucket from a browser: GET and HEAD only. The property
 lookup needs it to load a town's parcels; `make check-live` fails without it, and also
 types an address into the live lookup with no town chosen and expects it found.
 
+### Place addresses
+
+Place pages live at readable addresses with the state in them: `/nj/princeton`,
+`/nj/somerset-county`, `/nj/zip-07030`, and `/report` beneath each. The addresses are
+pinned in `web/lib/placeRoutes.json` and never recomputed by a build, so a rename or a new
+namesake cannot take an address already published. Old numeric links (`/regions/224`)
+still work, through `web/public/_redirects` and small redirect pages the build writes.
+
+When a place gains data for the first time, the build stops and says so, because the
+place has no address yet. Give it one, review the two files it changes, and commit them:
+
+```bash
+cd web && npm run routes:refresh   # needs the local API; Node 22.18+
+```
+
 ### When check-live fails
 
 `make check-live` compares the live site and data with `dist/`: every artifact's

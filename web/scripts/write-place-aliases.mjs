@@ -10,15 +10,16 @@ const origin = new URL(firstCanonical).origin;
 let count = 0;
 const publicPaths = {};
 for (const [id, r] of Object.entries(registry)) {
-  const path = `/regions/${r.slug}`;
+  const path = `/${r.state}/${r.slug}`;
   if (!sitemap.includes(`${path}</loc>`)) continue;
   publicPaths[id] = path;
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(r.slug) || !/^[1-9]\d*$/.test(id)) throw new Error("Invalid alias registry entry");
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(r.slug) || !/^[a-z]{2}$/.test(r.state) || !/^[1-9]\d*$/.test(id)) throw new Error("Invalid alias registry entry");
   for (const report of [false, true]) {
     const target = `${path}${report ? "/report" : ""}`;
     await stat(new URL(`.${target}.html`, root));
     const file = new URL(`regions/${id}${report ? "/report" : ""}.html`, root);
-    if (report) await mkdir(new URL(`regions/${id}/`, root), { recursive: true });
+    // Region pages live under /<state>/ now, so nothing else creates regions/.
+    await mkdir(new URL(report ? `regions/${id}/` : "regions/", root), { recursive: true });
     // Query/hash are browser-only and preserved by JS. With JS off, refresh still
     // reaches the full report; a visible link is a fallback for restrictive browsers.
     const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>This place has moved — Housing</title><link rel="canonical" href="${origin}${target}"><meta name="robots" content="noindex,follow"><script>location.replace(${JSON.stringify(target)}+location.search+location.hash)</script><noscript><meta http-equiv="refresh" content="0;url=${target}"></noscript></head><body><main><h1>This place has moved</h1><p><a href="${target}">Continue to the housing ${report ? "report" : "page"}</a>.</p></main></body></html>\n`;

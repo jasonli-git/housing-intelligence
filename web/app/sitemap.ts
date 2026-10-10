@@ -26,7 +26,7 @@ const PAGES = [
  * No dates: a build date would say every page changed on every deploy.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const regions = (await regionsWithData()).filter((r) => r.level !== "state");
+  const regions = (await regionsWithData()).filter((r) => r.level !== "state" && r.level !== "nation");
   placeRouteParams(regions); // Fail rather than publish unregistered/numeric new places.
   return [
     ...PAGES.map((path) => ({ url: `${SITE_URL}${path}` })),

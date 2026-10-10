@@ -14,7 +14,8 @@ for (let offset = 0; ; offset += 1000) {
   if (regions.length >= page.total) break;
   if (!page.items.length) throw new Error("Incomplete region enumeration");
 }
-const local = regions.filter(r => r.level !== "state");
+// States and the nation have pages of their own (`/states/...`, `/`), not place addresses.
+const local = regions.filter(r => r.level !== "state" && r.level !== "nation");
 const pinned = JSON.parse(await readFile(registry, "utf8"));
 for (const r of local) {
   const old = pinned[r.region_id];
@@ -26,14 +27,16 @@ const routes = allocatePlaceSlugs(local, Object.fromEntries(Object.entries(pinne
 const redirectFile = new URL("public/_redirects", root);
 const marker = "# Generated place redirects; update with npm run routes:refresh.";
 const original = (await readFile(redirectFile, "utf8")).split(marker)[0].trimEnd();
-const rules = local.flatMap(r => [
-  `/regions/${r.region_id} /regions/${routes[r.region_id]} 301`,
-  ...(r.level === "zip" ? [] : [`/regions/${r.region_id}/report /regions/${routes[r.region_id]}/report 301`]),
-]);
+const path = (r) => `/${r.state_code.toLowerCase()}/${routes[r.region_id]}`;
+const nation = regions.filter(r => r.level === "nation").flatMap(r => [`/regions/${r.region_id} / 301`, `/regions/${r.region_id}/report / 301`]);
+const rules = [...nation, ...local.flatMap(r => [
+  `/regions/${r.region_id} ${path(r)} 301`,
+  ...(r.level === "zip" ? [] : [`/regions/${r.region_id}/report ${path(r)}/report 301`]),
+])];
 const originalRules = original.split("\n").filter(line => line.trim() && !line.trim().startsWith("#")).length;
 if (rules.length + originalRules > 2000) throw new Error("Cloudflare static redirect limit exceeded; revise the compatibility strategy before updating.");
 const identities = { ...pinned };
-for (const r of local) identities[r.region_id] = { slug: routes[r.region_id], geoid: r.geoid, level: r.level };
+for (const r of local) identities[r.region_id] = { slug: routes[r.region_id], state: r.state_code.toLowerCase(), geoid: r.geoid, level: r.level };
 await writeFile(registry, `${JSON.stringify(identities, null, 2)}\n`);
 await writeFile(redirectFile, `${original}\n\n${marker}\n${rules.join("\n")}\n`);
 console.log(`${local.length} readable routes; ${rules.length + originalRules} static redirects. ZIP reports retain browser redirects and canonical aliases.`);

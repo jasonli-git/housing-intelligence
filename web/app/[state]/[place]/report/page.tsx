@@ -1,6 +1,5 @@
-import { placeRouteParams, regionPath, resolveRegionId } from "@/lib/placeRoutes";
+import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { notFound } from "next/navigation";
-import { LegacyPlaceAddress } from "@/components/LegacyPlaceAddress";
 import Link from "next/link";
 import { Fragment } from "react";
 
@@ -104,9 +103,9 @@ export async function generateStaticParams() {
  * report's own look among the page types (globals.css).
  */
 /** The printable report's own title (#358), named for its place like the region page. */
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const regionId = resolveRegionId(id);
+export async function generateMetadata({ params }: { params: Promise<{ state: string; place: string }> }) {
+  const { state, place: slug } = await params;
+  const regionId = resolvePlace(state, slug);
   if (regionId === null) return {};
   const region = await api.region(regionId);
   if (!region) return {};
@@ -114,13 +113,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return pageMetadata({
     title: `${place} — housing report`,
     description: `A printable housing report for ${place}: every figure, its period and its source.`,
-    path: `${regionPath(id)}/report`,
+    path: `${regionPath(regionId)}/report`,
   });
 }
 
-export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const regionId = resolveRegionId(id);
+export default async function ReportPage({ params }: { params: Promise<{ state: string; place: string }> }) {
+  const { state, place: slug } = await params;
+  const regionId = resolvePlace(state, slug);
   if (regionId === null) notFound();
   const [packet, summary] = await Promise.all([
     api.packet(regionId, WINDOW),
@@ -134,8 +133,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <main id="main-content" tabIndex={-1} className="shell report">
           <h1 className="page-title">No report</h1>
           <p className="meta">
-            Region {id} has no analytics for the {WINDOW} window, or the API is unreachable.{" "}
-            <Link href={regionPath(id)}>Back to the region</Link>.
+            Region {regionId} has no analytics for the {WINDOW} window, or the API is unreachable.{" "}
+            <Link href={regionPath(regionId)}>Back to the region</Link>.
           </p>
         </main>
       </>
@@ -176,7 +175,6 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     <>
       <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className="shell report">
-        {/^\d+$/.test(id) && <LegacyPlaceAddress target={`${regionPath(regionId)}/report`} />}
       <header className="page-head" data-kind="report">
         <div>
           <Crumbs

@@ -39,7 +39,7 @@ describe("GettingAround", () => {
     render(<GettingAround name="Hoboken" level="municipality" levels={levels} destinations={destinations} />);
     expect(screen.getByRole("heading", { name: "How do people here get around?" })).toBeTruthy();
     expect(screen.getByText(/51% in New York City/)).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Hoboken" }).getAttribute("href")).toBe("/regions/hoboken");
+    expect(screen.getByRole("link", { name: "Hoboken" }).getAttribute("href")).toBe("/nj/hoboken");
     expect(screen.getByRole("rowheader", { name: "New York City" }).querySelector("a")).toBeNull();
     expect(screen.getByText(/not how often anything calls there/)).toBeTruthy();
     expect(screen.getByText(/about 33 minutes/)).toBeTruthy();

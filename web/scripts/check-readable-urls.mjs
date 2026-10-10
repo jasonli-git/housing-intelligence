@@ -14,10 +14,10 @@ const publicPaths = JSON.parse(await readFile(new URL("place-routes.json", root)
 assert.doesNotMatch(sitemap, /\/regions\/\d+(?:<|\/|\?)/);
 for (const [id, r] of Object.entries(registry)) {
   // A retained pin may have ceased carrying data: only sitemap-listed places are exported.
-  const url = `/regions/${r.slug}`;
+  const url = `/${r.state}/${r.slug}`;
   if (!sitemap.includes(`${url}</loc>`)) continue;
   assert.equal(publicPaths[id], url);
-  for (const path of [`regions/${r.slug}.html`, `regions/${id}.html`, `regions/${r.slug}/report.html`, `regions/${id}/report.html`]) await stat(new URL(path, root));
+  for (const path of [`${r.state}/${r.slug}.html`, `regions/${id}.html`, `${r.state}/${r.slug}/report.html`, `regions/${id}/report.html`]) await stat(new URL(path, root));
   assert.deepEqual(redirects.get(`/regions/${id}`), { to: url, status: "301" });
   if (r.level !== "zip") assert.deepEqual(redirects.get(`/regions/${id}/report`), { to: `${url}/report`, status: "301" });
 }
@@ -37,12 +37,12 @@ try {
     const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
     const page = await context.newPage();
     for (const [path, title] of [
-      ["/regions/princeton", "Princeton"],
-      ["/regions/somerset-county", "Somerset"],
-      ["/regions/zip-07030", "07030"],
-      ["/regions/washington-township-morris-county", "Washington"],
-      ["/regions/washington-township-warren-county", "Washington"],
-      ["/regions/princeton/report", "Princeton"],
+      ["/nj/princeton", "Princeton"],
+      ["/nj/somerset-county", "Somerset"],
+      ["/nj/zip-07030", "07030"],
+      ["/nj/washington-township-morris-county", "Washington"],
+      ["/nj/washington-township-warren-county", "Washington"],
+      ["/nj/princeton/report", "Princeton"],
     ]) {
       const response = await page.goto(`${origin}${path}`);
       assert.equal(response.status(), 200);
@@ -50,16 +50,16 @@ try {
       assert.ok((await page.locator('link[rel="canonical"]').getAttribute("href")).endsWith(path));
       assert.deepEqual(await page.locator('a[href^="/regions/"]').evaluateAll(links => links.filter(link => /^\/regions\/\d+(?:\/report)?(?:[?#]|$)/.test(link.getAttribute("href"))).map(link => link.href)), [], "numeric navigation leaked");
     }
-    await page.goto(`${origin}/regions/princeton`);
+    await page.goto(`${origin}/nj/princeton`);
     await page.locator('a.report-action').click();
-    await page.waitForURL(`${origin}/regions/princeton/report`);
+    await page.waitForURL(`${origin}/nj/princeton/report`);
     await page.goto(`${origin}/`);
     const search = page.locator('main input[role="combobox"]').first();
     await search.fill("Princeton");
     await page.getByRole("option").filter({ hasText: /^Princeton/ }).first().click();
-    await page.waitForURL(`${origin}/regions/princeton`);
+    await page.waitForURL(`${origin}/nj/princeton`);
     await page.goto(`${origin}/regions/3283/report?verify=1#sources`);
-    await page.waitForURL(`${origin}/regions/zip-07030/report?verify=1#sources`);
+    await page.waitForURL(`${origin}/nj/zip-07030/report?verify=1#sources`);
     assert.ok((await page.locator("h1").first().innerText()).includes("07030"));
     await context.close();
   }
@@ -67,9 +67,9 @@ try {
   const page = await noJS.newPage();
   const response = await page.goto(`${origin}/regions/3283/report`);
   assert.equal(response.status(), 200);
-  await page.waitForURL(`${origin}/regions/zip-07030/report`);
+  await page.waitForURL(`${origin}/nj/zip-07030/report`);
   assert.ok((await page.locator("h1").first().innerText()).includes("07030"));
-  assert.ok((await page.locator('link[rel="canonical"]').getAttribute("href")).endsWith("/regions/zip-07030/report"));
+  assert.ok((await page.locator('link[rel="canonical"]').getAttribute("href")).endsWith("/nj/zip-07030/report"));
   await noJS.close();
 } finally {
   await browser.close();
