@@ -266,14 +266,14 @@ export function DecisionGuide({
 
       {!data && load.state === "idle" && <p className="guide-empty">Choose a place to see its buying costs, rent comparison and pre-offer checks.</p>}
 
-      {data && (
         <>
-          <section className="section guide-answer" aria-labelledby="guide-afford-heading">
+          <section className="section guide-answer" aria-labelledby="guide-afford-heading" data-ready={Boolean(data)}>
             <p className="guide-eyebrow">Affordability</p>
             <div className="guide-check-head">
               <h2 id="guide-afford-heading">Can I afford to buy here?</h2>
               {afford && <Strength judged={afford.evidence} />}
             </div>
+            {data ? <div className="guide-answer-body">
             {!yearly && <p className="meta">Enter your household income above.</p>}
             {yearly && !afford && <p>No home price is published for this place, so there is no cost of owning to set against your income.</p>}
             {afford && (
@@ -322,14 +322,16 @@ export function DecisionGuide({
                 ]} />
               </>
             )}
+            </div> : <p className="guide-preview">Estimated buying costs against your household income.</p>}
           </section>
 
-          <section className="section guide-answer" aria-labelledby="guide-rent-heading">
+          <section className="section guide-answer" aria-labelledby="guide-rent-heading" data-ready={Boolean(data)}>
             <p className="guide-eyebrow">The longer view</p>
             <div className="guide-check-head">
               <h2 id="guide-rent-heading">Should I rent or buy?</h2>
               {choice && <Strength judged={choice.evidence} />}
             </div>
+            {data ? <div className="guide-answer-body">
             <div className="guide-fields">
               <label>
                 Rent you would pay, a month
@@ -375,18 +377,20 @@ export function DecisionGuide({
                 <Steps steps={[{ label: `Change any assumption on ${data.region.name}’s cost of owning`, href: placeHref }]} />
               </>
             )}
+            </div> : <p className="guide-preview">Compare costs over the years you expect to stay.</p>}
           </section>
 
-          <section className="section guide-answer" aria-labelledby="guide-checks-heading">
+          <section className="section guide-answer" aria-labelledby="guide-checks-heading" data-ready={Boolean(data)}>
             <p className="guide-eyebrow">Before committing</p>
             <h2 id="guide-checks-heading">What should I check before an offer?</h2>
+            {data ? <div className="guide-answer-body">
             <p className="meta">What the published figures say about {data.region.name}, and where to check the home itself.</p>
             <ul className="guide-checks">
               {checklist(data, { place: placeHref, tax: taxHref }).map((item) => <Check key={item.key} item={item} />)}
             </ul>
+            </div> : <p className="guide-preview">Local context and links for checking the actual home.</p>}
           </section>
         </>
-      )}
     </div>
   );
 }

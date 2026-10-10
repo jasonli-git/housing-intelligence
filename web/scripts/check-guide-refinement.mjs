@@ -13,10 +13,14 @@ try {
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(`${origin}/guide`, { waitUntil: 'networkidle' });
       await page.getByText('Choose a place to see its buying costs, rent comparison and pre-offer checks.', { exact: true }).waitFor();
+      assert.equal(await page.locator('.guide-preview').count(), 3, 'All three question previews are visible');
+      const heading = await page.locator('#guide-afford-heading').elementHandle();
       const picker = page.locator('.guide-picker input');
       await picker.fill('Somerset');
       await page.getByRole('option').filter({ hasText: 'Somerset County' }).first().click();
-      await page.locator('#guide-afford-heading').waitFor({ timeout: 30000 });
+      await page.locator('.guide-answer[data-ready="true"]').first().waitFor({ timeout: 30000 });
+      assert(await heading.evaluate(n => n === document.querySelector('#guide-afford-heading')), 'Question heading stays in place when its answer expands');
+      assert.equal(await page.locator('.guide-preview').count(), 0);
       await page.getByLabel('Yearly household income, before tax', { exact: true }).fill('120000');
       await page.locator('.guide-lead').first().waitFor();
       assert.equal(await page.locator('#guide-rent-heading').count(), 1);
