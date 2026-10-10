@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { artifactUrl, publicApiUrl } from "@/lib/api";
 import {
@@ -12,6 +12,7 @@ const labels: Record<string, string> = {municipal_project: "Municipal report", l
 const n = (v: number | null) => v === null ? "Not reported" : v.toLocaleString("en-US", {maximumFractionDigits: 0});
 const money = (v: number | null) => v === null ? "Not reported" : v.toLocaleString("en-US", {style: "currency", currency: "USD", maximumFractionDigits: 0});
 const month = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", {month: "short", year: "numeric", timeZone: "UTC"});
+const ProgrammePanel = createContext<boolean | null>(null);
 
 /** Open our own disclosure after hydration, never mutate a still-hydrating parent. */
 export function HousingHelpDisclosure({enabled, children}: {enabled: boolean; children: ReactNode}) {
@@ -30,11 +31,12 @@ export function HousingHelpDisclosure({enabled, children}: {enabled: boolean; ch
   // Only this native open-state mismatch is expected; our effect adopts that state.
   return enabled ? <details suppressHydrationWarning open={open} onToggle={(event) => setOpen(event.currentTarget.open)} className="quiet-disclosure">
     <summary><span>Programmes, reported homes &amp; sources</span><span className="quiet-plus" aria-hidden="true">+</span></summary>
-    <div className="quiet-disclosure-body">{children}</div>
+    <div className="quiet-disclosure-body"><ProgrammePanel.Provider value={open}>{children}</ProgrammePanel.Provider></div>
   </details> : <>{children}</>;
 }
 
 export function AffordableHousing({data, hideRoutes = false}: {data: HousingData | null; hideRoutes?: boolean}) {
+  const programmeOpen = useContext(ProgrammePanel);
   const id = useId();
   const [program, setProgram] = useState("all");
   const [query, setQuery] = useState("");
@@ -47,7 +49,7 @@ export function AffordableHousing({data, hideRoutes = false}: {data: HousingData
   const records = useMemo(() => inventory?.records ?? (data?.overview ? [] : data?.records ?? []), [data, inventory]);
   const provenance = data?.records ?? [];
   const stats = data?.stats;
-  const fetchInventory = async () => {
+  const fetchInventory = useCallback(async () => {
     if (!data || inventory || inFlight.current) return;
     inFlight.current = true; setLoading(true); setError(false);
     try {
@@ -58,7 +60,11 @@ export function AffordableHousing({data, hideRoutes = false}: {data: HousingData
       if (body.region_id !== data.region_id || body.overview || !Array.isArray(body.records)) throw new Error("Wrong inventory");
       setInventory(body);
     } catch { setError(true); } finally {setLoading(false); inFlight.current = false;}
-  };
+  }, [data, inventory]);
+  useEffect(() => {
+    if (programmeOpen) void fetchInventory();
+    // Fetch on the outer panel's opening, not for hidden pre-expanded children.
+  }, [programmeOpen, fetchInventory]);
   const need = records.filter((r) => r.kind === "need");
   const projects = records.filter((r) => r.kind === "municipal_project");
   const funds = provenance.filter((r) => r.kind === "trust_fund");
@@ -79,7 +85,7 @@ export function AffordableHousing({data, hideRoutes = false}: {data: HousingData
     </a>)}</div>}
     <p className="assistance-note">Links reviewed Oct 4, 2026. Open waiting lists, vacancies and eligibility are not verified here. Apply through the official administrator; an income check is not a qualification decision.</p>
     {!data ? <p className="assistance-note">No directly located inventory is loaded for this page. The official application routes above are still available. Town records are not allocated to ZIP codes.</p> : <>
-      <details><summary>What towns report <span>Need, completed projects & trust funds</span></summary>
+      <details open={programmeOpen !== null ? true : undefined}><summary>What towns report <span>Need, completed projects & trust funds</span></summary>
         <div className="assistance-facts">
           <div><small>DCA present need · non-binding</small><strong>{n(stats ? stats.present_need ?? null : reportedSum(need, "present_need"))}</strong></div>
           <div><small>DCA prospective need · non-binding</small><strong>{n(stats ? stats.prospective_need ?? null : reportedSum(need, "prospective_need"))}</strong></div>
@@ -90,7 +96,7 @@ export function AffordableHousing({data, hideRoutes = false}: {data: HousingData
         <p className="assistance-note">{n(stats?.projects ?? projects.length)} project records from {stats?.project_towns ?? new Set(projects.map((r) => r.region_id)).size} of {stats?.listed_towns ?? need.length} listed towns; {n(stats?.unknown_completion ?? unknown.length)} have an unknown completion status. Trust fund submissions: {stats?.funds_reported ?? reportedFunds.length} of {stats?.funds_listed ?? funds.length} listed towns. Missing reports are not zero; balances do not subtract commitments still to be spent.</p>
         {funds.length > 0 && <p className="assistance-note">Municipal workbook: {month(funds[0].snapshot)}. Fund table date: {funds[0].payload.table_as_of}; metadata cutoff: {funds[0].payload.metadata_cutoff}. DCA does not certify these self-reports.</p>}
       </details>
-      <details onToggle={(event) => {if (event.currentTarget.open) void fetchInventory();}}><summary>Explore reported properties <span>By programme, not a combined total</span></summary>
+      <details open={programmeOpen !== null ? true : undefined} onToggle={(event) => {if (event.currentTarget.open && programmeOpen === null) void fetchInventory();}}><summary>Explore reported properties <span>By programme, not a combined total</span></summary>
         {loading && <p role="status">Loading the reported inventory…</p>}
         {error && <p role="alert">The inventory could not be loaded. <button onClick={() => void fetchInventory()}>Try again</button></p>}
         <div className="assistance-filter">

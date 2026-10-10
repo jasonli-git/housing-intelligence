@@ -35,7 +35,8 @@ export function QuietDisclosure({ enabled, title, note, children }: {
   enabled: boolean; title: string; note?: string; children: ReactNode;
 }) {
   if (!enabled) return <>{children}</>;
-  return <details className="quiet-disclosure">
+  const treatment = title === "Prices & paychecks over time" ? "history" : title === "The local market" ? "market" : title === "Who is moving here" ? "migration" : undefined;
+  return <details className="quiet-disclosure" data-treatment={treatment}>
     <summary>{title === "The local market" && <AbstractField kind="architecture" />}<span className="quiet-disclosure-copy"><span className="quiet-disclosure-title">{title}</span>{note && <small>{note}</small>}</span><span className="quiet-plus" aria-hidden="true">+</span></summary>
     <div className="quiet-disclosure-body">{children}</div>
   </details>;

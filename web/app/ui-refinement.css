@@ -19,7 +19,16 @@
   .quiet-county .cost-evidence { padding-block: .85rem; }
   .quiet-county .cost-evidence-item p { line-height: 1.65; }
   .quiet-county .quiet-tool-group { padding-top: .9rem; }
-  .quiet-county.atlas-local .quiet-tool-group { background: light-dark(#f0f1f2, #252629); }
+  .quiet-county.atlas-local .quiet-tool-group { background: color-mix(in srgb, var(--text-primary) 3%, var(--surface-1)); border-color: color-mix(in srgb, var(--text-primary) 15%, var(--surface-1)); border-radius: 16px; box-shadow: none; }
+  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title) { color: light-dark(#66513b, #dfcfb6); }
+  main .crumbs a:is([href^="/"], [href^="#"]) { color: var(--crumb-accent, var(--text-primary)); }
+  .quiet-county .local-understand-group .quiet-disclosure[data-treatment] { position: relative; overflow: visible; border-radius: 0; background: transparent; border-inline: 0; box-shadow: none; }
+  .quiet-county .local-understand-group .quiet-disclosure[data-treatment="history"] { border-top: 1px dashed var(--border); }
+  .quiet-county .local-understand-group .quiet-disclosure[data-treatment="history"] > summary { padding-left: 1rem; border-left: 2px solid color-mix(in srgb, var(--atlas-accent) 55%, transparent); }
+  .quiet-county .local-understand-group .quiet-disclosure[data-treatment="market"] { background: color-mix(in srgb, var(--atlas-accent) 4%, var(--surface-1)); border-radius: 14px; border: 1px solid var(--border); margin-block: .7rem; }
+  .quiet-county .local-understand-group .quiet-disclosure[data-treatment="market"] > summary { padding-inline: 1rem; }
+  .quiet-county .local-understand-group .quiet-disclosure[data-treatment="migration"] > summary { border-bottom: 1px solid var(--border); }
+  .quiet-county .local-understand-group .quiet-disclosure[data-treatment="migration"] .quiet-disclosure-title::before { content: "↗ ↙"; display: inline-block; margin-right: .7rem; color: var(--text-muted); font-size: .85em; }
   .quiet-county.atlas-local .quiet-tool-group > .abstract-field { opacity: .035; }
   .quiet-county.atlas-local .page-head { display: block; }
   .quiet-county.atlas-local .page-head > .actions { position: static; display: flex; justify-content: flex-end; flex-wrap: wrap; width: 100%; }
