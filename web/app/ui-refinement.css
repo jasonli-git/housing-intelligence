@@ -20,7 +20,7 @@
   .quiet-county .cost-evidence-item p { line-height: 1.65; }
   .quiet-county .quiet-tool-group { padding-top: .9rem; }
   .quiet-county.atlas-local .quiet-tool-group { background: color-mix(in srgb, var(--text-primary) 3%, var(--surface-1)); border-color: color-mix(in srgb, var(--text-primary) 15%, var(--surface-1)); border-radius: 16px; box-shadow: none; }
-  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not(.home-action-checks a[href^="#"]):not(.destination-town):not(.destination-county):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
+  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not(.home-action-checks a[href^="#"]):not(.destination-town):not(.destination-county):not(.state-fit-shortcut):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
   main a[href^="/tax"]:not(.button) { color: light-dark(#006977, #8ed9e2); }
   main .home-action-checks a[href^="#"] { color: light-dark(#246b55, #a6d9c0); }
   main.atlas-local:is([data-region-level="municipality"], [data-region-level="zip"]) .home-action-checks a[href^="#"] { color: var(--atlas-accent); }
@@ -132,8 +132,9 @@
   .state-supporting-context .section { margin-top: .75rem; }
   .nj-page.quiet-state .state-workspace-head { display: flex; flex-wrap: wrap; }
   .nj-page .state-workspace-head > div { margin-right: auto; }
-  .state-fit-shortcut { display: flex; flex-direction: column; gap: .1rem; padding: .4rem .6rem; color: var(--text-primary); text-decoration: none; font: 500 13px/1.4 var(--font-text); }
+  .state-fit-shortcut { display: flex; flex-direction: column; gap: .1rem; padding: .4rem .6rem; color: light-dark(#a44e34, #edb09b); text-decoration: none; font: 500 13px/1.4 var(--font-text); }
   .state-fit-shortcut small { color: var(--text-secondary); font: 11px/1.4 var(--font-text); }
+  main.nj-page.quiet-state a.state-fit-shortcut { color: light-dark(#a44e34, #edb09b); }
   .state-fit-shortcut:hover { text-decoration: underline; }
   .state-extra-market { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-block: 1rem; }
   .state-extra-market > details { min-width: 0; border-top: 1px solid var(--border); }
