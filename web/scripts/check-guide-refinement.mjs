@@ -13,6 +13,13 @@ try {
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(`${origin}/guide`, { waitUntil: 'networkidle' });
       await page.locator('.guide-question-tagline').waitFor();
+      const guidePalette = await page.evaluate(() => ({ background: getComputedStyle(document.body).backgroundColor, accent: getComputedStyle(document.querySelector('.guide-page')).getPropertyValue('--atlas-accent').trim() }));
+      const zip = await context.newPage();
+      await zip.goto(`${origin}/regions/2842`, { waitUntil: 'networkidle' });
+      const zipPalette = await zip.evaluate(() => ({ background: getComputedStyle(document.body).backgroundColor, accent: getComputedStyle(document.querySelector('.atlas-local')).getPropertyValue('--atlas-accent').trim() }));
+      assert.notEqual(guidePalette.background, zipPalette.background, 'Guide and ZIP backgrounds differ');
+      assert.notEqual(guidePalette.accent, zipPalette.accent, 'Guide and ZIP accent palettes differ');
+      await zip.close();
       assert.equal(await page.locator('.guide-question-tagline li').count(), 3, 'All questions preview next to the title');
       assert(await page.locator('.guide-page .page-title').evaluate(n => {
         const probe = document.createElement('span'); probe.style.color = 'var(--atlas-ink)'; n.append(probe);
