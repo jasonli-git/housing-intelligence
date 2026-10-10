@@ -184,7 +184,8 @@ Not open work: each comes round on a date. The steps live where the row says.
 - [ ] **The home page's illustration loops with no pause control.** (M43, #309) Removed
       at the owner's request on 2026-10-05; WCAG 2.2.2 asks for one on anything that
       moves for more than five seconds. Reduced motion stops it. The New Jersey header
-      artwork added 2026-10-06 (#311) loops the same way.
+      artwork added 2026-10-06 (#311) loops the same way, as do the home page's atlas outlines and
+      travelling line (#364).
 - [ ] **A compare page shared by its link.** (owner, 2026-10-09, from an outside
       review) `/compare?places=194,330,112`: a few towns side by side, the choice held in
       the address so it can be bookmarked or sent, and nothing stored in the browser.
