@@ -112,6 +112,7 @@
   .reader-details-body { padding-bottom: .3rem; }
   .reader-details-body > :last-child { margin-bottom: .3rem; }
   .section-jump-control { border-radius: 12px; background: color-mix(in srgb, var(--surface-card) 70%, transparent); box-shadow: none; }
+  .report-label-mobile, .section-jump-mobile-label { display: none; }
   .section-jump-control .section-jump { min-height: 44px; max-width: 100%; padding-block: .65rem; font-size: 12px; }
   .page-section-nav { margin-top: .65rem; }
   .quiet-state .nj-head { padding-bottom: .7rem; }
@@ -250,6 +251,15 @@
   .landing-canvas .coverage-state-preview { padding-block: .8rem; }
   .landing-canvas .national-backdrop { border-bottom: 0; margin-bottom: 0; }
   @media (max-width: 600px) {
+    .quiet-county.atlas-local .page-head > .actions { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.6rem; }
+    .quiet-county .page-head > .actions .section-jump-control { width:100%; }
+    .quiet-county .page-head > .actions .section-jump { color:transparent; }
+    .quiet-county .page-head > .actions .section-jump option { color:var(--text-primary); }
+    .quiet-county .page-head > .actions .section-jump-mobile-label { display:block; position:absolute; left:.75rem; pointer-events:none; font:550 12px/1.3 var(--font-text); color:var(--text-primary); }
+    .quiet-county .page-head > .actions .section-jump-mark { display:none; }
+    .quiet-county .page-head > .actions .report-action { min-height:44px; min-width:0; padding:.5rem .65rem; gap:.4rem; }
+    .quiet-county .page-head > .actions :is(.report-label-desktop,.report-action-copy small,.report-action-arrow) { display:none; }
+    .quiet-county .page-head > .actions .report-label-mobile { display:inline; white-space:nowrap; }
     .landing-canvas { padding: .5rem 0; background: transparent; }
     .landing-canvas .nation-head { padding-top: .8rem; }
   }

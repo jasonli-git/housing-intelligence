@@ -95,6 +95,7 @@ export function SectionJump() {
 
   return (
     <span className="section-jump-control">
+    <span className="section-jump-mobile-label" aria-hidden="true">Jump to section</span>
     <svg className="section-jump-mark" viewBox="0 0 20 20" aria-hidden="true">
       <path d="M7 5h9M7 10h9M7 15h9M3 5h.5M3 10h.5M3 15h.5" />
     </svg>
