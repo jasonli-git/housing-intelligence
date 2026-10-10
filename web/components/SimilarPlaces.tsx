@@ -1,3 +1,4 @@
+import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 
 import type { SimilarPlaces as SimilarPlacesData } from "@/lib/api";
@@ -61,7 +62,7 @@ export function SimilarPlaces({ name, data }: { name: string; data: SimilarPlace
                 </th>
                 {places.map((p, i) => (
                   <th scope="col" className="num" key={p.region_id}>
-                    {i === 0 ? p.name : <Link href={`/regions/${p.region_id}`}>{p.name}</Link>}
+                    {i === 0 ? p.name : <Link href={regionPath(p.region_id)}>{p.name}</Link>}
                   </th>
                 ))}
               </tr>

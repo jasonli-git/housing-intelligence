@@ -1,3 +1,6 @@
+import { placeRouteParams, regionPath, resolveRegionId } from "@/lib/placeRoutes";
+import { notFound } from "next/navigation";
+import { LegacyPlaceAddress } from "@/components/LegacyPlaceAddress";
 import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
@@ -97,7 +100,7 @@ const TREND_METRICS = [
  */
 export async function generateStaticParams() {
   const regions = await regionsWithData();
-  return regions.filter((r) => r.level !== "state").map((r) => ({ id: String(r.region_id) }));
+  return placeRouteParams(regions);
 }
 
 /**
@@ -106,7 +109,9 @@ export async function generateStaticParams() {
  */
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const region = await api.region(Number(id));
+  const regionId = resolveRegionId(id);
+  if (regionId === null) return {};
+  const region = await api.region(regionId);
   if (!region) return {};
   const place = regionTitle(region);
   return pageMetadata({
@@ -114,7 +119,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     description:
       `${placeLine(region)}: home values, rents, what it costs to own or rent, and local ` +
       "conditions, with every figure traced to its public source.",
-    path: `/regions/${id}`,
+    path: regionPath(id),
   });
 }
 
@@ -205,7 +210,8 @@ export default async function RegionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const regionId = Number(id);
+  const regionId = resolveRegionId(id);
+  if (regionId === null) notFound();
 
   // The explanations are fetched alongside the data and are allowed to be absent: the
   // dashboard is fully usable with no AI layer at all, so a missing one renders nothing
@@ -470,6 +476,7 @@ export default async function RegionPage({
     <>
       <Masthead affordability={affordabilityControl} />
       <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
+        {/^\d+$/.test(id) && <LegacyPlaceAddress target={regionPath(regionId)} />}
       <header className="page-head" data-kind={kindOf(region.level)}>
         {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
         <div className="region-head-main">
@@ -477,7 +484,7 @@ export default async function RegionPage({
             trail={[
               { href: "/", label: "United States" },
               { href: "/states/new-jersey", label: "New Jersey" },
-              ...(county ? [{ href: `/regions/${county.region_id}`, label: displayName(county) }] : []),
+              ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : []),
             ]}
             here={name}
             hereKind={kindOf(region.level)}
@@ -535,7 +542,7 @@ export default async function RegionPage({
         </div>
         <div className="actions">
           <SectionJump key={regionId} />
-          <Link className="button report-action" href={`/regions/${regionId}/report`}>
+          <Link className="button report-action" href={`${regionPath(regionId)}/report`}>
             <svg viewBox="0 0 20 20" aria-hidden="true">
               <path d="M5.5 2.75h6l3 3v11.5h-9Z" />
               <path d="M11.5 2.75v3h3M8 9h4M8 12h4" />
@@ -719,7 +726,7 @@ export default async function RegionPage({
               defined={defined}
               regionLabel={name}
               sources={packet.sources}
-              path={`/regions/${id}`}
+              path={regionPath(id)}
               uncertainties={uncertainties}
               peers={peers}
             />
@@ -836,7 +843,7 @@ export default async function RegionPage({
               defined={defined}
               regionLabel={name}
               sources={packet.sources}
-              path={`/regions/${id}`}
+              path={regionPath(id)}
               uncertainties={uncertainties}
               peers={peers}
             />

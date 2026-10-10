@@ -1,3 +1,4 @@
+import { regionPath } from "@/lib/placeRoutes";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -164,7 +165,7 @@ function ChangeGroup({ group, day }: { group: RevisionGroup; day: string }) {
                 <tr key={place.region_id}>
                   <th scope="row">
                     {place.has_page ? (
-                      <Link href={`/regions/${place.region_id}`}>{placeName(place)}</Link>
+                      <Link href={regionPath(place.region_id)}>{placeName(place)}</Link>
                     ) : (
                       placeName(place)
                     )}

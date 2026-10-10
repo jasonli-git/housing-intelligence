@@ -9,6 +9,7 @@
  */
 
 import type { Region } from "@/lib/api";
+import { regionPath } from "@/lib/placeRoutes";
 import { STATE_DESTINATIONS } from "@/lib/coverageMap";
 import { displayName, legalType } from "@/lib/names";
 
@@ -22,7 +23,7 @@ const LEVEL_ORDER: Record<string, number> = { state: 0, county: 1, municipality:
 
 /** Where picking an entry goes: a covered state's own page, otherwise the region page. */
 export function entryPath(entry: SearchEntry): string {
-  return (entry.code && STATE_DESTINATIONS[entry.code]) || `/regions/${entry.id}`;
+  return (entry.code && STATE_DESTINATIONS[entry.code]) || regionPath(entry.id);
 }
 
 function capitalised(text: string): string {

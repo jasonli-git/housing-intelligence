@@ -30,7 +30,7 @@ const destinations: WorkDestinations = {
   total_jobs: 34044,
   destinations: [
     { rank: 1, name: "New York City", region_id: null, jobs: 17255, share: 0.507 },
-    { rank: 2, name: "Hoboken", region_id: 194, jobs: 2830, share: 0.083 },
+    { rank: 2, name: "Hoboken", region_id: 344, jobs: 2830, share: 0.083 },
   ],
 };
 
@@ -39,7 +39,7 @@ describe("GettingAround", () => {
     render(<GettingAround name="Hoboken" level="municipality" levels={levels} destinations={destinations} />);
     expect(screen.getByRole("heading", { name: "How do people here get around?" })).toBeTruthy();
     expect(screen.getByText(/51% in New York City/)).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Hoboken" }).getAttribute("href")).toBe("/regions/194");
+    expect(screen.getByRole("link", { name: "Hoboken" }).getAttribute("href")).toBe("/regions/hoboken");
     expect(screen.getByRole("rowheader", { name: "New York City" }).querySelector("a")).toBeNull();
     expect(screen.getByText(/not how often anything calls there/)).toBeTruthy();
     expect(screen.getByText(/about 33 minutes/)).toBeTruthy();

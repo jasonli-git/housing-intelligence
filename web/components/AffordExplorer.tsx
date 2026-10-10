@@ -1,5 +1,6 @@
 "use client";
 
+import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 import { Fragment, type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
 
@@ -313,7 +314,7 @@ export function AffordExplorer({
         {pickedPlace && check ? (
           <>
             <p className="check-place">
-              <Link href={`/regions/${pickedPlace.id}`}>
+              <Link href={regionPath(pickedPlace.id)}>
                 {pickedPlace.name}
               </Link>
               {pickedPlace.detail && <span>{pickedPlace.detail}</span>}
@@ -395,7 +396,7 @@ export function AffordExplorer({
                         key={row.place.id}
                         className={row.within ? "within" : !scope ? "afford-secondary" : undefined}
                       >
-                        <td><Link href={`/regions/${row.place.id}`}>{row.place.name}</Link><span className="budget-row-status">{row.missing.length > 0 ? `Incomplete: ${listed(row.missing)}` : row.within ? "Within budget on included costs" : "Above budget"}</span></td>
+                        <td><Link href={regionPath(row.place.id)}>{row.place.name}</Link><span className="budget-row-status">{row.missing.length > 0 ? `Incomplete: ${listed(row.missing)}` : row.within ? "Within budget on included costs" : "Above budget"}</span></td>
                         <td className="num">{money(row.monthly)}</td>
                         <td className="num">{share(row.share)}</td>
                         <td className="reach-mark">{row.missing.length > 0 ? `Incomplete: ${listed(row.missing)}` : row.within ? "within budget*" : <span className="visually-hidden">Above budget</span>}</td>
@@ -438,7 +439,7 @@ export function AffordExplorer({
                     {shownTowns.map((row) => (
                       <tr key={row.place.id}>
                         <td>
-                          <Link href={`/regions/${row.place.id}`}>
+                          <Link href={regionPath(row.place.id)}>
                             {row.place.name}
                           </Link>
                           {row.place.detail && (
