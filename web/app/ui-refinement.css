@@ -361,6 +361,10 @@
     .bar-inner { grid-template-columns: minmax(0, 1fr) 38px; }
     .bar-inner > .theme-toggle { grid-column: 2; grid-row: 1; }
     .bar-tools { grid-column: 1 / -1; grid-row: 2; }
+    /* Without a menu search, keep Tools beside the brand at tablet widths too. */
+    .bar-inner:not(:has(.bar-tools .place-search)) { grid-template-columns:auto minmax(0,1fr) 38px; }
+    .bar-inner:not(:has(.bar-tools .place-search)) .bar-tools { grid-column:2; grid-row:1; }
+    .bar-inner:not(:has(.bar-tools .place-search)) > .theme-toggle { grid-column:3; }
     .bar-desktop-tools { display: none; }
     .bar-tool-menu { display: block; }
     .bar-tool-menu > summary { display: flex; align-items: center; gap: .6rem; min-height: 44px; padding-inline: .8rem; border: 1px solid var(--border); border-radius: 8px; font: 500 11px/1.4 var(--font-mono); text-transform: uppercase; cursor: pointer; list-style: none; }

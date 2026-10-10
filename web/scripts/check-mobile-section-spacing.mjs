@@ -4,7 +4,7 @@ import { chromium } from "playwright";
 const origin = process.env.SPACING_ORIGIN ?? "http://127.0.0.1:3002";
 const browser = await chromium.launch();
 try {
-  for (const width of [320, 390, 600, 1280]) {
+  for (const width of [320, 390, 600, 601, 760, 768, 1000, 1001, 1280, 1440]) {
     for (const theme of ["light", "dark"]) {
       const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
       await context.addInitScript(t => localStorage.setItem("housing-theme", t), theme);
@@ -19,11 +19,15 @@ try {
       });
       assert.ok(box.search.top > box.mode.bottom, "Search overlaps the mode buttons");
       if (width === 390 && theme === "dark") await page.screenshot({ path: "/tmp/mobile-spacing-home-after.png" });
-      if (width <= 600) {
-        assert.ok(await page.locator(".bar-inner").evaluate(e => e.getBoundingClientRect().height < 65), "Home menu reserves a second row");
+      assert.ok(await page.locator(".bar-inner").evaluate(e => e.getBoundingClientRect().height < 65), "Home menu reserves a second row");
+      if (width <= 1000) {
         await page.locator(".bar-tool-menu > summary").click();
         assert.ok(await page.locator(".bar-tool-menu .bar-controls").isVisible());
         await page.locator(".bar-tool-menu > summary").click();
+      } else {
+        assert.ok(await page.locator(".bar-desktop-tools").isVisible());
+      }
+      if (width <= 600) {
         assert.ok(box.stage.height <= 300, "Search mode still reserves hidden map controls");
         assert.ok(box.search.top - box.mode.bottom < 100, "Search remains too far below the mode controls");
         assert.equal(parseFloat(box.header), 12.8);
