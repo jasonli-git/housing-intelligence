@@ -77,10 +77,15 @@
   .history-exhibit .persistence-bar.below { fill: light-dark(#65717b, #a8b5c0); opacity: .65; }
   .history-exhibit .persistence-bar.latest { fill: light-dark(#245a83, #b6dcf5); }
   .state-housing-help > h2 { font: 500 23px/1.3 Georgia, serif; }
-  .state-help-links { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; }
-  .state-help-links a { min-height: 44px; display: inline-flex; align-items: center; gap: .4rem; color: var(--text-primary); font: 500 13px/1.5 var(--font-text); }
+  .state-help-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+  .state-help-links a { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; padding: 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-card); color: var(--text-primary); text-decoration: none; transition: border-color 160ms ease, background-color 160ms ease; }
+  .state-help-links a > small { color: var(--text-secondary); font: 500 10px/1.5 var(--font-mono); letter-spacing: .04em; }
+  .state-help-links a > strong { font: 500 16px/1.4 var(--font-text); }
+  .state-help-links a > span { color: var(--text-secondary); font: 12px/1.6 var(--font-text); }
+  .state-help-links a:is(:hover, :focus-visible) { border-color: var(--state-blue); background: color-mix(in srgb, var(--state-blue) 5%, var(--surface-card)); }
   .state-help-caveat { color: var(--text-secondary); font: 12px/1.6 var(--font-text); }
-  @media (max-width: 760px) { .state-extra-market { grid-template-columns: minmax(0, 1fr); } .nj-page .history-exhibit { padding: 1rem 0; } .state-help-links { flex-direction: column; gap: 0; } .nj-page .state-workspace-head > div { flex-basis: 100%; } }
+  @media (max-width: 760px) { .state-extra-market { grid-template-columns: minmax(0, 1fr); } .nj-page .history-exhibit { padding: 1rem 0; } .state-help-links { grid-template-columns: minmax(0, 1fr); gap: .5rem; } .state-help-links a { padding: .8rem 1rem; gap: .3rem; } .nj-page .state-workspace-head > div { flex-basis: 100%; } }
+  @media (prefers-reduced-motion: reduce) { .state-help-links a { transition: none; } }
   @media print { .history-exhibit::before { display: none; } }
   .state-discovery-modes { display: flex; gap: .3rem; padding: .25rem; margin-bottom: 1rem; width: fit-content; max-width: 100%; border: 1px solid var(--border); border-radius: 9px; }
   .state-discovery-modes button { min-height: 44px; border: 0; border-radius: 6px; padding: .5rem .8rem; background: transparent; color: var(--text-secondary); font: 500 13px/1.4 var(--font-text); cursor: pointer; }

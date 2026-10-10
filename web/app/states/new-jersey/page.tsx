@@ -197,7 +197,7 @@ export default async function NewJerseyPage() {
       <div className="state-history-exhibit"><HowUnusual name="New Jersey" data={persistence} exhibit />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</div>
       <section id="housing-assistance" className="state-housing-help" aria-labelledby="state-help-heading">
         <h2 id="state-help-heading">Housing help</h2>
-        <nav className="state-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer">{route.label} <span aria-hidden="true">↗</span></a>)}</nav>
+        <nav className="state-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><small>{route.agency}</small><strong>{route.label} <span aria-hidden="true">↗</span></strong><span>{route.note}</span></a>)}</nav>
         <p className="state-help-caveat">Check availability and eligibility with the administrator; these links do not confirm an open waiting list or vacancy.</p>
         <details className="state-help-details"><summary>Programmes, reported homes &amp; sources</summary><AffordableHousing data={housingHelp} hideRoutes /></details>
       </section>
