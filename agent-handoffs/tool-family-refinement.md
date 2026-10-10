@@ -2,6 +2,7 @@
 
 ## What changed
 
+- Palette follow-up: replace inherited orange title ink and navigation rule with scoped plum tokens, and replace the warm-brown guide surfaces with light mauve / dark aubergine. Neutral United States navigation, semantic evidence colours and all tool behavior retained. Earlier paper/umber description is superseded.
 - Follow-up: move the three questions to a compact tagline list by the guide title. Hide duplicate empty answer blocks and household setup until a place loads; preserve answer-heading DOM identities and restore open results afterward. Guide now uses a warm paper/umber background in light/dark themes, distinct from the cooler tax tool. United States breadcrumb uses primary neutral/ivory text.
 - Unify property tax, buyer's guide and find-within-budget tools: shared serif title/result-heading scale, sans-serif explanatory text and controls, consistent field heights/radii and detail-summary treatment. Retain each tool's colour identity and neutral working surfaces.
 - Flatten the tax result card to an open, divided result section; retain all data and links.
@@ -32,6 +33,7 @@
 
 ## Verification
 
+- Plum-palette follow-up: reran typecheck, all 565 tests/81 files and 2,386-page build successfully. Six guide workflows passed with new title-ink/navigation-rule token assertions; all 16 initial/populated guide WCAG states passed. Reviewed desktop dark and mobile light screenshots `/tmp/guide-plum-1280-dark.png`, `/tmp/guide-plum-390-light.png`. No behavior or production configuration changes.
 - Compact/warm-guide follow-up: typecheck and 565 tests/81 files passed; final 2,386-page build passed. Six guide workflows now verify question tagline near title, neutral United States breadcrumb, hidden initial household/empty-answer blocks and stable populated headings. All 16 initial/populated guide WCAG states passed. Initial light-theme evidence contrast measured 4.48:1 against the new background; darkened its light-mode green before final rerun. Mobile initial screenshot `/tmp/guide-warm-initial.png` reviewed. Existing local proxy remains required; no production configuration changes.
 - `npm run typecheck`: passed. `npm test`: 565 tests across 81 files passed, including initial three-question SSR previews with no premature missing-data claim.
 - `NEXT_PUBLIC_ARTIFACT_URL=http://localhost:8001 npm run build`: passed, 2,386 pages exported.

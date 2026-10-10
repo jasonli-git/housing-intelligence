@@ -14,6 +14,14 @@ try {
       await page.goto(`${origin}/guide`, { waitUntil: 'networkidle' });
       await page.locator('.guide-question-tagline').waitFor();
       assert.equal(await page.locator('.guide-question-tagline li').count(), 3, 'All questions preview next to the title');
+      assert(await page.locator('.guide-page .page-title').evaluate(n => {
+        const probe = document.createElement('span'); probe.style.color = 'var(--atlas-ink)'; n.append(probe);
+        const same = getComputedStyle(probe).color === getComputedStyle(n).color; probe.remove(); return same;
+      }), 'Guide title uses its own ink rather than the generic orange tool ink');
+      assert(await page.locator('.guide-page > .page-head').evaluate(n => {
+        const probe = document.createElement('span'); probe.style.color = 'var(--atlas-accent)'; n.append(probe);
+        const same = getComputedStyle(probe).color === getComputedStyle(n).borderTopColor; probe.remove(); return same;
+      }), 'Guide navigation rule uses the matching accent');
       assert.equal(await page.locator('.guide-household').isVisible(), false, 'Household setup waits for a place');
       assert.equal(await page.locator('.guide-answer').first().isVisible(), false, 'No duplicate empty answer blocks below setup');
       assert(await page.locator('.crumbs li[data-level="nation"] a').evaluate(n => {

@@ -164,8 +164,9 @@
   .quiet-tax .tax-lookup { border-top: 1px solid var(--border); padding-top: 1rem; }
   .quiet-tax .tax-card { background: transparent; box-shadow: none; border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: 1.25rem 0; }
   .guide-preview { margin: .6rem 0 0; color: var(--text-secondary); font: 400 14px/1.6 var(--font-text); }
-  body:has(.guide-page) { --surface-1: light-dark(#f5f1eb, #25211d); --surface-2: light-dark(#fffcf7, #302a24); --surface-card: var(--surface-2); --text-primary: light-dark(#352e27, #eee6db); --text-secondary: light-dark(#63584b, #cfc3b3); --text-muted: light-dark(#6b5d4d, #c6b7a4); --border: light-dark(#ddd2c3, #584b3e); background: var(--surface-1); }
-  .guide-page { --atlas-accent: light-dark(#80532a, #dbb990); }
+  body:has(.guide-page) { --surface-1: light-dark(#f1edf4, #241e2a); --surface-2: light-dark(#fbf8fd, #302737); --surface-card: var(--surface-2); --text-primary: light-dark(#342a3d, #f0e9f5); --text-secondary: light-dark(#605268, #d0c0da); --text-muted: light-dark(#66576e, #c8b7d3); --border: light-dark(#d8cbdF, #594762); background: var(--surface-1); }
+  .guide-page { --atlas-accent: light-dark(#78517f, #c8a4d3); --atlas-ink: light-dark(#653b71, #dbc0e4); }
+  .guide-page > .page-head[data-kind="tool"] { --kind: var(--atlas-accent); }
   .guide-page .crumbs li[data-level="nation"] { --crumb-accent: var(--text-primary); }
   .guide-page .crumbs li[data-level="nation"] a { color: var(--text-primary); }
   .guide-question-tagline { list-style: none; padding: 0; margin: .75rem 0 .5rem; display: flex; flex-wrap: wrap; gap: .35rem 1.4rem; color: var(--text-secondary); font: 400 clamp(15px, 1.6vw, 18px)/1.5 var(--font-text); }
