@@ -29,7 +29,7 @@ export function Masthead({
   affordability,
   taxActive = false,
   guideActive = false,
-  budgetLabel = "Find places · NJ",
+  budgetLabel = "Find your fit",
   search = true,
 }: {
   affordability: AffordabilityControl;
@@ -45,6 +45,12 @@ export function Masthead({
     <span className="bar-budget-long">{budgetLabel}</span>
     <span className="bar-budget-short" aria-hidden="true">{budgetLabel === "Find places · NJ" ? "Budget · NJ" : budgetLabel === "Find within my budget" ? "My budget" : budgetLabel}</span>
     {affordability.kind !== "disabled" && <span aria-hidden="true">→</span>}
+  </>;
+  const toolLinks = <>
+    {affordability.kind === "hidden" ? null : affordability.kind === "disabled" ? <button className="bar-budget" type="button" disabled title={affordability.reason} aria-label={`${budgetLabel}. ${affordability.reason}`}>{budgetContent}</button> :
+      <Link className="bar-budget" href="/afford?county=all" aria-current={affordability.kind === "route" && affordability.active ? "page" : undefined} aria-label="Find places within my budget across all New Jersey">{budgetContent}</Link>}
+    <Link className="bar-link" href="/guide" aria-label="Buyer’s guide" aria-current={guideActive ? "page" : undefined}>Buyer’s guide</Link>
+    <Link className="bar-link" href="/tax" aria-label="Property tax lookup" aria-current={taxActive ? "page" : undefined}>Property tax</Link>
   </>;
   return (
     <>
@@ -74,32 +80,17 @@ export function Masthead({
               </svg>
             </a>
           </div>
-          {/* The tax link and theme stay on the trail's row at every width. Search and
-              the budget link wrap to their own row on a phone (#204). */}
-          <div className="bar-controls">
-            <Link
-              className="bar-link"
-              href="/tax"
-              aria-label="Property tax lookup"
-              aria-current={taxActive ? "page" : undefined}
-            >
-              <span className="bar-link-long">Property tax</span>
-              <span className="bar-link-short" aria-hidden="true">Tax</span>
-            </Link>
-            <Link
-              className="bar-link"
-              href="/guide"
-              aria-label="Buyer’s guide"
-              aria-current={guideActive ? "page" : undefined}
-            >
-              <span className="bar-link-long">Buyer’s guide</span>
-              <span className="bar-link-short" aria-hidden="true">Guide</span>
-            </Link>
-          </div>
+          {/* Desktop follows the reader's journey; mobile keeps the same links in
+              a native disclosure beside search, with theme on the brand row. */}
           <div className="bar-tools">
             {search && <PlaceSearch />}
-            {affordability.kind === "hidden" ? null : affordability.kind === "disabled" ? <button className="bar-budget" type="button" disabled title={affordability.reason} aria-label={`${budgetLabel}. ${affordability.reason}`}>{budgetContent}</button> :
-              <Link className="bar-budget" href="/afford?county=all" aria-label="Find places within my budget across all New Jersey">{budgetContent}</Link>}
+            <div className="bar-controls bar-desktop-tools">{toolLinks}</div>
+            <details className="bar-tool-menu">
+              <summary>Tools <span aria-hidden="true">⌄</span></summary>
+              <div className="bar-controls">
+                {toolLinks}
+              </div>
+            </details>
           </div>
           <ThemeToggle />
         </div>
