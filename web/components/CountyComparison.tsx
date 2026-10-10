@@ -22,10 +22,13 @@ export function CountyComparison({ sections, initial, embedded = false }: { sect
   const key = measure.windows[window] ? window : WINDOWS.find(item => measure.windows[item.key])?.key;
   const reading = key ? measure.windows[key] : null;
   const rows = reading?.rows ?? [];
+  const notes = key ? windowNote(key, measure.metric_id, measure.windows) : [];
   const Container = embedded ? "div" : "details";
   return <Container id="county-comparison" className="place-comparison" data-embedded={embedded || undefined}>
     {!embedded && <summary><span>Compare counties</span><small>Differences between places, with dates and uncertainty</small><span aria-hidden="true">＋</span></summary>}
     <div className="place-comparison-body">
+      <div className="comparison-intro">
+      <div>
       <div className="place-comparison-controls">
         <label htmlFor={id}>Measure<select id={id} value={measure.metric_id} onChange={event => setMetric(event.target.value)}>
           {sections.map(section => <optgroup key={section.key} label={section.title}>{section.rows.map(item => <option key={item.metric_id} value={item.metric_id}>{item.label}</option>)}</optgroup>)}
@@ -36,6 +39,9 @@ export function CountyComparison({ sections, initial, embedded = false }: { sect
       </div>
       <p className="meta">{rankBasis("change", measure.direction, key ? WINDOWS.find(item => item.key === key)!.phrase : "")}. {reading?.start && reading.end ? windowLabel(reading.start, reading.end, measure.metric_id) : "Dates not published"}.</p>
       <p className="meta">{mapDefinitionOf(measure.metric_id)}</p>
+      </div>
+      {notes.length > 0 && <aside className="window-aside"><p className="window-aside-label">About “Since 2019”</p>{notes.map(note => <p key={note}>{note}</p>)}</aside>}
+      </div>
       <div className="scroll-x" tabIndex={0} role="region" aria-label="County comparison, scroll horizontally">
         <table className="ranks"><thead><tr><th scope="col">County</th><th scope="col">Latest value</th><th scope="col">Change</th><th scope="col">Change rank</th></tr></thead>
           <tbody>{rows.map(row => <tr key={row.id}>
@@ -48,7 +54,6 @@ export function CountyComparison({ sections, initial, embedded = false }: { sect
       </div>
       {rows.length === 0 && <p>No county figures for this window.</p>}
       {rows.some(row => row.latestMargin != null || row.changeMargin != null) && <p className="meta">{MARGIN_NOTE}</p>}
-      {key && windowNote(key, measure.metric_id, measure.windows).map(note => <p className="meta" key={note}>{note}</p>)}
     </div>
   </Container>;
 }

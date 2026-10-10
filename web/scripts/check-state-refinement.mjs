@@ -27,6 +27,11 @@ try {
       const measure = page.locator('#county-comparison select').first();
       const options = await measure.locator('option').evaluateAll(nodes => nodes.map(n => n.value));
       if (options.length > 1) await measure.selectOption(options[1]);
+      const changeWindow = page.locator('#county-comparison select').last();
+      await changeWindow.selectOption('since_2019');
+      assert.equal(await page.locator('.comparison-intro .window-aside').isVisible(), true);
+      assert.match(await page.locator('.comparison-intro .window-aside').textContent(), /before COVID/);
+      assert.equal(await page.locator('#county-comparison > .place-comparison-body > .meta').filter({ hasText: 'before COVID' }).count(), 0);
       await page.getByRole('button', { name: 'Explore places', exact: true }).click();
       assert.equal(await page.locator('.place-county-grid').isVisible(), true);
       await page.waitForFunction(() => ![...document.querySelectorAll('.section-jump option')].some(n => n.textContent === 'Compare counties'));
