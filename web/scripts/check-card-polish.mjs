@@ -29,7 +29,15 @@ try {
     assert.equal(await guide.evaluate(n => getComputedStyle(n).color), theme === 'dark' ? 'rgb(215, 163, 173)' : 'rgb(146, 84, 96)');
     assert.equal(await page.locator('.local-picture-note .standouts-disclosure').count(), 1);
     assert.equal(await page.locator('.local-picture-note .editorial-annotation').count(), 1);
-    assert.equal(await page.locator('.local-picture-note .cited').first().evaluate(n => getComputedStyle(n).color), 'rgb(48, 54, 50)');
+    assert.equal(await page.locator('.local-picture-note .cited').first().evaluate(n => getComputedStyle(n).color), theme === 'dark' ? 'rgb(232, 236, 230)' : 'rgb(48, 54, 50)');
+    assert.equal(await page.locator('.local-picture-note .consumer-feature-editorial > .editorial-annotation').count(), 1);
+    if (width === 1280) {
+      const answer = await page.locator('.local-picture-note .consumer-feature-answer').boundingBox();
+      const annotation = await page.locator('.local-picture-note .editorial-annotation').boundingBox();
+      assert.ok(annotation.x >= answer.x + answer.width, 'Computed highlight is on the right');
+    }
+    assert.equal(await page.locator('.home-action-checks a[href^="/tax"]').evaluate(n => getComputedStyle(n).color), theme === 'dark' ? 'rgb(142, 217, 226)' : 'rgb(0, 105, 119)');
+    for (const link of await page.locator('.home-action-checks a[href^="#"]').all()) assert.equal(await link.evaluate(n => getComputedStyle(n).color), theme === 'dark' ? 'rgb(166, 217, 192)' : 'rgb(36, 107, 85)');
     await page.locator('.local-picture-note .standouts-disclosure').evaluate(n => {n.open = true;});
     for (const panel of await page.locator('.quiet-disclosure[data-treatment]').all()) await panel.evaluate(n => {n.open = true;});
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
@@ -46,4 +54,13 @@ try {
     console.log(`PASS ${width}px ${theme}`);
     await context.close();
   }
+  const motionContext = await browser.newContext({viewport: {width: 1280, height: 900}, reducedMotion: 'no-preference'});
+  const motionPage = await motionContext.newPage();
+  await motionPage.goto('http://localhost:3002/regions/12', {waitUntil: 'networkidle'});
+  const metric = motionPage.locator('.local-picture-note .editorial-metric');
+  const before = await metric.textContent();
+  await motionPage.waitForTimeout(10500);
+  assert.notEqual(await metric.textContent(), before, 'Computed highlight rotates after ten seconds');
+  console.log('PASS computed highlight rotation');
+  await motionContext.close();
 } finally {await browser.close();}

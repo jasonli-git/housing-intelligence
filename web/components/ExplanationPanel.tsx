@@ -184,7 +184,7 @@ export function ConsumerReading({
         </span>
       </div>
       <Stale reading={reading} />
-      <div className={`consumer-feature-main${annotation && !paperNote ? " consumer-feature-editorial" : ""}`}>
+      <div className={`consumer-feature-main${annotation ? " consumer-feature-editorial" : ""}`}>
         <h2 id={id}>{heading ?? answer.heading}</h2>
         {section === "before_moving" ? (
           <div className="consumer-moving-body">
@@ -200,14 +200,13 @@ export function ConsumerReading({
             <Runs runs={answer.runs} binding={binding} />
           </p>
         )}
-        {annotation && !paperNote && <aside className="editorial-annotation" aria-label="Computed figure, separate from the AI interpretation">{annotation}</aside>}
+        {annotation && <aside className="editorial-annotation" aria-label="Computed figure, separate from the AI interpretation">{annotation}</aside>}
       </div>
       {section !== "before_moving" && figures}
     </>;
   return (
     <section aria-labelledby={id} className={`interpretation consumer-feature consumer-feature-${section}`}>
       {paperNote ? <div className="local-picture-note">{content}
-        {annotation && <aside className="editorial-annotation local-picture-measured" aria-label="Computed figure, separate from the AI interpretation">{annotation}</aside>}
         {children}
       </div> : <>{content}{children}</>}
     </section>
