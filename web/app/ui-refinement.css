@@ -476,6 +476,18 @@
   .recovery-routes a:hover { background: var(--surface-card); }
   @media (max-width: 600px) {
     main.shell { --section-space: 1.35rem; }
+    /* Match the market summary's inset instead of putting its body on the border. */
+    .quiet-county .local-understand-group .quiet-disclosure[data-treatment="market"] > .quiet-disclosure-body { padding: .25rem 1rem 1rem; }
+    /* Search mode need not reserve space for invisible map controls. Keep the full
+       map layout when the reader deliberately switches to exploration. */
+    .nation-page .landing-canvas .nation-head { padding-block: .8rem .25rem; }
+    .nation-page .landing-canvas .coverage-search-stage[data-search-first="true"] { padding-top: 48px; }
+    .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map-content { min-height: 240px; }
+    .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] :is(.coverage-region-bar, .coverage-map-foot) { display: none; }
+    .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .map-pan-controls { display: none; }
+    .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map { height: 240px; }
+    .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map-placeholder { min-height: 240px; }
+    .nation-page .landing-canvas .coverage-search-overlay { top: 48px; }
     .bar-inner { padding-block: .45rem; }
     .bar-controls { gap: .25rem; }
     .bar .bar-link { font-size: 10px; padding-inline: .55rem; }
