@@ -44,7 +44,6 @@ export function Masthead({
   const budgetContent = <>
     <span className="bar-budget-long">{budgetLabel}</span>
     <span className="bar-budget-short" aria-hidden="true">{budgetLabel === "Find places · NJ" ? "Budget · NJ" : budgetLabel === "Find within my budget" ? "My budget" : budgetLabel}</span>
-    {affordability.kind !== "disabled" && <span aria-hidden="true">→</span>}
   </>;
   const toolLinks = <>
     {affordability.kind === "hidden" ? null : affordability.kind === "disabled" ? <button className="bar-budget" type="button" disabled title={affordability.reason} aria-label={`${budgetLabel}. ${affordability.reason}`}>{budgetContent}</button> :

@@ -2,6 +2,7 @@
 
 ## What changed
 
+- Follow-up: removed the decorative arrow from Find your fit in both desktop navigation and mobile Tools; link behavior unchanged.
 - Find your fit now has pale slate-blue / midnight-slate surfaces rather than the default neutral background. Warm budget result accents remain.
 - Shared desktop navigation: brand/code link, search, Find your fit, Buyer's guide, Property tax, theme.
 - At widths up to 1000px: brand/theme row, then search beside a compact native Tools disclosure. Existing unavailable/hidden budget states remain intact.
@@ -31,6 +32,7 @@
 
 ## Verification
 
+- Arrow-removal follow-up: typecheck, three targeted masthead tests (including no-arrow regression), 2,386-page static build and `git diff --check` passed.
 - `npm run typecheck`: passed.
 - `npm test`: 565 tests / 81 files passed; budget regression checks updated for approved label/order.
 - `NEXT_PUBLIC_ARTIFACT_URL=http://localhost:8001 npm run build`: passed, 2,386 static pages. Initial sandbox build could not access local API; reran outside sandbox. One overlapping build attempt was rejected; reran after previous build completed.
