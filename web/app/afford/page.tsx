@@ -6,6 +6,7 @@ import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { SectionJump } from "@/components/SectionJump";
 import { affordData } from "@/lib/affordData";
+import "../tool-pages.css";
 import { pageMetadata } from "@/lib/meta";
 
 export const metadata: Metadata = pageMetadata({
@@ -54,10 +55,12 @@ export default async function AffordPage() {
           />
           <Kind kind="tool" />
           <h1 className="page-title">Find your fit.</h1>
-          <p className="meta">
-            A budget, a place, a clearer starting point. Compare typical housing costs in New Jersey.
-          </p>
-          <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>
+          <div className="tool-head-tools">
+            <p className="meta">
+              A budget, a place, a clearer starting point. Compare typical housing costs in New Jersey.
+            </p>
+            <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>
+          </div>
         </div>
       </header>
       <AffordExplorer

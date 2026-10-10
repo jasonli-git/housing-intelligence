@@ -6,6 +6,7 @@ import { Masthead } from "@/components/Masthead";
 import { SectionJump } from "@/components/SectionJump";
 import { api, artifactUrl, nationalMortgageRate } from "@/lib/api";
 import { periodLabel } from "@/lib/periods";
+import "../tool-pages.css";
 import { pageMetadata } from "@/lib/meta";
 
 export const metadata: Metadata = pageMetadata({
@@ -41,7 +42,7 @@ export default async function GuidePage() {
               <li>Should I rent or buy?</li>
               <li>What should I check before an offer?</li>
             </ul>
-            <div className="guide-header-tools">
+            <div className="guide-header-tools tool-head-tools">
               <details className="guide-about"><summary>How this guide works</summary><p className="meta">Add your numbers to published local figures. Answers use fixed calculations, with sources and limits—not AI-written advice.</p></details>
               <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>
             </div>

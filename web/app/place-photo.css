@@ -3,7 +3,9 @@
    title block only, under a dark wash, so the summary and buttons stay on the page's
    own background. */
 @media screen {
-  main > header.page-head.has-photo .state-place-artwork-header { display: none; }
+  /* The drawn New Jersey artwork stays beside a photo: it rises from behind the photo's
+     left edge on wide screens and is drawn over the photo band on phones. */
+  main > header.page-head.has-photo .state-place-artwork-header { z-index: -1; }
   .place-photo { margin: 0; }
   .place-photo img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 12px; background: var(--surface-2); }
   .place-photo figcaption { display: grid; gap: .1rem; margin-top: .45rem; font: 12px/1.4 var(--font-text, system-ui); color: var(--text-muted); text-align: right; }
@@ -21,6 +23,8 @@
     /* The state header is a title and nickname with no summary under them, so a full-size
        photo would make it the tallest thing on the page; a smaller one stays level with it. */
     .quiet-state > header.page-head.has-photo > .place-photo { margin-top: .4rem; max-width: 340px; }
+    .quiet-county > header.page-head.has-photo .state-place-artwork-header { right: calc(min(480px, 40%) - 110px); top: -.4rem; width: clamp(180px, 22vw, 260px); }
+    .quiet-state > header.page-head.has-photo .state-place-artwork-header { right: 290px; top: -.6rem; }
   }
 
   @media (max-width: 760px) {
@@ -35,5 +39,7 @@
       --text-primary: #f7f4ee; --text-secondary: #e6e0d6; --text-muted: #d8d1c5; color: #f7f4ee;
     }
     .quiet-county > header.page-head.has-photo .page-title-row { padding-bottom: 3.4rem; }
+    .quiet-county > header.page-head.has-photo .state-place-artwork-header { z-index: 0; top: .6rem; right: -.5rem; width: 150px; height: 130px; stroke: #fff; opacity: .5; }
+    .quiet-county > header.page-head.has-photo .state-place-artwork-header :is(.state-artwork-wash, .state-artwork-points) { fill: #fff; }
   }
 }

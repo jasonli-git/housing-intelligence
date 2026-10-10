@@ -187,6 +187,16 @@ Not open work: each comes round on a date. The steps live where the row says.
       moves for more than five seconds. Reduced motion stops it. The New Jersey header
       artwork added 2026-10-06 (#311) loops the same way, as do the home page's atlas outlines and
       travelling line (#364).
+- [ ] **Shorten the publisher notices in the footer.** (owner, 2026-10-10) On the home
+      page the notices are the longest thing below the charts. One idea: a single footer
+      line linking to a sources page that lists every notice, with each page showing only
+      its own. First read each publisher's terms (Census, FRED, FHFA and the rest) for
+      whether a linked page satisfies their notice wording.
+- [ ] **A pass on monospace capitals across the site.** (owner, 2026-10-10) Breadcrumbs,
+      the "Computed from the data · Not AI" badge, the bar's links and section labels
+      (`HOUSING, AT A GLANCE`) are set in spaced monospace capitals on every page. The home
+      page moved its own to sentence case in `feature/home-refresh`. Touches every page, so
+      it gets its own branch and review.
 - [ ] **A compare page shared by its link.** (owner, 2026-10-09, from an outside
       review) `/compare?places=194,330,112`: a few towns side by side, the choice held in
       the address so it can be bookmarked or sent, and nothing stored in the browser.

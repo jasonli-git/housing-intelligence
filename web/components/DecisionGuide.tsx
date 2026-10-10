@@ -126,6 +126,10 @@ function Check({ item }: { item: CheckItem }) {
 
 const usd = (value: number) => formatValue(value, "usd");
 
+// Places to start from when the reader has none in mind: towns and counties from the
+// state's north, centre and shore. Matched by name, so a renumbered id cannot break them.
+const GUIDE_EXAMPLES = [["Hoboken", "municipality"], ["Montclair", "municipality"], ["Princeton", "municipality"], ["Mercer County", "county"], ["Cape May County", "county"]] as const;
+
 export function DecisionGuide({
   artifactUrl,
   rate,
@@ -182,6 +186,7 @@ export function DecisionGuide({
     writePersonal(next);
   };
 
+  const examples = (entries ?? []).filter((entry) => GUIDE_EXAMPLES.some(([name, level]) => entry.name === name && entry.level === level));
   const ratePct = personal.ratePct ?? rate.value;
   const downPct = personal.downPct ?? 20;
   const years = personal.years ?? 10;
@@ -207,6 +212,10 @@ export function DecisionGuide({
           className="guide-picker"
           keepPicked
         />
+        {!data && load.state === "idle" && examples.length > 0 && <div className="guide-examples">
+          <span>Or try</span>
+          {examples.map((entry) => <button key={entry.id} type="button" onClick={() => pick(entry)}>{entry.name}</button>)}
+        </div>}
         {load.state === "loading" && <p className="meta">Loading this place’s figures…</p>}
         {load.state === "failed" && <p className="meta">This place’s figures could not be loaded. Try again, or choose another place.</p>}
         {data && <p className="meta"><Link href={placeHref}>Everything published for {data.region.name}</Link></p>}

@@ -5,7 +5,7 @@
   .quiet-nation .entry-free.computed > span { min-width:0; color:var(--text-secondary); }
   .quiet-nation .entry-free.computed svg { flex-shrink:0; width:13px; height:13px; }
   .atlas-local > .page-head { position:relative; isolation:isolate; }
-  .atlas-local .state-place-artwork-header { right:1.5%; top:.5rem; width:clamp(160px,24vw,260px); height:240px; opacity:.22; }
+  .atlas-local .state-place-artwork-header { right:1.5%; top:.5rem; width:clamp(160px,24vw,260px); height:240px; opacity:.42; stroke-width:1.3; }
   .atlas-local:is([data-region-level="municipality"],[data-region-level="zip"]) :is(.cost-monthly-headline,.more) { background:var(--surface-2); }
   .atlas-local:is([data-region-level="municipality"],[data-region-level="zip"]) .bridge-difference { background:var(--surface-1); }
   .atlas-local:is([data-region-level="municipality"],[data-region-level="zip"]) .more-entry { --text-primary:inherit; --text-secondary:inherit; }
@@ -18,7 +18,7 @@
   body:has(.quiet-revisions) { --surface-1:light-dark(#f6f3ef,#201d19); --surface-2:light-dark(#fdfbf8,#2d2923); --surface-card:var(--surface-2); --border:light-dark(#e0d7ca,#554c3f); background:var(--surface-1); }
   .nj-head { position:relative; isolation:isolate; }
   .state-place-artwork { position:absolute; right:1rem; top:.4rem; width:220px; height:160px; stroke:var(--atlas-accent); stroke-width:1; opacity:.3; pointer-events:none; z-index:-1; }
-  .state-place-artwork-header { right:17%; top:1rem; width:260px; height:240px; opacity:.32; }
+  .state-place-artwork-header { right:17%; top:1rem; width:260px; height:240px; opacity:.5; stroke-width:1.3; }
   body:has(:is(.quiet-tax,.quiet-history)) .foot-kicker { color:var(--text-secondary); }
   .state-artwork-wash { fill:var(--atlas-accent); stroke:none; opacity:.1; }
   .state-artwork-points { fill:var(--atlas-accent); stroke:none; }
@@ -37,7 +37,7 @@
     .state-artwork-trace path:nth-child(3) { animation-delay:.5s; }
     .state-artwork-wash { transform-origin:229px 126px; animation:state-place-breathe 9s ease-in-out infinite; }
     .page-head:is(:hover,:focus-within) :is(.state-artwork-trace path,.state-artwork-wash) { animation-play-state:paused; }
-    @keyframes state-place-breathe { 0%,100% { transform:scale(.92); opacity:.06; } 50% { transform:scale(1.06); opacity:.16; } }
+    @keyframes state-place-breathe { 0%,100% { transform:scale(.92); opacity:.1; } 50% { transform:scale(1.06); opacity:.24; } }
   }
   .atlas-local[data-region-level="municipality"] { --atlas-accent: light-dark(#267775, #a2dad5); }
   .atlas-local[data-region-level="zip"] { --atlas-accent: light-dark(#735e91, #d2bce9); }
@@ -48,7 +48,9 @@
   .atlas-local .crumbs li[data-level="state"] { --crumb-accent:var(--state-blue); }
   .atlas-local .crumbs li[data-level="local"]:not([aria-current="page"]) { --crumb-accent:light-dark(#246b55,#a6d9c0); }
   main.atlas-local .crumbs li[data-level] a { color:var(--crumb-accent); }
-  main.nj-page .place-county-grid a { color:var(--text-primary); }
+  /* County links take the county pages' green, as town and ZIP links take theirs. */
+  main.nj-page .place-county-grid a { color:light-dark(#246b55,#a6d9c0); }
+  main.nj-page .place-county-grid a small { color:color-mix(in srgb,currentColor 70%,transparent); }
   .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) > .page-head { border-top-color:color-mix(in srgb,var(--atlas-accent) 50%,var(--border)); }
   .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) :is(.quiet-profile,.more-entry) { --atlas-accent: inherit; }
   .quiet-tax { --atlas-accent: light-dark(#006977, #8ed9e2); }
@@ -86,8 +88,8 @@
   .budget-page .explorer { grid-template-columns:minmax(0,1fr); }
   .budget-coverage-note { color:var(--text-secondary); font-size:12px; line-height:1.6; max-width:85ch; }
   @media(max-width:600px) {
-    .atlas-local .state-place-artwork-header { width:110px; height:150px; top:4rem; right:0; opacity:.12; }
-    .state-place-artwork-header { right:0; top:4rem; width:140px; opacity:.2; }
+    .atlas-local .state-place-artwork-header { width:110px; height:150px; top:4rem; right:0; opacity:.26; }
+    .state-place-artwork-header { right:0; top:4rem; width:140px; opacity:.32; }
     .place-discovery-search { display:block; }
     .place-budget-link { margin-top:.3rem; }
     .state-place-artwork:not(.state-place-artwork-header) { width:130px; opacity:.14; }
