@@ -193,7 +193,9 @@ export function DecisionGuide({
 
   return (
     <div className="decision-guide">
+      <div className="guide-setup">
       <section className="section guide-place" aria-labelledby="guide-place-heading">
+        <p className="guide-eyebrow">01 · Your starting point</p>
         <h2 id="guide-place-heading">{data ? data.region.label : "Choose a place"}</h2>
         <PlacePicker
           entries={entries}
@@ -210,8 +212,9 @@ export function DecisionGuide({
       </section>
 
       <section className="section guide-household" aria-labelledby="guide-household-heading">
+        <p className="guide-eyebrow">02 · Your numbers</p>
         <h2 id="guide-household-heading">Your household</h2>
-        <p className="meta">Kept in this browser only, and used on the site’s other cost pages.</p>
+        <p className="meta">Saved only in this browser. Shared with the site’s other cost tools.</p>
         <div className="guide-fields">
           <label>
             Yearly household income, before tax
@@ -259,10 +262,14 @@ export function DecisionGuide({
           </label>
         </div>
       </section>
+      </div>
+
+      {!data && load.state === "idle" && <p className="guide-empty">Choose a place to see its buying costs, rent comparison and pre-offer checks.</p>}
 
       {data && (
         <>
           <section className="section guide-answer" aria-labelledby="guide-afford-heading">
+            <p className="guide-eyebrow">Affordability</p>
             <div className="guide-check-head">
               <h2 id="guide-afford-heading">Can I afford to buy here?</h2>
               {afford && <Strength judged={afford.evidence} />}
@@ -318,6 +325,7 @@ export function DecisionGuide({
           </section>
 
           <section className="section guide-answer" aria-labelledby="guide-rent-heading">
+            <p className="guide-eyebrow">The longer view</p>
             <div className="guide-check-head">
               <h2 id="guide-rent-heading">Should I rent or buy?</h2>
               {choice && <Strength judged={choice.evidence} />}
@@ -370,6 +378,7 @@ export function DecisionGuide({
           </section>
 
           <section className="section guide-answer" aria-labelledby="guide-checks-heading">
+            <p className="guide-eyebrow">Before committing</p>
             <h2 id="guide-checks-heading">What should I check before an offer?</h2>
             <p className="meta">What the published figures say about {data.region.name}, and where to check the home itself.</p>
             <ul className="guide-checks">

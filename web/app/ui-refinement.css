@@ -127,6 +127,32 @@
   .guide-page .decision-guide { gap: 1.25rem; margin-top: .9rem; }
   .guide-page .decision-guide .section { margin: 0; }
   .guide-page .guide-answer { padding-top: .75rem; border-top: 1px solid var(--border); }
+  .guide-page .decision-guide { max-width: none; gap: 1.5rem; }
+  .guide-header-tools { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .4rem 1rem; }
+  .guide-header-tools .page-section-nav { margin: 0; }
+  .guide-header-tools .guide-about { max-width: 52ch; }
+  .guide-setup { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(1rem, 3vw, 2.5rem); padding-block: 1rem 1.25rem; border-block: 1px solid var(--border); }
+  .guide-page .guide-eyebrow { margin: 0 0 .6rem; color: var(--text-secondary); font: 550 10px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: .1em; }
+  .guide-page .decision-guide h2 { font: 500 clamp(23px, 2.6vw, 30px)/1.2 Georgia, serif; letter-spacing: -.025em; }
+  .guide-page .guide-setup .meta { font-size: 12px; line-height: 1.6; margin-block: .5rem; }
+  .guide-page .guide-picker { max-width: none; margin-top: 1rem; }
+  .guide-page .guide-picker input { min-height: 50px; border-radius: 10px; padding: .75rem; }
+  .guide-page .guide-fields { gap: .8rem 1rem; }
+  .guide-page .guide-fields :is(input, select) { min-height: 44px; border-radius: 8px; }
+  .guide-page .guide-answer { padding-top: 1.25rem; }
+  .guide-page .guide-lead { max-width: 72ch; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.6; }
+  .guide-page .guide-limit { line-height: 1.6; max-width: 90ch; }
+  .guide-page .guide-checks { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2rem; }
+  .guide-page .guide-check { min-width: 0; border-left: 0; border-top: 1px solid var(--border); padding: 1rem 0 0; line-height: 1.6; }
+  .guide-empty { margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+  @media (max-width: 700px) {
+    .guide-setup, .guide-page .guide-checks { grid-template-columns: minmax(0, 1fr); }
+    .guide-setup { gap: 1.25rem; }
+    .guide-page .guide-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .guide-page .guide-fields label { font-size: 12px; }
+    .guide-page .guide-check-head { align-items: flex-start; }
+  }
+  .guide-page .evidence[data-strength="strong"] summary { color: light-dark(#087f50, #87d8b0); border-color: currentColor; }
   .budget-page > .page-head { padding-bottom: .7rem; }
   .budget-page .budget-explorer { margin-top: .8rem; }
   .budget-page .afford-controls { gap: .85rem; }
