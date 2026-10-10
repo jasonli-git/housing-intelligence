@@ -39,7 +39,7 @@ try {
   assert.equal(await page.locator('.coverage-atlas-traces path').first().evaluate(n => getComputedStyle(n).animationIterationCount), 'infinite', 'State-boundary accents keep tracing');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   assert.equal(await page.locator('.coverage-atlas-traces').evaluate(n => getComputedStyle(n).display), 'none', 'Reduced motion retains only the static atlas');
-  await page.getByRole('button', { name: 'Explore the map', exact: true }).click();
+  await page.getByRole('button', { name: 'Explore map', exact: true }).click();
   await page.locator('.coverage-map-stage').scrollIntoViewIfNeeded();
   await page.locator('.coverage-viewport').waitFor();
   await page.getByRole('button', {name:'Zoom in United States map'}).click();

@@ -60,7 +60,14 @@
   .nj-page.quiet-state .place-county-grid a { padding-block: .4rem; }
   .nj-page.quiet-state .state-workspace-head { padding-bottom: .55rem; }
   .quiet-nation .nation-head { padding-block: 1.2rem .5rem; }
-  .landing-canvas { position: relative; padding: clamp(1rem, 3vw, 2rem); background: var(--surface-card); border-radius: 18px; }
+  .landing-canvas { position: relative; padding: 0; background: transparent; }
+  .landing-canvas .coverage-search-stage[data-search-first="true"] { padding-top: 52px; }
+  .coverage-mode-switch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 4; display: flex; gap: .75rem; white-space: nowrap; border-bottom: 1px solid var(--border); }
+  .coverage-mode-switch :is(.coverage-search-return, .coverage-explore-button) { margin: 0; padding: .5rem .3rem; border: 0; border-radius: 0; background: transparent; color: var(--text-secondary); min-height: 44px; font: 550 13px/1.4 var(--font-text); }
+  .coverage-mode-switch button[aria-pressed="true"] { color: var(--text-primary); box-shadow: inset 0 -2px var(--entry-accent); }
+  .landing-canvas :is(.coverage-map-stage, .coverage-state-preview, .coverage-region-bar) { background: var(--surface-1); }
+  .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map-stage { background: var(--surface-1); }
+  .landing-canvas .coverage-search-overlay { background: radial-gradient(ellipse at center, var(--surface-1) 0%, var(--surface-1) 22%, transparent 68%); }
   .landing-canvas .nation-head { border: 0; }
   .landing-canvas .nation-portrait { opacity: .2; }
   .landing-canvas .coverage-entry { margin-block: .75rem 1rem; }

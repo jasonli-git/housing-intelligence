@@ -2,6 +2,7 @@
 
 ## What changed
 
+- Follow-up: remove the redundant Find your place heading, replace separate reveal/return shortcuts with a persistent Search places / Explore map pressed-button group, and remove the outer tinted surface. Search atlas, coverage strip and page now share one background. Query/viewport preservation and focus transfer retained.
 - Group the existing title, tagline, free badge, place search/illustrated atlas, New Jersey coverage and national benchmarks into one continuous landing composition.
 - Keep desktop's faint surface without a heavy outline; mobile removes the extra inset to preserve reading width and the single-line free badge. No fixed-height hero or duplicate search.
 - Trace actual national trend linework once on entry (750ms). Values, dates, definitions, dots and scales remain static. The US atlas still loops independently.
@@ -30,6 +31,7 @@
 
 ## Verification
 
+- Single-tone/mode-switch follow-up: typecheck, 564 tests/80 files, 2,386-page build, focused UI checks, all eight landing axe states and full interaction audit passed. New assertions cover no redundant heading, pressed states and atlas/page background equality. Desktop dark and mobile light screenshots reviewed. Existing input field keeps its own readable control surface; no tinted outer composition. No deployment.
 - `npm test`: 564 tests across 80 files passed, including entry/disconnect and unavailable-observer cases.
 - `npm run typecheck`: passed.
 - `npm run build`: passed; 2,386 static pages exported against the local API.

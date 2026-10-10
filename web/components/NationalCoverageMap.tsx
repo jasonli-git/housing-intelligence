@@ -127,7 +127,10 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
 
   return <div className="coverage-atlas">
     <div ref={entry} className="coverage-search-stage" data-search-first={searchFirst} data-exploring={exploring}>
-    {searchFirst && exploring && <button className="coverage-search-return" type="button" onClick={() => changeMode(false)}>← Search for a place</button>}
+    {searchFirst && <div className="coverage-mode-switch" role="group" aria-label="Find a place by search or map">
+      <button className="coverage-search-return" type="button" aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>Search places</button>
+      <button className="coverage-explore-button" type="button" aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>Explore map</button>
+    </div>}
     <div id="coverage-map-content" className="coverage-map-content" inert={!exploring} aria-hidden={!exploring}>
     <div className="coverage-region-bar">
       <span>Look closer</span>
@@ -240,11 +243,10 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
       <div className="coverage-map-foot"><span>{hovered}</span><span><i aria-hidden="true" />Blue = available{viewport.scale > 1 && " · Drag or use move buttons"}</span></div>
     </div>
     </div>
-    {searchFirst && <div className="coverage-search-overlay" hidden={exploring}>
+    {searchFirst && <div id="coverage-place-search" className="coverage-search-overlay" hidden={exploring}>
       <div className="coverage-search-panel">
         <PlaceSearch variant="hero" />
         <p className="home-find-hint">Detailed coverage starts with New Jersey.</p>
-        <button className="coverage-explore-button" type="button" aria-controls="coverage-map-content" onClick={() => changeMode(true)}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m2 4 5-2 6 2 5-2v14l-5 2-6-2-5 2ZM7 2v14m6-12v14" /></svg>Explore the map <span aria-hidden="true">→</span></button>
       </div>
     </div>}
     </div>

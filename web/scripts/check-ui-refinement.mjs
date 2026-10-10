@@ -48,22 +48,27 @@ try {
   await go('/');
   const search = page.getByRole('combobox', { name: 'Search by state, town, county or ZIP code', exact: true });
   assert.equal(await search.count(), 1, 'Only one place search');
+  assert.equal(await page.getByRole('heading', { name: 'Find your place', exact: true }).count(), 0, 'Search does not repeat a separate heading');
+  assert.equal(await page.getByRole('button', { name: 'Search places', exact: true }).getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.getByRole('button', { name: 'Explore map', exact: true }).getAttribute('aria-pressed'), 'false');
+  assert(await page.locator('.coverage-map-stage').evaluate(n => getComputedStyle(n).backgroundColor === getComputedStyle(document.body).backgroundColor), 'Atlas shares the page background');
   assert(await page.locator('#coverage-map-content').evaluate(n => n.inert && n.getAttribute('aria-hidden') === 'true'), 'Preview map is not interactive or announced behind search');
   assert.equal(await page.getByText('Try Princeton or 07030.', { exact: false }).count(), 0);
   await search.fill('Somerset');
   await page.getByRole('option').first().waitFor();
-  await page.getByRole('button', { name: 'Explore the map', exact: true }).click();
+  await page.getByRole('button', { name: 'Explore map', exact: true }).click();
   assert(await page.locator('.coverage-map').evaluate(n => n === document.activeElement), 'Reveal transfers focus to map');
   assert.equal(await search.isVisible(), false);
+  assert.equal(await page.getByRole('button', { name: 'Explore map', exact: true }).getAttribute('aria-pressed'), 'true');
   assert.equal(await page.locator('#coverage-map-content').evaluate(n => n.inert), false);
   await page.getByRole('button', { name: 'Zoom in United States map', exact: true }).click();
   const zoomed = await page.locator('.coverage-viewport').getAttribute('style');
-  await page.getByRole('button', { name: 'Search for a place', exact: false }).click();
+  await page.getByRole('button', { name: 'Search places', exact: false }).click();
   assert(await search.evaluate(n => n === document.activeElement), 'Return transfers focus to search');
   assert.equal(await search.inputValue(), 'Somerset', 'Switching preserves the query');
-  await page.getByRole('button', { name: 'Explore the map', exact: true }).click();
+  await page.getByRole('button', { name: 'Explore map', exact: true }).click();
   assert.equal(await page.locator('.coverage-viewport').getAttribute('style'), zoomed, 'Switching preserves map position');
-  await page.getByRole('button', { name: 'Search for a place', exact: false }).click();
+  await page.getByRole('button', { name: 'Search places', exact: false }).click();
   await search.fill('');
   await search.blur();
   const prices = page.locator('.national-benchmark', { has: page.getByRole('heading', { name: 'Home prices · past year', exact: true }) });
@@ -112,14 +117,14 @@ try {
       assert.equal(await page.locator('#coverage-map-content').evaluate(n => getComputedStyle(n).filter), 'none', 'No unlock-style blur');
       assert(await page.locator('.coverage-search-panel').evaluate(n => getComputedStyle(n).boxShadow === 'none' && parseFloat(getComputedStyle(n).borderTopWidth) === 0), 'Search is integrated rather than a blocking card');
       assert.equal(await page.locator('.atlas-travelling-line').evaluate(n => getComputedStyle(n).animationName), 'none', 'Reduced-motion atlas stays static');
-      await page.getByRole('button', { name: 'Explore the map', exact: true }).click();
+      await page.getByRole('button', { name: 'Explore map', exact: true }).click();
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${width} ${theme}: revealed map does not overflow`);
       if (width === 390) {
         const mapAudit = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
         assert.deepEqual(mapAudit.violations.map(v => v.id), [], `${theme}: revealed map accessibility`);
         await page.locator('.coverage-search-stage').screenshot({ path: `${output}/revealed-map-${theme}.png` });
       }
-      await page.getByRole('button', { name: 'Search for a place', exact: false }).click();
+      await page.getByRole('button', { name: 'Search places', exact: false }).click();
       await search.blur();
       assert(await page.locator('.foot-notice-head > svg').evaluate(n => {
         const probe = document.createElement('span');
