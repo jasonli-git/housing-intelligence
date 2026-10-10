@@ -215,7 +215,7 @@
   .nj-page.quiet-state .place-budget-link small { color: var(--text-secondary); font: 11px/1.4 var(--font-text); }
   .nj-page.quiet-state .county-directory-heading { margin: 1.2rem 0 .4rem; font: 500 12px/1.5 var(--font-text); color: var(--text-secondary); }
   .nj-page.quiet-state .place-county-grid a { flex-direction: row; align-items: center; border-radius: 5px; }
-  .nj-page.quiet-state .place-county-grid a:is(:hover, :focus-visible) { background: color-mix(in srgb, var(--state-blue) 9%, transparent); }
+  .nj-page.quiet-state .place-county-grid a:is(:hover, :focus-visible) { background: color-mix(in srgb, light-dark(#246b55, #a6d9c0) 10%, transparent); }
   .nj-page.quiet-state .place-comparison { border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--state-blue) 4%, var(--surface-card)); }
   .nj-page.quiet-state .place-comparison > summary { padding: .9rem 1rem; }
   .nj-page.quiet-state #state-detailed-data > summary { padding: 1rem; }
@@ -359,13 +359,10 @@
   .bar-tool-menu .bar-controls { display: flex; align-items: center; gap: .3rem; }
   .bar-tool-menu .bar-budget { border: 0; font: 500 11px/1.4 var(--font-mono); letter-spacing: .055em; text-transform: uppercase; }
   @media (max-width: 1000px) {
-    .bar-inner { grid-template-columns: minmax(0, 1fr) 38px; }
-    .bar-inner > .theme-toggle { grid-column: 2; grid-row: 1; }
-    .bar-tools { grid-column: 1 / -1; grid-row: 2; }
-    /* Without a menu search, keep Tools beside the brand at tablet widths too. */
-    .bar-inner:not(:has(.bar-tools .place-search)) { grid-template-columns:auto minmax(0,1fr) 38px; }
-    .bar-inner:not(:has(.bar-tools .place-search)) .bar-tools { grid-column:2; grid-row:1; }
-    .bar-inner:not(:has(.bar-tools .place-search)) > .theme-toggle { grid-column:3; }
+    /* One row at every width (owner, 2026-10-10): brand, then search and Tools, then theme. */
+    .bar-inner { grid-template-columns: auto minmax(0, 1fr) 38px; column-gap: .5rem; }
+    .bar-tools { grid-column: 2; grid-row: 1; display: flex; align-items: center; justify-content: flex-end; gap: .4rem; }
+    .bar-inner > .theme-toggle { grid-column: 3; grid-row: 1; }
     .bar-desktop-tools { display: none; }
     .bar-tool-menu { display: block; }
     .bar-tool-menu > summary { display: flex; align-items: center; gap: .6rem; min-height: 44px; padding-inline: .8rem; border: 1px solid var(--border); border-radius: 8px; font: 500 11px/1.4 var(--font-mono); text-transform: uppercase; cursor: pointer; list-style: none; }
@@ -376,6 +373,7 @@
     .bar-tool-menu .bar-budget-short { display: none; }
     .bar-tool-menu .bar-budget-long { display: inline; }
   }
+  .bar-menu-extra { display: none; }
   .guide-page { --atlas-accent: light-dark(#925460, #d7a3ad); --atlas-ink: light-dark(#7c414e, #e6bcc5); }
   .guide-page > .page-head[data-kind="tool"] { --kind: var(--atlas-accent); }
   .guide-page .crumbs li[data-level="nation"] { --crumb-accent: var(--text-primary); }
@@ -504,13 +502,16 @@
     .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map-placeholder { min-height: 240px; }
     .nation-page .landing-canvas .coverage-search-overlay { top: 48px; }
     .bar-inner { padding-block: .45rem; }
-    /* Pages with their own main search need no empty second navigation row. */
-    .bar-inner:not(:has(.bar-tools .place-search)) { grid-template-columns: auto minmax(0, 1fr) 38px; column-gap: .4rem; }
-    .bar-inner:not(:has(.bar-tools .place-search)) .bar-tools { grid-column: 2; grid-row: 1; }
-    .bar-inner:not(:has(.bar-tools .place-search)) > .theme-toggle { grid-column: 3; }
-    .bar-inner:not(:has(.bar-tools .place-search)) .bar-trail { gap: .25rem; }
-    .bar-inner:not(:has(.bar-tools .place-search)) .bar-trail .bar-icon { width: 24px; }
-    .bar-inner:not(:has(.bar-tools .place-search)) .bar-tool-menu > summary { padding-inline: .45rem; gap: .3rem; }
+    .bar-inner { column-gap: .4rem; }
+    .bar-trail { gap: .25rem; }
+    .bar-trail .bar-icon { width: 24px; }
+    .bar-tool-menu > summary { padding-inline: .45rem; gap: .3rem; }
+    /* With a bar search, the brand shrinks to the house mark so the search keeps room;
+       the portfolio and GitHub links move into Tools. */
+    .bar-inner:has(.bar-tools .place-search) :is(.bar-home, .bar-sep, .bar-trail > .bar-icon) { display: none; }
+    .bar-inner:has(.bar-tools .place-search) .wordmark-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .bar-inner:has(.bar-tools .place-search) .bar-tool-menu .bar-menu-extra { display: flex; }
+    .bar-tools .place-search { flex: 1 1 auto; min-width: 0; }
     .bar-controls { gap: .25rem; }
     .bar .bar-link { font-size: 10px; padding-inline: .55rem; }
     .site-meta-row { padding-block: .1rem; }

@@ -64,7 +64,7 @@ export function Masthead({
             </span>
             <Link className="wordmark" href="/">
               <img className="housing-mark" src="/icon.svg" width="24" height="24" alt="" />
-              Housing
+              <span className="wordmark-text">Housing</span>
             </Link>
             <a
               className="bar-icon"
@@ -88,6 +88,9 @@ export function Masthead({
               <summary>Tools <span aria-hidden="true">⌄</span></summary>
               <div className="bar-controls">
                 {toolLinks}
+                {/* On phones with a bar search, the brand row drops these to fit one row. */}
+                <a className="bar-link bar-menu-extra" href="https://jasonli.app">Jason Li — portfolio</a>
+                <a className="bar-link bar-menu-extra" href={REPOSITORY} rel="noreferrer noopener" target="_blank">Code on GitHub ↗</a>
               </div>
             </details>
           </div>

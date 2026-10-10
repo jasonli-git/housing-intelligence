@@ -1,0 +1,32 @@
+/* The tool pages' shared header (2026-10-10, #369): What can I afford? and the buyer's
+   guide open the same way, title and summary on the left, the section jump on the right.
+   The property-tax lookup keeps its own centred, search-engine opening. */
+@media screen {
+  :is(.budget-page, .guide-page) > .page-head { padding-block: 1.6rem 1rem; }
+  :is(.budget-page, .guide-page) .page-title { font-size: clamp(48px, 5.4vw, 72px); }
+  :is(.budget-page, .guide-page) .page-head .meta,
+  .guide-question-tagline { max-width: 60ch; margin-block: .6rem .3rem; font: 400 clamp(15px, 1.6vw, 18px)/1.5 var(--font-text); color: var(--text-secondary); }
+  .tool-head-tools { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .4rem 1rem; margin-top: .4rem; }
+  .tool-head-tools { align-items: end; }
+  .tool-head-tools .page-section-nav { margin: 0 0 0 auto; }
+  .guide-page .guide-setup[data-ready="false"] .guide-place { max-width: 46rem; }
+  .guide-page .guide-setup[data-ready="false"] .guide-picker { max-width: 36rem; }
+
+  /* The guide before a place is chosen: example places, then the three questions it
+     answers as cards rather than an empty page. */
+  .guide-examples { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin-top: .8rem; }
+  .guide-examples > span { margin-right: .2rem; color: var(--text-secondary); font-size: 13px; }
+  .guide-examples button { min-height: 36px; padding: .3rem .8rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-card); color: var(--text-primary); font: 500 13px/1.3 var(--font-text); cursor: pointer; }
+  .guide-examples button:hover { border-color: var(--atlas-accent); }
+  .decision-guide:has(> .guide-setup[data-ready="false"]) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: stretch; }
+  .decision-guide:has(> .guide-setup[data-ready="false"]) > .guide-setup { grid-column: 1 / -1; margin-bottom: .6rem; }
+  .guide-page .decision-guide .guide-answer[data-ready="false"] { display: block; margin: 0; padding: 1.1rem 1.2rem; border: 1px dashed var(--border); border-radius: 16px; background: color-mix(in srgb, var(--surface-card) 60%, transparent); }
+  .guide-answer[data-ready="false"] h2 { margin: 0 0 .4rem; font-size: 20px; line-height: 1.25; }
+  .guide-answer[data-ready="false"] .guide-preview { margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
+  .guide-answer[data-ready="false"] :is(.guide-check-head > :not(h2)) { display: none; }
+
+  @media (max-width: 760px) {
+    .decision-guide:has(> .guide-setup[data-ready="false"]) { grid-template-columns: minmax(0, 1fr); gap: .7rem; }
+    .tool-head-tools .page-section-nav { margin-left: 0; }
+  }
+}

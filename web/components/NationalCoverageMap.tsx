@@ -38,6 +38,22 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
 
   const changeMode = (next: boolean) => { modeChanged.current = true; setExploring(next); };
 
+  // "/" focuses the search, as on many sites; never while the reader is typing elsewhere.
+  useEffect(() => {
+    if (!searchFirst) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      event.preventDefault();
+      modeChanged.current = true;
+      setExploring(false);
+      entry.current?.querySelector<HTMLInputElement>(".place-search input")?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [searchFirst]);
+
   useEffect(() => {
     const controller = new AbortController();
     let started = false;
@@ -246,7 +262,7 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
     {searchFirst && <div id="coverage-place-search" className="coverage-search-overlay" hidden={exploring}>
       <div className="coverage-search-panel">
         <PlaceSearch variant="hero" />
-        <p className="home-find-hint">Detailed coverage starts with New Jersey.</p>
+        <p className="home-find-hint">Detailed coverage starts with New Jersey.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>
       </div>
     </div>}
     </div>

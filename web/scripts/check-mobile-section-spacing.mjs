@@ -32,7 +32,7 @@ try {
         assert.ok(box.search.top - box.mode.bottom < 100, "Search remains too far below the mode controls");
         assert.equal(parseFloat(box.header), 12.8);
       } else {
-        assert.equal(parseFloat(box.header), 36.8, "Desktop header spacing changed");
+        assert.equal(parseFloat(box.header), 25.6, "Desktop header spacing changed");
       }
       await page.getByRole("button", { name: "Explore map", exact: true }).click();
       await page.locator(".coverage-map-stage").scrollIntoViewIfNeeded();
@@ -60,6 +60,19 @@ try {
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       }
       console.log(`${width}px ${theme}: search spacing, map mode, market inset and overflow passed`);
+      await context.close();
+    }
+  }
+  // Every page's bar is one row at every width, search or not (owner, 2026-10-10).
+  for (const path of ["/states/new-jersey", "/nj/mercer-county", "/nj/princeton", "/guide", "/tax", "/freshness"]) {
+    for (const width of [320, 390, 600, 768, 1000, 1280]) {
+      const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
+      const page = await context.newPage();
+      await page.goto(origin + path);
+      await page.locator("main h1").waitFor();
+      const bar = await page.evaluate(() => ({ height: document.querySelector(".bar-inner").getBoundingClientRect().height, overflow: document.documentElement.scrollWidth > innerWidth }));
+      assert.ok(bar.height < 65, `${path} at ${width}px: the menu takes a second row (${bar.height}px)`);
+      assert.ok(!bar.overflow, `${path} at ${width}px: the page scrolls sideways`);
       await context.close();
     }
   }
