@@ -36,9 +36,11 @@ export default async function GuidePage() {
             />
             <Kind kind="tool" />
             <h1 className="page-title">Before you buy.</h1>
-            <p className="meta">
-              Choose a place. Work through the costs. Know what to check.
-            </p>
+            <ul className="guide-question-tagline" aria-label="Questions this guide answers">
+              <li>Can I afford to buy here?</li>
+              <li>Should I rent or buy?</li>
+              <li>What should I check before an offer?</li>
+            </ul>
             <div className="guide-header-tools">
               <details className="guide-about"><summary>How this guide works</summary><p className="meta">Add your numbers to published local figures. Answers use fixed calculations, with sources and limits—not AI-written advice.</p></details>
               <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>

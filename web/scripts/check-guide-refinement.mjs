@@ -12,8 +12,14 @@ try {
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(`${origin}/guide`, { waitUntil: 'networkidle' });
-      await page.getByText('Choose a place to see its buying costs, rent comparison and pre-offer checks.', { exact: true }).waitFor();
-      assert.equal(await page.locator('.guide-preview').count(), 3, 'All three question previews are visible');
+      await page.locator('.guide-question-tagline').waitFor();
+      assert.equal(await page.locator('.guide-question-tagline li').count(), 3, 'All questions preview next to the title');
+      assert.equal(await page.locator('.guide-household').isVisible(), false, 'Household setup waits for a place');
+      assert.equal(await page.locator('.guide-answer').first().isVisible(), false, 'No duplicate empty answer blocks below setup');
+      assert(await page.locator('.crumbs li[data-level="nation"] a').evaluate(n => {
+        const probe = document.createElement('span'); probe.style.color = 'var(--text-primary)'; n.append(probe);
+        const same = getComputedStyle(probe).color === getComputedStyle(n).color; probe.remove(); return same;
+      }), 'United States uses the neutral navigation colour');
       const heading = await page.locator('#guide-afford-heading').elementHandle();
       const picker = page.locator('.guide-picker input');
       await picker.fill('Somerset');

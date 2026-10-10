@@ -193,7 +193,7 @@ export function DecisionGuide({
 
   return (
     <div className="decision-guide">
-      <div className="guide-setup">
+      <div className="guide-setup" data-ready={Boolean(data)}>
       <section className="section guide-place" aria-labelledby="guide-place-heading">
         <p className="guide-eyebrow">01 · Your starting point</p>
         <h2 id="guide-place-heading">{data ? data.region.label : "Choose a place"}</h2>
@@ -211,7 +211,7 @@ export function DecisionGuide({
         {data && <p className="meta"><Link href={placeHref}>Everything published for {data.region.name}</Link></p>}
       </section>
 
-      <section className="section guide-household" aria-labelledby="guide-household-heading">
+      <section className="section guide-household" aria-labelledby="guide-household-heading" hidden={!data}>
         <p className="guide-eyebrow">02 · Your numbers</p>
         <h2 id="guide-household-heading">Your household</h2>
         <p className="meta">Saved only in this browser. Shared with the site’s other cost tools.</p>

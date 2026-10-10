@@ -152,7 +152,7 @@
     .guide-page .guide-fields label { font-size: 12px; }
     .guide-page .guide-check-head { align-items: flex-start; }
   }
-  .guide-page .evidence[data-strength="strong"] summary { color: light-dark(#087f50, #87d8b0); border-color: currentColor; }
+  .guide-page .evidence[data-strength="strong"] summary { color: light-dark(#07683e, #87d8b0); border-color: currentColor; }
   .budget-page > .page-head { padding-bottom: .7rem; }
   :is(.guide-page, .budget-page, .quiet-tax) { --tool-heading: Georgia, serif; }
   :is(.guide-page, .budget-page, .quiet-tax) > .page-head .page-title { font: 500 clamp(38px, 5vw, 62px)/1.08 var(--tool-heading); letter-spacing: -.045em; }
@@ -164,6 +164,15 @@
   .quiet-tax .tax-lookup { border-top: 1px solid var(--border); padding-top: 1rem; }
   .quiet-tax .tax-card { background: transparent; box-shadow: none; border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: 1.25rem 0; }
   .guide-preview { margin: .6rem 0 0; color: var(--text-secondary); font: 400 14px/1.6 var(--font-text); }
+  body:has(.guide-page) { --surface-1: light-dark(#f5f1eb, #25211d); --surface-2: light-dark(#fffcf7, #302a24); --surface-card: var(--surface-2); --text-primary: light-dark(#352e27, #eee6db); --text-secondary: light-dark(#63584b, #cfc3b3); --text-muted: light-dark(#6b5d4d, #c6b7a4); --border: light-dark(#ddd2c3, #584b3e); background: var(--surface-1); }
+  .guide-page { --atlas-accent: light-dark(#80532a, #dbb990); }
+  .guide-page .crumbs li[data-level="nation"] { --crumb-accent: var(--text-primary); }
+  .guide-page .crumbs li[data-level="nation"] a { color: var(--text-primary); }
+  .guide-question-tagline { list-style: none; padding: 0; margin: .75rem 0 .5rem; display: flex; flex-wrap: wrap; gap: .35rem 1.4rem; color: var(--text-secondary); font: 400 clamp(15px, 1.6vw, 18px)/1.5 var(--font-text); }
+  .guide-page .guide-setup[data-ready="false"] { grid-template-columns: minmax(0, 1fr); padding-block: .75rem; }
+  .guide-page .guide-setup[data-ready="false"] .guide-place { max-width: 36rem; }
+  .guide-page .guide-household[hidden], .guide-page .guide-answer[data-ready="false"], .guide-page .guide-empty { display: none; }
+  .guide-page .guide-header-tools { gap: .25rem 1rem; }
   .guide-answer[data-ready="true"] .guide-answer-body { animation: tool-answer-enter 220ms ease-out; }
   @keyframes tool-answer-enter { from { opacity: .4; transform: translateY(5px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .guide-answer[data-ready="true"] .guide-answer-body { animation: none; } }
