@@ -148,12 +148,14 @@ export function ConsumerReading({
   heading,
   children,
   annotation,
+  paperNote = false,
 }: {
   reading: Explanation | null;
   section: FocusedConsumerSection;
   heading?: string;
   children?: ReactNode;
   annotation?: ReactNode;
+  paperNote?: boolean;
 }) {
   if (!reading || !reading.sections?.length) return children ?? null;
   const { answer, binding } = focusedConsumerAnswer(
@@ -166,8 +168,7 @@ export function ConsumerReading({
   const id = `interpretation-${reading.region_id}-${section}`;
   const figures = <Figures binding={binding} />;
 
-  return (
-    <section aria-labelledby={id} className={`interpretation consumer-feature consumer-feature-${section}`}>
+  const content = <>
       <div className="consumer-feature-topline">
         <span className="consumer-feature-tag consumer-ai-badge">
           <Definition term={{
@@ -183,7 +184,7 @@ export function ConsumerReading({
         </span>
       </div>
       <Stale reading={reading} />
-      <div className={`consumer-feature-main${annotation ? " consumer-feature-editorial" : ""}`}>
+      <div className={`consumer-feature-main${annotation && !paperNote ? " consumer-feature-editorial" : ""}`}>
         <h2 id={id}>{heading ?? answer.heading}</h2>
         {section === "before_moving" ? (
           <div className="consumer-moving-body">
@@ -199,9 +200,14 @@ export function ConsumerReading({
             <Runs runs={answer.runs} binding={binding} />
           </p>
         )}
-        {annotation && <aside className="editorial-annotation" aria-label="Computed figure, separate from the AI interpretation">{annotation}</aside>}
+        {annotation && !paperNote && <aside className="editorial-annotation" aria-label="Computed figure, separate from the AI interpretation">{annotation}</aside>}
       </div>
       {section !== "before_moving" && figures}
+    </>;
+  return (
+    <section aria-labelledby={id} className={`interpretation consumer-feature consumer-feature-${section}`}>
+      {paperNote ? <div className="local-picture-note">{content}</div> : content}
+      {paperNote && annotation && <aside className="editorial-annotation local-picture-measured" aria-label="Computed figure, separate from the AI interpretation">{annotation}</aside>}
       {children}
     </section>
   );

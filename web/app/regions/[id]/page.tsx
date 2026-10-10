@@ -609,7 +609,7 @@ export default async function RegionPage({
           #281). "What's changing?" held this place until 2026-10-01; the page's own
           sentences say what changed. */}
       <QuietAnchor enabled={quiet} id="quiet-highlights">
-      <ConsumerReading reading={consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`} annotation={editorialAnnotation}>
+      <ConsumerReading reading={consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`} annotation={editorialAnnotation} paperNote={quiet}>
       {standing.length > 0 && (
         <details className="standouts-disclosure">
           <summary>

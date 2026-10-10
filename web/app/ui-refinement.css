@@ -20,8 +20,19 @@
   .quiet-county .cost-evidence-item p { line-height: 1.65; }
   .quiet-county .quiet-tool-group { padding-top: .9rem; }
   .quiet-county.atlas-local .quiet-tool-group { background: color-mix(in srgb, var(--text-primary) 3%, var(--surface-1)); border-color: color-mix(in srgb, var(--text-primary) 15%, var(--surface-1)); border-radius: 16px; box-shadow: none; }
-  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title) { color: light-dark(#66513b, #dfcfb6); }
-  main .crumbs a:is([href^="/"], [href^="#"]) { color: var(--crumb-accent, var(--text-primary)); }
+  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not(.destination-town):not(.destination-county):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
+  main a.destination-county[href^="/regions/"] { color: light-dark(#246b55, #a6d9c0); }
+  main a[href^="/states/"]:not(.crumbs a) { color: var(--state-blue); }
+  main .crumbs li[data-level] a:is([href^="/"], [href^="#"]) { color: var(--crumb-accent, var(--text-primary)); }
+  main a[href^="/guide"]:not(.button) { color: light-dark(#925460, #d7a3ad); }
+  main .county-town-links a[href^="/regions/"] { color: light-dark(#267775, #a2dad5); }
+  .quiet-county .consumer-feature-what_stands_out:has(.local-picture-note) { background: transparent; border: 0; border-radius: 0; padding: 0; box-shadow: none; }
+  .local-picture-note { --text-muted: light-dark(#625b4d, #c6bfab); --text-secondary: light-dark(#5c574c, #d0c8b7); position: relative; margin: 1rem .2rem 1.5rem; padding: 1.65rem 1.4rem 1.2rem; background: light-dark(#f3eddc, #302f27); border: 1px solid light-dark(#d9cfb6, #575342); border-radius: 3px 3px 12px 3px; box-shadow: 0 5px 13px #0000000d; transform: rotate(-.35deg); }
+  .local-picture-note::before { content: ""; position: absolute; width: 76px; height: 22px; top: -10px; left: 38%; background: light-dark(#d5d8c8a8, #b9beaa38); border: 1px solid light-dark(#c4c8b855, #c4c8b825); transform: rotate(3deg); pointer-events: none; }
+  .local-picture-note .consumer-feature-main h2 { margin-top: .7rem; }
+  .local-picture-measured { padding: .6rem 1rem; border-left: 2px solid var(--border); margin-block: 0 1rem; }
+  .local-picture-measured strong { font-size: 38px; }
+  @media (max-width: 700px) { .local-picture-note { transform: none; margin-inline: 0; padding-inline: 1rem; } }
   .quiet-county .local-understand-group .quiet-disclosure[data-treatment] { position: relative; overflow: visible; border-radius: 0; background: transparent; border-inline: 0; box-shadow: none; }
   .quiet-county .local-understand-group .quiet-disclosure[data-treatment="history"] { border-top: 1px dashed var(--border); }
   .quiet-county .local-understand-group .quiet-disclosure[data-treatment="history"] > summary { padding-left: 1rem; border-left: 2px solid color-mix(in srgb, var(--atlas-accent) 55%, transparent); }

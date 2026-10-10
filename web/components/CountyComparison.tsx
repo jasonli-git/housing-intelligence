@@ -48,7 +48,7 @@ export function CountyComparison({ sections, initial, embedded = false, onWindow
       <div className="scroll-x" tabIndex={0} role="region" aria-label="County comparison, scroll horizontally">
         <table className="ranks"><thead><tr><th scope="col">County</th><th scope="col">Latest value</th><th scope="col">Change</th><th scope="col">Change rank</th></tr></thead>
           <tbody>{rows.map(row => <tr key={row.id}>
-            <th scope="row"><Link href={"/regions/" + row.id}>{row.name}</Link></th>
+            <th scope="row"><Link className="destination-county" href={"/regions/" + row.id}>{row.name}</Link></th>
             <td>{row.latest === null ? "Not published" : <>{formatMetric(row.latest, measure.unit, measure.metric_id)}<small>{marginLabel(row.latest, row.latestMargin ?? null, measure.unit, measure.metric_id)}</small></>}</td>
             <td>{formatChange(row.change)}<small>{changeMarginLabel(row.changeMargin ?? null, measure.metric_id)}</small></td>
             <td>{row.best != null && row.worst != null && row.best !== row.worst ? row.best + "–" + row.worst : row.rank} / {row.of}</td>

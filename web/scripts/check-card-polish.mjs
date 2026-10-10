@@ -21,6 +21,13 @@ try {
     const internal = page.locator('.home-action-checks a[href^="/"]').first();
     const external = page.locator('.local-help-links a').first();
     assert.notEqual(await internal.evaluate(n => getComputedStyle(n).color), await external.evaluate(n => getComputedStyle(n).color));
+    const state = page.locator('.crumbs li[data-level="state"] a');
+    assert.equal(await state.evaluate(n => getComputedStyle(n).color), await state.evaluate(n => {const probe = document.createElement('span'); probe.style.color = 'var(--state-blue)'; n.append(probe); const color = getComputedStyle(probe).color; probe.remove(); return color;}));
+    const town = page.locator('.county-town-links a').first();
+    assert.equal(await town.evaluate(n => getComputedStyle(n).color), theme === 'dark' ? 'rgb(162, 218, 213)' : 'rgb(38, 119, 117)');
+    const guide = page.locator('.household-next a[href^="/guide"]');
+    assert.equal(await guide.evaluate(n => getComputedStyle(n).color), theme === 'dark' ? 'rgb(215, 163, 173)' : 'rgb(146, 84, 96)');
+    assert.equal(await page.locator('.local-picture-note .standouts-disclosure, .local-picture-note .editorial-annotation').count(), 0);
     for (const panel of await page.locator('.quiet-disclosure[data-treatment]').all()) await panel.evaluate(n => {n.open = true;});
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     assert.deepEqual(errors, []);
@@ -28,6 +35,11 @@ try {
     assert.deepEqual(results.violations.map(v => ({id: v.id, targets: v.nodes.map(n => n.target)})), []);
     await page.locator('.quiet-tool-group').scrollIntoViewIfNeeded();
     await page.screenshot({path: `/tmp/card-polish-${width}-${theme}.png`});
+    await page.locator('.local-picture-note').scrollIntoViewIfNeeded();
+    await page.screenshot({path: `/tmp/local-note-${width}-${theme}.png`});
+    await page.goto('http://localhost:3002/states/new-jersey', {waitUntil: 'networkidle'});
+    const county = page.locator('a.destination-county').first();
+    assert.equal(await county.evaluate(n => getComputedStyle(n).color), theme === 'dark' ? 'rgb(166, 217, 192)' : 'rgb(36, 107, 85)');
     console.log(`PASS ${width}px ${theme}`);
     await context.close();
   }
