@@ -489,6 +489,13 @@
     .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map-placeholder { min-height: 240px; }
     .nation-page .landing-canvas .coverage-search-overlay { top: 48px; }
     .bar-inner { padding-block: .45rem; }
+    /* Pages with their own main search need no empty second navigation row. */
+    .bar-inner:not(:has(.bar-tools .place-search)) { grid-template-columns: auto minmax(0, 1fr) 38px; column-gap: .4rem; }
+    .bar-inner:not(:has(.bar-tools .place-search)) .bar-tools { grid-column: 2; grid-row: 1; }
+    .bar-inner:not(:has(.bar-tools .place-search)) > .theme-toggle { grid-column: 3; }
+    .bar-inner:not(:has(.bar-tools .place-search)) .bar-trail { gap: .25rem; }
+    .bar-inner:not(:has(.bar-tools .place-search)) .bar-trail .bar-icon { width: 24px; }
+    .bar-inner:not(:has(.bar-tools .place-search)) .bar-tool-menu > summary { padding-inline: .45rem; gap: .3rem; }
     .bar-controls { gap: .25rem; }
     .bar .bar-link { font-size: 10px; padding-inline: .55rem; }
     .site-meta-row { padding-block: .1rem; }

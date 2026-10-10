@@ -4,6 +4,7 @@
 - Added 16px horizontal padding to the expanded Local market body on mobile.
 - Reduced mobile landing header spacing and the search backdrop height. Hidden map region, footer and directional controls no longer reserve space in Search mode.
 - Preserved the full map layout in Explore mode and desktop spacing.
+- Review follow-up: on mobile pages without a menu search, placed Tools on the branding/theme row instead of reserving an otherwise empty second row. Search-bearing menus retain their search row; Tools retains its 44px target.
 
 ## Files/modules affected
 - `web/app/ui-refinement.css`

@@ -20,6 +20,10 @@ try {
       assert.ok(box.search.top > box.mode.bottom, "Search overlaps the mode buttons");
       if (width === 390 && theme === "dark") await page.screenshot({ path: "/tmp/mobile-spacing-home-after.png" });
       if (width <= 600) {
+        assert.ok(await page.locator(".bar-inner").evaluate(e => e.getBoundingClientRect().height < 65), "Home menu reserves a second row");
+        await page.locator(".bar-tool-menu > summary").click();
+        assert.ok(await page.locator(".bar-tool-menu .bar-controls").isVisible());
+        await page.locator(".bar-tool-menu > summary").click();
         assert.ok(box.stage.height <= 300, "Search mode still reserves hidden map controls");
         assert.ok(box.search.top - box.mode.bottom < 100, "Search remains too far below the mode controls");
         assert.equal(parseFloat(box.header), 12.8);
