@@ -45,6 +45,7 @@ export function pageDestinations(): Destination[] {
   const found: Destination[] = [];
   for (const [label, selector] of SECTIONS) {
     const target = main.querySelector<HTMLElement>(selector);
+    if (label === "Is this unusual here?" && target?.closest("#local-price-history")) continue;
     if (target && available(target)) found.push({ label, selector, target });
   }
   for (const target of main.querySelectorAll<HTMLElement>("[data-jump-label][id], .legal-page > section > h2[id]")) {

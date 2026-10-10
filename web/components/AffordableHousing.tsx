@@ -29,7 +29,7 @@ export function HousingHelpDisclosure({enabled, children}: {enabled: boolean; ch
   // Browsers can expand a native details element for a fragment before React loads.
   // Only this native open-state mismatch is expected; our effect adopts that state.
   return enabled ? <details suppressHydrationWarning open={open} onToggle={(event) => setOpen(event.currentTarget.open)} className="quiet-disclosure">
-    <summary><span>Income, housing help &amp; nearby places</span><span className="quiet-plus" aria-hidden="true">+</span></summary>
+    <summary><span>Programmes, reported homes &amp; sources</span><span className="quiet-plus" aria-hidden="true">+</span></summary>
     <div className="quiet-disclosure-body">{children}</div>
   </details> : <>{children}</>;
 }

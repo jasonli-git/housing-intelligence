@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CostToOwn } from "@/components/CostToOwn";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { AffordableHousing, HousingHelpDisclosure } from "@/components/AffordableHousing";
+import { APPLICATION_ROUTES } from "@/lib/affordableHousing";
 import { HomeSales } from "@/components/HomeSales";
 import { HomeChecks } from "@/components/HomeChecks";
 import { WhoIsMoving } from "@/components/WhoIsMoving";
@@ -444,10 +445,14 @@ export default async function RegionPage({
     </section>
   </QuietDisclosure>;
 
-  const householdContent = <><HousingHelpDisclosure enabled={quiet}>
+  const marketPreview = ["sr1a_sales_count", "nj_net_units_added"].flatMap(id => {
+    const figure = packet.levels.find(item => item.metric_id === id);
+    return figure ? [`${formatMetric(figure.value, figure.unit, id)} ${id === "sr1a_sales_count" ? "qualifying sales" : "net homes added"} · ${periodLabel(figure.period_end, id)}`] : [];
+  }).join(" · ");
+
+  const householdContent = <><QuietDisclosure enabled={quiet} title="Income & nearby places" note="Household income, published lending & places to compare">
     <ForYourHousehold regionName={name} limits={incomeLimits} levels={packet.levels} countyLevels={countyLevels}
       margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))} />
-    <div id="housing-assistance"><AffordableHousing data={housingHelp} /></div>
     <MortgageLending name={name} levels={packet.levels} />
     <SimilarPlaces name={name} data={similar} />
     {region.level !== "zip" && <p className="household-next">
@@ -455,7 +460,7 @@ export default async function RegionPage({
         {region.level === "county" ? "Find towns within my budget" : "Compare nearby towns"} <span aria-hidden="true">→</span>
       </Link><span>Starts in {region.level === "county" ? name : county ? displayName(county) : "New Jersey"}. You can search all New Jersey.</span>
     </p>}
-  </HousingHelpDisclosure>{quiet && homeChecks}</>;
+  </QuietDisclosure><p className="household-next"><Link href={`/guide?place=${regionId}`}>Buyer’s guide for {name} <span aria-hidden="true">→</span></Link><span>Start with this place, then add your household details.</span></p></>;
 
   return (
     <>
@@ -509,7 +514,7 @@ export default async function RegionPage({
           )}
           {/* The short answers in the line, the sentences behind them a click away: the
               answer is what a reader came for, the working what some go on to. */}
-          {paid && answers && (
+          {!quiet && paid && answers && (
             <details className="verdict-details">
               <summary className="disclose">
                 <span className="verdict-details-label">Did paychecks keep up?</span>
@@ -577,10 +582,13 @@ export default async function RegionPage({
       )}
       </QuietAnchor>
 
-      {persistence && (
-      <QuietDisclosure enabled={quiet} title="Is this unusual for here?" note="Home prices against income, against the county's own past">
+      {(persistence || (quiet && paid && answers)) && (
+      <div id="local-price-history" data-jump-label="Prices & paychecks over time">
+      <QuietDisclosure enabled={quiet} title="Prices & paychecks over time" note="Did income keep up? Compare the place with its own past.">
+        {quiet && paid && answers && <div className="local-paychecks"><p className="local-paychecks-heading">Did paychecks keep up? <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p><p>{paid}</p></div>}
         <HowUnusual name={name} data={persistence} />
       </QuietDisclosure>
+      </div>
       )}
 
       {!quiet && householdContent}
@@ -631,12 +639,21 @@ export default async function RegionPage({
       </QuietAnchor>
       {quiet && !cost && householdContent}
 
+      {quiet && homeChecks}
+
+      <section id="housing-assistance" className="local-housing-help" aria-labelledby="local-help-heading">
+        <h2 id="local-help-heading">Housing help</h2>
+        <nav className="local-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><small>{route.agency}</small><strong>{route.label} <span aria-hidden="true">↗</span></strong><span>{route.note}</span></a>)}</nav>
+        <p className="table-note">Check eligibility, vacancies and waiting lists with the administrator.</p>
+        <HousingHelpDisclosure enabled={quiet}><AffordableHousing data={housingHelp} hideRoutes /></HousingHelpDisclosure>
+      </section>
+
       {!quiet && homeChecks}
 
       {(construction.some((series) => series.length > 0) ||
         (packet.levels.some((level) => level.metric_id === "sr1a_median_sale_price") &&
           packet.levels.some((level) => level.metric_id === "sr1a_sales_count"))) && (
-      <QuietDisclosure enabled={quiet} title="The local market" note="Homes sold, new building and the detail behind them">
+      <QuietDisclosure enabled={quiet} title="The local market" note={marketPreview || "Homes sold, new building and the detail behind them"}>
       <section className="local-page-group local-market" aria-labelledby="local-market-heading">
       <h2 id="local-market-heading">Local market</h2>
       <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} />
@@ -660,7 +677,7 @@ export default async function RegionPage({
       </QuietDisclosure>
       )}
 
-      <MoreExpander id="region-detailed-data" title={moreTitle} sub={`For the full picture: ${listed(contents)}.`}>
+      <MoreExpander id="region-detailed-data" title={moreTitle} sub={quiet ? "Figures, trends & sources. Explore the detail." : `For the full picture: ${listed(contents)}.`}>
         {hasDownloadableFigures([...packet.metrics, ...packet.levels]) && (
           <p className="data-download-line">
             <DataDownload

@@ -19,6 +19,21 @@
   .quiet-county .cost-evidence { padding-block: .85rem; }
   .quiet-county .cost-evidence-item p { line-height: 1.65; }
   .quiet-county .quiet-tool-group { padding-top: .9rem; }
+  .quiet-county.atlas-local .quiet-tool-group { background: light-dark(#f0f1f2, #252629); }
+  .quiet-county.atlas-local .quiet-tool-group > .abstract-field { opacity: .035; }
+  .quiet-county.atlas-local .page-head { display: block; }
+  .quiet-county.atlas-local .page-head > .actions { position: static; display: flex; justify-content: flex-end; flex-wrap: wrap; width: 100%; }
+  .local-housing-help { margin-block: var(--section-space); }
+  .local-housing-help > h2 { font: 500 clamp(24px, 3vw, 32px)/1.2 Georgia, serif; margin-bottom: .8rem; }
+  .local-help-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
+  .local-help-links a { display: grid; align-content: start; gap: .45rem; padding: .85rem; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-card); color: var(--text-primary); text-decoration: none; }
+  .local-help-links small { font: 500 10px/1.4 var(--font-mono); color: var(--text-secondary); }
+  .local-help-links strong { font-size: 14px; line-height: 1.4; font-weight: 550; }
+  .local-help-links a > span { font-size: 12px; line-height: 1.5; color: var(--text-secondary); }
+  .local-paychecks-heading { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+  .local-paychecks > p { line-height: 1.65; }
+  .quiet-county.atlas-local .quiet-check-topics { display: flex; flex-wrap: wrap; gap: .7rem 1.2rem; }
+  @media (max-width: 600px) { .local-help-links { grid-template-columns: minmax(0, 1fr); } .local-help-links a { grid-template-columns: minmax(0, 1fr); gap: .25rem; padding: .65rem .8rem; } }
   .quiet-county .quiet-tool-group > h3 { margin-bottom: .4rem; }
   .quiet-county .quiet-tool-group .quiet-disclosure > summary { min-height: 48px; padding-block: .7rem; }
   .quiet-disclosure-copy { min-width: 0; }
