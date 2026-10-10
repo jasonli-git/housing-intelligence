@@ -158,6 +158,10 @@
   .coverage-search-stage[data-exploring="false"] .coverage-atlas-guides { display: block; }
   .atlas-guide-line { opacity: .18; }
   .atlas-travelling-line { stroke-dasharray: .08 .92; animation: atlas-travel 14s linear infinite; opacity: .38; }
+  .coverage-atlas-traces { display: none; fill: none; stroke: var(--entry-accent); stroke-width: 1; opacity: .6; pointer-events: none; }
+  .coverage-search-stage[data-exploring="false"] .coverage-atlas-traces { display: block; }
+  .coverage-atlas-traces path { stroke-dasharray: .15 .85; animation: atlas-travel 20s linear infinite; }
+  .coverage-atlas-traces path[data-available="true"] { stroke: var(--state-blue); }
   @keyframes atlas-outline-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
   @keyframes atlas-travel { from { stroke-dashoffset: 1; } to { stroke-dashoffset: -1; } }
   .coverage-search-overlay { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 1.5rem; background: radial-gradient(ellipse at center, var(--surface-card) 0%, var(--surface-card) 22%, transparent 68%); }
@@ -183,6 +187,8 @@
     .coverage-map-content, .coverage-unavailable, .coverage-state-top, .coverage-state-wall, .coverage-state-shadow, .coverage-land { transition: none; }
     .coverage-search-stage[data-exploring="false"] .coverage-unavailable, .coverage-search-stage[data-exploring="false"] .coverage-state-top, .atlas-travelling-line { animation: none; }
     .atlas-travelling-line { opacity: .15; }
+    .coverage-atlas-traces { display: none !important; }
+    .coverage-atlas-traces path { animation: none; }
   }
   .foot .notice-external-icon { flex: none; width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
   .foot-policy-links { display: flex; flex-wrap: wrap; gap: .1rem 1rem; }

@@ -6,6 +6,7 @@
 - Remove the separate upper search and “Try Princeton or 07030” text. Keep the concise coverage limit and direct New Jersey entry visible.
 - Render “Detailed coverage available now” in the neutral secondary text colour, distinct from New Jersey's blue link.
 - Approved visual follow-up supersedes the initial blurred-map treatment: remove blur and the foreground panel border/shadow. Render the same state geometry as a fine-line, stippled atlas behind the integrated search. State boundaries trace once on entering search mode; a slow decorative line loops across the composition. New Jersey retains blue. Rename the action “Explore the map” and add a native SVG map icon.
+- Subsequent motion refinement: keep complete base outlines visible while a lighter boundary accent continually traces each state over 20 seconds. The existing travelling line also loops. Both stop in exploration mode and reduced-motion preferences retain the static atlas. No metric animation or search-centered whole-page rearrangement implemented; those remain design discussion.
 
 ## Files/modules affected
 
@@ -38,6 +39,7 @@
 
 ## Verification
 
+- Perpetual-trace follow-up: typecheck passed; all 562 tests across 79 files passed; build exported 2,386 pages. Focused UI checks and the full accessibility interaction audit passed, including infinite boundary tracing and reduced-motion static-atlas assertions. `git diff --check` passed. No production deployment, metric animation or whole-page layout rearrangement.
 - `npm run typecheck` — passed.
 - `npm test` — 556 tests passed across 78 files.
 - `npm run build` — passed; 2,386 static pages, using the running local API. Port 3002 serves the updated export; no production deployment.

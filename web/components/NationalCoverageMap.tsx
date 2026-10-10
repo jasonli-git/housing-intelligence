@@ -200,6 +200,7 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
             <path className="coverage-state-top" pathLength="1" d={state.top} />
           </a> : <path key={state.id} className="coverage-unavailable" pathLength="1" d={state.base} aria-hidden="true" onMouseEnter={() => setHovered(`${state.name} · Not available yet`)}><title>{state.name} — Not available yet</title></path>;
         })}
+        <g className="coverage-atlas-traces" aria-hidden="true">{drawing.states.map(state => <path key={state.id} d={state.id === "NJ" ? state.top : state.base} pathLength="1" data-available={state.id === "NJ"} />)}</g>
         </g>
         </g>
         <g className="coverage-atlas-guides" aria-hidden="true">
