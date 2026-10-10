@@ -18,6 +18,7 @@
 
 import type { IncomeLimits } from "./household";
 import type { AffordableHousing } from "./affordableHousing";
+import { annualHomePriceChange, annualHomePriceTrend, mortgageRateTrend } from "./nationalBenchmarks";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -778,6 +779,23 @@ function nationalRateSeries(metricId: string): Promise<Observation[] | null> {
     nationalRates.set(metricId, series);
   }
   return series;
+}
+
+/** A calculated annual change from the exact monthly national FHFA index series. */
+export async function nationalHomePriceChange() {
+  return annualHomePriceChange((await nationalRateSeries("fhfa_hpi_us_monthly")) ?? []);
+}
+
+/** Reuses the cached national series; the rate chart always matches the headline's basis. */
+export async function nationalBenchmarkTrends(rateMetricId?: string) {
+  const [prices, rates] = await Promise.all([
+    nationalRateSeries("fhfa_hpi_us_monthly"),
+    rateMetricId ? nationalRateSeries(rateMetricId) : Promise.resolve(null),
+  ]);
+  return {
+    prices: annualHomePriceTrend(prices ?? []),
+    rates: mortgageRateTrend(rates ?? [], rateMetricId === "mortgage_rate_30y_weekly"),
+  };
 }
 
 /**

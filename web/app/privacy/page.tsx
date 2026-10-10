@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { Crumbs } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
+import { SectionJump } from "@/components/SectionJump";
 import { dayLabel } from "@/lib/freshness";
 import { CONTACT_EMAIL, OPERATOR, POLICIES_UPDATED, PRIVACY_EMAIL } from "@/lib/site";
 import { pageMetadata } from "@/lib/meta";
@@ -34,6 +35,7 @@ export default function PrivacyPage() {
             <Crumbs trail={[{ href: "/", label: "United States" }]} here="Privacy policy" />
             <h1 className="page-title">Privacy policy</h1>
             <p className="meta">Last updated {dayLabel(POLICIES_UPDATED)}. See also the <Link href="/terms">terms of use</Link>.</p>
+            <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>
           </div>
         </header>
 

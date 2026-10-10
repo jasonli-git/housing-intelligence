@@ -1,12 +1,11 @@
 """FHFA House Price Index.
 
 `hpi_master.csv` is FHFA's combined file: every index flavor, frequency, and geography
-level in one 17MB CSV. Only the state-level purchase-only seasonally-adjusted quarterly
-series is used, filtered downstream in dbt rather than here, because landing stays dumb
-(ARCHITECTURE, Pipeline).
+level in one 17MB CSV. State quarterly indexes and the national monthly purchase-only
+series are selected downstream in dbt rather than here, because landing stays dumb.
 
 County-level HPI is a separate annual "developmental" workbook, read by
-`HpiCountyAdapter` below since Milestone 52; `hpi_master.csv` offers state level only.
+`HpiCountyAdapter` below since Milestone 52.
 """
 
 from __future__ import annotations

@@ -1,11 +1,11 @@
 /* State-led information architecture: truthful national coverage, a full NJ profile. */
 .nation-page, .nj-page { --entry-ink: light-dark(#174a6b, #bddcf3); --entry-accent: var(--state-blue); }
 .nation-page { --entry-ink: light-dark(#34312d, #ebe6dc); --entry-accent: light-dark(#6e655b, #c7beb0); }
-.nation-page > .nation-head { --kind: var(--entry-accent); }
+.nation-page .nation-head { --kind: var(--entry-accent); }
 /* The atlas is neutral; its available state destinations retain their blue identity. */
 .coverage-state-preview, .coverage-mobile-link { --entry-ink: light-dark(#174a6b, #bddcf3); --entry-accent: var(--state-blue); }
 .entry-kicker { margin: 0 0 .6rem; color: var(--entry-accent); font: 600 10px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
-.nation-page > .nation-head { display: block; padding-block: 2.3rem 2rem; }
+.nation-page .nation-head { display: block; padding-block: 2.3rem 2rem; }
 .nation-head h1 { margin: 0; color: var(--entry-ink); font-size: clamp(50px, 8vw, 106px); letter-spacing: -.07em; line-height: 1; }
 .entry-introduction { max-width: 35ch; margin: 1.2rem 0 .7rem; font: 550 clamp(22px, 3vw, 34px)/1.2 var(--font-display); letter-spacing: -.035em; }
 .entry-context { max-width: 65ch; color: var(--text-secondary); margin: 0; }

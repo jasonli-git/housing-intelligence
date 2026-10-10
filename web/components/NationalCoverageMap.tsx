@@ -6,11 +6,15 @@ import { useRouter } from "next/navigation";
 import { unpack, type PackedOutline } from "@/lib/mapdata";
 import { scene, type Outline } from "@/lib/globe";
 import { WORLD_LAND } from "@/lib/worldLand";
+import { PlaceSearch } from "@/components/PlaceSearch";
 import { boundCoverage, COVERAGE_HOME, COVERAGE_REGIONS, coverageScene, regionViewport, STATE_DESTINATIONS, zoomCoverage, type CoverageRegion, type CoverageViewport } from "@/lib/coverageMap";
 
 /** Zoomable coverage geometry without continuous reprojection or local-data downloads. */
-export function NationalCoverageMap() {
+export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boolean }) {
   const router = useRouter();
+  const [exploring, setExploring] = useState(!searchFirst);
+  const entry = useRef<HTMLDivElement>(null);
+  const modeChanged = useRef(false);
   const stage = useRef<HTMLDivElement>(null);
   const geography = useRef<SVGGElement>(null);
   const flight = useRef<{ animation: Animation; timer: ReturnType<typeof setTimeout> } | null>(null);
@@ -23,6 +27,16 @@ export function NationalCoverageMap() {
   const [dragging, setDragging] = useState(false);
   const drag = useRef<{ id: number; x: number; y: number; start: CoverageViewport; pixels: number; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
+
+  useEffect(() => {
+    if (!modeChanged.current) return;
+    const target = exploring ? entry.current?.querySelector<SVGSVGElement>(".coverage-map")
+      ?? entry.current?.querySelector<HTMLButtonElement>(".coverage-search-return")
+      : entry.current?.querySelector<HTMLInputElement>(".place-search input");
+    target?.focus({ preventScroll: true });
+  }, [exploring]);
+
+  const changeMode = (next: boolean) => { modeChanged.current = true; setExploring(next); };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -112,6 +126,12 @@ export function NationalCoverageMap() {
   const locator = drawing ? [viewport.x + drawing.locator[0] * viewport.scale, viewport.y + drawing.locator[1] * viewport.scale] : null;
 
   return <div className="coverage-atlas">
+    <div ref={entry} className="coverage-search-stage" data-search-first={searchFirst} data-exploring={exploring}>
+    {searchFirst && <div className="coverage-mode-switch" role="group" aria-label="Find a place by search or map">
+      <button className="coverage-search-return" type="button" aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>Search places</button>
+      <button className="coverage-explore-button" type="button" aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>Explore map</button>
+    </div>}
+    <div id="coverage-map-content" className="coverage-map-content" inert={!exploring} aria-hidden={!exploring}>
     <div className="coverage-region-bar">
       <span>Look closer</span>
       <div role="group" aria-label="Browse map by Census region">
@@ -169,6 +189,9 @@ export function NationalCoverageMap() {
         }}>
         <title id="coverage-map-title">Explore housing coverage by state</title>
         <desc id="coverage-map-description">New Jersey is blue and available. All other states are unavailable. Alaska and Hawaii are outside this view. Zoom with the buttons; drag the enlarged map, or swipe sideways on mobile. Vertical scrolling moves the page. Use the New Jersey link to explore.</desc>
+        <defs>
+          <pattern id="coverage-atlas-stipple" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".55" /></pattern>
+        </defs>
         <g ref={geography} className="coverage-geography">
         <g className="coverage-viewport" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})` }}>
         <g className="coverage-land" aria-hidden="true">{land.map((part) => <path key={part.id} d={part.base} />)}</g>
@@ -177,10 +200,16 @@ export function NationalCoverageMap() {
           return destination ? <a key={state.id} href={destination} onClick={enterState} aria-label={`Explore ${state.name} housing data`} className="coverage-available" onFocus={() => setHovered(`${state.name} · Available now`)} onMouseEnter={() => setHovered(`${state.name} · Available now`)}>
             <path className="coverage-state-shadow" d={state.base} />
             <path className="coverage-state-wall" d={state.walls} />
-            <path className="coverage-state-top" d={state.top} />
-          </a> : <path key={state.id} className="coverage-unavailable" d={state.base} aria-hidden="true" onMouseEnter={() => setHovered(`${state.name} · Not available yet`)}><title>{state.name} — Not available yet</title></path>;
+            <path className="coverage-state-top" pathLength="1" d={state.top} />
+          </a> : <path key={state.id} className="coverage-unavailable" pathLength="1" d={state.base} aria-hidden="true" onMouseEnter={() => setHovered(`${state.name} · Not available yet`)}><title>{state.name} — Not available yet</title></path>;
         })}
+        <g className="coverage-atlas-traces" aria-hidden="true">{drawing.states.map(state => <path key={state.id} d={state.id === "NJ" ? state.top : state.base} pathLength="1" data-available={state.id === "NJ"} />)}</g>
         </g>
+        </g>
+        <g className="coverage-atlas-guides" aria-hidden="true">
+          <path className="atlas-guide-line" d="M38 393H862M86 44V425M814 44V425" />
+          <path className="atlas-guide-line" d="M72 393v-10m28 10v-5m28 5v-5m28 5v-10m28 10v-5m28 5v-5M688 393v-10m28 10v-5m28 5v-5m28 5v-10m28 10v-5m28 5v-5" />
+          <path className="atlas-travelling-line" pathLength="1" d="M45 295C180 60 375 55 530 188S740 325 855 138" />
         </g>
         {locator && locator[0] > 0 && locator[0] < 900 && locator[1] > 0 && locator[1] < 480 && drawing.states.some((state) => state.id === "NJ") && <a href={STATE_DESTINATIONS.NJ} onClick={enterState} className="coverage-locator" aria-label="Explore New Jersey housing data">
           <path d={`M${locator[0]},${locator[1]} L${locator[0] - 26},${locator[1] - 48} H${locator[0] - 154}`} />
@@ -213,9 +242,16 @@ export function NationalCoverageMap() {
       </div>
       <div className="coverage-map-foot"><span>{hovered}</span><span><i aria-hidden="true" />Blue = available{viewport.scale > 1 && " · Drag or use move buttons"}</span></div>
     </div>
+    </div>
+    {searchFirst && <div id="coverage-place-search" className="coverage-search-overlay" hidden={exploring}>
+      <div className="coverage-search-panel">
+        <PlaceSearch variant="hero" />
+        <p className="home-find-hint">Detailed coverage starts with New Jersey.</p>
+      </div>
+    </div>}
+    </div>
     <div className="coverage-state-preview">
-      <div><p className="entry-kicker">Detailed coverage available now</p><h3>New Jersey</h3><p>Counties, towns and ZIP codes.</p></div>
-      <Link href="/states/new-jersey" className="coverage-state-action">Explore New Jersey <span aria-hidden="true">↗</span></Link>
+      <div><p className="entry-kicker">Detailed coverage available now</p><h3><Link href="/states/new-jersey" className="coverage-state-title">New Jersey <span aria-hidden="true">→</span></Link></h3><p>Counties, towns and ZIP codes.</p></div>
     </div>
     <p className="coverage-map-note">Regions help you browse the map. Only New Jersey has published housing pages. Alaska and Hawaii are outside this view.</p>
   </div>;

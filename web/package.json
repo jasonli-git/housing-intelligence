@@ -12,6 +12,7 @@
     "test": "vitest run",
     "check:a11y": "node scripts/check-accessibility.mjs",
     "check:a11y:interactions": "node scripts/check-accessibility-interactions.mjs",
+    "check:ui-refinement": "node scripts/check-ui-refinement.mjs",
     "check:a11y:serve": "node scripts/serve-accessibility.mjs"
   },
   "dependencies": {

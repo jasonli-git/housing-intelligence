@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { Masthead } from "@/components/Masthead";
-import { nationalMortgageRate } from "@/lib/api";
+import { nationalBenchmarkTrends, nationalHomePriceChange, nationalMortgageRate } from "@/lib/api";
+import { NationalTrend } from "@/components/NationalTrend";
 import { periodLabel } from "@/lib/periods";
 import { pageMetadata } from "@/lib/meta";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
-import { PlaceSearch } from "@/components/PlaceSearch";
 import "./housing-entry.css";
 import "./state-navigation.css";
 
@@ -16,10 +16,12 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default async function HousingLandingPage() {
-  const rate = await nationalMortgageRate();
+  const [rate, homePrices] = await Promise.all([nationalMortgageRate(), nationalHomePriceChange()]);
+  const trends = await nationalBenchmarkTrends(rate?.metric_id);
   return <>
     <Masthead affordability={{ kind: "hidden" }} search={false} />
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
+      <div className="landing-canvas">
       <header className="page-head nation-head" data-kind="nation">
         <svg className="nation-portrait" viewBox="0 0 360 300" fill="none" aria-hidden="true">
           <circle className="portrait-halo" cx="185" cy="157" r="123" />
@@ -31,21 +33,34 @@ export default async function HousingLandingPage() {
         <p className="entry-kicker">A public data project</p>
         <h1>Housing Intelligence</h1>
         <p className="entry-introduction">A clearer picture of the place you could call home.</p>
-        <section className="home-find" aria-labelledby="home-find-heading">
-          <h2 id="home-find-heading">Find your place</h2>
-          <PlaceSearch variant="hero" />
-          <p className="home-find-hint">Any state, county, town or ZIP code the site covers. Detailed coverage starts with New Jersey: try NJ, Princeton or 07030. <a href="#coverage-heading">Or browse the map ↓</a></p>
-        </section>
-        <p className="entry-free computed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free to use · No fees. No subscription. Definitely no ads.</span></p>
+        <p className="entry-free computed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees, subscriptions or ads</span></p>
       </header>
-      <section className="coverage-entry coverage-entry-map" aria-labelledby="coverage-heading">
-        <header><p className="entry-kicker">United States · Explore by state</p><h2 id="coverage-heading">Browse by state</h2></header>
-        <NationalCoverageMap />
+      <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
+        <NationalCoverageMap searchFirst />
       </section>
-      <section className="national-context" aria-labelledby="national-context-heading">
-        <div><h2 id="national-context-heading">National borrowing benchmark</h2><p>National average—not a lender quote.</p></div>
-        {rate ? <div className="national-rate"><strong>{rate.value.toFixed(2)}%</strong><FloatingMetricTerm metricId={rate.metric_id} label="30-year fixed mortgage" /><small>Freddie Mac · {periodLabel(rate.period_start, rate.metric_id)}</small></div> : <p>Mortgage-rate data is unavailable in this snapshot.</p>}
+      <section className="national-backdrop" aria-labelledby="national-backdrop-heading">
+        <header><h2 id="national-backdrop-heading">The national backdrop</h2><span>United States</span></header>
+        <div className="national-backdrop-grid">
+          <section className="national-benchmark" aria-labelledby="national-context-heading">
+            <h3 id="national-context-heading">30-year mortgage rate</h3>
+            {rate ? <>
+              <div className="national-rate"><strong>{rate.value.toFixed(2)}%</strong><small><a href="https://www.freddiemac.com/pmms" target="_blank" rel="noreferrer noopener">Freddie Mac</a> · {periodLabel(rate.period_start, rate.metric_id)}</small></div>
+              <div className="national-benchmark-definition"><FloatingMetricTerm metricId={rate.metric_id} label="National average—not a lender quote" /></div>
+              <NationalTrend points={trends.rates} label="30-year mortgage rate history" metricId={rate.metric_id} frequency={rate.metric_id === "mortgage_rate_30y_weekly" ? "Weekly" : "Monthly"} />
+            </> : <p>Mortgage-rate data is unavailable in this snapshot.</p>}
+          </section>
+          <section className="national-benchmark" aria-labelledby="national-home-prices-heading">
+            <h3 id="national-home-prices-heading">Home prices · past year</h3>
+            {homePrices ? <>
+              <div className="national-rate"><strong>{homePrices.pct_change > 0 ? "+" : ""}{homePrices.pct_change.toFixed(1)}%</strong><small>{periodLabel(homePrices.period_start, "fhfa_hpi_us_monthly")} → {periodLabel(homePrices.period_end, "fhfa_hpi_us_monthly")} · <a href="https://www.fhfa.gov/data/hpi/datasets?tab=monthly-data" target="_blank" rel="noreferrer noopener">FHFA HPI®</a></small></div>
+              <div className="national-benchmark-definition"><FloatingMetricTerm metricId="fhfa_hpi_us_monthly" label="Annual change · Single-family homes" definition="Calculated from FHFA’s national purchase-only house price index: the latest published month compared with the same month a year earlier. Seasonally adjusted, not adjusted for inflation. Covers homes financed with mortgages bought or securitized by Fannie Mae or Freddie Mac—not every home or your home's value. The plot shows annual percentage changes for successive months, not index levels. Historical figures may be revised." why={null} /></div>
+              <NationalTrend points={trends.prices} label="Annual home-price change history" metricId="fhfa_hpi_us_monthly" frequency="Monthly" />
+            </> : <p>A full year of comparable home-price data is unavailable.</p>}
+          </section>
+        </div>
+        <p className="national-backdrop-note">Each trend uses its own scale. Historical figures, not forecasts.</p>
       </section>
+      </div>
     </main>
   </>;
 }

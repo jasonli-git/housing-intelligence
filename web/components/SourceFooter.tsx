@@ -173,21 +173,26 @@ export async function SourceFooter() {
           </div>
         </nav>
 
-        <div className="foot-notice">
-          <svg viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M10 2.5 16 5v4.4c0 3.8-2.3 6.6-6 8.1-3.7-1.5-6-4.3-6-8.1V5Z" />
-            <path d="M7.2 10.1 9.1 12l3.8-4" />
-          </svg>
-          <div className="foot-notice-copy">
+        <section className="foot-notice" aria-label="Code and data terms">
+          <div className="foot-notice-head">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M10 2.5 16 5v4.4c0 3.8-2.3 6.6-6 8.1-3.7-1.5-6-4.3-6-8.1V5Z" />
+              <path d="M7.2 10.1 9.1 12l3.8-4" />
+            </svg>
             <a
-              className="foot-tab"
+              className="foot-tab foot-notice-title"
               href={NOTICE_URL}
               rel="noreferrer noopener"
               target="_blank"
               title="The full terms for the site's code and data, on GitHub"
             >
-              Notice <span aria-hidden="true">↗</span>
+              Notice
+              <svg className="notice-external-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path d="M9.5 2.5h4v4M13.5 2.5 7 9M6.5 3.5h-4v10h10v-4" />
+              </svg>
             </a>
+          </div>
+          <nav className="foot-policy-links" aria-label="Site policies">
             <Link className="foot-tab" href="/terms">
               Terms of use
             </Link>
@@ -203,18 +208,18 @@ export async function SourceFooter() {
             >
               License: AGPL-3.0 <span aria-hidden="true">↗</span>
             </a>
-            {/* AGPL section 13: a site running this code offers its users the source. */}
-            <span className="foot-intro">
-              The code is free software under the GNU Affero General Public License v3.0, and{" "}
-              <a href={REPO_URL} rel="noreferrer noopener" target="_blank">
-                its source is public
-              </a>
-              . The data is not ours to relicense, and this site cannot grant terms it was not
-              given. Questions or corrections:{" "}
-              <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
-            </span>
-          </div>
-        </div>
+          </nav>
+          {/* AGPL section 13: a site running this code offers its users the source. */}
+          <p className="foot-intro">
+            The code is free software under the GNU Affero General Public License v3.0, and{" "}
+            <a href={REPO_URL} rel="noreferrer noopener" target="_blank">
+              its source is public
+            </a>
+            . The data is not ours to relicense, and this site cannot grant terms it was not
+            given. Questions or corrections:{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+          </p>
+        </section>
       </div>
     </footer>
   );

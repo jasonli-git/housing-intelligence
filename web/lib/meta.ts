@@ -10,10 +10,10 @@ import { SITE_NAME } from "@/lib/site";
  * image, site name and card size included. Rendered by `scripts/make-site-images.mjs`.
  */
 const PREVIEW = {
-  url: "/og-image.png",
+  url: "/housing-preview.png",
   width: 1200,
   height: 630,
-  alt: "Housing: New Jersey housing data, every figure traced to its source",
+  alt: "Housing Intelligence — a clearer picture of the place you could call home. Free housing data, traced to its sources.",
 };
 export const SHARE_DEFAULTS = {
   openGraph: { siteName: SITE_NAME, type: "website" as const, locale: "en_US", images: [PREVIEW] },

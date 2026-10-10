@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AffordExplorer } from "@/components/AffordExplorer";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
+import { SectionJump } from "@/components/SectionJump";
 import { affordData } from "@/lib/affordData";
 import { pageMetadata } from "@/lib/meta";
 
@@ -56,6 +57,7 @@ export default async function AffordPage() {
           <p className="meta">
             A budget, a place, a clearer starting point. Compare typical housing costs in New Jersey.
           </p>
+          <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>
         </div>
       </header>
       <AffordExplorer

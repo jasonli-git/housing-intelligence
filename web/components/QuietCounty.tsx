@@ -12,6 +12,9 @@ export function QuietCheckTopics() {
     {label: "Flood exposure", path: "M3 18Q7 14 11 18T19 18M3 23Q7 19 11 23T19 23M6 12V7L12 2L18 7V12"},
     {label: "Ground & water", path: "M12 2C10 6 5 11 5 15A7 7 0 0 0 19 15C19 11 14 6 12 2ZM2 25H22M5 29H19"},
     {label: "Property tax", path: "M5 2H19V28L15 25L12 28L9 25L5 28ZM9 8H15M9 13H15M9 18H13"},
+    {label: "Schools", path: "M3 12L12 5L21 12L12 19ZM6 15V23H18V15"},
+    {label: "Internet", path: "M2 10Q12 0 22 10M5 15Q12 8 19 15M9 20Q12 17 15 20M12 25V26"},
+    {label: "Getting around", path: "M5 4H19V23H5ZM8 23V27M16 23V27M8 9H16M8 16H16"},
   ];
   return <div className="quiet-check-topics">{topics.map((t) => <span key={t.label}><svg viewBox="0 0 24 32" fill="none" aria-hidden="true"><path d={t.path} /></svg>{t.label}</span>)}</div>;
 }
@@ -23,7 +26,7 @@ export function QuietAnchor({ enabled, id, children }: { enabled: boolean; id: s
 export function QuietToolGroup({ enabled, children }: { enabled: boolean; children: ReactNode }) {
   return enabled ? <div className="quiet-tool-group" role="group" aria-label="Your household and buying plans">
     <AbstractField kind="household" />
-    <h3>Your household &amp; buying plans</h3>{children}
+    <h3>Make it yours</h3>{children}
   </div> : <>{children}</>;
 }
 
@@ -32,8 +35,9 @@ export function QuietDisclosure({ enabled, title, note, children }: {
   enabled: boolean; title: string; note?: string; children: ReactNode;
 }) {
   if (!enabled) return <>{children}</>;
-  return <details className="quiet-disclosure">
-    <summary>{title === "The local market" && <AbstractField kind="architecture" />}<span>{title}{note && <small>{note}</small>}</span><span className="quiet-plus" aria-hidden="true">+</span></summary>
+  const treatment = title === "Prices & paychecks over time" ? "history" : title === "The local market" ? "market" : title === "Who is moving here" ? "migration" : undefined;
+  return <details className="quiet-disclosure" data-treatment={treatment}>
+    <summary>{title === "The local market" && <AbstractField kind="architecture" />}<span className="quiet-disclosure-copy"><span className="quiet-disclosure-title">{title}</span>{note && <small>{note}</small>}</span><span className="quiet-plus" aria-hidden="true">+</span></summary>
     <div className="quiet-disclosure-body">{children}</div>
   </details>;
 }

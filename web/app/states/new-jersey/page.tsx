@@ -8,9 +8,13 @@ import { StateOverview } from "@/components/StateOverview";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { MoreExpander } from "@/components/MoreExpander";
 import { AffordableHousing } from "@/components/AffordableHousing";
+import { APPLICATION_ROUTES } from "@/lib/affordableHousing";
 import { HomeSales } from "@/components/HomeSales";
 import { HomesAdded } from "@/components/HomesAdded";
 import { HowUnusual } from "@/components/HowUnusual";
+import { MortgageLending } from "@/components/MortgageLending";
+import { GettingAround } from "@/components/GettingAround";
+import { StateBroadband } from "@/components/StateBroadband";
 import { QuietProfile } from "@/components/QuietCounty";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
@@ -65,6 +69,9 @@ export default async function NewJerseyPage() {
   const housingHelp = state ? await api.affordableHousing(state.region_id) : null;
   // Milestone 52: today's price-to-income against the state's own history.
   const persistence = state ? await api.persistence(state.region_id) : null;
+  const [packet, destinations, community] = state ? await Promise.all([
+    api.packet(state.region_id, "5y"), api.workDestinations(state.region_id), api.community(state.region_id),
+  ]) : [null, null, null];
   const construction = await Promise.all(["permits_total_units", "nj_units_certified", "nj_units_demolished", "nj_net_units_added"].map(
     async (metric) => state ? (await api.observations(state.region_id, metric))?.observations ?? [] : [],
   ));
@@ -175,14 +182,14 @@ export default async function NewJerseyPage() {
             <ComputedBadge />
           </div>
         </div>
-        <a className="nj-atlas-entry" href="#nj-explore">
-          <span className="nj-atlas-count">{countyRegions?.total ?? 0}<span>counties</span></span>
-          <span className="nj-atlas-entry-label">Find your place <span aria-hidden="true">↘</span></span>
-        </a>
       </header>
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
         <details className="state-extra-figures"><summary>More statewide figures <span aria-hidden="true">＋</span></summary>
           <QuietProfile statewide allMetrics items={stateProfile(levels.filter((level) => ["fhfa_hpi", "fhfa_hpi_all_transactions", "nj_effective_tax_rate", "sr1a_median_price_per_sqft", "sr1a_median_year_built_sold", "water_homes_share_public"].includes(level.metric_id)), statewide?.headlines ?? [])} />
+          <div className="state-extra-market">
+            <details><summary>How homes sell here</summary><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} /></details>
+            <details><summary>Building &amp; demolition</summary><HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} portrait /></details>
+          </div>
         </details>
       </StateOverview>
 
@@ -193,11 +200,20 @@ export default async function NewJerseyPage() {
             initial={initial ?? DEFAULT_MEASURE}
           />
       </div>
-      <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Sales, building activity and every available state figure, with dates and definitions.">
-        <div id="housing-assistance"><AffordableHousing data={housingHelp} /></div>
-        <HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait />
-        <HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} portrait />
-        <HowUnusual name="New Jersey" data={persistence} />
+      <div className="state-history-exhibit"><HowUnusual name="New Jersey" data={persistence} exhibit />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</div>
+      <section id="housing-assistance" className="state-housing-help" aria-labelledby="state-help-heading">
+        <h2 id="state-help-heading">Housing help</h2>
+        <nav className="state-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><small>{route.agency}</small><strong>{route.label} <span aria-hidden="true">↗</span></strong><span>{route.note}</span></a>)}</nav>
+        <p className="state-help-caveat">Check availability and eligibility with the administrator; these links do not confirm an open waiting list or vacancy.</p>
+        <details className="state-help-details"><summary>Programmes, reported homes &amp; sources</summary><AffordableHousing data={housingHelp} hideRoutes /></details>
+      </section>
+      <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Every available state figure, with dates, definitions and sources.">
+        <section className="state-supporting-context" aria-labelledby="state-context-heading">
+          <h2 id="state-context-heading">More statewide context</h2>
+          <details><summary>How buyers finance homes <small>Published mortgages—not today’s offers</small></summary>{packet ? <MortgageLending name="New Jersey" levels={packet.levels} /> : <p>Mortgage records are unavailable in this snapshot.</p>}</details>
+          <details><summary>Where residents work <small>Job destinations &amp; transit proximity</small></summary>{packet ? <GettingAround name="New Jersey" level="state" levels={packet.levels} destinations={destinations} /> : <p>Work and transit figures are unavailable in this snapshot.</p>}</details>
+          <details><summary>Broadband availability <small>FCC statewide summary</small></summary><StateBroadband data={community} /></details>
+        </section>
         <section className="section" aria-labelledby="state-figures-heading">
           <div className="section-head"><h2 id="state-figures-heading">All statewide figures</h2></div>
           <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally"><table className="state-figures">

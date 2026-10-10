@@ -106,6 +106,7 @@ export const KINDS: Record<string, RecordType> = {
   chas_renter_cost_burden: "survey",
   chas_renter_severe_burden: "survey",
   fhfa_hpi: "modelled",
+  fhfa_hpi_us_monthly: "modelled",
   fhfa_hpi_all_transactions: "modelled",
   fhfa_hpi_county: "modelled",
   saipe_median_hh_income: "modelled",

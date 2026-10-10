@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { DecisionGuide } from "@/components/DecisionGuide";
 import { Masthead } from "@/components/Masthead";
+import { SectionJump } from "@/components/SectionJump";
 import { api, artifactUrl, nationalMortgageRate } from "@/lib/api";
 import { periodLabel } from "@/lib/periods";
 import { pageMetadata } from "@/lib/meta";
@@ -35,11 +36,15 @@ export default async function GuidePage() {
             />
             <Kind kind="tool" />
             <h1 className="page-title">Before you buy.</h1>
-            <p className="meta">
-              Three questions answered for one place from public records: what it would cost you, whether renting costs
-              less, and what to check before an offer. Every answer is worked out from published figures, never written
-              by a model, and says where each figure comes from and how far it can be trusted.
-            </p>
+            <ul className="guide-question-tagline" aria-label="Questions this guide answers">
+              <li>Can I afford to buy here?</li>
+              <li>Should I rent or buy?</li>
+              <li>What should I check before an offer?</li>
+            </ul>
+            <div className="guide-header-tools">
+              <details className="guide-about"><summary>How this guide works</summary><p className="meta">Add your numbers to published local figures. Answers use fixed calculations, with sources and limits—not AI-written advice.</p></details>
+              <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>
+            </div>
           </div>
         </header>
         {rate ? (

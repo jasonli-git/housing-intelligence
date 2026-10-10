@@ -457,13 +457,23 @@ sources:
   fhfa_hpi:
     release_calendar:
       url: https://www.fhfa.gov/data/hpi
-      checked: 2026-10-02
+      checked: 2026-10-09
       dates:
+        - {day: 2026-10-27, covers: August 2026}
         - {day: 2026-11-24, covers: 2026 Q3}
+        - {day: 2026-12-29, covers: October 2026}
+        - {day: 2027-01-26, covers: November 2026}
         - {day: 2027-02-23, covers: 2026 Q4}
+        - {day: 2027-03-30, covers: January 2027}
+        - {day: 2027-04-27, covers: February 2027}
         - {day: 2027-05-25, covers: 2027 Q1}
+        - {day: 2027-06-29, covers: April 2027}
+        - {day: 2027-07-27, covers: May 2027}
         - {day: 2027-08-31, covers: 2027 Q2}
+        - {day: 2027-09-28, covers: July 2027}
+        - {day: 2027-10-26, covers: August 2027}
         - {day: 2027-11-30, covers: 2027 Q3}
+        - {day: 2027-12-28, covers: October 2027}
     name: House Price Index
     publisher: Federal Housing Finance Agency
     license: Public domain (U.S. Government work)
@@ -474,13 +484,18 @@ sources:
       note: >-
         A U.S. Government work, with no copyright to licence (17 U.S.C. 105); its
         terms set no limit on commercial use.
-    terms_url: https://www.fhfa.gov/data/hpi
-    terms_checked: 2026-09-30
+    terms_url: https://www.fhfa.gov/about/fhfa-policies/website-privacy-policy
+    terms_checked: 2026-10-09
     terms_note: >-
-      The HPI page states no terms; FHFA is a federal agency and its data a U.S. Government work.
+      FHFA HPI FAQ 32 permits reuse with source credit. Website policy sections 10-11
+      describe agency-produced data as public domain, reserve protected marks/seals,
+      and require the non-endorsement notice below. Direct published files, not the API.
+    notices:
+      - "This product uses FHFA data but is neither endorsed nor certified by FHFA."
     url: https://www.fhfa.gov/data/hpi
-    cadence: quarterly
+    cadence: monthly
     adapter: hip.sources.fhfa:HpiAdapter
+    notes: Master file updates monthly; national figures are monthly and state figures remain quarterly.
     fallback: >-
       FRED republishes FHFA's New Jersey series (NJSTHPI).
 
@@ -495,11 +510,14 @@ sources:
       note: >-
         A U.S. Government work, with no copyright to licence (17 U.S.C. 105); its
         terms set no limit on commercial use.
-    terms_url: https://www.fhfa.gov/data/hpi
-    terms_checked: 2026-10-08
+    terms_url: https://www.fhfa.gov/about/fhfa-policies/website-privacy-policy
+    terms_checked: 2026-10-09
     terms_note: >-
-      The HPI page states no terms; FHFA is a federal agency and its data a U.S. Government
-      work. FHFA labels the county indexes developmental and may revise them.
+      FHFA HPI FAQ 32 permits reuse with source credit. Website policy sections 10-11
+      describe agency-produced data as public domain and require the notice below.
+      County indexes are developmental and may be revised. Direct published file.
+    notices:
+      - "This product uses FHFA data but is neither endorsed nor certified by FHFA."
     url: https://www.fhfa.gov/data/hpi/datasets?tab=additional-data
     cadence: annual
     adapter: hip.sources.fhfa:HpiCountyAdapter

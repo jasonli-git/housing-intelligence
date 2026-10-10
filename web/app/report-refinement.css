@@ -1,0 +1,96 @@
+/* Reports retain every figure, caveat and source; density comes from layout. */
+.report-reading-points { margin: .7rem 0; padding-left: 1.2rem; color: var(--text-secondary); font-size: var(--text-small); line-height: 1.5; }
+.report-reading-points li + li { margin-top: .4rem; }
+.report-source-code { font-family: var(--font-mono); }
+small.report-source-code { display: block; color: var(--text-muted); }
+@media screen {
+  .report > .page-head { display: block; padding-bottom: 1rem; }
+  .report > .page-head > .actions { position: static; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: .5rem; margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--border); }
+  .report > .page-head > .actions > * { max-width: 100%; white-space: normal; }
+  .report .page-title { font: 500 clamp(32px, 4vw, 46px)/1.12 Georgia, serif; letter-spacing: -.035em; }
+  .report .verdict { font-size: 17px; line-height: 1.55; }
+  .report > .section > h2, .report .section-head h2 { font-family: Georgia, serif; font-weight: 500; }
+  .report .section-head { flex-wrap: wrap; }
+  .report .doc td { padding-block: .55rem; }
+}
+@media print {
+  @page { margin-top: 12mm; margin-left: 12mm; margin-right: 12mm; }
+  .report { --text-small: 9pt; --text-label: 8pt; --text-body: 10pt; --text-note: 8.5pt; font-size: 10pt; line-height: 1.4; margin: 0; padding: 0; border: 0; }
+  .report > .page-head { display: block; margin: 0 0 9pt; padding: 0 0 8pt; }
+  .report .page-title { font: 500 25pt/1.1 Georgia, serif; margin: 5pt 0; }
+  .report .crumbs, .report .kind { font-size: 8pt; margin: 0; }
+  .report :is(.meta, .muted, .table-note, .section-sub, .src, .verdict-source, .report-reading-points) { font-size: 9pt; line-height: 1.35; }
+  .report .verdict { font-size: 11pt; line-height: 1.4; margin-block: 6pt; }
+  .report .report-reading-points { margin-block: 5pt; }
+  .report > .section { margin-top: 12pt; }
+  .report :is(h2, .section-head h2) { font: 500 16pt/1.2 Georgia, serif; margin: 0 0 6pt; }
+  .report h3 { font-size: 10pt; margin-block: 5pt; break-after: avoid; }
+  .report .section-head { display: block; margin-bottom: 6pt; }
+  .report .doc { width: 100%; min-width: 0; font-size: 9pt; line-height: 1.3; }
+  .report .doc :is(th, td) { padding: 4pt 3pt; white-space: normal; overflow-wrap: anywhere; }
+  .report .doc th { font-size: 8pt; letter-spacing: .03em; }
+  .report .doc .group th { padding-top: 7pt; font-size: 8pt; }
+  .report .doc thead { display: table-header-group; }
+  .report .doc tbody { break-inside: auto; }
+  .report .doc :is(.rank-read, .rank-lead) { font-size: 9pt; line-height: 1.3; }
+  .report .doc :is(.rank-range, .margin, .kind-tag) { font-size: 8pt; line-height: 1.3; }
+  .report .doc .kind-tag { display: inline; margin-left: 3pt; letter-spacing: 0; font-family: var(--font-text); }
+  .report .doc .when { font: 8.5pt/1.3 var(--font-text); }
+  .report .doc .num { white-space: nowrap; overflow-wrap: normal; }
+  .report .cost-card { min-width: 0; }
+  .report .cost-card table { min-width: 0; width: 100%; table-layout: fixed; font-size: 9pt; }
+  .report .cost-card table :is(th, td) { white-space: normal; overflow-wrap: anywhere; }
+  /* Grid/flex fragment poorly in Chromium print: use normal-flow ledgers and
+     keep each label/value pair intact, without making a whole card unbreakable. */
+  .report .cost-lines { display: block; }
+  .report .cost-lines > div { display: table; width: 100%; table-layout: fixed; padding-block: 4pt; break-inside: avoid; }
+  .report .cost-lines :is(dt, dd) { display: table-cell; vertical-align: top; }
+  .report .cost-lines dt { width: 62%; padding-right: 6pt; }
+  .report .cost-lines dt { min-width: 0; }
+  .report .cost-lines dd { white-space: normal; text-align: right; flex-shrink: 0; max-width: 42%; }
+  .report .cost-lines .src { font: 8pt/1.35 var(--font-text); }
+  .report .cost-view { display: block; padding: 8pt; border-radius: 4pt; }
+  .report .cost-view-title { break-after: avoid; }
+  .report .cost-view-figure { display: block; margin-bottom: 4pt; break-inside: avoid; break-after: avoid; }
+  .report .cost-view-figure b { margin-right: 6pt; }
+  .report .cost-view-note { orphans: 2; widows: 2; }
+  .report .cost-view-figure b { font-size: 18pt; }
+  .report .doc tr { break-inside: avoid; }
+  .report .doc tr.group { break-after: avoid; }
+  .report .standout-group-label { break-after: avoid; }
+  /* Inline card rows fragment normally; a grid can strand the preceding heading. */
+  .report .standouts { display: block; break-before: avoid; font-size: 0; }
+  .report .standout { display: inline-block; vertical-align: top; width: calc((100% - 18pt) / 3); margin: 0 6pt 6pt 0; padding: 6pt; font-size: 9pt; border-radius: 4pt; break-inside: avoid; }
+  .report .standout > span { display: block; margin-top: 2pt; }
+  .report .standout-figure { font-size: 16pt; }
+  .report .standout-detail { font-size: 8.5pt; }
+  .report .cost-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8pt; }
+  .report .cost-card { padding: 9pt; border-radius: 4pt; }
+  .report .cost-card .cost-figure { font-size: 24pt; }
+  .report .cost-strip { padding: 7pt; gap: 4pt; margin-top: 7pt; }
+  .report .cost-strip :is(p, .cost-strip-big, .cost-strip-small) { font-size: 9pt; line-height: 1.4; }
+  .report > footer { margin-top: 10pt; padding-top: 5pt; font-size: 8.5pt; }
+  /* Preserve required notices and the entire source directory; flatten web-only framing. */
+  body:has(.report) .foot { margin-top: 12pt; background: none; }
+  body:has(.report) .foot-inner { display: block; padding: 0; }
+  body:has(.report) .foot :is(.foot-notices, .foot-sources, .foot-links, .foot-notice) { display: block; padding: 6pt 0; margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+  body:has(.report) .foot :is(.foot-head, .foot-title-block, .foot-notice-head, .foot-history-head) { display: block; padding: 0; }
+  body:has(.report) .foot :is(.foot-label, .foot-notice-title, .foot-kicker) { font: 600 10pt/1.3 var(--font-text); margin: 3pt 0; letter-spacing: 0; }
+  body:has(.report) .foot :is(p, .foot-intro, .inst, .inst-name, .inst-terms, .ds-meta, .ds-terms, .publisher-notice-name) { font-size: 8.5pt; line-height: 1.35; }
+  body:has(.report) .foot .inst-grid { display: block; columns: 2; column-gap: 14pt; padding: 0; margin: 5pt 0; }
+  body:has(.report) .foot .inst { padding: 0; margin: 0 0 6pt; border: 0; border-radius: 0; background: none; box-shadow: none; }
+  body:has(.report) .foot .inst ul { padding: 0 0 0 10pt; }
+  body:has(.report) .foot .inst li { margin: 0 0 2pt; }
+  body:has(.report) .foot :is(.foot-policy-links, .foot-links .foot-tab, .foot-notice svg) { display: none; }
+  body:has(.report) .foot .foot-tab { min-height: 0; padding: 0; }
+  body:has(.report) .site-meta-row .site-status { display: none; }
+  body:has(.report) .site-meta-row { display: block; padding: 0; margin: 0 0 8pt; max-width: none; }
+  body:has(.report) .site-meta-row .licence { display: block; width: 100%; }
+  body:has(.report) .licence-box { display: block; overflow: visible; }
+  body:has(.report) .licence-box > summary { min-height: 0; padding: 0; }
+  body:has(.report) .licence-text { font-size: 9pt; line-height: 1.35; padding: 3pt 0 0; }
+  body:has(.report) .foot .foot-history-head { margin-bottom: 4pt; }
+  body:has(.report) .foot .foot-built { display: block; font-size: 8.5pt; }
+  body:has(.report) .foot .foot-link-list { display: none; }
+  body:has(.report) .foot .foot-notice { break-inside: avoid; }
+}

@@ -9,6 +9,7 @@ import { KindTag } from "@/components/KindTag";
 import { MetricTerm } from "@/components/MetricTerm";
 import { Masthead } from "@/components/Masthead";
 import { PrintButton } from "@/components/PrintButton";
+import { SectionJump } from "@/components/SectionJump";
 import { StandOuts } from "@/components/StandOuts";
 import { api, artifactUrl, type Packet, regionsWithData } from "@/lib/api";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
@@ -20,6 +21,7 @@ import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, windowLabel } from "@/lib/periods";
 import { RANK_HEADING, rankBasis } from "@/lib/ranks";
 import { isRestricted } from "@/lib/sources";
+import { reportSourceLabel } from "@/lib/reportSources";
 import { standOuts } from "@/lib/standouts";
 import {
   anyMargin,
@@ -192,19 +194,21 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             {/* The envelope, not a span every metric covers: sources publish at different
                 frequencies, so each metric resolves the window to its own dates. The
                 table gives them. */}
-            Between them the measures reach from {periodLabel(window.start)} to{" "}
-            {periodLabel(window.end)}; each covers its own window, given in the table.
+            Coverage: {periodLabel(window.start)}–{periodLabel(window.end)}. Each measure’s dates are listed in the table.
           </p>
           {lead && <p className="verdict">{lead}</p>}
-          {paid && <p className="verdict-more">{paid}</p>}
-          {trade && <p className="verdict-more">{trade}</p>}
+          {(paid || trade) && <ul className="report-reading-points">
+            {paid && <li>{paid}</li>}
+            {trade && <li>{trade}</li>}
+          </ul>}
           {lead && (
             <p className="verdict-source">
-              Computed from the figures in this report by fixed rules, not written by AI.
+              Computed from the data · not AI-written.
             </p>
           )}
         </div>
         <div className="actions print-hide">
+          <SectionJump />
           <PrintButton />
           {/*
             The published artifact path, not the API's. A static file cannot vary on
@@ -239,7 +243,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         items={standOuts(packet, uncertainties)}
       />
 
-      <section className="section">
+      <section className="section" id="report-measures" data-jump-label="Measures">
         <h2>Measures</h2>
         <div className="scroll-x" tabIndex={0} role="region" aria-label="Ranked measures table, scroll horizontally">
           <table className="doc">
@@ -328,18 +332,16 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </div>
         <TableNotes placement={measures} general={placement.general} above="the table above" />
         <p className="table-note">
-          Ranked by change over five years, not by price or size: rank 1 is the largest
-          rise, or the smallest where lower is better, as for unemployment.
+          Change ranks compare five-year movement, not price or size. Rank 1 is the largest rise—or the smallest where lower is better, such as unemployment.
         </p>
         {anyMargin(uncertainties) && <p className="table-note">{MARGIN_NOTE}</p>}
       </section>
 
       {packet.levels.length > 0 && (
-        <section className="section">
+        <section className="section" id="report-current" data-jump-label="Current values">
           <h2>Current values</h2>
           <p className="table-note">
-            Ranked by value rather than by change. HUD’s CHAS tables and the MOD-IV
-            assessment records are single snapshots, so they appear only here.
+            Ranks compare values, not change. Single-snapshot CHAS and MOD-IV figures appear only here.
           </p>
           <div className="scroll-x" tabIndex={0} role="region" aria-label="Latest values table, scroll horizontally">
             <table className="doc">
@@ -392,7 +394,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                           )}
                         </td>
                         <td className="when">{periodLabel(l.period_end, l.metric_id)}</td>
-                        <td>{(l.source_id && sourceNames.get(l.source_id)) ?? l.source_id ?? "—"}</td>
+                        <td>{reportSourceLabel(l.source_id, sourceNames.get(l.source_id ?? ""))}</td>
                       </tr>
                       <NoteRows id={l.metric_id} texts={current.inline.get(l.metric_id)} span={5} />
                     </Fragment>
@@ -405,7 +407,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         </section>
       )}
 
-      <section className="section">
+      <section className="section" id="report-sources" data-jump-label="Sources">
         <h2>Sources</h2>
         <div className="scroll-x" tabIndex={0} role="region" aria-label="Source citations table, scroll horizontally">
           <table className="doc">
@@ -421,7 +423,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <tbody>
               {sources.map((s) => (
                 <tr key={s.source_id}>
-                  <td>{s.name}</td>
+                  <td>{s.name}<small className="report-source-code">{reportSourceLabel(s.source_id, s.name)} · {s.source_id}</small></td>
                   <td>{s.publisher}</td>
                   <td className="when">{s.vintages.join(", ")}</td>
                   <td className="when">{s.fetched.slice(0, 10)}</td>
@@ -449,9 +451,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       </section>
 
       <footer className="muted">
-        Generated from analysis packet {packet.packet_version} for region {region.region_id}{" "}
-        (GEOID {region.geoid}). Every figure is read from the housing warehouse and produced
-        by the sources above, subject to the notes. Nothing in this report is model-generated.
+        Packet {packet.packet_version} · region {region.region_id} · GEOID {region.geoid}.
+        Figures come from the sources above, subject to the notes. No model-generated content.
       </footer>
       </main>
     </>

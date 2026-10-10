@@ -148,12 +148,14 @@ export function ConsumerReading({
   heading,
   children,
   annotation,
+  paperNote = false,
 }: {
   reading: Explanation | null;
   section: FocusedConsumerSection;
   heading?: string;
   children?: ReactNode;
   annotation?: ReactNode;
+  paperNote?: boolean;
 }) {
   if (!reading || !reading.sections?.length) return children ?? null;
   const { answer, binding } = focusedConsumerAnswer(
@@ -166,8 +168,7 @@ export function ConsumerReading({
   const id = `interpretation-${reading.region_id}-${section}`;
   const figures = <Figures binding={binding} />;
 
-  return (
-    <section aria-labelledby={id} className={`interpretation consumer-feature consumer-feature-${section}`}>
+  const content = <>
       <div className="consumer-feature-topline">
         <span className="consumer-feature-tag consumer-ai-badge">
           <Definition term={{
@@ -202,7 +203,12 @@ export function ConsumerReading({
         {annotation && <aside className="editorial-annotation" aria-label="Computed figure, separate from the AI interpretation">{annotation}</aside>}
       </div>
       {section !== "before_moving" && figures}
-      {children}
+    </>;
+  return (
+    <section aria-labelledby={id} className={`interpretation consumer-feature consumer-feature-${section}`}>
+      {paperNote ? <div className="local-picture-note">{content}
+        {children}
+      </div> : <>{content}{children}</>}
     </section>
   );
 }

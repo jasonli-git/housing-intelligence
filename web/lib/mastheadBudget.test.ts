@@ -24,6 +24,9 @@ describe("budget entry availability", () => {
   it("keeps the statewide entry navigable on supported pages", () => {
     const html = renderToStaticMarkup(createElement(Masthead, { affordability: { kind: "route" } }));
     expect(html).toContain('href="/afford?county=all"');
-    expect(html).toContain("Find places · NJ");
+    expect(html).toContain("Find your fit");
+    expect(html).not.toContain("→");
+    expect(html.indexOf('href="/afford?county=all"')).toBeLessThan(html.indexOf('href="/guide"'));
+    expect(html.indexOf('href="/guide"')).toBeLessThan(html.indexOf('href="/tax"'));
   });
 });

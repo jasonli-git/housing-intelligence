@@ -7,7 +7,7 @@ const BOUNDARIES = "https://www.arcgis.com/home/item.html?id=26a2a9f9cf0a472d865
 const FCC = "https://broadbandmap.fcc.gov/";
 
 /** Compact components, not a neighbourhood grade, a school assignment or a safety verdict. */
-export function CommunityContext({ data, level }: { data: CommunityData | null; level: string }) {
+export function CommunityContext({ data, level, supporting = false }: { data: CommunityData | null; level: string; supporting?: boolean }) {
   if (!data) return null;
   const complete = data.crime.filter((r) => r.payload.complete).length;
   const broadband = data.broadband ?? [];
@@ -58,9 +58,10 @@ export function CommunityContext({ data, level }: { data: CommunityData | null; 
     </section>
 
     <section className="section sales community-crime" aria-labelledby="community-crime-heading">
-      <div className="section-head"><h2 id="community-crime-heading">Crime records, with reporting coverage</h2></div>
+      <div className="section-head"><h2 id="community-crime-heading">{supporting ? "Public-safety reporting context" : "Crime records, with reporting coverage"}</h2></div>
       <p className="sales-note">These records cannot tell you whether a home or neighborhood is safe.</p>
-      {data.crime.length ? <ReaderDetails title={`${data.crime[0].payload.year} · ${data.crime_county} agency chapter · ${complete}/${data.crime.length} listed agencies reported 12 months`}>
+      {data.crime.length ? <ReaderDetails title={supporting ? "Recorded offences & reporting completeness" : `${data.crime[0].payload.year} · ${data.crime_county} agency chapter · ${complete}/${data.crime.length} listed agencies reported 12 months`}>
+        {supporting && <p className="sales-note">{data.crime[0].payload.year} · {data.crime_county} agency chapter · {complete}/{data.crime.length} listed agencies reported all 12 months.</p>}
         <p className="sales-note">NJSP’s annual index-crime workbook, published April 2025. County chapter context{level === "municipality" ? ", not this town’s crime rate" : ""}. The denominator is agencies listed in this workbook, not every agency or every resident. State Police’s separate chapter is not added here.</p>
         <div className="scroll-x" tabIndex={0} role="region" aria-label="Agency crime reporting table, scroll horizontally">
           <table className="change-places"><thead><tr><th scope="col">Agency</th><th scope="col" className="num">Months reported</th><th scope="col" className="num">Index offenses</th></tr></thead>

@@ -33,5 +33,13 @@ describe("SourceFooter", () => {
     const html = renderToStaticMarkup((await SourceFooter())!);
     expect(html).not.toContain("foot-notices");
     expect(html).toContain("Data provenance");
+    expect(html).toContain('class="foot-notice-head"');
+    expect(html).toContain('class="notice-external-icon"');
+    expect(html).toContain('aria-label="Site policies"');
+    expect(html).toContain('href="/terms"');
+    expect(html).toContain('href="/privacy"');
+    expect(html).toContain('href="https://github.com/jasonli-git/housing-intelligence/blob/main/LICENSE"');
+    expect(html).toContain("The data is not ours to relicense");
+    expect(html).toContain("its source is public");
   });
 });
