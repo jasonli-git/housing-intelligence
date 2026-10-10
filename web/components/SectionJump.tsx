@@ -82,7 +82,7 @@ export function SectionJump() {
     document.addEventListener("toggle", refresh, true);
     const observer = new MutationObserver(refresh);
     const main = document.querySelector("main");
-    if (main) observer.observe(main, { childList: true, subtree: true });
+    if (main) observer.observe(main, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"] });
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();

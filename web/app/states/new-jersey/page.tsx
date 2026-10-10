@@ -135,6 +135,9 @@ export default async function NewJerseyPage() {
     ? DEFAULT_MEASURE
     : measures[0]?.metric_id;
   const levels = statewide?.levels ?? [];
+  const salesCount = levels.find(level => level.metric_id === "sr1a_sales_count");
+  const constructionRows = constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] });
+  const latestBuilding = constructionRows[0];
   const population = levels.find((level) => level.metric_id === "pep_population")
     ?? levels.find((level) => level.metric_id === "acs_population");
   const statewideNotes = (statewide?.caveat_scopes ?? [])
@@ -189,11 +192,22 @@ export default async function NewJerseyPage() {
             initial={initial ?? DEFAULT_MEASURE}
           />
       </div>
-      <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Sales, building activity and every available state figure, with dates and definitions.">
-        <div id="housing-assistance"><AffordableHousing data={housingHelp} /></div>
-        <HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait />
-        <HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} portrait />
-        <HowUnusual name="New Jersey" data={persistence} />
+      <section id="state-market" className="state-market" aria-labelledby="state-market-heading" data-jump-label="New Jersey’s housing market">
+        <h2 id="state-market-heading">New Jersey’s housing market</h2>
+        <div className="state-market-grid">
+          <article><h3>Homes that changed hands</h3>
+            {salesCount ? <><strong>{formatMetric(salesCount.value, salesCount.unit, salesCount.metric_id)} qualifying sales</strong><p>{periodLabel(salesCount.period_start)}–{periodLabel(salesCount.period_end)} · One- to four-family homes, not all homes.</p></> : <p>Sale counts are not published in this snapshot.</p>}
+            <details className="state-market-detail"><summary>Sales details</summary><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} /></details>
+          </article>
+          <article><h3>Building and demolition</h3>
+            {latestBuilding ? <><strong>{latestBuilding.year}{latestBuilding.preliminary ? " · preliminary" : ""}</strong><p>{latestBuilding.completed === null ? "Completions not reported" : `${latestBuilding.completed.toLocaleString("en-US")} homes completed`} · {latestBuilding.demolished === null ? "demolitions not reported" : `${latestBuilding.demolished.toLocaleString("en-US")} demolished`}. Reporting towns only; missing reports are not zero.</p></> : <p>Construction figures are not published in this snapshot.</p>}
+            <details className="state-market-detail"><summary>Building history &amp; coverage</summary><HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} portrait /></details>
+          </article>
+        </div>
+        <details className="state-history-context"><summary><span>Affordability against its own history</span><small>Home prices against income—not a forecast.</small><span aria-hidden="true">＋</span></summary><HowUnusual name="New Jersey" data={persistence} />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</details>
+      </section>
+      <div id="housing-assistance" className="state-housing-help"><AffordableHousing data={housingHelp} /></div>
+      <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Every available state figure, with dates, definitions and sources.">
         <section className="section" aria-labelledby="state-figures-heading">
           <div className="section-head"><h2 id="state-figures-heading">All statewide figures</h2></div>
           <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally"><table className="state-figures">

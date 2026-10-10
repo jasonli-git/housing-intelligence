@@ -19,20 +19,37 @@ try {
       assert.match(await page.locator('.state-facts').textContent(), /National average, not a local rate/);
       assert.match(await page.locator('.state-facts').textContent(), /reporting towns only/);
       assert.equal(await page.locator('.foot-notices').isVisible(), true);
-      for (const selector of ['.state-extra-figures', '#county-comparison', '#state-detailed-data']) {
-        await page.locator(`${selector} > summary`).focus();
-        await page.keyboard.press('Enter');
-        assert.equal(await page.locator(selector).getAttribute('open'), '');
+      await page.getByRole('button', { name: 'Compare counties', exact: true }).click();
+      assert.equal(await page.locator('#state-explore-panel').isVisible(), false);
+      assert.equal(await page.locator('#state-compare-panel').isVisible(), true);
+      await page.waitForFunction(() => [...document.querySelectorAll('.section-jump option')].some(n => n.textContent === 'Compare counties'));
+      const measure = page.locator('#county-comparison select').first();
+      const options = await measure.locator('option').evaluateAll(nodes => nodes.map(n => n.value));
+      if (options.length > 1) await measure.selectOption(options[1]);
+      await page.getByRole('button', { name: 'Explore places', exact: true }).click();
+      assert.equal(await page.locator('.place-county-grid').isVisible(), true);
+      await page.waitForFunction(() => ![...document.querySelectorAll('.section-jump option')].some(n => n.textContent === 'Compare counties'));
+      await page.getByRole('button', { name: 'Compare counties', exact: true }).click();
+      if (options.length > 1) assert.equal(await measure.inputValue(), options[1]);
+      assert.equal(await page.locator('#state-detailed-data .housing-assistance, #state-detailed-data .homes-added, #state-detailed-data .how-unusual, #state-detailed-data .sales').count(), 0);
+      assert.equal(await page.locator('#housing-assistance .assistance-routes a').count(), 3);
+      for (const selector of ['.state-extra-figures', '.state-market-detail', '.state-history-context', '#state-detailed-data']) {
+        const details = page.locator(selector);
+        for (let i = 0; i < await details.count(); i++) {
+          await details.nth(i).locator(':scope > summary').focus();
+          await page.keyboard.press('Enter');
+          assert.equal(await details.nth(i).getAttribute('open'), '');
+        }
       }
       assert.ok(await page.locator('#county-comparison tbody tr').count() > 0);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
-      assert.deepEqual(results.violations.map(v => v.id), []);
+      assert.deepEqual(results.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => ({ target: n.target, reason: n.failureSummary })) })), []);
       assert.deepEqual(errors, []);
-      for (const selector of ['.state-extra-figures', '#county-comparison', '#state-detailed-data']) {
-        await page.locator(`${selector} > summary`).click();
-      }
+      await page.evaluate(() => document.querySelectorAll('main details[open]').forEach(n => n.removeAttribute('open')));
+      await page.getByRole('button', { name: 'Explore places', exact: true }).click();
       await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); window.scrollTo(0, 0); });
+      await page.mouse.move(0, 0);
       await page.screenshot({ path: `/tmp/nj-refined-${width}-${theme}.png`, fullPage: true });
       await page.screenshot({ path: `/tmp/nj-refined-viewport-${width}-${theme}.png` });
       console.log(`PASS ${width}px ${theme}: directory, scope, caveats, disclosures, reflow and WCAG`);

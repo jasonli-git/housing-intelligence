@@ -12,7 +12,7 @@ import { mapDefinitionOf } from "@/lib/mapDefinitions";
 import { marginLabel, changeMarginLabel, MARGIN_NOTE } from "@/lib/uncertainty";
 
 /** Published county comparisons, independent of map geometry or network requests. */
-export function CountyComparison({ sections, initial }: { sections: Section<Measure>[]; initial: string }) {
+export function CountyComparison({ sections, initial, embedded = false }: { sections: Section<Measure>[]; initial: string; embedded?: boolean }) {
   const measures = sections.flatMap(section => section.rows);
   const [metric, setMetric] = useState(initial);
   const [window, setWindow] = useState<WindowKey>("5y");
@@ -22,8 +22,9 @@ export function CountyComparison({ sections, initial }: { sections: Section<Meas
   const key = measure.windows[window] ? window : WINDOWS.find(item => measure.windows[item.key])?.key;
   const reading = key ? measure.windows[key] : null;
   const rows = reading?.rows ?? [];
-  return <details id="county-comparison" className="place-comparison">
-    <summary><span>Compare counties</span><small>Differences between places, with dates and uncertainty</small><span aria-hidden="true">＋</span></summary>
+  const Container = embedded ? "div" : "details";
+  return <Container id="county-comparison" className="place-comparison" data-embedded={embedded || undefined}>
+    {!embedded && <summary><span>Compare counties</span><small>Differences between places, with dates and uncertainty</small><span aria-hidden="true">＋</span></summary>}
     <div className="place-comparison-body">
       <div className="place-comparison-controls">
         <label htmlFor={id}>Measure<select id={id} value={measure.metric_id} onChange={event => setMetric(event.target.value)}>
@@ -49,5 +50,5 @@ export function CountyComparison({ sections, initial }: { sections: Section<Meas
       {rows.some(row => row.latestMargin != null || row.changeMargin != null) && <p className="meta">{MARGIN_NOTE}</p>}
       {key && windowNote(key, measure.metric_id, measure.windows).map(note => <p className="meta" key={note}>{note}</p>)}
     </div>
-  </details>;
+  </Container>;
 }

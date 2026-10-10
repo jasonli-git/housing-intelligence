@@ -59,6 +59,29 @@
   .nj-page.quiet-state .place-discovery-search { margin-bottom: .8rem; }
   .nj-page.quiet-state .place-county-grid a { padding-block: .4rem; }
   .nj-page.quiet-state .state-workspace-head { padding-bottom: .55rem; }
+  .state-discovery-modes { display: flex; gap: .3rem; padding: .25rem; margin-bottom: 1rem; width: fit-content; max-width: 100%; border: 1px solid var(--border); border-radius: 9px; }
+  .state-discovery-modes button { min-height: 44px; border: 0; border-radius: 6px; padding: .5rem .8rem; background: transparent; color: var(--text-secondary); font: 500 13px/1.4 var(--font-text); cursor: pointer; }
+  .state-discovery-modes button[aria-pressed="true"] { background: color-mix(in srgb, var(--state-blue) 12%, var(--surface-card)); color: var(--text-primary); }
+  .nj-page.quiet-state .place-comparison[data-embedded] { margin: 0; border: 0; background: none; }
+  .nj-page.quiet-state .place-comparison[data-embedded] .place-comparison-body { padding: 0; }
+  .state-market, .state-housing-help { margin-block: 1.5rem; }
+  .state-market > h2 { font: 500 25px/1.3 Georgia, serif; }
+  .state-market-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+  .state-market-grid article { min-width: 0; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .state-market-grid h3 { font: 500 20px/1.3 Georgia, serif; margin: 0 0 .6rem; }
+  .state-market-grid article > strong { font: 500 21px/1.4 var(--font-text); }
+  .state-market-grid article > p { color: var(--text-secondary); font: 13px/1.6 var(--font-text); }
+  .state-market-detail > summary { min-height: 44px; padding-block: .6rem; cursor: pointer; color: var(--text-primary); font: 500 13px/1.5 var(--font-text); }
+  .state-market-detail .section { margin-top: .6rem; }
+  .state-history-context { border-block: 1px solid var(--border); margin-top: 1rem; }
+  .state-history-context > summary { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; min-height: 56px; padding-block: .7rem; cursor: pointer; list-style: none; }
+  .state-history-context > summary > span:first-child { font: 500 18px/1.4 Georgia, serif; }
+  .state-history-context > summary small { flex: 1; color: var(--text-secondary); font: 12px/1.5 var(--font-text); }
+  .state-housing-help .assistance-routes { gap: .5rem; }
+  .nj-page .state-housing-help .housing-assistance { padding: 1rem 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
+  .state-housing-help .assistance-routes > a { background: transparent; border-radius: 0; border: 0; border-left: 2px solid var(--border); padding: .5rem .8rem; }
+  .state-housing-help .housing-assistance-head > p { display: none; }
+  @media (max-width: 760px) { .state-market-grid { grid-template-columns: minmax(0, 1fr); gap: 1rem; } .state-history-context > summary small { flex-basis: 85%; } }
   .nj-page.quiet-state .state-facts { border-radius: 12px; background: color-mix(in srgb, var(--state-blue) 5%, var(--surface-card)); }
   .nj-page.quiet-state .state-facts article { position: relative; isolation: isolate; justify-content: flex-start; }
   .nj-page.quiet-state .state-facts article::before { content: ""; position: absolute; z-index: -1; pointer-events: none; right: 12px; top: 12px; width: 60px; height: 60px; border: 1px solid color-mix(in srgb, var(--state-blue) 12%, transparent); border-radius: 50% 50% 10% 50%; transform: rotate(-25deg); }
@@ -80,6 +103,7 @@
   .nj-page.quiet-state .place-comparison > summary { padding: .9rem 1rem; }
   .nj-page.quiet-state #state-detailed-data > summary { padding: 1rem; }
   .nj-page.quiet-state #state-detailed-data > summary .more-title { font-size: 25px; }
+  .nj-page.quiet-state #state-detailed-data > summary > .more-kicker { color: light-dark(#505e6a, #c1cfdb); }
   body:has(.nj-page) .foot-notices { column-gap: 1.5rem; row-gap: .7rem; }
   body:has(.nj-page) .publisher-notice { margin: 0; }
   body:has(.nj-page) .foot .publisher-notice p { margin-top: .25rem; line-height: 1.5; }
