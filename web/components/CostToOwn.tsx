@@ -465,7 +465,8 @@ export function CostToOwn({
                 </div>
               </dl>) : null;
   const calculationToggle = <button type="button" className="calculation-toggle" aria-expanded={calculationOpen} aria-controls={id+"-calculation"} onClick={()=>setCalculationOpen(o=>!o)}>
-    {calculationOpen ? "Hide the calculation" : "Show the calculation"} <span aria-hidden="true">{calculationOpen ? "−" : "+"}</span>
+    <span className="calculation-toggle-label"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M8 6h8v4H8zM8 14h2m4 0h2m-8 4h2m4 0h2"/></svg>{calculationOpen ? "Hide the breakdown" : "See the breakdown"}</span>
+    <svg className="calculation-chevron" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m5 8 5 5 5-5"/></svg>
   </button>;
 
   const budgetFit = control ? <QuietDisclosure enabled={quiet} title="Check your monthly budget">
@@ -573,7 +574,6 @@ export function CostToOwn({
         <div className="cost-monthly-headline" role="group" aria-label="Monthly cash comparison">
           <p className="cost-evidence-label">Monthly cash</p>
           {quiet && rentMonth !== null && against ? <DifferenceBridge own={goneNoUtilities} rent={rentMonth} principal={kept} kind={against.kind} gap={against.gap} missing={missingBeyondUtilities}/> : <p className="cost-monthly-headline-copy" aria-live="polite">{cashComparison}</p>}
-          {quiet && calculationToggle}
         </div>
       )}
 
@@ -713,7 +713,7 @@ export function CostToOwn({
           )}
         </article>
         {quiet && <>
-          {!(control && cashComparison) && <div className="calculation-fallback">{calculationToggle}</div>}
+          {calculationToggle}
           <section id={id+"-calculation"} className="shared-calculation" hidden={!calculationOpen} aria-label="Owning and renting calculation">
             <div><h4>Owning</h4><p className="calculation-note">Cash payment includes principal and included utilities. Money spent includes utilities here; the bridge excludes them.</p>{owningLedger}</div>
             <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. Enter one under “Your numbers” to compare.</p>}</div>

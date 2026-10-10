@@ -546,7 +546,7 @@ export default async function RegionPage({
               <path d="M11.5 2.75v3h3M8 9h4M8 12h4" />
             </svg>
             <span className="report-action-copy">
-              <strong>Open full report</strong>
+              <strong><span className="report-label-desktop">Open full report</span><span className="report-label-mobile">Full report</span></strong>
               <small>Print-ready detail</small>
             </span>
             <span className="report-action-arrow" aria-hidden="true">→</span>

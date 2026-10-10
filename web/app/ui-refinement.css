@@ -20,7 +20,7 @@
   .quiet-county .cost-evidence-item p { line-height: 1.65; }
   .quiet-county .quiet-tool-group { padding-top: .9rem; }
   .quiet-county.atlas-local .quiet-tool-group { background: color-mix(in srgb, var(--text-primary) 3%, var(--surface-1)); border-color: color-mix(in srgb, var(--text-primary) 15%, var(--surface-1)); border-radius: 16px; box-shadow: none; }
-  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not(.home-action-checks a[href^="#"]):not(.destination-town):not(.destination-county):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
+  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not(.home-action-checks a[href^="#"]):not(.destination-town):not(.destination-county):not(.state-fit-shortcut):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
   main a[href^="/tax"]:not(.button) { color: light-dark(#006977, #8ed9e2); }
   main .home-action-checks a[href^="#"] { color: light-dark(#246b55, #a6d9c0); }
   main.atlas-local:is([data-region-level="municipality"], [data-region-level="zip"]) .home-action-checks a[href^="#"] { color: var(--atlas-accent); }
@@ -112,6 +112,7 @@
   .reader-details-body { padding-bottom: .3rem; }
   .reader-details-body > :last-child { margin-bottom: .3rem; }
   .section-jump-control { border-radius: 12px; background: color-mix(in srgb, var(--surface-card) 70%, transparent); box-shadow: none; }
+  .report-label-mobile, .section-jump-mobile-label { display: none; }
   .section-jump-control .section-jump { min-height: 44px; max-width: 100%; padding-block: .65rem; font-size: 12px; }
   .page-section-nav { margin-top: .65rem; }
   .quiet-state .nj-head { padding-bottom: .7rem; }
@@ -131,8 +132,9 @@
   .state-supporting-context .section { margin-top: .75rem; }
   .nj-page.quiet-state .state-workspace-head { display: flex; flex-wrap: wrap; }
   .nj-page .state-workspace-head > div { margin-right: auto; }
-  .state-fit-shortcut { display: flex; flex-direction: column; gap: .1rem; padding: .4rem .6rem; color: var(--text-primary); text-decoration: none; font: 500 13px/1.4 var(--font-text); }
+  .state-fit-shortcut { display: flex; flex-direction: column; gap: .1rem; padding: .4rem .6rem; color: light-dark(#a44e34, #edb09b); text-decoration: none; font: 500 13px/1.4 var(--font-text); }
   .state-fit-shortcut small { color: var(--text-secondary); font: 11px/1.4 var(--font-text); }
+  main.nj-page.quiet-state a.state-fit-shortcut { color: light-dark(#a44e34, #edb09b); }
   .state-fit-shortcut:hover { text-decoration: underline; }
   .state-extra-market { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-block: 1rem; }
   .state-extra-market > details { min-width: 0; border-top: 1px solid var(--border); }
@@ -250,6 +252,15 @@
   .landing-canvas .coverage-state-preview { padding-block: .8rem; }
   .landing-canvas .national-backdrop { border-bottom: 0; margin-bottom: 0; }
   @media (max-width: 600px) {
+    .quiet-county.atlas-local .page-head > .actions { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:.6rem; }
+    .quiet-county .page-head > .actions .section-jump-control { width:100%; }
+    .quiet-county .page-head > .actions .section-jump { color:transparent; }
+    .quiet-county .page-head > .actions .section-jump option { color:var(--text-primary); }
+    .quiet-county .page-head > .actions .section-jump-mobile-label { display:block; position:absolute; left:.75rem; pointer-events:none; font:550 12px/1.3 var(--font-text); color:var(--text-primary); }
+    .quiet-county .page-head > .actions .section-jump-mark { display:none; }
+    .quiet-county .page-head > .actions .report-action { min-height:44px; min-width:0; padding:.5rem .65rem; gap:.4rem; }
+    .quiet-county .page-head > .actions :is(.report-label-desktop,.report-action-copy small,.report-action-arrow) { display:none; }
+    .quiet-county .page-head > .actions .report-label-mobile { display:inline; white-space:nowrap; }
     .landing-canvas { padding: .5rem 0; background: transparent; }
     .landing-canvas .nation-head { padding-top: .8rem; }
   }
@@ -351,6 +362,10 @@
     .bar-inner { grid-template-columns: minmax(0, 1fr) 38px; }
     .bar-inner > .theme-toggle { grid-column: 2; grid-row: 1; }
     .bar-tools { grid-column: 1 / -1; grid-row: 2; }
+    /* Without a menu search, keep Tools beside the brand at tablet widths too. */
+    .bar-inner:not(:has(.bar-tools .place-search)) { grid-template-columns:auto minmax(0,1fr) 38px; }
+    .bar-inner:not(:has(.bar-tools .place-search)) .bar-tools { grid-column:2; grid-row:1; }
+    .bar-inner:not(:has(.bar-tools .place-search)) > .theme-toggle { grid-column:3; }
     .bar-desktop-tools { display: none; }
     .bar-tool-menu { display: block; }
     .bar-tool-menu > summary { display: flex; align-items: center; gap: .6rem; min-height: 44px; padding-inline: .8rem; border: 1px solid var(--border); border-radius: 8px; font: 500 11px/1.4 var(--font-mono); text-transform: uppercase; cursor: pointer; list-style: none; }
@@ -476,7 +491,26 @@
   .recovery-routes a:hover { background: var(--surface-card); }
   @media (max-width: 600px) {
     main.shell { --section-space: 1.35rem; }
+    /* Match the market summary's inset instead of putting its body on the border. */
+    .quiet-county .local-understand-group .quiet-disclosure[data-treatment="market"] > .quiet-disclosure-body { padding: .25rem 1rem 1rem; }
+    /* Search mode need not reserve space for invisible map controls. Keep the full
+       map layout when the reader deliberately switches to exploration. */
+    .nation-page .landing-canvas .nation-head { padding-block: .8rem .25rem; }
+    .nation-page .landing-canvas .coverage-search-stage[data-search-first="true"] { padding-top: 48px; }
+    .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map-content { min-height: 240px; }
+    .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] :is(.coverage-region-bar, .coverage-map-foot) { display: none; }
+    .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .map-pan-controls { display: none; }
+    .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map { height: 240px; }
+    .nation-page .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map-placeholder { min-height: 240px; }
+    .nation-page .landing-canvas .coverage-search-overlay { top: 48px; }
     .bar-inner { padding-block: .45rem; }
+    /* Pages with their own main search need no empty second navigation row. */
+    .bar-inner:not(:has(.bar-tools .place-search)) { grid-template-columns: auto minmax(0, 1fr) 38px; column-gap: .4rem; }
+    .bar-inner:not(:has(.bar-tools .place-search)) .bar-tools { grid-column: 2; grid-row: 1; }
+    .bar-inner:not(:has(.bar-tools .place-search)) > .theme-toggle { grid-column: 3; }
+    .bar-inner:not(:has(.bar-tools .place-search)) .bar-trail { gap: .25rem; }
+    .bar-inner:not(:has(.bar-tools .place-search)) .bar-trail .bar-icon { width: 24px; }
+    .bar-inner:not(:has(.bar-tools .place-search)) .bar-tool-menu > summary { padding-inline: .45rem; gap: .3rem; }
     .bar-controls { gap: .25rem; }
     .bar .bar-link { font-size: 10px; padding-inline: .55rem; }
     .site-meta-row { padding-block: .1rem; }

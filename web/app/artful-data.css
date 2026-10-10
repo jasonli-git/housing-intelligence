@@ -1,6 +1,13 @@
 /* Decorative echoes of the housing portrait. They never encode a measurement. */
 .abstract-field { display: none; }
-.calculation-toggle { display:flex; align-items:center; justify-content:space-between; gap:1rem; width:100%; padding:.65rem 0; min-height:44px; margin-top:.5rem; background:none; color:var(--text-primary); border:0; border-top:1px solid var(--border); cursor:pointer; font:inherit; font-size:12px; text-align:left; }
+.calculation-toggle { grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; gap:1rem; width:100%; padding:.8rem 1.35rem; min-height:48px; margin:0; background:color-mix(in srgb,var(--atlas-accent,var(--text-primary)) 6%,var(--surface-card)); color:var(--atlas-ink,var(--text-primary)); border:0; border-top:1px solid var(--border); cursor:pointer; font:550 13px/1.4 var(--font-text); text-align:left; transition:background 160ms ease; }
+.calculation-toggle-label { display:flex; align-items:center; gap:.55rem; }
+.calculation-toggle svg { width:20px; height:20px; flex-shrink:0; }
+.calculation-chevron { transition:transform 180ms ease; }
+.calculation-toggle[aria-expanded="true"] .calculation-chevron { transform:rotate(180deg); }
+.calculation-toggle:is(:hover,:focus-visible) { background:color-mix(in srgb,var(--atlas-accent,var(--text-primary)) 12%,var(--surface-card)); }
+.calculation-toggle:focus-visible { outline:2px solid currentColor; outline-offset:-3px; }
+@media (prefers-reduced-motion:reduce) { .calculation-toggle,.calculation-chevron { transition:none; } }
 .shared-calculation { grid-column:1 / -1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1.6rem; padding:1.2rem 1.35rem; border-top:1px solid var(--border); }
 .shared-calculation[hidden] { display:none; }
 .shared-calculation > div { min-width:0; }
