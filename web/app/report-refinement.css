@@ -40,11 +40,20 @@ small.report-source-code { display: block; color: var(--text-muted); }
   .report .cost-card { min-width: 0; }
   .report .cost-card table { min-width: 0; width: 100%; table-layout: fixed; font-size: 9pt; }
   .report .cost-card table :is(th, td) { white-space: normal; overflow-wrap: anywhere; }
-  .report .cost-lines > div { gap: 6pt; padding-block: 4pt; }
+  /* Grid/flex fragment poorly in Chromium print: use normal-flow ledgers and
+     keep each label/value pair intact, without making a whole card unbreakable. */
+  .report .cost-lines { display: block; }
+  .report .cost-lines > div { display: table; width: 100%; table-layout: fixed; padding-block: 4pt; break-inside: avoid; }
+  .report .cost-lines :is(dt, dd) { display: table-cell; vertical-align: top; }
+  .report .cost-lines dt { width: 62%; padding-right: 6pt; }
   .report .cost-lines dt { min-width: 0; }
   .report .cost-lines dd { white-space: normal; text-align: right; flex-shrink: 0; max-width: 42%; }
   .report .cost-lines .src { font: 8pt/1.35 var(--font-text); }
-  .report .cost-view { padding: 8pt; gap: 4pt; border-radius: 4pt; }
+  .report .cost-view { display: block; padding: 8pt; border-radius: 4pt; }
+  .report .cost-view-title { break-after: avoid; }
+  .report .cost-view-figure { display: block; margin-bottom: 4pt; break-inside: avoid; break-after: avoid; }
+  .report .cost-view-figure b { margin-right: 6pt; }
+  .report .cost-view-note { orphans: 2; widows: 2; }
   .report .cost-view-figure b { font-size: 18pt; }
   .report .doc tr { break-inside: avoid; }
   .report .standouts { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6pt; }
