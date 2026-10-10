@@ -8,6 +8,7 @@ import { StateOverview } from "@/components/StateOverview";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { MoreExpander } from "@/components/MoreExpander";
 import { AffordableHousing } from "@/components/AffordableHousing";
+import { APPLICATION_ROUTES } from "@/lib/affordableHousing";
 import { HomeSales } from "@/components/HomeSales";
 import { HomesAdded } from "@/components/HomesAdded";
 import { HowUnusual } from "@/components/HowUnusual";
@@ -135,9 +136,6 @@ export default async function NewJerseyPage() {
     ? DEFAULT_MEASURE
     : measures[0]?.metric_id;
   const levels = statewide?.levels ?? [];
-  const salesCount = levels.find(level => level.metric_id === "sr1a_sales_count");
-  const constructionRows = constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] });
-  const latestBuilding = constructionRows[0];
   const population = levels.find((level) => level.metric_id === "pep_population")
     ?? levels.find((level) => level.metric_id === "acs_population");
   const statewideNotes = (statewide?.caveat_scopes ?? [])
@@ -182,6 +180,10 @@ export default async function NewJerseyPage() {
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
         <details className="state-extra-figures"><summary>More statewide figures <span aria-hidden="true">＋</span></summary>
           <QuietProfile statewide allMetrics items={stateProfile(levels.filter((level) => ["fhfa_hpi", "fhfa_hpi_all_transactions", "nj_effective_tax_rate", "sr1a_median_price_per_sqft", "sr1a_median_year_built_sold", "water_homes_share_public"].includes(level.metric_id)), statewide?.headlines ?? [])} />
+          <div className="state-extra-market">
+            <details><summary>How homes sell here</summary><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} /></details>
+            <details><summary>Building &amp; demolition</summary><HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} portrait /></details>
+          </div>
         </details>
       </StateOverview>
 
@@ -192,21 +194,13 @@ export default async function NewJerseyPage() {
             initial={initial ?? DEFAULT_MEASURE}
           />
       </div>
-      <section id="state-market" className="state-market" aria-labelledby="state-market-heading" data-jump-label="New Jersey’s housing market">
-        <h2 id="state-market-heading">New Jersey’s housing market</h2>
-        <div className="state-market-grid">
-          <article><h3>Homes that changed hands</h3>
-            {salesCount ? <><strong>{formatMetric(salesCount.value, salesCount.unit, salesCount.metric_id)} qualifying sales</strong><p>{periodLabel(salesCount.period_start)}–{periodLabel(salesCount.period_end)} · One- to four-family homes, not all homes.</p></> : <p>Sale counts are not published in this snapshot.</p>}
-            <details className="state-market-detail"><summary>Sales details</summary><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} /></details>
-          </article>
-          <article><h3>Building and demolition</h3>
-            {latestBuilding ? <><strong>{latestBuilding.year}{latestBuilding.preliminary ? " · preliminary" : ""}</strong><p>{latestBuilding.completed === null ? "Completions not reported" : `${latestBuilding.completed.toLocaleString("en-US")} homes completed`} · {latestBuilding.demolished === null ? "demolitions not reported" : `${latestBuilding.demolished.toLocaleString("en-US")} demolished`}. Reporting towns only; missing reports are not zero.</p></> : <p>Construction figures are not published in this snapshot.</p>}
-            <details className="state-market-detail"><summary>Building history &amp; coverage</summary><HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} portrait /></details>
-          </article>
-        </div>
-        <details className="state-history-context"><summary><span>Affordability against its own history</span><small>Home prices against income—not a forecast.</small><span aria-hidden="true">＋</span></summary><HowUnusual name="New Jersey" data={persistence} />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</details>
+      <div className="state-history-exhibit"><HowUnusual name="New Jersey" data={persistence} exhibit />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</div>
+      <section id="housing-assistance" className="state-housing-help" aria-labelledby="state-help-heading">
+        <h2 id="state-help-heading">Housing help</h2>
+        <nav className="state-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer">{route.label} <span aria-hidden="true">↗</span></a>)}</nav>
+        <p className="state-help-caveat">Check availability and eligibility with the administrator; these links do not confirm an open waiting list or vacancy.</p>
+        <details className="state-help-details"><summary>Programmes, reported homes &amp; sources</summary><AffordableHousing data={housingHelp} hideRoutes /></details>
       </section>
-      <div id="housing-assistance" className="state-housing-help"><AffordableHousing data={housingHelp} /></div>
       <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Every available state figure, with dates, definitions and sources.">
         <section className="section" aria-labelledby="state-figures-heading">
           <div className="section-head"><h2 id="state-figures-heading">All statewide figures</h2></div>

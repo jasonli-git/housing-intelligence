@@ -34,7 +34,7 @@ export function HousingHelpDisclosure({enabled, children}: {enabled: boolean; ch
   </details> : <>{children}</>;
 }
 
-export function AffordableHousing({data}: {data: HousingData | null}) {
+export function AffordableHousing({data, hideRoutes = false}: {data: HousingData | null; hideRoutes?: boolean}) {
   const id = useId();
   const [program, setProgram] = useState("all");
   const [query, setQuery] = useState("");
@@ -74,9 +74,9 @@ export function AffordableHousing({data}: {data: HousingData | null}) {
   return <section className="housing-assistance" aria-labelledby={`${id}-title`}>
     <div className="housing-assistance-head"><span className="cost-evidence-label">Housing help</span>
       <h3 id={`${id}-title`}>Affordable housing & where to apply</h3><p>Programmes, reported homes and the next official step.</p></div>
-    <div className="assistance-routes">{APPLICATION_ROUTES.map((r) => <a key={r.url} href={r.url} target="_blank" rel="noreferrer">
+    {!hideRoutes && <div className="assistance-routes">{APPLICATION_ROUTES.map((r) => <a key={r.url} href={r.url} target="_blank" rel="noreferrer">
       <small>{r.agency}</small><strong>{r.label} <span aria-hidden="true">↗</span></strong><span>{r.note}</span>
-    </a>)}</div>
+    </a>)}</div>}
     <p className="assistance-note">Links reviewed Oct 4, 2026. Open waiting lists, vacancies and eligibility are not verified here. Apply through the official administrator; an income check is not a qualification decision.</p>
     {!data ? <p className="assistance-note">No directly located inventory is loaded for this page. The official application routes above are still available. Town records are not allocated to ZIP codes.</p> : <>
       <details><summary>What towns report <span>Need, completed projects & trust funds</span></summary>

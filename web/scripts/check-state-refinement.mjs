@@ -13,8 +13,9 @@ try {
       assert.equal(await page.locator('.nj-atlas-entry').count(), 0);
       assert.equal(await page.locator('.place-county-grid a').count(), 21);
       assert.equal(await page.locator('#county-directory-heading').textContent(), 'Explore 21 counties');
-      assert.equal(await page.locator('.place-budget-link').getAttribute('href'), '/afford?county=all');
-      assert.match(await page.locator('.place-budget-link').textContent(), /Across New Jersey/);
+      assert.equal(await page.locator('.state-fit-shortcut').getAttribute('href'), '/afford?county=all');
+      assert.match(await page.locator('.state-fit-shortcut').textContent(), /Across New Jersey/);
+      assert.equal(await page.locator('.place-discovery .state-fit-shortcut, .place-budget-link').count(), 0);
       assert.equal(await page.locator('.state-facts article').count(), 3);
       assert.match(await page.locator('.state-facts').textContent(), /National average, not a local rate/);
       assert.match(await page.locator('.state-facts').textContent(), /reporting towns only/);
@@ -32,8 +33,10 @@ try {
       await page.getByRole('button', { name: 'Compare counties', exact: true }).click();
       if (options.length > 1) assert.equal(await measure.inputValue(), options[1]);
       assert.equal(await page.locator('#state-detailed-data .housing-assistance, #state-detailed-data .homes-added, #state-detailed-data .how-unusual, #state-detailed-data .sales').count(), 0);
-      assert.equal(await page.locator('#housing-assistance .assistance-routes a').count(), 3);
-      for (const selector of ['.state-extra-figures', '.state-market-detail', '.state-history-context', '#state-detailed-data']) {
+      assert.equal(await page.locator('#housing-assistance .state-help-links a').count(), 3);
+      assert.equal(await page.locator('.history-exhibit .persistence-history').isVisible(), true);
+      assert.equal(await page.locator('#housing-assistance > details').count(), 1);
+      for (const selector of ['.state-extra-figures', '.state-extra-market > details', '.state-help-details', '#state-detailed-data']) {
         const details = page.locator(selector);
         for (let i = 0; i < await details.count(); i++) {
           await details.nth(i).locator(':scope > summary').focus();
