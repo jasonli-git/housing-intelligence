@@ -17,6 +17,7 @@ export function StateModeWorkspace({ countyPages, sections, initial }: {
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"explore" | "compare">("explore");
+  const [windowNotes, setWindowNotes] = useState<string[]>([]);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("mode") !== "afford") return;
@@ -33,9 +34,15 @@ export function StateModeWorkspace({ countyPages, sections, initial }: {
         <SectionJump />
       </header>
       <div className="place-discovery">
+        <div className="state-discovery-intro">
+        <div>
         <div className="state-discovery-modes" role="group" aria-label="Find your place mode">
           <button type="button" aria-pressed={mode === "explore"} aria-controls="state-explore-panel" onClick={() => setMode("explore")}>Explore places</button>
           <button type="button" aria-pressed={mode === "compare"} aria-controls="state-compare-panel" onClick={() => setMode("compare")}>Compare counties</button>
+        </div>
+        {mode === "compare" && <p className="place-search-label">Compare county figures and how they changed.</p>}
+        </div>
+        {mode === "compare" && windowNotes.length > 0 && <aside className="window-aside"><p className="window-aside-label">About “Since 2019”</p>{windowNotes.map(note => <p key={note}>{note}</p>)}</aside>}
         </div>
         <div id="state-explore-panel" hidden={mode !== "explore"}>
         <p className="place-search-label">Search a town, county or ZIP.</p>
@@ -47,8 +54,7 @@ export function StateModeWorkspace({ countyPages, sections, initial }: {
         {!countyPages.length && <p>County pages are unavailable in this snapshot. Try the place search.</p>}
         </div>
         <div id="state-compare-panel" hidden={mode !== "compare"}>
-          <p className="place-search-label">Compare county figures and how they changed.</p>
-          <CountyComparison sections={sections} initial={initial} embedded />
+          <CountyComparison sections={sections} initial={initial} embedded onWindowNotesChange={setWindowNotes} />
         </div>
       </div>
     </section>

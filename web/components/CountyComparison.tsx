@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { Measure } from "@/lib/measures";
 import type { Section } from "@/lib/groups";
 import { formatChange, formatMetric } from "@/lib/format";
@@ -12,23 +12,26 @@ import { mapDefinitionOf } from "@/lib/mapDefinitions";
 import { marginLabel, changeMarginLabel, MARGIN_NOTE } from "@/lib/uncertainty";
 
 /** Published county comparisons, independent of map geometry or network requests. */
-export function CountyComparison({ sections, initial, embedded = false }: { sections: Section<Measure>[]; initial: string; embedded?: boolean }) {
+export function CountyComparison({ sections, initial, embedded = false, onWindowNotesChange }: { sections: Section<Measure>[]; initial: string; embedded?: boolean; onWindowNotesChange?: (notes: string[]) => void }) {
   const measures = sections.flatMap(section => section.rows);
   const [metric, setMetric] = useState(initial);
   const [window, setWindow] = useState<WindowKey>("5y");
   const id = useId();
   const measure = measures.find(item => item.metric_id === metric) ?? measures[0];
-  if (!measure) return <p>No county comparisons are published yet.</p>;
-  const key = measure.windows[window] ? window : WINDOWS.find(item => measure.windows[item.key])?.key;
-  const reading = key ? measure.windows[key] : null;
+  const key = measure?.windows[window] ? window : WINDOWS.find(item => measure?.windows[item.key])?.key;
+  const reading = key ? measure?.windows[key] : null;
   const rows = reading?.rows ?? [];
-  const notes = key ? windowNote(key, measure.metric_id, measure.windows) : [];
+  const notes = key && measure ? windowNote(key, measure.metric_id, measure.windows) : [];
+  useEffect(() => {
+    onWindowNotesChange?.(key && measure ? windowNote(key, measure.metric_id, measure.windows) : []);
+  }, [key, measure, onWindowNotesChange]);
+  if (!measure) return <p>No county comparisons are published yet.</p>;
   const Container = embedded ? "div" : "details";
   return <Container id="county-comparison" className="place-comparison" data-embedded={embedded || undefined}>
     {!embedded && <summary><span>Compare counties</span><small>Differences between places, with dates and uncertainty</small><span aria-hidden="true">＋</span></summary>}
     <div className="place-comparison-body">
       <div className="comparison-intro">
-      {notes.length > 0 && <aside className="window-aside"><p className="window-aside-label">About “Since 2019”</p>{notes.map(note => <p key={note}>{note}</p>)}</aside>}
+      {!onWindowNotesChange && notes.length > 0 && <aside className="window-aside"><p className="window-aside-label">About “Since 2019”</p>{notes.map(note => <p key={note}>{note}</p>)}</aside>}
       <div>
       <div className="place-comparison-controls">
         <label htmlFor={id}>Measure<select id={id} value={measure.metric_id} onChange={event => setMetric(event.target.value)}>

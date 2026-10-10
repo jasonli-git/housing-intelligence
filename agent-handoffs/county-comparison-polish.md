@@ -2,15 +2,18 @@
 
 ## What changed
 - Refined New Jersey's comparison controls, numeric table and subdued blue header/hover treatment.
-- Moved the selected Since 2019 explanation from below the table into a dashed-outline note in its own row above the controls, right-aligned on desktop. Dropdowns retain the full available width.
+- Moved the selected Since 2019 explanation from below the table into a dashed-outline note beside the Explore places / Compare counties buttons and comparison introduction. Dropdowns underneath retain the full available width; mobile stacks the note below the introduction.
 
 ## Files/modules affected
 - web/components/CountyComparison.tsx
+- web/components/StateModeWorkspace.tsx
 - web/app/ui-refinement.css
+- web/app/state-navigation.css
 - web/scripts/check-state-refinement.mjs
 
 ## Architectural or implementation decisions
 - Reused the existing window-aside design and windowNote helper. No duplicate caveat, changed calculations or new dependencies.
+- The embedded comparison reports selected-window notes to its workspace so they can sit beside the mode controls; standalone comparisons retain their own note.
 - Styling is scoped to New Jersey. Window notes retain same-window and HUD method-change qualifications.
 
 ## Assumptions
