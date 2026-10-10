@@ -21,6 +21,7 @@ export default async function HousingLandingPage() {
   return <>
     <Masthead affordability={{ kind: "hidden" }} search={false} />
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
+      <div className="landing-canvas">
       <header className="page-head nation-head" data-kind="nation">
         <svg className="nation-portrait" viewBox="0 0 360 300" fill="none" aria-hidden="true">
           <circle className="portrait-halo" cx="185" cy="157" r="123" />
@@ -60,6 +61,7 @@ export default async function HousingLandingPage() {
         </div>
         <p className="national-backdrop-note">Each trend uses its own scale. Historical figures, not forecasts.</p>
       </section>
+      </div>
     </main>
   </>;
 }

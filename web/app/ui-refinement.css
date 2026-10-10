@@ -59,7 +59,22 @@
   .nj-page.quiet-state .place-discovery-search { margin-bottom: .8rem; }
   .nj-page.quiet-state .place-county-grid a { padding-block: .4rem; }
   .nj-page.quiet-state .state-workspace-head { padding-bottom: .55rem; }
-  .quiet-nation > .nation-head { padding-block: 1.5rem 1rem; }
+  .quiet-nation .nation-head { padding-block: 1.2rem .5rem; }
+  .landing-canvas { position: relative; padding: clamp(1rem, 3vw, 2rem); background: var(--surface-card); border-radius: 18px; }
+  .landing-canvas .nation-head { border: 0; }
+  .landing-canvas .nation-portrait { opacity: .2; }
+  .landing-canvas .coverage-entry { margin-block: .75rem 1rem; }
+  .landing-canvas .coverage-entry > header h2 { font: 550 17px/1.4 var(--font-text); letter-spacing: -.02em; }
+  .landing-canvas .coverage-atlas { border: 0; background: transparent; }
+  .landing-canvas .coverage-state-preview { padding-block: .8rem; }
+  .landing-canvas .national-backdrop { border-bottom: 0; margin-bottom: 0; }
+  @media (max-width: 600px) {
+    .landing-canvas { padding: .5rem 0; background: transparent; }
+    .landing-canvas .nation-head { padding-top: .8rem; }
+  }
+  .trend-entrance[data-entered="true"] .national-trend-line { animation: national-trend-enter 750ms ease-out both; }
+  @keyframes national-trend-enter { from { stroke-dasharray: 1; stroke-dashoffset: 1; } to { stroke-dasharray: 1; stroke-dashoffset: 0; } }
+  @media (prefers-reduced-motion: reduce) { .trend-entrance[data-entered="true"] .national-trend-line { animation: none; } }
   .quiet-nation .entry-introduction { margin-block: .6rem .8rem; font-size: clamp(22px, 2.5vw, 30px); max-width: 32ch; color: color-mix(in srgb, var(--text-secondary) 90%, var(--surface-1)); }
   .quiet-nation .home-find { margin-top: 1.1rem; }
   .quiet-nation .home-find-hint { max-width: 64ch; font-size: 13px; line-height: 1.6; }

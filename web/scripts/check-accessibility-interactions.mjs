@@ -19,6 +19,13 @@ const axe = async label => {
 try {
   await go('/');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const trend = page.locator('.trend-entrance').first();
+  await trend.scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => document.querySelector('.trend-entrance')?.getAttribute('data-entered') === 'true');
+  assert.equal(await trend.locator('.national-trend-line').evaluate(n => getComputedStyle(n).animationIterationCount), '1', 'National chart traces once, not continuously');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  assert.equal(await trend.locator('.national-trend-line').evaluate(n => getComputedStyle(n).animationName), 'none', 'Reduced motion leaves the chart static');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
   assert.equal(await page.locator('.portrait-house').evaluate(n => getComputedStyle(n).animationIterationCount), 'infinite', 'House illustration loops');
   await page.locator('.portrait-house').evaluate(n => { for (const a of n.getAnimations()) a.currentTime = 13500; });
   assert.equal(await page.locator('.portrait-house').evaluate(n => getComputedStyle(n).opacity), '1', 'Finished house remains visible in second cycle');
