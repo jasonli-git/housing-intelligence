@@ -190,6 +190,8 @@ publish:  ## Build both halves of the deployable site into dist/
 	$(call STAMP,publish: clean build started)
 	rm -rf dist web/.next web/out
 	uv run hip publish --out dist/artifacts
+	@# Place photos (#368) ride with the artifacts: the R2 sync deletes what it was not given.
+	node web/scripts/make-photos.mjs --out dist/artifacts/photos
 	$(call STAMP,publish: artifacts written; starting the API for the page export)
 	@uv run uvicorn hip.api.main:app --port 8000 > /tmp/hip-publish-api.log 2>&1 & \
 	  echo $$! > /tmp/hip-publish-api.pid; \

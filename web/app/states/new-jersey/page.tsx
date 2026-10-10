@@ -1,3 +1,5 @@
+import { PlacePhoto } from "@/components/PlacePhoto";
+import "../../place-photo.css";
 import type { Metadata } from "next";
 import type { Measure } from "@/lib/measures";
 import { StateFigureNotes } from "@/components/StateFigureNotes";
@@ -157,7 +159,7 @@ export default async function NewJerseyPage() {
     <>
       <Masthead affordability={{ kind: "local" }} />
       <main id="main-content" tabIndex={-1} className="shell nj-page quiet-county quiet-state">
-      <header className="page-head nj-head" data-kind="state">
+      <header className="page-head nj-head has-photo" data-kind="state">
         <GardenStateArtwork header />
         <div className="region-head-main">
           <Crumbs trail={[{ href: "/", label: "United States" }]} here="New Jersey" hereKind="state" />
@@ -182,6 +184,7 @@ export default async function NewJerseyPage() {
             <ComputedBadge />
           </div>
         </div>
+        <PlacePhoto geoid="34" />
       </header>
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
         <details className="state-extra-figures"><summary>More statewide figures <span aria-hidden="true">＋</span></summary>

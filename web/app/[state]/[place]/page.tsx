@@ -1,4 +1,7 @@
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
+import { PlacePhoto } from "@/components/PlacePhoto";
+import { photoFor } from "@/lib/photos";
+import "../../place-photo.css";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -471,11 +474,14 @@ export default async function RegionPage({
     </p>}
   </QuietDisclosure><p className="household-next"><Link href={`/guide?place=${regionId}`}>Buyer’s guide for {name} <span aria-hidden="true">→</span></Link><span>Start with this place, then add your household details.</span></p></>;
 
+  // Counties only (ARCHITECTURE #368): a town's or ZIP's page never shows one.
+  const photo = region.level === "county" ? photoFor(region.geoid) : undefined;
+
   return (
     <>
       <Masthead affordability={affordabilityControl} />
       <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
-      <header className="page-head" data-kind={kindOf(region.level)}>
+      <header className={`page-head${photo ? " has-photo" : ""}`} data-kind={kindOf(region.level)}>
         {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
         <div className="region-head-main">
           <Crumbs
@@ -552,6 +558,7 @@ export default async function RegionPage({
             <span className="report-action-arrow" aria-hidden="true">→</span>
           </Link>
         </div>
+        {photo && <PlacePhoto geoid={region.geoid} />}
       </header>
 
       {quiet ? <QuietProfile items={profile} peers={peerNoun(peer_level)} /> : <ProfileTicker

@@ -1,0 +1,574 @@
+[
+ {
+  "geoid": "34",
+  "place": "New Jersey",
+  "caption": "The State House, Trenton",
+  "alt": "The New Jersey State House in Trenton, a cream stone building with a gold dome, under a clear blue sky",
+  "credit": {
+   "artist": "ajay_suresh",
+   "licence": "CC BY 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:New_Jersey_State_House_-_2_(55141979306).jpg",
+   "title": "New Jersey State House - 2 (55141979306).jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/New_Jersey_State_House_-_2_%2855141979306%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "30cc5bdc87d2d98e9af91e7bd8e326c6cbcb3af9599c222e492e5862904f9f39",
+   "width": 9018,
+   "height": 5073
+  },
+  "crop": {
+   "cx": 0.45,
+   "cy": 0.55,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34001",
+  "place": "Atlantic County",
+  "caption": "Lucy the Elephant, Margate City",
+  "alt": "Lucy the Elephant, a six-story wooden elephant building with a canopy on its back, in Margate City",
+  "credit": {
+   "artist": "Acroterion",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Lucy_the_Elephant_NJ3.jpg",
+   "title": "Lucy the Elephant NJ3.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Lucy_the_Elephant_NJ3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "7398b6636dce882a7fa46bbc54ec1f41be9ede8a4f5318216a26f1193b7fa169",
+   "width": 4698,
+   "height": 3900
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.55,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34003",
+  "place": "Bergen County",
+  "caption": "The Hudson from Rockefeller Overlook, Englewood Cliffs; the far shore is New York",
+  "alt": "The Hudson River seen from the top of the Palisades cliffs, with green brush in the foreground",
+  "credit": {
+   "artist": "Andre Carrotflower",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Rockefeller_Overlook,_Palisades_Interstate_Parkway,_Englewood_Cliffs,_New_Jersey_-_20200907_-_01_(panorama).jpg",
+   "title": "Rockefeller Overlook, Palisades Interstate Parkway, Englewood Cliffs, New Jersey - 20200907 - 01 (panorama).jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/c/c5/Rockefeller_Overlook%2C_Palisades_Interstate_Parkway%2C_Englewood_Cliffs%2C_New_Jersey_-_20200907_-_01_%28panorama%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "968c4d09cf832a545e1ea1e252ddcccc7df87ffcbb86213d27c34f0acc35df02",
+   "width": 12924,
+   "height": 3940
+  },
+  "crop": {
+   "cx": 0.56,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34005",
+  "place": "Burlington County",
+  "caption": "The Mullica River in Wharton State Forest (Pine Barrens)",
+  "alt": "A tea-coloured river bending through pine forest in the Pine Barrens",
+  "credit": {
+   "artist": "Famartin",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2024-10-08_11_43_16_Panoramic_view_southwest_across_the_Mullica_River_within_Wharton_State_Forest_on_the_border_of_Mullica_Township,_Atlantic_County_and_Washington_Township,_Burlington_County_in_New_Jersey.jpg",
+   "title": "2024-10-08 11 43 16 Panoramic view southwest across the Mullica River within Wharton State Forest on the border of Mullica Township, Atlantic County and Washington Township, Burlington County in New Jersey.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/2/2e/2024-10-08_11_43_16_Panoramic_view_southwest_across_the_Mullica_River_within_Wharton_State_Forest_on_the_border_of_Mullica_Township%2C_Atlantic_County_and_Washington_Township%2C_Burlington_County_in_New_Jersey.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "a8b37cf241dade630973d209fde88975c7092bebb1ac8ff9f463ab46010e5d1e",
+   "width": 8338,
+   "height": 3988
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34007",
+  "place": "Camden County",
+  "caption": "Battleship New Jersey from the Camden marina",
+  "alt": "The battleship New Jersey moored on the Camden waterfront, behind a Camden fire rescue boat",
+  "credit": {
+   "artist": "Brahmslover",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:The_USS_New_Jersey_seen_from_Camden_Marina.jpg",
+   "title": "The USS New Jersey seen from Camden Marina.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/5/59/The_USS_New_Jersey_seen_from_Camden_Marina.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "9081d553820098ee3ed7b9c9612855f12c3d7577a4c012e36a66d2f19f54722d",
+   "width": 4032,
+   "height": 3024
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.34,
+   "scale": 0.7
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34009",
+  "place": "Cape May County",
+  "caption": "Cape May Lighthouse",
+  "alt": "Cape May Lighthouse at sunset, above dune grass and a sand fence",
+  "credit": {
+   "artist": "King of Hearts",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Cape_May_Lighthouse_September_2020_002.jpg",
+   "title": "Cape May Lighthouse September 2020 002.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/a/a3/Cape_May_Lighthouse_September_2020_002.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "367545db7ff3b98ff98a8ff862abc39ef827a7e4df2e0714887d23c12b9c3a62",
+   "width": 5700,
+   "height": 3800
+  },
+  "crop": {
+   "cx": 0.55,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34011",
+  "place": "Cumberland County",
+  "caption": "East Point Lighthouse, Maurice River Township",
+  "alt": "East Point Lighthouse, a white house with a red roof and a lantern, on a marsh beside Delaware Bay, seen from the air",
+  "credit": {
+   "artist": "Needsmoreritalin",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:East_Point_Light_Drone_HDR.jpg",
+   "title": "East Point Light Drone HDR.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/East_Point_Light_Drone_HDR.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "b43673a9e237fca9407cdee98410d427bc87de2e78d331ae9c2fb45e618c9659",
+   "width": 5463,
+   "height": 3639
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34013",
+  "place": "Essex County",
+  "caption": "Second River in Branch Brook Park, Newark",
+  "alt": "Second River in Branch Brook Park in spring, lined with flowering cherry trees and forsythia",
+  "credit": {
+   "artist": "Jim.henderson",
+   "licence": "Public domain",
+   "licence_url": "https://commons.wikimedia.org/wiki/File:Second_River_in_Branch_Brook_Park_jeh.jpg",
+   "source": "https://commons.wikimedia.org/wiki/File:Second_River_in_Branch_Brook_Park_jeh.jpg",
+   "title": "Second River in Branch Brook Park jeh.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Second_River_in_Branch_Brook_Park_jeh.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "48ffae3570eb557745cfb9350526e8f9b360c42291a60c8a761ec97fe5a59152",
+   "width": 3072,
+   "height": 2304
+  },
+  "crop": {
+   "cx": 0.25,
+   "cy": 0.58,
+   "scale": 0.55
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34015",
+  "place": "Gloucester County",
+  "caption": "Stewart Lake, Woodbury",
+  "alt": "Stewart Lake in Woodbury, calm water between wooded banks on a summer day",
+  "credit": {
+   "artist": "Mr. Matté",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Stewart_Lake,_Woodbury,_NJ_looking_north,_Aug._2025.jpg",
+   "title": "Stewart Lake, Woodbury, NJ looking north, Aug. 2025.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/3/31/Stewart_Lake%2C_Woodbury%2C_NJ_looking_north%2C_Aug._2025.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "f707d123fee3191a5e95bfd4f7947eca5301ad724b8bfb500f656cd60ee11101",
+   "width": 3765,
+   "height": 2877
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34017",
+  "place": "Hudson County",
+  "caption": "West New York's riverfront towers",
+  "alt": "Apartment towers and riverfront townhouses in West New York, seen across the Hudson River",
+  "credit": {
+   "artist": "Jakub Hałun",
+   "licence": "CC BY 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Apartment_buildings_on_the_shore_of_Hudson_River,_West_New_York,_New_Jersey,_20231001_1206_1074.jpg",
+   "title": "Apartment buildings on the shore of Hudson River, West New York, New Jersey, 20231001 1206 1074.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/4/49/Apartment_buildings_on_the_shore_of_Hudson_River%2C_West_New_York%2C_New_Jersey%2C_20231001_1206_1074.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "ee7d7f1fae7999953f011b4c2edea0c583a2f33a897a7e13077c60f7a1ee0349",
+   "width": 5885,
+   "height": 2673
+  },
+  "crop": {
+   "cx": 0.55,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34019",
+  "place": "Hunterdon County",
+  "caption": "The Red Mill, Clinton",
+  "alt": "The Red Mill in Clinton, a red four-story mill with a waterwheel, beside a dam in autumn",
+  "credit": {
+   "artist": "King of Hearts",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Red_Mill_Clinton_October_2021_003.jpg",
+   "title": "Red Mill Clinton October 2021 003.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Red_Mill_Clinton_October_2021_003.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "5d91b7e057c6026fb42660292da9d5b928135b93e3ec61e7a8ce5e5c566d5335",
+   "width": 5460,
+   "height": 3900
+  },
+  "crop": {
+   "cx": 0.42,
+   "cy": 0.5,
+   "scale": 0.85
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34021",
+  "place": "Mercer County",
+  "caption": "Mercer Lake, Mercer County Park, West Windsor",
+  "alt": "Mercer Lake in Mercer County Park under a cloudy sky, with bare trees on the far shore",
+  "credit": {
+   "artist": "Ryan Hodnett",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Mercer_Lake_-_West_Windsor,_New_Jersey_2023-03-04_(03).jpg",
+   "title": "Mercer Lake - West Windsor, New Jersey 2023-03-04 (03).jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Mercer_Lake_-_West_Windsor%2C_New_Jersey_2023-03-04_%2803%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "2e27fa71238c2ccd94ef3982f7474aed7df82657dc17521266dd868f19837f9b",
+   "width": 6016,
+   "height": 3384
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34023",
+  "place": "Middlesex County",
+  "caption": "Davidson's Mill Pond, South Brunswick",
+  "alt": "A stone dam spilling water from Davidson's Mill Pond, with autumn trees reflected behind it",
+  "credit": {
+   "artist": "Freeholdman12",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Davidson_Mill_Pond_in_fall.jpg",
+   "title": "Davidson Mill Pond in fall.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/2/25/Davidson_Mill_Pond_in_fall.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "adeb82140fa9745b8d41cf2faa9a9c6e48b570ca5235f27673683f267114086a",
+   "width": 6000,
+   "height": 4000
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "title",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34025",
+  "place": "Monmouth County",
+  "caption": "Sandy Hook Lighthouse",
+  "alt": "Sandy Hook Lighthouse, a white stone tower with a red lantern, beside the white keeper's house",
+  "credit": {
+   "artist": "King of Hearts",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Sandy_Hook_Lighthouse_October_2020_panorama.jpg",
+   "title": "Sandy Hook Lighthouse October 2020 panorama.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/6/60/Sandy_Hook_Lighthouse_October_2020_panorama.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "16ee0be828ff01853f98b449dcf0dafb056e7284f374d1599d7909aa444ff700",
+   "width": 8750,
+   "height": 6250
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.45,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34027",
+  "place": "Morris County",
+  "caption": "Great Swamp National Wildlife Refuge",
+  "alt": "Wetland meadow and evergreens in the Great Swamp National Wildlife Refuge in winter",
+  "credit": {
+   "artist": "Ryan Hodnett",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Great_Swamp_National_Wildlife_Refuge,_New_Jersey_2023-02-25_(03).jpg",
+   "title": "Great Swamp National Wildlife Refuge, New Jersey 2023-02-25 (03).jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/9/93/Great_Swamp_National_Wildlife_Refuge%2C_New_Jersey_2023-02-25_%2803%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "78e11966a89552308e031bb3cd19844ff21f422e9f87f6a08946950b400d0494",
+   "width": 7833,
+   "height": 2611
+  },
+  "crop": {
+   "cx": 0.6,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34029",
+  "place": "Ocean County",
+  "caption": "Dunes and the beach walkway, Barnegat Light",
+  "alt": "A boardwalk path through grassy dunes to the ocean at Barnegat Light, under scattered clouds",
+  "credit": {
+   "artist": "Famartin",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2020-10-18_16_44_41_Panorama_from_the_walkway_to_the_Atlantic_Ocean_from_East_9th_Street_in_Barnegat_Light,_Ocean_County,_New_Jersey.jpg",
+   "title": "2020-10-18 16 44 41 Panorama from the walkway to the Atlantic Ocean from East 9th Street in Barnegat Light, Ocean County, New Jersey.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/e/e0/2020-10-18_16_44_41_Panorama_from_the_walkway_to_the_Atlantic_Ocean_from_East_9th_Street_in_Barnegat_Light%2C_Ocean_County%2C_New_Jersey.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "1f5360568d5940c4ec9bed84d3ff2dc7a489915f748b11d16acc0afc9f6df062",
+   "width": 14324,
+   "height": 3924
+  },
+  "crop": {
+   "cx": 0.55,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34031",
+  "place": "Passaic County",
+  "caption": "Greenwood Lake from Abram S. Hewitt State Forest, West Milford; the lake runs into New York",
+  "alt": "Greenwood Lake seen from a rocky ridge in autumn, with wooded hills on either side",
+  "credit": {
+   "artist": "Famartin",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2024-10-22_12_44_35_Autumn_panoramic_view_eastward_toward_Greenwood_Lake_from_the_eastern_segment_of_the_Ernest_Walter_Trail_within_Abram_S._Hewitt_State_Forest_in_West_Milford_Township,_Passaic_County,_New_Jersey.jpg",
+   "title": "2024-10-22 12 44 35 Autumn panoramic view eastward toward Greenwood Lake from the eastern segment of the Ernest Walter Trail within Abram S. Hewitt State Forest in West Milford Township, Passaic County, New Jersey.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/7/7d/2024-10-22_12_44_35_Autumn_panoramic_view_eastward_toward_Greenwood_Lake_from_the_eastern_segment_of_the_Ernest_Walter_Trail_within_Abram_S._Hewitt_State_Forest_in_West_Milford_Township%2C_Passaic_County%2C_New_Jersey.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "7e5f5e3b90c4068719114b0c4f7dd7e0e5704e7f0fe3cfaab7e276411a234a12",
+   "width": 8088,
+   "height": 3842
+  },
+  "crop": {
+   "cx": 0.6,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34033",
+  "place": "Salem County",
+  "caption": "Finns Point Rear Range Light, Pennsville",
+  "alt": "Finns Point Rear Range Light, a tall black iron lighthouse tower, at Supawna Meadows National Wildlife Refuge",
+  "credit": {
+   "artist": "Zeete",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Finns_Point_Rear_Range_Light,_Pennsville_Township,_NJ.jpg",
+   "title": "Finns Point Rear Range Light, Pennsville Township, NJ.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Finns_Point_Rear_Range_Light%2C_Pennsville_Township%2C_NJ.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "abd7f1abec33036baad73d19fde4f3d5dcf1efdb454f2024d180978e22e62e87",
+   "width": 2882,
+   "height": 1921
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34035",
+  "place": "Somerset County",
+  "caption": "Sourland Mountain in autumn",
+  "alt": "Autumn forest of tall oaks and maples on Sourland Mountain",
+  "credit": {
+   "artist": "Famartin",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2024-10-23_11_45_19_Autumn_view_northeast_from_the_highest_elevation_of_Sourland_Mountain_within_the_Sourland_Mountain_Preserve_in_Hillsborough_Township,_Somerset_County,_New_Jersey.jpg",
+   "title": "2024-10-23 11 45 19 Autumn view northeast from the highest elevation of Sourland Mountain within the Sourland Mountain Preserve in Hillsborough Township, Somerset County, New Jersey.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/5/51/2024-10-23_11_45_19_Autumn_view_northeast_from_the_highest_elevation_of_Sourland_Mountain_within_the_Sourland_Mountain_Preserve_in_Hillsborough_Township%2C_Somerset_County%2C_New_Jersey.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "bd416cdea20595bfa66329bbe11fad7f98379c9ef960dc649793cc34c1a76e80",
+   "width": 4032,
+   "height": 3024
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.45,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34037",
+  "place": "Sussex County",
+  "caption": "A creek in Wawayanda State Park, Vernon",
+  "alt": "Grass tussocks and shrubs in a frozen creek in Wawayanda State Park on a foggy day",
+  "credit": {
+   "artist": "Kritzolina",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:A_creek_in_Wawayanda_State_Park_03.jpg",
+   "title": "A creek in Wawayanda State Park 03.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/6/68/A_creek_in_Wawayanda_State_Park_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "83422d0349db17cf53911dc1e7d8e1b9c23d9fc3cd2ff9b3c2151b03c1668a9c",
+   "width": 5472,
+   "height": 3648
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34039",
+  "place": "Union County",
+  "caption": "Watchung Reservation",
+  "alt": "A large maple in autumn colour on a lawn in the Watchung Reservation",
+  "credit": {
+   "artist": "Tyler de Noche",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Trees_in_Watchung_Reservation.jpg",
+   "title": "Trees in Watchung Reservation.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Trees_in_Watchung_Reservation.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "4d045b8ce60cdb11b7b388203bc98fad81a7e809218ecd37322db4bb0a29146d",
+   "width": 4032,
+   "height": 3024
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.5,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ },
+ {
+  "geoid": "34041",
+  "place": "Warren County",
+  "caption": "The Delaware Water Gap from Mount Tammany; Mount Minsi, across the river, is in Pennsylvania",
+  "alt": "The Delaware River curving around Mount Minsi at the Delaware Water Gap, seen from Mount Tammany",
+  "credit": {
+   "artist": "Famartin",
+   "licence": "CC BY-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:2024-08-21_10_47_36_View_south-southwest_toward_Mount_Minsi_from_about_720_feet_on_the_Mount_Tammany_Trail_in_Hardwick_Township,_Warren_County,_New_Jersey.jpg",
+   "title": "2024-08-21 10 47 36 View south-southwest toward Mount Minsi from about 720 feet on the Mount Tammany Trail in Hardwick Township, Warren County, New Jersey.jpg"
+  },
+  "original": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/2/24/2024-08-21_10_47_36_View_south-southwest_toward_Mount_Minsi_from_about_720_feet_on_the_Mount_Tammany_Trail_in_Hardwick_Township%2C_Warren_County%2C_New_Jersey.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "sha256": "adc55eecc87ebcdbea510a69aae1d6c7cc53d300d095248f296ea2a2e1a6c94f",
+   "width": 4032,
+   "height": 3024
+  },
+  "crop": {
+   "cx": 0.5,
+   "cy": 0.45,
+   "scale": 1
+  },
+  "located_by": "geotag",
+  "reviewed": "2026-10-10"
+ }
+]

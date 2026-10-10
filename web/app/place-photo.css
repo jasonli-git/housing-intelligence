@@ -1,0 +1,39 @@
+/* Place photos (ARCHITECTURE #368). Wide screens: a column of its own beside the title,
+   in space the header already had, so the page grows no longer. Phones: behind the
+   title block only, under a dark wash, so the summary and buttons stay on the page's
+   own background. */
+@media screen {
+  main > header.page-head.has-photo .state-place-artwork-header { display: none; }
+  .place-photo { margin: 0; }
+  .place-photo img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 12px; background: var(--surface-2); }
+  .place-photo figcaption { display: grid; gap: .1rem; margin-top: .45rem; font: 12px/1.4 var(--font-text, system-ui); color: var(--text-muted); text-align: right; }
+  .place-photo-caption { color: var(--text-secondary); }
+  .place-photo figcaption a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); }
+
+  @media (min-width: 761px) {
+    .quiet-county > header.page-head.has-photo {
+      display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+      grid-template-areas: "main photo" "actions photo"; column-gap: clamp(1.5rem, 4vw, 3rem); align-items: start;
+    }
+    .quiet-county > header.page-head.has-photo > .region-head-main { grid-area: main; }
+    .quiet-county > header.page-head.has-photo > .actions { grid-area: actions; }
+    .quiet-county > header.page-head.has-photo > .place-photo { grid-area: photo; align-self: start; margin-top: 2.4rem; max-width: 480px; justify-self: end; width: 100%; }
+    /* The state header is a title and nickname with no summary under them, so a full-size
+       photo would make it the tallest thing on the page; a smaller one stays level with it. */
+    .quiet-state > header.page-head.has-photo > .place-photo { margin-top: .4rem; max-width: 340px; }
+  }
+
+  @media (max-width: 760px) {
+    .quiet-county > header.page-head.has-photo { position: relative; isolation: isolate; }
+    .quiet-county > header.page-head.has-photo > .place-photo { position: absolute; top: 0; left: calc(-1 * var(--gutter, 16px)); right: calc(-1 * var(--gutter, 16px)); height: var(--place-photo-band, 236px); z-index: -1; }
+    .quiet-county > header.page-head.has-photo > .place-photo picture,
+    .quiet-county > header.page-head.has-photo > .place-photo img { height: 100%; aspect-ratio: auto; border-radius: 0; }
+    .quiet-county > header.page-head.has-photo > .place-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #0006 0%, #000a 100%); pointer-events: none; }
+    .quiet-county > header.page-head.has-photo > .place-photo figcaption { position: absolute; left: var(--gutter, 16px); right: var(--gutter, 16px); bottom: .45rem; z-index: 1; margin: 0; color: #ece7de; text-shadow: 0 1px 2px #000; grid-template-columns: 1fr; }
+    .quiet-county > header.page-head.has-photo > .place-photo .place-photo-caption { color: #f4efe6; }
+    .quiet-county > header.page-head.has-photo :is(.crumbs, .page-head-eyebrow, .page-title-row) {
+      --text-primary: #f7f4ee; --text-secondary: #e6e0d6; --text-muted: #d8d1c5; color: #f7f4ee;
+    }
+    .quiet-county > header.page-head.has-photo .page-title-row { padding-bottom: 3.4rem; }
+  }
+}

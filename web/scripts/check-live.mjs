@@ -423,6 +423,27 @@ async function checkCrossOrigin(page) {
 }
 
 /**
+ * Place photos (ARCHITECTURE #368): the build wrote them into the artifacts, so the bucket
+ * must serve the one a county page asks for. Its bytes must equal this build's copy, the
+ * same rule as every other artifact.
+ */
+async function checkPhotos() {
+  const local = path.join(artifactsDir, "photos", "34021-640.webp");
+  let expected;
+  try {
+    expected = await readFile(local);
+  } catch {
+    throw new Error("dist/artifacts/photos/ has no 34021-640.webp: make publish did not write the place photos");
+  }
+  const response = await fetch(liveUrl(artifactUrl, "/photos/34021-640.webp"));
+  const actual = Buffer.from(await response.arrayBuffer());
+  if (response.status !== 200 || !actual.equals(expected)) {
+    throw new Error(`photos/34021-640.webp is not live (HTTP ${response.status}, ${actual.length} bytes)`);
+  }
+  console.log(`ok photos     photos/34021-640.webp · ${actual.length} bytes`);
+}
+
+/**
  * The statewide search, driven as a reader would (Milestone 38): an address from a town's
  * file typed with no town chosen must come back as a result, which takes the street
  * index's `meta.json`, its shard and the town's file, all read across origins.
@@ -481,6 +502,7 @@ async function run() {
     page.setDefaultTimeout(timeout);
     await checkManifest(page);
     await checkCrossOrigin(page);
+    await checkPhotos();
     await checkStatewideSearch(page);
 
     for (const sample of await pageSamples()) {

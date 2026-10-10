@@ -786,6 +786,19 @@ place has no address yet. Give it one, review the two files it changes, and comm
 cd web && npm run routes:refresh   # needs the local API; Node 22.18+
 ```
 
+### Place photos
+
+The New Jersey page and each county page show one photograph from Wikimedia Commons,
+listed in `web/lib/photos.json` with its credit, licence and crop. `make publish` builds
+the page-sized copies into `dist/artifacts/photos/` from originals kept in
+`data/raw/photos/`, downloading any that are missing. A photo whose file has changed on
+Commons stops the publish until it is reviewed again.
+
+To add or replace one: find it on Commons (public domain, CC0, CC BY or CC BY-SA only);
+check it at full size for faces, number plates and house numbers; confirm it shows the
+place its caption names; then add its entry with the original's SHA-256 and run
+`node web/scripts/make-photos.mjs --out /tmp/photos` to see the crop.
+
 ### When check-live fails
 
 `make check-live` compares the live site and data with `dist/`: every artifact's
