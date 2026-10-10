@@ -894,6 +894,19 @@ export type SourceFreshness = {
   expected_weekly?: string | null;
   /** Where the publisher's calendar is, when it has one. */
   calendar_url?: string | null;
+  /** Whether `expected` is the publisher's calendar or what it told the project (#370). */
+  expected_by?: "calendar" | "inquiry" | null;
+  /** What the publisher told the project directly (#370). */
+  inquiries?: Inquiry[];
+};
+
+/** A publisher's direct answer to the project, by email or a records request (#370). */
+export type Inquiry = {
+  answered: string;
+  office: string;
+  via: "email" | "records request";
+  said: string;
+  expected?: { day: string; precision: "day" | "month"; covers: string } | null;
 };
 
 export type FreshnessReport = {

@@ -6,8 +6,8 @@ publisher and cadence) — because the whole reason this page exists is that *ch
 today* must never read as *measured today*, and inventing a number to fill a gap would
 be exactly that.
 
-Two fields of `config/sources.yml` are never read here: `notes`, which holds at least
-one fact known only from a private email (below), and `fallback`, which ARCHITECTURE
+Two fields of `config/sources.yml` are never read here: `notes`, the maintainers' own
+remarks, and `fallback`, which ARCHITECTURE
 #211 records as internal — the plan for the day a source stops answering, not a
 public claim about it.
 
@@ -38,10 +38,11 @@ comes from the publisher's own calendar, recorded by hand in `config/sources.yml
 (`release_calendar`, #298, amending this file's first rule of no schedule at all): the
 announced dates still ahead, or the weekday a weekly release keeps, with the calendar's
 address so a reader can check it. Nothing is inferred from a source's history — MOD-IV's
-gaps are why — and a source whose publisher announces no date says so. `nj_modiv`'s
-real next-publication date, known only from a private email, stays out of this file
-entirely and out of every public page; `config/sources.yml`'s `notes` field is never
-read here.
+gaps are why — and a source whose publisher announces no date says so. A date a
+publisher told the project directly, by email or a records request, is the exception
+(2026-10-10, ARCHITECTURE #370): it comes from the source's `inquiries`, only where no
+calendar exists, marked `expected_by="inquiry"` so the page shows it as the project's
+own reporting with the publisher's words. `nj_modiv`'s February 2027 is the first.
 """
 
 from __future__ import annotations
@@ -56,7 +57,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from hip import __version__
-from hip.config import REPO_ROOT, ReleaseDate, Source, Weekday
+from hip.config import REPO_ROOT, Inquiry, ReleaseDate, Source, Weekday
 from hip.warehouse.determinations import income_limits_in_force
 
 Status = Literal["current", "pending", "unreachable", "not_tracked"]
@@ -89,6 +90,10 @@ class SourceFreshness(BaseModel):
     expected: list[ReleaseDate] = []
     expected_weekly: Weekday | None = None
     calendar_url: str | None = None
+    # Where `expected` came from: the publisher's calendar, or what it told the project
+    # directly (#370), which the page marks as the project's own reporting.
+    expected_by: Literal["calendar", "inquiry"] | None = None
+    inquiries: list[Inquiry] = []
 
 
 class FreshnessReport(BaseModel):
@@ -222,6 +227,15 @@ def build_report(
         start, end = observed.get(source_id, (None, None))
         calendar = source.release_calendar
         today = datetime.now(UTC).date()
+        # A published calendar outranks a date told by email: it is the public record.
+        told = [
+            i.expected
+            for i in source.inquiries
+            if i.expected and _not_yet_past(i.expected, today)
+        ]
+        expected = (
+            [d for d in calendar.dates if _not_yet_past(d, today)] if calendar else told
+        )
         rows.append(
             SourceFreshness(
                 source_id=source_id,
@@ -247,13 +261,15 @@ def build_report(
                     else None
                 ),
                 acquired_at=acquired.get(source_id),
-                expected=(
-                    [d for d in calendar.dates if _not_yet_past(d, today)]
-                    if calendar
-                    else []
-                ),
+                expected=expected,
                 expected_weekly=calendar.weekly if calendar else None,
                 calendar_url=calendar.url if calendar else None,
+                expected_by=(
+                    ("calendar" if calendar else "inquiry")
+                    if (expected or calendar)
+                    else None
+                ),
+                inquiries=source.inquiries,
             )
         )
 

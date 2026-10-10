@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import type { SourceFreshness } from "@/lib/api";
 import { nextRelease } from "@/lib/freshness";
+import { InquiryNote } from "@/components/InquiryNote";
 
 /**
  * A source's next release, from the publisher's own calendar (#298). Drawn first from the
@@ -24,6 +25,9 @@ export function NextRelease({ source, builtAt }: { source: SourceFreshness; buil
     <span data-volatile>
       {next.label}
       {next.detail && <span className="fresh-sub">{next.detail}</span>}
+      {source.expected_by === "inquiry" && source.inquiries?.at(-1) && (
+        <span className="fresh-sub"><InquiryNote inquiry={source.inquiries.at(-1)!} headline={`${source.inquiries.at(-1)!.office} told us`} /></span>
+      )}
       {source.calendar_url && (
         <span className="fresh-sub">
           <a href={source.calendar_url} target="_blank" rel="noreferrer">

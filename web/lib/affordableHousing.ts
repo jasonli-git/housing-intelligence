@@ -42,9 +42,9 @@ export function reportedEnds(row: HousingRecord, records: HousingRecord[]): stri
     : row.payload.earliest_controls_end ? [row.payload.earliest_controls_end] : [];
 }
 export const APPLICATION_ROUTES = [
-  {label: "Find listed affordable homes", agency: "NJ Housing Resource Center", url: "https://www.nj.gov/njhrc/", note: "Listings and application contacts; confirm availability with the administrator."},
-  {label: "Check state voucher enrollment", agency: "NJ DCA", url: "https://www.nj.gov/dca/dhcr/offices/vouchers.shtml", note: "Check official openings, waiting lists and application instructions."},
-  {label: "Find a housing authority", agency: "HUD’s New Jersey directory", url: "https://www.hud.gov/sites/dfiles/PIH/documents/PHA_Contact_Report_NJ.pdf", note: "Ask which areas it serves and whether its waiting list is open."},
+  {icon: "listings", label: "Find listed affordable homes", agency: "NJ Housing Resource Center", url: "https://www.nj.gov/njhrc/", note: "Listings and application contacts; confirm availability with the administrator."},
+  {icon: "voucher", label: "Check state voucher enrollment", agency: "NJ DCA", url: "https://www.nj.gov/dca/dhcr/offices/vouchers.shtml", note: "Check official openings, waiting lists and application instructions."},
+  {icon: "authority", label: "Find a housing authority", agency: "HUD’s New Jersey directory", url: "https://www.hud.gov/sites/dfiles/PIH/documents/PHA_Contact_Report_NJ.pdf", note: "Ask which areas it serves and whether its waiting list is open."},
 ] as const;
 
 export function inventoryUrl(artifacts: string, api: string, id: number): string {

@@ -9,6 +9,7 @@ import { CostToOwn } from "@/components/CostToOwn";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { AffordableHousing, HousingHelpDisclosure } from "@/components/AffordableHousing";
 import { APPLICATION_ROUTES } from "@/lib/affordableHousing";
+import { StepIcon } from "@/components/StepIcon";
 import { LocalNextSteps } from "@/components/LocalNextSteps";
 import { CountyPlaces } from "@/components/CountyPlaces";
 import { LocalEvidenceCharts } from "@/components/LocalEvidenceCharts";
@@ -468,11 +469,11 @@ export default async function RegionPage({
       margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))} />
     <SimilarPlaces name={name} data={similar} />
     {region.level !== "zip" && <p className="household-next">
-      <Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
+      <StepIcon name="budget" /><Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
         {region.level === "county" ? "Find towns within my budget" : "Compare nearby towns"} <span aria-hidden="true">→</span>
       </Link><span>Starts in {region.level === "county" ? name : county ? displayName(county) : "New Jersey"}. You can search all New Jersey.</span>
     </p>}
-  </QuietDisclosure><p className="household-next"><Link href={`/guide?place=${regionId}`}>Buyer’s guide for {name} <span aria-hidden="true">→</span></Link><span>Start with this place, then add your household details.</span></p></>;
+  </QuietDisclosure><p className="household-next"><StepIcon name="guide" /><Link href={`/guide?place=${regionId}`}>Buyer’s guide for {name} <span aria-hidden="true">→</span></Link><span>Start with this place, then add your household details.</span></p></>;
 
   // Counties only (ARCHITECTURE #368): a town's or ZIP's page never shows one.
   const photo = region.level === "county" ? photoFor(region.geoid) : undefined;
@@ -604,7 +605,7 @@ export default async function RegionPage({
       <LocalNextSteps taxHref={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"} />
       <section id="housing-assistance" className="local-housing-help" aria-labelledby="local-help-heading">
         <h3 id="local-help-heading">Find housing help</h3>
-        <nav className="local-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><small>{route.agency}</small><strong>{route.label} <span aria-hidden="true">↗</span></strong><span>{route.note}</span></a>)}</nav>
+        <nav className="local-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><StepIcon name={route.icon} /><small>{route.agency}</small><strong>{route.label} <span aria-hidden="true">↗</span></strong><span>{route.note}</span></a>)}</nav>
         <p className="table-note">Check eligibility, vacancies and waiting lists with the administrator.</p>
         <HousingHelpDisclosure enabled={quiet}><AffordableHousing data={housingHelp} hideRoutes /></HousingHelpDisclosure>
       </section>
