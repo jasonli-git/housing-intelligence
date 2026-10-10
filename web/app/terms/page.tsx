@@ -98,6 +98,22 @@ export default function TermsPage() {
           </p>
         </section>
 
+        <section className="section" aria-labelledby="terms-photos">
+          <h2 id="terms-photos">Photographs</h2>
+          <p>
+            The photographs on the New Jersey and county pages are not the site&rsquo;s. Each is
+            from Wikimedia Commons and belongs to its photographer, under the licence named in its
+            credit, which links the original and the licence. The site has cropped and resized
+            them; nothing else about them is changed. These terms do not cover them, and reusing
+            one means following its own licence.
+          </p>
+          <p>
+            If you are a photographer, or are recognisable in a photograph here, and want it
+            removed, write to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> and it will
+            come down at the next update.
+          </p>
+        </section>
+
         <section className="section" aria-labelledby="terms-code">
           <h2 id="terms-code">The code</h2>
           <p>
