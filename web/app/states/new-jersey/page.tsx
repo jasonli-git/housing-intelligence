@@ -175,10 +175,6 @@ export default async function NewJerseyPage() {
             <ComputedBadge />
           </div>
         </div>
-        <a className="nj-atlas-entry" href="#nj-explore">
-          <span className="nj-atlas-count">{countyRegions?.total ?? 0}<span>counties</span></span>
-          <span className="nj-atlas-entry-label">Find your place <span aria-hidden="true">↘</span></span>
-        </a>
       </header>
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
         <details className="state-extra-figures"><summary>More statewide figures <span aria-hidden="true">＋</span></summary>

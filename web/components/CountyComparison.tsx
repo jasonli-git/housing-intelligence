@@ -23,7 +23,7 @@ export function CountyComparison({ sections, initial }: { sections: Section<Meas
   const reading = key ? measure.windows[key] : null;
   const rows = reading?.rows ?? [];
   return <details id="county-comparison" className="place-comparison">
-    <summary><span>Compare counties</span><small>Values, change and source uncertainty</small><span aria-hidden="true">＋</span></summary>
+    <summary><span>Compare counties</span><small>Differences between places, with dates and uncertainty</small><span aria-hidden="true">＋</span></summary>
     <div className="place-comparison-body">
       <div className="place-comparison-controls">
         <label htmlFor={id}>Measure<select id={id} value={measure.metric_id} onChange={event => setMetric(event.target.value)}>

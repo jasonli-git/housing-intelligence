@@ -31,12 +31,13 @@ export function StateModeWorkspace({ countyPages, sections, initial }: {
         <SectionJump />
       </header>
       <div className="place-discovery">
-        <p>Start with a county, or go straight to a town or ZIP.</p>
+        <p className="place-search-label">Search a town, county or ZIP.</p>
         <div className="place-discovery-search"><PlaceSearch />
-          <Link className="place-budget-link" href="/afford?county=all">Search by budget <span aria-hidden="true">↗</span></Link>
+          <Link className="place-budget-link" href="/afford?county=all"><span>Find your fit <span aria-hidden="true">↗</span></span><small>Across New Jersey</small></Link>
         </div>
-        <nav aria-label="New Jersey counties" className="place-county-grid">
-          {countyPages.map(county => <Link key={county.id} href={`/regions/${county.id}`}><span>{county.name.replace(/ County$/, "")}</span><small>County <span aria-hidden="true">↗</span></small></Link>)}
+        <h3 id="county-directory-heading" className="county-directory-heading">Explore {countyPages.length} counties</h3>
+        <nav aria-labelledby="county-directory-heading" className="place-county-grid">
+          {countyPages.map(county => <Link key={county.id} href={`/regions/${county.id}`} aria-label={`Explore ${county.name}`}><span>{county.name.replace(/ County$/, "")}</span><small aria-hidden="true">↗</small></Link>)}
         </nav>
         {!countyPages.length && <p>County pages are unavailable in this snapshot. Try the place search.</p>}
       </div>
