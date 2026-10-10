@@ -56,8 +56,12 @@ small.report-source-code { display: block; color: var(--text-muted); }
   .report .cost-view-note { orphans: 2; widows: 2; }
   .report .cost-view-figure b { font-size: 18pt; }
   .report .doc tr { break-inside: avoid; }
-  .report .standouts { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6pt; }
-  .report .standout { padding: 6pt; font-size: 9pt; border-radius: 4pt; }
+  .report .doc tr.group { break-after: avoid; }
+  .report .standout-group-label { break-after: avoid; }
+  /* Inline card rows fragment normally; a grid can strand the preceding heading. */
+  .report .standouts { display: block; break-before: avoid; font-size: 0; }
+  .report .standout { display: inline-block; vertical-align: top; width: calc((100% - 18pt) / 3); margin: 0 6pt 6pt 0; padding: 6pt; font-size: 9pt; border-radius: 4pt; break-inside: avoid; }
+  .report .standout > span { display: block; margin-top: 2pt; }
   .report .standout-figure { font-size: 16pt; }
   .report .standout-detail { font-size: 8.5pt; }
   .report .cost-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8pt; }
@@ -88,4 +92,5 @@ small.report-source-code { display: block; color: var(--text-muted); }
   body:has(.report) .foot .foot-history-head { margin-bottom: 4pt; }
   body:has(.report) .foot .foot-built { display: block; font-size: 8.5pt; }
   body:has(.report) .foot .foot-link-list { display: none; }
+  body:has(.report) .foot .foot-notice { break-inside: avoid; }
 }

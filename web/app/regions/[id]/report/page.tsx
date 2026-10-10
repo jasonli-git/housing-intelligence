@@ -21,6 +21,7 @@ import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, windowLabel } from "@/lib/periods";
 import { RANK_HEADING, rankBasis } from "@/lib/ranks";
 import { isRestricted } from "@/lib/sources";
+import { reportSourceLabel } from "@/lib/reportSources";
 import { standOuts } from "@/lib/standouts";
 import {
   anyMargin,
@@ -148,6 +149,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   );
   const [measures, current] = placement.tables;
   const sources = bySource(packet.sources);
+  const sourceNames = new Map(sources.map((s) => [s.source_id, s.name]));
   const restricted = sources.filter(isRestricted).map((s) => s.name);
   // The region page's answers, printed with the report (Milestone 17).
   const peers = {
@@ -392,7 +394,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
                           )}
                         </td>
                         <td className="when">{periodLabel(l.period_end, l.metric_id)}</td>
-                        <td className="report-source-code">{l.source_id ?? "—"}</td>
+                        <td>{reportSourceLabel(l.source_id, sourceNames.get(l.source_id ?? ""))}</td>
                       </tr>
                       <NoteRows id={l.metric_id} texts={current.inline.get(l.metric_id)} span={5} />
                     </Fragment>
@@ -421,7 +423,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <tbody>
               {sources.map((s) => (
                 <tr key={s.source_id}>
-                  <td>{s.name}<small className="report-source-code">{s.source_id}</small></td>
+                  <td>{s.name}<small className="report-source-code">{reportSourceLabel(s.source_id, s.name)} · {s.source_id}</small></td>
                   <td>{s.publisher}</td>
                   <td className="when">{s.vintages.join(", ")}</td>
                   <td className="when">{s.fetched.slice(0, 10)}</td>
