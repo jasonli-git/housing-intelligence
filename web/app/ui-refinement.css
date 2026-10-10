@@ -24,6 +24,32 @@
   .quiet-county.atlas-local .page-head { display: block; }
   .quiet-county.atlas-local .page-head > .actions { position: static; display: flex; justify-content: flex-end; flex-wrap: wrap; width: 100%; }
   .local-housing-help { margin-block: var(--section-space); }
+  .local-next-step-group, .local-understand-group, .county-place-directory { margin-block: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  :is(.local-next-step-group, .local-understand-group, .county-place-directory) > h2 { font: 500 clamp(26px, 3vw, 34px)/1.2 Georgia, serif; letter-spacing: -.025em; margin-bottom: 1rem; }
+  .local-understand-group { background: radial-gradient(ellipse at 90% 10%, color-mix(in srgb, var(--atlas-accent) 4%, transparent), transparent 65%); }
+  .local-next-step-group .local-help-links a { background: light-dark(#f0f1f2, #252629); }
+  .quiet-county .local-understand-group { position: relative; isolation: isolate; }
+  .quiet-county .local-understand-group > .abstract-field { width: min(70%, 36rem); height: 100%; top: 0; right: 0; opacity: .045; z-index: -1; }
+  .quiet-county .local-understand-group .quiet-disclosure > summary .abstract-field { display: none; }
+  .home-action-checks ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1.6rem; }
+  .home-action-checks li { padding-block: .75rem; border-bottom: 1px solid var(--border); display: grid; gap: .3rem; }
+  .home-action-checks li > span { color: var(--text-secondary); font-size: 13px; line-height: 1.55; }
+  .home-action-checks a { font-size: 15px; font-weight: 550; }
+  .county-place-directory label { display: block; font-size: 13px; margin-bottom: .4rem; }
+  .county-place-directory input { width: 100%; max-width: 28rem; box-sizing: border-box; padding: .75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-card); color: var(--text-primary); }
+  .county-town-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-block: 1rem; }
+  .county-town-links a { padding: .6rem; border-bottom: 1px solid var(--border); }
+  .local-evidence-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+  .local-evidence-charts figure { margin: 0; min-width: 0; }
+  .local-evidence-charts figcaption { font-size: 19px; font-weight: 550; }
+  .local-evidence-charts figcaption small { display: block; font-size: 12px; line-height: 1.5; font-weight: 400; color: var(--text-secondary); margin-block: .4rem 1rem; }
+  .construction-chart-row { display: grid; grid-template-columns: 3rem minmax(0, 1fr) 5rem; gap: .6rem; padding-block: .5rem; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .evidence-bar-row { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem; gap: .5rem; align-items: center; min-height: 22px; font-size: 12px; }
+  .evidence-bar-row i { display: block; height: 8px; background: var(--text-secondary); }
+  .evidence-bar-row i[data-kind="Demolished"] { background: repeating-linear-gradient(90deg, var(--text-secondary) 0 2px, transparent 2px 4px); }
+  .work-chart-row { margin-block: .6rem; font-size: 13px; }
+  .chart-key { font-size: 12px; color: var(--text-secondary); }
+  @media (max-width: 700px) { .home-action-checks ul, .local-evidence-charts { grid-template-columns: minmax(0, 1fr); } .county-town-links { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .local-housing-help > h2 { font: 500 clamp(24px, 3vw, 32px)/1.2 Georgia, serif; margin-bottom: .8rem; }
   .local-help-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
   .local-help-links a { display: grid; align-content: start; gap: .45rem; padding: .85rem; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-card); color: var(--text-primary); text-decoration: none; }

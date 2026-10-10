@@ -4,6 +4,10 @@ import { CostToOwn } from "@/components/CostToOwn";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { AffordableHousing, HousingHelpDisclosure } from "@/components/AffordableHousing";
 import { APPLICATION_ROUTES } from "@/lib/affordableHousing";
+import { LocalNextSteps } from "@/components/LocalNextSteps";
+import { CountyPlaces } from "@/components/CountyPlaces";
+import { LocalEvidenceCharts } from "@/components/LocalEvidenceCharts";
+import { AbstractField } from "@/components/AbstractField";
 import { HomeSales } from "@/components/HomeSales";
 import { HomeChecks } from "@/components/HomeChecks";
 import { WhoIsMoving } from "@/components/WhoIsMoving";
@@ -31,7 +35,7 @@ import { Ledger, Margin, TableNotes } from "@/components/Ledger";
 import { MoreExpander } from "@/components/MoreExpander";
 import { Masthead } from "@/components/Masthead";
 import { SectionJump } from "@/components/SectionJump";
-import { QuietAnchor, QuietCheckTopics, QuietDisclosure, QuietLinework, QuietProfile } from "@/components/QuietCounty";
+import { QuietAnchor, QuietCheckTopics, QuietDisclosure, QuietProfile } from "@/components/QuietCounty";
 import { RankOverview } from "@/components/RankOverview";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
 import { TrendsExplorer } from "@/components/TrendsExplorer";
@@ -444,16 +448,16 @@ export default async function RegionPage({
       <HomeChecks levels={packet.levels} taxHref={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"} />
     </section>
   </QuietDisclosure>;
+  const countyTowns = region.level === "county" ? (await api.regions(`level=municipality&parent_id=${regionId}&limit=1000`))?.items ?? [] : [];
 
   const marketPreview = ["sr1a_sales_count", "nj_net_units_added"].flatMap(id => {
     const figure = packet.levels.find(item => item.metric_id === id);
-    return figure ? [`${formatMetric(figure.value, figure.unit, id)} ${id === "sr1a_sales_count" ? "qualifying sales" : "net homes added"} · ${periodLabel(figure.period_end, id)}`] : [];
+    return figure ? [`${formatMetric(figure.value, figure.unit, id)} ${id === "sr1a_sales_count" ? "qualifying sales" : "net homes added"} · ${id === "sr1a_sales_count" ? `${periodLabel(figure.period_start, id)}–` : ""}${periodLabel(figure.period_end, id)}`] : [];
   }).join(" · ");
 
-  const householdContent = <><QuietDisclosure enabled={quiet} title="Income & nearby places" note="Household income, published lending & places to compare">
+  const householdContent = <><QuietDisclosure enabled={quiet} title="Income & nearby places" note="Household income & places to compare">
     <ForYourHousehold regionName={name} limits={incomeLimits} levels={packet.levels} countyLevels={countyLevels}
       margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))} />
-    <MortgageLending name={name} levels={packet.levels} />
     <SimilarPlaces name={name} data={similar} />
     {region.level !== "zip" && <p className="household-next">
       <Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
@@ -582,14 +586,21 @@ export default async function RegionPage({
       )}
       </QuietAnchor>
 
-      {(persistence || (quiet && paid && answers)) && (
-      <div id="local-price-history" data-jump-label="Prices & paychecks over time">
-      <QuietDisclosure enabled={quiet} title="Prices & paychecks over time" note="Did income keep up? Compare the place with its own past.">
-        {quiet && paid && answers && <div className="local-paychecks"><p className="local-paychecks-heading">Did paychecks keep up? <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p><p>{paid}</p></div>}
-        <HowUnusual name={name} data={persistence} />
-      </QuietDisclosure>
-      </div>
-      )}
+      <section className="local-next-step-group" aria-label="Your next step">
+      <h2>Your next step</h2>
+      {quiet && !cost && householdContent}
+      <LocalNextSteps taxHref={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"} />
+      <section id="housing-assistance" className="local-housing-help" aria-labelledby="local-help-heading">
+        <h3 id="local-help-heading">Find housing help</h3>
+        <nav className="local-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><small>{route.agency}</small><strong>{route.label} <span aria-hidden="true">↗</span></strong><span>{route.note}</span></a>)}</nav>
+        <p className="table-note">Check eligibility, vacancies and waiting lists with the administrator.</p>
+        <HousingHelpDisclosure enabled={quiet}><AffordableHousing data={housingHelp} hideRoutes /></HousingHelpDisclosure>
+      </section>
+      </section>
+
+      <section className="local-understand-group" aria-label="Understand this place">
+      <AbstractField kind="architecture" />
+      <h2>Understand this place</h2>
 
       {!quiet && householdContent}
 
@@ -598,7 +609,6 @@ export default async function RegionPage({
           #281). "What's changing?" held this place until 2026-10-01; the page's own
           sentences say what changed. */}
       <QuietAnchor enabled={quiet} id="quiet-highlights">
-      {quiet && <QuietLinework />}
       <ConsumerReading reading={consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`} annotation={editorialAnnotation}>
       {standing.length > 0 && (
         <details className="standouts-disclosure">
@@ -637,16 +647,7 @@ export default async function RegionPage({
       )}
       </ConsumerReading>
       </QuietAnchor>
-      {quiet && !cost && householdContent}
-
-      {quiet && homeChecks}
-
-      <section id="housing-assistance" className="local-housing-help" aria-labelledby="local-help-heading">
-        <h2 id="local-help-heading">Housing help</h2>
-        <nav className="local-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><small>{route.agency}</small><strong>{route.label} <span aria-hidden="true">↗</span></strong><span>{route.note}</span></a>)}</nav>
-        <p className="table-note">Check eligibility, vacancies and waiting lists with the administrator.</p>
-        <HousingHelpDisclosure enabled={quiet}><AffordableHousing data={housingHelp} hideRoutes /></HousingHelpDisclosure>
-      </section>
+      {(persistence || (quiet && paid && answers)) && <div id="local-price-history" data-jump-label="Prices & paychecks over time"><QuietDisclosure enabled={quiet} title="Prices & paychecks over time" note="Did income keep up? Compare the place with its own past.">{quiet && paid && answers && <div className="local-paychecks"><p className="local-paychecks-heading">Did paychecks keep up? <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p><p>{paid}</p></div>}<HowUnusual name={name} data={persistence}/></QuietDisclosure></div>}
 
       {!quiet && homeChecks}
 
@@ -676,8 +677,21 @@ export default async function RegionPage({
         <WhoIsMoving name={name} data={migration} />
       </QuietDisclosure>
       )}
+      </section>
+      {region.level === "county" && countyTowns.length > 0 && <CountyPlaces name={name} towns={countyTowns.map(t => ({id: t.region_id, name: displayName(t)}))} />}
 
       <MoreExpander id="region-detailed-data" title={moreTitle} sub={quiet ? "Figures, trends & sources. Explore the detail." : `For the full picture: ${listed(contents)}.`}>
+        <LocalEvidenceCharts name={name} level={region.level} levels={packet.levels} series={construction} />
+        <details id="local-property-evidence" className="quiet-disclosure"><summary>Property & community context <span className="quiet-plus" aria-hidden="true">+</span></summary><div className="quiet-disclosure-body">
+          <p className="table-note">Area context, not a property assessment or a neighbourhood grade.</p>
+          <FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} />
+          <GroundAndWater name={name} levels={packet.levels} water={water} />
+          <Utilities data={utilities} />
+          <GettingAround name={name} level={region.level} levels={packet.levels} destinations={workDestinations} />
+          <CommunityContext data={community} level={region.level} supporting />
+          <HomeChecks levels={packet.levels} taxHref={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"} />
+        </div></details>
+        <QuietDisclosure enabled={quiet} title="Published mortgage lending" note="Historical records—not an offer or qualification prediction"><MortgageLending name={name} levels={packet.levels}/></QuietDisclosure>
         {hasDownloadableFigures([...packet.metrics, ...packet.levels]) && (
           <p className="data-download-line">
             <DataDownload

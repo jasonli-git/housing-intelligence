@@ -18,7 +18,19 @@ try {
         const jump = page.getByRole('combobox', { name: 'Jump to section' });
         await jump.selectOption('#home-checks-heading');
         assert.equal(await page.locator('#home-checks-heading').isVisible(), true);
-        assert.match(await page.locator('.quiet-check-topics').textContent(), /Schools.*Internet.*Getting around/);
+        assert.match(await page.locator('.home-action-checks').textContent(), /Confirm schools.*Check internet.*Check the commute/);
+        assert.equal(await page.locator('.local-next-step-group .community-crime, .local-next-step-group .community-health').count(), 0);
+        assert.equal(await page.locator('#local-property-evidence').count(), 1);
+        await page.locator('.home-action-checks a[href="#local-property-evidence"]').first().click();
+        assert.equal(await page.locator('#local-property-evidence').getAttribute('open'), '');
+        assert.equal(await page.locator('#region-detailed-data').getAttribute('open'), '');
+        if (id === 12) {
+          await page.locator('#county-town-search').fill('Bridgewater');
+          assert.equal(await page.locator('.county-town-links a').count(), 1);
+          assert.match(await page.locator('.county-town-links a').textContent(), /Bridgewater/);
+        } else assert.equal(await page.locator('#county-places').count(), 0);
+        await jump.selectOption('#region-detailed-data');
+        if (await page.locator('.local-evidence-charts figure').count()) assert.equal(await page.locator('.local-evidence-charts').isVisible(), true);
         await jump.selectOption('#housing-assistance');
         assert.equal(await page.locator('.local-help-links').isVisible(), true);
         for (const detail of await page.locator('main details.quiet-disclosure').all()) await detail.evaluate(n => { n.open = true; });
