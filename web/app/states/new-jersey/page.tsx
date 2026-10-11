@@ -13,7 +13,6 @@ import { statewideMosaicViews } from "@/lib/housingMosaic";
 import { LearningExhibit } from "@/components/LearningExhibit";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { MoreExpander } from "@/components/MoreExpander";
-import { AffordableHousing } from "@/components/AffordableHousing";
 import Link from "next/link";
 import { StepIcon } from "@/components/StepIcon";
 import { HomeSales } from "@/components/HomeSales";
@@ -70,7 +69,6 @@ export default async function NewJerseyPage() {
   ]);
   const state = states?.items[0] ?? null;
   const statewide = state ? await api.summary(state.region_id, "5y") : null;
-  const housingHelp = state ? await api.affordableHousing(state.region_id) : null;
   // Milestone 52: today's price-to-income against the state's own history.
   const persistence = state ? await api.persistence(state.region_id) : null;
   const [packet, destinations, community] = state ? await Promise.all([
@@ -219,7 +217,6 @@ export default async function NewJerseyPage() {
         </div>
       </section>
       <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Every available state figure, with dates, definitions and sources.">
-        <details className="state-help-details"><summary>Programmes, reported homes &amp; sources</summary><AffordableHousing data={housingHelp} hideRoutes /></details>
         <section className="section" aria-labelledby="state-figures-heading">
           <div className="section-head"><h2 id="state-figures-heading">All statewide figures</h2></div>
           <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally"><table className="state-figures">

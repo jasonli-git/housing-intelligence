@@ -1,6 +1,7 @@
 # Compact statewide exhibits
 
 ## What changed
+- Removed the duplicate programmes/reported-homes disclosure from statewide evidence at the user's request; Your next step still links the housing-help tool. Removed its unused page import and API fetch; the housing-help tool and data remain unchanged.
 - State sales/history/construction exhibits are smaller, in a two-column desktop gallery and single-column mobile layout.
 - Mortgage lending, work/transit and broadband moved out of the statewide evidence expansion into visible exhibits with distinct ledger/destination/network themes.
 - Lending and work preview key figures; full existing records and source explanations remain in local disclosures. Broadband retains its published shares and important denominator/address caveats.
@@ -32,3 +33,4 @@
 - Backend tests skipped (presentation-only); no configured frontend lint command.
 - Final preview build passed (2,386 pages). `node scripts/check-state-exhibits.mjs` passed all six widths/themes combinations, six visible exhibits, removal from the deep evidence expansion, scoped axe including contrast, and no overflow before/after opening lending/work details.
 - Final desktop dark screenshot inspected; `git diff --check` passed. Existing construction wording about the five-year reporting window and county totals is inherited from HomesAdded and not changed here.
+- Programmes removal follow-up: type checking, preview build and browser diagnostic passed, including explicit absence of the programmes disclosure and retention of the Your next step housing-help link. Unit suite not rerun for this markup/import/fetch removal.

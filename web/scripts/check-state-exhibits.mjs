@@ -11,6 +11,8 @@ try {
     assert.equal(await gallery.locator(':scope > .learning-exhibit').count(),6);
     for(const heading of ['What did buyers borrow?','Where does the workday lead?','How connected is the state?']) assert(await gallery.getByRole('heading',{name:heading}).isVisible());
     assert.equal(await page.locator('#state-detailed-data .mortgage-lending').count(),0);
+    assert.equal(await page.locator('#state-detailed-data .state-help-details').count(),0);
+    assert.equal(await page.locator('.state-next-step a[href="/help"]').count(),1);
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     const result=await new AxeBuilder({page}).include('.state-market-exhibits').analyze();
     assert.deepEqual(result.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);
