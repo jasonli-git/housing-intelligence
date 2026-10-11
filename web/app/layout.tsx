@@ -25,6 +25,7 @@ import "./learning-exhibits.css";
 import "./tool-refinement.css";
 import "./report-refinement.css";
 import "./housing-mosaic.css";
+import "./state-exhibits.css";
 import "./county-cabinet.css";
 
 // Self-hosted at build time: next/font downloads each face once and serves it from this

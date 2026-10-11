@@ -6,10 +6,10 @@ import { LearningExhibit } from "./LearningExhibit";
 
 afterEach(cleanup);
 it("gives each topic its own decorative language without changing its content", () => {
-  const kinds = ["Home sales", "Prices & paychecks", "Against its own history", "New homes", "Arrivals & departures"];
+  const kinds = ["Home sales", "Prices & paychecks", "Against its own history", "New homes", "Arrivals & departures", "Buyer financing", "Work & transit", "Broadband"];
   const { container } = render(<>{kinds.map(kind => <LearningExhibit key={kind} kind={kind}><p>{kind} figures</p></LearningExhibit>)}</>);
-  expect(Array.from(container.querySelectorAll("[data-exhibit-style]"), el => el.getAttribute("data-exhibit-style"))).toEqual(["sales", "paychecks", "history", "building", "migration"]);
-  expect(new Set(Array.from(container.querySelectorAll("path"), el => el.getAttribute("d"))).size).toBe(5);
-  expect(container.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(5);
-  expect(container.querySelectorAll(".exhibit-content p")).toHaveLength(5);
+  expect(Array.from(container.querySelectorAll("[data-exhibit-style]"), el => el.getAttribute("data-exhibit-style"))).toEqual(["sales", "paychecks", "history", "building", "migration", "lending", "work", "network"]);
+  expect(new Set(Array.from(container.querySelectorAll("path"), el => el.getAttribute("d"))).size).toBe(8);
+  expect(container.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(8);
+  expect(container.querySelectorAll(".exhibit-content p")).toHaveLength(8);
 });

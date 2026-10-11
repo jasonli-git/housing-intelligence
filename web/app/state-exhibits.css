@@ -1,0 +1,36 @@
+@media screen {
+  .nj-page .state-market-exhibits { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; align-items:start; }
+  .nj-page .state-market-exhibits > .learning-exhibit { --text-muted:light-dark(#4c5660,#c2cbd0); --text-secondary:light-dark(#424c55,#d2d8db); margin:0; padding:1rem; min-width:0; }
+  .nj-page .state-market-exhibits .exhibit-kicker { margin-bottom:.6rem; padding-bottom:.4rem; font-size:9px; }
+  .nj-page .state-market-exhibits .exhibit-kicker > span:last-child { display:none; }
+  .nj-page .state-market-exhibits .learning-exhibit .exhibit-content h2 { margin:0 0 .4rem; font-size:23px; line-height:1.2; }
+  .nj-page .state-market-exhibits .learning-exhibit .sales { gap:.3rem; }
+  .nj-page .state-market-exhibits .exhibit-readout strong { font-size:32px; }
+  .nj-page .state-market-exhibits .exhibit-plot { margin:.4rem 0; padding:.3rem 0; }
+  .nj-page .state-market-exhibits .learning-exhibit .exhibit-history { height:130px; }
+  .nj-page .state-market-exhibits .section { margin:0; padding:0; border:0; }
+  .nj-page .state-market-exhibits .sales-lead { font-size:14px; line-height:1.6; margin:.5rem 0; }
+  .nj-page .state-market-exhibits .sales-note { font-size:12px; line-height:1.6; margin:.5rem 0; }
+  .nj-page .state-market-exhibits .history-interactive { padding:.6rem; }
+  .nj-page .state-market-exhibits .quiet-market-figures { margin:.6rem 0; padding-block:.6rem; }
+  .nj-page .state-market-exhibits details > summary { min-height:44px; display:flex; align-items:center; cursor:pointer; font-size:12px; padding-block:.25rem; }
+  .nj-page .state-market-exhibits .exhibit-content > section > details:not(.reader-details) > summary::after { content:"＋"; margin-left:auto; padding-left:.6rem; }
+  .nj-page .state-market-exhibits .exhibit-content > section > details[open]:not(.reader-details) > summary::after { content:"−"; }
+  .nj-page .state-market-exhibits [data-exhibit-style="lending"] { background:repeating-linear-gradient(0deg,transparent 0 27px,light-dark(#a7926b14,#ceb78c0c) 27px 28px),light-dark(#f4eddf,#28251f); border:1px solid light-dark(#cfc1a6,#5a5142); border-radius:3px; box-shadow:3px 3px 0 light-dark(#e1d6c1,#151611); }
+  .nj-page .state-market-exhibits [data-exhibit-style="lending"] h2 { font-family:Georgia,serif; }
+  .nj-page .state-market-exhibits [data-exhibit-style="work"] { background:light-dark(#e7eded,#17292a); border-radius:3px 24px 3px 3px; border-top:3px solid light-dark(#426866,#9abcb8); }
+  .nj-page .state-market-exhibits [data-exhibit-style="work"] h2 { font-family:var(--font-text); font-weight:600; letter-spacing:-.04em; }
+  .nj-page .state-market-exhibits [data-exhibit-style="network"] { background:radial-gradient(circle at 90% 0,light-dark(#d9d8ef,#39364b),transparent 65%),light-dark(#f0eef6,#211f2b); border-radius:24px; border:1px solid light-dark(#c8c1d8,#534b63); }
+  .nj-page .state-market-exhibits [data-exhibit-style="network"] h2 { font-family:var(--font-mono); font-size:20px; }
+  .state-exhibit-readouts { display:flex; flex-wrap:wrap; gap:.7rem 1.2rem; margin:.8rem 0; }
+  .state-exhibit-readouts dt { color:var(--text-secondary); font-size:11px; }
+  .state-exhibit-readouts dd { margin:.2rem 0 0; font:500 24px/1.2 var(--font-text); }
+  .state-commute-lead { font-size:12px; color:var(--text-secondary); }
+  .state-commute-lead strong { font:500 26px var(--font-text); color:var(--text-primary); margin-right:.4rem; }
+  .state-job-preview { list-style:none; padding:0; margin:.7rem 0; }
+  .state-job-preview li { display:flex; justify-content:space-between; position:relative; isolation:isolate; gap:.6rem; padding:.55rem .5rem; font-size:12px; border-bottom:1px solid var(--border); }
+  .state-job-preview i { position:absolute; inset:0 auto 0 0; z-index:-1; background:light-dark(#4369651a,#b7d4cd14); }
+  .state-job-preview b { font-weight:500; white-space:nowrap; }
+  .nj-page .state-market-exhibits .utility-reliability { margin:.6rem 0; }
+  @media(max-width:800px) { .nj-page .state-market-exhibits { grid-template-columns:minmax(0,1fr); }.nj-page .state-market-exhibits h2 { font-size:22px; } }
+}

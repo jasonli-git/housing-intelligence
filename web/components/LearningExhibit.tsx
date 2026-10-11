@@ -2,8 +2,11 @@ import type { ReactNode } from "react";
 
 /** Decorative motion is separate from the measurements, which never animate their value. */
 export function LearningExhibit({ kind, children }: { kind: string; children: ReactNode }) {
-  const style = kind === "Prices & paychecks" ? "paychecks" : kind === "Against its own history" ? "history" : kind === "Arrivals & departures" ? "migration" : ["New homes", "Building & demolition"].includes(kind) ? "building" : "sales";
+  const style = kind === "Buyer financing" ? "lending" : kind === "Work & transit" ? "work" : kind === "Broadband" ? "network" : kind === "Prices & paychecks" ? "paychecks" : kind === "Against its own history" ? "history" : kind === "Arrivals & departures" ? "migration" : ["New homes", "Building & demolition"].includes(kind) ? "building" : "sales";
   const paths = {
+    lending: "M30 30h540M30 70h540M30 110h540M30 150h540M160 15v150m260-150v150",
+    work: "M20 90h560M60 30v120M200 60v90M350 20v130M500 50v100",
+    network: "M40 40h160v90h200V40h160M40 130h160M400 130h160M200 90h200",
     sales: "M40 40h100m-50-10v20m70 20h180m-90-10v20m110 20h150m-75-10v20",
     paychecks: "M0 150C150 150 200 100 300 100S450 20 600 20M0 160C150 160 200 140 300 140S450 110 600 110",
     history: "M0 45h600M0 90h600M0 135h600M60 20v140m100-140v140m100-140v140m100-140v140m100-140v140",
