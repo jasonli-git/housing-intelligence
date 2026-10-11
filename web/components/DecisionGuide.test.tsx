@@ -12,4 +12,6 @@ it("previews all three questions without claiming missing data before selection"
   expect(html.match(/class="guide-preview"/g)).toHaveLength(3);
   expect(html).not.toContain("No home price is published");
   expect(html).not.toContain("guide-answer-body");
+  expect(html).toContain('aria-label="In this guide"');
+  expect(html.match(/href="#guide-place-heading"/g)).toHaveLength(3);
 });

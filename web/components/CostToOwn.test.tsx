@@ -13,6 +13,15 @@ const inputs: CostProps = {
   noTax: "No ZIP-level tax estimate", gain: null, rateThen: null,
 };
 describe("local monthly budget", () => {
+  it("keeps published monthly costs and the breakdown without planning panels", () => {
+    localStorage.setItem("hip.cost.personal.v1", JSON.stringify({downPct: 3.5, insuranceYear: 20000}));
+    const {container} = render(createElement(CostToOwn, {...inputs, planning:false, control:false, quiet:true, showHelp:false}));
+    expect(container.querySelector(".cost-yours")).toBeNull();
+    expect(container.querySelector(".quiet-tool-group")).toBeNull();
+    expect(screen.queryByText("Make it yours")).toBeNull();
+    expect(screen.getByText("20% down payment")).toBeTruthy();
+    expect(screen.getByRole("button", {name:"See the breakdown"})).toBeTruthy();
+  });
   it("opens one shared breakdown from the cost-card footer and closes it again", () => {
     const { container } = render(createElement(CostToOwn, { ...inputs, quiet: true, showHelp: false }));
     const toggle = screen.getByRole("button", { name: "See the breakdown" });

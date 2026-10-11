@@ -177,9 +177,11 @@ export function CostToOwn({
   comparePlaceId,
   quiet = false,
   householdTools,
-}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode }) {
+  planning = true,
+}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode; planning?: boolean }) {
   const id = useId();
-  const { personal, household, savePersonal, saveHousehold } = useBudgetScenario(control);
+  const { personal: rememberedPersonal, household, savePersonal, saveHousehold } = useBudgetScenario(control && planning);
+  const personal = planning ? rememberedPersonal : {};
   const [fields, setFields] = useState<HomeFields>(NO_HOME_FIELDS);
   const [view, setView] = useState<View>("upfront");
   const [calculationOpen,setCalculationOpen] = useState(false);
@@ -339,7 +341,7 @@ export function CostToOwn({
       "cost-partial",
       "Partial estimate",
       `This total leaves out ${listed(month.missing).toLowerCase()}: no published figure ` +
-        "covers it for this place. Enter yours under “Your numbers” to complete it.",
+        (planning ? "covers it for this place. Enter yours under ‘Your numbers’ to complete it." : "covers it for this place. Use the buyer’s guide to enter a quote."),
     ),
   };
 
@@ -513,7 +515,7 @@ export function CostToOwn({
         )}
       </div>
 
-      {control && (
+      {control && planning && (
         <details className="cost-yours">
           <summary>
             <span className="cost-yours-title">Your numbers</span>
@@ -708,7 +710,7 @@ export function CostToOwn({
           ) : (
             <p className="cost-missing">
               No rent figure for this place: Zillow publishes its rent index for fewer places than
-              its home values. Enter one under “Your numbers” to compare.
+              its home values. {planning ? "Enter one under ‘Your numbers’ to compare." : "Use the buyer’s guide to compare a rent you enter."}
             </p>
           )}
         </article>
@@ -716,7 +718,7 @@ export function CostToOwn({
           {calculationToggle}
           <section id={id+"-calculation"} className="shared-calculation" hidden={!calculationOpen} aria-label="Owning and renting calculation">
             <div><h4>Owning</h4><p className="calculation-note">Cash payment includes principal and included utilities. Money spent includes utilities here; the bridge excludes them.</p>{owningLedger}</div>
-            <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. Enter one under “Your numbers” to compare.</p>}</div>
+            <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. {planning ? "Enter one under ‘Your numbers’ to compare." : "Enter your rent in the buyer’s guide to compare."}</p>}</div>
           </section>
         </>}
         <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
@@ -757,7 +759,7 @@ export function CostToOwn({
         </div>
       )}
 
-      <QuietToolGroup enabled={quiet}>
+      {planning && <QuietToolGroup enabled={quiet}>
       {quiet && budgetFit}
       <QuietDisclosure enabled={quiet} title="Upfront cash & a longer-term scenario">
       <div className="cost-views">
@@ -883,11 +885,11 @@ export function CostToOwn({
       </div>
       </QuietDisclosure>
       {householdTools}
-      </QuietToolGroup>
+      </QuietToolGroup>}
 
       {showHelp && <HousingHelp />}
 
-      {!control && (
+      {!control && planning && (
         <div className="cost-strip">
           {cashComparison && (
             <p className="cost-strip-big" aria-live="polite">

@@ -7,7 +7,7 @@ const SECTIONS = [
   ["Costs to own & rent", ".region-standard-content > .cost, #quiet-cost, .report > .cost"],
   ["Your household & plans", ".quiet-tool-group, .region-standard-content > .household"],
   ["Highlights & rankings", ".region-standard-content > .consumer-feature-what_stands_out, .region-standard-content > .standouts-disclosure, #quiet-highlights"],
-  ["Before choosing a home", "#home-checks-heading"],
+  ["Your next step", "#home-checks-heading"],
   ["Local market", "#local-market-heading"],
   ["Is this unusual here?", "#how-unusual-heading"],
   ["Who is moving here", "#who-is-moving-heading"],
