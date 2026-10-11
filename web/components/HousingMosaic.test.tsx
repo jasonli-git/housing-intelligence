@@ -1,0 +1,38 @@
+// @vitest-environment jsdom
+import React from "react";
+import { afterEach, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { HousingMosaic } from "./HousingMosaic";
+import type { MosaicView } from "@/lib/housingMosaic";
+
+afterEach(cleanup);
+const views: MosaicView[] = [
+  { id: "tenure", label: "Owned / rented", denominator: "Occupied homes", source: "census_acs", period: "2020–2024",
+    groups: [{ label: "Owner-occupied", share: .743, margin: "± 1.0 points", note: "Owners." },
+      { label: "Renter-occupied", share: .257, margin: "± 1.0 points", note: "Renters." }] },
+  { id: "occupancy", label: "Occupied / empty", denominator: "All homes", source: "census_acs", period: "2020–2024",
+    groups: [{ label: "Empty", share: .02, margin: "no margin available", note: "Includes seasonal homes." },
+      { label: "Occupied", share: .98, margin: "no margin available", note: "Residents." }] },
+];
+it("renders 100 decorative tiles and exact shares, not rounded tile numbers", () => {
+  render(<HousingMosaic name="Somerset County" views={views} />);
+  expect(document.querySelectorAll(".mosaic-tile")).toHaveLength(100);
+  expect(document.querySelectorAll('.mosaic-tile[data-group="0"]')).toHaveLength(74);
+  expect(document.querySelector(".mosaic-selected")?.textContent).toContain("74.3%");
+  expect(screen.getByText(/not individual homes or a map/)).toBeTruthy();
+});
+it("switches views and lets accessible group buttons reveal the estimate", () => {
+  render(<HousingMosaic name="Somerset County" views={views} />);
+  fireEvent.click(screen.getByRole("button", { name: "Renter-occupied 25.7%" }));
+  expect(document.querySelector(".mosaic-selected")?.textContent).toContain("25.7%");
+  fireEvent.click(screen.getByRole("button", { name: "Occupied / empty" }));
+  expect(screen.getByText("All homes · Somerset County")).toBeTruthy();
+  expect(document.querySelector(".mosaic-selected")?.textContent).toContain("Includes seasonal homes.");
+  expect(document.querySelector(".mosaic-selected")?.textContent).not.toContain("90% margin");
+  expect(document.querySelectorAll('.mosaic-tile[data-group="0"]')).toHaveLength(2);
+  expect(screen.getByRole("button", { name: "Occupied / empty" }).getAttribute("aria-pressed")).toBe("true");
+});
+it("has no empty shell when figures are unavailable", () => {
+  const { container } = render(<HousingMosaic name="No data" views={[]} />);
+  expect(container.innerHTML).toBe("");
+});
