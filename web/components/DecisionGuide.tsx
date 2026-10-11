@@ -120,7 +120,7 @@ function Steps({ steps }: { steps: { label: string; href: string }[] }) {
 
 function Check({ item, supporting = false }: { item: CheckItem; supporting?: boolean }) {
   return (
-    <li className="guide-check">
+    <li className="guide-check" id={supporting ? undefined : `guide-check-${item.key}`}>
       <div className="guide-check-head">
         <h3>{item.title}</h3>
         {supporting && <Strength judged={item.evidence} />}
@@ -223,6 +223,14 @@ export function DecisionGuide({
         <a href={data ? "#guide-rent-heading" : "#guide-place-heading"}><small>02</small> Rent or buy</a>
         <a href={data ? "#guide-checks-heading" : "#guide-place-heading"}><small>03</small> Before an offer</a>
         <a href={data ? "#housing-assistance" : "#guide-place-heading"}><small>04</small> Housing help</a>
+      </nav>
+      <nav className="guide-check-index" aria-label="Checks before an offer">
+        <span>Before an offer · {data ? "jump to a check" : "choose a place to explore"}</span>
+        <ul>{[
+          ["tax", "Property tax"], ["mortgage", "Financing"], ["turnover", "Home sales"],
+          ["flood", "Flooding"], ["water", "Drinking water"], ["sites", "Contaminated sites"], ["radon", "Radon"],
+          ["school", "Schools"], ["commute", "Commute"], ["utilities", "Internet & utilities"],
+        ].map(([key,label]) => <li key={key}><a href={data ? `#guide-check-${key}` : "#guide-place-heading"}>{label}<span aria-hidden="true">↘</span></a></li>)}</ul>
       </nav>
       <div className="guide-setup" data-ready={Boolean(data)}>
       <section className="section guide-place" aria-labelledby="guide-place-heading">

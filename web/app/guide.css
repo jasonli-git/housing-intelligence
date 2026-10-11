@@ -8,6 +8,14 @@
 .guide-contents > span { color:var(--text-muted); font-size:.75rem; margin-right:.4rem; }
 .guide-contents a { display:flex; align-items:center; gap:.45rem; padding:.55rem .75rem; border-radius:999px; background:var(--surface-card); color:var(--text-primary); font-size:.85rem; text-decoration:none; }
 .guide-contents small { color:var(--text-muted); }
+.decision-guide > :is(.guide-contents,.guide-check-index) { grid-column:1/-1; }
+.guide-check-index { margin:.6rem 0 1rem; padding:.75rem 1rem; border-radius:12px; background:color-mix(in srgb,var(--text-secondary) 5%,transparent); }
+.guide-check-index > span { font:500 11px/1.4 var(--font-mono); color:var(--text-muted); }
+.guide-check-index ul { display:flex; flex-wrap:wrap; gap:0 1.25rem; list-style:none; padding:0; margin:.3rem 0 0; }
+.guide-check-index a { display:inline-flex; gap:.4rem; align-items:center; min-height:44px; font:500 13px/1.4 var(--font-text); text-decoration:none; }
+.guide-check-index a span { opacity:.4; }
+.guide-check-index a:hover { text-decoration:underline; text-underline-offset:4px; }
+.guide-check[id] { scroll-margin-top:7rem; }
 .guide-check-group { margin-top:1.5rem; }
 .guide-check-group > h3 { color:var(--text-muted); font-size:.85rem; }
 .guide-supporting-evidence { margin-top:1.5rem; border-top:1px solid var(--border); padding-top:.8rem; }

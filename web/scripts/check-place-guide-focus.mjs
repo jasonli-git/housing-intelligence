@@ -96,6 +96,9 @@ try {
     assert.equal(await page.getByLabel('Purchase price',{exact:true}).inputValue(),'360000','Explicit home transfer reaches guide');
     await page.goto(origin+'/guide?place=224',{waitUntil:'networkidle'});
     await page.locator('.guide-answer[data-ready="true"]').first().waitFor({timeout:30000});
+    assert.equal(await page.locator('.guide-question-tagline').count(),0,'Repeated question tagline is removed');
+    assert.equal(await page.locator('.guide-check-index a').count(),10,'All ten offer checks have a compact preview');
+    assert(await page.locator('.guide-check-index a').evaluateAll(els=>els.every(el=>document.querySelector(el.getAttribute('href')))),'Every preview links to its visible primary check');
     assert.equal(await page.getByLabel('Purchase price',{exact:true}).inputValue(),'','Another place does not inherit listing price');
     await page.goto(origin+'/guide?place=12',{waitUntil:'networkidle'});
     await page.locator('.guide-answer[data-ready="true"]').first().waitFor({timeout:30000});
