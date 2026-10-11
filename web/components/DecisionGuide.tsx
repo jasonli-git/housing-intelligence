@@ -28,6 +28,7 @@ import type { SearchEntry } from "@/lib/search";
 import { cashFit } from "@/lib/budgetScenario";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { readGuideTransfer } from "@/lib/guideTransfer";
+import { TwoPaths } from "@/components/TwoPaths";
 
 /**
  * The decision guides (Milestone 49): one page for every place, which reads the place's
@@ -206,7 +207,7 @@ export function DecisionGuide({
   const examples = (entries ?? []).filter((entry) => GUIDE_EXAMPLES.some(([name, level]) => entry.name === name && entry.level === level));
   const ratePct = personal.ratePct ?? rate.value;
   const downPct = personal.downPct ?? 20;
-  const years = personal.years ?? 10;
+  const years = Math.max(1, Math.min(30, Math.round(personal.years ?? 10)));
   const yearly = parseAmount(income);
   const data = load.state === "ready" ? load.data : null;
   const placeHref = data ? regionPath(data.region.region_id) : "/";
@@ -308,7 +309,7 @@ export function DecisionGuide({
             <input
               inputMode="decimal"
               defaultValue={ratePct.toFixed(2)}
-              key={ratePct === rate.value ? "published" : "own"}
+              key={ratePct}
               onBlur={(e) => {
                 const value = parseAmount(e.target.value);
                 if (value !== null && value > 0 && value < 20) remember({ ratePct: value });
@@ -423,7 +424,7 @@ export function DecisionGuide({
               <label>
                 Years you expect to stay
                 <select value={years} onChange={(e) => remember({ years: Number(e.target.value) })}>
-                  {[3, 5, 7, 10, 15, 20, 30].map((n) => <option key={n} value={n}>{n}</option>)}
+                  {Array.from({length:30},(_,i)=>i+1).map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
               </label>
               <label>
@@ -431,6 +432,7 @@ export function DecisionGuide({
                 <input
                   inputMode="decimal"
                   defaultValue={String(personal.appreciationPct ?? 0)}
+                  key={personal.appreciationPct ?? 0}
                   onBlur={(e) => {
                     const value = Number(e.target.value.replace("%", ""));
                     if (Number.isFinite(value) && Math.abs(value) <= 15) remember({ appreciationPct: value });
@@ -441,6 +443,7 @@ export function DecisionGuide({
             {!choice && <p>No home price or typical rent is published for this place. Enter the rent you would pay to compare.</p>}
             {choice && (
               <>
+                <TwoPaths input={choice.inputs} onYears={n=>remember({years:n})} onPrice={n=>setHome(previous=>({...previous,price:n}))} onDown={n=>remember({downPct:n})} onRate={n=>remember({ratePct:n})} onUpkeep={n=>remember({upkeepPct:n})} onFlat={()=>remember({appreciationPct:0,rentGrowthPct:0})} />
                 <p className="guide-lead">
                   {choice.breakEven === null
                     ? <>Under these assumptions, owning does not cost less than renting at {usd(choice.rent)} a month within {MAX_YEARS} years.</>

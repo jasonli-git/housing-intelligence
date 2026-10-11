@@ -1,5 +1,38 @@
 /* The gallery is optional exploration. Motion belongs to its linework, never its values. */
 @media screen {
+  .two-paths { padding:clamp(14px,2vw,24px); border:1px solid var(--border); border-radius:24px; background:var(--surface-1); margin:1rem 0; min-width:0; }
+  .paths-head { display:flex; justify-content:space-between; flex-wrap:wrap; align-items:center; gap:.7rem; }
+  .paths-head h3 { margin:0; font:500 clamp(23px,3vw,32px)/1.2 var(--font-display); }
+  .paths-head > span { font:11px/1.4 var(--font-mono); color:var(--text-secondary); }
+  .paths-intro,.paths-assumptions p,.paths-limit,.paths-warning { font:13px/1.5 var(--font-text); color:var(--text-secondary); }
+  .paths-controls { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.75rem; margin:1rem 0; }
+  .paths-controls label { display:grid; gap:.4rem; font:12px/1.4 var(--font-text); min-width:0; }
+  .paths-controls :is(input,select) { box-sizing:border-box; min-width:0; width:100%; padding:.6rem; min-height:44px; border:1px solid var(--border); border-radius:8px; background:var(--surface-1); color:var(--text-primary); font:16px var(--font-text); }
+  .paths-figure { margin:1.5rem 0 1rem; }
+  .paths-figure svg { display:block; width:100%; height:auto; overflow:visible; }
+  .paths-figure path { fill:none; stroke-width:3; }
+  .paths-own { stroke:var(--atlas-accent); fill:var(--atlas-accent); }
+  .paths-rent { stroke:var(--text-secondary); fill:var(--text-secondary); stroke-dasharray:5 4; }
+  .paths-zero { stroke:var(--border); }
+  .paths-marker { stroke:var(--text-muted); stroke-dasharray:2 4; }
+  .paths-figure text { fill:var(--text-muted); font:12px var(--font-text); }
+  .paths-figure figcaption { display:flex; flex-wrap:wrap; gap:.6rem 1.5rem; font:13px/1.5 var(--font-text); }
+  .paths-own-key::before,.paths-rent-key::before { content:""; display:inline-block; width:20px; border-top:3px solid var(--atlas-accent); margin-right:7px; vertical-align:middle; }
+  .paths-rent-key::before { border-color:var(--text-secondary); border-top-style:dashed; }
+  .two-paths small { display:block; font:11px/1.5 var(--font-text); color:var(--text-muted); }
+  .paths-figure figcaption small { flex-basis:100%; }
+  .paths-scrub { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; font:13px var(--font-text); padding:.7rem 0; }
+  .paths-scrub input { flex:1; min-width:140px; min-height:44px; accent-color:var(--atlas-accent); }
+  .paths-readouts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.2rem; margin:1rem 0; }
+  .paths-readouts article { min-width:0; border-top:2px solid var(--atlas-accent); padding-top:.8rem; }
+  .paths-readouts article:last-child { border-color:var(--text-muted); }
+  .paths-readouts h4 { margin:0 0 .75rem; font:500 18px var(--font-display); }
+  .paths-readouts dl { margin:0 0 .7rem; }
+  .paths-readouts dl > div { display:flex; justify-content:space-between; gap:1rem; margin:.6rem 0; font:12px/1.4 var(--font-text); }
+  .paths-readouts dd { margin:0; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .paths-assumptions { display:flex; flex-wrap:wrap; gap:.7rem; align-items:center; }
+  .paths-assumptions button { min-height:44px; padding:.6rem .8rem; border:1px solid var(--border); border-radius:99px; background:transparent; color:var(--text-primary); cursor:pointer; }
+  @media(max-width:700px) { .paths-controls { grid-template-columns:repeat(2,minmax(0,1fr)); } .paths-readouts { grid-template-columns:minmax(0,1fr); } }
   .monthly-bill { grid-column:1/-1; padding:1.2rem; border:1px solid var(--border); border-radius:20px; background:var(--surface-1); min-width:0; }
   .bill-head { display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1rem; }
   .bill-head > div { min-width:0; }

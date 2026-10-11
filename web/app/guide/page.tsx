@@ -45,7 +45,7 @@ export default async function GuidePage() {
         </header>
         {rate ? (
           <DecisionGuide
-            artifactUrl={artifactUrl}
+            artifactUrl={process.env.GUIDE_PREVIEW_ARTIFACT_URL ?? artifactUrl}
             rate={{ value: rate.value, asOf: periodLabel(rate.period_start, rate.metric_id) }}
             newest={newest}
           />
