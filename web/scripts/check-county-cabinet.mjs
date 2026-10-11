@@ -9,6 +9,7 @@ try {
     const page = await context.newPage();
     await page.goto('http://localhost:3002/states/new-jersey', { waitUntil: 'networkidle' });
     const cabinet = page.locator('.county-cabinet');
+    assert.equal(await page.locator('.place-discovery').evaluate(el => getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)');
     const files = cabinet.locator('.cabinet-file');
     assert.equal(await files.count(), 21);
     await files.first().focus();
@@ -25,9 +26,13 @@ try {
     assert.equal(await cabinet.getByRole('navigation', { name: 'All counties' }).getByRole('link').count(), 21);
     await cabinet.getByRole('button', { name: 'Folder view', exact: true }).click();
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
-    const result = await new AxeBuilder({ page }).include('.county-cabinet').analyze();
+    const result = await new AxeBuilder({ page }).include('.place-first-workspace').analyze();
     assert.deepEqual(result.violations.map(v => v.id), []);
-    await cabinet.screenshot({ path: `/tmp/county-cabinet-${width}-${theme}.png` });
+    await page.locator('.place-first-workspace').screenshot({ path: `/tmp/county-cabinet-${width}-${theme}.png` });
+    await page.getByRole('button', { name:'Compare counties', exact:true }).click();
+    assert(await page.locator('#state-compare-panel').isVisible());
+    await page.getByRole('button', { name:'Explore places', exact:true }).click();
+    assert(await cabinet.isVisible());
     console.log(width, theme, 'passed');
     await context.close();
   }

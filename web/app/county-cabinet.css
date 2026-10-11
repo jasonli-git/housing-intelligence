@@ -1,3 +1,29 @@
+/* A browsing workspace, not another blue snapshot card. The drawer is its only frame. */
+@media screen {
+  .nj-page.quiet-state .place-first-workspace { margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border); }
+  .nj-page.quiet-state .place-first-workspace .state-workspace-head { padding:.4rem 0 1rem; margin:0; }
+  .nj-page.quiet-state .place-first-workspace .state-workspace-head h2 { font:600 clamp(27px,3vw,35px)/1.15 var(--font-text); letter-spacing:-.055em; }
+  .nj-page.quiet-state .place-first-workspace .place-discovery { padding:0; border:0; border-radius:0; background:none; box-shadow:none; }
+  .nj-page.quiet-state .place-first-workspace .state-discovery-intro { margin:0 0 1rem; padding:.2rem 0 0; border-top:1px solid var(--border); }
+  .nj-page.quiet-state .place-first-workspace .state-discovery-modes { width:100%; padding:0; gap:1.5rem; border:0; border-radius:0; margin:0; }
+  .nj-page.quiet-state .place-first-workspace .state-discovery-modes button { position:relative; padding:.7rem 0; border-radius:0; background:none; color:var(--text-muted); font:500 13px/1.3 var(--font-text); }
+  .nj-page.quiet-state .place-first-workspace .state-discovery-modes button[aria-pressed="true"] { color:var(--text-primary); }
+  .nj-page.quiet-state .place-first-workspace .state-discovery-modes button[aria-pressed="true"]::after { content:""; position:absolute; left:0; right:0; bottom:0; height:2px; background:var(--text-primary); }
+  .nj-page.quiet-state .place-first-workspace .place-search-label { margin:.6rem 0 .5rem; font:11px/1.5 var(--font-mono); letter-spacing:.02em; color:var(--text-muted); }
+  .nj-page.quiet-state .place-first-workspace .place-discovery-search { margin:0; padding:0; }
+  .nj-page.quiet-state .place-first-workspace .place-search { max-width:none; width:100%; }
+  .nj-page.quiet-state .place-first-workspace .place-search input { min-height:52px; border-radius:4px; border-color:color-mix(in srgb,var(--text-primary) 25%,var(--border)); background:light-dark(#f5f3ee,#1c2227); box-shadow:inset 0 1px 3px #0001; }
+  .nj-page.quiet-state .place-first-workspace .county-cabinet { margin-top:1.1rem; }
+  .nj-page.quiet-state .place-first-workspace .cabinet-heading h3 { font:500 17px/1.3 var(--font-text); letter-spacing:-.02em; }
+  .nj-page.quiet-state .place-first-workspace .cabinet-kicker { font-size:9px; }
+  .nj-page.quiet-state .place-first-workspace .cabinet-view { border-radius:4px; font-size:12px; }
+  @media(max-width:700px) {
+    .nj-page.quiet-state .place-first-workspace { margin-top:1.5rem; }
+    .nj-page.quiet-state .place-first-workspace .state-discovery-modes { gap:1.2rem; }
+    .nj-page.quiet-state .place-first-workspace .state-workspace-head { display:grid; grid-template-columns:minmax(0,1fr) auto; row-gap:.4rem; }
+    .nj-page.quiet-state .place-first-workspace .state-workspace-head > div:first-child { grid-column:1 / -1; margin:0; }
+  }
+}
 .county-cabinet { --folder-ink:light-dark(#246b55,#a6d9c0); --cabinet-metal:light-dark(#dfded9,#181c20); --folder-paper:light-dark(#f3ede0,#343b3c); --folder-edge:light-dark(#bcb4a3,#626b69); margin-top:1.4rem; }
 .cabinet-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.8rem; }
 .cabinet-kicker { font:10px/1.5 var(--font-mono); text-transform:uppercase; letter-spacing:.12em; color:var(--text-muted); }

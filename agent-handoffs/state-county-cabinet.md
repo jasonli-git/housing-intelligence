@@ -1,6 +1,7 @@
 # State county cabinet
 
 ## What changed
+- Full workspace follow-up: remove the rounded snapshot-like outer card, use page-level typographic hierarchy, underlined browsing/comparison tabs and full-width neutral search. Cabinet remains the only framed browsing object; search, comparison and Since 2019 note retain functionality.
 - Aesthetic follow-up: brushed-metal drawer frame, warm paper folder surfaces, layered edges, index marks, folder-fan illustration and bordered open action distinguish the cabinet from the statewide snapshot. Theme-aware surfaces retain county-green destinations.
 - Replaced the state explorer's plain county list with a shallow folder cabinet: mouse hover/focus previews counties, explicit links open them.
 - Mobile uses a horizontally swipeable folder strip; tapping selects a folder, then Explore county opens it.
@@ -32,3 +33,4 @@
 - `node scripts/check-county-cabinet.mjs`: passed 320/390/1280px in light/dark, 21 folders and direct links, Home/End keyboard selection, desktop hover, no horizontal page overflow and scoped axe accessibility. Corrected an initial diagnostic browser-context setup error before successful rerun.
 - Desktop/mobile dark screenshots visually inspected. `git diff --check` passed. No configured frontend lint command; backend tests skipped (presentation-only).
 - Aesthetic follow-up: typecheck, three cabinet tests, static preview build and browser diagnostic passed. Both themes at 320/390/1280px passed scoped axe including contrast; dark desktop and light mobile screenshots inspected. No data or interaction changes.
+- Workspace redesign: typecheck and three cabinet tests passed. Browser diagnostic expanded to the entire discovery workspace, verifies removal of the outer background and switches comparison/explore modes. Full-workspace accessibility passed in both themes at 320/390/1280px. Screenshot review prompted a mobile header correction: title spans the row, shortcuts share the next row.
