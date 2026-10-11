@@ -1,6 +1,7 @@
 # Tool colour and reader clarity
 
 ## What changed
+- Home introduction follow-up: replaced the far-right free badge with a simple line below the tagline, retaining the green check and explicit no-fees/subscriptions/ads promise.
 - Home tool cards use quiet off-centre radial washes: slate for affordability, rose for buyer’s guide, teal for tax lookup. Icons, arrows, scope chips and hover borders follow those palettes.
 - Income panel leads with programme income limits and their purpose, clearer column labels and an expandable explanation of adjusted percentage bands versus housing spending percentages.
 - Reader-specific income sentences no longer describe adjusted limits as exact percentages of median income.
@@ -45,3 +46,4 @@
 - No separate lint command is configured in the frontend package.
 - `git diff --check`: passed.
 - Follow-up verification: typecheck, 600 tests across 90 files, production build and six browser width/theme combinations passed, including chevron/native disclosure interaction, expanded body inset and closed-disclosure print visibility. Updated the withheld-chart test to distinguish decorative icons from actual charts; no withholding logic changed.
+- Free-line follow-up: typecheck, 600 tests, final build and six browser combinations passed. Verified the line is aligned below the tagline with less than 30px separation and no badge border. Tightened desktop introduction row gaps after visual inspection.

@@ -5,9 +5,10 @@
   .quiet-nation .nation-head h1 { font-size: clamp(44px, 5.4vw, 70px); max-width: none; }
   .quiet-nation .nation-head .entry-kicker { font: 600 13px/1.4 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--text-secondary); }
   .quiet-nation .entry-introduction { margin-block: .45rem .2rem; }
-  .quiet-nation .nation-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 2rem; align-items: end; }
+  .quiet-nation .nation-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 2rem; row-gap:.35rem; align-items: end; }
   .quiet-nation .nation-head > :not(svg) { grid-column: 1; }
-  .quiet-nation .nation-head > .entry-free { grid-column: 2; grid-row: 3; align-self: end; margin: 0 0 .4rem; }
+  .quiet-nation .nation-head > .entry-free { grid-column:1; grid-row:auto; margin:.65rem 0 0; padding:0; gap:.45rem; font:500 13px/1.5 var(--font-text); }
+  .quiet-nation .nation-head > .entry-free > span { color:var(--text-secondary); }
 
   /* Search: a larger box over the atlas's original fade. */
   .coverage-search-panel .place-search-hero input { min-height: 58px; border-radius: 14px; font-size: 18px; padding-inline: 1.1rem; }

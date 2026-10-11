@@ -9,6 +9,11 @@ try {
     await context.addInitScript(t => localStorage.setItem('housing-theme', t), theme);
     const page = await context.newPage();
     await page.goto(origin);
+    assert.ok(await page.locator('.entry-free').evaluate(e => {
+      const tagline = document.querySelector('.entry-introduction').getBoundingClientRect();
+      const box = e.getBoundingClientRect(), style = getComputedStyle(e);
+      return !e.classList.contains('computed') && parseFloat(style.borderTopWidth) === 0 && box.top >= tagline.bottom && box.top - tagline.bottom < 30 && Math.abs(box.left - tagline.left) < 2;
+    }), 'Free reassurance follows the tagline without a badge container');
     const cards = page.locator('.home-tools a[data-tool]');
     assert.equal(await cards.count(), 3);
     const washes = await cards.evaluateAll(nodes => nodes.map(e => getComputedStyle(e).backgroundImage));
