@@ -49,19 +49,6 @@ export default async function HousingLandingPage() {
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
         <NationalCoverageMap searchFirst />
       </section>
-      <section className="home-tools" aria-labelledby="home-tools-heading">
-        <h2 id="home-tools-heading">Tools</h2>
-        <ul>
-          {HOME_TOOLS.map((tool) => <li key={tool.href}>
-            <Link href={tool.href} data-tool={tool.href.slice(1)}>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d={tool.icon} /></svg>
-              <span className="home-tool-title">{tool.title} <span aria-hidden="true">→</span></span>
-              <span className="home-tool-text">{tool.text}</span>
-              <span className="home-tool-scope">New Jersey</span>
-            </Link>
-          </li>)}
-        </ul>
-      </section>
       <section className="national-backdrop" aria-labelledby="national-backdrop-heading">
         <header><h2 id="national-backdrop-heading">The national backdrop</h2><span>United States</span></header>
         <div className="national-backdrop-grid">
@@ -83,6 +70,19 @@ export default async function HousingLandingPage() {
           </section>
         </div>
         <p className="national-backdrop-note">Each trend uses its own scale. Historical figures, not forecasts.</p>
+      </section>
+      <section className="home-tools" aria-labelledby="home-tools-heading">
+        <h2 id="home-tools-heading">Tools</h2>
+        <ul>
+          {HOME_TOOLS.map((tool) => <li key={tool.href}>
+            <Link href={tool.href} data-tool={tool.href.slice(1)}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d={tool.icon} /></svg>
+              <span className="home-tool-title">{tool.title} <span aria-hidden="true">→</span></span>
+              <span className="home-tool-text">{tool.text}</span>
+              <span className="home-tool-scope">New Jersey</span>
+            </Link>
+          </li>)}
+        </ul>
       </section>
       </div>
     </main>
