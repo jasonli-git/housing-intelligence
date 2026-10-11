@@ -1,6 +1,7 @@
 # Living housing mosaic
 
 ## What changed
+- Second visual refinement after user feedback: much stronger topic identities—transaction-slip sales, rounded paycheck panel, inset historical chart display, gridded blueprint construction and flowing migration panel. Topic-specific heading fonts, silhouettes, surfaces and chart framing replace subtle border-only differentiation. Still screen-only; data and print report layout unchanged.
 - Follow-up exhibit overhaul: state history now uses the same interactive learning-exhibit wrapper as place pages. State sequence is sales → historical context → building; place sequence is sales → paychecks → history → building → migration, omitting unsupported exhibits.
 - Five topic-specific decorative linework/surface styles replace repeated wave artwork, with consistent widths, legible theme-aware text, reduced-motion handling and no change to measured values or upstream data. Removed the extra Local market wrapper heading so exhibits form one continuous gallery.
 - Integrated the state mosaic into Statewide snapshot after user approval: one shared blue surface, steady headline metrics, subordinate Explore the mix heading, mobile readout above the tiles, and More statewide figures last.
@@ -40,6 +41,7 @@
 - This does not change source licensing or collection; it reuses the project's existing NJ DCA and HMDA data and preserves publisher notices.
 
 ## Verification
+- Stronger-style follow-up: inspected computed backgrounds/silhouettes and mobile gallery screenshots; scoped axe checks on Somerset's complete five-exhibit gallery returned no violations in light/dark themes. Full responsive diagnostic rerun after rebuild.
 - `npm run typecheck`: passed.
 - `npm test`: 630 tests passed across 95 files. State record tests cover complete partitions, matching source/release/period, mortgage exclusions, record-vs-survey labelling, very small groups that receive zero tiles and the embedded heading. Exhibit tests verify five distinct decorative paths and preserved content.
 - `npm run build`: passed; 2,386 static outputs, 2,366 legacy aliases and 16,693 files.
