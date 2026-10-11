@@ -16,6 +16,23 @@
 .guide-check-index a span { opacity:.4; }
 .guide-check-index a:hover { text-decoration:underline; text-underline-offset:4px; }
 .guide-check[id] { scroll-margin-top:7rem; }
+@media screen {
+  .guide-page .decision-guide .guide-answer.guide-slide[data-active="false"] { display:none; }
+  .guide-page .decision-guide:has(>.guide-setup[data-ready="false"]) { grid-template-columns:minmax(0,1fr); }
+  .guide-step-selector { scroll-margin-top:6rem; border:0; padding:0; }
+  .guide-step-selector button { min-height:44px; padding:.65rem .8rem; border:1px solid var(--border); border-radius:999px; background:transparent; color:var(--text-secondary); font:500 13px/1.4 var(--font-text); cursor:pointer; }
+  .guide-step-selector button[aria-current="step"] { color:var(--text-primary); background:color-mix(in srgb,var(--text-secondary) 12%,var(--surface-card)); border-color:var(--text-secondary); }
+  .guide-step-selector .guide-help-shortcut { margin-left:auto; background:none; }
+  .guide-step-arrows { display:flex; align-items:center; justify-content:space-between; gap:.75rem; grid-column:1/-1; }
+  .guide-step-arrows button { min-height:44px; padding:.65rem .8rem; border:1px solid var(--border); border-radius:12px; background:var(--surface-card); color:var(--text-primary); font:500 13px/1.4 var(--font-text); cursor:pointer; }
+  .guide-step-arrows button:disabled { opacity:.35; cursor:default; }
+  .guide-step-arrows > span { font:12px var(--font-mono); color:var(--text-muted); white-space:nowrap; }
+  .guide-slide[data-active="true"] { animation:guide-slide-in 180ms ease-out; }
+  @keyframes guide-slide-in { from { opacity:0; transform:translateX(8px); } to { opacity:1; transform:none; } }
+  @media(prefers-reduced-motion:reduce) { .guide-slide[data-active="true"] { animation:none; } }
+  @media(max-width:600px) { .guide-step-selector button { flex:1; padding:.6rem .4rem; font-size:12px; } .guide-step-selector button small { display:block; } .guide-step-selector .guide-help-shortcut { flex-basis:100%; justify-content:flex-end; padding:0; } }
+}
+@media print { .guide-step-selector,.guide-step-arrows { display:none; } .guide-slide[data-ready="true"] { display:block !important; } }
 .guide-check-group { margin-top:1.5rem; }
 .guide-check-group > h3 { color:var(--text-muted); font-size:.85rem; }
 .guide-supporting-evidence { margin-top:1.5rem; border-top:1px solid var(--border); padding-top:.8rem; }

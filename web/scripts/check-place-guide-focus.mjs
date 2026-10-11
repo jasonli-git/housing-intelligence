@@ -97,12 +97,17 @@ try {
     await page.goto(origin+'/guide?place=224',{waitUntil:'networkidle'});
     await page.locator('.guide-answer[data-ready="true"]').first().waitFor({timeout:30000});
     assert.equal(await page.locator('.guide-question-tagline').count(),0,'Repeated question tagline is removed');
+    await page.getByRole('button',{name:'03 Before an offer',exact:true}).click();
     assert.equal(await page.locator('.guide-check-index a').count(),10,'All ten offer checks have a compact preview');
     assert(await page.locator('.guide-check-index a').evaluateAll(els=>els.every(el=>document.querySelector(el.getAttribute('href')))),'Every preview links to its visible primary check');
     assert.equal(await page.getByLabel('Purchase price',{exact:true}).inputValue(),'','Another place does not inherit listing price');
     await page.goto(origin+'/guide?place=12',{waitUntil:'networkidle'});
     await page.locator('.guide-answer[data-ready="true"]').first().waitFor({timeout:30000});
-    assert.equal(await page.locator('.guide-contents a').count(),4);
+    assert.equal(await page.locator('.guide-contents button').count(),3);
+    assert.equal(await page.locator('.guide-slide:visible').count(),1,'Only one guide question is visible');
+    await page.getByRole('button',{name:'Next: Rent or buy? →',exact:true}).click();
+    assert(await page.locator('#guide-panel-1').isVisible(),'Next arrow advances the question');
+    await page.getByRole('button',{name:'01 Can I afford it?',exact:true}).click();
     await page.getByLabel('Yearly household income, before tax',{exact:true}).fill('120000');
     await page.locator('.guide-assumptions summary').click();
     await page.getByLabel('Purchase price',{exact:true}).fill('350000');
@@ -110,16 +115,23 @@ try {
     await page.getByLabel('HOA or condo fees a month',{exact:true}).fill('200');
     assert((await page.locator('#guide-afford-heading').locator('..').locator('..').textContent()).includes('Your purchase price of'),'Reader price not credited to a publisher');
     assert(await page.getByText('Upfront cash:',{exact:false}).isVisible());
+    await page.getByRole('button',{name:'02 Rent or buy?',exact:true}).click();
+    assert.equal(await page.getByLabel('Purchase price',{exact:true}).inputValue(),'350000','Changing steps preserves home figures');
+    await page.getByRole('button',{name:'03 Before an offer',exact:true}).click();
     assert.equal(await page.locator('.guide-check-group').count(),3);
     assert.equal(await page.locator('.guide-check-group .guide-check').count(),10);
     assert.equal(await page.locator('.guide-check-group details').count(),0,'No hidden primary checklist actions');
     assert.equal(await page.locator('.guide-checks').locator('..').filter({has:page.locator('summary')}).count(),1,'One checklist supporting appendix');
-    assert.equal(await page.locator('.guide-housing-help .assistance-routes a').count(),3,'Help available in guide too');
-    await page.locator('.guide-housing-help > details > summary').click();
-    assert(await page.locator('.guide-housing-help .housing-assistance').isVisible(),'Programme detail is discoverable in guide');
+    assert(await page.locator('.guide-help-shortcut[href="/help"]').isVisible(),'Help stays available outside the steps');
+    await page.emulateMedia({media:'print'});
+    assert.equal(await page.locator('.guide-slide:visible').count(),3,'Printing includes all three answers');
+    await page.emulateMedia({media:'screen'});
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Guide has no horizontal overflow');
     assert.deepEqual(errors,[]);
     await page.screenshot({path:`/tmp/place-guide-focus-${width}-${theme}.png`,fullPage:true});
+    await page.goto(origin+'/guide?place=224#guide-check-water',{waitUntil:'networkidle'});
+    await page.locator('#guide-check-water').waitFor({state:'visible',timeout:30000});
+    assert(await page.locator('#guide-panel-2').isVisible(),'Direct check link opens the correct step');
     await page.close();
   }
 } finally { await browser.close(); }

@@ -27,8 +27,6 @@ import type { IncomeLimits } from "@/lib/household";
 import type { SearchEntry } from "@/lib/search";
 import { cashFit } from "@/lib/budgetScenario";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
-import { AffordableHousing, HousingHelpDisclosure } from "@/components/AffordableHousing";
-import { APPLICATION_ROUTES, type AffordableHousing as HousingData } from "@/lib/affordableHousing";
 import { readGuideTransfer } from "@/lib/guideTransfer";
 
 /**
@@ -52,14 +50,13 @@ async function getJson<T>(url: string): Promise<T | null> {
 
 async function loadPlace(artifactUrl: string, id: number, newest: Record<string, string | null>): Promise<GuideData | null> {
   const base = `${artifactUrl}/regions/${id}`;
-  const [packet, metrics, incomeLimits, water, community, utilities, housingHelp] = await Promise.all([
+  const [packet, metrics, incomeLimits, water, community, utilities] = await Promise.all([
     getJson<Packet>(`${base}/packet/5y.json`),
     getJson<{ observations: Observation[] }>(`${base}/metrics.json`),
     getJson<IncomeLimits>(`${base}/income-limits.json`),
     getJson<WaterSystems>(`${base}/water-systems.json`),
     getJson<CommunityContext>(`${base}/community.json`),
     getJson<Utilities>(`${base}/utilities.json`),
-    getJson<HousingData>(`${base}/affordable-housing/overview.json`),
   ]);
   if (!packet) return null;
   // FHA's limit and the county's turnover are the county's: a town or ZIP reads its
@@ -81,7 +78,6 @@ async function loadPlace(artifactUrl: string, id: number, newest: Record<string,
     water,
     community,
     utilities,
-    housingHelp,
     newest,
   };
 }
@@ -160,6 +156,9 @@ export function DecisionGuide({
   const [rent, setRent] = useState("");
   const [home, setHome] = useState<GuideHome>({});
   const [cash, setCash] = useState<number | undefined>();
+  const [step, setStep] = useState(0);
+  const stepNames = ["Can I afford it?", "Rent or buy?", "Before an offer"];
+  const stepIds = ["guide-afford-heading", "guide-rent-heading", "guide-checks-heading"];
 
   // The place from the URL, and what this reader set on other pages.
   useEffect(() => {
@@ -214,24 +213,39 @@ export function DecisionGuide({
   const taxHref = data?.region.level === "municipality" ? `/tax?town=${data.region.geoid}` : "/tax";
   const afford = data && yearly ? affordAnswer(data, { income: yearly, size, ratePct, personal: { ...personal, downPct }, home }) : null;
   const choice = data ? rentOrBuy(data, { ratePct, personal: { ...personal, downPct, years }, home, rent: parseAmount(rent) }) : null;
+  useEffect(() => {
+    const followHash = () => {
+      const hash=window.location.hash.slice(1);
+      const next=hash.startsWith("guide-check-") ? 2 : stepIds.indexOf(hash);
+      if(next<0) return;
+      setStep(next);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>document.getElementById(hash)?.scrollIntoView({block:"start"})));
+    };
+    followHash();
+    window.addEventListener("hashchange",followHash);
+    return ()=>window.removeEventListener("hashchange",followHash);
+    // Revisit an initial deep link when the place finishes loading.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+  function goToStep(next:number) {
+    setStep(next);
+    window.history.replaceState(null,"",`#${stepIds[next]}`);
+    requestAnimationFrame(()=>{
+      document.getElementById("guide-step-selector")?.scrollIntoView({block:"start"});
+      document.getElementById(stepIds[next])?.focus({preventScroll:true});
+    });
+  }
+  const checkIndex = <nav className="guide-check-index" aria-label="Checks before an offer">
+    <span>Before an offer · {data ? "jump to a check" : "choose a place to explore"}</span>
+    <ul>{[
+      ["tax", "Property tax"], ["mortgage", "Financing"], ["turnover", "Home sales"],
+      ["flood", "Flooding"], ["water", "Drinking water"], ["sites", "Contaminated sites"], ["radon", "Radon"],
+      ["school", "Schools"], ["commute", "Commute"], ["utilities", "Internet & utilities"],
+    ].map(([key,label])=><li key={key}><a href={data ? `#guide-check-${key}` : "#guide-place-heading"}>{label}<span aria-hidden="true">↘</span></a></li>)}</ul>
+  </nav>;
 
   return (
     <div className="decision-guide">
-      <nav className="guide-contents" aria-label="In this guide">
-        <span>In this guide</span>
-        <a href={data ? "#guide-afford-heading" : "#guide-place-heading"}><small>01</small> Buying budget</a>
-        <a href={data ? "#guide-rent-heading" : "#guide-place-heading"}><small>02</small> Rent or buy</a>
-        <a href={data ? "#guide-checks-heading" : "#guide-place-heading"}><small>03</small> Before an offer</a>
-        <a href={data ? "#housing-assistance" : "#guide-place-heading"}><small>04</small> Housing help</a>
-      </nav>
-      <nav className="guide-check-index" aria-label="Checks before an offer">
-        <span>Before an offer · {data ? "jump to a check" : "choose a place to explore"}</span>
-        <ul>{[
-          ["tax", "Property tax"], ["mortgage", "Financing"], ["turnover", "Home sales"],
-          ["flood", "Flooding"], ["water", "Drinking water"], ["sites", "Contaminated sites"], ["radon", "Radon"],
-          ["school", "Schools"], ["commute", "Commute"], ["utilities", "Internet & utilities"],
-        ].map(([key,label]) => <li key={key}><a href={data ? `#guide-check-${key}` : "#guide-place-heading"}>{label}<span aria-hidden="true">↘</span></a></li>)}</ul>
-      </nav>
       <div className="guide-setup" data-ready={Boolean(data)}>
       <section className="section guide-place" aria-labelledby="guide-place-heading">
         <p className="guide-eyebrow">01 · Your starting point</p>
@@ -323,13 +337,17 @@ export function DecisionGuide({
       </section>
       </div>
 
+      <nav id="guide-step-selector" className="guide-contents guide-step-selector" aria-label="In this guide">
+        {stepNames.map((label,index)=><button key={label} type="button" aria-current={step===index ? "step" : undefined} aria-controls={`guide-panel-${index}`} onClick={()=>goToStep(index)}><small>0{index+1}</small>{label}</button>)}
+        <Link className="guide-help-shortcut" href="/help">Housing help ↗</Link>
+      </nav>
       {!data && load.state === "idle" && <p className="guide-empty">Choose a place to see its buying costs, rent comparison and pre-offer checks.</p>}
 
         <>
-          <section className="section guide-answer" aria-labelledby="guide-afford-heading" data-ready={Boolean(data)} hidden={!data}>
+          <section id="guide-panel-0" className="section guide-answer guide-slide" data-active={step===0} aria-labelledby="guide-afford-heading" data-ready={Boolean(data)} hidden={!data}>
             <p className="guide-eyebrow">Affordability</p>
             <div className="guide-check-head">
-              <h2 id="guide-afford-heading">Can I afford to buy here?</h2>
+              <h2 id="guide-afford-heading" tabIndex={-1}>Can I afford to buy here?</h2>
               {afford && <Strength judged={afford.evidence} />}
             </div>
             {data ? <div className="guide-answer-body">
@@ -390,10 +408,10 @@ export function DecisionGuide({
             </div> : <p className="guide-preview">Estimated buying costs against your household income.</p>}
           </section>
 
-          <section className="section guide-answer" aria-labelledby="guide-rent-heading" data-ready={Boolean(data)} hidden={!data}>
+          <section id="guide-panel-1" className="section guide-answer guide-slide" data-active={step===1} aria-labelledby="guide-rent-heading" data-ready={Boolean(data)} hidden={!data}>
             <p className="guide-eyebrow">The longer view</p>
             <div className="guide-check-head">
-              <h2 id="guide-rent-heading">Should I rent or buy?</h2>
+              <h2 id="guide-rent-heading" tabIndex={-1}>Should I rent or buy?</h2>
               {choice && <Strength judged={choice.evidence} />}
             </div>
             {data ? <div className="guide-answer-body">
@@ -445,9 +463,10 @@ export function DecisionGuide({
             </div> : <p className="guide-preview">Compare costs over the years you expect to stay.</p>}
           </section>
 
-          <section className="section guide-answer" aria-labelledby="guide-checks-heading" data-ready={Boolean(data)} hidden={!data}>
+          <section id="guide-panel-2" className="section guide-answer guide-slide" data-active={step===2} aria-labelledby="guide-checks-heading" data-ready={Boolean(data)} hidden={!data}>
             <p className="guide-eyebrow">Before committing</p>
-            <h2 id="guide-checks-heading">What should I check before an offer?</h2>
+            <h2 id="guide-checks-heading" tabIndex={-1}>What should I check before an offer?</h2>
+            {checkIndex}
             {data ? <div className="guide-answer-body">
             <p className="meta">Check the actual home. Area figures do not establish its risk, school assignment or available service.</p>
             {[
@@ -463,13 +482,12 @@ export function DecisionGuide({
             </details>
             </div> : <p className="guide-preview">Local context and links for checking the actual home.</p>}
           </section>
-          {data && <section id="housing-assistance" className="section guide-housing-help" aria-labelledby="guide-help-heading">
-            <h2 id="guide-help-heading">Find housing help</h2>
-            <nav className="assistance-routes" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><small>{route.agency}</small><strong>{route.label} ↗</strong><span>{route.note}</span></a>)}</nav>
-            <p className="guide-limit">For renters and buyers. Confirm eligibility, vacancies and waiting lists with the administrator.</p>
-            <HousingHelpDisclosure enabled><AffordableHousing data={data.housingHelp ?? null} hideRoutes /></HousingHelpDisclosure>
-          </section>}
         </>
+      <nav className="guide-step-arrows" aria-label="Guide step navigation">
+        <button type="button" disabled={step===0} onClick={()=>goToStep(step-1)}>← {step>0 ? stepNames[step-1] : "Previous"}</button>
+        <span>{step+1} / 3</span>
+        <button type="button" disabled={step===2} onClick={()=>goToStep(step+1)}>{step<2 ? `Next: ${stepNames[step+1]}` : "Last step"} →</button>
+      </nav>
     </div>
   );
 }
