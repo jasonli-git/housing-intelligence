@@ -56,7 +56,7 @@ export function HomeSales({
   return (
     <section className="section sales" aria-labelledby="sales-heading">
       <div className="section-head">
-        <h2 id="sales-heading">How homes sell here</h2>
+        <h2 id="sales-heading">{portrait ? "What did buyers actually pay?" : "How homes sell here"}</h2>
       </div>
       {portrait && <><p className="sales-note">{Math.round(count.value).toLocaleString("en-US")} qualifying one- to four-family sales · {span}</p><SaleExhibit median={median.value} lower={q1?.period_start===median.period_start && q1?.period_end===median.period_end ? q1.value : undefined} upper={q3?.period_start===median.period_start && q3?.period_end===median.period_end ? q3.value : undefined} period={span} /></>}
       {!portrait && <p className="sales-lead">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { THEME_KEY, type Theme, applyTheme, parseTheme, shown, toggled } from "@/lib/theme";
@@ -20,7 +20,6 @@ const DARK = "(prefers-color-scheme: dark)";
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
   const [systemDark, setSystemDark] = useState(false);
-  const maskId = useId();
   const button = useRef<HTMLButtonElement>(null);
   const transition = useRef<ViewTransition | null>(null);
   const chosen = useRef<Theme>("system");
@@ -93,12 +92,9 @@ export function ThemeToggle() {
   return (
     <button ref={button} type="button" className="bar-icon theme-toggle" onClick={press} aria-label={label} title={label}>
       <svg className="theme-eclipse" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" {...stroke}>
-        <defs><mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-          <rect width="24" height="24" fill="white" stroke="none" />
-          <circle className="eclipse-shadow" cx="17" cy="7" r="6" fill="black" stroke="none" />
-        </mask></defs>
+        <path className="eclipse-moon" d="M20.5 13.2A8.5 8.5 0 0 1 10.8 3.5a8.5 8.5 0 1 0 9.7 9.7Z" />
         <g className="eclipse-rays"><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M5 19l1.4-1.4M17.6 6.4 19 5" /></g>
-        <circle className="eclipse-disc" cx="12" cy="12" r="6" mask={`url(#${maskId})`} />
+        <circle className="eclipse-disc" cx="12" cy="12" r="6" />
         <g className="eclipse-orbit"><circle cx="21" cy="12" r="1" fill="currentColor" stroke="none" /></g>
       </svg>
     </button>

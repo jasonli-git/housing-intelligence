@@ -13,6 +13,9 @@ it("previews all three questions without claiming missing data before selection"
   expect(html).not.toContain("No home price is published");
   expect(html).not.toContain("guide-answer-body");
   expect(html).toContain('aria-label="In this guide"');
+  expect(html).toContain('class="guide-slide-stage"');
+  expect(html.match(/class="guide-side-arrow/g)).toHaveLength(2);
+  expect(html).not.toContain('class="guide-step-arrows"');
   const contents=html.match(/<nav[^>]*class="guide-contents[^\"]*"[\s\S]*?<\/nav>/)?.[0] ?? "";
   expect(contents.match(/<button/g)).toHaveLength(3);
   expect(contents).toContain('aria-current="step"');

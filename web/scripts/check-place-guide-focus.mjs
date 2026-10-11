@@ -15,6 +15,11 @@ try {
     assert.equal(await page.locator('.bar-budget[href="/afford?county=all"]').count(),2,'Home affordability link is enabled in both menus');
     assert(await page.locator('.bar-budget .bar-budget-long').evaluateAll(els=>els.every(el=>el.textContent==='Find your fit')),'Home uses the shared Find your fit menu label');
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Home tool cards fit the viewport');
+    await page.goto(origin+'/states/new-jersey',{waitUntil:'networkidle'});
+    assert(await page.locator('.state-next-step a[href="/guide"]').isVisible(),'NJ has the buyer-guide next step');
+    assert(await page.locator('.state-next-step a[href="/help"]').isVisible(),'NJ has the housing-help next step');
+    assert.equal(await page.locator('.state-help-links').count(),0,'NJ does not duplicate help application cards');
+    assert.equal(await page.locator('#state-detailed-data .state-help-details').count(),1,'Historical programme evidence remains available');
     // The static guide expects publisher artifacts. Bridge those requests to the
     // real local API for this diagnostic only; no synthetic records are used.
     await page.route(/^https?:\/\/[^/]+\/regions\/\d+\/.*\.json$/,async route=>{
@@ -112,13 +117,19 @@ try {
     await page.locator('.guide-answer[data-ready="true"]').first().waitFor({timeout:30000});
     assert.equal(await page.locator('.guide-contents button').count(),3);
     assert.equal(await page.locator('.guide-slide:visible').count(),1,'Only one guide question is visible');
+    assert.equal(await page.locator('.guide-step-arrows').count(),0,'No buried bottom arrow controls');
+    assert(await page.locator('.guide-side-next').evaluate(el=>{
+      const arrow=el.getBoundingClientRect();
+      const panel=document.querySelector('.guide-slide[data-active="true"]').getBoundingClientRect();
+      return arrow.height>=100 && arrow.left>=panel.right;
+    }),'Large next arrow sits outside the card in its side gutter');
     await page.locator('#guide-step-selector').scrollIntoViewIfNeeded();
     const beforeStep=await page.evaluate(()=>scrollY);
     await page.getByRole('button',{name:'02 Rent or buy?',exact:true}).click();
     await page.waitForTimeout(250);
     assert(Math.abs((await page.evaluate(()=>scrollY))-beforeStep)<2,'Question shortcut does not force scrolling');
     await page.getByRole('button',{name:'01 Can I afford it?',exact:true}).click();
-    await page.getByRole('button',{name:'Next: Rent or buy? →',exact:true}).click();
+    await page.getByRole('button',{name:'Next: Rent or buy?',exact:true}).click();
     assert(await page.locator('#guide-panel-1').isVisible(),'Next arrow advances the question');
     await page.getByRole('button',{name:'01 Can I afford it?',exact:true}).click();
     await page.getByLabel('Yearly household income, before tax',{exact:true}).fill('120000');

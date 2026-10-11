@@ -10,7 +10,7 @@ import { StateOverview } from "@/components/StateOverview";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { MoreExpander } from "@/components/MoreExpander";
 import { AffordableHousing } from "@/components/AffordableHousing";
-import { APPLICATION_ROUTES } from "@/lib/affordableHousing";
+import Link from "next/link";
 import { StepIcon } from "@/components/StepIcon";
 import { HomeSales } from "@/components/HomeSales";
 import { HomesAdded } from "@/components/HomesAdded";
@@ -196,7 +196,6 @@ export default async function NewJerseyPage() {
           </div>
         </details>
       </StateOverview>
-
       <div id="nj-explore" className="nj-explore-anchor">
           <StateModeWorkspace
             countyPages={(countyRegions?.items ?? []).map((county) => ({ id: county.region_id, name: county.name }))}
@@ -205,13 +204,19 @@ export default async function NewJerseyPage() {
           />
       </div>
       <div className="state-history-exhibit"><HowUnusual name="New Jersey" data={persistence} exhibit />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</div>
-      <section id="housing-assistance" className="state-housing-help" aria-labelledby="state-help-heading">
-        <h2 id="state-help-heading">Housing help</h2>
-        <nav className="state-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><StepIcon name={route.icon} /><small>{route.agency}</small><strong>{route.label} <span aria-hidden="true">↗</span></strong><span>{route.note}</span></a>)}</nav>
-        <p className="state-help-caveat">Check availability and eligibility with the administrator; these links do not confirm an open waiting list or vacancy.</p>
-        <details className="state-help-details"><summary>Programmes, reported homes &amp; sources</summary><AffordableHousing data={housingHelp} hideRoutes /></details>
+      <section className="local-next-step-group state-next-step" aria-labelledby="state-next-step-heading">
+        <h2 id="state-next-step-heading">Your next step</h2>
+        <div className="place-next-destinations">
+          <section className="place-guide-entry" aria-labelledby="state-guide-heading">
+            <StepIcon name="guide" /><div><h3 id="state-guide-heading">Planning a purchase?</h3><p>Buying budget, rent or buy, and checks before an offer.</p><Link href="/guide">Explore the buyer’s guide →</Link></div>
+          </section>
+          <section id="housing-assistance" className="local-housing-help" aria-labelledby="state-help-heading">
+            <StepIcon name="listings" /><div><h3 id="state-help-heading">Find housing help</h3><p>Affordable homes, vouchers and local housing authorities.</p><Link href="/help">Explore your options →</Link></div>
+          </section>
+        </div>
       </section>
       <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Every available state figure, with dates, definitions and sources.">
+        <details className="state-help-details"><summary>Programmes, reported homes &amp; sources</summary><AffordableHousing data={housingHelp} hideRoutes /></details>
         <section className="state-supporting-context" aria-labelledby="state-context-heading">
           <h2 id="state-context-heading">More statewide context</h2>
           <details><summary>How buyers finance homes <small>Published mortgages—not today’s offers</small></summary>{packet ? <MortgageLending name="New Jersey" levels={packet.levels} /> : <p>Mortgage records are unavailable in this snapshot.</p>}</details>
