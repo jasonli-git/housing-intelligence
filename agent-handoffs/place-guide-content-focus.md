@@ -1,6 +1,9 @@
 # Place / guide content focus
 
 ## What changed
+- Approved Housing help tool at `/help`: official application routes and the existing sourced New Jersey programme/property explorer, accessible from Tools and compact place-page help. Reuses the current overview and lazy inventory; no new data or eligibility claims. Coverage is explicitly New Jersey-only, not a misleading multi-state selector. Buyer’s guide help remains available.
+- Migration-table internal links now explicitly use the county destination class. Their records are county-to-county flows; external IRS citations remain external-source blue.
+- Recommendations only, not implemented: expose essential Make it yours inputs before its optional fine tuning; turn factual context into individually approachable learning exhibits. Await design approval before altering those sections.
 - Desktop follow-up: remove the rate table's inherited 34rem minimum width, which clipped its third column inside a desktop cost card despite no document overflow. Add a regression assertion against the disclosure's actual bounds.
 - Restore shared 16–22px horizontal insets to visible history, market, migration, similar-town and county-directory sections across place levels. Similar-town links now use the municipality destination colour; local anchor links use the place accent, while existing guide/tax/budget and external-source colours remain intact.
 - Housing help as a separate, state-aware tool is recommended but not implemented or authorized in this follow-up. Initial coverage would be New Jersey only; do not imply nationwide programme coverage.
@@ -50,6 +53,7 @@
 - Canonical documentation and underlying datasets are untouched. Claude should review the intentional distinction between published/default profile costs and personal guide scenarios before reconciling project documents.
 
 ## Verification
+- Housing-help follow-up: typecheck and 604 tests / 91 files passed; export passed with 2,385 pages, 2,366 aliases and 16,692 files. Responsive browser diagnostic covers the standalone help title, explicit NJ-only coverage, three official routes and no horizontal overflow, alongside existing county/town/ZIP and guide checks. Sitemap entry added after that export; its local generated sitemap will refresh at the next build.
 - Desktop-spacing follow-up: `npm run typecheck` and all 604 tests / 91 files passed. `node scripts/check-place-guide-focus.mjs` passed county/town/ZIP at 320/390/1280px in light/dark, including new table-within-disclosure and minimum 16px context-inset assertions. `git diff --check` passed. Static export passed with 2,384 pages, 2,366 aliases and 16,685 files; final colour-selector export is checked before committing. No new route, dataset, merge or deployment.
 - Discoverability follow-up: typecheck and 604 tests across 91 files passed, including session transfer isolation and corrupt input guards. Six width/theme browser combinations passed on county, town and ZIP profiles; restored inputs, mobile rate expansion, compact place help links, guide help, explicit home transfer and different-place isolation verified. At 320px the expanded table measured 231px within a 258px body, with no clipped horizontal content. Visual inspection prompted keeping the short Rate header on one line. Production export passed with unchanged page/file counts; final CSS re-export recorded below.
 - `npm run typecheck`: passed.

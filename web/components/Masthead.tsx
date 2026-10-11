@@ -50,6 +50,7 @@ export function Masthead({
       <Link className="bar-budget" href="/afford?county=all" aria-current={affordability.kind === "route" && affordability.active ? "page" : undefined} aria-label="Find places within my budget across all New Jersey">{budgetContent}</Link>}
     <Link className="bar-link" href="/guide" aria-label="Buyer’s guide" aria-current={guideActive ? "page" : undefined}>Buyer’s guide</Link>
     <Link className="bar-link" href="/tax" aria-label="Property tax lookup" aria-current={taxActive ? "page" : undefined}>Property tax</Link>
+    <Link className="bar-link" href="/help">Housing help</Link>
   </>;
   return (
     <>

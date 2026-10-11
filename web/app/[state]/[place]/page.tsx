@@ -612,7 +612,7 @@ export default async function RegionPage({
         <h3 id="local-help-heading">Find housing help</h3>
         <nav className="local-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><StepIcon name={route.icon} /><small>{route.agency}</small><strong>{route.label} <span aria-hidden="true">↗</span></strong><span>{route.note}</span></a>)}</nav>
         <p className="table-note">Check eligibility, vacancies and waiting lists with the administrator.</p>
-        <p className="table-note"><Link href={`/guide?place=${regionId}#housing-assistance`}>Explore programmes, reported homes & sources in the guide →</Link></p>
+        <p className="table-note"><Link href="/help">Explore New Jersey housing help →</Link></p>
       </section>
       </section>
 

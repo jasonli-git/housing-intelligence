@@ -21,12 +21,18 @@ try {
       const response=await page.request.get(url.toString());
       await route.fulfill({response});
     });
+    await page.goto(origin+'/help',{waitUntil:'networkidle'});
+    assert(await page.getByRole('heading',{name:'Find housing help.',exact:true}).isVisible(),'Housing help is a standalone tool');
+    assert.equal(await page.locator('.assistance-routes a').count(),3,'Official assistance routes remain visible');
+    assert(await page.getByText('Coverage: New Jersey. More states are not available yet.',{exact:true}).isVisible(),'Housing help coverage is explicit');
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Housing help has no horizontal overflow');
     for(const path of ['/nj/somerset-county','/nj/princeton','/regions/2842']) {
       await page.goto(origin+path,{waitUntil:'networkidle'});
       assert.equal(await page.locator('.home-action-checks').count(),0,'No long duplicate property checklist');
       assert.equal(await page.locator('.cost-yours').count(),1,'Interactive cost inputs restored');
       assert.equal(await page.locator('.quiet-tool-group').count(),1,'Buying views restored');
       assert.equal(await page.locator('.local-housing-help details').count(),0,'Place help links stay compact');
+      assert(await page.locator('.migration-flows a').evaluateAll(els=>els.every(el=>el.classList.contains('destination-county'))),'Migration destinations carry the county colour class');
       await page.locator('.mortgage-rate-details summary').click();
       assert(await page.locator('.rate-scenarios').isVisible());
       assert(await page.locator('.mortgage-rate-details .reader-details-body').evaluate(el=>getComputedStyle(el).overflowX==='auto'),'Rate table has accessible overflow');

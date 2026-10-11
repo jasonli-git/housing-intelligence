@@ -1,5 +1,8 @@
 /* Compact rhythm, explicit destinations. Presentation only; retain print's full detail. */
 @media screen {
+  .housing-help-page { --atlas-accent: light-dark(#66513b, #dfcfb6); }
+  .housing-help-page .page-title { color: var(--atlas-accent); }
+  .housing-help-page .housing-assistance { margin-top: 1.5rem; }
   .housing-mark { flex: 0 0 auto; border-radius: 6px; }
   .bar-inner { padding-block: .55rem; }
   .bar .bar-link { font-size: 11px; letter-spacing: .055em; }
