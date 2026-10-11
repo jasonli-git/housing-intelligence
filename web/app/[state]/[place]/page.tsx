@@ -6,8 +6,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
-import { HousingMosaic } from "@/components/HousingMosaic";
-import { housingMosaicViews } from "@/lib/housingMosaic";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { StepIcon } from "@/components/StepIcon";
 import { CountyPlaces } from "@/components/CountyPlaces";
@@ -574,7 +572,6 @@ export default async function RegionPage({
       />}
 
       <div className="region-standard-content">
-      {quiet && <HousingMosaic key={regionId} name={name} views={housingMosaicViews(packet.levels, uncertainties)} />}
 
       <QuietAnchor enabled={quiet} id="quiet-cost">
       {cost ? (

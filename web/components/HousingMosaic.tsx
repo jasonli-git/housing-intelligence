@@ -4,7 +4,7 @@ import { useState, type CSSProperties } from "react";
 import { mosaicCounts, type MosaicView } from "@/lib/housingMosaic";
 
 /** A playful share graphic, not a map, a sample of homes, or a cross-tabulation. */
-export function HousingMosaic({ name, views }: { name: string; views: MosaicView[] }) {
+export function HousingMosaic({ name, views, statewide = false }: { name: string; views: MosaicView[]; statewide?: boolean }) {
   const [viewId, setViewId] = useState(views[0]?.id);
   const [selected, setSelected] = useState(0);
   if (!views.length) return null;
@@ -16,7 +16,7 @@ export function HousingMosaic({ name, views }: { name: string; views: MosaicView
   const percentage = (share: number) => `${(share * 100).toFixed(1)}%`;
   return <section className="housing-mosaic" id="housing-mosaic" aria-labelledby="housing-mosaic-heading" data-jump-label="Housing mosaic">
     <div className="mosaic-heading">
-      <div><span className="mosaic-eyebrow">A hundred little homes</span><h2 id="housing-mosaic-heading">The housing mix</h2></div>
+      <div><span className="mosaic-eyebrow">{statewide ? "A state in little pieces" : "A hundred little homes"}</span><h2 id="housing-mosaic-heading">{statewide ? "Housing in motion" : "The housing mix"}</h2></div>
       <div className="mosaic-views" role="group" aria-label="Housing mosaic view">
         {views.map(v => <button key={v.id} type="button" aria-pressed={view.id === v.id}
           onClick={() => { setViewId(v.id); setSelected(0); }}>{v.label}</button>)}
@@ -42,7 +42,8 @@ export function HousingMosaic({ name, views }: { name: string; views: MosaicView
         <p className="mosaic-denominator">{view.denominator} · {name}</p>
         <div className="mosaic-selected">
           <strong>{percentage(group.share)}</strong><span>{group.label}</span>
-          <small>{group.margin}{group.margin !== "no margin available" && " · 90% margin"}</small><p>{group.note}</p>
+          <small>{group.margin ? <>{group.margin}{group.margin !== "no margin available" && " · 90% margin"}</> : "Shares calculated from reported records"}</small><p>{group.note}</p>
+          {counts[selected] === 0 && group.share > 0 && <small>Smaller than one tile at this scale.</small>}
         </div>
         <div className="mosaic-legend" role="group" aria-label="Explore housing groups">
           {view.groups.map((g, i) => <button key={g.label} type="button" data-group={i}
@@ -51,13 +52,13 @@ export function HousingMosaic({ name, views }: { name: string; views: MosaicView
             onFocus={() => setSelected(i)} onClick={() => setSelected(i)}>
             <span className="mosaic-swatch" aria-hidden="true" /><span>{g.label}</span><b>{percentage(g.share)}</b>
             <span className="visually-hidden" id={`mosaic-description-${view.id}-${i}`}>
-              {g.margin}{g.margin !== "no margin available" && " (90% margin)"}. {g.note}
+              {g.margin ?? "Share calculated from reported records"}{g.margin && g.margin !== "no margin available" && " (90% margin)"}. {g.note}
             </span>
           </button>)}
         </div>
       </div>
     </div>
     <p className="mosaic-caption">100 tiles, rounded shares—not individual homes or a map. Each view is a separate picture.</p>
-    <p className="mosaic-source">Census ACS · {view.period} five-year survey estimates. Select a group to explore.</p>
+    <p className="mosaic-source">{view.evidence ?? `Census ACS · ${view.period} five-year survey estimates.`} Select a group to explore.</p>
   </section>;
 }

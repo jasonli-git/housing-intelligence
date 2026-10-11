@@ -2,10 +2,11 @@ import type { PacketLevel } from "@/lib/api";
 import { surveyYears } from "@/lib/periods";
 import { marginLabel, type Uncertainties } from "@/lib/uncertainty";
 
-export type MosaicGroup = { label: string; share: number; margin: string; note: string };
+export type MosaicGroup = { label: string; share: number; margin: string | null; note: string };
 export type MosaicView = {
   id: string; label: string; denominator: string; period: string; source: string;
   groups: MosaicGroup[];
+  evidence?: string;
 };
 
 /** Largest-remainder apportionment: exactly 100 tiles, never 100 invented records. */
@@ -61,6 +62,53 @@ export function housingMosaicViews(levels: PacketLevel[], uncertainty?: Uncertai
       period: surveyYears(first.period_start, first.period_end), source: first.source_id ?? "Census ACS",
       groups: ages.map((row, i) => ({ label: ageSpecs[i][1], share: row.value,
         margin: margin(row), note: "When homes were built, not their current condition." })) });
+  }
+  return views;
+}
+
+/** State records describe new completions and issued loans, not the entire housing stock. */
+export function statewideMosaicViews(levels: PacketLevel[], preliminaryYears: number[] = []): MosaicView[] {
+  const views: MosaicView[] = [];
+  const find = (id: string, source: string, unit: string) => levels.find(r => r.metric_id === id
+    && r.source_id === source && r.unit === unit && Number.isFinite(r.value) && r.value >= 0
+    && (unit !== "count" || Number.isInteger(r.value))
+    && (unit !== "ratio" || r.value <= 1));
+  const matches = (r: PacketLevel | undefined, total: PacketLevel): r is PacketLevel => !!r
+    && r.source_id === total.source_id && r.release_id === total.release_id
+    && r.period_start === total.period_start && r.period_end === total.period_end;
+  const total = find("nj_units_certified", "nj_construction", "count");
+  const categories = [
+    ["nj_units_certified_1_2", "Houses & two-family", "New homes in one- or two-family buildings. Tiles represent homes, not buildings."],
+    ["nj_units_certified_multi", "Multifamily", "New homes in buildings with three or more homes, counted separately from mixed-use buildings."],
+    ["nj_units_certified_mixed", "Mixed-use", "New homes in buildings that also contain shops or offices."],
+  ];
+  const rows = categories.map(([id]) => find(id, "nj_construction", "count"));
+  if (total && total.value > 0 && rows.every((r): r is PacketLevel => matches(r, total))
+    && rows.reduce((sum, r) => sum + r.value, 0) === total.value) {
+    const year = total.period_end.slice(0, 4);
+    const preliminary = preliminaryYears.includes(Number(year)) ? " Preliminary figures." : "";
+    views.push({ id: "new-homes", label: "New homes", denominator: `${total.value.toLocaleString("en-US")} reported new homes finished`,
+      period: year, source: "nj_construction", evidence: `NJ DCA construction records · ${year}. Reporting towns only.${preliminary}`,
+      groups: rows.map((r, i) => ({ label: categories[i][1], share: r.value / total.value, margin: null, note: categories[i][2] })) });
+  }
+  const loans = find("hmda_purchase_loans", "ffiec_hmda", "count");
+  const loanSpecs = [
+    ["hmda_conventional_share", "Conventional", "Home-purchase mortgages not insured or guaranteed by a government programme."],
+    ["hmda_fha_share", "FHA", "Home-purchase mortgages insured by the Federal Housing Administration."],
+    ["hmda_va_share", "VA", "Home-purchase mortgages guaranteed by the Department of Veterans Affairs."],
+  ];
+  const shares = loanSpecs.map(([id]) => find(id, "ffiec_hmda", "ratio"));
+  if (loans && loans.value > 0 && shares.every((r): r is PacketLevel => matches(r, loans))) {
+    const sum = shares.reduce((s, r) => s + r.value, 0);
+    // Other is the explicit remainder of an exhaustive loan-type classification.
+    // Reject incompatible distributions rather than rescale them to fit.
+    if (sum <= 1) {
+      const year = loans.period_end.slice(0, 4);
+      views.push({ id: "purchase-loans", label: "Purchase loans", denominator: `${loans.value.toLocaleString("en-US")} reported home-purchase loans`,
+        period: year, source: "ffiec_hmda", evidence: `HMDA lender records · ${year}. Owner-occupied purchases; cash buyers and non-reporting lenders are excluded.`,
+        groups: [...shares.map((r, i) => ({ label: loanSpecs[i][1], share: r.value, margin: null, note: loanSpecs[i][2] })),
+          { label: "Other", share: 1 - sum, margin: null, note: "Other reported loan types, outside conventional, FHA and VA." }] });
+    }
   }
   return views;
 }

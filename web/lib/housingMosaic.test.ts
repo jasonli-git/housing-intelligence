@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PacketLevel } from "@/lib/api";
-import { housingMosaicViews, mosaicCounts } from "./housingMosaic";
+import { housingMosaicViews, mosaicCounts, statewideMosaicViews } from "./housingMosaic";
 
 function row(metric_id: string, value: number, extra: Partial<PacketLevel> = {}): PacketLevel {
   return { metric_id, value, label: metric_id, unit: "ratio", direction: "neutral",
@@ -25,6 +25,48 @@ describe("mosaic apportionment", () => {
     for (const shares of [[], [.4, .4], [-.1, 1.1], [NaN, 1], [Infinity, 0]]) {
       expect(mosaicCounts(shares)).toEqual([]);
     }
+  });
+});
+
+describe("state record distributions", () => {
+  const construction = [
+    row("nj_units_certified", 100, { source_id: "nj_construction", unit: "count" }),
+    row("nj_units_certified_1_2", 40, { source_id: "nj_construction", unit: "count" }),
+    row("nj_units_certified_multi", 50, { source_id: "nj_construction", unit: "count" }),
+    row("nj_units_certified_mixed", 10, { source_id: "nj_construction", unit: "count" }),
+  ];
+  const mortgages = [
+    row("hmda_purchase_loans", 100, { source_id: "ffiec_hmda", unit: "count" }),
+    row("hmda_conventional_share", .7, { source_id: "ffiec_hmda" }),
+    row("hmda_fha_share", .2, { source_id: "ffiec_hmda" }),
+    row("hmda_va_share", .05, { source_id: "ffiec_hmda" }),
+  ];
+  it("uses reported completion counts, not statewide stock, and labels preliminary coverage", () => {
+    const [view] = statewideMosaicViews(construction, [2024]);
+    expect(view.groups.map(g => g.share)).toEqual([.4, .5, .1]);
+    expect(view.groups.every(g => g.margin === null)).toBe(true);
+    expect(view.denominator).toBe("100 reported new homes finished");
+    expect(view.evidence).toContain("Reporting towns only. Preliminary figures.");
+  });
+  it("keeps the other loan-type remainder and excludes cash purchases explicitly", () => {
+    const [view] = statewideMosaicViews(mortgages);
+    expect(view.groups[3].share).toBeCloseTo(.05);
+    expect(mosaicCounts(view.groups.map(g => g.share))).toEqual([70, 20, 5, 5]);
+    expect(view.evidence).toContain("cash buyers and non-reporting lenders are excluded");
+  });
+  it("rejects incomplete, incompatible and inconsistent completion distributions", () => {
+    expect(statewideMosaicViews(construction.slice(1))).toEqual([]);
+    expect(statewideMosaicViews(construction.slice(0, 3))).toEqual([]);
+    for (const extra of [{ value: 101 }, { value: 0 }, { value: 100.5 }, { period_end: "2023-12-31" }, { release_id: 2 }, { source_id: "other" }]) {
+      expect(statewideMosaicViews([{ ...construction[0], ...extra }, ...construction.slice(1)])).toEqual([]);
+    }
+  });
+  it("rejects missing, overfull and mismatched loan-type distributions", () => {
+    expect(statewideMosaicViews(mortgages.slice(0, 3))).toEqual([]);
+    for (const extra of [{ value: .9 }, { value: -1 }, { period_end: "2023-12-31" }, { release_id: 2 }]) {
+      expect(statewideMosaicViews([mortgages[0], { ...mortgages[1], ...extra }, ...mortgages.slice(2)])).toEqual([]);
+    }
+    expect(statewideMosaicViews([{ ...mortgages[0], value: 0 }, ...mortgages.slice(1)])).toEqual([]);
   });
 });
 describe("independent housing views", () => {
