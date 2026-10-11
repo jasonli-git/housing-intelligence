@@ -1,5 +1,11 @@
 @media screen {
   .atlas-local .exhibit-gallery-head { grid-column:1/-1; }
+  .trend-measure-control { display:flex; align-items:center; flex-wrap:wrap; gap:.5rem 1rem; font-size:13px; margin:.7rem 0; }
+  .trend-measure-control select { min-height:44px; max-width:100%; min-width:0; padding:.5rem .7rem; font:16px var(--font-text); border:1px solid var(--border); border-radius:7px; background:var(--surface-1); color:var(--text-primary); }
+  #trends-exhibits .trends { grid-template-columns:minmax(0,1fr); max-width:760px; margin-inline:auto; gap:0; }
+  #trends-exhibits .since { margin-bottom:.6rem; }
+  #trends-exhibits .trend-detail-intro { margin-block:.8rem .4rem; padding-block:0; }
+  #trends-exhibits .trend-detail-intro p { margin:.3rem 0; font-size:12px; }
   .property-exhibit-anchor { min-width:0; scroll-margin-top:100px; }
   .property-exhibit-anchor > .learning-exhibit { margin:0; padding:1rem; --text-muted:light-dark(#4c5660,#c2cbd0); --text-secondary:light-dark(#424c55,#d2d8db); }
   .atlas-local .exhibit-gallery > :is(.local-evidence-charts,#trends-exhibits) { grid-column:1/-1; min-width:0; margin:0; }

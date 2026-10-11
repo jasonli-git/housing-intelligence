@@ -694,7 +694,7 @@ export default async function RegionPage({
       )}
       <StateContextExhibits name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
           <LearningExhibit kind="Flood context"><FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} /></LearningExhibit>
-          <LearningExhibit kind="Ground & water"><GroundAndWater name={name} levels={packet.levels} water={water} /></LearningExhibit>
+          <LearningExhibit kind="Ground & water"><GroundAndWater compact name={name} levels={packet.levels} water={water} /></LearningExhibit>
           <div id="local-property-evidence" className="property-exhibit-anchor"><LearningExhibit kind="Service providers"><Utilities data={utilities} bpuInquiry={bpuInquiry} /></LearningExhibit></div>
           <CommunityContext exhibits data={community} level={region.level} supporting hideBroadband={region.level === "county"} />
         <LocalEvidenceCharts name={name} level={region.level} levels={packet.levels} series={construction} />
