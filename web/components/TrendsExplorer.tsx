@@ -32,21 +32,18 @@ export type TrendSeries = {
  * the page ships no second copy of the answers.
  */
 export function TrendsExplorer({ series, exhibits = false }: { series: TrendSeries[]; exhibits?:boolean }) {
-  const [selectedMetric, setSelectedMetric] = useState(series[0]?.metricId ?? "");
-  const displayedSeries = exhibits ? series.filter(s => s.metricId === selectedMetric) : series;
   const all = series.map((s) => s.points);
   const years = selectableYears(all); // newest first
   const ascending = [...years].reverse();
   const [year, setYear] = useState(() => openingYear(all, years));
   const id = useId();
 
-  const readings = displayedSeries.map((s) => ({ s, reading: years.length > 0 ? since(s.points, year) : null }));
+  const readings = series.map((s) => ({ s, reading: years.length > 0 ? since(s.points, year) : null }));
   const charts = years.length > 0 ? readings.filter((r) => r.reading !== null) : readings;
   const note = yearsNote(series);
 
   return (
     <>
-      {exhibits && <label className="trend-measure-control">Explore a measure<select value={selectedMetric} onChange={event => setSelectedMetric(event.target.value)}>{series.map(s => <option value={s.metricId} key={s.metricId}>{s.title}</option>)}</select></label>}
       {years.length > 0 && (
         <div className="since">
           <div className="since-controls">
@@ -78,7 +75,7 @@ export function TrendsExplorer({ series, exhibits = false }: { series: TrendSeri
           {/* By the control it explains: why the years reach back to one series' start. */}
           {note && <p className="since-note">{note}</p>}
           <ul className="since-lines" aria-live="polite">
-            {displayedSeries.map((s) => {
+            {series.map((s) => {
               const line = sinceLine({ metricId: s.metricId, label: s.title, unit: s.unit, points: s.points }, year);
               return (
                 <li key={s.metricId}>
@@ -92,7 +89,7 @@ export function TrendsExplorer({ series, exhibits = false }: { series: TrendSeri
 
       <div className="trends">
         {charts.map(({ s, reading }) => (
-          <TrendExhibit key={s.metricId} enabled={exhibits}><TrendChart
+          <TrendExhibit key={s.metricId} enabled={exhibits} metricId={s.metricId}><TrendChart
             key={s.metricId}
             points={s.points.map((p) => ({ date: p.period_end, value: p.value, margin: p.margin ?? null }))}
             title={s.title}
@@ -112,6 +109,6 @@ export function TrendsExplorer({ series, exhibits = false }: { series: TrendSeri
   );
 }
 
-function TrendExhibit({ enabled, children }: {enabled:boolean; children:ReactNode}) {
-  return enabled ? <LearningExhibit kind="Measure over time">{children}</LearningExhibit> : <>{children}</>;
+function TrendExhibit({ enabled, children, metricId }: {enabled:boolean; children:ReactNode; metricId:string}) {
+  return enabled ? <LearningExhibit kind="Measure over time" metricId={metricId}>{children}</LearningExhibit> : <>{children}</>;
 }

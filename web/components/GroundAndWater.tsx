@@ -37,8 +37,8 @@ export function GroundAndWater({
   if (open === null && publicShare === null && !water) return null;
   const count = (n: number) => formatValue(n, "count");
   const orderedSystems = compact ? [...(water?.systems ?? [])].sort((a,b) => b.share_of_homes-a.share_of_homes || a.name.localeCompare(b.name)) : water?.systems ?? [];
-  const visibleSystems = compact ? orderedSystems.slice(0,3) : orderedSystems;
-  const remainingSystems = compact ? orderedSystems.slice(3) : [];
+  const visibleSystems = compact ? orderedSystems.slice(0,2) : orderedSystems;
+  const remainingSystems = compact ? orderedSystems.slice(2) : [];
 
   return (
     <section className="section sales ground-water" aria-labelledby="ground-water-heading">
@@ -71,7 +71,7 @@ export function GroundAndWater({
 
       {water && water.systems.length > 0 && (
         <>
-          {compact && remainingSystems.length > 0 && <p className="sales-note">Three largest systems by estimated homes served—not ranked by water quality.</p>}
+          {compact && remainingSystems.length > 0 && <p className="sales-note">Two largest systems by estimated homes served—not ranked by water quality.</p>}
           <WaterTable name={name} water={water} systems={visibleSystems} />
           {compact && remainingSystems.length > 0 && <details className="water-more-systems"><summary>{remainingSystems.length} more water {remainingSystems.length === 1 ? "system" : "systems"}</summary><WaterTable name={name} water={water} systems={remainingSystems} /></details>}
         </>
