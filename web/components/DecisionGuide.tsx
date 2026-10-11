@@ -265,7 +265,7 @@ export function DecisionGuide({
         </div>}
         {load.state === "loading" && <p className="meta">Loading this place’s figures…</p>}
         {load.state === "failed" && <p className="meta">This place’s figures could not be loaded. Try again, or choose another place.</p>}
-        {data && <p className="meta"><Link href={placeHref}>Everything published for {data.region.name}</Link></p>}
+        {data && <p className="meta"><Link className={`destination-${data.region.level === "municipality" ? "town" : data.region.level}`} href={placeHref}>Everything published for {data.region.name}</Link></p>}
       </section>
 
       <section className="section guide-household" aria-labelledby="guide-household-heading" hidden={!data}>
