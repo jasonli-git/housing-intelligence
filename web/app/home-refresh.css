@@ -18,6 +18,19 @@
   @media (hover: none) { .search-shortcut { display: none; } }
 
   .coverage-search-panel { width: min(100%, 36rem); }
+  /* Reveal the atlas on its own wrapper, never the geographic zoom transform. */
+  .landing-canvas .coverage-mode-switch { gap:0; }
+  .landing-canvas .coverage-mode-switch button { width:110px; }
+  .landing-canvas .coverage-mode-switch button[aria-pressed="true"] { box-shadow:none; }
+  .landing-canvas .coverage-mode-switch::after { content:""; position:absolute; bottom:-1px; left:0; width:50%; height:2px; background:var(--entry-accent); transform:translateX(0); transition:transform 420ms cubic-bezier(.22,1,.36,1); pointer-events:none; }
+  .landing-canvas .coverage-mode-switch[data-exploring="true"]::after { transform:translateX(100%); }
+  .landing-canvas .coverage-map-content { transform-origin:50% 45%; transition:transform 460ms cubic-bezier(.22,1,.36,1),opacity 420ms ease; }
+  .landing-canvas .coverage-search-stage[data-exploring="false"] .coverage-map-content { transform:scale(1.035); opacity:.65; }
+  .landing-canvas .coverage-search-stage[data-exploring="true"] .coverage-map-content { transform:scale(1); opacity:1; }
+  .landing-canvas .coverage-search-overlay { opacity:1; transform:translateY(0); visibility:visible; transition:opacity 220ms ease,transform 340ms cubic-bezier(.22,1,.36,1),visibility 0s; }
+  .landing-canvas .coverage-search-stage[data-exploring="true"] .coverage-search-overlay { opacity:0; transform:translateY(-10px); visibility:hidden; pointer-events:none; transition:opacity 220ms ease,transform 340ms cubic-bezier(.22,1,.36,1),visibility 0s 340ms; }
+  .landing-canvas .coverage-search-stage[data-exploring="true"] :is(.coverage-zoom,.map-pan-controls) { animation:atlas-controls-arrive 380ms ease both; }
+  @keyframes atlas-controls-arrive { from { opacity:0; } 45% { opacity:0; } to { opacity:1; } }
 
   /* Tools: three cards under the search. */
   .home-tools { margin-block: 1.6rem 2rem; }
@@ -47,6 +60,8 @@
     .home-tools ul { grid-template-columns: minmax(0, 1fr); gap: .7rem; }
   }
   @media (prefers-reduced-motion: reduce) {
+    .landing-canvas :is(.coverage-map-content,.coverage-search-overlay), .landing-canvas .coverage-mode-switch::after { transition:none; }
+    .landing-canvas .coverage-search-stage[data-exploring="true"] :is(.coverage-zoom,.map-pan-controls) { animation:none; }
     .home-tools a { transition: none; }
     .home-tools a:hover { transform: none; }
   }
