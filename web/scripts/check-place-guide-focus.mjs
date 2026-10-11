@@ -12,6 +12,7 @@ try {
     assert.equal(await page.locator('.home-tools a').count(),4,'Home presents all four tools');
     assert(await page.locator('.home-tools a[href="/help"]').isVisible(),'Housing help has a home tool card');
     assert.equal(await page.locator('.bar-help-route[href="/help"]').count(),2,'Housing help is in desktop and dropdown navigation');
+    assert.equal(await page.locator('.bar-budget[href="/afford?county=all"]').count(),2,'Home affordability link is enabled in both menus');
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Home tool cards fit the viewport');
     // The static guide expects publisher artifacts. Bridge those requests to the
     // real local API for this diagnostic only; no synthetic records are used.
