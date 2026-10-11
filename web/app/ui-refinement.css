@@ -23,7 +23,8 @@
   .quiet-county .cost-evidence-item p { line-height: 1.65; }
   .quiet-county .quiet-tool-group { padding-top: .9rem; }
   .quiet-county.atlas-local .quiet-tool-group { background: color-mix(in srgb, var(--text-primary) 3%, var(--surface-1)); border-color: color-mix(in srgb, var(--text-primary) 15%, var(--surface-1)); border-radius: 16px; box-shadow: none; }
-  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not([href^="/afford"]):not(.home-action-checks a[href^="#"]):not(.destination-town):not(.destination-county):not(.state-fit-shortcut):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
+  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not([href^="/afford"]):not([href^="/help"]):not(.home-action-checks a[href^="#"]):not(.destination-town):not(.destination-county):not(.state-fit-shortcut):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
+  main a[href^="/help"]:not(.button) { color:light-dark(#59654a,#c4d1b2); }
   main a[href^="/tax"]:not(.button) { color: light-dark(#006977, #8ed9e2); }
   /* What can I afford? links take the budget tool's own colour, as the guide's and the tax
      lookup's take theirs. */

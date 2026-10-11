@@ -46,6 +46,12 @@ try {
       assert.equal(await page.locator('.cost-yours').count(),1,'Interactive cost inputs restored');
       assert.equal(await page.locator('.quiet-tool-group').count(),1,'Buying views restored');
       assert.equal(await page.locator('.local-housing-help details').count(),0,'Place help links stay compact');
+      assert.equal(await page.locator('.local-help-links').count(),0,'Official help cards live on the help tool, not place pages');
+      assert(await page.locator('.local-housing-help a[href="/help"]').isVisible(),'Compact help destination remains discoverable');
+      assert(await page.locator('.learning-exhibit').evaluateAll(els=>{
+        const widths=els.filter(el=>getComputedStyle(el).display!=='none').map(el=>el.getBoundingClientRect().width);
+        return Math.max(...widths)-Math.min(...widths)<2;
+      }),'All factual exhibits share one width');
       assert(await page.locator('.migration-flows a').evaluateAll(els=>els.every(el=>el.classList.contains('destination-county'))),'Migration destinations carry the county colour class');
       await page.locator('.mortgage-rate-details summary').click();
       assert(await page.locator('.rate-scenarios').isVisible());

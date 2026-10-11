@@ -7,7 +7,6 @@ import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
-import { APPLICATION_ROUTES } from "@/lib/affordableHousing";
 import { StepIcon } from "@/components/StepIcon";
 import { CountyPlaces } from "@/components/CountyPlaces";
 import { LocalEvidenceCharts } from "@/components/LocalEvidenceCharts";
@@ -604,6 +603,7 @@ export default async function RegionPage({
 
       <section className="local-next-step-group" aria-label="Your next step">
       <h2>Your next step</h2>
+      <div className="place-next-destinations">
       <section className="place-guide-entry" id="home-checks-heading" aria-labelledby="place-guide-title">
         <StepIcon name="guide" />
         <div><h3 id="place-guide-title">Planning a purchase here?</h3>
@@ -612,11 +612,14 @@ export default async function RegionPage({
         </div>
       </section>
       <section id="housing-assistance" className="local-housing-help" aria-labelledby="local-help-heading">
+        <StepIcon name="listings" />
+        <div>
         <h3 id="local-help-heading">Find housing help</h3>
-        <nav className="local-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><StepIcon name={route.icon} /><small>{route.agency}</small><strong>{route.label} <span aria-hidden="true">↗</span></strong><span>{route.note}</span></a>)}</nav>
-        <p className="table-note">Check eligibility, vacancies and waiting lists with the administrator.</p>
-        <p className="table-note"><Link href="/help">Explore New Jersey housing help →</Link></p>
+        <p>Affordable homes, vouchers and local housing authorities.</p>
+        <Link href="/help">Explore your options <span aria-hidden="true">→</span></Link>
+        </div>
       </section>
+      </div>
       </section>
 
       <section className="local-understand-group" aria-label="Understand this place">
@@ -669,7 +672,7 @@ export default async function RegionPage({
       </ConsumerReading>
       </QuietAnchor>
       <ExhibitGallery>
-      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Prices & paychecks over time"><h3>Prices & paychecks over time</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">Did paychecks keep up? <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p><p>{paid}</p></div></section></LearningExhibit>}
+      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Prices & paychecks over time"><h3>Prices & paychecks over time</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">Did paychecks keep up? <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
       {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
 
       {!quiet && homeChecks}
