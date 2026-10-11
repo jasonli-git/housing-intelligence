@@ -4,9 +4,11 @@
 .state-market-exhibits .sales-note { overflow-wrap:anywhere; }
 .quiet-state .state-overview { padding:clamp(16px,2.4vw,28px); border:1px solid var(--border); border-radius:22px; background:linear-gradient(130deg,color-mix(in srgb,var(--atlas-accent) 5%,var(--surface-card)),var(--surface-card)); }
 .housing-mosaic.mosaic-embedded { margin:.8rem 0 .4rem; padding:.75rem 0 0; border:0; border-top:1px solid var(--border); border-radius:0; background:none; }
-.mosaic-embedded .mosaic-body { gap:clamp(16px,3vw,32px); margin:.8rem 0 .5rem; }
-.mosaic-embedded .mosaic-art { aspect-ratio:3.5/1; }
-.mosaic-embedded .mosaic-selected { min-height:100px; }
+.mosaic-embedded .mosaic-body { grid-template-columns:minmax(0,1fr) minmax(300px,1fr); gap:clamp(16px,3vw,32px); margin:.5rem 0 .3rem; }
+.mosaic-embedded .mosaic-art { aspect-ratio:4/1; }
+.mosaic-embedded .mosaic-selected { min-height:0; }
+.mosaic-embedded .mosaic-selected-heading { display:flex; align-items:baseline; gap:.5rem; }
+.mosaic-embedded .mosaic-selected strong { flex-shrink:0; margin-right:0; }
 .mosaic-embedded .mosaic-selected strong { font-size:34px; }
 .mosaic-embedded h3 { margin:0; font:500 12px/1.4 var(--font-text); color:var(--text-secondary); }
 .mosaic-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
@@ -28,7 +30,7 @@
 .mosaic-denominator { font:11px/1.5 var(--font-mono); color:var(--text-muted); margin:0 0 .5rem; }
 .mosaic-selected { min-height:115px; }
 .mosaic-selected strong { font:400 38px/1.1 var(--font-display); letter-spacing:-.05em; margin-right:.55rem; }
-.mosaic-selected > span { display:inline-block; font-size:14px; }
+.mosaic-selected-heading > span { display:inline-block; font-size:14px; }
 .mosaic-selected small { display:block; color:var(--text-muted); font-size:11px; margin:.25rem 0; }
 .mosaic-selected p { font-size:12px; line-height:1.5; color:var(--text-secondary); margin:.3rem 0 .65rem; }
 .mosaic-legend { display:flex; flex-wrap:wrap; gap:2px 12px; }
@@ -46,8 +48,9 @@
   .mosaic-selected { min-height:0; }
   .mosaic-selected strong { font-size:30px; }
   .mosaic-embedded .mosaic-reading { grid-row:1; }
-  .mosaic-embedded .mosaic-art { aspect-ratio:2.1/1; max-width:360px; }
-  .mosaic-embedded .mosaic-body { gap:10px; }
+  .mosaic-embedded .mosaic-art { aspect-ratio:2.5/1; max-width:320px; }
+  .mosaic-embedded .mosaic-body { grid-template-columns:1fr; gap:8px; }
+  .mosaic-embedded .mosaic-heading { gap:.25rem; }
   .mosaic-embedded .mosaic-selected { min-height:0; }
   .mosaic-embedded .mosaic-selected strong { font-size:30px; }
 }

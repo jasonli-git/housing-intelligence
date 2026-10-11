@@ -41,8 +41,8 @@ export function HousingMosaic({ name, views, statewide = false, embedded = false
       <div className="mosaic-reading">
         <p className="mosaic-denominator">{view.denominator} · {name}</p>
         <div className="mosaic-selected">
-          <strong>{percentage(group.share)}</strong><span>{group.label}</span>
-          <small>{group.margin ? <>{group.margin}{group.margin !== "no margin available" && " · 90% margin"}</> : "Shares calculated from reported records"}</small><p>{group.note}</p>
+          <div className="mosaic-selected-heading"><strong>{percentage(group.share)}</strong><span>{group.label}</span></div>
+          {(!embedded || group.margin) && <small>{group.margin ? <>{group.margin}{group.margin !== "no margin available" && " · 90% margin"}</> : "Shares calculated from reported records"}</small>}<p>{group.note}</p>
           {counts[selected] === 0 && group.share > 0 && <small>Smaller than one tile at this scale.</small>}
         </div>
         <div className="mosaic-legend" role="group" aria-label="Explore housing groups">
@@ -58,7 +58,9 @@ export function HousingMosaic({ name, views, statewide = false, embedded = false
         </div>
       </div>
     </div>
-    <p className="mosaic-caption">100 tiles, rounded shares—not individual homes or a map. Each view is a separate picture.</p>
-    <p className="mosaic-source">{view.evidence ?? `Census ACS · ${view.period} five-year survey estimates.`} Select a group to explore.</p>
+    {embedded ? <p className="mosaic-source mosaic-caption">100 tiles ≈ reported shares, not individual homes or a map; views are separate. {view.evidence ?? `Census ACS · ${view.period} five-year survey estimates.`}</p> : <>
+      <p className="mosaic-caption">100 tiles, rounded shares—not individual homes or a map. Each view is a separate picture.</p>
+      <p className="mosaic-source">{view.evidence ?? `Census ACS · ${view.period} five-year survey estimates.`} Select a group to explore.</p>
+    </>}
   </section>;
 }

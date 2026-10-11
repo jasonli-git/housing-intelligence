@@ -10,6 +10,9 @@ it("uses a subordinate heading without a separate card when embedded", () => {
   render(<HousingMosaic embedded statewide name="New Jersey" views={views} />);
   expect(screen.getByRole("heading", { name: "Explore the mix", level: 3 })).toBeTruthy();
   expect(document.querySelector(".mosaic-embedded")).toBeTruthy();
+  expect(document.querySelectorAll(".mosaic-source, .mosaic-caption")).toHaveLength(1);
+  expect(document.querySelector(".mosaic-source")?.textContent).toContain("2020–2024");
+  expect(document.querySelector(".mosaic-selected")?.textContent).toContain("90% margin");
   expect(screen.queryByText("A state in little pieces")).toBeNull();
 });
 const views: MosaicView[] = [
