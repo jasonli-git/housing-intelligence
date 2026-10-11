@@ -33,6 +33,8 @@ import { type IncomeLimits, positionSentence } from "@/lib/household";
 import { eachMonth, type Inputs, type Month, overYears, type Years } from "@/lib/ownership";
 import { periodLabel } from "@/lib/periods";
 import { ownershipInputs, utilityTotal } from "@/lib/budgetScenario";
+import type { Inquiry } from "@/lib/api";
+import { RADON_MAP_INQUIRY } from "@/lib/inquiries";
 import { type Context, type Evidence, judgeAnswer, type Judged } from "@/lib/evidence";
 
 /** Everything the guides read for one place, as the page fetched it. */
@@ -256,6 +258,8 @@ export type CheckItem = {
   /** Null where there is no local figure to judge — radon. */
   evidence: Judged | null;
   steps: Step[];
+  /** What a publisher told the project about this check directly (#370). */
+  inquiry?: Inquiry;
 };
 
 export const LINKS = {
@@ -498,17 +502,19 @@ function utilitiesItem(data: GuideData): CheckItem {
   };
 }
 
-/** Radon has no local figure here: NJDEP's tiers are undated and test every home anyway. */
+/** Radon has no local figure here: NJDEP's tiers are 2015's, a new map is coming (#370),
+ * and NJDEP says to test every home anyway. */
 export const RADON: CheckItem = {
   key: "radon",
   title: "Radon",
   finding:
     "Radon levels differ from house to house, even next door. NJDEP recommends testing every home, whatever its town’s radon tier: hire an NJDEP-certified tester, or use a home test kit.",
   limitation:
-    "This site shows no radon tier for the place: NJDEP’s municipal tiers carry no date and appear to be its 2015 assignments, and a low tier is no reason to skip the test.",
+    "This site shows no radon tier for the place: NJDEP’s municipal tiers date from 2015 and NJDEP is building a new map, and a low tier is no reason to skip the test.",
   source: null,
   evidence: null,
   steps: [LINKS.radon, LINKS.radonMap],
+  inquiry: RADON_MAP_INQUIRY,
 };
 
 /** The before-an-offer checklist, in the order a buyer meets them. */

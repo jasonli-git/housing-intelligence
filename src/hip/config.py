@@ -278,6 +278,32 @@ class ReleaseCalendar(BaseModel):
         return self
 
 
+class Inquiry(BaseModel):
+    """What a publisher told this project directly, by email or in answer to a
+    public-records request, that none of its published pages states (2026-10-10,
+    ARCHITECTURE #370). The site shows these as its own reporting, dated and quoted, so a
+    reader can tell them from what the publisher published. The office is named, never
+    the person who answered."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    answered: date
+    office: str = Field(min_length=1)
+    via: Literal["email", "records request"]
+    # The publisher's words, exactly as received: an email's answer.
+    said: str | None = None
+    # What was released, for a records request, which answers with documents.
+    received: str | None = None
+    # A release date the answer gives, used where the publisher has no calendar.
+    expected: ReleaseDate | None = None
+
+    @model_validator(mode="after")
+    def _says_something(self) -> Inquiry:
+        if not (self.said or self.received):
+            raise ValueError("an inquiry records what was said or what was received")
+        return self
+
+
 class Source(BaseModel):
     """One public data source. ``adapter`` is resolved at Milestone 2."""
 
@@ -319,6 +345,8 @@ class Source(BaseModel):
     # When the publisher says its next release comes (#298). Absent where it publishes
     # no calendar, which the freshness page then says rather than guessing one.
     release_calendar: ReleaseCalendar | None = None
+    # What the publisher told the project directly (#370), newest last.
+    inquiries: list[Inquiry] = Field(default_factory=list)
 
 
 class CommercialRights(BaseModel):
