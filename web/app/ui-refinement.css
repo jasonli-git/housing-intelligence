@@ -355,6 +355,11 @@
   .quiet-tax .tax-lookup { border-top: 1px solid var(--border); padding-top: 1rem; }
   .quiet-tax .tax-card { background: transparent; box-shadow: none; border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: 1.25rem 0; }
   .guide-preview { margin: .6rem 0 0; color: var(--text-secondary); font: 400 14px/1.6 var(--font-text); }
+  .income-limit-explainer { margin-top:.65rem; color:var(--text-secondary); font:400 13px/1.6 var(--font-text); }
+  .income-limit-explainer > summary { min-height:44px; display:flex; align-items:center; cursor:pointer; color:var(--text-primary); gap:.5rem; }
+  .income-limit-explainer > summary::before { content:"+"; }
+  .income-limit-explainer[open] > summary::before { content:"−"; }
+  .income-limit-explainer p { margin:.4rem 0 .7rem; }
   body:has(.guide-page) { --surface-1: light-dark(#f5edee, #2a2022); --surface-2: light-dark(#fff9f9, #37292c); --surface-card: var(--surface-2); --text-primary: light-dark(#3b2b2e, #f3e6e8); --text-secondary: light-dark(#685257, #d8c0c5); --text-muted: light-dark(#70585e, #cfb7be); --border: light-dark(#dfc9ce, #62474e); background: var(--surface-1); }
   body:has(.budget-page) { --surface-1: light-dark(#edf1f6, #202936); --surface-2: light-dark(#f8faff, #2a3544); --surface-card: var(--surface-2); --text-primary: light-dark(#283445, #edf2f8); --text-secondary: light-dark(#536278, #c4cfdd); --text-muted: light-dark(#596a80, #bcc9da); --border: light-dark(#cad4e1, #4f6076); background: var(--surface-1); }
   .bar-inner { grid-template-columns: auto minmax(0, 1fr) 38px; }

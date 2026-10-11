@@ -52,7 +52,7 @@ export default async function HousingLandingPage() {
         <h2 id="home-tools-heading">Tools</h2>
         <ul>
           {HOME_TOOLS.map((tool) => <li key={tool.href}>
-            <Link href={tool.href}>
+            <Link href={tool.href} data-tool={tool.href.slice(1)}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d={tool.icon} /></svg>
               <span className="home-tool-title">{tool.title} <span aria-hidden="true">→</span></span>
               <span className="home-tool-text">{tool.text}</span>
