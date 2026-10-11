@@ -4,6 +4,7 @@ import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { InquiryNote } from "@/components/InquiryNote";
 import { PlacePicker } from "@/components/PlacePicker";
 import type { CommunityContext, Observation, Packet, Utilities, WaterSystems } from "@/lib/api";
 import { DOWN_PAYMENTS } from "@/lib/cost";
@@ -119,6 +120,7 @@ function Check({ item }: { item: CheckItem }) {
       <p>{item.finding}</p>
       <p className="guide-limit">{item.limitation}</p>
       {item.source && <small className="src">Source: {item.source}</small>}
+      {item.inquiry && <InquiryNote inquiry={item.inquiry} headline="NJDEP is building a new, town-level radon map" />}
       <Steps steps={item.steps} />
     </li>
   );

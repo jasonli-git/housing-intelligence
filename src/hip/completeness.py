@@ -260,18 +260,24 @@ class Question:
 
 QUESTIONS: tuple[Question, ...] = (
     Question("What can I afford here?", "answered", "/afford"),
-    Question("What would it cost me per month to own here?", "answered", "/regions/[id]"),
+    Question(
+        "What would it cost me per month to own here?", "answered", "/[state]/[place]"
+    ),
     Question(
         "Is it cheaper to rent or to own here, month to month?",
         "answered",
-        "/regions/[id]",
+        "/[state]/[place]",
     ),
-    Question("What is the property tax bill here?", "answered", "/regions/[id]"),
+    Question("What is the property tax bill here?", "answered", "/[state]/[place]"),
     Question(
-        "How much has changed since the year I moved here?", "answered", "/regions/[id]"
+        "How much has changed since the year I moved here?",
+        "answered",
+        "/[state]/[place]",
     ),
-    Question("Are paychecks keeping up with housing here?", "answered", "/regions/[id]"),
-    Question("What is the housing here like?", "answered", "/regions/[id]"),
+    Question(
+        "Are paychecks keeping up with housing here?", "answered", "/[state]/[place]"
+    ),
+    Question("What is the housing here like?", "answered", "/[state]/[place]"),
     Question("How does this place rank in New Jersey?", "answered", "/"),
     Question("How current is each figure?", "answered", "/freshness"),
     Question("What changed since the figures were published?", "answered", "/changes"),
@@ -285,14 +291,16 @@ QUESTIONS: tuple[Question, ...] = (
         "unanswered",
         "decided against 2026-09-13 (advice)",
     ),
-    Question("Is it at risk of flooding?", "answered", "/regions/[id]"),
-    Question("How long is the commute?", "answered", "/regions/[id]"),
-    Question("Where do people who live here work?", "answered", "/regions/[id]"),
-    Question("Is it near a train or a bus?", "answered", "/regions/[id]"),
-    Question("How do people here pay for homes?", "answered", "/regions/[id]"),
-    Question("Where is somewhere like here, but cheaper?", "answered", "/regions/[id]"),
-    Question("What are the schools like?", "answered", "/regions/[id]"),
-    Question("Is it safe?", "declined", "/regions/[id]"),
+    Question("Is it at risk of flooding?", "answered", "/[state]/[place]"),
+    Question("How long is the commute?", "answered", "/[state]/[place]"),
+    Question("Where do people who live here work?", "answered", "/[state]/[place]"),
+    Question("Is it near a train or a bus?", "answered", "/[state]/[place]"),
+    Question("How do people here pay for homes?", "answered", "/[state]/[place]"),
+    Question(
+        "Where is somewhere like here, but cheaper?", "answered", "/[state]/[place]"
+    ),
+    Question("What are the schools like?", "answered", "/[state]/[place]"),
+    Question("Is it safe?", "declined", "/[state]/[place]"),
 )
 
 Right = Literal["yes", "no", "unverified", "inherited"]

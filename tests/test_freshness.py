@@ -414,11 +414,14 @@ def test_a_month_precise_release_counts_until_its_month_ends() -> None:
 
 
 def test_modiv_never_carries_a_release_calendar() -> None:
-    """Its real next date is known only from a private email (this module's docstring)."""
+    """NJOGIS publishes no schedule; its next date came by email, an inquiry (#370)."""
     from hip.config import load_sources
 
     sources = load_sources()
     assert sources["nj_modiv"].release_calendar is None
+    told = sources["nj_modiv"].inquiries[-1]
+    assert told.office == "NJOGIS" and told.via == "email"
+    assert told.expected and told.expected.precision == "month"
     assert sources["njgin_parcels"].release_calendar is None
     # Every calendar names where it was read and when.
     for source in sources.values():

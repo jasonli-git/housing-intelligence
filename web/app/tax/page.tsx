@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Crumbs, Kind } from "@/components/Crumbs";
+import { InquiryNote } from "@/components/InquiryNote";
 import { Masthead } from "@/components/Masthead";
 import { type Town, TaxLookup } from "@/components/TaxLookup";
 import { api, artifactUrl } from "@/lib/api";
@@ -21,10 +22,13 @@ export const metadata: Metadata = pageMetadata({
  * host's file cap 154 times over (ARCHITECTURE #289, #294).
  */
 export default async function TaxPage() {
-  const [municipalities, counties] = await Promise.all([
+  const [municipalities, counties, freshness] = await Promise.all([
     api.regions("level=municipality&state=NJ&limit=1000"),
     api.regions("level=county&state=NJ&limit=100"),
+    api.freshness(),
   ]);
+  // MOD-IV's next statewide update, as NJOGIS told the project (#370); none is published.
+  const modivInquiry = freshness?.sources.find((s) => s.source_id === "nj_modiv")?.inquiries?.at(-1);
   const countyName = new Map((counties?.items ?? []).map((c) => [c.region_id, c.name]));
   const towns: Town[] = (municipalities?.items ?? [])
     .map((m) => ({
@@ -51,6 +55,7 @@ export default async function TaxPage() {
               and how it compares with the rest of its town, from the state’s own
               assessment records. Owner names are never shown.
             </p></details>
+            {modivInquiry && <InquiryNote inquiry={modivInquiry} />}
           </div>
         </header>
         <TaxLookup towns={towns} artifactUrl={artifactUrl} />

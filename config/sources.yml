@@ -48,6 +48,15 @@ sources:
       Records Custodian under OPRA, drop them into data/manual/nj_bpu_reports/ under the
       names BPU gives them, and add each to REPORTS in hip.sources.nj_bpu once its tables
       are reviewed; an unreviewed file fails visibly.
+    inquiries:
+      # The 2024 and 2025 reports could not be found in BPU's public document search.
+      - answered: 2026-10-08
+        office: NJ Board of Public Utilities
+        via: records request
+        received: >-
+          The 2024 and 2025 annual system performance reports of Atlantic City
+          Electric, JCP&L, PSE&G and Rockland Electric, eight reports not found in BPU's
+          public document search (OPRA request C263585).
     notes: >-
       CAIDI is minutes per customer interruption, not SAIDI. Each figure is the report's
       company-wide actual against BPU's minimum reliability levels; ACE states major
@@ -817,6 +826,16 @@ sources:
       revaluation year. Stays in Parquet/DuckDB per ARCHITECTURE #16. Next publication
       (the 2025 tax year) expected February 2027, per NJOGIS by email on 2026-09-23;
       no published schedule states it.
+    inquiries:
+      # Asked by the owner because the dataset's metadata names no month; every past
+      # annual join fell between July and December, so February is new information.
+      - answered: 2026-09-23
+        office: NJOGIS
+        via: email
+        said: >-
+          The annual update of Mod IV that our office receives will be available in the
+          next publication which is currently scheduled for February.
+        expected: {day: 2027-02-01, precision: month, covers: 2025 tax year}
 
   nj_sr1a:
     name: SR1A sales file

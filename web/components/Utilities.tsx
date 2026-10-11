@@ -1,4 +1,5 @@
-import type { Utilities as UtilityData } from "@/lib/api";
+import type { Inquiry, Utilities as UtilityData } from "@/lib/api";
+import { InquiryNote } from "@/components/InquiryNote";
 import { bundledPrice, publisherUrl } from "@/lib/infrastructure";
 import { ReaderDetails } from "@/components/ReaderDetails";
 
@@ -10,7 +11,7 @@ const BPU_SEARCH = "https://publicaccess.bpu.state.nj.us/";
 const JCPL_BPU = "https://nj.gov/bpu/pdf/boardorders/2025/20250813/2B%20ORDER%20JCP%26L%20Reliability%20Levels.pdf";
 
 /** A compact way into company-wide records, not another cost calculator. */
-export function Utilities({ data }: { data: UtilityData | null }) {
+export function Utilities({ data, bpuInquiry }: { data: UtilityData | null; bpuInquiry?: Inquiry }) {
   if (!data) return null;
   const energy = data.energy_context?.payload;
   return <section className="section sales utility-context" aria-labelledby="utilities-heading">
@@ -41,6 +42,7 @@ export function Utilities({ data }: { data: UtilityData | null }) {
                 </div>)}
               </dl>
               <p className="sales-note">CAIDI is the average restoration time for customer interruptions—not annual minutes per customer (SAIDI). Each year is the company-wide actual the utility reported against <a href={BPU}>BPU’s minimum reliability levels</a>{p.regulatory_reliability!.some((r) => r.payload.basis.includes("major events excluded")) && ", with major events excluded"}, so it is not the same basis as EIA’s figures above. {p.regulatory_reliability!.some((r) => r.source_id === "nj_bpu_reports") && <>From the utility’s annual system performance reports to BPU, released under public-records request {p.regulatory_reliability!.find((r) => r.payload.opra_request)?.payload.opra_request}. </>}{p.regulatory_reliability!.some((r) => r.source_id === "nj_bpu_reliability") && <>Earlier years from <a href={publisherUrl(p.regulatory_reliability!.find((r) => r.source_id === "nj_bpu_reliability")!.payload.url) ?? JCPL_BPU}>BPU’s August 2025 order, Tables 1–3</a>. </>}Not today’s outage status or this town’s own record.</p>
+              {bpuInquiry && p.regulatory_reliability!.some((r) => r.source_id === "nj_bpu_reports") && <InquiryNote inquiry={bpuInquiry} headline="Reports we obtained by public-records request" />}
             </> : <p className="sales-note">BPU annual figures are not imported for this supplier. <a href={p.electricity?.record_id === "963" ? BPU_SEARCH : BPU}>{p.electricity?.record_id === "963" ? "Search BPU public filings" : "BPU reliability oversight"}</a>{p.electricity?.record_id === "963" && " by document title or docket; a newer filing may not appear in search results"}.</p>}
           </ReaderDetails>
         </> : p.fuel === "electric" && <p className="sales-note">No verified EIA company match; price and outages not filled in.</p>}

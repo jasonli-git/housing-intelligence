@@ -54,7 +54,10 @@
   .local-next-step-group, .local-understand-group, .county-place-directory { margin-block: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
   :is(.local-next-step-group, .local-understand-group, .county-place-directory) > h2 { font: 500 clamp(26px, 3vw, 34px)/1.2 Georgia, serif; letter-spacing: -.025em; margin-bottom: 1rem; }
   .local-understand-group { background: radial-gradient(ellipse at 90% 10%, color-mix(in srgb, var(--atlas-accent) 4%, transparent), transparent 65%); }
-  .local-next-step-group .local-help-links a { background: light-dark(#f0f1f2, #252629); }
+  /* Housing help cards take each page's own card surface (green county, blue town,
+     purple ZIP), as the state page's do, not one fixed grey. */
+  .local-next-step-group .local-help-links a { background: var(--surface-card); transition: border-color 160ms ease, background-color 160ms ease; }
+  .local-next-step-group .local-help-links a:is(:hover, :focus-visible) { border-color: var(--atlas-accent, var(--state-blue)); background: color-mix(in srgb, var(--atlas-accent, var(--state-blue)) 6%, var(--surface-card)); }
   .quiet-county .local-understand-group { position: relative; isolation: isolate; }
   .quiet-county .local-understand-group > .abstract-field { width: min(70%, 36rem); height: 100%; top: 0; right: 0; opacity: .045; z-index: -1; }
   .quiet-county .local-understand-group .quiet-disclosure > summary .abstract-field { display: none; }
@@ -549,4 +552,33 @@
     .bar-trail .bar-icon { flex-shrink: 0; width: 28px; min-width: 28px; }
     .bar .bar-link { padding-inline: .4rem; }
   }
+}
+/* "Your next step" icons (2026-10-10): a line icon left of each link, in the link's colour. */
+@media screen {
+  .step-icon { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .home-action-checks li { grid-template-columns: 22px minmax(0, 1fr); column-gap: .7rem; align-items: start; }
+  .home-action-checks li > .step-icon { grid-row: 1 / span 2; margin-top: .1rem; color: var(--atlas-accent, var(--text-secondary)); }
+  .home-action-checks li > :not(.step-icon) { grid-column: 2; }
+  .household-next { align-items: center; }
+  .household-next > .step-icon { color: var(--atlas-accent, var(--text-secondary)); margin-right: -.4rem; }
+  :is(.local-help-links, .state-help-links) a > .step-icon { width: 22px; height: 22px; color: var(--atlas-accent, var(--state-blue)); }
+}
+@media print { .step-icon { display: none; } }
+/* "From our inquiry" (#370): what a publisher told the project directly, marked as the
+   project's own reporting in a warm accent the site uses for nothing else. */
+@media screen {
+  .inquiry-note { --inquiry: light-dark(#8a5a12, #f0c27a); display: inline-block; max-width: 44rem; margin-top: .8rem; border: 1px solid color-mix(in srgb, var(--inquiry) 45%, var(--border)); border-radius: 12px; background: color-mix(in srgb, var(--inquiry) 7%, var(--surface-card, transparent)); text-align: left; }
+  .inquiry-note > summary { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .6rem; min-height: 44px; padding: .45rem .85rem; cursor: pointer; list-style: none; }
+  .inquiry-note > summary::-webkit-details-marker { display: none; }
+  .inquiry-note > summary::after { content: "+"; margin-left: auto; color: var(--inquiry); font-size: 16px; }
+  .inquiry-note[open] > summary::after { content: "−"; }
+  .inquiry-note svg { width: 17px; height: 17px; fill: none; stroke: var(--inquiry); stroke-width: 1.6; stroke-linejoin: round; }
+  .inquiry-kicker { padding: .05rem .5rem; border-radius: 999px; background: color-mix(in srgb, var(--inquiry) 18%, transparent); color: var(--inquiry); font: 650 11px/1.5 var(--font-text); letter-spacing: .02em; }
+  .inquiry-headline { color: var(--text-primary); font: 550 14px/1.4 var(--font-text); }
+  .inquiry-body { padding: 0 .85rem .8rem; }
+  .inquiry-body blockquote { margin: 0 0 .5rem; padding-left: .8rem; border-left: 2px solid var(--inquiry); color: var(--text-primary); font: 400 15px/1.55 Georgia, serif; }
+  .inquiry-body p { margin: 0; color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
+  .fresh-sub .inquiry-note { margin-top: .35rem; }
+  .fresh-sub .inquiry-note > summary { min-height: 36px; padding: .3rem .6rem; }
+  .fresh-sub .inquiry-headline { font-size: 12px; }
 }
