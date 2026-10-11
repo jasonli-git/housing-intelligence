@@ -342,7 +342,8 @@ export function DecisionGuide({
       </nav>
       {!data && load.state === "idle" && <p className="guide-empty">Choose a place to see its buying costs, rent comparison and pre-offer checks.</p>}
 
-        <>
+        <div className="guide-slide-stage" aria-label="Buying guide questions">
+          <button className="guide-side-arrow guide-side-previous" type="button" disabled={step===0} aria-label={step>0 ? `Previous: ${stepNames[step-1]}` : "Previous question"} onClick={()=>goToStep(step-1)}><span aria-hidden="true">‹</span></button>
           <section id="guide-panel-0" className="section guide-answer guide-slide" data-active={step===0} aria-labelledby="guide-afford-heading" data-ready={Boolean(data)} hidden={!data}>
             <p className="guide-eyebrow">Affordability</p>
             <div className="guide-check-head">
@@ -481,12 +482,9 @@ export function DecisionGuide({
             </details>
             </div> : <p className="guide-preview">Local context and links for checking the actual home.</p>}
           </section>
-        </>
-      <nav className="guide-step-arrows" aria-label="Guide step navigation">
-        <button type="button" disabled={step===0} onClick={()=>goToStep(step-1)}>← {step>0 ? stepNames[step-1] : "Previous"}</button>
-        <span>{step+1} / 3</span>
-        <button type="button" disabled={step===2} onClick={()=>goToStep(step+1)}>{step<2 ? `Next: ${stepNames[step+1]}` : "Last step"} →</button>
-      </nav>
+          <button className="guide-side-arrow guide-side-next" type="button" disabled={step===2} aria-label={step<2 ? `Next: ${stepNames[step+1]}` : "Next question"} onClick={()=>goToStep(step+1)}><span aria-hidden="true">›</span></button>
+        </div>
+      <p className="guide-slide-position" aria-live="polite">Question {step+1} of 3 · {stepNames[step]}</p>
     </div>
   );
 }

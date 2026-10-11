@@ -58,7 +58,7 @@ export function WhoIsMoving({ name, data, exhibit = false }: { name: string; dat
   return (
     <section className="section sales who-is-moving" aria-labelledby="who-is-moving-heading">
       <div className="section-head">
-        <h2 id="who-is-moving-heading">Who is moving here?</h2>
+        <h2 id="who-is-moving-heading">{exhibit ? "Who’s arriving—and where are others going?" : "Who is moving here?"}</h2>
       </div>
       {note && <p className="sales-note">{note}</p>}
       {moves && <p className="sales-lead">{moves}</p>}

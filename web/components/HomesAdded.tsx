@@ -54,7 +54,7 @@ export function HomesAdded({
   return (
     <section className="section sales homes-added" aria-labelledby="homes-added-heading">
       <div className="section-head">
-        <h2 id="homes-added-heading">Is it adding homes?</h2>
+        <h2 id="homes-added-heading">{exhibit ? "Are we adding homes—or losing them?" : "Is it adding homes?"}</h2>
       </div>
       {exhibit && <ConstructionExhibit rows={rows} />}
       {portrait && !exhibit && rows.some((r) => r.net !== null) && <figure className="quiet-net-chart">

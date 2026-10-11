@@ -57,7 +57,7 @@ export function HowUnusual({ name, data, exhibit = false, interactive = false }:
   return (
     <section className={`section sales how-unusual${exhibit ? " history-exhibit" : ""}`} aria-labelledby="how-unusual-heading">
       <div className="section-head">
-        <h2 id="how-unusual-heading">{exhibit ? "Home prices against income" : "Is this unusual for here?"}</h2>
+        <h2 id="how-unusual-heading">{interactive ? "How unusual is today’s market?" : exhibit ? "Home prices against income" : "Is this unusual for here?"}</h2>
       </div>
       {/* SPEC principle 11: say what kind of figure this is where it is read. */}
       <p className="sales-note">{interactive ? "Price and income estimates, compared with this place’s own past." : exhibit ? "New Jersey against its own history. Calculated from price and income estimates—not counted." : "Calculated here from two published estimates — a house price index and yearly income estimates — not counted."}</p>
