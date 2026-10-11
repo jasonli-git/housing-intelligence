@@ -38,7 +38,18 @@
     .quiet-county > header.page-head.has-photo :is(.crumbs, .page-head-eyebrow, .page-title-row) {
       --text-primary: #f7f4ee; --text-secondary: #e6e0d6; --text-muted: #d8d1c5; color: #f7f4ee;
     }
-    .quiet-county > header.page-head.has-photo .page-title-row { padding-bottom: 3.4rem; }
+    /* The title block's box spans the caption, so it lets taps through to the credit
+       links; its children, which never overlap the caption, stay interactive.
+       Margin, not padding, below the title for the same reason. */
+    .quiet-county > header.page-head.has-photo .page-title-row { margin-bottom: 3.4rem; }
+    /* The band is dark in both themes, so the breadcrumb pills are too: light mode's
+       white and pale-blue pills under light text were unreadable. */
+    main.quiet-county > header.page-head.has-photo .crumbs a { background: #0000006b; border-color: #ffffff38; color: #f7f4ee; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+    main.quiet-county > header.page-head.has-photo .crumbs a[href^="/states/"] { color: #bddcf3; }
+    main.quiet-county > header.page-head.has-photo .crumbs li:last-child { color: #c9ecd9; }
+    main.quiet-county > header.page-head.has-photo .page-head-eyebrow { color: #e6e0d6; }
+    .quiet-county > header.page-head.has-photo > .region-head-main { pointer-events: none; }
+    .quiet-county > header.page-head.has-photo > .region-head-main > * { pointer-events: auto; }
     .quiet-county > header.page-head.has-photo .state-place-artwork-header { z-index: 0; top: .6rem; right: -.5rem; width: 150px; height: 130px; stroke: #fff; opacity: .5; }
     .quiet-county > header.page-head.has-photo .state-place-artwork-header :is(.state-artwork-wash, .state-artwork-points) { fill: #fff; }
   }
