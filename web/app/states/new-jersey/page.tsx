@@ -196,6 +196,14 @@ export default async function NewJerseyPage() {
           </div>
         </details>
       </StateOverview>
+      <div id="nj-explore" className="nj-explore-anchor">
+          <StateModeWorkspace
+            countyPages={(countyRegions?.items ?? []).map((county) => ({ id: county.region_id, name: county.name }))}
+            sections={sections}
+            initial={initial ?? DEFAULT_MEASURE}
+          />
+      </div>
+      <div className="state-history-exhibit"><HowUnusual name="New Jersey" data={persistence} exhibit />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</div>
       <section className="local-next-step-group state-next-step" aria-labelledby="state-next-step-heading">
         <h2 id="state-next-step-heading">Your next step</h2>
         <div className="place-next-destinations">
@@ -207,15 +215,6 @@ export default async function NewJerseyPage() {
           </section>
         </div>
       </section>
-
-      <div id="nj-explore" className="nj-explore-anchor">
-          <StateModeWorkspace
-            countyPages={(countyRegions?.items ?? []).map((county) => ({ id: county.region_id, name: county.name }))}
-            sections={sections}
-            initial={initial ?? DEFAULT_MEASURE}
-          />
-      </div>
-      <div className="state-history-exhibit"><HowUnusual name="New Jersey" data={persistence} exhibit />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</div>
       <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Every available state figure, with dates, definitions and sources.">
         <details className="state-help-details"><summary>Programmes, reported homes &amp; sources</summary><AffordableHousing data={housingHelp} hideRoutes /></details>
         <section className="state-supporting-context" aria-labelledby="state-context-heading">

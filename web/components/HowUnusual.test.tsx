@@ -13,6 +13,7 @@ const data: Persistence = {
 describe("historical exhibit", () => {
   it("shows the graph and uncertainty without an enclosing disclosure", () => {
     const html = renderToStaticMarkup(<HowUnusual name="New Jersey" data={data} exhibit />);
+    expect(html).toContain("How unusual is today’s market?");
     expect(html).toContain("2024: 20% above the usual level since 2000.");
     expect(html).toContain("between 15% above and 25% above");
     expect(html).toContain("Historical comparison—not a forecast.");

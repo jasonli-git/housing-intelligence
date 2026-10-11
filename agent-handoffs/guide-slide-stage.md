@@ -1,7 +1,8 @@
 # Guide slide stage
 
 ## What changed
-- New Jersey now has the compact Your next step section used on place pages: buyer’s guide and Housing help destinations, immediately below the snapshot.
+- New Jersey now has the compact Your next step section used on place pages: buyer’s guide and Housing help destinations, immediately above statewide evidence (moved there following review).
+- New Jersey’s historical price/income exhibit is titled “How unusual is today’s market?” following review.
 - Replaced its duplicate official-help cards with the help-tool destination. Preserved programme/property/source detail inside statewide evidence.
 - Buyer’s guide answers now sit inside a distinct rounded slide card with large, tall previous/next arrows in dedicated side margins, not bottom controls. Existing question shortcuts remain.
 - Place exhibits use more inviting factual question titles; no model text or measured values changed.
@@ -34,3 +35,4 @@
 - Visual inspection: desktop slide stage and NJ next-step area, plus mobile dark guide screenshot.
 - `git diff --check`: passed.
 - No frontend lint script is configured. Backend tests were not run because no backend logic or data changed.
+- Review follow-up: typecheck, three HowUnusual tests, static rebuild and rendered browser checks for the updated NJ heading and immediate next-step/evidence ordering passed.
