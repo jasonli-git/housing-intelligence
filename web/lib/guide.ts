@@ -186,6 +186,7 @@ export function affordAnswer(
 export const MAX_YEARS = 30;
 
 export type RentOrBuy = {
+  inputs: Inputs;
   price: GuidePrice;
   rent: number;
   /** The rent was the reader's own, not the published figure. */
@@ -223,6 +224,7 @@ export function rentOrBuy(
     ...(input.rent ? [] : [{ label: "rent", figure: asEvidence(published), context: ctx }]),
   ]);
   return {
+    inputs,
     price,
     rent,
     ownRent: Boolean(input.rent),

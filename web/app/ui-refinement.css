@@ -23,7 +23,7 @@
   .quiet-county .cost-evidence-item p { line-height: 1.65; }
   .quiet-county .quiet-tool-group { padding-top: .9rem; }
   .quiet-county.atlas-local .quiet-tool-group { background: color-mix(in srgb, var(--text-primary) 3%, var(--surface-1)); border-color: color-mix(in srgb, var(--text-primary) 15%, var(--surface-1)); border-radius: 16px; box-shadow: none; }
-  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not([href^="/afford"]):not([href^="/help"]):not(.home-action-checks a[href^="#"]):not(.destination-town):not(.destination-county):not(.state-fit-shortcut):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
+  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not([href^="/afford"]):not([href^="/help"]):not(.home-action-checks a[href^="#"]):not(.destination-zip):not(.destination-town):not(.destination-county):not(.state-fit-shortcut):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
   main a[href^="/help"]:not(.button) { color:light-dark(#59654a,#c4d1b2); }
   main a[href^="/tax"]:not(.button) { color: light-dark(#006977, #8ed9e2); }
   /* What can I afford? links take the budget tool's own colour, as the guide's and the tax
@@ -31,13 +31,14 @@
   main a[href^="/afford"]:not(.button) { color: light-dark(#a44e34, #edb09b); }
   main .home-action-checks a[href^="#"] { color: light-dark(#246b55, #a6d9c0); }
   main.atlas-local:is([data-region-level="municipality"], [data-region-level="zip"]) .home-action-checks a[href^="#"] { color: var(--atlas-accent); }
-  main a.destination-county { color: light-dark(#246b55, #a6d9c0); }
+  main.shell a.destination-county { color: light-dark(#246b55, #a6d9c0); }
   main a[href^="/states/"]:not(.crumbs a) { color: var(--state-blue); }
   main .crumbs li[data-level] a:is([href^="/"], [href^="#"]) { color: var(--crumb-accent, var(--text-primary)); }
   main a[href^="/guide"]:not(.button) { color: light-dark(#925460, #d7a3ad); }
   main .county-town-links a { color: light-dark(#267775, #a2dad5); }
-  main a.destination-town { color: light-dark(#267775, #a2dad5); }
-  main.atlas-local a[href^="#"]:not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not([href^="/afford"]):not(.home-action-checks a[href^="#"]):not(.destination-town):not(.destination-county):not(.state-fit-shortcut):not([href^="/states/"]) { color: var(--atlas-accent); }
+  main.shell a.destination-town { color: light-dark(#267775, #a2dad5); }
+  main.shell a.destination-zip { color: light-dark(#735e91, #d2bce9); }
+  main.atlas-local a[href^="#"]:not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not([href^="/afford"]):not(.home-action-checks a[href^="#"]):not(.destination-zip):not(.destination-town):not(.destination-county):not(.state-fit-shortcut):not([href^="/states/"]) { color: var(--atlas-accent); }
   /* Visible context retains the insets formerly supplied by disclosure wrappers. */
   .atlas-local :is(#local-price-history, .local-market, .who-is-moving, .similar-places, .county-place-directory) {
     padding-inline: clamp(1rem, 2vw, 1.4rem);

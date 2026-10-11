@@ -7,6 +7,9 @@ import { ComputedBadge } from "@/components/ComputedBadge";
 import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { StateOverview } from "@/components/StateOverview";
+import { HousingMosaic } from "@/components/HousingMosaic";
+import { statewideMosaicViews } from "@/lib/housingMosaic";
+import { LearningExhibit } from "@/components/LearningExhibit";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { MoreExpander } from "@/components/MoreExpander";
 import { AffordableHousing } from "@/components/AffordableHousing";
@@ -188,12 +191,9 @@ export default async function NewJerseyPage() {
         <PlacePhoto geoid="34" />
       </header>
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
+        <HousingMosaic embedded statewide name="New Jersey" views={statewideMosaicViews(packet?.levels ?? [], constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter(r => r.preliminary).map(r => r.year))} />
         <details className="state-extra-figures"><summary>More statewide figures <span aria-hidden="true">＋</span></summary>
           <QuietProfile statewide allMetrics items={stateProfile(levels.filter((level) => ["fhfa_hpi", "fhfa_hpi_all_transactions", "nj_effective_tax_rate", "sr1a_median_price_per_sqft", "sr1a_median_year_built_sold", "water_homes_share_public"].includes(level.metric_id)), statewide?.headlines ?? [])} />
-          <div className="state-extra-market">
-            <details><summary>How homes sell here</summary><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} /></details>
-            <details><summary>Building &amp; demolition</summary><HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} portrait /></details>
-          </div>
         </details>
       </StateOverview>
       <div id="nj-explore" className="nj-explore-anchor">
@@ -203,7 +203,11 @@ export default async function NewJerseyPage() {
             initial={initial ?? DEFAULT_MEASURE}
           />
       </div>
-      <div className="state-history-exhibit"><HowUnusual name="New Jersey" data={persistence} exhibit />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</div>
+      <div className="state-market-exhibits" id="state-market-exhibits" data-jump-label="Sales & new homes">
+        <LearningExhibit kind="Home sales"><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait /></LearningExhibit>
+        <LearningExhibit kind="Against its own history"><HowUnusual name="New Jersey" data={persistence} interactive />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</LearningExhibit>
+        <LearningExhibit kind="New homes"><HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} exhibit /></LearningExhibit>
+      </div>
       <section className="local-next-step-group state-next-step" aria-labelledby="state-next-step-heading">
         <h2 id="state-next-step-heading">Your next step</h2>
         <div className="place-next-destinations">

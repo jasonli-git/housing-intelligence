@@ -13,6 +13,20 @@ const inputs: CostProps = {
   noTax: "No ZIP-level tax estimate", gain: null, rateThen: null,
 };
 describe("local monthly budget", () => {
+  it("updates monthly layers from existing inputs without changing the starting estimate", () => {
+    const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,showHelp:false}));
+    const bill=container.querySelector(".monthly-bill")!;
+    const baseline=bill.querySelector(".bill-head > div:last-child > small")?.textContent;
+    const total=bill.querySelector(".bill-head strong")?.textContent;
+    fireEvent.change(screen.getByLabelText("HOA or condo fees a month"),{target:{value:"250"}});
+    expect(bill.querySelector('[data-cost="hoa"]')?.textContent).toContain("$250");
+    expect(bill.querySelector(".bill-head strong")?.textContent).not.toBe(total);
+    expect(bill.querySelector(".bill-head > div:last-child > small")?.textContent).toBe(baseline);
+    fireEvent.click(bill.querySelector('[data-cost="hoa"]')!);
+    expect(bill.querySelector(".bill-reading")?.textContent).toContain("Your input.");
+    expect(bill.textContent).toContain("Missing is not zero");
+    expect(bill.textContent).toContain("Principal into the home");
+  });
   it("previews upfront cash and uses the selected planning horizon", () => {
     localStorage.setItem("hip.cost.personal.v1", JSON.stringify({years:5}));
     const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,showHelp:false}));

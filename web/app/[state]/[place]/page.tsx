@@ -461,11 +461,6 @@ export default async function RegionPage({
   </QuietDisclosure>;
   const countyTowns = region.level === "county" ? (await api.regions(`level=municipality&parent_id=${regionId}&limit=1000`))?.items ?? [] : [];
 
-  const marketPreview = ["sr1a_sales_count", "nj_net_units_added"].flatMap(id => {
-    const figure = packet.levels.find(item => item.metric_id === id);
-    return figure ? [`${formatMetric(figure.value, figure.unit, id)} ${id === "sr1a_sales_count" ? "qualifying sales" : "net homes added"} · ${id === "sr1a_sales_count" ? `${periodLabel(figure.period_start, id)}–` : ""}${periodLabel(figure.period_end, id)}`] : [];
-  }).join(" · ");
-
   const householdContent = <><QuietDisclosure enabled={quiet} title="Your income & nearby places" icon={<StepIcon name="budget" />} note="Compare your income with local benchmarks and explore alternatives.">
     <ForYourHousehold regionName={name} limits={incomeLimits} levels={packet.levels} countyLevels={countyLevels}
       margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))} />
@@ -672,20 +667,12 @@ export default async function RegionPage({
       </ConsumerReading>
       </QuietAnchor>
       <ExhibitGallery>
-      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Did paychecks keep up with housing?</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
-      {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
-
       {!quiet && homeChecks}
-
-      {(construction.some((series) => series.length > 0) ||
-        (packet.levels.some((level) => level.metric_id === "sr1a_median_sale_price") &&
-          packet.levels.some((level) => level.metric_id === "sr1a_sales_count"))) && (
-      <QuietDisclosure enabled={false} title="The local market" note={marketPreview || "Homes sold, new building and the detail behind them"}>
-      <section className="local-page-group local-market" aria-labelledby="local-market-heading">
-      <h2 id="local-market-heading">Local market</h2>
       <LearningExhibit kind="The homes that sold">
       <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} />
       </LearningExhibit>
+      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Did paychecks keep up with housing?</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
+      {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
       <LearningExhibit kind="Building & demolition">
       <HomesAdded
         exhibit={quiet}
@@ -699,9 +686,6 @@ export default async function RegionPage({
         levels={packet.levels}
       />
       </LearningExhibit>
-      </section>
-      </QuietDisclosure>
-      )}
 
       {migration && (
       <QuietDisclosure enabled={false} title="Who is moving here" note="Households moving in and out of the county, from tax returns">
