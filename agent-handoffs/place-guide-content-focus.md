@@ -1,6 +1,11 @@
 # Place / guide content focus
 
 ## What changed
+- Approved discoverability follow-up supersedes the initial retirement of profile cost tools: interactive inputs, monthly budget and upfront/long-term views are restored. The buyer's guide retains all of its corresponding capabilities. Similar places stay in the visible exploration area rather than appearing twice, and the cost tools have one Continue link.
+- Mortgage-rate ReaderDetails now participates in the narrow-screen full-width card layout; its body has accessible horizontal overflow and wrapping table headers. This fixes the old selector targeting only QuietDisclosure after that expansion was changed to ReaderDetails.
+- Place pages retain the three housing-help application links but not the long programme/property directory. The guide adds a Housing help navigation destination and the full shared programme/property component, with sources/limits unchanged.
+- Explicit Continue copies only entered home-specific figures and rent into session storage, keyed to the selected place. The guide validates these fields and reads them only for that place; personal assumptions continue using existing browser storage. No source figures or rankings change.
+- The guide reads the publisher's small `affordable-housing/overview.json` first; the existing shared component loads full inventory only when its programme/property detail is opened.
 - Experimental division of responsibility: local profiles explain the place; the buyer's guide hosts personal purchase planning.
 - County, municipality (including towns/boroughs) and ZIP profiles retain published monthly costs, the difference bridge, breakdown, caveats, local readings, ranks and evidence. Their cost card now uses published/default assumptions rather than silently applying remembered personal scenarios.
 - Removed the rendered personal-input, monthly-budget, upfront/long-term and household-tool group from local cost cards. Replaced the lengthy property-action checklist with a visible place-aware buyer's-guide entry.
@@ -10,6 +15,8 @@
 - Pre-offer actions are visible in Costs & financing, Property & environment and Everyday life. One supporting checklist appendix holds figures, limits, evidence labels and extra links; it is not required to discover the primary actions. Programme thresholds/rents by size are optional supporting material, not a large always-visible panel.
 
 ## Files/modules affected
+- `web/lib/guideTransfer.ts` and its tests
+- `web/app/quiet-county.css`
 - `web/app/[state]/[place]/page.tsx`
 - `web/components/CostToOwn.tsx` and regression tests
 - `web/components/DecisionGuide.tsx` and regression tests
@@ -31,6 +38,8 @@
 - Primary pre-offer actions can be discovered without reading the full area evidence. The visible warning distinguishes an area's figures from a property's risk, school assignment and service.
 
 ## New TODOs / limitations
+- The initial statement below about profile costs using only defaults is superseded by the approved restoration. Profile costs once again honor the existing personal assumptions and entered home figures. The `planning` extension remains default-true for compatibility.
+- If session storage is unavailable, Continue still navigates; home-specific transfer cannot persist. Personal assumptions retain their existing guarded storage behavior. Transfer lasts only for the browser session and does not carry into a different place.
 - Remaining disclosure counts in tested profiles are 35 (Somerset County), 27 (Princeton) and 20 (ZIP 2842's legacy route), including definitions, notices and evidence detail. These are absolute post-change counts, not a measured before/after reduction. No quantitative scroll reduction is claimed.
 - Some factual subcomponents retain their own long-detail disclosures. A future pass can assess those separately without hiding the first useful answer.
 - Programme/rent context in the guide retains its existing household component and underlying official limits; this branch does not change eligibility methodology.
@@ -38,6 +47,7 @@
 - Canonical documentation and underlying datasets are untouched. Claude should review the intentional distinction between published/default profile costs and personal guide scenarios before reconciling project documents.
 
 ## Verification
+- Discoverability follow-up: typecheck and 604 tests across 91 files passed, including session transfer isolation and corrupt input guards. Six width/theme browser combinations passed on county, town and ZIP profiles; restored inputs, mobile rate expansion, compact place help links, guide help, explicit home transfer and different-place isolation verified. At 320px the expanded table measured 231px within a 258px body, with no clipped horizontal content. Visual inspection prompted keeping the short Rate header on one line. Production export passed with unchanged page/file counts; final CSS re-export recorded below.
 - `npm run typecheck`: passed.
 - `npm test`: 602 tests across 90 files passed, including no planning-panel rendering, published defaults despite remembered personal inputs, guide navigator and quote/upfront parity with the shared model.
 - Initial build failed because the local API was stopped. Restarted the API; production export passed with 2,384 pages, 2,366 compatibility aliases and 16,685 files. A final presentation rebuild and browser rerun are recorded below when completed.
@@ -45,4 +55,5 @@
 - Inspected the mobile dark guide screenshot; reduced excessive always-visible programme tables and supplementary school-report links afterwards.
 - First browser runs timed out because their artifact requests hit production CORS; corrected the test's hostname matching and mapped its `.json` requests to the real local API routes. No synthetic records used.
 - No frontend lint command is configured. No merge or deployment authorized.
+- Follow-up final export passed (2,384 pages, 2,366 aliases, 16,685 files). Final six responsive/theme combinations passed after the overview-path change, including opening guide programme detail. The short Rate header is nowrap at 320px. Restored disclosure totals are 39/31/27 for the sampled county/town/ZIP; this approved middle ground restores planning interactions while retaining the flatter contextual/evidence structure.
 - Final presentation export passed with the same 2,384 pages / 2,366 aliases / 16,685 files. Final six width/theme browser combinations passed: real API quote inputs and upfront calculation, three visible checklist groups, ten actions with no primary-action accordions, one checklist supporting appendix, and no horizontal overflow. `git diff --check` passed.

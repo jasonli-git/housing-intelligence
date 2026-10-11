@@ -34,6 +34,7 @@ import { eachMonth, type Inputs, type Month, overYears, type Years, upFront, typ
 import { periodLabel } from "@/lib/periods";
 import { ownershipInputs, utilityTotal } from "@/lib/budgetScenario";
 import type { Inquiry } from "@/lib/api";
+import type { AffordableHousing } from "@/lib/affordableHousing";
 import { RADON_MAP_INQUIRY } from "@/lib/inquiries";
 import { type Context, type Evidence, judgeAnswer, type Judged } from "@/lib/evidence";
 
@@ -50,6 +51,7 @@ export type GuideData = {
   water: WaterSystems | null;
   community: CommunityContext | null;
   utilities: Utilities | null;
+  housingHelp?: AffordableHousing | null;
   /** The newest period each metric has anywhere, from the catalog. */
   newest: Record<string, string | null>;
 };

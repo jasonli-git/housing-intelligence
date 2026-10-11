@@ -7,7 +7,6 @@ import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
-import { AffordableHousing, HousingHelpDisclosure } from "@/components/AffordableHousing";
 import { APPLICATION_ROUTES } from "@/lib/affordableHousing";
 import { StepIcon } from "@/components/StepIcon";
 import { CountyPlaces } from "@/components/CountyPlaces";
@@ -287,7 +286,7 @@ export default async function RegionPage({
   // BPU's reports came by public-records request (#370); the note says so beside them.
   const bpuInquiry = (await api.freshness())?.sources.find((s) => s.source_id === "nj_bpu_reports")?.inquiries?.at(-1);
 
-  const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations, similar, community, migration, persistence] = await Promise.all([
+  const [series, cost, incomeLimits, construction, floodClaims, water, utilities, workDestinations, similar, community, migration, persistence] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -306,7 +305,6 @@ export default async function RegionPage({
     // Milestone 40: flood claims paid by year, and the water systems serving the place.
     floodClaimsFor(),
     api.waterSystems(regionId),
-    api.affordableHousing(regionId),
     api.utilities(regionId),
     // Milestone 45: where residents work.
     api.workDestinations(regionId),
@@ -469,13 +467,12 @@ export default async function RegionPage({
   const householdContent = <><QuietDisclosure enabled={quiet} title="Income & nearby places" note="Household income & places to compare">
     <ForYourHousehold regionName={name} limits={incomeLimits} levels={packet.levels} countyLevels={countyLevels}
       margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))} />
-    <SimilarPlaces name={name} data={similar} />
     {region.level !== "zip" && <p className="household-next">
       <StepIcon name="budget" /><Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
         {region.level === "county" ? "Find towns within my budget" : "Compare nearby towns"} <span aria-hidden="true">→</span>
       </Link><span>Starts in {region.level === "county" ? name : county ? displayName(county) : "New Jersey"}. You can search all New Jersey.</span>
     </p>}
-  </QuietDisclosure><p className="household-next"><StepIcon name="guide" /><Link href={`/guide?place=${regionId}`}>Buyer’s guide for {name} <span aria-hidden="true">→</span></Link><span>Start with this place, then add your household details.</span></p></>;
+  </QuietDisclosure></>;
 
   // Counties only (ARCHITECTURE #368): a town's or ZIP's page never shows one.
   const photo = region.level === "county" ? photoFor(region.geoid) : undefined;
@@ -579,8 +576,7 @@ export default async function RegionPage({
         <CostToOwn
           {...cost}
           quiet={quiet}
-          planning={false}
-          control={false}
+          guidePlaceId={regionId}
           householdTools={quiet ? householdContent : undefined}
           comparePlaceId={region.level === "county" || region.level === "municipality" ? region.region_id : undefined}
           showHelp={!incomeLimits}
@@ -616,7 +612,7 @@ export default async function RegionPage({
         <h3 id="local-help-heading">Find housing help</h3>
         <nav className="local-help-links" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><StepIcon name={route.icon} /><small>{route.agency}</small><strong>{route.label} <span aria-hidden="true">↗</span></strong><span>{route.note}</span></a>)}</nav>
         <p className="table-note">Check eligibility, vacancies and waiting lists with the administrator.</p>
-        <HousingHelpDisclosure enabled={quiet}><AffordableHousing data={housingHelp} hideRoutes /></HousingHelpDisclosure>
+        <p className="table-note"><Link href={`/guide?place=${regionId}#housing-assistance`}>Explore programmes, reported homes & sources in the guide →</Link></p>
       </section>
       </section>
 

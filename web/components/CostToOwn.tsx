@@ -28,6 +28,7 @@ import { ownershipInputs, cashFit, DEFAULT_YEARS } from "@/lib/budgetScenario";
 import { useBudgetScenario } from "@/components/useBudgetScenario";
 import { QuietDisclosure, QuietToolGroup } from "@/components/QuietCounty";
 import {DifferenceBridge,sentenceCostLabel} from "@/components/DifferenceBridge";
+import { writeGuideTransfer } from "@/lib/guideTransfer";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
 export type Dated = { value: number; asOf: string };
@@ -178,7 +179,8 @@ export function CostToOwn({
   quiet = false,
   householdTools,
   planning = true,
-}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode; planning?: boolean }) {
+  guidePlaceId,
+}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode; planning?: boolean; guidePlaceId?: number }) {
   const id = useId();
   const { personal: rememberedPersonal, household, savePersonal, saveHousehold } = useBudgetScenario(control && planning);
   const personal = planning ? rememberedPersonal : {};
@@ -638,7 +640,7 @@ export function CostToOwn({
             · not a lender quote
           </p>
           {/* Stated assumptions, not a forecast of rates (#327). */}
-          <ReaderDetails title="At other mortgage rates">
+          <ReaderDetails title="At other mortgage rates" className="mortgage-rate-details">
             <table className="change-places rate-scenarios">
               <caption className="visually-hidden">The month at other mortgage rates, everything else as above</caption>
               <thead>
@@ -885,6 +887,13 @@ export function CostToOwn({
       </div>
       </QuietDisclosure>
       {householdTools}
+      {guidePlaceId !== undefined && <p className="household-next"><a href={`/guide?place=${guidePlaceId}`} onClick={() => {
+        const home = Object.fromEntries([
+          ["price", typedPrice], ["taxYear", typedTax], ["hoaMonth", parseAmount(fields.hoa)],
+          ["floodYear", parseAmount(fields.flood)], ["movingCost", parseAmount(fields.moving)], ["repairsCost", parseAmount(fields.repairs)],
+        ].filter(([,value]) => value !== null));
+        writeGuideTransfer(guidePlaceId, home, typedRent);
+      }}>Continue in the buyer’s guide →</a><span>Bring these home figures into a complete buying plan.</span></p>}
       </QuietToolGroup>}
 
       {showHelp && <HousingHelp />}

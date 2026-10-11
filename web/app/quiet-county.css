@@ -270,8 +270,8 @@
     .quiet-county .cost-monthly-headline-copy { font-size: 13px; }
     .quiet-county .quiet-tool-group { padding: 1rem 1rem 0; }
     .quiet-county .cost-evidence-omissions { padding: 0.8rem 1rem; }
-    .quiet-county .cost-cards:has(.quiet-disclosure[open]) { grid-template-columns: minmax(0, 1fr); }
-    .quiet-county .cost-cards:has(.quiet-disclosure[open]) .cost-card + .cost-card { border-left: 0; border-top: 1px solid var(--border); }
+    .quiet-county .cost-cards:has(:is(.quiet-disclosure,.mortgage-rate-details)[open]) { grid-template-columns: minmax(0, 1fr); }
+    .quiet-county .cost-cards:has(:is(.quiet-disclosure,.mortgage-rate-details)[open]) .cost-card + .cost-card { border-left: 0; border-top: 1px solid var(--border); }
     .quiet-county .cost-card .tip { position: fixed; left: 16px; right: 16px; top: 28vh; width: auto; max-height: 60vh; overflow-y: auto; }
     .quiet-county .consumer-feature-what_stands_out { padding: 1.1rem; }
     .quiet-county .consumer-feature-main h2 { font-size: 26px; }

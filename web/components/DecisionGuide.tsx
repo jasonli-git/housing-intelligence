@@ -27,6 +27,9 @@ import type { IncomeLimits } from "@/lib/household";
 import type { SearchEntry } from "@/lib/search";
 import { cashFit } from "@/lib/budgetScenario";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
+import { AffordableHousing, HousingHelpDisclosure } from "@/components/AffordableHousing";
+import { APPLICATION_ROUTES, type AffordableHousing as HousingData } from "@/lib/affordableHousing";
+import { readGuideTransfer } from "@/lib/guideTransfer";
 
 /**
  * The decision guides (Milestone 49): one page for every place, which reads the place's
@@ -49,13 +52,14 @@ async function getJson<T>(url: string): Promise<T | null> {
 
 async function loadPlace(artifactUrl: string, id: number, newest: Record<string, string | null>): Promise<GuideData | null> {
   const base = `${artifactUrl}/regions/${id}`;
-  const [packet, metrics, incomeLimits, water, community, utilities] = await Promise.all([
+  const [packet, metrics, incomeLimits, water, community, utilities, housingHelp] = await Promise.all([
     getJson<Packet>(`${base}/packet/5y.json`),
     getJson<{ observations: Observation[] }>(`${base}/metrics.json`),
     getJson<IncomeLimits>(`${base}/income-limits.json`),
     getJson<WaterSystems>(`${base}/water-systems.json`),
     getJson<CommunityContext>(`${base}/community.json`),
     getJson<Utilities>(`${base}/utilities.json`),
+    getJson<HousingData>(`${base}/affordable-housing/overview.json`),
   ]);
   if (!packet) return null;
   // FHA's limit and the county's turnover are the county's: a town or ZIP reads its
@@ -77,6 +81,7 @@ async function loadPlace(artifactUrl: string, id: number, newest: Record<string,
     water,
     community,
     utilities,
+    housingHelp,
     newest,
   };
 }
@@ -176,8 +181,9 @@ export function DecisionGuide({
     if (placeId === null) return;
     let live = true;
     setLoad({ state: "loading" });
-    setHome({});
-    setRent("");
+    const transfer = readGuideTransfer(placeId);
+    setHome(transfer.home);
+    setRent(transfer.rent === null ? "" : String(transfer.rent));
     loadPlace(artifactUrl, placeId, newest).then((data) => {
       if (live) setLoad(data ? { state: "ready", data } : { state: "failed" });
     });
@@ -216,6 +222,7 @@ export function DecisionGuide({
         <a href={data ? "#guide-afford-heading" : "#guide-place-heading"}><small>01</small> Buying budget</a>
         <a href={data ? "#guide-rent-heading" : "#guide-place-heading"}><small>02</small> Rent or buy</a>
         <a href={data ? "#guide-checks-heading" : "#guide-place-heading"}><small>03</small> Before an offer</a>
+        <a href={data ? "#housing-assistance" : "#guide-place-heading"}><small>04</small> Housing help</a>
       </nav>
       <div className="guide-setup" data-ready={Boolean(data)}>
       <section className="section guide-place" aria-labelledby="guide-place-heading">
@@ -448,6 +455,12 @@ export function DecisionGuide({
             </details>
             </div> : <p className="guide-preview">Local context and links for checking the actual home.</p>}
           </section>
+          {data && <section id="housing-assistance" className="section guide-housing-help" aria-labelledby="guide-help-heading">
+            <h2 id="guide-help-heading">Find housing help</h2>
+            <nav className="assistance-routes" aria-label="Official housing help">{APPLICATION_ROUTES.map(route => <a key={route.url} href={route.url} target="_blank" rel="noreferrer"><small>{route.agency}</small><strong>{route.label} ↗</strong><span>{route.note}</span></a>)}</nav>
+            <p className="guide-limit">For renters and buyers. Confirm eligibility, vacancies and waiting lists with the administrator.</p>
+            <HousingHelpDisclosure enabled><AffordableHousing data={data.housingHelp ?? null} hideRoutes /></HousingHelpDisclosure>
+          </section>}
         </>
     </div>
   );
