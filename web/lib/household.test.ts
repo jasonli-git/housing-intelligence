@@ -52,10 +52,14 @@ describe("positionOf", () => {
 describe("positionSentence", () => {
   it("names the line plainly, then as HUD does, with the line's own dollar figure", () => {
     expect(positionSentence(HUDSON, 3, 68000)).toBe(
-      "$68,000 for a household of 3 is at or below Hudson County’s 80% line ($106,150) — " +
-        "80% of the area’s median income, what HUD calls “low income” — and above its 50% " +
-        "line ($66,300).",
+      "$68,000 for a household of 3 is at or below Hudson County’s 80% income limit ($106,150) — " +
+        "what HUD calls “low income” — and above its 50% income limit ($66,300).",
     );
+  });
+  it("does not present adjusted income limits as exact percentages of median income", () => {
+    for (const income of [25000, 68000, 300000]) {
+      expect(positionSentence(HUDSON, 3, income)).not.toContain("% of the area’s median");
+    }
   });
 
   it("says when an income is below the lowest line, and above all three", () => {

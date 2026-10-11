@@ -43,7 +43,7 @@ export default async function HousingLandingPage() {
         <p className="entry-kicker">A public data project</p>
         <h1>Housing Intelligence</h1>
         <p className="entry-introduction">A clearer picture of the place you could call home.</p>
-        <p className="entry-free computed"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees, subscriptions or ads</span></p>
+        <p className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free to use · No fees, subscriptions or ads</span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
         <NationalCoverageMap searchFirst />
@@ -52,7 +52,7 @@ export default async function HousingLandingPage() {
         <h2 id="home-tools-heading">Tools</h2>
         <ul>
           {HOME_TOOLS.map((tool) => <li key={tool.href}>
-            <Link href={tool.href}>
+            <Link href={tool.href} data-tool={tool.href.slice(1)}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d={tool.icon} /></svg>
               <span className="home-tool-title">{tool.title} <span aria-hidden="true">→</span></span>
               <span className="home-tool-text">{tool.text}</span>

@@ -4,9 +4,8 @@
  *
  * Positions, never eligibility: HUD's lines are the start of most housing programs'
  * rules, not the whole of any of them, so the sentence says where an income sits and
- * never that a household qualifies (ARCHITECTURE #285). Named plainly first — "80% of
- * the area's median income" — and then as HUD names it, decided with the owner
- * 2026-10-01.
+ * never that a household qualifies (ARCHITECTURE #285). Percentage labels identify
+ * published, adjusted income-limit levels, not exact arithmetic on median income.
  *
  * HUD's lines are not exactly 30%, 50% and 80% of the median: it adjusts them for high
  * housing costs, for the federal poverty line and by household size. So the sentence
@@ -79,10 +78,8 @@ export function countyLabel(limits: IncomeLimits): string {
 }
 
 /**
- * The sentence: "$68,000 for a household of 3 is at or below Hudson County's 80% line
- * ($106,150) — 80% of the area's median income, what HUD calls “low income” — and above
- * its 50% line ($66,300)." The dollar figure is the line, never the median it is a share
- * of, and sits beside the line's name so it cannot be read as the median.
+ * The sentence gives the published income limit and HUD category without implying
+ * that adjusted limits are exact percentages of the area's median income.
  */
 export function positionSentence(limits: IncomeLimits, size: number, income: number): string {
   const { within, above, lines } = positionOf(limits, size, income);
@@ -92,16 +89,15 @@ export function positionSentence(limits: IncomeLimits, size: number, income: num
     const top = lines[lines.length - 1];
     return (
       `${lead} is above all three of HUD’s lines for ${place}, the highest being its ` +
-      `${top.band.band}% line (${money(top.limit)}), ${top.band.band}% of the area’s median ` +
-      `income.`
+      `${top.band.band}% income limit (${money(top.limit)}).`
     );
   }
   const limit = lineFor(within, size);
   const head =
-    `${lead} is at or below ${place}’s ${within.band}% line (${money(limit)}) — ` +
-    `${within.band}% of the area’s median income, what HUD calls “${within.hud_name}”`;
+    `${lead} is at or below ${place}’s ${within.band}% income limit (${money(limit)}) — ` +
+    `what HUD calls “${within.hud_name}”`;
   if (above === null) return `${head} — the lowest of its three lines.`;
-  return `${head} — and above its ${above.band}% line (${money(lineFor(above, size))}).`;
+  return `${head} — and above its ${above.band}% income limit (${money(lineFor(above, size))}).`;
 }
 
 // What of the reader's household is remembered, in their browser alone: the household

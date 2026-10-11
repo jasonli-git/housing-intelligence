@@ -143,7 +143,7 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
 
   return <div className="coverage-atlas">
     <div ref={entry} className="coverage-search-stage" data-search-first={searchFirst} data-exploring={exploring}>
-    {searchFirst && <div className="coverage-mode-switch" role="group" aria-label="Find a place by search or map">
+    {searchFirst && <div className="coverage-mode-switch" data-exploring={exploring} role="group" aria-label="Find a place by search or map">
       <button className="coverage-search-return" type="button" aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>Search places</button>
       <button className="coverage-explore-button" type="button" aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>Explore map</button>
     </div>}
@@ -259,7 +259,7 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
       <div className="coverage-map-foot"><span>{hovered}</span><span><i aria-hidden="true" />Blue = available{viewport.scale > 1 && " · Drag or use move buttons"}</span></div>
     </div>
     </div>
-    {searchFirst && <div id="coverage-place-search" className="coverage-search-overlay" hidden={exploring}>
+    {searchFirst && <div id="coverage-place-search" className="coverage-search-overlay" inert={exploring} aria-hidden={exploring}>
       <div className="coverage-search-panel">
         <PlaceSearch variant="hero" />
         <p className="home-find-hint">Detailed coverage starts with New Jersey.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>

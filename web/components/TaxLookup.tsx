@@ -317,7 +317,7 @@ function ParcelCard({
       </p>
       <dl className="cost-lines">
         <div className="sum">
-          <dt>Assessed value</dt>
+          <dt>Value used to calculate property tax<small className="src">Assessed value · the assessor’s recorded value, not necessarily today’s sale price</small></dt>
           <dd>{usd(parcel.assessed)}</dd>
         </div>
         <div>
@@ -339,7 +339,7 @@ function ParcelCard({
         {implied !== null && file.assessment_ratio && (
           <div>
             <dt>
-              Market value the state’s ratio implies
+              Rough market-value estimate from the town’s ratio
               <small className="src">
                 at {town}’s {file.assessment_ratio.value.toFixed(2)}% Director’s Ratio for{" "}
                 {file.assessment_ratio.year} — the state’s method, not an appraisal
@@ -351,10 +351,10 @@ function ParcelCard({
         {percentile !== null && (
           <div>
             <dt>
-              Against the town’s {className.toLowerCase()}
-              <small className="src">the same class only</small>
+              Compared with {className.toLowerCase()} properties in {town}
+              <small className="src">Tax assessments—not home quality or sale prices</small>
             </dt>
-            <dd>assessed above {percentile}%</dd>
+            <dd>Higher assessed value than {percentile}%</dd>
           </div>
         )}
         {(parcel.yearBuilt || parcel.dwellings || parcel.building) && (
@@ -385,8 +385,7 @@ function ParcelCard({
         </li>
         {ratio && (
           <li>
-            Its Director’s Ratio for {ratio.year} is {ratio.value.toFixed(2)}%: assessments
-            are about that share of market value.{" "}
+            <strong>How assessments compare with market values:</strong> {town}’s {ratio.year} Director’s Ratio is {ratio.value.toFixed(2)}%. Town-wide assessed values average about that share of market values—not a valuation of this particular home.{" "}
             {indicated
               ? `At or below ${REVALUATION_RATIO}%, the state’s rules generally read that as calling for a revaluation; the county tax board decides.`
               : `Above the ${REVALUATION_RATIO}% at which the state’s rules generally call for a revaluation.`}
@@ -394,9 +393,7 @@ function ParcelCard({
         )}
         {file.nj_general_tax_rate && file.nj_effective_tax_rate && (
           <li>
-            Its {file.nj_general_tax_rate.year} tax rate is {file.nj_general_tax_rate.value.toFixed(3)}{" "}
-            per $100 of assessed value — {file.nj_effective_tax_rate.value.toFixed(3)} per $100 of
-            market value, the effective rate.
+            Tax rates for {file.nj_general_tax_rate.year}: ${file.nj_general_tax_rate.value.toFixed(3)} per $100 of assessed value (used to calculate bills); ${file.nj_effective_tax_rate.value.toFixed(3)} per $100 of equalized value (the effective rate, for comparing towns—not calculating this bill).
           </li>
         )}
       </ul>
