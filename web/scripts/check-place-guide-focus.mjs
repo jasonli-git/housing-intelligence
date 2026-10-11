@@ -45,6 +45,15 @@ try {
       assert.equal(await page.locator('.home-action-checks').count(),0,'No long duplicate property checklist');
       assert.equal(await page.locator('.cost-yours').count(),1,'Interactive cost inputs restored');
       assert.equal(await page.locator('.quiet-tool-group').count(),1,'Buying views restored');
+      assert.equal(await page.locator('.planning-preview-grid > .planning-preview').count(),2,'Both buying-plan destinations are visible preview tiles');
+      assert(await page.locator('.planning-preview-value').isVisible(),'Upfront estimate is visible before opening');
+      await page.locator('.planning-preview').first().locator('summary').click();
+      assert(await page.locator('.planning-preview').first().evaluate(el=>Math.abs(el.getBoundingClientRect().width-el.parentElement.getBoundingClientRect().width)<2),'Expanded planning tile uses the full width');
+      assert(await page.locator('.planning-preview[open] .cost-lines dd').evaluateAll(els=>els.every(el=>{
+        const frame=el.closest('.planning-preview').getBoundingClientRect();
+        return el.getBoundingClientRect().right<=frame.right && el.scrollWidth<=el.clientWidth+1;
+      })),'Expanded cash figures fit without clipping');
+      await page.locator('.planning-preview').first().locator('summary').click();
       assert.equal(await page.locator('.local-housing-help details').count(),0,'Place help links stay compact');
       assert.equal(await page.locator('.local-help-links').count(),0,'Official help cards live on the help tool, not place pages');
       assert(await page.locator('.local-housing-help a[href="/help"]').isVisible(),'Compact help destination remains discoverable');

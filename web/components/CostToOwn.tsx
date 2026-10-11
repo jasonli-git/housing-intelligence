@@ -27,6 +27,7 @@ import { type Basis, eachMonth, type Inputs, overYears, upFront } from "@/lib/ow
 import { ownershipInputs, cashFit, DEFAULT_YEARS } from "@/lib/budgetScenario";
 import { useBudgetScenario } from "@/components/useBudgetScenario";
 import { QuietDisclosure, QuietToolGroup } from "@/components/QuietCounty";
+import { StepIcon } from "@/components/StepIcon";
 import {DifferenceBridge,sentenceCostLabel} from "@/components/DifferenceBridge";
 import { writeGuideTransfer } from "@/lib/guideTransfer";
 
@@ -764,7 +765,8 @@ export function CostToOwn({
 
       {planning && <QuietToolGroup enabled={quiet}>
       {quiet && budgetFit}
-      <QuietDisclosure enabled={quiet} title="Upfront cash & a longer-term scenario">
+      <div className={quiet ? "planning-preview-grid" : undefined}>
+      <QuietDisclosure enabled={quiet} title={`Upfront cash & the next ${input.years} years`} icon={<StepIcon name="tax" />} preview={`${money(up.low)}–${money(up.high)} upfront · estimate`} note="Cash at closing—and what owning could cost over time.">
       <div className="cost-views">
         {control && (
           <div className="cost-view-tabs" role="tablist" aria-label="Other views of the cost">
@@ -888,6 +890,7 @@ export function CostToOwn({
       </div>
       </QuietDisclosure>
       {householdTools}
+      </div>
       {guidePlaceId !== undefined && <p className="household-next"><a href={`/guide?place=${guidePlaceId}`} onClick={() => {
         const home = Object.fromEntries([
           ["price", typedPrice], ["taxYear", typedTax], ["hoaMonth", parseAmount(fields.hoa)],

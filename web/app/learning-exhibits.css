@@ -1,5 +1,20 @@
 /* The gallery is optional exploration. Motion belongs to its linework, never its values. */
 @media screen {
+  .bar-tool-menu .bar-help-route { border-top:1px solid var(--border); margin-top:.25rem; }
+  .planning-preview-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; margin-top:1rem; align-items:start; }
+  .quiet-county .planning-preview-grid > .planning-preview { min-width:0; width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:14px; background:color-mix(in srgb,var(--atlas-accent) 4%,var(--surface-1)); overflow:visible; }
+  .quiet-county .planning-preview-grid > .planning-preview > summary { padding:1rem; align-items:flex-start; gap:.65rem; }
+  .planning-preview > summary > svg { width:21px; height:21px; flex-shrink:0; color:var(--atlas-accent); }
+  .planning-preview .quiet-disclosure-title { font:600 15px/1.4 var(--font-text); }
+  .planning-preview-value { display:block; margin-top:.35rem; color:var(--atlas-accent); font:500 14px/1.4 var(--font-text); }
+  .quiet-county .planning-preview-grid > .planning-preview > summary small { font:400 12px/1.5 var(--font-text); color:var(--text-secondary); }
+  .planning-preview-grid > .planning-preview[open] { grid-column:1/-1; }
+  .planning-preview-grid > .planning-preview > .quiet-disclosure-body { padding:0 1rem 1rem; }
+  .planning-preview .cost-lines > div { gap:.6rem; }
+  .planning-preview .cost-lines dt { min-width:0; }
+  .planning-preview .cost-lines dd { max-width:60%; white-space:normal; overflow-wrap:anywhere; }
+  .planning-preview[open] > summary .quiet-plus { transform:rotate(180deg); }
+  @media(max-width:600px) { .planning-preview-grid { grid-template-columns:1fr; } }
   .exhibit-gallery-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin:1.8rem 0 1rem; }
   .exhibit-gallery-head p { margin:0; max-width:48ch; color:var(--text-secondary); font:400 15px/1.5 var(--font-text); }
   .exhibit-gallery-head button { flex-shrink:0; min-height:44px; border:0; background:transparent; color:var(--text-muted); font:400 12px var(--font-text); cursor:pointer; text-decoration:underline; text-underline-offset:4px; }

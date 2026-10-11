@@ -13,6 +13,15 @@ const inputs: CostProps = {
   noTax: "No ZIP-level tax estimate", gain: null, rateThen: null,
 };
 describe("local monthly budget", () => {
+  it("previews upfront cash and uses the selected planning horizon", () => {
+    localStorage.setItem("hip.cost.personal.v1", JSON.stringify({years:5}));
+    const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,showHelp:false}));
+    const summary=container.querySelector(".planning-preview > summary");
+    expect(summary?.textContent).toContain("Upfront cash & the next 5 years");
+    expect(summary?.textContent).toContain("upfront · estimate");
+    expect(summary?.textContent).toContain("Cash at closing");
+    expect(summary?.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+  });
   it("exposes the budget and rent inputs without opening a disclosure", () => {
     const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,showHelp:false}));
     const income=screen.getByLabelText("Yearly household income before tax");

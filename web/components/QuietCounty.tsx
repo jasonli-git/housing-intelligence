@@ -31,13 +31,13 @@ export function QuietToolGroup({ enabled, children }: { enabled: boolean; childr
 }
 
 /** Presentation-only experiment. Native disclosures also work before hydration. */
-export function QuietDisclosure({ enabled, title, note, children }: {
-  enabled: boolean; title: string; note?: string; children: ReactNode;
+export function QuietDisclosure({ enabled, title, note, preview, icon, children }: {
+  enabled: boolean; title: string; note?: string; preview?: string; icon?: ReactNode; children: ReactNode;
 }) {
   if (!enabled) return <>{children}</>;
   const treatment = title === "Prices & paychecks over time" ? "history" : title === "The local market" ? "market" : title === "Who is moving here" ? "migration" : undefined;
-  return <details className="quiet-disclosure" data-treatment={treatment}>
-    <summary>{title === "The local market" && <AbstractField kind="architecture" />}<span className="quiet-disclosure-copy"><span className="quiet-disclosure-title">{title}</span>{note && <small>{note}</small>}</span><span className="quiet-plus" aria-hidden="true">+</span></summary>
+  return <details className={`quiet-disclosure${icon ? " planning-preview" : ""}`} data-treatment={treatment}>
+    <summary>{icon}{title === "The local market" && <AbstractField kind="architecture" />}<span className="quiet-disclosure-copy"><span className="quiet-disclosure-title">{title}</span>{preview && <span className="planning-preview-value">{preview}</span>}{note && <small>{note}</small>}</span><span className="quiet-plus" aria-hidden="true">{icon ? "⌄" : "+"}</span></summary>
     <div className="quiet-disclosure-body">{children}</div>
   </details>;
 }

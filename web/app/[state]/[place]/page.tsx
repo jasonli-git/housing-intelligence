@@ -466,7 +466,7 @@ export default async function RegionPage({
     return figure ? [`${formatMetric(figure.value, figure.unit, id)} ${id === "sr1a_sales_count" ? "qualifying sales" : "net homes added"} · ${id === "sr1a_sales_count" ? `${periodLabel(figure.period_start, id)}–` : ""}${periodLabel(figure.period_end, id)}`] : [];
   }).join(" · ");
 
-  const householdContent = <><QuietDisclosure enabled={quiet} title="Income & nearby places" note="Household income & places to compare">
+  const householdContent = <><QuietDisclosure enabled={quiet} title="Your income & nearby places" icon={<StepIcon name="budget" />} note="Compare your income with local benchmarks and explore alternatives.">
     <ForYourHousehold regionName={name} limits={incomeLimits} levels={packet.levels} countyLevels={countyLevels}
       margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))} />
     {region.level !== "zip" && <p className="household-next">
