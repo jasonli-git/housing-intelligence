@@ -1,0 +1,32 @@
+.county-cabinet { --folder-ink:light-dark(#246b55,#a6d9c0); margin-top:1.4rem; }
+.cabinet-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.8rem; }
+.cabinet-kicker { font:10px/1.5 var(--font-mono); text-transform:uppercase; letter-spacing:.12em; color:var(--text-muted); }
+.cabinet-heading h3 { margin:.25rem 0 0; font:400 24px/1.2 Georgia,serif; }
+.cabinet-view { min-height:44px; border:1px solid var(--border); border-radius:24px; padding:.5rem .9rem; background:transparent; color:var(--text-secondary); cursor:pointer; }
+.cabinet-stage { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:clamp(20px,4vw,48px); padding:1rem; border:1px solid var(--border); border-radius:20px; background:radial-gradient(ellipse at 70% 60%,color-mix(in srgb,var(--folder-ink) 8%,transparent),transparent 65%),var(--surface-1); }
+.cabinet-stage[hidden], .county-cabinet nav[hidden] { display:none; }
+.cabinet-files { height:312px; overflow:auto; padding:12px 18px 12px 8px; perspective:800px; scrollbar-width:thin; scrollbar-color:var(--border) transparent; scroll-behavior:smooth; }
+.cabinet-file { position:relative; display:flex; align-items:center; gap:.8rem; width:100%; min-height:56px; margin:9px 0 0; padding:12px 16px; border:1px solid color-mix(in srgb,var(--folder-ink) 25%,var(--border)); border-radius:3px 14px 7px 7px; background:linear-gradient(160deg,color-mix(in srgb,var(--folder-ink) 8%,var(--surface-2)),var(--surface-2)); color:var(--text-secondary); text-align:left; font:500 15px/1.3 var(--font-text); box-shadow:0 4px 0 color-mix(in srgb,var(--folder-ink) 8%,var(--surface-1)),0 7px 10px #0001; transform:rotateX(-12deg); transform-origin:center bottom; transition:transform 220ms ease,background 220ms ease,color 220ms ease; cursor:pointer; }
+.cabinet-file::before { content:""; position:absolute; width:35%; height:7px; top:-7px; left:-1px; background:var(--surface-2); border:1px solid var(--border); border-bottom:0; border-radius:7px 10px 0 0; }
+.cabinet-file[aria-pressed="true"] { transform:translateX(7px) rotateX(0deg); color:var(--folder-ink); background:color-mix(in srgb,var(--folder-ink) 13%,var(--surface-2)); }
+.cabinet-file-number,.cabinet-file-mark { font:10px/1 var(--font-mono); color:var(--text-muted); }
+.cabinet-file-mark { margin-left:auto; }
+.cabinet-preview { align-self:center; min-width:0; padding:1rem 1rem 1rem 0; }
+.cabinet-preview h4 { margin:.4rem 0 .65rem; font:400 clamp(28px,3.5vw,42px)/1.1 Georgia,serif; color:var(--folder-ink); overflow-wrap:anywhere; }
+.cabinet-preview p { max-width:32ch; font-size:14px; line-height:1.6; color:var(--text-secondary); }
+.cabinet-open { display:inline-flex; gap:1.3rem; align-items:center; min-height:44px; font-weight:600; }
+.cabinet-preview small { display:block; margin-top:.5rem; color:var(--text-muted); font-size:11px; }
+.cabinet-drawing { height:62px; display:flex; align-items:flex-end; gap:8px; margin-bottom:1.2rem; }
+.cabinet-drawing i { display:block; width:28px; height:38px; border:1px solid color-mix(in srgb,var(--folder-ink) 45%,transparent); border-top:0; transform:skewY(-12deg); background:linear-gradient(130deg,color-mix(in srgb,var(--folder-ink) 8%,transparent),transparent); }
+.cabinet-drawing i:nth-child(2n) { height:55px; }.cabinet-drawing i:nth-child(3) { height:30px; }
+@media(max-width:700px) {
+  .cabinet-heading h3 { font-size:21px; }
+  .cabinet-stage { grid-template-columns:minmax(0,1fr); gap:.6rem; padding:.8rem; }
+  .cabinet-files { display:flex; gap:12px; height:auto; overflow-x:auto; padding:12px 5px 18px; scroll-snap-type:x mandatory; }
+  .cabinet-file { flex:0 0 170px; width:170px; min-height:90px; scroll-snap-align:center; margin:0; gap:.5rem; }
+  .cabinet-file[aria-pressed="true"] { transform:translateY(-3px); }
+  .cabinet-preview { padding:.6rem; }.cabinet-preview h4 { font-size:30px; }.cabinet-drawing { display:none; }
+  .cabinet-preview p { margin:.4rem 0; }.cabinet-preview small { margin-top:.2rem; }
+}
+@media(prefers-reduced-motion:reduce) { .cabinet-file { transition:none; }.cabinet-files { scroll-behavior:auto; } }
+@media print { .cabinet-stage { display:none; }.county-cabinet nav[hidden] { display:grid; } }
