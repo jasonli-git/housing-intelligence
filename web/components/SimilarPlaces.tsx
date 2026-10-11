@@ -62,7 +62,7 @@ export function SimilarPlaces({ name, data }: { name: string; data: SimilarPlace
                 </th>
                 {places.map((p, i) => (
                   <th scope="col" className="num" key={p.region_id}>
-                    {i === 0 ? p.name : <Link href={regionPath(p.region_id)}>{p.name}</Link>}
+                    {i === 0 ? p.name : <Link className="destination-town" href={regionPath(p.region_id)}>{p.name}</Link>}
                   </th>
                 ))}
               </tr>

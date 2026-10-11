@@ -30,7 +30,12 @@ try {
       await page.locator('.mortgage-rate-details summary').click();
       assert(await page.locator('.rate-scenarios').isVisible());
       assert(await page.locator('.mortgage-rate-details .reader-details-body').evaluate(el=>getComputedStyle(el).overflowX==='auto'),'Rate table has accessible overflow');
+      assert(await page.locator('.mortgage-rate-details .rate-scenarios').evaluate(el=>{
+        const table=el.getBoundingClientRect(), body=el.closest('.reader-details-body').getBoundingClientRect();
+        return table.left>=body.left-1 && table.right<=body.right+1;
+      }),'Rate table fits its disclosure on desktop and mobile');
       assert(await page.locator('.place-guide-entry a').isVisible(),'Place-aware guide entry is exposed');
+      assert(await page.locator('#local-price-history, .local-market, .who-is-moving, .similar-places, .county-place-directory').evaluateAll(els=>els.every(el=>parseFloat(getComputedStyle(el).paddingLeft)>=16 && parseFloat(getComputedStyle(el).paddingRight)>=16)),'Visible context retains comfortable text insets');
       assert.equal(await page.locator('#local-property-evidence').evaluate(el=>el.tagName),'SECTION','Evidence has no second property accordion');
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Place has no horizontal overflow');
       console.log(`${width} ${theme} ${path}: ${await page.locator('main details').count()} disclosures remaining`);

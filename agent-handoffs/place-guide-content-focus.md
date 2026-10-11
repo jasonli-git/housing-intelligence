@@ -1,6 +1,9 @@
 # Place / guide content focus
 
 ## What changed
+- Desktop follow-up: remove the rate table's inherited 34rem minimum width, which clipped its third column inside a desktop cost card despite no document overflow. Add a regression assertion against the disclosure's actual bounds.
+- Restore shared 16–22px horizontal insets to visible history, market, migration, similar-town and county-directory sections across place levels. Similar-town links now use the municipality destination colour; local anchor links use the place accent, while existing guide/tax/budget and external-source colours remain intact.
+- Housing help as a separate, state-aware tool is recommended but not implemented or authorized in this follow-up. Initial coverage would be New Jersey only; do not imply nationwide programme coverage.
 - Approved discoverability follow-up supersedes the initial retirement of profile cost tools: interactive inputs, monthly budget and upfront/long-term views are restored. The buyer's guide retains all of its corresponding capabilities. Similar places stay in the visible exploration area rather than appearing twice, and the cost tools have one Continue link.
 - Mortgage-rate ReaderDetails now participates in the narrow-screen full-width card layout; its body has accessible horizontal overflow and wrapping table headers. This fixes the old selector targeting only QuietDisclosure after that expansion was changed to ReaderDetails.
 - Place pages retain the three housing-help application links but not the long programme/property directory. The guide adds a Housing help navigation destination and the full shared programme/property component, with sources/limits unchanged.
@@ -47,6 +50,7 @@
 - Canonical documentation and underlying datasets are untouched. Claude should review the intentional distinction between published/default profile costs and personal guide scenarios before reconciling project documents.
 
 ## Verification
+- Desktop-spacing follow-up: `npm run typecheck` and all 604 tests / 91 files passed. `node scripts/check-place-guide-focus.mjs` passed county/town/ZIP at 320/390/1280px in light/dark, including new table-within-disclosure and minimum 16px context-inset assertions. `git diff --check` passed. Static export passed with 2,384 pages, 2,366 aliases and 16,685 files; final colour-selector export is checked before committing. No new route, dataset, merge or deployment.
 - Discoverability follow-up: typecheck and 604 tests across 91 files passed, including session transfer isolation and corrupt input guards. Six width/theme browser combinations passed on county, town and ZIP profiles; restored inputs, mobile rate expansion, compact place help links, guide help, explicit home transfer and different-place isolation verified. At 320px the expanded table measured 231px within a 258px body, with no clipped horizontal content. Visual inspection prompted keeping the short Rate header on one line. Production export passed with unchanged page/file counts; final CSS re-export recorded below.
 - `npm run typecheck`: passed.
 - `npm test`: 602 tests across 90 files passed, including no planning-panel rendering, published defaults despite remembered personal inputs, guide navigator and quote/upfront parity with the shared model.
