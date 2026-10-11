@@ -22,7 +22,8 @@ try {
       assert(await mosaic.getByText(/reported new homes finished ·/).isVisible());
       assert(await mosaic.locator('.mosaic-source').getByText(/Reporting towns only/).isVisible());
       assert.equal(await page.locator('.state-extra-figures .homes-added, .state-extra-figures .home-sales').count(), 0);
-      assert.equal(await page.locator('.state-market-exhibits > .learning-exhibit').count(), 2);
+      assert.equal(await page.locator('.state-market-exhibits > .learning-exhibit').count(), 3);
+      assert.deepEqual(await page.locator('.state-market-exhibits > .learning-exhibit').evaluateAll(items => items.map(el => el.dataset.exhibitStyle)), ['sales', 'history', 'building']);
       assert(await page.locator('#nj-explore').evaluate(el => el.nextElementSibling?.id === 'state-market-exhibits'), 'Sales and building exhibits follow Find your place');
       assert(await page.locator('#state-market-exhibits #sales-heading').isVisible());
       assert(await page.locator('#state-market-exhibits #homes-added-heading').isVisible());
@@ -58,6 +59,12 @@ try {
     for (const path of ['/', '/nj/somerset-county', '/nj/princeton', '/regions/2842']) {
       await page.goto(origin + path, { waitUntil: 'networkidle' });
       assert.equal(await page.locator('.housing-mosaic').count(), 0, 'Mosaic is state-only: ' + path);
+      if (path !== '/') {
+        const styles = await page.locator('.exhibit-gallery .learning-exhibit:visible').evaluateAll(items => items.map(el => el.dataset.exhibitStyle));
+        const sequence = ['sales', 'paychecks', 'history', 'building', 'migration'];
+        assert.deepEqual(styles, sequence.filter(style => styles.includes(style)), 'Available place exhibits follow the reading sequence');
+        assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Place page stays within viewport');
+      }
     }
     await context.close();
   }

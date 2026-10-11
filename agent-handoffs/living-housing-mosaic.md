@@ -1,6 +1,8 @@
 # Living housing mosaic
 
 ## What changed
+- Follow-up exhibit overhaul: state history now uses the same interactive learning-exhibit wrapper as place pages. State sequence is sales → historical context → building; place sequence is sales → paychecks → history → building → migration, omitting unsupported exhibits.
+- Five topic-specific decorative linework/surface styles replace repeated wave artwork, with consistent widths, legible theme-aware text, reduced-motion handling and no change to measured values or upstream data. Removed the extra Local market wrapper heading so exhibits form one continuous gallery.
 - Integrated the state mosaic into Statewide snapshot after user approval: one shared blue surface, steady headline metrics, subordinate Explore the mix heading, mobile readout above the tiles, and More statewide figures last.
 - Following user review, the mosaic is state-only: below New Jersey’s statewide snapshot, removed from county, municipality and ZIP pages.
 - A hundred architectural tiles regroup between **new homes finished** (DCA building-type counts) and **home-purchase loans** (HMDA loan-type shares). These are existing statewide records, not a picture of the whole housing stock.
@@ -9,6 +11,7 @@
 - Jump-to-section discovers the mosaic. Reports and existing profile/cost calculations remain unchanged.
 
 ## Files/modules affected
+- `web/components/LearningExhibit.tsx`, its new test and `web/app/learning-exhibits.css`: topic-specific styling and decorative paths.
 - `web/lib/housingMosaic.ts` and its tests: available views and largest-remainder allocation.
 - `web/components/HousingMosaic.tsx` and its tests: interaction and accessible controls.
 - `web/app/housing-mosaic.css`, root CSS import, New Jersey integration/exhibits and removal of place-page integration.
@@ -38,11 +41,11 @@
 
 ## Verification
 - `npm run typecheck`: passed.
-- `npm test`: 629 tests passed across 94 files. State record tests cover complete partitions, matching source/release/period, mortgage exclusions, record-vs-survey labelling, very small groups that receive zero tiles and the embedded heading.
+- `npm test`: 630 tests passed across 95 files. State record tests cover complete partitions, matching source/release/period, mortgage exclusions, record-vs-survey labelling, very small groups that receive zero tiles and the embedded heading. Exhibit tests verify five distinct decorative paths and preserved content.
 - `npm run build`: passed; 2,386 static outputs, 2,366 legacy aliases and 16,693 files.
 - Initial `node scripts/check-housing-mosaic.mjs` run passed for county/town/ZIP pages at 320/390/760/1280px in both themes. Diagnostic now targets the state record mosaic, verifies the two moved exhibits and asserts absence on home/county/town/ZIP pages. Includes scoped axe accessibility, exact tile total, view/group switching, keyboard/hover access, no forced scroll, field bounds, horizontal overflow, reduced motion, normal-motion rearrangement, jump menu discovery and print omission.
 - Visual inspection: mobile and desktop mosaics in light/dark themes.
 - `git diff --check`: passed. No frontend lint command configured; backend checks not run (no backend changes).
 - Browser diagnostic initially needed an explicit Playwright context for axe and a selector distinguishing visible copy from its screen-reader description; corrected and rerun successfully after the final build.
 - State-only review initially failed the expected-NJ-mosaic assertion: real state packet/summary had no ACS measures. User subsequently approved an existing-state-record version; no data collection was added.
-- State record browser checks passed at all four widths in both themes, including the two visible exhibits immediately following Find your place and absence of the mosaic on national/county/town/ZIP pages. State mosaic and exhibit screenshots inspected on mobile/desktop.
+- State record browser checks passed at all four widths in both themes, including three visible state exhibits immediately following Find your place in sales/history/building order, available county/town/ZIP exhibit order and no horizontal overflow. Mosaic remains absent on national/county/town/ZIP pages. State mosaic and exhibit screenshots inspected on mobile/desktop.

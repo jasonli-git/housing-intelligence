@@ -19,6 +19,13 @@
   .exhibit-gallery-head p { margin:0; max-width:48ch; color:var(--text-secondary); font:400 15px/1.5 var(--font-text); }
   .exhibit-gallery-head button { flex-shrink:0; min-height:44px; border:0; background:transparent; color:var(--text-muted); font:400 12px var(--font-text); cursor:pointer; text-decoration:underline; text-underline-offset:4px; }
   .learning-exhibit { position:relative; isolation:isolate; box-sizing:border-box; width:100%; max-width:none; margin:1rem 0; padding:1rem clamp(1rem,2.5vw,1.8rem); border:1px solid color-mix(in srgb,var(--border) 75%,transparent); border-radius:22px; background:linear-gradient(135deg,color-mix(in srgb,var(--atlas-accent) 5%,var(--surface-1)),var(--surface-1)); box-shadow:0 14px 35px -30px #0009; }
+  .learning-exhibit[data-exhibit-style="sales"] { background:radial-gradient(ellipse at 100% 0,color-mix(in srgb,var(--atlas-accent) 10%,transparent),transparent 65%),var(--surface-1); border-top:3px solid color-mix(in srgb,var(--atlas-accent) 55%,var(--border)); }
+  .learning-exhibit[data-exhibit-style="paychecks"] { background:linear-gradient(110deg,color-mix(in srgb,var(--atlas-accent) 7%,var(--surface-1)),var(--surface-1) 65%); border-radius:8px 28px 28px 8px; border-left:3px solid var(--atlas-accent); }
+  .learning-exhibit[data-exhibit-style="history"] { background:linear-gradient(180deg,color-mix(in srgb,var(--text-muted) 7%,var(--surface-1)),var(--surface-1)); border-style:dashed; }
+  .learning-exhibit[data-exhibit-style="building"] { background:linear-gradient(135deg,color-mix(in srgb,var(--atlas-accent) 6%,var(--surface-1)),var(--surface-1)); border-radius:12px; border-bottom:3px solid color-mix(in srgb,var(--atlas-accent) 50%,var(--border)); }
+  .learning-exhibit[data-exhibit-style="migration"] { background:radial-gradient(ellipse at 0 100%,color-mix(in srgb,var(--text-muted) 9%,transparent),transparent 65%),var(--surface-1); border-radius:28px 10px 28px 10px; }
+  .learning-exhibit[data-exhibit-style="history"] .exhibit-linework { opacity:.07; }
+  .learning-exhibit[data-exhibit-style="building"] .exhibit-linework { width:min(55%,30rem); }
   .place-next-destinations { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:2rem; }
   .place-next-destinations .local-housing-help { display:flex; align-items:flex-start; gap:1rem; margin:0; padding:1.2rem 0; }
   .place-next-destinations .local-housing-help > svg { width:24px; height:24px; flex-shrink:0; }
