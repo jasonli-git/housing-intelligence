@@ -1,0 +1,69 @@
+/* The gallery is optional exploration. Motion belongs to its linework, never its values. */
+@media screen {
+  .exhibit-gallery-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin:1.8rem 0 1rem; }
+  .exhibit-gallery-head p { margin:0; max-width:48ch; color:var(--text-secondary); font:400 15px/1.5 var(--font-text); }
+  .exhibit-gallery-head button { flex-shrink:0; min-height:44px; border:0; background:transparent; color:var(--text-muted); font:400 12px var(--font-text); cursor:pointer; text-decoration:underline; text-underline-offset:4px; }
+  .learning-exhibit { position:relative; isolation:isolate; margin-block:1.2rem; padding:1.1rem clamp(1rem,2.5vw,1.8rem) 1.4rem; border:1px solid var(--border); border-radius:4px 24px 4px 4px; background:linear-gradient(135deg,color-mix(in srgb,var(--atlas-accent) 5%,var(--surface-1)),var(--surface-1)); box-shadow:0 14px 35px -30px #0009; }
+  .learning-exhibit:has(> .exhibit-content:empty) { display:none; }
+  .exhibit-kicker { display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem; color:var(--text-muted); font:10px/1.4 var(--font-mono); letter-spacing:.04em; margin-bottom:1.2rem; }
+  .exhibit-kicker > span:last-child { font:12px var(--font-text); letter-spacing:0; }
+  .exhibit-linework { position:absolute; right:0; top:0; width:min(75%,38rem); height:180px; pointer-events:none; z-index:-1; stroke:var(--atlas-accent); stroke-width:.8; opacity:.12; }
+  .exhibit-content > .section { margin-block:0; }
+  .atlas-local .exhibit-content :is(#local-price-history,.local-market,.who-is-moving) { padding-inline:0; margin-block:0; }
+  .exhibit-content :is(h2,h3) { font:500 clamp(24px,3vw,34px)/1.2 Georgia,serif; letter-spacing:-.025em; margin:0 0 1rem; }
+  .exhibit-content .section-head { border:0; margin:0; padding:0; }
+  .exhibit-content .sales-lead { font-size:15px; line-height:1.65; max-width:72ch; }
+  .exhibit-content .sales-note { font-size:13px; line-height:1.6; max-width:80ch; }
+  .exhibit-content .quiet-market-figures { grid-template-columns:repeat(2,minmax(0,1fr)); margin-bottom:1rem; }
+  .exhibit-content .quiet-market-figures strong { font-size:clamp(25px,3vw,38px); }
+  .exhibit-plot { margin:1rem 0; padding:1.1rem 0; }
+  .exhibit-plot figcaption { margin-top:.85rem; max-width:75ch; font:400 13px/1.6 var(--font-text); color:var(--text-secondary); }
+  .exhibit-choice { display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:1.1rem; }
+  .exhibit-choice button { min-height:44px; padding:.5rem .85rem; border:1px solid var(--border); border-radius:999px; background:transparent; color:var(--text-secondary); cursor:pointer; font:500 13px/1.4 var(--font-text); transition:background 180ms,color 180ms; }
+  .exhibit-choice button[aria-pressed="true"] { color:var(--text-primary); border-color:var(--atlas-accent); background:color-mix(in srgb,var(--atlas-accent) 9%,var(--surface-1)); }
+  .exhibit-choice button:focus-visible { outline:2px solid var(--atlas-accent); outline-offset:3px; }
+  .exhibit-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.5rem; }
+  .exhibit-pair strong,.exhibit-readout strong { display:block; font:500 clamp(27px,4vw,42px)/1.2 Georgia,serif; letter-spacing:-.03em; overflow-wrap:anywhere; }
+  .exhibit-pair span,.exhibit-readout span { display:block; margin:.3rem 0 .8rem; color:var(--text-secondary); font-size:13px; }
+  .exhibit-track { height:6px; border-radius:99px; background:color-mix(in srgb,var(--text-muted) 12%,transparent); overflow:hidden; }
+  .exhibit-track i { display:block; height:100%; background:var(--atlas-accent); border-radius:inherit; transition:width 350ms ease; }
+  .construction-exhibit .exhibit-pair > div:last-child .exhibit-track i { background:var(--text-muted); }
+  .exhibit-history { display:flex; height:150px; gap:2px; margin:.8rem 0; position:relative; }
+  .exhibit-history::before { content:""; position:absolute; top:50%; width:100%; height:1px; background:var(--border); }
+  .exhibit-history > div { position:relative; flex:1; background:transparent; }
+  .exhibit-history i { position:absolute; left:10%; width:80%; background:var(--atlas-accent); opacity:.45; border-radius:2px; }
+  .exhibit-history > [data-selected="true"] { background:color-mix(in srgb,var(--atlas-accent) 8%,transparent); }
+  .exhibit-history > [data-selected="true"] i { opacity:1; }
+  .history-interactive label { display:flex; flex-wrap:wrap; align-items:center; gap:.7rem; font-size:13px; }
+  .history-interactive input { flex:1; min-width:160px; min-height:44px; accent-color:var(--atlas-accent); }
+  .exhibit-destinations { list-style:none; padding:0; margin:1rem 0 0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem 2rem; }
+  .exhibit-destinations li { display:grid; gap:.35rem; min-width:0; }
+  .exhibit-destinations li > span { font-size:14px; overflow-wrap:anywhere; }
+  .exhibit-destinations strong { font:500 14px var(--font-text); font-variant-numeric:tabular-nums; }
+  .exhibit-destinations small { font:400 11px var(--font-text); color:var(--text-secondary); }
+  .atlas-local .local-market > h2 { margin-top:2rem; }
+  .atlas-local .exhibit-gallery .local-market { padding-inline:0; }
+  .budget-basics h4 { font:500 20px/1.3 Georgia,serif; margin:0 0 .9rem; }
+  .budget-basics .budget-inputs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.85rem; }
+  .budget-basics .budget-inputs :is(.control,label) { display:grid; align-content:start; gap:.4rem; min-width:0; font-size:13px; }
+  .budget-basics input { box-sizing:border-box; min-width:0; width:100%; min-height:44px; padding:.65rem; border:1px solid var(--border); border-radius:8px; background:var(--surface-1); color:var(--text-primary); font:16px var(--font-text); }
+  .quiet-tool-group .cost-budget-fit { padding:0; border:0; background:transparent; }
+  @media (prefers-reduced-motion:no-preference) {
+    .exhibit-linework path { stroke-dasharray:.45 .55; animation:exhibit-current 18s linear infinite; }
+    .learning-exhibit:nth-child(even) .exhibit-linework path { animation-direction:reverse; animation-duration:24s; }
+    .learning-exhibit[data-exhibit="Arrivals & departures"] .exhibit-linework path { animation-duration:12s; }
+  }
+  .exhibit-gallery[data-motion="paused"] .exhibit-linework path { animation-play-state:paused; }
+  @media(max-width:600px) {
+    .exhibit-gallery-head { align-items:flex-start; gap:.5rem; }
+    .exhibit-gallery-head p { font-size:13px; }
+    .exhibit-gallery-head button { font-size:11px; }
+    .exhibit-kicker > span:last-child { display:none; }
+    .exhibit-pair { gap:1rem; }
+    .exhibit-destinations { grid-template-columns:minmax(0,1fr); }
+    .budget-basics .budget-inputs { grid-template-columns:minmax(0,1fr); }
+  }
+}
+@keyframes exhibit-current { to { stroke-dashoffset:-2; } }
+@media(prefers-reduced-motion:reduce) { .exhibit-linework path { animation:none; } .exhibit-track i,.exhibit-choice button { transition:none; } }
+@media print { .exhibit-kicker,.exhibit-linework,.exhibit-gallery-head button,.exhibit-choice { display:none; } .learning-exhibit { break-inside:auto; } }

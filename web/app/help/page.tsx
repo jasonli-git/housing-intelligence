@@ -16,17 +16,18 @@ export default async function HousingHelpPage() {
   const state = states?.items[0];
   const data = state ? await api.affordableHousing(state.region_id) : null;
   return <>
-    <Masthead affordability={{kind: "route"}} />
+    <Masthead affordability={{kind: "route"}} helpActive />
     <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool housing-help-page">
       <header className="page-head" data-kind="tool">
+        <div>
         <Crumbs trail={[{href: "/", label: "United States"}]} here="Housing help" />
         <Kind kind="tool" />
         <h1 className="page-title">Find housing help.</h1>
-        <p className="tool-subtitle">Where to apply. What’s listed. Who to contact.</p>
+        <p className="tool-subtitle">Find affordable homes, check vouchers or contact a housing authority.</p>
         <p className="meta">Coverage: New Jersey. More states are not available yet.</p>
+        </div>
       </header>
-      <p className="table-note">Listed properties are not a live vacancy list. Confirm availability and eligibility with the programme or property.</p>
-      <AffordableHousing data={data} />
+      <AffordableHousing data={data} tool inventoryHref="/help/inventory.json" />
     </main>
   </>;
 }

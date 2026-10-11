@@ -15,6 +15,9 @@ import { AbstractField } from "@/components/AbstractField";
 import { HomeSales } from "@/components/HomeSales";
 import { HomeChecks } from "@/components/HomeChecks";
 import { WhoIsMoving } from "@/components/WhoIsMoving";
+import { LearningExhibit } from "@/components/LearningExhibit";
+import { ExhibitGallery } from "@/components/ExhibitGallery";
+import { PaycheckExhibit } from "@/components/ExhibitCharts";
 import { HowUnusual } from "@/components/HowUnusual";
 import { FloodRisk } from "@/components/FloodRisk";
 import { GettingAround } from "@/components/GettingAround";
@@ -665,7 +668,9 @@ export default async function RegionPage({
       )}
       </ConsumerReading>
       </QuietAnchor>
-      {(persistence || (quiet && paid && answers)) && <section id="local-price-history" data-jump-label="Prices & paychecks over time"><h3>Prices & paychecks over time</h3>{quiet && paid && answers && <div className="local-paychecks"><p className="local-paychecks-heading">Did paychecks keep up? <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p><p>{paid}</p></div>}<HowUnusual name={name} data={persistence}/></section>}
+      <ExhibitGallery>
+      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Prices & paychecks over time"><h3>Prices & paychecks over time</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">Did paychecks keep up? <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p><p>{paid}</p></div></section></LearningExhibit>}
+      {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
 
       {!quiet && homeChecks}
 
@@ -675,8 +680,12 @@ export default async function RegionPage({
       <QuietDisclosure enabled={false} title="The local market" note={marketPreview || "Homes sold, new building and the detail behind them"}>
       <section className="local-page-group local-market" aria-labelledby="local-market-heading">
       <h2 id="local-market-heading">Local market</h2>
+      <LearningExhibit kind="The homes that sold">
       <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} />
+      </LearningExhibit>
+      <LearningExhibit kind="Building & demolition">
       <HomesAdded
+        exhibit={quiet}
         portrait={quiet}
         name={name}
         level={region.level}
@@ -686,15 +695,17 @@ export default async function RegionPage({
         net={construction[3]}
         levels={packet.levels}
       />
+      </LearningExhibit>
       </section>
       </QuietDisclosure>
       )}
 
       {migration && (
       <QuietDisclosure enabled={false} title="Who is moving here" note="Households moving in and out of the county, from tax returns">
-        <WhoIsMoving name={name} data={migration} />
+        <LearningExhibit kind="Arrivals & departures"><WhoIsMoving name={name} data={migration} exhibit={quiet} /></LearningExhibit>
       </QuietDisclosure>
       )}
+      </ExhibitGallery>
       </section>
       <SimilarPlaces name={name} data={similar} />
       {region.level === "county" && countyTowns.length > 0 && <CountyPlaces name={name} towns={countyTowns.map(t => ({id: t.region_id, name: displayName(t)}))} />}

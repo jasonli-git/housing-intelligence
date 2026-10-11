@@ -473,16 +473,17 @@ export function CostToOwn({
     <svg className="calculation-chevron" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m5 8 5 5 5-5"/></svg>
   </button>;
 
-  const budgetFit = control ? <QuietDisclosure enabled={quiet} title="Check your monthly budget">
+  const budgetFit = control ? <QuietDisclosure enabled={false} title="Check your monthly budget">
       <aside className="cost-budget-fit" aria-label="Your budget fit">
-        <details open={quiet || undefined}>
-          <summary>Your budget{household.income && household.income > 0 ? ` · Owning uses ${Math.round(month.total / (household.income / 12) * 100)}% of your income${partial ? " on included costs" : ""}` : " · Add your income to check"}</summary>
+        <div className="budget-basics">
+          <h4>Your budget{household.income && household.income > 0 ? ` · Owning uses ${Math.round(month.total / (household.income / 12) * 100)}% of your income${partial ? " on included costs" : ""}` : " · Add your income to check"}</h4>
           <div className="budget-inputs">
             <label className="control">Yearly household income before tax<input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={(event) => saveHousehold({ ...household, income: parseAmount(event.target.value) ?? undefined })} /></label>
             <label className="control">Cash available for buying<input inputMode="decimal" value={household.cash ?? ""} placeholder="optional" onChange={(event) => saveHousehold({ ...household, cash: parseAmount(event.target.value) ?? undefined })} /></label>
+            {quiet && <Field label="Rent you’d pay instead, a month" value={fields.rent} placeholder={rent ? money(rent.value) : "not published"} onChange={(t) => setField("rent", t)} />}
           </div>
           <p>Uses cash paid each month, including principal—not the lower “money gone” figure. The comparison line is 30% of income, not loan approval.</p>
-        </details>
+        </div>
         {household.income !== undefined && household.income > 0 && <p>
           {month.total > household.income / 12 * .3
             ? `${money(month.total - household.income / 12 * .3)} a month above the 30% comparison line.`
@@ -520,7 +521,7 @@ export function CostToOwn({
       {control && planning && (
         <details className="cost-yours">
           <summary>
-            <span className="cost-yours-title">Your numbers</span>
+            <span className="cost-yours-title">Fine-tune the costs</span>
             <span className="cost-yours-hint">
               {own ? "Using your figures" : "Replace any figure with your own — a listing’s price, a quote"}
             </span>
@@ -534,7 +535,7 @@ export function CostToOwn({
               <Field label="Flood insurance a year" value={fields.flood} placeholder="if required" onChange={(t) => setField("flood", t)}>
                 <a href={FLOOD_MAP.url} target="_blank" rel="noreferrer">Check FEMA’s flood map</a>
               </Field>
-              <Field label="Rent you’d pay instead, a month" value={fields.rent} placeholder={rent ? money(rent.value) : "not published"} onChange={(t) => setField("rent", t)} />
+              {!quiet && <Field label="Rent you’d pay instead, a month" value={fields.rent} placeholder={rent ? money(rent.value) : "not published"} onChange={(t) => setField("rent", t)} />}
               <Field label="Moving" value={fields.moving} placeholder="optional" onChange={(t) => setField("moving", t)} />
               <Field label="First repairs" value={fields.repairs} placeholder="optional" onChange={(t) => setField("repairs", t)} />
             </fieldset>

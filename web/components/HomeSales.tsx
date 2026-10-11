@@ -1,8 +1,15 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
+import { ReaderDetails } from "@/components/ReaderDetails";
 
 import type { PacketLevel } from "@/lib/api";
 import { formatValue } from "@/lib/format";
 import { monthLabel, periodLabel } from "@/lib/periods";
+import { SaleExhibit } from "@/components/ExhibitCharts";
+
+function SaleDetails({ compact, children }: {compact:boolean; children:ReactNode}) {
+  return compact ? <ReaderDetails title="Sale details & assessments">{children}</ReaderDetails> : <>{children}</>;
+}
 
 /**
  * How homes change hands here (Milestone 36): what the state's deed records say about the
@@ -51,11 +58,8 @@ export function HomeSales({
       <div className="section-head">
         <h2 id="sales-heading">How homes sell here</h2>
       </div>
-      {portrait && <div className="quiet-market-figures">
-        <div><strong>{Math.round(count.value).toLocaleString("en-US")}</strong><span>Qualifying sales</span><small>{monthLabel(count.period_start)} to {monthLabel(count.period_end)}</small></div>
-        <div><strong>{usd(median.value)}</strong><span>Median sale price</span><small>{span} · sold homes, not all homes</small></div>
-      </div>}
-      <p className="sales-lead">
+      {portrait && <><p className="sales-note">{Math.round(count.value).toLocaleString("en-US")} qualifying one- to four-family sales · {span}</p><SaleExhibit median={median.value} lower={q1?.period_start===median.period_start && q1?.period_end===median.period_end ? q1.value : undefined} upper={q3?.period_start===median.period_start && q3?.period_end===median.period_end ? q3.value : undefined} period={span} /></>}
+      {!portrait && <p className="sales-lead">
         {Math.round(count.value).toLocaleString("en-US")} usable sales of one- to four-family
         homes in {name} from {span}, at a median of <b>{usd(median.value)}</b>
         {q1 && q3 ? (
@@ -64,7 +68,8 @@ export function HomeSales({
           </>
         ) : null}
         .
-      </p>
+      </p>}
+      <SaleDetails compact={portrait}>
       <dl className="cost-lines sales-lines">
         {recent && (
           <div>
@@ -118,6 +123,7 @@ export function HomeSales({
           </div>
         )}
       </dl>
+      </SaleDetails>
       <p className="sales-note">
         Only arm’s-length sales the state accepts. This describes sold homes, not every home.
         A higher median may mean pricier homes sold—not that each home gained value.

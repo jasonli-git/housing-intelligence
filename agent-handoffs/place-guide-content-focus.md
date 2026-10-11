@@ -1,6 +1,10 @@
 # Place / guide content focus
 
 ## What changed
+- Approved exhibit/utility follow-up supersedes the earlier recommendations-only note: Make it yours now exposes income, buying cash and actual rent without a disclosure. Existing down-payment control remains visible; the home-specific and scenario fine tuning remain optional.
+- Factual context is a learning gallery: price/income or rent/income endpoint comparison, a historical-year slider, sale quartiles, a construction-year selector, and arrivals/departures destination bars. The model-written note is unchanged. Background linework loops independently of figures, supports reduced motion and has one gallery pause control.
+- Housing help receives a lean shared-tool header, calm neutral/olive surface, readable official action cards, and explicit NJ-only coverage. Municipal need/project totals no longer lead the help tool; its source appendix retains context. The historical archive is a secondary, clearly labelled browser—not a live vacancy list.
+- Find your fit loses the old red header and result rules, simplifies its empty-income view, and reveals assumptions/coverage/results after income. Ownership/rental methods, suppression and incomplete-estimate handling are unchanged.
 - Approved Housing help tool at `/help`: official application routes and the existing sourced New Jersey programme/property explorer, accessible from Tools and compact place-page help. Reuses the current overview and lazy inventory; no new data or eligibility claims. Coverage is explicitly New Jersey-only, not a misleading multi-state selector. Buyer’s guide help remains available.
 - Migration-table internal links now explicitly use the county destination class. Their records are county-to-county flows; external IRS citations remain external-source blue.
 - Recommendations only, not implemented: expose essential Make it yours inputs before its optional fine tuning; turn factual context into individually approachable learning exhibits. Await design approval before altering those sections.
@@ -21,6 +25,11 @@
 - Pre-offer actions are visible in Costs & financing, Property & environment and Everyday life. One supporting checklist appendix holds figures, limits, evidence labels and extra links; it is not required to discover the primary actions. Programme thresholds/rents by size are optional supporting material, not a large always-visible panel.
 
 ## Files/modules affected
+- `web/components/{LearningExhibit,ExhibitGallery,ExhibitCharts}.tsx` and exhibit tests
+- `web/app/{learning-exhibits,tool-refinement}.css` and layout imports
+- `web/components/{HomeSales,HomesAdded,HowUnusual,WhoIsMoving}.tsx`
+- `web/app/help/page.tsx`, `web/app/help/inventory.json/route.ts`, `web/components/AffordableHousing.tsx` and tests
+- `web/app/afford/page.tsx`, `web/components/AffordExplorer.tsx`, `web/components/Masthead.tsx`, `web/lib/api.ts`
 - `web/lib/guideTransfer.ts` and its tests
 - `web/app/quiet-county.css`
 - `web/app/[state]/[place]/page.tsx`
@@ -32,6 +41,9 @@
 - `web/scripts/check-place-guide-focus.mjs`
 
 ## Architectural or implementation decisions
+- Exhibit opt-ins are enabled by the shared place template. Default report consumers retain their existing presentation. Source/annual tables remain supporting detail rather than a prerequisite to understanding the exhibit.
+- Sale quartiles are displayed only when their windows match the median. Missing construction reports remain null, never zero. History sliders omit missing years and do not bridge them with invented values. Migration uses one absolute-return scale across directions; county-based scope remains visible for town/ZIP views.
+- Housing-help inventory is a build-time same-origin `/help/inventory.json` snapshot of the existing public API. The help entry carries only the overview; opening Browse fetches the full archive. This avoids localhost CORS and avoids putting approximately 7 MB of directory data in the first HTML response. No new source acquisition, credentials, eligibility model or runtime server is introduced. Existing guide/programme fetching defaults are unchanged.
 - `planning` defaults to true on the shared cost component, preserving existing report/other consumers. Only local profiles disable it and interactive controls; report routes were not edited.
 - Guide overrides are passed to `ownershipInputs`, `eachMonth`, `upFront` and `overYears`; no replacement financial model or forecast was introduced.
 - Reader prices have a distinct `reader` basis and do not masquerade as Zillow/SR1A values. Reader tax/insurance do not receive publisher citations. Evidence labels cover remaining published inputs, not verification of quotes.
@@ -44,6 +56,8 @@
 - Primary pre-offer actions can be discovered without reading the full area evidence. The visible warning distinguishes an area's figures from a property's risk, school assignment and service.
 
 ## New TODOs / limitations
+- The archive itself is approximately 6.5 MB uncompressed and remains a historical directory. Future sharding/search could improve low-bandwidth browsing; official actions do not depend on downloading it. If its build-time source is unavailable, opening the archive reports failure; the three official routes remain usable. No claim of vacancies, open lists or eligibility.
+- Exhibition figures use existing published data only; availability differs by place. Empty exhibit frames are suppressed. Decorative loops never advance a selected year or change a measured value.
 - The initial statement below about profile costs using only defaults is superseded by the approved restoration. Profile costs once again honor the existing personal assumptions and entered home figures. The `planning` extension remains default-true for compatibility.
 - If session storage is unavailable, Continue still navigates; home-specific transfer cannot persist. Personal assumptions retain their existing guarded storage behavior. Transfer lasts only for the browser session and does not carry into a different place.
 - Remaining disclosure counts in tested profiles are 35 (Somerset County), 27 (Princeton) and 20 (ZIP 2842's legacy route), including definitions, notices and evidence detail. These are absolute post-change counts, not a measured before/after reduction. No quantitative scroll reduction is claimed.
@@ -53,6 +67,8 @@
 - Canonical documentation and underlying datasets are untouched. Claude should review the intentional distinction between published/default profile costs and personal guide scenarios before reconciling project documents.
 
 ## Verification
+- Final exhibit/tool pass: `npm run typecheck`, 612 tests in 92 files, and production export passed. Export has 2,386 static outputs, 2,366 legacy aliases and 16,693 files. `node scripts/check-place-guide-focus.mjs` passed eight combinations (320/390/760/1280px × light/dark), checking same-origin help inventory loading, no duplicated municipal reporting emphasis, budget input-to-results behavior, no old red header line, exposed profile inputs, historical slider keyboard interaction, gallery pause, mortgage fit and no document overflow. Existing guide transfer/isolation/checklist checks still pass.
+- Separate Chromium check with normal motion verified `exhibit-current` loops, actual paused animation state, and no animation under reduced motion. Inspected desktop exhibit/help/budget screenshots and mobile help/exhibit output; corrected the desktop help header grouping after that inspection. Help HTML is 129,483 bytes; optional archive JSON is 6,533,257 bytes, uncompressed. `git diff --check` passed. Initial diagnostic selector failures were corrected (income label matching and distinguishing the budget input from the existing benchmark input), not treated as application failures.
 - Housing-help follow-up: typecheck and 604 tests / 91 files passed; export passed with 2,385 pages, 2,366 aliases and 16,692 files. Responsive browser diagnostic covers the standalone help title, explicit NJ-only coverage, three official routes and no horizontal overflow, alongside existing county/town/ZIP and guide checks. Sitemap entry added after that export; its local generated sitemap will refresh at the next build.
 - Desktop-spacing follow-up: `npm run typecheck` and all 604 tests / 91 files passed. `node scripts/check-place-guide-focus.mjs` passed county/town/ZIP at 320/390/1280px in light/dark, including new table-within-disclosure and minimum 16px context-inset assertions. `git diff --check` passed. Static export passed with 2,384 pages, 2,366 aliases and 16,685 files; final colour-selector export is checked before committing. No new route, dataset, merge or deployment.
 - Discoverability follow-up: typecheck and 604 tests across 91 files passed, including session transfer isolation and corrupt input guards. Six width/theme browser combinations passed on county, town and ZIP profiles; restored inputs, mobile rate expansion, compact place help links, guide help, explicit home transfer and different-place isolation verified. At 320px the expanded table measured 231px within a 258px body, with no clipped horizontal content. Visual inspection prompted keeping the short Rate header on one line. Production export passed with unchanged page/file counts; final CSS re-export recorded below.

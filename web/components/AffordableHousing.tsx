@@ -36,8 +36,9 @@ export function HousingHelpDisclosure({enabled, children}: {enabled: boolean; ch
   </details> : <>{children}</>;
 }
 
-export function AffordableHousing({data, hideRoutes = false}: {data: HousingData | null; hideRoutes?: boolean}) {
-  const programmeOpen = useContext(ProgrammePanel);
+export function AffordableHousing({data, hideRoutes = false, tool = false, inventoryHref}: {data: HousingData | null; hideRoutes?: boolean; tool?: boolean; inventoryHref?: string}) {
+  const contextOpen = useContext(ProgrammePanel);
+  const programmeOpen = contextOpen;
   const id = useId();
   const [program, setProgram] = useState("all");
   const [query, setQuery] = useState("");
@@ -48,20 +49,20 @@ export function AffordableHousing({data, hideRoutes = false}: {data: HousingData
   const [error, setError] = useState(false);
   const inFlight = useRef(false);
   const records = useMemo(() => inventory?.records ?? (data?.overview ? [] : data?.records ?? []), [data, inventory]);
-  const provenance = data?.records ?? [];
+  const provenance = tool ? [...new Map((data?.records ?? []).map(r=>[`${r.source_id}-${r.kind}-${r.release_id}`,r])).values()] : data?.records ?? [];
   const stats = data?.stats;
   const fetchInventory = useCallback(async () => {
-    if (!data || inventory || inFlight.current) return;
+    if (!data || !data.overview || inventory || inFlight.current) return;
     inFlight.current = true; setLoading(true); setError(false);
     try {
-      const url = inventoryUrl(artifactUrl, publicApiUrl, data.region_id);
+      const url = inventoryHref ?? inventoryUrl(artifactUrl, publicApiUrl, data.region_id);
       const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const body: HousingData = await response.json();
       if (body.region_id !== data.region_id || body.overview || !Array.isArray(body.records)) throw new Error("Wrong inventory");
       setInventory(body);
     } catch { setError(true); } finally {setLoading(false); inFlight.current = false;}
-  }, [data, inventory]);
+  }, [data, inventory, inventoryHref]);
   useEffect(() => {
     if (programmeOpen) void fetchInventory();
     // Fetch on the outer panel's opening, not for hidden pre-expanded children.
@@ -78,15 +79,15 @@ export function AffordableHousing({data, hideRoutes = false}: {data: HousingData
     .filter((r) => !soon || reportedEnds(r, records).some((d) => soonAfterSnapshot(d, r.snapshot))), [records, program, query, soon]);
   const shown = properties.slice(page * 10, (page + 1) * 10);
 
-  return <section className="housing-assistance" aria-labelledby={`${id}-title`}>
+  return <section className="housing-assistance" data-tool={tool} aria-labelledby={`${id}-title`}>
     <div className="housing-assistance-head"><span className="cost-evidence-label">Housing help</span>
-      <h3 id={`${id}-title`}>Affordable housing & where to apply</h3><p>Programmes, reported homes and the next official step.</p></div>
+      <h3 id={`${id}-title`}>{tool ? "Choose your next step" : "Affordable housing & where to apply"}</h3>{!tool && <p>Programmes, reported homes and the next official step.</p>}</div>
     {!hideRoutes && <div className="assistance-routes">{APPLICATION_ROUTES.map((r) => <a key={r.url} href={r.url} target="_blank" rel="noreferrer">
       <small>{r.agency}</small><strong>{r.label} <span aria-hidden="true">↗</span></strong><span>{r.note}</span>
     </a>)}</div>}
     <p className="assistance-note">Links reviewed Oct 4, 2026. Open waiting lists, vacancies and eligibility are not verified here. Apply through the official administrator; an income check is not a qualification decision.</p>
     {!data ? <p className="assistance-note">No directly located inventory is loaded for this page. The official application routes above are still available. Town records are not allocated to ZIP codes.</p> : <>
-      <details open={programmeOpen !== null ? true : undefined}><summary>What towns report <span>Need, completed projects & trust funds</span></summary>
+      {!tool && <details open={programmeOpen !== null ? true : undefined}><summary>What towns report <span>Need, completed projects & trust funds</span></summary>
         <div className="assistance-facts">
           <div><small>DCA present need · non-binding</small><strong>{n(stats ? stats.present_need ?? null : reportedSum(need, "present_need"))}</strong></div>
           <div><small>DCA prospective need · non-binding</small><strong>{n(stats ? stats.prospective_need ?? null : reportedSum(need, "prospective_need"))}</strong></div>
@@ -96,8 +97,8 @@ export function AffordableHousing({data, hideRoutes = false}: {data: HousingData
         <p className="assistance-note">DCA’s October 2024 calculations for 2025–2035 use the published cap. Not final court-approved obligations. Completed projects include earlier rounds and rehabilitation — not progress against this round’s need.</p>
         <p className="assistance-note">{n(stats?.projects ?? projects.length)} project records from {stats?.project_towns ?? new Set(projects.map((r) => r.region_id)).size} of {stats?.listed_towns ?? need.length} listed towns; {n(stats?.unknown_completion ?? unknown.length)} have an unknown completion status. Trust fund submissions: {stats?.funds_reported ?? reportedFunds.length} of {stats?.funds_listed ?? funds.length} listed towns. Missing reports are not zero; balances do not subtract commitments still to be spent.</p>
         {funds.length > 0 && <p className="assistance-note">Municipal workbook: {month(funds[0].snapshot)}. Fund table date: {funds[0].payload.table_as_of}; metadata cutoff: {funds[0].payload.metadata_cutoff}. DCA does not certify these self-reports.</p>}
-      </details>
-      <details open={programmeOpen !== null ? true : undefined} onToggle={(event) => {if (event.currentTarget.open && programmeOpen === null) void fetchInventory();}}><summary>Explore reported properties <span>By programme, not a combined total</span></summary>
+      </details>}
+      <details className="assistance-inventory" open={programmeOpen !== null ? true : undefined} onToggle={(event) => {if (event.currentTarget.open && programmeOpen === null) void fetchInventory();}}><summary>{tool ? "Browse reported affordable properties" : "Explore reported properties"} <span>{tool ? "Historical records—not current vacancies" : "By programme, not a combined total"}</span></summary>
         {loading && <p role="status">Loading the reported inventory…</p>}
         {error && <p role="alert">The inventory could not be loaded. <button onClick={() => void fetchInventory()}>Try again</button></p>}
         <div className="assistance-filter">
@@ -113,7 +114,8 @@ export function AffordableHousing({data, hideRoutes = false}: {data: HousingData
         {properties.length > 10 && <nav aria-label="Property result pages" className="assistance-pages"><button disabled={page === 0} onClick={() => setPage(page - 1)}>Previous</button><span>{page + 1} / {Math.ceil(properties.length / 10)}</span><button disabled={(page + 1) * 10 >= properties.length} onClick={() => setPage(page + 1)}>Next</button></nav>}
       </details>
       <details className="assistance-method"><summary>Sources & limits</summary><ul>{data.limitations.map((t) => <li key={t}>{t}</li>)}</ul>
-        <ul>{provenance.map((r) => <li key={`${r.source_id}-${r.kind}`}><a href={r.source_url} target="_blank" rel="noreferrer">{r.source_id} · {r.kind.replaceAll("_", " ")}</a> · snapshot {r.snapshot} · downloaded {r.fetched_at.slice(0, 10)} · release {r.release_id}</li>)}</ul>
+        {tool && <p>Municipal self-reports: {n(stats?.projects ?? projects.length)} project records; {n(stats?.unknown_completion ?? unknown.length)} have unknown completion status. DCA present and prospective need figures are non-binding calculations, not final obligations or an application list. Reported properties and bedroom counts do not establish vacancies.</p>}
+        <ul>{provenance.map((r) => <li key={`${r.source_id}-${r.kind}-${r.release_id}`}><a href={r.source_url} target="_blank" rel="noreferrer">{r.source_id} · {r.kind.replaceAll("_", " ")}</a> · snapshot {r.snapshot} · downloaded {r.fetched_at.slice(0, 10)} · release {r.release_id}</li>)}</ul>
       </details>
     </>}
   </section>;

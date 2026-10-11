@@ -2,6 +2,12 @@ import type { Observation, PacketLevel } from "@/lib/api";
 import { ReaderDetails } from "@/components/ReaderDetails";
 import { byYear, constructionYears, fiveYears } from "@/lib/construction";
 import { formatValue } from "@/lib/format";
+import { ConstructionExhibit } from "@/components/ExhibitCharts";
+import type { ReactNode } from "react";
+
+function AnnualFigures({ exhibit, children }: {exhibit:boolean; children:ReactNode}) {
+  return exhibit ? <ReaderDetails title="Annual building figures">{children}</ReaderDetails> : <>{children}</>;
+}
 
 /**
  * Is it adding homes, or only approving them (Milestone 39, ARCHITECTURE #300)? Permits
@@ -22,6 +28,7 @@ export function HomesAdded({
   net,
   levels,
   portrait = false,
+  exhibit = false,
 }: {
   name: string;
   level: string;
@@ -31,6 +38,7 @@ export function HomesAdded({
   net: Observation[];
   levels: Pick<PacketLevel, "metric_id" | "value" | "period_start" | "period_end">[];
   portrait?: boolean;
+  exhibit?: boolean;
 }) {
   const rows = constructionYears({ permitted, completed, demolished, net });
   if (rows.length === 0) return null;
@@ -48,7 +56,8 @@ export function HomesAdded({
       <div className="section-head">
         <h2 id="homes-added-heading">Is it adding homes?</h2>
       </div>
-      {portrait && rows.some((r) => r.net !== null) && <figure className="quiet-net-chart">
+      {exhibit && <ConstructionExhibit rows={rows} />}
+      {portrait && !exhibit && rows.some((r) => r.net !== null) && <figure className="quiet-net-chart">
         <figcaption>Net homes added, by year <small>Reported completions minus demolitions · only towns that reported</small></figcaption>
         <div className="quiet-net-years">{[...rows].reverse().map((r) => <div key={r.year}>
           <div className="quiet-net-track" aria-hidden="true"><i className={r.net !== null && r.net < 0 ? "negative" : "positive"} style={{height: `${Math.abs(r.net ?? 0) / maxNet * 48}%`}} /></div>
@@ -81,7 +90,7 @@ export function HomesAdded({
           homes for every 1,000 already standing.
         </p>
       )}
-      <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
+      <AnnualFigures exhibit={exhibit}><div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
         <table className="change-places homes-added-years">
           <caption className="visually-hidden">Homes permitted, completed and demolished in {name}, by year</caption>
           <thead>
@@ -109,6 +118,7 @@ export function HomesAdded({
           </tbody>
         </table>
       </div>
+      </AnnualFigures>
       <p className="sales-note">
         Permits are permission to build, not finished homes. Missing reports are not zero;
         totals include only towns that reported.

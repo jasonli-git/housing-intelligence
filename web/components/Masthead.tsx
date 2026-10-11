@@ -29,6 +29,7 @@ export function Masthead({
   affordability,
   taxActive = false,
   guideActive = false,
+  helpActive = false,
   budgetLabel = "Find your fit",
   search = true,
 }: {
@@ -37,6 +38,7 @@ export function Masthead({
   taxActive?: boolean;
   /** On the buyer's guide itself. */
   guideActive?: boolean;
+  helpActive?: boolean;
   budgetLabel?: string;
   /** False on the home page, whose own search is the page's main action. */
   search?: boolean;
@@ -50,7 +52,7 @@ export function Masthead({
       <Link className="bar-budget" href="/afford?county=all" aria-current={affordability.kind === "route" && affordability.active ? "page" : undefined} aria-label="Find places within my budget across all New Jersey">{budgetContent}</Link>}
     <Link className="bar-link" href="/guide" aria-label="Buyer’s guide" aria-current={guideActive ? "page" : undefined}>Buyer’s guide</Link>
     <Link className="bar-link" href="/tax" aria-label="Property tax lookup" aria-current={taxActive ? "page" : undefined}>Property tax</Link>
-    <Link className="bar-link" href="/help">Housing help</Link>
+    <Link className="bar-link" href="/help" aria-current={helpActive ? "page" : undefined}>Housing help</Link>
   </>;
   return (
     <>

@@ -4,7 +4,7 @@ import {chromium} from 'playwright';
 const origin=process.env.FOCUS_ORIGIN ?? 'http://localhost:3002';
 const browser=await chromium.launch();
 try {
-  for(const width of [320,390,1280]) for(const theme of ['light','dark']) {
+  for(const width of [320,390,760,1280]) for(const theme of ['light','dark']) {
     const page=await browser.newPage({viewport:{width,height:900},colorScheme:theme,reducedMotion:'reduce'});
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
@@ -26,6 +26,20 @@ try {
     assert.equal(await page.locator('.assistance-routes a').count(),3,'Official assistance routes remain visible');
     assert(await page.getByText('Coverage: New Jersey. More states are not available yet.',{exact:true}).isVisible(),'Housing help coverage is explicit');
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Housing help has no horizontal overflow');
+    assert.equal(await page.locator('.housing-assistance').getAttribute('data-tool'),'true');
+    assert.equal(await page.locator('.housing-help-page .assistance-facts').count(),0,'Municipal reporting does not compete with application routes');
+    await page.locator('.assistance-inventory > summary').click();
+    await page.locator('.assistance-properties li').first().waitFor();
+    assert.equal(await page.locator('.assistance-properties li').count(),10,'Historical inventory loads from the same-origin static snapshot');
+    await page.screenshot({path:`/tmp/help-${width}-${theme}.png`,fullPage:true});
+    await page.goto(origin+'/afford?county=all',{waitUntil:'networkidle'});
+    assert.equal(await page.locator('.budget-assumptions').count(),0,'Empty budget starts with essential controls only');
+    assert(await page.locator('.budget-page > .page-head').evaluate(el=>getComputedStyle(el).borderTopWidth==='0px'),'Old red header line removed');
+    await page.getByLabel(/Yearly household income · before tax/).fill('100000');
+    assert(await page.locator('.budget-assumptions').isVisible(),'Assumptions are available after entering income');
+    assert(await page.locator('.budget-comparison').isVisible(),'Income reveals comparison results');
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Budget tool has no horizontal overflow');
+    await page.screenshot({path:`/tmp/fit-${width}-${theme}.png`,fullPage:true});
     for(const path of ['/nj/somerset-county','/nj/princeton','/regions/2842']) {
       await page.goto(origin+path,{waitUntil:'networkidle'});
       assert.equal(await page.locator('.home-action-checks').count(),0,'No long duplicate property checklist');
@@ -41,9 +55,22 @@ try {
         return table.left>=body.left-1 && table.right<=body.right+1;
       }),'Rate table fits its disclosure on desktop and mobile');
       assert(await page.locator('.place-guide-entry a').isVisible(),'Place-aware guide entry is exposed');
-      assert(await page.locator('#local-price-history, .local-market, .who-is-moving, .similar-places, .county-place-directory').evaluateAll(els=>els.every(el=>parseFloat(getComputedStyle(el).paddingLeft)>=16 && parseFloat(getComputedStyle(el).paddingRight)>=16)),'Visible context retains comfortable text insets');
+      assert(await page.locator('#local-price-history, .who-is-moving, .similar-places, .county-place-directory').evaluateAll(els=>els.every(el=>{
+        const frame=el.closest('.learning-exhibit')??el;
+        return parseFloat(getComputedStyle(frame).paddingLeft)>=16 && parseFloat(getComputedStyle(frame).paddingRight)>=16;
+      })),'Visible context retains comfortable text insets');
+      assert(await page.locator('.budget-basics').getByLabel('Yearly household income before tax',{exact:true}).isVisible(),'Make it yours income is not hidden');
+      assert(await page.getByLabel('Rent you’d pay instead, a month',{exact:true}).isVisible(),'Make it yours rent is not hidden');
+      if(await page.locator('.history-interactive input').count()) {
+        await page.locator('.history-interactive input').focus();
+        await page.locator('.history-interactive input').press('Home');
+        assert(await page.locator('.history-interactive input').getAttribute('aria-valuetext'),'History slider names the selected year');
+      }
+      await page.getByRole('button',{name:'Pause artwork',exact:true}).click();
+      assert.equal(await page.locator('.exhibit-gallery').getAttribute('data-motion'),'paused');
       assert.equal(await page.locator('#local-property-evidence').evaluate(el=>el.tagName),'SECTION','Evidence has no second property accordion');
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Place has no horizontal overflow');
+      if(path==='/nj/somerset-county') await page.locator('.local-understand-group').screenshot({path:`/tmp/exhibits-${width}-${theme}.png`});
       console.log(`${width} ${theme} ${path}: ${await page.locator('main details').count()} disclosures remaining`);
     }
     await page.goto(origin+'/nj/somerset-county',{waitUntil:'networkidle'});

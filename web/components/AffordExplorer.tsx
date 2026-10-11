@@ -192,7 +192,7 @@ export function AffordExplorer({
   }
 
   return (
-    <section className="afford budget-explorer" data-view="list" data-has-income={income > 0} aria-labelledby={`${id}-summary`}>
+    <section className="afford budget-explorer" data-view="list" data-has-income={income > 0} aria-label="Find places within your budget">
       <div className="afford-controls">
         <label className="control" htmlFor={`${id}-scope`}>
           <span className="control-label">Where</span>
@@ -275,10 +275,10 @@ export function AffordExplorer({
       <div className="budget-headline" aria-live="polite">
         <span>Your monthly housing budget</span>
         <strong>{income > 0 ? money(monthlyBudget(income)) : "Start with your income"}</strong>
-        <p>30% of income before tax. A comparison guide, not loan approval.</p>
+        <p>{income > 0 ? "30% of income before tax. A comparison guide, not loan approval." : "Enter your income above. Typical costs, not listings. A guide, not loan approval."}</p>
       </div>
 
-      <details className="budget-assumptions">
+      {income > 0 && <details className="budget-assumptions">
         <summary>Your assumptions · {options.ratePct.toFixed(2)}% mortgage rate{mode === "rent" ? " · Rent only" : ""}</summary>
         <div className="budget-inputs">
           <label className="control">Cash available for buying<input inputMode="decimal" value={household.cash ?? ""} placeholder="optional" onChange={(event) => saveHousehold({ ...household, cash: parseAmount(event.target.value) ?? undefined })} /></label>
@@ -286,7 +286,7 @@ export function AffordExplorer({
         </div>
         <p>Saved in this browser and shared with the cost cards. Property-specific prices, tax bills, HOA fees and flood premiums stay on the home’s profile.</p>
         {mode === "own" && down === FHA_DOWN && <p>FHA scenario: county loan limits are not checked. <a href={FHA_LIMITS.url} target="_blank" rel="noreferrer">Check the loan limit</a>.</p>}
-      </details>
+      </details>}
 
       <details className="budget-place-check" open={pickedPlace ? true : undefined}>
       <summary>Check one place{pickedPlace ? ` · ${pickedPlace.name}` : ""}</summary>
@@ -347,8 +347,8 @@ export function AffordExplorer({
       </section>
       </details>
 
-      <p className="table-note">Monthly results use a 30% income comparison, not loan approval. {mode === "own" ? "Incomplete estimates are not counted as within budget. Buying cash is checked separately for your selected place; HOA fees and flood premiums may add more." : "Rent-only results exclude utilities and renters insurance."}</p>
-      <p className="afford-summary" id={`${id}-summary`} aria-live="polite">
+      {income > 0 && <p className="table-note">{mode === "own" ? "Incomplete estimates are not counted as within budget. Buying cash is checked separately; HOA fees and flood premiums may add more." : "Rent-only results exclude utilities and renters insurance."}</p>}
+      <p className="afford-summary" id={`${id}-summary`} aria-live="polite" hidden={income <= 0}>
         {income > 0 ? (
           scope ? <>
             With this budget, {home} is
@@ -364,7 +364,7 @@ export function AffordExplorer({
         )}
       </p>
 
-      <p className="budget-coverage-note">Missing data does not mean unaffordable. {income > 0 && <>{(scope ? towns.filter(town => town.parentId === scope.countyId).length : towns.length) - townRows.length} municipalities in this search have no comparable {mode === "own" ? "home value or tax bill" : "rent figure"} and are not listed. </>}Other incomplete estimates stay labelled separately; a local profile may offer a sale-price scenario that is not used in this comparison.</p>
+      {income > 0 && <p className="budget-coverage-note">Missing data does not mean unaffordable. {(scope ? towns.filter(town => town.parentId === scope.countyId).length : towns.length) - townRows.length} municipalities in this search have no comparable {mode === "own" ? "home value or tax bill" : "rent figure"} and are not listed. Other incomplete estimates stay labelled separately; sale-price scenarios on local profiles are not used in this comparison.</p>}
       {income > 0 && <div className="explorer">
         <div className="scroll-x budget-comparison" tabIndex={0} role="region" aria-label="Place comparison table, scroll horizontally">
           <table className="ranks">

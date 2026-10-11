@@ -13,6 +13,14 @@ const inputs: CostProps = {
   noTax: "No ZIP-level tax estimate", gain: null, rateThen: null,
 };
 describe("local monthly budget", () => {
+  it("exposes the budget and rent inputs without opening a disclosure", () => {
+    const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,showHelp:false}));
+    const income=screen.getByLabelText("Yearly household income before tax");
+    const rent=screen.getByLabelText("Rent you’d pay instead, a month");
+    expect(income.closest("details")).toBeNull();
+    expect(rent.closest("details")).toBeNull();
+    expect(container.querySelector(".cost-yours summary")?.textContent).toContain("Fine-tune the costs");
+  });
   it("keeps published monthly costs and the breakdown without planning panels", () => {
     localStorage.setItem("hip.cost.personal.v1", JSON.stringify({downPct: 3.5, insuranceYear: 20000}));
     const {container} = render(createElement(CostToOwn, {...inputs, planning:false, control:false, quiet:true, showHelp:false}));

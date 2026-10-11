@@ -1,5 +1,6 @@
 import type { Persistence } from "@/lib/api";
 import { ReaderDetails } from "@/components/ReaderDetails";
+import { HistoryExhibit } from "@/components/ExhibitCharts";
 import { againstUsual, leadSentence, spellsSentence } from "@/lib/persistence";
 
 const FHFA = "https://www.fhfa.gov/data/hpi/datasets?tab=additional-data";
@@ -49,7 +50,7 @@ function History({ data }: { data: Persistence }) {
  * against income sit against the place's own past, and how long earlier spells this high
  * lasted. Counties and the state; a description of the past, never a forecast.
  */
-export function HowUnusual({ name, data, exhibit = false }: { name: string; data: Persistence | null; exhibit?: boolean }) {
+export function HowUnusual({ name, data, exhibit = false, interactive = false }: { name: string; data: Persistence | null; exhibit?: boolean; interactive?: boolean }) {
   if (!data) return null;
   const lead = leadSentence(data, name);
   const spells = spellsSentence(data);
@@ -72,7 +73,7 @@ export function HowUnusual({ name, data, exhibit = false }: { name: string; data
           {!exhibit && data.above_median_since !== null && data.above_median_since < data.last_year && (
             <p className="sales-note">It has been above its usual level every year since {data.above_median_since}.</p>
           )}
-          <History data={data} />
+          {interactive ? <HistoryExhibit data={data} /> : <History data={data} />}
           <p className="sales-note">{exhibit ? "Historical comparison—not a forecast." : "This describes the past. How an earlier spell ended says nothing certain about how this one will."}</p>
         </>
       )}

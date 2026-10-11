@@ -8,9 +8,18 @@ describe("Programme panel presentation", () => {
   it("pre-expands reports and properties, but not sources or the outer panel", () => {
     const html = renderToStaticMarkup(<HousingHelpDisclosure enabled><AffordableHousing data={data} hideRoutes /></HousingHelpDisclosure>);
     expect(html).toContain('<details open=""><summary>What towns report');
-    expect(html).toContain('<details open=""><summary>Explore reported properties');
+    expect(html).toContain('<details class="assistance-inventory" open=""><summary>Explore reported properties');
     expect(html).toContain('<details class="assistance-method"><summary>Sources &amp; limits');
     expect(html).toContain('<details class="quiet-disclosure">');
+  });
+  it("puts official routes ahead of the optional historical archive in the help tool", () => {
+    const html = renderToStaticMarkup(<AffordableHousing data={data} tool />);
+    expect(html).toContain("Choose your next step");
+    expect(html).toContain('<details class="assistance-inventory">');
+    expect(html).toContain("Historical records—not current vacancies");
+    expect(html).not.toContain("What towns report");
+    expect(html).toContain("vacancies");
+    expect(html.match(/target="_blank"/g)?.length).toBe(3);
   });
   it("keeps independent inventory disclosures unchanged outside the local wrapper", () => {
     const html = renderToStaticMarkup(<AffordableHousing data={data} />);
