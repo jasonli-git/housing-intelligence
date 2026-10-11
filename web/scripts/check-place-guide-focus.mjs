@@ -8,6 +8,11 @@ try {
     const page=await browser.newPage({viewport:{width,height:900},colorScheme:theme,reducedMotion:'reduce'});
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(origin+'/',{waitUntil:'networkidle'});
+    assert.equal(await page.locator('.home-tools a').count(),4,'Home presents all four tools');
+    assert(await page.locator('.home-tools a[href="/help"]').isVisible(),'Housing help has a home tool card');
+    assert.equal(await page.locator('.bar-help-route[href="/help"]').count(),2,'Housing help is in desktop and dropdown navigation');
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Home tool cards fit the viewport');
     // The static guide expects publisher artifacts. Bridge those requests to the
     // real local API for this diagnostic only; no synthetic records are used.
     await page.route(/^https?:\/\/[^/]+\/regions\/\d+\/.*\.json$/,async route=>{
@@ -105,6 +110,12 @@ try {
     await page.locator('.guide-answer[data-ready="true"]').first().waitFor({timeout:30000});
     assert.equal(await page.locator('.guide-contents button').count(),3);
     assert.equal(await page.locator('.guide-slide:visible').count(),1,'Only one guide question is visible');
+    await page.locator('#guide-step-selector').scrollIntoViewIfNeeded();
+    const beforeStep=await page.evaluate(()=>scrollY);
+    await page.getByRole('button',{name:'02 Rent or buy?',exact:true}).click();
+    await page.waitForTimeout(250);
+    assert(Math.abs((await page.evaluate(()=>scrollY))-beforeStep)<2,'Question shortcut does not force scrolling');
+    await page.getByRole('button',{name:'01 Can I afford it?',exact:true}).click();
     await page.getByRole('button',{name:'Next: Rent or buy? →',exact:true}).click();
     assert(await page.locator('#guide-panel-1').isVisible(),'Next arrow advances the question');
     await page.getByRole('button',{name:'01 Can I afford it?',exact:true}).click();

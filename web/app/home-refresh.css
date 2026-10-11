@@ -35,11 +35,13 @@
   /* Tools: three cards under the search. */
   .home-tools { margin-block: 1.6rem 2rem; }
   .home-tools h2 { margin: 0 0 .8rem; font: 500 24px/1.2 Georgia, serif; letter-spacing: -.025em; }
-  .home-tools ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+  .home-tools ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
   .home-tools a { display: grid; gap: .35rem; height: 100%; box-sizing: border-box; padding: 1.1rem 1.2rem 1rem; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-card); color: var(--text-primary); text-decoration: none; transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease; }
   .home-tools a[data-tool="afford"] { --tool-wash:light-dark(#d3dfef,#35455d); --tool-ink:light-dark(#405d80,#afc6e6); }
   .home-tools a[data-tool="guide"] { --tool-wash:light-dark(#efd7dd,#52323d); --tool-ink:light-dark(#925460,#d7a3ad); }
   .home-tools a[data-tool="tax"] { --tool-wash:light-dark(#cce8eb,#24494e); --tool-ink:light-dark(#006977,#8ed9e2); }
+  .home-tools a[data-tool="help"] { --tool-wash:light-dark(#dfe5d6,#374233); --tool-ink:light-dark(#59654a,#c4d1b2); }
+  @media(min-width:601px) and (max-width:1000px) { .home-tools ul { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   .home-tools a[data-tool] { background:radial-gradient(ellipse at 12% 8%,var(--tool-wash),transparent 85%),var(--surface-card); border-color:color-mix(in srgb,var(--tool-ink) 25%,var(--border)); }
   .home-tools a:hover, .home-tools a:focus-visible { border-color: var(--tool-ink); transform: translateY(-2px); box-shadow: 0 12px 30px -20px #0009; }
   .home-tools svg { width: 26px; height: 26px; margin-bottom: .3rem; fill: none; stroke: var(--tool-ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }

@@ -231,7 +231,6 @@ export function DecisionGuide({
     setStep(next);
     window.history.replaceState(null,"",`#${stepIds[next]}`);
     requestAnimationFrame(()=>{
-      document.getElementById("guide-step-selector")?.scrollIntoView({block:"start"});
       document.getElementById(stepIds[next])?.focus({preventScroll:true});
     });
   }
