@@ -4,7 +4,7 @@ import { useState, type CSSProperties } from "react";
 import { mosaicCounts, type MosaicView } from "@/lib/housingMosaic";
 
 /** A playful share graphic, not a map, a sample of homes, or a cross-tabulation. */
-export function HousingMosaic({ name, views, statewide = false }: { name: string; views: MosaicView[]; statewide?: boolean }) {
+export function HousingMosaic({ name, views, statewide = false, embedded = false }: { name: string; views: MosaicView[]; statewide?: boolean; embedded?: boolean }) {
   const [viewId, setViewId] = useState(views[0]?.id);
   const [selected, setSelected] = useState(0);
   if (!views.length) return null;
@@ -14,9 +14,9 @@ export function HousingMosaic({ name, views, statewide = false }: { name: string
   const group = view.groups[selected] ?? view.groups[0];
   const slots = counts.flatMap((count, groupIndex) => Array<number>(count).fill(groupIndex));
   const percentage = (share: number) => `${(share * 100).toFixed(1)}%`;
-  return <section className="housing-mosaic" id="housing-mosaic" aria-labelledby="housing-mosaic-heading" data-jump-label="Housing mosaic">
+  return <section className={`housing-mosaic${embedded ? " mosaic-embedded" : ""}`} id="housing-mosaic" aria-labelledby="housing-mosaic-heading" data-jump-label="Housing mosaic">
     <div className="mosaic-heading">
-      <div><span className="mosaic-eyebrow">{statewide ? "A state in little pieces" : "A hundred little homes"}</span><h2 id="housing-mosaic-heading">{statewide ? "Housing in motion" : "The housing mix"}</h2></div>
+      <div>{!embedded && <span className="mosaic-eyebrow">{statewide ? "A state in little pieces" : "A hundred little homes"}</span>}{embedded ? <h3 id="housing-mosaic-heading">Explore the mix</h3> : <h2 id="housing-mosaic-heading">{statewide ? "Housing in motion" : "The housing mix"}</h2>}</div>
       <div className="mosaic-views" role="group" aria-label="Housing mosaic view">
         {views.map(v => <button key={v.id} type="button" aria-pressed={view.id === v.id}
           onClick={() => { setViewId(v.id); setSelected(0); }}>{v.label}</button>)}

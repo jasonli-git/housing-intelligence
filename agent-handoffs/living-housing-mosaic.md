@@ -1,6 +1,7 @@
 # Living housing mosaic
 
 ## What changed
+- Integrated the state mosaic into Statewide snapshot after user approval: one shared blue surface, steady headline metrics, subordinate Explore the mix heading, mobile readout above the tiles, and More statewide figures last.
 - Following user review, the mosaic is state-only: below New Jersey’s statewide snapshot, removed from county, municipality and ZIP pages.
 - A hundred architectural tiles regroup between **new homes finished** (DCA building-type counts) and **home-purchase loans** (HMDA loan-type shares). These are existing statewide records, not a picture of the whole housing stock.
 - Exact shares, denominator, source/year, construction reporting/preliminary limits and mortgage exclusions remain readable beside the artwork. Touch/hover and keyboard category buttons reveal each group.
@@ -37,7 +38,7 @@
 
 ## Verification
 - `npm run typecheck`: passed.
-- `npm test`: 628 tests passed across 94 files. State record tests cover complete partitions, matching source/release/period, mortgage exclusions, record-vs-survey labelling and very small groups that receive zero tiles.
+- `npm test`: 629 tests passed across 94 files. State record tests cover complete partitions, matching source/release/period, mortgage exclusions, record-vs-survey labelling, very small groups that receive zero tiles and the embedded heading.
 - `npm run build`: passed; 2,386 static outputs, 2,366 legacy aliases and 16,693 files.
 - Initial `node scripts/check-housing-mosaic.mjs` run passed for county/town/ZIP pages at 320/390/760/1280px in both themes. Diagnostic now targets the state record mosaic, verifies the two moved exhibits and asserts absence on home/county/town/ZIP pages. Includes scoped axe accessibility, exact tile total, view/group switching, keyboard/hover access, no forced scroll, field bounds, horizontal overflow, reduced motion, normal-motion rearrangement, jump menu discovery and print omission.
 - Visual inspection: mobile and desktop mosaics in light/dark themes.

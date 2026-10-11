@@ -14,6 +14,9 @@ try {
       await page.goto(origin + path, { waitUntil: 'networkidle' });
       const mosaic = page.locator('.housing-mosaic');
       assert.equal(await mosaic.count(), 1, path + ' has a mosaic');
+      assert.equal(await page.locator('#state-overview > .mosaic-embedded').count(), 1, 'Mosaic belongs to the snapshot');
+      assert(await mosaic.getByRole('heading', { name: 'Explore the mix', level: 3 }).isVisible());
+      assert(await page.locator('#state-overview').evaluate(el => el.lastElementChild?.classList.contains('state-extra-figures')), 'More figures stays last');
       assert.equal(await mosaic.locator('.mosaic-tile').count(), 100);
       assert.equal(await mosaic.locator('.mosaic-views button').count(), 2);
       assert(await mosaic.getByText(/reported new homes finished ·/).isVisible());

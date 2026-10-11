@@ -191,11 +191,11 @@ export default async function NewJerseyPage() {
         <PlacePhoto geoid="34" />
       </header>
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
+        <HousingMosaic embedded statewide name="New Jersey" views={statewideMosaicViews(packet?.levels ?? [], constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter(r => r.preliminary).map(r => r.year))} />
         <details className="state-extra-figures"><summary>More statewide figures <span aria-hidden="true">＋</span></summary>
           <QuietProfile statewide allMetrics items={stateProfile(levels.filter((level) => ["fhfa_hpi", "fhfa_hpi_all_transactions", "nj_effective_tax_rate", "sr1a_median_price_per_sqft", "sr1a_median_year_built_sold", "water_homes_share_public"].includes(level.metric_id)), statewide?.headlines ?? [])} />
         </details>
       </StateOverview>
-      <HousingMosaic statewide name="New Jersey" views={statewideMosaicViews(packet?.levels ?? [], constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter(r => r.preliminary).map(r => r.year))} />
       <div id="nj-explore" className="nj-explore-anchor">
           <StateModeWorkspace
             countyPages={(countyRegions?.items ?? []).map((county) => ({ id: county.region_id, name: county.name }))}

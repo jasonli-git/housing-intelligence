@@ -6,6 +6,12 @@ import { HousingMosaic } from "./HousingMosaic";
 import type { MosaicView } from "@/lib/housingMosaic";
 
 afterEach(cleanup);
+it("uses a subordinate heading without a separate card when embedded", () => {
+  render(<HousingMosaic embedded statewide name="New Jersey" views={views} />);
+  expect(screen.getByRole("heading", { name: "Explore the mix", level: 3 })).toBeTruthy();
+  expect(document.querySelector(".mosaic-embedded")).toBeTruthy();
+  expect(screen.queryByText("A state in little pieces")).toBeNull();
+});
 const views: MosaicView[] = [
   { id: "tenure", label: "Owned / rented", denominator: "Occupied homes", source: "census_acs", period: "2020–2024",
     groups: [{ label: "Owner-occupied", share: .743, margin: "± 1.0 points", note: "Owners." },
