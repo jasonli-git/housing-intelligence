@@ -160,6 +160,8 @@ it("theme switching uses no page transition when reduced motion is requested", (
   Object.defineProperty(document, "startViewTransition", { configurable: true, value: transition });
   localStorage.clear(); document.documentElement.removeAttribute("data-theme");
   render(<ThemeToggle />);
+  expect(document.querySelector(".eclipse-moon")?.getAttribute("d")).toMatch(/Z$/);
+  expect(document.querySelector(".theme-eclipse mask")).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Switch to the dark theme" }));
   expect(document.documentElement.dataset.theme).toBe("dark");
   expect(transition).not.toHaveBeenCalled();

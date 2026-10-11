@@ -1,6 +1,7 @@
 # Guide slide stage
 
 ## What changed
+- Review fix: replaced the masked open moon arc with a closed crescent outline. Sun, orbit, palette reveal and reduced-motion behaviour remain; no SVG mask dependency.
 - New Jersey now has the compact Your next step section used on place pages: buyer’s guide and Housing help destinations, immediately above statewide evidence (moved there following review).
 - New Jersey’s historical price/income exhibit is titled “How unusual is today’s market?” following review.
 - Replaced its duplicate official-help cards with the help-tool destination. Preserved programme/property/source detail inside statewide evidence.
@@ -36,3 +37,4 @@
 - `git diff --check`: passed.
 - No frontend lint script is configured. Backend tests were not run because no backend logic or data changed.
 - Review follow-up: typecheck, three HowUnusual tests, static rebuild and rendered browser checks for the updated NJ heading and immediate next-step/evidence ordering passed.
+- Theme-icon follow-up: typecheck, all 613 frontend tests, static build, diff whitespace check and Chromium actual-toggle checks with normal/reduced motion passed. Both crescent/sun screenshots inspected. WebKit was unavailable locally; no Safari verification claimed.
