@@ -11,6 +11,9 @@ try {
   assert(await gallery.getByRole('heading',{name:'Where does the workday lead?'}).isVisible());
   assert.equal(await page.locator('#region-detailed-data .mortgage-lending').count(),0);
   assert.equal(await page.locator('#region-detailed-data .getting-around').count(),0);
+  assert.equal(await page.locator('#region-detailed-data .local-evidence-charts, #region-detailed-data .trends').count(),0);
+  assert(await gallery.locator('[data-exhibit="Flood context"]').count()>0);
+  if(path.includes('county')) assert(await page.locator('#region-detailed-data').getByRole('heading',{name:'How this place ranks at a glance',includeHidden:true}).count()>0);
   assert.equal(await gallery.locator('[data-exhibit-style="network"]').count(),path.includes('county')?1:0);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   const a=await new AxeBuilder({page}).include('.exhibit-gallery').analyze();

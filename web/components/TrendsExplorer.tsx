@@ -3,6 +3,7 @@
 import { type ReactNode, useId, useState } from "react";
 
 import { TrendChart } from "@/components/TrendChart";
+import { LearningExhibit } from "@/components/LearningExhibit";
 import { periodLabel } from "@/lib/periods";
 import { openingYear, type Point, selectableYears, since, sinceLine, yearsNote } from "@/lib/since";
 
@@ -30,7 +31,7 @@ export type TrendSeries = {
  * Everything is worked out in the browser from the points the charts already carry, so
  * the page ships no second copy of the answers.
  */
-export function TrendsExplorer({ series }: { series: TrendSeries[] }) {
+export function TrendsExplorer({ series, exhibits = false }: { series: TrendSeries[]; exhibits?:boolean }) {
   const all = series.map((s) => s.points);
   const years = selectableYears(all); // newest first
   const ascending = [...years].reverse();
@@ -88,7 +89,7 @@ export function TrendsExplorer({ series }: { series: TrendSeries[] }) {
 
       <div className="trends">
         {charts.map(({ s, reading }) => (
-          <TrendChart
+          <TrendExhibit key={s.metricId} enabled={exhibits}><TrendChart
             key={s.metricId}
             points={s.points.map((p) => ({ date: p.period_end, value: p.value, margin: p.margin ?? null }))}
             title={s.title}
@@ -101,9 +102,13 @@ export function TrendsExplorer({ series }: { series: TrendSeries[] }) {
             }
           >
             {s.table}
-          </TrendChart>
+          </TrendChart></TrendExhibit>
         ))}
       </div>
     </>
   );
+}
+
+function TrendExhibit({ enabled, children }: {enabled:boolean; children:ReactNode}) {
+  return enabled ? <LearningExhibit kind="Measure over time">{children}</LearningExhibit> : <>{children}</>;
 }

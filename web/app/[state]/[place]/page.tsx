@@ -693,79 +693,22 @@ export default async function RegionPage({
       </QuietDisclosure>
       )}
       <StateContextExhibits name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
-      </ExhibitGallery>
-      </section>
-      <SimilarPlaces name={name} data={similar} />
-      {region.level === "county" && countyTowns.length > 0 && <CountyPlaces name={name} towns={countyTowns.map(t => ({id: t.region_id, name: displayName(t)}))} />}
-
-      <MoreExpander id="region-detailed-data" title={moreTitle} sub={quiet ? "Figures, trends & sources. Explore the detail." : `For the full picture: ${listed(contents)}.`}>
+          <LearningExhibit kind="Flood context"><FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} /></LearningExhibit>
+          <LearningExhibit kind="Ground & water"><GroundAndWater name={name} levels={packet.levels} water={water} /></LearningExhibit>
+          <div id="local-property-evidence" className="property-exhibit-anchor"><LearningExhibit kind="Service providers"><Utilities data={utilities} bpuInquiry={bpuInquiry} /></LearningExhibit></div>
+          <CommunityContext exhibits data={community} level={region.level} supporting hideBroadband={region.level === "county"} />
         <LocalEvidenceCharts name={name} level={region.level} levels={packet.levels} series={construction} />
-        <section id="local-property-evidence" aria-labelledby="local-property-title"><h3 id="local-property-title">Property & community context</h3>
-          <p className="table-note">Area context, not a property assessment or a neighbourhood grade.</p>
-          <FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} />
-          <GroundAndWater name={name} levels={packet.levels} water={water} />
-          <Utilities data={utilities} bpuInquiry={bpuInquiry} />
-          <CommunityContext data={community} level={region.level} supporting hideBroadband={region.level === "county"} />
-        </section>
-        {hasDownloadableFigures([...packet.metrics, ...packet.levels]) && (
-          <p className="data-download-line">
-            <DataDownload
-              regionId={regionId}
-              geoid={region.geoid}
-              window={WINDOW}
-              figures={[...packet.metrics, ...packet.levels]}
-            />
-            <span> — every figure below, with its kind, source and licence.</span>
-          </p>
-        )}
-        <RankOverview
-          changes={packet.metrics}
-          values={packet.levels}
-          peerLabel={peerNoun(peer_level)}
-          uncertainties={uncertainties}
-        />
-
-        <section className="section" aria-labelledby="ledger-heading">
-          <h2 id="ledger-heading">Every figure, ranked by change over five years</h2>
-          {packet.metrics.length > 0 ? (
-            <Ledger
-              metrics={packet.metrics}
-              placement={changes}
-              defined={defined}
-              regionLabel={name}
-              sources={packet.sources}
-              path={regionPath(regionId)}
-              uncertainties={uncertainties}
-              peers={peers}
-            />
-          ) : (
-            <p className="meta">
-              No figure here has two readings five years apart, so there is no change to
-              show. Its current values are below.
-            </p>
-          )}
-          <TableNotes placement={changes} general={placement.general} above="the figures above" />
-          {packet.metrics.length > 0 && (
-            <p className="table-note">
-              Ranked by change over five years, not by price or size: rank 1 is the largest
-              rise, or the smallest where lower is better, as for unemployment.
-              {rankExample && ` ${rankExample}`}
-            </p>
-          )}
-          {anyMargin(uncertainties) && <p className="table-note">{MARGIN_NOTE}</p>}
-        </section>
-
         {trends.length > 0 && (
-          <section className="section" aria-labelledby="trends-heading">
+          <section id="trends-exhibits" className="section" aria-labelledby="trends-heading" data-jump-label="Trends">
             <h2 id="trends-heading">Trends</h2>
-            <IndexedComparison series={indexedInputs} />
+            <LearningExhibit kind="Costs & income"><IndexedComparison series={indexedInputs} /></LearningExhibit>
             {hasIndexedComparison && (
               <div className="trend-detail-intro">
                 <h3>Explore each measure</h3>
                 <p>The year below changes only the individual charts, not the comparison above.</p>
               </div>
             )}
-            <TrendsExplorer
+            <TrendsExplorer exhibits
               series={trends.map(({ metricId, short, observations }) => {
                 const meta = findSeries(packet.metrics, packet.levels, metricId);
                 const unit = meta?.unit ?? "";
@@ -829,6 +772,60 @@ export default async function RegionPage({
             />
           </section>
         )}
+      </ExhibitGallery>
+      </section>
+      <SimilarPlaces name={name} data={similar} />
+      {region.level === "county" && countyTowns.length > 0 && <CountyPlaces name={name} towns={countyTowns.map(t => ({id: t.region_id, name: displayName(t)}))} />}
+
+      <MoreExpander id="region-detailed-data" title={moreTitle} sub={quiet ? "Figures, trends & sources. Explore the detail." : `For the full picture: ${listed(contents)}.`}>
+        {hasDownloadableFigures([...packet.metrics, ...packet.levels]) && (
+          <p className="data-download-line">
+            <DataDownload
+              regionId={regionId}
+              geoid={region.geoid}
+              window={WINDOW}
+              figures={[...packet.metrics, ...packet.levels]}
+            />
+            <span> — every figure below, with its kind, source and licence.</span>
+          </p>
+        )}
+        <RankOverview
+          changes={packet.metrics}
+          values={packet.levels}
+          peerLabel={peerNoun(peer_level)}
+          uncertainties={uncertainties}
+        />
+
+        <section className="section" aria-labelledby="ledger-heading">
+          <h2 id="ledger-heading">Every figure, ranked by change over five years</h2>
+          {packet.metrics.length > 0 ? (
+            <Ledger
+              metrics={packet.metrics}
+              placement={changes}
+              defined={defined}
+              regionLabel={name}
+              sources={packet.sources}
+              path={regionPath(regionId)}
+              uncertainties={uncertainties}
+              peers={peers}
+            />
+          ) : (
+            <p className="meta">
+              No figure here has two readings five years apart, so there is no change to
+              show. Its current values are below.
+            </p>
+          )}
+          <TableNotes placement={changes} general={placement.general} above="the figures above" />
+          {packet.metrics.length > 0 && (
+            <p className="table-note">
+              Ranked by change over five years, not by price or size: rank 1 is the largest
+              rise, or the smallest where lower is better, as for unemployment.
+              {rankExample && ` ${rankExample}`}
+            </p>
+          )}
+          {anyMargin(uncertainties) && <p className="table-note">{MARGIN_NOTE}</p>}
+        </section>
+
 
         {packet.levels.length > 0 && (
           <section className="section" aria-labelledby="values-heading">
