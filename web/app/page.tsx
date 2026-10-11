@@ -30,7 +30,7 @@ export default async function HousingLandingPage() {
   const [rate, homePrices] = await Promise.all([nationalMortgageRate(), nationalHomePriceChange()]);
   const trends = await nationalBenchmarkTrends(rate?.metric_id);
   return <>
-    <Masthead affordability={{ kind: "route", active: false }} budgetLabel="What can I afford?" search={false} />
+    <Masthead affordability={{ kind: "route", active: false }} search={false} />
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
       <div className="landing-canvas">
       <header className="page-head nation-head" data-kind="nation">
