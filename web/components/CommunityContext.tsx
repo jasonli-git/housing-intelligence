@@ -7,7 +7,7 @@ const BOUNDARIES = "https://www.arcgis.com/home/item.html?id=26a2a9f9cf0a472d865
 const FCC = "https://broadbandmap.fcc.gov/";
 
 /** Compact components, not a neighbourhood grade, a school assignment or a safety verdict. */
-export function CommunityContext({ data, level, supporting = false }: { data: CommunityData | null; level: string; supporting?: boolean }) {
+export function CommunityContext({ data, level, supporting = false, hideBroadband = false }: { data: CommunityData | null; level: string; supporting?: boolean; hideBroadband?:boolean }) {
   if (!data) return null;
   const complete = data.crime.filter((r) => r.payload.complete).length;
   const broadband = data.broadband ?? [];
@@ -42,7 +42,7 @@ export function CommunityContext({ data, level, supporting = false }: { data: Co
       </ReaderDetails> : <p className="sales-note">No district association matched this boundary copy—not evidence that there is no school service. <a href={SPR} target="_blank" rel="noreferrer">Check NJDOE’s reports</a>.</p>}
     </section>
 
-    <section className="section sales community-broadband" aria-labelledby="community-broadband-heading">
+    {!hideBroadband && <section className="section sales community-broadband" aria-labelledby="community-broadband-heading">
       <div className="section-head"><h2 id="community-broadband-heading">Internet at the address</h2></div>
       <p className="sales-note">Check <a href={FCC} target="_blank" rel="noreferrer">FCC’s National Broadband Map</a> for providers and advertised speeds at a home. Availability is not measured speed; confirm the plan with the provider.</p>
       {wired ? <ReaderDetails title={`${data.broadband_area} · ${data.broadband_level} availability summary`}>
@@ -55,7 +55,7 @@ export function CommunityContext({ data, level, supporting = false }: { data: Co
         <p className="sales-note">Shares of FCC’s mapped units with residential-service offers—not shares of people, subscribers or households. FCC’s denominator is {wired.payload.total_units.toLocaleString("en-US")} units across broadband-serviceable locations, including multi-unit buildings. Wired and fiber overlap; do not add their percentages.</p>
         <p className="sales-note">Availability as of {wired.payload.as_of} · revised {wired.payload.revision}. Provider reports, not speed tests, prices or a guarantee at an address. <a href={wired.payload.url} target="_blank" rel="noreferrer">FCC published summaries</a>.</p>
       </ReaderDetails> : <ReaderDetails title="Why there is no local availability figure yet"><p className="sales-note">{level === "zip" ? "No ZIP-level summary has been matched. ZIP areas can cross county boundaries, so no county figure is substituted." : "No matching availability summary is loaded for this geography."} The public website downloads do not require an account; the documented API does. The location Fabric has separate licensing. Household internet subscriptions are not a substitute for availability.</p></ReaderDetails>}
-    </section>
+    </section>}
 
     <section className="section sales community-crime" aria-labelledby="community-crime-heading">
       <div className="section-head"><h2 id="community-crime-heading">{supporting ? "Public-safety reporting context" : "Crime records, with reporting coverage"}</h2></div>

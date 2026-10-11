@@ -4,6 +4,10 @@ import { afterEach, expect, it } from "vitest";
 import type { PacketLevel } from "@/lib/api";
 import { StateContextExhibits } from "./StateContextExhibits";
 afterEach(cleanup);
+it("does not substitute county broadband for a town or ZIP", () => {
+  const { container } = render(<StateContextExhibits name="Princeton" level="municipality" levels={[]} destinations={null} community={null} />);
+  expect(container.querySelector('[data-exhibit-style="network"]')).toBeNull();
+});
 it("keeps unavailable sources explicit instead of inventing figures", () => {
   render(<StateContextExhibits levels={[]} destinations={null} community={null} />);
   expect(screen.getByText("Mortgage records are unavailable in this snapshot.")).toBeTruthy();

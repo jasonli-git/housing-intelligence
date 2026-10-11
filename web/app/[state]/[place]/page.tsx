@@ -15,12 +15,12 @@ import { HomeSales } from "@/components/HomeSales";
 import { HomeChecks } from "@/components/HomeChecks";
 import { WhoIsMoving } from "@/components/WhoIsMoving";
 import { LearningExhibit } from "@/components/LearningExhibit";
+import { StateContextExhibits } from "@/components/StateContextExhibits";
 import { ExhibitGallery } from "@/components/ExhibitGallery";
 import { PaycheckExhibit } from "@/components/ExhibitCharts";
 import { HowUnusual } from "@/components/HowUnusual";
 import { FloodRisk } from "@/components/FloodRisk";
 import { GettingAround } from "@/components/GettingAround";
-import { MortgageLending } from "@/components/MortgageLending";
 import { GroundAndWater } from "@/components/GroundAndWater";
 import { SimilarPlaces } from "@/components/SimilarPlaces";
 import { Utilities } from "@/components/Utilities";
@@ -692,6 +692,7 @@ export default async function RegionPage({
         <LearningExhibit kind="Arrivals & departures"><WhoIsMoving name={name} data={migration} exhibit={quiet} /></LearningExhibit>
       </QuietDisclosure>
       )}
+      <StateContextExhibits name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
       </ExhibitGallery>
       </section>
       <SimilarPlaces name={name} data={similar} />
@@ -704,10 +705,8 @@ export default async function RegionPage({
           <FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} />
           <GroundAndWater name={name} levels={packet.levels} water={water} />
           <Utilities data={utilities} bpuInquiry={bpuInquiry} />
-          <GettingAround name={name} level={region.level} levels={packet.levels} destinations={workDestinations} />
-          <CommunityContext data={community} level={region.level} supporting />
+          <CommunityContext data={community} level={region.level} supporting hideBroadband={region.level === "county"} />
         </section>
-        <MortgageLending name={name} levels={packet.levels}/>
         {hasDownloadableFigures([...packet.metrics, ...packet.levels]) && (
           <p className="data-download-line">
             <DataDownload
