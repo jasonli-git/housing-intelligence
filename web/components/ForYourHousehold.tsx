@@ -156,12 +156,11 @@ export function ForYourHousehold({
               )}
             </tbody>
           </table>
-          <details className="income-limit-explainer">
-            <summary>What do these percentages mean?</summary>
+          <ReaderDetails className="income-limit-explainer" title="What do these percentages mean?">
             <p>The 30%, 50% and 80% labels name HUD’s income-limit levels, based on the area’s median family income—the middle of the income distribution. HUD adjusts the dollar limits for household size, housing costs and other rules. They are not simple percentages of this town’s median income.</p>
             <p>For example, an income below the dollar amount in the 50% row is within that income limit. Each housing programme has additional eligibility rules.</p>
             <p>This is different from the budget comparison’s 30%: that measures how much of your own income goes toward housing.</p>
-          </details>
+          </ReaderDetails>
           <p className="household-note">
             {limits.via === "self"
               ? `HUD sets these lines for ${countyLabel(limits)}.`

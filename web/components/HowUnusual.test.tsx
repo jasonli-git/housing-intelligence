@@ -23,7 +23,8 @@ describe("historical exhibit", () => {
     const html = renderToStaticMarkup(<HowUnusual name="New Jersey" data={{...data, withheld: "Insufficient observations"}} exhibit />);
     expect(html).toContain("Insufficient observations");
     expect(html).not.toContain("20% above");
-    expect(html).not.toContain("<svg");
+    expect(html).not.toContain('class="persistence-history"');
+    expect(html).not.toContain('role="img"'); // Decorative disclosure chevrons are not data charts.
   });
   it("keeps the existing county presentation unchanged by default", () => {
     const html = renderToStaticMarkup(<HowUnusual name="Somerset County" data={data} />);

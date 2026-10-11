@@ -9,6 +9,7 @@
 ## Files/modules affected
 - `web/app/page.tsx`, `web/app/home-refresh.css`, `web/app/ui-refinement.css`
 - `web/components/ForYourHousehold.tsx`, `web/components/TaxLookup.tsx`
+- Follow-up: `web/components/ReaderDetails.tsx`, `web/components/ReaderDetails.test.tsx`, `web/components/HowUnusual.test.tsx`
 - `web/lib/household.ts`, `web/lib/household.test.ts`
 - `web/scripts/check-reader-clarity.mjs`
 
@@ -23,6 +24,7 @@
 - Tool colour washes echo destination backgrounds rather than copying all page theme tokens.
 
 ## New TODOs / limitations
+- Future considerations only (not implemented): (1) coordinate tool colour/icon identity across all menus and shortcuts; (5) audit mobile spacing rhythm and long labels site-wide; (6) unify keyboard focus and hover treatments across all controls. These are suggestions, not approved requirements or roadmap commitments.
 - Tool card palettes are local CSS tokens; keep them coordinated if destination themes change.
 - Canonical docs remain untouched. Claude may wish to reconcile the earlier income-band presentation guidance with this plain-language correction.
 - No new data, deployment, or general redesign of unrelated sections.
@@ -34,6 +36,7 @@
 - NJ statistical information / effective versus general rates: https://www.nj.gov/treasury/taxation/lpt/statdata.shtml
 
 ## Verification
+- Follow-up pass: elevated household income answers, made explanatory tax text readable rather than monospaced metadata, standardised ReaderDetails with a chevron and connected expanded surfaces/insets. Income explanation now uses that shared component. Calculations and native disclosure/print behaviour remain unchanged.
 - `npm run typecheck`: passed.
 - `npm test`: 599 tests across 89 files passed, including regression coverage against exact-percentage wording.
 - Initial production build could not reach the stopped local API; started the API and reran. Final production build passed: 2,384 pages, 2,366 compatibility aliases and 16,685 files.
@@ -41,3 +44,4 @@
 - Inspected mobile screenshots of cards, expanded income explanation and tax result. First browser diagnostic ran before export completed; a subsequent diagnostic used textbox instead of combobox for the town input. Corrected the test selector and reran successfully.
 - No separate lint command is configured in the frontend package.
 - `git diff --check`: passed.
+- Follow-up verification: typecheck, 600 tests across 90 files, production build and six browser width/theme combinations passed, including chevron/native disclosure interaction, expanded body inset and closed-disclosure print visibility. Updated the withheld-chart test to distinguish decorative icons from actual charts; no withholding logic changed.

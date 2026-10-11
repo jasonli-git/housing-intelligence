@@ -23,11 +23,21 @@ try {
     const explanation = page.locator('.income-limit-explainer');
     // Reveal existing parent disclosures before interacting with the new explanation.
     await explanation.evaluate(e => { for (let p = e.parentElement; p; p = p.parentElement) if (p.tagName === 'DETAILS') p.open = true; });
+    await explanation.locator('..').getByLabel('Yearly household income before tax', { exact:true }).fill('68000');
+    assert.ok(await explanation.locator('..').locator('.household-position').evaluate(e => getComputedStyle(e).fontWeight === '500'));
     await explanation.locator('summary').click();
+    assert.equal(await explanation.getAttribute('open'), '');
+    assert.equal(await explanation.locator('.reader-details-chevron').getAttribute('aria-hidden'), 'true');
+    assert.ok(await explanation.locator('.reader-details-body').evaluate(e => parseFloat(getComputedStyle(e).paddingLeft) > 10));
     assert.ok((await explanation.textContent()).includes('different from the budget comparison'));
     assert.ok((await page.locator('.household-lines').textContent()).includes('30% level'));
     await explanation.scrollIntoViewIfNeeded();
     if (width === 390) await page.screenshot({ path: `/tmp/reader-income-${theme}.png` });
+    await explanation.locator('summary').click();
+    await page.emulateMedia({ media:'print' });
+    assert.ok(await explanation.locator('.reader-details-body').isVisible());
+    assert.equal(await explanation.locator('summary').isVisible(), false);
+    await page.emulateMedia({ media:'screen' });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
 
     // Synthetic records exercise presentation only; these are not published property data.

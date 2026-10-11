@@ -110,12 +110,19 @@
   .quiet-county .local-checks-grid .section { margin-block: 1rem; }
   .quiet-county .local-checks-grid .sales-note { font-size: 13px; line-height: 1.6; }
   .quiet-county .local-checks-grid .section-head h2 { font-size: 21px; }
-  .reader-details > summary { min-height: 44px; display: flex; align-items: center; gap: .65rem; color: var(--text-primary); }
-  .reader-details > summary::after { content: "+"; margin-left: auto; font-size: 20px; font-weight: 400; color: var(--text-secondary); }
-  .reader-details[open] > summary::after { content: "−"; }
+  .reader-details { border-radius:8px; }
+  .reader-details > summary { width:100%; box-sizing:border-box; min-height:44px; display:flex; align-items:center; gap:.65rem; padding:.55rem .7rem; color:var(--text-primary); }
+  .reader-details > summary::after { content:none; }
+  .reader-details-chevron { width:18px; height:18px; flex-shrink:0; margin-left:auto; color:var(--text-secondary); transition:transform 160ms ease; }
+  .reader-details[open] .reader-details-chevron { transform:rotate(180deg); }
+  .reader-details[open] { background:color-mix(in srgb,var(--atlas-accent,var(--text-secondary)) 4%,var(--surface-card)); }
   .reader-details > summary { list-style: none; }
   .reader-details > summary::-webkit-details-marker { display: none; }
-  .reader-details-body { padding-bottom: .3rem; }
+  .reader-details-body { padding:.35rem .85rem .6rem; border-left:2px solid color-mix(in srgb,var(--atlas-accent,var(--text-secondary)) 25%,var(--border)); font:400 13px/1.65 var(--font-text); }
+  .household-panel .household-position { padding:.8rem 1rem; border-left:2px solid var(--atlas-accent,var(--text-secondary)); border-radius:0 8px 8px 0; background:color-mix(in srgb,var(--atlas-accent,var(--text-secondary)) 6%,var(--surface-card)); font:500 15px/1.6 var(--font-text); color:var(--text-primary); }
+  .tax-card .cost-lines .sum dt { font-weight:550; color:var(--text-primary); }
+  .tax-card .cost-lines .sum dt .src { font:400 12px/1.6 var(--font-text); color:var(--text-secondary); margin-top:.3rem; }
+  @media (prefers-reduced-motion:reduce) { .reader-details-chevron { transition:none; } }
   .reader-details-body > :last-child { margin-bottom: .3rem; }
   .section-jump-control { border-radius: 12px; background: color-mix(in srgb, var(--surface-card) 70%, transparent); box-shadow: none; }
   .report-label-mobile, .section-jump-mobile-label { display: none; }
@@ -356,9 +363,6 @@
   .quiet-tax .tax-card { background: transparent; box-shadow: none; border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: 1.25rem 0; }
   .guide-preview { margin: .6rem 0 0; color: var(--text-secondary); font: 400 14px/1.6 var(--font-text); }
   .income-limit-explainer { margin-top:.65rem; color:var(--text-secondary); font:400 13px/1.6 var(--font-text); }
-  .income-limit-explainer > summary { min-height:44px; display:flex; align-items:center; cursor:pointer; color:var(--text-primary); gap:.5rem; }
-  .income-limit-explainer > summary::before { content:"+"; }
-  .income-limit-explainer[open] > summary::before { content:"−"; }
   .income-limit-explainer p { margin:.4rem 0 .7rem; }
   body:has(.guide-page) { --surface-1: light-dark(#f5edee, #2a2022); --surface-2: light-dark(#fff9f9, #37292c); --surface-card: var(--surface-2); --text-primary: light-dark(#3b2b2e, #f3e6e8); --text-secondary: light-dark(#685257, #d8c0c5); --text-muted: light-dark(#70585e, #cfb7be); --border: light-dark(#dfc9ce, #62474e); background: var(--surface-1); }
   body:has(.budget-page) { --surface-1: light-dark(#edf1f6, #202936); --surface-2: light-dark(#f8faff, #2a3544); --surface-card: var(--surface-2); --text-primary: light-dark(#283445, #edf2f8); --text-secondary: light-dark(#536278, #c4cfdd); --text-muted: light-dark(#596a80, #bcc9da); --border: light-dark(#cad4e1, #4f6076); background: var(--surface-1); }
