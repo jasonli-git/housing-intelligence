@@ -30,6 +30,7 @@ import { QuietDisclosure, QuietToolGroup } from "@/components/QuietCounty";
 import { StepIcon } from "@/components/StepIcon";
 import {DifferenceBridge,sentenceCostLabel} from "@/components/DifferenceBridge";
 import { writeGuideTransfer } from "@/lib/guideTransfer";
+import { MonthlyBill } from "@/components/MonthlyBill";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
 export type Dated = { value: number; asOf: string };
@@ -220,6 +221,9 @@ export function CostToOwn({
     upkeep: personal.upkeepPct !== undefined ? "reader" : "thumb",
   });
   const up = upFront(input);
+  const baselineMonth = eachMonth(ownershipInputs({ price: home.value, ratePct: rate.value,
+    taxYear: tax?.value ?? null, insuranceYear: insurance?.value ?? null,
+    utilitiesMonth: utilities?.month ?? null, rentMonth: rent?.value ?? null }));
   const years = overYears(input);
   const partial = month.missing.length > 0;
   const fha = fhaCheck(month.loan, fhaLimit);
@@ -528,6 +532,7 @@ export function CostToOwn({
             </span>
           </summary>
           <div className="cost-yours-body">
+            <MonthlyBill current={month} baseline={baselineMonth} />
             <fieldset>
               <legend>This home <small>stays on this page</small></legend>
               <Field label="Purchase price" value={fields.price} placeholder={money(home.value)} onChange={(t) => setField("price", t)} />

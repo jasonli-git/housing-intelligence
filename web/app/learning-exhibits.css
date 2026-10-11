@@ -1,5 +1,26 @@
 /* The gallery is optional exploration. Motion belongs to its linework, never its values. */
 @media screen {
+  .monthly-bill { grid-column:1/-1; padding:1.2rem; border:1px solid var(--border); border-radius:20px; background:var(--surface-1); min-width:0; }
+  .bill-head { display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1rem; }
+  .bill-head > div { min-width:0; }
+  .bill-head h3 { margin:0; font:500 20px/1.3 var(--font-display); }
+  .bill-head p,.bill-reading p { font:13px/1.5 var(--font-text); color:var(--text-secondary); margin:.4rem 0; }
+  .bill-head strong { display:block; font:500 28px/1.3 var(--font-display); }
+  .monthly-bill small { display:block; font:11px/1.5 var(--font-text); color:var(--text-muted); }
+  .bill-layout { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); gap:1.5rem; }
+  .bill-stack { display:grid; gap:5px; align-content:start; }
+  .bill-stack button { position:relative; isolation:isolate; display:flex; justify-content:space-between; align-items:center; gap:.75rem; min-height:44px; padding:.7rem .8rem; border:1px solid var(--border); border-radius:5px; background:transparent; color:var(--text-primary); text-align:left; cursor:pointer; font:12px/1.4 var(--font-text); }
+  .bill-stack button::before { content:""; position:absolute; inset:0 auto 0 0; width:var(--bill-share); background:color-mix(in srgb,var(--atlas-accent) 15%,transparent); z-index:-1; transition:width 300ms ease; }
+  .bill-stack button[data-cost="mortgage"]::before { background:color-mix(in srgb,var(--atlas-accent) 28%,transparent); }
+  .bill-stack button[aria-pressed="true"] { border-color:var(--atlas-accent); }
+  .bill-stack button:focus-visible { outline:2px solid var(--atlas-accent); outline-offset:3px; }
+  .bill-stack b { flex-shrink:0; font-weight:500; }
+  .bill-reading h4 { margin:0 0 .5rem; font:500 17px/1.4 var(--font-text); }
+  .bill-reading dl { margin:1rem 0; }
+  .bill-reading dl > div { display:flex; justify-content:space-between; gap:.8rem; margin:.5rem 0; font:12px/1.4 var(--font-text); }
+  .bill-reading dd { margin:0; font-variant-numeric:tabular-nums; }
+  @media(max-width:600px) { .bill-layout { grid-template-columns:minmax(0,1fr); gap:1rem; } .monthly-bill { padding:.9rem; } }
+  @media(prefers-reduced-motion:reduce) { .bill-stack button::before { transition:none; } }
   .bar-tool-menu .bar-help-route { border-top:1px solid var(--border); margin-top:.25rem; }
   .planning-preview-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; margin-top:1rem; align-items:start; }
   .quiet-county .planning-preview-grid > .planning-preview { min-width:0; width:100%; box-sizing:border-box; border:1px solid var(--border); border-radius:14px; background:color-mix(in srgb,var(--atlas-accent) 4%,var(--surface-1)); overflow:visible; }
