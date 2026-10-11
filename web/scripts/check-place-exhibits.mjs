@@ -17,12 +17,14 @@ try {
   assert.equal(await gallery.locator('[data-exhibit-style="network"]').count(),path.includes('county')?1:0);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   assert.equal(await page.locator('.trend-measure-control select').count(),0);
+  assert.equal(await page.locator('.trend-side-exhibits, #trends-exhibits .trends').count(),0);
+  assert.equal(await page.getByRole('heading',{name:'Explore each measure',includeHidden:true}).count(),0);
+  assert(await page.locator('#region-detailed-data .historical-value-tables table').count()>0);
   if(width>900 && await page.locator('#trends-exhibits > .learning-exhibit').count()) {
-    const comparison=await page.locator('#trends-exhibits > .learning-exhibit').boundingBox();
-    const individual=await page.locator('.trend-side-exhibits').boundingBox();
-    assert(individual.x>comparison.x+comparison.width-1);
+    const chart=await page.locator('#trends-exhibits > .learning-exhibit').boundingBox();
+    const section=await page.locator('#trends-exhibits').boundingBox();
+    assert(chart.width>=section.width-2);
   }
-  if(path.includes('county')) assert(await page.locator('.trend-side-exhibits [data-exhibit="Measure over time"]').count()>1);
   const more=page.locator('.water-more-systems');
   if(await more.count()) {
     assert.equal(await page.locator('.ground-water > .scroll-x .water-systems tbody tr').count(),2);

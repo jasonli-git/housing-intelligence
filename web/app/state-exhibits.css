@@ -1,20 +1,9 @@
 @media screen {
   .atlas-local .exhibit-gallery-head { grid-column:1/-1; }
-  #trends-exhibits { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:1rem; align-items:start; }
-  #trends-exhibits > h2 { grid-column:1/-1; }
+  #trends-exhibits { display:block; }
   #trends-exhibits > .learning-exhibit { margin:0; padding:1rem; min-width:0; }
-  .trend-side-exhibits { min-width:0; }
-  #trends-exhibits .trends { grid-template-columns:minmax(0,1fr); margin:0; gap:.65rem; }
   #trends-exhibits .indexed-chart-scroll svg { min-width:0; }
   #trends-exhibits .indexed-comparison { padding:0; margin:0; border:0; background:none; }
-  #trends-exhibits .trends .learning-exhibit { padding:.75rem; }
-  #trends-exhibits .trends svg { max-height:150px; }
-  #trends-exhibits .trends [data-metric="zhvi_sfr"] { border-top:3px solid var(--series-1); border-radius:4px 14px 4px 4px; }
-  #trends-exhibits .trends [data-metric="zori_all"] { --series-1:var(--series-2); border-left:3px solid var(--series-2); border-radius:14px 4px; }
-  #trends-exhibits .trends [data-metric="acs_median_hh_income"] { --series-1:var(--series-3); border-top:3px dashed var(--series-3); border-radius:4px; }
-  #trends-exhibits .since { margin-bottom:.6rem; }
-  #trends-exhibits .trend-detail-intro { margin-block:.8rem .4rem; padding-block:0; }
-  #trends-exhibits .trend-detail-intro p { margin:.3rem 0; font-size:12px; }
   .property-exhibit-anchor { min-width:0; scroll-margin-top:100px; }
   .property-exhibit-anchor > .learning-exhibit { margin:0; padding:1rem; --text-muted:light-dark(#4c5660,#c2cbd0); --text-secondary:light-dark(#424c55,#d2d8db); }
   .atlas-local .exhibit-gallery > :is(.local-evidence-charts,#trends-exhibits) { grid-column:1/-1; min-width:0; margin:0; }
@@ -38,7 +27,6 @@
   .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Health estimates"] { background:radial-gradient(circle,light-dark(#355f4810,#c3e1d20b) 1px,transparent 1px) 0 0/14px 14px,light-dark(#e7eee8,#1d2a24); border-radius:35px; }
   .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Health estimates"] h2 { font-family:var(--font-text); font-weight:400; }
   .atlas-local .exhibit-gallery .learning-exhibit:is([data-exhibit="Schools"],[data-exhibit="Public safety"],[data-exhibit="Service providers"]) .exhibit-linework { display:none; }
-  @media(max-width:900px) { #trends-exhibits { grid-template-columns:minmax(0,1fr); } }
   .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Internet access"] { border-radius:20px; background:light-dark(#efedf5,#252332); }
   .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Costs & income"] { background:light-dark(#edf0f3,#202830); border-top:3px solid var(--atlas-accent); }
   .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Measure over time"] { background:var(--surface-1); border:1px solid var(--border); border-radius:14px; }
