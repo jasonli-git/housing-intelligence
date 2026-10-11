@@ -290,10 +290,18 @@ class Inquiry(BaseModel):
     answered: date
     office: str = Field(min_length=1)
     via: Literal["email", "records request"]
-    # The publisher's words, exactly as received.
-    said: str = Field(min_length=1)
+    # The publisher's words, exactly as received: an email's answer.
+    said: str | None = None
+    # What was released, for a records request, which answers with documents.
+    received: str | None = None
     # A release date the answer gives, used where the publisher has no calendar.
     expected: ReleaseDate | None = None
+
+    @model_validator(mode="after")
+    def _says_something(self) -> Inquiry:
+        if not (self.said or self.received):
+            raise ValueError("an inquiry records what was said or what was received")
+        return self
 
 
 class Source(BaseModel):

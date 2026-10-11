@@ -48,6 +48,15 @@ sources:
       Records Custodian under OPRA, drop them into data/manual/nj_bpu_reports/ under the
       names BPU gives them, and add each to REPORTS in hip.sources.nj_bpu once its tables
       are reviewed; an unreviewed file fails visibly.
+    inquiries:
+      # The 2024 and 2025 reports could not be found in BPU's public document search.
+      - answered: 2026-10-08
+        office: NJ Board of Public Utilities
+        via: records request
+        received: >-
+          The 2024 and 2025 annual system performance reports of Atlantic City
+          Electric, JCP&L, PSE&G and Rockland Electric, eight reports not found in BPU's
+          public document search (OPRA request C263585).
     notes: >-
       CAIDI is minutes per customer interruption, not SAIDI. Each figure is the report's
       company-wide actual against BPU's minimum reliability levels; ACE states major

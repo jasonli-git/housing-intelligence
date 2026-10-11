@@ -18,8 +18,9 @@ export function InquiryNote({ inquiry, headline }: { inquiry: Inquiry; headline?
       <span className="inquiry-headline">{headline ?? (when ? `Next update expected ${when}${inquiry.expected?.covers ? ` · ${inquiry.expected.covers}` : ""}` : `${inquiry.office} answered`)}</span>
     </summary>
     <div className="inquiry-body">
-      <blockquote>“{inquiry.said}”</blockquote>
-      <p>{inquiry.office}, by {inquiry.via === "email" ? "email" : "a public-records request"} to Housing Intelligence, {dayLabel(inquiry.answered)}. No published page or schedule states this; it can change.</p>
+      {inquiry.said && <blockquote>“{inquiry.said}”</blockquote>}
+      {inquiry.received && <p className="inquiry-received">Released to us: {inquiry.received}</p>}
+      <p>{inquiry.office}, {inquiry.via === "email" ? "by email" : "in answer to a public-records request"} to Housing Intelligence, {dayLabel(inquiry.answered)}. {inquiry.via === "email" ? "No published page states this; it can change." : "Not otherwise published online."}</p>
     </div>
   </details>;
 }

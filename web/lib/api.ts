@@ -905,7 +905,10 @@ export type Inquiry = {
   answered: string;
   office: string;
   via: "email" | "records request";
-  said: string;
+  /** The publisher's words, for an email. */
+  said?: string | null;
+  /** What was released, for a records request. */
+  received?: string | null;
   expected?: { day: string; precision: "day" | "month"; covers: string } | null;
 };
 

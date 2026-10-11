@@ -285,6 +285,9 @@ export default async function RegionPage({
     ]);
     return { claims, paid, unplaced: [], newest, place: null, unseparable: false };
   };
+  // BPU's reports came by public-records request (#370); the note says so beside them.
+  const bpuInquiry = (await api.freshness())?.sources.find((s) => s.source_id === "nj_bpu_reports")?.inquiries?.at(-1);
+
   const [series, cost, incomeLimits, construction, floodClaims, water, housingHelp, utilities, workDestinations, similar, community, migration, persistence] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
@@ -442,7 +445,7 @@ export default async function RegionPage({
           estimated={region.level === "municipality" && floodClaims.place === null}
           unseparable={floodClaims.unseparable} />
         <GroundAndWater name={name} levels={packet.levels} water={water} />
-        <Utilities data={utilities} />
+        <Utilities data={utilities} bpuInquiry={bpuInquiry} />
         <GettingAround name={name} level={region.level} levels={packet.levels} destinations={workDestinations} />
         <CommunityContext data={community} level={region.level} />
       </div>
@@ -699,7 +702,7 @@ export default async function RegionPage({
           <p className="table-note">Area context, not a property assessment or a neighbourhood grade.</p>
           <FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} />
           <GroundAndWater name={name} levels={packet.levels} water={water} />
-          <Utilities data={utilities} />
+          <Utilities data={utilities} bpuInquiry={bpuInquiry} />
           <GettingAround name={name} level={region.level} levels={packet.levels} destinations={workDestinations} />
           <CommunityContext data={community} level={region.level} supporting />
           <HomeChecks levels={packet.levels} taxHref={region.level === "municipality" ? `/tax?town=${region.geoid}` : "/tax"} />
