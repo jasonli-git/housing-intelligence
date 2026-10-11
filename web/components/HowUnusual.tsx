@@ -1,5 +1,6 @@
 import type { Persistence } from "@/lib/api";
 import { ReaderDetails } from "@/components/ReaderDetails";
+import { HistoryExhibit } from "@/components/ExhibitCharts";
 import { againstUsual, leadSentence, spellsSentence } from "@/lib/persistence";
 
 const FHFA = "https://www.fhfa.gov/data/hpi/datasets?tab=additional-data";
@@ -49,7 +50,7 @@ function History({ data }: { data: Persistence }) {
  * against income sit against the place's own past, and how long earlier spells this high
  * lasted. Counties and the state; a description of the past, never a forecast.
  */
-export function HowUnusual({ name, data, exhibit = false }: { name: string; data: Persistence | null; exhibit?: boolean }) {
+export function HowUnusual({ name, data, exhibit = false, interactive = false }: { name: string; data: Persistence | null; exhibit?: boolean; interactive?: boolean }) {
   if (!data) return null;
   const lead = leadSentence(data, name);
   const spells = spellsSentence(data);
@@ -59,25 +60,25 @@ export function HowUnusual({ name, data, exhibit = false }: { name: string; data
         <h2 id="how-unusual-heading">{exhibit ? "Home prices against income" : "Is this unusual for here?"}</h2>
       </div>
       {/* SPEC principle 11: say what kind of figure this is where it is read. */}
-      <p className="sales-note">{exhibit ? "New Jersey against its own history. Calculated from price and income estimates—not counted." : "Calculated here from two published estimates — a house price index and yearly income estimates — not counted."}</p>
+      <p className="sales-note">{interactive ? "Price and income estimates, compared with this place’s own past." : exhibit ? "New Jersey against its own history. Calculated from price and income estimates—not counted." : "Calculated here from two published estimates — a house price index and yearly income estimates — not counted."}</p>
       {data.withheld ? (
         <p className="sales-note">No long-run comparison is shown for {name}. {data.withheld}</p>
       ) : (
         <>
-          {lead && <p className="sales-lead">{exhibit ? `${data.last_year}: ${againstUsual(data.vs_median!)} the usual level since ${data.first_year}.` : lead}</p>}
+          {lead && !interactive && <p className="sales-lead">{exhibit ? `${data.last_year}: ${againstUsual(data.vs_median!)} the usual level since ${data.first_year}.` : lead}</p>}
           {data.vs_median_low !== null && data.vs_median_high !== null && Math.round(data.vs_median_low) !== Math.round(data.vs_median_high) && (
             <p className="sales-note">Income is an estimate: within its margin, today is between {againstUsual(data.vs_median_low)} and {againstUsual(data.vs_median_high)} the usual level.</p>
           )}
-          {!exhibit && spells && <p className="sales-note">{spells}</p>}
-          {!exhibit && data.above_median_since !== null && data.above_median_since < data.last_year && (
+          {!exhibit && !interactive && spells && <p className="sales-note">{spells}</p>}
+          {!exhibit && !interactive && data.above_median_since !== null && data.above_median_since < data.last_year && (
             <p className="sales-note">It has been above its usual level every year since {data.above_median_since}.</p>
           )}
-          <History data={data} />
-          <p className="sales-note">{exhibit ? "Historical comparison—not a forecast." : "This describes the past. How an earlier spell ended says nothing certain about how this one will."}</p>
+          {interactive ? <HistoryExhibit data={data} /> : <History data={data} />}
+          {!interactive && <p className="sales-note">{exhibit ? "Historical comparison—not a forecast." : "This describes the past. How an earlier spell ended says nothing certain about how this one will."}</p>}
         </>
       )}
       <ReaderDetails title="How this is worked out">
-        {exhibit && !data.withheld && <>{lead && <p className="sales-note">{lead}</p>}{spells && <p className="sales-note">{spells}</p>}{data.above_median_since !== null && data.above_median_since < data.last_year && <p className="sales-note">Above its usual level every year since {data.above_median_since}.</p>}</>}
+        {(exhibit || interactive) && !data.withheld && <>{lead && <p className="sales-note">{lead}</p>}{spells && <p className="sales-note">{spells}</p>}{data.above_median_since !== null && data.above_median_since < data.last_year && <p className="sales-note">Above its usual level every year since {data.above_median_since}.</p>}</>}
         <p className="sales-note">
           Each year, <a href={FHFA}>FHFA’s house price index</a> for {name} divided by the
           Census Bureau’s <a href={SAIPE}>estimate of median household income</a>, compared with the

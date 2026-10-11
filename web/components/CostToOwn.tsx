@@ -27,7 +27,9 @@ import { type Basis, eachMonth, type Inputs, overYears, upFront } from "@/lib/ow
 import { ownershipInputs, cashFit, DEFAULT_YEARS } from "@/lib/budgetScenario";
 import { useBudgetScenario } from "@/components/useBudgetScenario";
 import { QuietDisclosure, QuietToolGroup } from "@/components/QuietCounty";
+import { StepIcon } from "@/components/StepIcon";
 import {DifferenceBridge,sentenceCostLabel} from "@/components/DifferenceBridge";
+import { writeGuideTransfer } from "@/lib/guideTransfer";
 
 /** A figure and when it is from, already labelled for a reader: "Jul 2026". */
 export type Dated = { value: number; asOf: string };
@@ -177,9 +179,12 @@ export function CostToOwn({
   comparePlaceId,
   quiet = false,
   householdTools,
-}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode }) {
+  planning = true,
+  guidePlaceId,
+}: CostProps & { control?: boolean; beforeMoving?: ReactNode; showHelp?: boolean; comparePlaceId?: number; quiet?: boolean; householdTools?: ReactNode; planning?: boolean; guidePlaceId?: number }) {
   const id = useId();
-  const { personal, household, savePersonal, saveHousehold } = useBudgetScenario(control);
+  const { personal: rememberedPersonal, household, savePersonal, saveHousehold } = useBudgetScenario(control && planning);
+  const personal = planning ? rememberedPersonal : {};
   const [fields, setFields] = useState<HomeFields>(NO_HOME_FIELDS);
   const [view, setView] = useState<View>("upfront");
   const [calculationOpen,setCalculationOpen] = useState(false);
@@ -339,7 +344,7 @@ export function CostToOwn({
       "cost-partial",
       "Partial estimate",
       `This total leaves out ${listed(month.missing).toLowerCase()}: no published figure ` +
-        "covers it for this place. Enter yours under “Your numbers” to complete it.",
+        (planning ? "covers it for this place. Enter yours under ‘Your numbers’ to complete it." : "covers it for this place. Use the buyer’s guide to enter a quote."),
     ),
   };
 
@@ -469,16 +474,17 @@ export function CostToOwn({
     <svg className="calculation-chevron" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m5 8 5 5 5-5"/></svg>
   </button>;
 
-  const budgetFit = control ? <QuietDisclosure enabled={quiet} title="Check your monthly budget">
+  const budgetFit = control ? <QuietDisclosure enabled={false} title="Check your monthly budget">
       <aside className="cost-budget-fit" aria-label="Your budget fit">
-        <details open={quiet || undefined}>
-          <summary>Your budget{household.income && household.income > 0 ? ` · Owning uses ${Math.round(month.total / (household.income / 12) * 100)}% of your income${partial ? " on included costs" : ""}` : " · Add your income to check"}</summary>
+        <div className="budget-basics">
+          <h4>Your budget{household.income && household.income > 0 ? ` · Owning uses ${Math.round(month.total / (household.income / 12) * 100)}% of your income${partial ? " on included costs" : ""}` : " · Add your income to check"}</h4>
           <div className="budget-inputs">
             <label className="control">Yearly household income before tax<input inputMode="decimal" value={household.income ?? ""} placeholder="e.g. 100000" onChange={(event) => saveHousehold({ ...household, income: parseAmount(event.target.value) ?? undefined })} /></label>
             <label className="control">Cash available for buying<input inputMode="decimal" value={household.cash ?? ""} placeholder="optional" onChange={(event) => saveHousehold({ ...household, cash: parseAmount(event.target.value) ?? undefined })} /></label>
+            {quiet && <Field label="Rent you’d pay instead, a month" value={fields.rent} placeholder={rent ? money(rent.value) : "not published"} onChange={(t) => setField("rent", t)} />}
           </div>
           <p>Uses cash paid each month, including principal—not the lower “money gone” figure. The comparison line is 30% of income, not loan approval.</p>
-        </details>
+        </div>
         {household.income !== undefined && household.income > 0 && <p>
           {month.total > household.income / 12 * .3
             ? `${money(month.total - household.income / 12 * .3)} a month above the 30% comparison line.`
@@ -513,10 +519,10 @@ export function CostToOwn({
         )}
       </div>
 
-      {control && (
+      {control && planning && (
         <details className="cost-yours">
           <summary>
-            <span className="cost-yours-title">Your numbers</span>
+            <span className="cost-yours-title">Fine-tune the costs</span>
             <span className="cost-yours-hint">
               {own ? "Using your figures" : "Replace any figure with your own — a listing’s price, a quote"}
             </span>
@@ -530,7 +536,7 @@ export function CostToOwn({
               <Field label="Flood insurance a year" value={fields.flood} placeholder="if required" onChange={(t) => setField("flood", t)}>
                 <a href={FLOOD_MAP.url} target="_blank" rel="noreferrer">Check FEMA’s flood map</a>
               </Field>
-              <Field label="Rent you’d pay instead, a month" value={fields.rent} placeholder={rent ? money(rent.value) : "not published"} onChange={(t) => setField("rent", t)} />
+              {!quiet && <Field label="Rent you’d pay instead, a month" value={fields.rent} placeholder={rent ? money(rent.value) : "not published"} onChange={(t) => setField("rent", t)} />}
               <Field label="Moving" value={fields.moving} placeholder="optional" onChange={(t) => setField("moving", t)} />
               <Field label="First repairs" value={fields.repairs} placeholder="optional" onChange={(t) => setField("repairs", t)} />
             </fieldset>
@@ -636,7 +642,7 @@ export function CostToOwn({
             · not a lender quote
           </p>
           {/* Stated assumptions, not a forecast of rates (#327). */}
-          <ReaderDetails title="At other mortgage rates">
+          <ReaderDetails title="At other mortgage rates" className="mortgage-rate-details">
             <table className="change-places rate-scenarios">
               <caption className="visually-hidden">The month at other mortgage rates, everything else as above</caption>
               <thead>
@@ -708,7 +714,7 @@ export function CostToOwn({
           ) : (
             <p className="cost-missing">
               No rent figure for this place: Zillow publishes its rent index for fewer places than
-              its home values. Enter one under “Your numbers” to compare.
+              its home values. {planning ? "Enter one under ‘Your numbers’ to compare." : "Use the buyer’s guide to compare a rent you enter."}
             </p>
           )}
         </article>
@@ -716,7 +722,7 @@ export function CostToOwn({
           {calculationToggle}
           <section id={id+"-calculation"} className="shared-calculation" hidden={!calculationOpen} aria-label="Owning and renting calculation">
             <div><h4>Owning</h4><p className="calculation-note">Cash payment includes principal and included utilities. Money spent includes utilities here; the bridge excludes them.</p>{owningLedger}</div>
-            <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. Enter one under “Your numbers” to compare.</p>}</div>
+            <div><h4>Renting</h4>{rentingLedger ?? <p>No rent figure. {planning ? "Enter one under ‘Your numbers’ to compare." : "Enter your rent in the buyer’s guide to compare."}</p>}</div>
           </section>
         </>}
         <aside className="cost-evidence-omissions" aria-label="Costs not included in the monthly owning estimate">
@@ -757,9 +763,10 @@ export function CostToOwn({
         </div>
       )}
 
-      <QuietToolGroup enabled={quiet}>
+      {planning && <QuietToolGroup enabled={quiet}>
       {quiet && budgetFit}
-      <QuietDisclosure enabled={quiet} title="Upfront cash & a longer-term scenario">
+      <div className={quiet ? "planning-preview-grid" : undefined}>
+      <QuietDisclosure enabled={quiet} title={`Upfront cash & the next ${input.years} years`} icon={<StepIcon name="tax" />} preview={`${money(up.low)}–${money(up.high)} upfront · estimate`} note="Cash at closing—and what owning could cost over time.">
       <div className="cost-views">
         {control && (
           <div className="cost-view-tabs" role="tablist" aria-label="Other views of the cost">
@@ -883,11 +890,19 @@ export function CostToOwn({
       </div>
       </QuietDisclosure>
       {householdTools}
-      </QuietToolGroup>
+      </div>
+      {guidePlaceId !== undefined && <p className="household-next"><a href={`/guide?place=${guidePlaceId}`} onClick={() => {
+        const home = Object.fromEntries([
+          ["price", typedPrice], ["taxYear", typedTax], ["hoaMonth", parseAmount(fields.hoa)],
+          ["floodYear", parseAmount(fields.flood)], ["movingCost", parseAmount(fields.moving)], ["repairsCost", parseAmount(fields.repairs)],
+        ].filter(([,value]) => value !== null));
+        writeGuideTransfer(guidePlaceId, home, typedRent);
+      }}>Continue in the buyer’s guide →</a><span>Bring these home figures into a complete buying plan.</span></p>}
+      </QuietToolGroup>}
 
       {showHelp && <HousingHelp />}
 
-      {!control && (
+      {!control && planning && (
         <div className="cost-strip">
           {cashComparison && (
             <p className="cost-strip-big" aria-live="polite">

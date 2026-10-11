@@ -13,6 +13,32 @@ const inputs: CostProps = {
   noTax: "No ZIP-level tax estimate", gain: null, rateThen: null,
 };
 describe("local monthly budget", () => {
+  it("previews upfront cash and uses the selected planning horizon", () => {
+    localStorage.setItem("hip.cost.personal.v1", JSON.stringify({years:5}));
+    const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,showHelp:false}));
+    const summary=container.querySelector(".planning-preview > summary");
+    expect(summary?.textContent).toContain("Upfront cash & the next 5 years");
+    expect(summary?.textContent).toContain("upfront · estimate");
+    expect(summary?.textContent).toContain("Cash at closing");
+    expect(summary?.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+  });
+  it("exposes the budget and rent inputs without opening a disclosure", () => {
+    const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,showHelp:false}));
+    const income=screen.getByLabelText("Yearly household income before tax");
+    const rent=screen.getByLabelText("Rent you’d pay instead, a month");
+    expect(income.closest("details")).toBeNull();
+    expect(rent.closest("details")).toBeNull();
+    expect(container.querySelector(".cost-yours summary")?.textContent).toContain("Fine-tune the costs");
+  });
+  it("keeps published monthly costs and the breakdown without planning panels", () => {
+    localStorage.setItem("hip.cost.personal.v1", JSON.stringify({downPct: 3.5, insuranceYear: 20000}));
+    const {container} = render(createElement(CostToOwn, {...inputs, planning:false, control:false, quiet:true, showHelp:false}));
+    expect(container.querySelector(".cost-yours")).toBeNull();
+    expect(container.querySelector(".quiet-tool-group")).toBeNull();
+    expect(screen.queryByText("Make it yours")).toBeNull();
+    expect(screen.getByText("20% down payment")).toBeTruthy();
+    expect(screen.getByRole("button", {name:"See the breakdown"})).toBeTruthy();
+  });
   it("opens one shared breakdown from the cost-card footer and closes it again", () => {
     const { container } = render(createElement(CostToOwn, { ...inputs, quiet: true, showHelp: false }));
     const toggle = screen.getByRole("button", { name: "See the breakdown" });

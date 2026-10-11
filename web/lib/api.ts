@@ -698,7 +698,7 @@ export const api = {
    * (Milestone 35). Null for the state, and for a ZIP the crosswalk does not place.
    */
   incomeLimits: (id: number) => tryGet<IncomeLimits>(`/regions/${id}/income-limits`),
-  affordableHousing: (id: number) => tryGet<AffordableHousing>(`/regions/${id}/affordable-housing?overview=true`),
+  affordableHousing: (id: number, overview = true) => tryGet<AffordableHousing>(`/regions/${id}/affordable-housing${overview ? "?overview=true" : ""}`),
   /**
    * The community water systems serving a town or ZIP code, with their health-based
    * violations over five calendar years (Milestone 40). Null for a county or the state,

@@ -83,6 +83,19 @@ describe("can I afford to buy here?", () => {
 });
 
 describe("should I rent or buy?", () => {
+  it("supports home-specific quotes even without a published price and matches the shared model", () => {
+    const data=place([]);
+    const home={price:350000,taxYear:6000,hoaMonth:200,floodYear:1200,movingCost:1000,repairsCost:2000};
+    const personal={downPct:20,insuranceYear:1500,closingPct:3,years:7,rentGrowthPct:2,commissionPct:4};
+    const answer=affordAnswer(data,{income:100000,size:3,ratePct:6,personal,home,now:NOW})!;
+    const expected=ownershipInputs({price:350000,ratePct:6,taxYear:null,insuranceYear:null,utilitiesMonth:null,rentMonth:null},personal,home);
+    expect(answer.price.basis).toBe("reader");
+    expect(answer.month.total).toBeCloseTo(eachMonth(expected).total);
+    expect(answer.upfront.low).toBe(70000+10500+3000);
+    const comparison=rentOrBuy(data,{ratePct:6,personal,home,rent:2500,now:NOW})!;
+    expect(comparison.price.basis).toBe("reader");
+    expect(comparison.planned.upfront).toBe(answer.upfront.low);
+  });
   it("finds the first year owning then selling costs no more than renting", () => {
     const base = ownershipInputs({ price: 500_000, ratePct: 6.5, taxYear: 12_000, insuranceYear: 1_800, utilitiesMonth: 150, rentMonth: 4_500 }, { appreciationPct: 4 });
     const year = breakEvenYear(base);

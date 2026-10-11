@@ -30,10 +30,11 @@ import { formatValue } from "@/lib/format";
 import { MAPPED_FLOOR, shareText } from "@/lib/hazards";
 import { homePrice } from "@/lib/homePrice";
 import { type IncomeLimits, positionSentence } from "@/lib/household";
-import { eachMonth, type Inputs, type Month, overYears, type Years } from "@/lib/ownership";
+import { eachMonth, type Inputs, type Month, overYears, type Years, upFront, type Upfront } from "@/lib/ownership";
 import { periodLabel } from "@/lib/periods";
 import { ownershipInputs, utilityTotal } from "@/lib/budgetScenario";
 import type { Inquiry } from "@/lib/api";
+import type { AffordableHousing } from "@/lib/affordableHousing";
 import { RADON_MAP_INQUIRY } from "@/lib/inquiries";
 import { type Context, type Evidence, judgeAnswer, type Judged } from "@/lib/evidence";
 
@@ -50,6 +51,7 @@ export type GuideData = {
   water: WaterSystems | null;
   community: CommunityContext | null;
   utilities: Utilities | null;
+  housingHelp?: AffordableHousing | null;
   /** The newest period each metric has anywhere, from the catalog. */
   newest: Record<string, string | null>;
 };
@@ -101,8 +103,14 @@ export const BAND_TEXT: Record<Band, string> = {
   severe: "HUD counts a household paying over half its income for housing as severely cost-burdened.",
 };
 
+export type GuidePrice = HomePrice | { basis: "reader"; value: number; asOf: string };
+export type GuideHome = Partial<Pick<Inputs, "price" | "taxYear" | "hoaMonth" | "floodYear" | "movingCost" | "repairsCost">>;
+function guidePrice(data: GuideData, home: GuideHome = {}, now?: string): GuidePrice | null {
+  return home.price !== undefined && home.price > 0 ? {basis: "reader", value: home.price, asOf: "Your input"} : homePrice(data.levels, now);
+}
 export type AffordAnswer = {
-  price: HomePrice;
+  price: GuidePrice;
+  upfront: Upfront;
   month: Month;
   share: number;
   band: Band;
@@ -114,7 +122,7 @@ export type AffordAnswer = {
 };
 
 /** The published costs of the typical home here, as the cost model takes them. */
-function inputsFor(data: GuideData, price: HomePrice, ratePct: number, personal: Personal): Inputs {
+function inputsFor(data: GuideData, price: GuidePrice, ratePct: number, personal: Personal, home: GuideHome = {}): Inputs {
   const value = (id: string) => find(data.levels, id)?.value ?? null;
   return ownershipInputs(
     {
@@ -125,34 +133,37 @@ function inputsFor(data: GuideData, price: HomePrice, ratePct: number, personal:
       utilitiesMonth: utilityTotal(value("acs_median_electricity"), value("acs_median_gas"), value("acs_median_water_sewer")),
       rentMonth: value("zori_all"),
     },
-    personal,
+    personal, home,
   );
 }
 
-function priceLevel(data: GuideData, price: HomePrice): PacketLevel | null {
+function priceLevel(data: GuideData, price: GuidePrice): PacketLevel | null {
+  if (price.basis === "reader") return null;
   return find(data.levels, price.basis === "index" ? "zhvi_sfr" : "sr1a_median_sale_price");
 }
 
 export function affordAnswer(
   data: GuideData,
-  input: { income: number; size: number; ratePct: number; personal: Personal; now?: string },
+  input: { income: number; size: number; ratePct: number; personal: Personal; home?: GuideHome; now?: string },
 ): AffordAnswer | null {
-  const price = homePrice(data.levels, input.now);
+  const price = guidePrice(data, input.home, input.now);
   if (!price || input.income <= 0) return null;
-  const month = eachMonth(inputsFor(data, price, input.ratePct, input.personal));
+  const scenario = inputsFor(data, price, input.ratePct, input.personal, input.home);
+  const month = eachMonth(scenario, {tax: input.home?.taxYear !== undefined ? "reader" : "source", insurance: input.personal.insuranceYear !== undefined ? "reader" : "source", upkeep: input.personal.upkeepPct !== undefined ? "reader" : "thumb"});
   const share = month.total / (input.income / 12);
   const fhaLevel = find(data.levels, "hud_fha_limit_1unit") ?? find(data.countyLevels, "hud_fha_limit_1unit");
   const fha = fhaCheck(month.loan, fhaLevel ? { value: fhaLevel.value, year: Number(fhaLevel.period_end.slice(0, 4)) } : null);
   const buyersLevel = find(data.levels, "hmda_median_income");
   const ctx = { newest: data.newest };
   const evidence = judgeAnswer([
-    { label: "home price", figure: asEvidence(priceLevel(data, price)), context: salesContext(data) },
-    { label: "property tax", figure: asEvidence(find(data.levels, "modiv_median_tax_bill")), context: ctx },
-    { label: "insurance", figure: asEvidence(find(data.levels, "acs_median_home_insurance")), context: ctx },
+    ...(price.basis === "reader" ? [] : [{ label: "home price", figure: asEvidence(priceLevel(data, price)), context: salesContext(data) }]),
+    ...(input.home?.taxYear !== undefined ? [] : [{ label: "property tax", figure: asEvidence(find(data.levels, "modiv_median_tax_bill")), context: ctx }]),
+    ...(input.personal.insuranceYear !== undefined ? [] : [{ label: "insurance", figure: asEvidence(find(data.levels, "acs_median_home_insurance")), context: ctx }]),
     { label: "utilities", figure: asEvidence(find(data.levels, "acs_median_electricity")), context: ctx },
   ]);
   return {
     price,
+    upfront: upFront(scenario),
     month,
     share,
     band: bandOf(share),
@@ -175,7 +186,7 @@ export function affordAnswer(
 export const MAX_YEARS = 30;
 
 export type RentOrBuy = {
-  price: HomePrice;
+  price: GuidePrice;
   rent: number;
   /** The rent was the reader's own, not the published figure. */
   ownRent: boolean;
@@ -197,17 +208,17 @@ export function breakEvenYear(input: Inputs, maxYears = MAX_YEARS): number | nul
 
 export function rentOrBuy(
   data: GuideData,
-  input: { ratePct: number; personal: Personal; rent?: number | null; now?: string },
+  input: { ratePct: number; personal: Personal; home?: GuideHome; rent?: number | null; now?: string },
 ): RentOrBuy | null {
-  const price = homePrice(data.levels, input.now);
+  const price = guidePrice(data, input.home, input.now);
   const published = find(data.levels, "zori_all");
   const rent = input.rent ?? published?.value ?? null;
   if (!price || rent === null || rent <= 0) return null;
-  const inputs = { ...inputsFor(data, price, input.ratePct, input.personal), rentMonth: rent };
+  const inputs = { ...inputsFor(data, price, input.ratePct, input.personal, input.home), rentMonth: rent };
   const ctx = { newest: data.newest };
   const evidence = judgeAnswer([
-    { label: "home price", figure: asEvidence(priceLevel(data, price)), context: salesContext(data) },
-    { label: "property tax", figure: asEvidence(find(data.levels, "modiv_median_tax_bill")), context: ctx },
+    ...(price.basis === "reader" ? [] : [{ label: "home price", figure: asEvidence(priceLevel(data, price)), context: salesContext(data) }]),
+    ...(input.home?.taxYear !== undefined ? [] : [{ label: "property tax", figure: asEvidence(find(data.levels, "modiv_median_tax_bill")), context: ctx }]),
     // The reader's own rent needs no evidence; the published one is judged like any other.
     ...(input.rent ? [] : [{ label: "rent", figure: asEvidence(published), context: ctx }]),
   ]);

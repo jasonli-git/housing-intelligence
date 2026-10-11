@@ -1,4 +1,54 @@
 /* The decision guides (Milestone 49). */
+.mortgage-rate-details { min-width:0; max-width:100%; }
+.mortgage-rate-details .reader-details-body { min-width:0; overflow-x:auto; }
+.mortgage-rate-details .rate-scenarios { width:100%; min-width:0; }
+.mortgage-rate-details .rate-scenarios th { white-space:normal; overflow-wrap:anywhere; }
+.mortgage-rate-details .rate-scenarios th:first-child { white-space:nowrap; overflow-wrap:normal; }
+.guide-contents { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; padding:.7rem 0; border-block:1px solid var(--border); }
+.guide-contents > span { color:var(--text-muted); font-size:.75rem; margin-right:.4rem; }
+.guide-contents a { display:flex; align-items:center; gap:.45rem; padding:.55rem .75rem; border-radius:999px; background:var(--surface-card); color:var(--text-primary); font-size:.85rem; text-decoration:none; }
+.guide-contents small { color:var(--text-muted); }
+.decision-guide > :is(.guide-contents,.guide-check-index) { grid-column:1/-1; }
+.guide-check-index { margin:.6rem 0 1rem; padding:.75rem 1rem; border-radius:12px; background:color-mix(in srgb,var(--text-secondary) 5%,transparent); }
+.guide-check-index > span { font:500 11px/1.4 var(--font-mono); color:var(--text-muted); }
+.guide-check-index ul { display:flex; flex-wrap:wrap; gap:0 1.25rem; list-style:none; padding:0; margin:.3rem 0 0; }
+.guide-check-index a { display:inline-flex; gap:.4rem; align-items:center; min-height:44px; font:500 13px/1.4 var(--font-text); text-decoration:none; }
+.guide-check-index a span { opacity:.4; }
+.guide-check-index a:hover { text-decoration:underline; text-underline-offset:4px; }
+.guide-check[id] { scroll-margin-top:7rem; }
+@media screen {
+  .guide-page .decision-guide .guide-answer.guide-slide[data-active="false"] { display:none; }
+  .guide-page .decision-guide:has(>.guide-setup[data-ready="false"]) { grid-template-columns:minmax(0,1fr); }
+  .guide-step-selector { scroll-margin-top:6rem; border:0; padding:0; }
+  .guide-step-selector button { min-height:44px; padding:.65rem .8rem; border:1px solid var(--border); border-radius:999px; background:transparent; color:var(--text-secondary); font:500 13px/1.4 var(--font-text); cursor:pointer; }
+  .guide-step-selector button[aria-current="step"] { color:var(--text-primary); background:color-mix(in srgb,var(--text-secondary) 12%,var(--surface-card)); border-color:var(--text-secondary); }
+  .guide-step-selector .guide-help-shortcut { margin-left:auto; background:none; }
+  .guide-step-arrows { display:flex; align-items:center; justify-content:space-between; gap:.75rem; grid-column:1/-1; }
+  .guide-step-arrows button { min-height:44px; padding:.65rem .8rem; border:1px solid var(--border); border-radius:12px; background:var(--surface-card); color:var(--text-primary); font:500 13px/1.4 var(--font-text); cursor:pointer; }
+  .guide-step-arrows button:disabled { opacity:.35; cursor:default; }
+  .guide-step-arrows > span { font:12px var(--font-mono); color:var(--text-muted); white-space:nowrap; }
+  .guide-slide[data-active="true"] { animation:guide-slide-in 180ms ease-out; }
+  @keyframes guide-slide-in { from { opacity:0; transform:translateX(8px); } to { opacity:1; transform:none; } }
+  @media(prefers-reduced-motion:reduce) { .guide-slide[data-active="true"] { animation:none; } }
+  @media(max-width:600px) { .guide-step-selector button { flex:1; padding:.6rem .4rem; font-size:12px; } .guide-step-selector button small { display:block; } .guide-step-selector .guide-help-shortcut { flex-basis:100%; justify-content:flex-end; padding:0; } }
+}
+@media print { .guide-step-selector,.guide-step-arrows { display:none; } .guide-slide[data-ready="true"] { display:block !important; } }
+.guide-check-group { margin-top:1.5rem; }
+.guide-check-group > h3 { color:var(--text-muted); font-size:.85rem; }
+.guide-supporting-evidence { margin-top:1.5rem; border-top:1px solid var(--border); padding-top:.8rem; }
+.guide-supporting-evidence summary { cursor:pointer; }
+.guide-page .guide-answer[hidden] { display:none; }
+.guide-cash { display:grid; gap:.4rem; max-width:20rem; font-size:.85rem; }
+.guide-cash input { font:inherit; font-size:16px; padding:.55rem; background:var(--surface-card); color:var(--text-primary); border:1px solid var(--border); border-radius:6px; }
+.guide-assumptions { margin-top:1rem; padding-top:.8rem; border-top:1px solid var(--border); }
+.guide-assumptions summary { cursor:pointer; }
+.guide-page :is(h2,h3) { scroll-margin-top:110px; }
+.atlas-local #local-price-history { margin-block:1.5rem; }
+.place-guide-entry { display:flex; gap:1rem; align-items:flex-start; padding:1.2rem 0; }
+.place-guide-entry > svg { width:24px; height:24px; flex-shrink:0; }
+.place-guide-entry h3 { margin:0; }
+.place-guide-entry p { margin:.4rem 0; color:var(--text-secondary); }
+@media (max-width:600px) { .guide-contents > span { flex-basis:100%; } .guide-contents a { padding:.5rem .6rem; font-size:.8rem; } }
 .decision-guide { display: grid; gap: 1.5rem; max-width: 52rem; }
 .decision-guide .section { margin: 0; }
 .guide-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: .9rem 1.2rem; margin: .8rem 0; }

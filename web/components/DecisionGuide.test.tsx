@@ -12,4 +12,14 @@ it("previews all three questions without claiming missing data before selection"
   expect(html.match(/class="guide-preview"/g)).toHaveLength(3);
   expect(html).not.toContain("No home price is published");
   expect(html).not.toContain("guide-answer-body");
+  expect(html).toContain('aria-label="In this guide"');
+  const contents=html.match(/<nav[^>]*class="guide-contents[^\"]*"[\s\S]*?<\/nav>/)?.[0] ?? "";
+  expect(contents.match(/<button/g)).toHaveLength(3);
+  expect(contents).toContain('aria-current="step"');
+  expect(contents).toContain('href="/help"');
+  expect(html.match(/data-active="true"/g)).toHaveLength(1);
+  expect(html.match(/data-active="false"/g)).toHaveLength(2);
+  const checks=html.match(/<nav class="guide-check-index"[\s\S]*?<\/nav>/)?.[0] ?? "";
+  expect(checks.match(/href="#guide-place-heading"/g)).toHaveLength(10);
+  for(const label of ["Property tax", "Financing", "Home sales", "Flooding", "Drinking water", "Contaminated sites", "Radon", "Schools", "Commute", "Internet &amp; utilities"]) expect(checks).toContain(label);
 });

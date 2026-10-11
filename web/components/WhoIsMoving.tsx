@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import type { Migration, MigrationFlow } from "@/lib/api";
 import { ReaderDetails } from "@/components/ReaderDetails";
+import { MigrationExhibit } from "@/components/ExhibitCharts";
 import { shareText } from "@/lib/hazards";
 import { formatIncome, formatReturns, incomeSentence, latestYear, movesSentence, whose } from "@/lib/migration";
 
@@ -26,7 +27,7 @@ function Flows({ flows, caption, heading }: { flows: MigrationFlow[]; caption: s
         <tbody>
           {flows.map((f) => (
             <tr key={f.rank}>
-              <th scope="row">{f.region_id !== null ? <Link href={regionPath(f.region_id)}>{f.name}</Link> : f.name}</th>
+              <th scope="row">{f.region_id !== null ? <Link className="destination-county" href={regionPath(f.region_id)}>{f.name}</Link> : f.name}</th>
               <td className="num">{formatReturns(f.returns)}</td>
               <td className="num">{shareText(f.share)}</td>
               <td className="num">{f.income_per_return !== null ? formatIncome(f.income_per_return) : "—"}</td>
@@ -44,7 +45,7 @@ function Flows({ flows, caption, heading }: { flows: MigrationFlow[]; caption: s
  * those who stayed, six years of the balance, and where movers came from and went to.
  * A town or ZIP shows its county's, and says so.
  */
-export function WhoIsMoving({ name, data }: { name: string; data: Migration | null }) {
+export function WhoIsMoving({ name, data, exhibit = false }: { name: string; data: Migration | null; exhibit?: boolean }) {
   if (!data) return null;
   const latest = latestYear(data);
   if (!latest) return null;
@@ -68,7 +69,8 @@ export function WhoIsMoving({ name, data }: { name: string; data: Migration | nu
         </p>
       )}
 
-      {trend.length > 1 && (
+      {exhibit && <MigrationExhibit data={data} />}
+      {!exhibit && trend.length > 1 && (
         <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
           <table className="change-places migration-years">
             <caption className="visually-hidden">Households moving in and out of {county}, by year</caption>
@@ -96,7 +98,7 @@ export function WhoIsMoving({ name, data }: { name: string; data: Migration | nu
         </div>
       )}
 
-      <Flows
+      {!exhibit && <><Flows
         flows={data.arrivals}
         heading={`Where arrivals lived in ${data.flows_year ? data.flows_year - 1 : "the year before"}`}
         caption={`The ten counties sending the most households to ${county}, ${data.flows_year}`}
@@ -106,8 +108,11 @@ export function WhoIsMoving({ name, data }: { name: string; data: Migration | nu
         heading="Where leavers went"
         caption={`The ten counties receiving the most households from ${county}, ${data.flows_year}`}
       />
+      </>}
 
       <ReaderDetails title="About these figures">
+        {exhibit && <><Flows flows={data.arrivals} heading="Where arrivals lived" caption={`Arrivals to ${county}, ${data.flows_year}`} /><Flows flows={data.departures} heading="Where leavers went" caption={`Departures from ${county}, ${data.flows_year}`} />
+          <p className="sales-note">Annual net matched returns per 1,000: {trend.map(y=>`${y.year}: ${y.net_per_1000?.toFixed(1)}`).join(" · ")}.</p></>}
         <p className="sales-note">
           From the IRS’s county-to-county migration data, which compares the addresses on federal tax returns
           filed in two years. A household here is a tax return: people who file none, such as many retirees

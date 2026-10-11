@@ -1,0 +1,49 @@
+/* Shared tool typography and calm entry surfaces; official routes stay source-blue. */
+@media screen {
+  body:has(.housing-help-page) { --surface-1:light-dark(#f3f2ee,#232420); --surface-2:light-dark(#fdfcf8,#2e302b); --surface-card:var(--surface-2); --text-primary:light-dark(#33372e,#edf0e7); --text-secondary:light-dark(#555b4f,#c6ccbd); --text-muted:light-dark(#62695b,#b6bead); --border:light-dark(#d3d7ca,#515848); background:var(--surface-1); }
+  .housing-help-page { --atlas-accent:light-dark(#59654a,#c4d1b2); --tool-heading:Georgia,serif; }
+  .housing-help-page .page-title { font:500 clamp(38px,5vw,62px)/1.08 var(--tool-heading); letter-spacing:-.045em; color:var(--text-primary); margin-bottom:.8rem; }
+  .housing-help-page .tool-subtitle { font:400 16px/1.6 var(--font-text); color:var(--text-secondary); max-width:55ch; margin:.5rem 0; }
+  .housing-help-page .page-head { --kind:var(--atlas-accent); display:block; padding-bottom:.7rem; border:0; }
+  .housing-help-page .page-head .meta { font-size:12px; }
+  .housing-help-page .crumbs li[data-level="nation"] { --crumb-accent:var(--text-primary); }
+  .housing-help-page .housing-assistance { border:0; background:none; padding:0; box-shadow:none; margin-top:.8rem; }
+  .housing-help-page .housing-assistance-head > span { display:none; }
+  .housing-help-page .housing-assistance-head h3 { font:500 23px/1.2 var(--tool-heading); margin:.7rem 0; }
+  .housing-help-page .assistance-routes { gap:.8rem; counter-reset:help-route; }
+  .housing-help-page .assistance-routes a { counter-increment:help-route; position:relative; gap:.6rem; padding:1.1rem; background:var(--surface-card); border:1px solid var(--border); border-radius:14px; }
+  .housing-help-page .assistance-routes a::before { content:"0" counter(help-route); color:var(--text-muted); font:11px var(--font-mono); }
+  .housing-help-page .assistance-routes a:hover { border-color:var(--text-secondary); }
+  .housing-help-page .assistance-routes small { font:12px/1.4 var(--font-text); }
+  .housing-help-page .assistance-routes strong { font:600 17px/1.3 var(--font-text); }
+  .housing-help-page .assistance-routes span { font:400 14px/1.5 var(--font-text); }
+  .housing-help-page :is(.assistance-note,.assistance-method,.assistance-result-count) { font:400 13px/1.6 var(--font-text); max-width:80ch; }
+  .housing-help-page .assistance-inventory { margin-top:1.4rem; padding-top:1.2rem; }
+  .housing-help-page .assistance-inventory > summary { font:500 24px/1.3 var(--tool-heading); }
+  .housing-help-page .assistance-filter { padding:1rem; background:var(--surface-card); border:1px solid var(--border); border-radius:12px; }
+  .housing-help-page .assistance-filter label { font-size:13px; }
+  .housing-help-page .assistance-filter :is(input,select) { font:16px var(--font-text); box-sizing:border-box; min-height:44px; }
+  .housing-help-page .assistance-property { padding:1.2rem .2rem; }
+  .housing-help-page .assistance-property-facts { font-size:13px; }
+  .budget-page { --atlas-accent:var(--budget-accent); }
+  .budget-page > .page-head { border-top:0; }
+  .budget-page .afford-controls { border-radius:18px 18px 0 0; border-color:var(--border); box-shadow:none; gap:1rem; }
+  .budget-page .afford-controls .control-label { text-align:left; }
+  .budget-page .budget-headline { background:var(--surface-card); padding-block:1.1rem; }
+  .budget-page .budget-headline::after { border-color:color-mix(in srgb,var(--text-muted) 15%,transparent); }
+  .budget-page .budget-headline strong { font:500 clamp(26px,3vw,36px)/1.2 Georgia,serif; }
+  .budget-page .budget-scope-line { background:var(--surface-card); }
+  .budget-page .afford-summary { padding:.8rem 0; border-left:0; background:none; }
+  .budget-page .afford-summary[hidden] { display:none; }
+  .budget-page .budget-place-check { border:0; margin:1rem 0; }
+  .budget-page .check { border:1px solid var(--border); box-shadow:none; background:var(--surface-card); }
+  .budget-page .budget-explorer[data-has-income="false"] .budget-place-check > summary { color:var(--text-secondary); }
+  .budget-page .explorer { grid-template-columns:minmax(0,1fr); }
+  .budget-page .budget-coverage-note { max-width:80ch; font-size:13px; line-height:1.6; }
+  @media(max-width:640px) {
+    .housing-help-page .assistance-routes a { padding:.95rem 1rem; gap:.35rem; }
+    .housing-help-page .assistance-routes strong { font-size:16px; }
+    .housing-help-page .assistance-routes a::before { position:absolute; top:1rem; right:1rem; }
+    .housing-help-page .assistance-routes small { padding-right:2rem; }
+  }
+}

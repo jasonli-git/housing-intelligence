@@ -9,9 +9,8 @@ export type AffordabilityControl =
   | { kind: "local"; fallbackHref?: string }
   | { kind: "route"; active?: boolean }
   | { kind: "disabled"; reason: string }
-  // Not shown at all: on a page about no one state (the home page, the site's own
-  // policy and source-history pages), a New Jersey shortcut does not belong (owner,
-  // 2026-10-09). "disabled" stays for a page where the control belongs but cannot work.
+  // Not shown on policy/source-history pages. The home page explicitly opts into
+  // the tool link. "disabled" stays where the control belongs but cannot work.
   | { kind: "hidden" };
 
 /**

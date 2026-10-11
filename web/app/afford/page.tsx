@@ -57,7 +57,7 @@ export default async function AffordPage() {
           <h1 className="page-title">Find your fit.</h1>
           <div className="tool-head-tools">
             <p className="meta">
-              A budget, a place, a clearer starting point. Compare typical housing costs in New Jersey.
+              Your income. Typical housing costs. Places to explore in New Jersey.
             </p>
             <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>
           </div>
