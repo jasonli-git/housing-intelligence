@@ -20,8 +20,11 @@
   .quiet-county .cost-evidence-item p { line-height: 1.65; }
   .quiet-county .quiet-tool-group { padding-top: .9rem; }
   .quiet-county.atlas-local .quiet-tool-group { background: color-mix(in srgb, var(--text-primary) 3%, var(--surface-1)); border-color: color-mix(in srgb, var(--text-primary) 15%, var(--surface-1)); border-radius: 16px; box-shadow: none; }
-  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not(.home-action-checks a[href^="#"]):not(.destination-town):not(.destination-county):not(.state-fit-shortcut):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
+  main a:is([href^="/"], [href^="#"], [href^="https://housing.jasonli.app"]):not([href^="//"]):not(.button):not(.coverage-state-title):not(.crumbs a):not([href^="/guide"]):not([href^="/tax"]):not([href^="/afford"]):not(.home-action-checks a[href^="#"]):not(.destination-town):not(.destination-county):not(.state-fit-shortcut):not([href^="/states/"]) { color: light-dark(#66513b, #dfcfb6); }
   main a[href^="/tax"]:not(.button) { color: light-dark(#006977, #8ed9e2); }
+  /* What can I afford? links take the budget tool's own colour, as the guide's and the tax
+     lookup's take theirs. */
+  main a[href^="/afford"]:not(.button) { color: light-dark(#a44e34, #edb09b); }
   main .home-action-checks a[href^="#"] { color: light-dark(#246b55, #a6d9c0); }
   main.atlas-local:is([data-region-level="municipality"], [data-region-level="zip"]) .home-action-checks a[href^="#"] { color: var(--atlas-accent); }
   main a.destination-county { color: light-dark(#246b55, #a6d9c0); }
@@ -376,7 +379,6 @@
     .bar-tool-menu .bar-budget-short { display: none; }
     .bar-tool-menu .bar-budget-long { display: inline; }
   }
-  .bar-menu-extra { display: none; }
   .guide-page { --atlas-accent: light-dark(#925460, #d7a3ad); --atlas-ink: light-dark(#7c414e, #e6bcc5); }
   .guide-page > .page-head[data-kind="tool"] { --kind: var(--atlas-accent); }
   .guide-page .crumbs li[data-level="nation"] { --crumb-accent: var(--text-primary); }
@@ -509,11 +511,11 @@
     .bar-trail { gap: .25rem; }
     .bar-trail .bar-icon { width: 24px; }
     .bar-tool-menu > summary { padding-inline: .45rem; gap: .3rem; }
-    /* With a bar search, the brand shrinks to the house mark so the search keeps room;
-       the portfolio and GitHub links move into Tools. */
+    /* With a bar search, the brand shrinks to the house mark so the search keeps room.
+       The portfolio and GitHub links are left out there (owner, 2026-10-10); the home
+       page's bar, which has no search, and wider screens still carry them. */
     .bar-inner:has(.bar-tools .place-search) :is(.bar-home, .bar-sep, .bar-trail > .bar-icon) { display: none; }
     .bar-inner:has(.bar-tools .place-search) .wordmark-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-    .bar-inner:has(.bar-tools .place-search) .bar-tool-menu .bar-menu-extra { display: flex; }
     .bar-tools .place-search { flex: 1 1 auto; min-width: 0; }
     .bar-controls { gap: .25rem; }
     .bar .bar-link { font-size: 10px; padding-inline: .55rem; }
