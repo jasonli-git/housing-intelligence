@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { Masthead } from "@/components/Masthead";
-import { nationalBenchmarkTrends, nationalHomePriceChange, nationalMortgageRate } from "@/lib/api";
+import { api, regionsWithData, nationalBenchmarkTrends, nationalHomePriceChange, nationalMortgageRate } from "@/lib/api";
+import { dataScale } from "@/lib/dataScale";
+import { DataScale } from "@/components/DataScale";
 import { NationalTrend } from "@/components/NationalTrend";
 import { periodLabel } from "@/lib/periods";
 import { pageMetadata } from "@/lib/meta";
@@ -19,6 +21,7 @@ const HOME_TOOLS = [
 import "./housing-entry.css";
 import "./state-navigation.css";
 import "./home-refresh.css";
+import "./data-scale.css";
 
 export const metadata: Metadata = pageMetadata({
   title: "Housing Intelligence — Find your place",
@@ -29,6 +32,8 @@ export const metadata: Metadata = pageMetadata({
 export default async function HousingLandingPage() {
   const [rate, homePrices] = await Promise.all([nationalMortgageRate(), nationalHomePriceChange()]);
   const trends = await nationalBenchmarkTrends(rate?.metric_id);
+  const [metrics,freshness,places] = await Promise.all([api.metrics(),api.freshness(),regionsWithData()]);
+  const scale = dataScale(metrics,freshness,places);
   return <>
     <Masthead affordability={{ kind: "route", active: false }} search={false} />
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
@@ -49,6 +54,7 @@ export default async function HousingLandingPage() {
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
         <NationalCoverageMap searchFirst />
       </section>
+      <DataScale stats={scale} />
       <section className="national-backdrop" aria-labelledby="national-backdrop-heading">
         <header><h2 id="national-backdrop-heading">The national backdrop</h2><span>United States</span></header>
         <div className="national-backdrop-grid">
