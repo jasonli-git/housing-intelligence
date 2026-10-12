@@ -144,8 +144,8 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
   return <div className={`coverage-atlas${focusedEntry ? " coverage-focused-entry" : ""}`}>
     <div ref={entry} className="coverage-search-stage" data-search-first={searchFirst} data-exploring={exploring}>
     {searchFirst && <div className="coverage-mode-switch" data-exploring={exploring} role="group" aria-label="Find a place by search or map">
-      <button className="coverage-search-return" type="button" hidden={focusedEntry && !exploring} aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>{focusedEntry ? "Back to search" : "Search places"}</button>
-      <button className="coverage-explore-button" type="button" hidden={focusedEntry && exploring} aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>Explore map</button>
+      <button className="coverage-search-return" type="button" hidden={focusedEntry && !exploring} aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>{focusedEntry && <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18" /></svg>}{focusedEntry ? "Back to search" : "Search places"}</button>
+      <button className="coverage-explore-button" type="button" hidden={focusedEntry && exploring} aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>{focusedEntry && <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2Zm6-2v16m6-14v16" /></svg>}Explore map</button>
     </div>}
     <div className="coverage-search-interaction">
     <div id="coverage-map-content" className="coverage-map-content" inert={!exploring} aria-hidden={!exploring}>
@@ -221,7 +221,7 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
           </a> : <path key={state.id} className="coverage-unavailable" pathLength="1" d={state.base} aria-hidden="true" onMouseEnter={() => setHovered(`${state.name} · Not available yet`)}><title>{state.name} — Not available yet</title></path>;
         })}
         <g className="coverage-atlas-traces" aria-hidden="true">{drawing.states.map(state => <path key={state.id} d={STATE_DESTINATIONS[state.id] ? state.top : state.base} pathLength="1" data-available={!!STATE_DESTINATIONS[state.id]} />)}</g>
-        {focusedEntry && STATE_DESTINATIONS.NJ && <g className="coverage-availability-glow" aria-hidden="true"><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="17" /><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="5" /></g>}
+        {focusedEntry && STATE_DESTINATIONS.NJ && <g className="coverage-availability-glow" aria-hidden="true"><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="17" /><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="17" /><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="5" /></g>}
         </g>
         </g>
         <g className="coverage-atlas-guides" aria-hidden="true">
@@ -264,7 +264,7 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
     {searchFirst && <div id="coverage-place-search" className="coverage-search-overlay" inert={exploring} aria-hidden={exploring}>
       <div className="coverage-search-panel">
         <PlaceSearch variant="hero" />
-        {focusedEntry ? <p className="home-find-hint"><Link href="/states/new-jersey" className="landing-coverage-link">New Jersey coverage <span aria-hidden="true">→</span></Link></p> : <p className="home-find-hint">Detailed coverage starts with New Jersey.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>}
+        {!focusedEntry && <p className="home-find-hint">Detailed coverage starts with New Jersey.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>}
       </div>
     </div>}
     </div>

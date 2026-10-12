@@ -71,3 +71,17 @@
 @keyframes coverage-blue-breathe { 50% { transform:scale(1.35); opacity:.08; } }
 @media(max-width:600px) { .search-first-home .coverage-focused-entry [data-exploring="false"] :is(.coverage-map,.coverage-map-placeholder) { height:210px !important; }.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map { transform:translateX(0) scale(1); } }
 @media(prefers-reduced-motion:reduce) { .coverage-availability-glow circle { animation:none; }.search-first-home .coverage-focused-entry :is(.coverage-map,.coverage-map-content) { transition:none; } }
+
+.coverage-availability-glow circle:not(:last-child) { fill:none; stroke:var(--state-blue); stroke-width:1.5; animation:coverage-blue-radial 5s ease-out infinite; }
+.coverage-availability-glow circle:nth-child(2) { animation-delay:-2.5s; }
+@keyframes coverage-blue-radial { 0% { transform:scale(.25); opacity:.65; } 90%,100% { transform:scale(3.5); opacity:0; } }
+.search-first-home .coverage-focused-entry .coverage-mode-switch button { padding:.55rem .85rem; gap:.6rem; border:1px solid var(--border); border-radius:999px; background:var(--surface-card); min-height:44px; }
+.search-first-home .coverage-focused-entry .coverage-mode-switch button svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.4; }
+.search-first-home .coverage-focused-entry .coverage-mode-switch button:hover { border-color:var(--text-secondary); }
+@media(min-width:901px) {
+ .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map-content { height:180px; min-height:180px !important; overflow:visible; }
+ .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map-window { overflow:visible; }
+ .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map { transform:translate(25%,-225px) scale(.48); }
+ .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-search-interaction { min-height:180px; }
+}
+@media(prefers-reduced-motion:reduce) { .coverage-availability-glow circle:not(:last-child) { animation:none; transform:scale(1); opacity:.2; } }

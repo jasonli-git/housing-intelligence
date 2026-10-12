@@ -3,13 +3,13 @@ import {chromium} from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 const browser=await chromium.launch();
 try {
- for(const width of [320,390,768,1280]) for(const theme of ['light','dark']) {
+ for(const width of [320,390,768,1024,1280]) for(const theme of ['light','dark']) {
   const context=await browser.newContext({viewport:{width,height:900},colorScheme:theme,reducedMotion:'reduce'});
   const page=await context.newPage();await page.goto('http://localhost:3002/',{waitUntil:'networkidle'});
   const input=page.locator('.coverage-search-panel input');
   assert((await input.boundingBox()).y<500,'Search should be on the first mobile screen');
   assert(await page.getByText('Housing costs. Local context. Clear sources.').isVisible());
-  assert(await page.locator('.landing-coverage-link').isVisible());
+  assert.equal(await page.locator('.landing-coverage-link').count(),0);
   assert.equal(await page.locator('.coverage-scale-slot').count(),0);
   assert.equal(await page.locator('.nation-portrait').count(),0);
   await input.fill('Princeton');await page.getByRole('option').first().waitFor();
@@ -29,7 +29,7 @@ try {
   await page.locator('.entry-free-assurance summary').click();
   await page.emulateMedia({reducedMotion:'no-preference'});
   assert.equal(await page.locator('.coverage-atlas-traces path').first().evaluate(e=>getComputedStyle(e).animationName),'atlas-travel');
-  assert.equal(await page.locator('.coverage-availability-glow circle').first().evaluate(e=>getComputedStyle(e).animationName),'coverage-blue-breathe');
+  assert.equal(await page.locator('.coverage-availability-glow circle').first().evaluate(e=>getComputedStyle(e).animationName),'coverage-blue-radial');
   await page.emulateMedia({reducedMotion:'reduce'});
   assert.equal(await page.locator('.coverage-availability-glow circle').first().evaluate(e=>getComputedStyle(e).animationName),'none');
   await page.locator('.licence summary').click();assert(await page.locator('.licence-text').isVisible());await page.locator('.licence summary').click();
