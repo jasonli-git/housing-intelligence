@@ -10,6 +10,9 @@
 .scale-ledger path { stroke:var(--text-secondary); stroke-width:.7; opacity:.5; }
 .scale-places path { stroke:var(--text-secondary); stroke-width:.8; fill:light-dark(#897d6410,#e5d6b713); }
 .scale-counts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:.2rem 0; }
+.scale-counts-properties { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.scale-counts small { letter-spacing:normal; }
+@media(max-width:700px) { .scale-counts-properties { grid-template-columns:repeat(2,minmax(0,1fr)); row-gap:1rem; } }
 .scale-counts > div { min-width:0; border-left:1px solid var(--border); padding-left:1rem; }
 .scale-counts dt { font:12px/1.5 var(--font-text); color:var(--text-secondary); }
 .scale-counts dd { margin:.2rem 0; font:500 clamp(20px,3.4vw,36px)/1.1 var(--font-display); letter-spacing:-.04em; color:var(--text-primary); font-variant-numeric:tabular-nums; }

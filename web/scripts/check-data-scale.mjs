@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
+import {readFileSync,existsSync} from 'node:fs';
 import {chromium} from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 const metrics=await(await fetch('http://localhost:8000/metrics')).json();
 const freshness=await(await fetch('http://localhost:8000/freshness')).json();
 const totals=await Promise.all(['county','municipality','zip'].map(async level=>(await(await fetch(`http://localhost:8000/regions?has_data=true&state=NJ&level=${level}&limit=1`)).json()).total));
-const expected=[new Set(freshness.sources.filter(s=>s.period_observed_start||s.period_observed_end).map(s=>s.source_id)).size,metrics.reduce((sum,m)=>sum+m.observations,0),totals.reduce((sum,n)=>sum+n,0)];
+const properties=existsSync('.property-scale.json')?JSON.parse(readFileSync('.property-scale.json','utf8')):null;
+const sources=new Set(freshness.sources.filter(s=>s.period_observed_start||s.period_observed_end).map(s=>s.source_id)).size;
+const expected=properties?[properties.parcels,properties.transactions,sources,totals.reduce((sum,n)=>sum+n,0)]:[sources,metrics.reduce((sum,m)=>sum+m.observations,0),totals.reduce((sum,n)=>sum+n,0)];
 const browser=await chromium.launch();
 try {
  for(const width of [320,390,1280]) for(const theme of ['light','dark']) {

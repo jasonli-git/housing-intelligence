@@ -3,6 +3,7 @@ import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { Masthead } from "@/components/Masthead";
 import { api, regionsWithData, nationalBenchmarkTrends, nationalHomePriceChange, nationalMortgageRate } from "@/lib/api";
 import { dataScale } from "@/lib/dataScale";
+import { propertyScale } from "@/lib/propertyScale";
 import { DataScale } from "@/components/DataScale";
 import { NationalTrend } from "@/components/NationalTrend";
 import { periodLabel } from "@/lib/periods";
@@ -54,7 +55,7 @@ export default async function HousingLandingPage() {
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
         <NationalCoverageMap searchFirst />
       </section>
-      <DataScale stats={scale} />
+    <DataScale stats={scale} properties={propertyScale()} />
       <section className="national-backdrop" aria-labelledby="national-backdrop-heading">
         <header><h2 id="national-backdrop-heading">The national backdrop</h2><span>United States</span></header>
         <div className="national-backdrop-grid">

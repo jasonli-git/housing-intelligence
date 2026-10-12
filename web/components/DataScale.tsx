@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type {DataScale as Scale} from "@/lib/dataScale";
+import type {PropertyScale} from "@/lib/propertyScale";
 
-export function DataScale({stats}:{stats:Scale|null}) {
+export function DataScale({stats,properties}:{stats:Scale|null;properties?:PropertyScale|null}) {
   if(!stats) return null;
   const number=(n:number)=>n.toLocaleString("en-US");
   return <section className="data-scale" aria-labelledby="data-scale-heading">
@@ -12,12 +13,14 @@ export function DataScale({stats}:{stats:Scale|null}) {
       <g className="scale-ledger">{Array.from({length:9},(_,i)=><path key={i} d={`M395 ${25+i*10} h110 m-110 0 v3 m110-3v3`} />)}<path d="M425 20v100m50-100v100" /></g>
       <g className="scale-places">{Array.from({length:12},(_,i)=>{const x=755+(i%6)*22,y=25+Math.floor(i/6)*50;return <path key={i} d={`M${x} ${y+12}l8-9 8 9v17h-16Z m5 17v-9h6v9`} />;})}</g>
     </svg>
-    <dl className="scale-counts">
+    <dl className={`scale-counts${properties?" scale-counts-properties":""}`}>
+      {properties && <><div><dt>Property parcels</dt><dd><span className="scale-value">{number(properties.parcels)}</span><small>Distinct NJ parcel identifiers</small></dd></div><div><dt>Property sales records</dt><dd><span className="scale-value">{number(properties.transactions)}</span><small>NJ sales-ratio archives {properties.archives[0]}–{properties.archives.at(-1)?.replace("ytd"," YTD")}</small></dd></div></>}
       <div><dt>Data sources</dt><dd><span className="scale-value">{number(stats.sources)}</span><small>With dated records loaded</small></dd></div>
-      <div><dt>Dated metric records</dt><dd><span className="scale-value">{number(stats.observations)}</span><small>Across {number(stats.measures)} measures</small></dd></div>
+      {!properties && <div><dt>Dated metric records</dt><dd><span className="scale-value">{number(stats.observations)}</span><small>Across {number(stats.measures)} measures</small></dd></div>}
       <div><dt>Places to explore</dt><dd><span className="scale-value">{number(stats.places)}</span><small>New Jersey · counties, towns &amp; ZIP areas</small></dd></div>
     </dl>
     <details className="scale-definitions"><summary>What these counts mean</summary>
+      {properties && <p>{number(stats.observations)} dated metric records across {number(stats.measures)} measures sit behind the analytical views. Parcel totals count distinct nonblank PAMS parcel identifiers in the current landed NJ MOD-IV composite—not annual assessment rows or only residential homes. Sales totals count SR1A reporting records, deduplicated by county, district, serial number and assessment year; they include non-market transfers and records not matched to a place page. These are not deed documents. Archive labels are sales-ratio years (July–June), not calendar-year coverage; YTD is the publisher’s open archive label.</p>}
       <p>Calculated from the data available at build time—not a live counter. Sources have dated metric, infrastructure or community records loaded; unfetched sources and raw map layers are not counted. Metric records count dated observations in the warehouse across loaded geographies, including national/state series and calculated measures—not raw rows processed, independent measurements or individual homes.</p>
       <p>Places count New Jersey county, municipality and ZIP pages with at least one metric observation. Coverage varies: a page does not mean every measure is available. The artwork illustrates assembly; its marks are not one-to-one records or a trace of individual homes.</p>
       <nav aria-label="Explore data provenance"><Link href="/freshness">How current are the sources?</Link><Link href="/changes">Which figures changed?</Link></nav>
