@@ -20,8 +20,6 @@ const DARK = "(prefers-color-scheme: dark)";
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
   const [systemDark, setSystemDark] = useState(false);
-  const button = useRef<HTMLButtonElement>(null);
-  const transition = useRef<ViewTransition | null>(null);
   const chosen = useRef<Theme>("system");
 
   useEffect(() => {
@@ -38,41 +36,20 @@ export function ThemeToggle() {
     return () => query.removeEventListener("change", follow);
   }, []);
 
-  async function press() {
-    // Complete the previous palette update before another click chooses its opposite.
-    const previous = transition.current;
-    if (previous) {
-      previous.skipTransition();
-      await previous.updateCallbackDone.catch(() => {});
-    }
+  function press() {
+    // Palette changes are synchronous; only the icon animates. Full-page snapshots
+    // can block pointer input and split named map elements into different reveals.
     const next = toggled(chosen.current, window.matchMedia(DARK).matches);
     chosen.current = next;
-    const root = document.documentElement;
-    const update = () => {
+    const root=document.documentElement;
+    root.dataset.paletteUpdate="";
+    try {
       flushSync(() => setTheme(next));
       applyTheme(root, next);
-    };
-    if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      const bounds = button.current?.getBoundingClientRect();
-      const x = bounds ? bounds.left + bounds.width / 2 : innerWidth / 2;
-      const y = bounds ? bounds.top + bounds.height / 2 : 0;
-      root.style.setProperty("--theme-x", `${x}px`);
-      root.style.setProperty("--theme-y", `${y}px`);
-      root.style.setProperty("--theme-radius", `${Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))}px`);
-      root.dataset.themeReveal = "";
-      const active = document.startViewTransition(update);
-      transition.current = active;
-      // A skipped/unsupported snapshot still applies the palette. Only its owner
-      // cleans up, so rapid clicks cannot erase a newer reveal's styles.
-      void active.finished.catch(() => {}).finally(() => {
-        if (transition.current !== active) return;
-        transition.current = null;
-        delete root.dataset.themeReveal;
-        ["--theme-x", "--theme-y", "--theme-radius"].forEach((key) => root.style.removeProperty(key));
-      });
-    } else {
-      update();
-    }
+      // Settle the new palette without independent hover-color tweens leaving
+      // controls briefly grey. Restore normal interaction motion in this same tap.
+      void root.offsetWidth;
+    } finally { delete root.dataset.paletteUpdate; }
     try {
       if (next === "system") localStorage.removeItem(THEME_KEY);
       else localStorage.setItem(THEME_KEY, next);
@@ -90,7 +67,7 @@ export function ThemeToggle() {
     strokeLinejoin: "round" as const,
   };
   return (
-    <button ref={button} type="button" className="bar-icon theme-toggle" onClick={press} aria-label={label} title={label}>
+    <button type="button" className="bar-icon theme-toggle" onClick={press} aria-label={label} title={label}>
       <svg className="theme-eclipse" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" {...stroke}>
         <path className="eclipse-moon" d="M20.5 13.2A8.5 8.5 0 0 1 10.8 3.5a8.5 8.5 0 1 0 9.7 9.7Z" />
         <g className="eclipse-rays"><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M5 19l1.4-1.4M17.6 6.4 19 5" /></g>
