@@ -17,9 +17,13 @@ try {
   const signature=page.locator('.scale-signature');
   const bounds=await signature.boundingBox();
   assert(bounds && bounds.height<=60,'Map-edge signature should remain compact');
-  assert(await page.locator('.coverage-entry').evaluate(e=>e.contains(document.querySelector('.scale-signature')) && e.contains(document.querySelector('.data-scale'))));
-  assert(await page.locator('.coverage-search-stage').evaluate(e=>e.contains(document.querySelector('.scale-map-edge'))));
-  assert((await page.locator('.scale-map-edge').boundingBox()).y < (await page.locator('.coverage-state-preview').boundingBox()).y);
+  if(await page.locator('.coverage-focused-entry').count()) {
+    assert(await page.locator('.landing-data-support').evaluate(e=>e.contains(document.querySelector('.scale-signature')) && e.contains(document.querySelector('.data-scale'))));
+  } else {
+    assert(await page.locator('.coverage-entry').evaluate(e=>e.contains(document.querySelector('.scale-signature')) && e.contains(document.querySelector('.data-scale'))));
+    assert(await page.locator('.coverage-search-stage').evaluate(e=>e.contains(document.querySelector('.scale-map-edge'))));
+    assert((await page.locator('.scale-map-edge').boundingBox()).y < (await page.locator('.coverage-state-preview').boundingBox()).y);
+  }
   assert((await page.locator('.scale-map-edge').boundingBox()).height<110,'Closed map-edge strip should stay shallow');
   assert.equal(await page.locator('.foot-sources summary').innerText().then(t=>/All \d+ datasets/.test(t)),false);
   assert(await page.locator('.foot-sources summary').innerText().then(t=>t.includes('Census')));

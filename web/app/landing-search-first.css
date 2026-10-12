@@ -1,0 +1,39 @@
+/* Local experiment: the visitor's task leads, project depth follows. */
+.search-first-home .site-meta-row { display:flex; align-items:center; flex-wrap:wrap; gap:.2rem 1rem; padding-block:.2rem; }
+.search-first-home .site-meta-row .licence { flex:1; margin:0; }
+.search-first-home .licence-label { font:500 11px/1.4 var(--font-text); letter-spacing:0; text-transform:none; }
+.search-first-home .site-status { border:0; background:none; font:11px/1.4 var(--font-text); padding:.25rem 0; }
+.search-first-home .site-status-kicker { font:inherit; letter-spacing:0; text-transform:none; }
+.search-first-home .licence .disclose-hint .when-closed { display:none; }
+.search-first-home .nation-page .landing-canvas .nation-head { padding:1.5rem 0 .4rem; display:block; }
+.search-first-home .nation-head h1 { font:400 clamp(38px,5vw,64px)/1.08 Georgia,serif; letter-spacing:-.045em; }
+.search-first-home .nation-head .entry-introduction { font:400 17px/1.55 var(--font-text); max-width:44ch; margin:.65rem 0 0; color:var(--text-secondary); }
+.search-first-home .nation-portrait { opacity:.35; }
+.search-first-home .nation-head .entry-free { margin:.65rem 0 .25rem; font-size:12px; }
+.search-first-home .coverage-focused-entry .coverage-search-stage { display:flex; flex-direction:column; padding-top:0 !important; }
+.search-first-home .coverage-focused-entry .coverage-mode-switch { position:relative; inset:auto; order:2; margin:.2rem 0 .65rem; align-self:flex-start; transform:none; }
+.search-first-home .coverage-focused-entry .coverage-search-interaction { order:1; }
+.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map-content { display:none; }
+.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-search-overlay { position:relative; inset:auto; display:block; padding:0; background:none; transform:none; }
+.search-first-home .coverage-focused-entry .coverage-search-panel { width:min(100%,40rem); padding:.65rem 0 0; margin:0; }
+.landing-search-label { display:block; font:500 13px/1.5 var(--font-text); color:var(--text-primary); margin:0 0 .5rem; }
+.search-first-home .coverage-search-panel input { background:var(--surface-card); border-color:var(--text-muted); border-radius:10px; }
+.landing-start-links { display:flex; gap:1.3rem; flex-wrap:wrap; font:13px/1.5 var(--font-text); }
+.landing-start-links a { min-height:44px; display:inline-flex; align-items:center; gap:.7rem; color:var(--state-blue); }
+.landing-start-links a:last-child { color:var(--text-secondary); }
+.search-first-home .coverage-focused-entry .coverage-map-note { font:11px/1.5 var(--font-text); margin:.2rem 0; padding:0; max-width:70ch; }
+.search-first-home .coverage-focused-entry:has([data-exploring="false"]) .coverage-map-note { display:none; }
+.search-first-home .coverage-entry { margin-top:0; }
+.landing-data-support { border-top:1px solid var(--border); margin:1.5rem 0 1rem; padding-top:1rem; }
+.landing-data-support > h2 { font:500 14px/1.4 var(--font-text); margin:0 0 .5rem; color:var(--text-secondary); }
+.landing-data-support .scale-map-edge { margin-top:0; border:0; padding-top:.25rem; }
+@media(max-width:600px) {
+ .search-first-home .nation-page .landing-canvas .nation-head { padding:1rem 0 .2rem; }
+ .search-first-home .nation-head h1 { font-size:38px; }
+ .search-first-home .nation-portrait { display:none; }
+ .search-first-home .nation-head .entry-introduction { font-size:15px; }
+ .search-first-home .site-meta-row { gap:.2rem .6rem; }
+ .search-first-home .site-status { font-size:10px; }
+ .search-first-home .site-status-arrow { display:none; }
+ .search-first-home .coverage-search-panel .place-search-hero input { font-size:16px; }
+}

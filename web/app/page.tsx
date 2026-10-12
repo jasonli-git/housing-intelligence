@@ -23,6 +23,7 @@ import "./housing-entry.css";
 import "./state-navigation.css";
 import "./home-refresh.css";
 import "./data-scale.css";
+import "./landing-search-first.css";
 
 export const metadata: Metadata = pageMetadata({
   title: "Housing Intelligence — Find your place",
@@ -36,7 +37,7 @@ export default async function HousingLandingPage() {
   const [metrics,sources,places] = await Promise.all([api.metrics(),api.sources(),regionsWithData()]);
   const scale = dataScale(metrics,sources,places);
   const properties = propertyScale();
-  return <>
+  return <div className="search-first-home">
     <Masthead affordability={{ kind: "route", active: false }} search={false} />
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
       <div className="landing-canvas">
@@ -48,16 +49,19 @@ export default async function HousingLandingPage() {
           <path className="portrait-windows" pathLength="1" d="M112 254V183H151V254M70 145H96V174H70ZM176 145H202V174H176ZM250 189H275V217H250ZM298 189H320V217H298Z" />
           <path className="portrait-guides" d="M47 276H225M47 270V282M225 270V282M20 254V125M14 125H26M14 254H26" strokeDasharray="3 5" />
         </svg>
-        <p className="entry-kicker">A public data project</p>
         <h1>Housing Intelligence</h1>
-        <p className="entry-introduction">A clearer picture of the place you could call home.</p>
+        <p className="entry-introduction">Understand housing costs and local conditions, with public data you can inspect.</p>
         <p className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free to use · No fees, subscriptions or ads</span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
-        <NationalCoverageMap searchFirst scaleStrip={<div className="scale-map-edge">
+        <NationalCoverageMap searchFirst focusedEntry />
+      </section>
+      <section className="landing-data-support" aria-label="About the data">
+        <h2>About the data</h2>
+        <div className="scale-map-edge">
           <ScaleSignature stats={scale} properties={properties} />
           <DataScale stats={scale} properties={properties} />
-        </div>} />
+        </div>
         {scale && <p className="scale-coverage">{scale.places.toLocaleString("en-US")} New Jersey places to explore · Coverage varies by place</p>}
       </section>
       <section className="national-backdrop" aria-labelledby="national-backdrop-heading">
@@ -97,5 +101,5 @@ export default async function HousingLandingPage() {
       </section>
       </div>
     </main>
-  </>;
+  </div>;
 }

@@ -10,7 +10,7 @@ import { PlaceSearch } from "@/components/PlaceSearch";
 import { boundCoverage, COVERAGE_HOME, COVERAGE_REGIONS, coverageScene, regionViewport, STATE_DESTINATIONS, zoomCoverage, type CoverageRegion, type CoverageViewport } from "@/lib/coverageMap";
 
 /** Zoomable coverage geometry without continuous reprojection or local-data downloads. */
-export function NationalCoverageMap({ searchFirst = false, scaleStrip }: { searchFirst?: boolean; scaleStrip?: ReactNode }) {
+export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEntry = false }: { searchFirst?: boolean; scaleStrip?: ReactNode; focusedEntry?: boolean }) {
   const router = useRouter();
   const [exploring, setExploring] = useState(!searchFirst);
   const entry = useRef<HTMLDivElement>(null);
@@ -141,7 +141,7 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip }: { searc
   };
   const locator = drawing ? [viewport.x + drawing.locator[0] * viewport.scale, viewport.y + drawing.locator[1] * viewport.scale] : null;
 
-  return <div className="coverage-atlas">
+  return <div className={`coverage-atlas${focusedEntry ? " coverage-focused-entry" : ""}`}>
     <div ref={entry} className="coverage-search-stage" data-search-first={searchFirst} data-exploring={exploring}>
     {searchFirst && <div className="coverage-mode-switch" data-exploring={exploring} role="group" aria-label="Find a place by search or map">
       <button className="coverage-search-return" type="button" aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>Search places</button>
@@ -262,16 +262,18 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip }: { searc
     </div>
     {searchFirst && <div id="coverage-place-search" className="coverage-search-overlay" inert={exploring} aria-hidden={exploring}>
       <div className="coverage-search-panel">
+        {focusedEntry && <p className="landing-search-label">Find a place</p>}
         <PlaceSearch variant="hero" />
-        <p className="home-find-hint">Detailed coverage starts with New Jersey.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>
+        <p className="home-find-hint">Detailed coverage starts with New Jersey.{!focusedEntry && <span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span>}</p>
+        {focusedEntry && <div className="landing-start-links"><Link href="/states/new-jersey">Explore New Jersey <span aria-hidden="true">→</span></Link><Link href="/nj/princeton">Try Princeton</Link></div>}
       </div>
     </div>}
     </div>
     {scaleStrip && <div className="coverage-scale-slot">{scaleStrip}</div>}
     </div>
-    <div className="coverage-state-preview">
+    {!focusedEntry && <div className="coverage-state-preview">
       <div><p className="entry-kicker">Detailed coverage available now</p><h3><Link href="/states/new-jersey" className="coverage-state-title">New Jersey <span aria-hidden="true">→</span></Link></h3><p>Counties, towns and ZIP codes.</p></div>
-    </div>
-    <p className="coverage-map-note">Regions help you browse the map. Only New Jersey has published housing pages. Alaska and Hawaii are outside this view.</p>
+    </div>}
+    <p className="coverage-map-note">{focusedEntry ? "Map shows state coverage, not housing prices. Detailed housing pages are available for New Jersey; Alaska and Hawaii are outside the map view." : "Regions help you browse the map. Only New Jersey has published housing pages. Alaska and Hawaii are outside this view."}</p>
   </div>;
 }
