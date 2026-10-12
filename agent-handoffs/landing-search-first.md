@@ -1,6 +1,8 @@
 # Search-first landing experiment
 
 ## What changed
+- Lean/artful follow-up: shortened intro to “Housing costs. Local context. Clear sources.” Free assurance now reads “Free · No fees or ads,” with subscription assurance in an expandable definition. Removed Find a place label, Princeton example, duplicate NJ link and About the data title/extra place-count sentence.
+- Restored the animated US outline/travelling lines behind search, decorative/inert in search mode. One Explore map action replaces two visible tabs; Back to search appears in map mode. NJ coverage itself links to the state page.
 - Task-led introduction, immediate location search, explicit NJ coverage and a Princeton example link.
 - Map now appears only when deliberately explored; retained zoom, navigation, keyboard search and map controls.
 - Moved project scale into About the data after the opening; exact counts and methodology preserved.
@@ -20,9 +22,11 @@
 
 ## New TODOs / limitations
 - Other pages remain unchanged. No broader national detailed coverage promised.
-- Search-mode map art intentionally removed: map is an actual coverage explorer, not an implied data backdrop.
+- Follow-up restores decorative search-mode outlines; they depict geographic coverage, not local housing values. Interactive map remains a deliberate exploration mode.
 
 ## Verification
+- Lean/artful follow-up: typecheck, 655 tests and build passed. Eight interaction/theme/width cases passed, including normal-motion `atlas-travel` animation and free-assurance expansion; six exact-count cases passed. Screenshots inspected. Removed reserved space for hidden map controls in decorative mode; final rebuild/recheck below.
+- Final tighter build and all eight interaction/accessibility cases passed; light desktop screenshot inspected. `git diff --check` passed.
 - `npm run typecheck`: passed. `npm test`: 655 tests in 104 files passed.
 - Initial build failed because local API was stopped; restarted read-only API on 8000 and static preview on 3002, then build passed (2,386 pages / 16,695 exported files). Preview guide adapter is local-only.
 - `node scripts/check-search-first.mjs`: eight width/theme cases passed (320/390/768/1280, light/dark): first-screen search, Princeton results, map/search switching, restriction disclosure, axe and horizontal overflow.

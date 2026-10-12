@@ -144,8 +144,8 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
   return <div className={`coverage-atlas${focusedEntry ? " coverage-focused-entry" : ""}`}>
     <div ref={entry} className="coverage-search-stage" data-search-first={searchFirst} data-exploring={exploring}>
     {searchFirst && <div className="coverage-mode-switch" data-exploring={exploring} role="group" aria-label="Find a place by search or map">
-      <button className="coverage-search-return" type="button" aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>Search places</button>
-      <button className="coverage-explore-button" type="button" aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>Explore map</button>
+      <button className="coverage-search-return" type="button" hidden={focusedEntry && !exploring} aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>{focusedEntry ? "Back to search" : "Search places"}</button>
+      <button className="coverage-explore-button" type="button" hidden={focusedEntry && exploring} aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>Explore map</button>
     </div>}
     <div className="coverage-search-interaction">
     <div id="coverage-map-content" className="coverage-map-content" inert={!exploring} aria-hidden={!exploring}>
@@ -262,10 +262,8 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
     </div>
     {searchFirst && <div id="coverage-place-search" className="coverage-search-overlay" inert={exploring} aria-hidden={exploring}>
       <div className="coverage-search-panel">
-        {focusedEntry && <p className="landing-search-label">Find a place</p>}
         <PlaceSearch variant="hero" />
-        <p className="home-find-hint">Detailed coverage starts with New Jersey.{!focusedEntry && <span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span>}</p>
-        {focusedEntry && <div className="landing-start-links"><Link href="/states/new-jersey">Explore New Jersey <span aria-hidden="true">→</span></Link><Link href="/nj/princeton">Try Princeton</Link></div>}
+        {focusedEntry ? <p className="home-find-hint"><Link href="/states/new-jersey" className="landing-coverage-link">New Jersey coverage <span aria-hidden="true">→</span></Link></p> : <p className="home-find-hint">Detailed coverage starts with New Jersey.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>}
       </div>
     </div>}
     </div>

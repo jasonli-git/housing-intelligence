@@ -8,8 +8,8 @@ try {
   const page=await context.newPage();await page.goto('http://localhost:3002/',{waitUntil:'networkidle'});
   const input=page.locator('.coverage-search-panel input');
   assert((await input.boundingBox()).y<500,'Search should be on the first mobile screen');
-  assert(await page.getByText('Understand housing costs and local conditions, with public data you can inspect.').isVisible());
-  assert(await page.locator('.landing-start-links a').first().isVisible());
+  assert(await page.getByText('Housing costs. Local context. Clear sources.').isVisible());
+  assert(await page.locator('.landing-coverage-link').isVisible());
   assert.equal(await page.locator('.coverage-scale-slot').count(),0);
   await input.fill('Princeton');await page.getByRole('option').first().waitFor();
   assert(await page.getByRole('option').count()>0);await input.press('Escape');
@@ -17,6 +17,12 @@ try {
   await page.locator('.coverage-map').waitFor({state:'visible'});
   assert(await page.locator('.coverage-map-note').isVisible());
   await page.locator('.coverage-search-return').click();assert(await input.isVisible());
+  await page.locator('.entry-free-assurance summary').click();
+  assert(await page.getByText('No fees, subscriptions or advertisements. Free to use.').isVisible());
+  await page.locator('.entry-free-assurance summary').click();
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  assert.equal(await page.locator('.coverage-atlas-traces path').first().evaluate(e=>getComputedStyle(e).animationName),'atlas-travel');
+  await page.emulateMedia({reducedMotion:'reduce'});
   await page.locator('.licence summary').click();assert(await page.locator('.licence-text').isVisible());await page.locator('.licence summary').click();
   const a=await new AxeBuilder({page}).include('.search-first-home').analyze();
   assert.deepEqual(a.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);

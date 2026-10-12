@@ -13,8 +13,10 @@
 .search-first-home .coverage-focused-entry .coverage-search-stage { display:flex; flex-direction:column; padding-top:0 !important; }
 .search-first-home .coverage-focused-entry .coverage-mode-switch { position:relative; inset:auto; order:2; margin:.2rem 0 .65rem; align-self:flex-start; transform:none; }
 .search-first-home .coverage-focused-entry .coverage-search-interaction { order:1; }
-.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map-content { display:none; }
-.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-search-overlay { position:relative; inset:auto; display:block; padding:0; background:none; transform:none; }
+.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map-content { display:block; min-height:180px !important; }
+.search-first-home .coverage-focused-entry [data-exploring="false"] :is(.coverage-region-bar,.coverage-map-foot,.coverage-zoom,.map-pan-controls) { display:none; }
+.search-first-home .coverage-focused-entry [data-exploring="false"] :is(.coverage-map,.coverage-map-placeholder) { height:180px !important; min-height:180px !important; }
+.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-search-overlay { position:absolute; inset:0; display:grid; place-items:center start; padding:0; background:radial-gradient(ellipse at 30% 50%,var(--surface-card),transparent 75%); transform:none; }
 .search-first-home .coverage-focused-entry .coverage-search-panel { width:min(100%,40rem); padding:.65rem 0 0; margin:0; }
 .landing-search-label { display:block; font:500 13px/1.5 var(--font-text); color:var(--text-primary); margin:0 0 .5rem; }
 .search-first-home .coverage-search-panel input { background:var(--surface-card); border-color:var(--text-muted); border-radius:10px; }
@@ -37,3 +39,13 @@
  .search-first-home .site-status-arrow { display:none; }
  .search-first-home .coverage-search-panel .place-search-hero input { font-size:16px; }
 }
+.search-first-home .coverage-focused-entry .coverage-mode-switch::after { display:none; }
+.search-first-home .coverage-focused-entry .coverage-mode-switch button { width:auto; padding:.3rem 0; border:0; font-size:12px; }
+.search-first-home .coverage-focused-entry .coverage-mode-switch button[hidden] { display:none; }
+.search-first-home .coverage-focused-entry .coverage-mode-switch { border:0; margin:0 0 .5rem; }
+.landing-coverage-link { color:var(--state-blue); min-height:44px; display:inline-flex; align-items:center; gap:.5rem; font-size:12px; }
+.entry-free-assurance { margin:.6rem 0 0; width:fit-content; font-size:12px; color:var(--text-secondary); }
+.search-first-home .entry-free-assurance summary { display:flex; cursor:pointer; min-height:44px; margin:0; }
+.entry-free-assurance summary::after { content:"＋"; font-size:10px; margin-left:.5rem; color:var(--text-muted); }
+.entry-free-assurance[open] summary::after { content:"−"; }
+.entry-free-assurance p { margin:0 0 .5rem; max-width:35ch; }
