@@ -7,20 +7,17 @@ import { ComputedBadge } from "@/components/ComputedBadge";
 import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { StateOverview } from "@/components/StateOverview";
+import { StateContextExhibits } from "@/components/StateContextExhibits";
 import { HousingMosaic } from "@/components/HousingMosaic";
 import { statewideMosaicViews } from "@/lib/housingMosaic";
 import { LearningExhibit } from "@/components/LearningExhibit";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { MoreExpander } from "@/components/MoreExpander";
-import { AffordableHousing } from "@/components/AffordableHousing";
 import Link from "next/link";
 import { StepIcon } from "@/components/StepIcon";
 import { HomeSales } from "@/components/HomeSales";
 import { HomesAdded } from "@/components/HomesAdded";
 import { HowUnusual } from "@/components/HowUnusual";
-import { MortgageLending } from "@/components/MortgageLending";
-import { GettingAround } from "@/components/GettingAround";
-import { StateBroadband } from "@/components/StateBroadband";
 import { QuietProfile } from "@/components/QuietCounty";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
@@ -72,7 +69,6 @@ export default async function NewJerseyPage() {
   ]);
   const state = states?.items[0] ?? null;
   const statewide = state ? await api.summary(state.region_id, "5y") : null;
-  const housingHelp = state ? await api.affordableHousing(state.region_id) : null;
   // Milestone 52: today's price-to-income against the state's own history.
   const persistence = state ? await api.persistence(state.region_id) : null;
   const [packet, destinations, community] = state ? await Promise.all([
@@ -203,10 +199,12 @@ export default async function NewJerseyPage() {
             initial={initial ?? DEFAULT_MEASURE}
           />
       </div>
-      <div className="state-market-exhibits" id="state-market-exhibits" data-jump-label="Sales & new homes">
+      <div className="state-market-exhibits" id="state-market-exhibits" data-jump-label="Statewide exhibits">
         <LearningExhibit kind="Home sales"><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait /></LearningExhibit>
+        <StateContextExhibits topics={["lending"]} levels={packet?.levels ?? []} destinations={destinations} community={community} />
         <LearningExhibit kind="Against its own history"><HowUnusual name="New Jersey" data={persistence} interactive />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</LearningExhibit>
         <LearningExhibit kind="New homes"><HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} exhibit /></LearningExhibit>
+        <StateContextExhibits topics={["work","broadband"]} levels={packet?.levels ?? []} destinations={destinations} community={community} />
       </div>
       <section className="local-next-step-group state-next-step" aria-labelledby="state-next-step-heading">
         <h2 id="state-next-step-heading">Your next step</h2>
@@ -220,13 +218,6 @@ export default async function NewJerseyPage() {
         </div>
       </section>
       <MoreExpander id="state-detailed-data" title="The statewide evidence" sub="Every available state figure, with dates, definitions and sources.">
-        <details className="state-help-details"><summary>Programmes, reported homes &amp; sources</summary><AffordableHousing data={housingHelp} hideRoutes /></details>
-        <section className="state-supporting-context" aria-labelledby="state-context-heading">
-          <h2 id="state-context-heading">More statewide context</h2>
-          <details><summary>How buyers finance homes <small>Published mortgages—not today’s offers</small></summary>{packet ? <MortgageLending name="New Jersey" levels={packet.levels} /> : <p>Mortgage records are unavailable in this snapshot.</p>}</details>
-          <details><summary>Where residents work <small>Job destinations &amp; transit proximity</small></summary>{packet ? <GettingAround name="New Jersey" level="state" levels={packet.levels} destinations={destinations} /> : <p>Work and transit figures are unavailable in this snapshot.</p>}</details>
-          <details><summary>Broadband availability <small>FCC statewide summary</small></summary><StateBroadband data={community} /></details>
-        </section>
         <section className="section" aria-labelledby="state-figures-heading">
           <div className="section-head"><h2 id="state-figures-heading">All statewide figures</h2></div>
           <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally"><table className="state-figures">

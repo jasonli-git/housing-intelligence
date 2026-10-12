@@ -9,6 +9,14 @@ function record<T>(payload: T): CommunityRecord<T> {
 const empty: Data = { region_id: 1, districts: [], health: [], health_area: null, health_level: null, crime: [], crime_county: null, broadband_status: "pending_download", broadband: [], broadband_area: null, broadband_level: null };
 
 describe("community components", () => {
+  it("gives community topics separate exhibits without changing default guide markup", () => {
+    const html = renderToStaticMarkup(<CommunityContext data={empty} level="county" exhibits hideBroadband />);
+    expect(html).toContain('data-exhibit="Schools"');
+    expect(html).toContain('data-exhibit="Public safety"');
+    expect(html).toContain('data-exhibit="Health estimates"');
+    expect(html).not.toContain('data-exhibit="Internet access"');
+    expect(renderToStaticMarkup(<CommunityContext data={empty} level="county" />)).not.toContain('data-exhibit=');
+  });
   it("states missingness, not safety or availability", () => {
     const html = renderToStaticMarkup(<CommunityContext data={empty} level="zip" />);
     expect(html).toContain("ZIP areas do not identify a police jurisdiction");

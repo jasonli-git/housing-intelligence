@@ -15,12 +15,12 @@ import { HomeSales } from "@/components/HomeSales";
 import { HomeChecks } from "@/components/HomeChecks";
 import { WhoIsMoving } from "@/components/WhoIsMoving";
 import { LearningExhibit } from "@/components/LearningExhibit";
+import { StateContextExhibits } from "@/components/StateContextExhibits";
 import { ExhibitGallery } from "@/components/ExhibitGallery";
 import { PaycheckExhibit } from "@/components/ExhibitCharts";
 import { HowUnusual } from "@/components/HowUnusual";
 import { FloodRisk } from "@/components/FloodRisk";
 import { GettingAround } from "@/components/GettingAround";
-import { MortgageLending } from "@/components/MortgageLending";
 import { GroundAndWater } from "@/components/GroundAndWater";
 import { SimilarPlaces } from "@/components/SimilarPlaces";
 import { Utilities } from "@/components/Utilities";
@@ -44,7 +44,6 @@ import { SectionJump } from "@/components/SectionJump";
 import { QuietAnchor, QuietCheckTopics, QuietDisclosure, QuietProfile } from "@/components/QuietCounty";
 import { RankOverview } from "@/components/RankOverview";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
-import { TrendsExplorer } from "@/components/TrendsExplorer";
 import { api, type PacketLevel, type PacketMetric, type Region, regionsWithData } from "@/lib/api";
 import { indexedComparison } from "@/lib/chartInsights";
 import { placeCaveats, scopesFor } from "@/lib/caveats";
@@ -403,7 +402,7 @@ export default async function RegionPage({
     Number(packet.metrics.some((row) => row.rank !== null && row.of !== null && row.of > 1)) +
     Number(packet.levels.some((row) => row.rank !== null && row.of !== null && row.of > 1));
   const hasIndexedComparison = indexedComparison(indexedInputs) !== null;
-  const chartCount = trends.length + rankChartCount + Number(hasIndexedComparison);
+  const chartCount = rankChartCount + Number(hasIndexedComparison);
 
   // One set per page: each glossary term is marked the first time it appears.
   const defined = new Set<string>();
@@ -673,6 +672,12 @@ export default async function RegionPage({
       </LearningExhibit>
       {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Did paychecks keep up with housing?</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
       {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
+
+      {migration && (
+      <QuietDisclosure enabled={false} title="Who is moving here" note="Households moving in and out of the county, from tax returns">
+        <LearningExhibit kind="Arrivals & departures"><WhoIsMoving name={name} data={migration} exhibit={quiet} /></LearningExhibit>
+      </QuietDisclosure>
+      )}
       <LearningExhibit kind="Building & demolition">
       <HomesAdded
         exhibit={quiet}
@@ -686,28 +691,33 @@ export default async function RegionPage({
         levels={packet.levels}
       />
       </LearningExhibit>
-
-      {migration && (
-      <QuietDisclosure enabled={false} title="Who is moving here" note="Households moving in and out of the county, from tax returns">
-        <LearningExhibit kind="Arrivals & departures"><WhoIsMoving name={name} data={migration} exhibit={quiet} /></LearningExhibit>
-      </QuietDisclosure>
-      )}
+      <LocalEvidenceCharts kind="building" name={name} level={region.level} levels={packet.levels} series={construction} />
+      <StateContextExhibits topics={["lending","work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+          <LearningExhibit kind="Ground & water"><GroundAndWater compact name={name} levels={packet.levels} water={water} /></LearningExhibit>
+          <div id="local-property-evidence" className="property-exhibit-anchor"><LearningExhibit kind="Service providers"><Utilities data={utilities} bpuInquiry={bpuInquiry} /></LearningExhibit></div>
+          <LearningExhibit kind="Flood context"><FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} /></LearningExhibit>
+      <StateContextExhibits topics={["broadband"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+          <CommunityContext exhibits data={community} level={region.level} supporting hideBroadband={region.level === "county"} />
+        <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />
+        {hasIndexedComparison && (
+          <section id="trends-exhibits" className="section" aria-labelledby="trends-heading" data-jump-label="Trends">
+            <h2 id="trends-heading">Trends</h2>
+            <IndexedComparison series={indexedInputs} />
+          </section>
+        )}
       </ExhibitGallery>
       </section>
       <SimilarPlaces name={name} data={similar} />
       {region.level === "county" && countyTowns.length > 0 && <CountyPlaces name={name} towns={countyTowns.map(t => ({id: t.region_id, name: displayName(t)}))} />}
 
       <MoreExpander id="region-detailed-data" title={moreTitle} sub={quiet ? "Figures, trends & sources. Explore the detail." : `For the full picture: ${listed(contents)}.`}>
-        <LocalEvidenceCharts name={name} level={region.level} levels={packet.levels} series={construction} />
-        <section id="local-property-evidence" aria-labelledby="local-property-title"><h3 id="local-property-title">Property & community context</h3>
-          <p className="table-note">Area context, not a property assessment or a neighbourhood grade.</p>
-          <FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} />
-          <GroundAndWater name={name} levels={packet.levels} water={water} />
-          <Utilities data={utilities} bpuInquiry={bpuInquiry} />
-          <GettingAround name={name} level={region.level} levels={packet.levels} destinations={workDestinations} />
-          <CommunityContext data={community} level={region.level} supporting />
-        </section>
-        <MortgageLending name={name} levels={packet.levels}/>
+        {trends.length > 0 && <details className="historical-value-tables"><summary>Historical values &amp; sources</summary>{trends.map(({metricId,observations}) => {
+          const meta=findSeries(packet.metrics,packet.levels,metricId);
+          return <section key={metricId}><h3>{meta?.label ?? metricId}</h3><div className="scroll-x" tabIndex={0} role="region" aria-label="Historical figures, scroll horizontally"><table>
+            <thead><tr><th scope="col">Period</th><th scope="col">Value</th><th scope="col">Source</th><th scope="col">Matched by</th></tr></thead>
+            <tbody>{observations.slice(-24).reverse().map(o=><tr key={o.period_start}><td>{periodLabel(o.period_end,metricId)}</td><td>{formatMetric(o.value,meta?.unit ?? "",metricId)}<Margin label={marginLabel(o.value,o.margin_of_error ?? null,meta?.unit ?? "",metricId)} /></td><td>{o.source_id}</td><td>{o.match_method}</td></tr>)}</tbody>
+          </table></div></section>;
+        })}</details>}
         {hasDownloadableFigures([...packet.metrics, ...packet.levels]) && (
           <p className="data-download-line">
             <DataDownload
@@ -756,80 +766,6 @@ export default async function RegionPage({
           {anyMargin(uncertainties) && <p className="table-note">{MARGIN_NOTE}</p>}
         </section>
 
-        {trends.length > 0 && (
-          <section className="section" aria-labelledby="trends-heading">
-            <h2 id="trends-heading">Trends</h2>
-            <IndexedComparison series={indexedInputs} />
-            {hasIndexedComparison && (
-              <div className="trend-detail-intro">
-                <h3>Explore each measure</h3>
-                <p>The year below changes only the individual charts, not the comparison above.</p>
-              </div>
-            )}
-            <TrendsExplorer
-              series={trends.map(({ metricId, short, observations }) => {
-                const meta = findSeries(packet.metrics, packet.levels, metricId);
-                const unit = meta?.unit ?? "";
-                return {
-                  metricId,
-                  title: meta?.label ?? metricId,
-                  short,
-                  unit,
-                  // The end date alone: it is all the charts and the lines read (#148).
-                  points: observations.map((o) => ({
-                    period_end: o.period_end,
-                    value: o.value,
-                    margin: o.margin_of_error ?? null,
-                  })),
-                  // Keyed: it rides in a list of series into a client component, and React
-                  // asks every element created in a list for a key.
-                  table: (
-                    <details key={metricId}>
-                      <summary>Values and their sources</summary>
-                      <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
-                        <table>
-                          <thead>
-                            <tr>
-                              <th scope="col">Period</th>
-                              <th scope="col" className="num">
-                                Value
-                              </th>
-                              <th scope="col">Source</th>
-                              <th scope="col">Matched by</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {observations
-                              .slice(-24)
-                              .reverse()
-                              .map((o) => (
-                                <tr key={o.period_start}>
-                                  <td className="nowrap">{periodLabel(o.period_end, metricId)}</td>
-                                  <td className="num">
-                                    {formatMetric(o.value, unit, metricId)}
-                                    <Margin
-                                      label={marginLabel(
-                                        o.value,
-                                        o.margin_of_error ?? null,
-                                        unit,
-                                        metricId,
-                                      )}
-                                    />
-                                  </td>
-                                  <td>{o.source_id}</td>
-                                  <td>{o.match_method}</td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </details>
-                  ),
-                };
-              })}
-            />
-          </section>
-        )}
 
         {packet.levels.length > 0 && (
           <section className="section" aria-labelledby="values-heading">

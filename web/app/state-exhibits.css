@@ -1,0 +1,67 @@
+@media screen {
+  .atlas-local .exhibit-gallery-head { grid-column:1/-1; }
+  #trends-exhibits { display:block; }
+  .property-exhibit-anchor { min-width:0; scroll-margin-top:100px; }
+  .property-exhibit-anchor > .learning-exhibit { margin:0; padding:1rem; --text-muted:light-dark(#4c5660,#c2cbd0); --text-secondary:light-dark(#424c55,#d2d8db); }
+  .atlas-local .exhibit-gallery > :is(.local-evidence-charts:not([data-chart-kind]),#trends-exhibits) { grid-column:1/-1; min-width:0; margin:0; }
+  .atlas-local .exhibit-gallery > .local-evidence-charts[data-chart-kind] { grid-column:auto; display:block; }
+  .atlas-local .local-evidence-charts > .learning-exhibit,.atlas-local .trends > .learning-exhibit { --text-muted:light-dark(#4c5660,#c2cbd0); --text-secondary:light-dark(#424c55,#d2d8db); padding:1rem; margin:0; }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Flood context"] { border-radius:24px 3px 24px 3px; border-top:3px solid light-dark(#546c8a,#b2c6de); background:light-dark(#e9edf3,#1d2735); }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Ground & water"] { border-radius:4px; border-left:4px solid light-dark(#786b53,#cbbd9e); background:light-dark(#eeeadd,#28261f); }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Ground & water"] { background:repeating-linear-gradient(0deg,transparent 0 35px,light-dark(#8d7b5610,#e2c89208) 35px 36px),light-dark(#eeeadd,#28261f); border-radius:3px 3px 25px 3px; }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Ground & water"] h2 { font-family:Georgia,serif; font-style:italic; }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Flood context"] { background:radial-gradient(ellipse at 100% 0,transparent 35%,light-dark(#53799715,#9fc4eb0c) 36% 37%,transparent 38% 48%,light-dark(#53799715,#9fc4eb0c) 49% 50%,transparent 51%),light-dark(#e9edf3,#1d2735); border-radius:35px 3px 35px 3px; }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Flood context"] h2 { font-family:var(--font-text); font-weight:600; }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Service providers"] { border-radius:20px; background:light-dark(#e7eced,#1d292e); border:1px solid light-dark(#b7c6ca,#486068); }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Service providers"] { border-radius:10px; border-top:5px solid light-dark(#486068,#90b8bc); box-shadow:inset 0 0 0 4px light-dark(#ffffff77,#ffffff05); }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Service providers"] h2 { font-family:var(--font-mono); }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Schools"] { border-radius:3px; background:repeating-linear-gradient(0deg,transparent 0 27px,#8888880a 27px 28px),light-dark(#f2eee3,#29271f); border-top:3px solid light-dark(#8a734f,#d1bb8f); }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Schools"] { border-left:7px solid light-dark(#b8a079,#837457); border-top:0; box-shadow:3px 4px 0 light-dark(#e4ddce,#151919); }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Schools"] h2 { font-family:Georgia,serif; }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Public safety"] { border-radius:3px; border-top:3px double var(--text-muted); background:light-dark(#ecebed,#24252b); }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Public safety"] .exhibit-kicker { border:1px solid var(--border); width:fit-content; padding:.3rem .5rem; }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Public safety"] h2 { font-family:var(--font-text); text-transform:uppercase; font-size:19px; letter-spacing:.04em; }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Health estimates"] { border-radius:28px; border:1px solid light-dark(#b4c7bd,#455d50); background:light-dark(#e7eee8,#1d2a24); }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Health estimates"] { background:radial-gradient(circle,light-dark(#355f4810,#c3e1d20b) 1px,transparent 1px) 0 0/14px 14px,light-dark(#e7eee8,#1d2a24); border-radius:35px; }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Health estimates"] h2 { font-family:var(--font-text); font-weight:400; }
+  .atlas-local .exhibit-gallery .learning-exhibit:is([data-exhibit="Schools"],[data-exhibit="Public safety"],[data-exhibit="Service providers"]) .exhibit-linework { display:none; }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Internet access"] { border-radius:20px; background:light-dark(#efedf5,#252332); }
+  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Measure over time"] { background:var(--surface-1); border:1px solid var(--border); border-radius:14px; }
+  .atlas-local .local-evidence-charts > .learning-exhibit[data-exhibit="Annual building"] { background:light-dark(#eef0e9,#252a21); border-radius:3px; }
+  .atlas-local .local-evidence-charts > .learning-exhibit[data-exhibit="Job geography"] { background:light-dark(#e7edee,#1e2b30); border-radius:20px 3px; }
+  .atlas-local .exhibit-gallery .learning-exhibit .exhibit-content :is(h2,h3) { font-size:23px; line-height:1.2; margin-bottom:.4rem; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; align-items:start; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) > .learning-exhibit { --text-muted:light-dark(#4c5660,#c2cbd0); --text-secondary:light-dark(#424c55,#d2d8db); margin:0; padding:1rem; min-width:0; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .exhibit-kicker { margin-bottom:.6rem; padding-bottom:.4rem; font-size:9px; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .exhibit-kicker > span:last-child { display:none; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .learning-exhibit .exhibit-content h2 { margin:0 0 .4rem; font-size:23px; line-height:1.2; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .learning-exhibit .sales { gap:.3rem; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .exhibit-readout strong { font-size:32px; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .exhibit-plot { margin:.4rem 0; padding:.3rem 0; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .learning-exhibit .exhibit-history { height:130px; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .section { margin:0; padding:0; border:0; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .sales-lead { font-size:14px; line-height:1.6; margin:.5rem 0; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .sales-note { font-size:12px; line-height:1.6; margin:.5rem 0; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .history-interactive { padding:.6rem; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .quiet-market-figures { margin:.6rem 0; padding-block:.6rem; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) details > summary { min-height:44px; display:flex; align-items:center; cursor:pointer; font-size:12px; padding-block:.25rem; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .exhibit-content > section > details:not(.reader-details) > summary::after { content:"＋"; margin-left:auto; padding-left:.6rem; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .exhibit-content > section > details[open]:not(.reader-details) > summary::after { content:"−"; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) [data-exhibit-style="lending"] { background:repeating-linear-gradient(0deg,transparent 0 27px,light-dark(#a7926b14,#ceb78c0c) 27px 28px),light-dark(#f4eddf,#28251f); border:1px solid light-dark(#cfc1a6,#5a5142); border-radius:3px; box-shadow:3px 3px 0 light-dark(#e1d6c1,#151611); }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) [data-exhibit-style="lending"] h2 { font-family:Georgia,serif; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) [data-exhibit-style="work"] { background:light-dark(#e7eded,#17292a); border-radius:3px 24px 3px 3px; border-top:3px solid light-dark(#426866,#9abcb8); }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) [data-exhibit-style="work"] h2 { font-family:var(--font-text); font-weight:600; letter-spacing:-.04em; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) [data-exhibit-style="network"] { background:radial-gradient(circle at 90% 0,light-dark(#d9d8ef,#39364b),transparent 65%),light-dark(#f0eef6,#211f2b); border-radius:24px; border:1px solid light-dark(#c8c1d8,#534b63); }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) [data-exhibit-style="network"] h2 { font-family:var(--font-mono); font-size:20px; }
+  .state-exhibit-readouts { display:flex; flex-wrap:wrap; gap:.7rem 1.2rem; margin:.8rem 0; }
+  .state-exhibit-readouts dt { color:var(--text-secondary); font-size:11px; }
+  .state-exhibit-readouts dd { margin:.2rem 0 0; font:500 24px/1.2 var(--font-text); }
+  .state-commute-lead { font-size:12px; color:var(--text-secondary); }
+  .state-commute-lead strong { font:500 26px var(--font-text); color:var(--text-primary); margin-right:.4rem; }
+  .state-job-preview { list-style:none; padding:0; margin:.7rem 0; }
+  .state-job-preview li { display:flex; justify-content:space-between; position:relative; isolation:isolate; gap:.6rem; padding:.55rem .5rem; font-size:12px; border-bottom:1px solid var(--border); }
+  .state-job-preview i { position:absolute; inset:0 auto 0 0; z-index:-1; background:light-dark(#4369651a,#b7d4cd14); }
+  .state-job-preview b { font-weight:500; white-space:nowrap; }
+  :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) .utility-reliability { margin:.6rem 0; }
+  @media(max-width:800px) { :is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) { grid-template-columns:minmax(0,1fr); }:is(.nj-page,.atlas-local) :is(.state-market-exhibits,.exhibit-gallery) h2 { font-size:22px; } }
+}

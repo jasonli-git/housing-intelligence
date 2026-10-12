@@ -22,10 +22,12 @@ export function GroundAndWater({
   name,
   levels,
   water,
+  compact = false,
 }: {
   name: string;
   levels: PacketLevel[];
   water: WaterSystems | null;
+  compact?: boolean;
 }) {
   const value = (id: string) => levels.find((l) => l.metric_id === id)?.value ?? null;
   const open = value("njdep_sites_open");
@@ -34,6 +36,9 @@ export function GroundAndWater({
   const publicShare = value("water_homes_share_public");
   if (open === null && publicShare === null && !water) return null;
   const count = (n: number) => formatValue(n, "count");
+  const orderedSystems = compact ? [...(water?.systems ?? [])].sort((a,b) => b.share_of_homes-a.share_of_homes || a.name.localeCompare(b.name)) : water?.systems ?? [];
+  const visibleSystems = compact ? orderedSystems.slice(0,2) : orderedSystems;
+  const remainingSystems = compact ? orderedSystems.slice(2) : [];
 
   return (
     <section className="section sales ground-water" aria-labelledby="ground-water-heading">
@@ -65,49 +70,11 @@ export function GroundAndWater({
       )}
 
       {water && water.systems.length > 0 && (
-        <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
-          <table className="change-places water-systems">
-            <caption className="visually-hidden">
-              Water systems serving {name}, with health-based violations {water.first_year}–
-              {water.last_year}
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Water system</th>
-                <th scope="col" className="num">Homes here</th>
-                <th scope="col" className="num">
-                  Violations {water.first_year}–{water.last_year}
-                </th>
-                <th scope="col">Most recent</th>
-              </tr>
-            </thead>
-            <tbody>
-              {water.systems.map((s) => (
-                <tr key={s.pwsid}>
-                  <th scope="row">
-                    <a href={systemReportUrl(s.pwsid)} target="_blank" rel="noreferrer">
-                      {s.name}
-                    </a>
-                  </th>
-                  <td className="num">{shareText(s.share_of_homes)}</td>
-                  <td className="num">{s.violations === 0 ? "none" : count(s.violations)}
-                    <div className="sales-note">{resolutionText(s)}</div>
-                  </td>
-                  <td>
-                    {s.latest_violation && s.latest_violation_what
-                      ? `${s.latest_violation_what}, ${s.latest_violation.slice(0, 7)}`
-                      : "—"}
-                    {s.latest_violation && <div className="sales-note">
-                      {s.latest_return_to_compliance
-                        ? `Return to compliance reported ${s.latest_return_to_compliance}`
-                        : "No return-to-compliance date recorded for this violation"}
-                    </div>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {compact && remainingSystems.length > 0 && <p className="sales-note">Two largest systems by estimated homes served—not ranked by water quality.</p>}
+          <WaterTable name={name} water={water} systems={visibleSystems} />
+          {compact && remainingSystems.length > 0 && <details className="water-more-systems"><summary>{remainingSystems.length} more water {remainingSystems.length === 1 ? "system" : "systems"}</summary><WaterTable name={name} water={water} systems={remainingSystems} /></details>}
+        </>
       )}
 
       {water && <ReaderDetails title="Lead pipes and measured PFAS · by water system">
@@ -177,5 +144,54 @@ export function GroundAndWater({
       </p>
       </ReaderDetails>
     </section>
+  );
+}
+
+function WaterTable({name,water,systems}:{name:string;water:WaterSystems;systems:WaterSystems["systems"]}) {
+  const count = (n:number) => formatValue(n,"count");
+  return (
+        <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
+          <table className="change-places water-systems">
+            <caption className="visually-hidden">
+              Water systems serving {name}, with health-based violations {water.first_year}–
+              {water.last_year}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Water system</th>
+                <th scope="col" className="num">Homes here</th>
+                <th scope="col" className="num">
+                  Violations {water.first_year}–{water.last_year}
+                </th>
+                <th scope="col">Most recent</th>
+              </tr>
+            </thead>
+            <tbody>
+              {systems.map((s) => (
+                <tr key={s.pwsid}>
+                  <th scope="row">
+                    <a href={systemReportUrl(s.pwsid)} target="_blank" rel="noreferrer">
+                      {s.name}
+                    </a>
+                  </th>
+                  <td className="num">{shareText(s.share_of_homes)}</td>
+                  <td className="num">{s.violations === 0 ? "none" : count(s.violations)}
+                    <div className="sales-note">{resolutionText(s)}</div>
+                  </td>
+                  <td>
+                    {s.latest_violation && s.latest_violation_what
+                      ? `${s.latest_violation_what}, ${s.latest_violation.slice(0, 7)}`
+                      : "—"}
+                    {s.latest_violation && <div className="sales-note">
+                      {s.latest_return_to_compliance
+                        ? `Return to compliance reported ${s.latest_return_to_compliance}`
+                        : "No return-to-compliance date recorded for this violation"}
+                    </div>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
   );
 }
