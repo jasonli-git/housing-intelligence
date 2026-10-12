@@ -305,6 +305,8 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 
 /* ------------------------------------------------------------ licence / location --- */
 
+.theme-palette-bloom { position:fixed; inset:0; z-index:2147483646; pointer-events:none; background:radial-gradient(circle at var(--bloom-x) var(--bloom-y),#e2efff,#eef3f6); }
+.theme-palette-bloom[data-palette="dark"] { background:radial-gradient(circle at var(--bloom-x) var(--bloom-y),#526579,#15222e); }
 .site-meta-row.shared-meta { align-items:center; gap:.2rem 1rem; padding-block:.2rem; }
 .site-meta-row.shared-meta .licence { flex:1; margin:0; }
 .shared-meta .licence-label { font:500 11px/1.4 var(--font-text); letter-spacing:0; text-transform:none; }

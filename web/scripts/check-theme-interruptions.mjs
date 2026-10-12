@@ -33,6 +33,9 @@ try {
     else await page.mouse.click(bounds.x+bounds.width/2,bounds.y+bounds.height/2);
   }
   assert.equal(await page.evaluate(()=>window.__themeClicks),5,'Every rapid tap must reach the real selector');
+  assert(await page.locator('.theme-palette-bloom').count()<=1,'Rapid taps replace rather than stack animation layers');
+  if(motion==='reduce') assert.equal(await page.locator('.theme-palette-bloom').count(),0);
+  assert(await page.locator('.theme-palette-bloom').evaluateAll(nodes=>nodes.every(n=>getComputedStyle(n).pointerEvents==='none')),'Bloom must never intercept input');
   assert(Date.now()-start<1200,'Rapid taps should not wait for each 520ms reveal');
   await page.waitForFunction(()=>!document.documentElement.hasAttribute('data-theme-reveal'));
   assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme??'system'),'system');
@@ -43,6 +46,7 @@ try {
   assert.equal(await button.getAttribute('aria-label'),`Switch to the ${theme==='dark'?'light':'dark'} theme`);
   assert.equal(await page.evaluate(()=>document.documentElement.style.getPropertyValue('--theme-radius')),'');
   assert.deepEqual(errors,[]);
+  await page.waitForFunction(()=>!document.querySelector('.theme-palette-bloom'));
   await page.screenshot({path:`/tmp/theme-interrupt-${width}-${theme}-${motion}.png`});
   console.log(width,theme,motion,'every rapid tap delivered; latest palette persisted');await context.close();
  }

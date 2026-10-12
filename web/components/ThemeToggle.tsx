@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { flushSync } from "react-dom";
 
 import { THEME_KEY, type Theme, applyTheme, parseTheme, shown, toggled } from "@/lib/theme";
@@ -21,6 +21,7 @@ export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
   const [systemDark, setSystemDark] = useState(false);
   const chosen = useRef<Theme>("system");
+  const bloom = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     try {
@@ -33,12 +34,11 @@ export function ThemeToggle() {
     setSystemDark(query.matches);
     const follow = (event: MediaQueryListEvent) => setSystemDark(event.matches);
     query.addEventListener("change", follow);
-    return () => query.removeEventListener("change", follow);
+    return () => { query.removeEventListener("change", follow); bloom.current?.remove(); };
   }, []);
 
-  function press() {
-    // Palette changes are synchronous; only the icon animates. Full-page snapshots
-    // can block pointer input and split named map elements into different reveals.
+  function press(event: MouseEvent<HTMLButtonElement>) {
+    // Apply immediately; a pointer-transparent bloom never delays or queues taps.
     const next = toggled(chosen.current, window.matchMedia(DARK).matches);
     chosen.current = next;
     const root=document.documentElement;
@@ -50,6 +50,24 @@ export function ThemeToggle() {
       // controls briefly grey. Restore normal interaction motion in this same tap.
       void root.offsetWidth;
     } finally { delete root.dataset.paletteUpdate; }
+    bloom.current?.remove();
+    bloom.current = null;
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const layer = document.createElement("div");
+      layer.className = "theme-palette-bloom";
+      layer.setAttribute("aria-hidden", "true");
+      layer.style.setProperty("--bloom-x", `${rect.left + rect.width / 2}px`);
+      layer.style.setProperty("--bloom-y", `${rect.top + rect.height / 2}px`);
+      layer.dataset.palette = shown(next, window.matchMedia(DARK).matches);
+      document.body.append(layer);
+      bloom.current = layer;
+      const motion = layer.animate([
+        { clipPath:"circle(0px at var(--bloom-x) var(--bloom-y))", opacity:.35 },
+        { clipPath:"circle(150vmax at var(--bloom-x) var(--bloom-y))", opacity:0 },
+      ], { duration:180, easing:"cubic-bezier(.16,1,.3,1)" });
+      motion.finished.then(() => { layer.remove(); if (bloom.current === layer) bloom.current=null; }).catch(() => layer.remove());
+    }
     try {
       if (next === "system") localStorage.removeItem(THEME_KEY);
       else localStorage.setItem(THEME_KEY, next);
