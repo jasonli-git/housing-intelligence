@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { Masthead } from "@/components/Masthead";
-import { nationalBenchmarkTrends, nationalHomePriceChange, nationalMortgageRate } from "@/lib/api";
+import { api, regionsWithData, nationalBenchmarkTrends, nationalHomePriceChange, nationalMortgageRate } from "@/lib/api";
+import { dataScale } from "@/lib/dataScale";
+import { propertyScale } from "@/lib/propertyScale";
+import { DataScale, ScaleSignature } from "@/components/DataScale";
 import { NationalTrend } from "@/components/NationalTrend";
 import { periodLabel } from "@/lib/periods";
 import { pageMetadata } from "@/lib/meta";
@@ -19,6 +22,7 @@ const HOME_TOOLS = [
 import "./housing-entry.css";
 import "./state-navigation.css";
 import "./home-refresh.css";
+import "./data-scale.css";
 
 export const metadata: Metadata = pageMetadata({
   title: "Housing Intelligence — Find your place",
@@ -29,6 +33,9 @@ export const metadata: Metadata = pageMetadata({
 export default async function HousingLandingPage() {
   const [rate, homePrices] = await Promise.all([nationalMortgageRate(), nationalHomePriceChange()]);
   const trends = await nationalBenchmarkTrends(rate?.metric_id);
+  const [metrics,sources,places] = await Promise.all([api.metrics(),api.sources(),regionsWithData()]);
+  const scale = dataScale(metrics,sources,places);
+  const properties = propertyScale();
   return <>
     <Masthead affordability={{ kind: "route", active: false }} search={false} />
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
@@ -47,7 +54,11 @@ export default async function HousingLandingPage() {
         <p className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free to use · No fees, subscriptions or ads</span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
-        <NationalCoverageMap searchFirst />
+        <NationalCoverageMap searchFirst scaleStrip={<div className="scale-map-edge">
+          <ScaleSignature stats={scale} properties={properties} />
+          <DataScale stats={scale} properties={properties} />
+        </div>} />
+        {scale && <p className="scale-coverage">{scale.places.toLocaleString("en-US")} New Jersey places to explore · Coverage varies by place</p>}
       </section>
       <section className="national-backdrop" aria-labelledby="national-backdrop-heading">
         <header><h2 id="national-backdrop-heading">The national backdrop</h2><span>United States</span></header>

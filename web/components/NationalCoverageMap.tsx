@@ -1,6 +1,6 @@
 "use client";
 
-import { type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type MouseEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { unpack, type PackedOutline } from "@/lib/mapdata";
@@ -10,7 +10,7 @@ import { PlaceSearch } from "@/components/PlaceSearch";
 import { boundCoverage, COVERAGE_HOME, COVERAGE_REGIONS, coverageScene, regionViewport, STATE_DESTINATIONS, zoomCoverage, type CoverageRegion, type CoverageViewport } from "@/lib/coverageMap";
 
 /** Zoomable coverage geometry without continuous reprojection or local-data downloads. */
-export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boolean }) {
+export function NationalCoverageMap({ searchFirst = false, scaleStrip }: { searchFirst?: boolean; scaleStrip?: ReactNode }) {
   const router = useRouter();
   const [exploring, setExploring] = useState(!searchFirst);
   const entry = useRef<HTMLDivElement>(null);
@@ -147,6 +147,7 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
       <button className="coverage-search-return" type="button" aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>Search places</button>
       <button className="coverage-explore-button" type="button" aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>Explore map</button>
     </div>}
+    <div className="coverage-search-interaction">
     <div id="coverage-map-content" className="coverage-map-content" inert={!exploring} aria-hidden={!exploring}>
     <div className="coverage-region-bar">
       <span>Look closer</span>
@@ -265,6 +266,8 @@ export function NationalCoverageMap({ searchFirst = false }: { searchFirst?: boo
         <p className="home-find-hint">Detailed coverage starts with New Jersey.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>
       </div>
     </div>}
+    </div>
+    {scaleStrip && <div className="coverage-scale-slot">{scaleStrip}</div>}
     </div>
     <div className="coverage-state-preview">
       <div><p className="entry-kicker">Detailed coverage available now</p><h3><Link href="/states/new-jersey" className="coverage-state-title">New Jersey <span aria-hidden="true">→</span></Link></h3><p>Counties, towns and ZIP codes.</p></div>
