@@ -24,7 +24,10 @@ try {
   const button=page.locator('.theme-toggle');
   const initialMapColor=await page.locator('.coverage-explore-inline').evaluate(e=>getComputedStyle(e).backgroundColor);
   await button.click();
-  assert.equal(await page.evaluate(()=>window.__themeSnapshots.length),0,'Palette changes must not create input-blocking snapshots');
+  if(motion==='no-preference') {
+    await page.waitForFunction(()=>window.__themeSnapshots.length>0);
+    assert(await page.evaluate(()=>window.__themeSnapshots.every(names=>names.every(name=>name==='none'))),'Map fragments must be included in the single page reveal');
+  }
   const start=Date.now();
   const bounds=await button.boundingBox();
   await button.evaluate(e=>{window.__themeClicks=0;e.addEventListener('click',()=>window.__themeClicks++);});
@@ -33,16 +36,13 @@ try {
     else await page.mouse.click(bounds.x+bounds.width/2,bounds.y+bounds.height/2);
   }
   assert.equal(await page.evaluate(()=>window.__themeClicks),5,'Every rapid tap must reach the real selector');
-  assert(await page.locator('.theme-palette-bloom').count()<=1,'Rapid taps replace rather than stack animation layers');
-  if(motion==='reduce') assert.equal(await page.locator('.theme-palette-bloom').count(),0);
-  assert(await page.locator('.theme-palette-bloom').evaluateAll(nodes=>nodes.every(n=>getComputedStyle(n).pointerEvents==='none')),'Bloom must never intercept input');
   assert(Date.now()-start<1200,'Rapid taps should not wait for each 520ms reveal');
   await page.waitForFunction(()=>!document.documentElement.hasAttribute('data-theme-reveal'));
   assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme??'system'),'system');
   assert.equal(await page.evaluate(()=>localStorage.getItem('housing-theme')),null);
   assert.equal(await page.locator('.coverage-explore-inline').evaluate(e=>getComputedStyle(e).backgroundColor),initialMapColor,'Controls must settle immediately, not tween through stale grey colors');
   assert.equal(await page.evaluate(()=>document.documentElement.dataset.paletteUpdate),undefined);
-  assert.equal(await page.evaluate(()=>window.__snapshotCalls),0);
+  assert.equal(await page.evaluate(()=>window.__snapshotCalls>0),motion==='no-preference');
   assert.equal(await button.getAttribute('aria-label'),`Switch to the ${theme==='dark'?'light':'dark'} theme`);
   assert.equal(await page.evaluate(()=>document.documentElement.style.getPropertyValue('--theme-radius')),'');
   assert.deepEqual(errors,[]);

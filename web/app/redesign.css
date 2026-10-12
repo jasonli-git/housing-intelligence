@@ -289,8 +289,8 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 :root[data-theme-reveal] .eclipse-orbit { animation: eclipse-orbit 450ms ease-out; }
 @keyframes eclipse-orbit { 0% { opacity: 0; transform: rotate(-80deg); } 25% { opacity: .7; } 100% { opacity: 0; transform: rotate(80deg); } }
 
-/* Default snapshot timing for page interactions. Palette changes are synchronous;
-   the theme icon animates without blocking input or fragmenting map snapshots. */
+/* Page interactions retain their own timing; theme reveals override the root
+   snapshot and temporarily fold named map artwork into the same page surface. */
 ::view-transition-old(root),
 ::view-transition-new(root) { animation-duration: 240ms; animation-timing-function: ease-out; }
 /* Snapshot overlays must not swallow another tap on the real controls below. */
@@ -305,8 +305,10 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 
 /* ------------------------------------------------------------ licence / location --- */
 
-.theme-palette-bloom { position:fixed; inset:0; z-index:2147483646; pointer-events:none; background:radial-gradient(circle at var(--bloom-x) var(--bloom-y),#e2efff,#eef3f6); }
-.theme-palette-bloom[data-palette="dark"] { background:radial-gradient(circle at var(--bloom-x) var(--bloom-y),#526579,#15222e); }
+:root[data-theme-reveal] * { view-transition-name:none !important; }
+:root[data-theme-reveal]::view-transition-old(root) { animation:none; mix-blend-mode:normal; }
+:root[data-theme-reveal]::view-transition-new(root) { animation:theme-page-flow 220ms cubic-bezier(.2,.7,.3,1) both; mix-blend-mode:normal; }
+@keyframes theme-page-flow { from { clip-path:circle(0 at var(--theme-x) var(--theme-y)); } to { clip-path:circle(150vmax at var(--theme-x) var(--theme-y)); } }
 .site-meta-row.shared-meta { align-items:center; gap:.2rem 1rem; padding-block:.2rem; }
 .site-meta-row.shared-meta .licence { flex:1; margin:0; }
 .shared-meta .licence-label { font:500 11px/1.4 var(--font-text); letter-spacing:0; text-transform:none; }

@@ -21,7 +21,9 @@ export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
   const [systemDark, setSystemDark] = useState(false);
   const chosen = useRef<Theme>("system");
-  const bloom = useRef<HTMLElement | null>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const reveal = useRef<ViewTransition | null>(null);
+  const revision = useRef(0);
 
   useEffect(() => {
     try {
@@ -34,40 +36,45 @@ export function ThemeToggle() {
     setSystemDark(query.matches);
     const follow = (event: MediaQueryListEvent) => setSystemDark(event.matches);
     query.addEventListener("change", follow);
-    return () => { query.removeEventListener("change", follow); bloom.current?.remove(); };
+    // Root snapshots are painted above the live page and can target the root
+    // instead of its button. Preserve this one visible control's hit area.
+    const forwardTap = (event: PointerEvent) => {
+      const control=button.current;
+      if (!control || !document.documentElement.hasAttribute("data-theme-reveal") || event.composedPath().includes(control) || !event.isPrimary || event.button!==0) return;
+      const rect=control.getBoundingClientRect();
+      if(event.clientX>=rect.left && event.clientX<=rect.right && event.clientY>=rect.top && event.clientY<=rect.bottom) {
+        event.preventDefault(); control.click();
+      }
+    };
+    window.addEventListener("pointerup",forwardTap,true);
+    return () => { query.removeEventListener("change", follow); window.removeEventListener("pointerup",forwardTap,true); reveal.current?.skipTransition(); delete document.documentElement.dataset.themeReveal; };
   }, []);
 
   function press(event: MouseEvent<HTMLButtonElement>) {
-    // Apply immediately; a pointer-transparent bloom never delays or queues taps.
+    // Interrupt, never await the previous reveal. Stale callbacks cannot apply a palette.
     const next = toggled(chosen.current, window.matchMedia(DARK).matches);
     chosen.current = next;
     const root=document.documentElement;
-    root.dataset.paletteUpdate="";
-    try {
-      flushSync(() => setTheme(next));
-      applyTheme(root, next);
-      // Settle the new palette without independent hover-color tweens leaving
-      // controls briefly grey. Restore normal interaction motion in this same tap.
-      void root.offsetWidth;
-    } finally { delete root.dataset.paletteUpdate; }
-    bloom.current?.remove();
-    bloom.current = null;
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      const layer = document.createElement("div");
-      layer.className = "theme-palette-bloom";
-      layer.setAttribute("aria-hidden", "true");
-      layer.style.setProperty("--bloom-x", `${rect.left + rect.width / 2}px`);
-      layer.style.setProperty("--bloom-y", `${rect.top + rect.height / 2}px`);
-      layer.dataset.palette = shown(next, window.matchMedia(DARK).matches);
-      document.body.append(layer);
-      bloom.current = layer;
-      const motion = layer.animate([
-        { clipPath:"circle(0px at var(--bloom-x) var(--bloom-y))", opacity:.35 },
-        { clipPath:"circle(150vmax at var(--bloom-x) var(--bloom-y))", opacity:0 },
-      ], { duration:180, easing:"cubic-bezier(.16,1,.3,1)" });
-      motion.finished.then(() => { layer.remove(); if (bloom.current === layer) bloom.current=null; }).catch(() => layer.remove());
-    }
+    const current = ++revision.current;
+    reveal.current?.skipTransition();
+    const apply = () => {
+      if (revision.current !== current) return;
+      root.dataset.paletteUpdate="";
+      try { flushSync(() => setTheme(next)); applyTheme(root,next); void root.offsetWidth; }
+      finally { delete root.dataset.paletteUpdate; }
+    };
+    if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const rect=event.currentTarget.getBoundingClientRect();
+      root.style.setProperty("--theme-x",`${rect.left+rect.width/2}px`);
+      root.style.setProperty("--theme-y",`${rect.top+rect.height/2}px`);
+      root.dataset.themeReveal="";
+      const transition=document.startViewTransition(apply);
+      reveal.current=transition;
+      transition.ready.catch(()=>{});
+      transition.finished.catch(()=>{}).finally(()=>{
+        if(revision.current===current) { delete root.dataset.themeReveal; root.style.removeProperty("--theme-x"); root.style.removeProperty("--theme-y"); reveal.current=null; }
+      });
+    } else { delete root.dataset.themeReveal; root.style.removeProperty("--theme-x"); root.style.removeProperty("--theme-y"); apply(); }
     try {
       if (next === "system") localStorage.removeItem(THEME_KEY);
       else localStorage.setItem(THEME_KEY, next);
@@ -85,7 +92,7 @@ export function ThemeToggle() {
     strokeLinejoin: "round" as const,
   };
   return (
-    <button type="button" className="bar-icon theme-toggle" onClick={press} aria-label={label} title={label}>
+    <button ref={button} type="button" className="bar-icon theme-toggle" onClick={press} aria-label={label} title={label}>
       <svg className="theme-eclipse" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" {...stroke}>
         <path className="eclipse-moon" d="M20.5 13.2A8.5 8.5 0 0 1 10.8 3.5a8.5 8.5 0 1 0 9.7 9.7Z" />
         <g className="eclipse-rays"><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M5 19l1.4-1.4M17.6 6.4 19 5" /></g>
