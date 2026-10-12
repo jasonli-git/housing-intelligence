@@ -17,7 +17,7 @@ export function DataScale({stats,properties}:{stats:Scale|null;properties?:Prope
   const number=(n:number)=>n.toLocaleString("en-US");
   return <section className="data-scale" aria-labelledby="data-scale-heading">
     <h2 id="data-scale-heading" className="sr-only">Behind the picture</h2>
-    <details className="scale-definitions"><summary>Behind the picture · Exact counts &amp; definitions</summary>
+    <details className="scale-definitions"><summary>Behind the picture</summary>
     <svg className="scale-tapestry" viewBox="0 0 900 130" fill="none" aria-hidden="true">
       <g className="scale-records">{Array.from({length:72},(_,i)=><rect key={i} x={15+(i%12)*12} y={15+Math.floor(i/12)*16} width="5" height="9" rx="1" />)}</g>
       <g className="scale-streams">{[25,48,71,94].map((y,i)=><path key={y} pathLength="100" d={`M165 ${y} C260 ${y} 295 ${40+i*15} 380 ${40+i*15} H520 C610 ${40+i*15} 650 ${y} 735 ${y}`} />)}</g>

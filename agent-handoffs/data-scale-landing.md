@@ -1,6 +1,7 @@
 # Landing-page data scale
 
 ## What changed
+- Final map-edge pass: rounded signature and exact-count disclosure now share a shallow strip inside the base of the search/map section. Removed signature from title area; three larger numeric columns, animated flow at the strip’s top edge, and small Behind the picture disclosure. Place coverage remains separate by search. Open definitions expand below the signature rather than squeeze it.
 - Split signature pass supersedes the full above-search strip: rounded headline property/source figures under the free badge, with a tiny animated flow; NJ place coverage cue by search. Exact totals and definitions now live together inside one closed disclosure below search. No top card/background/borders.
 - Compact placement pass: removed the “Many sources. One clearer picture.” headline and secondary caption. Moved Behind the picture directly beneath the title/free badge and before search; reduced number sizes/padding and turned the decorative animation into a narrow header-side ribbon. Preserved all four counts and expandable definitions.
 - Final count reconciliation: exhibit now shows 48 **Source datasets** from the same external-source catalogue as the footer, rather than 42 dated-record sources. Removed the footer’s closed-state “All 48 datasets” text while retaining the expansion chevron and open-state Hide cue, freeing room for institution names.
@@ -37,6 +38,7 @@
 - No representation of complete measure coverage for every place. No canonical document edits.
 
 ## Verification
+- Map-edge pass: typecheck, 655 tests, static build and six theme/width browser cases passed. Closed strip height below 110px, signature below 60px, contained within search/map section; exact totals, disclosure, axe, overflow and reduced motion passed. Dark mobile screenshot inspected. `git diff --check` passed.
 - Split pass: typecheck, 655 frontend tests and static build passed. Six responsive/theme browser cases passed after export completion: signature at most 42px tall, signature before search, exact-count disclosure after search, exact totals, axe, overflow and reduced motion. Initial browser run overlapped export replacement and timed out; rerun against completed output passed. Full dark-mobile screenshot inspected; `git diff --check` passed.
 - Compact placement pass: typecheck, 654 frontend tests, static build and six browser cases passed. Browser assertions confirm the entire closed strip ends above 667px from page top at tested widths, and it precedes search. Axe, overflow, exact counts, reduced motion and footer checks passed. Mobile screenshot inspected; `git diff --check` passed.
 - Source reconciliation: typecheck and five affected tests passed. Test covers supporting datasets, duplicate IDs and exclusion of internal calculated metrics.

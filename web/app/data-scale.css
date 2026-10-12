@@ -35,3 +35,18 @@
 @media(max-width:700px) { .data-scale { padding:.5rem 0 0; }.scale-tapestry { right:0; top:.2rem; width:45%; height:25px; }.scale-counts { gap:.45rem; }.scale-counts > div { padding-left:.5rem; }.scale-counts dd { font-size:22px; }.scale-counts dt { font-size:11px; }.scale-counts small { font-size:10px; } }
 @media(prefers-reduced-motion:reduce) { .scale-streams path { animation:none; } }
 @media print { .scale-tapestry { display:none; }.scale-definitions::details-content { content-visibility:visible !important; }.scale-definitions > :not(summary) { display:block !important; } }
+
+/* Scale belongs to the map's base, not the title or search instructions. */
+.scale-map-edge { display:flex; flex-wrap:wrap; align-items:center; gap:.25rem 2rem; border-top:1px solid var(--border); margin-top:.75rem; padding:.7rem 0 0; }
+.scale-map-edge .scale-signature { flex:1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:0; padding:0; font-size:12px; }
+.scale-map-edge .scale-signature b { display:block; font:500 24px/1.2 var(--font-display); color:var(--text-primary); }
+.scale-map-edge .signature-flow { position:absolute; right:0; top:-.65rem; width:100%; height:12px; opacity:.5; pointer-events:none; }
+.scale-map-edge .data-scale { margin:0; padding:0; }
+.scale-map-edge:has(.scale-definitions[open]) .data-scale { flex-basis:100%; }
+@media(max-width:700px) {
+  .scale-map-edge { gap:0; padding-top:.6rem; }
+  .scale-map-edge .scale-signature { flex-basis:100%; font-size:10px; gap:.5rem; }
+  .scale-map-edge .scale-signature b { font-size:21px; }
+  .scale-map-edge .data-scale { flex-basis:100%; }
+  .scale-map-edge .scale-definitions summary { font-size:11px; }
+}

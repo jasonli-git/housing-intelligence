@@ -16,9 +16,9 @@ try {
   const scale=page.locator('.data-scale');
   const signature=page.locator('.scale-signature');
   const bounds=await signature.boundingBox();
-  assert(bounds && bounds.height<=42,'Signature should take at most two compact lines');
-  assert(await page.locator('.coverage-entry').evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('.scale-signature')) & Node.DOCUMENT_POSITION_PRECEDING)));
-  assert(await page.locator('.coverage-entry').evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('.data-scale')) & Node.DOCUMENT_POSITION_FOLLOWING)));
+  assert(bounds && bounds.height<=60,'Map-edge signature should remain compact');
+  assert(await page.locator('.coverage-entry').evaluate(e=>e.contains(document.querySelector('.scale-signature')) && e.contains(document.querySelector('.data-scale'))));
+  assert((await page.locator('.scale-map-edge').boundingBox()).height<110,'Closed map-edge strip should stay shallow');
   assert.equal(await page.locator('.foot-sources summary').innerText().then(t=>/All \d+ datasets/.test(t)),false);
   assert(await page.locator('.foot-sources summary').innerText().then(t=>t.includes('Census')));
   assert.equal(await signature.locator('.scale-streams path').first().evaluate(e=>getComputedStyle(e).animationName),'none');
