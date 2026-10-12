@@ -38,7 +38,11 @@ import "../../new-jersey.css";
 import "../../housing-entry.css";
 import "../../state-navigation.css";
 
-export const metadata: Metadata = pageMetadata({ title: "New Jersey — Housing", description: "Statewide housing figures, county comparisons and places within your budget in New Jersey.", path: "/states/new-jersey" });
+export const metadata: Metadata = pageMetadata({ title: "New Jersey — Housing", description: "Statewide housing figures and places to explore in New Jersey.", path: "/states/new-jersey" });
+
+// Parked pending a future presentation redesign. Preserve the implementation,
+// but do not fetch ranking windows or render its controls/table in this build.
+const COUNTY_COMPARISON_ENABLED = false;
 
 // The figure most readers arrive for. It is where the page opens, not a limit on it.
 const DEFAULT_MEASURE = "zhvi_sfr";
@@ -52,15 +56,14 @@ const CAVEAT_IN_DEFINITION: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * The New Jersey page: the state's counties, compared on whichever measure and window
- * the reader picks.
+ * The New Jersey page: statewide figures, county navigation and learning exhibits.
  *
  * Since Milestone 18 this is also the state's own page. `/regions/1` carried two FHFA
  * index values, their caveat and the footer; its figures are here now, and
  * `public/_redirects` sends the old URL to this one (ARCHITECTURE #127).
  *
- * County comparisons are embedded at build time. The page now leads with direct place
- * discovery; comparison lives in a secondary table and no map geometry is requested.
+ * County comparison assembly and components are parked behind the disabled flag.
+ * No ranking windows or map geometry are requested while that feature is retired.
  */
 export default async function NewJerseyPage() {
   const [catalog, states, mortgage, countyRegions] = await Promise.all([
@@ -94,7 +97,7 @@ export default async function NewJerseyPage() {
     );
   }
 
-  const measures = (
+  const measures = COUNTY_COMPARISON_ENABLED ? (
     await Promise.all(
       catalog.map(async (metric): Promise<Measure | null> => {
         const windows: Measure["windows"] = {};
@@ -139,7 +142,7 @@ export default async function NewJerseyPage() {
           : null;
       }),
     )
-  ).filter((measure): measure is Measure => measure !== null);
+  ).filter((measure): measure is Measure => measure !== null) : [];
 
   const sections = groupRows(measures);
   const initial = measures.some((m) => m.metric_id === DEFAULT_MEASURE)
@@ -189,19 +192,19 @@ export default async function NewJerseyPage() {
         </div>
         <PlacePhoto geoid="34" />
       </header>
-      <CountyCabinet counties={(countyRegions?.items ?? []).map(county => ({ id:county.region_id, name:county.name }))} />
+      <div id="nj-explore"><CountyCabinet counties={(countyRegions?.items ?? []).map(county => ({ id:county.region_id, name:county.name }))} /></div>
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
         <HousingMosaic embedded statewide name="New Jersey" views={statewideMosaicViews(packet?.levels ?? [], constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter(r => r.preliminary).map(r => r.year))} />
         <details className="state-extra-figures"><summary>More statewide figures <span aria-hidden="true">＋</span></summary>
           <QuietProfile statewide allMetrics items={stateProfile(levels.filter((level) => ["fhfa_hpi", "fhfa_hpi_all_transactions", "nj_effective_tax_rate", "sr1a_median_price_per_sqft", "sr1a_median_year_built_sold", "water_homes_share_public"].includes(level.metric_id)), statewide?.headlines ?? [])} />
         </details>
       </StateOverview>
-      <div id="nj-explore" className="nj-explore-anchor">
+      {COUNTY_COMPARISON_ENABLED && <div id="state-county-comparison" className="nj-explore-anchor" data-jump-label="Compare counties">
           <StateModeWorkspace
             sections={sections}
             initial={initial ?? DEFAULT_MEASURE}
           />
-      </div>
+      </div>}
       <div className="state-market-exhibits" id="state-market-exhibits" data-jump-label="Statewide exhibits">
         <LearningExhibit kind="Home sales"><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait /></LearningExhibit>
         <StateContextExhibits topics={["lending"]} levels={packet?.levels ?? []} destinations={destinations} community={community} />

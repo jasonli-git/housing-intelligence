@@ -22,14 +22,14 @@ try {
     }
     if(route==='/states/new-jersey') {
       assert.equal(await page.locator('#nj-explore .place-search,.state-discovery-modes').count(),0);
-      assert(await page.locator('#county-comparison').isVisible());
-      assert.equal(await page.locator('.state-title-navigation select option').filter({hasText:'Compare counties'}).count(),1);
+      assert.equal(await page.locator('#county-comparison').count(),0);
+      assert.equal(await page.locator('.state-title-navigation select option').filter({hasText:'Compare counties'}).count(),0);
     }
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     const audit=await new AxeBuilder({page}).include('.site-meta-row').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
     assert.deepEqual(audit.violations.map(v=>v.id),[]);
     if(route==='/states/new-jersey') await page.screenshot({path:`/tmp/nj-direct-comparison-${width}.png`,fullPage:true});
-    console.log(`PASS ${width} ${route}: menu, notices, reflow, accessibility${route.includes('states')?', direct comparison and jump list':''}`);
+    console.log(`PASS ${width} ${route}: menu, notices, reflow, accessibility${route.includes('states')?', comparison retired and jump list updated':''}`);
     await context.close();
   }
 } finally {await browser.close();}
