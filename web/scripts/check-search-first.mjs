@@ -1,0 +1,77 @@
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright';
+import AxeBuilder from '@axe-core/playwright';
+const browser=await chromium.launch();
+try {
+ for(const width of [320,390,768,1024,1280,1440,1920]) for(const theme of ['light','dark']) {
+  const context=await browser.newContext({viewport:{width,height:900},colorScheme:theme,reducedMotion:'reduce'});
+  const page=await context.newPage();await page.goto('http://localhost:3002/',{waitUntil:'networkidle'});
+  const input=page.locator('.coverage-search-panel input');
+  assert((await input.boundingBox()).y<500,'Search should be on the first mobile screen');
+  assert(await page.getByText('Housing costs. Local context. Clear sources.').isVisible());
+  assert.equal(await page.locator('.landing-coverage-link').count(),0);
+  assert.equal(await page.locator('.coverage-scale-slot').count(),1);
+  assert.equal(await page.locator('.nation-portrait').count(),0);
+  const mapButton=await page.locator('.coverage-explore-inline').boundingBox();
+  const mapIcon=await page.locator('.coverage-explore-inline svg').boundingBox();
+  assert(Math.abs(mapButton.x+mapButton.width/2-mapIcon.x-mapIcon.width/2)<1);
+  assert(Math.abs(mapButton.y+mapButton.height/2-mapIcon.y-mapIcon.height/2)<1);
+  assert.equal(await page.locator('.coverage-explore-inline').innerText(),'');
+  assert.equal(await page.locator('.coverage-explore-inline').getAttribute('aria-label'),'Explore map');
+  const searchBox=await input.boundingBox();
+  assert(width<360 ? mapButton.y+mapButton.height<searchBox.y : mapButton.x+mapButton.width<searchBox.x,'Map action must be separate and left of search');
+  await input.fill('Princeton');await page.getByRole('option').first().waitFor();
+  assert(await page.getByRole('option').count()>0);
+  await input.fill('a');await page.getByRole('listbox').waitFor();
+  assert(await page.getByRole('listbox').evaluate(e=>{
+    const r=e.getBoundingClientRect();const target=document.elementFromPoint(r.left+r.width/2,Math.min(r.bottom-8,innerHeight-8));
+    return target?.closest('.search-results')===e;
+  }),'Suggestion dropdown must paint above following content');
+  await page.getByRole('option').first().click({trial:true});
+  await input.press('Escape');
+  await page.locator('.coverage-map').waitFor({state:'attached'});
+  if(width>900) {
+    assert(await page.evaluate(()=>{
+      const boxes=[...document.querySelectorAll('.coverage-unavailable,.coverage-available')].map(e=>e.getBoundingClientRect());
+      const range=document.createRange();range.selectNodeContents(document.querySelector('h1'));
+      return Math.min(...boxes.map(b=>b.left))>range.getBoundingClientRect().right+8
+        && Math.max(...boxes.map(b=>b.bottom))<document.querySelector('.coverage-search-panel input').getBoundingClientRect().top-6
+        && Math.max(...boxes.map(b=>b.right))<innerWidth-8;
+    }),'Desktop artwork must clear title, input and viewport edges');
+  }
+  await page.locator('.coverage-map').evaluate(e=>window.__openingMap=e);
+  await page.locator('.coverage-explore-button').click();
+  await page.locator('.coverage-map').waitFor({state:'visible'});
+  await page.locator('.coverage-zoom button').nth(1).click();
+  assert(await page.locator('.coverage-map-note').isVisible());
+  assert(await page.locator('.coverage-map').evaluate(e=>e===window.__openingMap),'Exploration must retain the same SVG');
+  await page.locator('.coverage-search-stage').screenshot({path:`/tmp/search-first-map-${width}-${theme}.png`,animations:'disabled'});
+  await page.locator('.coverage-zoom button').nth(2).click();
+  await page.locator('.coverage-search-return').click();assert(await input.isVisible());
+  await page.locator('.entry-free-assurance summary').click();
+  assert(await page.getByText('No fees, subscriptions or advertisements. Free to use.').isVisible());
+  await page.locator('.entry-free-assurance summary').click();
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  assert.equal(await page.locator('.coverage-atlas-traces path').first().evaluate(e=>getComputedStyle(e).animationName),'atlas-travel');
+  assert.equal(await page.locator('.coverage-availability-glow circle').first().evaluate(e=>getComputedStyle(e).animationName),'coverage-blue-radial');
+  if(await page.evaluate(()=>typeof document.startViewTransition==='function')) {
+    await page.locator('.coverage-explore-inline').click();
+    await page.locator('[data-mode-transition="true"]').waitFor();
+    await page.waitForFunction(()=>!document.querySelector('.coverage-search-stage').hasAttribute('data-mode-transition'));
+    assert.equal(await page.locator('.coverage-search-stage').getAttribute('data-exploring'),'true');
+    await page.locator('.coverage-search-return').click();
+    await page.waitForFunction(()=>!document.querySelector('.coverage-search-stage').hasAttribute('data-mode-transition'));
+    assert(await input.isVisible());
+  }
+  await page.emulateMedia({reducedMotion:'reduce'});
+  assert.equal(await page.locator('.coverage-availability-glow circle').first().evaluate(e=>getComputedStyle(e).animationName),'none');
+  await page.locator('.licence summary').click();assert(await page.locator('.licence-text').isVisible());await page.locator('.licence summary').click();
+  const a=await new AxeBuilder({page}).include('.search-first-home').analyze();
+  assert.deepEqual(a.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  await input.fill('');await input.press('Escape');
+  await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`/tmp/search-first-${width}-${theme}.png`});
+  await page.locator('.home-tools').screenshot({path:`/tmp/search-first-tools-${width}-${theme}.png`});
+  console.log(width,theme,'passed');await context.close();
+ }
+} finally {await browser.close();}

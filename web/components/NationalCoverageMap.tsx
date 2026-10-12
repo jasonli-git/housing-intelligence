@@ -2,6 +2,7 @@
 
 import { type MouseEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { unpack, type PackedOutline } from "@/lib/mapdata";
 import { scene, type Outline } from "@/lib/globe";
@@ -10,11 +11,12 @@ import { PlaceSearch } from "@/components/PlaceSearch";
 import { boundCoverage, COVERAGE_HOME, COVERAGE_REGIONS, coverageScene, regionViewport, STATE_DESTINATIONS, zoomCoverage, type CoverageRegion, type CoverageViewport } from "@/lib/coverageMap";
 
 /** Zoomable coverage geometry without continuous reprojection or local-data downloads. */
-export function NationalCoverageMap({ searchFirst = false, scaleStrip }: { searchFirst?: boolean; scaleStrip?: ReactNode }) {
+export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEntry = false }: { searchFirst?: boolean; scaleStrip?: ReactNode; focusedEntry?: boolean }) {
   const router = useRouter();
   const [exploring, setExploring] = useState(!searchFirst);
   const entry = useRef<HTMLDivElement>(null);
   const modeChanged = useRef(false);
+  const modeTransition = useRef<ViewTransition | null>(null);
   const stage = useRef<HTMLDivElement>(null);
   const geography = useRef<SVGGElement>(null);
   const flight = useRef<{ animation: Animation; timer: ReturnType<typeof setTimeout> } | null>(null);
@@ -36,7 +38,21 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip }: { searc
     target?.focus({ preventScroll: true });
   }, [exploring]);
 
-  const changeMode = (next: boolean) => { modeChanged.current = true; setExploring(next); };
+  const changeMode = (next: boolean) => {
+    if(next===exploring) return;
+    modeChanged.current = true;
+    if(!focusedEntry || !document.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setExploring(next); return; }
+    modeTransition.current?.skipTransition();
+    entry.current?.setAttribute("data-mode-transition", "true");
+    const transition=document.startViewTransition(()=>flushSync(()=>setExploring(next)));
+    modeTransition.current=transition;
+    void transition.finished.finally(()=>{
+      if(modeTransition.current!==transition) return;
+      modeTransition.current=null;
+      entry.current?.removeAttribute("data-mode-transition");
+    });
+  };
+  useEffect(()=>()=>{modeTransition.current?.skipTransition();},[]);
 
   // "/" focuses the search, as on many sites; never while the reader is typing elsewhere.
   useEffect(() => {
@@ -141,11 +157,11 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip }: { searc
   };
   const locator = drawing ? [viewport.x + drawing.locator[0] * viewport.scale, viewport.y + drawing.locator[1] * viewport.scale] : null;
 
-  return <div className="coverage-atlas">
+  return <div className={`coverage-atlas${focusedEntry ? " coverage-focused-entry" : ""}`}>
     <div ref={entry} className="coverage-search-stage" data-search-first={searchFirst} data-exploring={exploring}>
-    {searchFirst && <div className="coverage-mode-switch" data-exploring={exploring} role="group" aria-label="Find a place by search or map">
-      <button className="coverage-search-return" type="button" aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>Search places</button>
-      <button className="coverage-explore-button" type="button" aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>Explore map</button>
+    {searchFirst && (!focusedEntry || exploring) && <div className="coverage-mode-switch" data-exploring={exploring} role="group" aria-label="Find a place by search or map">
+      <button className="coverage-search-return" type="button" hidden={focusedEntry && !exploring} aria-pressed={!exploring} aria-controls="coverage-place-search" onClick={() => { if (exploring) changeMode(false); }}>{focusedEntry && <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 5-7 7 7 7M3 12h18" /></svg>}{focusedEntry ? "Back to search" : "Search places"}</button>
+      {!focusedEntry && <button className="coverage-explore-button" type="button" aria-pressed={exploring} aria-controls="coverage-map-content" onClick={() => { if (!exploring) changeMode(true); }}>Explore map</button>}
     </div>}
     <div className="coverage-search-interaction">
     <div id="coverage-map-content" className="coverage-map-content" inert={!exploring} aria-hidden={!exploring}>
@@ -220,7 +236,8 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip }: { searc
             <path className="coverage-state-top" pathLength="1" d={state.top} />
           </a> : <path key={state.id} className="coverage-unavailable" pathLength="1" d={state.base} aria-hidden="true" onMouseEnter={() => setHovered(`${state.name} · Not available yet`)}><title>{state.name} — Not available yet</title></path>;
         })}
-        <g className="coverage-atlas-traces" aria-hidden="true">{drawing.states.map(state => <path key={state.id} d={state.id === "NJ" ? state.top : state.base} pathLength="1" data-available={state.id === "NJ"} />)}</g>
+        <g className="coverage-atlas-traces" aria-hidden="true">{drawing.states.map(state => <path key={state.id} d={STATE_DESTINATIONS[state.id] ? state.top : state.base} pathLength="1" data-available={!!STATE_DESTINATIONS[state.id]} />)}</g>
+        {focusedEntry && STATE_DESTINATIONS.NJ && <g className="coverage-availability-glow" aria-hidden="true"><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="17" /><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="17" /><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="5" /></g>}
         </g>
         </g>
         <g className="coverage-atlas-guides" aria-hidden="true">
@@ -262,16 +279,17 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip }: { searc
     </div>
     {searchFirst && <div id="coverage-place-search" className="coverage-search-overlay" inert={exploring} aria-hidden={exploring}>
       <div className="coverage-search-panel">
+        {focusedEntry && <button className="coverage-explore-button coverage-explore-inline" type="button" aria-label="Explore map" title="Explore map" aria-controls="coverage-map-content" onClick={()=>changeMode(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2Zm6-2v16m6-14v16" /></svg></button>}
         <PlaceSearch variant="hero" />
-        <p className="home-find-hint">Detailed coverage starts with New Jersey.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>
+        {!focusedEntry && <p className="home-find-hint">Detailed coverage starts with New Jersey.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>}
       </div>
     </div>}
     </div>
     {scaleStrip && <div className="coverage-scale-slot">{scaleStrip}</div>}
     </div>
-    <div className="coverage-state-preview">
+    {!focusedEntry && <div className="coverage-state-preview">
       <div><p className="entry-kicker">Detailed coverage available now</p><h3><Link href="/states/new-jersey" className="coverage-state-title">New Jersey <span aria-hidden="true">→</span></Link></h3><p>Counties, towns and ZIP codes.</p></div>
-    </div>
-    <p className="coverage-map-note">Regions help you browse the map. Only New Jersey has published housing pages. Alaska and Hawaii are outside this view.</p>
+    </div>}
+    <p className="coverage-map-note">{focusedEntry ? "Map shows state coverage, not housing prices. Detailed housing pages are available for New Jersey; Alaska and Hawaii are outside the map view." : "Regions help you browse the map. Only New Jersey has published housing pages. Alaska and Hawaii are outside this view."}</p>
   </div>;
 }
