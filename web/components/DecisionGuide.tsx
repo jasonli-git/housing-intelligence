@@ -115,20 +115,23 @@ function Steps({ steps }: { steps: { label: string; href: string }[] }) {
   );
 }
 
-function Check({ item, supporting = false }: { item: CheckItem; supporting?: boolean }) {
+function Check({ item }: { item: CheckItem }) {
   return (
-    <li className="guide-check" id={supporting ? undefined : `guide-check-${item.key}`}>
+    <li className="guide-check" id={`guide-check-${item.key}`}>
       <div className="guide-check-head">
         <h3>{item.title}</h3>
-        {supporting && <Strength judged={item.evidence} />}
       </div>
-      <Steps steps={supporting ? item.key === "school" ? item.steps.slice(0,-1) : item.steps.slice(1) : item.key === "school" ? item.steps.slice(-1) : item.steps.slice(0,1)} />
-      {supporting && <div className="guide-check-evidence">
+      <Steps steps={item.key === "school" ? item.steps.slice(-1) : item.steps.slice(0,1)} />
+      <div className="guide-check-evidence">
         <p>{item.finding}</p>
+        <details className="guide-check-detail"><summary>Sources & limits</summary>
+        <Strength judged={item.evidence} />
+        <Steps steps={item.key === "school" ? item.steps.slice(0,-1) : item.steps.slice(1)} />
         <p className="guide-limit">{item.limitation}</p>
         {item.source && <small className="src">Source: {item.source}</small>}
         {item.inquiry && <InquiryNote inquiry={item.inquiry} headline="NJDEP is building a new, town-level radon map" />}
-      </div>}
+        </details>
+      </div>
     </li>
   );
 }
@@ -480,9 +483,6 @@ export function DecisionGuide({
               <h3>{group.title}</h3>
               <ul className="guide-checks">{checklist(data, {place: placeHref, tax: taxHref}).filter(item => group.keys.includes(item.key)).map(item => <Check key={item.key} item={item} />)}</ul>
             </section>)}
-            <details className="guide-supporting-evidence"><summary>Local evidence, sources & limits for these checks</summary>
-              <ul className="guide-checks">{checklist(data, {place: placeHref, tax: taxHref}).map(item => <Check key={item.key} item={item} supporting />)}</ul>
-            </details>
             </div> : <p className="guide-preview">Local context and links for checking the actual home.</p>}
           </section>
           <button className="guide-side-arrow guide-side-next" type="button" disabled={step===2} aria-label={step<2 ? `Next: ${stepNames[step+1]}` : "Next question"} onClick={()=>goToStep(step+1)}><span aria-hidden="true">›</span></button>
