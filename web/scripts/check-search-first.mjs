@@ -21,7 +21,14 @@ try {
   const searchBox=await input.boundingBox();
   assert(width<360 ? mapButton.y+mapButton.height<searchBox.y : mapButton.x+mapButton.width<searchBox.x,'Map action must be separate and left of search');
   await input.fill('Princeton');await page.getByRole('option').first().waitFor();
-  assert(await page.getByRole('option').count()>0);await input.press('Escape');
+  assert(await page.getByRole('option').count()>0);
+  await input.fill('a');await page.getByRole('listbox').waitFor();
+  assert(await page.getByRole('listbox').evaluate(e=>{
+    const r=e.getBoundingClientRect();const target=document.elementFromPoint(r.left+r.width/2,Math.min(r.bottom-8,innerHeight-8));
+    return target?.closest('.search-results')===e;
+  }),'Suggestion dropdown must paint above following content');
+  await page.getByRole('option').first().click({trial:true});
+  await input.press('Escape');
   await page.locator('.coverage-map').waitFor({state:'attached'});
   if(width>900) {
     assert(await page.evaluate(()=>{

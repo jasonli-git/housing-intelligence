@@ -1,6 +1,7 @@
 # Search-first landing experiment
 
 ## What changed
+- Search layering fix: opening establishes a raised stacking context so suggestion popup paints above following national benchmarks. Preserves map window clipping and popup overflow; adds bottom-of-popup hit test and clickability check.
 - Coordinated mode motion: supported browsers use View Transitions for the actual atlas geometry, canvas and following benchmarks together, avoiding conflicting width/height/layout animations. 480ms shared easing with shorter content crossfade. Reduced motion remains instant; other browsers retain CSS fallback. Rapid switches skip prior transitions and unmount cancels pending snapshots.
 - Centered icon-only map button with explicit alignment and minimum 44px width. Compacted tool cards with smaller padding/icons/type and horizontal mobile layout; preserved descriptions, links, destination colors and scope labels.
 - Map shortcut now icon-only; retains “Explore map” accessible label and hover title. Existing touch-target sizing preserved.
@@ -32,6 +33,7 @@
 - Follow-up restores decorative search-mode outlines; they depict geographic coverage, not local housing values. Interactive map remains a deliberate exploration mode.
 
 ## Verification
+- Search layering fix: typecheck, 656 tests, static build and all 14 responsive/theme cases passed. Long query-result list bottom hit test confirms it paints above following content; first option passes Playwright pointer-action trial. Normal/reduced transitions, axe and overflow checks preserved. `git diff --check` passed.
 - Coordinated motion: typecheck, 656 tests, static build and 14 responsive/theme cases passed. Browser diagnostic now exercises normal-motion View Transition entry/return and waits for completion, plus reduced motion, zoom/reset, focus/visibility, axe and overflow. `git diff --check` passed. Browsers without View Transitions retain prior CSS fallback, not the identical new choreography.
 - Compact tool cards/icon centering: typecheck, 656 tests, static build and all 14 responsive/theme cases passed; browser assertions measure icon center on both axes. Tool screenshots inspected at 320px dark and 1280px light. Removed decorative mobile arrows that wrapped onto their own rows; final rebuild/recheck below.
 - Final compact-card build and all 14 browser cases passed. `git diff --check` passed.
