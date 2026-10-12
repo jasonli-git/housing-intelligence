@@ -4,6 +4,12 @@ import { afterEach, expect, it } from "vitest";
 import type { PacketLevel } from "@/lib/api";
 import { StateContextExhibits } from "./StateContextExhibits";
 afterEach(cleanup);
+it("lets pages place topic exhibits separately without duplicating others", () => {
+ const {container}=render(<StateContextExhibits topics={["lending"]} levels={[]} destinations={null} community={null} />);
+ expect(container.querySelectorAll(".learning-exhibit")).toHaveLength(1);
+ expect(container.querySelector('[data-exhibit="Buyer financing"]')).toBeTruthy();
+ expect(container.querySelector('[data-exhibit="Work & transit"]')).toBeNull();
+});
 it("does not substitute county broadband for a town or ZIP", () => {
   const { container } = render(<StateContextExhibits name="Princeton" level="municipality" levels={[]} destinations={null} community={null} />);
   expect(container.querySelector('[data-exhibit-style="network"]')).toBeNull();

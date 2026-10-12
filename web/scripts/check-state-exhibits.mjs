@@ -9,6 +9,7 @@ try {
     await page.goto('http://localhost:3002/states/new-jersey',{waitUntil:'networkidle'});
     const gallery=page.locator('.state-market-exhibits');
     assert.equal(await gallery.locator(':scope > .learning-exhibit').count(),6);
+    assert.deepEqual(await gallery.locator(':scope > .learning-exhibit').evaluateAll(es=>es.map(e=>e.dataset.exhibit)),['Home sales','Buyer financing','Against its own history','New homes','Work & transit','Broadband']);
     for(const heading of ['What did buyers borrow?','Where does the workday lead?','How connected is the state?']) assert(await gallery.getByRole('heading',{name:heading}).isVisible());
     assert.equal(await page.locator('#state-detailed-data .mortgage-lending').count(),0);
     assert.equal(await page.locator('#state-detailed-data .state-help-details').count(),0);

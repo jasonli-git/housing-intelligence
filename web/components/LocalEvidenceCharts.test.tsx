@@ -18,3 +18,11 @@ describe("Local evidence charts", () => {
     expect(renderToStaticMarkup(<LocalEvidenceCharts name="ZIP" level="zip" levels={levels} series={[[], [], [], []]} />)).not.toContain("Where residents work");
   });
 });
+it("can place only the work exhibit and omits it when unsupported",()=>{
+ const row=(metric_id:string,value:number)=>({metric_id,value,period_end:"2023-12-31"}) as PacketLevel;
+ const levels=[row("lodes_resident_jobs",100),row("lodes_work_home_county_share",.4),row("lodes_work_other_nj_share",.3),row("lodes_work_nyc_share",.2),row("lodes_work_pennsylvania_share",.1),row("lodes_work_other_state_share",0)];
+ const html=renderToStaticMarkup(<LocalEvidenceCharts kind="work" name="Example" level="county" levels={levels} series={[[],[],[],[]]} />);
+ expect(html).toContain('data-exhibit="Job geography"');
+ expect(html).not.toContain('data-exhibit="Annual building"');
+ expect(renderToStaticMarkup(<LocalEvidenceCharts kind="work" name="Example" level="zip" levels={[]} series={[[],[],[],[]]} />)).toBe("");
+});

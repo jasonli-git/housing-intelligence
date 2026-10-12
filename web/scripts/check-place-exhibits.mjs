@@ -7,6 +7,15 @@ try {
   const context=await browser.newContext({viewport:{width,height:1000},colorScheme:theme,reducedMotion:'reduce'});
   const page=await context.newPage();await page.goto(`http://localhost:3002${path}`,{waitUntil:'networkidle'});
   const gallery=page.locator('.exhibit-gallery');
+  const order=await gallery.locator('[data-exhibit]').evaluateAll(es=>es.map(e=>e.dataset.exhibit));
+  if(order.includes('Annual building')) assert.equal(order.indexOf('Annual building'),order.indexOf('Building & demolition')+1);
+  if(order.includes('Arrivals & departures')) assert(order.indexOf('Arrivals & departures')<order.indexOf('Building & demolition'));
+  if(width>900 && path.includes('county')) {
+    const building=await gallery.locator('[data-exhibit="Building & demolition"]').boundingBox();
+    const annual=await gallery.locator('[data-exhibit="Annual building"]').boundingBox();
+    assert(Math.abs(building.y-annual.y)<2);
+    assert(annual.x>building.x);
+  }
   assert(await gallery.getByRole('heading',{name:'What did buyers borrow?'}).isVisible());
   assert(await gallery.getByRole('heading',{name:'Where does the workday lead?'}).isVisible());
   assert.equal(await page.locator('#region-detailed-data .mortgage-lending').count(),0);

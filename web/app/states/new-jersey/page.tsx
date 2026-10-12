@@ -201,9 +201,10 @@ export default async function NewJerseyPage() {
       </div>
       <div className="state-market-exhibits" id="state-market-exhibits" data-jump-label="Statewide exhibits">
         <LearningExhibit kind="Home sales"><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait /></LearningExhibit>
+        <StateContextExhibits topics={["lending"]} levels={packet?.levels ?? []} destinations={destinations} community={community} />
         <LearningExhibit kind="Against its own history"><HowUnusual name="New Jersey" data={persistence} interactive />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</LearningExhibit>
         <LearningExhibit kind="New homes"><HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} exhibit /></LearningExhibit>
-        <StateContextExhibits levels={packet?.levels ?? []} destinations={destinations} community={community} />
+        <StateContextExhibits topics={["work","broadband"]} levels={packet?.levels ?? []} destinations={destinations} community={community} />
       </div>
       <section className="local-next-step-group state-next-step" aria-labelledby="state-next-step-heading">
         <h2 id="state-next-step-heading">Your next step</h2>

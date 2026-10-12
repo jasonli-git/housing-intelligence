@@ -6,7 +6,8 @@
   #trends-exhibits .indexed-comparison { padding:0; margin:0; border:0; background:none; }
   .property-exhibit-anchor { min-width:0; scroll-margin-top:100px; }
   .property-exhibit-anchor > .learning-exhibit { margin:0; padding:1rem; --text-muted:light-dark(#4c5660,#c2cbd0); --text-secondary:light-dark(#424c55,#d2d8db); }
-  .atlas-local .exhibit-gallery > :is(.local-evidence-charts,#trends-exhibits) { grid-column:1/-1; min-width:0; margin:0; }
+  .atlas-local .exhibit-gallery > :is(.local-evidence-charts:not([data-chart-kind]),#trends-exhibits) { grid-column:1/-1; min-width:0; margin:0; }
+  .atlas-local .exhibit-gallery > .local-evidence-charts[data-chart-kind] { grid-column:auto; display:block; }
   .atlas-local .local-evidence-charts > .learning-exhibit,.atlas-local .trends > .learning-exhibit { --text-muted:light-dark(#4c5660,#c2cbd0); --text-secondary:light-dark(#424c55,#d2d8db); padding:1rem; margin:0; }
   .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Flood context"] { border-radius:24px 3px 24px 3px; border-top:3px solid light-dark(#546c8a,#b2c6de); background:light-dark(#e9edf3,#1d2735); }
   .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Ground & water"] { border-radius:4px; border-left:4px solid light-dark(#786b53,#cbbd9e); background:light-dark(#eeeadd,#28261f); }
