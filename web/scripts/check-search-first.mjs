@@ -3,7 +3,7 @@ import {chromium} from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 const browser=await chromium.launch();
 try {
- for(const width of [320,390,768,1024,1280]) for(const theme of ['light','dark']) {
+ for(const width of [320,390,768,1024,1280,1440,1920]) for(const theme of ['light','dark']) {
   const context=await browser.newContext({viewport:{width,height:900},colorScheme:theme,reducedMotion:'reduce'});
   const page=await context.newPage();await page.goto('http://localhost:3002/',{waitUntil:'networkidle'});
   const input=page.locator('.coverage-search-panel input');
@@ -15,6 +15,15 @@ try {
   await input.fill('Princeton');await page.getByRole('option').first().waitFor();
   assert(await page.getByRole('option').count()>0);await input.press('Escape');
   await page.locator('.coverage-map').waitFor({state:'attached'});
+  if(width>900) {
+    assert(await page.evaluate(()=>{
+      const boxes=[...document.querySelectorAll('.coverage-unavailable,.coverage-available')].map(e=>e.getBoundingClientRect());
+      const range=document.createRange();range.selectNodeContents(document.querySelector('h1'));
+      return Math.min(...boxes.map(b=>b.left))>range.getBoundingClientRect().right+8
+        && Math.max(...boxes.map(b=>b.bottom))<document.querySelector('.coverage-search-panel input').getBoundingClientRect().top-6
+        && Math.max(...boxes.map(b=>b.right))<innerWidth-8;
+    }),'Desktop artwork must clear title, input and viewport edges');
+  }
   await page.locator('.coverage-map').evaluate(e=>window.__openingMap=e);
   await page.locator('.coverage-explore-button').click();
   await page.locator('.coverage-map').waitFor({state:'visible'});

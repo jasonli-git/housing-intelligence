@@ -51,7 +51,7 @@
 .entry-free-assurance p { margin:0 0 .5rem; max-width:35ch; }
 
 /* One geographic drawing, carried into exploration rather than replaced. */
-.search-first-home .coverage-focused-entry .coverage-map { transition:height 520ms cubic-bezier(.22,1,.36,1),transform 520ms cubic-bezier(.22,1,.36,1); }
+.search-first-home .coverage-focused-entry .coverage-map { margin-left:auto; transition:height 520ms cubic-bezier(.22,1,.36,1),width 520ms cubic-bezier(.22,1,.36,1),transform 520ms cubic-bezier(.22,1,.36,1); }
 .search-first-home .coverage-focused-entry .coverage-map-window { overflow:hidden; }
 .search-first-home .coverage-focused-entry .coverage-map-content { transition:transform 520ms cubic-bezier(.22,1,.36,1),opacity 420ms ease; transform-origin:50% 50%; }
 .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map-content { transform:none; opacity:.8; }
@@ -81,7 +81,7 @@
 @media(min-width:901px) {
  .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map-content { height:180px; min-height:180px !important; overflow:visible; }
  .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map-window { overflow:visible; }
- .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map { transform:translate(25%,-225px) scale(.48); }
+ .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map { width:48%; margin-left:auto; transform:translateY(-225px) scale(1); }
  .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-search-interaction { min-height:180px; }
 }
 @media(prefers-reduced-motion:reduce) { .coverage-availability-glow circle:not(:last-child) { animation:none; transform:scale(1); opacity:.2; } }

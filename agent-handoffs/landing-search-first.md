@@ -1,6 +1,7 @@
 # Search-first landing experiment
 
 ## What changed
+- Larger desktop atlas: artwork uses 48% of the opening’s width at natural scale, rather than scaling a full-width SVG down. Measured candidate at 1024/1280/1440/1920 pixels against actual state outlines and input; preserves at least 8px clearance before search at normal desktop widths. Width transition keeps right-edge anchoring into the full map. Mobile unchanged.
 - Desktop placement/control follow-up: US artwork moves into the former right-hand portrait position on wide screens while retaining mobile placement. NJ emits two staggered outward radial rings; reduced motion shows a static ring. Removed NJ coverage shortcut. Map/search controls now use rounded icon-and-label buttons (map outline / back arrow).
 - Geographic centerpiece follow-up: removed house portrait; promoted US drawing, added restrained NJ blue halo and available-state trace highlights driven by destination registry. Same SVG is retained when switching to interactive exploration, with height/position/opacity transitions rather than artwork replacement. Mobile uses a tighter map canvas; reduced motion removes breathing/transition effects.
 - Lean/artful follow-up: shortened intro to “Housing costs. Local context. Clear sources.” Free assurance now reads “Free · No fees or ads,” with subscription assurance in an expandable definition. Removed Find a place label, Princeton example, duplicate NJ link and About the data title/extra place-count sentence.
@@ -27,6 +28,7 @@
 - Follow-up restores decorative search-mode outlines; they depict geographic coverage, not local housing values. Interactive map remains a deliberate exploration mode.
 
 ## Verification
+- Larger desktop atlas: typecheck, 655 tests, final static build and 14 width/theme cases passed (320/390/768/1024/1280/1440/1920). Added assertions against actual state bounds and title text range: artwork clears title, search and viewport. Normal/reduced radial motion, mode switching, zoom/reset, axe and overflow checks passed. Desktop screenshot inspected; `git diff --check` passed.
 - Desktop portrait-position follow-up: typecheck, 655 tests and static build passed. Added 1024px checks; first run found overflow there, corrected desktop scale to fit the portrait space. Radial motion checks replace breathing-animation assertions. Final responsive rebuild/recheck below.
 - Final rebuild and all ten width/theme cases passed, including actual zoom/reset, radial/reduced motion, axe and horizontal overflow. Inspected 1024px desktop screenshot; `git diff --check` passed.
 - Geographic centerpiece: typecheck, 655 tests and static build passed. Browser run caught tablet overflow; confined SVG motion to map window, then all eight cases passed. Verified same SVG retained across modes, NJ breathing animation with normal motion and none with reduced motion. Visual inspection prompted mobile controls positioning below region bar; final build/check below.
