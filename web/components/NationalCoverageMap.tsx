@@ -2,6 +2,7 @@
 
 import { type MouseEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { unpack, type PackedOutline } from "@/lib/mapdata";
 import { scene, type Outline } from "@/lib/globe";
@@ -15,6 +16,7 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
   const [exploring, setExploring] = useState(!searchFirst);
   const entry = useRef<HTMLDivElement>(null);
   const modeChanged = useRef(false);
+  const modeTransition = useRef<ViewTransition | null>(null);
   const stage = useRef<HTMLDivElement>(null);
   const geography = useRef<SVGGElement>(null);
   const flight = useRef<{ animation: Animation; timer: ReturnType<typeof setTimeout> } | null>(null);
@@ -36,7 +38,21 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
     target?.focus({ preventScroll: true });
   }, [exploring]);
 
-  const changeMode = (next: boolean) => { modeChanged.current = true; setExploring(next); };
+  const changeMode = (next: boolean) => {
+    if(next===exploring) return;
+    modeChanged.current = true;
+    if(!focusedEntry || !document.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setExploring(next); return; }
+    modeTransition.current?.skipTransition();
+    entry.current?.setAttribute("data-mode-transition", "true");
+    const transition=document.startViewTransition(()=>flushSync(()=>setExploring(next)));
+    modeTransition.current=transition;
+    void transition.finished.finally(()=>{
+      if(modeTransition.current!==transition) return;
+      modeTransition.current=null;
+      entry.current?.removeAttribute("data-mode-transition");
+    });
+  };
+  useEffect(()=>()=>{modeTransition.current?.skipTransition();},[]);
 
   // "/" focuses the search, as on many sites; never while the reader is typing elsewhere.
   useEffect(() => {

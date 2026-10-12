@@ -119,6 +119,15 @@
 .search-first-home .home-tool-title { font-size:15px; }
 .search-first-home .home-tool-text { font-size:13px; line-height:1.4; }
 .search-first-home .home-tool-scope { margin-top:.15rem; font-size:11px; }
+
+/* Snapshot geometry coordinates the artwork, canvas and following content as one move. */
+.search-first-home .coverage-focused-entry { view-transition-name:coverage-opening; }
+.search-first-home .coverage-focused-entry .coverage-map { view-transition-name:coverage-artwork; }
+.search-first-home .national-backdrop { view-transition-name:coverage-following; }
+.search-first-home [data-mode-transition="true"] :is(.coverage-map,.coverage-map-content,.coverage-search-overlay,.coverage-zoom,.map-pan-controls) { transition:none !important; animation:none !important; }
+::view-transition-group(coverage-opening),::view-transition-group(coverage-artwork),::view-transition-group(coverage-following) { animation-duration:480ms; animation-timing-function:cubic-bezier(.22,1,.36,1); }
+::view-transition-old(coverage-opening),::view-transition-new(coverage-opening),::view-transition-old(coverage-artwork),::view-transition-new(coverage-artwork),::view-transition-old(coverage-following),::view-transition-new(coverage-following) { animation-duration:200ms; mix-blend-mode:normal; }
+::view-transition-old(root),::view-transition-new(root) { animation:none; }
 @media(max-width:600px) {
  .search-first-home .home-tools a { grid-template-columns:24px minmax(0,1fr) auto; column-gap:.65rem; padding:.75rem .85rem; }
  .search-first-home .home-tools svg { grid-column:1; grid-row:1 / span 2; align-self:center; }

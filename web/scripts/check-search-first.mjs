@@ -47,6 +47,15 @@ try {
   await page.emulateMedia({reducedMotion:'no-preference'});
   assert.equal(await page.locator('.coverage-atlas-traces path').first().evaluate(e=>getComputedStyle(e).animationName),'atlas-travel');
   assert.equal(await page.locator('.coverage-availability-glow circle').first().evaluate(e=>getComputedStyle(e).animationName),'coverage-blue-radial');
+  if(await page.evaluate(()=>typeof document.startViewTransition==='function')) {
+    await page.locator('.coverage-explore-inline').click();
+    await page.locator('[data-mode-transition="true"]').waitFor();
+    await page.waitForFunction(()=>!document.querySelector('.coverage-search-stage').hasAttribute('data-mode-transition'));
+    assert.equal(await page.locator('.coverage-search-stage').getAttribute('data-exploring'),'true');
+    await page.locator('.coverage-search-return').click();
+    await page.waitForFunction(()=>!document.querySelector('.coverage-search-stage').hasAttribute('data-mode-transition'));
+    assert(await input.isVisible());
+  }
   await page.emulateMedia({reducedMotion:'reduce'});
   assert.equal(await page.locator('.coverage-availability-glow circle').first().evaluate(e=>getComputedStyle(e).animationName),'none');
   await page.locator('.licence summary').click();assert(await page.locator('.licence-text').isVisible());await page.locator('.licence summary').click();
