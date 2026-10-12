@@ -145,3 +145,11 @@ body:has(.housing-atlas-page) { --surface-1:light-dark(#f2f5f8,#19232c); --surfa
     .atlas-panel-resizer { display:none; }
   }
 }
+.atlas-more-button { min-height:44px; padding:.4rem .65rem; border:1px solid var(--border); border-radius:12px; color:var(--text-primary); background:var(--surface-card); font:12px var(--font-text); }
+.atlas-measure-picker { position:absolute; top:100%; left:0; right:0; max-height:60svh; overflow:auto; padding:1rem; border:1px solid var(--border); border-radius:20px; background:var(--surface-card); box-shadow:0 16px 40px #0004; }
+.atlas-measure-picker label { display:grid; }
+.atlas-measure-picker input { width:100%; min-height:44px; padding:.5rem; border:1px solid var(--border); border-radius:10px; background:var(--surface-2); color:var(--text-primary); }
+.atlas-measure-picker h3 { margin:1rem 0 .4rem; font:12px var(--font-text); color:var(--text-secondary); }
+.atlas-measure-picker button { display:grid; width:100%; text-align:left; gap:.3rem; padding:.7rem; margin:.3rem 0; border:1px solid var(--border); border-radius:12px; background:var(--surface-2); color:var(--text-primary); }
+.atlas-measure-picker button[aria-pressed="true"] { border-color:var(--text-primary); }
+.atlas-measure-picker span,.atlas-measure-picker small,.atlas-how-to-read { font-size:12px; line-height:1.5; color:var(--text-secondary); }

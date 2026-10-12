@@ -12,6 +12,9 @@ import { periodLabel, windowLabel } from "@/lib/periods";
 import { WINDOWS, windowNote } from "@/lib/windows";
 import { regionPath } from "@/lib/placeRoutes";
 
+const EVERYDAY = new Set(["zhvi_sfr","zori_all","acs_median_hh_income","acs_renter_cost_burden","pep_population"]);
+const FRIENDLY:Record<string,string> = {zhvi_sfr:"Typical home price",zori_all:"Typical asking rent",acs_median_hh_income:"Household income",acs_renter_cost_burden:"Renters under housing-cost pressure",pep_population:"Population"};
+
 export function HousingAtlas({measures,counties,stateMeasures,states}:{measures:AtlasMeasure[];counties:AtlasCounty[];stateMeasures:AtlasMeasure[];states:(AtlasCounty&{code:string})[]}) {
   const [level,setLevel]=useState<"globe"|"states"|"county">("globe");
   const [rotation,setRotation]=useState({lon:-96,lat:30});
@@ -25,6 +28,40 @@ export function HousingAtlas({measures,counties,stateMeasures,states}:{measures:
   const [descending,setDescending]=useState(true);
   const [viewport,setViewport]=useState({scale:1,x:0,y:0});
   const [panelWidth,setPanelWidth]=useState(370);
+  const [moreMeasures,setMoreMeasures]=useState(false);
+  const [measureSearch,setMeasureSearch]=useState("");
+  const [restored,setRestored]=useState(false);
+  const [shareStatus,setShareStatus]=useState("");
+  useEffect(()=>{
+    const restore=()=>{
+      const params=new URLSearchParams(window.location.search);
+      const next=params.get("level");
+      const nextLevel=next==="county"||next==="states"?next:"globe";
+      const list=nextLevel==="county"?measures:stateMeasures;
+      const picked=list.find(m=>m.metric_id===params.get("measure"))??list[0];
+      const requested=params.get("view") as AtlasMode;
+      setLevel(nextLevel);setMetric(picked.metric_id);setMode(requested&&requested!=="latest"&&picked.windows[requested]?requested:"latest");
+      const id=Number(params.get("place"));
+      setSelected(params.has("place")&&Number.isFinite(id)?id:null);
+      const lon=Number(params.get("lon")),lat=Number(params.get("lat")),scale=Number(params.get("zoom"));
+      setRotation({lon:params.has("lon")&&Number.isFinite(lon)?lon:-96,lat:params.has("lat")&&Number.isFinite(lat)?Math.max(-85,Math.min(85,lat)):30});
+      setViewport({scale:params.has("zoom")&&Number.isFinite(scale)?Math.max(.8,Math.min(6,scale)):1,x:Number(params.get("x"))||0,y:Number(params.get("y"))||0});
+      setRestored(true);
+    };
+    restore();window.addEventListener("popstate",restore);return()=>window.removeEventListener("popstate",restore);
+  },[measures,stateMeasures]);
+  useEffect(()=>{
+    if(!restored)return;
+    const timer=window.setTimeout(()=>{
+      const url=new URL(window.location.href);
+      const params=url.searchParams;
+      params.set("level",level);params.set("measure",metric);params.set("view",mode);
+      if(selected!==null)params.set("place",String(selected));else params.delete("place");
+      params.set("lon",String(rotation.lon));params.set("lat",String(rotation.lat));params.set("zoom",String(viewport.scale));params.set("x",String(viewport.x));params.set("y",String(viewport.y));
+      window.history.replaceState(null,"",url);
+    },150);
+    return()=>window.clearTimeout(timer);
+  },[restored,level,metric,mode,selected,rotation,viewport]);
   const resizing=useRef<{x:number;width:number}|null>(null);
   const svg=useRef<SVGSVGElement>(null);
   const table=useRef<HTMLDivElement>(null);
@@ -44,6 +81,7 @@ export function HousingAtlas({measures,counties,stateMeasures,states}:{measures:
   const destinations=level==="county"?counties:stateGeometry.length?stateGeometry.map((outline,index)=>({id:states.find(s=>s.code===outline.id)?.id??-(index+1),name:outline.name,code:String(outline.id)})):states;
   const availableMeasures=level==="county"?measures:stateMeasures;
   const measure=availableMeasures.find(m=>m.metric_id===metric)??availableMeasures[0];
+  const chooseMeasure=(next:AtlasMeasure)=>{setMetric(next.metric_id);if(mode!=="latest"&&!next.windows[mode])setMode("latest");setMoreMeasures(false);};
   const reading=atlasReading(measure,mode);
   const rows=new Map(reading?.rows.map(row=>[row.id,row]));
   const figures=destinations.map(county=>({county,row:rows.get(county.id),value:atlasValue(rows.get(county.id),mode)}));
@@ -83,9 +121,12 @@ export function HousingAtlas({measures,counties,stateMeasures,states}:{measures:
   return <section className="housing-atlas" aria-label="Housing atlas globe and comparison" data-level={level} style={{"--atlas-panel-width":`${panelWidth}px`} as CSSProperties}>
     <div className="atlas-controls">
       <div className="atlas-levels" role="group" aria-label="Map geography"><button type="button" aria-pressed={level==="globe"} onClick={()=>changeLevel("globe")}>Globe</button><button type="button" aria-pressed={level==="states"} onClick={()=>changeLevel("states")}>US states</button><button type="button" aria-pressed={level==="county"} onClick={()=>changeLevel("county")}>NJ counties</button></div>
-      <label>Measure<select aria-label="Measure" value={measure.metric_id} onChange={e=>{const next=availableMeasures.find(m=>m.metric_id===e.target.value)!;setMetric(next.metric_id);if(mode!=="latest"&&!next.windows[mode])setMode("latest");}}>{availableMeasures.map(m=><option key={m.metric_id} value={m.metric_id}>{m.label}</option>)}</select></label>
+      <label>Measure<select aria-label="Measure" value={measure.metric_id} onChange={e=>chooseMeasure(availableMeasures.find(m=>m.metric_id===e.target.value)!)}>{availableMeasures.filter(m=>EVERYDAY.has(m.metric_id)||m.metric_id===measure.metric_id).map(m=><option key={m.metric_id} value={m.metric_id}>{FRIENDLY[m.metric_id]??m.label}</option>)}</select></label>
+      <button className="atlas-more-button" type="button" aria-expanded={moreMeasures} aria-controls="atlas-measure-picker" onClick={()=>setMoreMeasures(!moreMeasures)}>More measures…</button>
+      {moreMeasures&&<div id="atlas-measure-picker" className="atlas-measure-picker"><label>Search measures<input autoFocus type="search" value={measureSearch} onChange={e=>setMeasureSearch(e.target.value)} placeholder="Rent, income, building…"/></label>{["Everyday figures","Other price & rent measures","Building & supply"].map((group,index)=>{const matches=availableMeasures.filter(m=>(index===0?EVERYDAY.has(m.metric_id):index===2?m.metric_id.startsWith("permits_"):!EVERYDAY.has(m.metric_id)&&!m.metric_id.startsWith("permits_"))).filter(m=>`${m.label} ${FRIENDLY[m.metric_id]??""} ${m.definition}`.toLowerCase().includes(measureSearch.toLowerCase()));return matches.length?<div key={group}><h3>{group}</h3>{matches.map(m=><button type="button" key={m.metric_id} aria-pressed={m.metric_id===measure.metric_id} onClick={()=>chooseMeasure(m)}><b>{FRIENDLY[m.metric_id]??m.label}</b><span>{m.definition}</span><small>{level==="county"?"NJ county figures":"State figures"} · {m.latest.rows.length} published areas</small></button>)}</div>:null;})}<button type="button" onClick={()=>setMoreMeasures(false)}>Close measures</button></div>}
       <label>View<select aria-label="View" value={mode} onChange={e=>setMode(e.target.value as AtlasMode)}><option value="latest">Latest figure</option>{WINDOWS.map(w=><option key={w.key} value={w.key} disabled={!measure.windows[w.key]}>{w.label} · change</option>)}</select></label>
       <span className="atlas-coverage">{level==="county"?"New Jersey counties":"US states & territories"}<b>{values.length}/{destinations.length} published</b></span>
+      <button className="atlas-more-button" type="button" onClick={async()=>{try{await navigator.clipboard.writeText(window.location.href);setShareStatus("Link copied");}catch{setShareStatus("Copy this page’s address to share this view");}}}>Share view</button><span role="status">{shareStatus}</span>
     </div>
     <div className="atlas-workspace">
       <div className="atlas-map-stage">
@@ -117,7 +158,7 @@ export function HousingAtlas({measures,counties,stateMeasures,states}:{measures:
         <div className="atlas-results-head"><h2>Compare {level==="county"?"counties":"states"}</h2><button className="atlas-sheet-toggle" type="button" aria-expanded={expanded} aria-controls="atlas-table" onClick={()=>setExpanded(!expanded)}>{expanded?"Close table":"Show table"}</button></div>
         {level!=="county"&&<p className="atlas-state-coverage">Detailed figures currently cover New Jersey only. Other states are available to explore geographically.</p>}
         <div className="atlas-selected" aria-live="polite">{choice?<><h3>{choice.county.name}</h3><strong>{format(choice.value)}</strong><small>{margin(choice.county.id)}{mode==="latest"&&measure.latest.periods[choice.county.id]?` · ${periodLabel(measure.latest.periods[choice.county.id],metric)}`:""}</small>{level==="county"?<Link className="destination-county" href={regionPath(choice.county.id)}>Open place page →</Link>:choice.county.id===states.find(s=>s.code==="NJ")?.id?<><button type="button" className="atlas-drill" onClick={()=>changeLevel("county")}>Explore New Jersey counties →</button><Link href="/states/new-jersey">Open state page →</Link></>:<p>State and county figures are not available here yet.</p>}</>:<p>Select a {level==="county"?"county":"state"} on the map or in the table.</p>}</div>
-        <div className="atlas-reading"><b>{measure.label}</b><span>{mode==="latest"?"Latest figure":"Percentage change"} · {dateLabel}</span></div>
+        <div className="atlas-reading"><b>{FRIENDLY[measure.metric_id]??measure.label}</b><span>{mode==="latest"?"Latest figure":"Percentage change"} · {dateLabel}</span><p className="atlas-how-to-read">{measure.definition} Darker means higher—not better. Hatched areas have no figure for this view.</p></div>
         <div className="atlas-table-wrap" ref={table} id="atlas-table" tabIndex={0} role="region" aria-label={`${level==="county"?"County":"State"} comparison table, scroll for all places`}><table><thead><tr><th scope="col">{level==="county"?"County":"State"}</th><th scope="col"><button type="button" onClick={()=>setDescending(!descending)} aria-label={`Sort figures ${descending?"low to high":"high to low"}`}>Figure {descending?"↓":"↑"}</button></th></tr></thead><tbody>{ordered.map(({county,value})=><tr key={county.id} data-county-row={county.id} data-selected={selected===county.id}><th scope="row"><button type="button" aria-label={`Select ${county.name}`} aria-pressed={selected===county.id} onClick={()=>select(county.id)}>{county.name.replace(/ County$/,"")}</button></th><td>{format(value)}{margin(county.id)&&<small>{margin(county.id)}</small>}{mode==="latest"&&dates.length>1&&<small>{measure.latest.periods[county.id]?periodLabel(measure.latest.periods[county.id],metric):""}</small>}</td></tr>)}</tbody></table></div>
         <details className="atlas-notes"><summary>About this measure & sources</summary><p>{measure.definition}</p>{measure.sourceUrl?<a href={measure.sourceUrl} target="_blank" rel="noreferrer">{measure.source} ↗</a>:<p>{measure.source}</p>}<p>{MARGIN_NOTE}</p>{mode!=="latest"&&windowNote(mode,metric,measure.windows).map(note=><p key={note}>{note}</p>)}<p>Shading uses a linear scale from the lowest to highest published county figure. The scale changes with the measure and window. Missing values are hatched; unavailable periods are disabled. A county figure does not describe every neighborhood or property.</p></details>
       </aside>
