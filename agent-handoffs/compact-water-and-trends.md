@@ -1,6 +1,7 @@
 # Compact water and trends
 
 ## What changed
+- Graph aesthetic follow-up: restore the original IndexedComparison neutral card, padding, legend and minimum readable chart width; remove the LearningExhibit wrapper/artwork. Keep full-width placement and individual graphs removed. Mobile keeps the original chart-local horizontal scrolling.
 - Latest superseding direction: remove Explore each measure and individual trend graphs from place pages; restore full-width indexed housing-cost/income comparison. Retain each series' recent historical values/source/uncertainty rows under Historical values & sources in evidence. Chart-count copy updated; default trend components elsewhere unchanged.
 - Superseding user refinement: water preview now shows two systems. Reverted single-measure selection; all supported trend charts return beside a horizontally narrower indexed comparison on desktop, stacked on mobile. Expanded exhibit theme distinctions in surfaces, typography, framing and decorative patterns.
 - Place ground/water exhibit previews the three largest systems by estimated share of homes served; remaining systems expand locally.
@@ -33,3 +34,4 @@
 - Individual graph cues use metric IDs, not display order, so missing-year charts do not shift the colour mapping.
 - Final cue build passed (2,386 pages); browser diagnostic passed all 12 page/width/theme combinations, including desktop side-by-side bounds and full accessibility/contrast. Desktop trend layout screenshot inspected. Final keyed-metric regression test and diff check passed.
 - Final removal follow-up: type checking, 646 tests and static preview build passed. Updated browser checks passed all county/town/ZIP width/theme combinations: no Explore each measure or individual charts, full-width comparison and retained historical-source tables; axe/overflow checks passed. Removed stale side-layout CSS.
+- Original-style graph follow-up: type checking, all 648 tests, preview build and 12 place browser cases passed, including no exhibit frame and full-width comparison bounds. Dedicated IndexedComparison test filter found no files; ran the full suite instead. Restored desktop dark screenshot visually inspected; diff check passed.

@@ -702,7 +702,7 @@ export default async function RegionPage({
         {hasIndexedComparison && (
           <section id="trends-exhibits" className="section" aria-labelledby="trends-heading" data-jump-label="Trends">
             <h2 id="trends-heading">Trends</h2>
-            <LearningExhibit kind="Costs & income"><IndexedComparison series={indexedInputs} /></LearningExhibit>
+            <IndexedComparison series={indexedInputs} />
           </section>
         )}
       </ExhibitGallery>

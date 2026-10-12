@@ -29,8 +29,9 @@ try {
   assert.equal(await page.locator('.trend-side-exhibits, #trends-exhibits .trends').count(),0);
   assert.equal(await page.getByRole('heading',{name:'Explore each measure',includeHidden:true}).count(),0);
   assert(await page.locator('#region-detailed-data .historical-value-tables table').count()>0);
-  if(width>900 && await page.locator('#trends-exhibits > .learning-exhibit').count()) {
-    const chart=await page.locator('#trends-exhibits > .learning-exhibit').boundingBox();
+  assert.equal(await page.locator('#trends-exhibits .learning-exhibit').count(),0);
+  if(width>900 && await page.locator('#trends-exhibits > .indexed-comparison').count()) {
+    const chart=await page.locator('#trends-exhibits > .indexed-comparison').boundingBox();
     const section=await page.locator('#trends-exhibits').boundingBox();
     assert(chart.width>=section.width-2);
   }

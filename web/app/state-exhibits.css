@@ -1,9 +1,6 @@
 @media screen {
   .atlas-local .exhibit-gallery-head { grid-column:1/-1; }
   #trends-exhibits { display:block; }
-  #trends-exhibits > .learning-exhibit { margin:0; padding:1rem; min-width:0; }
-  #trends-exhibits .indexed-chart-scroll svg { min-width:0; }
-  #trends-exhibits .indexed-comparison { padding:0; margin:0; border:0; background:none; }
   .property-exhibit-anchor { min-width:0; scroll-margin-top:100px; }
   .property-exhibit-anchor > .learning-exhibit { margin:0; padding:1rem; --text-muted:light-dark(#4c5660,#c2cbd0); --text-secondary:light-dark(#424c55,#d2d8db); }
   .atlas-local .exhibit-gallery > :is(.local-evidence-charts:not([data-chart-kind]),#trends-exhibits) { grid-column:1/-1; min-width:0; margin:0; }
@@ -29,7 +26,6 @@
   .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Health estimates"] h2 { font-family:var(--font-text); font-weight:400; }
   .atlas-local .exhibit-gallery .learning-exhibit:is([data-exhibit="Schools"],[data-exhibit="Public safety"],[data-exhibit="Service providers"]) .exhibit-linework { display:none; }
   .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Internet access"] { border-radius:20px; background:light-dark(#efedf5,#252332); }
-  .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Costs & income"] { background:light-dark(#edf0f3,#202830); border-top:3px solid var(--atlas-accent); }
   .atlas-local .exhibit-gallery .learning-exhibit[data-exhibit="Measure over time"] { background:var(--surface-1); border:1px solid var(--border); border-radius:14px; }
   .atlas-local .local-evidence-charts > .learning-exhibit[data-exhibit="Annual building"] { background:light-dark(#eef0e9,#252a21); border-radius:3px; }
   .atlas-local .local-evidence-charts > .learning-exhibit[data-exhibit="Job geography"] { background:light-dark(#e7edee,#1e2b30); border-radius:20px 3px; }
