@@ -13,6 +13,8 @@ try {
   assert.equal(await page.locator('.coverage-scale-slot').count(),1);
   assert.equal(await page.locator('.nation-portrait').count(),0);
   const mapButton=await page.locator('.coverage-explore-inline').boundingBox();
+  assert.equal(await page.locator('.coverage-explore-inline').innerText(),'');
+  assert.equal(await page.locator('.coverage-explore-inline').getAttribute('aria-label'),'Explore map');
   const searchBox=await input.boundingBox();
   assert(width<360 ? mapButton.y+mapButton.height<searchBox.y : mapButton.x+mapButton.width<searchBox.x,'Map action must be separate and left of search');
   await input.fill('Princeton');await page.getByRole('option').first().waitFor();
