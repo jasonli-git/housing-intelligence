@@ -1,6 +1,7 @@
 # Landing-page data scale
 
 ## What changed
+- Final count reconciliation: exhibit now shows 48 **Source datasets** from the same external-source catalogue as the footer, rather than 42 dated-record sources. Removed the footer’s closed-state “All 48 datasets” text while retaining the expansion chevron and open-state Hide cue, freeing room for institution names.
 - Follow-up: lead with 3,480,497 distinct parcel identifiers and 1,398,840 SR1A property sales records, alongside sources and places. Metric observations move into definitions when landed property data is available; original three-count layout remains when it is absent.
 - Four columns on desktop, two-by-two on mobile. Small count captions no longer inherit numeric letter spacing.
 - Added a compact Behind the picture exhibit between place search/map and national benchmarks.
@@ -12,6 +13,7 @@
 - Landing page, DataScale component/style, dataScale helper/tests, browser diagnostic.
 
 ## Architectural or implementation decisions
+- Supersedes the earlier dated-source filter below: headline sources now count distinct external `/sources` catalogue entries, excluding `hip_derived`; supporting boundaries, directories and uncertainty datasets count too. The definition explicitly distinguishes datasets from institutions. Freshness is no longer needed for the exhibit fetch.
 - Property counts are generated on every `npm run build` from `HIP_DATA_DIR` (default repo data), using project Python/DuckDB. `HIP_PYTHON` can select the interpreter. No new API endpoint or privacy-sensitive exports; only counts and archive labels leave the landed tier.
 - Parcels: distinct nonblank trimmed PAMS_PIN from current MOD-IV composite. 3,481,240 geometry rows become 3,480,497 parcel identifiers. This includes nonresidential/unmatched parcels, not just properties supported by lookup pages.
 - SR1A: distinct county/district/serial/assessment-year tuples across currently landed archive files. All 1,398,840 rows have unique keys and nonnull key fields. Count includes unusable/non-market records. Do not call these deed documents or ordinary home sales.
@@ -33,6 +35,8 @@
 - No representation of complete measure coverage for every place. No canonical document edits.
 
 ## Verification
+- Source reconciliation: typecheck and five affected tests passed. Test covers supporting datasets, duplicate IDs and exclusion of internal calculated metrics.
+- Reconciliation full suite: 654 tests passed; static build passed (2,386 pages). Six browser theme/size cases passed with count 48, no repeated footer dataset total, visible source names, axe/overflow/reduced motion checks. `git diff --check` passed.
 - Follow-up synthetic aggregation test (`.venv/bin/python web/scripts/test_property_counts.py`) passed: repeated parcel IDs, blank/null IDs, repeated transaction keys, distinct districts, archive labels and missing-data stale-count removal.
 - Follow-up typecheck and five affected frontend tests passed. Static build passed with the prebuild aggregate step, 2,386 pages / 16,695 files.
 - Follow-up full frontend suite: 654 tests across 104 files passed; `git diff --check` passed.

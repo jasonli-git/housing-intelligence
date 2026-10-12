@@ -33,8 +33,8 @@ export const metadata: Metadata = pageMetadata({
 export default async function HousingLandingPage() {
   const [rate, homePrices] = await Promise.all([nationalMortgageRate(), nationalHomePriceChange()]);
   const trends = await nationalBenchmarkTrends(rate?.metric_id);
-  const [metrics,freshness,places] = await Promise.all([api.metrics(),api.freshness(),regionsWithData()]);
-  const scale = dataScale(metrics,freshness,places);
+  const [metrics,sources,places] = await Promise.all([api.metrics(),api.sources(),regionsWithData()]);
+  const scale = dataScale(metrics,sources,places);
   return <>
     <Masthead affordability={{ kind: "route", active: false }} search={false} />
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">

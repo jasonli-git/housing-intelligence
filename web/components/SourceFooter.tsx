@@ -105,7 +105,6 @@ export async function SourceFooter() {
               match method in the underlying packet.
             </span>
             <span className="disclose-hint">
-              <span className="when-closed">All {external.length} datasets</span>
               <span className="when-open">Hide</span>
             </span>
           </summary>
