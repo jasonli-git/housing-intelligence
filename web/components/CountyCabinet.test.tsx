@@ -5,22 +5,22 @@ import { CountyCabinet } from "./CountyCabinet";
 
 afterEach(cleanup);
 const counties = [{ id:5, name:"Atlantic County" }, { id:12, name:"Somerset County" }];
-it("previews counties without navigating and provides an explicit destination link", () => {
+it("links each county directly without a preview panel", () => {
   render(<CountyCabinet counties={counties} />);
-  fireEvent.click(screen.getByRole("button", { name:/Somerset/ }));
-  expect(screen.getByRole("heading", { name:"Somerset County" })).toBeTruthy();
-  expect(screen.getByRole("link", { name:/Explore county/ }).getAttribute("href")).toBe("/nj/somerset-county");
+  expect(screen.getByRole("link", { name:"Explore Somerset County" }).getAttribute("href")).toBe("/nj/somerset-county");
+  expect(screen.getAllByRole("link")).toHaveLength(2);
+  expect(screen.queryByText("Housing costs, the local picture and the figures behind it.")).toBeNull();
+  expect(screen.getByRole("button", {name:"Scroll counties right"})).toBeTruthy();
 });
-it("offers a direct directory and preserves selection on return", () => {
+it("supports directional keyboard browsing without navigating", () => {
   render(<CountyCabinet counties={counties} />);
-  fireEvent.click(screen.getByRole("button", { name:/Somerset/ }));
-  fireEvent.click(screen.getByRole("button", { name:"All counties" }));
-  expect(screen.getByRole("navigation", { name:"All counties" }).hidden).toBe(false);
-  expect(screen.getByRole("link", { name:/Atlantic/ })).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name:"Folder view" }));
-  expect(screen.getByRole("heading", { name:"Somerset County" })).toBeTruthy();
+  const first=screen.getByRole("link",{name:"Explore Atlantic County"});
+  const last=screen.getByRole("link",{name:"Explore Somerset County"});
+  last.scrollIntoView=()=>{}; first.scrollIntoView=()=>{};
+  first.focus(); fireEvent.keyDown(first,{key:"End"}); expect(document.activeElement).toBe(last);
+  fireEvent.keyDown(last,{key:"Home"}); expect(document.activeElement).toBe(first);
 });
-it("renders no empty cabinet", () => {
+it("renders no empty navigation", () => {
   const { container } = render(<CountyCabinet counties={[]} />);
   expect(container.innerHTML).toBe("");
 });

@@ -7,6 +7,7 @@ import { ComputedBadge } from "@/components/ComputedBadge";
 import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { StateOverview } from "@/components/StateOverview";
+import { CountyCabinet } from "@/components/CountyCabinet";
 import { StateContextExhibits } from "@/components/StateContextExhibits";
 import { HousingMosaic } from "@/components/HousingMosaic";
 import { statewideMosaicViews } from "@/lib/housingMosaic";
@@ -186,6 +187,7 @@ export default async function NewJerseyPage() {
         </div>
         <PlacePhoto geoid="34" />
       </header>
+      <CountyCabinet counties={(countyRegions?.items ?? []).map(county => ({ id:county.region_id, name:county.name }))} />
       <StateOverview hasNotes={statewideNotes.length > 0} levels={levels} mortgage={mortgage} preliminaryYears={constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter((row) => row.preliminary).map((row) => row.year)}>
         <HousingMosaic embedded statewide name="New Jersey" views={statewideMosaicViews(packet?.levels ?? [], constructionYears({ permitted: construction[0], completed: construction[1], demolished: construction[2], net: construction[3] }).filter(r => r.preliminary).map(r => r.year))} />
         <details className="state-extra-figures"><summary>More statewide figures <span aria-hidden="true">＋</span></summary>

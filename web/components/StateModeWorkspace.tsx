@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import type { Measure } from "@/lib/measures";
 import { SectionJump } from "@/components/SectionJump";
 import { CountyComparison } from "@/components/CountyComparison";
-import { CountyCabinet } from "@/components/CountyCabinet";
 import { PlaceSearch } from "@/components/PlaceSearch";
 import type { CountyDestination } from "@/lib/countyPicker";
 import type { Section } from "@/lib/groups";
@@ -48,7 +47,6 @@ export function StateModeWorkspace({ countyPages, sections, initial }: {
         <div id="state-explore-panel" hidden={mode !== "explore"}>
         <p className="place-search-label">Search a town, county or ZIP.</p>
         <div className="place-discovery-search"><PlaceSearch /></div>
-        <CountyCabinet counties={countyPages} />
         {!countyPages.length && <p>County pages are unavailable in this snapshot. Try the place search.</p>}
         </div>
         <div id="state-compare-panel" hidden={mode !== "compare"}>
