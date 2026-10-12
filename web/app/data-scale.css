@@ -37,6 +37,13 @@
 @media print { .scale-tapestry { display:none; }.scale-definitions::details-content { content-visibility:visible !important; }.scale-definitions > :not(summary) { display:block !important; } }
 
 /* Scale belongs to the map's base, not the title or search instructions. */
+.coverage-search-interaction { position:relative; }
+.nation-page .landing-canvas .coverage-search-interaction .coverage-search-overlay { top:0; }
+.coverage-scale-slot { position:relative; z-index:4; width:100%; padding:0 1rem .3rem; }
+.coverage-scale-slot .scale-map-edge { max-width:680px; margin:.1rem auto 0; justify-content:center; text-align:center; border-top:0; }
+.coverage-scale-slot .scale-signature { flex-basis:100%; }
+.coverage-scale-slot .data-scale { flex-basis:100%; text-align:left; }
+.coverage-scale-slot .scale-definitions summary { margin-inline:auto; }
 .scale-map-edge { display:flex; flex-wrap:wrap; align-items:center; gap:.25rem 2rem; border-top:1px solid var(--border); margin-top:.75rem; padding:.7rem 0 0; }
 .scale-map-edge .scale-signature { flex:1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:0; padding:0; font-size:12px; }
 .scale-map-edge .scale-signature b { display:block; font:500 24px/1.2 var(--font-display); color:var(--text-primary); }

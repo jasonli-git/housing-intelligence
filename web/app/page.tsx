@@ -54,12 +54,11 @@ export default async function HousingLandingPage() {
         <p className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free to use · No fees, subscriptions or ads</span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
-        <NationalCoverageMap searchFirst />
-        {scale && <p className="scale-coverage">{scale.places.toLocaleString("en-US")} New Jersey places to explore · Coverage varies by place</p>}
-        <div className="scale-map-edge">
+        <NationalCoverageMap searchFirst scaleStrip={<div className="scale-map-edge">
           <ScaleSignature stats={scale} properties={properties} />
           <DataScale stats={scale} properties={properties} />
-        </div>
+        </div>} />
+        {scale && <p className="scale-coverage">{scale.places.toLocaleString("en-US")} New Jersey places to explore · Coverage varies by place</p>}
       </section>
       <section className="national-backdrop" aria-labelledby="national-backdrop-heading">
         <header><h2 id="national-backdrop-heading">The national backdrop</h2><span>United States</span></header>
