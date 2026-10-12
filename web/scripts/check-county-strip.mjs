@@ -18,17 +18,15 @@ try {
     const first=strip.locator('a').first(), last=strip.locator('a').last();
     await first.focus(); await first.press('End'); assert(await last.evaluate(n=>n===document.activeElement));
     await last.press('Home'); assert(await first.evaluate(n=>n===document.activeElement));
-    await page.getByRole('button',{name:'Compare counties',exact:true}).click();
-    assert(await page.locator('#state-compare-panel').isVisible());
-    await page.getByRole('button',{name:'Explore places',exact:true}).click();
-    assert(await page.locator('#state-explore-panel .place-search input').isVisible());
+    assert(await page.locator('#county-comparison').isVisible());
+    assert.equal(await page.locator('#nj-explore .place-search').count(),0);
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     const audit=await new AxeBuilder({page}).include('.county-strip').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
     assert.deepEqual(audit.violations.map(v=>v.id),[]);
     await strip.scrollIntoViewIfNeeded();
     await page.screenshot({path:`/tmp/county-strip-${width}-${theme}.png`});
     const href=await first.getAttribute('href'); await first.click(); await page.waitForURL(new RegExp(href+'$'));
-    console.log(`PASS ${width} ${theme}: 21 destinations, compact placement, scrolling, keyboard, compare/search, axe, county navigation`);
+    console.log(`PASS ${width} ${theme}: 21 destinations, compact placement, scrolling, keyboard, direct comparison, axe, county navigation`);
     await context.close();
   }
 } finally { await browser.close(); }

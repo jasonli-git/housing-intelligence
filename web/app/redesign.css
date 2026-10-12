@@ -305,6 +305,18 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 
 /* ------------------------------------------------------------ licence / location --- */
 
+.site-meta-row.shared-meta { align-items:center; gap:.2rem 1rem; padding-block:.2rem; }
+.site-meta-row.shared-meta .licence { flex:1; margin:0; }
+.shared-meta .licence-label { font:500 11px/1.4 var(--font-text); letter-spacing:0; text-transform:none; }
+.shared-meta .site-status { border:0; background:none; font:11px/1.4 var(--font-text); padding:.25rem 0; }
+.shared-meta .site-status-kicker { font:inherit; letter-spacing:0; text-transform:none; }
+.shared-meta .licence .disclose-hint .when-closed { display:none; }
+@media(max-width:600px) {
+  .site-meta-row.shared-meta { gap:.2rem .6rem; }
+  .site-meta-row.shared-meta .licence { flex:1 1 auto; }
+  .shared-meta .site-status { font-size:10px; margin-left:auto; }
+  .shared-meta .site-status-arrow { display:none; }
+}
 .site-meta-row {
   display: flex;
   flex-wrap: wrap;

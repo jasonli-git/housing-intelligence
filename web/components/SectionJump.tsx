@@ -14,7 +14,7 @@ const SECTIONS = [
   ["Explore the evidence", "#region-detailed-data"],
   ["Statewide overview", "#state-overview"],
   ["State profile", ".nj-page > .state-ticker, .nj-page .quiet-state-profile"],
-  ["Find your place", "#nj-explore"],
+  ["Compare counties", "#nj-explore"],
   ["Compare counties", "#county-comparison"],
   ["Housing help", "#housing-assistance"],
   ["Statewide evidence", "#state-detailed-data"],
@@ -45,6 +45,7 @@ export function pageDestinations(): Destination[] {
   const found: Destination[] = [];
   for (const [label, selector] of SECTIONS) {
     const target = main.querySelector<HTMLElement>(selector);
+    if (selector === "#county-comparison" && target?.closest("#nj-explore")) continue;
     if (label === "Is this unusual here?" && target?.closest("#local-price-history")) continue;
     if (target && available(target)) found.push({ label, selector, target });
   }

@@ -1,4 +1,11 @@
 /* Place search and comparison workspace. */
+.nj-page.quiet-state .place-first-workspace.direct-county-comparison { border:0; padding-top:0; margin-top:1rem; }
+.nj-page.quiet-state .direct-county-comparison .state-workspace-head { display:flex; justify-content:space-between; padding-bottom:.6rem; border:0; }
+.nj-page.quiet-state .direct-county-comparison .place-discovery { display:flow-root; }
+.nj-page.quiet-state .direct-county-comparison .window-aside { float:right; width:min(42%,26rem); margin:0 0 .7rem 1rem; border:1px dashed var(--border); border-radius:10px; }
+.state-title-navigation { margin-top:.7rem; }
+.state-title-navigation .page-section-nav { margin:0; }
+@media(max-width:700px) { .nj-page.quiet-state .direct-county-comparison .window-aside { float:none; width:auto; margin:0 0 .75rem; } }
 .county-strip { display:flex; align-items:center; gap:.45rem; min-width:0; width:100%; padding:.35rem 0; margin:0 0 .7rem; }
 .county-strip-label { font:500 10px/1 var(--font-mono); text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); margin-right:.25rem; }
 .county-strip-track { display:flex; flex:1; min-width:0; gap:.55rem; overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x proximity; scroll-behavior:smooth; scrollbar-width:none; padding:6px 3px; perspective:700px; }

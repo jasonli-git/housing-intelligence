@@ -8,6 +8,7 @@ import { StateModeWorkspace } from "@/components/StateModeWorkspace";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { StateOverview } from "@/components/StateOverview";
 import { CountyCabinet } from "@/components/CountyCabinet";
+import { SectionJump } from "@/components/SectionJump";
 import { StateContextExhibits } from "@/components/StateContextExhibits";
 import { HousingMosaic } from "@/components/HousingMosaic";
 import { statewideMosaicViews } from "@/lib/housingMosaic";
@@ -184,6 +185,7 @@ export default async function NewJerseyPage() {
             <p className="state-nickname">The Garden State</p>
             <ComputedBadge />
           </div>
+          <div className="state-title-navigation"><SectionJump /></div>
         </div>
         <PlacePhoto geoid="34" />
       </header>
@@ -196,7 +198,6 @@ export default async function NewJerseyPage() {
       </StateOverview>
       <div id="nj-explore" className="nj-explore-anchor">
           <StateModeWorkspace
-            countyPages={(countyRegions?.items ?? []).map((county) => ({ id: county.region_id, name: county.name }))}
             sections={sections}
             initial={initial ?? DEFAULT_MEASURE}
           />
