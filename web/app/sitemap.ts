@@ -11,6 +11,7 @@ const PAGES = [
   "/",
   "/states/new-jersey",
   "/afford",
+  "/atlas",
   "/guide",
   "/help",
   "/tax",
