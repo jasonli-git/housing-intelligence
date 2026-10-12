@@ -1,6 +1,7 @@
 # Landing-page data scale
 
 ## What changed
+- Split signature pass supersedes the full above-search strip: rounded headline property/source figures under the free badge, with a tiny animated flow; NJ place coverage cue by search. Exact totals and definitions now live together inside one closed disclosure below search. No top card/background/borders.
 - Compact placement pass: removed the “Many sources. One clearer picture.” headline and secondary caption. Moved Behind the picture directly beneath the title/free badge and before search; reduced number sizes/padding and turned the decorative animation into a narrow header-side ribbon. Preserved all four counts and expandable definitions.
 - Final count reconciliation: exhibit now shows 48 **Source datasets** from the same external-source catalogue as the footer, rather than 42 dated-record sources. Removed the footer’s closed-state “All 48 datasets” text while retaining the expansion chevron and open-state Hide cue, freeing room for institution names.
 - Follow-up: lead with 3,480,497 distinct parcel identifiers and 1,398,840 SR1A property sales records, alongside sources and places. Metric observations move into definitions when landed property data is available; original three-count layout remains when it is absent.
@@ -36,6 +37,7 @@
 - No representation of complete measure coverage for every place. No canonical document edits.
 
 ## Verification
+- Split pass: typecheck, 655 frontend tests and static build passed. Six responsive/theme browser cases passed after export completion: signature at most 42px tall, signature before search, exact-count disclosure after search, exact totals, axe, overflow and reduced motion. Initial browser run overlapped export replacement and timed out; rerun against completed output passed. Full dark-mobile screenshot inspected; `git diff --check` passed.
 - Compact placement pass: typecheck, 654 frontend tests, static build and six browser cases passed. Browser assertions confirm the entire closed strip ends above 667px from page top at tested widths, and it precedes search. Axe, overflow, exact counts, reduced motion and footer checks passed. Mobile screenshot inspected; `git diff --check` passed.
 - Source reconciliation: typecheck and five affected tests passed. Test covers supporting datasets, duplicate IDs and exclusion of internal calculated metrics.
 - Reconciliation full suite: 654 tests passed; static build passed (2,386 pages). Six browser theme/size cases passed with count 48, no repeated footer dataset total, visible source names, axe/overflow/reduced motion checks. `git diff --check` passed.

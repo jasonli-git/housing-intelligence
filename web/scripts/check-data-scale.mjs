@@ -14,18 +14,21 @@ try {
   const context=await browser.newContext({viewport:{width,height:1000},colorScheme:theme,reducedMotion:'reduce'});
   const page=await context.newPage();await page.goto('http://localhost:3002/',{waitUntil:'networkidle'});
   const scale=page.locator('.data-scale');
-  const bounds=await scale.boundingBox();
-  assert(bounds && bounds.y+bounds.height<667,'Scale strip should fit in the first mobile screen');
-  assert(await page.locator('.coverage-entry').evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('.data-scale')) & Node.DOCUMENT_POSITION_PRECEDING)));
+  const signature=page.locator('.scale-signature');
+  const bounds=await signature.boundingBox();
+  assert(bounds && bounds.height<=42,'Signature should take at most two compact lines');
+  assert(await page.locator('.coverage-entry').evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('.scale-signature')) & Node.DOCUMENT_POSITION_PRECEDING)));
+  assert(await page.locator('.coverage-entry').evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('.data-scale')) & Node.DOCUMENT_POSITION_FOLLOWING)));
   assert.equal(await page.locator('.foot-sources summary').innerText().then(t=>/All \d+ datasets/.test(t)),false);
   assert(await page.locator('.foot-sources summary').innerText().then(t=>t.includes('Census')));
-  assert.deepEqual(await scale.locator('.scale-value').allTextContents(),expected.map(n=>n.toLocaleString('en-US')));
-  assert.equal(await scale.locator('.scale-streams path').first().evaluate(e=>getComputedStyle(e).animationName),'none');
+  assert.equal(await signature.locator('.scale-streams path').first().evaluate(e=>getComputedStyle(e).animationName),'none');
   await scale.locator('summary').click();assert(await scale.locator('nav').isVisible());
-  const a=await new AxeBuilder({page}).include('.data-scale').analyze();
+  assert.deepEqual(await scale.locator('.scale-value').allTextContents(),expected.map(n=>n.toLocaleString('en-US')));
+  const a=await new AxeBuilder({page}).include('.data-scale').include('.scale-signature').analyze();
   assert.deepEqual(a.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   await scale.locator('summary').click();await scale.screenshot({path:`/tmp/data-scale-${width}-${theme}.png`});
+  await page.screenshot({path:`/tmp/scale-landing-${width}-${theme}.png`});
   console.log(width,theme,expected,'passed');await context.close();
  }
 }finally{await browser.close();}
