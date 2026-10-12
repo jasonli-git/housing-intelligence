@@ -7,6 +7,7 @@ it("renders exact static counts and explains the different denominators",()=>{
  expect(html).toContain("not a live counter");expect(html).toContain("not one-to-one records");
  expect(html).toContain("not raw rows processed");expect(html).toContain('href="/freshness"');
  expect(html).toContain('aria-hidden="true"');
+ expect(html).not.toContain("Many sources. One clearer picture.");
 });
 it("omits unavailable statistics rather than inventing a fallback",()=>{
  expect(renderToStaticMarkup(<DataScale stats={null} />)).toBe("");

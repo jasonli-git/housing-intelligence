@@ -1,21 +1,21 @@
-.data-scale { margin:1.3rem 0; padding:1.2rem 1.3rem .5rem; border-block:1px solid var(--border); position:relative; background:radial-gradient(ellipse at 50% 40%,light-dark(#c6b6990b,#e7d1a20a),transparent 70%); }
+.data-scale { margin:.4rem 0 .8rem; padding:.6rem .8rem 0; border-block:1px solid var(--border); position:relative; background:radial-gradient(ellipse at 50% 40%,light-dark(#c6b6990b,#e7d1a20a),transparent 70%); }
 .data-scale header { display:flex; justify-content:space-between; align-items:end; gap:1rem; }
 .scale-kicker { font:10px/1.5 var(--font-mono); letter-spacing:.13em; text-transform:uppercase; color:var(--text-muted); }
-.data-scale h2 { margin:.3rem 0 0; font:400 clamp(22px,2.5vw,28px)/1.2 Georgia,serif; color:var(--text-primary); }
+.data-scale h2 { margin:0; font:10px/1.5 var(--font-mono); letter-spacing:.13em; text-transform:uppercase; color:var(--text-muted); }
 .data-scale header p { font:12px/1.5 var(--font-text); color:var(--text-muted); margin:0; }
-.scale-tapestry { display:block; width:100%; height:100px; margin:.7rem 0 .3rem; }
+.scale-tapestry { display:block; position:absolute; right:.8rem; top:.25rem; width:48%; height:28px; margin:0; pointer-events:none; }
 .scale-records rect { stroke:var(--text-muted); stroke-width:.7; opacity:.5; }
 .scale-streams path { stroke:light-dark(#877558,#d7c3a0); stroke-width:1; stroke-dasharray:2 4; opacity:.45; animation:scale-flow 18s linear infinite; }
 .scale-streams path:nth-child(2n) { animation-direction:reverse; animation-duration:24s; }
 .scale-ledger path { stroke:var(--text-secondary); stroke-width:.7; opacity:.5; }
 .scale-places path { stroke:var(--text-secondary); stroke-width:.8; fill:light-dark(#897d6410,#e5d6b713); }
-.scale-counts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:.2rem 0; }
+.scale-counts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.7rem; margin:.65rem 0 0; }
 .scale-counts-properties { grid-template-columns:repeat(4,minmax(0,1fr)); }
 .scale-counts small { letter-spacing:normal; }
 @media(max-width:700px) { .scale-counts-properties { grid-template-columns:repeat(2,minmax(0,1fr)); row-gap:1rem; } }
 .scale-counts > div { min-width:0; border-left:1px solid var(--border); padding-left:1rem; }
 .scale-counts dt { font:12px/1.5 var(--font-text); color:var(--text-secondary); }
-.scale-counts dd { margin:.2rem 0; font:500 clamp(20px,3.4vw,36px)/1.1 var(--font-display); letter-spacing:-.04em; color:var(--text-primary); font-variant-numeric:tabular-nums; }
+.scale-counts dd { margin:.15rem 0; font:500 clamp(20px,2.6vw,28px)/1.1 var(--font-display); letter-spacing:-.04em; color:var(--text-primary); font-variant-numeric:tabular-nums; }
 .scale-counts small { display:block; font-size:11px; line-height:1.5; color:var(--text-muted); }
 .scale-definitions { font-size:12px; color:var(--text-secondary); }
 .scale-definitions summary { min-height:44px; display:flex; align-items:center; width:fit-content; cursor:pointer; gap:.6rem; }
@@ -23,6 +23,6 @@
 .scale-definitions p { line-height:1.65; max-width:95ch; margin:.5rem 0; }
 .scale-definitions nav { display:flex; flex-wrap:wrap; gap:.6rem 1.5rem; margin:.6rem 0; }.scale-definitions nav a { min-height:44px; display:inline-flex; align-items:center; }
 @keyframes scale-flow { to { stroke-dashoffset:-100; } }
-@media(max-width:700px) { .data-scale { padding:.8rem 0 .2rem; }.data-scale header { display:block; }.data-scale header p { margin-top:.35rem; }.scale-tapestry { height:65px; }.scale-counts { gap:.5rem; }.scale-counts > div { padding-left:.5rem; }.scale-counts dd { font-size:clamp(20px,5.5vw,28px); }.scale-counts dt { font-size:11px; }.scale-counts small { font-size:10px; } }
+@media(max-width:700px) { .data-scale { padding:.5rem 0 0; }.scale-tapestry { right:0; top:.2rem; width:45%; height:25px; }.scale-counts { gap:.45rem; }.scale-counts > div { padding-left:.5rem; }.scale-counts dd { font-size:22px; }.scale-counts dt { font-size:11px; }.scale-counts small { font-size:10px; } }
 @media(prefers-reduced-motion:reduce) { .scale-streams path { animation:none; } }
 @media print { .scale-tapestry { display:none; }.scale-definitions::details-content { content-visibility:visible !important; }.scale-definitions > :not(summary) { display:block !important; } }

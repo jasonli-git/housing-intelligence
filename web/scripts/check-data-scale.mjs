@@ -14,6 +14,9 @@ try {
   const context=await browser.newContext({viewport:{width,height:1000},colorScheme:theme,reducedMotion:'reduce'});
   const page=await context.newPage();await page.goto('http://localhost:3002/',{waitUntil:'networkidle'});
   const scale=page.locator('.data-scale');
+  const bounds=await scale.boundingBox();
+  assert(bounds && bounds.y+bounds.height<667,'Scale strip should fit in the first mobile screen');
+  assert(await page.locator('.coverage-entry').evaluate(e=>!!(e.compareDocumentPosition(document.querySelector('.data-scale')) & Node.DOCUMENT_POSITION_PRECEDING)));
   assert.equal(await page.locator('.foot-sources summary').innerText().then(t=>/All \d+ datasets/.test(t)),false);
   assert(await page.locator('.foot-sources summary').innerText().then(t=>t.includes('Census')));
   assert.deepEqual(await scale.locator('.scale-value').allTextContents(),expected.map(n=>n.toLocaleString('en-US')));

@@ -52,10 +52,10 @@ export default async function HousingLandingPage() {
         <p className="entry-introduction">A clearer picture of the place you could call home.</p>
         <p className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free to use · No fees, subscriptions or ads</span></p>
       </header>
+      <DataScale stats={scale} properties={propertyScale()} />
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
         <NationalCoverageMap searchFirst />
       </section>
-    <DataScale stats={scale} properties={propertyScale()} />
       <section className="national-backdrop" aria-labelledby="national-backdrop-heading">
         <header><h2 id="national-backdrop-heading">The national backdrop</h2><span>United States</span></header>
         <div className="national-backdrop-grid">
