@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { flushSync } from "react-dom";
 
 import { THEME_KEY, type Theme, applyTheme, parseTheme, shown, toggled } from "@/lib/theme";
@@ -20,9 +20,10 @@ const DARK = "(prefers-color-scheme: dark)";
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
   const [systemDark, setSystemDark] = useState(false);
-  const button = useRef<HTMLButtonElement>(null);
-  const transition = useRef<ViewTransition | null>(null);
   const chosen = useRef<Theme>("system");
+  const button = useRef<HTMLButtonElement>(null);
+  const reveal = useRef<ViewTransition | null>(null);
+  const revision = useRef(0);
 
   useEffect(() => {
     try {
@@ -35,44 +36,45 @@ export function ThemeToggle() {
     setSystemDark(query.matches);
     const follow = (event: MediaQueryListEvent) => setSystemDark(event.matches);
     query.addEventListener("change", follow);
-    return () => query.removeEventListener("change", follow);
+    // Root snapshots are painted above the live page and can target the root
+    // instead of its button. Preserve this one visible control's hit area.
+    const forwardTap = (event: PointerEvent) => {
+      const control=button.current;
+      if (!control || !document.documentElement.hasAttribute("data-theme-reveal") || event.composedPath().includes(control) || !event.isPrimary || event.button!==0) return;
+      const rect=control.getBoundingClientRect();
+      if(event.clientX>=rect.left && event.clientX<=rect.right && event.clientY>=rect.top && event.clientY<=rect.bottom) {
+        event.preventDefault(); control.click();
+      }
+    };
+    window.addEventListener("pointerup",forwardTap,true);
+    return () => { query.removeEventListener("change", follow); window.removeEventListener("pointerup",forwardTap,true); reveal.current?.skipTransition(); delete document.documentElement.dataset.themeReveal; };
   }, []);
 
-  async function press() {
-    // Complete the previous palette update before another click chooses its opposite.
-    const previous = transition.current;
-    if (previous) {
-      previous.skipTransition();
-      await previous.updateCallbackDone.catch(() => {});
-    }
+  function press(event: MouseEvent<HTMLButtonElement>) {
+    // Interrupt, never await the previous reveal. Stale callbacks cannot apply a palette.
     const next = toggled(chosen.current, window.matchMedia(DARK).matches);
     chosen.current = next;
-    const root = document.documentElement;
-    const update = () => {
-      flushSync(() => setTheme(next));
-      applyTheme(root, next);
+    const root=document.documentElement;
+    const current = ++revision.current;
+    reveal.current?.skipTransition();
+    const apply = () => {
+      if (revision.current !== current) return;
+      root.dataset.paletteUpdate="";
+      try { flushSync(() => setTheme(next)); applyTheme(root,next); void root.offsetWidth; }
+      finally { delete root.dataset.paletteUpdate; }
     };
     if (document.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      const bounds = button.current?.getBoundingClientRect();
-      const x = bounds ? bounds.left + bounds.width / 2 : innerWidth / 2;
-      const y = bounds ? bounds.top + bounds.height / 2 : 0;
-      root.style.setProperty("--theme-x", `${x}px`);
-      root.style.setProperty("--theme-y", `${y}px`);
-      root.style.setProperty("--theme-radius", `${Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))}px`);
-      root.dataset.themeReveal = "";
-      const active = document.startViewTransition(update);
-      transition.current = active;
-      // A skipped/unsupported snapshot still applies the palette. Only its owner
-      // cleans up, so rapid clicks cannot erase a newer reveal's styles.
-      void active.finished.catch(() => {}).finally(() => {
-        if (transition.current !== active) return;
-        transition.current = null;
-        delete root.dataset.themeReveal;
-        ["--theme-x", "--theme-y", "--theme-radius"].forEach((key) => root.style.removeProperty(key));
+      const rect=event.currentTarget.getBoundingClientRect();
+      root.style.setProperty("--theme-x",`${rect.left+rect.width/2}px`);
+      root.style.setProperty("--theme-y",`${rect.top+rect.height/2}px`);
+      root.dataset.themeReveal="";
+      const transition=document.startViewTransition(apply);
+      reveal.current=transition;
+      transition.ready.catch(()=>{});
+      transition.finished.catch(()=>{}).finally(()=>{
+        if(revision.current===current) { delete root.dataset.themeReveal; root.style.removeProperty("--theme-x"); root.style.removeProperty("--theme-y"); reveal.current=null; }
       });
-    } else {
-      update();
-    }
+    } else { delete root.dataset.themeReveal; root.style.removeProperty("--theme-x"); root.style.removeProperty("--theme-y"); apply(); }
     try {
       if (next === "system") localStorage.removeItem(THEME_KEY);
       else localStorage.setItem(THEME_KEY, next);

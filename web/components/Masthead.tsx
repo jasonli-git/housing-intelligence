@@ -85,8 +85,8 @@ export function Masthead({
           {/* Desktop follows the reader's journey; mobile keeps the same links in
               a native disclosure beside search, with theme on the brand row. */}
           <div className="bar-tools">
-            {search && <PlaceSearch />}
             <div className="bar-controls bar-desktop-tools">{toolLinks}</div>
+            {search && <PlaceSearch />}
             <details className="bar-tool-menu">
               <summary>Tools <span aria-hidden="true">⌄</span></summary>
               <div className="bar-controls">
@@ -97,7 +97,7 @@ export function Masthead({
           <ThemeToggle />
         </div>
       </nav>
-      <div className="site-meta-row">
+      <div className="site-meta-row shared-meta">
         <LicenceLine />
         <SiteStatus />
       </div>

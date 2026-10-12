@@ -14,8 +14,6 @@ const SECTIONS = [
   ["Explore the evidence", "#region-detailed-data"],
   ["Statewide overview", "#state-overview"],
   ["State profile", ".nj-page > .state-ticker, .nj-page .quiet-state-profile"],
-  ["Find your place", "#nj-explore"],
-  ["Compare counties", "#county-comparison"],
   ["Housing help", "#housing-assistance"],
   ["Statewide evidence", "#state-detailed-data"],
   ["Choose a place", "#guide-place-heading"],
