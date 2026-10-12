@@ -18,7 +18,7 @@ try {
   const bounds=await signature.boundingBox();
   assert(bounds && bounds.height<=60,'Map-edge signature should remain compact');
   if(await page.locator('.coverage-focused-entry').count()) {
-    assert(await page.locator('.landing-data-support').evaluate(e=>e.contains(document.querySelector('.scale-signature')) && e.contains(document.querySelector('.data-scale'))));
+    assert(await page.locator('.artwork-caption').evaluate(e=>e.contains(document.querySelector('.scale-signature')) && e.contains(document.querySelector('.data-scale'))));
   } else {
     assert(await page.locator('.coverage-entry').evaluate(e=>e.contains(document.querySelector('.scale-signature')) && e.contains(document.querySelector('.data-scale'))));
     assert(await page.locator('.coverage-search-stage').evaluate(e=>e.contains(document.querySelector('.scale-map-edge'))));

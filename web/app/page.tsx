@@ -47,13 +47,10 @@ export default async function HousingLandingPage() {
         <details className="entry-free-assurance"><summary className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees or ads</span></summary><p>No fees, subscriptions or advertisements. Free to use.</p></details>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
-        <NationalCoverageMap searchFirst focusedEntry />
-      </section>
-      <section className="landing-data-support" aria-label="About the data">
-        <div className="scale-map-edge">
+        <NationalCoverageMap searchFirst focusedEntry scaleStrip={<div className="scale-map-edge artwork-caption">
           <ScaleSignature stats={scale} properties={properties} />
-          <DataScale stats={scale} properties={properties} />
-        </div>
+          <DataScale stats={scale} properties={properties} compactSummary />
+        </div>} />
       </section>
       <section className="national-backdrop" aria-labelledby="national-backdrop-heading">
         <header><h2 id="national-backdrop-heading">The national backdrop</h2><span>United States</span></header>

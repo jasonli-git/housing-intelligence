@@ -10,8 +10,11 @@ try {
   assert((await input.boundingBox()).y<500,'Search should be on the first mobile screen');
   assert(await page.getByText('Housing costs. Local context. Clear sources.').isVisible());
   assert.equal(await page.locator('.landing-coverage-link').count(),0);
-  assert.equal(await page.locator('.coverage-scale-slot').count(),0);
+  assert.equal(await page.locator('.coverage-scale-slot').count(),1);
   assert.equal(await page.locator('.nation-portrait').count(),0);
+  const mapButton=await page.locator('.coverage-explore-inline').boundingBox();
+  const searchBox=await input.boundingBox();
+  assert(width<360 ? mapButton.y+mapButton.height<searchBox.y : mapButton.x+mapButton.width<searchBox.x,'Map action must be separate and left of search');
   await input.fill('Princeton');await page.getByRole('option').first().waitFor();
   assert(await page.getByRole('option').count()>0);await input.press('Escape');
   await page.locator('.coverage-map').waitFor({state:'attached'});

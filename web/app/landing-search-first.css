@@ -85,3 +85,28 @@
  .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-search-interaction { min-height:180px; }
 }
 @media(prefers-reduced-motion:reduce) { .coverage-availability-glow circle:not(:last-child) { animation:none; transform:scale(1); opacity:.2; } }
+
+/* Alternative navigation left of search; project scale credits the illustration. */
+.search-first-home .coverage-focused-entry .coverage-search-panel { display:flex; align-items:center; gap:.65rem; }
+.search-first-home .coverage-search-panel .place-search { flex:1; min-width:0; }
+.coverage-explore-inline { flex:none; flex-direction:column; gap:.2rem; padding:.4rem .6rem; border-radius:10px; min-height:58px; font:11px/1.4 var(--font-text); }
+.coverage-explore-inline svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.3; }
+.search-first-home .coverage-focused-entry [data-exploring="true"] .coverage-mode-switch { order:0; margin:0 0 .6rem; }
+.search-first-home .coverage-scale-slot { padding:0; order:3; }
+.artwork-caption.scale-map-edge { max-width:none; padding:.4rem 0; gap:.25rem; text-align:center; }
+.artwork-caption .scale-signature { display:flex; justify-content:center; flex:1; flex-basis:auto; gap:.75rem; font-size:10px; }
+.artwork-caption .scale-signature b { display:inline; font:500 13px/1.4 var(--font-text); }
+.artwork-caption .signature-flow { display:none; }
+.artwork-caption .data-scale { flex:0 0 auto; }
+.artwork-caption .scale-definitions summary { width:44px; justify-content:center; font-size:17px; }
+.artwork-caption .scale-definitions summary::after { display:none; }
+.artwork-caption:has(details[open]) .data-scale { flex-basis:100%; text-align:left; }
+.artwork-caption:has(details[open]) .scale-definitions summary { margin-left:auto; margin-right:0; }
+@media(min-width:901px) {
+ .search-first-home .coverage-focused-entry .coverage-search-panel { width:min(58%,40rem); }
+ .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-scale-slot { position:absolute; right:0; top:65px; width:40%; }
+ .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-scale-slot:has(details[open]) { position:relative; top:auto; width:100%; }
+ .search-first-home .coverage-focused-entry [data-exploring="false"] :is(.coverage-map-stage,.coverage-map-window) { height:180px; background:none; }
+}
+@media(max-width:359px) { .search-first-home .coverage-focused-entry .coverage-search-panel { flex-wrap:wrap; }.coverage-explore-inline { flex-direction:row; min-height:44px; }.search-first-home .coverage-search-panel .place-search { flex-basis:100%; } }
+@media(max-width:900px) { .artwork-caption .scale-signature { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.4rem; }.artwork-caption .scale-signature b { display:block; font-size:16px; } }

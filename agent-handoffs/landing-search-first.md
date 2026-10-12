@@ -1,6 +1,7 @@
 # Search-first landing experiment
 
 ## What changed
+- Integrated caption/control pass: map alternative sits left of the search field, with an above-left fallback on narrow phones; Back to search leads the interactive map. Rounded counts caption the artwork (right-hand portrait space on desktop, map base on mobile) with a named info control. Removed standalone scale section/disclosure row; expanded exact definitions flow below the search/map area.
 - Larger desktop atlas: artwork uses 48% of the opening’s width at natural scale, rather than scaling a full-width SVG down. Measured candidate at 1024/1280/1440/1920 pixels against actual state outlines and input; preserves at least 8px clearance before search at normal desktop widths. Width transition keeps right-edge anchoring into the full map. Mobile unchanged.
 - Desktop placement/control follow-up: US artwork moves into the former right-hand portrait position on wide screens while retaining mobile placement. NJ emits two staggered outward radial rings; reduced motion shows a static ring. Removed NJ coverage shortcut. Map/search controls now use rounded icon-and-label buttons (map outline / back arrow).
 - Geographic centerpiece follow-up: removed house portrait; promoted US drawing, added restrained NJ blue halo and available-state trace highlights driven by destination registry. Same SVG is retained when switching to interactive exploration, with height/position/opacity transitions rather than artwork replacement. Mobile uses a tighter map canvas; reduced motion removes breathing/transition effects.
@@ -28,6 +29,8 @@
 - Follow-up restores decorative search-mode outlines; they depict geographic coverage, not local housing values. Interactive map remains a deliberate exploration mode.
 
 ## Verification
+- Integrated caption/control pass: typecheck, 656 tests in 105 files, static build, 14 interaction/theme/width cases and six scale-disclosure cases passed. Added assertions for map control left/above search; compact info control has accessible name and retains definitions. Visual review caught a leftover desktop map-stage background painting over following content; final rebuild/recheck after correction below.
+- Final corrected build, all 14 interaction cases and six exact-count cases passed. Desktop/mobile screenshots inspected; leftover surface removed. `git diff --check` passed.
 - Larger desktop atlas: typecheck, 655 tests, final static build and 14 width/theme cases passed (320/390/768/1024/1280/1440/1920). Added assertions against actual state bounds and title text range: artwork clears title, search and viewport. Normal/reduced radial motion, mode switching, zoom/reset, axe and overflow checks passed. Desktop screenshot inspected; `git diff --check` passed.
 - Desktop portrait-position follow-up: typecheck, 655 tests and static build passed. Added 1024px checks; first run found overflow there, corrected desktop scale to fit the portrait space. Radial motion checks replace breathing-animation assertions. Final responsive rebuild/recheck below.
 - Final rebuild and all ten width/theme cases passed, including actual zoom/reset, radial/reduced motion, axe and horizontal overflow. Inspected 1024px desktop screenshot; `git diff --check` passed.
