@@ -13,6 +13,9 @@ try {
   assert.equal(await page.locator('.coverage-scale-slot').count(),1);
   assert.equal(await page.locator('.nation-portrait').count(),0);
   const mapButton=await page.locator('.coverage-explore-inline').boundingBox();
+  const mapIcon=await page.locator('.coverage-explore-inline svg').boundingBox();
+  assert(Math.abs(mapButton.x+mapButton.width/2-mapIcon.x-mapIcon.width/2)<1);
+  assert(Math.abs(mapButton.y+mapButton.height/2-mapIcon.y-mapIcon.height/2)<1);
   assert.equal(await page.locator('.coverage-explore-inline').innerText(),'');
   assert.equal(await page.locator('.coverage-explore-inline').getAttribute('aria-label'),'Explore map');
   const searchBox=await input.boundingBox();
@@ -52,6 +55,7 @@ try {
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   await input.fill('');await input.press('Escape');
   await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`/tmp/search-first-${width}-${theme}.png`});
+  await page.locator('.home-tools').screenshot({path:`/tmp/search-first-tools-${width}-${theme}.png`});
   console.log(width,theme,'passed');await context.close();
  }
 } finally {await browser.close();}
