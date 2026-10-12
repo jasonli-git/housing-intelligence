@@ -220,7 +220,8 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
             <path className="coverage-state-top" pathLength="1" d={state.top} />
           </a> : <path key={state.id} className="coverage-unavailable" pathLength="1" d={state.base} aria-hidden="true" onMouseEnter={() => setHovered(`${state.name} · Not available yet`)}><title>{state.name} — Not available yet</title></path>;
         })}
-        <g className="coverage-atlas-traces" aria-hidden="true">{drawing.states.map(state => <path key={state.id} d={state.id === "NJ" ? state.top : state.base} pathLength="1" data-available={state.id === "NJ"} />)}</g>
+        <g className="coverage-atlas-traces" aria-hidden="true">{drawing.states.map(state => <path key={state.id} d={STATE_DESTINATIONS[state.id] ? state.top : state.base} pathLength="1" data-available={!!STATE_DESTINATIONS[state.id]} />)}</g>
+        {focusedEntry && STATE_DESTINATIONS.NJ && <g className="coverage-availability-glow" aria-hidden="true"><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="17" /><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="5" /></g>}
         </g>
         </g>
         <g className="coverage-atlas-guides" aria-hidden="true">

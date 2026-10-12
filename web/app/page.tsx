@@ -42,13 +42,6 @@ export default async function HousingLandingPage() {
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
       <div className="landing-canvas">
       <header className="page-head nation-head" data-kind="nation">
-        <svg className="nation-portrait" viewBox="0 0 360 300" fill="none" aria-hidden="true">
-          <circle className="portrait-halo" cx="185" cy="157" r="123" />
-          <path className="portrait-foundation" pathLength="1" d="M20 254H340" />
-          <path className="portrait-house" pathLength="1" d="M47 254V125L136 60L225 125V254M33 135L136 60L239 135M104 82V37H119V72M225 254V166L283 124L332 160V254M213 175L283 124L344 168" />
-          <path className="portrait-windows" pathLength="1" d="M112 254V183H151V254M70 145H96V174H70ZM176 145H202V174H176ZM250 189H275V217H250ZM298 189H320V217H298Z" />
-          <path className="portrait-guides" d="M47 276H225M47 270V282M225 270V282M20 254V125M14 125H26M14 254H26" strokeDasharray="3 5" />
-        </svg>
         <h1>Housing Intelligence</h1>
         <p className="entry-introduction">Housing costs. Local context. Clear sources.</p>
         <details className="entry-free-assurance"><summary className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees or ads</span></summary><p>No fees, subscriptions or advertisements. Free to use.</p></details>

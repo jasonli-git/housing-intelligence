@@ -1,6 +1,7 @@
 # Search-first landing experiment
 
 ## What changed
+- Geographic centerpiece follow-up: removed house portrait; promoted US drawing, added restrained NJ blue halo and available-state trace highlights driven by destination registry. Same SVG is retained when switching to interactive exploration, with height/position/opacity transitions rather than artwork replacement. Mobile uses a tighter map canvas; reduced motion removes breathing/transition effects.
 - Lean/artful follow-up: shortened intro to “Housing costs. Local context. Clear sources.” Free assurance now reads “Free · No fees or ads,” with subscription assurance in an expandable definition. Removed Find a place label, Princeton example, duplicate NJ link and About the data title/extra place-count sentence.
 - Restored the animated US outline/travelling lines behind search, decorative/inert in search mode. One Explore map action replaces two visible tabs; Back to search appears in map mode. NJ coverage itself links to the state page.
 - Task-led introduction, immediate location search, explicit NJ coverage and a Princeton example link.
@@ -25,6 +26,8 @@
 - Follow-up restores decorative search-mode outlines; they depict geographic coverage, not local housing values. Interactive map remains a deliberate exploration mode.
 
 ## Verification
+- Geographic centerpiece: typecheck, 655 tests and static build passed. Browser run caught tablet overflow; confined SVG motion to map window, then all eight cases passed. Verified same SVG retained across modes, NJ breathing animation with normal motion and none with reduced motion. Visual inspection prompted mobile controls positioning below region bar; final build/check below.
+- Final build and eight responsive/theme cases passed, including actual zoom/reset clicks, axe and overflow checks. `git diff --check` passed. Blue available-state trace styling follows destination registry; the current pulse is NJ-specific and needs centroid placement for additional states.
 - Lean/artful follow-up: typecheck, 655 tests and build passed. Eight interaction/theme/width cases passed, including normal-motion `atlas-travel` animation and free-assurance expansion; six exact-count cases passed. Screenshots inspected. Removed reserved space for hidden map controls in decorative mode; final rebuild/recheck below.
 - Final tighter build and all eight interaction/accessibility cases passed; light desktop screenshot inspected. `git diff --check` passed.
 - `npm run typecheck`: passed. `npm test`: 655 tests in 104 files passed.

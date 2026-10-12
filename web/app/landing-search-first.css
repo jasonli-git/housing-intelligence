@@ -49,3 +49,25 @@
 .entry-free-assurance summary::after { content:"＋"; font-size:10px; margin-left:.5rem; color:var(--text-muted); }
 .entry-free-assurance[open] summary::after { content:"−"; }
 .entry-free-assurance p { margin:0 0 .5rem; max-width:35ch; }
+
+/* One geographic drawing, carried into exploration rather than replaced. */
+.search-first-home .coverage-focused-entry .coverage-map { transition:height 520ms cubic-bezier(.22,1,.36,1),transform 520ms cubic-bezier(.22,1,.36,1); }
+.search-first-home .coverage-focused-entry .coverage-map-window { overflow:hidden; }
+.search-first-home .coverage-focused-entry .coverage-map-content { transition:transform 520ms cubic-bezier(.22,1,.36,1),opacity 420ms ease; transform-origin:50% 50%; }
+.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map-content { transform:none; opacity:.8; }
+.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map { transform:translateX(9%) scale(.94); }
+.search-first-home .coverage-focused-entry [data-exploring="true"] .coverage-map { transform:translateX(0) scale(1); }
+.search-first-home .coverage-focused-entry [data-exploring="true"] .coverage-map-content { transform:translateX(0) scale(1); opacity:1; }
+.search-first-home .coverage-focused-entry [data-exploring="false"] :is(.coverage-map,.coverage-map-placeholder) { height:300px !important; min-height:0 !important; }
+.search-first-home .coverage-focused-entry .coverage-region-bar { position:absolute; inset:0 0 auto; z-index:5; }
+.search-first-home .coverage-focused-entry .coverage-map-caption { display:none; }
+@media(max-width:760px) { .search-first-home .coverage-focused-entry .coverage-zoom { top:68px; }.search-first-home .coverage-focused-entry .coverage-mobile-link { top:68px; } }
+.search-first-home .coverage-focused-entry .coverage-map-foot { position:absolute; inset:auto 0 0; z-index:5; background:var(--surface-card); }
+.coverage-availability-glow { pointer-events:none; }
+.coverage-availability-glow circle { fill:var(--state-blue); opacity:.18; transform-box:fill-box; transform-origin:center; animation:coverage-blue-breathe 6s ease-in-out infinite; }
+.coverage-availability-glow circle:last-child { opacity:.65; animation:none; }
+.search-first-home .coverage-focused-entry [data-exploring="true"] .coverage-availability-glow { opacity:0; transition:opacity 250ms ease; }
+.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-atlas-traces path[data-available="true"] { stroke:var(--state-blue); filter:drop-shadow(0 0 4px var(--state-blue)); }
+@keyframes coverage-blue-breathe { 50% { transform:scale(1.35); opacity:.08; } }
+@media(max-width:600px) { .search-first-home .coverage-focused-entry [data-exploring="false"] :is(.coverage-map,.coverage-map-placeholder) { height:210px !important; }.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map { transform:translateX(0) scale(1); } }
+@media(prefers-reduced-motion:reduce) { .coverage-availability-glow circle { animation:none; }.search-first-home .coverage-focused-entry :is(.coverage-map,.coverage-map-content) { transition:none; } }
