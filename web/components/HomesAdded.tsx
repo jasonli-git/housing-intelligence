@@ -56,7 +56,7 @@ export function HomesAdded({
       <div className="section-head">
         <h2 id="homes-added-heading">{exhibit ? "Are we adding homes—or losing them?" : "Is it adding homes?"}</h2>
       </div>
-      {exhibit && <ConstructionExhibit rows={rows} />}
+      {exhibit && <ConstructionExhibit rows={rows} level={level} />}
       {portrait && !exhibit && rows.some((r) => r.net !== null) && <figure className="quiet-net-chart">
         <figcaption>Net homes added, by year <small>Reported completions minus demolitions · only towns that reported</small></figcaption>
         <div className="quiet-net-years">{[...rows].reverse().map((r) => <div key={r.year}>
@@ -67,27 +67,26 @@ export function HomesAdded({
       </figure>}
       {window ? (
         <p className="sales-lead">
-          From {window.first} to {window.last}, {name} permitted{" "}
-          <b>{formatValue(window.permitted, "count")}</b> homes and certified{" "}
-          <b>{formatValue(window.completed, "count")}</b> as complete
-          {window.reported < 5 ? ` (in the ${window.reported} of those years its office reported)` : ""}
+          {window.first}–{window.last}: <b>{formatValue(window.permitted, "count")}</b> homes permitted;{" "}
+          <b>{formatValue(window.completed, "count")}</b> completed
+          {window.reported < 5 ? ` (${window.reported} reported years)` : ""}
           {window.demolished !== null && window.net !== null ? (
             <>
-              ; {formatValue(window.demolished, "count")} were demolished, so{" "}
-              <b>{formatValue(window.net, "count")}</b> net homes were added
+              ; {formatValue(window.demolished, "count")} demolished;{" "}
+              <b>{formatValue(window.net, "count")}</b> net added
             </>
           ) : null}
           .
         </p>
       ) : (
         <p className="sales-lead">
-          {name}’s construction office has reported too few years to compare five of them.
+          Too few reported years for a five-year comparison.
         </p>
       )}
       {perThousand && (
         <p className="sales-note">
-          In {perThousand.period_end.slice(0, 4)} it added {perThousand.value.toFixed(1)} net
-          homes for every 1,000 already standing.
+          {perThousand.period_end.slice(0, 4)}: {perThousand.value.toFixed(1)} net
+          homes added per 1,000 existing homes.
         </p>
       )}
       <AnnualFigures exhibit={exhibit}><div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">

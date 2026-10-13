@@ -670,15 +670,16 @@ export default async function RegionPage({
       <LearningExhibit kind="The homes that sold">
       <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} />
       </LearningExhibit>
-      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Did paychecks keep up with housing?</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
       {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
+      {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Did paychecks keep up with housing?</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
+      <StateContextExhibits topics={["lending"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
 
       {migration && (
       <QuietDisclosure enabled={false} title="Who is moving here" note="Households moving in and out of the county, from tax returns">
         <LearningExhibit kind="Arrivals & departures"><WhoIsMoving name={name} data={migration} exhibit={quiet} /></LearningExhibit>
       </QuietDisclosure>
       )}
-      <LearningExhibit kind="Building & demolition">
+      {construction.some(series=>series.length>0) && <LearningExhibit kind="Building & demolition">
       <HomesAdded
         exhibit={quiet}
         portrait={quiet}
@@ -690,15 +691,14 @@ export default async function RegionPage({
         net={construction[3]}
         levels={packet.levels}
       />
-      </LearningExhibit>
-      <LocalEvidenceCharts kind="building" name={name} level={region.level} levels={packet.levels} series={construction} />
-      <StateContextExhibits topics={["lending","work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+      </LearningExhibit>}
+      <StateContextExhibits topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+      <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />
           <LearningExhibit kind="Ground & water"><GroundAndWater compact name={name} levels={packet.levels} water={water} /></LearningExhibit>
-          <div id="local-property-evidence" className="property-exhibit-anchor"><LearningExhibit kind="Service providers"><Utilities data={utilities} bpuInquiry={bpuInquiry} /></LearningExhibit></div>
           <LearningExhibit kind="Flood context"><FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} /></LearningExhibit>
+          <div id="local-property-evidence" className="property-exhibit-anchor"><LearningExhibit kind="Service providers"><Utilities data={utilities} bpuInquiry={bpuInquiry} /></LearningExhibit></div>
       <StateContextExhibits topics={["broadband"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
           <CommunityContext exhibits data={community} level={region.level} supporting hideBroadband={region.level === "county"} />
-        <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />
         {hasIndexedComparison && (
           <section id="trends-exhibits" className="section" aria-labelledby="trends-heading" data-jump-label="Trends">
             <h2 id="trends-heading">Trends</h2>

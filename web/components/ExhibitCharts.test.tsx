@@ -33,6 +33,11 @@ describe("learning exhibits",()=>{
     expect(screen.getByText("0")).toBeTruthy();
     expect(screen.queryByText("Not reported")).toBeNull();
   });
+  it("preserves the different-reporter caveat for aggregate construction totals",()=>{
+    render(<ConstructionExhibit level="county" rows={[{year:2024,completed:20,demolished:5,net:10,permitted:30,preliminary:false}]}/>);
+    expect(screen.getByText(/Net uses towns reporting both measures; totals may not subtract/)).toBeTruthy();
+    expect(screen.getByText("Net added: 10")).toBeTruthy();
+  });
   it("switches migration directions on one scale and styles verified county links",()=>{
     const data={county_name:"Somerset",flows_year:2023,arrivals:[{rank:1,name:"Mercer",region_id:12,returns:100,share:.1}],departures:[{rank:1,name:"Elsewhere",region_id:null,returns:50,share:.05}]} as Migration;
     const {container}=render(<MigrationExhibit data={data}/>);

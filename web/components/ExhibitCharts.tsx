@@ -37,7 +37,7 @@ export function HistoryExhibit({ data }: { data: Persistence }) {
   </figure>;
 }
 
-export function ConstructionExhibit({ rows }: { rows: ConstructionYear[] }) {
+export function ConstructionExhibit({ rows, level }: { rows: ConstructionYear[]; level?:string }) {
   const [year,setYear] = useState(rows[0]?.year);
   const row=rows.find(r=>r.year===year)??rows[0];
   if (!row) return null;
@@ -45,7 +45,7 @@ export function ConstructionExhibit({ rows }: { rows: ConstructionYear[] }) {
   return <figure className="exhibit-plot construction-exhibit">
     <div className="exhibit-choice" aria-label="Construction year">{[...rows].reverse().map(r=><button type="button" key={r.year} aria-pressed={row.year===r.year} onClick={()=>setYear(r.year)}>{r.year}{r.preliminary?"*":""}</button>)}</div>
     <div className="exhibit-pair">{[{label:"Completed",value:row.completed},{label:"Demolished",value:row.demolished}].map(p=><div key={p.label}><strong>{p.value===null?"Not reported":formatValue(p.value,"count")}</strong><span>{p.label}</span><div className="exhibit-track" aria-hidden="true">{p.value!==null&&<i style={{width:`${p.value/max*100}%`}}/>}</div></div>)}</div>
-    <figcaption><b>Net added: {row.net===null?"not reported":formatValue(row.net,"count")}</b> = completions − demolitions. Permits aren’t finished homes. {row.preliminary&&"* Preliminary. "}Missing ≠ zero; county totals cover reporting towns.</figcaption>
+    <figcaption><b>Net added: {row.net===null?"not reported":formatValue(row.net,"count")}</b>{level==="county"||level==="state"?" · Net uses towns reporting both measures; totals may not subtract.":" = completions − demolitions."} Permits aren’t finished homes. {row.preliminary&&"* Preliminary. "}Missing ≠ zero.</figcaption>
   </figure>;
 }
 
