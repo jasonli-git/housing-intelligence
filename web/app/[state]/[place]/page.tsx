@@ -10,6 +10,8 @@ import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { StepIcon } from "@/components/StepIcon";
 import { CountyPlaces } from "@/components/CountyPlaces";
 import { LocalEvidenceCharts } from "@/components/LocalEvidenceCharts";
+import { IncomePressure } from "@/components/IncomePressure";
+import "../../income-pressure.css";
 import { AbstractField } from "@/components/AbstractField";
 import { HomeSales } from "@/components/HomeSales";
 import { HomeChecks } from "@/components/HomeChecks";
@@ -287,7 +289,7 @@ export default async function RegionPage({
   // BPU's reports came by public-records request (#370); the note says so beside them.
   const bpuInquiry = (await api.freshness())?.sources.find((s) => s.source_id === "nj_bpu_reports")?.inquiries?.at(-1);
 
-  const [series, cost, incomeLimits, construction, floodClaims, water, utilities, workDestinations, similar, community, migration, persistence] = await Promise.all([
+  const [series, cost, incomeLimits, construction, floodClaims, water, utilities, workDestinations, similar, community, migration, persistence, pressure] = await Promise.all([
     Promise.all(
       TREND_METRICS.map(async ({ metricId, short }) => ({
         metricId,
@@ -316,6 +318,7 @@ export default async function RegionPage({
     api.migration(regionId),
     // Milestone 52: today's price-to-income against the county's own history.
     region.level === "county" ? api.persistence(regionId) : Promise.resolve(null),
+    api.housingPressure(regionId),
   ]);
   // A town or ZIP reads HUD's county Fair Market Rents from its county's packet: HUD sets
   // them for the county's area, and only a county page carries them (Milestone 35).
@@ -673,6 +676,7 @@ export default async function RegionPage({
       {persistence && <LearningExhibit kind="Against its own history"><HowUnusual name={name} data={persistence} interactive={quiet} /></LearningExhibit>}
       {quiet && paid && answers && <LearningExhibit kind="Prices & paychecks"><section id="local-price-history" data-jump-label="Did paychecks keep up with housing?"><h3>Did paychecks keep up with housing?</h3><PaycheckExhibit metrics={packet.metrics} /><div className="local-paychecks"><p className="local-paychecks-heading">The short answer: <Answer label="Homes" answer={answers.homes} />{answers.rent && <Answer label="Rent" answer={answers.rent} />}</p></div></section></LearningExhibit>}
       <StateContextExhibits topics={["lending"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
+      <IncomePressure data={pressure} />
 
       {migration && (
       <QuietDisclosure enabled={false} title="Who is moving here" note="Households moving in and out of the county, from tax returns">

@@ -8,6 +8,7 @@ import { WINDOWS } from "@/lib/windows";
 import { mapDefinitionOf } from "@/lib/mapDefinitions";
 import type { AtlasMeasure } from "@/lib/housingAtlas";
 import "./atlas.css";
+import "../income-pressure.css";
 
 export const metadata:Metadata=pageMetadata({title:"Housing atlas — Housing",description:"Explore New Jersey county housing figures on a synchronized map and comparison table.",path:"/atlas"});
 const METRICS=["zhvi_sfr","zori_all","acs_median_hh_income","acs_median_gross_rent","acs_median_home_value","acs_renter_cost_burden","pep_population","permits_total_units"];

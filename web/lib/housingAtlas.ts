@@ -6,6 +6,15 @@ export type AtlasCounty = { id:number; name:string };
 export type AtlasMode = "latest" | WindowKey;
 export const ATLAS_COLORS = ["#d2e5e9","#a4cbd4","#70a9ba","#3c819c","#17516d"];
 
+/** Difference is descriptive, not evidence of statistical significance. */
+export function atlasDifference(measure:AtlasMeasure,mode:AtlasMode,first:number,second:number) {
+  const rows=atlasReading(measure,mode)?.rows;
+  const a=atlasValue(rows?.find(row=>row.id===first),mode),b=atlasValue(rows?.find(row=>row.id===second),mode);
+  if(a===null||b===null)return {value:null,reason:"A figure is unavailable."};
+  if(mode==="latest"&&(!measure.latest.periods[first]||measure.latest.periods[first]!==measure.latest.periods[second]))return {value:null,reason:"Different dates; no difference calculated."};
+  return {value:b-a,reason:null};
+}
+
 /** Latest and change are distinct records; never silently substitute one. */
 export function atlasReading(measure:AtlasMeasure, mode:AtlasMode) {
   if(mode!=="latest") return measure.windows[mode] ?? null;
