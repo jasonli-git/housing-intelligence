@@ -8,6 +8,7 @@
 - Added short panel entrances, selection-detail transitions and control feedback. No perpetual movement of data, animated counters, or delays imposed on controls.
 - Refined the Atlas palette: neutral blue-gray glass and geographic shading, violet interface accents, amber selections, and restrained secondary catalogue colors. Existing destination-specific and external-source link colors remain.
 - Removed the coarse world silhouette at county scale; it produced misleading angular shapes at very close zoom. Globe/state views retain it.
+- Map background now comes entirely from the full-width stage. Removed the fitted SVG's rectangular background/grain tile, whose edge was visible on wide screens.
 - Catalogue search focus no longer scrolls the page. Shared URL pan coordinates reject nonfinite numbers; Share view uses current state even before the URL debounce settles.
 
 ## Files/modules affected
