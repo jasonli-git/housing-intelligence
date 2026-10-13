@@ -621,7 +621,10 @@ export type Explanation = {
   disclaimer: string;
 };
 
+export type HousingPressure = {region_id:number;period:string;basis:"direct"|"county_sum";areas:number;source:string;source_url:string;releases:{release_id:number;file_sha256:string;fetched_at:string}[];bands:{tenure:"renter"|"owner";band:number;total:number;burdened:number;severe:number;unknown:number;share:number|null;margin:number|null}[]};
+
 export const api = {
+  housingPressure: (id:number) => tryGet<HousingPressure>(`/regions/${id}/housing-pressure`),
   regions: (query: string) =>
     tryGet<{ total: number; items: Region[] }>(`/regions?${query}`),
   region: (id: number) =>

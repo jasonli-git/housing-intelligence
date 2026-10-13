@@ -19,6 +19,8 @@ import Link from "next/link";
 import { StepIcon } from "@/components/StepIcon";
 import { HomeSales } from "@/components/HomeSales";
 import { HomesAdded } from "@/components/HomesAdded";
+import { IncomePressure } from "@/components/IncomePressure";
+import "../../income-pressure.css";
 import { HowUnusual } from "@/components/HowUnusual";
 import { QuietProfile } from "@/components/QuietCounty";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
@@ -76,6 +78,7 @@ export default async function NewJerseyPage() {
   const statewide = state ? await api.summary(state.region_id, "5y") : null;
   // Milestone 52: today's price-to-income against the state's own history.
   const persistence = state ? await api.persistence(state.region_id) : null;
+  const pressure = state ? await api.housingPressure(state.region_id) : null;
   const [packet, destinations, community] = state ? await Promise.all([
     api.packet(state.region_id, "5y"), api.workDestinations(state.region_id), api.community(state.region_id),
   ]) : [null, null, null];
@@ -208,6 +211,7 @@ export default async function NewJerseyPage() {
       <div className="state-market-exhibits" id="state-market-exhibits" data-jump-label="Statewide exhibits">
         <LearningExhibit kind="Home sales"><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait /></LearningExhibit>
         <StateContextExhibits topics={["lending"]} levels={packet?.levels ?? []} destinations={destinations} community={community} />
+        <IncomePressure data={pressure} />
         <LearningExhibit kind="Against its own history"><HowUnusual name="New Jersey" data={persistence} interactive />{!persistence && <p>Historical comparison is not available in this snapshot.</p>}</LearningExhibit>
         <LearningExhibit kind="New homes"><HomesAdded name="New Jersey" level="state" levels={levels} permitted={construction[0]} completed={construction[1]} demolished={construction[2]} net={construction[3]} exhibit /></LearningExhibit>
         <StateContextExhibits topics={["work","broadband"]} levels={packet?.levels ?? []} destinations={destinations} community={community} />

@@ -220,6 +220,10 @@ def _plan(
 
     for region_id in region_ids:
         yield f"/regions/{region_id}", f"regions/{region_id}.json"
+        yield (
+            f"/regions/{region_id}/housing-pressure",
+            f"regions/{region_id}/housing-pressure.json",
+        )
         # The unfiltered series for every metric the region has. The filtered form takes
         # arbitrary dates and is listed in UNPUBLISHABLE instead.
         yield f"/regions/{region_id}/metrics", f"regions/{region_id}/metrics.json"

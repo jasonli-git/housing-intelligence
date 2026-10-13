@@ -30,6 +30,7 @@ export function Masthead({
   taxActive = false,
   guideActive = false,
   helpActive = false,
+  atlasActive = false,
   budgetLabel = "Find your fit",
   search = true,
 }: {
@@ -39,6 +40,7 @@ export function Masthead({
   /** On the buyer's guide itself. */
   guideActive?: boolean;
   helpActive?: boolean;
+  atlasActive?: boolean;
   budgetLabel?: string;
   /** False on the home page, whose own search is the page's main action. */
   search?: boolean;
@@ -53,6 +55,7 @@ export function Masthead({
     <Link className="bar-link" href="/guide" aria-label="Buyer’s guide" aria-current={guideActive ? "page" : undefined}>Buyer’s guide</Link>
     <Link className="bar-link" href="/tax" aria-label="Property tax lookup" aria-current={taxActive ? "page" : undefined}>Property tax</Link>
     <Link className="bar-link bar-help-route" href="/help" aria-current={helpActive ? "page" : undefined}>Housing help</Link>
+    <Link className="bar-link" href="/atlas" aria-current={atlasActive ? "page" : undefined}>Housing atlas</Link>
   </>;
   return (
     <>

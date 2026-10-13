@@ -18,6 +18,7 @@ from hip.api.routers import (
     explanations,
     freshness,
     health,
+    housing_pressure,
     income_limits,
     infrastructure,
     metrics,
@@ -47,6 +48,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(housing_pressure.router)
 app.include_router(regions.router)
 app.include_router(metrics.router)
 app.include_router(analytics.router)

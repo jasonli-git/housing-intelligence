@@ -8,13 +8,17 @@ try {
   const page=await context.newPage();await page.goto(`http://localhost:3002${path}`,{waitUntil:'networkidle'});
   const gallery=page.locator('.exhibit-gallery');
   const order=await gallery.locator('[data-exhibit]').evaluateAll(es=>es.map(e=>e.dataset.exhibit));
-  if(order.includes('Annual building')) assert.equal(order.indexOf('Annual building'),order.indexOf('Building & demolition')+1);
-  if(order.includes('Arrivals & departures')) assert(order.indexOf('Arrivals & departures')<order.indexOf('Building & demolition'));
+  assert(!order.includes('Annual building'));
+  assert.equal(await gallery.getByText('Homes added and removed',{exact:true}).count(),0);
+  if(await gallery.locator('.homes-added').count()===0) assert.equal(await gallery.locator('[data-exhibit="Building & demolition"]').count(),0);
+  if(order.includes('Against its own history')) assert.equal(order.indexOf('Against its own history'),order.indexOf('The homes that sold')+1);
+  if(order.includes('Prices & paychecks')) assert.equal(order.indexOf('Buyer financing'),order.indexOf('Prices & paychecks')+1);
+  if(order.includes('Arrivals & departures')&&order.includes('Building & demolition')) assert(order.indexOf('Arrivals & departures')<order.indexOf('Building & demolition'));
   if(width>900 && path.includes('county')) {
-    const building=await gallery.locator('[data-exhibit="Building & demolition"]').boundingBox();
-    const annual=await gallery.locator('[data-exhibit="Annual building"]').boundingBox();
-    assert(Math.abs(building.y-annual.y)<2);
-    assert(annual.x>building.x);
+    const sales=await gallery.locator('[data-exhibit="The homes that sold"]').boundingBox();
+    const history=await gallery.locator('[data-exhibit="Against its own history"]').boundingBox();
+    assert(Math.abs(sales.y-history.y)<2);
+    assert(history.x>sales.x);
   }
   assert(await gallery.getByRole('heading',{name:'What did buyers borrow?'}).isVisible());
   assert(await gallery.getByRole('heading',{name:'Where does the workday lead?'}).isVisible());

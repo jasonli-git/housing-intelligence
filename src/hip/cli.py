@@ -100,6 +100,7 @@ from hip.validate.gate import run_checks, write_report
 from hip.warehouse.community import load_community
 from hip.warehouse.db import get_engine
 from hip.warehouse.discoveries import load_discoveries
+from hip.warehouse.housing_pressure import load_housing_pressure
 from hip.warehouse.infrastructure import load_infrastructure
 from hip.warehouse.load import (
     ReleaseAttributionError,
@@ -1232,6 +1233,10 @@ def load(
     # HUD's income limits in full, for the income check (Milestone 35). After the facts,
     # whose load records the releases each line cites.
     income_lines = load_income_limits(get_engine(), settings.duckdb_path)
+    pressure_rows = load_housing_pressure(
+        get_engine(), settings.duckdb_path, releases=fact_provenance
+    )
+    typer.echo(f"housing pressure cohorts: {pressure_rows:,}")
     # The water systems serving each town and ZIP code (Milestone 40), after the facts
     # for the same reason: each row cites the SDWIS release the load recorded.
     water_rows = load_water_systems(
