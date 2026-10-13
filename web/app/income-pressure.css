@@ -11,6 +11,11 @@
   .income-pressure-margin { position:absolute; top:5px; height:3px; border-inline:2px solid var(--text-primary); background:var(--text-primary); }
   .income-pressure-bars strong { text-align:right; font-size:12px; }
   .income-pressure-bars small { grid-column:1/-1; font-size:10px; color:var(--text-secondary); }
+  .income-band-label { border:0; padding:0; min-height:32px; background:transparent; color:var(--text-primary); font:inherit; text-align:left; text-decoration:underline dotted; text-underline-offset:4px; cursor:pointer; }
+  .income-band-label[aria-pressed="true"] { font-weight:700; }
+  .income-band-explanation { color:var(--text-secondary); }
+  .atlas-outline-status { margin:0; color:var(--text-secondary); font:11px/1.5 var(--font-text); }
+  .atlas-control-footer .atlas-coverage { flex-wrap:wrap; }
   .atlas-pin-button { min-height:36px; padding:.4rem .6rem; border:1px solid var(--border); background:var(--surface-1); color:var(--text-primary); border-radius:10px; font:12px var(--font-text); cursor:pointer; }
   .atlas-results:has(.atlas-comparison) { overflow:auto; }
   .atlas-comparison { border:1px solid var(--border); border-radius:14px; padding:.65rem; background:var(--surface-1); font:12px/1.5 var(--font-text); }

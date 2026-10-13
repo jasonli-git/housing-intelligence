@@ -7,6 +7,7 @@ afterEach(cleanup);
 const data:HousingPressure={region_id:12,period:"2018–2022",basis:"direct",areas:1,source:"HUD CHAS",source_url:"https://www.huduser.gov/portal/datasets/cp.html",releases:[],bands:[{tenure:"renter",band:0,total:100,burdened:80,severe:60,unknown:10,share:.8,margin:.1},{tenure:"owner",band:0,total:0,burdened:0,severe:0,unknown:0,share:null,margin:null}]};
 it("separates tenures and shows uncomputed households and uncertainty",()=>{
  render(<IncomePressure data={data}/>);expect(screen.getByText("80%")).toBeTruthy();expect(screen.getByText(/10 uncomputed/)).toBeTruthy();expect(screen.getByText(/±10.0 points/)).toBeTruthy();
+ fireEvent.click(screen.getByRole('button',{name:'Up to 30%'}));expect(screen.getByText(/earn at most 30% of their local HUD/)).toBeTruthy();
  fireEvent.click(screen.getByRole('button',{name:'Owners'}));expect(screen.getByText('Not available')).toBeTruthy();expect(screen.queryByText('80%')).toBeNull();
 });
 it("labels a statewide county sum and omits unsupported geography",()=>{
