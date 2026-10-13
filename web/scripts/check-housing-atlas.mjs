@@ -7,10 +7,10 @@ try {
     const context=await browser.newContext({viewport:{width,height:1100},colorScheme:theme,reducedMotion:'reduce'});
     const page=await context.newPage(), errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto('http://localhost:3002/atlas');
-    await page.getByRole('button',{name:'NJ counties',exact:true}).click();
+    await page.getByRole('button',{name:'Counties',exact:true}).click();
     await page.locator('path[data-county="12"]').waitFor();
     assert.equal(await page.locator('.atlas-map-geography [data-county]').count(),21);
-    if(width<=900) await page.getByRole('button',{name:'Show table',exact:true}).click();
+    if(width<=900) await page.getByRole('button',{name:'Compare counties',exact:true}).click();
     assert.equal(await page.locator('.atlas-table-wrap tbody tr').count(),21);
     if(width>900) { const divider=page.getByRole('separator',{name:'Resize comparison panel'});await divider.focus();await divider.press('ArrowLeft');assert.equal(await divider.getAttribute('aria-valuenow'),'390');await divider.press('ArrowRight'); }
     await page.getByRole('button',{name:'Select Somerset County',exact:true}).click();
@@ -20,10 +20,10 @@ try {
     assert.equal(await page.locator('.atlas-selected h3').textContent(),'Atlantic County');
     assert.equal(await page.locator('[data-county-row="5"]').getAttribute('data-selected'),'true');
     const map=page.locator('.atlas-county-map');await map.focus();const before=await page.locator('.atlas-map-geography').getAttribute('transform');const scroll=await page.evaluate(()=>scrollY);await map.press('ArrowRight');assert.notEqual(await page.locator('.atlas-map-geography').getAttribute('transform'),before);assert.equal(await page.evaluate(()=>scrollY),scroll);
+    if(width<=900) await page.getByRole('button',{name:'Close table',exact:true}).click();
     await page.getByRole('button',{name:'Zoom in',exact:true}).click();
     assert.notEqual(await page.locator('.atlas-map-geography').getAttribute('transform'),before);
     await page.getByRole('button',{name:'Reset',exact:true}).click();assert.equal(await page.locator('.atlas-map-geography').getAttribute('transform'),'translate(0 0) scale(1)');
-    if(width<=900) await page.getByRole('button',{name:'Close table',exact:true}).click();
     const hit=await path.evaluate(node=>{const r=node.getBoundingClientRect();for(const a of [.2,.4,.6,.8])for(const b of [.2,.4,.6,.8]){const x=r.x+r.width*a,y=r.y+r.height*b;if(document.elementFromPoint(x,y)===node)return {x,y};}return null;});
     assert(hit,'A visible county must have a real pointer hit area');await page.mouse.click(hit.x,hit.y);assert.equal(await page.locator('.atlas-selected h3').textContent(),'Atlantic County');
     await page.getByRole('button',{name:'Reset',exact:true}).click();
@@ -31,7 +31,7 @@ try {
     await page.getByLabel('Measure',{exact:true}).selectOption('acs_renter_cost_burden');
     const selectable=await page.getByLabel('View',{exact:true}).locator('option:not([disabled])').evaluateAll(nodes=>nodes.map(n=>n.value).filter(v=>v!=='latest'));
     assert(selectable.length>0);await page.getByLabel('View',{exact:true}).selectOption(selectable[0]);
-    if(width<=900) await page.getByRole('button',{name:'Show table',exact:true}).click();
+    if(width<=900) await page.getByRole('button',{name:'Compare counties',exact:true}).click();
     const figure=await page.locator('[data-county-row="5"] td').evaluate(n=>n.firstChild.textContent);
     assert.equal(await page.locator('.atlas-selected strong').textContent(),figure);
     assert((await page.locator('.atlas-reading').textContent()).includes('Percentage change'));
@@ -43,5 +43,5 @@ try {
     console.log(`PASS ${width} ${theme}: geometry, linked selection, controls, measure/change sync, source details, axe, county link`);await context.close();
   }
   const context=await browser.newContext({viewport:{width:1280,height:1000}});const page=await context.newPage();
-  await page.route('**/atlas/counties.json',route=>route.abort());await page.goto('http://localhost:3002/atlas');await page.getByRole('button',{name:'NJ counties',exact:true}).click();await page.getByText('Map unavailable. Published figures remain in the table.').waitFor();assert.equal(await page.locator('.atlas-table-wrap tbody tr').count(),21);await page.getByRole('button',{name:'Select Somerset County'}).click();assert.equal(await page.locator('.atlas-selected h3').textContent(),'Somerset County');console.log('PASS missing-geometry fallback: table remains usable');await context.close();
+  await page.route('**/atlas/counties.json',route=>route.abort());await page.goto('http://localhost:3002/atlas');await page.getByRole('button',{name:'Counties',exact:true}).click();await page.getByText('Map unavailable. Published figures remain in the table.').waitFor();assert.equal(await page.locator('.atlas-table-wrap tbody tr').count(),21);await page.getByRole('button',{name:'Select Somerset County'}).click();assert.equal(await page.locator('.atlas-selected h3').textContent(),'Somerset County');console.log('PASS missing-geometry fallback: table remains usable');await context.close();
 } finally {await browser.close();}

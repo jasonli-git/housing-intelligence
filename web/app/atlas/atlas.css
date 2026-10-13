@@ -258,3 +258,30 @@ body:has(.housing-atlas-page) { --surface-1:light-dark(#f2f5f8,#19232c); --surfa
 }
 @keyframes atlas-panel-in { from { opacity:0; transform:translateY(8px) scale(.985); } to { opacity:1; transform:none; } }
 @keyframes atlas-selection-in { from { opacity:.4; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+@media screen {
+  .atlas-levels { align-items:center; }
+  .atlas-levels>span { color:var(--text-muted); font-size:15px; }
+  .atlas-levels .atlas-globe-reset { flex:0 0 36px; font-size:22px; color:var(--text-secondary); }
+  .atlas-clear-selection { align-self:flex-end; min-height:32px; padding:.2rem .35rem; margin:-.5rem 0; border:0; background:transparent; color:var(--text-secondary); font:11px var(--font-text); cursor:pointer; }
+  .atlas-results { overflow:hidden; }
+  .atlas-results:has(.atlas-notes[open]) { overflow:auto; }
+  .atlas-selected { position:sticky; top:0; z-index:2; }
+  .atlas-results > :not(.atlas-table-wrap) { flex-shrink:0; }
+  .atlas-table-wrap { min-height:100px; }
+  .atlas-notes { max-height:200px; overflow:auto; }
+  .atlas-county-finder label { display:grid; gap:.3rem; font:11px var(--font-text); color:var(--text-secondary); }
+  .atlas-county-finder input { min-height:40px; padding:.5rem .65rem; border:1px solid var(--border); border-radius:11px; color:var(--text-primary); background:var(--surface-1); font:14px var(--font-text); }
+  .atlas-county-finder small { display:block; margin-top:.3rem; font:10px/1.5 var(--font-text); color:var(--text-secondary); }
+  .atlas-legend { max-width:min(460px,calc(100% - var(--atlas-panel-width) - 65px)); }
+  .atlas-map-buttons { bottom:145px; }
+  @media(max-width:900px) {
+    .atlas-levels button { padding:.35rem .3rem; font-size:11px; }
+    .atlas-results[data-expanded="false"] .atlas-county-finder { display:none; }
+    .atlas-results[data-expanded="true"] { max-height:65%; overflow:auto; }
+    .atlas-results[data-expanded="true"] .atlas-how-to-read { display:none; }
+    .housing-atlas .atlas-legend,.housing-atlas:has(.atlas-results[data-expanded="true"]) .atlas-legend { bottom:calc(var(--atlas-sheet-height) + 24px); max-width:calc(100% - 24px); }
+    .housing-atlas .atlas-map-buttons,.housing-atlas:has(.atlas-results[data-expanded="true"]) .atlas-map-buttons { bottom:calc(var(--atlas-sheet-height) + 152px); }
+    .housing-atlas:has(.atlas-results[data-expanded="true"]) :is(.atlas-legend,.atlas-map-buttons) { display:none; }
+  }
+}

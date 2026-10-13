@@ -15,7 +15,7 @@ try {
     await page.getByRole('button',{name:'Zoom in',exact:true}).click();
     await page.getByRole('button',{name:'Zoom in',exact:true}).click();
     await page.waitForTimeout(450);assert(Math.abs(await radius()-370*Math.pow(1.25,3))<.1,'Repeated zoom must settle at the newest target');
-    await page.getByRole('button',{name:'NJ counties',exact:true}).click();await page.waitForTimeout(450);
+    await page.getByRole('button',{name:'Counties',exact:true}).click();await page.waitForTimeout(450);
     const scroll=await page.evaluate(()=>window.scrollY);
     await page.getByRole('button',{name:'Browse all measures',exact:true}).click();
     await page.waitForTimeout(250);
@@ -33,7 +33,7 @@ try {
     assert.deepEqual(audit.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);
     await page.screenshot({path:`/tmp/atlas-studio-picker-${width}-${theme}.png`});
     await page.getByRole('button',{name:'Close measures',exact:true}).click();
-    if(width<=900)await page.getByRole('button',{name:'Show table',exact:true}).click();
+    if(width<=900)await page.getByRole('button',{name:'Compare counties',exact:true}).click();
     await page.getByRole('button',{name:'Select Somerset County',exact:true}).click();await page.waitForTimeout(450);
     if(width<=900)await page.getByRole('button',{name:'Close table',exact:true}).click();
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);
