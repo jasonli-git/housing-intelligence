@@ -1,10 +1,7 @@
-"use client";
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
+/** The field-notes exhibits. The owner removed the pause control (2026-10-14); reduced
+ * motion still stops the decorative looping artwork (TODO: WCAG 2.2.2 pause control). */
 export function ExhibitGallery({ children }: { children: ReactNode }) {
-  const [paused,setPaused]=useState(false);
-  return <div className="exhibit-gallery" data-motion={paused ? "paused" : "playing"}>
-    <div className="exhibit-gallery-head"><p>Explore what interests you.</p><button type="button" aria-pressed={paused} onClick={()=>setPaused(!paused)}>{paused ? "Resume artwork" : "Pause artwork"}</button></div>
-    {children}
-  </div>;
+  return <div className="exhibit-gallery" data-motion="playing">{children}</div>;
 }
