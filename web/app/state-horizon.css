@@ -118,3 +118,31 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
 }
 @media screen { body:has(.horizon-page) main.horizon-page .section-jump-control { background:var(--glass) !important; border:1px solid var(--glass-edge) !important; color:var(--plate-ink) !important; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); } body:has(.horizon-page) main.horizon-page .section-jump-control * { color:var(--plate-ink) !important; opacity:1 !important; } }
 @media screen { body:has(.horizon-page) main.horizon-page.horizon-page .section-jump-control select { color:var(--plate-ink) !important; -webkit-text-fill-color:var(--plate-ink); } }
+
+/* State pages keep their blue (the site's colour code for a state): the same Horizon
+   paper, glass and glow, recoloured from rust and amber to state blue and sky. */
+@media screen {
+  body:has(.horizon-page) {
+    --plate-ink: light-dark(#1c2632, #e8eef5);
+    --plate-paper: light-dark(#ecf2f8, #0b1422);
+    --plate-accent: light-dark(#2f6db0, #7fb6ec);
+    --plate-sky: light-dark(#3f8fbf, #9fd4f2);
+    --plate-rule: light-dark(#1c263214, #e8eef514);
+    --plate-strong-rule: light-dark(#1c263226, #e8eef526);
+    --text-secondary: light-dark(#4c5a69, #aebccb);
+    --text-muted: light-dark(#738192, #8495a7);
+    --glass: light-dark(#ffffffa6, #ffffff0b);
+    --glass-edge: light-dark(#ffffff, #e8eef51f);
+    --state-blue: var(--plate-accent);
+  }
+  body:has(.horizon-page)::before {
+    background: radial-gradient(30% 40% at 25% 30%, light-dark(#7fb2e6,#1f5fa8) 0%, transparent 70%),
+                radial-gradient(28% 36% at 72% 22%, light-dark(#a9b8f5,#3b3fa8) 0%, transparent 70%),
+                radial-gradient(26% 30% at 55% 62%, light-dark(#8fd3e0,#14706f) 0%, transparent 70%) !important;
+    opacity: .6 !important;
+  }
+  body:has(.horizon-page) main.horizon-page .state-nickname { background: linear-gradient(90deg, var(--plate-accent), var(--plate-sky)); -webkit-background-clip: text; background-clip: text; }
+}
+@media screen and (max-width: 760px) {
+  body:has(.horizon-page) main.horizon-page > header.has-photo .state-nickname { background: linear-gradient(90deg, #a9d3ff, #c9f0ff); -webkit-background-clip: text; background-clip: text; }
+}
