@@ -1,0 +1,142 @@
+/* The home page as a printed atlas plate (2026-10-14): paper and a survey grid, a ruled
+   masthead, a stamped search, the national figures as a market box and the tools as an
+   index. Presentation only; every control and its order is unchanged. */
+@media screen {
+  body:has(.search-first-home) {
+    --plate-ink: light-dark(#1f2a33, #e9e4d8);
+    --plate-paper: light-dark(#f4efe4, #15191c);
+    --plate-rule: light-dark(#1f2a3326, #e9e4d824);
+    --plate-grid: light-dark(#1f2a332e, #e9e4d824);
+    --plate-accent: light-dark(#b2462e, #f08a6b);
+    --plate-strong-rule: light-dark(#1f2a3366, #e9e4d84d);
+    /* Survey dots, not ruled grid lines: the page has rules enough. */
+    background: radial-gradient(circle, var(--plate-grid) 1.1px, transparent 1.4px) 0 0 / 28px 28px, var(--plate-paper);
+  }
+  .search-first-home .bar { background: color-mix(in srgb, var(--plate-paper) 88%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+
+  /* Masthead: a double rule, the plate's caption, the title with an italic turn. */
+  .search-first-home .nation-page .landing-canvas .nation-head { position: relative; padding-top: 1.1rem; margin-top: .6rem; }
+  .plate-kicker { display: flex; flex-wrap: wrap; gap: .2rem 1.4rem; margin: 0 0 1.1rem; font: 600 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--text-secondary); }
+  .plate-kicker span:first-child { color: var(--plate-accent); }
+  .plate-kicker span + span::before { content: "·"; margin-right: 1.4rem; color: var(--text-muted); }
+  .search-first-home .nation-head h1 { font: 400 clamp(46px, 7vw, 96px)/.95 Georgia, "Times New Roman", serif; letter-spacing: -.055em; color: var(--plate-ink); }
+  .search-first-home .nation-head h1 em { font-style: italic; color: var(--plate-accent); letter-spacing: -.04em; }
+  .search-first-home .nation-head .entry-introduction { margin-top: 1rem; font: italic 400 clamp(17px, 1.8vw, 21px)/1.45 Georgia, serif; color: var(--text-secondary); }
+  .search-first-home .entry-free-assurance summary { font: 600 11px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+
+  /* Search: a stamped ledger line, offset shadow in ink, which lifts on focus. */
+  .search-first-home .coverage-search-panel .place-search-hero input {
+    border: 1.5px solid var(--plate-ink); border-radius: 3px; background: var(--surface-card);
+    box-shadow: 5px 5px 0 var(--plate-ink); font: 400 19px/1.3 Georgia, serif; min-height: 60px;
+    transition: transform 140ms ease, box-shadow 140ms ease;
+  }
+  .search-first-home .coverage-search-panel .place-search-hero input::placeholder { font-style: italic; color: var(--text-muted); }
+  .search-first-home .coverage-search-panel .place-search-hero input:focus-visible { outline: 0; transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--plate-accent); }
+  .search-first-home.search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-search-overlay { background: none; }
+  .search-first-home .coverage-explore-inline { border: 1.5px solid var(--plate-ink); border-radius: 3px; min-height: 60px; box-shadow: 5px 5px 0 var(--plate-rule); }
+  .search-first-home .artwork-caption .scale-signature { font: 600 10px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text-secondary); }
+  .search-first-home .artwork-caption .scale-signature b { font: 400 22px/1.1 Georgia, serif; letter-spacing: -.02em; color: var(--plate-ink); text-transform: none; }
+  .search-first-home .coverage-atlas-traces path[data-available="true"] { stroke: var(--plate-accent); }
+
+  /* The national backdrop as a market box: heavy top rule, column rule, no cards. */
+  .search-first-home .national-backdrop { margin-top: 2.2rem; padding-top: .7rem; border-top: 1px solid var(--plate-strong-rule); }
+  .search-first-home .national-backdrop > header h2 { font: 400 clamp(26px, 3vw, 34px)/1.1 Georgia, serif; letter-spacing: -.03em; }
+  .search-first-home .national-backdrop > header > span { font: 600 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--plate-accent); }
+  .search-first-home.search-first-home .national-backdrop .national-benchmark { border: 0; border-radius: 0; background: none; box-shadow: none; padding: .6rem 1.6rem .4rem 0; }
+  .search-first-home.search-first-home .national-backdrop .national-benchmark + .national-benchmark { border-left: 1px solid var(--plate-rule); padding-left: 1.6rem; }
+  /* The metric names lead each figure, large enough to read before the number. */
+  .search-first-home .national-benchmark h3 { margin-bottom: .2rem; font: 400 clamp(20px, 2vw, 24px)/1.25 Georgia, serif; letter-spacing: -.015em; text-transform: none; color: var(--plate-ink); }
+  .search-first-home .national-backdrop .national-rate > strong { font: 400 clamp(52px, 6vw, 76px)/1 Georgia, serif; letter-spacing: -.05em; color: var(--plate-ink); font-variant-numeric: lining-nums; }
+  .search-first-home .national-backdrop-grid { gap: 0; }
+
+  /* Tools as an index: numbered rows, a hairline between, the tool's ink on hover. */
+  .search-first-home .home-tools { margin-block: 2.6rem 2.4rem; padding-top: .7rem; border-top: 1px solid var(--plate-strong-rule); }
+  .search-first-home .home-tools h2 { font: 400 clamp(26px, 3vw, 34px)/1.1 Georgia, serif; letter-spacing: -.03em; margin-bottom: .6rem; }
+  .search-first-home .home-tools h2 span { font-style: italic; color: var(--text-muted); font-size: .7em; }
+  .search-first-home .home-tools ul { display: block; }
+  .search-first-home .home-tools li + li { border-top: 1px solid var(--plate-rule); }
+  .search-first-home.search-first-home .home-tools a[data-tool] {
+    display: grid; grid-template-columns: 3.4rem minmax(14rem, .9fr) minmax(0, 1.6fr) auto; align-items: baseline; column-gap: 1.2rem;
+    padding: 1.05rem .6rem; border: 0; border-radius: 0; box-shadow: none; transform: none;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--tool-ink) 10%, transparent), transparent 70%) no-repeat 0 0 / 0% 100%;
+    transition: background-size 320ms cubic-bezier(.22, 1, .36, 1);
+  }
+  .search-first-home .home-tools a[data-tool]:is(:hover, :focus-visible) { background-size: 100% 100%; }
+  .search-first-home .home-tools a > svg { display: none; }
+  .home-tool-index { font: italic 400 30px/1 Georgia, serif; color: var(--tool-ink); letter-spacing: -.03em; }
+  .search-first-home .home-tool-title { font: 400 22px/1.2 Georgia, serif; letter-spacing: -.02em; color: var(--plate-ink); }
+  .search-first-home .home-tool-title > span { display: inline-block; color: var(--tool-ink); transition: transform 220ms ease; }
+  .search-first-home .home-tools a:is(:hover, :focus-visible) .home-tool-title > span { transform: translateX(.35rem); }
+  .search-first-home .home-tool-text { font-size: 14px; color: var(--text-secondary); }
+  .search-first-home.search-first-home .home-tool-scope { background: none; padding: 0; margin: 0; font: 600 10px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--tool-ink); }
+
+  .search-first-home.search-first-home .coverage-focused-entry [data-exploring="false"] :is(.coverage-map-stage, .coverage-map-window) { background: none; border: 0; }
+  @media (max-width: 760px) {
+    .plate-kicker span:last-child { display: none; }
+    .search-first-home .coverage-search-panel .place-search-hero input, .search-first-home .coverage-explore-inline { box-shadow: 3px 3px 0 var(--plate-ink); }
+    .search-first-home .coverage-search-panel .place-search-hero input:focus-visible { box-shadow: 4px 4px 0 var(--plate-accent); }
+    .search-first-home .coverage-search-panel { padding-right: 4px; }
+    .search-first-home .national-backdrop > header > span { white-space: nowrap; }
+    .search-first-home.search-first-home .home-tools a[data-tool] { grid-template-columns: 2.4rem minmax(0, 1fr) auto; row-gap: .25rem; padding: .9rem .3rem; }
+    .home-tool-index { grid-row: 1 / span 2; font-size: 24px; }
+    .search-first-home.search-first-home .home-tool-title { grid-column: 2; grid-row: 1; font-size: 19px; }
+    .search-first-home.search-first-home .home-tool-title > span { display: inline-block; }
+    .search-first-home.search-first-home .home-tool-text { grid-column: 2 / span 2; grid-row: 2; }
+    .search-first-home.search-first-home .home-tool-scope { grid-column: 3; grid-row: 1; }
+    .search-first-home.search-first-home .national-backdrop .national-benchmark + .national-benchmark { border-left: 0; padding-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .search-first-home .home-tools a[data-tool], .search-first-home .home-tool-title > span, .search-first-home .coverage-search-panel .place-search-hero input { transition: none; }
+  }
+}
+
+/* Top menu (home only): a masthead strip on the paper, ruled in ink, small-caps links
+   with a rust underline that draws in. Same links, same order, same menu on phones. */
+@media screen {
+  .search-first-home .bar { border-bottom: 0; box-shadow: none; }
+  .search-first-home .bar .wordmark { font: 400 21px/1 Georgia, serif; letter-spacing: -.03em; color: var(--plate-ink); }
+  .search-first-home .bar .bar-home { font: 600 12px/1 var(--font-mono); letter-spacing: .1em; }
+  .search-first-home .bar :is(.bar-link, .bar-budget) {
+    position: relative; border: 0; border-radius: 0; background: none; box-shadow: none;
+    font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--plate-ink);
+  }
+  .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget)::after {
+    content: ""; position: absolute; left: .55rem; right: .55rem; bottom: .3rem; height: 2px; background: var(--plate-accent);
+    transform: scaleX(0); transform-origin: left; transition: transform 220ms cubic-bezier(.22, 1, .36, 1);
+  }
+  .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget):is(:hover, :focus-visible)::after { transform: scaleX(1); }
+  .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget) + :is(.bar-link, .bar-budget) { border-left: 1px solid var(--plate-rule); }
+  .search-first-home .bar-tool-menu > summary { border: 1.5px solid var(--plate-ink); border-radius: 3px; font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; box-shadow: 3px 3px 0 var(--plate-rule); }
+  .search-first-home .bar-tool-menu .bar-controls { border: 1.5px solid var(--plate-ink); border-radius: 3px; background: var(--plate-paper); box-shadow: 5px 5px 0 var(--plate-ink); }
+  .search-first-home .bar-tool-menu .bar-controls :is(a, button) + :is(a, button) { border-top: 1px solid var(--plate-rule); }
+  .search-first-home .site-meta-row { border: 0; }
+  .search-first-home .site-meta-row :is(.licence-label, .site-status, .site-status-kicker) { font: 600 10px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+
+  /* Footer: the three boxes become ruled ledger sections; the code-and-data terms a
+     stamped notice with a dashed border. */
+  body:has(.search-first-home) .foot :is(.foot-sources, .foot-links) { border: 0; border-radius: 0; background: none; box-shadow: none; padding-inline: 0; }
+  body:has(.search-first-home) .foot .foot-sources { border-top: 1px solid var(--plate-strong-rule); }
+  body:has(.search-first-home) .foot .foot-kicker { font: 600 10px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--plate-accent); }
+  body:has(.search-first-home) .foot :is(.foot-label, .foot-link-title) { font: 400 26px/1.15 Georgia, serif; letter-spacing: -.03em; color: var(--plate-ink); }
+  body:has(.search-first-home) .foot .foot-link-title { font-size: 22px; }
+  body:has(.search-first-home) .foot .foot-brief { font: 13px/1.8 var(--font-text); color: var(--text-secondary); }
+  body:has(.search-first-home) .foot .nc-tag { border-radius: 0; border: 1px solid var(--plate-accent); color: var(--plate-accent); font: 600 9px/1.4 var(--font-mono); letter-spacing: .1em; }
+  body:has(.search-first-home) .foot .foot-link-list { gap: 0; }
+  body:has(.search-first-home) .foot .foot-link-list a { padding: .6rem 1rem .9rem 0; border: 0; text-decoration: none; }
+  body:has(.search-first-home) .foot .foot-link-list a + a { border-left: 1px solid var(--plate-rule); padding-left: 1rem; }
+  body:has(.search-first-home) .foot .foot-link-list a .foot-link-title > span { color: var(--plate-accent); display: inline-block; transition: transform 200ms ease; }
+  body:has(.search-first-home) .foot .foot-link-list a:is(:hover, :focus-visible) .foot-link-title > span { transform: translateX(.3rem); }
+  body:has(.search-first-home) .foot .foot-notice {
+    border: 1.5px dashed var(--plate-ink); border-radius: 0; background: color-mix(in srgb, var(--plate-accent) 4%, transparent);
+    box-shadow: none; outline: 1px solid var(--plate-rule); outline-offset: 4px;
+  }
+  body:has(.search-first-home) .foot .foot-notice-title { font: 400 22px/1.2 Georgia, serif; color: var(--plate-ink); }
+  body:has(.search-first-home) .foot .foot-notice-head > svg { stroke: var(--plate-accent); }
+  body:has(.search-first-home) .foot .foot-policy-links .foot-tab { font: 600 10px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  @media (max-width: 700px) {
+    body:has(.search-first-home) .foot .foot-link-list a + a { border-left: 0; padding-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget)::after, body:has(.search-first-home) .foot .foot-link-list a .foot-link-title > span { transition: none; }
+  }
+}
