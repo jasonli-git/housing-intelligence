@@ -2,6 +2,7 @@ import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
+import "../../horizon-theme.css";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -479,7 +480,7 @@ export default async function RegionPage({
   return (
     <>
       <Masthead affordability={affordabilityControl} />
-      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
+      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local horizon-page${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
       <header className={`page-head${photo ? " has-photo" : ""}`} data-kind={kindOf(region.level)}>
         {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
         <div className="region-head-main">

@@ -1,4 +1,4 @@
-/* The New Jersey page in the Horizon look (2026-10-14), matching the home page: warm
+/* The Horizon theme for state and place pages (2026-10-14; first on the New Jersey page), matching the home page: warm
    paper by day and a dark sky at night, a slow rust/violet/amber glow, glass panels, serif
    headings. Presentation only; every section, control and figure is unchanged. */
 @keyframes look-aurora { to { transform: translate3d(4vw, 3vh, 0) rotate(8deg) scale(1.1); } }
@@ -116,13 +116,13 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
   body:has(.horizon-page) main.horizon-page > header.has-photo .page-title { color:#f7f4ee !important; }
   body:has(.horizon-page) main.horizon-page > header.has-photo .state-nickname { background:linear-gradient(90deg,#f6a07a,#ffd59a); -webkit-background-clip:text; background-clip:text; }
 }
-@media screen { body:has(.horizon-page) main.horizon-page .section-jump-control { background:var(--glass) !important; border:1px solid var(--glass-edge) !important; color:var(--plate-ink) !important; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); } body:has(.horizon-page) main.horizon-page .section-jump-control * { color:var(--plate-ink) !important; opacity:1 !important; } }
+@media screen { body:has(.horizon-page) main.horizon-page .section-jump-control { background:var(--glass) !important; border:1px solid var(--glass-edge) !important; color:var(--plate-ink) !important; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); } body:has(.horizon-page) main.horizon-page .section-jump-control * { color:var(--plate-ink) !important; } }
 @media screen { body:has(.horizon-page) main.horizon-page.horizon-page .section-jump-control select { color:var(--plate-ink) !important; -webkit-text-fill-color:var(--plate-ink); } }
 
-/* State pages keep their blue (the site's colour code for a state): the same Horizon
-   paper, glass and glow, recoloured from rust and amber to state blue and sky. */
+/* Each kind of place keeps its colour code (state blue, county green, town teal, ZIP
+   purple): the same Horizon paper, glass and glow, recoloured per kind. */
 @media screen {
-  body:has(.horizon-page) {
+  body:has(main.horizon-page[data-region-level="state"]) {
     --plate-ink: light-dark(#1c2632, #e8eef5);
     --plate-paper: light-dark(#ecf2f8, #0b1422);
     --plate-accent: light-dark(#2f6db0, #7fb6ec);
@@ -135,7 +135,7 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
     --glass-edge: light-dark(#ffffff, #e8eef51f);
     --state-blue: var(--plate-accent);
   }
-  body:has(.horizon-page)::before {
+  body:has(main.horizon-page[data-region-level="state"])::before {
     background: radial-gradient(30% 40% at 25% 30%, light-dark(#7fb2e6,#1f5fa8) 0%, transparent 70%),
                 radial-gradient(28% 36% at 72% 22%, light-dark(#a9b8f5,#3b3fa8) 0%, transparent 70%),
                 radial-gradient(26% 30% at 55% 62%, light-dark(#8fd3e0,#14706f) 0%, transparent 70%) !important;
@@ -289,4 +289,61 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
 @media screen and (max-width: 760px) {
   body:has(.horizon-page) main .state-jump { column-gap:1.1rem; }
   body:has(.horizon-page) main .state-jump a + a::before { display:none; }
+}
+
+/* Place kinds: county green, town teal, ZIP purple, each with its own glow. */
+@media screen {
+  body:has(main.horizon-page[data-region-level="county"]) {
+    --plate-ink: light-dark(#1d2a24, #e6efe9); --plate-paper: light-dark(#eef4f0, #0a120e);
+    --plate-accent: light-dark(#2f7a55, #7fcfa4); --plate-sky: light-dark(#4f9a6c, #a8e3bf);
+    --plate-rule: light-dark(#1d2a2414, #e6efe914); --plate-strong-rule: light-dark(#1d2a2426, #e6efe926);
+    --text-secondary: light-dark(#4b5d53, #adc1b5); --text-muted: light-dark(#728579, #84988b);
+    --glass: light-dark(#ffffffa6, #ffffff0b); --glass-edge: light-dark(#ffffff, #e6efe91f);
+  }
+  body:has(main.horizon-page[data-region-level="county"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#8fd0a8,#1f7a4c) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#c7e3a0,#4a6f1f) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#8fd3c7,#146e60) 0%, transparent 70%) !important; opacity: .55 !important; }
+  body:has(main.horizon-page[data-region-level="municipality"]) {
+    --plate-ink: light-dark(#1b2a2c, #e4eff0); --plate-paper: light-dark(#ecf4f5, #091214);
+    --plate-accent: light-dark(#267775, #7fd2cc); --plate-sky: light-dark(#3a9aa0, #a6e6e8);
+    --plate-rule: light-dark(#1b2a2c14, #e4eff014); --plate-strong-rule: light-dark(#1b2a2c26, #e4eff026);
+    --text-secondary: light-dark(#4a5e60, #abc3c5); --text-muted: light-dark(#708587, #839a9c);
+    --glass: light-dark(#ffffffa6, #ffffff0b); --glass-edge: light-dark(#ffffff, #e4eff01f);
+  }
+  body:has(main.horizon-page[data-region-level="municipality"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#86d0cc,#1a6f6c) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#a6c8ef,#2a4f8a) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#a9e2c6,#1c6a4e) 0%, transparent 70%) !important; opacity: .55 !important; }
+  body:has(main.horizon-page[data-region-level="zip"]) {
+    --plate-ink: light-dark(#28223a, #ece6f5); --plate-paper: light-dark(#f2eff8, #0f0b17);
+    --plate-accent: light-dark(#735e91, #c8b2ea); --plate-sky: light-dark(#9277b8, #e0cff7);
+    --plate-rule: light-dark(#28223a14, #ece6f514); --plate-strong-rule: light-dark(#28223a26, #ece6f526);
+    --text-secondary: light-dark(#5a5170, #bdb2d0); --text-muted: light-dark(#7d7493, #978dab);
+    --glass: light-dark(#ffffffa6, #ffffff0b); --glass-edge: light-dark(#ffffff, #ece6f51f);
+  }
+  body:has(main.horizon-page[data-region-level="zip"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#c3aee8,#4b2f8a) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#e9b8d8,#7a2f68) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#a9b8ef,#2f3f8a) 0%, transparent 70%) !important; opacity: .55 !important; }
+  body:has(main.horizon-page:not([data-region-level="state"])) { --state-blue: var(--plate-accent); }
+
+  /* Place-page exhibits: their own colour fields, as the state page's have. */
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="The homes that sold"] { --ex: light-dark(#b8742a,#f2b45c); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Prices & paychecks"] { --ex: light-dark(#7a52b3,#b99af0); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Arrivals & departures"] { --ex: light-dark(#c25a6e,#f29bb0); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Building & demolition"] { --ex: light-dark(#3f8a4a,#86d293); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Ground & water"] { --ex: light-dark(#1b84a8,#6fd0f0); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Flood context"] { --ex: light-dark(#2f6db0,#7fb6ec); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Service providers"] { --ex: light-dark(#5a6b80,#a9b8cc); }
+}
+@media screen { :where(body:has(.horizon-page) .learning-exhibit) { --ex: var(--plate-accent); } }
+
+/* Place-page panels in glass: the at-a-glance figures, the cost cards, the planning tools,
+   the local-picture note and the deeper comparisons. Their contents are unchanged. */
+@media screen {
+  body:has(.horizon-page) main.horizon-page :is(.quiet-profile-grid, .monthly-bill, .quiet-tool-group, .local-picture-note, .indexed-comparison, .rank-plot) {
+    background: var(--glass) !important; border: 1px solid var(--glass-edge) !important; border-radius: 22px !important;
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 24px 50px -36px #000c !important;
+  }
+  body:has(.horizon-page) main.horizon-page .quiet-profile-grid { background: radial-gradient(90% 80% at 0% 0%, color-mix(in srgb, var(--plate-accent) 16%, transparent), transparent 70%), var(--glass) !important; }
+  body:has(.horizon-page) main.horizon-page .local-picture-note::before, body:has(.horizon-page) main.horizon-page .local-picture-note::after { display: none !important; }
+  body:has(.horizon-page) main.horizon-page :is(.cost-monthly-headline, .cost-cards, .calculation-toggle, .planning-preview) { background: color-mix(in srgb, var(--plate-ink) 4%, transparent) !important; border-color: var(--glass-edge) !important; }
+  body:has(.horizon-page) main.horizon-page .cost-monthly-headline { background: radial-gradient(70% 120% at 50% 0%, color-mix(in srgb, var(--plate-accent) 14%, transparent), transparent 70%) !important; }
+  body:has(.horizon-page) main.horizon-page .cost-evidence-omissions { background: color-mix(in srgb, #d99a3a 12%, transparent) !important; border-radius: 0 0 22px 22px; }
+  body:has(.horizon-page) main.horizon-page .local-understand-group { background: none !important; }
+  body:has(.horizon-page) main.horizon-page :is(.quiet-profile strong, .cost-card strong, .cost-monthly-headline strong, .monthly-bill strong) { font-family: Georgia, serif !important; font-weight: 400 !important; letter-spacing: -.03em; }
+  body:has(.horizon-page) main.horizon-page :is(.quiet-profile > h2, .quiet-profile-kicker, .section-kicker) { font: 600 11px/1.4 -apple-system, BlinkMacSystemFont, "Inter", sans-serif !important; letter-spacing: .08em !important; }
+  body:has(.horizon-page) main.horizon-page > .page-head :is(.verdict, .region-verdict, .page-summary, p.lede) { font-size: 17px; line-height: 1.55; }
 }
