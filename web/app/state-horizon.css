@@ -1,0 +1,120 @@
+/* The New Jersey page in the Horizon look (2026-10-14), matching the home page: warm
+   paper by day and a dark sky at night, a slow rust/violet/amber glow, glass panels, serif
+   headings. Presentation only; every section, control and figure is unchanged. */
+@keyframes look-aurora { to { transform: translate3d(4vw, 3vh, 0) rotate(8deg) scale(1.1); } }
+@media screen {
+body:has(.horizon-page) {
+  --plate-ink:light-dark(#22201c,#f1ebe0); --plate-paper:light-dark(#f7f2ea,#0b0a09); --plate-accent:light-dark(#b2462e,#f08a5d);
+  --plate-rule:light-dark(#22201c14,#f1ebe014); --plate-strong-rule:light-dark(#22201c26,#f1ebe026);
+  --text-primary:var(--plate-ink); --text-secondary:light-dark(#5e574d,#b9b1a4); --text-muted:light-dark(#8a8274,#8a8274);
+  --glass:light-dark(#ffffffa6,#ffffff0d); --glass-edge:light-dark(#ffffff,#f1ebe01f); --state-blue:var(--plate-accent);
+  background:var(--plate-paper);
+}
+body:has(.horizon-page)::before { content:""; position:fixed; inset:-25vh -10vw auto; height:85vh; z-index:-1; pointer-events:none; filter:blur(70px); opacity:.42;
+  background: radial-gradient(30% 40% at 25% 30%, #d0613e 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#c9a7ff,#7a3cff) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, #e5a64a 0%, transparent 70%);
+  animation: look-aurora 26s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { body:has(.horizon-page)::before { animation:none; } }
+
+body:has(.horizon-page) { --plate-grid: light-dark(#22201c14,#f1ebe00f); }
+body:has(.horizon-page) :is(.bar,.site-meta-row) { background:color-mix(in srgb,var(--plate-paper) 60%,transparent) !important; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+body:has(.horizon-page) .wordmark { font:400 21px/1 Georgia,serif; letter-spacing:-.03em; }
+
+/* Header: a large serif name, the nickname in the rust-to-gold of "Intelligence". */
+body:has(.horizon-page) main.horizon-page > .page-head { border:0; }
+body:has(.horizon-page) main.horizon-page .page-title { font:400 clamp(56px,8vw,112px)/.95 Georgia,"Times New Roman",serif !important; letter-spacing:-.055em !important; color:var(--plate-ink); }
+body:has(.horizon-page) main.horizon-page .state-nickname { font:italic 400 clamp(22px,2.6vw,32px)/1.2 Georgia,serif !important; background:linear-gradient(90deg,var(--plate-accent),light-dark(#d98a2b,#ffc27a)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+body:has(.horizon-page) main.horizon-page .place-photo img { border-radius:22px; box-shadow:0 30px 60px -30px #000c; }
+body:has(.horizon-page) main.horizon-page .place-photo figcaption { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Helvetica Neue",Arial,sans-serif; }
+body:has(.horizon-page) main.horizon-page .state-place-artwork-header { stroke:var(--plate-accent); }
+
+/* Counties: glass pills. */
+body:has(.horizon-page) main.horizon-page :is(.state-county-strip a,.county-chip,.state-counties a,[class*="county"] a[href^="/nj/"]) { border-radius:999px; }
+
+/* Glass for every panel: the snapshot, the mosaic and each exhibit. */
+body:has(.horizon-page) main.horizon-page :is(.state-overview,.learning-exhibit,.housing-mosaic) {
+  background:var(--glass) !important; border:1px solid var(--glass-edge) !important; border-radius:24px !important;
+  -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); box-shadow:0 24px 50px -36px #000c !important;
+}
+body:has(.horizon-page) main.horizon-page .learning-exhibit { border-top-width:1px !important; }
+body:has(.horizon-page) main.horizon-page .learning-exhibit::before { content:""; position:absolute; inset:0 0 auto; height:3px; border-radius:24px 24px 0 0; background:linear-gradient(90deg,transparent,var(--atlas-accent,var(--plate-accent)),transparent); opacity:.8; }
+body:has(.horizon-page) main.horizon-page .exhibit-kicker { border:0 !important; padding-bottom:.4rem !important; }
+body:has(.horizon-page) main.horizon-page .exhibit-kicker > span:first-child { padding:.2rem .65rem !important; border-radius:999px; border:1px solid var(--glass-edge); background:var(--glass) !important; color:var(--text-secondary) !important; font:600 11px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Helvetica Neue",Arial,sans-serif !important; letter-spacing:0 !important; text-transform:none !important; }
+body:has(.horizon-page) main.horizon-page .exhibit-content :is(h2,h3) { font:400 clamp(26px,3vw,36px)/1.15 Georgia,serif !important; letter-spacing:-.025em !important; font-style:normal !important; max-width:24ch; }
+body:has(.horizon-page) main.horizon-page :is(.exhibit-readout strong,.state-overview strong,.exhibit-pair strong) { font-family:Georgia,serif !important; letter-spacing:-.03em; font-weight:400 !important; }
+body:has(.horizon-page) main.horizon-page .exhibit-choice button, body:has(.horizon-page) main.horizon-page .state-overview [role="group"] button { border-radius:999px; }
+
+/* Section headings in the page's serif. */
+body:has(.horizon-page) main.horizon-page :is(.section-head h2,.local-next-step-group > h2,.state-overview h2,.mosaic-heading h2) { font:400 clamp(28px,3.2vw,40px)/1.1 Georgia,serif !important; letter-spacing:-.03em !important; }
+body:has(.horizon-page) main.horizon-page .local-next-step-group { border-top:0 !important; }
+body:has(.horizon-page) main.horizon-page .local-next-step-group > h2 { margin-top:2rem; }
+body:has(.horizon-page) main.horizon-page .more > summary, body:has(.horizon-page) main.horizon-page .state-figure-notes > summary { border-radius:20px; }
+@media (prefers-reduced-motion: reduce) { body:has(.horizon-page)::before { animation:none; } }
+}
+/* Top menu (Horizon pages): a masthead strip on the paper, ruled in ink, small-caps links
+   with a rust underline that draws in. Same links, same order, same menu on phones. */
+@media screen {
+  body:has(.horizon-page) .bar { border-bottom: 0; box-shadow: none; }
+  body:has(.horizon-page) .bar .wordmark { font: 400 21px/1 Georgia, serif; letter-spacing: -.03em; color: var(--plate-ink); }
+  body:has(.horizon-page) .bar .bar-home { font: 600 12px/1 var(--font-mono); letter-spacing: .1em; }
+  body:has(.horizon-page) .bar :is(.bar-link, .bar-budget) {
+    position: relative; border: 0; border-radius: 0; background: none; box-shadow: none;
+    font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--plate-ink);
+  }
+  body:has(.horizon-page) .bar-desktop-tools :is(.bar-link, .bar-budget)::after {
+    content: ""; position: absolute; left: .55rem; right: .55rem; bottom: .3rem; height: 2px; background: var(--plate-accent);
+    transform: scaleX(0); transform-origin: left; transition: transform 220ms cubic-bezier(.22, 1, .36, 1);
+  }
+  body:has(.horizon-page) .bar-desktop-tools :is(.bar-link, .bar-budget):is(:hover, :focus-visible)::after { transform: scaleX(1); }
+  body:has(.horizon-page) .bar-desktop-tools :is(.bar-link, .bar-budget) + :is(.bar-link, .bar-budget) { border-left: 1px solid var(--plate-rule); }
+  body:has(.horizon-page) .bar-tool-menu > summary { border: 1.5px solid var(--plate-ink); border-radius: 3px; font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; box-shadow: 3px 3px 0 var(--plate-rule); }
+  body:has(.horizon-page) .bar-tool-menu .bar-controls { border: 1.5px solid var(--plate-ink); border-radius: 3px; background: var(--plate-paper); box-shadow: 5px 5px 0 var(--plate-ink); }
+  body:has(.horizon-page) .bar-tool-menu .bar-controls :is(a, button) + :is(a, button) { border-top: 1px solid var(--plate-rule); }
+  body:has(.horizon-page) .site-meta-row { border: 0; }
+  body:has(.horizon-page) .site-meta-row :is(.licence-label, .site-status, .site-status-kicker) { font: 600 10px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+
+  /* Footer: the three boxes become ruled ledger sections; the code-and-data terms a
+     stamped notice with a dashed border. */
+  body:has(.horizon-page) .foot :is(.foot-sources, .foot-links) { border: 0; border-radius: 0; background: none; box-shadow: none; padding-inline: 0; }
+  body:has(.horizon-page) .foot .foot-sources { border-top: 1px solid var(--plate-strong-rule); }
+  body:has(.horizon-page) .foot .foot-kicker { font: 600 10px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--plate-accent); }
+  body:has(.horizon-page) .foot :is(.foot-label, .foot-link-title) { font: 400 26px/1.15 Georgia, serif; letter-spacing: -.03em; color: var(--plate-ink); }
+  body:has(.horizon-page) .foot .foot-link-title { font-size: 22px; }
+  body:has(.horizon-page) .foot .foot-brief { font: 13px/1.8 var(--font-text); color: var(--text-secondary); }
+  body:has(.horizon-page) .foot .nc-tag { border-radius: 0; border: 1px solid var(--plate-accent); color: var(--plate-accent); font: 600 9px/1.4 var(--font-mono); letter-spacing: .1em; }
+  body:has(.horizon-page) .foot .foot-link-list { gap: 0; }
+  body:has(.horizon-page) .foot .foot-link-list a { padding: .6rem 1rem .9rem 0; border: 0; text-decoration: none; }
+  body:has(.horizon-page) .foot .foot-link-list a + a { border-left: 1px solid var(--plate-rule); padding-left: 1rem; }
+  body:has(.horizon-page) .foot .foot-link-list a .foot-link-title > span { color: var(--plate-accent); display: inline-block; transition: transform 200ms ease; }
+  body:has(.horizon-page) .foot .foot-link-list a:is(:hover, :focus-visible) .foot-link-title > span { transform: translateX(.3rem); }
+  body:has(.horizon-page) .foot .foot-notice {
+    border: 1.5px dashed var(--plate-ink); border-radius: 0; background: color-mix(in srgb, var(--plate-accent) 4%, transparent);
+    box-shadow: none; outline: 1px solid var(--plate-rule); outline-offset: 4px;
+  }
+  body:has(.horizon-page) .foot .foot-notice-title { font: 400 22px/1.2 Georgia, serif; color: var(--plate-ink); }
+  body:has(.horizon-page) .foot .foot-notice-head > svg { stroke: var(--plate-accent); }
+  body:has(.horizon-page) .foot .foot-policy-links .foot-tab { font: 600 10px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  @media (max-width: 700px) {
+    body:has(.horizon-page) .foot .foot-link-list a + a { border-left: 0; padding-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body:has(.horizon-page) .bar-desktop-tools :is(.bar-link, .bar-budget)::after, body:has(.horizon-page) .foot .foot-link-list a .foot-link-title > span { transition: none; }
+  }
+}
+
+@media screen {
+body:has(.horizon-page) main.horizon-page .state-facts { background:transparent !important; border:1px solid var(--glass-edge); border-radius:18px; }
+body:has(.horizon-page) main.horizon-page .state-facts > * + * { border-left-color:var(--glass-edge) !important; }
+body:has(.horizon-page) main.horizon-page .housing-mosaic.mosaic-embedded { background:transparent !important; border:0 !important; box-shadow:none !important; -webkit-backdrop-filter:none; backdrop-filter:none; }
+body:has(.horizon-page) main.horizon-page .more > summary { background:radial-gradient(120% 140% at 100% 0%, color-mix(in srgb,var(--plate-accent) 16%,transparent), transparent 60%), var(--glass) !important; border:1px solid var(--glass-edge) !important; border-radius:24px !important; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
+body:has(.horizon-page) main.horizon-page .more .more-kicker { color:var(--plate-accent) !important; }
+body:has(.horizon-page) main.horizon-page .more .more-copy strong, body:has(.horizon-page) main.horizon-page .more .more-copy > :first-child { font-family:Georgia,serif !important; }
+body:has(.horizon-page) main.horizon-page .exhibit-history, body:has(.horizon-page) main.horizon-page .history-interactive { background:transparent !important; }
+body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive { border-color:var(--glass-edge) !important; }
+}
+@media screen and (max-width: 760px) {
+  /* Over the photo band the title is always light, whatever the theme. */
+  body:has(.horizon-page) main.horizon-page > header.has-photo .page-title { color:#f7f4ee !important; }
+  body:has(.horizon-page) main.horizon-page > header.has-photo .state-nickname { background:linear-gradient(90deg,#f6a07a,#ffd59a); -webkit-background-clip:text; background-clip:text; }
+}
+@media screen { body:has(.horizon-page) main.horizon-page .section-jump-control { background:var(--glass) !important; border:1px solid var(--glass-edge) !important; color:var(--plate-ink) !important; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); } body:has(.horizon-page) main.horizon-page .section-jump-control * { color:var(--plate-ink) !important; opacity:1 !important; } }
+@media screen { body:has(.horizon-page) main.horizon-page.horizon-page .section-jump-control select { color:var(--plate-ink) !important; -webkit-text-fill-color:var(--plate-ink); } }

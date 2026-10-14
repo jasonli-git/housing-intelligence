@@ -39,6 +39,7 @@ import { pageMetadata } from "@/lib/meta";
 import "../../new-jersey.css";
 import "../../housing-entry.css";
 import "../../state-navigation.css";
+import "../../state-horizon.css";
 
 export const metadata: Metadata = pageMetadata({ title: "New Jersey — Housing", description: "Statewide housing figures and places to explore in New Jersey.", path: "/states/new-jersey" });
 
@@ -166,7 +167,7 @@ export default async function NewJerseyPage() {
   return (
     <>
       <Masthead affordability={{ kind: "local" }} />
-      <main id="main-content" tabIndex={-1} className="shell nj-page quiet-county quiet-state">
+      <main id="main-content" tabIndex={-1} className="shell nj-page quiet-county quiet-state horizon-page">
       <header className="page-head nj-head has-photo" data-kind="state">
         <GardenStateArtwork header />
         <div className="region-head-main">
