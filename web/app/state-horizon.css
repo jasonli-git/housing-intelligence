@@ -147,22 +147,31 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
   body:has(.horizon-page) main.horizon-page > header.has-photo .state-nickname { background: linear-gradient(90deg, #a9d3ff, #c9f0ff); -webkit-background-clip: text; background-clip: text; }
 }
 
-/* Counties: every county at once in three regional columns, not a strip to scroll. */
+/* Counties: an index line, as compact as the old strip but every county visible. One glass
+   bar; region names as small italic labels inline; counties as a dotted run of names that
+   wraps to two lines on desktop. On phones it is a single sideways-swiped line. */
 @media screen {
-  body:has(.horizon-page) .county-index { margin:1.6rem 0 2rem; padding:1.4rem 1.6rem 1.5rem; border:1px solid var(--glass-edge); border-radius:24px; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); box-shadow:0 24px 50px -36px #000c; }
-  body:has(.horizon-page) .county-index-head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:.3rem 1rem; margin-bottom:1rem; }
-  body:has(.horizon-page) .county-index-head h2 { margin:0; font:400 clamp(28px,3.2vw,40px)/1.1 Georgia,serif; letter-spacing:-.03em; color:var(--plate-ink); }
-  body:has(.horizon-page) .county-index-head p { margin:0; font-size:13px; color:var(--text-secondary); }
-  body:has(.horizon-page) .county-index-groups { display:grid; grid-template-columns:8fr 5fr 8fr; gap:1.4rem; }
-  body:has(.horizon-page) .county-index-group h3 { display:flex; align-items:baseline; gap:.5rem; margin:0 0 .5rem; padding-bottom:.45rem; border-bottom:1px solid var(--glass-edge); font:italic 400 22px/1.2 Georgia,serif; color:var(--plate-accent); }
-  body:has(.horizon-page) .county-index-group h3 span { font:600 11px/1 -apple-system,BlinkMacSystemFont,"Inter",sans-serif; font-style:normal; color:var(--text-muted); }
-  body:has(.horizon-page) .county-index-group ul { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.15rem .8rem; margin:0; padding:0; list-style:none; }
-  body:has(.horizon-page) .county-index-group:nth-child(2) ul { grid-template-columns:1fr; }
-  body:has(.horizon-page) main .county-index-link { display:flex; align-items:center; justify-content:space-between; min-height:40px; padding:0 .55rem; margin-inline:-.55rem; border-radius:10px; text-decoration:none; color:var(--plate-ink); font:400 18px/1.2 Georgia,serif; transition:background-color 160ms ease, color 160ms ease; }
-  body:has(.horizon-page) main .county-index-link i { font-style:normal; color:var(--plate-accent); opacity:0; transform:translateX(-4px); transition:opacity 160ms ease, transform 160ms ease; }
-  body:has(.horizon-page) main .county-index-link:is(:hover,:focus-visible) { background:color-mix(in srgb,var(--plate-accent) 12%,transparent); color:var(--plate-accent); }
-  body:has(.horizon-page) main .county-index-link:is(:hover,:focus-visible) i { opacity:1; transform:none; }
-  @media (max-width:900px) { body:has(.horizon-page) .county-index-groups { grid-template-columns:1fr; gap:1rem; } body:has(.horizon-page) .county-index-group:nth-child(2) ul { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-  @media (max-width:420px) { body:has(.horizon-page) .county-index { padding:1.1rem 1rem; } body:has(.horizon-page) main .county-index-link { font-size:16px; } }
-  @media (prefers-reduced-motion: reduce) { body:has(.horizon-page) main .county-index-link, body:has(.horizon-page) main .county-index-link i { transition:none; } }
+  body:has(.horizon-page) .county-index { display:flex; align-items:baseline; gap:.4rem 1rem; margin:1.1rem 0 1.4rem; padding:.7rem 1.1rem; border:1px solid var(--glass-edge); border-radius:18px; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
+  body:has(.horizon-page) .county-index-head { flex:none; }
+  body:has(.horizon-page) .county-index-head h2 { margin:0; font:600 11px/1.4 -apple-system,BlinkMacSystemFont,"Inter",sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); }
+  body:has(.horizon-page) .county-index-head p { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  body:has(.horizon-page) .county-index-groups { display:flex; flex-wrap:wrap; align-items:baseline; gap:0; min-width:0; }
+  body:has(.horizon-page) .county-index-group + .county-index-group h3 { margin-left:.9rem; }
+  body:has(.horizon-page) .county-index-group { display:contents; }
+  body:has(.horizon-page) .county-index-group h3 { margin:0 .35rem 0 0; font:italic 400 15px/1.6 Georgia,serif; color:var(--plate-accent); }
+  body:has(.horizon-page) .county-index-group h3 span { display:none; }
+  body:has(.horizon-page) .county-index-group ul { display:contents; }
+  body:has(.horizon-page) .county-index-group li { display:inline-flex; align-items:baseline; }
+  body:has(.horizon-page) .county-index-group li + li::before { content:"·"; margin:0 .1rem; color:var(--text-muted); }
+  body:has(.horizon-page) main .county-index-link { display:inline-flex; align-items:center; min-height:32px; padding:0 .3rem; border-radius:8px; text-decoration:none; color:var(--plate-ink); font:400 15.5px/1.2 Georgia,serif; transition:background-color 140ms ease, color 140ms ease; }
+  body:has(.horizon-page) main .county-index-link i { display:none; }
+  body:has(.horizon-page) main .county-index-link:is(:hover,:focus-visible) { background:color-mix(in srgb,var(--plate-accent) 14%,transparent); color:var(--plate-accent); }
+  @media (max-width:760px) {
+    body:has(.horizon-page) .county-index { padding:.55rem .9rem; border-radius:999px; }
+    body:has(.horizon-page) .county-index-head { display:none; }
+    body:has(.horizon-page) .county-index-groups { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent); mask-image:linear-gradient(90deg,#000 88%,transparent); }
+    body:has(.horizon-page) .county-index-groups::-webkit-scrollbar { display:none; }
+    body:has(.horizon-page) .county-index-group li { white-space:nowrap; }
+  }
+  @media (prefers-reduced-motion: reduce) { body:has(.horizon-page) main .county-index-link { transition:none; } }
 }
