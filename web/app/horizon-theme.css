@@ -347,3 +347,15 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
   body:has(.horizon-page) main.horizon-page :is(.quiet-profile > h2, .quiet-profile-kicker, .section-kicker) { font: 600 11px/1.4 -apple-system, BlinkMacSystemFont, "Inter", sans-serif !important; letter-spacing: .08em !important; }
   body:has(.horizon-page) main.horizon-page > .page-head :is(.verdict, .region-verdict, .page-summary, p.lede) { font-size: 17px; line-height: 1.55; }
 }
+@media screen {
+  body:has(.horizon-page) :is(#quiet-cost, #cost-heading, #place-next-step, #place-understand, #place-explore, #region-detailed-data) { scroll-margin-top: 90px; }
+  /* Place pages: the jump line spans the text column above the report button. */
+  body:has(.horizon-page) main > .page-head .actions:has(.place-jump) { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.4rem; }
+  body:has(.horizon-page) .place-jump { flex: 1 1 100%; margin-top: .4rem; }
+}
+@media screen {
+  /* Six links wrap; a leading divider on a new line looks broken, so spacing alone separates them. */
+  body:has(.horizon-page) main .place-jump { column-gap: 1.3rem; row-gap: 0; font-size: 14.5px; }
+  body:has(.horizon-page) main .place-jump a + a::before { display: none; }
+  body:has(.horizon-page) main .place-jump::before { flex-basis: 100%; margin: 0 0 -.3rem; }
+}
