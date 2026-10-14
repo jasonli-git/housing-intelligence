@@ -359,3 +359,17 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
   body:has(.horizon-page) main .place-jump a + a::before { display: none; }
   body:has(.horizon-page) main .place-jump::before { flex-basis: 100%; margin: 0 0 -.3rem; }
 }
+@media screen {
+  /* Charts inside an exhibit draw in that exhibit's colour: the accent variables they read
+     are pointed at the exhibit's own --ex. */
+  body:has(.horizon-page) main.horizon-page .learning-exhibit { --atlas-accent: var(--ex); --state-blue: var(--ex); --entry-accent: var(--ex); --geo-accent: var(--ex); --series-1: var(--ex); }
+}
+@media screen {
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Job geography"] { --ex: light-dark(#2a8585,#7fd6d6); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Schools"] { --ex: light-dark(#a87f1a,#f0cf6b); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Public safety"] { --ex: light-dark(#5560c8,#9ea6f2); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Health estimates"] { --ex: light-dark(#c0623a,#f2a37a); }
+}
+@media screen {
+  body:has(.horizon-page) main.horizon-page .learning-exhibit[data-exhibit="Building & demolition"] .exhibit-content strong { font-size: clamp(44px, 5vw, 64px) !important; color: var(--ex); font-family: Georgia, serif; font-weight: 400; }
+}
