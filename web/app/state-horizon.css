@@ -203,7 +203,45 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
   @media (min-width: 761px) {
     body:has(.horizon-page) .state-market-exhibits { grid-auto-flow: dense; gap: 1.2rem !important; }
     body:has(.horizon-page) .state-market-exhibits > .learning-exhibit:is([data-exhibit="Home sales"],[data-exhibit="Against its own history"],[data-exhibit="Broadband"]) { grid-column: 1 / -1; }
-    body:has(.horizon-page) .state-market-exhibits > .learning-exhibit[data-exhibit="Home sales"] .exhibit-content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 2.5rem; align-items: start; }
-    body:has(.horizon-page) .state-market-exhibits > .learning-exhibit[data-exhibit="Home sales"] .exhibit-content > :first-child { grid-column: 1 / -1; }
   }
+}
+
+/* Compact field notes: less padding and air, smaller headings, and the full-width cards
+   laid out side by side inside so they are short as well as wide. */
+@media screen {
+  body:has(.horizon-page) main.horizon-page .learning-exhibit { padding: .9rem 1.2rem 1rem !important; margin: 0 !important; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit .exhibit-kicker { margin-bottom: .2rem; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit .exhibit-content :is(h2,h3) { font-size: clamp(22px, 2.2vw, 28px) !important; margin: 0 0 .25rem !important; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit :is(.section, .section-head) { margin: 0 !important; padding: 0 !important; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit :is(.sales-note, p) { margin-block: .25rem !important; font-size: 13px; line-height: 1.45; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit :is(.exhibit-plot, figure) { margin: .4rem 0 !important; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit .reader-details > summary { min-height: 40px; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit .exhibit-readout strong { font-size: clamp(48px, 5.5vw, 76px) !important; }
+  body:has(.horizon-page) .state-market-exhibits { gap: .9rem !important; align-items: start; }
+  @media (min-width: 761px) {
+    /* Sales: the price and its quartile buttons on the left; the notes and details right. */
+    body:has(.horizon-page) [data-exhibit="Home sales"] .section.sales { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 2rem; align-items: start; }
+    body:has(.horizon-page) [data-exhibit="Home sales"] .section.sales > :is(.section-head, .sales-note:first-of-type) { grid-column: 1 / -1; }
+    body:has(.horizon-page) [data-exhibit="Home sales"] .section.sales > figure { grid-column: 1; grid-row: span 3; }
+    body:has(.horizon-page) [data-exhibit="Home sales"] .section.sales > :is(details, .sales-note:last-child) { grid-column: 2; }
+    /* History: the year and its reading beside the chart, not above it. */
+    body:has(.horizon-page) [data-exhibit="Against its own history"] .history-interactive { display: grid; grid-template-columns: minmax(150px, .28fr) minmax(0, 1fr); column-gap: 1.6rem; align-items: center; }
+    body:has(.horizon-page) [data-exhibit="Against its own history"] .history-interactive > :not(.exhibit-readout) { grid-column: 2; }
+    body:has(.horizon-page) [data-exhibit="Against its own history"] .history-interactive > .exhibit-readout { grid-column: 1; grid-row: 1 / span 3; }
+    /* Broadband: the figures in a row across the card. */
+    body:has(.horizon-page) [data-exhibit="Broadband"] dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem 1.5rem; }
+    body:has(.horizon-page) [data-exhibit="Broadband"] dl > div { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: .2rem; }
+  }
+}
+@media screen and (min-width: 761px) {
+  /* Pair cards of similar height so neither leaves a gap beside the other: the two short
+     ones (borrowing, work) together, then the two tall ones (pressure, new homes). */
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Home sales"] { order: 1; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Buyer financing"] { order: 2; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Work & transit"] { order: 3; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Against its own history"] { order: 4; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Income & housing pressure"] { order: 5; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="New homes"] { order: 6; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Broadband"] { order: 7; }
+  body:has(.horizon-page) .state-market-exhibits { align-items: stretch; }
 }
