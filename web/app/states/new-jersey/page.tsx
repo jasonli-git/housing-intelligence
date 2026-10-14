@@ -192,7 +192,11 @@ export default async function NewJerseyPage() {
             <p className="state-nickname">The Garden State</p>
             <ComputedBadge />
           </div>
-          <div className="state-title-navigation"><SectionJump /></div>
+          <nav className="state-title-navigation state-jump" aria-label="On this page">
+            <a href="#field-notes"><span>Field notes</span><i aria-hidden="true">↓</i></a>
+            <a href="#state-next-step-heading"><span>Your next step</span><i aria-hidden="true">↓</i></a>
+            <a href="#state-detailed-data"><span>Statewide evidence</span><i aria-hidden="true">↓</i></a>
+          </nav>
         </div>
         <PlacePhoto geoid="34" />
       </header>
@@ -209,7 +213,11 @@ export default async function NewJerseyPage() {
             initial={initial ?? DEFAULT_MEASURE}
           />
       </div>}
-      <div className="state-market-exhibits" id="state-market-exhibits" data-jump-label="Statewide exhibits">
+      <header className="field-notes-head" id="field-notes">
+        <h2>Field notes</h2>
+        <p>Closer looks at how New Jersey buys, borrows, builds and works.</p>
+      </header>
+      <div className="state-market-exhibits" id="state-market-exhibits">
         <LearningExhibit kind="Home sales"><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait /></LearningExhibit>
         <StateContextExhibits topics={["lending"]} levels={packet?.levels ?? []} destinations={destinations} community={community} />
         <IncomePressure data={pressure} />

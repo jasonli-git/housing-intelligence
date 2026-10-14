@@ -245,3 +245,20 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
   body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Broadband"] { order: 7; }
   body:has(.horizon-page) .state-market-exhibits { align-items: stretch; }
 }
+
+/* On this page: three glass links under the title in place of the section menu. */
+@media screen {
+  body:has(.horizon-page) .state-jump { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1rem; }
+  body:has(.horizon-page) main .state-jump a { display:inline-flex; align-items:center; gap:.55rem; min-height:44px; padding:0 1rem; border:1px solid var(--glass-edge); border-radius:999px; background:var(--glass); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); color:var(--plate-ink); font:500 14px/1 -apple-system,BlinkMacSystemFont,"Inter",sans-serif; text-decoration:none; transition:background-color 150ms ease, border-color 150ms ease, color 150ms ease; }
+  body:has(.horizon-page) main .state-jump a i { font-style:normal; color:var(--plate-accent); transition:transform 180ms ease; }
+  body:has(.horizon-page) main .state-jump a:is(:hover,:focus-visible) { border-color:color-mix(in srgb,var(--plate-accent) 45%,transparent); background:color-mix(in srgb,var(--plate-accent) 12%,transparent); color:var(--plate-accent); }
+  body:has(.horizon-page) main .state-jump a:is(:hover,:focus-visible) i { transform:translateY(2px); }
+  body:has(.horizon-page) :is(#field-notes, #state-next-step-heading, #state-detailed-data) { scroll-margin-top:90px; }
+
+  /* Field notes heading: separates the exhibits from the snapshot above. */
+  body:has(.horizon-page) .field-notes-head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:.3rem 1.2rem; margin:2.6rem 0 1rem; padding-top:1.4rem; border-top:1px solid var(--plate-strong-rule); }
+  body:has(.horizon-page) .field-notes-head h2 { margin:0; font:400 clamp(32px,3.6vw,46px)/1.05 Georgia,serif; letter-spacing:-.035em; color:var(--plate-ink); }
+  body:has(.horizon-page) .field-notes-head p { margin:0; max-width:52ch; font-size:14px; color:var(--text-secondary); }
+  @media (max-width:760px) { body:has(.horizon-page) main .state-jump a { font-size:13px; padding:0 .8rem; } }
+  @media (prefers-reduced-motion: reduce) { body:has(.horizon-page) main .state-jump a, body:has(.horizon-page) main .state-jump a i { transition:none; } }
+}
