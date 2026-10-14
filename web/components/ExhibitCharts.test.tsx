@@ -52,10 +52,10 @@ describe("learning exhibits",()=>{
     expect(screen.queryByRole("button",{name:"Lower quartile"})).toBeNull();
     expect(screen.getByText("$300,000")).toBeTruthy();
   });
-  it("allows decorative looping motion to pause without changing the content",()=>{
+  it("renders the exhibits with no gallery controls",()=>{
     const {container}=render(<ExhibitGallery><p>Published figure</p></ExhibitGallery>);
-    fireEvent.click(screen.getByRole("button",{name:"Pause artwork"}));
-    expect(container.querySelector("[data-motion=paused]")).toBeTruthy();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(container.querySelector(".exhibit-gallery")).toBeTruthy();
     expect(screen.getByText("Published figure")).toBeTruthy();
   });
 });

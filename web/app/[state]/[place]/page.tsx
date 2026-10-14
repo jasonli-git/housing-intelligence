@@ -2,6 +2,7 @@ import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
+import "../../horizon-theme.css";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -42,7 +43,6 @@ import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Ledger, Margin, TableNotes } from "@/components/Ledger";
 import { MoreExpander } from "@/components/MoreExpander";
 import { Masthead } from "@/components/Masthead";
-import { SectionJump } from "@/components/SectionJump";
 import { QuietAnchor, QuietCheckTopics, QuietDisclosure, QuietProfile } from "@/components/QuietCounty";
 import { RankOverview } from "@/components/RankOverview";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
@@ -479,7 +479,7 @@ export default async function RegionPage({
   return (
     <>
       <Masthead affordability={affordabilityControl} />
-      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
+      <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local horizon-page${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
       <header className={`page-head${photo ? " has-photo" : ""}`} data-kind={kindOf(region.level)}>
         {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
         <div className="region-head-main">
@@ -544,7 +544,14 @@ export default async function RegionPage({
           )}
         </div>
         <div className="actions">
-          <SectionJump key={regionId} />
+          <nav className="state-jump place-jump" aria-label="On this page">
+            <a href={quiet ? "#quiet-cost" : "#cost-heading"}><span>What it costs to own and rent</span><i aria-hidden="true">↓</i></a>
+            <a href="#place-next-step"><span>Your next step</span><i aria-hidden="true">↓</i></a>
+            <a href="#place-understand"><span>Understand this place</span><i aria-hidden="true">↓</i></a>
+            <a href="#field-notes"><span>Field notes</span><i aria-hidden="true">↓</i></a>
+            <a href="#place-explore"><span>Explore places</span><i aria-hidden="true">↓</i></a>
+            <a href="#region-detailed-data"><span>Explore the evidence</span><i aria-hidden="true">↓</i></a>
+          </nav>
           <Link className="button report-action" href={`${regionPath(regionId)}/report`}>
             <svg viewBox="0 0 20 20" aria-hidden="true">
               <path d="M5.5 2.75h6l3 3v11.5h-9Z" />
@@ -598,7 +605,7 @@ export default async function RegionPage({
       )}
       </QuietAnchor>
 
-      <section className="local-next-step-group" aria-label="Your next step">
+      <section id="place-next-step" className="local-next-step-group" aria-label="Your next step">
       <h2>Your next step</h2>
       <div className="place-next-destinations">
       <section className="place-guide-entry" id="home-checks-heading" aria-labelledby="place-guide-title">
@@ -619,7 +626,7 @@ export default async function RegionPage({
       </div>
       </section>
 
-      <section className="local-understand-group" aria-label="Understand this place">
+      <section id="place-understand" className="local-understand-group" aria-label="Understand this place">
       <AbstractField kind="architecture" />
       <h2>Understand this place</h2>
 
@@ -668,6 +675,10 @@ export default async function RegionPage({
       )}
       </ConsumerReading>
       </QuietAnchor>
+      <header className="field-notes-head" id="field-notes">
+        <h2>Field notes</h2>
+        <p>Closer looks at what sold, how it has changed, who is moving and what lies under the ground.</p>
+      </header>
       <ExhibitGallery>
       {!quiet && homeChecks}
       <LearningExhibit kind="The homes that sold">
@@ -711,8 +722,10 @@ export default async function RegionPage({
         )}
       </ExhibitGallery>
       </section>
+      <div id="place-explore">
       <SimilarPlaces name={name} data={similar} />
       {region.level === "county" && countyTowns.length > 0 && <CountyPlaces name={name} towns={countyTowns.map(t => ({id: t.region_id, name: displayName(t)}))} />}
+      </div>
 
       <MoreExpander id="region-detailed-data" title={moreTitle} sub={quiet ? "Figures, trends & sources. Explore the detail." : `For the full picture: ${listed(contents)}.`}>
         {trends.length > 0 && <details className="historical-value-tables"><summary>Historical values &amp; sources</summary>{trends.map(({metricId,observations}) => {

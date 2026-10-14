@@ -186,7 +186,7 @@ Not open work: each comes round on a date. The steps live where the row says.
       at the owner's request on 2026-10-05; WCAG 2.2.2 asks for one on anything that
       moves for more than five seconds. Reduced motion stops it. The New Jersey header
       artwork added 2026-10-06 (#311) loops the same way, as do the home page's atlas outlines and
-      travelling line (#364).
+      travelling line (#364). The field-notes gallery's pause button was removed at the owner's request on 2026-10-14, so its looping exhibit artwork has none either.
 - [ ] **Shorten the publisher notices in the footer.** (owner, 2026-10-10) On the home
       page the notices are the longest thing below the charts. One idea: a single footer
       line linking to a sources page that lists every notice, with each page showing only
