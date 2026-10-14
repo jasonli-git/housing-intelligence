@@ -39,6 +39,7 @@ import { pageMetadata } from "@/lib/meta";
 import "../../new-jersey.css";
 import "../../housing-entry.css";
 import "../../state-navigation.css";
+import "../../state-horizon.css";
 
 export const metadata: Metadata = pageMetadata({ title: "New Jersey — Housing", description: "Statewide housing figures and places to explore in New Jersey.", path: "/states/new-jersey" });
 
@@ -166,7 +167,7 @@ export default async function NewJerseyPage() {
   return (
     <>
       <Masthead affordability={{ kind: "local" }} />
-      <main id="main-content" tabIndex={-1} className="shell nj-page quiet-county quiet-state">
+      <main id="main-content" tabIndex={-1} className="shell nj-page quiet-county quiet-state horizon-page">
       <header className="page-head nj-head has-photo" data-kind="state">
         <GardenStateArtwork header />
         <div className="region-head-main">
@@ -191,7 +192,11 @@ export default async function NewJerseyPage() {
             <p className="state-nickname">The Garden State</p>
             <ComputedBadge />
           </div>
-          <div className="state-title-navigation"><SectionJump /></div>
+          <nav className="state-title-navigation state-jump" aria-label="On this page">
+            <a href="#field-notes"><span>Field notes</span><i aria-hidden="true">↓</i></a>
+            <a href="#state-next-step-heading"><span>Your next step</span><i aria-hidden="true">↓</i></a>
+            <a href="#state-detailed-data"><span>Statewide evidence</span><i aria-hidden="true">↓</i></a>
+          </nav>
         </div>
         <PlacePhoto geoid="34" />
       </header>
@@ -208,7 +213,11 @@ export default async function NewJerseyPage() {
             initial={initial ?? DEFAULT_MEASURE}
           />
       </div>}
-      <div className="state-market-exhibits" id="state-market-exhibits" data-jump-label="Statewide exhibits">
+      <header className="field-notes-head" id="field-notes">
+        <h2>Field notes</h2>
+        <p>Closer looks at how New Jersey buys, borrows, builds and works.</p>
+      </header>
+      <div className="state-market-exhibits" id="state-market-exhibits">
         <LearningExhibit kind="Home sales"><HomeSales name="New Jersey" level="state" geoid="34" levels={levels} showLookup={false} portrait /></LearningExhibit>
         <StateContextExhibits topics={["lending"]} levels={packet?.levels ?? []} destinations={destinations} community={community} />
         <IncomePressure data={pressure} />

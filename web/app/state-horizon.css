@@ -1,0 +1,292 @@
+/* The New Jersey page in the Horizon look (2026-10-14), matching the home page: warm
+   paper by day and a dark sky at night, a slow rust/violet/amber glow, glass panels, serif
+   headings. Presentation only; every section, control and figure is unchanged. */
+@keyframes look-aurora { to { transform: translate3d(4vw, 3vh, 0) rotate(8deg) scale(1.1); } }
+@media screen {
+body:has(.horizon-page) {
+  --plate-ink:light-dark(#22201c,#f1ebe0); --plate-paper:light-dark(#f7f2ea,#0b0a09); --plate-accent:light-dark(#b2462e,#f08a5d);
+  --plate-rule:light-dark(#22201c14,#f1ebe014); --plate-strong-rule:light-dark(#22201c26,#f1ebe026);
+  --text-primary:var(--plate-ink); --text-secondary:light-dark(#5e574d,#b9b1a4); --text-muted:light-dark(#8a8274,#8a8274);
+  --glass:light-dark(#ffffffa6,#ffffff0d); --glass-edge:light-dark(#ffffff,#f1ebe01f); --state-blue:var(--plate-accent);
+  background:var(--plate-paper);
+}
+body:has(.horizon-page)::before { content:""; position:fixed; inset:-25vh -10vw auto; height:85vh; z-index:-1; pointer-events:none; filter:blur(70px); opacity:.42;
+  background: radial-gradient(30% 40% at 25% 30%, #d0613e 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#c9a7ff,#7a3cff) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, #e5a64a 0%, transparent 70%);
+  animation: look-aurora 26s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { body:has(.horizon-page)::before { animation:none; } }
+
+body:has(.horizon-page) { --plate-grid: light-dark(#22201c14,#f1ebe00f); }
+body:has(.horizon-page) :is(.bar,.site-meta-row) { background:color-mix(in srgb,var(--plate-paper) 60%,transparent) !important; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+body:has(.horizon-page) .wordmark { font:400 21px/1 Georgia,serif; letter-spacing:-.03em; }
+
+/* Header: a large serif name, the nickname in the rust-to-gold of "Intelligence". */
+body:has(.horizon-page) main.horizon-page > .page-head { border:0; }
+body:has(.horizon-page) main.horizon-page .page-title { font:400 clamp(56px,8vw,112px)/.95 Georgia,"Times New Roman",serif !important; letter-spacing:-.055em !important; color:var(--plate-ink); }
+body:has(.horizon-page) main.horizon-page .state-nickname { font:italic 400 clamp(22px,2.6vw,32px)/1.2 Georgia,serif !important; background:linear-gradient(90deg,var(--plate-accent),light-dark(#d98a2b,#ffc27a)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+body:has(.horizon-page) main.horizon-page .place-photo img { border-radius:22px; box-shadow:0 30px 60px -30px #000c; }
+body:has(.horizon-page) main.horizon-page .place-photo figcaption { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Helvetica Neue",Arial,sans-serif; }
+body:has(.horizon-page) main.horizon-page .state-place-artwork-header { stroke:var(--plate-accent); }
+
+/* Counties: glass pills. */
+body:has(.horizon-page) main.horizon-page :is(.state-county-strip a,.county-chip,.state-counties a,[class*="county"] a[href^="/nj/"]) { border-radius:999px; }
+
+/* Glass for every panel: the snapshot, the mosaic and each exhibit. */
+body:has(.horizon-page) main.horizon-page :is(.state-overview,.learning-exhibit,.housing-mosaic) {
+  background:var(--glass) !important; border:1px solid var(--glass-edge) !important; border-radius:24px !important;
+  -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); box-shadow:0 24px 50px -36px #000c !important;
+}
+body:has(.horizon-page) main.horizon-page .learning-exhibit { border-top-width:1px !important; }
+body:has(.horizon-page) main.horizon-page .learning-exhibit::before { content:""; position:absolute; inset:0 0 auto; height:3px; border-radius:24px 24px 0 0; background:linear-gradient(90deg,transparent,var(--atlas-accent,var(--plate-accent)),transparent); opacity:.8; }
+body:has(.horizon-page) main.horizon-page .exhibit-kicker { border:0 !important; padding-bottom:.4rem !important; }
+body:has(.horizon-page) main.horizon-page .exhibit-kicker > span:first-child { padding:.2rem .65rem !important; border-radius:999px; border:1px solid var(--glass-edge); background:var(--glass) !important; color:var(--text-secondary) !important; font:600 11px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Helvetica Neue",Arial,sans-serif !important; letter-spacing:0 !important; text-transform:none !important; }
+body:has(.horizon-page) main.horizon-page .exhibit-content :is(h2,h3) { font:400 clamp(26px,3vw,36px)/1.15 Georgia,serif !important; letter-spacing:-.025em !important; font-style:normal !important; max-width:24ch; }
+body:has(.horizon-page) main.horizon-page :is(.exhibit-readout strong,.state-overview strong,.exhibit-pair strong) { font-family:Georgia,serif !important; letter-spacing:-.03em; font-weight:400 !important; }
+body:has(.horizon-page) main.horizon-page .exhibit-choice button, body:has(.horizon-page) main.horizon-page .state-overview [role="group"] button { border-radius:999px; }
+
+/* Section headings in the page's serif. */
+body:has(.horizon-page) main.horizon-page :is(.section-head h2,.local-next-step-group > h2,.state-overview h2,.mosaic-heading h2) { font:400 clamp(28px,3.2vw,40px)/1.1 Georgia,serif !important; letter-spacing:-.03em !important; }
+body:has(.horizon-page) main.horizon-page .local-next-step-group { border-top:0 !important; }
+body:has(.horizon-page) main.horizon-page .local-next-step-group > h2 { margin-top:2rem; }
+body:has(.horizon-page) main.horizon-page .more > summary, body:has(.horizon-page) main.horizon-page .state-figure-notes > summary { border-radius:20px; }
+@media (prefers-reduced-motion: reduce) { body:has(.horizon-page)::before { animation:none; } }
+}
+/* Top menu (Horizon pages): a masthead strip on the paper, ruled in ink, small-caps links
+   with a rust underline that draws in. Same links, same order, same menu on phones. */
+@media screen {
+  body:has(.horizon-page) .bar { border-bottom: 0; box-shadow: none; }
+  body:has(.horizon-page) .bar .wordmark { font: 400 21px/1 Georgia, serif; letter-spacing: -.03em; color: var(--plate-ink); }
+  body:has(.horizon-page) .bar .bar-home { font: 600 12px/1 var(--font-mono); letter-spacing: .1em; }
+  body:has(.horizon-page) .bar :is(.bar-link, .bar-budget) {
+    position: relative; border: 0; border-radius: 0; background: none; box-shadow: none;
+    font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--plate-ink);
+  }
+  body:has(.horizon-page) .bar-desktop-tools :is(.bar-link, .bar-budget)::after {
+    content: ""; position: absolute; left: .55rem; right: .55rem; bottom: .3rem; height: 2px; background: var(--plate-accent);
+    transform: scaleX(0); transform-origin: left; transition: transform 220ms cubic-bezier(.22, 1, .36, 1);
+  }
+  body:has(.horizon-page) .bar-desktop-tools :is(.bar-link, .bar-budget):is(:hover, :focus-visible)::after { transform: scaleX(1); }
+  body:has(.horizon-page) .bar-desktop-tools :is(.bar-link, .bar-budget) + :is(.bar-link, .bar-budget) { border-left: 1px solid var(--plate-rule); }
+  body:has(.horizon-page) .bar-tool-menu > summary { border: 1.5px solid var(--plate-ink); border-radius: 3px; font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; box-shadow: 3px 3px 0 var(--plate-rule); }
+  body:has(.horizon-page) .bar-tool-menu .bar-controls { border: 1.5px solid var(--plate-ink); border-radius: 3px; background: var(--plate-paper); box-shadow: 5px 5px 0 var(--plate-ink); }
+  body:has(.horizon-page) .bar-tool-menu .bar-controls :is(a, button) + :is(a, button) { border-top: 1px solid var(--plate-rule); }
+  body:has(.horizon-page) .site-meta-row { border: 0; }
+  body:has(.horizon-page) .site-meta-row :is(.licence-label, .site-status, .site-status-kicker) { font: 600 10px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+
+  /* Footer: the three boxes become ruled ledger sections; the code-and-data terms a
+     stamped notice with a dashed border. */
+  body:has(.horizon-page) .foot :is(.foot-sources, .foot-links) { border: 0; border-radius: 0; background: none; box-shadow: none; padding-inline: 0; }
+  body:has(.horizon-page) .foot .foot-sources { border-top: 1px solid var(--plate-strong-rule); }
+  body:has(.horizon-page) .foot .foot-kicker { font: 600 10px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--plate-accent); }
+  body:has(.horizon-page) .foot :is(.foot-label, .foot-link-title) { font: 400 26px/1.15 Georgia, serif; letter-spacing: -.03em; color: var(--plate-ink); }
+  body:has(.horizon-page) .foot .foot-link-title { font-size: 22px; }
+  body:has(.horizon-page) .foot .foot-brief { font: 13px/1.8 var(--font-text); color: var(--text-secondary); }
+  body:has(.horizon-page) .foot .nc-tag { border-radius: 0; border: 1px solid var(--plate-accent); color: var(--plate-accent); font: 600 9px/1.4 var(--font-mono); letter-spacing: .1em; }
+  body:has(.horizon-page) .foot .foot-link-list { gap: 0; }
+  body:has(.horizon-page) .foot .foot-link-list a { padding: .6rem 1rem .9rem 0; border: 0; text-decoration: none; }
+  body:has(.horizon-page) .foot .foot-link-list a + a { border-left: 1px solid var(--plate-rule); padding-left: 1rem; }
+  body:has(.horizon-page) .foot .foot-link-list a .foot-link-title > span { color: var(--plate-accent); display: inline-block; transition: transform 200ms ease; }
+  body:has(.horizon-page) .foot .foot-link-list a:is(:hover, :focus-visible) .foot-link-title > span { transform: translateX(.3rem); }
+  body:has(.horizon-page) .foot .foot-notice {
+    border: 1.5px dashed var(--plate-ink); border-radius: 0; background: color-mix(in srgb, var(--plate-accent) 4%, transparent);
+    box-shadow: none; outline: 1px solid var(--plate-rule); outline-offset: 4px;
+  }
+  body:has(.horizon-page) .foot .foot-notice-title { font: 400 22px/1.2 Georgia, serif; color: var(--plate-ink); }
+  body:has(.horizon-page) .foot .foot-notice-head > svg { stroke: var(--plate-accent); }
+  body:has(.horizon-page) .foot .foot-policy-links .foot-tab { font: 600 10px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  @media (max-width: 700px) {
+    body:has(.horizon-page) .foot .foot-link-list a + a { border-left: 0; padding-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body:has(.horizon-page) .bar-desktop-tools :is(.bar-link, .bar-budget)::after, body:has(.horizon-page) .foot .foot-link-list a .foot-link-title > span { transition: none; }
+  }
+}
+
+@media screen {
+body:has(.horizon-page) main.horizon-page .state-facts { background:transparent !important; border:1px solid var(--glass-edge); border-radius:18px; }
+body:has(.horizon-page) main.horizon-page .state-facts > * + * { border-left-color:var(--glass-edge) !important; }
+body:has(.horizon-page) main.horizon-page .housing-mosaic.mosaic-embedded { background:transparent !important; border:0 !important; box-shadow:none !important; -webkit-backdrop-filter:none; backdrop-filter:none; }
+body:has(.horizon-page) main.horizon-page .more > summary { background:radial-gradient(120% 140% at 100% 0%, color-mix(in srgb,var(--plate-accent) 16%,transparent), transparent 60%), var(--glass) !important; border:1px solid var(--glass-edge) !important; border-radius:24px !important; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
+body:has(.horizon-page) main.horizon-page .more .more-kicker { color:var(--plate-accent) !important; }
+body:has(.horizon-page) main.horizon-page .more .more-copy strong, body:has(.horizon-page) main.horizon-page .more .more-copy > :first-child { font-family:Georgia,serif !important; }
+body:has(.horizon-page) main.horizon-page .exhibit-history, body:has(.horizon-page) main.horizon-page .history-interactive { background:transparent !important; }
+body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive { border-color:var(--glass-edge) !important; }
+}
+@media screen and (max-width: 760px) {
+  /* Over the photo band the title is always light, whatever the theme. */
+  body:has(.horizon-page) main.horizon-page > header.has-photo .page-title { color:#f7f4ee !important; }
+  body:has(.horizon-page) main.horizon-page > header.has-photo .state-nickname { background:linear-gradient(90deg,#f6a07a,#ffd59a); -webkit-background-clip:text; background-clip:text; }
+}
+@media screen { body:has(.horizon-page) main.horizon-page .section-jump-control { background:var(--glass) !important; border:1px solid var(--glass-edge) !important; color:var(--plate-ink) !important; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); } body:has(.horizon-page) main.horizon-page .section-jump-control * { color:var(--plate-ink) !important; opacity:1 !important; } }
+@media screen { body:has(.horizon-page) main.horizon-page.horizon-page .section-jump-control select { color:var(--plate-ink) !important; -webkit-text-fill-color:var(--plate-ink); } }
+
+/* State pages keep their blue (the site's colour code for a state): the same Horizon
+   paper, glass and glow, recoloured from rust and amber to state blue and sky. */
+@media screen {
+  body:has(.horizon-page) {
+    --plate-ink: light-dark(#1c2632, #e8eef5);
+    --plate-paper: light-dark(#ecf2f8, #0b1422);
+    --plate-accent: light-dark(#2f6db0, #7fb6ec);
+    --plate-sky: light-dark(#3f8fbf, #9fd4f2);
+    --plate-rule: light-dark(#1c263214, #e8eef514);
+    --plate-strong-rule: light-dark(#1c263226, #e8eef526);
+    --text-secondary: light-dark(#4c5a69, #aebccb);
+    --text-muted: light-dark(#738192, #8495a7);
+    --glass: light-dark(#ffffffa6, #ffffff0b);
+    --glass-edge: light-dark(#ffffff, #e8eef51f);
+    --state-blue: var(--plate-accent);
+  }
+  body:has(.horizon-page)::before {
+    background: radial-gradient(30% 40% at 25% 30%, light-dark(#7fb2e6,#1f5fa8) 0%, transparent 70%),
+                radial-gradient(28% 36% at 72% 22%, light-dark(#a9b8f5,#3b3fa8) 0%, transparent 70%),
+                radial-gradient(26% 30% at 55% 62%, light-dark(#8fd3e0,#14706f) 0%, transparent 70%) !important;
+    opacity: .6 !important;
+  }
+  body:has(.horizon-page) main.horizon-page .state-nickname { background: linear-gradient(90deg, var(--plate-accent), var(--plate-sky)); -webkit-background-clip: text; background-clip: text; }
+}
+@media screen and (max-width: 760px) {
+  body:has(.horizon-page) main.horizon-page > header.has-photo .state-nickname { background: linear-gradient(90deg, #a9d3ff, #c9f0ff); -webkit-background-clip: text; background-clip: text; }
+}
+
+/* Counties: the original one-line strip, refined for Horizon. One glass bar holds the
+   label, the arrows and the scrolling track; the track fades at both ends; pills are glass
+   with a blue hover. Still one line tall however many counties a state has. */
+@media screen {
+  body:has(.horizon-page) .county-strip { display:flex; align-items:center; gap:.5rem; margin:1.1rem 0 1.4rem; padding:.45rem .5rem .45rem 1rem; border:1px solid var(--glass-edge); border-radius:999px; background:var(--glass); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); box-shadow:0 18px 40px -32px #000c; }
+  body:has(.horizon-page) .county-strip-label { flex:none; margin-right:.2rem; font:600 11px/1.4 -apple-system,BlinkMacSystemFont,"Inter",sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); }
+  body:has(.horizon-page) .county-strip-track { display:flex; gap:.35rem; min-width:0; flex:1; overflow-x:auto; scroll-snap-type:x proximity; scrollbar-width:none; padding:.15rem .1rem; -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent); mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent); }
+  body:has(.horizon-page) .county-strip-track::-webkit-scrollbar { display:none; }
+  body:has(.horizon-page) main .county-strip-pill { flex:none; scroll-snap-align:start; display:inline-flex; align-items:center; min-height:44px; padding:0 .95rem; border:1px solid color-mix(in srgb,var(--plate-ink) 12%,transparent); border-radius:999px; background:color-mix(in srgb,var(--plate-paper) 40%,transparent); color:var(--plate-ink) !important; font:400 16px/1 Georgia,serif; text-decoration:none; white-space:nowrap; transition:background-color 150ms ease, border-color 150ms ease, color 150ms ease; }
+  body:has(.horizon-page) main .county-strip-pill:is(:hover,:focus-visible) { background:color-mix(in srgb,var(--plate-accent) 14%,transparent); border-color:color-mix(in srgb,var(--plate-accent) 35%,transparent); color:var(--plate-accent) !important; }
+  body:has(.horizon-page) .county-strip-arrow { flex:none; display:grid; place-items:center; width:44px; height:44px; padding:0; border:1px solid var(--glass-edge); border-radius:50%; background:var(--glass); color:var(--plate-accent); font:400 20px/1 Georgia,serif; cursor:pointer; transition:background-color 150ms ease; }
+  body:has(.horizon-page) .county-strip-arrow:hover { background:color-mix(in srgb,var(--plate-accent) 14%,transparent); }
+  @media (max-width:760px) {
+    body:has(.horizon-page) .county-strip { padding:.4rem; }
+    body:has(.horizon-page) .county-strip-label { display:none; }
+    body:has(.horizon-page) main .county-strip-pill { font-size:15px; padding:0 .8rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { body:has(.horizon-page) :is(main .county-strip-pill,.county-strip-arrow) { transition:none; } }
+}
+
+/* Field notes (2026-10-14): one frame, distinct content. Every exhibit keeps the glass
+   shell and serif heading, but carries its own colour field, puts its signature figure
+   up front at a size the others do not share, and the grid alternates full-width and
+   paired exhibits so the rhythm changes as you scroll. */
+@media screen {
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Home sales"] { --ex: light-dark(#b8742a,#f2b45c); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Buyer financing"] { --ex: light-dark(#1f8a80,#5fd4c6); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Income & housing pressure"] { --ex: light-dark(#7a52b3,#b99af0); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Against its own history"] { --ex: light-dark(#2f6db0,#7fb6ec); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="New homes"] { --ex: light-dark(#3f8a4a,#86d293); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Work & transit"] { --ex: light-dark(#5a6b80,#a9b8cc); }
+  body:has(.horizon-page) .learning-exhibit[data-exhibit="Broadband"] { --ex: light-dark(#1b84a8,#6fd0f0); }
+
+  body:has(.horizon-page) main.horizon-page .learning-exhibit {
+    background: radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, var(--ex) 22%, transparent), transparent 70%),
+                radial-gradient(70% 60% at 0% 100%, color-mix(in srgb, var(--ex) 10%, transparent), transparent 70%), var(--glass) !important;
+    border-color: color-mix(in srgb, var(--ex) 30%, var(--glass-edge)) !important;
+  }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit::before { background: linear-gradient(90deg, transparent, var(--ex), transparent); height: 3px; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit .exhibit-kicker > span:first-child { color: var(--ex) !important; border-color: color-mix(in srgb, var(--ex) 40%, transparent); background: color-mix(in srgb, var(--ex) 12%, transparent) !important; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit .exhibit-choice button[aria-pressed="true"],
+  body:has(.horizon-page) main.horizon-page .learning-exhibit [role="tab"][aria-selected="true"] { border-color: var(--ex) !important; background: color-mix(in srgb, var(--ex) 16%, transparent) !important; }
+
+  /* Signature figures, each its own scale. */
+  body:has(.horizon-page) main.horizon-page .learning-exhibit .exhibit-readout strong { display:block; font-size: clamp(56px, 7vw, 96px) !important; line-height: .95; letter-spacing: -.05em; color: var(--ex) !important; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit[data-exhibit="Buyer financing"] dd { font: 400 clamp(34px, 3.6vw, 48px)/1 Georgia, serif !important; letter-spacing: -.035em; color: var(--ex); }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit[data-exhibit="New homes"] .exhibit-content strong { font-size: clamp(48px, 5.5vw, 72px) !important; color: var(--ex); }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit[data-exhibit="Broadband"] dd { font: 400 30px/1 Georgia, serif !important; color: var(--ex); }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit[data-exhibit="Work & transit"] li:first-child,
+  body:has(.horizon-page) main.horizon-page .learning-exhibit[data-exhibit="Work & transit"] tr:first-child { font-size: 1.25em; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit[data-exhibit="Income & housing pressure"] :is(.income-pressure-bar i, [class*="bar"] > i) { background: var(--ex) !important; }
+
+  /* Rhythm: sales, history and broadband run full width; the rest pair up. */
+  @media (min-width: 761px) {
+    body:has(.horizon-page) .state-market-exhibits { grid-auto-flow: dense; gap: 1.2rem !important; }
+    body:has(.horizon-page) .state-market-exhibits > .learning-exhibit:is([data-exhibit="Home sales"],[data-exhibit="Against its own history"],[data-exhibit="Broadband"]) { grid-column: 1 / -1; }
+  }
+}
+
+/* Compact field notes: less padding and air, smaller headings, and the full-width cards
+   laid out side by side inside so they are short as well as wide. */
+@media screen {
+  body:has(.horizon-page) main.horizon-page .learning-exhibit { padding: .9rem 1.2rem 1rem !important; margin: 0 !important; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit .exhibit-kicker { margin-bottom: .2rem; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit .exhibit-content :is(h2,h3) { font-size: clamp(22px, 2.2vw, 28px) !important; margin: 0 0 .25rem !important; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit :is(.section, .section-head) { margin: 0 !important; padding: 0 !important; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit :is(.sales-note, p) { margin-block: .25rem !important; font-size: 13px; line-height: 1.45; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit :is(.exhibit-plot, figure) { margin: .4rem 0 !important; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit .reader-details > summary { min-height: 40px; }
+  body:has(.horizon-page) main.horizon-page .learning-exhibit .exhibit-readout strong { font-size: clamp(48px, 5.5vw, 76px) !important; }
+  body:has(.horizon-page) .state-market-exhibits { gap: .9rem !important; align-items: start; }
+  @media (min-width: 761px) {
+    /* Sales: the price and its quartile buttons on the left; the notes and details right. */
+    body:has(.horizon-page) [data-exhibit="Home sales"] .section.sales { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 2rem; align-items: start; }
+    body:has(.horizon-page) [data-exhibit="Home sales"] .section.sales > :is(.section-head, .sales-note:first-of-type) { grid-column: 1 / -1; }
+    body:has(.horizon-page) [data-exhibit="Home sales"] .section.sales > figure { grid-column: 1; grid-row: span 3; }
+    body:has(.horizon-page) [data-exhibit="Home sales"] .section.sales > :is(details, .sales-note:last-child) { grid-column: 2; }
+    /* History: the year and its reading beside the chart, not above it. */
+    body:has(.horizon-page) [data-exhibit="Against its own history"] .history-interactive { display: grid; grid-template-columns: minmax(150px, .28fr) minmax(0, 1fr); column-gap: 1.6rem; align-items: center; }
+    body:has(.horizon-page) [data-exhibit="Against its own history"] .history-interactive > :not(.exhibit-readout) { grid-column: 2; }
+    body:has(.horizon-page) [data-exhibit="Against its own history"] .history-interactive > .exhibit-readout { grid-column: 1; grid-row: 1 / span 3; }
+    /* Broadband: the figures in a row across the card. */
+    body:has(.horizon-page) [data-exhibit="Broadband"] dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem 1.5rem; }
+    body:has(.horizon-page) [data-exhibit="Broadband"] dl > div { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: .2rem; }
+  }
+}
+@media screen and (min-width: 761px) {
+  /* Pair cards of similar height so neither leaves a gap beside the other: the two short
+     ones (borrowing, work) together, then the two tall ones (pressure, new homes). */
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Home sales"] { order: 1; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Buyer financing"] { order: 2; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Work & transit"] { order: 3; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Against its own history"] { order: 4; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Income & housing pressure"] { order: 5; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="New homes"] { order: 6; }
+  body:has(.horizon-page) .state-market-exhibits > [data-exhibit="Broadband"] { order: 7; }
+  body:has(.horizon-page) .state-market-exhibits { align-items: stretch; }
+}
+
+/* On this page: a quiet line of text links under the title, no pills. */
+@media screen {
+  body:has(.horizon-page) .state-jump { display:flex; flex-wrap:wrap; align-items:baseline; gap:.2rem 0; margin-top:1.1rem; font:400 15px/1.5 -apple-system,BlinkMacSystemFont,"Inter",sans-serif; }
+  body:has(.horizon-page) .state-jump::before { content:"On this page"; margin-right:1rem; font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); }
+  body:has(.horizon-page) main .state-jump a { display:inline-flex; align-items:center; gap:.35rem; min-height:44px; padding:0; color:var(--plate-ink); text-decoration:none; background:none; border:0; }
+  body:has(.horizon-page) main .state-jump a + a::before { content:""; width:1px; height:14px; margin:0 .9rem; background:var(--plate-strong-rule); }
+  body:has(.horizon-page) main .state-jump a span { background:linear-gradient(var(--plate-accent),var(--plate-accent)) no-repeat 0 100% / 0 1.5px; padding-bottom:2px; transition:background-size 220ms cubic-bezier(.22,1,.36,1), color 150ms ease; }
+  body:has(.horizon-page) main .state-jump a i { font-style:normal; font-size:.85em; color:var(--plate-accent); transition:transform 180ms ease; }
+  body:has(.horizon-page) main .state-jump a:is(:hover,:focus-visible) span { background-size:100% 1.5px; color:var(--plate-accent); }
+  body:has(.horizon-page) main .state-jump a:is(:hover,:focus-visible) i { transform:translateY(2px); }
+  body:has(.horizon-page) :is(#field-notes, #state-next-step-heading, #state-detailed-data) { scroll-margin-top:90px; }
+
+  /* Breadcrumb: plain text with a slash, matching the page's quieter type. The current
+     place is ink, the way back is the state accent. */
+  body:has(.horizon-page) main .crumbs ol { display:flex; flex-wrap:wrap; align-items:center; gap:0; margin:0; padding:0; list-style:none; }
+  body:has(.horizon-page) main .crumbs li { display:inline-flex; align-items:center; padding:0 !important; border:0 !important; background:none !important; box-shadow:none !important; font:500 13px/1.4 -apple-system,BlinkMacSystemFont,"Inter",sans-serif !important; letter-spacing:0 !important; text-transform:none !important; color:var(--plate-ink) !important; }
+  body:has(.horizon-page) main .crumbs li::before, body:has(.horizon-page) main .crumbs li::after { content:none !important; }
+  body:has(.horizon-page) main .crumbs li + li::before { content:"/" !important; margin:0 .55rem; color:var(--text-muted); }
+  body:has(.horizon-page) main .crumbs a { display:inline-flex; align-items:center; min-height:32px; padding:0 !important; border:0 !important; border-radius:0 !important; background:none !important; box-shadow:none !important; color:var(--text-secondary) !important; font:inherit !important; letter-spacing:0 !important; text-transform:none !important; text-decoration:none; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+  body:has(.horizon-page) main .crumbs a > span[aria-hidden] { display:none; }
+  body:has(.horizon-page) main .crumbs a:is(:hover,:focus-visible) { color:var(--plate-accent) !important; text-decoration:underline; text-underline-offset:3px; }
+  @media (max-width:760px) {
+    body:has(.horizon-page) main > header.has-photo .crumbs li { color:#f7f4ee !important; }
+    body:has(.horizon-page) main > header.has-photo .crumbs a { color:#dfe8f1 !important; }
+    body:has(.horizon-page) main > header.has-photo .crumbs li + li::before { color:#c9d6e3; }
+    body:has(.horizon-page) .state-jump::before { width:100%; margin:0 0 -.4rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { body:has(.horizon-page) main .state-jump a :is(span,i) { transition:none; } }
+
+  /* Field notes heading: separates the exhibits from the snapshot above. */
+  body:has(.horizon-page) .field-notes-head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:.3rem 1.2rem; margin:2.6rem 0 1rem; padding-top:1.4rem; border-top:1px solid var(--plate-strong-rule); }
+  body:has(.horizon-page) .field-notes-head h2 { margin:0; font:400 clamp(32px,3.6vw,46px)/1.05 Georgia,serif; letter-spacing:-.035em; color:var(--plate-ink); }
+  body:has(.horizon-page) .field-notes-head p { margin:0; max-width:52ch; font-size:14px; color:var(--text-secondary); }
+  @media (max-width:760px) { body:has(.horizon-page) main .state-jump a { font-size:13px; padding:0 .8rem; } }
+  @media (prefers-reduced-motion: reduce) { body:has(.horizon-page) main .state-jump a, body:has(.horizon-page) main .state-jump a i { transition:none; } }
+}
+@media screen {
+  body:has(.horizon-page) main .state-jump a { color:var(--plate-ink) !important; }
+  body:has(.horizon-page) main .state-jump a:is(:hover,:focus-visible) { color:var(--plate-accent) !important; }
+}
+@media screen and (max-width: 760px) {
+  body:has(.horizon-page) main .state-jump { column-gap:1.1rem; }
+  body:has(.horizon-page) main .state-jump a + a::before { display:none; }
+}
