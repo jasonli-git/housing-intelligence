@@ -25,6 +25,7 @@ import "./state-navigation.css";
 import "./home-refresh.css";
 import "./data-scale.css";
 import "./landing-search-first.css";
+import "./home-plate.css";
 
 export const metadata: Metadata = pageMetadata({
   title: "Housing Intelligence — Find your place",
@@ -43,7 +44,8 @@ export default async function HousingLandingPage() {
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
       <div className="landing-canvas">
       <header className="page-head nation-head" data-kind="nation">
-        <h1>Housing Intelligence</h1>
+        <p className="plate-kicker" aria-hidden="true"><span>Plate I</span><span>The United States</span><span>39.8° N · 98.6° W</span></p>
+        <h1>Housing <em>Intelligence</em></h1>
         <p className="entry-introduction">Housing costs. Local context. Clear sources.</p>
         <details className="entry-free-assurance"><summary className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees or ads</span></summary><p>No fees, subscriptions or advertisements. Free to use.</p></details>
       </header>
@@ -76,10 +78,11 @@ export default async function HousingLandingPage() {
         <p className="national-backdrop-note">Each trend uses its own scale. Historical figures, not forecasts.</p>
       </section>
       <section className="home-tools" aria-labelledby="home-tools-heading">
-        <h2 id="home-tools-heading">Tools</h2>
+        <h2 id="home-tools-heading">Tools <span aria-hidden="true">— an index</span></h2>
         <ul>
-          {HOME_TOOLS.map((tool) => <li key={tool.href}>
+          {HOME_TOOLS.map((tool, i) => <li key={tool.href}>
             <Link href={tool.href} data-tool={tool.href.slice(1)}>
+              <span className="home-tool-index" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d={tool.icon} /></svg>
               <span className="home-tool-title">{tool.title} <span aria-hidden="true">→</span></span>
               <span className="home-tool-text">{tool.text}</span>
