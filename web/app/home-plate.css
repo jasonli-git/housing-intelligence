@@ -2,7 +2,7 @@
    masthead, a stamped search, the national figures as a market box and the tools as an
    index. Presentation only; every control and its order is unchanged. */
 @media screen {
-  .search-first-home {
+  body:has(.search-first-home) {
     --plate-ink: light-dark(#1f2a33, #e9e4d8);
     --plate-paper: light-dark(#f4efe4, #15191c);
     --plate-rule: light-dark(#1f2a3326, #e9e4d824);
@@ -88,5 +88,55 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .search-first-home .home-tools a[data-tool], .search-first-home .home-tool-title > span, .search-first-home .coverage-search-panel .place-search-hero input { transition: none; }
+  }
+}
+
+/* Top menu (home only): a masthead strip on the paper, ruled in ink, small-caps links
+   with a rust underline that draws in. Same links, same order, same menu on phones. */
+@media screen {
+  .search-first-home .bar { border-bottom: 2px solid var(--plate-ink); box-shadow: none; }
+  .search-first-home .bar .wordmark { font: 400 21px/1 Georgia, serif; letter-spacing: -.03em; color: var(--plate-ink); }
+  .search-first-home .bar .bar-home { font: 600 12px/1 var(--font-mono); letter-spacing: .1em; }
+  .search-first-home .bar :is(.bar-link, .bar-budget) {
+    position: relative; border: 0; border-radius: 0; background: none; box-shadow: none;
+    font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--plate-ink);
+  }
+  .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget)::after {
+    content: ""; position: absolute; left: .55rem; right: .55rem; bottom: .3rem; height: 2px; background: var(--plate-accent);
+    transform: scaleX(0); transform-origin: left; transition: transform 220ms cubic-bezier(.22, 1, .36, 1);
+  }
+  .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget):is(:hover, :focus-visible)::after { transform: scaleX(1); }
+  .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget) + :is(.bar-link, .bar-budget) { border-left: 1px solid var(--plate-rule); }
+  .search-first-home .bar-tool-menu > summary { border: 1.5px solid var(--plate-ink); border-radius: 3px; font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; box-shadow: 3px 3px 0 var(--plate-rule); }
+  .search-first-home .bar-tool-menu .bar-controls { border: 1.5px solid var(--plate-ink); border-radius: 3px; background: var(--plate-paper); box-shadow: 5px 5px 0 var(--plate-ink); }
+  .search-first-home .bar-tool-menu .bar-controls :is(a, button) + :is(a, button) { border-top: 1px solid var(--plate-rule); }
+  .search-first-home .site-meta-row { border-bottom: 1px solid var(--plate-rule); }
+  .search-first-home .site-meta-row :is(.licence-label, .site-status, .site-status-kicker) { font: 600 10px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+
+  /* Footer: the three boxes become ruled ledger sections; the code-and-data terms a
+     stamped notice with a dashed border. */
+  body:has(.search-first-home) .foot :is(.foot-sources, .foot-links) { border: 0; border-radius: 0; background: none; box-shadow: none; border-top: 3px solid var(--plate-ink); padding-inline: 0; }
+  body:has(.search-first-home) .foot .foot-kicker { font: 600 10px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--plate-accent); }
+  body:has(.search-first-home) .foot :is(.foot-label, .foot-link-title) { font: 400 26px/1.15 Georgia, serif; letter-spacing: -.03em; color: var(--plate-ink); }
+  body:has(.search-first-home) .foot .foot-link-title { font-size: 22px; }
+  body:has(.search-first-home) .foot .foot-brief { font: 13px/1.8 var(--font-text); color: var(--text-secondary); }
+  body:has(.search-first-home) .foot .nc-tag { border-radius: 0; border: 1px solid var(--plate-accent); color: var(--plate-accent); font: 600 9px/1.4 var(--font-mono); letter-spacing: .1em; }
+  body:has(.search-first-home) .foot .foot-link-list { gap: 0; }
+  body:has(.search-first-home) .foot .foot-link-list a { padding: .9rem 1rem .9rem 0; border-top: 1px solid var(--plate-rule); text-decoration: none; }
+  body:has(.search-first-home) .foot .foot-link-list a + a { border-left: 1px solid var(--plate-rule); padding-left: 1rem; }
+  body:has(.search-first-home) .foot .foot-link-list a .foot-link-title > span { color: var(--plate-accent); display: inline-block; transition: transform 200ms ease; }
+  body:has(.search-first-home) .foot .foot-link-list a:is(:hover, :focus-visible) .foot-link-title > span { transform: translateX(.3rem); }
+  body:has(.search-first-home) .foot .foot-notice {
+    border: 1.5px dashed var(--plate-ink); border-radius: 0; background: color-mix(in srgb, var(--plate-accent) 4%, transparent);
+    box-shadow: none; outline: 1px solid var(--plate-rule); outline-offset: 4px;
+  }
+  body:has(.search-first-home) .foot .foot-notice-title { font: 400 22px/1.2 Georgia, serif; color: var(--plate-ink); }
+  body:has(.search-first-home) .foot .foot-notice-head > svg { stroke: var(--plate-accent); }
+  body:has(.search-first-home) .foot .foot-policy-links .foot-tab { font: 600 10px/1.4 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  @media (max-width: 700px) {
+    body:has(.search-first-home) .foot .foot-link-list a + a { border-left: 0; padding-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .search-first-home .bar-desktop-tools :is(.bar-link, .bar-budget)::after, body:has(.search-first-home) .foot .foot-link-list a .foot-link-title > span { transition: none; }
   }
 }
