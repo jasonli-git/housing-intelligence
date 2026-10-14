@@ -26,6 +26,7 @@ import "./home-refresh.css";
 import "./data-scale.css";
 import "./landing-search-first.css";
 import "./home-plate.css";
+import "./home-horizon.css";
 
 export const metadata: Metadata = pageMetadata({
   title: "Housing Intelligence — Find your place",
@@ -67,7 +68,7 @@ export default async function HousingLandingPage() {
             </> : <p>Mortgage-rate data is unavailable in this snapshot.</p>}
           </section>
           <section className="national-benchmark" aria-labelledby="national-home-prices-heading">
-            <h3 id="national-home-prices-heading">Home prices · past year</h3>
+            <h3 id="national-home-prices-heading">Home prices, change over the past year</h3>
             {homePrices ? <>
               <div className="national-rate"><strong>{homePrices.pct_change > 0 ? "+" : ""}{homePrices.pct_change.toFixed(1)}%</strong><small>{periodLabel(homePrices.period_start, "fhfa_hpi_us_monthly")} → {periodLabel(homePrices.period_end, "fhfa_hpi_us_monthly")} · <a href="https://www.fhfa.gov/data/hpi/datasets?tab=monthly-data" target="_blank" rel="noreferrer noopener">FHFA HPI®</a></small></div>
               <div className="national-benchmark-definition"><FloatingMetricTerm metricId="fhfa_hpi_us_monthly" label="Annual change · Single-family homes" definition="Calculated from FHFA’s national purchase-only house price index: the latest published month compared with the same month a year earlier. Seasonally adjusted, not adjusted for inflation. Covers homes financed with mortgages bought or securitized by Fannie Mae or Freddie Mac—not every home or your home's value. The plot shows annual percentage changes for successive months, not index levels. Historical figures may be revised." why={null} /></div>

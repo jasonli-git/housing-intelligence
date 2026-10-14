@@ -44,7 +44,8 @@
   .search-first-home .national-backdrop > header > span { font: 600 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--plate-accent); }
   .search-first-home.search-first-home .national-backdrop .national-benchmark { border: 0; border-radius: 0; background: none; box-shadow: none; padding: .6rem 1.6rem .4rem 0; }
   .search-first-home.search-first-home .national-backdrop .national-benchmark + .national-benchmark { border-left: 1px solid var(--plate-rule); padding-left: 1.6rem; }
-  .search-first-home .national-benchmark h3 { font: 600 11px/1.4 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text-secondary); }
+  /* The metric names lead each figure, large enough to read before the number. */
+  .search-first-home .national-benchmark h3 { margin-bottom: .2rem; font: 400 clamp(20px, 2vw, 24px)/1.25 Georgia, serif; letter-spacing: -.015em; text-transform: none; color: var(--plate-ink); }
   .search-first-home .national-backdrop .national-rate > strong { font: 400 clamp(52px, 6vw, 76px)/1 Georgia, serif; letter-spacing: -.05em; color: var(--plate-ink); font-variant-numeric: lining-nums; }
   .search-first-home .national-backdrop-grid { gap: 0; }
 
