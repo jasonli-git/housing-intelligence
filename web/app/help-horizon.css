@@ -1,0 +1,48 @@
+/* Housing help in the Horizon theme (2026-10-15), like the other tools: step 1 asks which
+   office the reader needs, by situation; step 2 is the property search, open. Its colour is
+   the help link colour site-wide — sage — on a pale moss paper with a sage, lichen and
+   fern glow, greyer and yellower than the county pages' green. Presentation only. */
+@media screen {
+  body:has(main.horizon-page[data-region-level="help"]) {
+    --plate-ink: light-dark(#22261b, #e8ecdf); --plate-paper: light-dark(#f1f2e8, #0b0d08);
+    --plate-accent: light-dark(#59654a, #c4d1b2);
+    --plate-rule: light-dark(#22261b14, #e8ecdf14); --plate-strong-rule: light-dark(#22261b26, #e8ecdf26);
+    --text-secondary: light-dark(#545c47, #b3bba5); --text-muted: light-dark(#7a8270, #8a927e);
+    --glass: light-dark(#fbfcf6b3, #ffffff0b); --glass-edge: light-dark(#ffffff, #e8ecdf1f);
+    --budget-accent: var(--plate-accent); --atlas-accent: var(--plate-accent);
+  }
+  body:has(main.horizon-page[data-region-level="help"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#c3cfa3,#4f5f2a) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#dcd9a0,#5d5a1f) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#a9c4a0,#2f4a2a) 0%, transparent 70%) !important; opacity: .55 !important; }
+
+  .horizon-page.housing-help-page > .page-head { padding-block: 1.4rem .6rem; }
+  .horizon-page.housing-help-page .kind { display: inline-flex; margin: .9rem 0 .2rem; padding: .2rem .65rem; border: 1px solid var(--glass-edge); border-radius: 999px; background: var(--glass); color: var(--text-secondary); font: 600 11px/1.4 var(--font-mono); letter-spacing: .1em; }
+  .horizon-page.housing-help-page .kind::before { display: none; }
+  .horizon-page.housing-help-page .tool-subtitle { max-width: 60ch; color: var(--text-secondary); font-size: clamp(15px, 1.6vw, 18px); line-height: 1.5; }
+
+  /* Step 1: three situations, each a large card. */
+  .horizon-page .help-routes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin: 0; }
+  .horizon-page .help-routes a {
+    display: grid; align-content: start; gap: .45rem; padding: 1.2rem 1.25rem; border-radius: 24px; text-decoration: none;
+    border: 1.5px solid color-mix(in srgb, var(--plate-accent) 55%, transparent) !important;
+    background: color-mix(in srgb, var(--plate-accent) 7%, var(--glass)) !important; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    box-shadow: 0 24px 50px -36px #000c; color: var(--plate-ink) !important; transition: transform 160ms ease, border-color 160ms ease;
+  }
+  .horizon-page .help-routes a:hover { transform: translateY(-2px); border-color: var(--plate-accent) !important; }
+  .horizon-page .help-routes .step-icon { width: 28px; height: 28px; fill: none; stroke: var(--plate-accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .help-when { font: 400 clamp(20px, 2.2vw, 24px)/1.2 Georgia, serif; letter-spacing: -.02em; }
+  .horizon-page .help-routes strong { font: 600 14px/1.3 var(--font-text); color: var(--plate-accent); }
+  .horizon-page .help-routes small { font: 600 10px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+  @media (prefers-reduced-motion: reduce) { .horizon-page .help-routes a { transition: none; } .horizon-page .help-routes a:hover { transform: none; } }
+
+  /* Step 2: the property search, open, in glass. */
+  .horizon-page .housing-assistance[data-tool="true"] .assistance-inventory { padding: 1.1rem 1.3rem; border: 1px solid var(--glass-edge) !important; border-radius: 24px; background: var(--glass) !important; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 24px 50px -36px #000c; }
+  .horizon-page .housing-assistance[data-tool="true"] .assistance-inventory > summary { pointer-events: none; list-style: none; font: 400 22px/1.2 Georgia, serif; letter-spacing: -.02em; }
+  .horizon-page .housing-assistance[data-tool="true"] .assistance-inventory > summary::-webkit-details-marker { display: none; }
+  .horizon-page .housing-assistance[data-tool="true"] .assistance-inventory > summary span { display: block; margin-top: .2rem; font: 500 12px/1.4 var(--font-text); color: var(--text-muted); }
+  .horizon-page .housing-assistance[data-tool="true"] .assistance-filter :is(input[type="search"], select) { min-height: 44px; border-radius: 12px; border: 1px solid var(--plate-strong-rule); background: color-mix(in srgb, var(--plate-paper) 75%, transparent); color: var(--plate-ink); padding-inline: .8rem; }
+  .horizon-page .housing-assistance[data-tool="true"] .assistance-property { border-radius: 18px; border: 1px solid var(--plate-strong-rule); background: color-mix(in srgb, var(--plate-paper) 55%, transparent); }
+  .horizon-page .housing-assistance[data-tool="true"] .assistance-property strong { font: 400 20px/1.2 Georgia, serif; }
+  .horizon-page .housing-assistance[data-tool="true"] .assistance-method { margin-top: 1rem; }
+  .horizon-page .housing-assistance[data-tool="true"] .assistance-note { font-size: 13px; color: var(--text-muted); }
+}
+@media screen { .horizon-page .help-routes a::before { content: none !important; display: none !important; } }
+@media screen { .horizon-page .housing-assistance[data-tool="true"] .assistance-property footer { display: flex; flex-wrap: wrap; gap: .4rem 1rem; } .horizon-page .housing-assistance[data-tool="true"] .assistance-property footer a { color: var(--plate-accent) !important; font-weight: 600; } }

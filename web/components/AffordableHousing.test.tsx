@@ -15,10 +15,11 @@ describe("Programme panel presentation", () => {
   it("puts official routes ahead of the optional historical archive in the help tool", () => {
     const html = renderToStaticMarkup(<AffordableHousing data={data} tool />);
     expect(html).toContain("Choose your next step");
-    expect(html).toContain('<details class="assistance-inventory">');
-    expect(html).toContain("Historical records—not current vacancies");
+    expect(html).toContain("Which do I need?");
+    expect(html).toContain('<details class="assistance-inventory" open="">');
+    expect(html).toContain("Past records — not a list of current openings");
     expect(html).not.toContain("What towns report");
-    expect(html).toContain("vacancies");
+    expect(html).toContain("waiting lists");
     expect(html.match(/target="_blank"/g)?.length).toBe(3);
   });
   it("keeps independent inventory disclosures unchanged outside the local wrapper", () => {
