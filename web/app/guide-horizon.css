@@ -1,17 +1,17 @@
 /* The buyer's guide in the Horizon theme (2026-10-15), like Where can I afford?: numbered
    steps with step 1 in the accent, then three stacked answers, each opening with a verdict.
-   Its own colour is the guide's link colour site-wide — rose — on a blush paper with a
-   rose, plum and peach glow. Presentation only. */
+   Its own colour is the guide's link colour site-wide — rose — on a pink paper with a
+   rose, orchid and raspberry glow — no orange, so it never reads as the Budget explorer. Presentation only. */
 @media screen {
   body:has(main.horizon-page[data-region-level="guide"]) {
-    --plate-ink: light-dark(#2a1a1f, #f3e4e8); --plate-paper: light-dark(#f8edf0, #120a0d);
+    --plate-ink: light-dark(#2a1622, #f4e2ec); --plate-paper: light-dark(#f9ecf3, #120810);
     --plate-accent: light-dark(#925460, #d7a3ad);
     --plate-rule: light-dark(#2a1a1f14, #f3e4e814); --plate-strong-rule: light-dark(#2a1a1f26, #f3e4e826);
     --text-secondary: light-dark(#644a52, #c3a9b0); --text-muted: light-dark(#8e737b, #947a82);
     --glass: light-dark(#fff8fab3, #ffffff0b); --glass-edge: light-dark(#ffffff, #f3e4e81f);
     --budget-accent: var(--plate-accent); --atlas-accent: var(--plate-accent);
   }
-  body:has(main.horizon-page[data-region-level="guide"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#eba6b6,#8f2f4a) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#cdb0e0,#5b2a6e) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#f4c7a6,#8a4a2a) 0%, transparent 70%) !important; opacity: .55 !important; }
+  body:has(main.horizon-page[data-region-level="guide"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#eea2c4,#93285e) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#d9a8d8,#6a2266) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#f2b3cf,#7d2448) 0%, transparent 70%) !important; opacity: .55 !important; }
 
   .horizon-page.guide-page > .page-head { padding-block: 1.4rem .6rem; }
   .horizon-page.guide-page .page-head .meta { max-width: 60ch; color: var(--text-secondary); font-size: clamp(15px, 1.6vw, 18px); line-height: 1.5; }
