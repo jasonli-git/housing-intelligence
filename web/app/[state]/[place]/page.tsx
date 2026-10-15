@@ -724,7 +724,7 @@ export default async function RegionPage({
       </section>
       <div id="place-explore">
       <SimilarPlaces name={name} data={similar} />
-      {region.level === "county" && countyTowns.length > 0 && <CountyPlaces name={name} towns={countyTowns.map(t => ({id: t.region_id, name: displayName(t)}))} />}
+      {region.level === "county" && countyTowns.length > 0 && <CountyPlaces name={name} towns={countyTowns.map(t => ({id: t.region_id, name: countyTowns.filter(o => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, c => c.toUpperCase()) : displayName(t)}))} />}
       </div>
 
       <MoreExpander id="region-detailed-data" title={moreTitle} sub={quiet ? "Figures, trends & sources. Explore the detail." : `For the full picture: ${listed(contents)}.`}>

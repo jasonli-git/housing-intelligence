@@ -14,3 +14,32 @@
 @media screen and (max-width: 600px) {
   .site-meta-row:has(.licence-box[open]) .licence { flex-basis: 100% !important; }
 }
+
+/* The skip link is for keyboards; on a phone it only sat behind the search box. */
+@media screen and (max-width: 600px) { .skip-link { display: none !important; } }
+
+/* The Tools menu (2026-10-15), set apart from the search box beside it: a solid ink pill
+   with a small grid mark instead of a second outlined box, and its menu a rounded, frosted
+   card with each tool on its own row. Same links. */
+@media screen {
+  :root body .bar-tool-menu > summary {
+    gap: .45rem; border: 0 !important; border-radius: 999px !important; box-shadow: none !important;
+    background: var(--plate-ink, var(--text-primary)) !important; color: var(--plate-paper, var(--surface-1)) !important;
+    font: 600 11px/1.4 var(--font-mono) !important; letter-spacing: .1em !important; text-transform: uppercase;
+  }
+  :root body .bar-tool-menu > summary::before {
+    content: ""; width: 12px; height: 12px; flex: 0 0 auto; background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Crect width='5' height='5' rx='1.2'/%3E%3Crect x='7' width='5' height='5' rx='1.2'/%3E%3Crect y='7' width='5' height='5' rx='1.2'/%3E%3Crect x='7' y='7' width='5' height='5' rx='1.2'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Crect width='5' height='5' rx='1.2'/%3E%3Crect x='7' width='5' height='5' rx='1.2'/%3E%3Crect y='7' width='5' height='5' rx='1.2'/%3E%3Crect x='7' y='7' width='5' height='5' rx='1.2'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  :root body .bar-tool-menu > summary > span[aria-hidden] { display: none; }
+  :root body .bar-tool-menu[open] > summary { background: color-mix(in srgb, var(--plate-ink, var(--text-primary)) 85%, var(--plate-accent, var(--text-secondary))) !important; }
+  :root body .bar-tool-menu .bar-controls {
+    border: 1px solid light-dark(#ffffff, #ffffff24) !important; border-radius: 18px !important; padding: .35rem !important;
+    background: light-dark(#fffffff2, #16181cf5) !important; -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%);
+    box-shadow: 0 24px 50px -24px #000a !important;
+  }
+  :root body .bar-tool-menu .bar-controls :is(a, button) { border-radius: 12px !important; border: 0 !important; }
+  :root body .bar-tool-menu .bar-controls :is(a, button) + :is(a, button) { border-top: 0 !important; }
+  :root body .bar-tool-menu .bar-controls :is(a, button):is(:hover, :focus-visible) { background: color-mix(in srgb, var(--plate-ink, var(--text-primary)) 8%, transparent) !important; }
+}
