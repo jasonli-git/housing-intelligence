@@ -494,7 +494,11 @@ tracts (most new insight, about 2,000 more pages) were the strongest cases.
         and ZIP counts, and fiber too** — built as `fcc_bdc_locations` (ARCHITECTURE
         #372) on `feature/broadband-places`; first run 2026-10-14 on D25 (served file
         from the API, fiber file from the page): 1,184 places, statewide 77.0% of
-        locations with a fiber offer, 11,946 with no wired 100/20 offer.
+        locations with a fiber offer, 11,946 with no wired 100/20 offer. Merged as #163
+        and deployed 2026-10-14. **Owner replied to Mark 2026-10-14** (request 77754),
+        thanking him and describing the method — block counts only, no Location IDs,
+        town and ZIP totals with FCC attribution — and asking to hear if it raises any
+        Fabric-licensing concern. Awaiting any reply; none is needed to keep publishing.
       - **Towns without the Fabric, measured 2026-10-07:** the FCC's New Jersey
         Census-place summary (701 places, owner's download) covers 323 of 564 towns
         exactly — every borough (252), city (52), town (15) and village (3), and no
