@@ -200,6 +200,40 @@ export function AffordExplorer({
   const stripRows = countyRows.filter((row) => row.missing.length === 0);
   const stripMax = Math.max(budget, ...stripRows.map((row) => row.monthly)) * 1.04;
   const verb = mode === "own" ? "buy" : "rent";
+  // MOCKUP (2026-10-15): three places for "check a specific place", chosen by ?check=.
+  const [checkLayout, setCheckLayout] = useState<"bottom" | "beside" | "toggle">("bottom");
+  const [view, setView] = useState<"fit" | "check">("fit");
+  useEffect(() => {
+    const value = new URLSearchParams(window.location.search).get("check");
+    if (value === "beside" || value === "toggle") setCheckLayout(value);
+  }, []);
+  const picker = (
+    <PlacePicker
+      key={picked ?? "none"}
+      className="place-search"
+      entries={entries}
+      onPick={(entry) => {
+        setPicked(entry.id);
+        const place = places.find((place) => place.id === entry.id);
+        if (scope && place) setCountyId(place.level === "county" ? place.id : place.parentId ?? null);
+      }}
+      label="A town or county to check"
+      placeholder="Type a town or county"
+      name="check-place"
+      initialQuery={pickedPlace?.name ?? ""}
+      keepPicked
+    />
+  );
+  const verdict = (row: Reached | null, what: string) => row === null
+    ? <li><span>{what}</span><em>No figure</em></li>
+    : <li data-fits={row.within}><span>{what}</span><b>{money(row.monthly)}<small>/mo</small></b>
+        <em>{row.missing.length > 0 ? "Incomplete estimate" : row.within ? `Fits · ${money(budget - row.monthly)} to spare` : `Over by ${money(row.monthly - budget)}`}</em></li>;
+  const quick = pickedPlace && check ? (
+    <div className="wca-quick-result">
+      <Link href={regionPath(pickedPlace.id)}>{pickedPlace.name}</Link>
+      <ul>{verdict(check.own, "Buy")}{verdict(check.rent, "Rent")}</ul>
+    </div>
+  ) : <p className="wca-quick-empty">Type a town or county to see if its typical home fits {money(budget)} a month.</p>;
 
   return (
     <section className="afford budget-explorer wca" data-view="list" data-has-income={income > 0} aria-label="Find places within your budget">
@@ -299,6 +333,14 @@ export function AffordExplorer({
 
       {income > 0 && <>
         <div className="wca-step-label"><span>3</span>Where it fits</div>
+        {checkLayout === "toggle" && <div className="seg wca-view" role="radiogroup" aria-label="Show">
+          <button type="button" role="radio" aria-checked={view === "fit"} onClick={() => setView("fit")}>Towns that fit</button>
+          <button type="button" role="radio" aria-checked={view === "check"} onClick={() => setView("check")}>Check one place</button>
+        </div>}
+        {checkLayout === "toggle" && view === "check" ? <section className="wca-check-view">
+          {picker}
+          {quick}
+        </section> : <>
         <div className="wca-answer" id={`${id}-summary`} aria-live="polite">
           <p className="wca-count"><b>{townsWithin.length}</b> {townsWithin.length === 1 ? "town" : "towns"}</p>
           <p className="wca-sentence">
@@ -312,7 +354,7 @@ export function AffordExplorer({
           </p>}
         </div>
 
-        <div className="wca-results">
+        <div className="wca-results" data-check={checkLayout}>
           {townsWithin.length > 0 && <section className="budget-town-results wca-list" aria-labelledby={`${id}-towns`}>
             <h2 id={`${id}-towns`}>Within your budget</h2>
             <ol>
@@ -344,6 +386,11 @@ export function AffordExplorer({
               ))}
             </ol>
           </section>}
+          {checkLayout === "beside" && <section className="wca-list wca-quick" aria-label="Check a specific place">
+            <h2>Check a specific place</h2>
+            {picker}
+            {quick}
+          </section>}
         </div>
 
         {!scope && stripRows.length > 0 && <section className="budget-comparison wca-strip" aria-labelledby={`${id}-strip`}>
@@ -367,30 +414,17 @@ export function AffordExplorer({
           Typical costs from published figures, not listings or loan approval{mode === "own" ? " — HOA fees and flood insurance aren’t included" : " — rent only, no utilities"}.
           {unlisted > 0 && <> {unlisted} towns without {mode === "own" ? "a home value or tax bill" : "a rent figure"} aren’t listed; that doesn’t make them unaffordable.</>}
         </p>
+        </>}
       </>}
 
-      <details className="budget-place-check" open={pickedPlace && income > 0 ? true : undefined}>
+      {(checkLayout === "bottom" || income <= 0) && <details className="budget-place-check" open={pickedPlace && income > 0 ? true : undefined}>
       <summary>Check a specific town or county{pickedPlace ? ` · ${pickedPlace.name}` : ""}</summary>
       <section className="check" aria-labelledby={`${id}-check`}>
         <div className="check-head">
           <h2 id={`${id}-check`} className="check-title">
             Can I afford a specific place?
           </h2>
-          <PlacePicker
-            key={picked ?? "none"}
-            className="place-search"
-            entries={entries}
-            onPick={(entry) => {
-              setPicked(entry.id);
-              const place = places.find((place) => place.id === entry.id);
-              if (scope && place) setCountyId(place.level === "county" ? place.id : place.parentId ?? null);
-            }}
-            label="A town or county to check"
-            placeholder="Type a town or county"
-            name="check-place"
-            initialQuery={pickedPlace?.name ?? ""}
-            keepPicked
-          />
+          {picker}
         </div>
         {pickedPlace && check ? (
           <>
@@ -426,7 +460,11 @@ export function AffordExplorer({
           </p>
         )}
       </section>
-      </details>
+      </details>}
+
+      <nav className="wca-mock-switch" aria-label="Mockup layouts">Mockup · check a place:
+        {(["bottom", "beside", "toggle"] as const).map((layout) => <button key={layout} type="button" aria-pressed={checkLayout === layout} onClick={() => { setCheckLayout(layout); setView("fit"); }}>{layout === "bottom" ? "At the bottom" : layout === "beside" ? "Beside results" : "Toggle"}</button>)}
+      </nav>
 
       <details className="afford-notes"><summary>How we estimate</summary><p className="table-note">
         {mode === "own" ? (
