@@ -38,7 +38,12 @@ export default async function GuidePage() {
             />
             <Kind kind="tool" />
             <h1 className="page-title">Thinking of buying here?</h1>
-            <p className="meta">Pick a New Jersey place and add your household. Get three answers: can you afford it, should you rent or buy, and what to check before an offer.</p>
+            <p className="meta">Three answers for any place in New Jersey.</p>
+            <ol className="guide-promise" aria-label="What the guide answers">
+              <li><a href="#guide-afford-heading"><small>01</small>Can I afford it?</a></li>
+              <li><a href="#guide-rent-heading"><small>02</small>Rent or buy?</a></li>
+              <li><a href="#guide-checks-heading"><small>03</small>Before an offer</a></li>
+            </ol>
           </div>
         </header>
         {rate ? (

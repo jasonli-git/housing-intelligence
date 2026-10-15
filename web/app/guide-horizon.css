@@ -87,3 +87,17 @@
     .guide-tiles { grid-template-columns: minmax(0, 1fr); }
   }
 }
+@media screen {
+  /* The tagline: one short line, then the three questions as numbered pills. */
+  .guide-promise { display: flex; flex-wrap: wrap; gap: .5rem; margin: .7rem 0 0; padding: 0; list-style: none; }
+  .guide-promise a { display: inline-flex; align-items: baseline; gap: .45rem; min-height: 38px; align-items: center; padding: .3rem .9rem; border: 1px solid var(--plate-strong-rule); border-radius: 999px; background: var(--glass); color: var(--plate-ink) !important; font: 500 14px/1.2 var(--font-text); text-decoration: none; }
+  .guide-promise small { font: 600 11px/1 var(--font-mono); color: var(--plate-accent); }
+  .guide-promise a:hover { border-color: var(--plate-accent); }
+  .guide-steps-layout[data-ready="false"] ~ * .guide-promise a, .guide-page:has(.guide-steps-layout[data-ready="false"]) .guide-promise a { pointer-events: none; }
+
+  /* The chosen place's own page: a pill beside the place name. */
+  .guide-place-link { display: inline-flex; align-items: center; gap: .4rem; min-height: 36px; margin-top: .7rem; padding: .25rem .85rem; border: 1px solid color-mix(in srgb, var(--plate-accent) 45%, var(--plate-strong-rule)); border-radius: 999px; background: var(--glass); color: var(--plate-ink) !important; font: 500 13px/1.2 var(--font-text); text-decoration: none; }
+  .guide-place-link span { color: var(--plate-accent); transition: transform 160ms ease; }
+  .guide-place-link:hover span { transform: translateX(3px); }
+  @media (prefers-reduced-motion: reduce) { .guide-place-link span { transition: none; } }
+}
