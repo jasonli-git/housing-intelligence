@@ -3,17 +3,29 @@
    controls, then the map at full width with its zoom buttons tucked in a corner, then the
    legend, then the comparison, so nothing covers the map. Same controls and behaviour. */
 @media screen {
-  /* Its own colour (2026-10-15): the one near-neutral page — stone paper by day, graphite by
-     night, a slate and silver glow and a thin gold accent, a map room's palette — so the
-     map's warm fills carry the colour. */
+  /* Every colour at once (2026-10-15): the atlas is where all the site's places meet, so its
+     sky carries every page's colour — the state's blue, the counties' green, the towns'
+     teal, the ZIP codes' violet, and the tools' orange, rose, cyan and sage — on a neutral
+     paper. The geography buttons wear their level's colour, the same one each page uses. */
   body:has(main.horizon-page[data-region-level="atlas"]) {
-    --plate-ink: light-dark(#1e1f22, #ecebe6); --plate-paper: light-dark(#f1f0eb, #0b0c0e);
+    --plate-ink: light-dark(#1e1f22, #ecebe6); --plate-paper: light-dark(#f3f2ee, #0b0c0e);
     --plate-accent: light-dark(#8a6a24, #e3c27a);
     --plate-rule: light-dark(#1e1f2214, #ecebe614); --plate-strong-rule: light-dark(#1e1f2226, #ecebe626);
     --text-secondary: light-dark(#55575c, #b6b6b2); --text-muted: light-dark(#7c7e83, #8b8c89);
     --glass: light-dark(#fbfaf7b3, #ffffff0b); --glass-edge: light-dark(#ffffff, #ecebe61f);
   }
-  body:has(main.horizon-page[data-region-level="atlas"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#c9ccd6,#3a4152) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#e1dccb,#4d4a42) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#d2d6de,#2c3240) 0%, transparent 70%) !important; opacity: .6 !important; }
+  body:has(main.horizon-page[data-region-level="atlas"])::before {
+    inset: -10vh -10vw !important; height: auto !important; opacity: .55 !important;
+    background:
+      radial-gradient(26% 34% at 12% 22%, light-dark(#8db8ea,#3a7fd6) 0%, transparent 70%),
+      radial-gradient(26% 34% at 30% 8%, light-dark(#8fd0a8,#2fa86a) 0%, transparent 70%),
+      radial-gradient(26% 34% at 48% 26%, light-dark(#86d0cc,#2aa39c) 0%, transparent 70%),
+      radial-gradient(26% 34% at 66% 10%, light-dark(#c3aee8,#7a52d0) 0%, transparent 70%),
+      radial-gradient(26% 34% at 84% 24%, light-dark(#f2a46e,#e0703a) 0%, transparent 70%),
+      radial-gradient(24% 32% at 10% 70%, light-dark(#eea2c4,#d2488c) 0%, transparent 70%),
+      radial-gradient(24% 32% at 50% 88%, light-dark(#8fd8e6,#22a6c4) 0%, transparent 70%),
+      radial-gradient(24% 32% at 92% 72%, light-dark(#c3cfa3,#86a03e) 0%, transparent 70%) !important;
+  }
   body:has(main.horizon-page[data-region-level="atlas"]) { --surface-card: var(--glass); --surface-2: color-mix(in srgb, var(--plate-paper) 70%, transparent); --border: var(--plate-strong-rule); --atlas-ink: var(--plate-accent); }
   .horizon-page.housing-atlas-page .atlas-title h1 { font: 400 clamp(40px, 5.4vw, 72px)/1 Georgia, serif !important; letter-spacing: -.05em; color: var(--plate-ink); }
   .horizon-page .atlas-lede { margin: .45rem 0 0; font-size: clamp(14px, 1.5vw, 16px); color: var(--text-secondary); }
@@ -25,7 +37,12 @@
     -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 24px 50px -36px #000c !important;
   }
   .horizon-page .atlas-controls select, .horizon-page .atlas-county-finder input { border-radius: 12px !important; border-color: var(--plate-strong-rule) !important; background: color-mix(in srgb, var(--plate-paper) 70%, transparent) !important; color: var(--plate-ink) !important; }
-  .horizon-page .atlas-levels button[aria-pressed="true"] { background: var(--plate-ink) !important; color: var(--plate-paper) !important; border-radius: 999px; }
+  .horizon-page .atlas-levels button { border-radius: 999px !important; }
+  .horizon-page .atlas-levels button:nth-of-type(1) { --level: light-dark(#b2462e, #f08a5d); }
+  .horizon-page .atlas-levels button:nth-of-type(2) { --level: light-dark(#145e9c, #89c7ff); }
+  .horizon-page .atlas-levels button:nth-of-type(3) { --level: light-dark(#246b55, #a6d9c0); }
+  .horizon-page .atlas-levels button:not(.atlas-globe-reset) { color: var(--level) !important; }
+  .horizon-page .atlas-levels button[aria-pressed="true"]:not(.atlas-globe-reset) { background: color-mix(in srgb, var(--level) 18%, transparent) !important; box-shadow: inset 0 0 0 1.5px var(--level) !important; }
   .horizon-page .atlas-map-buttons button { border-radius: 999px !important; background: var(--glass) !important; border-color: var(--glass-edge) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
   .horizon-page .atlas-results-head h2 { font: 400 24px/1.15 Georgia, serif !important; letter-spacing: -.02em; }
   .horizon-page .atlas-selected { background: color-mix(in srgb, var(--plate-accent) 8%, transparent) !important; border-color: color-mix(in srgb, var(--plate-accent) 35%, transparent) !important; border-radius: 16px !important; }
@@ -76,7 +93,7 @@
   @media (min-width: 901px) { .horizon-page .atlas-controls { top: 20px !important; } }
 }
 @media screen {
-  /* The map in the page's own night: a slate globe with a gold rim, sand-coloured land. */
+  /* The map: a slate globe with a soft rim, sand-coloured land, so the fills carry the colour. */
   .horizon-page .atlas-globe-ocean { filter: drop-shadow(0 0 28px light-dark(#8a6a2433, #e3c27a2e)) !important; }
   .horizon-page .atlas-map-geography .atlas-context-land { fill: light-dark(#d9c3ab, #5a4a52) !important; stroke: light-dark(#c2a88e, #3a2f3a) !important; }
   .horizon-page .atlas-map-geography path { stroke: light-dark(#fff8f0, #1c1620); }
@@ -90,3 +107,4 @@
   .horizon-page .atlas-catalogue-button { border-radius: 12px !important; }
 }
 @media screen { .horizon-page .atlas-legend .atlas-missing-key { background: repeating-linear-gradient(135deg,#8a7d7a 0 3px,#d8cabd 3px 5px) !important; } }
+@media screen and (prefers-color-scheme: dark) { body:has(main.horizon-page[data-region-level="atlas"])::before { opacity: .8 !important; } } @media screen { :root[data-theme="dark"] body:has(main.horizon-page[data-region-level="atlas"])::before { opacity: .8 !important; } :root[data-theme="light"] body:has(main.horizon-page[data-region-level="atlas"])::before { opacity: .55 !important; } }
