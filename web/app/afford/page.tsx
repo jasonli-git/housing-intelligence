@@ -6,6 +6,8 @@ import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { affordData } from "@/lib/affordData";
 import "../tool-pages.css";
+import "../horizon-theme.css";
+import "../afford-horizon.css";
 import { pageMetadata } from "@/lib/meta";
 
 export const metadata: Metadata = pageMetadata({
@@ -45,7 +47,7 @@ export default async function AffordPage() {
   return (
     <>
       <Masthead affordability={{ kind: "route", active: true }} />
-      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool budget-page">
+      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool budget-page horizon-page" data-region-level="tool">
       <header className="page-head" data-kind="tool">
         <div>
           <Crumbs

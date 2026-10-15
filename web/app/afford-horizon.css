@@ -1,0 +1,59 @@
+/* Where can I afford? in the Horizon theme (2026-10-15), matching the home and New Jersey
+   pages: the same paper and glow, glass panels, serif figures. Step 1 keeps the accent;
+   steps 2 and 3 sit in plain glass. Presentation only. */
+@media screen {
+  body:has(main.horizon-page[data-region-level="tool"]) {
+    --plate-accent: light-dark(#b2462e, #f08a5d);
+    --budget-accent: var(--plate-accent);
+    --atlas-accent: var(--plate-accent);
+  }
+  .horizon-page.budget-page > .page-head { padding-block: 1.4rem .6rem; }
+  .horizon-page.budget-page .kind { display: inline-flex; margin: .9rem 0 .2rem; padding: .2rem .65rem; border: 1px solid var(--glass-edge); border-radius: 999px; background: var(--glass); color: var(--text-secondary); font: 600 11px/1.4 var(--font-mono); letter-spacing: .1em; }
+  .horizon-page.budget-page .kind::before { display: none; }
+  .horizon-page.budget-page .page-head .meta { color: var(--text-secondary); }
+
+  /* Every panel in glass. */
+  .horizon-page .wca :is(.afford-controls, .budget-headline, .wca-list, .wca-strip, .wca-placeholder, .wca-check-view, .wca-quick),
+  .horizon-page :is(.budget-place-check .check, .afford-notes) {
+    background: var(--glass) !important; border: 1px solid var(--glass-edge) !important; border-radius: 24px !important;
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 24px 50px -36px #000c;
+  }
+  .horizon-page .wca .wca-near { border-style: dashed !important; background: transparent !important; box-shadow: none; }
+  .horizon-page .wca .wca-placeholder { border-style: dashed !important; box-shadow: none; }
+  .horizon-page .wca .budget-headline::after { display: none; }
+
+  /* Step 1 leads: glass with the accent edge and glow. */
+  .horizon-page .wca .afford-controls.wca-first {
+    border: 1.5px solid color-mix(in srgb, var(--plate-accent) 70%, transparent) !important;
+    background: color-mix(in srgb, var(--plate-accent) 7%, var(--glass)) !important;
+    box-shadow: 0 30px 70px -40px color-mix(in srgb, var(--plate-accent) 80%, transparent), 0 0 0 6px color-mix(in srgb, var(--plate-accent) 8%, transparent) !important;
+  }
+  .horizon-page .wca :is(.afford-controls select, .money-input, .seg) { border-radius: 14px; border-color: var(--plate-strong-rule); background: color-mix(in srgb, var(--plate-paper) 70%, transparent); }
+  .horizon-page .wca .seg button { border-radius: 10px; }
+  .horizon-page .wca .seg button[aria-checked="true"] { background: var(--plate-ink); color: var(--plate-paper); }
+
+  /* Figures in the page's serif; the count in the rust-to-gold of the home page. */
+  .horizon-page .wca .budget-headline strong { font: 400 clamp(40px, 5.6vw, 64px)/1 Georgia, serif !important; letter-spacing: -.045em !important; color: var(--plate-ink) !important; }
+  .horizon-page .wca .budget-headline strong.wca-empty { font-size: clamp(22px, 2.6vw, 28px) !important; color: var(--text-muted) !important; letter-spacing: -.02em !important; }
+  .horizon-page .wca .wca-count { font: 400 clamp(56px, 8vw, 104px)/.95 Georgia, serif; letter-spacing: -.055em; background: linear-gradient(90deg, var(--plate-accent), light-dark(#d98a2b, #ffc27a)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .horizon-page .wca .wca-sentence { font: 400 clamp(18px, 2vw, 22px)/1.35 Georgia, serif; letter-spacing: -.01em; }
+  .horizon-page .wca :is(.wca-list h2, .wca-strip h2) { font: 400 22px/1.2 Georgia, serif !important; letter-spacing: -.02em; color: var(--plate-ink) !important; }
+  .horizon-page .wca .wca-list li a { font-weight: 500; }
+  .horizon-page .wca .wca-tip button { border-color: var(--plate-strong-rule); background: var(--glass); }
+  .horizon-page .wca .wca-strip-track { background: var(--plate-rule); }
+  .horizon-page .wca .wca-strip-bar { background: color-mix(in srgb, var(--plate-ink) 30%, transparent); }
+  .horizon-page .wca .wca-strip li[data-within="true"] .wca-strip-bar { background: linear-gradient(90deg, var(--plate-accent), light-dark(#d98a2b, #ffc27a)); }
+  .horizon-page .wca .wca-strip-track::after { background: var(--plate-accent); }
+  .horizon-page .wca .wca-key-line { background: var(--plate-accent); }
+
+  /* Folds: pill summaries as on the place pages. */
+  .horizon-page :is(.budget-assumptions, .budget-place-check, .afford-notes) > summary { border-radius: 20px; }
+  .horizon-page .afford-notes { padding: .4rem 1rem; margin-top: 1.4rem; }
+}
+@media screen {
+  .horizon-page .wca .money-input input { background: transparent; border: 0; box-shadow: none; color: var(--plate-ink); }
+  .horizon-page .wca .afford-controls .control-label { text-align: left; align-self: start; }
+}
+@media screen {
+  .horizon-page .wca .money-input { display: flex; align-items: center; gap: .3rem; padding-inline: .8rem; border: 1px solid var(--plate-strong-rule); background: color-mix(in srgb, var(--plate-paper) 80%, transparent); }
+}
