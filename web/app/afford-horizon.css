@@ -65,3 +65,8 @@
 @media screen {
   .horizon-page .wca .money-input { display: flex; align-items: center; gap: .3rem; padding-inline: .8rem; border: 1px solid var(--plate-strong-rule); background: color-mix(in srgb, var(--plate-paper) 80%, transparent); }
 }
+@media screen {
+  /* Georgia's old-style 5 hangs below the line, and a gradient is clipped to the text's
+     box, so the count sits on lining figures with room beneath it. */
+  .horizon-page .wca .wca-count { font-variant-numeric: lining-nums; line-height: 1.1; padding-bottom: .06em; }
+}
