@@ -253,6 +253,11 @@ export type BroadbandSummary = {
   total_units: number; biz_res: string; area_data_type: string;
   shares: Record<string, number>; basis: string; denominator: string; url: string;
 };
+/** One place's counts from FCC's location files, summed from 2020 blocks (#372). */
+export type BroadbandPlace = {
+  locations: number; fiber: number; unserved_wired: number; unserved_terrestrial: number;
+  unplaced: number; as_of: string; revision: string; url: string;
+};
 export type CommunityContext = {
   region_id: number;
   districts: { boundary: CommunityRecord<{ district_id: string; name: string; district_type: string; approximate_share: number }>;
@@ -261,6 +266,7 @@ export type CommunityContext = {
   health: CommunityRecord<HealthEstimate>[]; health_area: string | null; health_level: string | null;
   crime: CommunityRecord<CrimeAgency>[]; crime_county: string | null; broadband_status: string;
   broadband: CommunityRecord<BroadbandSummary>[]; broadband_area: string | null; broadband_level: string | null;
+  broadband_place?: CommunityRecord<BroadbandPlace> | null;
 };
 
 export type WaterSystems = {

@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { CommunityContext } from "./CommunityContext";
-import type { CommunityContext as Data, CommunityRecord, CrimeAgency, HealthEstimate, BroadbandSummary } from "@/lib/api";
+import type { CommunityContext as Data, CommunityRecord, CrimeAgency, HealthEstimate, BroadbandSummary, BroadbandPlace } from "@/lib/api";
 
 function record<T>(payload: T): CommunityRecord<T> {
   return { source_id: "test", kind: "test", entity_id: "county:34021", record_id: "test", payload, snapshot: null, release_id: 1, release_layer: "test", vintage: "current", file_sha256: "sha", fetched_at: "2026-10-07" };
@@ -60,5 +60,15 @@ describe("community components", () => {
     expect(html).toContain("Availability as of 2025-12-31");
     expect(html).toContain("revised 2026-09-29");
     expect(html).not.toContain("No matching availability summary");
+  });
+  it("gives a ZIP code its own location counts instead of the missing-summary note", () => {
+    const place: BroadbandPlace = { locations: 2000, fiber: 1500, unserved_wired: 12, unserved_terrestrial: 0, unplaced: 0, as_of: "2025-12-31", revision: "2026-10-13", url: "https://broadbandmap.fcc.gov/data-download/nationwide-data" };
+    const html = renderToStaticMarkup(<CommunityContext data={{ ...empty, broadband_status: "not_matched", broadband_place: record(place) }} level="zip" />);
+    expect(html).toContain("75.0%");
+    expect(html).toContain("12 locations");
+    expect(html).toContain("Of 2,000 broadband-serviceable locations FCC maps in this ZIP code");
+    expect(html).toContain("not shares of households");
+    expect(html).toContain("Every one has a wired or fixed-wireless offer");
+    expect(html).not.toContain("Why there is no local availability figure yet");
   });
 });

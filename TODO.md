@@ -490,8 +490,10 @@ tracts (most new insight, about 2,000 more pages) were the strongest cases.
         and LODES's crosswalk places them in towns and ZCTAs exactly (spot check 22/22;
         293 water blocks have no ZCTA). Both sites block scripted downloads (403
         outside a browser), and the rows carry CostQuest's Location ID, which the
-        current `fcc_bdc` terms note excludes — publishing block-derived counts needs
-        an owner decision. Awaiting that decision.
+        current `fcc_bdc` terms note excludes. **Owner decided 2026-10-14: publish town
+        and ZIP counts, and fiber too** — built as `fcc_bdc_locations` (ARCHITECTURE
+        #372) on `feature/broadband-places`; needs the two D25 files in
+        `data/manual/fcc_bdc_locations/` for its first pipeline run.
       - **Towns without the Fabric, measured 2026-10-07:** the FCC's New Jersey
         Census-place summary (701 places, owner's download) covers 323 of 564 towns
         exactly — every borough (252), city (52), town (15) and village (3), and no

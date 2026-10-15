@@ -27,7 +27,7 @@ from hip.sources.community import (
     SchoolPerformanceAdapter,
 )
 from hip.sources.epa_sdwis import SdwisAdapter
-from hip.sources.fcc import BroadbandSummaryAdapter
+from hip.sources.fcc import BroadbandLocationsAdapter, BroadbandSummaryAdapter
 from hip.sources.fema import NfhlAdapter, NfipClaimsAdapter
 from hip.sources.fhfa import HpiAdapter, HpiCountyAdapter
 from hip.sources.fred import FredAdapter
@@ -141,6 +141,8 @@ IMPLEMENTED: tuple[str, ...] = (
     CrimeAdapter.source_id,
     PlacesAdapter.source_id,
     BroadbandSummaryAdapter.source_id,
+    # Town and ZIP broadband, from the location files (#372).
+    BroadbandLocationsAdapter.source_id,
     # Milestone 48.
     HmdaAdapter.source_id,
     HudFhaLimitsAdapter.source_id,
@@ -199,6 +201,8 @@ METRIC_SOURCES: tuple[str, ...] = (
     CrimeAdapter.source_id,
     PlacesAdapter.source_id,
     BroadbandSummaryAdapter.source_id,
+    # Town and ZIP broadband, from the location files (#372).
+    BroadbandLocationsAdapter.source_id,
     # Milestone 48.
     HmdaAdapter.source_id,
     HudFhaLimitsAdapter.source_id,
@@ -246,6 +250,7 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         CrimeAdapter,
         PlacesAdapter,
         BroadbandSummaryAdapter,
+        BroadbandLocationsAdapter,
         BpuReliabilityAdapter,
         BpuAnnualReportsAdapter,
         EiaAdapter,
