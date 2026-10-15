@@ -17,6 +17,8 @@ import {
 import { countyLookup } from "@/lib/countyLookups";
 import { formatValue } from "@/lib/format";
 import {
+  addressCase,
+  appealDeadline,
   classPercentile,
   describeBuilding,
   impliedValue,
@@ -59,7 +61,7 @@ export const plainClass = (name: string) => PLAIN_CLASS[name] ?? name;
 
 function parcelName(parcel: Parcel): string {
   const where = `Block ${parcel.block}, lot ${parcel.lot}${parcel.qualifier ? `, ${parcel.qualifier}` : ""}`;
-  return parcel.address ? `${parcel.address} · ${where}` : where;
+  return parcel.address ? `${addressCase(parcel.address)} · ${where}` : where;
 }
 
 type Found = { file: ParcelFile; parcels: Parcel[]; parcel: Parcel };
@@ -243,24 +245,39 @@ export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: 
               and lot.
             </p>
           )}
-          {hits.length > 0 && targets.length === 0 && (
-            <ul className="tax-results" aria-live="polite">
-              <li className="household-note">
-                {hits.length === 1
-                  ? "One place has it:"
-                  : `${hits.length} places have it${parsed.zip || town ? "" : " — add the town or ZIP to narrow them"}. Choose one:`}
-              </li>
-              {hits.slice(0, 40).map((hit) => (
-                <li key={`${hit.street}-${hit.geoid}`}>
-                  <button type="button" onClick={() => setPicked(hit)}>
-                    {parsed.number ? `${parsed.number} ` : ""}
-                    {hit.street}
-                    <small>{place(hit.geoid)}</small>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          {hits.length > 0 && targets.length === 0 && (() => {
+            const counts = new Map<string, number>();
+            hits.forEach((hit) => counts.set(hit.street, (counts.get(hit.street) ?? 0) + 1));
+            const common = [...counts].sort((a, b) => b[1] - a[1])[0][0];
+            const byCounty = new Map<string, Hit[]>();
+            hits.slice(0, 80).forEach((hit) => {
+              const county = meta?.towns[hit.geoid]?.[1] ?? "";
+              byCounty.set(county, [...(byCounty.get(county) ?? []), hit]);
+            });
+            const addressText = `${parsed.number ? `${parsed.number} ` : ""}${addressCase(common)}`;
+            return (
+              <div className="tax-places" aria-live="polite">
+                <p className="tax-places-lead">
+                  {hits.length === 1 ? <><b>{addressText}</b> is in one town:</> : <><b>{addressText}</b> is in {hits.length} towns.{parsed.zip || town ? " Pick one:" : " Pick one, or add the town or ZIP to your search."}</>}
+                </p>
+                {[...byCounty].sort((a, b) => a[0].localeCompare(b[0])).map(([county, group]) => (
+                  <section key={county}>
+                    <h3>{county ? `${county} County` : "New Jersey"}</h3>
+                    <ul>
+                      {group.sort((a, b) => place(a.geoid).localeCompare(place(b.geoid))).map((hit) => (
+                        <li key={`${hit.street}-${hit.geoid}`}>
+                          <button type="button" onClick={() => setPicked(hit)}>
+                            {meta?.towns[hit.geoid]?.[0] ?? hit.geoid}
+                            {hit.street !== common && <small>{addressCase(hit.street)}</small>}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            );
+          })()}
         </>
       )}
 
@@ -327,7 +344,7 @@ function ParcelCard({
   return (
     <article className="household-panel tax-card tax-card-v2" aria-live="polite">
       <header className="tax-card-head">
-        <h2 className="household-title">{parcel.address ?? parcelName(parcel)}</h2>
+        <h2 className="household-title">{parcel.address ? addressCase(parcel.address) : parcelName(parcel)}</h2>
         <p className="household-note">
           {parcel.address ? <>Block {parcel.block}, lot {parcel.lot}{parcel.qualifier ? `, ${parcel.qualifier}` : ""} · </> : null}
           {className} · {town}{file.county ? `, ${file.county} County` : ""}
@@ -405,7 +422,7 @@ function ParcelCard({
       </section>
 
       <ul className="tax-next">
-        <li><a href={APPEALS} target="_blank" rel="noreferrer"><b>Think the assessment is wrong?</b><span>You can appeal to the county tax board, usually by April 1 (January 15 in Burlington, Gloucester and Monmouth)</span></a></li>
+        <li><a href={APPEALS} target="_blank" rel="noreferrer"><b>Think the assessment is wrong?</b><span>Appeal to the {file.county ? `${file.county} County` : "county"} tax board by <strong>{appealDeadline(file.county).date}</strong> — {appealDeadline(file.county).note}.</span></a></li>
         {countyRecords && <li><a href={countyRecords} target="_blank" rel="noreferrer"><b>{file.county} County’s record</b><span>Can be newer than the state’s file</span></a></li>}
         <li><a href={CHAPTER_123} target="_blank" rel="noreferrer"><b>How appeals are judged</b><span>The state’s fair-value range for each town</span></a></li>
       </ul>

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  addressCase,
+  appealDeadline,
   describeBuilding,
   classPercentile,
   impliedValue,
@@ -107,5 +109,20 @@ describe("describeBuilding", () => {
   });
   it("leaves codes it cannot read whole", () => {
     for (const code of ["1S-F-S", "2SS-1BIG", "1BR", "2", "", null]) expect(describeBuilding(code)).toBeNull();
+  });
+});
+
+
+describe("addressCase and appealDeadline", () => {
+  it("writes addresses in ordinary case", () => {
+    expect(addressCase("246 WITHERSPOON ST")).toBe("246 Witherspoon St");
+    expect(addressCase("10 NE 2ND AVE")).toBe("10 NE 2nd Ave");
+    expect(addressCase("ROUTE 9 & US HWY 1")).toBe("Route 9 & US Hwy 1");
+  });
+  it("gives each county its own appeal date", () => {
+    expect(appealDeadline("Monmouth").date).toBe("January 15");
+    expect(appealDeadline("Hunterdon").date).toBe("April 1");
+    expect(appealDeadline("Sussex").note).toContain("May 1");
+    expect(appealDeadline(null).date).toBe("April 1");
   });
 });
