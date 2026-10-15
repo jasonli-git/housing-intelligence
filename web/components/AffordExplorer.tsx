@@ -4,18 +4,23 @@ import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 import { type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
 
+import { PlacePicker } from "@/components/PlacePicker";
 import {
+  checkPlace,
   type Mode,
   monthlyBudget,
   type Place,
+  type Reached,
   reach,
 } from "@/lib/afford";
 import { DEFAULT_DOWN, DOWN_PAYMENTS, incomeFor } from "@/lib/cost";
 import { useBudgetScenario } from "./useBudgetScenario";
 import { parseAmount } from "@/lib/costScenario";
+import { cashFit } from "@/lib/budgetScenario";
 import { readHousehold } from "@/lib/household";
 import { FHA_DOWN, FHA_LIMITS, UPKEEP_PCT } from "@/lib/costRules";
 import { formatValue } from "@/lib/format";
+import type { SearchEntry } from "@/lib/search";
 import { affordScope } from "@/lib/affordScope";
 
 const DEFAULT_INCOME = "";
@@ -30,6 +35,60 @@ const MODES: { key: Mode; label: string }[] = [
 
 function money(value: number): string {
   return formatValue(value, "usd");
+}
+
+function share(value: number): string {
+  return `${Math.round(value * 100)}%`;
+}
+
+function listed(items: string[]): string {
+  return items.length <= 1
+    ? items.join("")
+    : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+}
+
+/** One side of "can I afford this place?": its monthly cost, its share of income, the verdict. */
+function CheckCell({
+  label,
+  row,
+  missing,
+  cash,
+}: {
+  label: string;
+  row: Reached | null;
+  missing: string;
+  cash?: number;
+}) {
+  if (!row) {
+    return (
+      <div className="check-cell">
+        <span className="label">{label}</span>
+        <p className="check-missing">{missing}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="check-cell">
+      <span className="label">{label}</span>
+      <b className="check-figure">
+        {money(row.monthly)}
+        <span>/mo</span>
+      </b>
+      <span className="check-share">
+        {share(row.share)} of your income{" "}
+        <span className={row.missing.length > 0 ? "status incomplete" : row.within ? "status within" : "status beyond"}>
+          {row.missing.length > 0 ? "Incomplete estimate" : row.within ? "Within budget on included costs" : "Above budget on included costs"}
+        </span>
+      </span>
+      {row.missing.length > 0 && <span className="check-need">Missing: {listed(row.missing)}. Not counted as within budget.</span>}
+      {row.upfront && <span className="check-need">Buying upfront: {money(row.upfront.low)}–{money(row.upfront.high)}. {cashFit(cash, row.upfront.low, row.upfront.high)}.</span>}
+      {row.upfront && <span className="check-need">Down payment + estimated closing costs. Moving, repairs and property-specific fees can add more.</span>}
+      {!row.upfront && <span className="check-need">Rental deposits and move-in fees are not checked here.</span>}
+      <span className="check-need">
+        It takes {money(incomeFor(row.monthly))} a year to keep it at 30%.
+      </span>
+    </div>
+  );
 }
 
 /**
@@ -65,12 +124,23 @@ export function AffordExplorer({
   const [allTowns, setAllTowns] = useState(false);
   // A county profile has already answered "which place?". Start its local affordability
   // mode with that county selected instead of asking the reader to type it again.
+  const [picked, setPicked] = useState<number | null>(initialScope?.countyId ?? null);
   const [countyId, setCountyId] = useState<number | null>(initialScope?.countyId ?? null);
   const selectedCounty = counties.find((place) => place.id === countyId);
   const scope = selectedCounty ? { countyId: selectedCounty.id, countyName: selectedCounty.name } : undefined;
   const id = useId();
 
   const places = useMemo(() => [...counties, ...towns], [counties, towns]);
+  const entries: SearchEntry[] = useMemo(
+    () =>
+      places.map((p) => ({
+        id: p.id,
+        name: p.name,
+        detail: p.detail ?? "County",
+        level: p.level,
+      })),
+    [places],
+  );
 
   // An income or a place passed in the address, read once on arrival. A static page has
   // no server to read it, and reading it here keeps the page renderable without it.
@@ -82,6 +152,7 @@ export function AffordExplorer({
       saveHousehold({ ...readHousehold(), income: Number(income) });
     }
     const context = affordScope(params, places);
+    if (context.pickedId !== null) setPicked(context.pickedId);
     if (params.has("place") || params.has("county")) {
       setCountyId(context.countyId);
     }
@@ -94,6 +165,12 @@ export function AffordExplorer({
   const townRows = scope ? allTownRows.filter((row) => row.place.parentId === scope.countyId) : allTownRows;
   const townsWithin = townRows.filter((row) => row.within);
   const shownTowns = allTowns ? townsWithin : townsWithin.slice(0, FIRST_TOWNS);
+  const pickedPlace =
+    picked === null ? null : (places.find((p) => p.id === picked) ?? null);
+  const check =
+    pickedPlace && income > 0
+      ? checkPlace(pickedPlace, options)
+      : null;
 
   function onModeKeys(event: KeyboardEvent<HTMLDivElement>) {
     if (
@@ -123,6 +200,41 @@ export function AffordExplorer({
   const stripRows = countyRows.filter((row) => row.missing.length === 0);
   const stripMax = Math.max(budget, ...stripRows.map((row) => row.monthly)) * 1.04;
   const verb = mode === "own" ? "buy" : "rent";
+  // MOCKUP (2026-10-15): three places for "check a specific place", chosen by ?check=.
+  const [checkLayout, setCheckLayout] = useState<"bottom" | "toggle">("bottom");
+  const [view, setView] = useState<"fit" | "check">("fit");
+  useEffect(() => {
+    const value = new URLSearchParams(window.location.search).get("check");
+    if (value === "toggle") setCheckLayout(value);
+  }, []);
+  const picker = (
+    <PlacePicker
+      key={picked ?? "none"}
+      className="place-search"
+      entries={entries}
+      onPick={(entry) => {
+        setPicked(entry.id);
+        const place = places.find((place) => place.id === entry.id);
+        if (scope && place) setCountyId(place.level === "county" ? place.id : place.parentId ?? null);
+      }}
+      label="A town or county to check"
+      placeholder="Type a town or county"
+      name="check-place"
+      initialQuery={pickedPlace?.name ?? ""}
+      keepPicked
+    />
+  );
+  const verdict = (row: Reached | null, what: string) => row === null
+    ? <li><span>{what}</span><em>No figure</em></li>
+    : <li data-fits={row.within}><span>{what}</span><b>{money(row.monthly)}<small>/mo</small></b>
+        <em>{row.missing.length > 0 ? "Incomplete estimate" : row.within ? `Fits · ${money(budget - row.monthly)} to spare` : `Over by ${money(row.monthly - budget)}`}</em></li>;
+  const quick = pickedPlace && check ? (
+    <div className="wca-quick-result">
+      <Link href={regionPath(pickedPlace.id)}>{pickedPlace.name}</Link>
+      <ul>{verdict(check.own, "Buy")}{verdict(check.rent, "Rent")}</ul>
+    </div>
+  ) : <p className="wca-quick-empty">Type a town or county to see if its typical home fits {money(budget)} a month.</p>;
+
   const situation = (
     <>
         <label className="control wca-income" htmlFor={`${id}-income`}>
@@ -184,9 +296,35 @@ export function AffordExplorer({
         )}
     </>
   );
+  const takeover = checkLayout === "toggle" && view === "check";
 
   return (
-    <section className="afford budget-explorer wca" data-view="list" data-has-income={income > 0} aria-label="Find places within your budget">
+    <section className="afford budget-explorer wca" data-view="list" data-has-income={income > 0} aria-label="Find places within your budget" data-takeover={takeover}>
+      {checkLayout === "toggle" && <div className="seg wca-view" role="radiogroup" aria-label="What do you want to do?">
+        <button type="button" role="radio" aria-checked={view === "fit"} onClick={() => setView("fit")}>Find towns that fit</button>
+        <button type="button" role="radio" aria-checked={view === "check"} onClick={() => setView("check")}>Check one place</button>
+      </div>}
+      {takeover ? <>
+        <div className="wca-step-label wca-step-first"><span>1</span>The place and your situation</div>
+        <div className="afford-controls wca-first wca-check-controls">
+          <div className="control wca-place">
+            <span className="control-label">Town or county</span>
+            {picker}
+          </div>
+          {situation}
+        </div>
+        <div className="wca-step-label"><span>2</span>Does it fit?</div>
+        {income > 0 && pickedPlace && check ? <section className="wca-check-view" aria-live="polite">
+          {quick}
+          <p className="wca-check-budget">Against a budget of <b>{money(budget)}</b> a month, 30% of {money(income)} a year.</p>
+          <details className="wca-check-detail"><summary>See the full cost</summary>
+            <div className="check-grid">
+              <CheckCell label="To own the typical single-family home" row={check.own} cash={household.cash} missing={pickedPlace.home === null ? "No Zillow home value for this comparison." : "There is no property tax figure here, so the cost to own is not worked out."} />
+              <CheckCell label="To rent the typical home · rent only" row={check.rent} missing="Zillow publishes no rent figure here." />
+            </div>
+          </details>
+        </section> : <p className="wca-placeholder">{income > 0 ? "Pick a town or county above." : pickedPlace ? "Enter your income above." : "Pick a place and enter your income above."} The answer shows here.</p>}
+      </> : <>
       <div className="wca-step-label wca-step-first"><span>1</span>Your situation{income <= 0 && <em>Start here</em>}</div>
       <div className="afford-controls wca-first">
         {situation}
@@ -196,6 +334,8 @@ export function AffordExplorer({
             const next = event.target.value === "all" ? null : Number(event.target.value);
             setCountyId(next);
             setAllTowns(false);
+            if (next !== null) setPicked(next);
+            else setPicked(null);
           }}>
             <option value="all">All New Jersey</option>
             {counties.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}
@@ -242,13 +382,13 @@ export function AffordExplorer({
           </p>}
         </div>
 
-        <div className="wca-results">
+        <div className="wca-results" data-check={checkLayout}>
           {townsWithin.length > 0 && <section className="budget-town-results wca-list" aria-labelledby={`${id}-towns`}>
             <h2 id={`${id}-towns`}>Within your budget</h2>
             <ol>
               {shownTowns.map((row) => (
                 <li key={row.place.id}>
-                  <Link href={`${regionPath(row.place.id)}#quiet-cost`}>{row.place.name}</Link>
+                  <Link href={regionPath(row.place.id)}>{row.place.name}</Link>
                   {row.place.detail && <span className="wca-detail">{row.place.detail}</span>}
                   <span className="wca-cost">{money(row.monthly)}<small>/mo</small></span>
                   <span className="wca-room">{money(budget - row.monthly)} to spare</span>
@@ -266,7 +406,7 @@ export function AffordExplorer({
             <ol>
               {nearMisses.map((row) => (
                 <li key={row.place.id}>
-                  <Link href={`${regionPath(row.place.id)}#quiet-cost`}>{row.place.name}</Link>
+                  <Link href={regionPath(row.place.id)}>{row.place.name}</Link>
                   {row.place.detail && <span className="wca-detail">{row.place.detail}</span>}
                   <span className="wca-cost">{money(row.monthly)}<small>/mo</small></span>
                   <span className="wca-room">needs about {money(Math.ceil(incomeFor(row.monthly) / 1000) * 1000)} a year</span>
@@ -282,7 +422,7 @@ export function AffordExplorer({
           <ul style={{ ["--budget-at" as string]: `${(budget / stripMax) * 100}%` }}>
             {stripRows.map((row) => (
               <li key={row.place.id} data-within={row.within}>
-                <button type="button" onClick={() => { setCountyId(row.place.id); setAllTowns(false); }}>
+                <button type="button" onClick={() => { setCountyId(row.place.id); setPicked(row.place.id); setAllTowns(false); }}>
                   <span className="wca-strip-name">{row.place.name.replace(/ County$/, "")}</span>
                   <span className="wca-strip-track"><span className="wca-strip-bar" style={{ width: `${(row.monthly / stripMax) * 100}%` }} /></span>
                   <span className="wca-strip-value">{money(row.monthly)}</span>
@@ -293,13 +433,62 @@ export function AffordExplorer({
         </section>}
         {scope && <p className="budget-scope-line wca-scope">Searching <b>{scope.countyName}</b> <button type="button" onClick={() => { setCountyId(null); setAllTowns(false); }}>Search all New Jersey</button></p>}
 
-        <p className="wca-pointer">Have a town in mind? Search it in the menu bar — its cost card uses the income you entered here.</p>
         <p className="wca-fineprint">
           Typical costs from published figures, not listings or loan approval{mode === "own" ? " — HOA fees and flood insurance aren’t included" : " — rent only, no utilities"}.
           {unlisted > 0 && <> {unlisted} towns without {mode === "own" ? "a home value or tax bill" : "a rent figure"} aren’t listed; that doesn’t make them unaffordable.</>}
         </p>
       </>}
 
+      </>}
+
+      {checkLayout === "bottom" && <details className="budget-place-check" open={pickedPlace && income > 0 ? true : undefined}>
+      <summary>Check a specific town or county{pickedPlace ? ` · ${pickedPlace.name}` : ""}</summary>
+      <section className="check" aria-labelledby={`${id}-check`}>
+        <div className="check-head">
+          <h2 id={`${id}-check`} className="check-title">
+            Can I afford a specific place?
+          </h2>
+          {picker}
+        </div>
+        {pickedPlace && check ? (
+          <>
+            <p className="check-place">
+              <Link href={regionPath(pickedPlace.id)}>
+                {pickedPlace.name}
+              </Link>
+              {pickedPlace.detail && <span>{pickedPlace.detail}</span>}
+            </p>
+            <div className="check-grid">
+              <CheckCell
+                label="To own the typical single-family home"
+                row={check.own}
+                cash={household.cash}
+                missing={
+                  pickedPlace.home === null
+                    ? "No Zillow home value for this comparison. Check the profile for any separately labelled sale-price scenario."
+                    : "There is no property tax figure here, so the cost to own is not worked out."
+                }
+              />
+              <CheckCell
+                label="To rent the typical home · rent only"
+                row={check.rent}
+                missing="Zillow publishes no rent figure here."
+              />
+            </div>
+          </>
+        ) : (
+          <p className="check-missing">
+            {income > 0
+              ? "Pick a town or county to see what its typical home costs at this income, owned and rented."
+              : "Enter an income above, then pick a place."}
+          </p>
+        )}
+      </section>
+      </details>}
+
+      <nav className="wca-mock-switch" aria-label="Mockup layouts">Mockup · check a place:
+        {(["bottom", "toggle"] as const).map((layout) => <button key={layout} type="button" aria-pressed={checkLayout === layout} onClick={() => { setCheckLayout(layout); setView("fit"); }}>{layout === "bottom" ? "At the bottom" : "Toggle at the top"}</button>)}
+      </nav>
 
       <details className="afford-notes"><summary>How we estimate</summary><p className="table-note">
         {mode === "own" ? (
