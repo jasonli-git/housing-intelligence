@@ -18,6 +18,6 @@ describe("budget explorer presentation", () => {
   it("names a local scope and offers a statewide escape", () => {
     const html = renderToStaticMarkup(createElement(AffordExplorer, { ...base, scope: { countyId: 5, countyName: county.name } }));
     expect(html).toContain('<option value="5" selected="">Atlantic County</option>');
-    expect(html).toContain("Check a specific town or county · Atlantic County");
+    expect(html).not.toContain("Check a specific town");
   });
 });
