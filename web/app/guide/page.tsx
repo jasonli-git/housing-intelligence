@@ -3,10 +3,11 @@ import type { Metadata } from "next";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { DecisionGuide } from "@/components/DecisionGuide";
 import { Masthead } from "@/components/Masthead";
-import { SectionJump } from "@/components/SectionJump";
 import { api, artifactUrl, nationalMortgageRate } from "@/lib/api";
 import { periodLabel } from "@/lib/periods";
 import "../tool-pages.css";
+import "../horizon-theme.css";
+import "../guide-horizon.css";
 import { pageMetadata } from "@/lib/meta";
 
 export const metadata: Metadata = pageMetadata({
@@ -28,7 +29,7 @@ export default async function GuidePage() {
   return (
     <>
       <Masthead affordability={{ kind: "route" }} guideActive />
-      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool guide-page">
+      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool guide-page horizon-page" data-region-level="guide">
         <header className="page-head" data-kind="tool">
           <div>
             <Crumbs
@@ -36,11 +37,8 @@ export default async function GuidePage() {
               here="Buyer’s guide"
             />
             <Kind kind="tool" />
-            <h1 className="page-title">Before you buy.</h1>
-            <div className="guide-header-tools tool-head-tools">
-              <details className="guide-about"><summary>How this guide works</summary><p className="meta">Add your numbers to published local figures. Answers use fixed calculations, with sources and limits—not AI-written advice.</p></details>
-              <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>
-            </div>
+            <h1 className="page-title">Thinking of buying here?</h1>
+            <p className="meta">Pick a New Jersey place and add your household. Get three answers: can you afford it, should you rent or buy, and what to check before an offer.</p>
           </div>
         </header>
         {rate ? (

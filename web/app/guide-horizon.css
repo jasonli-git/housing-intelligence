@@ -1,0 +1,89 @@
+/* The buyer's guide in the Horizon theme (2026-10-15), like Where can I afford?: numbered
+   steps with step 1 in the accent, then three stacked answers, each opening with a verdict.
+   Its own colour is the guide's link colour site-wide — rose — on a blush paper with a
+   rose, plum and peach glow. Presentation only. */
+@media screen {
+  body:has(main.horizon-page[data-region-level="guide"]) {
+    --plate-ink: light-dark(#2a1a1f, #f3e4e8); --plate-paper: light-dark(#f8edf0, #120a0d);
+    --plate-accent: light-dark(#925460, #d7a3ad);
+    --plate-rule: light-dark(#2a1a1f14, #f3e4e814); --plate-strong-rule: light-dark(#2a1a1f26, #f3e4e826);
+    --text-secondary: light-dark(#644a52, #c3a9b0); --text-muted: light-dark(#8e737b, #947a82);
+    --glass: light-dark(#fff8fab3, #ffffff0b); --glass-edge: light-dark(#ffffff, #f3e4e81f);
+    --budget-accent: var(--plate-accent); --atlas-accent: var(--plate-accent);
+  }
+  body:has(main.horizon-page[data-region-level="guide"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#eba6b6,#8f2f4a) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#cdb0e0,#5b2a6e) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#f4c7a6,#8a4a2a) 0%, transparent 70%) !important; opacity: .55 !important; }
+
+  .horizon-page.guide-page > .page-head { padding-block: 1.4rem .6rem; }
+  .horizon-page.guide-page .page-head .meta { max-width: 60ch; color: var(--text-secondary); font-size: clamp(15px, 1.6vw, 18px); line-height: 1.5; }
+  .horizon-page.guide-page .kind { display: inline-flex; margin: .9rem 0 .2rem; padding: .2rem .65rem; border: 1px solid var(--glass-edge); border-radius: 999px; background: var(--glass); color: var(--text-secondary); font: 600 11px/1.4 var(--font-mono); letter-spacing: .1em; }
+  .horizon-page.guide-page .kind::before { display: none; }
+
+  /* One column of steps, replacing the old side-by-side setup and carousel. */
+  .guide-page .decision-guide.guide-steps-layout { display: block !important; }
+  .guide-steps-layout > :is(.guide-place, .guide-household, .guide-answer, .wca-placeholder) { margin: 0; }
+  .guide-steps-layout :is(.guide-place, .guide-household, .guide-answer) {
+    padding: 1.2rem 1.4rem; background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 24px;
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 24px 50px -36px #000c;
+  }
+  .guide-steps-layout .guide-place.guide-first {
+    border: 1.5px solid color-mix(in srgb, var(--plate-accent) 70%, transparent);
+    background: color-mix(in srgb, var(--plate-accent) 7%, var(--glass));
+    box-shadow: 0 30px 70px -40px color-mix(in srgb, var(--plate-accent) 80%, transparent), 0 0 0 6px color-mix(in srgb, var(--plate-accent) 8%, transparent);
+  }
+  .guide-steps-layout[data-ready="false"] .guide-picker input { box-shadow: 0 0 0 3px color-mix(in srgb, var(--plate-accent) 35%, transparent); animation: wca-ask 2.4s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .guide-steps-layout[data-ready="false"] .guide-picker input { animation: none; } }
+  .guide-steps-layout .guide-picker { max-width: 40rem; }
+  .guide-steps-layout .guide-picker input { min-height: 54px; font-size: 18px; border-radius: 14px; }
+  .guide-steps-layout .guide-place h2 { margin: 0 0 .7rem; font: 400 clamp(28px, 3.4vw, 40px)/1.1 Georgia, serif; letter-spacing: -.03em; }
+  .guide-steps-layout .guide-place .meta { margin: .6rem 0 0; }
+  .guide-steps-layout .guide-examples button { border-radius: 999px; background: var(--glass); border-color: var(--plate-strong-rule); }
+
+  .guide-steps-layout[data-ready="false"] .guide-household { opacity: .55; }
+  .guide-steps-layout .guide-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .8rem 1rem; }
+  .guide-steps-layout .guide-fields label { display: grid; gap: .4rem; font-size: 13px; color: var(--text-primary); }
+  .guide-steps-layout .guide-fields :is(input, select) { min-height: 46px; border-radius: 12px; border: 1px solid var(--plate-strong-rule); background: color-mix(in srgb, var(--plate-paper) 75%, transparent); color: var(--plate-ink); padding-inline: .8rem; font-size: 15px; }
+  .guide-steps-layout .guide-fields-main input { font-size: 18px; }
+  .guide-steps-layout .guide-assumptions { margin-top: .8rem; }
+  .guide-steps-layout :is(.guide-assumptions, .guide-more) > summary { min-height: 40px; display: flex; align-items: center; cursor: pointer; font-size: 13px; color: var(--text-secondary); }
+  .guide-steps-layout :is(.guide-assumptions, .guide-more) > summary::before { content: "+"; margin-right: .6rem; color: var(--plate-accent); }
+  .guide-steps-layout :is(.guide-assumptions, .guide-more)[open] > summary::before { content: "−"; }
+  .guide-steps-layout .guide-assumptions[open] > :not(summary) { margin-top: .6rem; }
+  .guide-saved { margin: .6rem 0 0; font-size: 12px; color: var(--text-muted); }
+
+  /* Answers: a verdict, a figure, one supporting line; everything else folded. */
+  .guide-answers { display: grid; gap: 1rem; }
+  .guide-answer-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .guide-steps-layout .guide-answer h2 { margin: 0; display: flex; align-items: baseline; gap: .7rem; font: 600 13px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); }
+  .guide-answer h2 small { font: inherit; color: var(--plate-accent); }
+  .guide-verdict { margin: .5rem 0 .2rem; font: 400 clamp(38px, 5.4vw, 64px)/1.05 Georgia, serif; letter-spacing: -.045em; font-variant-numeric: lining-nums; }
+  .guide-verdict[data-band="within"] { color: light-dark(#2f7a4f, #8fd3a8); }
+  .guide-verdict[data-band="burdened"] { color: light-dark(#a8631e, #f2bb7a); }
+  .guide-verdict[data-band="severe"] { color: light-dark(#a33a3a, #f19a9a); }
+  .guide-verdict[data-band="neutral"] { background: linear-gradient(90deg, var(--plate-accent), light-dark(#b5768a, #f1c6d0)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; padding-bottom: .06em; }
+  .guide-figure { margin: 0; font-size: clamp(16px, 1.8vw, 20px); line-height: 1.4; }
+  .guide-figure b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .guide-sub { margin: .35rem 0 .4rem; max-width: 70ch; font-size: 14px; line-height: 1.5; color: var(--text-secondary); }
+  .guide-verdict-empty { margin: .6rem 0 .2rem; font: 400 22px/1.3 Georgia, serif; color: var(--text-muted); }
+  .guide-steps-layout .evidence > summary { font-size: 11px; }
+
+  /* Before an offer: ten tiles, each a title and its finding, clamped to two lines. */
+  .guide-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .7rem; margin: .6rem 0 0; padding: 0; list-style: none; }
+  .guide-tiles .guide-check { margin: 0; padding: 0; border: 0; }
+  .guide-tile { height: 100%; border: 1px solid var(--plate-strong-rule); border-radius: 16px; background: color-mix(in srgb, var(--plate-paper) 55%, transparent); }
+  .guide-tile > summary { display: block; padding: .8rem .9rem; cursor: pointer; list-style: none; }
+  .guide-tile > summary::-webkit-details-marker { display: none; }
+  .guide-tile h3 { margin: 0 0 .3rem; font: 600 14px/1.3 var(--font-text); color: var(--plate-ink); }
+  .guide-tile h3::after { content: " +"; color: var(--plate-accent); }
+  .guide-tile[open] h3::after { content: " −"; }
+  .guide-tile > summary p { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .guide-tile[open] { grid-column: 1 / -1; }
+  .guide-tile[open] > summary p { -webkit-line-clamp: unset; }
+  .guide-tile > :not(summary) { padding: 0 .9rem .8rem; }
+  .guide-tile:hover { border-color: color-mix(in srgb, var(--plate-accent) 50%, var(--plate-strong-rule)); }
+  .guide-fineprint { margin: 1.4rem 0 0; font-size: 12px; color: var(--text-muted); }
+
+  @media (max-width: 760px) {
+    .guide-steps-layout :is(.guide-place, .guide-household, .guide-answer) { padding: 1rem; }
+    .guide-tiles { grid-template-columns: minmax(0, 1fr); }
+  }
+}
