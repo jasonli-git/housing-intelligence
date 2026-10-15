@@ -8,7 +8,7 @@ export function SiteStatus() {
   return (
     <Link className="site-status" href="/freshness">
       <span className="site-status-schedule">
-        <span className="site-status-kicker">Source checks</span>{" "}scheduled Fridays
+        <span className="site-status-kicker">Source checks</span>{" "}<span className="site-status-word">scheduled</span>{" "}Fridays
       </span>
       <span className="site-status-arrow" aria-hidden="true">→</span>
     </Link>

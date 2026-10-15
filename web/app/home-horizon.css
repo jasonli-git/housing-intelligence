@@ -95,3 +95,25 @@
 }
 /* The map's loading line sits under the search box on phones; the search works without it. */
 @media screen and (max-width: 600px) { .search-first-home .coverage-focused-entry [data-exploring="false"] .coverage-map-placeholder p { visibility:hidden; } }
+/* Tool cards in each tool's own colour (2026-10-15), the colour its page and links use:
+   the Budget explorer's orange, the Buyer's guide's rose, the tax lookup's teal, Housing
+   help's sage and the atlas's indigo. */
+:root .search-first-home .home-tools a[data-tool="afford"] { --tool-ink: light-dark(#b2582a, #f2a46e); }
+:root .search-first-home .home-tools a[data-tool="guide"] { --tool-ink: light-dark(#a03d6e, #eea2c4); }
+:root .search-first-home .home-tools a[data-tool="tax"] { --tool-ink: light-dark(#006977, #8ed9e2); }
+:root .search-first-home .home-tools a[data-tool="help"] { --tool-ink: light-dark(#59654a, #c4d1b2); }
+:root .search-first-home .home-tools a[data-tool="atlas"] { --tool-ink: light-dark(#4d5ca8, #b4bfe2); }
+
+/* The search box over the drawn map, in frosted glass so the lines behind never cross the
+   text: translucent, strongly blurred, a hairline edge. The map button beside it matches. */
+@media screen {
+  :root .search-first-home .coverage-search-panel .place-search-hero input,
+  :root .search-first-home .coverage-search-panel :is(.coverage-map-toggle, button[aria-label*="map" i]) {
+    background: light-dark(#ffffffc4, #15171bcc) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(150%) !important; backdrop-filter: blur(22px) saturate(150%) !important;
+    border: 1px solid light-dark(#ffffff, #ffffff26) !important;
+    box-shadow: inset 0 1px 0 light-dark(#ffffff, #ffffff1a), 0 18px 40px -26px #000a !important;
+    color: var(--plate-ink, var(--text-primary)) !important;
+  }
+  :root .search-first-home .coverage-search-panel .place-search-hero input::placeholder { color: light-dark(#5e574d, #c9c2b6) !important; opacity: 1; }
+}

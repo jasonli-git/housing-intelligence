@@ -1,0 +1,16 @@
+/* Site chrome on phones (2026-10-15): the licence notice and the source-check link share one
+   row — the licence's toggle sits beside its label instead of pushing to the far edge, and
+   "scheduled" drops, leaving "Source checks · Fridays". Opening the licence still wraps its
+   text onto its own line below. */
+@media screen and (max-width: 600px) {
+  :root body .site-meta-row.shared-meta, :root body .search-first-home .site-meta-row { display: flex !important; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .2rem .6rem !important; }
+  :root body .site-meta-row .licence { flex: 0 1 auto !important; min-width: 0; margin: 0; }
+  :root body .site-meta-row .licence-box > summary { justify-content: flex-start !important; gap: .35rem; width: auto; }
+  :root body .site-meta-row .licence-box[open] { flex-basis: 100%; }
+  :root body .site-meta-row .site-status { flex: 0 0 auto; white-space: nowrap; margin-left: auto; }
+  :root body .site-meta-row .site-status-word { display: none; }
+  :root body .site-meta-row :is(.licence-label, .site-status, .site-status-kicker) { font-size: 9px !important; letter-spacing: .06em !important; }
+}
+@media screen and (max-width: 600px) {
+  .site-meta-row:has(.licence-box[open]) .licence { flex-basis: 100% !important; }
+}
