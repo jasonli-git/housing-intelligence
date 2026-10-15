@@ -263,11 +263,12 @@ class BroadbandLocationsAdapter(BroadbandSummaryAdapter):
             "served": "fixed_broadband_served_unserved",
             "fiber": "FibertothePremises_fixed_broadband",
         }[ref.layer]
-        return f"bdc_34_{kind}_{file_stamp(ref.vintage)}.csv.zip"
+        # As the download page saves it; the API names the same bytes `.csv.zip`.
+        return f"bdc_34_{kind}_{file_stamp(ref.vintage)}.zip"
 
     @classmethod
     def xlsx_records(cls, path: Path, ref: ReleaseRef) -> list[dict[str, object]]:
-        member = cls.filename(ref).removesuffix(".zip")
+        member = cls.filename(ref).replace(".zip", ".csv")
         try:
             with zipfile.ZipFile(path) as archive:
                 if archive.namelist() != [member]:

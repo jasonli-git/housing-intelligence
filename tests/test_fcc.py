@@ -237,7 +237,7 @@ def location_archive(path: Path, layer: str, rows: list[list[str]]) -> Path:
     writer.writerows(rows)
     with zipfile.ZipFile(path, "w") as zipped:
         zipped.writestr(
-            BroadbandLocationsAdapter.filename(ref).removesuffix(".zip"),
+            BroadbandLocationsAdapter.filename(ref).replace(".zip", ".csv"),
             buffer.getvalue(),
         )
     return path
@@ -259,10 +259,10 @@ def test_location_files_reduce_to_counts_per_block(
     monkeypatch.setattr(BroadbandLocationsAdapter, "minimum", 1)
     served, fiber = BroadbandLocationsAdapter().refs()
     assert BroadbandLocationsAdapter.filename(served) == (
-        "bdc_34_fixed_broadband_served_unserved_D25_13oct2026.csv.zip"
+        "bdc_34_fixed_broadband_served_unserved_D25_13oct2026.zip"
     )
     assert BroadbandLocationsAdapter.filename(fiber) == (
-        "bdc_34_FibertothePremises_fixed_broadband_D25_13oct2026.csv.zip"
+        "bdc_34_FibertothePremises_fixed_broadband_D25_13oct2026.zip"
     )
     rows = [
         ["1", A, "h", "1", "1", "1"],
