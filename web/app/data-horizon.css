@@ -1,0 +1,76 @@
+/* The two "about the data" pages — source freshness and revised figures — in the Horizon
+   theme (2026-10-15). Their colour is a highlighter's lime, the one hue no other page uses,
+   on a plain ledger paper: these pages are records, and the lime marks what is fresh. A row
+   of counts replaces the big number, and each status is a coloured chip. */
+@media screen {
+  body:has(main.horizon-page[data-region-level="data"]) {
+    --plate-ink: light-dark(#1f2116, #ecefe0); --plate-paper: light-dark(#f4f5ee, #0b0c08);
+    --plate-accent: light-dark(#5f7310, #cfe36a);
+    --plate-rule: light-dark(#1f211614, #ecefe014); --plate-strong-rule: light-dark(#1f211626, #ecefe626);
+    --text-secondary: light-dark(#53574a, #b5b9a8); --text-muted: light-dark(#7a7e70, #8b8f80);
+    --glass: light-dark(#fdfdf8b3, #ffffff0b); --glass-edge: light-dark(#ffffff, #ecefe01f);
+    --atlas-accent: var(--plate-accent);
+  }
+  body:has(main.horizon-page[data-region-level="data"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#dbe9a0,#4d5c12) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#e7ecd0,#3a3f24) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#cfe0b0,#2e3a1c) 0%, transparent 70%) !important; opacity: .5 !important; }
+
+  .horizon-page.atlas-ledger > .page-head { display: block !important; padding-block: 1.4rem .6rem; }
+  .horizon-page.atlas-ledger .kind { display: inline-flex; margin: .9rem 0 .2rem; padding: .2rem .65rem; border: 1px solid var(--glass-edge); border-radius: 999px; background: var(--glass); color: var(--text-secondary); font: 600 11px/1.4 var(--font-mono); letter-spacing: .1em; }
+  .horizon-page.atlas-ledger .kind::before { display: none; }
+  .horizon-page.atlas-ledger .history-intro { max-width: 62ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.5; color: var(--text-secondary); }
+
+  /* The two pages as a text switch, drawn like the New Jersey page's "On this page" line. */
+  body:has(main.horizon-page[data-region-level="data"]) .history-tabs.state-jump { display: flex; margin: 1rem 0 .2rem; padding: 0; border: 0; background: none; }
+  body:has(main.horizon-page[data-region-level="data"]) .history-tabs.state-jump::before { content: "About the data"; }
+  body:has(main.horizon-page[data-region-level="data"]) main .history-tabs.state-jump a[aria-current="page"] { font-weight: 600; pointer-events: none; }
+  body:has(main.horizon-page[data-region-level="data"]) main .history-tabs.state-jump a[aria-current="page"] span { background-size: 100% 1.5px; }
+
+  /* Counts in a row. */
+  .data-tally { display: flex; flex-wrap: wrap; gap: .5rem; margin: .8rem 0 .4rem; padding: 0; list-style: none; }
+  .data-tally li { display: inline-flex; align-items: baseline; gap: .4rem; padding: .35rem .85rem; border: 1px solid var(--plate-strong-rule); border-radius: 999px; background: var(--glass); font-size: 13px; color: var(--text-secondary); }
+  .data-tally b { font: 400 22px/1 Georgia, serif; font-variant-numeric: lining-nums; color: var(--plate-ink); }
+  .data-tally li[data-status="current"] { border-color: color-mix(in srgb, var(--plate-accent) 55%, transparent); }
+  .data-tally li[data-status="current"] b { color: var(--plate-accent); }
+  .data-tally li[data-status="pending"] b { color: light-dark(#a8631e, #f2bb7a); }
+  .data-tally li[data-status="unreachable"] b { color: light-dark(#a33a3a, #f19a9a); }
+  .horizon-page.atlas-ledger :is(.history-explainer, .fresh-built) { color: var(--text-muted); }
+
+  /* Each group and each table in glass. */
+  .horizon-page .fresh-cadence-group, .horizon-page .change-group { margin-top: 1rem; padding: 1rem 1.2rem; background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 24px; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 24px 50px -36px #000c; }
+  .horizon-page :is(#fresh-heading, .change-day) { font: 400 clamp(26px, 3vw, 36px)/1.15 Georgia, serif !important; letter-spacing: -.025em; }
+  .horizon-page :is(.fresh-cadence-heading, .change-metric) { font: 400 22px/1.2 Georgia, serif !important; letter-spacing: -.015em; }
+  .horizon-page :is(.fresh-cadence-heading span, .change-day-count) { margin-left: .5rem; font: 500 12px/1.4 var(--font-text); color: var(--text-muted); }
+  .horizon-page :is(table.freshness, table.change-places) thead th { font: 600 10px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--plate-strong-rule); }
+  .horizon-page :is(table.freshness, table.change-places) :is(td, tbody th) { border-bottom: 1px solid var(--plate-rule); }
+  .horizon-page table.freshness .fresh-name { font-weight: 600; }
+
+  /* Status as a coloured chip. */
+  .horizon-page table.freshness .fresh-status, .horizon-page .change-note .fresh-status { display: inline-block; padding: .12rem .55rem; border-radius: 999px; font: 600 11px/1.4 var(--font-text); background: color-mix(in srgb, var(--plate-accent) 16%, transparent); color: var(--plate-accent); }
+  .horizon-page table.freshness tr[data-status="pending"] .fresh-status { background: light-dark(#f6e3c8, #4a3418); color: light-dark(#8a5a12, #f2c98a); }
+  .horizon-page table.freshness tr[data-status="unreachable"] .fresh-status { background: light-dark(#f6d6d6, #4a1d1d); color: light-dark(#9b2c2c, #f3a6a6); }
+  .horizon-page table.freshness tr[data-status="not_tracked"] .fresh-status { background: color-mix(in srgb, var(--text-muted) 16%, transparent); color: var(--text-secondary); }
+  .horizon-page table.freshness .fresh-status :is(button, span, a) { color: inherit !important; font: inherit; }
+  .horizon-page .fresh-stale { color: light-dark(#8a5a12, #f2c98a) !important; }
+  .horizon-page .change-summary { color: var(--text-secondary); }
+}
+@media screen {
+  /* The counts are filters: buttons inside the pills. */
+  .data-tally li { padding: 0 !important; }
+  .data-tally button { display: inline-flex; align-items: baseline; gap: .4rem; min-height: 36px; padding: .35rem .85rem; border: 0; border-radius: 999px; background: none; color: inherit; font: inherit; cursor: pointer; }
+  .data-tally li:has(button[aria-pressed="true"]) { background: color-mix(in srgb, var(--plate-ink) 10%, var(--glass)); border-color: var(--plate-ink) !important; }
+  .data-tally li:has(button[aria-pressed="true"]) button { font-weight: 600; }
+  .data-tally button:focus-visible { outline: 2px solid var(--plate-accent); outline-offset: 2px; }
+  main[data-filter="current"] table.freshness tbody tr:not([data-status="current"]),
+  main[data-filter="pending"] table.freshness tbody tr:not([data-status="pending"]),
+  main[data-filter="unreachable"] table.freshness tbody tr:not([data-status="unreachable"]),
+  main[data-filter="not_tracked"] table.freshness tbody tr:not([data-status="not_tracked"]) { display: none; }
+  main[data-filter="current"] .fresh-cadence-group:not(:has(tr[data-status="current"])),
+  main[data-filter="pending"] .fresh-cadence-group:not(:has(tr[data-status="pending"])),
+  main[data-filter="unreachable"] .fresh-cadence-group:not(:has(tr[data-status="unreachable"])),
+  main[data-filter="not_tracked"] .fresh-cadence-group:not(:has(tr[data-status="not_tracked"])) { display: none; }
+
+  /* Links in the page's ink, underlined in lime, rather than the site's mixed link colours. */
+  body:has(main.horizon-page[data-region-level="data"]) main :is(table, .change-note, .change-summary, .history-explainer, .meta) a { color: var(--plate-ink) !important; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--plate-accent) 70%, transparent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+  body:has(main.horizon-page[data-region-level="data"]) main :is(table, .change-note, .change-summary, .history-explainer, .meta) a:hover { color: var(--plate-accent) !important; }
+  body:has(main.horizon-page[data-region-level="data"]) main .crumbs a { color: var(--text-secondary) !important; }
+}
+@media screen { main[data-filter] .fresh-cadence-heading span { display: none; } }

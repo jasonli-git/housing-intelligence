@@ -5,10 +5,12 @@ import { BuiltAgo } from "@/components/BuiltAgo";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
-import { SectionJump } from "@/components/SectionJump";
 import { NextRelease } from "@/components/NextRelease";
+import { StatusFilter } from "@/components/StatusFilter";
 import { api } from "@/lib/api";
 import { pageMetadata } from "@/lib/meta";
+import "../horizon-theme.css";
+import "../data-horizon.css";
 import {
   checkedDaysBefore,
   dayLabel,
@@ -58,18 +60,25 @@ export default async function FreshnessPage() {
   return (
     <>
       <Masthead affordability={{ kind: "hidden" }} />
-      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history">
+      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history horizon-page" data-region-level="data">
         <header className="page-head" data-kind="data">
           <div>
             <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Data freshness" />
             <Kind kind="data" />
             <h1 className="page-title">How current is each source</h1>
-            <p className="meta history-intro">Data dates and update checks, kept separate.</p>
-            <nav className="history-tabs" aria-label="Source history"><Link href="/freshness" aria-current="page">Source freshness</Link><Link href="/changes">Revised figures <span aria-hidden="true">↗</span></Link><span className="page-section-nav"><SectionJump /></span></nav>
+            <p className="meta history-intro">Every source behind the site: how recent its data is, and when we last checked for newer.</p>
+            <nav className="history-tabs state-jump" aria-label="About the data"><Link href="/freshness" aria-current="page"><span>Source freshness</span></Link><Link href="/changes"><span>Revised figures</span><i aria-hidden="true">→</i></Link></nav>
+            <StatusFilter
+              total={report.sources.length}
+              counts={(["current", "pending", "unreachable", "not_tracked"] as const)
+                .map((status) => ({ status, label: STATUS_COPY[status].label.toLowerCase(), count: report.sources.filter((source) => source.status === status).length }))
+                .filter((entry) => entry.count > 0)}
+            />
             <details className="history-explainer"><summary>How to read these dates</summary><p className="meta">
-              Data through is the period a source describes; Last checked is when we looked for
-              updates. Publishers update at the frequencies below; we check weekly. Next
-              release is the publisher’s own calendar, linked, where it publishes one.
+              “Covers up to” is the latest period a source describes; “We last checked” is when
+              we asked the publisher for anything newer. Publishers update at the frequencies
+              below, and we check every Friday. “Next release” is the publisher’s own calendar,
+              linked where it publishes one.
             </p></details>
             <p className="meta fresh-built">
               Built {dayLabel(report.generated_at)}
@@ -77,7 +86,6 @@ export default async function FreshnessPage() {
               dates are UTC
             </p>
           </div>
-          <aside className="history-portrait" aria-label="Source coverage"><strong>{report.sources.length}</strong><span>sources tracked</span><small>Source checks scheduled Fridays</small></aside>
         </header>
 
         <section className="section" aria-labelledby="fresh-heading">
@@ -106,9 +114,9 @@ export default async function FreshnessPage() {
                     <tr className="colheads">
                       <th scope="col">Source</th>
                       <th scope="col">Status</th>
-                      <th scope="col">Data through</th>
-                      <th scope="col">Last checked</th>
-                      <th scope="col">Downloaded</th>
+                      <th scope="col">Covers up to</th>
+                      <th scope="col">We last checked</th>
+                      <th scope="col">We downloaded</th>
                       <th scope="col">Next release</th>
                     </tr>
                   </thead>
