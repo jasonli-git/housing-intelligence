@@ -1,9 +1,19 @@
-/* The housing atlas in the Horizon theme (2026-10-15): the home page's own night sky — the
-   atlas is the site's map, so it takes the home palette rather than a tool's colour — with
+/* The housing atlas in the Horizon theme (2026-10-15), in a colour of its own (below), with
    the globe floating on it and every panel in glass. On phones the panels stop floating:
    controls, then the map at full width with its zoom buttons tucked in a corner, then the
    legend, then the comparison, so nothing covers the map. Same controls and behaviour. */
 @media screen {
+  /* Its own colour (2026-10-15): the one near-neutral page — stone paper by day, graphite by
+     night, a slate and silver glow and a thin gold accent, a map room's palette — so the
+     map's warm fills carry the colour. */
+  body:has(main.horizon-page[data-region-level="atlas"]) {
+    --plate-ink: light-dark(#1e1f22, #ecebe6); --plate-paper: light-dark(#f1f0eb, #0b0c0e);
+    --plate-accent: light-dark(#8a6a24, #e3c27a);
+    --plate-rule: light-dark(#1e1f2214, #ecebe614); --plate-strong-rule: light-dark(#1e1f2226, #ecebe626);
+    --text-secondary: light-dark(#55575c, #b6b6b2); --text-muted: light-dark(#7c7e83, #8b8c89);
+    --glass: light-dark(#fbfaf7b3, #ffffff0b); --glass-edge: light-dark(#ffffff, #ecebe61f);
+  }
+  body:has(main.horizon-page[data-region-level="atlas"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#c9ccd6,#3a4152) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#e1dccb,#4d4a42) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#d2d6de,#2c3240) 0%, transparent 70%) !important; opacity: .6 !important; }
   body:has(main.horizon-page[data-region-level="atlas"]) { --surface-card: var(--glass); --surface-2: color-mix(in srgb, var(--plate-paper) 70%, transparent); --border: var(--plate-strong-rule); --atlas-ink: var(--plate-accent); }
   .horizon-page.housing-atlas-page .atlas-title h1 { font: 400 clamp(40px, 5.4vw, 72px)/1 Georgia, serif !important; letter-spacing: -.05em; color: var(--plate-ink); }
   .horizon-page .atlas-lede { margin: .45rem 0 0; font-size: clamp(14px, 1.5vw, 16px); color: var(--text-secondary); }
@@ -66,8 +76,8 @@
   @media (min-width: 901px) { .horizon-page .atlas-controls { top: 20px !important; } }
 }
 @media screen {
-  /* The map in the same warm night: a plum globe, sand-coloured land, paper-coloured edges. */
-  .horizon-page .atlas-globe-ocean { filter: drop-shadow(0 0 28px light-dark(#c9783f44, #f08a5d33)) !important; }
+  /* The map in the page's own night: a slate globe with a gold rim, sand-coloured land. */
+  .horizon-page .atlas-globe-ocean { filter: drop-shadow(0 0 28px light-dark(#8a6a2433, #e3c27a2e)) !important; }
   .horizon-page .atlas-map-geography .atlas-context-land { fill: light-dark(#d9c3ab, #5a4a52) !important; stroke: light-dark(#c2a88e, #3a2f3a) !important; }
   .horizon-page .atlas-map-geography path { stroke: light-dark(#fff8f0, #1c1620); }
   .horizon-page .atlas-map-geography path:hover, .horizon-page .atlas-map-geography path:focus-visible, .horizon-page .atlas-map-geography path[data-selected="true"] { stroke: light-dark(#22201c, #ffe2a8); }
