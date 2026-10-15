@@ -31,7 +31,7 @@ export function Masthead({
   guideActive = false,
   helpActive = false,
   atlasActive = false,
-  budgetLabel = "Find your fit",
+  budgetLabel = "Where can I afford?",
   search = true,
 }: {
   affordability: AffordabilityControl;
@@ -47,7 +47,7 @@ export function Masthead({
 }) {
   const budgetContent = <>
     <span className="bar-budget-long">{budgetLabel}</span>
-    <span className="bar-budget-short" aria-hidden="true">{budgetLabel === "Find places · NJ" ? "Budget · NJ" : budgetLabel === "Find within my budget" ? "My budget" : budgetLabel}</span>
+    <span className="bar-budget-short" aria-hidden="true">{budgetLabel === "Find places · NJ" ? "Budget · NJ" : budgetLabel === "Find within my budget" ? "My budget" : budgetLabel === "Where can I afford?" ? "Afford?" : budgetLabel}</span>
   </>;
   const toolLinks = <>
     {affordability.kind === "hidden" ? null : affordability.kind === "disabled" ? <button className="bar-budget" type="button" disabled title={affordability.reason} aria-label={`${budgetLabel}. ${affordability.reason}`}>{budgetContent}</button> :

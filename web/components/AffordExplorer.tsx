@@ -2,7 +2,7 @@
 
 import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
-import { Fragment, type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
+import { type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
 
 import { PlacePicker } from "@/components/PlacePicker";
 import {
@@ -164,13 +164,7 @@ export function AffordExplorer({
   const allTownRows = income > 0 ? reach(towns, options) : [];
   const townRows = scope ? allTownRows.filter((row) => row.place.parentId === scope.countyId) : allTownRows;
   const townsWithin = townRows.filter((row) => row.within);
-  const countiesWithin = countyRows.filter((row) => row.within).length;
   const shownTowns = allTowns ? townsWithin : townsWithin.slice(0, FIRST_TOWNS);
-  const comparisonRows = scope ? townRows : countyRows;
-  const home =
-    mode === "own"
-      ? "owning the typical single-family home"
-      : "renting the typical home";
   const pickedPlace =
     picked === null ? null : (places.find((p) => p.id === picked) ?? null);
   const check =
@@ -191,32 +185,35 @@ export function AffordExplorer({
       [next === "own" ? 0 : 1]?.focus();
   }
 
+  // What would change the answer: the cheapest places just over budget, and how many
+  // more places the other mode or the largest down payment would open up.
+  const budget = income > 0 ? monthlyBudget(income) : 0;
+  const nearMisses = townRows.filter((row) => !row.within && row.missing.length === 0).slice(0, 4);
+  const scopedTowns = scope ? towns.filter((town) => town.parentId === scope.countyId) : towns;
+  const otherMode: Mode = mode === "own" ? "rent" : "own";
+  const otherModeFits = income > 0 ? reach(scopedTowns, { ...options, mode: otherMode }).filter((row) => row.within).length : 0;
+  const maxDown = DOWN_PAYMENTS[DOWN_PAYMENTS.length - 1];
+  const moreDownFits = income > 0 && mode === "own" && down < maxDown
+    ? reach(scopedTowns, { ...options, downPct: maxDown }).filter((row) => row.within).length
+    : null;
+  const unlisted = scopedTowns.length - townRows.length;
+  const stripRows = countyRows.filter((row) => row.missing.length === 0);
+  const stripMax = Math.max(budget, ...stripRows.map((row) => row.monthly)) * 1.04;
+  const verb = mode === "own" ? "buy" : "rent";
+
   return (
-    <section className="afford budget-explorer" data-view="list" data-has-income={income > 0} aria-label="Find places within your budget">
+    <section className="afford budget-explorer wca" data-view="list" data-has-income={income > 0} aria-label="Find places within your budget">
+      <div className="wca-step-label"><span>1</span>Your situation</div>
       <div className="afford-controls">
-        <label className="control" htmlFor={`${id}-scope`}>
-          <span className="control-label">Where</span>
-          <select id={`${id}-scope`} aria-label="Where" value={countyId ?? "all"} onChange={(event) => {
-            const next = event.target.value === "all" ? null : Number(event.target.value);
-            setCountyId(next);
-            setAllTowns(false);
-            if (next !== null) setPicked(next);
-            else setPicked(null);
-          }}>
-            <option value="all">All New Jersey</option>
-            {counties.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}
-          </select>
-        </label>
-        <label className="control" htmlFor={`${id}-income`}>
-          <span className="control-label">
-            Yearly household income · before tax
-          </span>
+        <label className="control wca-income" htmlFor={`${id}-income`}>
+          <span className="control-label">Household income a year, before tax</span>
           <span className="money-input">
             <span aria-hidden="true">$</span>
             <input
               id={`${id}-income`}
               inputMode="numeric"
               autoComplete="off"
+              placeholder="e.g. 95,000"
               value={incomeText}
               onChange={(event) => {
                 setIncomeText(event.target.value);
@@ -227,7 +224,7 @@ export function AffordExplorer({
         </label>
         <div className="control">
           <span className="control-label" id={`${id}-mode`}>
-            Looking to
+            Buy or rent
           </span>
           <div
             className="seg"
@@ -244,7 +241,7 @@ export function AffordExplorer({
                 tabIndex={mode === m.key ? 0 : -1}
                 onClick={() => setMode(m.key)}
               >
-                {m.label}
+                {m.key === "own" ? "Buy" : "Rent"}
               </button>
             ))}
           </div>
@@ -265,31 +262,115 @@ export function AffordExplorer({
             </select>
           </label>
         )}
+        <label className="control" htmlFor={`${id}-scope`}>
+          <span className="control-label">Search in</span>
+          <select id={`${id}-scope`} aria-label="Search in" value={countyId ?? "all"} onChange={(event) => {
+            const next = event.target.value === "all" ? null : Number(event.target.value);
+            setCountyId(next);
+            setAllTowns(false);
+            if (next !== null) setPicked(next);
+            else setPicked(null);
+          }}>
+            <option value="all">All New Jersey</option>
+            {counties.map((place) => <option key={place.id} value={place.id}>{place.name}</option>)}
+          </select>
+        </label>
       </div>
 
-      <div className="budget-scope-line">
-        <span>Searching <b>{scope?.countyName ?? "all New Jersey"}</b></span>
-        {scope && <button type="button" onClick={() => { setCountyId(null); setAllTowns(false); }}>Search all New Jersey <span aria-hidden="true">↗</span></button>}
-      </div>
-
+      <div className="wca-step-label"><span>2</span>Your budget</div>
       <div className="budget-headline" aria-live="polite">
-        <span>Your monthly housing budget</span>
-        <strong>{income > 0 ? money(monthlyBudget(income)) : "Start with your income"}</strong>
-        <p>{income > 0 ? "30% of income before tax. A comparison guide, not loan approval." : "Enter your income above. Typical costs, not listings. A guide, not loan approval."}</p>
+        {income > 0 ? <>
+          <strong>{money(budget)}<small> a month</small></strong>
+          <p>30% of {money(income)} a year — the usual line for what housing should cost.{mode === "own" && <> At a <b>{options.ratePct.toFixed(2)}%</b> mortgage rate with <b>{down}%</b> down.</>}</p>
+        </> : <>
+          <strong className="wca-empty">Enter your income</strong>
+          <p>We’ll turn it into a monthly housing budget and show which towns’ typical homes fit it.</p>
+        </>}
       </div>
-
       {income > 0 && <details className="budget-assumptions">
-        <summary>Your assumptions · {options.ratePct.toFixed(2)}% mortgage rate{mode === "rent" ? " · Rent only" : ""}</summary>
+        <summary>Adjust the rate, insurance or upkeep</summary>
         <div className="budget-inputs">
           <label className="control">Cash available for buying<input inputMode="decimal" value={household.cash ?? ""} placeholder="optional" onChange={(event) => saveHousehold({ ...household, cash: parseAmount(event.target.value) ?? undefined })} /></label>
           {([ ["ratePct", "Mortgage rate, %", rate.value], ["insuranceYear", "Homeowners insurance a year", null], ["upkeepPct", "Upkeep, % of price a year", UPKEEP_PCT] ] as const).map(([key, label, fallback]) => <label className="control" key={key}>{label}<input inputMode="decimal" value={personal[key] ?? ""} placeholder={fallback === null ? "area figure" : String(fallback)} onChange={(event) => { const next = { ...personal }; const value = parseAmount(event.target.value); if (value === null) delete next[key]; else next[key] = value; savePersonal(next); }} /></label>)}
         </div>
-        <p>Saved in this browser and shared with the cost cards. Property-specific prices, tax bills, HOA fees and flood premiums stay on the home’s profile.</p>
+        <p>Saved in this browser and shared with the cost cards on each place’s page.</p>
         {mode === "own" && down === FHA_DOWN && <p>FHA scenario: county loan limits are not checked. <a href={FHA_LIMITS.url} target="_blank" rel="noreferrer">Check the loan limit</a>.</p>}
       </details>}
 
-      <details className="budget-place-check" open={pickedPlace ? true : undefined}>
-      <summary>Check one place{pickedPlace ? ` · ${pickedPlace.name}` : ""}</summary>
+      {income > 0 && <>
+        <div className="wca-step-label"><span>3</span>Where it fits</div>
+        <div className="wca-answer" id={`${id}-summary`} aria-live="polite">
+          <p className="wca-count"><b>{townsWithin.length}</b> {townsWithin.length === 1 ? "town" : "towns"}</p>
+          <p className="wca-sentence">
+            {townsWithin.length > 0
+              ? <>where you could {verb} the typical home on {money(budget)} a month{scope ? <> in {scope.countyName}</> : null}, out of {townRows.length} with figures.</>
+              : <>fit {money(budget)} a month to {verb} the typical home{scope ? <> in {scope.countyName}</> : null}. Here’s what comes closest.</>}
+          </p>
+          {(otherModeFits > townsWithin.length || (moreDownFits ?? 0) > townsWithin.length) && <p className="wca-tip">
+            {otherModeFits > townsWithin.length && <button type="button" onClick={() => setMode(otherMode)}>{mode === "own" ? "Renting" : "Buying"}: {otherModeFits} {otherModeFits === 1 ? "town fits" : "towns fit"}</button>}
+            {moreDownFits !== null && moreDownFits > townsWithin.length && <button type="button" onClick={() => { setDown(maxDown); savePersonal({ ...personal, downPct: maxDown }); }}>With {maxDown}% down: {moreDownFits} {moreDownFits === 1 ? "town fits" : "towns fit"}</button>}
+          </p>}
+        </div>
+
+        <div className="wca-results">
+          {townsWithin.length > 0 && <section className="budget-town-results wca-list" aria-labelledby={`${id}-towns`}>
+            <h2 id={`${id}-towns`}>Within your budget</h2>
+            <ol>
+              {shownTowns.map((row) => (
+                <li key={row.place.id}>
+                  <Link href={regionPath(row.place.id)}>{row.place.name}</Link>
+                  {row.place.detail && <span className="wca-detail">{row.place.detail}</span>}
+                  <span className="wca-cost">{money(row.monthly)}<small>/mo</small></span>
+                  <span className="wca-room">{money(budget - row.monthly)} to spare</span>
+                </li>
+              ))}
+            </ol>
+            {townsWithin.length > FIRST_TOWNS && (
+              <button type="button" className="button" onClick={() => setAllTowns((all) => !all)}>
+                {allTowns ? `Show the first ${FIRST_TOWNS}` : `Show all ${townsWithin.length}`}
+              </button>
+            )}
+          </section>}
+          {nearMisses.length > 0 && <section className="wca-list wca-near" aria-labelledby={`${id}-near`}>
+            <h2 id={`${id}-near`}>Closest to your budget</h2>
+            <ol>
+              {nearMisses.map((row) => (
+                <li key={row.place.id}>
+                  <Link href={regionPath(row.place.id)}>{row.place.name}</Link>
+                  {row.place.detail && <span className="wca-detail">{row.place.detail}</span>}
+                  <span className="wca-cost">{money(row.monthly)}<small>/mo</small></span>
+                  <span className="wca-room">needs about {money(Math.ceil(incomeFor(row.monthly) / 1000) * 1000)} a year</span>
+                </li>
+              ))}
+            </ol>
+          </section>}
+        </div>
+
+        {!scope && stripRows.length > 0 && <section className="budget-comparison wca-strip" aria-labelledby={`${id}-strip`}>
+          <h2 id={`${id}-strip`}>Counties, typical home to {verb}</h2>
+          <p className="wca-strip-key"><span className="wca-key-line" aria-hidden="true" /> your budget, {money(budget)} · pick a county to search it</p>
+          <ul style={{ ["--budget-at" as string]: `${(budget / stripMax) * 100}%` }}>
+            {stripRows.map((row) => (
+              <li key={row.place.id} data-within={row.within}>
+                <button type="button" onClick={() => { setCountyId(row.place.id); setPicked(row.place.id); setAllTowns(false); }}>
+                  <span className="wca-strip-name">{row.place.name.replace(/ County$/, "")}</span>
+                  <span className="wca-strip-track"><span className="wca-strip-bar" style={{ width: `${(row.monthly / stripMax) * 100}%` }} /></span>
+                  <span className="wca-strip-value">{money(row.monthly)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>}
+        {scope && <p className="budget-scope-line wca-scope">Searching <b>{scope.countyName}</b> <button type="button" onClick={() => { setCountyId(null); setAllTowns(false); }}>Search all New Jersey</button></p>}
+
+        <p className="wca-fineprint">
+          Typical costs from published figures, not listings or loan approval{mode === "own" ? " — HOA fees and flood insurance aren’t included" : " — rent only, no utilities"}.
+          {unlisted > 0 && <> {unlisted} towns without {mode === "own" ? "a home value or tax bill" : "a rent figure"} aren’t listed; that doesn’t make them unaffordable.</>}
+        </p>
+      </>}
+
+      <details className="budget-place-check" open={pickedPlace && income > 0 ? true : undefined}>
+      <summary>Check a specific town or county{pickedPlace ? ` · ${pickedPlace.name}` : ""}</summary>
       <section className="check" aria-labelledby={`${id}-check`}>
         <div className="check-head">
           <h2 id={`${id}-check`} className="check-title">
@@ -347,138 +428,13 @@ export function AffordExplorer({
       </section>
       </details>
 
-      {income > 0 && <p className="table-note">{mode === "own" ? "Incomplete estimates are not counted as within budget. Buying cash is checked separately; HOA fees and flood premiums may add more." : "Rent-only results exclude utilities and renters insurance."}</p>}
-      <p className="afford-summary" id={`${id}-summary`} aria-live="polite" hidden={income <= 0}>
-        {income > 0 ? (
-          scope ? <>
-            With this budget, {home} is
-            within reach in <b>{townsWithin.length}</b> of {townRows.length} municipalities in {scope.countyName}.
-          </> : <>
-            With this budget, {home} is
-            within reach in <b>{countiesWithin}</b> of {countyRows.length}{" "}
-            counties and <b>{townsWithin.length}</b> of {townRows.length}{" "}
-            municipalities.
-          </>
-        ) : (
-          "Enter a yearly household income to see where the typical home is within reach."
-        )}
-      </p>
-
-      {income > 0 && <p className="budget-coverage-note">Missing data does not mean unaffordable. {(scope ? towns.filter(town => town.parentId === scope.countyId).length : towns.length) - townRows.length} municipalities in this search have no comparable {mode === "own" ? "home value or tax bill" : "rent figure"} and are not listed. Other incomplete estimates stay labelled separately; sale-price scenarios on local profiles are not used in this comparison.</p>}
-      {income > 0 && <div className="explorer">
-        <div className="scroll-x budget-comparison" tabIndex={0} role="region" aria-label="Place comparison table, scroll horizontally">
-          <table className="ranks">
-            <thead>
-              <tr>
-                <th scope="col">{scope ? "Municipality" : "County"}</th>
-                <th scope="col" className="num">
-                  A month
-                </th>
-                <th scope="col" className="num">
-                  Of income
-                </th>
-                <th scope="col">
-                  <span className="visually-hidden">Within reach</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {([true, false] as const).map((within) => {
-                const group = comparisonRows.filter((row) => row.within === within);
-                if (!group.length) return null;
-                return (
-                  <Fragment key={String(within)}>
-                    <tr className="afford-group-row"><th colSpan={4} scope="rowgroup">{scope
-                      ? within ? "Municipalities within reach" : "Other municipalities"
-                      : within ? "Counties within reach" : "Other counties"}</th></tr>
-                    {group.map((row) => (
-                      <tr
-                        key={row.place.id}
-                        className={row.within ? "within" : !scope ? "afford-secondary" : undefined}
-                      >
-                        <td><Link href={regionPath(row.place.id)}>{row.place.name}</Link><span className="budget-row-status">{row.missing.length > 0 ? `Incomplete: ${listed(row.missing)}` : row.within ? "Within budget on included costs" : "Above budget"}</span></td>
-                        <td className="num">{money(row.monthly)}</td>
-                        <td className="num">{share(row.share)}</td>
-                        <td className="reach-mark">{row.missing.length > 0 ? `Incomplete: ${listed(row.missing)}` : row.within ? "within budget*" : <span className="visually-hidden">Above budget</span>}</td>
-                      </tr>
-                    ))}
-                  </Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>}
-
-      {income > 0 && !scope && (
-        <section className="section budget-town-results" aria-labelledby={`${id}-towns`}>
-          <h2 id={`${id}-towns`}>Municipalities within reach</h2>
-          {townsWithin.length === 0 ? (
-            <p className="meta">
-              None of the {townRows.length} municipalities with figures is
-              within reach at this income.
-              {townRows[0] && townRows[0].missing.length === 0 &&
-                ` The least expensive is ${townRows[0].place.name}, at ${money(townRows[0].monthly)} a month — ${share(townRows[0].share)} of it.`}
-            </p>
-          ) : (
-            <>
-              <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
-                <table className="ranks towns">
-                  <thead>
-                    <tr>
-                      <th scope="col">Municipality</th>
-                      <th scope="col" className="num">
-                        A month
-                      </th>
-                      <th scope="col" className="num">
-                        Of income
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {shownTowns.map((row) => (
-                      <tr key={row.place.id}>
-                        <td>
-                          <Link href={regionPath(row.place.id)}>
-                            {row.place.name}
-                          </Link>
-                          {row.place.detail && (
-                            <span className="result-detail">
-                              {" "}
-                              {row.place.detail}
-                            </span>
-                          )}
-                        </td>
-                        <td className="num">{money(row.monthly)}</td>
-                        <td className="num">{share(row.share)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {townsWithin.length > FIRST_TOWNS && (
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() => setAllTowns((all) => !all)}
-                >
-                  {allTowns
-                    ? `Show the first ${FIRST_TOWNS}`
-                    : `Show all ${townsWithin.length}`}
-                </button>
-              )}
-            </>
-          )}
-        </section>
-      )}
-
-      <details className="afford-notes"><summary>How these estimates are worked out</summary><p className="table-note">
+      <details className="afford-notes"><summary>How we estimate</summary><p className="table-note">
         {mode === "own" ? (
           <>
             Owning: Zillow’s typical single-family home value ({asOf.home}), a
             30-year fixed loan at {options.ratePct.toFixed(2)}% ({personal.ratePct === undefined ? `national average, ${rate.asOf}` : "your quoted rate"}) with {down}% down, and the typical property
             tax bill from New Jersey’s assessment records ({asOf.tax}).
-            Included: homeowners insurance ({personal.insuranceYear === undefined ? `Census, ${asOf.insurance ?? "area figure"}` : "your annual quote"}) and utilities (electricity vintage {asOf.utilities ?? "area figure"}, gas and water where supplied), mortgage insurance when applicable, and upkeep ({personal.upkeepPct ?? UPKEEP_PCT}% of price a year, {personal.upkeepPct === undefined ? "a rule of thumb" : "your assumption"}), using the same calculation and saved assumptions as the profile cost cards. See each profile for component dates and definitions. Missing required costs mean an incomplete estimate, never a green result. HOA fees and flood insurance are not included; add them for a specific home on its profile. Places without a Zillow value or a
+            Included: homeowners insurance ({personal.insuranceYear === undefined ? `Census, ${asOf.insurance ?? "area figure"}` : "your annual quote"}) and utilities (electricity vintage {asOf.utilities ?? "area figure"}, gas and water where supplied), mortgage insurance when applicable, and upkeep ({personal.upkeepPct ?? UPKEEP_PCT}% of price a year, {personal.upkeepPct === undefined ? "a rule of thumb" : "your assumption"}), using the same calculation and saved assumptions as the profile cost cards. Missing required costs mean an incomplete estimate, never a fit. Places without a Zillow value or a
             matched tax bill are not counted.
           </>
         ) : (
@@ -488,8 +444,8 @@ export function AffordExplorer({
             values. Places without it are not counted.
           </>
         )}{" "}
-        Computed from these figures by fixed rules; not a quote, and not written
-        by AI.
+        A place fits when its typical monthly cost is at most 30% of income before tax, HUD’s cost-burden line.
+        Computed from these figures by fixed rules; not a quote, and not written by AI.
       </p></details>
     </section>
   );

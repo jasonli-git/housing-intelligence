@@ -13,7 +13,7 @@ try {
     assert(await page.locator('.home-tools a[href="/help"]').isVisible(),'Housing help has a home tool card');
     assert.equal(await page.locator('.bar-help-route[href="/help"]').count(),2,'Housing help is in desktop and dropdown navigation');
     assert.equal(await page.locator('.bar-budget[href="/afford?county=all"]').count(),2,'Home affordability link is enabled in both menus');
-    assert(await page.locator('.bar-budget .bar-budget-long').evaluateAll(els=>els.every(el=>el.textContent==='Find your fit')),'Home uses the shared Find your fit menu label');
+    assert(await page.locator('.bar-budget .bar-budget-long').evaluateAll(els=>els.every(el=>el.textContent==='Where can I afford?')),'Home uses the shared Where can I afford? menu label');
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Home tool cards fit the viewport');
     await page.goto(origin+'/states/new-jersey',{waitUntil:'networkidle'});
     assert(await page.locator('.state-next-step a[href="/guide"]').isVisible(),'NJ has the buyer-guide next step');
