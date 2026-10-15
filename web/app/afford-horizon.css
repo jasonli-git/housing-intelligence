@@ -3,10 +3,10 @@
    steps 2 and 3 sit in plain glass. Presentation only. */
 @media screen {
   /* Its own colour: terracotta, the budget tool's colour on every link to it (#371), on a
-     peach paper with a coral, rose and apricot glow — warmer than the home page's
-     rust-violet-amber and unlike the state's blue or the places' greens and violet. */
+     cream paper with an orange, gold and apricot glow — no pink, so it never reads as the
+     buyer's guide's rose, and unlike the state's blue or the places' greens and violet. */
   body:has(main.horizon-page[data-region-level="tool"]) {
-    --plate-ink: light-dark(#2a1c17, #f3e6df); --plate-paper: light-dark(#f8eee8, #120b09);
+    --plate-ink: light-dark(#2a1e12, #f3e9dc); --plate-paper: light-dark(#f8f0e4, #120d06);
     --plate-accent: light-dark(#a44e34, #edb09b);
     --plate-rule: light-dark(#2a1c1714, #f3e6df14); --plate-strong-rule: light-dark(#2a1c1726, #f3e6df26);
     --text-secondary: light-dark(#664d43, #c4ada3); --text-muted: light-dark(#8f756a, #947d73);
@@ -14,7 +14,7 @@
     --budget-accent: var(--plate-accent);
     --atlas-accent: var(--plate-accent);
   }
-  body:has(main.horizon-page[data-region-level="tool"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#f0a088,#a8432a) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#f2b6c4,#7e2a4a) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#f7cf95,#9a5a1e) 0%, transparent 70%) !important; opacity: .55 !important; }
+  body:has(main.horizon-page[data-region-level="tool"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#f2a46e,#a8471c) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#f6d27a,#8a6414) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#f0b98a,#7a3a12) 0%, transparent 70%) !important; opacity: .55 !important; }
   .horizon-page.budget-page > .page-head { padding-block: 1.4rem .6rem; }
   .horizon-page.budget-page .kind { display: inline-flex; margin: .9rem 0 .2rem; padding: .2rem .65rem; border: 1px solid var(--glass-edge); border-radius: 999px; background: var(--glass); color: var(--text-secondary); font: 600 11px/1.4 var(--font-mono); letter-spacing: .1em; }
   .horizon-page.budget-page .kind::before { display: none; }
@@ -70,3 +70,4 @@
      box, so the count sits on lining figures with room beneath it. */
   .horizon-page .wca .wca-count { font-variant-numeric: lining-nums; line-height: 1.1; padding-bottom: .06em; }
 }
+@media screen { .horizon-page .wca .wca-scope { display: flex; justify-content: flex-start; gap: .6rem; padding: .5rem 0; border: 0; background: none; font-size: 13px; } .horizon-page .wca .wca-scope button { min-height: 32px; padding: .2rem .8rem; border: 1px solid var(--plate-strong-rule); border-radius: 999px; } }

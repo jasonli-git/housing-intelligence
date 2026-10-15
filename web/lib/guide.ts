@@ -273,7 +273,18 @@ export type CheckItem = {
   steps: Step[];
   /** What a publisher told the project about this check directly (#370). */
   inquiry?: Inquiry;
+  /** A short factual note when the place's figure passes a stated line (FLAG_LINES). */
+  flag?: string;
 };
+
+/**
+ * The lines past which a check is marked worth a closer look (2026-10-15, ARCHITECTURE
+ * #376). Each is a published figure crossing a plain threshold, never a judgement of the
+ * place: a tenth of homes in FEMA's high-risk zone; any home in a tidal-risk area; a
+ * health-based violation at the largest water system; a twentieth of homes off public
+ * water; ten or more open contaminated sites; assessments below the state's 85% line.
+ */
+export const FLAG_LINES = { floodShare: 0.1, offPublicWater: 0.05, openSites: 10, directorRatio: 85 } as const;
 
 export const LINKS = {
   femaMap: { label: "Look up the address on FEMA’s flood map", href: "https://msc.fema.gov/portal/search" },
@@ -314,9 +325,13 @@ function floodItem(data: GuideData): CheckItem {
   } else {
     finding = "No flood zone figure is published for this place.";
   }
+  const floodFlag = mapped && mapped.value < MAPPED_FLOOR ? undefined
+    : high && high.value >= FLAG_LINES.floodShare ? `${pct(high.value)} of homes in a high-risk flood zone`
+    : tidal && tidal.value > 0 ? "Some homes at risk of tidal flooding" : undefined;
   return {
     key: "flood",
     title: "Flood risk",
+    flag: floodFlag,
     finding,
     limitation: "A share of the place’s homes says nothing certain about one house, and homes outside a zone flood too. Lenders require flood insurance only inside the high-risk zone.",
     source: citation(data, high ?? mapped),
@@ -349,8 +364,12 @@ function waterItem(data: GuideData): CheckItem {
     ? `${parts.join("; ")}.`.replace(/^./, (c) => c.toUpperCase())
     : "No water system figure is published for this place.";
   const wells = onPublic && onPublic.value < 0.95;
+  const waterFlag = main && main.violations > 0 ? `${main.violations} health-based violation${main.violations === 1 ? "" : "s"} at the main system`
+    : !main && violation && violation.value > 0 ? "Recent water violations"
+    : onPublic && onPublic.value < 1 - FLAG_LINES.offPublicWater ? "Many homes on private wells" : undefined;
   return {
     key: "water",
+    flag: waterFlag,
     title: "Drinking water, lead and PFAS",
     finding: wells ? `${finding} The rest are likely on private wells, which no public record here tests.` : finding,
     limitation: "A system’s record is not the water at one tap: a home’s own pipes and service line matter, and a private well is the owner’s to test.",
@@ -369,6 +388,7 @@ function sitesItem(data: GuideData): CheckItem {
     : "No contaminated-site count is published for this place.";
   return {
     key: "sites",
+    flag: open && open.value >= FLAG_LINES.openSites ? `${formatValue(open.value, "count")} open contaminated sites` : undefined,
     title: "Contaminated sites and oil tanks",
     finding,
     limitation: "A count for the whole place does not say how near any site is to one home. A buried heating-oil tank is often unrecorded until someone looks.",
@@ -387,8 +407,10 @@ function taxItem(data: GuideData, taxHref: string): CheckItem {
   if (rate) parts.push(`the state’s effective rate is ${formatValue(rate.value, rate.unit)}`);
   let finding = parts.length ? `${parts.join("; ")}.` : "No typical tax bill is published for this place.";
   if (reval) finding += ` Assessments were last brought back to market value in ${Math.round(reval.value)}; a revaluation can move one home’s bill a long way.`;
+  const ratio = find(data.levels, "nj_director_ratio");
   return {
     key: "tax",
+    flag: ratio && ratio.value < FLAG_LINES.directorRatio ? "Town values may be reset soon" : undefined,
     title: "The tax bill and revaluation",
     finding,
     limitation: "The typical bill is not this home’s. After a sale or a revaluation the bill can change.",
