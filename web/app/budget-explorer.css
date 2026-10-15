@@ -149,37 +149,9 @@
   }
 }
 
-/* Checking one place: beside the results, or behind a toggle (mockup, 2026-10-15). */
-@media screen {
-  .wca-results[data-check="beside"] { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-  .wca-quick { display: grid; align-content: start; gap: .7rem; border-color: color-mix(in srgb, var(--budget-accent) 40%, var(--border)); }
-  .wca-quick .place-search, .wca-check-view .place-search { width: 100%; margin: 0; }
-  .wca-quick-empty { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted); }
-  .wca-quick-result > a { font: 600 17px/1.3 var(--font-text); color: var(--text-primary); text-decoration: none; }
-  .wca-quick-result ul { margin: .5rem 0 0; padding: 0; list-style: none; }
-  .wca-quick-result li { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); column-gap: .6rem; padding: .5rem 0; border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
-  .wca-quick-result li > span { grid-row: 1 / 3; align-self: center; font-size: 12px; color: var(--text-muted); }
-  .wca-quick-result li b { font-variant-numeric: tabular-nums; }
-  .wca-quick-result li b small { font-weight: 400; color: var(--text-muted); }
-  .wca-quick-result li em { font-style: normal; font-size: 12px; color: var(--text-secondary); }
-  .wca-quick-result li[data-fits="true"] em { color: light-dark(#2f7a4f, #8fd3a8); }
-  .budget-page .wca-view { width: fit-content; min-height: 40px; margin-bottom: 1rem; }
-  .budget-page .wca-view button { padding-inline: 1rem; }
-  .wca-check-view { display: grid; gap: 1rem; max-width: 34rem; padding: 1.1rem 1.2rem; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-card); }
-  .wca-check-view .wca-quick-result > a { font-size: 22px; }
-  .wca-mock-switch { position: fixed; z-index: 50; right: 16px; bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; max-width: calc(100vw - 32px); padding: .45rem .6rem; border: 1px dashed var(--budget-accent); border-radius: 12px; background: var(--surface-card); font: 12px/1.3 var(--font-text); color: var(--text-secondary); box-shadow: 0 10px 30px -15px #000a; }
-  .wca-mock-switch button { min-height: 30px; padding: .2rem .6rem; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text-primary); font: inherit; cursor: pointer; }
-  .wca-mock-switch button[aria-pressed="true"] { background: var(--budget-accent); border-color: var(--budget-accent); color: var(--surface-card); }
-}
-@media screen {
-  .budget-page .wca-view { display: inline-flex; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-card); }
-  .budget-page .wca-view button { white-space: nowrap; min-height: 36px; border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); font: 500 13px/1.2 var(--font-text); cursor: pointer; }
-  .budget-page .wca-view button[aria-checked="true"] { background: var(--budget-accent); color: var(--surface-card); }
-}
-
 /* Step 1 leads (2026-10-15): the tool says nothing until it has an income, so the inputs
    carry the accent and steps 2 and 3 stay quiet — outlined numbers, placeholders while
-   empty. The toggle sits above everything and swaps the whole tool. */
+   empty. */
 @media screen {
   .wca-step-label > span { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
   .wca-step-label.wca-step-first { color: var(--budget-accent); font-size: 13px; }
@@ -193,27 +165,5 @@
   .budget-page .wca[data-has-income="false"] .budget-headline { opacity: .55; }
   .budget-page .wca .budget-headline { background: transparent; }
   .wca-placeholder { margin: 0; padding: 1.1rem 1.2rem; border: 1px dashed var(--border); border-radius: 14px; color: var(--text-muted); font-size: 14px; }
-
-  .budget-page .wca > .wca-view { margin: .2rem 0 .4rem; padding: 4px; }
-  .budget-page .wca > .wca-view button { min-height: 42px; padding-inline: 1.2rem; font-size: 14px; }
-  .budget-page .wca .wca-check-controls { grid-template-columns: 1.5fr 1.3fr .9fr .8fr; }
-  .wca-place .place-search { width: 100%; margin: 0; }
-  .wca-check-view { max-width: none; }
-  .wca-check-view .wca-quick-result > a { font: 500 clamp(28px, 4vw, 40px)/1.15 Georgia, serif; letter-spacing: -.02em; }
-  .wca-check-view .wca-quick-result li { grid-template-columns: 4rem minmax(0, 1fr); padding: .75rem 0; }
-  .wca-check-view .wca-quick-result li b { font-size: 22px; }
-  .wca-check-view .wca-quick-result li em { font-size: 14px; }
-  .wca-check-budget { margin: 0; font-size: 13px; color: var(--text-secondary); }
-  .wca-check-detail > summary { cursor: pointer; font-size: 13px; color: var(--text-secondary); min-height: 36px; display: flex; align-items: center; }
-  @media (max-width: 760px) {
-    .budget-page .wca .wca-check-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .budget-page .wca .wca-check-controls .wca-place { grid-column: 1 / -1; }
-    .budget-page .wca > .wca-view { width: 100%; }
-    .budget-page .wca > .wca-view button { flex: 1; padding-inline: .5rem; }
-  }
-}
-@media screen {
-  /* Checking one place answers both buying and renting, so it needs no buy-or-rent choice. */
-  .budget-page .wca .wca-check-controls .control:has(> .seg) { display: none; }
-  .budget-page .wca .wca-check-controls { grid-template-columns: 1.4fr 1.4fr .8fr; }
+  .wca-pointer { margin: 1rem 0 0; font-size: 13px; color: var(--text-secondary); }
 }
