@@ -48,8 +48,8 @@ export default async function TaxPage() {
           <div>
             <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Property tax lookup" />
             <Kind kind="tool" />
-            <h1 className="page-title">Find a property.<br />See its tax picture.</h1>
-            <p className="meta tax-intro">Any address in New Jersey — no need to know the town. Owner names are never shown.</p>
+            <h1 className="page-title">Property tax lookup</h1>
+            <p className="meta tax-intro">Type any New Jersey address to see its tax bill and value. Owner names are never shown.</p>
             {modivInquiry && <InquiryNote inquiry={modivInquiry} />}
           </div>
         </header>
