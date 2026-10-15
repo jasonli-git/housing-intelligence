@@ -2,11 +2,19 @@
    pages: the same paper and glow, glass panels, serif figures. Step 1 keeps the accent;
    steps 2 and 3 sit in plain glass. Presentation only. */
 @media screen {
+  /* Its own colour: terracotta, the budget tool's colour on every link to it (#371), on a
+     peach paper with a coral, rose and apricot glow — warmer than the home page's
+     rust-violet-amber and unlike the state's blue or the places' greens and violet. */
   body:has(main.horizon-page[data-region-level="tool"]) {
-    --plate-accent: light-dark(#b2462e, #f08a5d);
+    --plate-ink: light-dark(#2a1c17, #f3e6df); --plate-paper: light-dark(#f8eee8, #120b09);
+    --plate-accent: light-dark(#a44e34, #edb09b);
+    --plate-rule: light-dark(#2a1c1714, #f3e6df14); --plate-strong-rule: light-dark(#2a1c1726, #f3e6df26);
+    --text-secondary: light-dark(#664d43, #c4ada3); --text-muted: light-dark(#8f756a, #947d73);
+    --glass: light-dark(#fffaf6b3, #ffffff0b); --glass-edge: light-dark(#ffffff, #f3e6df1f);
     --budget-accent: var(--plate-accent);
     --atlas-accent: var(--plate-accent);
   }
+  body:has(main.horizon-page[data-region-level="tool"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#f0a088,#a8432a) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#f2b6c4,#7e2a4a) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#f7cf95,#9a5a1e) 0%, transparent 70%) !important; opacity: .55 !important; }
   .horizon-page.budget-page > .page-head { padding-block: 1.4rem .6rem; }
   .horizon-page.budget-page .kind { display: inline-flex; margin: .9rem 0 .2rem; padding: .2rem .65rem; border: 1px solid var(--glass-edge); border-radius: 999px; background: var(--glass); color: var(--text-secondary); font: 600 11px/1.4 var(--font-mono); letter-spacing: .1em; }
   .horizon-page.budget-page .kind::before { display: none; }
@@ -35,14 +43,14 @@
   /* Figures in the page's serif; the count in the rust-to-gold of the home page. */
   .horizon-page .wca .budget-headline strong { font: 400 clamp(40px, 5.6vw, 64px)/1 Georgia, serif !important; letter-spacing: -.045em !important; color: var(--plate-ink) !important; }
   .horizon-page .wca .budget-headline strong.wca-empty { font-size: clamp(22px, 2.6vw, 28px) !important; color: var(--text-muted) !important; letter-spacing: -.02em !important; }
-  .horizon-page .wca .wca-count { font: 400 clamp(56px, 8vw, 104px)/.95 Georgia, serif; letter-spacing: -.055em; background: linear-gradient(90deg, var(--plate-accent), light-dark(#d98a2b, #ffc27a)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .horizon-page .wca .wca-count { font: 400 clamp(56px, 8vw, 104px)/.95 Georgia, serif; letter-spacing: -.055em; background: linear-gradient(90deg, var(--plate-accent), light-dark(#c9782f, #f7c99a)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   .horizon-page .wca .wca-sentence { font: 400 clamp(18px, 2vw, 22px)/1.35 Georgia, serif; letter-spacing: -.01em; }
   .horizon-page .wca :is(.wca-list h2, .wca-strip h2) { font: 400 22px/1.2 Georgia, serif !important; letter-spacing: -.02em; color: var(--plate-ink) !important; }
   .horizon-page .wca .wca-list li a { font-weight: 500; }
   .horizon-page .wca .wca-tip button { border-color: var(--plate-strong-rule); background: var(--glass); }
   .horizon-page .wca .wca-strip-track { background: var(--plate-rule); }
   .horizon-page .wca .wca-strip-bar { background: color-mix(in srgb, var(--plate-ink) 30%, transparent); }
-  .horizon-page .wca .wca-strip li[data-within="true"] .wca-strip-bar { background: linear-gradient(90deg, var(--plate-accent), light-dark(#d98a2b, #ffc27a)); }
+  .horizon-page .wca .wca-strip li[data-within="true"] .wca-strip-bar { background: linear-gradient(90deg, var(--plate-accent), light-dark(#c9782f, #f7c99a)); }
   .horizon-page .wca .wca-strip-track::after { background: var(--plate-accent); }
   .horizon-page .wca .wca-key-line { background: var(--plate-accent); }
 
