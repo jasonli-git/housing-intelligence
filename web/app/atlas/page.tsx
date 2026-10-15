@@ -9,6 +9,8 @@ import { mapDefinitionOf } from "@/lib/mapDefinitions";
 import type { AtlasMeasure } from "@/lib/housingAtlas";
 import "./atlas.css";
 import "../income-pressure.css";
+import "../horizon-theme.css";
+import "./atlas-horizon.css";
 
 export const metadata:Metadata=pageMetadata({title:"Housing atlas — Housing",description:"Explore New Jersey county housing figures on a synchronized map and comparison table.",path:"/atlas"});
 const METRICS=["zhvi_sfr","zori_all","acs_median_hh_income","acs_median_gross_rent","acs_median_home_value","acs_renter_cost_burden","pep_population","permits_total_units"];
@@ -42,8 +44,8 @@ export default async function AtlasPage() {
   const [measures,stateMeasures]=await Promise.all([loadMeasures("county",regions?.items??[],catalog??[],sources??[]),loadMeasures("state",stateRegions?.items??[],catalog??[],sources??[])]);
   return <>
     <Masthead affordability={{kind:"route"}} atlasActive />
-    <main id="main-content" tabIndex={-1} className="housing-atlas-page">
-      <header className="atlas-title"><h1>Housing atlas</h1></header>
+    <main id="main-content" tabIndex={-1} className="housing-atlas-page horizon-page" data-region-level="atlas">
+      <header className="atlas-title"><div><h1>Housing atlas</h1><p className="atlas-lede">Every place’s figures on one map. Pick a measure, then tap a place.</p></div></header>
       {measures.length && stateMeasures.length && regions?.items.length ? <HousingAtlas measures={measures} stateMeasures={stateMeasures} states={(stateRegions?.items??[]).map(r=>({id:r.region_id,name:r.name,code:r.state_code??"NJ"}))} counties={regions.items.map(r=>({id:r.region_id,name:`${r.name.replace(/ County$/,"")} County`}))} /> : <p>Figures are unavailable in this build. <Link href="/states/new-jersey">Explore New Jersey instead.</Link></p>}
     </main>
   </>;

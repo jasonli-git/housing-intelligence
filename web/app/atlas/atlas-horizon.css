@@ -1,0 +1,67 @@
+/* The housing atlas in the Horizon theme (2026-10-15): the home page's own night sky — the
+   atlas is the site's map, so it takes the home palette rather than a tool's colour — with
+   the globe floating on it and every panel in glass. On phones the panels stop floating:
+   controls, then the map at full width with its zoom buttons tucked in a corner, then the
+   legend, then the comparison, so nothing covers the map. Same controls and behaviour. */
+@media screen {
+  body:has(main.horizon-page[data-region-level="atlas"]) { --surface-card: var(--glass); --surface-2: color-mix(in srgb, var(--plate-paper) 70%, transparent); --border: var(--plate-strong-rule); --atlas-ink: var(--plate-accent); }
+  .horizon-page.housing-atlas-page .atlas-title h1 { font: 400 clamp(40px, 5.4vw, 72px)/1 Georgia, serif !important; letter-spacing: -.05em; color: var(--plate-ink); }
+  .horizon-page .atlas-lede { margin: .45rem 0 0; font-size: clamp(14px, 1.5vw, 16px); color: var(--text-secondary); }
+  .horizon-page .housing-atlas { background: transparent !important; border: 0 !important; }
+  .horizon-page .atlas-map-stage { background: transparent !important; }
+  .horizon-page .atlas-ocean { fill: transparent !important; }
+  .horizon-page :is(.atlas-controls, .atlas-results, .atlas-legend, .atlas-measure-picker) {
+    background: var(--glass) !important; border: 1px solid var(--glass-edge) !important; border-radius: 24px !important;
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 24px 50px -36px #000c !important;
+  }
+  .horizon-page .atlas-controls select, .horizon-page .atlas-county-finder input { border-radius: 12px !important; border-color: var(--plate-strong-rule) !important; background: color-mix(in srgb, var(--plate-paper) 70%, transparent) !important; color: var(--plate-ink) !important; }
+  .horizon-page .atlas-levels button[aria-pressed="true"] { background: var(--plate-ink) !important; color: var(--plate-paper) !important; border-radius: 999px; }
+  .horizon-page .atlas-map-buttons button { border-radius: 999px !important; background: var(--glass) !important; border-color: var(--glass-edge) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .horizon-page .atlas-results-head h2 { font: 400 24px/1.15 Georgia, serif !important; letter-spacing: -.02em; }
+  .horizon-page .atlas-selected { background: color-mix(in srgb, var(--plate-accent) 8%, transparent) !important; border-color: color-mix(in srgb, var(--plate-accent) 35%, transparent) !important; border-radius: 16px !important; }
+  .horizon-page .atlas-selected h3 { font: 400 22px/1.15 Georgia, serif !important; }
+  .horizon-page .atlas-selected strong { font: 400 30px/1.15 Georgia, serif !important; letter-spacing: -.03em; font-variant-numeric: lining-nums; }
+  .horizon-page .atlas-table-wrap thead { background: transparent !important; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+
+  /* Phones and narrow windows: one column, nothing over the map. */
+  @media (max-width: 900px) {
+    .horizon-page .housing-atlas { display: flex !important; flex-direction: column; gap: .8rem; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+    .horizon-page .atlas-controls { position: relative !important; inset: auto !important; width: auto !important; margin: 0 !important; z-index: 4; }
+    .horizon-page .atlas-workspace { display: flex !important; flex-direction: column; gap: .8rem; height: auto !important; min-height: 0 !important; max-height: none !important; position: static !important; }
+    .horizon-page .atlas-map-stage { position: relative !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+    .horizon-page .atlas-county-map { height: min(62svh, 520px) !important; min-height: 320px; }
+    .horizon-page .atlas-map-buttons { position: absolute !important; top: 10px !important; right: 10px !important; left: auto !important; bottom: auto !important; display: flex !important; flex-direction: column; gap: 6px; }
+    .horizon-page .atlas-map-buttons button { min-width: 40px; min-height: 40px; padding: 0 .55rem; font-size: 15px; }
+    .horizon-page .atlas-legend, .horizon-page .housing-atlas:has(.atlas-results[data-expanded="true"]) .atlas-legend { position: static !important; inset: auto !important; display: flex !important; margin: .4rem auto 0 !important; max-width: 100% !important; width: auto !important; }
+    .horizon-page .atlas-map-credit { position: static !important; display: block !important; margin-top: .5rem; }
+    .horizon-page .atlas-results { position: static !important; inset: auto !important; width: auto !important; max-height: none !important; overflow: visible !important; }
+    .horizon-page .atlas-results[data-expanded="true"] .atlas-table-wrap { height: 360px; flex: none; }
+    .horizon-page .atlas-map-status { top: 35%; }
+  }
+}
+@media screen {
+  /* The title sits above the map, as on every other page, instead of floating on it. */
+  .horizon-page.housing-atlas-page .atlas-title { position: static !important; padding: 1.2rem var(--gutter, 16px) 1rem !important; pointer-events: auto; }
+  .horizon-page .housing-atlas { height: calc(100svh - 230px); min-height: 560px; margin-inline: var(--gutter, 16px); }
+  .horizon-page .atlas-map-buttons button { min-width: 40px; width: auto; }
+  @media (max-width: 900px) {
+    .horizon-page.housing-atlas-page .atlas-title { padding: .8rem 0 .6rem !important; }
+    .horizon-page .housing-atlas { margin-inline: 0; }
+    .horizon-page.housing-atlas-page { padding-inline: var(--gutter, 16px) !important; }
+    .horizon-page .atlas-map-buttons { align-items: flex-end; }
+  }
+}
+@media screen {
+  .horizon-page.housing-atlas-page .atlas-title { justify-content: flex-start !important; text-align: left; }
+  .horizon-page.housing-atlas-page .atlas-title .atlas-lede { display: block !important; }
+  @media (max-width: 900px) {
+    /* The map keeps its own 9:10 shape, so a phone shows the globe or the state, not blank sky. */
+    .horizon-page .atlas-county-map { height: auto !important; aspect-ratio: 9 / 10; min-height: 0; }
+  }
+}
+@media screen { .horizon-page.housing-atlas-page .atlas-title::before, .horizon-page.housing-atlas-page .atlas-title h1::before, .horizon-page.housing-atlas-page .atlas-title > div::before { display: none !important; content: none !important; } }
+@media screen {
+  /* Over the map the glass has to stay readable: mostly paper, lightly frosted. */
+  .horizon-page :is(.atlas-controls, .atlas-results, .atlas-legend, .atlas-measure-picker) { background: color-mix(in srgb, var(--plate-paper) 86%, transparent) !important; -webkit-backdrop-filter: blur(20px) saturate(120%); backdrop-filter: blur(20px) saturate(120%); }
+  @media (min-width: 901px) { .horizon-page .atlas-controls { top: 20px !important; } }
+}
