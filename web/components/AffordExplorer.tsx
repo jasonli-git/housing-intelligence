@@ -21,6 +21,8 @@ import { affordScope } from "@/lib/affordScope";
 const DEFAULT_INCOME = "";
 // The municipalities listed before "Show all": enough to answer, short enough to scan.
 const FIRST_TOWNS = 25;
+// Towns drawn as bars when the search is one county, before "Show all".
+const STRIP_TOWNS = 20;
 
 
 const MODES: { key: Mode; label: string }[] = [
@@ -120,7 +122,10 @@ export function AffordExplorer({
     ? reach(scopedTowns, { ...options, downPct: maxDown }).filter((row) => row.within).length
     : null;
   const unlisted = scopedTowns.length - townRows.length;
-  const stripRows = countyRows.filter((row) => row.missing.length === 0);
+  // Counties statewide; within one county, its towns, cheapest first, up to STRIP_TOWNS.
+  const stripAll = (scope ? townRows : countyRows).filter((row) => row.missing.length === 0);
+  const [stripOpen, setStripOpen] = useState(false);
+  const stripRows = scope && !stripOpen ? stripAll.slice(0, STRIP_TOWNS) : stripAll;
   const stripMax = Math.max(budget, ...stripRows.map((row) => row.monthly)) * 1.04;
   const verb = mode === "own" ? "buy" : "rent";
   const situation = (
@@ -276,20 +281,24 @@ export function AffordExplorer({
           </section>}
         </div>
 
-        {!scope && stripRows.length > 0 && <section className="budget-comparison wca-strip" aria-labelledby={`${id}-strip`}>
-          <h2 id={`${id}-strip`}>Counties, typical home to {verb}</h2>
-          <p className="wca-strip-key"><span className="wca-key-line" aria-hidden="true" /> your budget, {money(budget)} · pick a county to search it</p>
+        {stripRows.length > 0 && <section className="budget-comparison wca-strip" aria-labelledby={`${id}-strip`}>
+          <h2 id={`${id}-strip`}>{scope ? `Towns in ${scope.countyName}` : "Counties"}, typical home to {verb}</h2>
+          <p className="wca-strip-key"><span className="wca-key-line" aria-hidden="true" /> your budget, {money(budget)} · {scope ? "pick a town to see its costs" : "pick a county to search it"}</p>
           <ul style={{ ["--budget-at" as string]: `${(budget / stripMax) * 100}%` }}>
-            {stripRows.map((row) => (
-              <li key={row.place.id} data-within={row.within}>
-                <button type="button" onClick={() => { setCountyId(row.place.id); setAllTowns(false); }}>
-                  <span className="wca-strip-name">{row.place.name.replace(/ County$/, "")}</span>
-                  <span className="wca-strip-track"><span className="wca-strip-bar" style={{ width: `${(row.monthly / stripMax) * 100}%` }} /></span>
-                  <span className="wca-strip-value">{money(row.monthly)}</span>
-                </button>
-              </li>
-            ))}
+            {stripRows.map((row) => {
+              const bar = <>
+                <span className="wca-strip-name">{row.place.name.replace(/ County$/, "")}</span>
+                <span className="wca-strip-track"><span className="wca-strip-bar" style={{ width: `${(row.monthly / stripMax) * 100}%` }} /></span>
+                <span className="wca-strip-value">{money(row.monthly)}</span>
+              </>;
+              return <li key={row.place.id} data-within={row.within}>
+                {scope
+                  ? <Link className="wca-strip-row" href={`${regionPath(row.place.id)}#quiet-cost`}>{bar}</Link>
+                  : <button type="button" className="wca-strip-row" onClick={() => { setCountyId(row.place.id); setAllTowns(false); setStripOpen(false); }}>{bar}</button>}
+              </li>;
+            })}
           </ul>
+          {scope && stripAll.length > STRIP_TOWNS && <button type="button" className="wca-strip-more" onClick={() => setStripOpen((open) => !open)}>{stripOpen ? `Show the cheapest ${STRIP_TOWNS}` : `Show all ${stripAll.length} towns`}</button>}
         </section>}
         {scope && <p className="budget-scope-line wca-scope">Searching <b>{scope.countyName}</b> <button type="button" onClick={() => { setCountyId(null); setAllTowns(false); }}>Search all New Jersey</button></p>}
 

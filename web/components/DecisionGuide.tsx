@@ -118,8 +118,9 @@ function Steps({ steps }: { steps: { label: string; href: string }[] }) {
 function Check({ item }: { item: CheckItem }) {
   return (
     <li className="guide-check" id={`guide-check-${item.key}`}>
-      <details className="guide-tile">
+      <details className="guide-tile" data-flagged={item.flag ? "true" : undefined}>
         <summary>
+          {item.flag && <span className="guide-flag">{item.flag}</span>}
           <h3>{item.title}</h3>
           <p>{item.finding}</p>
         </summary>
@@ -376,8 +377,8 @@ export function DecisionGuide({
             <p className="guide-verdict" data-band="neutral">
               {choice.breakEven === null ? "Renting costs less" : choice.breakEven <= years ? `Buying wins from year ${choice.breakEven}` : `Buying only wins after year ${choice.breakEven}`}
             </p>
-            <p className="guide-figure">Over <b>{years} years</b>: owning <b>{usd(choice.planned.net)}</b> · renting <b>{usd(choice.planned.rent ?? 0)}</b></p>
-            <p className="guide-sub">Against {choice.ownRent ? "your rent" : "the typical rent here"} of {usd(choice.rent)} a month{choice.breakEven === null ? `, owning doesn’t cost less within ${MAX_YEARS} years` : ""}. Owning counts what the sale gives back.</p>
+            <p className="guide-figure">Over <b>{years} years</b>, all in: owning costs <b>{usd(choice.planned.net)}</b> after you sell · renting costs <b>{usd(choice.planned.rent ?? 0)}</b></p>
+            <p className="guide-sub">Owning counts the mortgage, tax, insurance, upkeep and buying and selling costs, less what the sale returns. Renting is {choice.ownRent ? "your rent" : "the typical rent here"}, {usd(choice.rent)} a month{choice.breakEven === null ? `; owning doesn’t come out cheaper within ${MAX_YEARS} years` : ""}.</p>
           </>}
           <details className="guide-more" open={!choice || undefined}><summary>Change the rent, years or price growth</summary>
             <div className="guide-fields">
@@ -421,7 +422,7 @@ export function DecisionGuide({
           <div className="guide-answer-head">
             <h2 id="guide-checks-heading" tabIndex={-1}><small>03</small>Before an offer</h2>
           </div>
-          <p className="guide-sub">Ten things to check on the actual home. Tap one for its links and sources — area figures can’t establish one home’s risk, school or service.</p>
+          <p className="guide-sub">Ten things to check on the actual home. Tap one for its links and sources. A highlighted check is one where this place’s figures pass a stated line — worth a closer look, not a verdict.</p>
           <ul className="guide-checks guide-tiles">{checklist(data, {place: placeHref, tax: taxHref}).map(item => <Check key={item.key} item={item} />)}</ul>
         </section>
       </div>}

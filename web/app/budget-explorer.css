@@ -130,8 +130,8 @@
   .wca-strip-key { display: flex; align-items: center; gap: .45rem; margin: .2rem 0 .7rem; font-size: 12px; color: var(--text-muted); }
   .wca-key-line { display: inline-block; width: 2px; height: 14px; background: var(--text-primary); }
   .wca-strip ul { position: relative; margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
-  .wca-strip li button { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr) 4.8rem; align-items: center; gap: .6rem; width: 100%; min-height: 28px; padding: 0 .2rem; border: 0; border-radius: 6px; background: transparent; color: var(--text-primary); font: 13px/1.2 var(--font-text); text-align: left; cursor: pointer; }
-  .wca-strip li button:hover { background: color-mix(in srgb, var(--budget-accent) 8%, transparent); }
+  .wca-strip li .wca-strip-row { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr) 4.8rem; align-items: center; gap: .6rem; width: 100%; min-height: 28px; padding: 0 .2rem; border: 0; border-radius: 6px; background: transparent; color: var(--text-primary); font: 13px/1.2 var(--font-text); text-align: left; cursor: pointer; }
+  .wca-strip li .wca-strip-row:hover { background: color-mix(in srgb, var(--budget-accent) 8%, transparent); }
   .wca-strip-track { position: relative; height: 10px; border-radius: 5px; background: color-mix(in srgb, var(--border) 45%, transparent); }
   .wca-strip-track::after { content: ""; position: absolute; left: var(--budget-at); top: -5px; bottom: -5px; width: 2px; background: var(--text-primary); }
   .wca-strip-bar { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: color-mix(in srgb, var(--text-muted) 55%, transparent); }
@@ -145,7 +145,7 @@
     .budget-page .wca .afford-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .budget-page .wca .wca-income { grid-column: 1 / -1; }
     .wca-answer { grid-template-columns: minmax(0, 1fr); }
-    .wca-strip li button { grid-template-columns: 5.6rem minmax(0, 1fr) 4.2rem; font-size: 12px; }
+    .wca-strip li .wca-strip-row { grid-template-columns: 5.6rem minmax(0, 1fr) 4.2rem; font-size: 12px; }
   }
 }
 
@@ -167,3 +167,10 @@
   .wca-placeholder { margin: 0; padding: 1.1rem 1.2rem; border: 1px dashed var(--border); border-radius: 14px; color: var(--text-muted); font-size: 14px; }
   .wca-pointer { margin: 1rem 0 0; font-size: 13px; color: var(--text-secondary); }
 }
+
+@media screen {
+  .wca-strip li a.wca-strip-row { text-decoration: none; }
+  .wca-strip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wca-strip-more { margin-top: .6rem; min-height: 36px; padding: .3rem .9rem; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text-primary); font: 500 13px/1.2 var(--font-text); cursor: pointer; }
+}
+@media screen { .wca-strip li a.wca-strip-row { color: var(--text-primary) !important; } }

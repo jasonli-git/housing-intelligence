@@ -101,3 +101,8 @@
   .guide-place-link:hover span { transform: translateX(3px); }
   @media (prefers-reduced-motion: reduce) { .guide-place-link span { transition: none; } }
 }
+@media screen {
+  /* A check whose figures pass a stated line (#376): amber edge and a short note. */
+  .guide-tile[data-flagged] { border-color: light-dark(#d9a25a, #a86f2b); background: color-mix(in srgb, light-dark(#f6e3c8, #4a3418) 45%, transparent); }
+  .guide-flag { display: inline-block; margin-bottom: .35rem; padding: .1rem .55rem; border-radius: 999px; background: light-dark(#f6e3c8, #4a3418); color: light-dark(#8a5a12, #f2c98a); font: 600 11px/1.4 var(--font-text); }
+}

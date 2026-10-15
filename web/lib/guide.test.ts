@@ -162,3 +162,22 @@ describe("what should I check before an offer?", () => {
     expect(flood.finding).toBe("FEMA’s digital flood map covers 50% of homes here, too few to say what share is in a flood zone.");
   });
 });
+
+describe("checks worth a closer look", () => {
+  it("flags only figures past the stated lines", () => {
+    const flagged = checklist(place([
+      level("fema_flood_homes_share", 0.12), level("fema_mapped_homes_share", 1),
+      level("njdep_sites_open", 22), level("nj_director_ratio", 62.6), level("water_homes_share_public", 0.8),
+    ]), { place: "/", tax: "/tax" });
+    const flag = (key: string) => flagged.find((item) => item.key === key)?.flag;
+    expect(flag("flood")).toBe("12% of homes in a high-risk flood zone");
+    expect(flag("sites")).toBe("22 open contaminated sites");
+    expect(flag("tax")).toBe("Town values may be reset soon");
+    expect(flag("water")).toBe("Many homes on private wells");
+    const quiet = checklist(place([
+      level("fema_flood_homes_share", 0.04), level("fema_mapped_homes_share", 1),
+      level("njdep_sites_open", 3), level("nj_director_ratio", 95), level("water_homes_share_public", 1),
+    ]), { place: "/", tax: "/tax" });
+    expect(quiet.filter((item) => item.flag)).toHaveLength(0);
+  });
+});

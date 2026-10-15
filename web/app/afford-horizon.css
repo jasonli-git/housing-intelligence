@@ -70,3 +70,4 @@
      box, so the count sits on lining figures with room beneath it. */
   .horizon-page .wca .wca-count { font-variant-numeric: lining-nums; line-height: 1.1; padding-bottom: .06em; }
 }
+@media screen { .horizon-page .wca .wca-scope { display: flex; justify-content: flex-start; gap: .6rem; padding: .5rem 0; border: 0; background: none; font-size: 13px; } .horizon-page .wca .wca-scope button { min-height: 32px; padding: .2rem .8rem; border: 1px solid var(--plate-strong-rule); border-radius: 999px; } }
