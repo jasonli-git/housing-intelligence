@@ -23,7 +23,7 @@ export function StateModeWorkspace({ sections, initial }: {
   return <section className="state-workspace place-first-workspace direct-county-comparison" aria-labelledby="state-workspace-heading">
     <header className="state-workspace-head">
       <h2 id="state-workspace-heading">Compare counties</h2>
-      <Link className="state-fit-shortcut" href="/afford?county=all">Where can I afford? <small>Across New Jersey</small></Link>
+      <Link className="state-fit-shortcut" href="/afford?county=all">Budget explorer <small>Across New Jersey</small></Link>
     </header>
     <div className="place-discovery">
       {windowNotes.length > 0 && <aside className="window-aside"><p className="window-aside-label">About “Since 2019”</p>{windowNotes.map(note => <p key={note}>{note}</p>)}</aside>}

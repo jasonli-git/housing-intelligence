@@ -13,6 +13,6 @@ export function CountyPlaces({ name, towns }: { name: string; towns: { id: numbe
     <nav aria-label={`Towns in ${name}`} className="county-town-links">{matching.slice(0, query ? matching.length : 6).map(t => <Link className="destination-town" key={t.id} href={regionPath(t.id)}>{t.name} ↗</Link>)}</nav>
     {!matching.length && <p>No matching town in this directory.</p>}
     {!query && matching.length > 6 && <details><summary>Browse all {towns.length} towns</summary><nav className="county-town-links" aria-label="More towns">{matching.slice(6).map(t => <Link className="destination-town" key={t.id} href={regionPath(t.id)}>{t.name} ↗</Link>)}</nav></details>}
-    <p className="table-note">Browse places here; use Where can I afford? to compare them against your budget. ZIP areas may cross counties—use the global search for ZIP profiles.</p>
+    <p className="table-note">Browse places here; use the Budget explorer to compare them against your budget. ZIP areas may cross counties—use the global search for ZIP profiles.</p>
   </section>;
 }

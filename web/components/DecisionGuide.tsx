@@ -118,23 +118,25 @@ function Steps({ steps }: { steps: { label: string; href: string }[] }) {
 function Check({ item }: { item: CheckItem }) {
   return (
     <li className="guide-check" id={`guide-check-${item.key}`}>
-      <div className="guide-check-head">
-        <h3>{item.title}</h3>
-      </div>
-      <Steps steps={item.key === "school" ? item.steps.slice(-1) : item.steps.slice(0,1)} />
-      <div className="guide-check-evidence">
-        <p>{item.finding}</p>
-        <details className="guide-check-detail"><summary>Sources & limits</summary>
-        <Strength judged={item.evidence} />
-        <Steps steps={item.key === "school" ? item.steps.slice(0,-1) : item.steps.slice(1)} />
-        <p className="guide-limit">{item.limitation}</p>
-        {item.source && <small className="src">Source: {item.source}</small>}
-        {item.inquiry && <InquiryNote inquiry={item.inquiry} headline="NJDEP is building a new, town-level radon map" />}
-        </details>
-      </div>
+      <details className="guide-tile">
+        <summary>
+          <h3>{item.title}</h3>
+          <p>{item.finding}</p>
+        </summary>
+        <Steps steps={item.steps} />
+        <div className="guide-check-evidence">
+          <Strength judged={item.evidence} />
+          <p className="guide-limit">{item.limitation}</p>
+          {item.source && <small className="src">Source: {item.source}</small>}
+          {item.inquiry && <InquiryNote inquiry={item.inquiry} headline="NJDEP is building a new, town-level radon map" />}
+        </div>
+      </details>
     </li>
   );
 }
+
+// The one-line verdict each answer opens with (2026-10-15).
+const AFFORD_VERDICT = { within: "Within reach", burdened: "A stretch", severe: "Out of reach" } as const;
 
 const usd = (value: number) => formatValue(value, "usd");
 
@@ -160,9 +162,6 @@ export function DecisionGuide({
   const [rent, setRent] = useState("");
   const [home, setHome] = useState<GuideHome>({});
   const [cash, setCash] = useState<number | undefined>();
-  const [step, setStep] = useState(0);
-  const stepNames = ["Can I afford it?", "Rent or buy?", "Before an offer"];
-  const stepIds = ["guide-afford-heading", "guide-rent-heading", "guide-checks-heading"];
 
   // The place from the URL, and what this reader set on other pages.
   useEffect(() => {
@@ -217,42 +216,20 @@ export function DecisionGuide({
   const taxHref = data?.region.level === "municipality" ? `/tax?town=${data.region.geoid}` : "/tax";
   const afford = data && yearly ? affordAnswer(data, { income: yearly, size, ratePct, personal: { ...personal, downPct }, home }) : null;
   const choice = data ? rentOrBuy(data, { ratePct, personal: { ...personal, downPct, years }, home, rent: parseAmount(rent) }) : null;
+  // A deep link to an answer or a check (`#guide-check-flood`) lands once the place loads.
   useEffect(() => {
-    const followHash = () => {
-      const hash=window.location.hash.slice(1);
-      const next=hash.startsWith("guide-check-") ? 2 : stepIds.indexOf(hash);
-      if(next<0) return;
-      setStep(next);
-      requestAnimationFrame(()=>requestAnimationFrame(()=>document.getElementById(hash)?.scrollIntoView({block:"start"})));
-    };
-    followHash();
-    window.addEventListener("hashchange",followHash);
-    return ()=>window.removeEventListener("hashchange",followHash);
-    // Revisit an initial deep link when the place finishes loading.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const hash = window.location.hash.slice(1);
+    if (!data || !hash) return;
+    const target = document.getElementById(hash);
+    if (target?.querySelector("details")) (target.querySelector("details") as HTMLDetailsElement).open = true;
+    requestAnimationFrame(() => target?.scrollIntoView({ block: "start" }));
   }, [data]);
-  function goToStep(next:number) {
-    setStep(next);
-    window.history.replaceState(null,"",`#${stepIds[next]}`);
-    requestAnimationFrame(()=>{
-      document.getElementById(stepIds[next])?.focus({preventScroll:true});
-    });
-  }
-  const checkIndex = <nav className="guide-check-index" aria-label="Checks before an offer">
-    <span>Before an offer · {data ? "jump to a check" : "choose a place to explore"}</span>
-    <ul>{[
-      ["tax", "Property tax"], ["mortgage", "Financing"], ["turnover", "Home sales"],
-      ["flood", "Flooding"], ["water", "Drinking water"], ["sites", "Contaminated sites"], ["radon", "Radon"],
-      ["school", "Schools"], ["commute", "Commute"], ["utilities", "Internet & utilities"],
-    ].map(([key,label])=><li key={key}><a href={data ? `#guide-check-${key}` : "#guide-place-heading"}>{label}<span aria-hidden="true">↘</span></a></li>)}</ul>
-  </nav>;
 
   return (
-    <div className="decision-guide">
-      <div className="guide-setup" data-ready={Boolean(data)}>
-      <section className="section guide-place" aria-labelledby="guide-place-heading">
-        <p className="guide-eyebrow">01 · Your starting point</p>
-        <h2 id="guide-place-heading">{data ? data.region.label : "Choose a place"}</h2>
+    <div className="decision-guide guide-steps-layout" data-ready={Boolean(data)} data-has-income={Boolean(yearly)}>
+      <div className="wca-step-label wca-step-first"><span>1</span>Pick a place{!data && <em>Start here</em>}</div>
+      <section className="guide-place guide-first" aria-labelledby="guide-place-heading">
+        <h2 id="guide-place-heading" className={data ? undefined : "visually-hidden"}>{data ? data.region.label : "Choose a place"}</h2>
         <PlacePicker
           entries={entries}
           onPick={pick}
@@ -268,20 +245,19 @@ export function DecisionGuide({
         </div>}
         {load.state === "loading" && <p className="meta">Loading this place’s figures…</p>}
         {load.state === "failed" && <p className="meta">This place’s figures could not be loaded. Try again, or choose another place.</p>}
-        {data && <p className="meta"><Link className={`destination-${data.region.level === "municipality" ? "town" : data.region.level}`} href={placeHref}>Everything published for {data.region.name}</Link></p>}
+        {data && <Link className="guide-place-link" href={placeHref}>{data.region.name}’s full page <span aria-hidden="true">→</span></Link>}
       </section>
 
-      <section className="section guide-household" aria-labelledby="guide-household-heading" hidden={!data}>
-        <p className="guide-eyebrow">02 · Your numbers</p>
-        <h2 id="guide-household-heading">Your household</h2>
-        <p className="meta">Saved only in this browser. Shared with the site’s other cost tools.</p>
-        <div className="guide-fields">
+      <div className="wca-step-label"><span>2</span>Your household</div>
+      <section className="guide-household" aria-labelledby="guide-household-heading">
+        <h2 id="guide-household-heading" className="visually-hidden">Your household</h2>
+        <div className="guide-fields guide-fields-main">
           <label>
-            Yearly household income, before tax
+            Household income a year, before tax
             <input
               inputMode="numeric"
               value={income}
-              placeholder="$95,000"
+              placeholder="e.g. 95,000"
               onChange={(e) => {
                 setIncome(e.target.value);
                 const value = parseAmount(e.target.value);
@@ -307,24 +283,26 @@ export function DecisionGuide({
               {DOWN_PAYMENTS.map((d) => <option key={d} value={d}>{d}%{d === 3.5 ? " (FHA)" : ""}</option>)}
             </select>
           </label>
-          <label>
-            Mortgage rate, %
-            <input
-              inputMode="decimal"
-              defaultValue={ratePct.toFixed(2)}
-              key={ratePct}
-              onBlur={(e) => {
-                const value = parseAmount(e.target.value);
-                if (value !== null && value > 0 && value < 20) remember({ ratePct: value });
-              }}
-            />
-            <small className="src">Freddie Mac’s 30-year average, {rate.asOf}: {rate.value.toFixed(2)}%</small>
-          </label>
         </div>
-        <label className="guide-cash">Cash available for buying
-          <input type="number" min="0" value={cash ?? ""} placeholder="Optional" onChange={e => {const value = parseAmount(e.target.value) ?? undefined; setCash(value); writeHousehold({...readHousehold(), cash:value});}} />
-        </label>
-        <details className="guide-assumptions"><summary>Use a listing, quotes or different assumptions</summary>
+        <details className="guide-assumptions"><summary>Adjust the rate, your cash, or use a listing’s figures</summary>
+          <div className="guide-fields">
+            <label>
+              Mortgage rate, %
+              <input
+                inputMode="decimal"
+                defaultValue={ratePct.toFixed(2)}
+                key={ratePct}
+                onBlur={(e) => {
+                  const value = parseAmount(e.target.value);
+                  if (value !== null && value > 0 && value < 20) remember({ ratePct: value });
+                }}
+              />
+              <small className="src">Freddie Mac’s 30-year average, {rate.asOf}: {rate.value.toFixed(2)}%</small>
+            </label>
+            <label>Cash available for buying
+              <input type="number" min="0" value={cash ?? ""} placeholder="Optional" onChange={e => {const value = parseAmount(e.target.value) ?? undefined; setCash(value); writeHousehold({...readHousehold(), cash:value});}} />
+            </label>
+          </div>
           <p className="meta">Home-specific figures stay with this place only. Personal assumptions are remembered in this browser. Neither changes published figures.</p>
           <div className="guide-fields">
             {([
@@ -337,88 +315,71 @@ export function DecisionGuide({
             ] as const).map(([key,label]) => <label key={key}>{label}<input type="number" min="0" value={personal[key] ?? ""} placeholder="Default assumption" onChange={e => {const value=parseAmount(e.target.value); const next={...personal}; if(value===null) delete next[key]; else next[key]=value; setPersonal(next); writePersonal(next);}} /></label>)}
           </div>
         </details>
+        <p className="guide-saved">Saved only in this browser, and shared with the site’s other cost tools.</p>
       </section>
-      </div>
 
-      <nav id="guide-step-selector" className="guide-contents guide-step-selector" aria-label="In this guide">
-        {stepNames.map((label,index)=><button key={label} type="button" aria-current={step===index ? "step" : undefined} aria-controls={`guide-panel-${index}`} onClick={()=>goToStep(index)}><small>0{index+1}</small>{label}</button>)}
-        <Link className="guide-help-shortcut" href="/help">Housing help ↗</Link>
-      </nav>
-      {!data && load.state === "idle" && <p className="guide-empty">Choose a place to see its buying costs, rent comparison and pre-offer checks.</p>}
+      <div className="wca-step-label"><span>3</span>The answers</div>
+      {!data ? <p className="wca-placeholder">Pick a place in step 1. Three answers show here: can you afford it, should you rent or buy, and what to check before an offer.</p> : <div className="guide-answers">
 
-        <div className="guide-slide-stage" aria-label="Buying guide questions">
-          <button className="guide-side-arrow guide-side-previous" type="button" disabled={step===0} aria-label={step>0 ? `Previous: ${stepNames[step-1]}` : "Previous question"} onClick={()=>goToStep(step-1)}><span aria-hidden="true">‹</span></button>
-          <section id="guide-panel-0" className="section guide-answer guide-slide" data-active={step===0} aria-labelledby="guide-afford-heading" data-ready={Boolean(data)} hidden={!data}>
-            <p className="guide-eyebrow">Affordability</p>
-            <div className="guide-check-head">
-              <h2 id="guide-afford-heading" tabIndex={-1}>Can I afford to buy here?</h2>
-              {afford && <Strength judged={afford.evidence} />}
-            </div>
-            {data ? <div className="guide-answer-body">
-            {!yearly && <p className="meta">Enter your household income above.</p>}
-            {yearly && !afford && <p>No usable home price is published here. Enter a listing price under your assumptions to estimate buying costs.</p>}
-            {afford && (
-              <>
-                <p className="guide-lead">
-                  {afford.price.basis === "reader" ? "Your purchase price of" : afford.price.basis === "index" ? "The typical home here, valued at" : "The median sale here,"}{" "}
-                  <b>{usd(afford.price.value)}</b>, would cost about <b>{usd(afford.month.total)} a month</b> to own with{" "}
-                  {downPct}% down at {ratePct.toFixed(2)}%: <b>{Math.round(afford.share * 100)}% of your income</b>.{" "}
-                  {BAND_TEXT[afford.band]}
-                </p>
-                <dl className="cost-lines">
-                  {afford.month.lines.filter((line) => !line.conditional).map((line) => (
-                    <div key={line.key} className={line.value === null ? "missing" : undefined}>
-                      <dt>{line.label}</dt>
-                      <dd>{line.value === null ? "not published here" : usd(line.value)}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <p className="guide-lead">Upfront cash: <b>{usd(afford.upfront.low)}–{usd(afford.upfront.high)}</b>.</p>
-                <p className="guide-limit">Down payment, closing costs and any moving or repair costs you entered. {cashFit(cash, afford.upfront.low, afford.upfront.high)}.</p>
-                {afford.month.missing.length > 0 && (
-                  <p className="guide-limit">A partial estimate: it leaves out {afford.month.missing.join(" and ").toLowerCase()}, which no source gives for this place.</p>
-                )}
-                {afford.fha?.over && (
-                  <p className="guide-limit">
-                    This loan is over FHA’s {afford.fha.year} limit for the county ({usd(afford.fha.limit)}), so FHA would not insure it.
-                  </p>
-                )}
-                {afford.buyers && (
-                  <p>
-                    Buyers here who borrowed to buy reported a median income of {afford.buyers.estimated ? "about " : ""}
-                    {usd(afford.buyers.income)} in {afford.buyers.year}.
-                  </p>
-                )}
-                {afford.limits && <p>{afford.limits}</p>}
-                <p className="guide-limit">
-                  HUD’s 30% and 50% lines are thresholds, not advice: lenders, savings and other debts all change what is right for you.
-                  Upkeep defaults to 1% of the price a year. Add HOA fees and flood insurance under your assumptions if they apply.
-                </p>
-                {Object.keys(home).length > 0 && <p className="guide-limit">Your entered home figures are not independently verified. Evidence labels describe the published inputs only.</p>}
-                <small className="src">
-                  Inputs: {[afford.price.basis === "reader" ? "purchase price: your input" : citation(data, data.levels.find((l) => l.metric_id === (afford.price.basis === "index" ? "zhvi_sfr" : "sr1a_median_sale_price")) ?? null),
-                    home.taxYear !== undefined ? "tax: your input" : citation(data, data.levels.find((l) => l.metric_id === "modiv_median_tax_bill") ?? null),
-                    personal.insuranceYear !== undefined ? "insurance: your input" : citation(data, data.levels.find((l) => l.metric_id === "acs_median_home_insurance") ?? null)].filter(Boolean).join("; ")}
-                </small>
-                <Steps steps={[
-                  { label: `Published figures for ${data.region.name}`, href: placeHref },
-                  { label: "Find a HUD-approved housing counselor", href: "https://www.consumerfinance.gov/find-a-housing-counselor/" },
-                ]} />
-              </>
-            )}
-            <details className="guide-supporting-evidence"><summary>Housing programme income limits & rents by home size</summary>
-              <ForYourHousehold regionName={data.region.name} limits={data.incomeLimits} levels={data.levels} countyLevels={data.countyLevels} margins={new Map(data.levels.map(level => [level.metric_id, level.margin_of_error ?? null]))} />
+        <section className="guide-answer" aria-labelledby="guide-afford-heading">
+          <div className="guide-answer-head">
+            <h2 id="guide-afford-heading" tabIndex={-1}><small>01</small>Can I afford it?</h2>
+            {afford && <Strength judged={afford.evidence} />}
+          </div>
+          {!yearly && <p className="guide-verdict-empty">Add your income in step 2 to see this answer.</p>}
+          {yearly && !afford && <p>No usable home price is published here. Enter a listing price under “Adjust…” in step 2 to estimate buying costs.</p>}
+          {afford && <>
+            <p className="guide-verdict" data-band={afford.band}>{AFFORD_VERDICT[afford.band]}</p>
+            <p className="guide-figure"><b>{usd(afford.month.total)}</b> a month to own · <b>{Math.round(afford.share * 100)}%</b> of your income</p>
+            <p className="guide-sub">
+              {afford.price.basis === "reader" ? "Your purchase price of" : afford.price.basis === "index" ? "The typical home here," : "The median sale here,"} {usd(afford.price.value)}, with {downPct}% down at {ratePct.toFixed(2)}%. Upfront cash: {usd(afford.upfront.low)}–{usd(afford.upfront.high)}.
+            </p>
+            <details className="guide-more"><summary>The cost breakdown and what it leaves out</summary>
+              <dl className="cost-lines">
+                {afford.month.lines.filter((line) => !line.conditional).map((line) => (
+                  <div key={line.key} className={line.value === null ? "missing" : undefined}>
+                    <dt>{line.label}</dt>
+                    <dd>{line.value === null ? "not published here" : usd(line.value)}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="guide-limit">{BAND_TEXT[afford.band]} Upfront cash is the down payment, closing costs and any moving or repair costs you entered. {cashFit(cash, afford.upfront.low, afford.upfront.high)}.</p>
+              {afford.month.missing.length > 0 && <p className="guide-limit">A partial estimate: it leaves out {afford.month.missing.join(" and ").toLowerCase()}, which no source gives for this place.</p>}
+              {afford.fha?.over && <p className="guide-limit">This loan is over FHA’s {afford.fha.year} limit for the county ({usd(afford.fha.limit)}), so FHA would not insure it.</p>}
+              {afford.buyers && <p>Buyers here who borrowed to buy reported a median income of {afford.buyers.estimated ? "about " : ""}{usd(afford.buyers.income)} in {afford.buyers.year}.</p>}
+              {afford.limits && <p>{afford.limits}</p>}
+              <p className="guide-limit">HUD’s 30% and 50% lines are thresholds, not advice: lenders, savings and other debts all change what is right for you. Upkeep defaults to 1% of the price a year. Add HOA fees and flood insurance in step 2 if they apply.</p>
+              {Object.keys(home).length > 0 && <p className="guide-limit">Your entered home figures are not independently verified. Evidence labels describe the published inputs only.</p>}
+              <small className="src">
+                Inputs: {[afford.price.basis === "reader" ? "purchase price: your input" : citation(data, data.levels.find((l) => l.metric_id === (afford.price.basis === "index" ? "zhvi_sfr" : "sr1a_median_sale_price")) ?? null),
+                  home.taxYear !== undefined ? "tax: your input" : citation(data, data.levels.find((l) => l.metric_id === "modiv_median_tax_bill") ?? null),
+                  personal.insuranceYear !== undefined ? "insurance: your input" : citation(data, data.levels.find((l) => l.metric_id === "acs_median_home_insurance") ?? null)].filter(Boolean).join("; ")}
+              </small>
+              <Steps steps={[
+                { label: `Published figures for ${data.region.name}`, href: placeHref },
+                { label: "Find a HUD-approved housing counselor", href: "https://www.consumerfinance.gov/find-a-housing-counselor/" },
+              ]} />
             </details>
-            </div> : <p className="guide-preview">Estimated buying costs against your household income.</p>}
-          </section>
+          </>}
+          <details className="guide-more"><summary>Housing programme income limits & rents by home size</summary>
+            <ForYourHousehold regionName={data.region.name} limits={data.incomeLimits} levels={data.levels} countyLevels={data.countyLevels} margins={new Map(data.levels.map(level => [level.metric_id, level.margin_of_error ?? null]))} />
+          </details>
+        </section>
 
-          <section id="guide-panel-1" className="section guide-answer guide-slide" data-active={step===1} aria-labelledby="guide-rent-heading" data-ready={Boolean(data)} hidden={!data}>
-            <p className="guide-eyebrow">The longer view</p>
-            <div className="guide-check-head">
-              <h2 id="guide-rent-heading" tabIndex={-1}>Should I rent or buy?</h2>
-              {choice && <Strength judged={choice.evidence} />}
-            </div>
-            {data ? <div className="guide-answer-body">
+        <section className="guide-answer" aria-labelledby="guide-rent-heading">
+          <div className="guide-answer-head">
+            <h2 id="guide-rent-heading" tabIndex={-1}><small>02</small>Rent or buy?</h2>
+            {choice && <Strength judged={choice.evidence} />}
+          </div>
+          {!choice && <p>No home price or typical rent is published for this place. Enter the rent you would pay below to compare.</p>}
+          {choice && <>
+            <p className="guide-verdict" data-band="neutral">
+              {choice.breakEven === null ? "Renting costs less" : choice.breakEven <= years ? `Buying wins from year ${choice.breakEven}` : `Buying only wins after year ${choice.breakEven}`}
+            </p>
+            <p className="guide-figure">Over <b>{years} years</b>: owning <b>{usd(choice.planned.net)}</b> · renting <b>{usd(choice.planned.rent ?? 0)}</b></p>
+            <p className="guide-sub">Against {choice.ownRent ? "your rent" : "the typical rent here"} of {usd(choice.rent)} a month{choice.breakEven === null ? `, owning doesn’t cost less within ${MAX_YEARS} years` : ""}. Owning counts what the sale gives back.</p>
+          </>}
+          <details className="guide-more" open={!choice || undefined}><summary>Change the rent, years or price growth</summary>
             <div className="guide-fields">
               <label>
                 Rent you would pay, a month
@@ -443,51 +404,29 @@ export function DecisionGuide({
                 />
               </label>
             </div>
-            {!choice && <p>No home price or typical rent is published for this place. Enter the rent you would pay to compare.</p>}
-            {choice && (
-              <>
-                <TwoPaths input={choice.inputs} onYears={n=>remember({years:n})} onPrice={n=>setHome(previous=>({...previous,price:n}))} onDown={n=>remember({downPct:n})} onRate={n=>remember({ratePct:n})} onUpkeep={n=>remember({upkeepPct:n})} onFlat={()=>remember({appreciationPct:0,rentGrowthPct:0})} />
-                <p className="guide-lead">
-                  {choice.breakEven === null
-                    ? <>Under these assumptions, owning does not cost less than renting at {usd(choice.rent)} a month within {MAX_YEARS} years.</>
-                    : <>Under these assumptions, owning costs less than renting at {usd(choice.rent)} a month <b>from year {choice.breakEven}</b>.</>}
-                </p>
-                <p>
-                  Over {years} years, owning and then selling costs about <b>{usd(choice.planned.net)}</b> after what the sale gives back;
-                  renting costs about <b>{usd(choice.planned.rent ?? 0)}</b>.
-                </p>
-                <p className="guide-limit">
-                  Assumptions: {choice.ownRent ? "your rent" : "the typical rent here"}, rising {personal.rentGrowthPct ?? 0}% a year;
-                  home prices {personal.appreciationPct ? `${personal.appreciationPct}% a year` : "flat"}; closing costs in the middle of
-                  {personal.closingPct !== undefined ? "your entered percentage" : "the CFPB’s range"}; a {personal.commissionPct ?? 5}% commission and New Jersey’s seller fees on sale; utilities left
-                  out, since renters and owners both pay them. Not a forecast: a sum over stated assumptions. What the down payment
-                  could earn instead is not counted.
-                </p>
-                <Steps steps={[{ label: "Change your home figures and assumptions", href: "#guide-household-heading" }]} />
-              </>
-            )}
-            </div> : <p className="guide-preview">Compare costs over the years you expect to stay.</p>}
-          </section>
+          </details>
+          {choice && <details className="guide-more"><summary>See the two paths year by year</summary>
+            <TwoPaths input={choice.inputs} onYears={n=>remember({years:n})} onPrice={n=>setHome(previous=>({...previous,price:n}))} onDown={n=>remember({downPct:n})} onRate={n=>remember({ratePct:n})} onUpkeep={n=>remember({upkeepPct:n})} onFlat={()=>remember({appreciationPct:0,rentGrowthPct:0})} />
+            <p className="guide-limit">
+              Assumptions: {choice.ownRent ? "your rent" : "the typical rent here"}, rising {personal.rentGrowthPct ?? 0}% a year;
+              home prices {personal.appreciationPct ? `${personal.appreciationPct}% a year` : "flat"}; closing costs in the middle of
+              {personal.closingPct !== undefined ? " your entered percentage" : " the CFPB’s range"}; a {personal.commissionPct ?? 5}% commission and New Jersey’s seller fees on sale; utilities left
+              out, since renters and owners both pay them. Not a forecast: a sum over stated assumptions. What the down payment
+              could earn instead is not counted.
+            </p>
+          </details>}
+        </section>
 
-          <section id="guide-panel-2" className="section guide-answer guide-slide" data-active={step===2} aria-labelledby="guide-checks-heading" data-ready={Boolean(data)} hidden={!data}>
-            <p className="guide-eyebrow">Before committing</p>
-            <h2 id="guide-checks-heading" tabIndex={-1}>What should I check before an offer?</h2>
-            {checkIndex}
-            {data ? <div className="guide-answer-body">
-            <p className="meta">Check the actual home. Area figures do not establish its risk, school assignment or available service.</p>
-            {[
-              {title: "Costs & financing", keys: ["tax", "mortgage", "turnover"]},
-              {title: "Property & environment", keys: ["flood", "water", "sites", "radon"]},
-              {title: "Everyday life", keys: ["school", "commute", "utilities"]},
-            ].map(group => <section className="guide-check-group" key={group.title}>
-              <h3>{group.title}</h3>
-              <ul className="guide-checks">{checklist(data, {place: placeHref, tax: taxHref}).filter(item => group.keys.includes(item.key)).map(item => <Check key={item.key} item={item} />)}</ul>
-            </section>)}
-            </div> : <p className="guide-preview">Local context and links for checking the actual home.</p>}
-          </section>
-          <button className="guide-side-arrow guide-side-next" type="button" disabled={step===2} aria-label={step<2 ? `Next: ${stepNames[step+1]}` : "Next question"} onClick={()=>goToStep(step+1)}><span aria-hidden="true">›</span></button>
-        </div>
-      <p className="guide-slide-position" aria-live="polite">Question {step+1} of 3 · {stepNames[step]}</p>
+        <section className="guide-answer guide-answer-checks" aria-labelledby="guide-checks-heading">
+          <div className="guide-answer-head">
+            <h2 id="guide-checks-heading" tabIndex={-1}><small>03</small>Before an offer</h2>
+          </div>
+          <p className="guide-sub">Ten things to check on the actual home. Tap one for its links and sources — area figures can’t establish one home’s risk, school or service.</p>
+          <ul className="guide-checks guide-tiles">{checklist(data, {place: placeHref, tax: taxHref}).map(item => <Check key={item.key} item={item} />)}</ul>
+        </section>
+      </div>}
+
+      <p className="guide-fineprint">Your numbers set against published local figures, by fixed calculations with sources and limits — not AI-written advice. <Link className="guide-help-shortcut" href="/help">Housing help ↗</Link></p>
     </div>
   );
 }
