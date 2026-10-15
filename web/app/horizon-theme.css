@@ -408,10 +408,11 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
 /* Phones (2026-10-15): state and place pages read top to bottom without collisions, wasted
    rows or boxes inside boxes. */
 @media screen and (max-width: 600px) {
-  /* The photo's credit drops to its own short line at the band's foot, below the "computed
-     from the data" line rather than across it. */
-  body:has(.horizon-page) main > header.page-head.has-photo { padding-bottom: 2.1rem !important; }
-  body:has(.horizon-page) main > header.page-head.has-photo > .place-photo figcaption { top: auto !important; bottom: .45rem !important; left: var(--gutter, 16px) !important; right: var(--gutter, 16px) !important; display: block !important; font-size: 10px !important; line-height: 1.3; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* The photo's credit gets its own reserved line at the very top of the band, above the
+     breadcrumb. The band is a fixed height while the title below varies, so a credit at the
+     foot always risked the "computed from the data" line; at the top nothing can reach it. */
+  body:has(.horizon-page) main > header.page-head.has-photo { padding-top: 1.7rem !important; }
+  body:has(.horizon-page) main > header.page-head.has-photo > .place-photo figcaption { top: .5rem !important; bottom: auto !important; left: var(--gutter, 16px) !important; right: var(--gutter, 16px) !important; display: block !important; font-size: 10px !important; line-height: 1.3; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   body:has(.horizon-page) main > header.page-head.has-photo > .place-photo figcaption > * { display: inline; }
   body:has(.horizon-page) main > header.page-head.has-photo > .place-photo figcaption > * + *::before { content: " · "; }
 
