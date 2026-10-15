@@ -14,7 +14,7 @@ import Link from "next/link";
 // The tools reachable from the bar, each with what it answers. All cover New
 // Jersey today, and say so, so the home page stays about no one state (#362).
 const HOME_TOOLS = [
-  { href: "/afford", title: "Where can I afford?", text: "Enter your income; see the towns where a typical home fits your budget.", icon: "M3 12h4l3-8 4 16 3-8h4" },
+  { href: "/afford", title: "Budget explorer", text: "Enter your income; see the towns where a typical home fits your budget.", icon: "M3 12h4l3-8 4 16 3-8h4" },
   { href: "/guide", title: "Buyer’s guide", text: "Afford, rent or buy, and what to check before an offer, for any place.", icon: "M4 5h7v14H4zM13 5h7v14h-7M7 9h1M16 9h1" },
   { href: "/tax", title: "Property tax lookup", text: "Any property by address or block and lot: its assessment and last year’s tax.", icon: "M5 21V8l7-5 7 5v13M9 21v-6h6v6" },
   { href: "/help", title: "Housing help", text: "Find affordable homes, vouchers and housing authorities in New Jersey.", icon: "M3 11l9-7 9 7M5 9v12h14V9M9 21v-6h6v6" },

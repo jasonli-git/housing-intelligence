@@ -11,7 +11,7 @@ import "../afford-horizon.css";
 import { pageMetadata } from "@/lib/meta";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Where can I afford? — Housing",
+  title: "Budget explorer — Housing",
   description:
     "Enter your income and see the New Jersey towns where the typical home fits your budget.",
   path: "/afford",
@@ -52,7 +52,7 @@ export default async function AffordPage() {
         <div>
           <Crumbs
             trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]}
-            here="Where can I afford?"
+            here="Budget explorer"
           />
           <Kind kind="tool" />
           <h1 className="page-title">Where can I afford?</h1>
