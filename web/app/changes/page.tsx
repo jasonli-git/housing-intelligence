@@ -57,7 +57,7 @@ export default async function ChangesPage() {
             <p className="meta history-intro">
               When a publisher corrects a figure we already showed, it’s recorded here: what it was, what it is now. Newest first.
             </p>
-            <nav className="history-tabs" aria-label="Source history"><Link href="/freshness">Source freshness</Link><Link href="/changes" aria-current="page">Revised figures</Link></nav>
+            <nav className="history-tabs state-jump" aria-label="About the data"><Link href="/freshness"><span>Source freshness</span><i aria-hidden="true">→</i></Link><Link href="/changes" aria-current="page"><span>Revised figures</span></Link></nav>
             <ul className="data-tally" aria-label="Revision history">
               <li data-status="all"><b>{report.total_batches.toLocaleString("en-US")}</b> refreshes with revisions</li>
               {report.batches[0] && <li data-status="current"><b>{report.batches[0].figures.toLocaleString("en-US")}</b> figures revised {dayLabel(report.batches[0].revised_on)}</li>}

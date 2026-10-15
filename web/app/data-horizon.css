@@ -18,10 +18,11 @@
   .horizon-page.atlas-ledger .kind::before { display: none; }
   .horizon-page.atlas-ledger .history-intro { max-width: 62ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.5; color: var(--text-secondary); }
 
-  /* The two pages as one switch. */
-  .horizon-page .history-tabs { display: inline-flex; gap: 0; margin: .9rem 0 .3rem; padding: 4px; border: 1px solid var(--plate-strong-rule); border-radius: 999px; background: var(--glass); }
-  .horizon-page .history-tabs a { padding: .45rem 1rem; border-radius: 999px; text-decoration: none !important; color: var(--text-secondary) !important; font: 500 14px/1.2 var(--font-text); border: 0 !important; }
-  .horizon-page .history-tabs a[aria-current="page"] { background: var(--plate-ink); color: var(--plate-paper) !important; }
+  /* The two pages as a text switch, drawn like the New Jersey page's "On this page" line. */
+  body:has(main.horizon-page[data-region-level="data"]) .history-tabs.state-jump { display: flex; margin: 1rem 0 .2rem; padding: 0; border: 0; background: none; }
+  body:has(main.horizon-page[data-region-level="data"]) .history-tabs.state-jump::before { content: "About the data"; }
+  body:has(main.horizon-page[data-region-level="data"]) main .history-tabs.state-jump a[aria-current="page"] { font-weight: 600; pointer-events: none; }
+  body:has(main.horizon-page[data-region-level="data"]) main .history-tabs.state-jump a[aria-current="page"] span { background-size: 100% 1.5px; }
 
   /* Counts in a row. */
   .data-tally { display: flex; flex-wrap: wrap; gap: .5rem; margin: .8rem 0 .4rem; padding: 0; list-style: none; }
@@ -51,3 +52,25 @@
   .horizon-page .fresh-stale { color: light-dark(#8a5a12, #f2c98a) !important; }
   .horizon-page .change-summary { color: var(--text-secondary); }
 }
+@media screen {
+  /* The counts are filters: buttons inside the pills. */
+  .data-tally li { padding: 0 !important; }
+  .data-tally button { display: inline-flex; align-items: baseline; gap: .4rem; min-height: 36px; padding: .35rem .85rem; border: 0; border-radius: 999px; background: none; color: inherit; font: inherit; cursor: pointer; }
+  .data-tally li:has(button[aria-pressed="true"]) { background: color-mix(in srgb, var(--plate-ink) 10%, var(--glass)); border-color: var(--plate-ink) !important; }
+  .data-tally li:has(button[aria-pressed="true"]) button { font-weight: 600; }
+  .data-tally button:focus-visible { outline: 2px solid var(--plate-accent); outline-offset: 2px; }
+  main[data-filter="current"] table.freshness tbody tr:not([data-status="current"]),
+  main[data-filter="pending"] table.freshness tbody tr:not([data-status="pending"]),
+  main[data-filter="unreachable"] table.freshness tbody tr:not([data-status="unreachable"]),
+  main[data-filter="not_tracked"] table.freshness tbody tr:not([data-status="not_tracked"]) { display: none; }
+  main[data-filter="current"] .fresh-cadence-group:not(:has(tr[data-status="current"])),
+  main[data-filter="pending"] .fresh-cadence-group:not(:has(tr[data-status="pending"])),
+  main[data-filter="unreachable"] .fresh-cadence-group:not(:has(tr[data-status="unreachable"])),
+  main[data-filter="not_tracked"] .fresh-cadence-group:not(:has(tr[data-status="not_tracked"])) { display: none; }
+
+  /* Links in the page's ink, underlined in lime, rather than the site's mixed link colours. */
+  body:has(main.horizon-page[data-region-level="data"]) main :is(table, .change-note, .change-summary, .history-explainer, .meta) a { color: var(--plate-ink) !important; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--plate-accent) 70%, transparent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+  body:has(main.horizon-page[data-region-level="data"]) main :is(table, .change-note, .change-summary, .history-explainer, .meta) a:hover { color: var(--plate-accent) !important; }
+  body:has(main.horizon-page[data-region-level="data"]) main .crumbs a { color: var(--text-secondary) !important; }
+}
+@media screen { main[data-filter] .fresh-cadence-heading span { display: none; } }

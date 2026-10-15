@@ -6,6 +6,7 @@ import { Crumbs, Kind } from "@/components/Crumbs";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
 import { NextRelease } from "@/components/NextRelease";
+import { StatusFilter } from "@/components/StatusFilter";
 import { api } from "@/lib/api";
 import { pageMetadata } from "@/lib/meta";
 import "../horizon-theme.css";
@@ -66,14 +67,13 @@ export default async function FreshnessPage() {
             <Kind kind="data" />
             <h1 className="page-title">How current is each source</h1>
             <p className="meta history-intro">Every source behind the site: how recent its data is, and when we last checked for newer.</p>
-            <nav className="history-tabs" aria-label="Source history"><Link href="/freshness" aria-current="page">Source freshness</Link><Link href="/changes">Revised figures</Link></nav>
-            <ul className="data-tally" aria-label="Sources by status">
-              <li data-status="all"><b>{report.sources.length}</b> sources</li>
-              {(["current", "pending", "unreachable", "not_tracked"] as const).map((status) => {
-                const count = report.sources.filter((source) => source.status === status).length;
-                return count ? <li key={status} data-status={status}><b>{count}</b> {STATUS_COPY[status].label.toLowerCase()}</li> : null;
-              })}
-            </ul>
+            <nav className="history-tabs state-jump" aria-label="About the data"><Link href="/freshness" aria-current="page"><span>Source freshness</span></Link><Link href="/changes"><span>Revised figures</span><i aria-hidden="true">→</i></Link></nav>
+            <StatusFilter
+              total={report.sources.length}
+              counts={(["current", "pending", "unreachable", "not_tracked"] as const)
+                .map((status) => ({ status, label: STATUS_COPY[status].label.toLowerCase(), count: report.sources.filter((source) => source.status === status).length }))
+                .filter((entry) => entry.count > 0)}
+            />
             <details className="history-explainer"><summary>How to read these dates</summary><p className="meta">
               “Covers up to” is the latest period a source describes; “We last checked” is when
               we asked the publisher for anything newer. Publishers update at the frequencies
