@@ -9,16 +9,15 @@ const base = { counties: [county], towns: [], rate: { value: 6, asOf: "2026-09-0
 describe("budget explorer presentation", () => {
   it("makes statewide scope and the empty-income starting point explicit", () => {
     const html = renderToStaticMarkup(createElement(AffordExplorer, base));
-    expect(html).toContain("all New Jersey");
-    expect(html).toContain("Start with your income");
-    expect(html).toContain("not loan approval");
+    expect(html).toContain("All New Jersey");
+    expect(html).toContain("Your monthly budget shows here");
+    expect(html).toContain("show which towns’ typical homes fit it");
     expect(html).toContain('data-view="list"');
     expect(html).not.toContain('class="globe-stage"');
   });
   it("names a local scope and offers a statewide escape", () => {
     const html = renderToStaticMarkup(createElement(AffordExplorer, { ...base, scope: { countyId: 5, countyName: county.name } }));
-    expect(html).toContain("Searching <b>Atlantic County</b>");
-    expect(html).toContain("Search all New Jersey");
-    expect(html).toContain("Check one place · Atlantic County");
+    expect(html).toContain('<option value="5" selected="">Atlantic County</option>');
+    expect(html).not.toContain("Check a specific town");
   });
 });

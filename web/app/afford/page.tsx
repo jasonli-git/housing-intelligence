@@ -4,15 +4,16 @@ import Link from "next/link";
 import { AffordExplorer } from "@/components/AffordExplorer";
 import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
-import { SectionJump } from "@/components/SectionJump";
 import { affordData } from "@/lib/affordData";
 import "../tool-pages.css";
+import "../horizon-theme.css";
+import "../afford-horizon.css";
 import { pageMetadata } from "@/lib/meta";
 
 export const metadata: Metadata = pageMetadata({
-  title: "What can I afford? — Housing",
+  title: "Where can I afford? — Housing",
   description:
-    "The New Jersey counties and municipalities where the typical home is within reach of an income.",
+    "Enter your income and see the New Jersey towns where the typical home fits your budget.",
   path: "/afford",
 });
 
@@ -33,7 +34,7 @@ export default async function AffordPage() {
       <>
         <Masthead affordability={{ kind: "route", active: true }} />
         <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool">
-          <h1 className="page-title">What can I afford?</h1>
+          <h1 className="page-title">Where can I afford?</h1>
           <p className="meta">
             The API is unreachable, so there is nothing to show.{" "}
             <Link href="/states/new-jersey">Back to New Jersey</Link>.
@@ -46,20 +47,19 @@ export default async function AffordPage() {
   return (
     <>
       <Masthead affordability={{ kind: "route", active: true }} />
-      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool budget-page">
+      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool budget-page horizon-page" data-region-level="tool">
       <header className="page-head" data-kind="tool">
         <div>
           <Crumbs
             trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]}
-            here="What can I afford?"
+            here="Where can I afford?"
           />
           <Kind kind="tool" />
-          <h1 className="page-title">Find your fit.</h1>
+          <h1 className="page-title">Where can I afford?</h1>
           <div className="tool-head-tools">
             <p className="meta">
-              Your income. Typical housing costs. Places to explore in New Jersey.
+              Enter your income. See the New Jersey towns where a typical home fits your budget.
             </p>
-            <nav className="page-section-nav" aria-label="Page sections"><SectionJump /></nav>
           </div>
         </div>
       </header>

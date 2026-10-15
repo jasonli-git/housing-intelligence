@@ -80,3 +80,90 @@
   .budget-view-choice, .budget-scope-line button { display: none; }
   .budget-page .budget-explorer .budget-comparison, .budget-page .budget-explorer .budget-town-results { display: block; }
 }
+
+/* Where can I afford? (2026-10-15): three numbered steps — situation, budget, where it
+   fits — and an answer that leads with a count, then what fits, what nearly does, and
+   how the counties sit against the budget. */
+@media screen {
+  .wca { display: grid; gap: 0; }
+  .wca-step-label { display: flex; align-items: center; gap: .55rem; margin: 1.6rem 0 .6rem; font: 600 12px/1.4 var(--font-mono, ui-monospace); letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); }
+  .wca-step-label:first-child { margin-top: .4rem; }
+  .wca-step-label > span { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--budget-accent); color: var(--surface-card); font-size: 11px; letter-spacing: 0; }
+  .budget-page .wca .afford-controls { grid-template-columns: 1.6fr .9fr .8fr 1.1fr; border-radius: 14px; }
+  .budget-page .wca .wca-income .money-input { min-height: 52px; }
+  .budget-page .wca .wca-income input { font-size: 20px; }
+  .budget-page .wca .budget-headline { border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.3rem; }
+  .budget-page .wca .budget-headline strong { font: 500 clamp(34px, 5vw, 52px)/1.1 Georgia, serif; letter-spacing: -.03em; margin: 0 0 .35rem; color: var(--budget-accent); }
+  .budget-page .wca .budget-headline strong small { font-size: .42em; letter-spacing: 0; color: var(--text-secondary); margin-left: .3rem; }
+  .budget-page .wca .budget-headline strong.wca-empty { color: var(--text-muted); font-size: clamp(20px, 2.4vw, 24px); }
+  .budget-page .wca .budget-headline p { font-size: 14px; line-height: 1.5; max-width: 60ch; }
+  .budget-page .wca .budget-headline b { color: var(--text-primary); font-weight: 600; }
+  .budget-page .wca .budget-assumptions { margin: .3rem 0 0; padding: 0; }
+
+  .wca-answer { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 1rem; align-items: baseline; padding: .2rem 0 .8rem; }
+  .wca-count { margin: 0; font: 500 clamp(44px, 7vw, 76px)/1 Georgia, serif; letter-spacing: -.04em; color: var(--budget-accent); }
+  .wca-count b { font-weight: 500; }
+  .wca-sentence { margin: 0; font-size: clamp(16px, 1.8vw, 20px); line-height: 1.4; max-width: 46ch; }
+  .wca-tip { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .5rem; margin: .9rem 0 0; }
+  .wca-tip button { min-height: 36px; padding: .3rem .85rem; border: 1px solid color-mix(in srgb, var(--budget-accent) 45%, var(--border)); border-radius: 999px; background: transparent; color: var(--text-primary); font: 500 13px/1.3 var(--font-text); cursor: pointer; }
+  .wca-tip button::after { content: " →"; color: var(--budget-accent); }
+  .wca-tip button:hover { background: color-mix(in srgb, var(--budget-accent) 10%, transparent); }
+
+  .wca-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+  .wca-list { padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-card); }
+  .budget-page .wca-list h2 { margin: 0 0 .6rem; font: 600 13px/1.4 var(--font-text); color: var(--text-secondary); }
+  .wca-list ol { margin: 0; padding: 0; list-style: none; }
+  .wca-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: .8rem; padding: .55rem 0; border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+  .wca-list li:first-child { border-top: 0; }
+  .wca-list li a { font-weight: 600; color: var(--text-primary); text-decoration: none; }
+  .wca-list li a:hover { color: var(--budget-accent); }
+  .wca-detail { grid-column: 1; grid-row: 2; font-size: 12px; color: var(--text-muted); }
+  .wca-cost { grid-column: 2; grid-row: 1; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .wca-cost small { font-weight: 400; color: var(--text-muted); }
+  .wca-room { grid-column: 2; grid-row: 2; text-align: right; font-size: 12px; color: light-dark(#2f7a4f, #8fd3a8); }
+  .wca-near .wca-room { color: var(--text-muted); }
+  .wca-near { background: transparent; border-style: dashed; }
+  .wca-list > .button { margin-top: .6rem; }
+
+  .wca-strip { margin-top: 1.2rem; padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-card); }
+  .budget-page .wca-strip h2 { margin: 0; font: 600 13px/1.4 var(--font-text); color: var(--text-secondary); }
+  .wca-strip-key { display: flex; align-items: center; gap: .45rem; margin: .2rem 0 .7rem; font-size: 12px; color: var(--text-muted); }
+  .wca-key-line { display: inline-block; width: 2px; height: 14px; background: var(--text-primary); }
+  .wca-strip ul { position: relative; margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+  .wca-strip li button { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr) 4.8rem; align-items: center; gap: .6rem; width: 100%; min-height: 28px; padding: 0 .2rem; border: 0; border-radius: 6px; background: transparent; color: var(--text-primary); font: 13px/1.2 var(--font-text); text-align: left; cursor: pointer; }
+  .wca-strip li button:hover { background: color-mix(in srgb, var(--budget-accent) 8%, transparent); }
+  .wca-strip-track { position: relative; height: 10px; border-radius: 5px; background: color-mix(in srgb, var(--border) 45%, transparent); }
+  .wca-strip-track::after { content: ""; position: absolute; left: var(--budget-at); top: -5px; bottom: -5px; width: 2px; background: var(--text-primary); }
+  .wca-strip-bar { position: absolute; inset: 0 auto 0 0; border-radius: 5px; background: color-mix(in srgb, var(--text-muted) 55%, transparent); }
+  .wca-strip li[data-within="true"] .wca-strip-bar { background: var(--budget-accent); }
+  .wca-strip-value { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+  .wca-scope { margin-top: 1rem; border-radius: 10px; border-top: 1px solid var(--border); }
+  .wca-fineprint { margin: 1rem 0 .2rem; font-size: 12px; line-height: 1.6; color: var(--text-muted); max-width: 80ch; }
+  .budget-page .wca .budget-place-check { margin-top: 1.4rem; }
+
+  @media (max-width: 760px) {
+    .budget-page .wca .afford-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .budget-page .wca .wca-income { grid-column: 1 / -1; }
+    .wca-answer { grid-template-columns: minmax(0, 1fr); }
+    .wca-strip li button { grid-template-columns: 5.6rem minmax(0, 1fr) 4.2rem; font-size: 12px; }
+  }
+}
+
+/* Step 1 leads (2026-10-15): the tool says nothing until it has an income, so the inputs
+   carry the accent and steps 2 and 3 stay quiet — outlined numbers, placeholders while
+   empty. */
+@media screen {
+  .wca-step-label > span { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+  .wca-step-label.wca-step-first { color: var(--budget-accent); font-size: 13px; }
+  .wca-step-label.wca-step-first > span { width: 26px; height: 26px; background: var(--budget-accent); border-color: var(--budget-accent); color: var(--surface-card); font-size: 12px; }
+  .wca-step-label em { margin-left: .3rem; padding: .15rem .55rem; border-radius: 999px; background: color-mix(in srgb, var(--budget-accent) 16%, transparent); color: var(--budget-accent); font: 600 11px/1.3 var(--font-text); letter-spacing: 0; text-transform: none; font-style: normal; }
+  .budget-page .wca .afford-controls.wca-first { border: 2px solid var(--budget-accent); background: color-mix(in srgb, var(--budget-accent) 6%, var(--surface-card)); box-shadow: 0 18px 50px -30px color-mix(in srgb, var(--budget-accent) 70%, transparent); padding: 1.3rem 1.4rem; }
+  .budget-page .wca .wca-first .control-label { color: var(--text-primary); font-weight: 500; }
+  .budget-page .wca[data-has-income="false"] .wca-income .money-input { box-shadow: 0 0 0 3px color-mix(in srgb, var(--budget-accent) 35%, transparent); border-radius: 10px; animation: wca-ask 2.4s ease-in-out infinite; }
+  @keyframes wca-ask { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--budget-accent) 12%, transparent); } }
+  @media (prefers-reduced-motion: reduce) { .budget-page .wca[data-has-income="false"] .wca-income .money-input { animation: none; } }
+  .budget-page .wca[data-has-income="false"] .budget-headline { opacity: .55; }
+  .budget-page .wca .budget-headline { background: transparent; }
+  .wca-placeholder { margin: 0; padding: 1.1rem 1.2rem; border: 1px dashed var(--border); border-radius: 14px; color: var(--text-muted); font-size: 14px; }
+  .wca-pointer { margin: 1rem 0 0; font-size: 13px; color: var(--text-secondary); }
+}
