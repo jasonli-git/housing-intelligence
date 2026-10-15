@@ -49,7 +49,7 @@ export function PlaceSearch({
       onFocus={load}
       onPick={(entry) => router.push(entryPath(entry))}
       label="Search by state, town, county or ZIP code"
-      placeholder={variant === "hero" ? "State, town, county or ZIP code" : "Search town, county or ZIP"}
+      placeholder={variant === "hero" ? "State, town, county or ZIP code" : "Town, county or ZIP"}
       name={variant === "hero" ? "home-place-query" : "place-query"}
     />
   );
