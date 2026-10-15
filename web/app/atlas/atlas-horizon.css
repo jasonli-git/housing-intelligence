@@ -65,3 +65,18 @@
   .horizon-page :is(.atlas-controls, .atlas-results, .atlas-legend, .atlas-measure-picker) { background: color-mix(in srgb, var(--plate-paper) 86%, transparent) !important; -webkit-backdrop-filter: blur(20px) saturate(120%); backdrop-filter: blur(20px) saturate(120%); }
   @media (min-width: 901px) { .horizon-page .atlas-controls { top: 20px !important; } }
 }
+@media screen {
+  /* The map in the same warm night: a plum globe, sand-coloured land, paper-coloured edges. */
+  .horizon-page .atlas-globe-ocean { filter: drop-shadow(0 0 28px light-dark(#c9783f44, #f08a5d33)) !important; }
+  .horizon-page .atlas-map-geography .atlas-context-land { fill: light-dark(#d9c3ab, #5a4a52) !important; stroke: light-dark(#c2a88e, #3a2f3a) !important; }
+  .horizon-page .atlas-map-geography path { stroke: light-dark(#fff8f0, #1c1620); }
+  .horizon-page .atlas-map-geography path:hover, .horizon-page .atlas-map-geography path:focus-visible, .horizon-page .atlas-map-geography path[data-selected="true"] { stroke: light-dark(#22201c, #ffe2a8); }
+  .horizon-page .atlas-legend > div { width: 140px; height: 10px; border-radius: 999px; }
+  .horizon-page .atlas-legend span { font: 400 15px/1 Georgia, serif; font-variant-numeric: lining-nums; }
+  .horizon-page .atlas-table-wrap tr[data-selected="true"] { background: color-mix(in srgb, var(--plate-accent) 14%, transparent) !important; }
+  .horizon-page .atlas-table-wrap td { font-variant-numeric: tabular-nums; }
+  .horizon-page .atlas-reading b { font: 400 18px/1.2 Georgia, serif; }
+  .horizon-page .atlas-control-footer .atlas-coverage i { background: var(--plate-accent) !important; }
+  .horizon-page .atlas-catalogue-button { border-radius: 12px !important; }
+}
+@media screen { .horizon-page .atlas-legend .atlas-missing-key { background: repeating-linear-gradient(135deg,#8a7d7a 0 3px,#d8cabd 3px 5px) !important; } }

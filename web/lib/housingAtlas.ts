@@ -4,7 +4,9 @@ import type { WindowKey } from "./windows";
 export type AtlasMeasure = Measure & { source: string; sourceUrl: string; definition: string; latest:{rows:RankRow[];start:null;end:string|null;periods:Record<string,string>} };
 export type AtlasCounty = { id:number; name:string };
 export type AtlasMode = "latest" | WindowKey;
-export const ATLAS_COLORS = ["#d2e5e9","#a4cbd4","#70a9ba","#3c819c","#17516d"];
+// Horizon's warm night (2026-10-15, #378): cream to plum, lightness falling at every
+// step so the order reads in either theme and in greyscale.
+export const ATLAS_COLORS = ["#f6e3c4","#efb47a","#d97848","#a3453c","#5a2646"];
 
 /** Difference is descriptive, not evidence of statistical significance. */
 export function atlasDifference(measure:AtlasMeasure,mode:AtlasMode,first:number,second:number) {
