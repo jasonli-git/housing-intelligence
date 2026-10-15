@@ -473,7 +473,28 @@ tracts (most new insight, about 2,000 more pages) were the strongest cases.
         ZIP areas, aggregates published, never records or addresses; asked whether this
         qualifies or whether a university partnership or other licence would. Awaiting
         a reply; follow up after about two weeks. A partner's licence would need to
-        cover publishing on this site.
+        cover publishing on this site. **Mark (NBF Support) replied 2026-10-14**, without
+        answering the licence question, with a route that may not need the Fabric:
+        location-level unserved/unfunded status from the Broadband Funding Map's public
+        downloads (section 3.2) as the numerator, and the FCC's "Fabric Locations by
+        Geography" counts per census block as the denominator, giving block or H3-8
+        shares. **Spike 2026-10-14 (`spike/bfm-broadband`), nothing built:** the BFM
+        file (40,045 NJ locations, D25) is not a usable rate on its own — a zero
+        means no *residential* (or *business*) service reported, so 10,036 business-only
+        locations read as residentially unserved (Bergen 3,515 rows against 5 unserved
+        by the map). Better found: the National Broadband Map's per-state
+        `bdc_34_fixed_broadband_served_unserved` file lists every NJ location
+        (2,583,482, one row each, 118,814 blocks) with 100/20 served flags, so it is
+        numerator and denominator at once; 8,678 (0.34%) unserved by terrestrial
+        technology, 11,946 by wired, 2 by any (satellite). Its blocks are 2020 blocks
+        and LODES's crosswalk places them in towns and ZCTAs exactly (spot check 22/22;
+        293 water blocks have no ZCTA). Both sites block scripted downloads (403
+        outside a browser), and the rows carry CostQuest's Location ID, which the
+        current `fcc_bdc` terms note excludes. **Owner decided 2026-10-14: publish town
+        and ZIP counts, and fiber too** — built as `fcc_bdc_locations` (ARCHITECTURE
+        #372) on `feature/broadband-places`; first run 2026-10-14 on D25 (served file
+        from the API, fiber file from the page): 1,184 places, statewide 77.0% of
+        locations with a fiber offer, 11,946 with no wired 100/20 offer.
       - **Towns without the Fabric, measured 2026-10-07:** the FCC's New Jersey
         Census-place summary (701 places, owner's download) covers 323 of 564 towns
         exactly — every borough (252), city (52), town (15) and village (3), and no

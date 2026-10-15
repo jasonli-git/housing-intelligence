@@ -48,6 +48,8 @@ class CommunityContext(BaseModel):
     broadband: list[CommunityRecord] = Field(default_factory=list)
     broadband_area: str | None = None
     broadband_level: str | None = None
+    # The place's own counts from FCC's location files, at every level (#372).
+    broadband_place: CommunityRecord | None = None
 
 
 def records_for(session: SessionDep, entities: list[str]) -> list[CommunityRecord]:
@@ -145,8 +147,13 @@ def community(region_id: int, session: SessionDep) -> CommunityContext:
         for r in local
         if r.kind == "broadband_summary" and r.entity_id == broadband_entity
     ]
+    place = next(
+        (r for r in local if r.kind == "broadband_place" and r.entity_id == entity),
+        None,
+    )
     return CommunityContext(
         region_id=region_id,
+        broadband_place=place,
         districts=[
             DistrictContext(
                 boundary=r,

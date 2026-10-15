@@ -3,6 +3,7 @@ import { ReaderDetails } from "@/components/ReaderDetails";
 import type { ReactNode } from "react";
 import { LearningExhibit } from "./LearningExhibit";
 import { districtCards, districtResults } from "@/lib/schools";
+import { BroadbandPlace } from "./BroadbandPlace";
 
 const SPR = "https://www.nj.gov/education/schoolperformance/";
 const BOUNDARIES = "https://www.arcgis.com/home/item.html?id=26a2a9f9cf0a472d865b367f88833336";
@@ -18,6 +19,7 @@ export function CommunityContext({ data, level, supporting = false, hideBroadban
   const broadband = data.broadband ?? [];
   const wired = broadband.find((r) => r.payload.technology === "All Wired");
   const fiber = broadband.find((r) => r.payload.technology === "Fiber");
+  const place = data.broadband_place ?? null;
   const districts = districtCards(data.districts);
   return <>
     <ContextExhibit enabled={exhibits} kind="Schools"><section className="section sales community-schools" aria-labelledby="community-schools-heading">
@@ -50,8 +52,9 @@ export function CommunityContext({ data, level, supporting = false, hideBroadban
     {!hideBroadband && <ContextExhibit enabled={exhibits} kind="Internet access"><section className="section sales community-broadband" aria-labelledby="community-broadband-heading">
       <div className="section-head"><h2 id="community-broadband-heading">Internet at the address</h2></div>
       <p className="sales-note">Check <a href={FCC} target="_blank" rel="noreferrer">FCC’s National Broadband Map</a> for providers and advertised speeds at a home. Availability is not measured speed; confirm the plan with the provider.</p>
+      {place && <BroadbandPlace record={place} name={level === "zip" ? "this ZIP code" : level === "municipality" ? "this town" : "this area"} />}
       {wired ? <ReaderDetails title={`${data.broadband_area} · ${data.broadband_level} availability summary`}>
-        {level === "municipality" && <p className="sales-note">County context, not this town’s availability. Census-place boundaries do not reliably match legal municipalities.</p>}
+        {level === "municipality" && <p className="sales-note">County context, not this town’s availability{place ? " (above)" : ""}. Census-place boundaries do not reliably match legal municipalities.</p>}
         <dl className="utility-reliability">
           <div><dt>Wired offers · at least 100 down / 20 up Mbps</dt><dd>{(wired.payload.shares.speed_100_20 * 100).toFixed(1)}%</dd></div>
           <div><dt>Wired offers · at least 1,000 down / 100 up Mbps</dt><dd>{(wired.payload.shares.speed_1000_100 * 100).toFixed(1)}%</dd></div>
@@ -59,7 +62,7 @@ export function CommunityContext({ data, level, supporting = false, hideBroadban
         </dl>
         <p className="sales-note">Shares of FCC’s mapped units with residential-service offers—not shares of people, subscribers or households. FCC’s denominator is {wired.payload.total_units.toLocaleString("en-US")} units across broadband-serviceable locations, including multi-unit buildings. Wired and fiber overlap; do not add their percentages.</p>
         <p className="sales-note">Availability as of {wired.payload.as_of} · revised {wired.payload.revision}. Provider reports, not speed tests, prices or a guarantee at an address. <a href={wired.payload.url} target="_blank" rel="noreferrer">FCC published summaries</a>.</p>
-      </ReaderDetails> : <ReaderDetails title="Why there is no local availability figure yet"><p className="sales-note">{level === "zip" ? "No ZIP-level summary has been matched. ZIP areas can cross county boundaries, so no county figure is substituted." : "No matching availability summary is loaded for this geography."} The public website downloads do not require an account; the documented API does. The location Fabric has separate licensing. Household internet subscriptions are not a substitute for availability.</p></ReaderDetails>}
+      </ReaderDetails> : place ? null : <ReaderDetails title="Why there is no local availability figure yet"><p className="sales-note">{level === "zip" ? "No ZIP-level summary has been matched. ZIP areas can cross county boundaries, so no county figure is substituted." : "No matching availability summary is loaded for this geography."} The public website downloads do not require an account; the documented API does. The location Fabric has separate licensing. Household internet subscriptions are not a substitute for availability.</p></ReaderDetails>}
     </section></ContextExhibit>}
 
     <ContextExhibit enabled={exhibits} kind="Public safety"><section className="section sales community-crime" aria-labelledby="community-crime-heading">

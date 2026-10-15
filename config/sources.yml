@@ -1390,6 +1390,42 @@ sources:
       As-of and revision dates are both in the vintage. State/county summaries only;
       Census places are not municipality boundaries. No claim of automatic Friday refresh.
 
+  fcc_bdc_locations:
+    name: FCC Broadband Data Collection — New Jersey location files, counted by block
+    publisher: Federal Communications Commission
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        Availability flags are FCC data, free of copyright restriction. Each row's
+        Location ID is CostQuest's; only counts per block and place are kept or published.
+    terms_url: https://broadbandmap.fcc.gov/about
+    terms_checked: 2026-10-14
+    terms_note: >-
+      Read License and Attribution on the current map. CostQuest owns the Fabric's
+      Location IDs, coordinates, addresses, unit counts and building types. These two
+      public files carry only the Location ID of those; landing reduces them to counts
+      per 2020 census block and discards the IDs, and the owner decided on 2026-10-14
+      to publish town and ZIP counts derived that way (ARCHITECTURE #372). Both files
+      download in a browser and refuse scripted requests (HTTP 403).
+    notices:
+      - >-
+        Source data: FCC Broadband Data Collection. Provider-reported availability at
+        broadband-serviceable locations, not measured speed, price or a guarantee at a
+        home. A location is a building or other place service could be installed, and
+        can hold many homes or none.
+    url: https://broadbandmap.fcc.gov/data-download/nationwide-data
+    homepage: https://broadbandmap.fcc.gov/
+    cadence: semiannual
+    adapter: hip.sources.fcc:BroadbandLocationsAdapter
+    fallback: Official FCC address checker.
+    notes: >-
+      Two files per edition into data/manual/fcc_bdc_locations/, named as FCC names
+      them — By State, New Jersey: Served/Unserved, and Fiber to the Premises. Placed
+      in towns and ZIP codes by LODES's block crosswalk.
+
   # Milestone 45: getting around (ARCHITECTURE #313-#314).
   census_lodes:
     name: LEHD Origin-Destination Employment Statistics (LODES 8)

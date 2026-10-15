@@ -1,8 +1,12 @@
-"""Public FCC summaries handed in through the website, not a Fabric license.
+"""Public FCC files handed in through the website, not a Fabric license.
 
 Manual acquisition is an integration choice until a documented authenticated API
 is configured, not a claim that FCC prohibits automatic downloads. Do not turn a
 Census place into a legal municipality, or infer a denominator from served rows.
+
+Two kinds of file: the published summaries, and two per-state location files
+(served/unserved and fiber) that are reduced to counts per census block as they land.
+Their rows carry CostQuest's Location IDs, so nothing finer than a block is kept.
 """
 
 import csv
@@ -29,6 +33,20 @@ SPEEDS = (
 )
 TECHNOLOGIES = {"All Wired", "Fiber", "Cable"}
 COUNTIES = {f"34{i:03d}" for i in range(1, 42, 2)}
+MONTHS = [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
+]
 
 
 def vintage_dates(vintage: str) -> tuple[date, date]:
@@ -39,6 +57,14 @@ def vintage_dates(vintage: str) -> tuple[date, date]:
     if (as_of.month, as_of.day) not in {(6, 30), (12, 31)} or revision < as_of:
         raise SourceError("FCC vintage must name a filing half-year and later revision")
     return as_of, revision
+
+
+def file_stamp(vintage: str) -> str:
+    """FCC's own file suffix for a vintage: `D25_29sep2026` for 2025-12-31_2026-09-29."""
+    as_of, revision = vintage_dates(vintage)
+    period = f"{'J' if as_of.month == 6 else 'D'}{as_of.year % 100:02d}"
+    month = MONTHS[revision.month - 1]
+    return f"{period}_{revision.day:02d}{month}{revision.year}"
 
 
 class BroadbandSummaryAdapter(SourceAdapter):
@@ -57,24 +83,9 @@ class BroadbandSummaryAdapter(SourceAdapter):
 
     @classmethod
     def filename(cls, ref: ReleaseRef) -> str:
-        as_of, revision = vintage_dates(ref.vintage)
-        period = f"{'J' if as_of.month == 6 else 'D'}{as_of.year % 100:02d}"
-        month = (
-            "jan",
-            "feb",
-            "mar",
-            "apr",
-            "may",
-            "jun",
-            "jul",
-            "aug",
-            "sep",
-            "oct",
-            "nov",
-            "dec",
-        )[revision.month - 1]
-        stamp = f"{revision.day:02d}{month}{revision.year}"
-        return f"bdc_us_fixed_broadband_summary_by_geography_{period}_{stamp}.zip"
+        return (
+            f"bdc_us_fixed_broadband_summary_by_geography_{file_stamp(ref.vintage)}.zip"
+        )
 
     def use_cached_vintage(self, raw_dir: Path) -> None:
         """Advance only from acquired files, never an unverified download or web date."""
@@ -88,10 +99,13 @@ class BroadbandSummaryAdapter(SourceAdapter):
         if not isinstance(data, dict):
             return
         newest = self.newest or self.default_vintage
+        layer = self.refs()[0].layer
         for key, sha in data.items():
             if not isinstance(key, str) or not isinstance(sha, str):
                 continue
-            match = re.fullmatch(r"summary@(\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2})", key)
+            match = re.fullmatch(
+                rf"{layer}@(\d{{4}}-\d{{2}}-\d{{2}}_\d{{4}}-\d{{2}}-\d{{2}})", key
+            )
             if match is None:
                 continue
             try:
@@ -205,3 +219,110 @@ class BroadbandSummaryAdapter(SourceAdapter):
         if seen != expected:
             raise SourceError("FCC NJ summary incomplete: need state and 21 counties")
         return result
+
+
+FCC_STATE_DOWNLOAD = "https://broadbandmap.fcc.gov/data-download/nationwide-data"
+SERVED_FIELDS = (
+    "location_id",
+    "block_geoid",
+    "h3_res8_id",
+    "any_dl100_ul20",
+    "wired_dl100_ul20",
+    "terrestrial_dl100_ul20",
+)
+FIBER_FIELDS = {"location_id", "technology", "block_geoid"}
+BLOCK = re.compile(r"34\d{13}")
+
+
+class BroadbandLocationsAdapter(BroadbandSummaryAdapter):
+    """New Jersey's location files, counted per 2020 census block (ARCHITECTURE #372).
+
+    `served` lists every broadband-serviceable location once, with whether any wired,
+    or any terrestrial, provider reports 100/20 Mbps there — numerator and denominator
+    in one file, so no denominator is inferred from served rows. `fiber` lists each
+    provider's fiber offer at a location; a location counts once however many reach
+    it. Blocks reach towns and ZIP codes through LODES's crosswalk in staging.
+    """
+
+    source_id: ClassVar[str] = "fcc_bdc_locations"
+    default_vintage: ClassVar[str] = "2025-12-31_2026-10-13"
+    manual_from: ClassVar[str] = FCC_STATE_DOWNLOAD
+    minimum: ClassVar[int] = 100_000
+
+    def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+        value = vintage or self.newest or self.default_vintage
+        vintage_dates(value)
+        return [
+            ReleaseRef(self.source_id, layer, value, FCC_STATE_DOWNLOAD)
+            for layer in ("served", "fiber")
+        ]
+
+    @classmethod
+    def filename(cls, ref: ReleaseRef) -> str:
+        kind = {
+            "served": "fixed_broadband_served_unserved",
+            "fiber": "FibertothePremises_fixed_broadband",
+        }[ref.layer]
+        # As the download page saves it; the API names the same bytes `.csv.zip`.
+        return f"bdc_34_{kind}_{file_stamp(ref.vintage)}.zip"
+
+    @classmethod
+    def xlsx_records(cls, path: Path, ref: ReleaseRef) -> list[dict[str, object]]:
+        member = cls.filename(ref).replace(".zip", ".csv")
+        try:
+            with zipfile.ZipFile(path) as archive:
+                if archive.namelist() != [member]:
+                    raise SourceError("FCC ZIP does not match the declared file")
+                with archive.open(member) as zipped, io.TextIOWrapper(zipped) as stream:
+                    rows = csv.DictReader(stream)
+                    blocks = (
+                        cls._served(rows) if ref.layer == "served" else cls._fiber(rows)
+                    )
+        except (zipfile.BadZipFile, UnicodeError, csv.Error) as exc:
+            raise SourceError("Invalid FCC location archive") from exc
+        if len(blocks) < (cls.minimum if ref.layer == "served" else 1):
+            raise SourceError(f"FCC {ref.layer} file covers too few blocks")
+        return [{"block": block, **counts} for block, counts in sorted(blocks.items())]
+
+    @staticmethod
+    def _served(rows: csv.DictReader[str]) -> dict[str, dict[str, int]]:
+        if tuple(rows.fieldnames or ()) != SERVED_FIELDS:
+            raise SourceError("FCC served/unserved columns changed")
+        seen: set[str] = set()
+        blocks: dict[str, dict[str, int]] = {}
+        for row in rows:
+            location, block = row["location_id"], row["block_geoid"]
+            flags = (
+                row["any_dl100_ul20"],
+                row["wired_dl100_ul20"],
+                row["terrestrial_dl100_ul20"],
+            )
+            if location in seen or not BLOCK.fullmatch(block):
+                raise SourceError("FCC served/unserved row is duplicated or unplaced")
+            if any(flag not in {"0", "1"} for flag in flags):
+                raise SourceError("FCC served flag is not 0 or 1")
+            seen.add(location)
+            counts = blocks.setdefault(
+                block,
+                {"locations": 0, "unserved_wired": 0, "unserved_terrestrial": 0},
+            )
+            counts["locations"] += 1
+            counts["unserved_wired"] += flags[1] == "0"
+            counts["unserved_terrestrial"] += flags[2] == "0"
+        return blocks
+
+    @staticmethod
+    def _fiber(rows: csv.DictReader[str]) -> dict[str, dict[str, int]]:
+        if not set(rows.fieldnames or ()) >= FIBER_FIELDS:
+            raise SourceError("FCC fiber columns changed")
+        located: dict[str, str] = {}
+        for row in rows:
+            location, block = row["location_id"], row["block_geoid"]
+            if row["technology"] != "50" or not BLOCK.fullmatch(block):
+                raise SourceError("FCC fiber row is not fiber in New Jersey")
+            if located.setdefault(location, block) != block:
+                raise SourceError("FCC fiber location sits in two blocks")
+        blocks: dict[str, dict[str, int]] = {}
+        for block in located.values():
+            blocks.setdefault(block, {"fiber": 0})["fiber"] += 1
+        return blocks

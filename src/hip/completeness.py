@@ -592,7 +592,11 @@ def measure_community(session: Session) -> list[CommunityCoverage]:
                 AS health_no_interval,
               (SELECT count(*) FROM community_records
                WHERE kind = 'broadband_summary'
-                 AND NOT (payload -> 'shares' ? 'speed_100_20')) AS broadband_missing
+                 AND NOT (payload -> 'shares' ? 'speed_100_20')) AS broadband_missing,
+              (SELECT coalesce(sum((payload ->> 'unplaced')::bigint), 0)
+               FROM community_records
+               WHERE kind = 'broadband_place' AND entity_id = 'state:34')
+                AS broadband_unplaced
             """
             )
         )
@@ -637,6 +641,12 @@ def measure_community(session: Session) -> list[CommunityCoverage]:
             "Broadband (FCC)",
             gaps["broadband_missing"],
             "summaries without the 100/20 Mbps share",
+        ),
+        (
+            "broadband_place",
+            "Broadband by place (FCC locations)",
+            gaps["broadband_unplaced"],
+            "locations in blocks no town holds",
         ),
     )
     return [

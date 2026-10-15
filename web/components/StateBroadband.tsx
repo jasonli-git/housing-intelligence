@@ -1,4 +1,5 @@
 import type { CommunityContext } from "@/lib/api";
+import { BroadbandPlace } from "./BroadbandPlace";
 
 /** Published state shares, never substituted for an address-specific service check. */
 export function StateBroadband({ data, name = "New Jersey" }: { data: CommunityContext | null; name?:string }) {
@@ -14,6 +15,7 @@ export function StateBroadband({ data, name = "New Jersey" }: { data: CommunityC
     <dl className="utility-reliability">{rows.map(row => <div key={row.label}><dt>{row.label}</dt><dd>{Number.isFinite(row.value) ? `${(row.value * 100).toFixed(1)}%` : "Not published"}</dd></div>)}</dl>
     <p className="sales-note">As of {wired.payload.as_of} · revised {wired.payload.revision}. Provider-reported residential-service offers—not measured speeds, subscribers or a guarantee at a home.</p>
     <p className="sales-note">Shares of {wired.payload.total_units.toLocaleString("en-US")} FCC mapped units across broadband-serviceable locations, including multi-unit buildings—not households or people. Wired and fiber overlap; do not add their percentages.</p>
+    {data?.broadband_place && <BroadbandPlace record={data.broadband_place} name={name} />}
     <p className="sales-note"><a href="https://broadbandmap.fcc.gov/" target="_blank" rel="noreferrer">Check providers at an address</a> · <a href={wired.payload.url} target="_blank" rel="noreferrer">FCC published summaries</a>. Confirm the plan with the provider.</p>
   </section>;
 }

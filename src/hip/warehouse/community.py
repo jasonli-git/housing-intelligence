@@ -18,6 +18,7 @@ SOURCES = (
     "nj_crime",
     "cdc_places",
     "fcc_bdc",
+    "fcc_bdc_locations",
     "nces_ccd_lea",
 )
 KINDS = {
@@ -26,6 +27,7 @@ KINDS = {
     "nj_crime": "crime_agency",
     "cdc_places": "health_estimate",
     "fcc_bdc": "broadband_summary",
+    "fcc_bdc_locations": "broadband_place",
     "nces_ccd_lea": "district_status",
 }
 
@@ -65,6 +67,23 @@ def validate_payload(kind: str, payload: dict[str, object]) -> None:
         values = [shares[k] for k in SPEEDS]
         if any(b > a + 1e-9 for a, b in zip(values, values[1:], strict=False)):
             raise ValueError("community: invalid broadband tier ordering")
+        vintage_dates(f"{payload.get('as_of')}_{payload.get('revision')}")
+    elif kind == "broadband_place":
+        tallies = [
+            payload.get(k)
+            for k in (
+                "locations",
+                "fiber",
+                "unserved_wired",
+                "unserved_terrestrial",
+                "unplaced",
+            )
+        ]
+        whole = [n for n in tallies if isinstance(n, int) and not isinstance(n, bool)]
+        if len(whole) != len(tallies) or whole[0] <= 0 or min(whole) < 0:
+            raise ValueError("community: invalid broadband location count")
+        if max(whole[1:]) > whole[0]:
+            raise ValueError("community: broadband count exceeds its locations")
         vintage_dates(f"{payload.get('as_of')}_{payload.get('revision')}")
     elif kind == "health_estimate":
         for field in ("value", "low", "high"):

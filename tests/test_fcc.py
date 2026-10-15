@@ -4,6 +4,7 @@ import csv
 import io
 import json
 import zipfile
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 from unittest.mock import Mock
@@ -15,8 +16,10 @@ from hip.config import load_geography
 from hip.sources.base import SourceError
 from hip.sources.fcc import (
     COUNTIES,
+    SERVED_FIELDS,
     SPEEDS,
     TECHNOLOGIES,
+    BroadbandLocationsAdapter,
     BroadbandSummaryAdapter,
     vintage_dates,
 )
@@ -215,3 +218,155 @@ def test_api_never_labels_county_broadband_as_town_or_zip(
     assert response.broadband_status == (
         "not_matched" if level == "zip" else "published_summary"
     )
+
+
+def location_archive(path: Path, layer: str, rows: list[list[str]]) -> Path:
+    """A served/unserved or fiber file as FCC ships it: one CSV inside a ZIP."""
+    ref = next(r for r in BroadbandLocationsAdapter().refs() if r.layer == layer)
+    header = (
+        list(SERVED_FIELDS)
+        if layer == "served"
+        else ["frn", "provider_id", "brand_name", "location_id", "technology"]
+        + ["max_advertised_download_speed", "max_advertised_upload_speed"]
+        + ["low_latency", "business_residential_code", "state_usps", "block_geoid"]
+        + ["h3_res8_id"]
+    )
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(header)
+    writer.writerows(rows)
+    with zipfile.ZipFile(path, "w") as zipped:
+        zipped.writestr(
+            BroadbandLocationsAdapter.filename(ref).replace(".zip", ".csv"),
+            buffer.getvalue(),
+        )
+    return path
+
+
+A, B = "340030174004007", "340373746002010"
+
+
+def fiber_row(location: str, block: str, brand: str = "Verizon") -> list[str]:
+    return ["0001", "131425", brand, location, "50", "2300", "2300", "1", "X", "NJ"] + [
+        block,
+        "882a1050b1fffff",
+    ]
+
+
+def test_location_files_reduce_to_counts_per_block(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    monkeypatch.setattr(BroadbandLocationsAdapter, "minimum", 1)
+    served, fiber = BroadbandLocationsAdapter().refs()
+    assert BroadbandLocationsAdapter.filename(served) == (
+        "bdc_34_fixed_broadband_served_unserved_D25_13oct2026.zip"
+    )
+    assert BroadbandLocationsAdapter.filename(fiber) == (
+        "bdc_34_FibertothePremises_fixed_broadband_D25_13oct2026.zip"
+    )
+    rows = [
+        ["1", A, "h", "1", "1", "1"],
+        ["2", A, "h", "1", "0", "1"],
+        ["3", B, "h", "1", "0", "0"],
+    ]
+    assert BroadbandLocationsAdapter.xlsx_records(
+        location_archive(tmp_path / "s.zip", "served", rows), served
+    ) == [
+        {"block": A, "locations": 2, "unserved_wired": 1, "unserved_terrestrial": 0},
+        {"block": B, "locations": 1, "unserved_wired": 1, "unserved_terrestrial": 1},
+    ]
+    # Two providers at one location count it once; a brand with a comma stays one field.
+    offers = [fiber_row("1", A), fiber_row("1", A, "Comcast, Inc."), fiber_row("3", B)]
+    assert BroadbandLocationsAdapter.xlsx_records(
+        location_archive(tmp_path / "f.zip", "fiber", offers), fiber
+    ) == [{"block": A, "fiber": 1}, {"block": B, "fiber": 1}]
+
+
+@pytest.mark.parametrize(
+    "layer,rows",
+    [
+        ("served", [["1", A, "h", "1", "1", "1"], ["1", A, "h", "1", "1", "1"]]),
+        ("served", [["1", "360610001001000", "h", "1", "1", "1"]]),
+        ("served", [["1", A, "h", "1", "2", "1"]]),
+        ("fiber", [fiber_row("1", A)[:4] + ["40"] + fiber_row("1", A)[5:]]),
+        ("fiber", [fiber_row("1", A), fiber_row("1", B)]),
+    ],
+)
+def test_location_files_fail_closed(
+    tmp_path: Path, monkeypatch: Any, layer: str, rows: list[list[str]]
+) -> None:
+    monkeypatch.setattr(BroadbandLocationsAdapter, "minimum", 1)
+    ref = next(r for r in BroadbandLocationsAdapter().refs() if r.layer == layer)
+    with pytest.raises(SourceError):
+        BroadbandLocationsAdapter.xlsx_records(
+            location_archive(tmp_path / "x.zip", layer, rows), ref
+        )
+
+
+def test_too_few_blocks_is_not_a_new_jersey_file(tmp_path: Path) -> None:
+    served = BroadbandLocationsAdapter().refs()[0]
+    path = location_archive(tmp_path / "s.zip", "served", [["1", A, "h", "1", "1", "1"]])
+    with pytest.raises(SourceError, match="too few blocks"):
+        BroadbandLocationsAdapter.xlsx_records(path, served)
+
+
+def place_payload(**changes: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "locations": 100,
+        "fiber": 70,
+        "unserved_wired": 3,
+        "unserved_terrestrial": 2,
+        "unplaced": 0,
+        "as_of": "2025-12-31",
+        "revision": "2026-10-13",
+        "url": "https://broadbandmap.fcc.gov/data-download/nationwide-data",
+    }
+    return {**payload, **changes}
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [{"locations": 0}, {"fiber": 101}, {"unserved_wired": -1}, {"fiber": 1.5}],
+)
+def test_loader_checks_place_counts(changes: dict[str, object]) -> None:
+    validate_payload("broadband_place", place_payload())
+    with pytest.raises(ValueError):
+        validate_payload("broadband_place", place_payload(**changes))
+
+
+@pytest.mark.parametrize("level", ["county", "municipality", "zip"])
+def test_api_gives_each_place_its_own_location_counts(
+    monkeypatch: Any, level: str
+) -> None:
+    from hip.api.routers import community as api
+
+    geoid = {"county": "34035", "municipality": "3403500001", "zip": "08540"}[level]
+    session = Mock()
+    session.execute.return_value.mappings.return_value.first.return_value = dict(
+        geoid=geoid,
+        level=level,
+        name="A place",
+        county_geoid=None if level == "zip" else "34035",
+        county_name="Somerset County",
+    )
+    own = CommunityRecord(
+        source_id="fcc_bdc_locations",
+        kind="broadband_place",
+        entity_id=f"{level}:{geoid}",
+        record_id="locations",
+        payload=place_payload(),
+        snapshot=date(2025, 12, 31),
+        release_id=2,
+        release_layer="served",
+        vintage="2025-12-31_2026-10-13",
+        file_sha256="b" * 64,
+        fetched_at=datetime(2026, 10, 14, tzinfo=UTC),
+    )
+    county = own.model_copy(update={"entity_id": "county:34035"})
+    monkeypatch.setattr(
+        api,
+        "records_for",
+        lambda s, entities: [r for r in (own, county) if r.entity_id in entities],
+    )
+    place = community(1, session).broadband_place
+    assert place is not None and place.entity_id == f"{level}:{geoid}"
