@@ -131,3 +131,45 @@ export const REVALUATION_RATIO = 85;
 export function revaluationIndicated(ratio: Dated | undefined): boolean | null {
   return ratio ? ratio.value <= REVALUATION_RATIO : null;
 }
+
+/**
+ * The assessor's building code in words, where it reads unambiguously (2026-10-15):
+ * "2SF2AG" is a 2-story wood-frame house with a 2-car attached garage. Codes are each
+ * town's own shorthand, not a state standard, so only the common pieces are read —
+ * stories, a wall material, a garage — and a code with any piece left over returns null,
+ * leaving the raw code on show rather than a guess.
+ */
+const MATERIALS: Record<string, string> = { F: "wood frame", FR: "wood frame", B: "brick", AL: "aluminum siding", CB: "concrete block", V: "vinyl siding" };
+const GARAGES: Record<string, string> = { G: "garage", AG: "attached garage", DG: "detached garage", BIG: "built-in garage", UG: "garage" };
+// Stories, then a wall material (Camden writes "BH" for a brick house), then a garage with
+// its cars before ("2AG") or after ("G2").
+const BUILDING = /^(?:(\d(?:\.5)?)S?)?(AL|CB|FR|F|B|V)?H?(?:(\d)?(BIG|AG|DG|UG|G)(\d)?)?$/;
+// Words some towns write out in full; "COMMON ELEMENTS" is a condominium's shared parts.
+const WORDS: Record<string, string> = { "COMMON ELEMENT": "shared condo areas", "COMMON ELEMENTS": "shared condo areas", "HI RISE": "high-rise" };
+
+export function describeBuilding(code: string | null | undefined): string | null {
+  if (!code) return null;
+  const upper = code.toUpperCase().trim();
+  if (WORDS[upper]) return WORDS[upper];
+  // A name written out ("TOWNHOUSE", "PARKING LOT") reads as itself.
+  if (/^[A-Z]{5,}(?: [A-Z]+)*$/.test(upper)) return upper.charAt(0) + upper.slice(1).toLowerCase();
+  const compact = upper
+    // Toms River follows its code with a four-digit figure the state does not define.
+    .replace(/\s{2,}\d{3,4}$/, "")
+    .replace(/(\d)\s*1\/2/g, "$1.5")
+    .replace(/(?<!\d)\.|\.(?!\d)/g, "")
+    .replace(/[\s-]+/g, "");
+  const match = BUILDING.exec(compact);
+  if (!compact || !match || match.slice(1).every((part) => part === undefined)) return null;
+  const [, stories, material, before, garage, after] = match;
+  const cars = before ?? after;
+  // A bare number with nothing after it could be anything; a story count needs company.
+  if (stories && !material && !garage && !/S/.test(compact)) return null;
+  if (before && after) return null;
+  const parts = [
+    stories ? `${stories.replace(".5", "½")}-story` : null,
+    material ? MATERIALS[material] : null,
+    garage ? `${cars ? `${cars}-car ` : ""}${GARAGES[garage]}` : null,
+  ].filter(Boolean);
+  return parts.join(", ");
+}

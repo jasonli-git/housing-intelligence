@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  describeBuilding,
   classPercentile,
   impliedValue,
   type ParcelFile,
@@ -84,5 +85,27 @@ describe("a parcel file", () => {
     for (const column of FILE.columns) {
       expect(column).not.toMatch(/owner|mail|deed|zip|city/i);
     }
+  });
+});
+
+describe("describeBuilding", () => {
+  it("reads the common pieces of an assessor's code", () => {
+    expect(describeBuilding("2SF2AG")).toBe("2-story, wood frame, 2-car attached garage");
+    expect(describeBuilding("2S F G")).toBe("2-story, wood frame, garage");
+    expect(describeBuilding("2.5SF1UG")).toBe("2½-story, wood frame, 1-car garage");
+    expect(describeBuilding("2 1/2S B G2")).toBe("2½-story, brick, 2-car garage");
+    expect(describeBuilding("2SFR2G")).toBe("2-story, wood frame, 2-car garage");
+    expect(describeBuilding("BHG")).toBe("brick, garage");
+    expect(describeBuilding("1F1G       1000")).toBe("1-story, wood frame, 1-car garage");
+    expect(describeBuilding("COMMON ELEMENTS")).toBe("shared condo areas");
+    expect(describeBuilding("TOWNHOUSE")).toBe("Townhouse");
+    expect(describeBuilding("1S-F")).toBe("1-story, wood frame");
+    expect(describeBuilding("2S.F.")).toBe("2-story, wood frame");
+    expect(describeBuilding("2SAL-1BIG")).toBe("2-story, aluminum siding, 1-car built-in garage");
+    expect(describeBuilding("1SCB")).toBe("1-story, concrete block");
+    expect(describeBuilding("2F2G")).toBe("2-story, wood frame, 2-car garage");
+  });
+  it("leaves codes it cannot read whole", () => {
+    for (const code of ["1S-F-S", "2SS-1BIG", "1BR", "2", "", null]) expect(describeBuilding(code)).toBeNull();
   });
 });

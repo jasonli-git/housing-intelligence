@@ -18,6 +18,7 @@ import { countyLookup } from "@/lib/countyLookups";
 import { formatValue } from "@/lib/format";
 import {
   classPercentile,
+  describeBuilding,
   impliedValue,
   type Parcel,
   type ParcelFile,
@@ -44,6 +45,17 @@ const FETCH_AT_ONCE = 3;
 function usd(value: number | null): string {
   return value === null ? "—" : formatValue(value, "usd");
 }
+
+// The state's property classes, as a reader would say them.
+const PLAIN_CLASS: Record<string, string> = {
+  "Residential, one to four families": "Home (1–4 families)",
+  "Apartments, five or more": "Apartment building (5+ units)",
+  "Farm, with a house": "Farm with a house",
+  "Other school": "Private school",
+  "Public property": "Government property",
+  "Other exempt": "Tax-exempt property",
+};
+export const plainClass = (name: string) => PLAIN_CLASS[name] ?? name;
 
 function parcelName(parcel: Parcel): string {
   const where = `Block ${parcel.block}, lot ${parcel.lot}${parcel.qualifier ? `, ${parcel.qualifier}` : ""}`;
@@ -189,7 +201,7 @@ export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: 
           <span className="tax-search-hint">Results appear as you type. You can add a town or ZIP in this field.</span>
         </label>
         <details className="tax-town-filter" ref={townFilter}>
-          <summary>{town ? `Town filter: ${label(town)}` : "Town filter or block & lot"} <span aria-hidden="true">＋</span></summary>
+          <summary>{town ? `Only in ${label(town)}` : "Narrow to one town, or search by block & lot"} <span aria-hidden="true">＋</span></summary>
         <label className="control">
           <span className="control-label">Town · required for block &amp; lot, otherwise optional</span>
           <input
@@ -261,7 +273,7 @@ export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: 
               <button type="button" onClick={() => setChosen(r)}>
                 {parcelName(r.parcel)}
                 <small>
-                  {place(r.file.geoid)} · {r.file.classes[r.parcel.propertyClass] ?? `Class ${r.parcel.propertyClass}`}
+                  {place(r.file.geoid)} · {plainClass(r.file.classes[r.parcel.propertyClass] ?? `Class ${r.parcel.propertyClass}`)}
                 </small>
               </button>
             </li>
@@ -303,121 +315,100 @@ function ParcelCard({
   const town = file.municipality ?? "this town";
   const implied = impliedValue(parcel.assessed, file.assessment_ratio);
   const percentile = classPercentile(parcels, parcel);
-  const className = file.classes[parcel.propertyClass] ?? `Class ${parcel.propertyClass}`;
+  const className = plainClass(file.classes[parcel.propertyClass] ?? `Class ${parcel.propertyClass}`);
+  const building = describeBuilding(parcel.building);
   const ratio = file.nj_director_ratio;
   const indicated = revaluationIndicated(ratio);
   const reval = file.nj_revaluation_year;
 
+  const perMonth = parcel.tax === null ? null : Math.round(parcel.tax / 12);
+  const exempt = parcel.tax === 0;
+
   return (
-    <article className="household-panel tax-card" aria-live="polite">
-      <h2 className="household-title">{parcelName(parcel)}</h2>
-      <p className="household-note">
-        {className}, {town}
-        {file.county ? `, ${file.county} County` : ""} · tax year {file.tax_year}
-      </p>
-      <dl className="cost-lines">
-        <div className="sum">
-          <dt>Value used to calculate property tax<small className="src">Assessed value · the assessor’s recorded value, not necessarily today’s sale price</small></dt>
-          <dd>{usd(parcel.assessed)}</dd>
-        </div>
-        <div>
-          <dt>
-            Land, and the improvements on it
-            <small className="src">as the town’s assessor values them</small>
-          </dt>
-          <dd>
-            {usd(parcel.land)} + {usd(parcel.improvement)}
-          </dd>
-        </div>
-        <div className="sum">
-          <dt>
-            Last year’s tax
-            <small className="src">MOD-IV, tax year {file.tax_year}, before any relief</small>
-          </dt>
-          <dd>{usd(parcel.tax)}</dd>
-        </div>
-        {implied !== null && file.assessment_ratio && (
-          <div>
-            <dt>
-              Rough market-value estimate from the town’s ratio
-              <small className="src">
-                at {town}’s {file.assessment_ratio.value.toFixed(2)}% Director’s Ratio for{" "}
-                {file.assessment_ratio.year} — the state’s method, not an appraisal
-              </small>
-            </dt>
-            <dd>about {usd(Math.round(implied / 1000) * 1000)}</dd>
-          </div>
-        )}
-        {percentile !== null && (
-          <div>
-            <dt>
-              Compared with {className.toLowerCase()} properties in {town}
-              <small className="src">Tax assessments—not home quality or sale prices</small>
-            </dt>
-            <dd>Higher assessed value than {percentile}%</dd>
-          </div>
-        )}
-        {(parcel.yearBuilt || parcel.dwellings || parcel.building) && (
-          <div>
-            <dt>
-              The building
-              <small className="src">the assessor’s description</small>
-            </dt>
-            <dd>
-              {[
-                parcel.yearBuilt ? `built ${parcel.yearBuilt}` : null,
-                parcel.dwellings ? `${parcel.dwellings} ${parcel.dwellings === 1 ? "home" : "homes"}` : null,
-                parcel.building,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </dd>
-          </div>
-        )}
+    <article className="household-panel tax-card tax-card-v2" aria-live="polite">
+      <header className="tax-card-head">
+        <h2 className="household-title">{parcel.address ?? parcelName(parcel)}</h2>
+        <p className="household-note">
+          {parcel.address ? <>Block {parcel.block}, lot {parcel.lot}{parcel.qualifier ? `, ${parcel.qualifier}` : ""} · </> : null}
+          {className} · {town}{file.county ? `, ${file.county} County` : ""}
+        </p>
+      </header>
+
+      <div className="tax-hero">
+        <p className="tax-hero-label">Property tax, {file.tax_year}</p>
+        <p className="tax-hero-figure">{usd(parcel.tax)}<small> a year</small></p>
+        <p className="tax-hero-sub">
+          {exempt ? "No tax billed — this property is exempt." : perMonth !== null ? <>About <b>{usd(perMonth)}</b> a month, before any rebates or credits.</> : "Not in the state’s file for this year."}
+        </p>
+      </div>
+
+      <dl className="tax-values">
+        <div><dt>Assessed value</dt><dd>{usd(parcel.assessed)}</dd><small>what the tax is based on</small></div>
+        <div><dt>Land + building</dt><dd>{usd(parcel.land)} <span>+</span> {usd(parcel.improvement)}</dd><small>how the assessor splits it</small></div>
+        {implied !== null && file.assessment_ratio && <div><dt>Likely sale value</dt><dd>~{usd(Math.round(implied / 1000) * 1000)}</dd><small>a rough guess from how {town}’s values compare with sales — not an appraisal</small></div>}
       </dl>
 
-      <h3 className="household-title">{town}’s assessments</h3>
-      <ul className="tax-context">
-        <li>
-          {reval
-            ? `Last revalued or reassessed for tax year ${Math.round(reval.value)}.`
-            : "Not revalued or reassessed since at least 2017, when the state’s lists begin."}
-        </li>
-        {ratio && (
-          <li>
-            <strong>How assessments compare with market values:</strong> {town}’s {ratio.year} Director’s Ratio is {ratio.value.toFixed(2)}%. Town-wide assessed values average about that share of market values—not a valuation of this particular home.{" "}
-            {indicated
-              ? `At or below ${REVALUATION_RATIO}%, the state’s rules generally read that as calling for a revaluation; the county tax board decides.`
-              : `Above the ${REVALUATION_RATIO}% at which the state’s rules generally call for a revaluation.`}
-          </li>
-        )}
-        {file.nj_general_tax_rate && file.nj_effective_tax_rate && (
-          <li>
-            Tax rates for {file.nj_general_tax_rate.year}: ${file.nj_general_tax_rate.value.toFixed(3)} per $100 of assessed value (used to calculate bills); ${file.nj_effective_tax_rate.value.toFixed(3)} per $100 of equalized value (the effective rate, for comparing towns—not calculating this bill).
-          </li>
-        )}
-      </ul>
-      <p className="household-note">
-        Think an assessment is wrong? Appeals go to the county board of taxation, usually by
-        1 April (15 January in Burlington, Gloucester and Monmouth).{" "}
-        <a href={APPEALS} target="_blank" rel="noreferrer">
-          How appeals work
-        </a>
-        {" · "}
-        <a href={CHAPTER_123} target="_blank" rel="noreferrer">
-          The state’s common level ranges (Chapter 123)
-        </a>
-        .
-      </p>
-      {countyRecords && (
-        <p className="household-note">
-          The county’s own record may be newer than the state’s file:{" "}
-          <a href={countyRecords} target="_blank" rel="noreferrer">
-            {file.county} County’s property records
-          </a>
-          .
+      {percentile !== null && (
+        <div className="tax-rank" style={{ ["--rank" as string]: `${percentile}%` }}>
+          <p>Assessed higher than <b>{percentile}%</b> of similar properties in {town}</p>
+          <span className="tax-rank-track" aria-hidden="true"><span /></span>
+          <small>Compared only with the same kind of property ({className.toLowerCase()}), by assessed value.</small>
+        </div>
+      )}
+
+      {(parcel.yearBuilt || parcel.dwellings || parcel.building) && (
+        <p className="tax-building">
+          <span>The building</span>
+          {[
+            parcel.yearBuilt ? `built ${parcel.yearBuilt}` : null,
+            parcel.dwellings ? `${parcel.dwellings} ${parcel.dwellings === 1 ? "home" : "homes"}` : null,
+            building ?? (parcel.building ? `assessor’s code “${parcel.building.trim()}”` : null),
+          ].filter(Boolean).join(" · ")}
         </p>
       )}
+
+      <section className="tax-town" aria-labelledby="tax-town-heading">
+        <h3 id="tax-town-heading">{town}’s assessments</h3>
+        <dl className="tax-town-stats">
+          <div>
+            <dt>Values last reset</dt>
+            <dd>{reval ? Math.round(reval.value) : "before 2017"}</dd>
+          </div>
+          {ratio && <div data-flag={indicated || undefined}>
+            <dt>Values vs what homes sell for</dt>
+            <dd>{Math.round(ratio.value)}%</dd>
+            {indicated && <small>a town-wide reset is likely due</small>}
+          </div>}
+          {file.nj_general_tax_rate && <div>
+            <dt>Tax rate, {file.nj_general_tax_rate.year}</dt>
+            <dd>${file.nj_general_tax_rate.value.toFixed(2)}<small> per $100 of value</small></dd>
+          </div>}
+        </dl>
+        <details className="tax-explain"><summary>What these mean</summary>
+          <ul className="tax-context">
+            <li>
+              {reval
+                ? `${town} last reset every property’s value to match the market for ${Math.round(reval.value)} (a revaluation or reassessment).`
+                : `${town} hasn’t reset its property values to match the market since at least 2017, when the state’s records begin.`}
+            </li>
+            {ratio && <li>
+              On average, {town}’s assessed values are {ratio.value.toFixed(1)}% of what homes actually sell for (the state’s {ratio.year} “Director’s Ratio”) — a town-wide figure, not one for this property.{" "}
+              {indicated
+                ? `Below ${REVALUATION_RATIO}%, the state usually expects a town to reset its values; the county tax board decides.`
+                : `That’s above the ${REVALUATION_RATIO}% where the state usually expects a reset.`}
+            </li>}
+            {file.nj_general_tax_rate && file.nj_effective_tax_rate && <li>
+              Bills are the tax rate times the assessed value: ${file.nj_general_tax_rate.value.toFixed(3)} for every $100. To compare towns fairly, use the “effective” rate, ${file.nj_effective_tax_rate.value.toFixed(3)} per $100 of sale value.
+            </li>}
+          </ul>
+        </details>
+      </section>
+
+      <ul className="tax-next">
+        <li><a href={APPEALS} target="_blank" rel="noreferrer"><b>Think the assessment is wrong?</b><span>You can appeal to the county tax board, usually by April 1 (January 15 in Burlington, Gloucester and Monmouth)</span></a></li>
+        {countyRecords && <li><a href={countyRecords} target="_blank" rel="noreferrer"><b>{file.county} County’s record</b><span>Can be newer than the state’s file</span></a></li>}
+        <li><a href={CHAPTER_123} target="_blank" rel="noreferrer"><b>How appeals are judged</b><span>The state’s fair-value range for each town</span></a></li>
+      </ul>
     </article>
   );
 }

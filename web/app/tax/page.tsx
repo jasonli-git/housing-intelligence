@@ -6,6 +6,8 @@ import { Masthead } from "@/components/Masthead";
 import { type Town, TaxLookup } from "@/components/TaxLookup";
 import { api, artifactUrl } from "@/lib/api";
 import { pageMetadata } from "@/lib/meta";
+import "../horizon-theme.css";
+import "../tax-horizon.css";
 
 export const metadata: Metadata = pageMetadata({
   title: "Property tax lookup — Housing",
@@ -41,20 +43,13 @@ export default async function TaxPage() {
   return (
     <>
       <Masthead affordability={{ kind: "route" }} taxActive />
-      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool quiet-county quiet-tax">
+      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-tool quiet-county quiet-tax horizon-page" data-region-level="tax">
         <header className="page-head" data-kind="tool">
           <div>
             <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Property tax lookup" />
             <Kind kind="tool" />
-            <h1 className="page-title">Find a property.<br />See its tax picture.</h1>
-            <p className="meta tax-intro">Search New Jersey’s assessment records for a property’s value, tax and town comparison.</p>
-            <details className="tax-about"><summary>About this lookup</summary><p className="meta">
-              Type an address anywhere in New Jersey — no need to know which town it is in
-              — or a block and lot with its town: what the property is assessed at, what
-              it paid in tax last year, what that assessment implies at the state’s ratio,
-              and how it compares with the rest of its town, from the state’s own
-              assessment records. Owner names are never shown.
-            </p></details>
+            <h1 className="page-title">Property tax lookup</h1>
+            <p className="meta tax-intro">Type any New Jersey address to see its tax bill and value. Owner names are never shown.</p>
             {modivInquiry && <InquiryNote inquiry={modivInquiry} />}
           </div>
         </header>
