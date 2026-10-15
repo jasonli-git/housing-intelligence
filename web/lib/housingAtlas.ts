@@ -4,7 +4,9 @@ import type { WindowKey } from "./windows";
 export type AtlasMeasure = Measure & { source: string; sourceUrl: string; definition: string; latest:{rows:RankRow[];start:null;end:string|null;periods:Record<string,string>} };
 export type AtlasCounty = { id:number; name:string };
 export type AtlasMode = "latest" | WindowKey;
-export const ATLAS_COLORS = ["#d2e5e9","#a4cbd4","#70a9ba","#3c819c","#17516d"];
+// Mist to indigo (2026-10-15, #378): one hue, lightness falling at every step, so the
+// order reads in either theme and in greyscale, and nothing else on the page competes.
+export const ATLAS_COLORS = ["#e6e9f5","#bcc5e8","#8d9bd6","#6170c2","#3b479c"];
 
 /** Difference is descriptive, not evidence of statistical significance. */
 export function atlasDifference(measure:AtlasMeasure,mode:AtlasMode,first:number,second:number) {
