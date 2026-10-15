@@ -173,3 +173,28 @@ export function describeBuilding(code: string | null | undefined): string | null
   ].filter(Boolean);
   return parts.join(", ");
 }
+
+
+/**
+ * An assessor's capitals in ordinary case (2026-10-15): "246 WITHERSPOON ST" becomes
+ * "246 Witherspoon St". Compass points stay as written ("NE"), and ordinals stay lower
+ * ("2nd").
+ */
+const KEEP_UPPER = new Set(["N", "S", "E", "W", "NE", "NW", "SE", "SW", "US", "NJ", "II", "III", "IV"]);
+export function addressCase(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[a-z0-9]+/g, (word) => {
+      if (KEEP_UPPER.has(word.toUpperCase())) return word.toUpperCase();
+      if (/^\d/.test(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    });
+}
+
+/** Where and by when an assessment is appealed: the state's rule, by county. */
+const JANUARY_COUNTIES = new Set(["Burlington", "Gloucester", "Monmouth"]);
+export function appealDeadline(county: string | null | undefined): { date: string; note: string } {
+  return county && JANUARY_COUNTIES.has(county)
+    ? { date: "January 15", note: `${county} County runs on the state’s alternative assessment calendar` }
+    : { date: "April 1", note: "or May 1 in a year the town revalues or reassesses" };
+}

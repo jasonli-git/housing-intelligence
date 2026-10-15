@@ -81,3 +81,16 @@
   .horizon-page .tax-card-v2 .tax-card-head .household-title { color: var(--plate-ink) !important; opacity: 1; }
   .tax-values dd { font-size: clamp(18px, 2vw, 24px); white-space: nowrap; }
 }
+@media screen {
+  /* An address in many towns: the towns as chips, grouped by county. */
+  .tax-places { margin-top: 1rem; padding: 1.1rem 1.2rem; border: 1px solid var(--glass-edge); border-radius: 22px; background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  .tax-places-lead { margin: 0 0 .4rem; font-size: 15px; color: var(--text-secondary); }
+  .tax-places-lead b { font: 400 20px/1.2 Georgia, serif; color: var(--plate-ink); }
+  .tax-places section { padding-top: .7rem; }
+  .tax-places h3 { margin: 0 0 .4rem; font: 600 11px/1.4 var(--font-mono) !important; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
+  .tax-places ul { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0; padding: 0; list-style: none; }
+  .tax-places button { display: inline-flex; flex-direction: column; align-items: flex-start; min-height: 38px; justify-content: center; padding: .3rem .85rem; border: 1px solid var(--plate-strong-rule); border-radius: 999px; background: color-mix(in srgb, var(--plate-paper) 60%, transparent); color: var(--plate-ink); font: 500 14px/1.2 var(--font-text); cursor: pointer; }
+  .tax-places button small { font-size: 11px; color: var(--text-muted); }
+  .tax-places button:hover, .tax-places button:focus-visible { border-color: var(--plate-accent); background: color-mix(in srgb, var(--plate-accent) 10%, transparent); }
+  .tax-next span strong { font-weight: 600; color: var(--plate-ink); }
+}
