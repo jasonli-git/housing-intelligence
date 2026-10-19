@@ -411,6 +411,15 @@ Not open work: each comes round on a date. The steps live where the row says.
       model is given, and a change to it is a change to every reading's input, which
       wants its own side-by-side.
 
+- [ ] **Zillow's other datasets: look into whether and how to integrate them.** (owner,
+      2026-10-19; moved out of the parked data additions) Survey everything on Zillow
+      Research's data page — bottom- and top-tier and SFR-only ZHVI, sale prices, new
+      construction, days to pending, price cuts,
+      inventory, market heat — and for each note the geographies offered (most stop at
+      metro, which the site has no pages for), what reader question it answers, and how
+      many more files the monthly hand download would add (each is downloaded by hand,
+      #272). Same CSV host and adapter as ZHVI and ZORI.
+
 ## Parked / needs user input
 
 - [ ] **Measure load speed — parked by the owner 2026-10-09.** From the launch
@@ -422,8 +431,8 @@ Not open work: each comes round on a date. The steps live where the row says.
 ### Data additions — parked by the owner 2026-10-09
 
 Each deepens the site without answering a new reader question, so none is built until
-the owner un-parks it. Of the four, Zillow's other cuts (buyer-relevant, cheap) and
-tracts (most new insight, about 2,000 more pages) were the strongest cases.
+the owner un-parks it. Tracts (most new insight, about 2,000 more pages) were the
+strongest case; Zillow's other datasets moved to Open on 2026-10-19.
 
 - [ ] **Milestone 34's ACS depth stops at ZCTA; tracts have none of it.** (M34) The
       warehouse holds 2,181 tracts and the ACS publishes every M34 table for them, but
@@ -434,9 +443,6 @@ tracts (most new insight, about 2,000 more pages) were the strongest cases.
       rather than FRED (ARCHITECTURE #109); **the three national series remain**: `HOUST`
       (housing starts), `RRVRUSQ156N` (rental vacancy), `MSPUS` (national median sale
       price). Each is a `sources.yml` line plus a `metric_id`.
-- [ ] **Zillow's other cuts** — bottom-tier and top-tier ZHVI, SFR-only,
-      new-construction sale price, days-to-pending, for-sale inventory. Same CSV host,
-      same adapter, already anticipated.
 - [ ] **Jobs located in a place, from LODES** — Milestone 45 read where residents work
       (#313), not how many jobs a place holds. LODES's workplace-area (WAC) file, or the
       origin–destination files already landed summed by workplace, would give a
