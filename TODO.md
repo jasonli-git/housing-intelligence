@@ -434,9 +434,13 @@ tracts (most new insight, about 2,000 more pages) were the strongest cases.
       rather than FRED (ARCHITECTURE #109); **the three national series remain**: `HOUST`
       (housing starts), `RRVRUSQ156N` (rental vacancy), `MSPUS` (national median sale
       price). Each is a `sources.yml` line plus a `metric_id`.
-- [ ] **Zillow's other cuts** — bottom-tier and top-tier ZHVI, SFR-only,
-      new-construction sale price, days-to-pending, for-sale inventory. Same CSV host,
-      same adapter, already anticipated.
+- [ ] **Zillow's other datasets: look into whether and how to integrate them.** (owner,
+      2026-10-19) Survey everything on Zillow Research's data page — bottom- and top-tier
+      and SFR-only ZHVI, sale prices, new construction, days to pending, price cuts,
+      inventory, market heat — and for each note the geographies offered (most stop at
+      metro, which the site has no pages for), what reader question it answers, and how
+      many more files the monthly hand download would add (each is downloaded by hand,
+      #272). Same CSV host and adapter as ZHVI and ZORI.
 - [ ] **Jobs located in a place, from LODES** — Milestone 45 read where residents work
       (#313), not how many jobs a place holds. LODES's workplace-area (WAC) file, or the
       origin–destination files already landed summed by workplace, would give a
