@@ -18,7 +18,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from hip.packets import bind, build_packet, packet_content_hash, render_markdown
-from hip.packets.assemble import _highlights
+from hip.packets.assemble import _highlights, highlight_depth
 from hip.packets.citations import Binding, Citation
 from hip.packets.margins import margin_problems
 from hip.packets.report import (
@@ -246,6 +246,37 @@ def test_a_ranged_rank_stands_out_only_when_its_whole_range_does() -> None:
     assert chosen["a"].position == "leading"
     assert (chosen["a"].rank_best, chosen["a"].rank_worst) == (1, 3)
     assert chosen["b"].position == "trailing"
+
+
+def test_a_tie_stands_out_only_when_the_whole_tied_group_does() -> None:
+    """152 of 392 towns share "1st" at 0%: none of them leads (packet 1.7)."""
+    crowd = _metric(
+        metric_id="a", rank=1, of=392, ties=152, rank_best=None, rank_worst=None
+    )
+    pair = _metric(metric_id="b", rank=1, of=21, ties=2, rank_best=None, rank_worst=None)
+
+    chosen = {h.metric_id for h in _highlights([crowd, pair])}
+
+    assert chosen == {"b"}
+
+
+def test_a_large_cohort_reaches_its_outer_five_percent() -> None:
+    """Three of 21 counties, but 29 of 564 towns: 8th of 564 leads, 40th does not."""
+    assert highlight_depth(21) == 3
+    assert highlight_depth(564) == 29
+    eighth = _metric(metric_id="a", rank=8, of=564, rank_best=None, rank_worst=None)
+    fortieth = _metric(metric_id="b", rank=40, of=564, rank_best=None, rank_worst=None)
+    near_last = _metric(metric_id="c", rank=540, of=564, rank_best=None, rank_worst=None)
+
+    chosen = {h.metric_id: h.position for h in _highlights([eighth, fortieth, near_last])}
+
+    assert chosen == {"a": "leading", "c": "trailing"}
+
+
+def test_ties_are_outside_the_content_hash(packet: Packet) -> None:
+    before = packet_content_hash(packet)
+    packet.levels[0].ties = 4
+    assert packet_content_hash(packet) == before
 
 
 # --- the report ------------------------------------------------------------------

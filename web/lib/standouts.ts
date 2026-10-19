@@ -4,7 +4,8 @@
  * lowest by current value.
  *
  * The change stand-outs are the packet's own highlights, chosen by `hip pack` (within three
- * ranks of either end, in a cohort of at least five), so the page and the packet a model
+ * ranks of either end or the outer 5% of a larger cohort, a tied group only where all of it
+ * is, in a cohort of at least five), so the page and the packet a model
  * reads agree on what stands out. The packet does not highlight current values, so the same
  * rule is applied to them here — the highest tax bill, the oldest homes — leaving out the
  * counts that follow a place's size: the largest county having the most people is not news.
@@ -22,9 +23,15 @@ import {
   withMargin,
 } from "@/lib/uncertainty";
 
-/** `HIGHLIGHT_DEPTH` and `MIN_COHORT` in `hip/packets/assemble.py`. */
+/** `HIGHLIGHT_DEPTH`, `HIGHLIGHT_SHARE` and `MIN_COHORT` in `hip/packets/assemble.py`. */
 const DEPTH = 3;
+const SHARE = 0.05;
 const MIN_COHORT = 5;
+
+/** Places from either end that still count as at that end: three, or the outer 5%. */
+export function standOutDepth(of: number): number {
+  return Math.max(DEPTH, Math.ceil(of * SHARE));
+}
 
 /** Counts that grow with a place's size, whose extremes only name the biggest and smallest places. */
 const SIZE_COUNTS: ReadonlySet<string> = new Set([
@@ -83,23 +90,32 @@ function spread(u: Uncertainty | undefined): { best: number; worst: number } | n
 function valueDetail(level: PacketLevel, u?: Uncertainty): string | null {
   if (level.rank === null || level.of === null || level.of < MIN_COHORT) return null;
   const of = level.of;
+  const depth = standOutDepth(of);
   // Rank 1 is the highest value, or the lowest where lower is better (`lib/ranks.ts`).
   const high = (rank: number) => (level.direction === "lower_is_better" ? of - rank + 1 : rank);
-  const range = spread(u);
+  // A tie is a range of places (packet 1.7): 152 towns at 0% are not each "the lowest".
+  const tied = (level.ties ?? 1) > 1 ? { best: level.rank, worst: level.rank + level.ties! - 1 } : null;
+  const surveyed = spread(u);
+  const range = tied || surveyed
+    ? {
+        best: Math.min(tied?.best ?? Infinity, surveyed?.best ?? Infinity),
+        worst: Math.max(tied?.worst ?? -Infinity, surveyed?.worst ?? -Infinity),
+      }
+    : null;
   if (range) {
     // A survey figure stands out only where its whole range sits at one end: a margin
     // that could put it tenth is not "the highest" (Milestone 28).
     const ends = [high(range.best), high(range.worst)];
-    if (Math.max(...ends) <= DEPTH) return `among the ${Math.max(...ends)} highest of ${of}`;
-    if (Math.min(...ends) > of - DEPTH) return `among the ${of - Math.min(...ends) + 1} lowest of ${of}`;
+    if (Math.max(...ends) <= depth) return `among the ${Math.max(...ends)} highest of ${of}`;
+    if (Math.min(...ends) > of - depth) return `among the ${of - Math.min(...ends) + 1} lowest of ${of}`;
     return null;
   }
   const fromHigh = high(level.rank);
   const fromLow = level.of - fromHigh + 1;
-  if (fromHigh <= DEPTH) {
+  if (fromHigh <= depth) {
     return fromHigh === 1 ? `the highest of ${level.of}` : `the ${ordinal(fromHigh)} highest of ${level.of}`;
   }
-  if (fromLow <= DEPTH) {
+  if (fromLow <= depth) {
     return fromLow === 1 ? `the lowest of ${level.of}` : `the ${ordinal(fromLow)} lowest of ${level.of}`;
   }
   return null;
@@ -121,7 +137,8 @@ export function standOuts(
     // leave it far from either end, and then it does not stand out (Milestone 28).
     const u = uncertainties?.change.get(h.metric_id);
     const range = spread(u);
-    if (range && (h.position === "leading" ? range.worst > DEPTH : range.best <= h.of - DEPTH)) {
+    const depth = standOutDepth(h.of);
+    if (range && (h.position === "leading" ? range.worst > depth : range.best <= h.of - depth)) {
       return [];
     }
     return [

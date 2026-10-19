@@ -29,6 +29,7 @@ from hip.packets import (
     schema_text,
     scoped_caveats,
 )
+from hip.packets.assemble import highlight_depth
 from hip.packets.report import format_change, format_value
 from hip.packets.schema import (
     PacketComparisons,
@@ -456,8 +457,9 @@ def test_highlights_only_name_ends_of_the_cohort(
     packet = build_packet(session, county_id, "5y")
 
     for highlight in packet.highlights:
-        assert highlight.rank <= 3 or highlight.rank > highlight.of - 3
-        assert (highlight.position == "leading") == (highlight.rank <= 3)
+        depth = highlight_depth(highlight.of)
+        assert highlight.rank <= depth or highlight.rank > highlight.of - depth
+        assert (highlight.position == "leading") == (highlight.rank <= depth)
 
 
 @warehouse

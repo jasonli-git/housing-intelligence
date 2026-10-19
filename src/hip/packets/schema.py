@@ -57,7 +57,11 @@ from pydantic import BaseModel, ConfigDict, Field
 # price-to-income sits against its own long-run median, and how long earlier spells at
 # today's level lasted. Descriptive only; a reading that cites it may not forecast
 # (`hip.packets.prediction`). Additive and inside the content hash.
-PACKET_VERSION = "1.6"
+#
+# 1.7 adds `ties` on every metric and level (migration 0037): how many regions share the
+# rank, so a highlight never names one of 152 towns tied for "1st". Additive, and outside
+# the content hash: it decides what is highlighted, and the highlights are inside it.
+PACKET_VERSION = "1.7"
 
 # The published contract. Resolved from the source tree, which is where this project
 # runs from (ARCHITECTURE #13 — local-first, no packaged deployment yet).
@@ -114,6 +118,10 @@ _RANK_BEST = (
     "rank is a place."
 )
 _RANK_WORST = "The worst rank the margins of error let this region hold; see `rank_best`."
+_TIES = (
+    "How many regions share `rank`, this one included: tied regions all take the first "
+    "of their places. Null in packets before 1.7, read as 1. Since 1.7."
+)
 
 
 _RECORD_TYPE = (
@@ -183,6 +191,7 @@ class PacketMetric(_Strict):
     )
     rank_best: int | None = Field(default=None, description=_RANK_BEST)
     rank_worst: int | None = Field(default=None, description=_RANK_WORST)
+    ties: int | None = Field(default=None, description=_TIES)
     record_type: str | None = Field(default=None, description=_RECORD_TYPE)
     licence_class: str | None = Field(default=None, description=_LICENCE_CLASS)
     originator: str | None = Field(default=None, description=_ORIGINATOR)
@@ -228,6 +237,7 @@ class PacketLevel(_Strict):
     )
     rank_best: int | None = Field(default=None, description=_RANK_BEST)
     rank_worst: int | None = Field(default=None, description=_RANK_WORST)
+    ties: int | None = Field(default=None, description=_TIES)
     record_type: str | None = Field(default=None, description=_RECORD_TYPE)
     licence_class: str | None = Field(default=None, description=_LICENCE_CLASS)
     originator: str | None = Field(default=None, description=_ORIGINATOR)
@@ -383,7 +393,7 @@ class PacketSource(_Strict):
 class Packet(_Strict):
     # 1.1 still parses. Every 1.2 and 1.3 addition is optional, and the evaluation reads
     # the 1.1 packets frozen into run `v2`'s scenarios as the ground truth for its checks.
-    packet_version: Literal["1.1", "1.2", "1.3", "1.4", "1.5", "1.6"]
+    packet_version: Literal["1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7"]
     region: PacketRegion
     window: PacketWindow
     metrics: list[PacketMetric]
@@ -414,7 +424,7 @@ def packet_hash(packet: Packet) -> str:
 
 # The fields that say where a figure came from, or what kind of figure it is and what
 # may be done with it (1.4), rather than what it says.
-_ABOUT_THE_FIGURE = {"record_type", "licence_class", "originator"}
+_ABOUT_THE_FIGURE = {"record_type", "licence_class", "originator", "ties"}
 _METRIC_PROVENANCE = {
     "release_id",
     "source_id",

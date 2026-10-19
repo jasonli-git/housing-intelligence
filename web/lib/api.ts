@@ -385,6 +385,8 @@ export type PacketMetric = {
   // Packet 1.4 (Milestone 31): what kind of figure it is, and the licence it carries.
   record_type?: string | null;
   licence_class?: string | null;
+  // Packet 1.7: how many regions share `rank`, this one included.
+  ties?: number | null;
 };
 
 export type PacketLevel = {
@@ -408,6 +410,8 @@ export type PacketLevel = {
   // evidence rules (Milestone 49), which read them from the published file.
   survey?: boolean;
   margin_of_error?: number | null;
+  // Packet 1.7: how many regions share `rank`, this one included.
+  ties?: number | null;
 };
 
 export type Packet = {
