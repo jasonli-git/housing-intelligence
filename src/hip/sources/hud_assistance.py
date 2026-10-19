@@ -123,6 +123,11 @@ class HudAssistedAdapter(SourceAdapter):
                 )
         if not output:
             raise SourceError(f"HUD assisted {ref.layer}: no records")
+        # HUD's 2026-10-06 contracts file lists one contract twice, every field equal:
+        # a repeated row says nothing new, so it is dropped. Two rows sharing an
+        # identifier but disagreeing are still refused below.
+        unique = {json.dumps(r, sort_keys=True, default=str): r for r in output}
+        output = list(unique.values())
         ids = [str(r["record_id"]) for r in output]
         if len(set(ids)) != len(ids):
             raise SourceError(f"HUD assisted {ref.layer}: duplicate identifiers")
