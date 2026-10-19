@@ -25,6 +25,7 @@ import { RANK_HEADING, rankBasis } from "@/lib/ranks";
 import { isRestricted } from "@/lib/sources";
 import { reportSourceLabel } from "@/lib/reportSources";
 import { standOuts } from "@/lib/standouts";
+import { TREND_METRICS } from "@/lib/trendMetrics";
 import {
   anyMargin,
   changeMarginLabel,
@@ -170,6 +171,17 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
   const paid = paychecks(packet.metrics);
   const trade = tradeoff(peers, packet.levels);
   const cost = await costInputs(region.level, packet.levels, packet.metrics);
+  // The history behind the region page's trend chart, printed as tables (moved here from
+  // the region page's evidence section, 2026-10-19).
+  const history = (
+    await Promise.all(
+      TREND_METRICS.map(async ({ metricId }) => ({
+        metricId,
+        meta: packet.metrics.find((m) => m.metric_id === metricId) ?? packet.levels.find((l) => l.metric_id === metricId),
+        observations: (await api.observations(regionId, metricId))?.observations ?? [],
+      })),
+    )
+  ).filter((h) => h.observations.length >= 2);
 
   return (
     <>
@@ -409,6 +421,31 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
             </table>
           </div>
           <TableNotes placement={current} above="the table above" />
+        </section>
+      )}
+
+      {history.length > 0 && (
+        <section className="section" id="report-history" data-jump-label="Historical values">
+          <h2>Historical values</h2>
+          <p className="meta">The latest 24 readings of each, newest first.</p>
+          {history.map(({ metricId, meta, observations }) => (
+            <section key={metricId} className="report-history-table">
+              <h3>{meta?.label ?? metricId}</h3>
+              <div className="scroll-x" tabIndex={0} role="region" aria-label={`${meta?.label ?? metricId}, scroll horizontally`}>
+                <table>
+                  <thead><tr><th scope="col">Period</th><th scope="col">Value</th><th scope="col">Source</th><th scope="col">Matched by</th></tr></thead>
+                  <tbody>{observations.slice(-24).reverse().map((o) => (
+                    <tr key={o.period_start}>
+                      <td>{periodLabel(o.period_end, metricId)}</td>
+                      <td>{formatMetric(o.value, meta?.unit ?? "", metricId)}<Margin label={marginLabel(o.value, o.margin_of_error ?? null, meta?.unit ?? "", metricId)} /></td>
+                      <td>{sourceNames.get(o.source_id) ?? o.source_id}</td>
+                      <td>{o.match_method}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            </section>
+          ))}
         </section>
       )}
 

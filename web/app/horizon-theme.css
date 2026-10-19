@@ -348,7 +348,7 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
   body:has(.horizon-page) main.horizon-page > .page-head :is(.verdict, .region-verdict, .page-summary, p.lede) { font-size: 17px; line-height: 1.55; }
 }
 @media screen {
-  body:has(.horizon-page) :is(#quiet-cost, #cost-heading, #place-next-step, #place-understand, #place-explore, #region-detailed-data) { scroll-margin-top: 90px; }
+  body:has(.horizon-page) :is(#quiet-cost, .region-standard-content .section.cost > .section-head h2, #place-next-step, #place-understand, #place-explore, #region-detailed-data) { scroll-margin-top: 90px; }
   /* Place pages: the jump line spans the text column above the report button. */
   body:has(.horizon-page) main > .page-head .actions:has(.place-jump) { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.4rem; }
   body:has(.horizon-page) .place-jump { flex: 1 1 100%; margin-top: .4rem; }
@@ -448,4 +448,68 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
   body:has(.horizon-page) main .indexed-legend { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; }
   body:has(.horizon-page) main .indexed-legend > li { display: grid; gap: .1rem; padding: .3rem 0 .3rem .6rem; }
   body:has(.horizon-page) main .indexed-legend > li * { font-size: 12px; }
+}
+/* County page sections, 2026-10-19: three page links, the exhibits grouped under three
+   subheads, the county's towns as one row in the header, the evidence on the report. */
+@media screen {
+  body:has(.horizon-page) .exhibit-gallery > .exhibit-group-head { grid-column: 1/-1; margin: 1.6rem 0 -.2rem; padding-top: 1rem; border-top: 1px solid var(--plate-strong-rule); font: 400 clamp(24px, 2.6vw, 32px)/1.1 Georgia, serif; letter-spacing: -.025em; color: var(--plate-ink); }
+  body:has(.horizon-page) .exhibit-gallery > .exhibit-group-head:first-child { margin-top: .4rem; }
+  /* The county's towns: the New Jersey page's county strip, in the towns' teal. */
+  body:has(.horizon-page) main > .page-head .town-strip { grid-column: 1/-1; margin: 1rem 0 0; }
+  body:has(.horizon-page) main .town-strip .county-strip-pill.destination-town { --town: light-dark(#267775, #a2dad5); color: var(--town) !important; border-color: color-mix(in srgb, var(--town) 30%, transparent); }
+  body:has(.horizon-page) main .town-strip .county-strip-pill.destination-town:is(:hover, :focus-visible) { background: color-mix(in srgb, var(--town) 14%, transparent); border-color: color-mix(in srgb, var(--town) 50%, transparent); color: var(--town) !important; }
+  body:has(.horizon-page) .place-report-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 2.4rem 0 1rem; padding: 1.1rem 1.4rem; border: 1px solid var(--glass-edge); border-radius: 24px; background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: var(--plate-ink); text-decoration: none; }
+  body:has(.horizon-page) .place-report-link span { display: grid; gap: .2rem; }
+  body:has(.horizon-page) .place-report-link strong { font: 400 24px/1.1 Georgia, serif; letter-spacing: -.02em; }
+  body:has(.horizon-page) .place-report-link small { color: var(--text-secondary); font-size: 14px; }
+  body:has(.horizon-page) .place-report-link i { font-style: normal; font-size: 22px; color: var(--plate-accent); }
+}
+@media screen {
+  /* Next step reads as the cost section's last row, not a section of its own. */
+  body:has(.horizon-page) main.horizon-page .local-next-step-group.cost-next-strip { margin: .9rem 0 0 !important; padding: 0 !important; border: 0 !important; }
+  body:has(.horizon-page) .cost-next-strip .place-next-destinations { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .7rem; }
+  body:has(.horizon-page) .cost-next-strip .place-next-destinations > section { display: flex; gap: .8rem; align-items: flex-start; margin: 0; padding: .9rem 1.1rem; border: 1px dashed var(--plate-strong-rule); border-radius: 18px; background: transparent; }
+  body:has(.horizon-page) .cost-next-strip h3 { margin: 0 0 .15rem; font-size: 15px; }
+  body:has(.horizon-page) .cost-next-strip p { margin: 0 0 .3rem; font-size: 13.5px; color: var(--text-secondary); }
+
+  /* About this place: its own contents row. */
+  body:has(.horizon-page) .about-toc { display: flex; gap: .45rem; overflow-x: auto; scrollbar-width: none; margin: -.2rem 0 1.4rem; }
+  body:has(.horizon-page) .about-toc::-webkit-scrollbar { display: none; }
+  body:has(.horizon-page) main .about-toc a { flex: none; padding: .35rem .85rem; border: 1px solid var(--plate-strong-rule); border-radius: 999px; color: var(--plate-ink); font-size: 13.5px; text-decoration: none; white-space: nowrap; }
+  body:has(.horizon-page) main .about-toc a:is(:hover, :focus-visible) { border-color: var(--plate-accent); color: var(--plate-accent); }
+  body:has(.horizon-page) :is(.about-anchor, .exhibit-group-head) { scroll-margin-top: 90px; }
+
+  /* Section titles, more distinct: a numbered mono kicker over a large serif title and an
+     accent rule; the subheads a step down, lettered. Numbers are decoration ("" alt). */
+  body:has(.horizon-page) main.horizon-page :is(.region-standard-content .section.cost > .section-head h2, .local-understand-group > h2, #similar-places-heading) { position: relative; margin-top: 3.2rem !important; padding-top: 1.6rem; border-top: 0 !important; font: 400 clamp(36px, 4.4vw, 56px)/1.02 Georgia, serif !important; letter-spacing: -.04em !important; color: var(--plate-ink); }
+  body:has(.horizon-page) main.horizon-page :is(.region-standard-content .section.cost > .section-head h2, .local-understand-group > h2, #similar-places-heading)::before { display: block; margin-bottom: .55rem; font: 600 11px/1 var(--font-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--plate-accent); }
+  body:has(.horizon-page) main.horizon-page .region-standard-content .section.cost > .section-head h2::before { content: "01 · Costs" / ""; }
+  body:has(.horizon-page) main.horizon-page .local-understand-group > h2::before { content: "02 · The place" / ""; }
+  body:has(.horizon-page) main.horizon-page #similar-places-heading::before { content: "03 · Cheaper alternatives" / ""; }
+  body:has(.horizon-page) main.horizon-page .similar-places { border-top: 0 !important; }
+  body:has(.horizon-page) main.horizon-page :is(.region-standard-content .section.cost > .section-head h2, .local-understand-group > h2, #similar-places-heading)::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, var(--plate-accent), color-mix(in srgb, var(--plate-accent) 25%, transparent) 40%, transparent); }
+  body:has(.horizon-page) main.horizon-page .local-understand-group { border-top: 0 !important; }
+  body:has(.horizon-page) .exhibit-gallery { counter-reset: about-group; }
+  body:has(.horizon-page) .exhibit-gallery > .exhibit-group-head { counter-increment: about-group; display: flex; align-items: baseline; gap: .7rem; border-top: 1px dashed var(--plate-strong-rule); }
+  body:has(.horizon-page) .exhibit-gallery > .exhibit-group-head::before { content: counter(about-group, upper-alpha) / ""; display: inline-grid; place-items: center; width: 1.6em; height: 1.6em; border-radius: 50%; background: color-mix(in srgb, var(--plate-accent) 16%, transparent); color: var(--plate-accent); font: 600 13px/1 var(--font-mono); transform: translateY(-.15em); }
+}
+@media screen and (min-width: 601px) {
+  /* Two page links leave room for the report button on the same line (2026-10-19). */
+  body:has(.horizon-page) .place-jump { flex: 1 1 0; min-width: 0; }
+  body:has(.horizon-page) main > .page-head .actions:has(.place-jump) { flex-wrap: nowrap; align-items: flex-end; justify-content: space-between; }
+  body:has(.horizon-page) main > .page-head .actions .report-action { margin-left: 1rem; }
+}
+@media screen {
+  /* The full report, for the few who want it: a word in the eyebrow, a line at the end,
+     a link inside the rankings — no button (2026-10-19). */
+  body:has(.horizon-page) main .page-head-eyebrow .eyebrow-report { font-size: 12.5px; color: var(--plate-accent) !important; text-decoration: none; }
+  body:has(.horizon-page) main .page-head-eyebrow .eyebrow-report::before { content: "·"; margin-right: .55rem; color: var(--text-muted); }
+  body:has(.horizon-page) main .page-head-eyebrow .eyebrow-report:is(:hover, :focus-visible) { text-decoration: underline; text-underline-offset: .2em; }
+  body:has(.horizon-page) .place-report-line { margin: 2.6rem 0 1rem; padding-top: 1.2rem; border-top: 1px solid var(--plate-rule); color: var(--text-secondary); font-size: 14.5px; }
+  body:has(.horizon-page) .standouts-report-link { margin: 1rem 0 0; font-size: 14px; }
+}
+@media screen {
+  /* Report links in the page's accent, not the site-wide tan (2026-10-19). */
+  body:has(.horizon-page) main :is(.place-report-line, .standouts-report-link) a { color: var(--plate-accent) !important; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--plate-accent) 40%, transparent); text-underline-offset: .2em; }
+  body:has(.horizon-page) main :is(.place-report-line, .standouts-report-link) a:is(:hover, :focus-visible) { text-decoration-color: currentColor; }
 }
