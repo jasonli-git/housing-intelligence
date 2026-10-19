@@ -193,6 +193,35 @@ def test_hud_snapshot_is_from_publisher_not_download_clock() -> None:
     assert "as_of=2026-09-11" in adapter.refs()[0].url
 
 
+def hud_contracts(path: Path, *rows_: dict[str, str]) -> Path:
+    head = {
+        "A": "property_id", "B": "contract_number", "C": "tracs_status_name",
+        "D": "assisted_units_count", "E": "tracs_current_expiration_date",
+        "F": "program_type_name", "G": "0BR_count", "H": "1BR_count",
+        "I": "2BR_count", "J": "3BR_count", "K": "4BR_count", "L": "5plusBR_count",
+    }  # fmt: skip
+    cells = {1: head} | {
+        i: {col: r.get(field, "") for col, field in head.items()}
+        for i, r in enumerate(rows_, start=2)
+    }
+    return workbook(path, "Contracts", cells)
+
+
+def test_hud_repeated_contract_row_is_dropped_conflicting_one_refused(
+    tmp_path: Path,
+) -> None:
+    ref = next(r for r in HudAssistedAdapter().refs() if r.layer == "contracts")
+    row = {"property_id": "1", "contract_number": "NJ1", "assisted_units_count": "4"}
+    same = hud_contracts(tmp_path / "same.xlsx", row, row)
+    kept = HudAssistedAdapter.xlsx_records(same, ref)
+    assert [r["record_id"] for r in kept].count("NJ1") == 1
+    clash = hud_contracts(
+        tmp_path / "clash.xlsx", row, row | {"assisted_units_count": "5"}
+    )
+    with pytest.raises(SourceError, match="duplicate identifiers"):
+        HudAssistedAdapter.xlsx_records(clash, ref)
+
+
 def test_personal_contacts_not_requested_from_lihtc() -> None:
     fields = HudLihtcAdapter.FIELDS
     assert not {"contact", "company", "co_add", "co_tel"}.intersection(fields)
