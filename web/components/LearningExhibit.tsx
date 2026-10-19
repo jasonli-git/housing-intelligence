@@ -14,7 +14,7 @@ export function LearningExhibit({ kind, children, metricId }: { kind: string; ch
     migration: "M0 160C180 160 220 30 400 30h200M0 20C180 20 220 140 400 140h200M0 90h600",
   };
   return <div className="learning-exhibit" data-exhibit={kind} data-exhibit-style={style} data-metric={metricId}>
-    <div className="exhibit-kicker"><span>Field notes · {kind}</span><span>Explore at your own pace</span></div>
+    <div className="exhibit-kicker"><span>{kind}</span><span>Explore at your own pace</span></div>
     <svg className="exhibit-linework" viewBox="0 0 600 180" fill="none" aria-hidden="true">
       <path pathLength="1" d={paths[style]} />
     </svg>

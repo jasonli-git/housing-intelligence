@@ -3,13 +3,14 @@ import { PlacePhoto } from "@/components/PlacePhoto";
 import { photoFor } from "@/lib/photos";
 import "../../place-photo.css";
 import "../../horizon-theme.css";
+import { TREND_METRICS } from "@/lib/trendMetrics";
+import { TownRow } from "@/components/TownRow";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { CostToOwn } from "@/components/CostToOwn";
 import { ForYourHousehold } from "@/components/ForYourHousehold";
 import { StepIcon } from "@/components/StepIcon";
-import { CountyPlaces } from "@/components/CountyPlaces";
 import { LocalEvidenceCharts } from "@/components/LocalEvidenceCharts";
 import { IncomePressure } from "@/components/IncomePressure";
 import "../../income-pressure.css";
@@ -32,37 +33,27 @@ import { HomesAdded } from "@/components/HomesAdded";
 import { ComputedBadge } from "@/components/ComputedBadge";
 import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
-import { CurrentValues } from "@/components/CurrentValues";
-import { DataDownload, hasDownloadableFigures } from "@/components/DataDownload";
 import { ConsumerReading } from "@/components/ExplanationPanel";
 import { EditorialMetrics } from "@/components/EditorialMetrics";
 import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { IndexedComparison } from "@/components/IndexedComparison";
-import { Glossed } from "@/components/Glossed";
 import { ProfileTicker } from "@/components/StateProfileTicker";
-import { Ledger, Margin, TableNotes } from "@/components/Ledger";
-import { MoreExpander } from "@/components/MoreExpander";
 import { Masthead } from "@/components/Masthead";
 import { QuietAnchor, QuietCheckTopics, QuietDisclosure, QuietProfile } from "@/components/QuietCounty";
-import { RankOverview } from "@/components/RankOverview";
 import { RegionStandOuts } from "@/components/RegionStandOuts";
-import { api, type PacketLevel, type PacketMetric, type Region, regionsWithData } from "@/lib/api";
+import { api, type PacketLevel, type Region, regionsWithData } from "@/lib/api";
 import { indexedComparison } from "@/lib/chartInsights";
-import { placeCaveats, scopesFor } from "@/lib/caveats";
 import { costInputs, homePrice } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
 import { pageMetadata, regionTitle } from "@/lib/meta";
 import { hasUnplaced, ownClaimsUsable } from "@/lib/hazards";
 import type { Term } from "@/lib/glossary";
-import { groupRows } from "@/lib/groups";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, surveyYears } from "@/lib/periods";
 import { standOuts } from "@/lib/standouts";
 import { firstEnd } from "@/lib/ranks";
 import {
-  anyMargin,
   changeMarginLabel,
-  MARGIN_NOTE,
   marginLabel,
   NO_MARGIN,
   NO_SAMPLING_ERROR,
@@ -74,7 +65,6 @@ import {
   type PaycheckAnswer,
   paycheckAnswers,
   paychecks,
-  rankBasisExample,
   tradeoff,
   verdict,
 } from "@/lib/verdict";
@@ -85,13 +75,6 @@ import {
 // (ARCHITECTURE #125).
 const WINDOW = "5y";
 
-// The series worth plotting on a region page, in the order a reader wants them, and what
-// a sentence calls each.
-const TREND_METRICS = [
-  { metricId: "zhvi_sfr", short: "home values" },
-  { metricId: "zori_all", short: "rent" },
-  { metricId: "acs_median_hh_income", short: "household income" },
-];
 
 /**
  * Which region pages exist: every region carrying data except the state, whose page
@@ -180,14 +163,6 @@ function asOfTerm(
 function changeWords(pct: number): string {
   if (pct === 0) return "unchanged";
   return `${pct > 0 ? "up" : "down"} ${Math.abs(pct).toFixed(1)}%`;
-}
-
-function listed(items: string[]): string {
-  return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
-}
-
-function findSeries(metrics: PacketMetric[], levels: PacketLevel[], metricId: string) {
-  return metrics.find((m) => m.metric_id === metricId) ?? levels.find((l) => l.metric_id === metricId);
 }
 
 /** One short answer to "Did paychecks keep up?": "Homes No". */
@@ -400,33 +375,8 @@ export default async function RegionPage({
     ?? standing.find((item) => item.group === "value");
   const changePreviewMetric = packet.metrics.find((metric) => metric.metric_id === changePreview?.metric_id);
   const standoutMeasureCount = new Set(standing.map((item) => item.metric_id)).size;
-  const rankExample = rankBasisExample(name, packet.metrics, packet.levels, uncertainties);
-  const rankChartCount =
-    Number(packet.metrics.some((row) => row.rank !== null && row.of !== null && row.of > 1)) +
-    Number(packet.levels.some((row) => row.rank !== null && row.of !== null && row.of > 1));
   const hasIndexedComparison = indexedComparison(indexedInputs) !== null;
-  const chartCount = rankChartCount + Number(hasIndexedComparison);
 
-  // One set per page: each glossary term is marked the first time it appears.
-  const defined = new Set<string>();
-  const order = <T extends { metric_id: string }>(rows: T[]) =>
-    groupRows(rows).flatMap((section) => section.rows.map((row) => row.metric_id));
-  const placement = placeCaveats(
-    [order(packet.metrics), order(packet.levels)],
-    scopesFor(packet.caveats, summary?.caveat_scopes ?? []),
-  );
-  const [changes, values] = placement.tables;
-
-  // What the data expander holds, said on it, so a reader knows what one click opens.
-  const contents = [
-    packet.metrics.length > 0 ? `${packet.metrics.length} figures ranked by change` : null,
-    packet.levels.length > 0 ? `${packet.levels.length} current values` : null,
-    chartCount > 0
-      ? `${chartCount} ${chartCount === 1 ? "chart" : "charts"}`
-      : null,
-  ].filter((part): part is string => part !== null);
-  const moreTitle =
-    trends.length > 0 ? "Every table and the trends" : "Every table";
   const affordabilityControl = region.level === "county"
     ? { kind: "local" as const, fallbackHref: `/afford?place=${regionId}` }
     : region.level === "zip"
@@ -511,6 +461,7 @@ export default async function RegionPage({
                 </span>
               </aside>
             )}
+            <Link className="eyebrow-report" href={`${regionPath(regionId)}/report`}>Full report <span aria-hidden="true">↗</span></Link>
           </div>
           <div className="page-title-row">
             <h1 className="page-title">{name}</h1>
@@ -545,25 +496,14 @@ export default async function RegionPage({
         </div>
         <div className="actions">
           <nav className="state-jump place-jump" aria-label="On this page">
-            <a href={quiet ? "#quiet-cost" : "#cost-heading"}><span>What it costs to own and rent</span><i aria-hidden="true">↓</i></a>
-            <a href="#place-next-step"><span>Your next step</span><i aria-hidden="true">↓</i></a>
-            <a href="#place-understand"><span>Understand this place</span><i aria-hidden="true">↓</i></a>
-            <a href="#field-notes"><span>Field notes</span><i aria-hidden="true">↓</i></a>
-            <a href="#place-explore"><span>Explore places</span><i aria-hidden="true">↓</i></a>
-            <a href="#region-detailed-data"><span>Explore the evidence</span><i aria-hidden="true">↓</i></a>
+            <a href={quiet ? "#quiet-cost" : "#place-costs"}><span>What it costs to own and rent</span><i aria-hidden="true">↓</i></a>
+            <a href="#place-understand"><span>About this place</span><i aria-hidden="true">↓</i></a>
+            {similar && <a href="#place-explore"><span>Cheaper alternatives</span><i aria-hidden="true">↓</i></a>}
           </nav>
-          <Link className="button report-action" href={`${regionPath(regionId)}/report`}>
-            <svg viewBox="0 0 20 20" aria-hidden="true">
-              <path d="M5.5 2.75h6l3 3v11.5h-9Z" />
-              <path d="M11.5 2.75v3h3M8 9h4M8 12h4" />
-            </svg>
-            <span className="report-action-copy">
-              <strong><span className="report-label-desktop">Open full report</span><span className="report-label-mobile">Full report</span></strong>
-              <small>Print-ready detail</small>
-            </span>
-            <span className="report-action-arrow" aria-hidden="true">→</span>
-          </Link>
         </div>
+        {region.level === "county" && countyTowns.length > 0 && (
+          <TownRow name={name} towns={countyTowns.map(t => ({ id: t.region_id, href: regionPath(t.region_id), name: countyTowns.filter(o => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, c => c.toUpperCase()) : displayName(t) }))} />
+        )}
         {photo && <PlacePhoto geoid={region.geoid} />}
       </header>
 
@@ -577,6 +517,7 @@ export default async function RegionPage({
 
       <div className="region-standard-content">
 
+      <div id="place-costs" className="about-anchor" />
       <QuietAnchor enabled={quiet} id="quiet-cost">
       {cost ? (
         <CostToOwn
@@ -605,8 +546,7 @@ export default async function RegionPage({
       )}
       </QuietAnchor>
 
-      <section id="place-next-step" className="local-next-step-group" aria-label="Your next step">
-      <h2>Your next step</h2>
+      <section id="place-next-step" className="local-next-step-group cost-next-strip" aria-label="Your next step">
       <div className="place-next-destinations">
       <section className="place-guide-entry" id="home-checks-heading" aria-labelledby="place-guide-title">
         <StepIcon name="guide" />
@@ -626,9 +566,15 @@ export default async function RegionPage({
       </div>
       </section>
 
-      <section id="place-understand" className="local-understand-group" aria-label="Understand this place">
+      <section id="place-understand" className="local-understand-group" aria-label="About this place">
       <AbstractField kind="architecture" />
-      <h2>Understand this place</h2>
+      <h2>About this place</h2>
+      <nav className="about-toc" aria-label="About this place">
+        {consumer ? <a href="#about-picture">The local picture</a> : standing.length > 0 && <a href="#about-picture">How it ranks</a>}
+        <a href="#field-notes">The market</a>
+        <a href="#about-getting-around">Getting around</a>
+        <a href="#about-living-there">Living there</a>
+      </nav>
 
       {!quiet && householdContent}
 
@@ -636,6 +582,7 @@ export default async function RegionPage({
           the computed rankings it is drawn from and does not author (ARCHITECTURE #275,
           #281). "What's changing?" held this place until 2026-10-01; the page's own
           sentences say what changed. */}
+      <div id="about-picture" className="about-anchor" />
       <QuietAnchor enabled={quiet} id="quiet-highlights">
       <ConsumerReading reading={consumer} section="what_stands_out" heading={quiet ? "The local picture" : `What stands out in ${name}`} annotation={editorialAnnotation} paperNote={quiet}>
       {standing.length > 0 && (
@@ -671,15 +618,13 @@ export default async function RegionPage({
             peers={`${scopeName(peer_scope)}’s ${peer_count} ${peerNoun(peer_level)}`}
             items={standing}
           />
+          <p className="standouts-report-link"><Link href={`${regionPath(regionId)}/report#report-measures`}>See all of them in the full report →</Link></p>
         </details>
       )}
       </ConsumerReading>
       </QuietAnchor>
-      <header className="field-notes-head" id="field-notes">
-        <h2>Field notes</h2>
-        <p>Closer looks at what sold, how it has changed, who is moving and what lies under the ground.</p>
-      </header>
       <ExhibitGallery>
+      <h3 className="exhibit-group-head" id="field-notes">The market</h3>
       {!quiet && homeChecks}
       <LearningExhibit kind="The homes that sold">
       <HomeSales name={name} level={region.level} geoid={region.geoid} levels={packet.levels} showLookup={false} portrait={quiet} />
@@ -707,113 +652,30 @@ export default async function RegionPage({
         levels={packet.levels}
       />
       </LearningExhibit>}
+      {hasIndexedComparison && (
+        <section id="trends-exhibits" className="section" aria-labelledby="trends-heading" data-jump-label="Trends">
+          <h2 id="trends-heading">Trends</h2>
+          <IndexedComparison series={indexedInputs} />
+        </section>
+      )}
+      <h3 className="exhibit-group-head" id="about-getting-around">Getting around</h3>
       <StateContextExhibits topics={["work"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
       <LocalEvidenceCharts kind="work" name={name} level={region.level} levels={packet.levels} series={construction} />
+      <h3 className="exhibit-group-head" id="about-living-there">Living there</h3>
           <LearningExhibit kind="Ground & water"><GroundAndWater compact name={name} levels={packet.levels} water={water} /></LearningExhibit>
           <LearningExhibit kind="Flood context"><FloodRisk name={name} levels={packet.levels} claims={floodClaims.claims} paid={floodClaims.paid} unplaced={floodClaims.unplaced} newestYear={floodClaims.newest} claimsPlace={floodClaims.place} estimated={region.level === "municipality" && floodClaims.place === null} unseparable={floodClaims.unseparable} /></LearningExhibit>
           <div id="local-property-evidence" className="property-exhibit-anchor"><LearningExhibit kind="Service providers"><Utilities data={utilities} bpuInquiry={bpuInquiry} /></LearningExhibit></div>
       <StateContextExhibits topics={["broadband"]} name={name} level={region.level} levels={packet.levels} destinations={workDestinations} community={community} />
           <CommunityContext exhibits data={community} level={region.level} supporting hideBroadband={region.level === "county"} />
-        {hasIndexedComparison && (
-          <section id="trends-exhibits" className="section" aria-labelledby="trends-heading" data-jump-label="Trends">
-            <h2 id="trends-heading">Trends</h2>
-            <IndexedComparison series={indexedInputs} />
-          </section>
-        )}
       </ExhibitGallery>
       </section>
       <div id="place-explore">
       <SimilarPlaces name={name} data={similar} />
-      {region.level === "county" && countyTowns.length > 0 && <CountyPlaces name={name} towns={countyTowns.map(t => ({id: t.region_id, name: countyTowns.filter(o => displayName(o) === displayName(t)).length > 1 && t.name_lsad ? t.name_lsad.replace(/^./, c => c.toUpperCase()) : displayName(t)}))} />}
       </div>
 
-      <MoreExpander id="region-detailed-data" title={moreTitle} sub={quiet ? "Figures, trends & sources. Explore the detail." : `For the full picture: ${listed(contents)}.`}>
-        {trends.length > 0 && <details className="historical-value-tables"><summary>Historical values &amp; sources</summary>{trends.map(({metricId,observations}) => {
-          const meta=findSeries(packet.metrics,packet.levels,metricId);
-          return <section key={metricId}><h3>{meta?.label ?? metricId}</h3><div className="scroll-x" tabIndex={0} role="region" aria-label="Historical figures, scroll horizontally"><table>
-            <thead><tr><th scope="col">Period</th><th scope="col">Value</th><th scope="col">Source</th><th scope="col">Matched by</th></tr></thead>
-            <tbody>{observations.slice(-24).reverse().map(o=><tr key={o.period_start}><td>{periodLabel(o.period_end,metricId)}</td><td>{formatMetric(o.value,meta?.unit ?? "",metricId)}<Margin label={marginLabel(o.value,o.margin_of_error ?? null,meta?.unit ?? "",metricId)} /></td><td>{o.source_id}</td><td>{o.match_method}</td></tr>)}</tbody>
-          </table></div></section>;
-        })}</details>}
-        {hasDownloadableFigures([...packet.metrics, ...packet.levels]) && (
-          <p className="data-download-line">
-            <DataDownload
-              regionId={regionId}
-              geoid={region.geoid}
-              window={WINDOW}
-              figures={[...packet.metrics, ...packet.levels]}
-            />
-            <span> — every figure below, with its kind, source and licence.</span>
-          </p>
-        )}
-        <RankOverview
-          changes={packet.metrics}
-          values={packet.levels}
-          peerLabel={peerNoun(peer_level)}
-          uncertainties={uncertainties}
-        />
-
-        <section className="section" aria-labelledby="ledger-heading">
-          <h2 id="ledger-heading">Every figure, ranked by change over five years</h2>
-          {packet.metrics.length > 0 ? (
-            <Ledger
-              metrics={packet.metrics}
-              placement={changes}
-              defined={defined}
-              regionLabel={name}
-              sources={packet.sources}
-              path={regionPath(regionId)}
-              uncertainties={uncertainties}
-              peers={peers}
-            />
-          ) : (
-            <p className="meta">
-              No figure here has two readings five years apart, so there is no change to
-              show. Its current values are below.
-            </p>
-          )}
-          <TableNotes placement={changes} general={placement.general} above="the figures above" />
-          {packet.metrics.length > 0 && (
-            <p className="table-note">
-              Ranked by change over five years, not by price or size: rank 1 is the largest
-              rise, or the smallest where lower is better, as for unemployment.
-              {rankExample && ` ${rankExample}`}
-            </p>
-          )}
-          {anyMargin(uncertainties) && <p className="table-note">{MARGIN_NOTE}</p>}
-        </section>
-
-
-        {packet.levels.length > 0 && (
-          <section className="section" aria-labelledby="values-heading">
-            <div className="section-head">
-              <h2 id="values-heading">Current values</h2>
-            </div>
-            <p className="table-note">
-              <Glossed
-                text={
-                  "Each measure’s latest reading, ranked by value rather than by change: rank 1 " +
-                  "is the highest, or the lowest where lower is better. The MOD-IV assessment " +
-                  "records and HUD’s CHAS tables are single snapshots, so they appear only here."
-                }
-                defined={defined}
-              />
-            </p>
-            <CurrentValues
-              levels={packet.levels}
-              placement={values}
-              defined={defined}
-              regionLabel={name}
-              sources={packet.sources}
-              path={regionPath(regionId)}
-              uncertainties={uncertainties}
-              peers={peers}
-            />
-            <TableNotes placement={values} above="the figures above" />
-          </section>
-        )}
-
-      </MoreExpander>
+      <p className="place-report-line" id="region-detailed-data">
+        Want every figure? <Link href={`${regionPath(regionId)}/report`}>The full report</Link> has each measure ranked, its history, sources and downloads.
+      </p>
       </div>
       </main>
     </>
