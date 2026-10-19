@@ -208,7 +208,7 @@ def bergen() -> object:
 @warehouse
 def test_the_packet_carries_the_fact_and_not_its_inputs(bergen: object) -> None:
     packet = bergen
-    assert packet.packet_version == "1.6"
+    assert packet.packet_version == "1.7"
     assert packet.persistence is not None
     hidden = {"fhfa_hpi_county", "saipe_median_hh_income"}
     assert not hidden & {m.metric_id for m in packet.metrics}

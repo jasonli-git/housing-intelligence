@@ -206,6 +206,9 @@ def test_skipped_entries_are_explanations_not_data(published: Path) -> None:
         and "/migration" not in path
         # Milestone 52: counties and the state only; no town has a yearly income.
         and "/persistence" not in path
+        # #159: HUD's income-group figures are published for counties, towns and the
+        # state, never ZIP codes or the nation.
+        and "/housing-pressure" not in path
     ]
     assert not unexpected, f"unexpected 404s: {unexpected[:5]}"
     # 52 on 2026-10-06: the nation, 10 towns and 41 ZIP codes, all small places. Many

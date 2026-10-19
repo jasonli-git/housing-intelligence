@@ -277,6 +277,19 @@
           "title": "Survey",
           "type": "boolean"
         },
+        "ties": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How many regions share `rank`, this one included: tied regions all take the first of their places. Null in packets before 1.7, read as 1. Since 1.7.",
+          "title": "Ties"
+        },
         "unit": {
           "title": "Unit",
           "type": "string"
@@ -543,6 +556,19 @@
           "description": "A survey estimate, or a figure calculated from one, which carries a margin of error (SPEC principle 12). A survey figure whose margin is null has none available \u2014 a Census special code, or HUD's CHAS tables \u2014 and is not exact.",
           "title": "Survey",
           "type": "boolean"
+        },
+        "ties": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How many regions share `rank`, this one included: tied regions all take the first of their places. Null in packets before 1.7, read as 1. Since 1.7.",
+          "title": "Ties"
         },
         "unit": {
           "title": "Unit",
@@ -1066,7 +1092,8 @@
         "1.3",
         "1.4",
         "1.5",
-        "1.6"
+        "1.6",
+        "1.7"
       ],
       "title": "Packet Version",
       "type": "string"

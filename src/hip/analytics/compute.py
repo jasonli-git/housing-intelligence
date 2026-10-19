@@ -527,7 +527,7 @@ def _rankings(conn: object) -> int:
                 """
                 INSERT INTO region_rankings
                     (metric_id, level, basis, "window", region_id, value,
-                     rank, of, percentile, margin_of_error)
+                     rank, of, percentile, margin_of_error, ties)
                 WITH ranked AS (
                     SELECT c.metric_id, r.level::text AS level, c."window", c.region_id,
                            c.pct_change AS value, c.pct_change_margin AS margin,
@@ -550,7 +550,9 @@ def _rankings(conn: object) -> int:
                             ELSE 100.0 END,
                        -- The margin of the value ranked (migration 0018), which
                        -- `_rank_ranges` tests differences with and `/rankings` shows.
-                       margin
+                       margin,
+                       -- How many share this rank (migration 0037).
+                       count(*) OVER (PARTITION BY metric_id, level, "window", rank)
                 FROM ranked
                 -- A ranking over one region is not a ranking.
                 WHERE of > 1
@@ -577,7 +579,7 @@ def _value_rankings(conn: object, unranked: list[str]) -> int:
                 """
                 INSERT INTO region_rankings
                     (metric_id, level, basis, "window", region_id, value,
-                     rank, of, percentile, margin_of_error)
+                     rank, of, percentile, margin_of_error, ties)
                 WITH latest AS (
                     SELECT DISTINCT ON (f.region_id, f.metric_id)
                            f.region_id, f.metric_id, f.value, f.margin_of_error
@@ -609,7 +611,8 @@ def _value_rankings(conn: object, unranked: list[str]) -> int:
                             THEN 100.0 * (of - rank) / (of - 1)
                             ELSE 100.0 END,
                        -- From the row the value came from (migration 0018).
-                       margin
+                       margin,
+                       count(*) OVER (PARTITION BY metric_id, level, rank)
                 FROM ranked
                 WHERE of > 1
                 """

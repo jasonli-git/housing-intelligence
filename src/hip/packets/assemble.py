@@ -12,6 +12,7 @@ current would undermine the provenance the packet exists to carry.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from typing import Any
 
@@ -37,9 +38,18 @@ from hip.packets.schema import (
 )
 from hip.packets.survey import is_survey
 
-# A region is "at one end" of its cohort within this many places of either extreme.
-# Selection only — the rank itself is read from region_rankings.
+# A region is "at one end" of its cohort within this many places of either extreme:
+# three, or the outer 5% of a larger cohort. Three of 21 counties is a seventh of them;
+# three of 564 municipalities is the top half-percent, which a town almost never
+# reaches (2026-10-19). Selection only — the rank itself is read from region_rankings.
 HIGHLIGHT_DEPTH = 3
+HIGHLIGHT_SHARE = 0.05
+
+
+def highlight_depth(of: int) -> int:
+    """How many places from either end still count as at that end of `of` regions."""
+    return max(HIGHLIGHT_DEPTH, math.ceil(of * HIGHLIGHT_SHARE))
+
 
 # Below this many peers, being third from the top is not a distinction worth reporting.
 MIN_COHORT = 5
@@ -76,7 +86,7 @@ _METRICS_SQL = text(
            o.release_id, sr.source_id, o.match_method,
            s.release_id AS start_release_id, s.match_method AS start_match_method,
            c.pct_change_margin, c.start_margin, c.end_margin,
-           k.rank_best, k.rank_worst,
+           k.rank_best, k.rank_worst, k.ties,
            m.record_type, m.licence_class, m.originator
     FROM fact_metric_change c
     JOIN metrics m ON m.metric_id = c.metric_id
@@ -110,7 +120,7 @@ _LEVELS_SQL = text(
            f.period_start, f.period_end,
            k.rank, k.of, k.percentile,
            f.release_id, sr.source_id, f.match_method,
-           f.margin_of_error, k.rank_best, k.rank_worst,
+           f.margin_of_error, k.rank_best, k.rank_worst, k.ties,
            m.record_type, m.licence_class, m.originator
     FROM fact_metric_observation f
     JOIN metrics m ON m.metric_id = f.metric_id
@@ -377,8 +387,9 @@ def _highlights(metrics: list[PacketMetric]) -> list[PacketHighlight]:
     metric measures.
 
     A rank with a range stands out only when the whole range does (packet 1.3): its
-    worst place within the top three to lead, its best within the bottom three to
-    trail. The region pages' stand-outs follow the same rule (ARCHITECTURE #241), and a
+    worst place within the top places to lead, its best within the bottom ones to
+    trail. A tie is a range too (packet 1.7): 152 towns sharing "1st" do not each
+    lead. The region pages' stand-outs follow the same rule (ARCHITECTURE #241), and a
     packet calling a region third when its survey could as well make it tenth would
     hand a reading a claim the page refuses to make.
     """
@@ -389,9 +400,11 @@ def _highlights(metrics: list[PacketMetric]) -> list[PacketHighlight]:
             continue
         best = metric.rank if metric.rank_best is None else metric.rank_best
         worst = metric.rank if metric.rank_worst is None else metric.rank_worst
-        if worst <= HIGHLIGHT_DEPTH:
+        worst = max(worst, metric.rank + (metric.ties or 1) - 1)
+        depth = highlight_depth(metric.of)
+        if worst <= depth:
             bucket, position = leading, "leading"
-        elif best > metric.of - HIGHLIGHT_DEPTH:
+        elif best > metric.of - depth:
             bucket, position = trailing, "trailing"
         else:
             continue

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { PacketLevel, PacketMetric } from "@/lib/api";
-import { standOuts } from "@/lib/standouts";
+import { standOutDepth, standOuts } from "@/lib/standouts";
 
 function metric(metric_id: string, fields: Partial<PacketMetric>): PacketMetric {
   return {
@@ -122,6 +122,30 @@ describe("standOuts", () => {
     const levels = [level("modiv_median_tax_bill", { value: 9000, rank: 1, of: 4 })];
 
     expect(standOuts({ highlights: [], metrics: [], levels })).toEqual([]);
+  });
+  it("reaches the outer 5% of a large cohort: 8th of 563 stands out, 40th does not", () => {
+    expect(standOutDepth(21)).toBe(3);
+    expect(standOutDepth(564)).toBe(29);
+    const levels = [
+      level("modiv_median_tax_bill", { value: 24000, rank: 8, of: 563 }),
+      level("acs_wfh_share", { unit: "ratio", value: 0.3, rank: 40, of: 564 }),
+    ];
+
+    expect(standOuts({ highlights: [], metrics: [], levels }).map((s) => [s.metric_id, s.detail])).toEqual([
+      ["modiv_median_tax_bill", "the 8th highest of 563"],
+    ]);
+  });
+
+  it("does not name one of a crowd tied at an end", () => {
+    // 152 of 392 towns have no homes in the tidal flood area: all share "1st".
+    const levels = [
+      level("njdep_tidal_homes_share", { unit: "ratio", value: 0, rank: 1, of: 392, ties: 152, direction: "lower_is_better" }),
+      level("acs_vacancy_rate", { unit: "ratio", value: 0.01, rank: 1, of: 21, ties: 2, direction: "lower_is_better" }),
+    ];
+
+    expect(standOuts({ highlights: [], metrics: [], levels }).map((s) => [s.metric_id, s.detail])).toEqual([
+      ["acs_vacancy_rate", "among the 2 lowest of 21"],
+    ]);
   });
 });
 
