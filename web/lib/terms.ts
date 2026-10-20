@@ -830,6 +830,173 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
       "record for every parcel, with its assessed value, property class and year built.",
   },
 
+  // Added 2026-10-20 (#392): the agencies, datasets and money and data words readers
+  // meet most often on these pages, measured across eleven page types.
+  "hud": {
+    title: "HUD",
+    phrases: ["HUD"],
+    what:
+      "The U.S. Department of Housing and Urban Development, the federal housing agency. It " +
+      "sets the income limits and Fair Market Rents housing programs use, and publishes " +
+      "data on who struggles with housing costs.",
+  },
+  "fema": {
+    title: "FEMA",
+    phrases: ["FEMA"],
+    what:
+      "The Federal Emergency Management Agency. It draws the flood maps lenders use and runs " +
+      "the National Flood Insurance Program, whose claims are counted here.",
+  },
+  "hmda": {
+    title: "HMDA",
+    phrases: ["HMDA"],
+    what:
+      "Home Mortgage Disclosure Act data: a record of most mortgage applications, filed " +
+      "each year by lenders above a size threshold, with the loan amount, the rate and " +
+      "whether it was approved. It has no credit scores.",
+  },
+  "fha": {
+    title: "FHA",
+    phrases: ["FHA"],
+    what:
+      "The Federal Housing Administration, part of HUD. It insures mortgages with as little " +
+      "as 3.5% down, in exchange for an upfront and a yearly insurance premium, up to a " +
+      "loan limit set for each county.",
+  },
+  "fhfa": {
+    title: "FHFA",
+    phrases: ["FHFA"],
+    what:
+      "The Federal Housing Finance Agency, which oversees Fannie Mae and Freddie Mac and " +
+      "publishes the house price index built from the mortgages they buy.",
+  },
+  "lodes": {
+    title: "LODES",
+    phrases: ["LODES"],
+    what:
+      "The Census Bureau’s LEHD Origin-Destination Employment Statistics: where people live " +
+      "and where they work, from state unemployment-insurance records. Counts carry a little " +
+      "deliberate noise to protect privacy.",
+  },
+  "sr1a": {
+    title: "SR1A",
+    phrases: ["SR1A"],
+    what:
+      "New Jersey’s record of each property sale, compiled from deeds by county tax boards, " +
+      "with the price, date and property. The sale prices here are the arm’s-length ones, " +
+      "not listings.",
+  },
+  "lihtc": {
+    title: "LIHTC",
+    phrases: ["LIHTC"],
+    what:
+      "The Low-Income Housing Tax Credit, the largest federal program for building " +
+      "affordable rentals: developers get tax credits in return for keeping rents within " +
+      "reach of lower-income households for decades.",
+  },
+  "pfas": {
+    title: "PFAS",
+    phrases: ["PFAS"],
+    what:
+      "“Forever chemicals”: man-made compounds used in non-stick, stain-resistant and " +
+      "firefighting products that build up in water and the body. EPA has set limits on " +
+      "some of them, with compliance years away.",
+  },
+  "median": {
+    title: "Median",
+    phrases: ["median", "Median"],
+    what:
+      "The middle value: half are above it and half below. Unlike an average, a few very " +
+      "large values do not pull it up.",
+  },
+  "principal": {
+    title: "Principal",
+    phrases: ["principal"],
+    what:
+      "The part of a mortgage payment that pays down the loan itself, rather than interest. " +
+      "It stays yours, as equity in the home.",
+  },
+  "equity": {
+    title: "Equity",
+    phrases: ["equity"],
+    what:
+      "The share of a home you own outright: its value minus what is still owed on the " +
+      "mortgage. It grows as the loan is paid down and as the home gains value.",
+  },
+  "mortgage-insurance": {
+    title: "Mortgage insurance",
+    phrases: ["mortgage insurance"],
+    what:
+      "Insurance a borrower pays for that protects the lender, usually required when the " +
+      "down payment is under 20%. On a conventional loan it can be dropped once enough is " +
+      "paid off.",
+  },
+  "closing-costs": {
+    title: "Closing costs",
+    phrases: ["closing costs"],
+    what:
+      "One-time fees paid when a purchase completes: the lender’s charges, title insurance, " +
+      "the appraisal and recording fees. Often a few percent of the price; the seller " +
+      "usually pays New Jersey’s transfer fee.",
+  },
+  "hoa": {
+    title: "HOA",
+    phrases: ["HOA"],
+    what:
+      "A homeowners or condominium association, which charges owners a monthly fee for " +
+      "shared upkeep and amenities. It is set by each building or community, so no " +
+      "published figure covers it.",
+  },
+  "debt-to-income": {
+    title: "Debt-to-income",
+    phrases: ["debt-to-income"],
+    what:
+      "A borrower’s monthly debt payments, the new mortgage included, as a share of monthly " +
+      "income before tax. Lenders use it to decide how much they will lend.",
+  },
+  "margin-of-error": {
+    title: "Margin of error",
+    phrases: ["margin of error", "margins of error"],
+    what:
+      "How far a survey figure could be from the true value. A ± figure here is the Census " +
+      "Bureau’s 90% margin: the true value is very likely within that range.",
+  },
+  "five-year-estimate": {
+    title: "Five-year estimate",
+    phrases: ["five-year estimate", "five-year estimates"],
+    what:
+      "A Census survey figure pooled over five years of responses, so “2020–2024” describes " +
+      "that whole span, not one year. Pooling is what makes small places measurable.",
+  },
+  "percentile": {
+    title: "Percentile",
+    phrases: ["percentile"],
+    what:
+      "Where a value sits in a ranked list, as the share below it: the 90th percentile is " +
+      "higher than 90% of the values.",
+  },
+  "assessed-value": {
+    title: "Assessed value",
+    phrases: ["assessed value", "assessed values"],
+    what:
+      "The value the town puts on a property for tax purposes. It can be far from today’s " +
+      "market price, since towns reassess only every few years.",
+  },
+  "flood-zone": {
+    title: "Flood zone",
+    phrases: ["flood zone", "flood zones"],
+    what:
+      "An area FEMA’s maps put at high risk of flooding, with at least a 1% chance each " +
+      "year. A home there with a federally backed mortgage must carry flood insurance.",
+  },
+  "mbps": {
+    title: "Mbps",
+    phrases: ["Mbps"],
+    what:
+      "Megabits per second, the speed of an internet connection. “100/20 Mbps” means 100 " +
+      "down and 20 up, the federal benchmark for adequate home broadband.",
+  },
+
   // Labels: a named idea the site explains where it shows it, never marked in running
   // text. They have a `title` and no `phrases`.
   "computed": {

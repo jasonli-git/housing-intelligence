@@ -1,4 +1,5 @@
 "use client";
+import { Gloss } from "@/components/Gloss";
 import {useState} from "react";
 import type {HousingPressure} from "@/lib/api";
 import {LearningExhibit} from "./LearningExhibit";
@@ -14,7 +15,7 @@ export function IncomePressure({data}:{data:HousingPressure|null}) {
     <h2 id="income-pressure-heading">Who feels housing costs most?</h2>
     <p>{data.period} · Share of {tenure==="renter"?"renters":"owners"} spending over 30% of income on housing.</p>
     <div className="income-pressure-tabs" role="group" aria-label="Household tenure">{(["renter","owner"] as const).map(value=><button type="button" key={value} aria-pressed={tenure===value} onClick={()=>setTenure(value)}>{value==="renter"?"Renters":"Owners"}</button>)}</div>
-    <p className="income-pressure-axis">Income as a share of HUD area median family income</p>
+    <p className="income-pressure-axis"><Gloss>Income as a share of HUD area median family income</Gloss></p>
     <div className="income-pressure-bars">{rows.map(row=><div key={row.band}><button type="button" className="income-band-label" aria-pressed={band===row.band} aria-controls="income-band-explanation" onClick={()=>setBand(band===row.band?null:row.band)}>{LABELS[row.band]}</button><div className="income-pressure-track" aria-hidden="true"><i style={{width:`${(row.share??0)*100}%`}}/>{row.share!==null&&row.margin!==null&&<b className="income-pressure-margin" style={{left:`${Math.max(0,row.share-row.margin)*100}%`,width:`${(Math.min(1,row.share+row.margin)-Math.max(0,row.share-row.margin))*100}%`}}/>}</div><strong>{row.share===null?"Not available":`${(row.share*100).toFixed(0)}%`}</strong><small>{row.share!==null&&row.margin!==null?`±${(row.margin*100).toFixed(1)} points · `:""}{row.total.toLocaleString("en-US")} households{row.unknown>0?` · ${row.unknown.toLocaleString("en-US")} uncomputed`:""}</small></div>)}</div>
     <p id="income-band-explanation" className="income-band-explanation" aria-live="polite">{band===null?"Tap an income band to understand it.":`These households earn ${EXPLANATIONS[band]} of their local HUD family-income benchmark, adjusted for household size.`}</p>
     <p className="sales-note">Survey estimates; whiskers show 90% margins. Bands are not eligibility limits.</p>

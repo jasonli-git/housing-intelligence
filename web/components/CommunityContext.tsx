@@ -1,3 +1,4 @@
+import { Gloss } from "@/components/Gloss";
 import type { CommunityContext as CommunityData } from "@/lib/api";
 import { ReaderDetails } from "@/components/ReaderDetails";
 import type { ReactNode } from "react";
@@ -56,9 +57,9 @@ export function CommunityContext({ data, level, supporting = false, hideBroadban
       {wired ? <ReaderDetails title={`${data.broadband_area} · ${data.broadband_level} availability summary`}>
         {level === "municipality" && <p className="sales-note">County context, not this town’s availability{place ? " (above)" : ""}. Census-place boundaries do not reliably match legal municipalities.</p>}
         <dl className="utility-reliability">
-          <div><dt>Wired offers · at least 100 down / 20 up Mbps</dt><dd>{(wired.payload.shares.speed_100_20 * 100).toFixed(1)}%</dd></div>
+          <div><dt><Gloss>Wired offers · at least 100 down / 20 up Mbps</Gloss></dt><dd>{(wired.payload.shares.speed_100_20 * 100).toFixed(1)}%</dd></div>
           <div><dt>Wired offers · at least 1,000 down / 100 up Mbps</dt><dd>{(wired.payload.shares.speed_1000_100 * 100).toFixed(1)}%</dd></div>
-          {fiber && <div><dt>Fiber offers · at least 100 down / 20 up Mbps</dt><dd>{(fiber.payload.shares.speed_100_20 * 100).toFixed(1)}%</dd></div>}
+          {fiber && <div><dt><Gloss>Fiber offers · at least 100 down / 20 up Mbps</Gloss></dt><dd>{(fiber.payload.shares.speed_100_20 * 100).toFixed(1)}%</dd></div>}
         </dl>
         <p className="sales-note">Shares of FCC’s mapped units with residential-service offers—not shares of people, subscribers or households. FCC’s denominator is {wired.payload.total_units.toLocaleString("en-US")} units across broadband-serviceable locations, including multi-unit buildings. Wired and fiber overlap; do not add their percentages.</p>
         <p className="sales-note">Availability as of {wired.payload.as_of} · revised {wired.payload.revision}. Provider reports, not speed tests, prices or a guarantee at an address. <a href={wired.payload.url} target="_blank" rel="noreferrer">FCC published summaries</a>.</p>

@@ -1,3 +1,4 @@
+import { Gloss } from "@/components/Gloss";
 import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 
@@ -134,14 +135,14 @@ export function GettingAround({
 
       {(work || destinations) && (
         <ReaderDetails title="About these figures">
-          <p className="sales-note">
+          <p className="sales-note"><Gloss>
             Jobs come from the Census Bureau’s LEHD Origin-Destination Employment Statistics (LODES):
             jobs covered by unemployment insurance and federal civilian jobs. Self-employment and
             military jobs are not counted, and a person with two jobs counts twice. A job is placed
             where its employer reports it, which for a firm with many sites can be an office.
             Counts carry deliberate noise to protect privacy, so small figures are approximate.
             LODES 2023 has no records for jobs in Alaska or Michigan.
-          </p>
+          </Gloss></p>
           <p className="sales-note">
             Stops are the Bureau of Transportation Statistics’ National Transit Map, compiled from
             each agency’s published schedule. Homes are 2020’s, by census block; a block’s homes

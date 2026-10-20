@@ -1,5 +1,6 @@
 "use client";
 
+import { Gloss } from "@/components/Gloss";
 import { type ReactNode, useId, useState } from "react";
 
 import { Glossed } from "@/components/Glossed";
@@ -414,7 +415,7 @@ export function CostToOwn({
             {month.lines.map((line) => (
               <div key={line.key} className={line.value === null ? "missing" : undefined}>
                 <dt>
-                  {line.label}
+                  <Glossed text={line.label} />
                   {line.key === "mortgage" && month.loan.fha ? ", FHA" : ""}{" "}
                   <small className={line.value === null && line.conditional ? "src cost-add-prompt" : "src"}>
                     {line.value === null && line.conditional
@@ -731,7 +732,7 @@ export function CostToOwn({
             Not included
           </p>
           <p>
-            The monthly owning estimate leaves out {listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.
+            <Glossed text={`The monthly owning estimate leaves out ${listed([...month.missing, ...month.optional, "what the down payment could earn"].map(sentenceCostLabel))}.`} />
           </p>
         </aside>
       </div>
@@ -846,7 +847,7 @@ export function CostToOwn({
             </p>
             <dl className="cost-lines">
               <div>
-                <dt>Cash up front <small className="src">closing costs at the middle of their range unless you set them</small></dt>
+                <dt>Cash up front <small className="src"><Gloss>closing costs at the middle of their range unless you set them</Gloss></small></dt>
                 <dd>{money(years.upfront)}</dd>
               </div>
               <div>

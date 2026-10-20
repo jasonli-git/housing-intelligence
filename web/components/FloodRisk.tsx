@@ -1,3 +1,4 @@
+import { Gloss } from "@/components/Gloss";
 import type { Observation, PacketLevel } from "@/lib/api";
 import { FLOOD_MAP } from "@/lib/costRules";
 import { ReaderDetails } from "@/components/ReaderDetails";
@@ -54,7 +55,7 @@ export function FloodRisk({
       </div>
 
       {flood.high !== null ? (
-        <p className="sales-lead">
+        <p className="sales-lead"><Gloss>
           About <b>{shareText(flood.high)}</b> of {name}’s homes
           {flood.homes ? ` (${count(flood.homes)})` : ""} are in FEMA’s 1%-a-year flood zone,
           where a flood has at least a one-in-four chance over a 30-year mortgage and a
@@ -63,7 +64,7 @@ export function FloodRisk({
             ? `; ${shareText(flood.moderate)} more are in the 0.2% zone`
             : ""}
           .
-        </p>
+        </Gloss></p>
       ) : unmapped(flood) ? (
         <p className="sales-lead">
           FEMA’s digital map covers only {shareText(flood.mapped ?? 0)} of {name}’s homes.

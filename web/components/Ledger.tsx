@@ -197,7 +197,7 @@ export function NoteRows({ id, texts, span }: { id: string; texts: string[] | un
           <td colSpan={span}>
             <p className="row-note">
               <span className="note-tag">Note</span>
-              {text}
+              <Glossed text={text} />
             </p>
           </td>
         </tr>

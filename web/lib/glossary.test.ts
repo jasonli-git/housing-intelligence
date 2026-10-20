@@ -35,6 +35,6 @@ describe("withTerms", () => {
   });
 
   it("leaves text with no term as one plain segment", () => {
-    expect(withTerms("Median household income")).toEqual([{ text: "Median household income" }]);
+    expect(withTerms("Household income")).toEqual([{ text: "Household income" }]);
   });
 });

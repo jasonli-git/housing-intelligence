@@ -1,5 +1,6 @@
 "use client";
 
+import { Glossed } from "@/components/Glossed";
 import { regionPath } from "@/lib/placeRoutes";
 import { createContext, useCallback, useContext, type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -142,7 +143,7 @@ export function AffordableHousing({data, hideRoutes = false, tool = false, inven
         {!shown.length && !loading && !error && inventory && <p>No records match. This does not establish that no affordable homes exist here.</p>}
         {properties.length > 10 && <nav aria-label="Property result pages" className="assistance-pages"><button disabled={page === 0} onClick={() => setPage(page - 1)}>Previous</button><span>{page + 1} / {Math.ceil(properties.length / 10)}</span><button disabled={(page + 1) * 10 >= properties.length} onClick={() => setPage(page + 1)}>Next</button></nav>}
       </details>
-      <details className="assistance-method"><summary>Sources & limits</summary><ul>{data.limitations.map((t) => <li key={t}>{t}</li>)}</ul>
+      <details className="assistance-method"><summary>Sources & limits</summary><ul>{data.limitations.map((t) => <li key={t}><Glossed text={t} /></li>)}</ul>
         {tool && <p>Municipal self-reports: {n(stats?.projects ?? projects.length)} project records; {n(stats?.unknown_completion ?? unknown.length)} have unknown completion status. DCA present and prospective need figures are non-binding calculations, not final obligations or an application list. Reported properties and bedroom counts do not establish vacancies.</p>}
         <ul>{provenance.map((r) => <li key={`${r.source_id}-${r.kind}-${r.release_id}`}><a href={r.source_url} target="_blank" rel="noreferrer">{r.source_id} · {r.kind.replaceAll("_", " ")}</a> · snapshot {r.snapshot} · downloaded {r.fetched_at.slice(0, 10)} · release {r.release_id}</li>)}</ul>
       </details>
@@ -154,7 +155,7 @@ function Property({row: r, records, plain = false}: {row: HousingRecord; records
   const contracts = r.kind === "hud_property" ? contractsFor(r, records) : [];
   const p = r.payload;
   const beds = Object.entries(p.bedrooms ?? {}).filter(([, v]) => v !== null && v > 0);
-  if (plain) return <li className="assistance-property"><header><span>{labels[r.kind]}</span><strong>{p.name ? capsCase(p.name) : "Unnamed project"}</strong><small>{p.address ? `${capsCase(p.address)}${p.city ? `, ${capsCase(p.city)}` : ""} · ` : ""}{r.place}</small></header>
+  if (plain) return <li className="assistance-property"><header><span><Glossed text={labels[r.kind]} /></span><strong>{p.name ? capsCase(p.name) : "Unnamed project"}</strong><small>{p.address ? `${capsCase(p.address)}${p.city ? `, ${capsCase(p.city)}` : ""} · ` : ""}{r.place}</small></header>
     <div className="assistance-property-facts">
       <span>{n(p.units ?? null)} {r.kind === "municipal_project" ? "affordable homes, as the town reports" : "homes in the property"}{r.kind === "lihtc_property" && p.low_income_units != null ? ` · ${n(p.low_income_units)} at lower rents` : ""}{r.kind === "lihtc_property" && p.placed_in_service ? ` · opened ${p.placed_in_service}` : ""}</span>
       {contracts.map((c) => <span key={c.record_id}>{plainProgram(c.payload.program)} · {n(c.payload.units ?? null)} homes · {c.payload.status === "Active" ? `contract runs to ${c.payload.contract_end ? month(c.payload.contract_end) : "a date not reported"}` : `contract ended${c.payload.contract_end ? ` ${month(c.payload.contract_end)}` : ""}`}</span>)}
@@ -167,7 +168,7 @@ function Property({row: r, records, plain = false}: {row: HousingRecord; records
       {r.kind === "hud_property" && !contracts.length && <span>No current HUD contract on record</span>}
     </div><footer>{p.phone && <a href={`tel:${p.phone.replace(/[^0-9+]/g, "")}`}>Call {p.phone}</a>}<a href={r.source_url} target="_blank" rel="noreferrer">Source ↗</a><span>As of {month(r.snapshot)}</span></footer>
   </li>;
-  return <li className="assistance-property"><header><span>{labels[r.kind]}</span><strong>{p.name || "Unnamed project"}</strong><small>{r.place}{p.address ? ` · ${p.address}, ${p.city ?? ""}` : ""}</small></header>
+  return <li className="assistance-property"><header><span><Glossed text={labels[r.kind]} /></span><strong>{p.name || "Unnamed project"}</strong><small>{r.place}{p.address ? ` · ${p.address}, ${p.city ?? ""}` : ""}</small></header>
     <div className="assistance-property-facts"><span>{n(p.units ?? null)} {r.kind === "municipal_project" ? "affordable homes, as the town reports" : "homes in the property"}</span>
       {r.kind === "lihtc_property" && <span>{n(p.low_income_units ?? null)} low-income homes · opened {p.placed_in_service ?? "year not reported"}</span>}
       {r.kind === "lihtc_property" && <>

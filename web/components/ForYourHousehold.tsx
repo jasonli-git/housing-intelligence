@@ -1,5 +1,6 @@
 "use client";
 
+import { Gloss } from "@/components/Gloss";
 import { Glossed } from "@/components/Glossed";
 import { useEffect, useId, useState } from "react";
 
@@ -98,7 +99,7 @@ export function ForYourHousehold({
       {limits && (
         <article className="household-panel">
           <h3 className="household-title">Income limits used by housing programmes</h3>
-          <p className="household-note">Compare your yearly household income with HUD’s local limits to find programmes worth checking—not to confirm eligibility.</p>
+          <p className="household-note"><Gloss>Compare your yearly household income with HUD’s local limits to find programmes worth checking—not to confirm eligibility.</Gloss></p>
           {ready && (
             <div className="household-inputs">
               <label className="control">
@@ -158,7 +159,7 @@ export function ForYourHousehold({
             </tbody>
           </table>
           <ReaderDetails className="income-limit-explainer" title="What do these percentages mean?">
-            <p>The 30%, 50% and 80% labels name HUD’s income-limit levels, based on the area’s median family income—the middle of the income distribution. HUD adjusts the dollar limits for household size, housing costs and other rules. They are not simple percentages of this town’s median income.</p>
+            <p><Gloss>The 30%, 50% and 80% labels name HUD’s income-limit levels, based on the area’s median family income—the middle of the income distribution. HUD adjusts the dollar limits for household size, housing costs and other rules. They are not simple percentages of this town’s median income.</Gloss></p>
             <p>For example, an income below the dollar amount in the 50% row is within that income limit. Each housing programme has additional eligibility rules.</p>
             <p>This is different from the budget comparison’s 30%: that measures how much of your own income goes toward housing.</p>
           </ReaderDetails>
@@ -227,7 +228,7 @@ export function ForYourHousehold({
                 <dt>
                   <span className="household-kind">{KIND_LABELS[row.kind]}</span> <Glossed text={row.label} />
                   <small className="src">
-                    {[row.asOf, row.note].filter(Boolean).join(" · ")}
+                    <Glossed text={[row.asOf, row.note].filter(Boolean).join(" · ")} />
                   </small>
                 </dt>
                 <dd>

@@ -1,3 +1,4 @@
+import { Glossed } from "@/components/Glossed";
 import type { PacketLevel, WaterSystems } from "@/lib/api";
 import { NJDEP_NOTICE } from "@/lib/notices";
 import { ReaderDetails } from "@/components/ReaderDetails";
@@ -99,7 +100,7 @@ export function GroundAndWater({
               {(s.pfas_samples?.length ?? 0) > 0 ? <>
                 <p className="sales-note">UCMR 5 entry-point samples, not current tap-water testing. Highest single measurements—not regulatory averages or violations.</p>
                 <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally"><table className="change-places">
-                  <caption>Measured PFAS · ng/L (parts per trillion)</caption>
+                  <caption><Glossed text="Measured PFAS · ng/L (parts per trillion)" /></caption>
                   <thead><tr><th scope="col">Chemical</th><th scope="col">Results</th><th scope="col">Sample dates</th><th scope="col">EPA reference</th></tr></thead>
                   <tbody>{s.pfas_samples!.map((r) => <tr key={r.record_id}>
                     <th scope="row">{r.payload.contaminant}</th>
