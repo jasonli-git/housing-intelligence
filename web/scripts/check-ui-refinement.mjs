@@ -86,7 +86,12 @@ try {
     assert.equal(Number(latest.toFixed(digits)), Number(headline.toFixed(digits)), 'Latest plotted observation matches its headline');
   }
   assert.equal(await prices.getByRole('link', { name: 'FHFA HPI®', exact: true }).getAttribute('href'), 'https://www.fhfa.gov/data/hpi/datasets?tab=monthly-data');
-  assert.equal(await page.locator('.publisher-notice p').filter({ hasText: 'This product uses FHFA data but is neither endorsed nor certified by FHFA.' }).count(), 1, 'Required FHFA notice displayed once');
+  // Since #386 the footer keeps three notices; FHFA's, with every other, is on /sources.
+  const sourcesPage = await context.newPage();
+  await sourcesPage.goto(origin + '/sources');
+  assert.equal(await sourcesPage.locator('.source-notice').filter({ hasText: 'This product uses FHFA data but is neither endorsed nor certified by FHFA.' }).count(), 1, 'Required FHFA notice on /sources once');
+  await sourcesPage.close();
+  assert.equal(await page.locator('.publisher-notice-more a[href="/sources"]').count(), 1, 'Footer links every notice');
   const image = await page.locator('meta[property="og:image"]').getAttribute('content');
   assert.equal(image, 'https://housing.jasonli.app/housing-preview.png');
   for (const path of ['/housing-preview.png', '/og-image.png', '/apple-icon.png', '/icon.svg', '/favicon.ico']) {

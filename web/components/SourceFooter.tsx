@@ -4,6 +4,7 @@ import { BuiltAgo } from "@/components/BuiltAgo";
 import { api } from "@/lib/api";
 import { dayLabel } from "@/lib/freshness";
 import { CONTACT_EMAIL, REPO_URL } from "@/lib/site";
+import { FOOTER_NOTICE_SOURCES } from "@/lib/notices";
 import { byInstitution, isRestricted, shortPublisher } from "@/lib/sources";
 
 const NOTICE_URL = `${REPO_URL}/blob/main/NOTICE`;
@@ -55,7 +56,18 @@ export async function SourceFooter() {
   // `hip_derived` is the platform's own computed metrics, not a third party to credit.
   const external = sources.filter((s) => s.source_id !== "hip_derived");
   const institutions = byInstitution(external);
-  const notices = [...new Set(external.flatMap((s) => s.notices ?? []))];
+  // Three notices on every page (ARCHITECTURE #386): Zillow's citation, which its terms
+  // require on each page showing its data, and the Census and FRED API notices, which
+  // theirs ask for "prominently". FRED's own series citation and every other notice are on
+  // /sources; NJDEP's also sits on the exhibits drawn from its data.
+  const footerSources = new Set<string>(FOOTER_NOTICE_SOURCES);
+  const notices = [
+    ...new Set(
+      external
+        .filter((s) => footerSources.has(s.source_id))
+        .flatMap((s) => (s.source_id === "fred" ? (s.notices ?? []).filter((n) => n.includes("FRED® API")) : s.notices ?? [])),
+    ),
+  ];
 
   return (
     <footer className="foot" aria-labelledby="sources-heading">
@@ -70,6 +82,9 @@ export async function SourceFooter() {
                 <p>{linked(notice)}</p>
               </div>
             ))}
+            <p className="publisher-notice-more">
+              <Link href="/sources">Every source&rsquo;s terms and notices <span aria-hidden="true">→</span></Link>
+            </p>
           </div>
         )}
 

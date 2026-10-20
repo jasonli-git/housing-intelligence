@@ -1,4 +1,5 @@
 import type { PacketLevel, WaterSystems } from "@/lib/api";
+import { NJDEP_NOTICE } from "@/lib/notices";
 import { ReaderDetails } from "@/components/ReaderDetails";
 import { formatValue } from "@/lib/format";
 import { shareText, systemReportUrl } from "@/lib/hazards";
@@ -143,6 +144,7 @@ export function GroundAndWater({
         from the 2020 Census.
       </p>
       </ReaderDetails>
+      <p className="sales-note publisher-notice-inline">{NJDEP_NOTICE}</p>
     </section>
   );
 }
