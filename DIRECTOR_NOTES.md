@@ -561,3 +561,55 @@ Reviewed with the owner on 2026-10-19.
   decides it, and a second state is the scale that would.
 - *Utilities and drinking water*, point 1 — answers for a property's own address, gated
   on NJOGIS's address-point terms and a lawyer's read of Daniel's Law.
+
+---
+
+## Parity with Zillow's home page
+
+**Status:** Exploratory — not approved for implementation
+**Recorded:** 2026-10-20
+
+The owner compared the site with Zillow, including Zillow's page for their own home. The
+aim is not to replace Zillow, an institution built on agents' listings, but to reach
+parity wherever that's free and legally possible.
+
+### Where the site is ahead
+
+Real recorded sale prices, the actual tax bill and a full monthly cost, and risk and
+environment (flood, water, PFAS, lead lines). Also utilities and broadband, housing help,
+cheaper alternatives, and a stated source, date and margin of error for every figure. No
+ads and no tracking.
+
+### Gaps that cannot close
+
+- **Listings:** homes for sale and rent, photos, listing events. They belong to agents and
+  the portals' terms forbid reuse (ARCHITECTURE, "Never").
+- **Beds, baths, heating and parking:** listing data, not in public records.
+- **Cash offers, agents and lenders:** commercial (ARCHITECTURE #323).
+
+### Possible directions, roughly in priority order
+
+1. **Make the tax lookup a fuller home page,** from data already loaded: lot size, a link
+   to the cost of owning this home (the guide pre-filled with its likely value and actual
+   tax bill), the town's rent for its size, and links to the town's flood, water and
+   schools sections.
+2. **Keep a tax history** by saving every year's parcel file instead of replacing it. Next
+   file: about February 2027.
+3. **A New Jersey housing-protections card.** Source-of-income protection is statewide
+   under the Law Against Discrimination.
+4. **ZIP-level market speed** where Zillow Research publishes it. Already in TODO as
+   "Zillow's other datasets".
+5. **Saved places in the browser,** beside the compare page (already in TODO).
+6. **A labelled value trend for a home,** modelled from its assessment and the town's
+   index. It would need principle 11's labelling.
+7. **A home's own sale history and nearby comparable sales,** joining the deed file to
+   parcels without names. **Gated on the Daniel's Law decision** (TODO).
+8. **Heat risk** from free federal data, and **walkability** (EPA's index, named in ROADMAP
+   for Milestone 45).
+
+### Open question
+
+Realtor.com publishes county and ZIP inventory, days on market and price cuts, but only
+with Move's written permission. Whether to ask is the owner's call.
+
+Do not implement yet. Each item is promoted to TODO only when the owner decides to do it.
