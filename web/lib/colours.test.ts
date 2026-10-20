@@ -29,11 +29,13 @@ function files(dir: string): string[] {
 }
 
 /**
- * Hex colours. In CSS a short `#fff` counts where a value starts (after a space, colon,
- * bracket or comma); in TSX only six- and eight-digit ones, since `href="#add"` is not a
- * colour.
+ * Hex colours, outside comments. In CSS a short `#fff` counts where a value starts (after
+ * a space, colon, bracket or comma); in TSX only six- and eight-digit ones, since
+ * `href="#add"` is not a colour.
  */
 function hexes(path: string, text: string): string[] {
+  // Comments cite decisions as "#122", which is not a colour.
+  text = text.replace(/\/\*[\s\S]*?\*\//g, "");
   const pattern = path.endsWith(".css")
     ? /(?<=[\s:(,])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![-\w])/g
     : /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6})(?![-\w])/g;

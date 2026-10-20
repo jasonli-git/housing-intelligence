@@ -209,8 +209,8 @@ Not open work: each comes round on a date. The steps live where the row says.
       first use per page. A check fails on inline definition text, and on a dictionary
       term that shows on a page without its pop-up.
 - [ ] **Bring the remaining one-off colours behind tokens.** (owner, 2026-10-10; #383,
-      #384) Kinds are tokens and a test now stops new hard-coded colours. 1,174 remain in
-      35 files, frozen in `web/lib/colourBaseline.json`; the largest are
+      #384) Kinds are tokens and a test now stops new hard-coded colours. 1,148 remain in
+      34 files, frozen in `web/lib/colourBaseline.json`; the largest are
       `horizon-theme.css` (187), the atlas (87 + 81) and `state-exhibits.css` (83). Take
       them file by file when a file is touched for other work, lowering the baseline.
 - [ ] **A compare page shared by its link.** (owner, 2026-10-09, from an outside
