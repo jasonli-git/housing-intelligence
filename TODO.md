@@ -208,11 +208,11 @@ Not open work: each comes round on a date. The steps live where the row says.
       term and metric is defined once and marked automatically wherever it appears,
       first use per page. A check fails on inline definition text, and on a dictionary
       term that shows on a page without its pop-up.
-- [ ] **One colour definition per kind of place and tool — the check and the rest.**
-      (owner, 2026-10-10) The kinds are defined once in `web/app/kinds.css` (#383). Left:
-      a check that fails on a hard-coded colour outside the token files, and moving the
-      remaining one-off colours behind tokens, so each new link or card needs no
-      spot-check.
+- [ ] **Bring the remaining one-off colours behind tokens.** (owner, 2026-10-10; #383,
+      #384) Kinds are tokens and a test now stops new hard-coded colours. 1,174 remain in
+      35 files, frozen in `web/lib/colourBaseline.json`; the largest are
+      `horizon-theme.css` (187), the atlas (87 + 81) and `state-exhibits.css` (83). Take
+      them file by file when a file is touched for other work, lowering the baseline.
 - [ ] **A pass on monospace capitals across the site.** (owner, 2026-10-10) Breadcrumbs,
       the "Computed from the data · Not AI" badge, the bar's links and section labels
       (`HOUSING, AT A GLANCE`) are set in spaced monospace capitals on every page. The home
