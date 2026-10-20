@@ -36,18 +36,21 @@ Read [SPEC.md](SPEC.md) for what the platform is meant to do and why, and
 
 ## Screenshots
 
-> **Work in progress — the screenshots have been removed for now.**
->
-> All eight predated the "Quiet utility" redesign of 2026-09-17 and Milestones 18, 23
-> and 16, so they showed pages the site no longer has. Rather than leave pictures that
-> misrepresent the product, the section is empty until they are retaken.
->
-> Retaking them is a manual step with tooling that now exists:
-> `npm run screenshot:poc` in `web/` captures a page headlessly at a given viewport.
-> See [`agent-handoffs/screenshot-automation.md`](agent-handoffs/screenshot-automation.md)
-> for why capture is not automated per push, and `TODO.md` for the open item.
->
-> Until then, the live site is the current view of the product.
+Taken from the build each deploy ships, so they always show the live site — including
+the Friday automatic deploy (ARCHITECTURE #175, #393). Each opens the page it shows.
+
+| | |
+|---|---|
+| <a href="https://housing.jasonli.app/"><img src="https://housing-data.jasonli.app/screenshots/home-desktop.png" alt="Home page" width="420"></a><br>**Home** — search any place, or start from a tool | <a href="https://housing.jasonli.app/states/new-jersey"><img src="https://housing-data.jasonli.app/screenshots/new-jersey-desktop.png" alt="New Jersey page" width="420"></a><br>**New Jersey** — the state, its 21 counties |
+| <a href="https://housing.jasonli.app/nj/mercer-county"><img src="https://housing-data.jasonli.app/screenshots/county-desktop.png" alt="Mercer County page" width="420"></a><br>**A county** — costs, the towns, about the place | <a href="https://housing.jasonli.app/nj/princeton"><img src="https://housing-data.jasonli.app/screenshots/town-desktop.png" alt="Princeton page" width="420"></a><br>**A town** — with cheaper alternatives |
+| <a href="https://housing.jasonli.app/afford"><img src="https://housing-data.jasonli.app/screenshots/budget-explorer-desktop.png" alt="Budget explorer" width="420"></a><br>**Budget explorer** — where can I afford? | <a href="https://housing.jasonli.app/guide"><img src="https://housing-data.jasonli.app/screenshots/buyers-guide-desktop.png" alt="Buyer’s guide" width="420"></a><br>**Buyer’s guide** — thinking of buying here? |
+| <a href="https://housing.jasonli.app/tax"><img src="https://housing-data.jasonli.app/screenshots/tax-lookup-desktop.png" alt="Property tax lookup" width="420"></a><br>**Property tax lookup** — any address’s bill | <a href="https://housing.jasonli.app/atlas"><img src="https://housing-data.jasonli.app/screenshots/atlas-desktop.png" alt="Housing atlas" width="420"></a><br>**Housing atlas** — every measure on a map |
+
+On a phone:
+
+| | | | |
+|---|---|---|---|
+| <a href="https://housing.jasonli.app/"><img src="https://housing-data.jasonli.app/screenshots/home-mobile.png" alt="Home page on a phone" width="180"></a> | <a href="https://housing.jasonli.app/nj/mercer-county"><img src="https://housing-data.jasonli.app/screenshots/county-mobile.png" alt="Mercer County on a phone" width="180"></a> | <a href="https://housing.jasonli.app/nj/princeton"><img src="https://housing-data.jasonli.app/screenshots/town-mobile.png" alt="Princeton on a phone" width="180"></a> | <a href="https://housing.jasonli.app/afford"><img src="https://housing-data.jasonli.app/screenshots/budget-explorer-mobile.png" alt="Budget explorer on a phone" width="180"></a> |
 
 ## Features
 

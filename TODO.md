@@ -188,7 +188,7 @@ Not open work: each comes round on a date. The steps live where the row says.
 - [ ] **Accessibility checks the audit script cannot make.** (M43, #309) True 200%
       text and 400% zoom, print in Safari and Firefox, and axe's remaining needs-review
       results. The handoff (`m43-accessibility-audit.md`) lists each.
-- [ ] **The home page's illustration loops with no pause control.** (M43, #309) Removed
+- [ ] **The home page's illustration loops with no pause control — kept so by the owner (2026-10-20).** Offered playing each loop once or restoring a pause button; the owner chose to leave the loops as they are. (M43, #309) Removed
       at the owner's request on 2026-10-05; WCAG 2.2.2 asks for one on anything that
       moves for more than five seconds. Reduced motion stops it. The New Jersey header
       artwork added 2026-10-06 (#311) loops the same way, as do the home page's atlas outlines and
@@ -230,14 +230,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       Chromium only.** (M18) A browser without it prints the licence label alone and the
       footer's institutions without their datasets. Check Safari and Firefox print
       previews before relying on it.
-- [ ] **The README has no screenshots.** (Quiet utility) The eight it had predated the
-      redesign and Milestone 23 and were removed; the section says so. Codex's
-      2026-09-19 investigation (`agent-handoffs/screenshot-automation.md`) built a
-      working capture command, `npm run screenshot:poc`, and recommended against
-      automating it per push — retaking them is a manual step with tooling that exists.
-      **Still blocked:** Milestone 27 chose this Mac on 2026-09-25, and only a runner
-      off it unblocks automation (ARCHITECTURE #175).
-
 - [ ] **The site does not say which questions it declines.** (M27 completeness run)
       ROADMAP decided on 2026-09-13 not to forecast prices or give investment advice,
       but no page tells a reader, so the check counts those two of its 20 questions as

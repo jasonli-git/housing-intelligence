@@ -2,7 +2,7 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help check-terms setup setup-eval venv-fix hooks rollback data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
+.PHONY: help check-terms screenshots setup setup-eval venv-fix hooks rollback data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
         check-dist check-live clean-dist deploy api web \
         test test-all test-py test-web lint format check-config dbt-debug eval clean
 
@@ -255,7 +255,14 @@ check-terms: check-dist  ## Fail if a glossary word's first use on a page has no
 	  pid=$$!; sleep 1; TERMS_ORIGIN=http://localhost:3005 node scripts/check-terms.mjs; status=$$?; \
 	  kill $$pid; exit $$status; }
 
-deploy: check-dist check-terms  ## Upload artifacts to R2 and the site to Pages
+screenshots: check-dist  ## Capture the README's screenshots from dist/site into dist/artifacts (#393)
+	@# From the tree about to ship, so the README always shows the deployed site. The
+	@# images go up with the artifacts and are never committed (ARCHITECTURE #175).
+	@cd web && { A11Y_ROOT=../dist/site A11Y_PORT=3006 node scripts/serve-accessibility.mjs > /dev/null & \
+	  pid=$$!; sleep 1; SCREENSHOT_ORIGIN=http://localhost:3006 node scripts/capture-readme.mjs; status=$$?; \
+	  kill $$pid; exit $$status; }
+
+deploy: check-dist check-terms screenshots  ## Upload artifacts to R2 and the site to Pages
 	@# Keep a way back (#359): the private backup bucket is emptied, then given the list of
 	@# keys live now and, through `--backup-dir`, every file this sync replaces or deletes.
 	@# `make rollback` restores from it. Refuses up front if the bucket is unreachable,
