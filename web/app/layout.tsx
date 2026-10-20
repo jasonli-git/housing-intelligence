@@ -29,6 +29,7 @@ import "./housing-mosaic.css";
 import "./state-exhibits.css";
 import "./county-cabinet.css";
 import "./site-chrome.css";
+import "./labels.css";
 
 // Self-hosted at build time: next/font downloads each face once and serves it from this
 // site, so a reader's browser never asks Google for anything (ARCHITECTURE #121).
