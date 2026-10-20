@@ -31,7 +31,7 @@ from __future__ import annotations
 import hashlib
 import json
 import warnings
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -40,7 +40,7 @@ from pathlib import Path
 from sqlalchemy import text
 
 from hip.api.main import app
-from hip.config import get_settings
+from hip.config import fips_for, get_settings, load_geography
 from hip.parcels import export as export_parcels
 from hip.removals import check_not_shrunk as check_removals_not_shrunk
 from hip.removals import read as read_removals
@@ -194,12 +194,17 @@ def _plan(
     region_ids: list[int],
     keys: list[tuple[str, str, str, str]],
     geoids: Mapping[str, str] | None = None,
+    *,
+    states: Sequence[str] = (),
+    legacy_geo_state: str | None = None,
 ) -> Iterator[tuple[str, str]]:
     """Yield (api_path, output_path) pairs. Pure, so the layout is testable alone.
 
     `geoids` (region id as text → geoid) names each region's CSV download: a browser
     ignores a link's `download` name for a file on another origin, which the artifacts
-    are, so the saved file keeps the name the path gives it."""
+    are, so the saved file keeps the name the path gives it. `states` is explicit scope;
+    `legacy_geo_state` pins the owner of old unscoped geometry URLs across expansions.
+    """
     yield "/health", "health.json"
     yield "/metrics", "metrics.json"
     # The attribution the site footer renders. Static like everything else, so the terms
@@ -212,8 +217,19 @@ def _plan(
     yield "/freshness", "freshness.json"
     yield "/revisions", "revisions.json"
 
-    for level in ("state", "county", "municipality", "zip"):
-        yield f"/geo/{level}?state=NJ", f"geo/{level}.json"
+    scoped_states = sorted({state.upper() for state in states})
+    for state in scoped_states:
+        fips_for(state)  # Refuse invalid scope codes before producing paths.
+        for level in ("state", "county", "municipality", "zip"):
+            yield f"/geo/{level}?state={state}", f"geo/{state}/{level}.json"
+    # The compatibility owner is explicit configuration, never the first state or
+    # the only state in today's scope. NJ's existing URLs survive expansion unchanged.
+    if legacy_geo_state:
+        legacy_geo_state = legacy_geo_state.upper()
+        if legacy_geo_state not in scoped_states:
+            raise ValueError("legacy_geo_state must belong to the published state scope")
+        for level in ("state", "county", "municipality", "zip"):
+            yield f"/geo/{level}?state={legacy_geo_state}", f"geo/{level}.json"
     # The map's context layer — every state's outline, no data attached. Not a level,
     # so it sits beside them rather than in the loop (migration 0012).
     yield "/geo/backdrop", "geo/backdrop.json"
@@ -374,6 +390,7 @@ def publish(root: Path) -> Result:
     _check_region_identity(root, geoids)
 
     result = Result(root=root, region_geoids=geoids)
+    scope = load_geography()
     # Imported here, not at the top: every `hip` command loads this module, and
     # Starlette's TestClient warns on import that it wants `httpx2`. Only publishing
     # uses it, so only publishing sees the warning, and it is silenced (TODO, M0).
@@ -405,7 +422,14 @@ def publish(root: Path) -> Result:
         # same as a serial run's. An error in any request is raised here, at its turn.
         with ThreadPoolExecutor(max_workers=PUBLISH_WORKERS) as pool:
             for api_path, out_path, payload in pool.map(
-                render, _plan(region_ids, keys, geoids)
+                render,
+                _plan(
+                    region_ids,
+                    keys,
+                    geoids,
+                    states=scope.states,
+                    legacy_geo_state=scope.legacy_geo_state,
+                ),
             ):
                 if payload is None:
                     result.skipped.append(api_path)

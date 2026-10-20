@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from hip.config import GeographyScope
+from sqlalchemy import create_engine, text
+
+from hip.config import ConfigError, GeographyScope, fips_for, get_settings
 from hip.sources.base import SourceAdapter, read_discovery
 from hip.sources.bls import BlsAdapter
 from hip.sources.bts_ntm import TransitStopsAdapter
@@ -209,14 +211,48 @@ METRIC_SOURCES: tuple[str, ...] = (
 )
 
 
-# NJ county FIPS, needed to build BLS series ids. Derived from the state scope rather
-# than hard-coded; counties are 001..041 odd-numbered in New Jersey.
+# County FIPS for BLS and HUD come from the loaded geography spine, not an arithmetic
+# sequence (county/equivalent codes need not be odd or stop at 041). Use a short-lived
+# read connection: sources must not import the later warehouse pipeline stage.
 def _county_fips(scope: GeographyScope) -> list[str]:
-    from hip.config import fips_for
-
-    return [
-        f"{fips_for(state)}{n:03d}" for state in scope.states for n in range(1, 42, 2)
-    ]
+    engine = create_engine(get_settings().database_url)
+    counties: set[str] = set()
+    try:
+        with engine.connect() as conn:
+            for state in scope.states:
+                state = state.upper()
+                prefix = fips_for(state)
+                codes = (
+                    conn.execute(
+                        text(
+                            "SELECT DISTINCT geoid FROM regions "
+                            "WHERE level = 'county' AND state_code = :state "
+                            "ORDER BY geoid"
+                        ),
+                        {"state": state},
+                    )
+                    .scalars()
+                    .all()
+                )
+                if not codes:
+                    raise ConfigError(
+                        f"No county regions loaded for {state}; "
+                        "load its geography spine before BLS/HUD acquisition"
+                    )
+                if any(
+                    len(code) != 5
+                    or not code.isdigit()
+                    or not code.startswith(prefix)
+                    or code[2:] == "000"
+                    for code in codes
+                ):
+                    raise ConfigError(
+                        f"Invalid county GEOID in the geography spine for {state}"
+                    )
+                counties.update(codes)
+    finally:
+        engine.dispose()
+    return sorted(counties)
 
 
 class UnknownSourceError(Exception):

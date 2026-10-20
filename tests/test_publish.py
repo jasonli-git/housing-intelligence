@@ -99,6 +99,25 @@ def test_plan_paths_are_unique() -> None:
     assert len(paths) == len(set(paths))
 
 
+def test_plan_publishes_state_scoped_geometry_and_pinned_compatibility() -> None:
+    pairs = list(_plan([], [], states=["NY", "NJ"], legacy_geo_state="NJ"))
+    for level in ("state", "county", "municipality", "zip"):
+        for state in ("NJ", "NY"):
+            assert (f"/geo/{level}?state={state}", f"geo/{state}/{level}.json") in pairs
+        assert (f"/geo/{level}?state=NJ", f"geo/{level}.json") in pairs
+        assert (f"/geo/{level}?state=NY", f"geo/{level}.json") not in pairs
+    assert len({out for _, out in pairs}) == len(pairs)
+    assert ("/geo/backdrop", "geo/backdrop.json") in pairs
+
+
+def test_plan_does_not_guess_geometry_alias_owner() -> None:
+    assert ("/geo/county?state=NY", "geo/county.json") not in list(
+        _plan([], [], states=["NY"])
+    )
+    with pytest.raises(ValueError, match="legacy_geo_state"):
+        list(_plan([], [], states=["NY"], legacy_geo_state="NJ"))
+
+
 def test_plan_covers_every_published_window() -> None:
     paths = [out for _, out in _plan([11], [])]
     for window in PUBLISHED_WINDOWS:

@@ -738,6 +738,8 @@ def test_the_new_hud_sources_are_registered_as_metric_sources(
     from hip.sources.registry import IMPLEMENTED, METRIC_SOURCES, build_adapter
 
     _hud(monkeypatch)
+    # Registration is a unit check; the geography-spine read is tested separately.
+    monkeypatch.setattr("hip.sources.registry._county_fips", lambda _: ["34001", "34021"])
     scope = load_geography()
     assert isinstance(build_adapter("hud_fmr", scope), HudFmrAdapter)
     assert isinstance(build_adapter("hud_chas", scope), HudChasAdapter)
