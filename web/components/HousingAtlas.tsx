@@ -1,7 +1,7 @@
 "use client";
 
 import { Glossed } from "@/components/Glossed";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { fit, scene, view } from "@/lib/globe";
 import { WORLD_LAND } from "@/lib/worldLand";
@@ -32,7 +32,18 @@ export function HousingAtlas({measures,counties,stateMeasures,states}:{measures:
   const [failed,setFailed]=useState(false);
   const [expanded,setExpanded]=useState(false);
   const [descending,setDescending]=useState(true);
-  const [viewport,setViewport]=useState({scale:1,x:0,y:0});
+  const [viewport,setRawViewport]=useState({scale:1,x:0,y:0});
+  // The drawn map's extent in the 900×1000 frame, before zoom (#399). A dimension the map
+  // fits in stays centred; one it overflows can be panned only until an edge reaches the
+  // frame's, so the map cannot be dragged away from view.
+  const extent=useRef<[number,number,number,number]|null>(null);
+  const bounded=useCallback((v:{scale:number;x:number;y:number})=>{
+    const scale=Math.max(.8,Math.min(6,v.scale)), e=extent.current;
+    if(!e)return {...v,scale};
+    const place=(lo:number,hi:number,offset:number,size:number)=>{const a=scale*lo,b=scale*hi;return b-a<=size?(size-a-b)/2:Math.min(-a,Math.max(size-b,offset));};
+    return {scale,x:place(e[0],e[2],v.x,900),y:place(e[1],e[3],v.y,1000)};
+  },[]);
+  const setViewport=useCallback((next:{scale:number;x:number;y:number}|((current:{scale:number;x:number;y:number})=>{scale:number;x:number;y:number}))=>setRawViewport(current=>bounded(typeof next==="function"?next(current):next)),[bounded]);
   const [panelWidth,setPanelWidth]=useState(370);
   const [moreMeasures,setMoreMeasures]=useState(false);
   const [measureSearch,setMeasureSearch]=useState("");
@@ -118,6 +129,13 @@ export function HousingAtlas({measures,counties,stateMeasures,states}:{measures:
   const countyOutlines=useMemo(()=>unpack(geometry),[geometry]);
   const stateOutlines=contiguous;
   const shapes=useMemo(()=>scene(perspective,level==="county"?countyOutlines:stateOutlines,()=>0),[perspective,level,countyOutlines,stateOutlines]);
+  // The extent the pan is held to: every point of the drawn outlines.
+  useEffect(()=>{
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    for(const shape of shapes){const n=shape.base.match(/-?\d+(?:\.\d+)?/g)??[];for(let i=0;i+1<n.length;i+=2){const x=Number(n[i]),y=Number(n[i+1]);if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;}}
+    extent.current=Number.isFinite(minX)?[minX,minY,maxX,maxY]:null;
+    setRawViewport(current=>bounded(current));
+  },[shapes,bounded]);
   // The low-resolution world silhouette is useful at globe scale, not parcel-close zoom.
   const land=useMemo(()=>level==="county"?[]:scene(perspective,WORLD_LAND,()=>0),[perspective,level]);
   const destinations=level==="county"?counties:stateGeometry.length?stateGeometry.map((outline,index)=>({id:states.find(s=>s.code===outline.id)?.id??-(index+1),name:outline.name,code:String(outline.id)})):states;
