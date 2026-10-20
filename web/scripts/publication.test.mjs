@@ -9,6 +9,9 @@ import {createLegacyRedirect} from './lib/legacy-resolver.mjs';
 test('strict rules reject duplicate, dynamic, rewrite, external and unsafe targets',()=>{
  for(const text of ['/regions/1 / 301\n/regions/1 / 301','/regions/* / 301','/regions/1 / 200','/regions/1 https://evil.test 301','/regions/1 //evil/path 301','/regions/1 /../x 301'])assert.throws(()=>parseRedirects(text));
  assert.equal(parseRedirects('/regions/1 / 301').size,1);
+ // Other addresses are the site's own rules: kept out of the legacy set, never refused.
+ assert.equal(parseRedirects('/old-page /new-page 301\n/blog/* /news/:splat 302\n/regions/1 / 301').size,1);
+ assert.throws(()=>parseRedirects(Array.from({length:2001},(_,i)=>`/page-${i} /x 301`).join('\n')),/limit/);
 });
 test('only sitemap places; local targets checked against pinned registry',()=>{
  const registry={2:{state:'nj',slug:'town',level:'municipality'},3:{state:'nj',slug:'retained',level:'zip'}};

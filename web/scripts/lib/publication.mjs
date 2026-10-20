@@ -2,17 +2,22 @@ import {readFile, readdir, stat} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-// Intentionally exact/static only. Refuse new rule syntax rather than silently
-// treating a wildcard, rewrite, external target or duplicate as equivalent coverage.
+// The legacy `/regions/` rules are intentionally exact/static only: refuse new syntax
+// there rather than silently treating a wildcard, rewrite, external target or duplicate
+// as equivalent coverage. Rules for any other address are the site's own business and
+// pass through untouched; they count only toward Pages' 2,000-rule limit.
 export function parseRedirects(text) {
   const rules=new Map();
+  let total=0;
   for(const line of text.split('\n').map(s=>s.trim()).filter(s=>s&&!s.startsWith('#'))) {
+    total++;
     const parts=line.split(/\s+/),[from,to,status]=parts;
+    if(!from.startsWith('/regions'))continue;
     if(parts.length!==3||!/^\/regions\/[1-9]\d*(?:\/report)?$/.test(from)||!/^\/(?:[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*)?$/.test(to)||status!=='301')throw new Error(`Unsupported legacy rule: ${line}`);
     if(rules.has(from))throw new Error(`Duplicate legacy rule: ${from}`);
     rules.set(from,{from,to,status:301});
   }
-  if(rules.size>2000)throw new Error('Pages static redirect limit exceeded');
+  if(total>2000)throw new Error('Pages static redirect limit exceeded');
   return rules;
 }
 
