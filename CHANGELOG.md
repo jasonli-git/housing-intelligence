@@ -3,6 +3,49 @@
 All notable changes to the Housing Intelligence Platform. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+Publication capacity, merged 2026-10-20 (#201, ARCHITECTURE #400). This section holds
+that change only; other changes merged since 0.50.0 are not yet recorded here.
+
+### Added
+
+- **A build-time check that every legacy numeric address has exactly one path**: each
+  published place's `/regions/<id>` and `/regions/<id>/report`, and the four state and
+  nation addresses, must have either a `_redirects` rule or a fallback page, never both
+  or neither, pointing at an existing canonical page. A duplicate rule, a wildcard,
+  rewrite or external target, or a wrong alias target fails the build
+  (`web/scripts/lib/publication.mjs`).
+- **`npm run build` writes diagnostics to `web/.publication/`** (ignored, outside the
+  deployed `out/`): a per-category file and byte inventory, and a manifest of all 2,370
+  legacy addresses. `npm run publication:inventory`, `:test`, `:capacity`, `:prepare`
+  and `:candidates` regenerate or check them.
+- **Three inactive redirect candidates**, generated and tested locally: a Cloudflare
+  Bulk Redirects CSV, a route Worker and a Pages Function for `/regions/*`. None is
+  wired into deploy and no hosting or account setting changed.
+- **A synthetic second-state capacity test** (`:capacity`): a manifest mirroring New
+  Jersey's 1,183 places, reports and payloads under reserved `/zz/` paths. It is not a
+  rendered state.
+
+### Changed
+
+- **Fallback alias pages are written only where `_redirects` has no rule**, because
+  Cloudflare Pages follows a redirect even when a file matches. 1,768 of 2,366 aliases
+  were removed: the export is 14,947 files (16,715 by the same build with every alias),
+  with 598 ZIP-report aliases and 1,772 rules left. ZIP pages, reports and Next payloads
+  are unchanged.
+
+### Fixed
+
+- The old-address browser check (`check-readable-urls.mjs`) looked for a report link
+  class the place page no longer has; it now uses `a.eyebrow-report`.
+
+### Not included
+
+- Room for a second state. The synthetic one is 28,551 files with no aliases, over the
+  20,000-file Pages Free cap, and no capacity route is chosen (TODO.md, Frontend and
+  presentation).
+
 ## [0.50.0] — 2026-10-08
 
 Milestone 52: historical persistence facts; and the changes merged since 0.49.0.
