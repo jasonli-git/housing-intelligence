@@ -9,7 +9,7 @@ try {
     const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto('http://localhost:3002/atlas');
     await page.locator('[data-state="NJ"]').waitFor();await page.waitForTimeout(450);
-    const radius=()=>page.locator('.atlas-globe-ocean').getAttribute('r').then(Number);
+    const radius=()=>page.locator('.atlas-map-geography').getAttribute('transform').then(t=>Number(/scale\(([\d.]+)\)/.exec(t)[1]));
     const start=await radius();await page.getByRole('button',{name:'Zoom in',exact:true}).click();
     await page.waitForTimeout(100);const middle=await radius();assert(middle>start&&middle<start*1.25,'Zoom should have a genuine intermediate frame');
     await page.getByRole('button',{name:'Zoom in',exact:true}).click();

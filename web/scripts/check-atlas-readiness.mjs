@@ -14,9 +14,9 @@ try {
   assert((await page.locator('.atlas-control-footer .atlas-coverage').textContent()).includes('other states: outlines'));
   assert(!requests.some(url=>url.endsWith('/atlas/counties.json')),'County boundaries deferred on state view');
   const map=page.locator('.atlas-county-map');const box=await map.boundingBox();
-  const before=await page.locator('.atlas-map-geography').getAttribute('data-rotation');
+  const before=await page.locator('.atlas-map-geography').getAttribute('transform');
   await page.mouse.move(box.x+box.width*.45,box.y+box.height*.6);await page.mouse.down();await page.mouse.move(box.x+box.width*.55,box.y+box.height*.6,{steps:5});await page.mouse.up();
-  assert.notEqual(await page.locator('.atlas-map-geography').getAttribute('data-rotation'),before,'Direct map dragging changes the view');
+  assert.notEqual(await page.locator('.atlas-map-geography').getAttribute('transform'),before,'Direct map dragging changes the view');
   if(width<=900)await page.getByRole('button',{name:'Compare states',exact:true}).click();
   await page.getByRole('button',{name:'Select Pennsylvania',exact:true}).click();
   assert((await page.locator('.atlas-outline-status').textContent()).includes('Boundary only'));
