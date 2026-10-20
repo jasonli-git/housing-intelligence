@@ -6,7 +6,7 @@
 - The source registry derives BLS/HUD county FIPS from loaded county regions for every scoped state. It no longer fabricates NJ's odd-numbered 001–041 sequence. Empty state inventories and malformed/wrong-state county identities fail loudly.
 - Geometry publishes to `geo/{STATE}/{level}.json` for every configured state, with uppercase postal codes. The four old `geo/{level}.json` paths retain their explicit owner, configured as `scope.legacy_geo_state: NJ`; this remains NJ even in a two-state scope. A legacy owner outside scope is refused. Backdrop stays nationwide and unchanged.
 - `api.geo(level, state, simplify?)` requires an explicit state. Its sole production caller, the Atlas county geometry route, explicitly passes NJ per Decision #398.
-- Additional small/local structural fixes were listed to the owner before implementation: replace the one-state scope-name vocabulary with all US state/territory labels; remove NJ defaults from StateContextExhibits and StateBroadband; remove the Atlas state metadata's redundant `state_code ?? "NJ"` fallback (the API requires a state code). The NJ page passes its name explicitly, preserving its content and its county Atlas scope.
+- Additional small/local structural fixes were listed to the owner before implementation: replace the one-state scope-name vocabulary with all US state/territory labels; require an explicit name in StateContextExhibits and StateBroadband rather than defaulting to NJ or "This state"; remove the Atlas state metadata's redundant `state_code ?? "NJ"` fallback (the API requires a state code). Existing production callers already pass their names explicitly, preserving their content and NJ's county Atlas scope. Tests now supply names and check both New York missing-data copy and New Jersey's broadband aria-label.
 - Larger assumptions were inventoried, not repaired. This is not a claim that adding a state to config alone now yields complete data, pages or tools.
 - No ingestion, migration, deployment, hosting/account changes, pinned-address or legacy-redirect changes. Only authorized new Decision #401 added to ARCHITECTURE; older rows and TODO untouched.
 
@@ -33,6 +33,7 @@
 - Scope's geography spine has been loaded before BLS/HUD acquisition. A missing county inventory is an error, not a guessed list.
 - No new state's source coverage or legal/cost rules are assumed. A state-name label is vocabulary, not an availability announcement.
 - A byte diff distinguishes raw identity from visible-text equivalence. Build timestamps/IDs and changed compiled bundles must be reported as differences, never silently called byte-identical.
+- Owner clarification on 2026-10-20: byte identity is the acceptance standard for published artifacts, with the documented metadata and additive geometry differences below; matching page/report text is the standard for HTML/RSC. Routine rebuild differences are accepted. No deterministic-HTML change is needed or requested.
 
 ## New TODOs / limitations
 
@@ -67,12 +68,13 @@ The inventory table gives matching file:line references. Additional assumptions 
 - Targeted Python tests: 25 passed, four slow deselected (the full suite is separately required below).
 - `make test-all`: 1,251 Python tests passed, one skipped; 700 frontend tests / 114 files passed. **Ran `tests/test_analytics.py` against the live local warehouse, including both transactional rebuilds**, with the publication API stopped. Skip identified separately with `-rs`: `test_a_region_with_no_known_margin_cannot_be_placed` has no case because every current rent observation carries a margin. No new state was ingested.
 - Separate final `npm test`: 700 passed; `npx tsc --noEmit`: passed; `npm run publication:test`: five passed. These were repeated after the final frontend default/fallback changes.
+- Review follow-up on 2026-10-20: after making both component names required and updating their fixtures, `npm test` passed all 700 tests / 114 files and `npx tsc --noEmit` passed. No new publication rebuild was needed: all production callers already supply the same names, so this follow-up changes the prop contract and test coverage, not rendered production text.
 - Ruff passed for affected Python files; mypy passed for registry/publisher. Direct live NJ county derivation matched the old 21-code list exactly. Initial new test fixtures (fetch timers/reused Response/type signature and default text expectations) were corrected before the successful runs.
 - Final affected-unit rerun: 74 passed, four slow deselected. The existing HUD registration unit test now stubs county lookup so it does not accidentally require a live database; the derivation itself has separate isolated tests.
 - After `make publish` passed: 19,229 artifact files (19,140 manifest artifacts plus metadata/photos), 14,947 site files. `make check-dist` passed. `check-live` expectations were inspected; the remote check was not run, because no deployment was authorized and the live manifest is intentionally still the previous one.
 - Raw comparison command: `uv run python scripts/compare_state_publication.py /private/tmp/hip-state-before-xwJ6g4/dist dist --output /private/tmp/hip-state-publication-diff.json`. All paths and changed-file lists remain in that local JSON. The script does **not** normalize bytes before counting them; the HTML main-text check is separately labelled, not a byte-identity claim.
 
-### Before/after publication results and the raw-byte limitation
+### Before/after publication results and accepted rebuild differences
 
 | Tree | Before | After | Same-path byte-identical | Changed same-path files |
 |---|---:|---:|---:|---|
@@ -85,7 +87,7 @@ The inventory table gives matching file:line references. Additional assumptions 
 - Site added three Next manifests under a new build-ID directory and removed the three manifests under the old ID. All 598 fallback aliases, `_redirects`, pinned `place-routes.json`, Atlas `atlas/counties.json`, other JSON and shared content-hashed assets remain byte-identical.
 - **Strict raw-byte identity of unchanged-layout HTML/RSC was not achieved.** Existing build clocks, Next build IDs and streaming serialization are nondeterministic. The footer's build time moved from `2026-10-20T20:46:00.279Z` to `2026-10-20T21:02:55.335Z`; the Next ID moved from `_kvXsp0Wws-Wp5bAN5mnK` to `zIbbqQRvTckURrsjLXu8N`. Live freshness/revision fetches during the page build also carry their own later generated timestamps.
 - Clock/ID replacement alone does not explain every raw serialization difference. Inspected examples show identical Flight import records arriving in different order (`_not-found.txt`, `nj/aberdeen.txt`) and identical Atlas window objects emitted in different key order (`atlas.txt`). No claim is made that every RSC record was independently semantically normalized. **All 2,380 HTML main-text comparisons matched**, separately from the raw counts; no price, figure, page/report text or URL change was observed.
-- A deterministic clock/build-ID/Flight-output refactor would be separate work if literal HTML/RSC byte identity is required as a merge gate. It was not silently added to this bounded state-parameterization task. Data-byte and existing-geometry compatibility checks passed; raw site-byte equality must not be reported as passed.
+- The owner accepted these routine rebuild differences on 2026-10-20: the published-artifact compatibility checks passed, and all page/report main-text comparisons matched. This satisfies the intended publication acceptance standard; raw HTML/RSC byte equality is not required or claimed. No deterministic clock/build-ID/Flight-output refactor was made or is needed for this PR.
 - `git diff --check` passed. No deploy, account change, new-state ingestion or pinned-address/legacy-rule modification occurred.
 
 ## Exhaustive scoped token inventory
