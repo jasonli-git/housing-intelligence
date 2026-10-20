@@ -16,7 +16,8 @@
     "check:a11y:interactions": "node scripts/check-accessibility-interactions.mjs",
     "check:ui-refinement": "node scripts/check-ui-refinement.mjs",
     "check:a11y:serve": "node scripts/serve-accessibility.mjs",
-    "colours:baseline": "UPDATE_COLOUR_BASELINE=1 vitest run lib/colours.test.ts"
+    "colours:baseline": "UPDATE_COLOUR_BASELINE=1 vitest run lib/colours.test.ts",
+    "check:terms": "node scripts/check-terms.mjs"
   },
   "dependencies": {
     "next": "^16.3.0",

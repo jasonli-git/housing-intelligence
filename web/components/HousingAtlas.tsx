@@ -1,5 +1,6 @@
 "use client";
 
+import { Glossed } from "@/components/Glossed";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { scene, view } from "@/lib/globe";
@@ -211,7 +212,7 @@ export function HousingAtlas({measures,counties,stateMeasures,states}:{measures:
         <div className="atlas-reading"><b>{FRIENDLY[measure.metric_id]??measure.label}</b><span>{mode==="latest"?"Latest figure":"Percentage change"} · {dateLabel}</span><p className="atlas-how-to-read">{measure.definition}</p></div>
         {level==="county"&&<div className="atlas-county-finder"><label>Find a county<input type="search" value={countySearch} onChange={e=>setCountySearch(e.target.value)} placeholder="County name"/></label>{countySearch&&<small role="status">{visibleRows.length} matching {visibleRows.length===1?"county":"counties"} · map still shows all counties</small>}</div>}
 <div className="atlas-table-wrap" ref={table} id="atlas-table" tabIndex={0} role="region" aria-label={`${level==="county"?"County":"State"} comparison table, scroll for all places`}><table><thead><tr><th scope="col">{level==="county"?"County":"State"}</th><th scope="col"><button type="button" onClick={()=>setDescending(!descending)} aria-label={`Sort figures ${descending?"low to high":"high to low"}`}>Figure {descending?"↓":"↑"}</button></th></tr></thead><tbody>{visibleRows.map(({county,value})=><tr key={county.id} data-county-row={county.id} data-selected={selected===county.id} data-pinned={pinned===county.id}><th scope="row"><button type="button" aria-label={`Select ${county.name}`} aria-pressed={selected===county.id} onClick={()=>select(county.id)}>{county.name.replace(/ County$/,"")}</button></th><td>{format(value)}{margin(county.id)&&<small>{margin(county.id)}</small>}{mode==="latest"&&dates.length>1&&<small>{measure.latest.periods[county.id]?periodLabel(measure.latest.periods[county.id],metric):""}</small>}</td></tr>)}</tbody></table></div>
-        <details className="atlas-notes"><summary>About this measure & sources</summary><p>{measure.definition}</p>{measure.sourceUrl?<a href={measure.sourceUrl} target="_blank" rel="noreferrer">{measure.source} ↗</a>:<p>{measure.source}</p>}<p>{MARGIN_NOTE}</p>{mode!=="latest"&&windowNote(mode,metric,measure.windows).map(note=><p key={note}>{note}</p>)}<p>The linear scale resets with each measure and period. Hatched areas have no figure; unavailable periods are disabled. Area figures do not describe an individual property.</p></details>
+        <details className="atlas-notes"><summary>About this measure & sources</summary><p>{measure.definition}</p>{measure.sourceUrl?<a href={measure.sourceUrl} target="_blank" rel="noreferrer">{measure.source} ↗</a>:<p>{measure.source}</p>}<p><Glossed text={MARGIN_NOTE} /></p>{mode!=="latest"&&windowNote(mode,metric,measure.windows).map(note=><p key={note}>{note}</p>)}<p>The linear scale resets with each measure and period. Hatched areas have no figure; unavailable periods are disabled. Area figures do not describe an individual property.</p></details>
       </aside>
     </div>
   </section>;

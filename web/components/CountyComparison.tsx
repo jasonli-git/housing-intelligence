@@ -1,5 +1,6 @@
 "use client";
 
+import { Glossed } from "@/components/Glossed";
 import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
@@ -57,7 +58,7 @@ export function CountyComparison({ sections, initial, embedded = false, onWindow
         </table>
       </div>
       {rows.length === 0 && <p>No county figures for this window.</p>}
-      {rows.some(row => row.latestMargin != null || row.changeMargin != null) && <p className="meta">{MARGIN_NOTE}</p>}
+      {rows.some(row => row.latestMargin != null || row.changeMargin != null) && <p className="meta"><Glossed text={MARGIN_NOTE} /></p>}
     </div>
   </Container>;
 }

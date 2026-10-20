@@ -843,6 +843,20 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     title: "AI-written interpretation",
     what: "Interpretation of area figures, not a measurement or advice.",
   },
+  "cost-gone": {
+    title: "Money gone each month",
+    what:
+      "The part of a month of owning that does not come back: interest, tax, insurance, " +
+      "mortgage insurance, utilities, upkeep and any fees. The rest, principal, pays the " +
+      "loan down and stays the owner’s as equity. These are the first month’s figures: " +
+      "each month after, a little more of the payment is principal.",
+  },
+  "cost-income": {
+    title: "Income to keep it at 30% of pay",
+    what:
+      "The yearly household income, before tax, at which a month’s cost is 30% of a month’s " +
+      "pay — HUD’s line for cost burden. It is the monthly cost × 12 ÷ 0.3.",
+  },
   "fhfa-us-annual-change": {
     title: "Annual change · Single-family homes",
     what: "Calculated from FHFA’s national purchase-only house price index: the latest published month compared with the same month a year earlier. Seasonally adjusted, not adjusted for inflation. Covers homes financed with mortgages bought or securitized by Fannie Mae or Freddie Mac—not every home or your home's value. The plot shows annual percentage changes for successive months, not index levels. Historical figures may be revised.",

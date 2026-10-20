@@ -44,7 +44,7 @@ export default async function SourcesPage() {
   return (
     <>
       <Masthead affordability={{ kind: "hidden" }} />
-      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history legal-page sources-page">
+      <main id="main-content" tabIndex={-1} className="shell atlas-page atlas-ledger quiet-county quiet-history legal-page sources-page" data-terms="off">
         <header className="page-head">
           <div>
             <Crumbs trail={[{ href: "/", label: "United States" }]} here="Sources and notices" />

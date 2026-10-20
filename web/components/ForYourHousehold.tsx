@@ -1,5 +1,6 @@
 "use client";
 
+import { Glossed } from "@/components/Glossed";
 import { useEffect, useId, useState } from "react";
 
 import type { PacketLevel } from "@/lib/api";
@@ -224,7 +225,7 @@ export function ForYourHousehold({
             {rows.map((row) => (
               <div key={row.key} data-kind={row.kind}>
                 <dt>
-                  <span className="household-kind">{KIND_LABELS[row.kind]}</span> {row.label}
+                  <span className="household-kind">{KIND_LABELS[row.kind]}</span> <Glossed text={row.label} />
                   <small className="src">
                     {[row.asOf, row.note].filter(Boolean).join(" · ")}
                   </small>

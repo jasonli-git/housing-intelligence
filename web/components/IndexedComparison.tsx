@@ -1,3 +1,4 @@
+import { Glossed } from "@/components/Glossed";
 import type { CSSProperties } from "react";
 
 import { indexedComparison, type IndexedInput } from "@/lib/chartInsights";
@@ -84,7 +85,7 @@ export function IndexedComparison({ series }: { series: IndexedInput[] }) {
           );
         })}
       </ul>
-      <p className="chart-method-note">An index compares change, not dollar amounts. Home values describe single-family houses; rent covers all rental types. Income is an ACS five-year estimate updated annually, not a current-month reading.</p>
+      <p className="chart-method-note"><Glossed text="An index compares change, not dollar amounts. Home values describe single-family houses; rent covers all rental types. Income is an ACS five-year estimate updated annually, not a current-month reading." /></p>
     </figure>
   );
 }

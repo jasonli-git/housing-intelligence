@@ -131,7 +131,7 @@ export default async function FreshnessPage() {
                           data-state-source={stateSource ? "true" : undefined}
                         >
                           <th scope="row">
-                            <span className="fresh-name">
+                            <span className="fresh-name" data-terms="off">
                               {source.name}
                               {stateSource && <span className="fresh-state-tag">NJ source</span>}
                             </span>
