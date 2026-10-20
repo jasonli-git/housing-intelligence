@@ -197,7 +197,7 @@ Not open work: each comes round on a date. The steps live where the row says.
       page returned nothing to an automated reader on 2026-10-19; the notice is on
       `/sources` and treated like the Census Bureau's. If HUD asks for it on each page or
       in the footer, add `hud` to `FOOTER_NOTICE_SOURCES` (`web/lib/notices.ts`).
-- [ ] **One system for pop-up definitions of terms.** (owner, 2026-10-10) Today there are
+- [ ] **One system for pop-up definitions of terms.** (owner, 2026-10-10; step 1 of 3 done, #387: one dictionary in `web/lib/terms.ts`. Next: one `<Term>` component, then automatic first-use marking and the checks below.) Today there are
       five ways to attach one: `Definition`, `FloatingDefinition`, `MetricTerm`,
       `FloatingMetricTerm` and `Glossed`, fed by three dictionaries (`lib/definitions.ts`
       for metrics, `lib/glossary.ts` for terms, `lib/mapDefinitions.ts`). Some text is
