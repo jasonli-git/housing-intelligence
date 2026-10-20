@@ -94,3 +94,20 @@ export function reportProblemUrl(ctx: ReportProblemContext): string {
   const params = new URLSearchParams({ title, body, labels: "data-quality" });
   return `https://github.com/${REPO}/issues/new?${params.toString()}`;
 }
+
+/**
+ * A pre-filled issue for a page as a whole (2026-10-20): since the region page's full
+ * tables moved to the report (#381), it has no per-figure links, so it closes with one
+ * that names the page and asks which figure.
+ */
+export function reportPageProblemUrl(regionLabel: string, path: string): string {
+  const title = `Something looks wrong: ${regionLabel}`;
+  const body = [
+    `**Page:** ${SITE_URL}${path}`,
+    "",
+    "**Which figure or sentence, and what looks wrong?**",
+    "",
+  ].join("\n");
+  const params = new URLSearchParams({ title, body, labels: "data-quality" });
+  return `https://github.com/${REPO}/issues/new?${params.toString()}`;
+}

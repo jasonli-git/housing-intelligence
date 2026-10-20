@@ -115,3 +115,14 @@ describe("reportProblemUrl", () => {
     expect(url.searchParams.get("body")).toContain("Not resolved");
   });
 });
+
+describe("reportPageProblemUrl", () => {
+  it("names the page and asks which figure, as a pre-filled data-quality issue", async () => {
+    const { reportPageProblemUrl } = await import("@/lib/reportProblem");
+    const url = new URL(reportPageProblemUrl("Mercer County, NJ", "/nj/mercer-county"));
+    expect(url.pathname).toBe("/jasonli-git/housing-intelligence/issues/new");
+    expect(url.searchParams.get("title")).toBe("Something looks wrong: Mercer County, NJ");
+    expect(url.searchParams.get("body")).toContain("https://housing.jasonli.app/nj/mercer-county");
+    expect(url.searchParams.get("labels")).toBe("data-quality");
+  });
+});
