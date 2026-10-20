@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile, stat } from "node:fs/promises";
 import { chromium } from "playwright";
+import {legacyManifest,parseRedirects,publishedPlaces,validateCoverage} from './lib/publication.mjs';
 
 const origin = process.env.ROUTE_CHECK_ORIGIN ?? "http://127.0.0.1:3006";
 const root = new URL("../out/", import.meta.url);
@@ -11,13 +12,14 @@ assert.equal(new Set(rules.map(r => r[0])).size, rules.length);
 const redirects = new Map(rules.map(([from, to, status]) => [from, { to, status }]));
 const sitemap = await readFile(new URL("sitemap.xml", root), "utf8");
 const publicPaths = JSON.parse(await readFile(new URL("place-routes.json", root), "utf8"));
+await validateCoverage(root,legacyManifest(publishedPlaces(registry,sitemap),parseRedirects(await readFile(new URL('_redirects',root),'utf8'))));
 assert.doesNotMatch(sitemap, /\/regions\/\d+(?:<|\/|\?)/);
 for (const [id, r] of Object.entries(registry)) {
   // A retained pin may have ceased carrying data: only sitemap-listed places are exported.
   const url = `/${r.state}/${r.slug}`;
   if (!sitemap.includes(`${url}</loc>`)) continue;
   assert.equal(publicPaths[id], url);
-  for (const path of [`${r.state}/${r.slug}.html`, `regions/${id}.html`, `${r.state}/${r.slug}/report.html`, `regions/${id}/report.html`]) await stat(new URL(path, root));
+  for (const path of [`${r.state}/${r.slug}.html`, `${r.state}/${r.slug}/report.html`]) await stat(new URL(path, root));
   assert.deepEqual(redirects.get(`/regions/${id}`), { to: url, status: "301" });
   if (r.level !== "zip") assert.deepEqual(redirects.get(`/regions/${id}/report`), { to: `${url}/report`, status: "301" });
 }
@@ -51,7 +53,7 @@ try {
       assert.deepEqual(await page.locator('a[href^="/regions/"]').evaluateAll(links => links.filter(link => /^\/regions\/\d+(?:\/report)?(?:[?#]|$)/.test(link.getAttribute("href"))).map(link => link.href)), [], "numeric navigation leaked");
     }
     await page.goto(`${origin}/nj/princeton`);
-    await page.locator('a.report-action').click();
+    await page.locator('a.eyebrow-report').click();
     await page.waitForURL(`${origin}/nj/princeton/report`);
     await page.goto(`${origin}/`);
     const search = page.locator('main input[role="combobox"]').first();
