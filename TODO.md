@@ -29,15 +29,26 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — interface cleanup, then readiness for a second state (2026-10-19)
+## Now — readiness for a second state (2026-10-20)
 
-The owner's order (2026-10-19): clear stale entries here and in DIRECTOR_NOTES, then the
-interface items under Frontend and presentation (starting with the 15 deed-priced town
-pages' wrong caveat and one colour definition per kind of place and tool), then what
-blocks a second state (Pages' file limits, New Jersey hardcoded, search results naming
-no state, `place` versus `cousub`). The place pages' sections were reworked the same day
-(#381) and stand-outs scaled to cohort size (#382). The readings are stale after the
-2026-10-19 Zillow refresh and #382; regenerating them is held by the owner.
+The interface cleanup the owner ordered on 2026-10-19 is done (#180–#199, through the
+housing atlas's flat United States map). Next, in the owner's order of 2026-10-20, the
+implementation work a second state needs:
+
+1. **Publication capacity** — Pages' two ceilings, files and redirect rules (under
+   Frontend and presentation): inventory the files, move the numeric-link redirects,
+   and prove it with a second-state-sized build.
+2. **Expansion correctness** — New Jersey hardcoded in three places (under API and scale
+   limits). Search results already name each place's state (#362).
+3. **Scale safety** — the analytics test that rebuilds the live warehouse (Test
+   coverage), a truncation signal on `/regions/{id}/metrics` and the `/rankings` cap,
+   then the rank-range step's cost (API and scale limits).
+
+Kept out of that scope: publisher-dependent gaps (Correctness and data integrity) and
+the owner's decisions (Open decisions; HUD income-limit dating). `place` versus `cousub`
+does not block the Northeast states, which are all strong-MCD. The readings are stale
+after the 2026-10-19 Zillow refresh and #382; regenerating them is held by the owner.
+Revoking the keys pasted into chat (Parked) is the owner's, and the most urgent.
 
 ## Open
 
@@ -158,7 +169,7 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### API and scale limits
 
-- [ ] **Two published limits have no headroom for Milestone 15.** (pre-M12 review)
+- [ ] **One published limit has no headroom for Milestone 15; the other is a watch item.** (pre-M12 review)
       `/regions/{id}/metrics` is published at its default `limit=5000` with nothing in
       the response saying whether it truncated; the largest region carries 1,152
       observations since Milestone 34 (Hudson County; 760 before), so this is a watch
@@ -190,9 +201,9 @@ Not open work: each comes round on a date. The steps live where the row says.
       `/sources` and treated like the Census Bureau's. If HUD asks for it on each page or
       in the footer, add `hud` to `FOOTER_NOTICE_SOURCES` (`web/lib/notices.ts`).
 - [ ] **Bring the remaining one-off colours behind tokens.** (owner, 2026-10-10; #383,
-      #384) Kinds are tokens and a test now stops new hard-coded colours. 1,148 remain in
-      34 files, frozen in `web/lib/colourBaseline.json`; the largest are
-      `horizon-theme.css` (187), the atlas (87 + 81) and `state-exhibits.css` (83). Take
+      #384) Kinds are tokens and a test now stops new hard-coded colours. 1,129 remain in
+      33 files (2026-10-20), frozen in `web/lib/colourBaseline.json`; the largest are
+      `horizon-theme.css` (187), the atlas (86 + 67) and `state-exhibits.css` (83). Take
       them file by file when a file is touched for other work, lowering the baseline.
 - [ ] **A compare page shared by its link.** (owner, 2026-10-09, from an outside
       review) `/compare?places=194,330,112`: a few towns side by side, the choice held in
