@@ -7,20 +7,22 @@ try {
     const context=await browser.newContext({viewport:{width,height:1100},colorScheme:theme,reducedMotion:'reduce'});
     const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto('http://localhost:3002/atlas');await page.locator('[data-state="NJ"]').waitFor();
-    assert.equal(await page.locator('.housing-atlas').getAttribute('data-level'),'globe');
-    assert.equal(await page.locator('.atlas-globe-ocean').count(),1);
+    assert.equal(await page.locator('.housing-atlas').getAttribute('data-level'),'states');
+    assert.equal(await page.locator('.atlas-globe-ocean').count(),0); // a flat map since #398
     assert(await page.locator('.atlas-context-land').count()>0);
     assert.equal(await page.locator('.atlas-table-wrap tbody tr').count(),52);
     assert.equal(await page.locator('.atlas-legend > div > i').count(),1);
     assert(await page.locator('.atlas-controls').evaluate(n=>getComputedStyle(n).backdropFilter!=='none'&&getComputedStyle(n).opacity==='1'));
     assert((await page.locator('.atlas-state-coverage').textContent()).includes('New Jersey only'));
-    const old=await page.locator('.atlas-map-geography').getAttribute('data-rotation');await page.locator('.atlas-county-map').focus();await page.locator('.atlas-county-map').press('ArrowRight');assert.notEqual(await page.locator('.atlas-map-geography').getAttribute('data-rotation'),old);
+    // The fitted map is held centred until it overflows the frame: zoom in before panning.
+    for(let i=0;i<3;i++)await page.getByRole('button',{name:'Zoom in',exact:true}).click();await page.waitForTimeout(450);
+    const old=await page.locator('.atlas-map-geography').getAttribute('transform');await page.locator('.atlas-county-map').focus();await page.locator('.atlas-county-map').press('ArrowRight');assert.notEqual(await page.locator('.atlas-map-geography').getAttribute('transform'),old);
     if(width<=900)await page.getByRole('button',{name:'Compare states',exact:true}).click();
     await page.getByRole('button',{name:'Select New Jersey',exact:true}).click();assert.equal(await page.locator('.housing-atlas').getAttribute('data-level'),'states');assert.equal(await page.locator('.atlas-selected h3').textContent(),'New Jersey');
     const selectionAudit=await new AxeBuilder({page}).include('.atlas-selected').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(selectionAudit.violations.map(v=>v.id),[]);
     await page.getByRole('button',{name:'Explore New Jersey counties',exact:false}).click();await page.locator('[data-county="12"]').waitFor();assert.equal(await page.locator('.housing-atlas').getAttribute('data-level'),'county');assert.equal(await page.locator('.atlas-table-wrap tbody tr').count(),21);
     await page.getByRole('button',{name:'United States',exact:true}).click();await page.getByRole('button',{name:'Select California',exact:true}).click();assert((await page.locator('.atlas-selected').textContent()).includes('not available'));assert.equal(await page.locator('.atlas-selected a').count(),0);assert.equal(await page.locator('.atlas-drill').count(),0);
-    await page.getByRole('button',{name:'Globe',exact:true}).click();if(width<=900)await page.getByRole('button',{name:'Close table',exact:true}).click();
+    await page.getByRole('button',{name:'United States',exact:true}).click();if(width<=900)await page.getByRole('button',{name:'Close table',exact:true}).click();
     const map=await page.locator('.atlas-map-stage').boundingBox(), frame=await page.locator('.housing-atlas').boundingBox();assert(Math.abs(map.width-frame.width)<2);
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     const audit=await new AxeBuilder({page}).include('.housing-atlas-page').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(audit.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);assert.deepEqual(errors,[]);

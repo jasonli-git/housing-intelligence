@@ -3,8 +3,8 @@
   "app/afford-horizon.css": 27,
   "app/artful-data.css": 24,
   "app/atlas-pages.css": 28,
-  "app/atlas/atlas-horizon.css": 81,
-  "app/atlas/atlas.css": 87,
+  "app/atlas/atlas-horizon.css": 67,
+  "app/atlas/atlas.css": 86,
   "app/budget-explorer.css": 2,
   "app/county-cabinet.css": 6,
   "app/data-horizon.css": 39,
@@ -31,5 +31,5 @@
   "app/tax-horizon.css": 27,
   "app/tool-refinement.css": 12,
   "app/ui-refinement.css": 73,
-  "components/HousingAtlas.tsx": 5
+  "components/HousingAtlas.tsx": 2
 }

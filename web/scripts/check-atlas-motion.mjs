@@ -9,12 +9,12 @@ try {
     const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto('http://localhost:3002/atlas');
     await page.locator('[data-state="NJ"]').waitFor();await page.waitForTimeout(450);
-    const radius=()=>page.locator('.atlas-globe-ocean').getAttribute('r').then(Number);
+    const radius=()=>page.locator('.atlas-map-geography').getAttribute('transform').then(t=>Number(/scale\(([\d.]+)\)/.exec(t)[1]));
     const start=await radius();await page.getByRole('button',{name:'Zoom in',exact:true}).click();
     await page.waitForTimeout(100);const middle=await radius();assert(middle>start&&middle<start*1.25,'Zoom should have a genuine intermediate frame');
     await page.getByRole('button',{name:'Zoom in',exact:true}).click();
     await page.getByRole('button',{name:'Zoom in',exact:true}).click();
-    await page.waitForTimeout(450);assert(Math.abs(await radius()-370*Math.pow(1.25,3))<.1,'Repeated zoom must settle at the newest target');
+    await page.waitForTimeout(450);assert(Math.abs(await radius()-start*Math.pow(1.25,3))<.01,'Repeated zoom must settle at the newest target');
     await page.getByRole('button',{name:'Counties',exact:true}).click();await page.waitForTimeout(450);
     const scroll=await page.evaluate(()=>window.scrollY);
     await page.getByRole('button',{name:'Browse all measures',exact:true}).click();
@@ -39,7 +39,7 @@ try {
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);
     await page.screenshot({path:`/tmp/atlas-studio-${width}-${theme}.png`});
     await page.emulateMedia({reducedMotion:'reduce'});await page.waitForTimeout(100);
-    await page.getByRole('button',{name:'Globe',exact:true}).click();await page.getByRole('button',{name:'Zoom in',exact:true}).click();await page.waitForTimeout(50);
+    await page.getByRole('button',{name:'United States',exact:true}).click();await page.getByRole('button',{name:'Zoom in',exact:true}).click();await page.waitForTimeout(50);
     assert(Math.abs(await radius()-462.5)<.1,'Reduced motion must snap directly to the new camera');
     console.log(`PASS ${width} ${theme}: retargetable motion, reduced motion, catalogue bounds, focus, empty search, axe, reflow`);
     await context.close();

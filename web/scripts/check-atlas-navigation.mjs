@@ -34,7 +34,7 @@ try {
     }
     await page.getByRole('button',{name:'New Jersey',exact:true}).click();assert.equal(await page.locator('.housing-atlas').getAttribute('data-level'),'states');assert.equal(await page.locator('.atlas-selected h3').textContent(),'New Jersey');
     await page.getByRole('button',{name:'United States',exact:true}).click();assert.equal(await page.locator('.atlas-selected h3').count(),0);
-    await page.getByRole('button',{name:'Globe',exact:true}).click();assert.equal(await page.locator('.housing-atlas').getAttribute('data-level'),'globe');
+    await page.getByRole('button',{name:'United States',exact:true}).click();assert.equal(await page.locator('.housing-atlas').getAttribute('data-level'),'states');
     const audit=await new AxeBuilder({page}).include('.housing-atlas-page').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(audit.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);
     await page.screenshot({path:`/tmp/atlas-navigation-${width}-${theme}.png`});
