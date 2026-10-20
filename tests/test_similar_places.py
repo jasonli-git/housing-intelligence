@@ -94,3 +94,31 @@ def test_at_most_five_matches() -> None:
         town(i, like=0.5 + i / 1000, price=300_000) for i in range(2, 10)
     ]
     assert len(found(towns + SPREAD)) == MATCHES
+
+
+def test_zip_codes_are_priced_on_zillow_with_no_sales_count() -> None:
+    """ZIP codes have no recorded-sales price (#394): Zillow's typical value, compared
+    only among ZIP codes, and no sales count to rest on."""
+    from hip.analytics.similar import ZIPS
+
+    def zip_code(region_id: int, value: float, **overrides: float) -> Town:
+        figures = {m: 0.5 for m in MEASURES} | {ZIPS.price: value, COMMUTE: 25}
+        return Town(region_id, figures | overrides)
+
+    spread = [
+        zip_code(90, 900_000, **{m: 0.3 for m in MEASURES}),
+        zip_code(91, 900_000, **{m: 0.7 for m in MEASURES}),
+    ]
+    here, cheaper, close = (
+        zip_code(1, 500_000),
+        zip_code(2, 440_000),
+        zip_code(3, 470_000),
+    )
+
+    assert here.eligible(ZIPS) and not here.eligible()
+    chosen = [
+        m.match_region_id
+        for m in matches([here, cheaper, close, *spread], ZIPS)
+        if m.region_id == 1
+    ]
+    assert chosen == [2]

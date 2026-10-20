@@ -3,7 +3,8 @@
 A town's figures on the measures it was matched on, and up to five towns most like it
 whose homes sold for at least 10% less, each with the same figures, so the page can set
 them side by side and say exactly what "like here" meant. Matches in no particular
-standing: nearest first, with no score shown.
+standing: nearest first, with no score shown. Since #394 a ZIP code gets the same among
+ZIP codes, priced on Zillow's typical value; `level` and `price` say which.
 """
 
 from __future__ import annotations
@@ -36,6 +37,8 @@ class SimilarPlace(BaseModel):
 
 class SimilarPlaces(BaseModel):
     region_id: int
+    # "municipality" or "zip": places are matched only with places of their own level.
+    level: str
     measures: list[str]
     price: str
     commute: str
@@ -53,7 +56,8 @@ class SimilarPlaces(BaseModel):
 _SQL = text(
     f"""
     SELECT s.rank, s.place_region_id, s.figures, s.basis,
-           {municipality_label("t", "c")} AS name
+           CASE WHEN t.level = 'zip' THEN 'ZIP ' || t.name
+                ELSE {municipality_label("t", "c")} END AS name
     FROM similar_places s
     JOIN regions t ON t.region_id = s.place_region_id
     LEFT JOIN regions c ON c.region_id = t.parent_id
@@ -67,11 +71,11 @@ _METRICS = text("SELECT metric_id, label, unit FROM metrics WHERE metric_id = AN
 @router.get(
     "/regions/{region_id}/similar-places",
     response_model=SimilarPlaces,
-    summary="Towns most like this one whose homes sold for at least 10% less",
+    summary="Places most like this one (towns, or ZIP codes) at least 10% cheaper",
 )
 def similar_places(region_id: int, session: SessionDep) -> SimilarPlaces:
-    """404 for anything but a town priced on enough sales; an empty `matches` where no
-    town is near enough, which the page says."""
+    """404 for anything but a town priced on enough sales or a ZIP code with Zillow's
+    value; an empty `matches` where no place is near enough, which the page says."""
     rows = session.execute(_SQL, {"region_id": region_id}).mappings().all()
     if not rows:
         raise HTTPException(
@@ -101,6 +105,7 @@ def similar_places(region_id: int, session: SessionDep) -> SimilarPlaces:
 
     return SimilarPlaces(
         region_id=region_id,
+        level=basis.get("level", "municipality"),
         measures=basis["measures"],
         price=basis["price"],
         commute=basis["commute"],

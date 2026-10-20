@@ -290,7 +290,7 @@ export default async function RegionPage({
     // Milestone 45: where residents work.
     api.workDestinations(regionId),
     // Milestone 46: towns like this one but cheaper; a town's only.
-    region.level === "municipality" ? api.similarPlaces(regionId) : Promise.resolve(null),
+    region.level === "municipality" || region.level === "zip" ? api.similarPlaces(regionId) : Promise.resolve(null),
     api.community(regionId),
     // Milestone 50: who moves in and out of the place's county.
     api.migration(regionId),
