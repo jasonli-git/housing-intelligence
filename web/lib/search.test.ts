@@ -23,15 +23,15 @@ describe("searchEntries", () => {
     const boontons = searchEntries(REGIONS).filter((e) => e.name === "Boonton");
 
     expect(boontons.map((e) => e.detail).sort()).toEqual([
-      "Town in Morris County",
-      "Township in Morris County",
+      "Town in Morris County, NJ",
+      "Township in Morris County, NJ",
     ]);
   });
 
   it("names counties and ZIPs as a reader does, and finds states too", () => {
     const entries = searchEntries(REGIONS);
 
-    expect(entries.find((e) => e.id === 11)).toEqual({ id: 11, name: "Mercer County", detail: "County", level: "county" });
+    expect(entries.find((e) => e.id === 11)).toEqual({ id: 11, name: "Mercer County", detail: "County, NJ", level: "county" });
     expect(entries.find((e) => e.id === 3091)?.name).toBe("ZIP 08540");
     expect(entries.find((e) => e.level === "state")).toEqual({ id: 1, name: "New Jersey", detail: "State", level: "state", code: "NJ" });
   });

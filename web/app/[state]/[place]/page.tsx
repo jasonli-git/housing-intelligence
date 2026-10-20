@@ -1,3 +1,5 @@
+import { reportPageProblemUrl } from "@/lib/reportProblem";
+import { AffordForward } from "@/components/AffordForward";
 import { Glossed } from "@/components/Glossed";
 import { Term } from "@/components/Term";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
@@ -430,6 +432,7 @@ export default async function RegionPage({
   return (
     <>
       <Masthead affordability={affordabilityControl} />
+      <AffordForward placeId={region.level === "zip" ? null : regionId} />
       <main id="main-content" tabIndex={-1} className={`shell atlas-page atlas-local horizon-page${quiet ? " quiet-county" : ""}`} data-region-level={region.level}>
       <header className={`page-head${photo ? " has-photo" : ""}`} data-kind={kindOf(region.level)}>
         {quiet && region.state_code === "NJ" && <GardenStateArtwork header />}
@@ -671,6 +674,7 @@ export default async function RegionPage({
 
       <p className="place-report-line" id="region-detailed-data">
         Want every figure? <Link href={`${regionPath(regionId)}/report`}>The full report</Link> has each measure ranked, its history, sources and downloads.
+        {" "}Something look wrong? <a href={reportPageProblemUrl(regionTitle(region), regionPath(regionId))} target="_blank" rel="noopener noreferrer">Report a problem with this page</a>.
       </p>
       </div>
       </main>

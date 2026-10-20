@@ -68,6 +68,7 @@ export function AffordExplorer({
   // A county profile has already answered "which place?". Start its local affordability
   // mode with that county selected instead of asking the reader to type it again.
   const [countyId, setCountyId] = useState<number | null>(initialScope?.countyId ?? null);
+  const [addressRead, setAddressRead] = useState(false);
   const selectedCounty = counties.find((place) => place.id === countyId);
   const scope = selectedCounty ? { countyId: selectedCounty.id, countyName: selectedCounty.name } : undefined;
   const id = useId();
@@ -87,7 +88,20 @@ export function AffordExplorer({
     if (params.has("place") || params.has("county")) {
       setCountyId(context.countyId);
     }
+    setAddressRead(true);
   }, [places]);
+
+  // The scope rides in the address once the reader changes it, so a shared or reloaded
+  // link reopens the same county or all New Jersey (`county` wins over `place` on arrival).
+  useEffect(() => {
+    if (!addressRead) return;
+    const url = new URL(window.location.href);
+    const current = url.searchParams.get("county");
+    const next = countyId === null ? (current === null && !url.searchParams.has("place") ? null : "all") : String(countyId);
+    if (next === current) return;
+    if (next === null) url.searchParams.delete("county"); else url.searchParams.set("county", next);
+    window.history.replaceState(window.history.state, "", url);
+  }, [countyId, addressRead]);
 
   const income = Number(incomeText.replace(/[^0-9.]/g, "")) || 0;
   const options = { mode, income, downPct: down, ratePct: personal.ratePct ?? rate.value, personal };

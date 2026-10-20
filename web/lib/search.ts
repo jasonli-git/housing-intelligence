@@ -39,11 +39,14 @@ export function searchEntries(regions: Region[]): SearchEntry[] {
     .filter((r) => r.level in LEVEL_ORDER)
     .map((r) => {
       if (r.level === "state") return { id: r.region_id, name: r.name, detail: "State", level: r.level, code: r.state_code };
-      if (r.level === "county") return { id: r.region_id, name: displayName(r), detail: "County", level: r.level };
-      if (r.level === "zip") return { id: r.region_id, name: displayName(r), detail: "ZIP code", level: r.level };
+      // The state's code on every place (#362): Mercer County is in New Jersey and in
+      // Pennsylvania, and a second state would make "County" ambiguous.
+      const state = r.state_code ? `, ${r.state_code}` : "";
+      if (r.level === "county") return { id: r.region_id, name: displayName(r), detail: `County${state}`, level: r.level };
+      if (r.level === "zip") return { id: r.region_id, name: displayName(r), detail: `ZIP code${state}`, level: r.level };
       const kind = capitalised(legalType(r) ?? "municipality");
       const county = r.parent_id === null ? undefined : counties.get(r.parent_id);
-      return { id: r.region_id, name: r.name, detail: county ? `${kind} in ${county}` : kind, level: r.level };
+      return { id: r.region_id, name: r.name, detail: `${county ? `${kind} in ${county}` : kind}${state}`, level: r.level };
     })
     .sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || a.name.localeCompare(b.name));
 }

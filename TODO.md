@@ -218,19 +218,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       address, so the build refuses rather than publish one that could change; the
       scheduled run then reports a failed build. Fix: `cd web && npm run routes:refresh`,
       review and commit. Rare: every place with any observation already has an address.
-- [ ] **Search results name no state.** (#362) Counties, towns and ZIPs read "County",
-      "Township in Mercer County": unambiguous while New Jersey is the only state, not
-      once a second one shares a county name (Mercer is in NJ and PA). Add the state's
-      code to each `detail` in `searchEntries` when the second state lands.
-- [ ] **The budget explorer's comparison scope is not in its address.** (PR #86, Codex
-      handoff `local-page-layout.md`) A page's link opens `/afford` with its place and
-      county; switching to another county or all New Jersey changes local state only,
-      so a shared or reloaded link returns to the original scope.
-- [ ] **`/?mode=afford` bookmarks open the national entry.** (PR #88, #94, #305) Old
-      `/states/new-jersey?mode=afford` links now forward to `/afford`, but the root
-      address cannot, since `/` is a real page; a county page's `?mode=afford` shows
-      the profile.
-
 - [ ] **No component tests cover the region page's interactive behaviour.** (#201,
       declared by Codex in its handoff) Auto-advance, arrow wrapping, the progress
       hairline, floating definitions, responsive paging and report isolation were checked
@@ -259,9 +246,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       but no page tells a reader, so the check counts those two of its 20 questions as
       neither answered nor declined (2026-10-09). A short statement on the site would
       move them to declined.
-- [ ] **Report a problem is on a region's two full metric tables only.** (M27, #221)
-      The cost cards, the verdict sentence, the New Jersey rankings and `/afford` quote
-      figures without it. ROADMAP's row asked for every figure.
 - [ ] **A figure's own history of values is not shown.** (M27, #224) `/changes`
       summarises each refresh; a region page neither marks a revised figure nor shows its
       earlier values, which `fact_revision` holds.
