@@ -532,3 +532,32 @@ Still open from the note: point 1, answers for a property's own address. That st
 gated on NJOGIS's address-point terms and on Daniel's Law (ROADMAP's source register;
 TODO's open decision on a lawyer's read).
 
+---
+
+## Follow-up: which notes are still open (2026-10-19)
+
+**Status:** Feedback — records where each note stands; the notes above are left as written
+**Recorded:** 2026-10-19
+
+Reviewed with the owner on 2026-10-19.
+
+**Settled, nothing left open:**
+
+- *Accessible, comprehensive, and current housing data* — promoted into Version 3
+  (decision of 2026-09-23), which is complete. Its mortgage-rate question was answered
+  by Milestone 26's weekly benchmark.
+- *Grounded synthesis beyond the automated data summary* — settled by Milestone 51's
+  relationship facts (decision of 2026-10-07).
+- *Outside review of the roadmap* — three suggestions joined Milestone 49 (decision of
+  2026-10-07); the rest stays advised against.
+
+**Still open:**
+
+- *README audit and documentation auto-maintenance* — every per-section intent, the
+  TODO usefulness audit and an automated SPEC audit. The image decision was "blocked on
+  automated deployment"; deployment is now automated (the Friday `launchd` refresh
+  rebuilds and deploys, ARCHITECTURE #216), so that block has lifted. Nothing scheduled.
+- *Batch pricing* and *Flex capacity* — the regeneration half not yet promoted. Scale
+  decides it, and a second state is the scale that would.
+- *Utilities and drinking water*, point 1 — answers for a property's own address, gated
+  on NJOGIS's address-point terms and a lawyer's read of Daniel's Law.

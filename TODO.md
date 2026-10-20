@@ -23,13 +23,19 @@ were records rather than work, moved to the file that owns each (Zillow's covera
 ceiling and parcel geometry to ARCHITECTURE's limitations, the model-comparison page to
 ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 
-## Now — launch readiness (2026-10-09)
+**Triaged again on 2026-10-19**, with the owner: `Now` rewritten for the interface cleanup,
+and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
+still outstanding and moved to Housekeeping.
 
-The correctness pass (ARCHITECTURE #350, #353–#356), the terms and privacy pages (#357),
-site metadata (#358) and the reliability work (#359) have shipped. On 2026-10-09 the
-owner parked the four data additions (below, under Parked) rather than build them:
-none answers a reader question the site cannot already answer. The next focus is the
-owner's to choose. Version 3 is complete and Version 4 optional (owner, 2026-10-09).
+## Now — interface cleanup, then readiness for a second state (2026-10-19)
+
+The owner's order (2026-10-19): clear stale entries here and in DIRECTOR_NOTES, then the
+interface items under Frontend and presentation (starting with the 15 deed-priced town
+pages' wrong caveat and one colour definition per kind of place and tool), then what
+blocks a second state (Pages' file limits, New Jersey hardcoded, search results naming
+no state, `place` versus `cousub`). The place pages' sections were reworked the same day
+(#381) and stand-outs scaled to cohort size (#382). The readings are stale after the
+2026-10-19 Zillow refresh and #382; regenerating them is held by the owner.
 
 ## Open
 
@@ -45,7 +51,7 @@ Not open work: each comes round on a date. The steps live where the row says.
 | Each January | Re-read the publishers' release calendars (BLS's ends 2026-12-30, Zillow's 2026-12-17; FHFA, PEP and HUD's run to 2027); add the ACS edition's date when announced (#298) | `config/sources.yml` `release_calendar` |
 | 2027-01-01 | Gemini 3.6–3.8 Flash's introductory price ends: $1.50 / $7.50 per million tokens (Flex half); update `config/evaluation.yml` the same day | — |
 | Each quarter | Look at DCA's Construction Reporter, stopped at January 2026 while DCA overhauls it; discovery picks up the yearly summary (usually July) on its own, and a changed layout is refused (#300) | `config/sources.yml` `nj_construction` |
-| Each June and December | FCC's broadband summaries (`fcc_bdc`) are downloaded by hand, so no refresh notices a new filing (#360). Look for an as-of date or revision newer than the one held | Download the county and place summaries from FCC's data download into `data/manual/fcc_bdc/`, then `hip acquire --source fcc_bdc --vintage <as-of>_<revision>` |
+| Each June and December | FCC's broadband files are downloaded by hand, so no refresh notices a new filing (#360, #372). Look for an as-of date or revision newer than the one held | County and place summaries into `data/manual/fcc_bdc/`, then `hip acquire --source fcc_bdc --vintage <as-of>_<revision>`; the two New Jersey location files (served/unserved and fiber) from the National Broadband Map into `data/manual/fcc_bdc_locations/` through a browser, since scripts get a 403 |
 | Each January | DOE's LEAD energy burden (`doe_lead`) is pinned to its 2022 data, and a newer edition would be a new OpenEI submission at a new address (#360). Look for one | If there is one, review its county file against `EnergyBurdenAdapter` before moving the URL |
 | Each October | Review the 22 place photos (#368): each Commons page still exists under the same licence, and each scene is still current | `web/lib/photos.json`; a changed file already stops `make publish` |
 | About December 2026 | SAIPE's 2025 income estimates extend the long-run comparison past 2024 (#348) | automatic on refresh |
@@ -333,6 +339,12 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Housekeeping
 
+- [ ] **CostQuest's view of the broadband method — courtesy only.** (M47, #322, #372)
+      Town and ZIP broadband counts shipped in #163 (2026-10-14) from FCC's location
+      files, without the Fabric. The owner described the method to NBF Support on
+      2026-10-14 (request 77754) and asked to hear of any licensing concern; no reply is
+      needed to keep publishing. Close when one arrives, or at the next calendar check.
+
 - [ ] **Reply as housing@ and privacy@ from Gmail.** (#357, owner 2026-10-09) Both
       addresses are Cloudflare Email Routing forwards, which only receive, so a reply
       today shows the owner's personal address. Chosen: keep the forwards and add an
@@ -466,55 +478,6 @@ strongest case; Zillow's other datasets moved to Open on 2026-10-19.
         clock), or every page still changes daily.
       - **Run `check-dist` once, not twice** (about 25 seconds): `deploy` and
         `check-live` each run it over the 4.3GB tree.
-
-- [ ] **FCC town and ZIP figures, and automatic updates.** (M47, #322) The county summary
-      is imported by hand from the public download; check its selector for a newer
-      edition. Waiting on the owner's inquiries:
-      - **FCC** (2026-10-07): the API agreement's public-statement and security clauses.
-        No reply yet.
-      - **CostQuest, location Fabric** (2026-10-07): Maggie (NBF Support) replied that
-        Tier 4R is "typically" for academic institutions and government bodies, and
-        asked for context. The owner answered the same day: independent developer, free
-        non-commercial site (#323), Fabric used only to assign FCC records to towns and
-        ZIP areas, aggregates published, never records or addresses; asked whether this
-        qualifies or whether a university partnership or other licence would. Awaiting
-        a reply; follow up after about two weeks. A partner's licence would need to
-        cover publishing on this site. **Mark (NBF Support) replied 2026-10-14**, without
-        answering the licence question, with a route that may not need the Fabric:
-        location-level unserved/unfunded status from the Broadband Funding Map's public
-        downloads (section 3.2) as the numerator, and the FCC's "Fabric Locations by
-        Geography" counts per census block as the denominator, giving block or H3-8
-        shares. **Spike 2026-10-14 (`spike/bfm-broadband`), nothing built:** the BFM
-        file (40,045 NJ locations, D25) is not a usable rate on its own — a zero
-        means no *residential* (or *business*) service reported, so 10,036 business-only
-        locations read as residentially unserved (Bergen 3,515 rows against 5 unserved
-        by the map). Better found: the National Broadband Map's per-state
-        `bdc_34_fixed_broadband_served_unserved` file lists every NJ location
-        (2,583,482, one row each, 118,814 blocks) with 100/20 served flags, so it is
-        numerator and denominator at once; 8,678 (0.34%) unserved by terrestrial
-        technology, 11,946 by wired, 2 by any (satellite). Its blocks are 2020 blocks
-        and LODES's crosswalk places them in towns and ZCTAs exactly (spot check 22/22;
-        293 water blocks have no ZCTA). Both sites block scripted downloads (403
-        outside a browser), and the rows carry CostQuest's Location ID, which the
-        current `fcc_bdc` terms note excludes. **Owner decided 2026-10-14: publish town
-        and ZIP counts, and fiber too** — built as `fcc_bdc_locations` (ARCHITECTURE
-        #372) on `feature/broadband-places`; first run 2026-10-14 on D25 (served file
-        from the API, fiber file from the page): 1,184 places, statewide 77.0% of
-        locations with a fiber offer, 11,946 with no wired 100/20 offer. Merged as #163
-        and deployed 2026-10-14. **Owner replied to Mark 2026-10-14** (request 77754),
-        thanking him and describing the method — block counts only, no Location IDs,
-        town and ZIP totals with FCC attribution — and asking to hear if it raises any
-        Fabric-licensing concern. Awaiting any reply; none is needed to keep publishing.
-      - **Towns without the Fabric, measured 2026-10-07:** the FCC's New Jersey
-        Census-place summary (701 places, owner's download) covers 323 of 564 towns
-        exactly — every borough (252), city (52), town (15) and village (3), and no
-        township (0 of 241) — about 49% of homes. A place counts as a town where 99.5%
-        of each's 2020 homes are in the other, by LODES's block crosswalk (ARCHITECTURE
-        #313); the result was the same at 95%. Not built, by the owner's choice
-        (2026-10-07): a layer for boroughs and cities only would leave townships on
-        the county figure beside them, so wait for CostQuest; revisit only if the
-        Fabric is refused. ZIP codes still need the Fabric. One FCC place is not in
-        the 2020 crosswalk; check which place boundaries the FCC file uses first.
 
 - [ ] **NJDEP radon tiers: waiting on NJDEP's new map.** (M49, #331) The guide shows
       test-every-home advice and links, not a tier. The owner asked NJDEP on 2026-10-07;
