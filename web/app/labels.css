@@ -1,0 +1,48 @@
+/*
+ * Spaced monospace capitals mean one thing: "this labels what you are looking at" — a
+ * section's kicker, the kind of place, where a figure came from (2026-10-19). Headings,
+ * links, ranks, chips and status lines read in sentence case in the text face.
+ * Imported last, so it settles what earlier stylesheets set rule by rule. Also labels, so
+ * left in capitals where they are set: a table's column heads, the tools' numbered steps,
+ * the home page's plate kickers, and note tags. The masthead is the bar shared with
+ * jasonli.app (ARCHITECTURE #122) and is not changed here.
+ */
+:root {
+  --label-font: 600 11px/1.3 var(--font-mono);
+  --label-tracking: .1em;
+}
+
+/* Read, not labelled: sentence case in the text face. */
+:root body :is(
+  .bar-tool-menu > summary,
+  .licence-label, .site-status-schedule, .site-status-kicker, .site-status-word,
+  .disclose-hint .when-closed, .disclose-hint .when-open,
+  .quiet-profile > .quiet-label,
+  .cost-evidence-label, .household-title, .household-kind,
+  fieldset > legend,
+  .standout-deck-label, .region-standout-rank,
+  .answer .k,
+  .chart-kicker,
+  .foot-kicker, .foot-tab,
+  .more-open-label span,
+  .housing-assistance a > small,
+  main.report .crumbs :is(a, li, span, li[aria-current]), main.report .cost-card .gl > .term, .cost-estimate-note,
+  .standout-group-label, .standout-rank
+) {
+  font-family: var(--font-text) !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+:root body :is(.quiet-profile > .quiet-label, .cost-evidence-label, .household-title, fieldset > legend, .standout-deck-label, .standout-group-label, .chart-kicker, .foot-kicker) {
+  font-size: 13.5px !important; font-weight: 600 !important;
+}
+:root body :is(.licence-label, .site-status-schedule, .site-status-kicker, .site-status-word, .disclose-hint span, .household-kind, .region-standout-rank, .standout-rank, .answer .k, .foot-tab, .bar-tool-menu > summary, .more-open-label span, .housing-assistance a > small, main.report .crumbs :is(a, li, span, li[aria-current]), .cost-estimate-note) {
+  font-size: 13px !important;
+}
+
+/* Labels: the one place the monospace capitals stay. */
+:root body :is(.page-head .kind, .computed, .consumer-ai-badge .term, .editorial-metric-content .quiet-label, .nc-tag, .county-strip-label) {
+  font: var(--label-font) !important;
+  letter-spacing: var(--label-tracking) !important;
+  text-transform: uppercase !important;
+}
