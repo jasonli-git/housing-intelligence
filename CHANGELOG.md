@@ -79,8 +79,9 @@ other changes merged since 0.50.0 are not yet recorded here.
   presentation).
 - Another state. #205 ingested nothing, added no state to the scope and changed no pinned
   address or redirect. Sources, pages and tools that assume New Jersey remain; they are
-  inventoried in `agent-handoffs/state-agnostic.md` and listed in TODO.md (API and scale
-  limits), and `config/geography.yml`'s claim that no state code is hard-coded is still
+  inventoried by `scripts/audit_state_assumptions.py` and listed in TODO.md (API and
+  scale limits; the handoff's table is `git show 87881b9:agent-handoffs/state-agnostic.md`),
+  and `config/geography.yml`'s claim that no state code is hard-coded is still
   false.
 
 ## [0.50.0] — 2026-10-08

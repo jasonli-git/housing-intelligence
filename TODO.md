@@ -193,10 +193,11 @@ Not open work: each comes round on a date. The steps live where the row says.
       review; narrowed 2026-10-20, #205, ARCHITECTURE #401) BLS and HUD county series now
       come from the loaded county regions, and the publisher and `api.geo` take a state
       explicitly, but `config/geography.yml` still says no state code is hard-coded
-      anywhere in `src/hip`, which is false. `agent-handoffs/state-agnostic.md` lists the
-      49 structural lines in 20 files; `scripts/audit_state_assumptions.py` regenerates
-      the list (it needs `rg` on the PATH, and it flags tokens, so assumptions without
-      one can still exist). Sources: LODES (main and crosswalk files, home-state
+      anywhere in `src/hip`, which is false. The handoff, removed after reconciliation
+      (`git show 87881b9:agent-handoffs/state-agnostic.md`), listed the 49 structural
+      lines in 20 files with each file's disposition; `scripts/audit_state_assumptions.py`
+      regenerates the list (it needs `rg` on the PATH, and it flags tokens, so
+      assumptions without one can still exist). Sources: LODES (main and crosswalk files, home-state
       exclusion), FEMA, HMDA, EPA's SDWIS, CDC PLACES, HUD's assisted-property parser,
       UCMR/EIA/LEAD and FCC's manual filings are pinned to New Jersey, as are
       `bts_ntm.py`'s bounding box and the broadband completeness check; each needs its
