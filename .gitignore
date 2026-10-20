@@ -57,6 +57,8 @@ web/next-env.d.ts
 
 # Deployable output from `make publish`: two trees for two hosts, both rebuildable.
 dist/
+web/.publication/
+web/.wrangler/
 
 # The scheduled refresh's own output (Milestone 27) — machine-local, and the reason it
 # exists is so a failure has somewhere to be read from after the Pushover notification
