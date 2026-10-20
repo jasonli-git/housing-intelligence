@@ -14,7 +14,7 @@ try {
     await page.waitForTimeout(100);const middle=await radius();assert(middle>start&&middle<start*1.25,'Zoom should have a genuine intermediate frame');
     await page.getByRole('button',{name:'Zoom in',exact:true}).click();
     await page.getByRole('button',{name:'Zoom in',exact:true}).click();
-    await page.waitForTimeout(450);assert(Math.abs(await radius()-370*Math.pow(1.25,3))<.1,'Repeated zoom must settle at the newest target');
+    await page.waitForTimeout(450);assert(Math.abs(await radius()-start*Math.pow(1.25,3))<.01,'Repeated zoom must settle at the newest target');
     await page.getByRole('button',{name:'Counties',exact:true}).click();await page.waitForTimeout(450);
     const scroll=await page.evaluate(()=>window.scrollY);
     await page.getByRole('button',{name:'Browse all measures',exact:true}).click();

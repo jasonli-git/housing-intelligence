@@ -11,7 +11,7 @@ try {
   await page.getByRole('button',{name:'Select Mercer County',exact:true}).click();
   assert.equal(await page.locator('.atlas-comparison-pair>div').count(),2);assert((await page.locator('.atlas-comparison').textContent()).includes('Descriptive difference'));
   await page.waitForTimeout(200);assert.equal(new URL(page.url()).searchParams.get('pin'),'12');
-  await page.reload();assert.equal(await page.locator('.atlas-comparison-pair>div').count(),2);
+  await page.reload();await page.locator('.atlas-comparison-pair>div').nth(1).waitFor({state:'attached'});assert.equal(await page.locator('.atlas-comparison-pair>div').count(),2);
   if(width<=900)await page.getByRole('button',{name:'Compare counties',exact:true}).click();
   let audit=await new AxeBuilder({page}).include('.housing-atlas').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(audit.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[]);
   await page.screenshot({path:`/tmp/atlas-two-place-${width}-${theme}.png`});

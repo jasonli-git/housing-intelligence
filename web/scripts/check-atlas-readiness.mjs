@@ -24,7 +24,7 @@ try {
   await page.getByRole('button',{name:'Zoom in',exact:true}).click();
   await page.getByRole('button',{name:'Reset',exact:true}).click();
   await page.waitForTimeout(500);
-  const params=new URL(page.url()).searchParams;assert.equal(params.get('zoom'),'1');assert.equal(params.get('lon'),'-96');
+  const params=new URL(page.url()).searchParams;assert.equal(params.get('zoom'),'1');assert.equal(params.get('lon'),null);
   await page.getByRole('button',{name:'Counties',exact:true}).click();await page.locator('[data-county="12"]').waitFor();
   assert(requests.some(url=>url.endsWith('/atlas/counties.json')));
   if(width<=900)await page.getByRole('button',{name:'Compare counties',exact:true}).click();
