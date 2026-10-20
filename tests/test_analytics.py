@@ -9,21 +9,23 @@ explanation was marked stale by the next pipeline run whether or not a number ha
 provenance diff with no figure behind it, and the releases accumulated one per run
 forever.
 
-These tests need a loaded warehouse and rebuild it twice, which is the only way to
-observe the property: it is a statement about two runs, not about one. The pair is run
-once and shared (`two_rebuilds`), and the tests are marked `slow`: `make test` leaves
-them out, `make test-all` runs them.
+These tests clone DDL into a disposable schema and seed synthetic histories. They
+never rebuild the served warehouse. The pair is shared (`two_rebuilds`); `slow` keeps
+the two-run checks in `make test-all`, while the margin checks also run in `make test`.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
-from sqlalchemy import text
+from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session
 
 from hip.analytics.compute import rebuild
 from hip.packets import build_packet, packet_hash
 from hip.warehouse.db import get_engine, probe
+from tests.warehouse_scratch import scratch_warehouse, seed_analytics
 
 pytestmark = pytest.mark.skipif(not probe().migrated, reason="needs a migrated warehouse")
 
@@ -51,8 +53,16 @@ ORPHANS = text(
 
 
 @pytest.fixture(scope="module")
-def county_id() -> int:
-    with Session(get_engine()) as session:
+def analytics_engine() -> Iterator[Engine]:
+    with scratch_warehouse(get_engine()) as engine:
+        seed_analytics(engine)
+        rebuild(engine)
+        yield engine
+
+
+@pytest.fixture(scope="module")
+def county_id(analytics_engine: Engine) -> int:
+    with Session(analytics_engine) as session:
         region_id = session.execute(
             text(
                 """
@@ -68,24 +78,22 @@ def county_id() -> int:
     return int(region_id)
 
 
-def _derived_releases() -> list[int]:
-    with get_engine().connect() as conn:
+def _derived_releases(engine: Engine) -> list[int]:
+    with engine.connect() as conn:
         return [int(row[0]) for row in conn.execute(DERIVED_RELEASES)]
 
 
 @pytest.fixture(scope="module")
-def two_rebuilds(county_id: int) -> dict[str, object]:
+def two_rebuilds(county_id: int, analytics_engine: Engine) -> dict[str, object]:
     """Two rebuilds over unchanged data, observed once for the four tests below.
 
-    Each rebuild takes about three and a half minutes (the rank ranges, TODO.md), and
-    the four tests had run six between them, 20 of the suite's 24 minutes. Every
-    property they check is a statement about this one pair of runs.
+    Both runs operate on the same synthetic facts, not the API's loaded tables.
     """
-    engine = get_engine()
+    engine = analytics_engine
     rebuild(engine)
     with Session(engine) as session:
         first = build_packet(session, county_id, "5y")
-    releases_before = _derived_releases()
+    releases_before = _derived_releases(engine)
 
     rebuild(engine)
     with Session(engine) as session:
@@ -94,7 +102,7 @@ def two_rebuilds(county_id: int) -> dict[str, object]:
         orphans = int(conn.execute(ORPHANS).scalar_one())
     return {
         "releases_before": releases_before,
-        "releases_after": _derived_releases(),
+        "releases_after": _derived_releases(engine),
         "hash_before": packet_hash(first),
         "hash_after": packet_hash(second),
         "packet": second,
@@ -151,15 +159,18 @@ def test_the_rebuild_leaves_no_unreferenced_derived_releases(
 # ------------------------------------------------------ margins of error (M28) ---
 
 
-def _rows(sql: str, **params: object) -> list[dict[str, object]]:
-    with Session(get_engine()) as session:
+def _rows(engine: Engine, sql: str, **params: object) -> list[dict[str, object]]:
+    with Session(engine) as session:
         return [dict(r) for r in session.execute(text(sql), params).mappings()]
 
 
-def test_rank_ranges_follow_the_census_test_for_a_significant_difference() -> None:
+def test_rank_ranges_follow_the_census_test_for_a_significant_difference(
+    analytics_engine: Engine,
+) -> None:
     """Recomputed in Python for one group, from the stored values and margins: a region
     moves ahead of another only where |difference| > sqrt(m1^2 + m2^2)."""
     rows = _rows(
+        analytics_engine,
         """
         SELECT rr.region_id, rr.value, rr.rank, rr.rank_best, rr.rank_worst, rr."of",
                (SELECT f.margin_of_error FROM fact_metric_observation f
@@ -168,7 +179,7 @@ def test_rank_ranges_follow_the_census_test_for_a_significant_difference() -> No
         FROM region_rankings rr
         WHERE rr.metric_id = 'acs_median_hh_income' AND rr.level = 'county'
           AND rr.basis = 'value'
-        """
+        """,
     )
     if not rows:
         pytest.skip("no ACS income rankings")
@@ -185,15 +196,16 @@ def test_rank_ranges_follow_the_census_test_for_a_significant_difference() -> No
         assert a["rank_best"] <= a["rank"] <= a["rank_worst"]  # type: ignore[operator]
 
 
-def test_only_ranks_built_on_margins_get_a_range() -> None:
+def test_only_ranks_built_on_margins_get_a_range(analytics_engine: Engine) -> None:
     rows = _rows(
+        analytics_engine,
         """
         SELECT m.source_id,
                count(*) FILTER (WHERE rr.rank_best IS NOT NULL) AS ranged,
                count(*) AS ranks
         FROM region_rankings rr JOIN metrics m USING (metric_id)
         GROUP BY 1
-        """
+        """,
     )
     by_source = {r["source_id"]: r for r in rows}
     if "census_acs" not in by_source:
@@ -205,9 +217,10 @@ def test_only_ranks_built_on_margins_get_a_range() -> None:
             assert by_source[source]["ranged"] == 0
 
 
-def test_a_region_with_no_known_margin_cannot_be_placed() -> None:
+def test_a_region_with_no_known_margin_cannot_be_placed(analytics_engine: Engine) -> None:
     """A Census special code leaves the margin unknown: the whole cohort is its range."""
     rows = _rows(
+        analytics_engine,
         """
         SELECT rr.rank_best, rr.rank_worst, rr."of"
         FROM region_rankings rr
@@ -218,17 +231,20 @@ def test_a_region_with_no_known_margin_cannot_be_placed() -> None:
         ) o ON true
         WHERE rr.basis = 'value' AND rr.metric_id = 'acs_median_gross_rent'
           AND o.margin_of_error IS NULL
-        """
+        """,
     )
     if not rows:
         pytest.skip("every rent carries a margin")
     assert all((r["rank_best"], r["rank_worst"]) == (1, r["of"]) for r in rows)
 
 
-def test_a_derived_ratio_carries_the_survey_income_margin() -> None:
+def test_a_derived_ratio_carries_the_survey_income_margin(
+    analytics_engine: Engine,
+) -> None:
     """price_to_income's margin is its value times the income's relative margin: the
     home value index publishes no sampling error of its own."""
     rows = _rows(
+        analytics_engine,
         """
         SELECT d.value, d.margin_of_error, i.value AS income, i.margin_of_error AS im
         FROM fact_metric_observation d
@@ -237,7 +253,7 @@ def test_a_derived_ratio_carries_the_survey_income_margin() -> None:
          AND i.metric_id = 'acs_median_hh_income'
         WHERE d.metric_id = 'price_to_income' AND i.margin_of_error IS NOT NULL
         LIMIT 50
-        """
+        """,
     )
     if not rows:
         pytest.skip("no ratios with a margined income")
@@ -246,8 +262,9 @@ def test_a_derived_ratio_carries_the_survey_income_margin() -> None:
         assert r["margin_of_error"] == pytest.approx(expected, abs=2e-6)
 
 
-def test_a_change_carries_the_census_margin_for_a_ratio() -> None:
+def test_a_change_carries_the_census_margin_for_a_ratio(analytics_engine: Engine) -> None:
     rows = _rows(
+        analytics_engine,
         """
         SELECT c.start_value, c.end_value, c.pct_change_margin,
                s.margin_of_error AS sm, e.margin_of_error AS em
@@ -261,7 +278,7 @@ def test_a_change_carries_the_census_margin_for_a_ratio() -> None:
         WHERE c.metric_id = 'acs_median_home_value' AND c."window" = '5y'
           AND s.margin_of_error IS NOT NULL AND e.margin_of_error IS NOT NULL
         LIMIT 50
-        """
+        """,
     )
     if not rows:
         pytest.skip("no margined five-year changes")
@@ -275,11 +292,14 @@ def test_a_change_carries_the_census_margin_for_a_ratio() -> None:
         assert r["pct_change_margin"] == pytest.approx(expected)
 
 
-def test_a_survey_change_is_never_shorter_than_its_label() -> None:
+def test_a_survey_change_is_never_shorter_than_its_label(
+    analytics_engine: Engine,
+) -> None:
     """#282: a ZCTA's first edition is 2020, so a five-year change to 2024 would have
     been measured from 2020 under the 400-day tolerance — four years labelled as five,
     over two editions sharing a year of sample. Survey windows may not start late."""
     rows = _rows(
+        analytics_engine,
         """
         SELECT count(*) AS n
         FROM fact_metric_change c JOIN metrics m USING (metric_id)
@@ -293,12 +313,13 @@ def test_a_survey_change_is_never_shorter_than_its_label() -> None:
     )
     assert rows[0]["n"] == 0
     zip_five = _rows(
+        analytics_engine,
         """
         SELECT count(*) AS n
         FROM fact_metric_change c JOIN regions r USING (region_id)
         JOIN metrics m USING (metric_id)
         WHERE r.level = 'zip' AND c."window" = '5y'
           AND (m.source_id = 'census_acs' OR m.metric_id = 'price_to_income')
-        """
+        """,
     )
     assert zip_five[0]["n"] == 0
