@@ -213,14 +213,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       address, so the build refuses rather than publish one that could change; the
       scheduled run then reports a failed build. Fix: `cd web && npm run routes:refresh`,
       review and commit. Rare: every place with any observation already has an address.
-- [ ] **No component tests cover the region page's interactive behaviour.** (#201,
-      declared by Codex in its handoff) Auto-advance, arrow wrapping, the progress
-      hairline, floating definitions, responsive paging and report isolation were checked
-      in a browser and are held by nothing. The project has no harness for interactive
-      React; adding one is the prerequisite, and the report-isolation boundary is the
-      piece most worth pinning, since a regression there would put client behaviour into
-      printed reports.
-
 - [ ] **The print rule that opens disclosures, `::details-content`, was checked in
       Chromium only.** (M18) A browser without it prints the licence label alone and the
       footer's institutions without their datasets. Check Safari and Firefox print
