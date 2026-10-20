@@ -68,6 +68,22 @@ export default function TermsPage() {
           </ul>
         </section>
 
+        <section className="section" aria-labelledby="terms-declined">
+          <h2 id="terms-declined">What it will not answer</h2>
+          <ul>
+            <li>
+              <strong>Whether prices will go up.</strong> The site describes what prices and rents
+              have done and how today compares with a place&rsquo;s own past; it does not forecast
+              them.
+            </li>
+            <li>
+              <strong>Whether a home is a good investment, or whether you should buy.</strong> It
+              sets out costs, trade-offs and the checks worth making, and leaves the decision to
+              you and anyone you pay to advise you.
+            </li>
+          </ul>
+        </section>
+
         <section className="section" aria-labelledby="terms-data">
           <h2 id="terms-data">The data belongs to its publishers</h2>
           <p>
