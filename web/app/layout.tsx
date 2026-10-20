@@ -12,7 +12,6 @@ import { THEME_SCRIPT } from "@/lib/theme";
 import "./tokens.css";
 import "./kinds.css";
 import "./globals.css";
-import "./redesign.css";
 import "./atlas-pages.css";
 import "./quiet-county.css";
 import "./affordable-housing.css";
