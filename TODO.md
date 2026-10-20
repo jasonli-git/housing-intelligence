@@ -208,14 +208,11 @@ Not open work: each comes round on a date. The steps live where the row says.
       term and metric is defined once and marked automatically wherever it appears,
       first use per page. A check fails on inline definition text, and on a dictionary
       term that shows on a page without its pop-up.
-- [ ] **One colour definition per kind of place and tool.** (owner, 2026-10-10) Link,
-      card and accent colours are set rule by rule across `ui-refinement.css`,
-      `place-first.css` and others, so each new link or card has to be spot-checked: county
-      links were left plain, help cards a fixed grey, budget links beige. Define each kind
-      once (state, county, town, ZIP, What can I afford?, buyer's guide, tax lookup) as
-      tokens: ink, accent, card surface, border. Then derive links, cards and hovers from
-      the element's kind, by `data-kind` or by destination, and add a check that fails on
-      a hard-coded colour outside the tokens file.
+- [ ] **One colour definition per kind of place and tool — the check and the rest.**
+      (owner, 2026-10-10) The kinds are defined once in `web/app/kinds.css` (#383). Left:
+      a check that fails on a hard-coded colour outside the token files, and moving the
+      remaining one-off colours behind tokens, so each new link or card needs no
+      spot-check.
 - [ ] **A pass on monospace capitals across the site.** (owner, 2026-10-10) Breadcrumbs,
       the "Computed from the data · Not AI" badge, the bar's links and section labels
       (`HOUSING, AT A GLANCE`) are set in spaced monospace capitals on every page. The home

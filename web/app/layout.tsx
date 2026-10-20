@@ -10,6 +10,7 @@ import { SHARE_DEFAULTS } from "@/lib/meta";
 import { SITE_URL } from "@/lib/site";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./tokens.css";
+import "./kinds.css";
 import "./globals.css";
 import "./redesign.css";
 import "./atlas-pages.css";

@@ -1,7 +1,7 @@
 /* Shared tool typography and calm entry surfaces; official routes stay source-blue. */
 @media screen {
   body:has(.housing-help-page) { --surface-1:light-dark(#f3f2ee,#232420); --surface-2:light-dark(#fdfcf8,#2e302b); --surface-card:var(--surface-2); --text-primary:light-dark(#33372e,#edf0e7); --text-secondary:light-dark(#555b4f,#c6ccbd); --text-muted:light-dark(#62695b,#b6bead); --border:light-dark(#d3d7ca,#515848); background:var(--surface-1); }
-  .housing-help-page { --atlas-accent:light-dark(#59654a,#c4d1b2); --tool-heading:Georgia,serif; }
+  .housing-help-page { --atlas-accent:var(--kind-help); --tool-heading:Georgia,serif; }
   .housing-help-page .page-title { font:500 clamp(38px,5vw,62px)/1.08 var(--tool-heading); letter-spacing:-.045em; color:var(--text-primary); margin-bottom:.8rem; }
   .housing-help-page .tool-subtitle { font:400 16px/1.6 var(--font-text); color:var(--text-secondary); max-width:55ch; margin:.5rem 0; }
   .housing-help-page .page-head { --kind:var(--atlas-accent); display:block; padding-bottom:.7rem; border:0; }

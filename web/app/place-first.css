@@ -39,21 +39,21 @@
     .page-head:is(:hover,:focus-within) :is(.state-artwork-trace path,.state-artwork-wash) { animation-play-state:paused; }
     @keyframes state-place-breathe { 0%,100% { transform:scale(.92); opacity:.1; } 50% { transform:scale(1.06); opacity:.24; } }
   }
-  .atlas-local[data-region-level="municipality"] { --atlas-accent: light-dark(#267775, #a2dad5); }
-  .atlas-local[data-region-level="zip"] { --atlas-accent: light-dark(#735e91, #d2bce9); }
-  .atlas-local[data-region-level="municipality"] .page-head { --geo-accent: light-dark(#267775, #a2dad5); }
-  .atlas-local[data-region-level="zip"] .page-head { --geo-accent: light-dark(#735e91, #d2bce9); }
+  .atlas-local[data-region-level="municipality"] { --atlas-accent: var(--kind-town); }
+  .atlas-local[data-region-level="zip"] { --atlas-accent: var(--kind-zip); }
+  .atlas-local[data-region-level="municipality"] .page-head { --geo-accent: var(--kind-town); }
+  .atlas-local[data-region-level="zip"] .page-head { --geo-accent: var(--kind-zip); }
   .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) .page-head .kind { color:var(--atlas-accent); }
   .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) .crumbs li[aria-current="page"] { --crumb-accent:var(--atlas-accent); }
   .atlas-local .crumbs li[data-level="state"] { --crumb-accent:var(--state-blue); }
-  .atlas-local .crumbs li[data-level="local"]:not([aria-current="page"]) { --crumb-accent:light-dark(#246b55,#a6d9c0); }
+  .atlas-local .crumbs li[data-level="local"]:not([aria-current="page"]) { --crumb-accent:var(--kind-county); }
   main.atlas-local .crumbs li[data-level] a { color:var(--crumb-accent); }
   /* County links take the county pages' green, as town and ZIP links take theirs. */
-  main.nj-page .place-county-grid a { color:light-dark(#246b55,#a6d9c0); }
+  main.nj-page .place-county-grid a { color:var(--kind-county); }
   main.nj-page .place-county-grid a small { color:color-mix(in srgb,currentColor 70%,transparent); }
   .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) > .page-head { border-top-color:color-mix(in srgb,var(--atlas-accent) 50%,var(--border)); }
   .atlas-local:is([data-region-level="zip"],[data-region-level="municipality"]) :is(.quiet-profile,.more-entry) { --atlas-accent: inherit; }
-  .quiet-tax { --atlas-accent: light-dark(#006977, #8ed9e2); }
+  .quiet-tax { --atlas-accent: var(--kind-tax); }
   .quiet-tax .tax-search-field { border-color:var(--atlas-accent); border-radius:16px; background:light-dark(#f0f5f7,#20292e); }
   .quiet-history.quiet-revisions { --atlas-accent: light-dark(#826438,#d7c19b); }
   :is(.quiet-tax,.quiet-history,.budget-page) .crumbs li[data-level="nation"] { --crumb-accent:var(--text-primary); }

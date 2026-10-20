@@ -456,7 +456,7 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
   body:has(.horizon-page) .exhibit-gallery > .exhibit-group-head:first-child { margin-top: .4rem; }
   /* The county's towns: the New Jersey page's county strip, in the towns' teal. */
   body:has(.horizon-page) main > .page-head .town-strip { grid-column: 1/-1; margin: 1rem 0 0; }
-  body:has(.horizon-page) main .town-strip .county-strip-pill.destination-town { --town: light-dark(#267775, #a2dad5); color: var(--town) !important; border-color: color-mix(in srgb, var(--town) 30%, transparent); }
+  body:has(.horizon-page) main .town-strip .county-strip-pill.destination-town { --town: var(--kind-town); color: var(--town) !important; border-color: color-mix(in srgb, var(--town) 30%, transparent); }
   body:has(.horizon-page) main .town-strip .county-strip-pill.destination-town:is(:hover, :focus-visible) { background: color-mix(in srgb, var(--town) 14%, transparent); border-color: color-mix(in srgb, var(--town) 50%, transparent); color: var(--town) !important; }
   body:has(.horizon-page) .place-report-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 2.4rem 0 1rem; padding: 1.1rem 1.4rem; border: 1px solid var(--glass-edge); border-radius: 24px; background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: var(--plate-ink); text-decoration: none; }
   body:has(.horizon-page) .place-report-link span { display: grid; gap: .2rem; }

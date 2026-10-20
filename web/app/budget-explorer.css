@@ -16,7 +16,7 @@
 .nj-page.quiet-state .rank-card .ranks td:nth-child(2) { padding-right: .55rem; }
 .nj-page.quiet-state .rank-card .ranks td.num { padding-inline: .35rem; }
 .state-workspace-choice .state-budget-entry { display: inline-flex; align-items: center; gap: .7rem; min-height: 44px; padding: .4rem .8rem; text-decoration: none; color: var(--entry-ink); font: 12px/1.4 var(--font-text); }
-.budget-page { --budget-accent: light-dark(#a44e34, #edb09b); }
+.budget-page { --budget-accent: var(--kind-budget); }
 .budget-page .page-head { padding-block: 1.3rem 1rem; }
 .budget-page .page-title { font: 500 clamp(42px, 6vw, 70px)/1.1 Georgia, serif; letter-spacing: -.045em; }
 .budget-page .page-head .meta { max-width: 50ch; margin-bottom: 0; }

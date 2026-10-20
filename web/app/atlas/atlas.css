@@ -37,7 +37,7 @@ body:has(.housing-atlas-page) { --surface-1:light-dark(#f2f5f8,#19232c); --surfa
 .atlas-selected h3 { margin:0 0 .3rem; font:500 18px/1.2 Georgia,serif; }
 .atlas-selected strong { font:500 25px/1.3 var(--font-text); }
 .atlas-selected small,.atlas-selected a { display:block; margin-top:.25rem; font-size:12px; }
-.housing-atlas-page .atlas-selected a.destination-county { color:light-dark(#246b55,#a6d9c0); }
+.housing-atlas-page .atlas-selected a.destination-county { color:var(--kind-county); }
 .housing-atlas-page .atlas-selected a[href^="/states/"] { color:light-dark(#145e9c,#89c7ff); }
 .atlas-selected p { margin:0; font-size:13px; color:var(--text-secondary); }
 .atlas-reading { display:grid; gap:.2rem; font-size:12px; line-height:1.5; }

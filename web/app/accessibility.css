@@ -12,7 +12,7 @@ html { scroll-padding-top: 90px; }
 .map-pan-controls span { font-size: 11px; color: var(--text-muted); margin-right: .4rem; }
 .ticker-step { min-width: 28px; min-height: 28px; }
 .budget-headline > span { color: var(--text-secondary); }
-.crumbs li[data-level="local"] { --crumb-accent: light-dark(#246b55, #a6d9c0); }
+.crumbs li[data-level="local"] { --crumb-accent: var(--kind-county); }
 .interpretation-runtime { opacity: 1; color: var(--text-secondary); }
 .interpretation-matched { opacity: 1; }
 /* Footnote letters, report-a-problem icons, the history tabs and the state note marker keep

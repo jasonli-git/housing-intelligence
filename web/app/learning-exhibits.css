@@ -101,7 +101,7 @@
   .place-next-destinations .local-housing-help > svg { width:24px; height:24px; flex-shrink:0; }
   .place-next-destinations .local-housing-help h3 { margin:0; }
   .place-next-destinations .local-housing-help p { margin:.4rem 0; color:var(--text-secondary); }
-  .atlas-local .place-next-destinations a[href="/help"] { color:light-dark(#59654a,#c4d1b2); }
+  .atlas-local .place-next-destinations a[href="/help"] { color:var(--kind-help); }
   @media(max-width:600px) { .place-next-destinations { grid-template-columns:1fr; gap:0; } .place-next-destinations .local-housing-help { padding-top:.4rem; } }
   .learning-exhibit:has(> .exhibit-content:empty) { display:none; }
   .exhibit-kicker { display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem; color:var(--text-muted); font:10px/1.4 var(--font-mono); letter-spacing:.04em; margin-bottom:1.2rem; }
