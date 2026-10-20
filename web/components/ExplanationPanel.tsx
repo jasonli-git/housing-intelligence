@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import { termOf } from "@/lib/terms";
 import { Definition } from "@/components/Definition";
 
 import type { Binding, Explanation } from "@/lib/api";
@@ -173,9 +174,9 @@ export function ConsumerReading({
         <span className="consumer-feature-tag consumer-ai-badge">
           <Definition term={{
             key: `ai-${id}`,
-            title: "AI-written interpretation",
+            title: termOf("ai-interpretation")!.title!,
             phrases: [],
-            definition: "Interpretation of area figures, not a measurement or advice.",
+            definition: termOf("ai-interpretation")!.what,
           }}>AI-written interpretation</Definition>
         </span>
         <span className="interpretation-source">

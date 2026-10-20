@@ -9,6 +9,8 @@
  * not how it was loaded.
  */
 
+import { TERMS_BY_ID } from "@/lib/terms";
+
 export type Term = {
   key: string;
   title: string;
@@ -21,91 +23,19 @@ export type Term = {
   phrases: string[];
 };
 
-export const TERMS: readonly Term[] = [
-  {
-    key: "acs",
-    title: "ACS",
-    phrases: ["ACS"],
-    definition:
-      "American Community Survey: the Census Bureau’s rolling survey. Figures here are " +
-      "five-year estimates, so “2023” means the survey years 2019–2023, not a count taken " +
-      "that year.",
-  },
-  {
-    key: "chas",
-    title: "CHAS",
-    phrases: ["CHAS"],
-    definition:
-      "Comprehensive Housing Affordability Strategy: HUD’s special tabulation of ACS " +
-      "microdata, counting households by the share of their income that goes on housing.",
-  },
-  {
-    key: "fmr",
-    title: "Fair Market Rent",
-    phrases: ["Fair Market Rent"],
-    definition:
-      "HUD’s estimate of what a modest home rents for in an area, set near the 40th " +
-      "percentile of recent movers’ rents. It sets Housing Choice Voucher payments.",
-  },
-  {
-    key: "ami",
-    title: "Area median income",
-    phrases: ["Area median income", "area median income", "AMI"],
-    definition:
-      "HUD’s median family income for an area. HUD sets the income limits that decide " +
-      "who qualifies for housing programs from it.",
-  },
-  {
-    key: "zhvi",
-    title: "Home value index",
-    phrases: ["Home value index"],
-    definition:
-      "Zillow Home Value Index (ZHVI): Zillow’s estimate of the typical value of homes in " +
-      "the middle third of the market, smoothed and seasonally adjusted.",
-  },
-  {
-    key: "zori",
-    title: "Observed rent index",
-    phrases: ["Observed rent index"],
-    definition:
-      "Zillow Observed Rent Index (ZORI): the typical rent asked for homes listed for rent, " +
-      "smoothed and seasonally adjusted.",
-  },
-  {
-    // Carries the packet's `fhfa_state_only` caveat on the New Jersey page, in plainer
-    // words, so the note is there for a reader who asks rather than a paragraph for all.
-    key: "fhfa-hpi",
-    title: "House price index",
-    phrases: ["House price index"],
-    definition:
-      "The Federal Housing Finance Agency’s repeat-sales index: how the price of the same " +
-      "homes changes from one sale to the next. An index, not a price — the purchase-only " +
-      "index is 100 in the first quarter of 1991, and the all-transactions index, which " +
-      "adds refinance appraisals, 100 in the first quarter of 1980. The figures here are " +
-      "for New Jersey as a whole: FHFA's county indexes are not loaded yet, so counties " +
-      "cannot be compared on it.",
-  },
-  {
-    // The tables keep the metrics' own labels — "Residential parcels", "Apartment share
-    // of residential parcels" — because renaming a metric changes every packet. The word
-    // is defined where it first appears instead.
-    key: "parcel",
-    title: "Parcel",
-    phrases: ["parcels"],
-    definition:
-      "One property on the tax roll: a lot and whatever stands on it. A one- to four-family " +
-      "home is one parcel, and so is a 200-unit apartment building, so parcels count " +
-      "properties, not homes.",
-  },
-  {
-    key: "modiv",
-    title: "MOD-IV",
-    phrases: ["MOD-IV"],
-    definition:
-      "New Jersey’s property tax assessment records, kept by the Division of Taxation: a " +
-      "record for every parcel, with its assessed value, property class and year built.",
-  },
-];
+// A view of `lib/terms.ts` since 2026-10-19 (#387): the entries marked by phrases.
+export const TERMS: readonly Term[] = Object.entries(TERMS_BY_ID).flatMap(([key, entry]) =>
+  entry.phrases?.length
+    ? [{
+        key,
+        title: entry.title ?? key,
+        phrases: entry.phrases,
+        definition: entry.what,
+        ...(entry.why !== undefined ? { why: entry.why } : {}),
+        ...(entry.kind !== undefined ? { kind: entry.kind } : {}),
+      }]
+    : [],
+);
 
 export type Segment = { text: string; term?: Term };
 

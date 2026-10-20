@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { termOf } from "@/lib/terms";
 import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { Masthead } from "@/components/Masthead";
 import { api, regionsWithData, nationalBenchmarkTrends, nationalHomePriceChange, nationalMortgageRate } from "@/lib/api";
@@ -71,7 +72,7 @@ export default async function HousingLandingPage() {
             <h3 id="national-home-prices-heading">Home prices, change over the past year</h3>
             {homePrices ? <>
               <div className="national-rate"><strong>{homePrices.pct_change > 0 ? "+" : ""}{homePrices.pct_change.toFixed(1)}%</strong><small>{periodLabel(homePrices.period_start, "fhfa_hpi_us_monthly")} → {periodLabel(homePrices.period_end, "fhfa_hpi_us_monthly")} · <a href="https://www.fhfa.gov/data/hpi/datasets?tab=monthly-data" target="_blank" rel="noreferrer noopener">FHFA HPI®</a></small></div>
-              <div className="national-benchmark-definition"><FloatingMetricTerm metricId="fhfa_hpi_us_monthly" label="Annual change · Single-family homes" definition="Calculated from FHFA’s national purchase-only house price index: the latest published month compared with the same month a year earlier. Seasonally adjusted, not adjusted for inflation. Covers homes financed with mortgages bought or securitized by Fannie Mae or Freddie Mac—not every home or your home's value. The plot shows annual percentage changes for successive months, not index levels. Historical figures may be revised." why={null} /></div>
+              <div className="national-benchmark-definition"><FloatingMetricTerm metricId="fhfa_hpi_us_monthly" label="Annual change · Single-family homes" definition={termOf("fhfa-us-annual-change")!.what} why={null} /></div>
               <NationalTrend points={trends.prices} label="Annual home-price change history" metricId="fhfa_hpi_us_monthly" frequency="Monthly" />
             </> : <p>A full year of comparable home-price data is unavailable.</p>}
           </section>

@@ -1,15 +1,9 @@
 import { Definition } from "@/components/Definition";
 import type { Term } from "@/lib/glossary";
+import { termOf } from "@/lib/terms";
 
-const COMPUTED: Term = {
-  key: "computed",
-  title: "Computed from the data, not AI",
-  phrases: [],
-  definition:
-    "The figures, rankings, costs, profiles, summaries and maps on this page are assembled " +
-    "from published data by fixed rules, not written by AI. When a region includes a labelled " +
-    "interpretation inside its expanded detail, that is the one part a language model wrote.",
-};
+const entry = termOf("computed")!;
+const COMPUTED: Term = { key: "computed", title: entry.title!, phrases: [], definition: entry.what };
 
 /** The same provenance promise beside every place title, with its full meaning attached. */
 export function ComputedBadge() {
