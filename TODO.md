@@ -40,8 +40,11 @@ implementation work a second state needs:
    Jersey is 14,947 files and 1,772 rules, and a synthetic second state of the same
    size reaches 28,551 files even with no redirect rules or aliases in Pages. Left:
    the owner's choice of how files are held, then activating one redirect option.
-2. **Expansion correctness** — New Jersey hardcoded in three places (under API and scale
-   limits). Search results already name each place's state (#362).
+2. **Expansion correctness** — the three seams are fixed (2026-10-20, #205, ARCHITECTURE
+   #401): county series, published geometry and `api.geo` take their state from scope.
+   Left: the New Jersey assumptions that change inventoried and left, and an all-sources
+   `hip acquire` on a new database (both under API and scale limits). Search results
+   already name each place's state (#362).
 3. **Scale safety** — the analytics test that rebuilds the live warehouse (Test
    coverage), a truncation signal on `/regions/{id}/metrics` and the `/rankings` cap,
    then the rank-range step's cost (API and scale limits).
@@ -186,13 +189,36 @@ Not open work: each comes round on a date. The steps live where the row says.
       rebuilds twice, under `make test-all`; #299). The weekly refresh
       rebuilds once, so it is tolerable for New Jersey; at Milestone 14's seven states it
       is not. A sort-based count, or the step moved to DuckDB, are the leads.
-- [ ] **New Jersey is hardcoded in three places**, despite `config/geography.yml` stating
-      no state code is hard-coded anywhere in `src/hip`. (pre-M12 review) NJ's
-      odd-numbered county FIPS in [registry.py:100](src/hip/sources/registry.py:100),
-      which is a real arithmetic assumption about one state; and `?state=NJ` in both
-      [publish.py:200](src/hip/publish.py:200) and
-      [web/lib/api.ts:437](web/lib/api.ts:437). Blocks the Northeast expansion
-      (Milestone 14, unscheduled).
+- [ ] **Other New Jersey assumptions remain, inventoried and not fixed.** (pre-M12
+      review; narrowed 2026-10-20, #205, ARCHITECTURE #401) BLS and HUD county series now
+      come from the loaded county regions, and the publisher and `api.geo` take a state
+      explicitly, but `config/geography.yml` still says no state code is hard-coded
+      anywhere in `src/hip`, which is false. `agent-handoffs/state-agnostic.md` lists the
+      49 structural lines in 20 files; `scripts/audit_state_assumptions.py` regenerates
+      the list (it needs `rg` on the PATH, and it flags tokens, so assumptions without
+      one can still exist). Sources: LODES (main and crosswalk files, home-state
+      exclusion), FEMA, HMDA, EPA's SDWIS, CDC PLACES, HUD's assisted-property parser,
+      UCMR/EIA/LEAD and FCC's manual filings are pinned to New Jersey, as are
+      `bts_ntm.py`'s bounding box and the broadband completeness check; each needs its
+      file shape, provenance and staging reviewed, not a changed literal.
+      `warehouse/names.py` keeps municipality names unique across the whole warehouse,
+      so namesakes in two states may need state-qualified labels. Pages and tools: the
+      place and report pages' location copy and state breadcrumb, `SimilarPlaces` and
+      `HowUnusual` captions, `SectionJump`'s `.nj-page` selector, the home page's
+      coverage locator and counter (`NationalCoverageMap`, `dataScale`,
+      `coverageMap`), the budget enumeration (`affordData`), `placeRoutes.ts`'s single
+      state destination, and `ownership.ts`, which applies New Jersey's seller fees and
+      needs jurisdiction rules. A state-name label or a geometry file is not a
+      coverage announcement. Blocks the Northeast expansion (Milestone 14, unscheduled).
+- [ ] **`hip acquire` with no `--source` cannot start on a new database.** (#205 review,
+      2026-10-20) The BLS and HUD adapters now read the `regions` table to list their
+      counties, and an all-sources run builds every adapter before acquiring any,
+      TIGER included. With no `regions` table it stops on SQLAlchemy's `no such table:
+      regions` (checked on an empty SQLite database); with the table but no counties
+      for a scoped state, on a `ConfigError` that says to load the spine first (tested).
+      A `--source` run for any other source is unaffected. Fix: build the BLS and HUD
+      adapters only when they are acquired, or turn the missing table into the same
+      `ConfigError`.
 ### Frontend and presentation
 
 - [ ] **Accessibility checks the audit script cannot make.** (M43, #309) True 200%
