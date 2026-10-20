@@ -22,6 +22,12 @@ export function SimilarPlaces({ name, data }: { name: string; data: SimilarPlace
   const measures = groups[0].rows.map((r) => r.label.toLowerCase());
   const cheaper = Math.round((1 - data.cheaper_by) * 100);
   const places = [data.here, ...data.matches];
+  // ZIP codes are compared with ZIP codes on Zillow's typical value; towns with towns on
+  // recorded sales (#394). The words follow.
+  const zip = data.level === "zip";
+  const noun = zip ? "ZIP code" : "town";
+  const nouns = zip ? "ZIP codes" : "towns";
+  const cheaperWords = zip ? `typical home value is at least ${cheaper}% lower` : `homes sold for at least ${cheaper}% less`;
 
   return (
     <section className="section sales similar-places" aria-labelledby="similar-places-heading">
@@ -32,29 +38,31 @@ export function SimilarPlaces({ name, data }: { name: string; data: SimilarPlace
       <p className="sales-lead">
         {data.matches.length > 0 ? (
           <>
-            The {data.matches.length === 1 ? "town" : `${COUNTS[data.matches.length]} towns`} most like {name}
-            {" "}whose homes sold for at least {cheaper}% less, with workers commuting no more than{" "}
+            The {data.matches.length === 1 ? noun : `${COUNTS[data.matches.length]} ${nouns}`} most like {name}
+            {" "}whose {cheaperWords}, with workers commuting no more than{" "}
             {data.commute_minutes} minutes longer.
           </>
         ) : (
           <>
-            No New Jersey town is close enough to {name} on these measures with homes selling for at
-            least {cheaper}% less and a commute no more than {data.commute_minutes} minutes longer.
-            The page does not loosen the rules to fill the list.
+            No New Jersey {noun} is close enough to {name} on these measures with a{" "}
+            {zip ? `typical home value at least ${cheaper}% lower` : `median sale at least ${cheaper}% lower`} and a commute no more than{" "}
+            {data.commute_minutes} minutes longer. The page does not loosen the rules to fill the list.
           </>
         )}
       </p>
       <p className="sales-note">
         “Like here” means only {measures.slice(0, -1).join(", ")} and {measures.at(-1)}: not
-        schools, safety or anything else. Prices are the median recorded sale
-        {window ? `, ${window}` : ""}, in towns with at least {data.min_sales} sales.
+        schools, safety or anything else.{" "}
+        {zip
+          ? "Prices are Zillow’s typical single-family home value, an estimate, not recorded sales: sales are filed by town, so no ZIP code has a sale price. ZIP codes are compared only with ZIP codes."
+          : <>Prices are the median recorded sale{window ? `, ${window}` : ""}, in towns with at least {data.min_sales} sales.</>}
       </p>
 
       {data.matches.length > 0 && (
         <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally">
           <table className="change-places similar-table">
             <caption className="visually-hidden">
-              {name} beside the towns most like it whose homes sold for less
+              {name} beside the {nouns} most like it, and cheaper
             </caption>
             <thead>
               <tr>
@@ -63,7 +71,7 @@ export function SimilarPlaces({ name, data }: { name: string; data: SimilarPlace
                 </th>
                 {places.map((p, i) => (
                   <th scope="col" className="num" key={p.region_id}>
-                    {i === 0 ? p.name : <Link className="destination-town" href={regionPath(p.region_id)}>{p.name}</Link>}
+                    {i === 0 ? p.name : <Link className={zip ? "destination-zip" : "destination-town"} href={regionPath(p.region_id)}>{p.name}</Link>}
                   </th>
                 ))}
               </tr>

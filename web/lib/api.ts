@@ -287,6 +287,8 @@ export type SimilarFigure = {
 export type SimilarPlace = { region_id: number; name: string; figures: SimilarFigure[] };
 export type SimilarPlaces = {
   region_id: number;
+  /** "municipality" or "zip" (#394): places are matched only with their own level. */
+  level?: string;
   measures: string[];
   price: string;
   commute: string;

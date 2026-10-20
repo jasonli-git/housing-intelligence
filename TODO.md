@@ -180,11 +180,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       (Milestone 14, unscheduled).
 ### Frontend and presentation
 
-- [ ] **"Somewhere like here, but cheaper" for ZIP codes.** (M46, #317) Towns only: ZIP
-      codes have no recorded-sales price, and matching them on Zillow's or the ACS's
-      value would compare a different measure from towns'. Needs a ZIP-level SR1A price
-      (sales placed by their parcel's ZIP) or a decision to use another measure there.
-
 - [ ] **Accessibility checks the audit script cannot make.** (M43, #309) True 200%
       text and 400% zoom, print in Safari and Firefox, and axe's remaining needs-review
       results. The handoff (`m43-accessibility-audit.md`) lists each.
@@ -267,6 +262,12 @@ Not open work: each comes round on a date. The steps live where the row says.
       leaves the build date where it was, and nothing published records the run itself.
       Publishing the last successful check apart from the snapshot would let it say so.
 ### Documentation upkeep
+
+- [ ] **Make README.md much more concise.** (owner, 2026-10-20) It has grown into a long
+      record of every milestone, source and decision, much of it repeated from
+      ARCHITECTURE, ROADMAP and CHANGELOG. Cut it to what a visitor needs: what the site
+      is, the screenshots, a short feature list, how to run it, and links to the other
+      documents for the rest. Pairs with the Director Note on README auto-maintenance.
 
 - [ ] **Which README figures are mechanically derivable has never been settled.** The
       status counts (regions, observations, metrics, sources), the Tech Stack, the
