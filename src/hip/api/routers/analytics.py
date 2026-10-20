@@ -62,6 +62,7 @@ class Ranking(BaseModel):
     basis: str
     window: str
     level: str
+    total: int
     items: list[RankedRegion]
 
 
@@ -102,14 +103,16 @@ def rankings(
     # A value ranking has no change row to join, and forcing one would drop every
     # snapshot metric back out of the result — the exact failure this basis exists to
     # prevent. LEFT JOIN keeps one query shape for both bases (ARCHITECTURE #8).
-    rows = session.execute(
-        text(
-            """
+    rows = (
+        session.execute(
+            text(
+                """
             SELECT k.rank, k.of, k.percentile, k.region_id, r.name, r.level::text,
                    k.value,
                    c.pct_change, c.start_value, c.end_value,
                    c.window_start, c.window_end, k.rank_best, k.rank_worst,
-                   k.margin_of_error, c.start_margin, c.end_margin
+                   k.margin_of_error, c.start_margin, c.end_margin,
+                   count(*) OVER () AS total
             FROM region_rankings k
             JOIN regions r ON r.region_id = k.region_id
             LEFT JOIN fact_metric_change c
@@ -120,15 +123,18 @@ def rankings(
             ORDER BY k.rank
             LIMIT :limit
             """
-        ),
-        {
-            "m": metric_id,
-            "level": level,
-            "basis": basis,
-            "w": effective_window,
-            "limit": limit,
-        },
-    ).mappings()
+            ),
+            {
+                "m": metric_id,
+                "level": level,
+                "basis": basis,
+                "w": effective_window,
+                "limit": limit,
+            },
+        )
+        .mappings()
+        .all()
+    )
 
     return Ranking(
         metric_id=metric["metric_id"],
@@ -138,6 +144,7 @@ def rankings(
         basis=basis,
         window=effective_window,
         level=level,
+        total=int(rows[0]["total"]) if rows else 0,
         items=[RankedRegion(**row) for row in rows],
     )
 

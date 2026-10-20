@@ -76,6 +76,7 @@ class RegionMetrics(BaseModel):
     region_id: int
     name: str
     level: str
+    total: int
     observations: list[Observation]
 
 
@@ -163,25 +164,31 @@ def region_metrics(
         filters.append("f.period_start <= :to")
         params["to"] = to
 
-    rows = session.execute(
-        text(
-            f"""
+    rows = (
+        session.execute(
+            text(
+                f"""
             SELECT f.metric_id, f.period_start, f.period_end, f.value,
-                   sr.source_id, sr.vintage, f.match_method, f.margin_of_error
+                   sr.source_id, sr.vintage, f.match_method, f.margin_of_error,
+                   count(*) OVER () AS total
             FROM fact_metric_observation f
             JOIN source_releases sr ON sr.release_id = f.release_id
             WHERE {" AND ".join(filters)}
             ORDER BY f.metric_id, f.period_start
             LIMIT :limit
             """
-        ),
-        params,
-    ).mappings()
+            ),
+            params,
+        )
+        .mappings()
+        .all()
+    )
 
     return RegionMetrics(
         region_id=region["region_id"],
         name=region["name"],
         level=region["level"],
+        total=int(rows[0]["total"]) if rows else 0,
         observations=[Observation(**row) for row in rows],
     )
 

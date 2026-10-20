@@ -215,6 +215,7 @@ check-dist:  ## Verify dist/ is complete and was built for production
 	  echo "dist/artifacts/manifest.json missing — run 'make publish' first"; exit 1; }
 	@test -f dist/site/index.html || { \
 	  echo "dist/site/index.html missing — run 'make publish' first"; exit 1; }
+	uv run python scripts/check_list_completeness.py dist/artifacts
 	@# A static export bakes the artifact origin into every page, so localhost in the
 	@# output means the whole site would ship with dead download links. Caught here
 	@# rather than by a reader clicking one.

@@ -134,6 +134,8 @@ export type Ranking = {
   basis: "change" | "value";
   window: string;
   level: string;
+  /** Full cohort size before the request limit; compare with items.length. */
+  total: number;
   items: RankedRegion[];
 };
 
@@ -667,7 +669,7 @@ export const api = {
       `/rankings?metric_id=${metricId}&level=${level}&limit=${limit}&basis=value`,
     ),
   observations: (id: number, metricId: string) =>
-    tryGet<{ observations: Observation[] }>(
+    tryGet<{ total: number; observations: Observation[] }>(
       `/regions/${id}/metrics?metric_id=${metricId}`,
     ),
   /** Build-time only: unranked annual ACS cost inputs, in ascending survey order. */

@@ -12,6 +12,14 @@
 ## Files/modules affected
 
 - Part 1: `tests/test_analytics.py`, `tests/warehouse_scratch.py`, `scripts/verify_analytics_isolation.py`.
+- Part 2: API analytics/metrics response models and queries; `src/hip/publish.py`; `web/lib/api.ts`; `web/components/DecisionGuide.tsx`; `scripts/check_list_completeness.py`; `Makefile`; `tests/test_list_completeness.py`; ARCHITECTURE Decision #402 (new row only).
+
+### Part 2 — explicit completeness
+
+- Both list responses add required `total`, counting the entire filtered result before `LIMIT` in the same SQL statement. Empty responses report zero. Existing caps are unchanged.
+- Publisher validates the total before writing the list file (and before replacing an existing complete file). Unknown, malformed or partial totals fail loudly, rather than publishing a clipped ranking/series. This implements the explicitly permitted refusal option, not automatic pagination. Failure aborts the build; a partially built output tree is never deployable.
+- `make check-dist` now checks every ranking/metrics manifest artifact for completeness. Payload bytes are written directly; validation does not reserialize successful responses.
+- Readers inventoried: `web/lib/api.ts` (`Ranking`, `api.rankings`, `api.values`, `api.observations`, `nationalObservationSeries`); `DecisionGuide.tsx` reads full metrics artifacts. Downstream consumers are `web/lib/affordData.ts`, `web/app/atlas/page.tsx`, `web/app/[state]/[place]/page.tsx`, `web/app/[state]/[place]/report/page.tsx`, and `web/app/states/new-jersey/page.tsx`. These consume existing item/observation arrays without shape changes. `Makefile check-dist` previously checked file/page presence only; it now validates the metadata. `check-live.mjs` checks manifest/content and has no independent list-response schema to update. API tests consume these same response models.
 
 ## Architectural or implementation decisions
 
@@ -46,3 +54,4 @@ Tests using the FastAPI `TestClient` also use its normal real database dependenc
 - First full isolation run: 1,251 passed, one existing brittle trigger-fixture failure in 201.90 s. A tiny ratio update was suppressed by the intended revision gate; the test then read an unrelated latest revision. Fixed its fixture to ACS income and scoped its revision lookup to the changed key. No production revision behavior changed.
 - Despite that fixture failure, both served analytics tables were unchanged: `fact_metric_change` 125,474 rows / checksum `b4d41f2bb9c1bbd498031099c035b6c1`; `region_rankings` 178,880 / `2d697902018ebebf18ccb1650b2b0ef8`. 398 successful real API rankings polls, zero failures. Evidence: `/private/tmp/hip-scale-isolation-part1.json`; test log `/private/tmp/hip-scale-tests-part1.log`.
 - Full-suite/API checksum evidence and subsequent parts: recorded below as completed.
+- Part 2 targeted: `uv run pytest tests/test_list_completeness.py tests/test_api_analytics.py tests/test_api_metrics.py -q --tb=short` — 32 passed, including a 1,001-region ranking refused at a 1,000-row page, explicit metrics truncation, empty/filtered series, malformed metadata, check-dist rejection, and unchanged bytes on successful writes. `npm test` — 700 passed / 114 files; `npx tsc --noEmit` — passed.
