@@ -21,5 +21,8 @@ describe("peerNoun and scopeName", () => {
     expect(peerNoun("county")).toBe("counties");
     expect(peerNoun("zip")).toBe("ZIP codes");
     expect(scopeName("NJ")).toBe("New Jersey");
+    expect(scopeName("NY")).toBe("New York");
+    expect(scopeName("AK")).toBe("Alaska");
+    expect(scopeName("not-a-code")).toBe("not-a-code");
   });
 });

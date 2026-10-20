@@ -434,6 +434,9 @@ class GeographyScope(BaseModel):
     states: list[str] = Field(min_length=1)
     levels: list[RegionLevel] = Field(min_length=1)
     municipality_id_system: Literal["census_mcd", "nj_municipal_code"]
+    # Keep the originally published unscoped geometry URLs attached to their state,
+    # even when scope expands. New readers use geo/<state>/<level>.json.
+    legacy_geo_state: str | None = None
 
 
 class SamplingParams(BaseModel):

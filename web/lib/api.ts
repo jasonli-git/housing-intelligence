@@ -677,9 +677,9 @@ export const api = {
     ),
   packet: (id: number, window: string) =>
     tryGet<Packet>(`/regions/${id}/packet?window=${window}`),
-  geo: (level: string, simplify?: number) =>
+  geo: (level: string, state: string, simplify?: number) =>
     tryGet<FeatureCollection>(
-      `/geo/${level}?state=NJ` +
+      `/geo/${level}?state=${encodeURIComponent(state.toUpperCase())}` +
         (simplify === undefined ? "" : `&simplify=${simplify}`),
     ),
   /**
