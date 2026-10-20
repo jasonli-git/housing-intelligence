@@ -129,3 +129,13 @@
   /* Zoom sits at the open area's bottom right, off the Pacific coast and clear of the legend. */
   @media (min-width: 901px) { .horizon-page .atlas-map-buttons { left: auto !important; right: calc(var(--atlas-panel-width) + 36px) !important; bottom: 24px !important; } }
 }
+/* The title on one compact line (2026-10-20, #399): a 28px serif heading with the tagline
+   beside it in small grey text, instead of a 140px block, so the map starts higher. */
+@media screen {
+  .horizon-page.housing-atlas-page .atlas-title { padding: .7rem var(--gutter, 16px) .55rem !important; }
+  .horizon-page.housing-atlas-page .atlas-title > div { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .9rem; row-gap: .15rem; }
+  .horizon-page.housing-atlas-page .atlas-title h1 { font-size: 28px !important; letter-spacing: -.03em; }
+  .horizon-page.housing-atlas-page .atlas-title .atlas-lede { margin: 0; font-size: 14px; color: var(--text-muted); }
+  .horizon-page .housing-atlas { height: calc(100svh - 165px); }
+  @media (max-width: 900px) { .horizon-page.housing-atlas-page .atlas-title { padding: .6rem 0 .5rem !important; } .horizon-page .housing-atlas { height: auto; } }
+}
