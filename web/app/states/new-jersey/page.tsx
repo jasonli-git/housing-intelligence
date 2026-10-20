@@ -1,3 +1,4 @@
+import { Term } from "@/components/Term";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import "../../place-photo.css";
 import type { Metadata } from "next";
@@ -23,7 +24,6 @@ import { IncomePressure } from "@/components/IncomePressure";
 import "../../income-pressure.css";
 import { HowUnusual } from "@/components/HowUnusual";
 import { QuietProfile } from "@/components/QuietCounty";
-import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
 import { api, nationalMortgageRate } from "@/lib/api";
 import { formatMetric } from "@/lib/format";
@@ -177,12 +177,7 @@ export default async function NewJerseyPage() {
             {population && (
               <aside className="population-badge" aria-label="Population">
                 <span className="population-badge-year">
-                  <FloatingMetricTerm
-                    metricId={population.metric_id}
-                    label={`${formatMetric(population.value, population.unit, population.metric_id)} residents`}
-                    definition={`${periodLabel(population.period_end, population.metric_id)} estimate. ${definitionOf(population.metric_id)?.what ?? population.label}`}
-                    why={null}
-                  />
+                  <Term id={population.metric_id} definition={`${periodLabel(population.period_end, population.metric_id)} estimate. ${definitionOf(population.metric_id)?.what ?? population.label}`} why={null}>{`${formatMetric(population.value, population.unit, population.metric_id)} residents`}</Term>
                 </span>
               </aside>
             )}
@@ -242,7 +237,7 @@ export default async function NewJerseyPage() {
           <div className="scroll-x" tabIndex={0} role="region" aria-label="Data table, scroll horizontally"><table className="state-figures">
             <thead><tr><th scope="col">Measure</th><th scope="col" className="num">Value</th><th scope="col">Period</th><th scope="col">Source</th></tr></thead>
             <tbody>{levels.map((level) => <tr key={level.metric_id}>
-              <th scope="row"><FloatingMetricTerm metricId={level.metric_id} label={level.label} /></th>
+              <th scope="row"><Term id={level.metric_id}>{level.label}</Term></th>
               <td className="num">{formatMetric(level.value, level.unit, level.metric_id)}<small className="state-figure-margin">{marginLabel(level.value, level.margin_of_error ?? null, level.unit, level.metric_id)}</small></td>
               <td>{stateFigurePeriod(level)}</td><td>{level.source_id ?? "Not supplied"}</td>
             </tr>)}</tbody>

@@ -1,4 +1,4 @@
-import { MetricTerm } from "@/components/MetricTerm";
+import { Term } from "@/components/Term";
 import type { StandOut, StandOutGroup } from "@/lib/standouts";
 
 const GROUPS: { key: StandOutGroup; title: string; sub: string }[] = [
@@ -35,7 +35,7 @@ export function StandOuts({ name, peers, items }: { name: string; peers: string;
                 <li key={item.metric_id} className="standout">
                   <span className="standout-rank">{item.rank}</span>
                   <span className="standout-what">
-                    <MetricTerm metricId={item.metric_id} label={item.label} scope={`standout-${group.key}`} />
+                    <Term id={item.metric_id}>{item.label}</Term>
                   </span>
                   <span className="standout-figure">{item.figure}</span>
                   {item.margin && <span className="margin">{item.margin}</span>}

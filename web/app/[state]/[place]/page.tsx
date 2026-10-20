@@ -1,3 +1,4 @@
+import { Term } from "@/components/Term";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { PlacePhoto } from "@/components/PlacePhoto";
 import { photoFor } from "@/lib/photos";
@@ -35,7 +36,6 @@ import { GardenStateArtwork } from "@/components/GardenStateArtwork";
 import { Crumbs, Kind, kindOf } from "@/components/Crumbs";
 import { ConsumerReading } from "@/components/ExplanationPanel";
 import { EditorialMetrics } from "@/components/EditorialMetrics";
-import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { IndexedComparison } from "@/components/IndexedComparison";
 import { ProfileTicker } from "@/components/StateProfileTicker";
 import { Masthead } from "@/components/Masthead";
@@ -47,7 +47,7 @@ import { costInputs, homePrice } from "@/lib/costInputs";
 import { formatMetric } from "@/lib/format";
 import { pageMetadata, regionTitle } from "@/lib/meta";
 import { hasUnplaced, ownClaimsUsable } from "@/lib/hazards";
-import type { Term } from "@/lib/glossary";
+import type { Term as GlossaryTerm } from "@/lib/glossary";
 import { displayName, peerNoun, scopeName } from "@/lib/names";
 import { periodLabel, surveyYears } from "@/lib/periods";
 import { standOuts } from "@/lib/standouts";
@@ -132,7 +132,7 @@ function asOfTerm(
   compared: boolean,
   valueMargin: string | null,
   changeMargin: string | null,
-): Term {
+): GlossaryTerm {
   const year = periodLabel(population.period_end);
   const marginNote = valueMargin === NO_SAMPLING_ERROR
     ? "For this area, the Census Bureau uses its population estimates rather than a survey sample. There is no sampling error, but this is still an estimate."
@@ -447,17 +447,12 @@ export default async function RegionPage({
             {population && (
               <aside className="population-badge" aria-label="Population">
                 <span className="population-badge-year">
-                  <FloatingMetricTerm
-                    metricId={population.metric_id}
-                    label={`${formatMetric(population.value, population.unit, population.metric_id)} residents`}
-                    definition={`${periodLabel(population.period_end)} estimate. ${populationChange ? `${changeWords(populationChange.pct_change)} over ${periodLabel(populationChange.window_start)}–${periodLabel(populationChange.window_end)}. ` : ""}${asOfTerm(
+                  <Term id={population.metric_id} definition={`${periodLabel(population.period_end)} estimate. ${populationChange ? `${changeWords(populationChange.pct_change)} over ${periodLabel(populationChange.window_start)}–${periodLabel(populationChange.window_end)}. ` : ""}${asOfTerm(
                       population,
                       Boolean(populationChange),
                       populationMargin,
                       populationChangeMargin,
-                    ).definition}`}
-                    why={null}
-                  />
+                    ).definition}`} why={null}>{`${formatMetric(population.value, population.unit, population.metric_id)} residents`}</Term>
                 </span>
               </aside>
             )}
