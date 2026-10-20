@@ -1,5 +1,6 @@
 "use client";
 
+import { Glossed } from "@/components/Glossed";
 import { useEffect, useRef } from "react";
 
 /** Preserve the footnote's deep link while keeping the caveats closed by default. */
@@ -25,6 +26,6 @@ export function StateFigureNotes({ notes }: { notes: string[] }) {
   }, []);
   return <details ref={ref} id="state-figure-notes" className="state-figure-notes">
     <summary>† About the statewide figures</summary>
-    <div>{notes.map((text) => <p key={text}>{text}</p>)}<a href="#state-note-reference">Back to the snapshot ↑</a></div>
+    <div>{notes.map((text) => <p key={text}><Glossed text={text} /></p>)}<a href="#state-note-reference">Back to the snapshot ↑</a></div>
   </details>;
 }

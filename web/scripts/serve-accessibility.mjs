@@ -3,7 +3,8 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 
-const root = resolve('out');
+// `out` by default; `make check-terms` points it at the deployable tree (#392).
+const root = resolve(process.env.A11Y_ROOT ?? 'out');
 const port = Number(process.env.A11Y_PORT ?? 3002);
 const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.svg':'image/svg+xml', '.woff2':'font/woff2', '.png':'image/png', '.ico':'image/x-icon' };
 createServer(async (request,response) => {

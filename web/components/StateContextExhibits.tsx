@@ -1,3 +1,4 @@
+import { Gloss } from "@/components/Gloss";
 import type { CommunityContext, PacketLevel, WorkDestinations } from "@/lib/api";
 import { lending } from "@/lib/lending";
 import { commutePicture } from "@/lib/gettingAround";
@@ -19,7 +20,7 @@ export function StateContextExhibits({ levels, destinations, community, name = "
       <section aria-labelledby="state-loans-exhibit"><h2 id="state-loans-exhibit">What did buyers borrow?</h2>
         {loans ? <>
           <dl className="state-exhibit-readouts">
-            {loans.loan !== null && <div><dt>Median loan</dt><dd>{formatValue(loans.loan, "usd")}</dd></div>}
+            {loans.loan !== null && <div><dt><Gloss>Median loan</Gloss></dt><dd>{formatValue(loans.loan, "usd")}</dd></div>}
             {loans.rate !== null && <div><dt>Median rate</dt><dd>{loans.rate.toFixed(2)}%</dd></div>}
             {loans.ltv !== null && <div><dt>Loan / home value</dt><dd>{loans.ltv.toFixed(0)}%</dd></div>}
           </dl>

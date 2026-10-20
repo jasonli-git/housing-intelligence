@@ -1,3 +1,4 @@
+import { Gloss } from "@/components/Gloss";
 import type { PacketLevel } from "@/lib/api";
 import { ReaderDetails } from "@/components/ReaderDetails";
 import { formatValue } from "@/lib/format";
@@ -37,7 +38,7 @@ export function MortgageLending({ name, levels }: { name: string; levels: Packet
       )}
 
       {(l.fha !== null || l.costs !== null || l.income !== null) && (
-        <p className="sales-note">
+        <p className="sales-note"><Gloss>
           {l.conventional !== null && l.fha !== null && l.va !== null && (
             <>
               {shareText(l.conventional)} were conventional loans, {shareText(l.fha)} FHA and{" "}
@@ -46,21 +47,21 @@ export function MortgageLending({ name, levels }: { name: string; levels: Packet
           )}
           {l.costs !== null && <>Median loan costs at closing were {usd(l.costs)}. </>}
           {l.income !== null && <>Borrowers’ median income was {usd(l.income)}.</>}
-        </p>
+        </Gloss></p>
       )}
 
       {l.denial !== null && (
-        <p className="sales-note">
+        <p className="sales-note"><Gloss>
           {shareText(l.denial)} of decided applications were denied
           {l.reasons.length > 0
             ? `, most often for ${l.reasons.map((r) => `${r.label} (${shareText(r.share)})`).join(", ")}`
             : ""}
           . HMDA has no credit scores, so this is not a measure of who could qualify.
-        </p>
+        </Gloss></p>
       )}
 
       <ReaderDetails title="About these figures">
-        <p className="sales-note">
+        <p className="sales-note"><Gloss>
           From the Home Mortgage Disclosure Act records lenders report to the CFPB: first-lien
           loans to buy an owner-occupied one-to-four-family home. Refinances, home-equity lines
           and cash purchases are not counted, nor are lenders below HMDA’s reporting thresholds,
@@ -69,7 +70,7 @@ export function MortgageLending({ name, levels }: { name: string; levels: Packet
           {l.estimated
             ? " HMDA places a loan in a census tract, not a town, so these figures weigh each tract’s loans by the share of its homes here: an estimate."
             : ""}
-        </p>
+        </Gloss></p>
       </ReaderDetails>
     </section>
   );

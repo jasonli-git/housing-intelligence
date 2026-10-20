@@ -412,7 +412,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
                           )}
                         </td>
                         <td className="when">{periodLabel(l.period_end, l.metric_id)}</td>
-                        <td>{reportSourceLabel(l.source_id, sourceNames.get(l.source_id ?? ""))}</td>
+                        <td data-terms="off">{reportSourceLabel(l.source_id, sourceNames.get(l.source_id ?? ""))}</td>
                       </tr>
                       <NoteRows id={l.metric_id} texts={current.inline.get(l.metric_id)} span={5} />
                     </Fragment>
@@ -466,7 +466,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
             <tbody>
               {sources.map((s) => (
                 <tr key={s.source_id}>
-                  <td>{s.name}<small className="report-source-code">{reportSourceLabel(s.source_id, s.name)} · {s.source_id}</small></td>
+                  <td data-terms="off">{s.name}<small className="report-source-code">{reportSourceLabel(s.source_id, s.name)} · {s.source_id}</small></td>
                   <td>{s.publisher}</td>
                   <td className="when">{s.vintages.join(", ")}</td>
                   <td className="when">{s.fetched.slice(0, 10)}</td>

@@ -1,3 +1,4 @@
+import { Gloss } from "@/components/Gloss";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ReaderDetails } from "@/components/ReaderDetails";
@@ -124,12 +125,12 @@ export function HomeSales({
         )}
       </dl>
       </SaleDetails>
-      <p className="sales-note">
+      <p className="sales-note"><Gloss>
         Only arm’s-length sales the state accepts. This describes sold homes, not every home.
         A higher median may mean pricier homes sold—not that each home gained value.
         {level !== "municipality" &&
           " Calculated from qualifying deeds across the area, not an average of town medians."}
-      </p>
+      </Gloss></p>
       {showLookup && level === "municipality" && (
         <p className="sales-note">
           <Link href={`/tax?town=${geoid}`}>Look up a property in {name}</Link>: its

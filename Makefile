@@ -2,7 +2,7 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help setup setup-eval venv-fix hooks rollback data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
+.PHONY: help check-terms setup setup-eval venv-fix hooks rollback data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
         check-dist check-live clean-dist deploy api web \
         test test-all test-py test-web lint format check-config dbt-debug eval clean
 
@@ -248,7 +248,14 @@ r2-cors:  ## Let the site's pages read the R2 artifacts (the property-tax lookup
 	@# file does. GET and HEAD from the site's own origin; nothing else (#291).
 	npx wrangler r2 bucket cors set $(R2_BUCKET) --file deploy/r2-cors.json --force
 
-deploy: check-dist  ## Upload artifacts to R2 and the site to Pages
+check-terms: check-dist  ## Fail if a glossary word's first use on a page has no definition (#389, #392)
+	@# Against the tree about to ship, served locally, so a failure stops the deploy before
+	@# anything uploads rather than reporting a page already live.
+	@cd web && { A11Y_ROOT=../dist/site A11Y_PORT=3005 node scripts/serve-accessibility.mjs > /dev/null & \
+	  pid=$$!; sleep 1; TERMS_ORIGIN=http://localhost:3005 node scripts/check-terms.mjs; status=$$?; \
+	  kill $$pid; exit $$status; }
+
+deploy: check-dist check-terms  ## Upload artifacts to R2 and the site to Pages
 	@# Keep a way back (#359): the private backup bucket is emptied, then given the list of
 	@# keys live now and, through `--backup-dir`, every file this sync replaces or deletes.
 	@# `make rollback` restores from it. Refuses up front if the bucket is unreachable,

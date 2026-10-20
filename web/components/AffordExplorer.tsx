@@ -1,5 +1,6 @@
 "use client";
 
+import { Gloss } from "@/components/Gloss";
 import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 import { type KeyboardEvent, useEffect, useId, useMemo, useState } from "react";
@@ -324,7 +325,7 @@ export function AffordExplorer({
       </>}
 
 
-      <details className="afford-notes"><summary>How we estimate</summary><p className="table-note">
+      <details className="afford-notes"><summary>How we estimate</summary><p className="table-note"><Gloss>
         {mode === "own" ? (
           <>
             Owning: Zillow’s typical single-family home value ({asOf.home}), a
@@ -342,7 +343,7 @@ export function AffordExplorer({
         )}{" "}
         A place fits when its typical monthly cost is at most 30% of income before tax, HUD’s cost-burden line.
         Computed from these figures by fixed rules; not a quote, and not written by AI.
-      </p></details>
+      </Gloss></p></details>
     </section>
   );
 }

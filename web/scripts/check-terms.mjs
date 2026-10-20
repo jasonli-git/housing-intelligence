@@ -32,9 +32,10 @@ try {
           let first = null;
           for (let node = walker.nextNode(); node; node = walker.nextNode()) {
             const el = node.parentElement;
-            // A link cannot hold a focusable term, and a publisher's own words or a source's
-            // name is quoted, not explained: both are skipped, and the next use must carry it.
-            if (!el || el.closest('.tip, .floating-tip, script, style, [hidden], [aria-hidden="true"], a, [data-terms="off"]')) continue;
+            // A link, a button, a disclosure's summary and a form label cannot hold a focusable term,
+            // and a publisher's own words or a source's name is quoted, not explained: all
+            // are skipped, and the next use must carry it (#392).
+            if (!el || el.closest('.tip, .floating-tip, script, style, [hidden], [aria-hidden="true"], a, button, summary, label, [data-terms="off"]')) continue;
             if (!el.getClientRects().length && !el.closest('details')) continue;
             if (pattern.test(node.textContent)) { first = el; break; }
           }
