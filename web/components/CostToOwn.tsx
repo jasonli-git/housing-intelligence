@@ -272,10 +272,19 @@ export function CostToOwn({
       {money(kept)} into the home.
     </>
   );
+  // The rent half is always true; the price half names whatever priced the card. Where
+  // Zillow has no home value, sales or the reader's own figure do, and Zillow's home
+  // value must not be described beside a card it is not on (TODO, found 2026-09-21).
+  const priceKind =
+    typedPrice !== null
+      ? null
+      : home.basis === "index"
+        ? " while its home value covers single-family houses only"
+        : " while the price here is the middle of recent residential sales";
   const rentalCaveat = rent && (
     <>
       A house usually rents for more than this: Zillow’s rent covers every kind of rental
-      home, mostly apartments, while its home value covers single-family houses only.
+      home, mostly apartments{priceKind ? `,${priceKind}` : ""}.
     </>
   );
   const history = gain && (

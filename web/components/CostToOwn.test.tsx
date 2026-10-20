@@ -84,4 +84,13 @@ describe("local monthly budget", () => {
     const { container } = render(createElement(CostToOwn, { ...inputs, control: false, quiet: true, showHelp: false }));
     expect(container.textContent).not.toContain("Check your monthly budget");
   });
+  it("describes Zillow's home value only beside a card it priced", () => {
+    const zillow = render(createElement(CostToOwn, { ...inputs, quiet: true, showHelp: false }));
+    expect(zillow.container.textContent).toContain("while its home value covers single-family houses only");
+    cleanup();
+    const sales = { basis: "transactions" as const, value: 520000, asOf: "Jun 2026", from: "Jan 2024", to: "Jun 2026" };
+    const deeds = render(createElement(CostToOwn, { ...inputs, home: sales, quiet: true, showHelp: false }));
+    expect(deeds.container.textContent).toContain("Zillow’s rent covers every kind of rental home, mostly apartments, while the price here is the middle of recent residential sales.");
+    expect(deeds.container.textContent).not.toContain("its home value");
+  });
 });

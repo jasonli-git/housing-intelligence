@@ -250,15 +250,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       address cannot, since `/` is a real page; a county page's `?mode=afford` shows
       the profile.
 
-- [ ] **15 municipality pages priced from deeds show a caveat about Zillow's home
-      value.** (M25/#187, found 2026-09-21 while reviewing the region redesign) Where
-      Zillow publishes no home value, the cost card is priced from SR1A transactions —
-      but the comparison caveat beside it still reads "Zillow's rent covers every kind of
-      rental home, mostly apartments, while **its home value** covers single-family
-      houses only". There is no Zillow home value on those pages. Verified live on
-      Howell, Randolph, Wall and 12 others; it predates the redesign, which only moved
-      the sentence. The rent half is still true and still worth saying, so this needs the
-      sentence split rather than removed.
 - [ ] **No component tests cover the region page's interactive behaviour.** (#201,
       declared by Codex in its handoff) Auto-advance, arrow wrapping, the progress
       hairline, floating definitions, responsive paging and report isolation were checked
