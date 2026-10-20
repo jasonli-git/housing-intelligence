@@ -183,8 +183,8 @@ Not open work: each comes round on a date. The steps live where the row says.
 ### Frontend and presentation
 
 - [ ] **Accessibility checks the audit script cannot make.** (M43, #309) True 200%
-      text and 400% zoom, print in Safari and Firefox, and axe's remaining needs-review
-      results. The handoff (`m43-accessibility-audit.md`) lists each.
+      text and 400% zoom, and axe's remaining needs-review results. (Print in Safari and
+      Firefox checked 2026-10-20, #397.) The handoff (`m43-accessibility-audit.md`) lists each.
 - [ ] **Read HUD User's API terms for where its notice must appear.** (#386) The terms
       page returned nothing to an automated reader on 2026-10-19; the notice is on
       `/sources` and treated like the Census Bureau's. If HUD asks for it on each page or
@@ -210,10 +210,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       address, so the build refuses rather than publish one that could change; the
       scheduled run then reports a failed build. Fix: `cd web && npm run routes:refresh`,
       review and commit. Rare: every place with any observation already has an address.
-- [ ] **The print rule that opens disclosures, `::details-content`, was checked in
-      Chromium only.** (M18) A browser without it prints the licence label alone and the
-      footer's institutions without their datasets. Check Safari and Firefox print
-      previews before relying on it.
 - [ ] **A revised figure is not marked on the place page.** (M27, #224; narrowed
       2026-10-20) The report's Historical values tables (#381) now show the earlier
       readings of home value, rent and income. Left: a place page neither marks a figure
