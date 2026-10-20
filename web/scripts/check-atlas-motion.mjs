@@ -39,7 +39,7 @@ try {
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);
     await page.screenshot({path:`/tmp/atlas-studio-${width}-${theme}.png`});
     await page.emulateMedia({reducedMotion:'reduce'});await page.waitForTimeout(100);
-    await page.getByRole('button',{name:'Globe',exact:true}).click();await page.getByRole('button',{name:'Zoom in',exact:true}).click();await page.waitForTimeout(50);
+    await page.getByRole('button',{name:'United States',exact:true}).click();await page.getByRole('button',{name:'Zoom in',exact:true}).click();await page.waitForTimeout(50);
     assert(Math.abs(await radius()-462.5)<.1,'Reduced motion must snap directly to the new camera');
     console.log(`PASS ${width} ${theme}: retargetable motion, reduced motion, catalogue bounds, focus, empty search, axe, reflow`);
     await context.close();
