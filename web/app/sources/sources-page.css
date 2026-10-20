@@ -1,0 +1,11 @@
+/* /sources (ARCHITECTURE #386): one compact entry per source, its notice set apart. */
+@media screen {
+  .sources-page .source-institution { margin-top: 1.6rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .sources-page .source-institution h2 { margin: 0 0 .15rem; }
+  .sources-page .source-institution > .meta { margin: 0 0 .6rem; }
+  .sources-page .source-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .9rem; }
+  .sources-page .source-list > li { margin: 0; }
+  .sources-page .source-name { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 0; font-weight: 600; }
+  .sources-page .source-meta { margin: .1rem 0 0; color: var(--text-secondary); font-size: 14px; }
+  .sources-page .source-notice { margin: .45rem 0 0; padding: .55rem .85rem; border-left: 3px solid var(--border); background: color-mix(in srgb, var(--text-primary) 4%, transparent); border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.5; }
+}

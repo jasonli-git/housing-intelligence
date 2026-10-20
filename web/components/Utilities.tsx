@@ -1,4 +1,5 @@
 import type { Inquiry, Utilities as UtilityData } from "@/lib/api";
+import { NJDEP_NOTICE } from "@/lib/notices";
 import { InquiryNote } from "@/components/InquiryNote";
 import { bundledPrice, publisherUrl } from "@/lib/infrastructure";
 import { ReaderDetails } from "@/components/ReaderDetails";
@@ -55,5 +56,6 @@ export function Utilities({ data, bpuInquiry }: { data: UtilityData | null; bpuI
       {energy && <p className="sales-note">Energy context derived here from <a href={LEAD}>DOE/NREL LEAD (2024 release)</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Each cost component uses its own reporting weight; the ratio compares county mean annual energy costs with county mean income. Neither a median household nor an average of individual household burdens. Not added to the cost cards.</p>}
       <p className="sales-note">Territory copy read {data.providers[0]?.territory.fetched_at.slice(0, 10) ?? "date unavailable"}. Download date is not a measurement date.</p>
     </ReaderDetails>
+    <p className="sales-note publisher-notice-inline">{NJDEP_NOTICE}</p>
   </section>;
 }

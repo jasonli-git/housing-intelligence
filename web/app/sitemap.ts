@@ -18,6 +18,7 @@ const PAGES = [
   "/freshness",
   "/changes",
   "/terms",
+  "/sources",
   "/privacy",
 ];
 
