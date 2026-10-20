@@ -851,9 +851,9 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     title: "HMDA",
     phrases: ["HMDA"],
     what:
-      "Home Mortgage Disclosure Act data: a record of nearly every mortgage application, " +
-      "filed by lenders every year, with the loan amount, the rate and whether it was " +
-      "approved. It has no credit scores.",
+      "Home Mortgage Disclosure Act data: a record of most mortgage applications, filed " +
+      "each year by lenders above a size threshold, with the loan amount, the rate and " +
+      "whether it was approved. It has no credit scores.",
   },
   "fha": {
     title: "FHA",
@@ -882,8 +882,9 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     title: "SR1A",
     phrases: ["SR1A"],
     what:
-      "The form filed with every New Jersey property sale, recording the price, date and " +
-      "property. The sale prices here come from these records, not from listings.",
+      "New Jersey’s record of each property sale, compiled from deeds by county tax boards, " +
+      "with the price, date and property. The sale prices here are the arm’s-length ones, " +
+      "not listings.",
   },
   "lihtc": {
     title: "LIHTC",
@@ -898,8 +899,8 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     phrases: ["PFAS"],
     what:
       "“Forever chemicals”: man-made compounds used in non-stick, stain-resistant and " +
-      "firefighting products that build up in water and the body. Federal limits on two of " +
-      "them take effect in the coming years.",
+      "firefighting products that build up in water and the body. EPA has set limits on " +
+      "some of them, with compliance years away.",
   },
   "median": {
     title: "Median",
@@ -935,8 +936,8 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     phrases: ["closing costs"],
     what:
       "One-time fees paid when a purchase completes: the lender’s charges, title insurance, " +
-      "the appraisal, recording fees and New Jersey’s transfer fees. Often a few percent of " +
-      "the price.",
+      "the appraisal and recording fees. Often a few percent of the price; the seller " +
+      "usually pays New Jersey’s transfer fee.",
   },
   "hoa": {
     title: "HOA",

@@ -63,7 +63,7 @@ export function MortgageLending({ name, levels }: { name: string; levels: Packet
       <ReaderDetails title="About these figures">
         <p className="sales-note"><Gloss>
           From the Home Mortgage Disclosure Act records lenders report to the CFPB: first-lien
-          loans to buy an owner-occupied one-to-four-family home. Refinances, home-equity lines
+          loans to buy an owner-occupied one-to-four-family home. Refinances, lines of credit against a home
           and cash purchases are not counted, nor are lenders below HMDA’s reporting thresholds,
           mostly small banks and credit unions. These are rates borrowers got in {l.year}, not
           one you would be offered today; loan amounts are published rounded, for privacy.
