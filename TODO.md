@@ -457,9 +457,10 @@ strongest case; Zillow's other datasets moved to Open on 2026-10-19.
       below); this is the part that matters and the part only you can do.
 
       **Rotate (yours; these cannot be done here).** Each in its own provider console:
-      **Qwen/DashScope**, pasted 2026-09-11, and **Mistral**, pasted 2026-09-06 — both
-      providers were removed on 2026-10-08 (#340), so revoke these rather than rotate,
-      and delete `MISTRAL_API_KEY` and `DASHSCOPE_API_KEY` from `.env`. **DeepSeek** and
+      **Mistral**, pasted 2026-09-06 — removed as a provider on 2026-10-08 (#340), so
+      revoke it rather than rotate, and delete `MISTRAL_API_KEY` from `.env`. (Qwen/
+      DashScope's, pasted 2026-09-11, was revoked by the owner on 2026-10-20 and
+      `DASHSCOPE_API_KEY` removed from `.env`.) **DeepSeek** and
       **Gemini**, pasted 2026-09-06. **Census**, **FRED**, **BLS** and **Anthropic**, pasted in
       earlier sessions. Update `.env` after each.
 
