@@ -135,7 +135,7 @@
   .horizon-page.housing-atlas-page .atlas-title { padding: .7rem var(--gutter, 16px) .55rem !important; }
   .horizon-page.housing-atlas-page .atlas-title > div { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .9rem; row-gap: .15rem; }
   .horizon-page.housing-atlas-page .atlas-title h1 { font-size: 28px !important; letter-spacing: -.03em; }
-  .horizon-page.housing-atlas-page .atlas-title .atlas-lede { margin: 0; font-size: 14px; color: var(--text-muted); }
+  .horizon-page.housing-atlas-page .atlas-title .atlas-lede { margin: 0; font-size: 14px; color: var(--text-secondary); }
   .horizon-page .housing-atlas { height: calc(100svh - 165px); }
   @media (max-width: 900px) { .horizon-page.housing-atlas-page .atlas-title { padding: .6rem 0 .5rem !important; } .horizon-page .housing-atlas { height: auto; } }
 }
