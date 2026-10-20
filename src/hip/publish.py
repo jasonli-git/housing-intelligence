@@ -30,13 +30,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import warnings
 from collections.abc import Iterator, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
-from fastapi.testclient import TestClient
 from sqlalchemy import text
 
 from hip.api.main import app
@@ -374,6 +374,14 @@ def publish(root: Path) -> Result:
     _check_region_identity(root, geoids)
 
     result = Result(root=root, region_geoids=geoids)
+    # Imported here, not at the top: every `hip` command loads this module, and
+    # Starlette's TestClient warns on import that it wants `httpx2`. Only publishing
+    # uses it, so only publishing sees the warning, and it is silenced (TODO, M0).
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", message="Using `httpx` with `starlette.testclient`"
+        )
+        from fastapi.testclient import TestClient
     with TestClient(app) as client:
 
         def render(planned: tuple[str, str]) -> tuple[str, str, bytes | None]:

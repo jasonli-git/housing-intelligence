@@ -482,6 +482,40 @@ async function checkStatewideSearch(page) {
   console.log(`ok search     "${address}" found statewide · ${file.municipality}`);
 }
 
+// The counties' own property lookups (#293), which the tax lookup links beside the
+// state's file. A county moving its search would leave a dead link until someone
+// noticed; this notices. Read from lib/countyLookups.ts so the two cannot drift: the
+// shared county-board search once per county code, Camden's and Ocean's own once each.
+// One retry, since a county server's bad minute is not a moved page.
+async function checkCountyLookups() {
+  const source = await readFile(new URL("../lib/countyLookups.ts", import.meta.url), "utf8");
+  const shared = source.match(/const SHARED = "([^"]+)"/)?.[1];
+  const own = [...source.matchAll(/^\s+\w+: "(https:[^"]+)",$/gm)].map((m) => m[1]);
+  if (!shared || own.length < 2) throw new Error("county lookups: could not read lib/countyLookups.ts");
+  const urls = [
+    // County codes 01–21; Camden (04) and Ocean (15) run their own lookup instead.
+    ...Array.from({ length: 21 }, (_, i) => String(i + 1).padStart(2, "0"))
+      .filter((code) => code !== "04" && code !== "15")
+      .map((code) => ({ url: `${shared}?district=${code}01&ms_user=ctb${code}`, marker: "NJ Assessment Records Search" })),
+    ...own.map((url) => ({ url, marker: null })),
+  ];
+  const dead = [];
+  for (const { url, marker } of urls) {
+    let ok = false;
+    for (let attempt = 0; attempt < 2 && !ok; attempt++) {
+      try {
+        const response = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(20_000), headers: { "User-Agent": "Mozilla/5.0 (housing.jasonli.app link check)" } });
+        ok = response.ok && (!marker || (await response.text()).includes(marker));
+      } catch {
+        ok = false;
+      }
+    }
+    if (!ok) dead.push(url);
+  }
+  if (dead.length) throw new Error(`county lookups unreachable or moved:\n  ${dead.join("\n  ")}`);
+  console.log(`ok county lookups · ${urls.length} links`);
+}
+
 async function run() {
   let browser;
   try {
@@ -504,6 +538,7 @@ async function run() {
     await checkCrossOrigin(page);
     await checkPhotos();
     await checkStatewideSearch(page);
+    await checkCountyLookups();
 
     for (const sample of await pageSamples()) {
       const expected = await localMarker(page, sample.route);

@@ -281,16 +281,10 @@ QUESTIONS: tuple[Question, ...] = (
     Question("How does this place rank in New Jersey?", "answered", "/"),
     Question("How current is each figure?", "answered", "/freshness"),
     Question("What changed since the figures were published?", "answered", "/changes"),
-    Question(
-        "Will prices go up?",
-        "unanswered",
-        "decided against 2026-09-13 (a forecast); Milestone 52 is the descriptive answer",
-    ),
-    Question(
-        "Is it a good investment, or should I buy?",
-        "unanswered",
-        "decided against 2026-09-13 (advice)",
-    ),
+    # Declined on the terms page since 2026-10-20 (ROADMAP decided against both on
+    # 2026-09-13; Milestone 52 is the descriptive answer to the first).
+    Question("Will prices go up?", "declined", "/terms"),
+    Question("Is it a good investment, or should I buy?", "declined", "/terms"),
     Question("Is it at risk of flooding?", "answered", "/[state]/[place]"),
     Question("How long is the commute?", "answered", "/[state]/[place]"),
     Question("Where do people who live here work?", "answered", "/[state]/[place]"),

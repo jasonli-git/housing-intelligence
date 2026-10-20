@@ -124,3 +124,12 @@ def test_community_records_are_counted_with_their_gaps() -> None:
     assert "fewer than 12 months" in crime.gaps_mean
     areas = by_name["School district areas"]
     assert {level for level, _, _ in areas.reach} >= {"county", "municipality", "zip"}
+
+
+def test_every_declined_question_is_declined_on_a_page_that_exists() -> None:
+    """A question counts as declined only where the site says so (2026-10-20)."""
+    app = REPO_ROOT / "web" / "app"
+    for question in QUESTIONS:
+        if question.status == "declined" and question.where == "/terms":
+            page = (app / "terms" / "page.tsx").read_text()
+            assert 'id="terms-declined"' in page, question.text

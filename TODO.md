@@ -23,6 +23,8 @@ were records rather than work, moved to the file that owns each (Zillow's covera
 ceiling and parcel geometry to ARCHITECTURE's limitations, the model-comparison page to
 ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 
+**Reviewed on 2026-10-20**, with the owner: seven entries closed — the three map-performance leads (about `GlobeMap`, which the atlas rebuild #171 removed), the kept illustration loops (owner's decision, #393's PR), the standing Zillow download arrangement (README documents it), `check-config`'s correct exit and the courtesy CostQuest reply — and the figure-history entry narrowed to marking revisions. They are in `git show 5ba83cc:TODO.md`.
+
 **Triaged again on 2026-10-19**, with the owner: `Now` rewritten for the interface cleanup,
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
@@ -183,11 +185,6 @@ Not open work: each comes round on a date. The steps live where the row says.
 - [ ] **Accessibility checks the audit script cannot make.** (M43, #309) True 200%
       text and 400% zoom, print in Safari and Firefox, and axe's remaining needs-review
       results. The handoff (`m43-accessibility-audit.md`) lists each.
-- [ ] **The home page's illustration loops with no pause control — kept so by the owner (2026-10-20).** Offered playing each loop once or restoring a pause button; the owner chose to leave the loops as they are. (M43, #309) Removed
-      at the owner's request on 2026-10-05; WCAG 2.2.2 asks for one on anything that
-      moves for more than five seconds. Reduced motion stops it. The New Jersey header
-      artwork added 2026-10-06 (#311) loops the same way, as do the home page's atlas outlines and
-      travelling line (#364). The field-notes gallery's pause button was removed at the owner's request on 2026-10-14, so its looping exhibit artwork has none either.
 - [ ] **Read HUD User's API terms for where its notice must appear.** (#386) The terms
       page returned nothing to an automated reader on 2026-10-19; the notice is on
       `/sources` and treated like the Census Bureau's. If HUD asks for it on each page or
@@ -217,38 +214,13 @@ Not open work: each comes round on a date. The steps live where the row says.
       Chromium only.** (M18) A browser without it prints the licence label alone and the
       footer's institutions without their datasets. Check Safari and Firefox print
       previews before relying on it.
-- [ ] **The site does not say which questions it declines.** (M27 completeness run)
-      ROADMAP decided on 2026-09-13 not to forecast prices or give investment advice,
-      but no page tells a reader, so the check counts those two of its 20 questions as
-      neither answered nor declined (2026-10-09). A short statement on the site would
-      move them to declined.
-- [ ] **A figure's own history of values is not shown.** (M27, #224) `/changes`
-      summarises each refresh; a region page neither marks a revised figure nor shows its
-      earlier values, which `fact_revision` holds.
-
-### Map performance — open leads (no release gate since #349)
-
-- [ ] **Unexplained: `slowest input 504ms`.** A single event took half a second to be
-      answered with no long task anywhere. Likeliest candidates are a click forcing a
-      large re-render and relayout — the town table's "Show all" is 585 rows — or a first
-      interaction landing while the map is still doing its one-time work. Worth its own
-      look before anything else is optimised.
-- [ ] **The level switch, which happens mid-flight**, is the next lead if slowness
-      persists. Crossing county to municipality swaps `inView` from 21 outlines to 564,
-      rebuilds every prism for the first time, and recomputes the ramp's quantiles over
-      564 values — on one frame, mid-zoom. Best remaining explanation for both a 141ms
-      hand-on frame and a 110ms idle p95, and unlike everything else it has never been
-      touched.
-- [ ] **Not reproduced: reports being worse than the map.** No report page renders a
-      `GlobeMap` — `/regions/[id]` and `/regions/[id]/report` have no map at all — so
-      whatever is slow there is a different problem and needs its own look.
+- [ ] **A revised figure is not marked on the place page.** (M27, #224; narrowed
+      2026-10-20) The report's Historical values tables (#381) now show the earlier
+      readings of home value, rent and income. Left: a place page neither marks a figure
+      its publisher revised nor links its earlier values, which `fact_revision` holds.
 
 ### Publication
 
-- [ ] **The county lookup links are not checked automatically.** (M38, #293) All 21
-      worked by hand on 2026-10-02; a county moving its search would leave a dead link
-      until someone notices. `check-live` could request each, at the cost of 21 requests
-      to county servers per deploy.
 - [ ] **The site's status link cannot say when a check last succeeded.** (PR #45, #251)
       It names the Friday schedule and the build date; a quiet Friday that found nothing
       leaves the build date where it was, and nothing published records the run itself.
@@ -277,12 +249,6 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Housekeeping
 
-- [ ] **CostQuest's view of the broadband method — courtesy only.** (M47, #322, #372)
-      Town and ZIP broadband counts shipped in #163 (2026-10-14) from FCC's location
-      files, without the Fabric. The owner described the method to NBF Support on
-      2026-10-14 (request 77754) and asked to hear of any licensing concern; no reply is
-      needed to keep publishing. Close when one arrives, or at the next calendar check.
-
 - [ ] **Reply as housing@ and privacy@ from Gmail.** (#357, owner 2026-10-09) Both
       addresses are Cloudflare Email Routing forwards, which only receive, so a reply
       today shows the owner's personal address. Chosen: keep the forwards and add an
@@ -292,15 +258,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       a DMARC record, which the domain has none of, starting at `p=none` with reports,
       so mail sent as the domain is harder to spoof. Test a reply from each address to
       an outside account before relying on it.
-- [ ] **`hip check-config` exits 1 on a clean checkout** because three source API keys
-      are unset. (M0) Correct behaviour, but it means `check-config` cannot be wired into
-      `make lint` or CI until the keys exist.
-- [ ] **Starlette's `TestClient` emits a deprecation warning asking for `httpx2`.** (M0)
-      Suppressed in `pyproject.toml` for the test suite rather than fixed, because
-      swapping the HTTP client was not Milestone 0 work — but every `hip` command prints
-      it too (checked 2026-09-27), so it fills the scheduled runs' logs. Revisit before
-      it becomes an error.
-
 ### Open decisions — not scheduled, not decided
 
 - [ ] **Adopt TIGER 2026 — not yet (owner, 2026-10-09).** (#360) Census published
@@ -474,12 +431,6 @@ strongest case; Zillow's other datasets moved to Open on 2026-10-19.
       the saving further. **Kept parked by the owner (2026-10-01)**: the saving is
       small while nearly every reading quotes a monthly figure.
 
-- [ ] **Zillow's files are downloaded by hand, as a standing arrangement.** (M31, #272)
-      Its Terms of Use forbid automated fetching, and its pages neither exempt a monthly
-      scripted download of the public CSVs nor offer a channel to ask (2026-09-30: the
-      contact page lists customer support, press and ZTRAX only). Milestone 32 found no
-      route around it: the licensed API's terms forbid what the site does (#278), so
-      nothing is applied for, and this stays the arrangement.
 - [ ] **Rotate the keys that were pasted into chat.** The cache half is finished (see
       below); this is the part that matters and the part only you can do.
 
