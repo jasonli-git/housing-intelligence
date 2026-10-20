@@ -100,8 +100,8 @@
    help's sage and the atlas's indigo. */
 :root .search-first-home .home-tools a[data-tool="afford"] { --tool-ink: light-dark(#b2582a, #f2a46e); }
 :root .search-first-home .home-tools a[data-tool="guide"] { --tool-ink: light-dark(#a03d6e, #eea2c4); }
-:root .search-first-home .home-tools a[data-tool="tax"] { --tool-ink: light-dark(#006977, #8ed9e2); }
-:root .search-first-home .home-tools a[data-tool="help"] { --tool-ink: light-dark(#59654a, #c4d1b2); }
+:root .search-first-home .home-tools a[data-tool="tax"] { --tool-ink: var(--kind-tax); }
+:root .search-first-home .home-tools a[data-tool="help"] { --tool-ink: var(--kind-help); }
 :root .search-first-home .home-tools a[data-tool="atlas"] { --tool-ink: light-dark(#4d5ca8, #b4bfe2); }
 
 /* The search box over the drawn map, in frosted glass so the lines behind never cross the

@@ -1,0 +1,30 @@
+/*
+ * One colour per kind of place and tool (2026-10-19). Every link, chip, card and accent
+ * that belongs to a kind reads it from here, so a new element cannot pick up the wrong
+ * one and a kind's colour changes in one line. Light and dark in one value: light-dark()
+ * resolves where it is used, against that element's colour scheme.
+ *
+ * Page palettes (each tool page's paper, glow and glass in its `*-horizon.css`) are not
+ * kinds: they set a page's mood, and their accents may differ from the kind's link ink.
+ */
+:root {
+  --kind-state: light-dark(#2368a0, #86bce8);
+  --kind-county: light-dark(#246b55, #a6d9c0);
+  --kind-town: light-dark(#267775, #a2dad5);
+  --kind-zip: light-dark(#735e91, #d2bce9);
+  --kind-budget: light-dark(#a44e34, #edb09b);
+  --kind-guide: light-dark(#925460, #d7a3ad);
+  --kind-tax: light-dark(#006977, #8ed9e2);
+  --kind-help: light-dark(#59654a, #c4d1b2);
+}
+
+/* What kind an element is, from its class or where it links: anything inside can colour
+   itself with var(--kind) instead of naming a kind. */
+:is(.destination-state, a[href^="/states/"]) { --kind: var(--kind-state); }
+:is(.destination-county, [data-kind="county"]) { --kind: var(--kind-county); }
+:is(.destination-town, [data-kind="town"]) { --kind: var(--kind-town); }
+:is(.destination-zip, [data-kind="zip"]) { --kind: var(--kind-zip); }
+:is(a[href^="/afford"], [data-kind="budget"]) { --kind: var(--kind-budget); }
+:is(a[href^="/guide"], [data-kind="guide"]) { --kind: var(--kind-guide); }
+:is(a[href^="/tax"], [data-kind="tax"]) { --kind: var(--kind-tax); }
+:is(a[href^="/help"], [data-kind="help"]) { --kind: var(--kind-help); }

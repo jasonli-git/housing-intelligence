@@ -25,7 +25,7 @@
   .atlas-comparison-pair>div { display:grid; align-content:start; gap:.2rem; }
   .atlas-comparison-pair strong { font-size:18px; }
   .atlas-comparison small { font-size:10px; color:var(--text-secondary); }
-  .atlas-comparison a.destination-county { color:light-dark(#246b55,#a6d9c0); font-size:11px; }
+  .atlas-comparison a.destination-county { color:var(--kind-county); font-size:11px; }
   .atlas-results:has(.atlas-comparison-pair) .atlas-selected { display:none; }
   .atlas-map-geography path[data-pinned="true"]:not([data-selected="true"]) { stroke:var(--atlas-accent); stroke-width:3px; stroke-dasharray:5 3; }
   .atlas-table-wrap tr[data-pinned="true"]:not([data-selected="true"]) { background:color-mix(in srgb,var(--atlas-accent) 8%,var(--surface-card)); }
