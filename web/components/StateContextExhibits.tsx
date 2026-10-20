@@ -8,7 +8,7 @@ import { MortgageLending } from "./MortgageLending";
 import { GettingAround } from "./GettingAround";
 import { StateBroadband } from "./StateBroadband";
 
-export function StateContextExhibits({ levels, destinations, community, name = "New Jersey", level = "state", topics = ["lending","work","broadband"] }: {
+export function StateContextExhibits({ levels, destinations, community, name = "This state", level = "state", topics = ["lending","work","broadband"] }: {
   levels: PacketLevel[]; destinations: WorkDestinations | null; community: CommunityContext | null; name?:string; level?:string; topics?:readonly ("lending"|"work"|"broadband")[];
 }) {
   const loans = lending(levels);

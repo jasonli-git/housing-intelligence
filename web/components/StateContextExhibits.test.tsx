@@ -19,6 +19,8 @@ it("keeps unavailable sources explicit instead of inventing figures", () => {
   expect(screen.getByText("Mortgage records are unavailable in this snapshot.")).toBeTruthy();
   expect(screen.getByText("Work destinations are unavailable in this snapshot.")).toBeTruthy();
   expect(screen.getByRole("link", { name:"Check the FCC map by address" })).toBeTruthy();
+  expect(screen.getByText(/No availability summary is loaded for This state/)).toBeTruthy();
+  expect(screen.queryByText(/New Jersey/)).toBeNull();
 });
 it("exposes reported loan and commute figures with their limits and full records", () => {
   const row = (metric_id:string, value:number) => ({ metric_id, value, period_end:"2025-12-31", match_method:"fips" }) as PacketLevel;

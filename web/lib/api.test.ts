@@ -15,6 +15,15 @@ function reply(status: number, body: unknown = {}): Response {
  * built reading "No report" while the build reported success.
  */
 describe("the API fetch layer", () => {
+  it("requests geometry for the explicit state without changing NJ's query", async () => {
+    vi.useRealTimers();
+    const fetch = vi.fn(async (_url: string) => reply(200, {type:"FeatureCollection",features:[]}));
+    vi.stubGlobal("fetch", fetch);
+    await api.geo("county", "ny", .001);
+    expect(String(fetch.mock.calls[0][0])).toContain("/geo/county?state=NY&simplify=0.001");
+    await api.geo("county", "NJ", .001);
+    expect(String(fetch.mock.calls[1][0])).toContain("/geo/county?state=NJ&simplify=0.001");
+  });
   beforeEach(() => {
     vi.useFakeTimers();
   });

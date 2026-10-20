@@ -3,7 +3,7 @@ import type { CommunityContext } from "@/lib/api";
 import { BroadbandPlace } from "./BroadbandPlace";
 
 /** Published state shares, never substituted for an address-specific service check. */
-export function StateBroadband({ data, name = "New Jersey" }: { data: CommunityContext | null; name?:string }) {
+export function StateBroadband({ data, name = "This state" }: { data: CommunityContext | null; name?:string }) {
   const wired = data?.broadband.find(record => record.payload.technology === "All Wired");
   const fiber = data?.broadband.find(record => record.payload.technology === "Fiber");
   if (!wired) return <p>No availability summary is loaded for {name}. <a href="https://broadbandmap.fcc.gov/">Check the FCC map by address</a>.</p>;

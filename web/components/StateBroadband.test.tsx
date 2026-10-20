@@ -6,7 +6,8 @@ import type { CommunityContext } from "@/lib/api";
 describe("state broadband presentation", () => {
   it("keeps missing records explicit with an address-check link", () => {
     const html = renderToStaticMarkup(<StateBroadband data={null} />);
-    expect(html).toContain("No availability summary is loaded for New Jersey");
+    expect(html).toContain("No availability summary is loaded for This state");
+    expect(renderToStaticMarkup(<StateBroadband data={null} name="New Jersey" />)).toContain("No availability summary is loaded for New Jersey");
     expect(html).toContain("https://broadbandmap.fcc.gov/");
   });
   it("shows dated offers with the correct denominator and no additive claims", () => {
