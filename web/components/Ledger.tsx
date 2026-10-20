@@ -227,7 +227,7 @@ export function TableNotes({
       {notes.map((note) => (
         <li key={note.letter} id={`note-${note.letter}`}>
           <b>{note.letter}</b>
-          <span>{note.text}</span>
+          <span><Glossed text={note.text} /></span>
         </li>
       ))}
       {earlier.length > 0 && (
@@ -242,7 +242,7 @@ export function TableNotes({
       {general.map((text, index) => (
         <li key={`general-${index}`}>
           <b aria-hidden="true">·</b>
-          <span>{text}</span>
+          <span><Glossed text={text} /></span>
         </li>
       ))}
     </ol>

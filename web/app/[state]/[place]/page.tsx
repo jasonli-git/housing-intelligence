@@ -1,3 +1,4 @@
+import { Glossed } from "@/components/Glossed";
 import { Term } from "@/components/Term";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { PlacePhoto } from "@/components/PlacePhoto";
@@ -364,7 +365,7 @@ export default async function RegionPage({
     <span className="quiet-label">From the data</span>
     <strong>{formatMetric(editorialFigure.value, editorialFigure.unit, editorialFigure.metric_id)}</strong>
     <span>{label}</span>
-    <small>Census ACS · {surveyYears(editorialFigure.period_start, editorialFigure.period_end)}</small>
+    <small>Census <Glossed text="ACS" /> · {surveyYears(editorialFigure.period_start, editorialFigure.period_end)}</small>
     <small>{uncertainties.value.get(editorialFigure.metric_id)?.margin != null ? `90% margin: ${marginLabel(editorialFigure.value, uncertainties.value.get(editorialFigure.metric_id)!.margin, editorialFigure.unit, editorialFigure.metric_id)}` : "Sampling margin unavailable"}</small>
     </div>];
   }) : [];

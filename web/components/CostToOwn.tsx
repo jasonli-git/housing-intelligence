@@ -2,6 +2,7 @@
 
 import { type ReactNode, useId, useState } from "react";
 
+import { Glossed } from "@/components/Glossed";
 import { Term, type TermEntry } from "@/components/Term";
 import { HousingHelp } from "@/components/HousingHelp";
 import { ReaderDetails } from "@/components/ReaderDetails";
@@ -338,20 +339,6 @@ export function CostToOwn({
             `tenants already in place pay, and it does not include utilities.`
           : "Zillow publishes no rent index for this place, so there is no typical rent to compare.",
     ),
-    gone: term(
-      "cost-gone",
-      "Money gone each month",
-      "The part of a month of owning that does not come back: interest, tax, insurance, " +
-        "mortgage insurance, utilities, upkeep and any fees. The rest, principal, pays the " +
-        "loan down and stays the owner’s as equity. These are the first month’s figures: " +
-        "each month after, a little more of the payment is principal.",
-    ),
-    income: term(
-      "cost-income",
-      "Income to keep it at 30% of pay",
-      "The yearly household income, before tax, at which a month’s cost is 30% of a month’s " +
-        "pay — HUD’s line for cost burden. It is the monthly cost × 12 ÷ 0.3.",
-    ),
     partial: term(
       "cost-partial",
       "Partial estimate",
@@ -401,7 +388,7 @@ export function CostToOwn({
   const owningLedger = (<dl className="cost-lines">
             <div className="sum">
               <dt>
-                <Term entry={terms.gone}>Money gone each month</Term>
+                <Term id="cost-gone">Money gone each month</Term>
               </dt>
               <dd>{money(month.gone)}</dd>
             </div>
@@ -432,9 +419,9 @@ export function CostToOwn({
                   <small className={line.value === null && line.conditional ? "src cost-add-prompt" : "src"}>
                     {line.value === null && line.conditional
                       ? "add yours if it applies"
-                      : [source(line.key), line.value !== null && line.key !== "mortgage" ? BASIS_WORDS[line.basis] : ""]
+                      : <Glossed text={[source(line.key), line.value !== null && line.key !== "mortgage" ? BASIS_WORDS[line.basis] : ""]
                           .filter(Boolean)
-                          .join(" · ")}
+                          .join(" · ")} />}
                   </small>
                 </dt>
                 <dd>{line.value === null ? (line.conditional ? "—" : "not included") : `${money(line.value)}/mo`}</dd>
@@ -442,7 +429,7 @@ export function CostToOwn({
             ))}
             <div>
               <dt>
-                <Term entry={terms.income}>Income to keep it at 30% of pay</Term>
+                <Term id="cost-income">Income to keep it at 30% of pay</Term>
               </dt>
               <dd>{money(incomeFor(month.total))} a year</dd>
             </div>

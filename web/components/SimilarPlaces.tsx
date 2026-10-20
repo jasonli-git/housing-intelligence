@@ -1,3 +1,4 @@
+import { Term } from "@/components/Term";
 import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 
@@ -76,7 +77,7 @@ export function SimilarPlaces({ name, data }: { name: string; data: SimilarPlace
                 </tr>
                 {group.rows.map((row) => (
                   <tr key={row.metric_id}>
-                    <th scope="row">{row.label}</th>
+                    <th scope="row"><Term id={row.metric_id}>{row.label}</Term></th>
                     {row.values.map((v, i) => (
                       <td className="num" key={places[i].region_id}>
                         {v === null ? "—" : formatMetric(v, row.unit, row.metric_id)}

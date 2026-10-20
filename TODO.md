@@ -197,16 +197,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       page returned nothing to an automated reader on 2026-10-19; the notice is on
       `/sources` and treated like the Census Bureau's. If HUD asks for it on each page or
       in the footer, add `hud` to `FOOTER_NOTICE_SOURCES` (`web/lib/notices.ts`).
-- [ ] **One system for pop-up definitions of terms.** (owner, 2026-10-10; steps 1 and 2 of 3 done: one dictionary in `web/lib/terms.ts`, #387, and one `<Term>` component, #388. Next: automatic first-use marking and the checks below.) Today there are
-      five ways to attach one: `Definition`, `FloatingDefinition`, `MetricTerm`,
-      `FloatingMetricTerm` and `Glossed`, fed by three dictionaries (`lib/definitions.ts`
-      for metrics, `lib/glossary.ts` for terms, `lib/mapDefinitions.ts`). Some text is
-      written inline at the call site (six `definition=` props, eight `<Definition>`),
-      and whether a term gets a pop-up depends on each page passing it through, so each
-      instance has to be spot-checked. Wanted: one component and one dictionary. Every
-      term and metric is defined once and marked automatically wherever it appears,
-      first use per page. A check fails on inline definition text, and on a dictionary
-      term that shows on a page without its pop-up.
 - [ ] **Bring the remaining one-off colours behind tokens.** (owner, 2026-10-10; #383,
       #384) Kinds are tokens and a test now stops new hard-coded colours. 1,148 remain in
       34 files, frozen in `web/lib/colourBaseline.json`; the largest are

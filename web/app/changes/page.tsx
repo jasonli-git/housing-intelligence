@@ -1,3 +1,5 @@
+import { Term } from "@/components/Term";
+import { Glossed } from "@/components/Glossed";
 import { regionPath } from "@/lib/placeRoutes";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -119,7 +121,7 @@ function ChangeGroup({ group, day }: { group: RevisionGroup; day: string }) {
   return (
     <article className="change-group" aria-labelledby={id}>
       <h3 id={id} className="change-metric">
-        {group.label}
+        <Term id={group.metric_id}>{group.label}</Term>
       </h3>
       {group.source_id === "hip_derived" && (
         <p className="change-note">
@@ -135,7 +137,7 @@ function ChangeGroup({ group, day }: { group: RevisionGroup; day: string }) {
       )}
       {group.method_change && (
         <p className="change-note">
-          <span className="fresh-status">Recomputed by this site</span> {group.method_change}
+          <span className="fresh-status">Recomputed by this site</span> <Glossed text={group.method_change} />
         </p>
       )}
       <p className="change-summary">{summaryLine(group)}</p>

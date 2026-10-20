@@ -1,3 +1,4 @@
+import { Glossed } from "@/components/Glossed";
 import { Term } from "@/components/Term";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { notFound } from "next/navigation";
@@ -351,7 +352,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
         <p className="table-note">
           Change ranks compare five-year movement, not price or size. Rank 1 is the largest rise—or the smallest where lower is better, such as unemployment.
         </p>
-        {anyMargin(uncertainties) && <p className="table-note">{MARGIN_NOTE}</p>}
+        {anyMargin(uncertainties) && <p className="table-note"><Glossed text={MARGIN_NOTE} /></p>}
       </section>
 
       {packet.levels.length > 0 && (
