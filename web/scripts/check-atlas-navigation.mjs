@@ -21,16 +21,17 @@ try {
     await page.getByRole('button',{name:'Clear selection',exact:false}).click();assert.equal(await page.locator('.atlas-selected h3').count(),0);
     await finder.fill('no such county');assert.equal(await page.locator('.atlas-table-wrap tbody tr').count(),0);assert((await page.locator('.atlas-county-finder').textContent()).includes('0 matching counties'));await finder.fill('');
     if(width<=900) {
-      assert.equal(await page.locator('.atlas-legend').isVisible(),false);
+      // Phones stack the atlas (Horizon, 2026-10-15): the map with its zoom buttons, then
+      // the legend, then the comparison, so none of them covers another.
       await page.getByRole('button',{name:'Close table',exact:true}).click();
       await page.waitForTimeout(100);
       const sheet=await page.locator('.atlas-results').boundingBox(),key=await page.locator('.atlas-legend').boundingBox(),zoom=await page.locator('.atlas-map-buttons').boundingBox();
-      assert(key.y+key.height<sheet.y&&zoom.y+zoom.height<key.y,'Map controls and legend do not overlap the sheet');
+      assert(zoom.y+zoom.height<key.y&&key.y+key.height<sheet.y,'Map controls, legend and comparison stack without overlap');
     }
     for(const metric of ['pep_population','acs_renter_cost_burden','acs_median_hh_income']) {
       await page.getByLabel('Measure',{exact:true}).selectOption(metric);await page.waitForTimeout(80);
       const key=await page.locator('.atlas-legend').boundingBox(),zoom=await page.locator('.atlas-map-buttons').boundingBox();
-      assert(zoom.y+zoom.height<key.y,'Zoom controls remain above each measure-specific legend');
+      assert(zoom.y+zoom.height<=key.y||zoom.x>=key.x+key.width||zoom.x+zoom.width<=key.x,'Zoom controls never overlap a measure-specific legend');
     }
     await page.getByRole('button',{name:'New Jersey',exact:true}).click();assert.equal(await page.locator('.housing-atlas').getAttribute('data-level'),'states');assert.equal(await page.locator('.atlas-selected h3').textContent(),'New Jersey');
     await page.getByRole('button',{name:'United States',exact:true}).click();assert.equal(await page.locator('.atlas-selected h3').count(),0);

@@ -221,13 +221,20 @@ export function HousingAtlas({measures,counties,stateMeasures,states}:{measures:
     const cx=frameRef.current.w/2, cy=frameRef.current.h/2;
     return {scale,x:cx-(cx-current.x)*ratio,y:cy-(cy-current.y)*ratio};
   });
+  // On phones the catalogue hangs from the controls, whose place on the page varies with
+  // the title above them: it is held to the room left below it, so it never runs off the
+  // bottom of the screen. Wide screens keep the stylesheet's height.
+  const fitPicker=useCallback((node:HTMLDivElement|null)=>{
+    if(!node||!window.matchMedia("(max-width: 900px)").matches)return;
+    node.style.maxHeight=`${Math.max(240,window.innerHeight-node.getBoundingClientRect().top-12)}px`;
+  },[]);
   const changeLevel=(next:typeof level)=>{setLevel(next);setSelected(null);setPinned(null);setViewport({scale:1,x:0,y:0});const list=next==="county"?measures:stateMeasures;if(!list.some(m=>m.metric_id===metric))setMetric(list[0].metric_id);setMode("latest");};
   return <section className="housing-atlas" aria-label="Housing atlas map and comparison" data-level={level} style={{"--atlas-panel-width":`${panelWidth}px`,"--atlas-sheet-height":`${sheetHeight}px`} as CSSProperties}>
     <div className="atlas-controls" ref={controls}>
       <div className="atlas-levels" role="group" aria-label="Map geography"><button type="button" aria-pressed={level!=="county"&&selected!==states.find(s=>s.code==="NJ")?.id} onClick={()=>{setCountySearch("");changeLevel("states");}}>United States</button><span aria-hidden="true">›</span><button type="button" aria-pressed={level==="states"&&selected===states.find(s=>s.code==="NJ")?.id} onClick={()=>{setCountySearch("");changeLevel("states");const nj=states.find(s=>s.code==="NJ")?.id;if(nj!==undefined)requestAnimationFrame(()=>select(nj));}}>New Jersey</button><span aria-hidden="true">›</span><button type="button" aria-pressed={level==="county"} onClick={()=>{setCountySearch("");changeLevel("county");}}>Counties</button></div>
       <div className="atlas-filter-row"><label className="atlas-measure-field"><span>Measure</span><div className="atlas-measure-control"><select aria-label="Measure" value={measure.metric_id} onChange={e=>{setMetric(e.target.value);const next=availableMeasures.find(m=>m.metric_id===e.target.value)!;if(mode!=="latest"&&!next.windows[mode])setMode("latest");}}>{availableMeasures.filter(m=>EVERYDAY.has(m.metric_id)||m.metric_id===measure.metric_id).map(m=><option key={m.metric_id} value={m.metric_id}>{FRIENDLY[m.metric_id]??m.label}</option>)}</select><button ref={measureLauncher} className="atlas-catalogue-button" type="button" aria-label="Browse all measures" title="Browse all measures" aria-expanded={moreMeasures} aria-controls="atlas-measure-picker" onClick={()=>{setMoreMeasures(!moreMeasures);setMeasureSearch("");}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>All</span></button></div></label>
       <label className="atlas-view-field"><span>Time</span><select aria-label="View" value={mode} onChange={e=>setMode(e.target.value as AtlasMode)}><option value="latest">Latest figure</option>{WINDOWS.map(w=><option key={w.key} value={w.key} disabled={!measure.windows[w.key]}>{w.label} · change</option>)}</select></label></div>
-      {moreMeasures&&<div id="atlas-measure-picker" className="atlas-measure-picker" role="region" aria-label="Measure catalogue">
+      {moreMeasures&&<div id="atlas-measure-picker" className="atlas-measure-picker" ref={fitPicker} role="region" aria-label="Measure catalogue">
         <header><div><small>MEASURES</small><h2>Choose a measure</h2></div><button type="button" aria-label="Close measures" onClick={()=>{setMoreMeasures(false);measureLauncher.current?.focus({preventScroll:true});}}>×</button></header>
         <label>Search measures<input ref={measureSearchInput} type="search" value={measureSearch} onChange={e=>setMeasureSearch(e.target.value)} placeholder="Rent, income, building…"/></label>
         {["Everyday figures","Other price & rent measures","Building & supply"].map((group,index)=>{
