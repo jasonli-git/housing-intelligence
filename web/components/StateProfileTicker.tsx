@@ -1,7 +1,7 @@
 "use client";
 
+import { Term } from "@/components/Term";
 import { type PointerEvent, useLayoutEffect, useRef, useState } from "react";
-import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { RankText } from "@/components/Ledger";
 import { useAutoCarousel } from "@/components/useAutoCarousel";
 import type { ProfileItem } from "@/lib/verdict";
@@ -232,7 +232,7 @@ export function ProfileTicker({
                   return (
                     <li key={item.metric_id} className={context?.rank && peerLabel ? "has-rank" : undefined}>
                       <span className="ticker-value"><b>{item.value}</b>{item.margin && <span className="margin ticker-margin">{item.margin}</span>}</span>
-                      {duplicate ? <span>{item.label}</span> : <FloatingMetricTerm metricId={item.metric_id} label={item.label} definition={item.definition} why={null} />}
+                      {duplicate ? <span>{item.label}</span> : <Term id={item.metric_id} definition={item.definition} why={null}>{item.label}</Term>}
                       {context?.words && <small className="state-ticker-context">{context.words}</small>}
                       {context?.rank && peerLabel && (
                         <RankText

@@ -1,8 +1,8 @@
+import { Term } from "@/components/Term";
 import { Fragment, type ReactNode } from "react";
 
 import { Glossed } from "@/components/Glossed";
 import { KindTag } from "@/components/KindTag";
-import { MetricTerm } from "@/components/MetricTerm";
 import { ReportProblem } from "@/components/ReportProblem";
 import type { Packet, PacketMetric } from "@/lib/api";
 import type { TablePlacement } from "@/lib/caveats";
@@ -310,12 +310,7 @@ export function Ledger({
                 <Fragment key={metric.metric_id}>
                   <tr className={notes ? "has-note" : undefined}>
                     <td>
-                      <MetricTerm
-                        metricId={metric.metric_id}
-                        label={metric.label}
-                        scope="ledger"
-                        up={atFoot.has(metric.metric_id)}
-                      />
+                      <Term id={metric.metric_id} up={atFoot.has(metric.metric_id)}>{metric.label}</Term>
                       <Marks letters={placement.marks.get(metric.metric_id)} />
                       <KindTag metricId={metric.metric_id} />
                       {regionLabel && sources && path && (

@@ -2,7 +2,7 @@
 
 import { type ReactNode, useId, useState } from "react";
 
-import { Definition } from "@/components/Definition";
+import { Term, type TermEntry } from "@/components/Term";
 import { HousingHelp } from "@/components/HousingHelp";
 import { ReaderDetails } from "@/components/ReaderDetails";
 import { DEFAULT_DOWN, DOWN_PAYMENTS, goneAgainstRent, incomeFor } from "@/lib/cost";
@@ -22,7 +22,6 @@ import {
 import { type Personal, parseAmount } from "@/lib/costScenario";
 import { type FhaLimit, fhaCheck, rateScenarios } from "@/lib/financing";
 import { formatValue } from "@/lib/format";
-import type { Term } from "@/lib/glossary";
 import { type Basis, eachMonth, type Inputs, overYears, upFront } from "@/lib/ownership";
 import { ownershipInputs, cashFit, DEFAULT_YEARS } from "@/lib/budgetScenario";
 import { useBudgetScenario } from "@/components/useBudgetScenario";
@@ -92,8 +91,8 @@ function listed(items: string[]): string {
   return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
 
-function term(key: string, title: string, definition: string): Term {
-  return { key, title, phrases: [], definition };
+function term(_key: string, title: string, what: string): TermEntry {
+  return { title, what };
 }
 
 function share(part: number, whole: number): string {
@@ -402,7 +401,7 @@ export function CostToOwn({
   const owningLedger = (<dl className="cost-lines">
             <div className="sum">
               <dt>
-                <Definition term={terms.gone}>Money gone each month</Definition>
+                <Term entry={terms.gone}>Money gone each month</Term>
               </dt>
               <dd>{money(month.gone)}</dd>
             </div>
@@ -443,7 +442,7 @@ export function CostToOwn({
             ))}
             <div>
               <dt>
-                <Definition term={terms.income}>Income to keep it at 30% of pay</Definition>
+                <Term entry={terms.income}>Income to keep it at 30% of pay</Term>
               </dt>
               <dd>{money(incomeFor(month.total))} a year</dd>
             </div>
@@ -600,13 +599,13 @@ export function CostToOwn({
       <div className="cost-cards">
         <article className="cost-card">
           <h3 className="cost-card-label">
-            <Definition term={terms.own}>
+            <Term entry={terms.own}>
               {typedPrice !== null
                 ? `To own at your ${money(typedPrice)} price`
                 : home.basis === "index"
                   ? "To own the typical single-family home"
                   : `To own at a ${money(home.value)} purchase price`}
-            </Definition>
+            </Term>
           </h3>
           {typedPrice === null && home.basis === "transactions" && (
             // The window, on the card rather than only in the definition. A reader who
@@ -647,9 +646,9 @@ export function CostToOwn({
           )}
           <p className="cost-estimate-note">
             {partial ? (
-              <Definition term={terms.partial}>
+              <Term entry={terms.partial}>
                 <span className="cost-partial">Partial estimate</span>
-              </Definition>
+              </Term>
             ) : (
               "Calculated estimate"
             )}{" "}
@@ -715,7 +714,7 @@ export function CostToOwn({
 
         <article className="cost-card">
           <h3 className="cost-card-label">
-            <Definition term={terms.rent}>{typedRent !== null ? "To rent at your figure" : "To rent the typical home"}</Definition>
+            <Term entry={terms.rent}>{typedRent !== null ? "To rent at your figure" : "To rent the typical home"}</Term>
           </h3>
           {rentMonth !== null ? (
             <>

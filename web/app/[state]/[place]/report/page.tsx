@@ -1,3 +1,4 @@
+import { Term } from "@/components/Term";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -8,7 +9,6 @@ import { Crumbs, Kind } from "@/components/Crumbs";
 import { ChangeCell, Margin, Marks, NoteRows, RankReading, TableNotes } from "@/components/Ledger";
 import { DataDownload } from "@/components/DataDownload";
 import { KindTag } from "@/components/KindTag";
-import { MetricTerm } from "@/components/MetricTerm";
 import { Masthead } from "@/components/Masthead";
 import { PrintButton } from "@/components/PrintButton";
 import { SectionJump } from "@/components/SectionJump";
@@ -286,7 +286,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
                   <Fragment key={m.metric_id}>
                     <tr className={measures.inline.has(m.metric_id) ? "has-note" : undefined}>
                       <td>
-                        <MetricTerm metricId={m.metric_id} label={m.label} scope="report-measures" />
+                        <Term id={m.metric_id}>{m.label}</Term>
                         <Marks letters={measures.marks.get(m.metric_id)} />
                         <KindTag metricId={m.metric_id} />
                       </td>
@@ -382,7 +382,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
                     <Fragment key={l.metric_id}>
                       <tr className={current.inline.has(l.metric_id) ? "has-note" : undefined}>
                         <td>
-                          <MetricTerm metricId={l.metric_id} label={l.label} scope="report-values" />
+                          <Term id={l.metric_id}>{l.label}</Term>
                           <Marks letters={current.marks.get(l.metric_id)} />
                           <KindTag metricId={l.metric_id} />
                         </td>

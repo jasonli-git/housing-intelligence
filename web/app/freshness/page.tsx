@@ -1,9 +1,9 @@
+import { Term } from "@/components/Term";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { BuiltAgo } from "@/components/BuiltAgo";
 import { Crumbs, Kind } from "@/components/Crumbs";
-import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { Masthead } from "@/components/Masthead";
 import { NextRelease } from "@/components/NextRelease";
 import { StatusFilter } from "@/components/StatusFilter";
@@ -139,12 +139,7 @@ export default async function FreshnessPage() {
                           </th>
                           <td>
                             <span className="fresh-status">
-                              <FloatingMetricTerm
-                                metricId={`fresh-${source.status}`}
-                                label={STATUS_COPY[source.status].label}
-                                definition={STATUS_COPY[source.status].means}
-                                why={null}
-                              />
+                              <Term id={`fresh-${source.status}`} definition={STATUS_COPY[source.status].means} why={null}>{STATUS_COPY[source.status].label}</Term>
                             </span>
                           </td>
                           <td>

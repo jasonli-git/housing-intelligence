@@ -1,5 +1,5 @@
+import { Term } from "@/components/Term";
 import type { ReactNode } from "react";
-import { FloatingMetricTerm } from "./FloatingMetricTerm";
 import type { ProfileItem } from "@/lib/verdict";
 import { AbstractField } from "./AbstractField";
 
@@ -55,7 +55,7 @@ export function QuietProfile({ items, peers = "counties", statewide = false, all
       <path d="M5 110H235M30 110V56L88 14L146 56V110M20 63L88 14L156 63M146 110V72L188 43L229 72V110M68 110V76H99V110M43 64H61V82H43ZM111 64H129V82H111ZM171 77H193V94H171ZM71 27V8H82V19" />
     </svg>}
     <p><strong>{item.value}</strong>{item.margin && <span className="quiet-margin">{item.margin}</span>}</p>
-    <FloatingMetricTerm metricId={item.metric_id} label={item.label} definition={item.definition} why={null} />
+    <Term id={item.metric_id} definition={item.definition} why={null}>{item.label}</Term>
     {item.context && <small>{item.context.words}{item.context.rank && ` · ${item.context.rank.best !== undefined && item.context.rank.worst !== undefined ? `${item.context.rank.best}–${item.context.rank.worst}` : item.context.rank.value} of ${item.context.rank.of} ${peers}`}</small>}
   </article>)}</div>;
   return <section className={`quiet-profile${statewide ? " quiet-state-profile" : ""}`} aria-label={statewide ? "Additional statewide measures" : "Housing profile"}>

@@ -2,8 +2,7 @@
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { FloatingMetricTerm } from "./FloatingMetricTerm";
-import { Definition } from "./Definition";
+import { Term } from "./Term";
 import { renderToStaticMarkup } from "react-dom/server";
 import { PlacePicker } from "./PlacePicker";
 import { SectionJump } from "./SectionJump";
@@ -30,7 +29,7 @@ afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); vi.unstub
 describe("Definitions", () => {
   it("keeps a floating definition open when the pointer moves into it", () => {
     vi.useFakeTimers();
-    render(<FloatingMetricTerm metricId="test" label="Metric" definition="Complete definition" />);
+    render(<Term id="test" definition="Complete definition">Metric</Term>);
     fireEvent.mouseEnter(screen.getByText("Metric"));
     fireEvent.mouseLeave(screen.getByText("Metric"));
     fireEvent.mouseEnter(screen.getByRole("tooltip"));
@@ -41,13 +40,13 @@ describe("Definitions", () => {
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
   it("Escape dismisses hover-only definitions", () => {
-    render(<FloatingMetricTerm metricId="test" label="Metric" definition="Definition" />);
+    render(<Term id="test" definition="Definition">Metric</Term>);
     fireEvent.mouseEnter(screen.getByText("Metric"));
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
   it("Escape does not throw keyboard focus away", () => {
-    render(<FloatingMetricTerm metricId="test" label="Metric" definition="Definition" />);
+    render(<Term id="test" definition="Definition">Metric</Term>);
     const anchor = screen.getByText("Metric");
     act(() => anchor.focus());
     fireEvent.keyDown(anchor, { key: "Escape" });
@@ -55,7 +54,7 @@ describe("Definitions", () => {
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
   it("lets keyboard users scroll a definition that exceeds the viewport", () => {
-    render(<FloatingMetricTerm metricId="test" label="Metric" definition="Long definition" />);
+    render(<Term id="test" definition="Long definition">Metric</Term>);
     const anchor = screen.getByText("Metric"); act(() => anchor.focus());
     const tip = screen.getByRole("tooltip");
     Object.defineProperty(tip, "scrollHeight", {value:1000});
@@ -65,7 +64,7 @@ describe("Definitions", () => {
     expect(document.activeElement).toBe(anchor);
   });
   it("adds dismissal to ordinary definitions without losing their no-script text", () => {
-    const definition = <Definition term={{ key: "test", title: "Term", phrases: [], definition: "Always in the document" }}>Term label</Definition>;
+    const definition = <Term entry={{ title: "Term", what: "Always in the document" }}>Term label</Term>;
     const html = renderToStaticMarkup(definition);
     expect(html).toContain("Always in the document");
     expect(html).toContain('role="tooltip"');

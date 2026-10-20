@@ -1,8 +1,8 @@
+import { Term } from "@/components/Term";
 import type { LevelReading } from "@/lib/api";
 import type { ReactNode } from "react";
 import { formatMetric } from "@/lib/format";
 import { monthLabel, periodLabel } from "@/lib/periods";
-import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { stateOverviewFigures } from "@/lib/stateEntry";
 
 export function StateOverview({ levels, mortgage, preliminaryYears, hasNotes = false, children }: {
@@ -16,9 +16,9 @@ export function StateOverview({ levels, mortgage, preliminaryYears, hasNotes = f
   return <section id="state-overview" className="state-overview" aria-labelledby="state-overview-heading">
     <div className="state-chapter-head"><h2 id="state-overview-heading">Statewide snapshot{hasNotes && <sup className="state-note-marker"><a id="state-note-reference" className="state-note-reference" href="#state-figure-notes" aria-label="Read notes about statewide figures at the bottom of the page" title="Notes about statewide figures">†</a></sup>}</h2></div>
     <div className="state-facts">
-      {price && <article><strong>{formatMetric(price.value, price.unit, price.metric_id)}</strong><FloatingMetricTerm metricId={price.metric_id} label="Median sold-home price" /><small>{monthLabel(price.period_start)}–{monthLabel(price.period_end)} · NJ sale records</small></article>}
-      {mortgage && <article><strong>{mortgage.value.toFixed(2)}%</strong><FloatingMetricTerm metricId={mortgage.metric_id} label="30-year fixed · US average" /><small>{periodLabel(mortgage.period_start, mortgage.metric_id)} · Freddie Mac · not a quote</small></article>}
-      {added && <article><strong>{formatMetric(added.value, added.unit, added.metric_id)}</strong><FloatingMetricTerm metricId={added.metric_id} label="Net homes added" /><small>{periodLabel(added.period_end, added.metric_id)}{preliminaryYears.includes(Number(added.period_end.slice(0, 4))) ? " (preliminary)" : ""} · Reporting towns only</small></article>}
+      {price && <article><strong>{formatMetric(price.value, price.unit, price.metric_id)}</strong><Term id={price.metric_id}>Median sold-home price</Term><small>{monthLabel(price.period_start)}–{monthLabel(price.period_end)} · NJ sale records</small></article>}
+      {mortgage && <article><strong>{mortgage.value.toFixed(2)}%</strong><Term id={mortgage.metric_id}>30-year fixed · US average</Term><small>{periodLabel(mortgage.period_start, mortgage.metric_id)} · Freddie Mac · not a quote</small></article>}
+      {added && <article><strong>{formatMetric(added.value, added.unit, added.metric_id)}</strong><Term id={added.metric_id}>Net homes added</Term><small>{periodLabel(added.period_end, added.metric_id)}{preliminaryYears.includes(Number(added.period_end.slice(0, 4))) ? " (preliminary)" : ""} · Reporting towns only</small></article>}
     </div>
     {!price && !added && !mortgage && <p>Statewide overview figures are unavailable in this snapshot.</p>}
     {(price || added || mortgage) && <details className="state-snapshot-limits"><summary>Scope &amp; reporting coverage</summary><div>

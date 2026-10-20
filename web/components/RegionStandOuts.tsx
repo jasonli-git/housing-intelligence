@@ -1,8 +1,8 @@
 "use client";
 
+import { Term } from "@/components/Term";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
-import { FloatingMetricTerm } from "@/components/FloatingMetricTerm";
 import { CarouselProgress, useAutoCarousel } from "@/components/useAutoCarousel";
 import type { StandOut, StandOutGroup } from "@/lib/standouts";
 
@@ -130,7 +130,7 @@ function StandOutRow({
           <li key={item.metric_id} className="region-standout-card">
             <span className="region-standout-rank">{item.rank}</span>
             <span className="region-standout-what">
-              <FloatingMetricTerm metricId={item.metric_id} label={item.label} />
+              <Term id={item.metric_id}>{item.label}</Term>
             </span>
             <span className="region-standout-figure">{item.figure}</span>
             {item.margin && <span className="margin">{item.margin}</span>}
