@@ -226,9 +226,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       piece most worth pinning, since a regression there would put client behaviour into
       printed reports.
 
-- [ ] **Fold `redesign.css` into `globals.css`**, so each component has one set of rules
-      rather than two whose winner depends on file order (#162's cost). (Quiet utility)
-      Mechanical and large — worth its own review.
 - [ ] **The print rule that opens disclosures, `::details-content`, was checked in
       Chromium only.** (M18) A browser without it prints the licence label alone and the
       footer's institutions without their datasets. Check Safari and Firefox print
