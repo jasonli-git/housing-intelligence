@@ -5,10 +5,23 @@ All notable changes to the Housing Intelligence Platform. Format loosely follows
 
 ## [Unreleased]
 
-Publication capacity, merged 2026-10-20 (#201, ARCHITECTURE #400). This section holds
-that change only; other changes merged since 0.50.0 are not yet recorded here.
+Publication capacity (#201, ARCHITECTURE #400) and state-scoped geometry (#205,
+ARCHITECTURE #401), both merged 2026-10-20. This section holds those two changes only;
+other changes merged since 0.50.0 are not yet recorded here.
 
 ### Added
+
+- **Geometry files per state**: `geo/{STATE}/{level}.json` for the state, county,
+  municipality and ZIP levels, for every state in `config/geography.yml`'s scope. Today
+  that is four additive files, `geo/NJ/*.json`, each byte-identical to the unscoped file
+  it mirrors. `scope.legacy_geo_state: NJ` keeps publishing the old `geo/{level}.json`
+  from New Jersey even after another state joins the scope; it is configuration, never
+  inferred from scope order, and publication refuses an owner outside the scope. The
+  files are artifacts in R2, not Pages files. `geo/backdrop.json` is unchanged.
+- **Two scripts that audit a state-generalizing change**:
+  `scripts/audit_state_assumptions.py` inventories every New Jersey token in `src/hip` and
+  `web` (it needs `rg` on the PATH), and `scripts/compare_state_publication.py` diffs two
+  built trees byte for byte, with a separate main-text check of the HTML.
 
 - **A build-time check that every legacy numeric address has exactly one path**: each
   published place's `/regions/<id>` and `/regions/<id>/report`, and the four state and
@@ -34,6 +47,25 @@ that change only; other changes merged since 0.50.0 are not yet recorded here.
   were removed: the export is 14,947 files (16,715 by the same build with every alias),
   with 598 ZIP-report aliases and 1,772 rules left. ZIP pages, reports and Next payloads
   are unchanged.
+- **BLS and HUD county series come from the loaded county regions** (#205,
+  `hip.sources.registry`), not from New Jersey's odd-numbered 001–041 sequence. The PR's
+  check against the local warehouse gave the same 21 New Jersey codes. A scoped state
+  with no county regions, or a code that is not a five-digit county GEOID under that
+  state's prefix, now stops with a `ConfigError`. The adapters read `regions` through a
+  short-lived connection, so building them needs a database with the spine loaded.
+- **The web layer names its state** (#205): `api.geo(level, state, simplify?)` requires
+  a state, and the atlas county route passes New Jersey explicitly (ARCHITECTURE #398).
+  `StateBroadband` and `StateContextExhibits` require a `name` instead of defaulting to
+  New Jersey, `scopeName` knows all 56 postal codes (50 states, DC, five territories)
+  and returns an unknown code as given, and the atlas's state metadata no longer falls
+  back to `NJ`. Rendered text for New Jersey is unchanged.
+- **Published output, before and after #205**: of 19,225 artifact files, 19,222 are
+  byte-identical at the same path; the manifest, `freshness.json` and `revisions.json`
+  differ (build metadata, the new entries, and each file's `generated_at`), and four
+  are new. Of the site's 14,947 files, the 2,380 HTML pages whose bytes changed all have
+  the same main text. Raw HTML and RSC bytes differ between rebuilds (build time, Next
+  build ID, serialization order); the owner accepted that on 2026-10-20 as the standard
+  for pages, with byte identity required of published artifacts.
 
 ### Fixed
 
@@ -45,6 +77,11 @@ that change only; other changes merged since 0.50.0 are not yet recorded here.
 - Room for a second state. The synthetic one is 28,551 files with no aliases, over the
   20,000-file Pages Free cap, and no capacity route is chosen (TODO.md, Frontend and
   presentation).
+- Another state. #205 ingested nothing, added no state to the scope and changed no pinned
+  address or redirect. Sources, pages and tools that assume New Jersey remain; they are
+  inventoried in `agent-handoffs/state-agnostic.md` and listed in TODO.md (API and scale
+  limits), and `config/geography.yml`'s claim that no state code is hard-coded is still
+  false.
 
 ## [0.50.0] — 2026-10-08
 
