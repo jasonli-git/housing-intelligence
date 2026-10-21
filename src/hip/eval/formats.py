@@ -46,6 +46,7 @@ from typing import Any
 from hip.config import Audience
 from hip.packets import Binding, Packet
 from hip.packets.causal import causal_problems
+from hip.packets.comparative import comparative_problems
 from hip.packets.margins import describe_problems, joined_as_range, margin_problems
 from hip.packets.prediction import prediction_problems
 
@@ -471,6 +472,8 @@ def consumer_problems(
     """What keeps a shaped consumer reading from publication, beyond binding."""
     # Milestone 51: a cause only where a relationship in the packet makes one.
     problems: list[str] = causal_problems(body, binding, packet)
+    # A ranking in words only where the packet's ranks bear it out (ARCHITECTURE #412).
+    problems += comparative_problems(body, binding, packet)
     # Milestone 52: no forecast from the long-run comparison.
     problems += prediction_problems(body, binding, packet)
     for label, pattern in _banned(packet):

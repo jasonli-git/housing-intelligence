@@ -13,6 +13,11 @@ are not yet recorded here.
 
 ### Added
 
+- **Readings' ranking words are checked against the data** (ARCHITECTURE #412): "among
+  the highest", "near the bottom" and the like must match the place's rank for the
+  measure named, or the reading is refused and rewritten. Four published readings would
+  fail it today, each calling a low home price to income ratio high; they are replaced at
+  the next regeneration.
 - **The status link says when sources were last checked** (ARCHITECTURE #411): "Sources
   checked Oct 17", from a small file the weekly check uploads even when nothing changed,
   and "Source check overdue" when the last one is more than nine days old.
