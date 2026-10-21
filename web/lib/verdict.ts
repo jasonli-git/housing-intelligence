@@ -296,6 +296,8 @@ export type ProfileItem = {
   value: string;
   /** A survey figure's margin beneath its value, "± 2.3 points" (Milestone 28). */
   margin?: string | null;
+  /** Changed after this site first published it (#410): the first value, and when. */
+  updated?: { from: string; on: string } | null;
   definition: string;
   /** Plain-language context plus an optional typed rank; never parsed back out of prose. */
   context: {

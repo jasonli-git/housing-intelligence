@@ -513,3 +513,8 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
   body:has(.horizon-page) main :is(.place-report-line, .standouts-report-link) a { color: var(--plate-accent) !important; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--plate-accent) 40%, transparent); text-underline-offset: .2em; }
   body:has(.horizon-page) main :is(.place-report-line, .standouts-report-link) a:is(:hover, :focus-visible) { text-decoration-color: currentColor; }
 }
+/* A figure that changed after first publication (#410): one quiet line under it. */
+@media screen {
+  .figure-updated { display: block; margin-top: .3rem; font-size: 12px; line-height: 1.4; color: var(--text-secondary); }
+  .figure-updated a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); text-underline-offset: .15em; }
+}

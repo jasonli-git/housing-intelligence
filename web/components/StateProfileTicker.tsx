@@ -1,5 +1,6 @@
 "use client";
 
+import { UpdatedMark } from "@/components/UpdatedMark";
 import { Term } from "@/components/Term";
 import { type PointerEvent, useLayoutEffect, useRef, useState } from "react";
 import { RankText } from "@/components/Ledger";
@@ -234,6 +235,7 @@ export function ProfileTicker({
                       <span className="ticker-value"><b>{item.value}</b>{item.margin && <span className="margin ticker-margin">{item.margin}</span>}</span>
                       {duplicate ? <span>{item.label}</span> : <Term id={item.metric_id} definition={item.definition} why={null}>{item.label}</Term>}
                       {context?.words && <small className="state-ticker-context">{context.words}</small>}
+                      {item.updated && !duplicate && <UpdatedMark updated={item.updated} />}
                       {context?.rank && peerLabel && (
                         <RankText
                           className="profile-rank"

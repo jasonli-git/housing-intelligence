@@ -245,3 +245,29 @@ def test_a_method_change_labels_a_rebuild_on_a_later_day_and_only_that_one(
     }
     assert labels[("2099-01-02", "acs_median_hh_income")] == "Worked out anew."
     assert labels[("2099-01-05", "acs_median_hh_income")] is None
+
+
+def test_a_place_lists_only_its_shown_figures_that_changed(session: Session) -> None:
+    """`/regions/{id}/revisions` (#410): each metric's newest period only, at its net
+    change, and nothing that changed back to where it started."""
+    from hip.api.routers.revisions import region_revisions
+
+    latest, earlier = session.execute(
+        text(
+            "SELECT max(period_start), min(period_start) FROM fact_metric_observation "
+            "WHERE region_id = 224 AND metric_id = 'zhvi_sfr'"
+        )
+    ).one()
+    _revise(session, 224, "zhvi_sfr", latest, 900_000, 910_000, "2099-01-01 12:00:00+00")
+    _revise(session, 224, "zhvi_sfr", latest, 910_000, 920_000)
+    _revise(session, 224, "zhvi_sfr", earlier, 100_000, 200_000)  # not shown: older
+    shown = {f.metric_id: f for f in region_revisions(224, session).figures}
+    figure = shown["zhvi_sfr"]
+    assert (figure.first_value, figure.latest_value, figure.revisions) == (
+        900_000,
+        920_000,
+        2,
+    )
+    assert figure.period_start == latest and figure.last_revised_on == date(2099, 1, 2)
+    _revise(session, 224, "zhvi_sfr", latest, 920_000, 900_000, "2099-01-03 12:00:00+00")
+    assert "zhvi_sfr" not in {f.metric_id for f in region_revisions(224, session).figures}

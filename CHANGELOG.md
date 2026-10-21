@@ -13,6 +13,9 @@ are not yet recorded here.
 
 ### Added
 
+- **Changed figures are marked on place pages** (ARCHITECTURE #410): a figure in the
+  housing profile that changed after the site first published it says when and what it
+  first said, linked to the revised-figures page.
 - **Lead service lines from 2026** (ARCHITECTURE #409): each water system's 2025 and
   2026 inventory submissions, from NJDEP's answer to OPRA request 407131 (2026-10-20), so
   a place's water systems show their newest counts — 2026 for 454 systems — instead of

@@ -713,6 +713,8 @@ export const api = {
   /** How current each source is (Milestone 27). */
   freshness: () => tryGet<FreshnessReport>(`/freshness`),
   revisions: () => tryGet<RevisionReport>(`/revisions`),
+  /** The place's shown figures that changed after first publication (#410). */
+  regionRevisions: (id: number) => tryGet<RegionRevisions>(`/regions/${id}/revisions`),
   /**
    * HUD's income limits for the region's county, every band and household size
    * (Milestone 35). Null for the state, and for a ZIP the crosswalk does not place.
@@ -961,6 +963,17 @@ export type RevisedPlace = {
   /** How many of this place's periods moved in this group. */
   periods: number;
 };
+
+/** A shown figure that changed after this site first published it (`GET /regions/{id}/revisions`). */
+export type RevisedFigure = {
+  metric_id: string;
+  period_start: string;
+  first_value: number;
+  latest_value: number;
+  revisions: number;
+  last_revised_on: string;
+};
+export type RegionRevisions = { region_id: number; figures: RevisedFigure[] };
 
 /** One metric's revisions in one refresh, split by whether the period had ended. */
 export type RevisionGroup = {
