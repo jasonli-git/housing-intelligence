@@ -13,6 +13,7 @@ from hip.analytics.relationships import pace
 from hip.eval.formats import consumer_problems, shape_consumer
 from hip.packets import Packet, bind, build_packet, render_markdown
 from hip.packets.causal import causal_problems
+from hip.packets.comparative import comparative_problems
 from hip.warehouse.db import get_engine, probe
 
 warehouse = pytest.mark.skipif(
@@ -163,3 +164,49 @@ def test_a_survey_figure_s_annualised_change_is_left_out(hudson: Packet) -> None
     survey = [m for m in hudson.metrics if m.survey]
     assert survey and all(m.cagr is None for m in survey)
     assert any(m.cagr is not None for m in hudson.metrics if not m.survey)
+
+
+@warehouse
+@pytest.mark.parametrize(
+    ("sentence", "refused"),
+    [
+        # Hudson: asking rent first of 21, homeownership last, and home value to income
+        # 19th of 21 best-first — the third highest ratio.
+        ("Hudson County has the highest typical asking rent in New Jersey.", False),
+        ("Its homeownership rate is the lowest among New Jersey counties.", False),
+        ("Its homeownership rate is among the highest in the state.", True),
+        (
+            "Home value compared with household income is among New Jersey’s highest.",
+            False,
+        ),
+        # Standing, not value: the ratio's 19th of 21 best-first is near the bottom.
+        ("Home value compared with household income ranks near the bottom.", False),
+        # By value, as the packet now states it, the same words also pass.
+        ("Home value compared with household income ranks among the highest.", False),
+        ("Home value compared with household income is near the bottom.", True),
+        # The Hudson sentence that started this (TODO, #275): no measure the data ranks.
+        ("Housing here takes a particularly large share of everything.", True),
+        ("What stands out here?", False),
+        ("That is the largest percentage change in the packet.", False),
+        # A relatively low homeownership rate: the words attach to the measure after.
+        ("Rents are the highest, with a relatively low homeownership rate.", False),
+    ],
+)
+def test_ranking_words_need_the_ranks_to_bear_them_out(
+    hudson: Packet, sentence: str, refused: bool
+) -> None:
+    problems = comparative_problems(sentence, bind(sentence, hudson), hudson)
+    assert bool(problems) is refused, problems
+
+
+@warehouse
+def test_a_ratio_where_lower_is_better_reads_its_rank_by_value(hudson: Packet) -> None:
+    """ARCHITECTURE #413: the packet ranks best-first, so Hudson's home value to income,
+    19th of 21, is the third highest — and the model is told so, not "19th of 21"."""
+    from hip.packets.report import value_rank_label
+
+    level = next(lv for lv in hudson.levels if lv.metric_id == "price_to_income")
+    assert value_rank_label(level).startswith(("3rd highest of 21", "2nd–", "3rd–"))
+    rent = next(lv for lv in hudson.levels if lv.metric_id == "zori_all")
+    assert value_rank_label(rent) == "1st of 21"
+    assert "highest of 21" in render_markdown(hudson)

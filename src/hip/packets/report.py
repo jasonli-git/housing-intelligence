@@ -274,6 +274,38 @@ def rank_label(entry: PacketMetric | PacketLevel) -> str:
     return f"{ordinal(entry.rank)} of {entry.of}"
 
 
+_TOWARD_LOW = {
+    "near the top": "among the lowest values",
+    "toward the top": "toward the low end",
+    "near the bottom": "among the highest values",
+    "toward the bottom": "toward the high end",
+}
+
+
+def value_rank_label(entry: PacketLevel) -> str:
+    """A current value's rank, said by value (ARCHITECTURE #413). The packet ranks
+    best-first, so where lower is better rank 1 is the lowest value, and "2nd of 21"
+    read as near the highest: four published readings called a low home value to income
+    ratio high. There it reads "2nd lowest of 21", its range words by value too; every
+    other measure ranks largest first already, and reads as `rank_label` does."""
+    if entry.direction != "lower_is_better" or entry.rank is None or entry.of is None:
+        return rank_label(entry)
+    of = entry.of
+    best = entry.rank_best if entry.rank_best is not None else entry.rank
+    worst = entry.rank_worst if entry.rank_worst is not None else entry.rank
+    # Counted from the nearer end: "3rd highest", not "19th lowest".
+    end, first, last = "lowest", best, worst
+    if best + worst > of + 1:
+        end, first, last = "highest", of + 1 - worst, of + 1 - best
+    if has_range(entry):
+        words = rank_words(best, worst, of)
+        return (
+            f"{ordinal(first)}–{ordinal(last)} {end} of {of} "
+            f"({_TOWARD_LOW.get(words, words)})"
+        )
+    return f"{end} of {of}" if first == 1 else f"{ordinal(first)} {end} of {of}"
+
+
 def _cell(text: str) -> str:
     """A pipe inside a cell would silently split the column."""
     return text.replace("|", "\\|")
@@ -533,7 +565,7 @@ def render_markdown(packet: Packet) -> str:
             lines.append(
                 f"| {_cell(level.label)} "
                 f"| {value} "
-                f"| {rank_label(level)} "
+                f"| {value_rank_label(level)} "
                 f"| {level.period_end} "
                 f"| {_cell(level.source_id or '—')} |"
             )

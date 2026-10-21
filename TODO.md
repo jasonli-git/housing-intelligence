@@ -129,19 +129,17 @@ Not open work: each comes round on a date. The steps live where the row says.
       on live packets. Read its revisions and fallthroughs, and decide then whether the
       prompt should name margins.
 
-- [ ] **A reading's claims without a figure go unchecked.** (#275, 2026-10-01) Gemini's
-      test reading of Hudson said rents take "a particularly large share of household
-      budgets" under *What stands out here?* with no figure behind the words
-      (`reports/evaluation/readings-v6.md`; ARCHITECTURE, Known Limitations, "Binding
-      checks figures, not claims"). Binding checks numbers only, so a figure-free claim
-      passes whether the packet supports it or not. Possible directions, none decided:
-      a gate that refuses comparative words ("large share", "highest", "among the")
-      in a sentence that cites no figure for the measure named; or the judge's
-      `factual_accuracy` run on a sample of published readings after each regeneration.
-      Milestone 51 (#337) refuses causal wording between *cited* measures; a causal
-      claim between measures named only in words is the same blind spot.
-      A second case on the packets of Milestone 34 (`reports/evaluation/readings-v8.md`):
-      Cumberland's reading called Zillow's home value a five-year survey estimate.
+- [ ] **What a reading says in words is now checked for rankings only.** (#275; narrowed
+      2026-10-21, ARCHITECTURE #412) A ranking in words ("among the highest", "near the
+      bottom") must match the packet's ranks, and one naming no ranked measure is refused.
+      Still unchecked: a measure mislabelled in words (Cumberland's reading called Zillow's
+      home value a five-year survey estimate, `reports/evaluation/readings-v8.md`) and a
+      causal claim between measures named only in words (#337's blind spot). Four
+      published readings (Gloucester, Burlington, Camden, Salem) call a low home value to
+      income ratio high and would be refused today; they stay live until the next
+      regeneration, which the owner holds. The cause, best-first ranks the models read as
+      high, is fixed in the packet's Markdown (#413), confirmed on those four counties
+      (`reports/evaluation/readings-v10.md`: all four would publish, correctly).
 
 ### Test coverage
 
