@@ -43,6 +43,8 @@ class Run:
     steps: list[str] = field(default_factory=list)
     # (title, priority) of every notification sent.
     notes: list[tuple[str, int]] = field(default_factory=list)
+    # The outcome of every status.json upload (#411).
+    status: list[str] = field(default_factory=list)
 
 
 def _run(
@@ -99,6 +101,8 @@ def _run(
     monkeypatch.setattr(script, "_run", fake_run)
     monkeypatch.setattr(script, "_notify", fake_notify)
     monkeypatch.setattr(script, "_sleep", lambda seconds: result.steps.append("wait"))
+    if hasattr(script, "_publish_status"):
+        monkeypatch.setattr(script, "_publish_status", result.status.append)
     if hasattr(script, "_zillow_reminder"):
         # Read from this machine's files and today's date; its own tests cover it.
         monkeypatch.setattr(script, "_zillow_reminder", lambda: None)
@@ -151,6 +155,17 @@ def test_a_quiet_week_stops_after_the_refresh_and_says_nothing(
 
     assert (run.code, run.notes) == (0, [])
     assert run.steps == ["hip refresh", "compare freshness"]
+
+
+def test_every_successful_check_publishes_its_date_a_quiet_week_included(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """ARCHITECTURE #411: the status link says when sources were last checked."""
+    assert _run(monkeypatch, "scheduled_refresh", moved=False).status == ["current"]
+    assert _run(monkeypatch, "scheduled_refresh").status == ["current"]
+    unreachable = _run(monkeypatch, "scheduled_refresh", hip={"refresh": 3}, moved=False)
+    assert unreachable.status == ["unreachable"]
+    assert _run(monkeypatch, "scheduled_refresh", hip={"refresh": 1}).status == []
 
 
 def test_a_quiet_week_republishes_when_the_freshness_page_would_change(

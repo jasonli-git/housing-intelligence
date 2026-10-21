@@ -152,7 +152,10 @@ downloads (`ARGS=--apply` deletes them).
 **The weekly refresh.** `scripts/scheduled_refresh.py` runs `hip refresh` and, only if
 something moved, rebuilds, deploys and runs `check-live`; it runs only from a clean
 `main`. Two `launchd` agents in `scripts/launchd/` run it on Fridays and on demand —
-installing them is a separate decision; see the comment in each `.plist`. Regenerating AI
+installing them is a separate decision; see the comment in each `.plist`. After every
+successful check, quiet weeks included, it uploads `status.json` beside the data
+(`make publish-status`), which the site's status link reads to say when sources were last
+checked. Regenerating AI
 readings is billed, so it is gated: `hip refresh-mode ask|auto` (one file in iCloud Drive's
 `HousingPipeline` folder, which an iPhone Shortcut can also write), and
 `hip regenerate-now` asks for one outside the schedule.

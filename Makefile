@@ -2,7 +2,7 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help check-terms check-accessibility screenshots setup setup-eval venv-fix hooks rollback data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
+.PHONY: help check-terms check-accessibility screenshots publish-status setup setup-eval venv-fix hooks rollback data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
         check-dist check-live clean-dist deploy api web \
         test test-all test-py test-web lint format check-config dbt-debug eval clean
 
@@ -285,8 +285,9 @@ deploy: check-dist check-terms check-accessibility screenshots  ## Upload artifa
 	rclone lsf -R --files-only $(R2_REMOTE):$(R2_BUCKET) > /tmp/hip-live-keys.txt
 	rclone copyto /tmp/hip-live-keys.txt $(R2_REMOTE):$(R2_BACKUP_BUCKET)/_keys.txt
 	$(call STAMP,deploy: artifacts to R2 started)
+	@# `status.json` is the weekly check's, not the build's (#411): never deleted here.
 	rclone sync dist/artifacts $(R2_REMOTE):$(R2_BUCKET) --progress --checksum \
-	  --backup-dir $(R2_REMOTE):$(R2_BACKUP_BUCKET)/files
+	  --exclude /status.json --backup-dir $(R2_REMOTE):$(R2_BACKUP_BUCKET)/files
 	@# `--branch` pinned: wrangler otherwise names the deployment after the checked-out git
 	@# branch, and anything but `main` becomes a Preview. On 2026-09-23 a deploy run from a
 	@# docs branch did exactly that — the artifacts above went live, the pages did not, and
@@ -295,6 +296,15 @@ deploy: check-dist check-terms check-accessibility screenshots  ## Upload artifa
 	$(call STAMP,deploy: site to Pages started)
 	wrangler pages deploy dist/site --project-name=$(PAGES_PROJECT) --branch=main
 	$(call STAMP,deploy: done)
+
+publish-status:  ## Publish when the sources were last checked (CHECKED_AT=, OUTCOME=current|unreachable)
+	@# Written by the weekly refresh after a successful check, deploy or not (#411): the
+	@# site's status link reads it, so a quiet Friday still shows it ran.
+	@case "$(OUTCOME)" in current|unreachable) ;; *) echo "OUTCOME must be current or unreachable"; exit 1;; esac
+	@echo "$(CHECKED_AT)" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}\+00:00$$' || { echo "CHECKED_AT must be an ISO UTC time"; exit 1; }
+	@printf '{"checked_at":"%s","outcome":"%s"}\n' "$(CHECKED_AT)" "$(OUTCOME)" > /tmp/hip-status.json
+	rclone copyto /tmp/hip-status.json $(R2_REMOTE):$(R2_BUCKET)/status.json \
+	  --header-upload "Content-Type: application/json" --header-upload "Cache-Control: public, max-age=300"
 
 rollback:  ## Restore the published data to the build before the last deploy (ARGS=--yes)
 	@# Data half only, and never past a Daniel's Law removal; it prints how to roll the

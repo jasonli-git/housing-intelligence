@@ -222,10 +222,6 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Publication
 
-- [ ] **The site's status link cannot say when a check last succeeded.** (PR #45, #251)
-      It names the Friday schedule and the build date; a quiet Friday that found nothing
-      leaves the build date where it was, and nothing published records the run itself.
-      Publishing the last successful check apart from the snapshot would let it say so.
 ### Documentation upkeep
 
 - [ ] **Which README figures are mechanically derivable has never been settled.** The
