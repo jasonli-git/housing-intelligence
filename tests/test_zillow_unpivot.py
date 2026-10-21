@@ -58,6 +58,9 @@ def build(tmp_path: Path, variant: str = "normal"):
                 rows[0][rows[0].index("State")] = "Jurisdiction"
             elif variant == "renamed_month":
                 rows[0][rows[0].index("2025-03-31")] = "2025/03/31"
+            elif variant == "missing_month":
+                gone = rows[0].index("2025-02-28")
+                rows = [row[:gone] + row[gone + 1 :] for row in rows]
             with dropped.open("w", newline="") as handle:
                 csv.writer(handle).writerows(rows)
             release = adapter.fetch(ref, raw_dir=tmp_path / "raw")
@@ -148,14 +151,14 @@ def test_renamed_required_metadata_fails_loudly(tmp_path: Path):
     assert "State" in result.stdout and "not found" in result.stdout
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason=(
-        "Zillow macro selects date columns by YYYY-MM-DD regex; a renamed month is "
-        "silently omitted rather than refused. Separate production fix required."
-    ),
-)
 def test_renamed_month_must_not_silently_disappear(tmp_path: Path):
+    # Fixed 2026-10-21: the macro's layout guard refuses a date-like column.
     result, _ = build(tmp_path, "renamed_month")
     assert result.returncode != 0, "2025/03/31 silently dropped by both real models"
+    assert "unrecognised month column(s) 2025/03/31" in result.stdout
+
+
+def test_a_missing_month_is_refused_as_a_gap(tmp_path: Path):
+    result, _ = build(tmp_path, "missing_month")
+    assert result.returncode != 0, "a dropped month column must not load as a gap"
+    assert "the month columns have a gap" in result.stdout

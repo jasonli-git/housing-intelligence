@@ -24,6 +24,17 @@ class HpiAdapter(SourceAdapter):
     source_id: ClassVar[str] = "fhfa_hpi"
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "csv"
+    # Every column `stg_fhfa_hpi` reads.
+    required_columns: ClassVar[tuple[str, ...]] = (
+        "hpi_flavor",
+        "frequency",
+        "level",
+        "place_id",
+        "yr",
+        "period",
+        "index_nsa",
+        "index_sa",
+    )
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         return [

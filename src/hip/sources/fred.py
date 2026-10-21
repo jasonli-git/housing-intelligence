@@ -67,6 +67,14 @@ class FredAdapter(SourceAdapter):
             raise ValueError(f"fred/{ref.key}: no 'observations' key in response")
         rows = payload["observations"]
         assert isinstance(rows, list)
+        # Every observation names its date and value; one that does not means FRED changed
+        # its shape, and dropping it would quietly shorten the series (2026-10-21).
+        for r in rows:
+            if not isinstance(r, dict) or "date" not in r or "value" not in r:
+                raise ValueError(
+                    f"fred/{ref.key}: an observation without 'date' and 'value' "
+                    f"({r!r}); FRED's response shape changed"
+                )
         # FRED writes "." for a missing period rather than null.
         return [
             {"series_id": ref.layer, "date": r["date"], "value": r["value"]}

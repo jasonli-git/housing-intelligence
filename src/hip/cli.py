@@ -901,6 +901,7 @@ def land(
                     parquet_dir=settings.parquet_dir,
                     overwrite=overwrite,
                     csv_options=adapter.csv_read_options,
+                    required_columns=adapter.required_columns,
                 )
             typer.echo(
                 f"{adapter.source_id:<14} {release.ref.key:<18} "
