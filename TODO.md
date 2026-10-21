@@ -29,34 +29,28 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — readiness for a second state (2026-10-20)
+## Now — the hosting decision, then the rest of a second state's groundwork (2026-10-21)
 
-The interface cleanup the owner ordered on 2026-10-19 is done (#180–#199, through the
-housing atlas's flat United States map). Next, in the owner's order of 2026-10-20, the
-implementation work a second state needs:
+The three implementation steps the owner ordered on 2026-10-20 are done: publication
+capacity measured and 1,768 redirect files cut (#201, #203, ARCHITECTURE #400), county
+series, geometry and `api.geo` taken from scope (#205, #401), and scale safety (#208,
+#402, #403). Config alone cannot fit a second New Jersey-sized state on Pages Free
+(#210); the accessibility check found on the way now runs on every deploy (#211, #404).
 
-1. **Publication capacity** — Pages' two ceilings, files and redirect rules (under
-   Frontend and presentation). Measured on 2026-10-20 (#201, ARCHITECTURE #400): New
-   Jersey is 14,947 files and 1,772 rules, and a synthetic second state of the same
-   size reaches 28,551 files even with no redirect rules or aliases in Pages. Left:
-   the owner's choice of how files are held, then activating one redirect option.
-2. **Expansion correctness** — the three seams are fixed (2026-10-20, #205, ARCHITECTURE
-   #401): county series, published geometry and `api.geo` take their state from scope.
-   Left: the New Jersey assumptions that change inventoried and left, and an all-sources
-   `hip acquire` on a new database (both under API and scale limits). Search results
-   already name each place's state (#362).
-3. **Scale safety** — done (2026-10-20, #208, ARCHITECTURE #402, #403): the analytics
-   tests rebuild a scratch schema, rankings and per-place series carry a `total` and
-   publication refuses a clipped list, and rank ranges count in about 4 s instead of
-   215 s with identical output. Left: other integration tests that still write to the
-   served warehouse (Test coverage), and paging `/rankings` past 1,000 (API and scale
-   limits).
+1. **The owner's hosting decision** — under Frontend and presentation, "A second state
+   will not fit Pages' limits". Recommended 2026-10-20: Workers static assets on Workers
+   Paid (100,000 files), moving the numeric-link redirects to a Worker; then pages in R2
+   behind a Worker past about seven states, and on-request rendering only for national
+   coverage.
+2. **The remaining New Jersey assumptions** and **`hip acquire` on a new database**
+   (API and scale limits).
+3. **Tests that guard data** — the validation gate, the Zillow unpivot, and the Zillow,
+   FRED, BLS and FHFA adapters against stubbed responses (Test coverage).
 
-Kept out of that scope: publisher-dependent gaps (Correctness and data integrity) and
-the owner's decisions (Open decisions; HUD income-limit dating). `place` versus `cousub`
-does not block the Northeast states, which are all strong-MCD. The readings are stale
-after the 2026-10-19 Zillow refresh and #382; regenerating them is held by the owner.
-Revoking the keys pasted into chat (Parked) is the owner's, and the most urgent.
+Kept out of that scope: publisher-dependent gaps (Correctness and data integrity) and the
+owner's decisions (Open decisions; HUD income-limit dating). The readings are stale after
+the 2026-10-19 Zillow refresh and #382; regenerating them is held by the owner. Rotating
+the six keys still listed under Parked is the owner's.
 
 ## Open
 
@@ -285,18 +279,16 @@ Not open work: each comes round on a date. The steps live where the row says.
       Publishing the last successful check apart from the snapshot would let it say so.
 ### Documentation upkeep
 
-- [ ] **Make README.md much more concise.** (owner, 2026-10-20) It has grown into a long
-      record of every milestone, source and decision, much of it repeated from
-      ARCHITECTURE, ROADMAP and CHANGELOG. Cut it to what a visitor needs: what the site
-      is, the screenshots, a short feature list, how to run it, and links to the other
-      documents for the rest. Pairs with the Director Note on README auto-maintenance.
-
 - [ ] **Which README figures are mechanically derivable has never been settled.** The
-      status counts (regions, observations, metrics, sources), the Tech Stack, the
-      evaluation table and the resource and storage figures all have a queryable or
-      file-based source; the status narrative, the Features descriptions and the setup
-      prose do not. Deciding the boundary is what makes any "regenerate on deploy" work
-      scopeable, and ARCHITECTURE #175 settles only the images half.
+      status counts (places and sources), the Tech Stack and the evaluation list have a
+      queryable or file-based source; the status narrative, the Features descriptions and
+      the setup prose do not. Deciding the boundary is what makes any "regenerate on
+      deploy" work scopeable, and ARCHITECTURE #175 settles only the images half. The
+      README was cut from 1,095 lines to about 250 on 2026-10-21: the milestone-by-
+      milestone features, sample output and status commentary went (CHANGELOG and ROADMAP
+      hold them), and so did the stale mac-sitrep resource table and the storage table
+      (`uv run hip footprint` measures storage on demand), so `src/hip/footprint.py`'s
+      docstring and a future sitrep run no longer have a README section to write into.
 
 - [ ] **ARCHITECTURE's Module Layout stops at 2026-09-11, plus Milestones 27 and 28's
       files.** (found 2026-09-26) Files from Milestones 24–26 and 29 are missing —
