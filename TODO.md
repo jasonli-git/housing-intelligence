@@ -251,6 +251,15 @@ Not open work: each comes round on a date. The steps live where the row says.
       a DMARC record, which the domain has none of, starting at `p=none` with reports,
       so mail sent as the domain is harder to spoof. Test a reply from each address to
       an outside account before relying on it.
+- [ ] **Run Postgres natively on Apple silicon.** (found 2026-10-21) `docker-compose.yml`
+      uses `postgis/postgis:16-3.4`, which is amd64 only, so it runs under Rosetta. It
+      has crashed three times ("rosetta error: unexpectedly got a signal during
+      sigreturn": 2026-10-01 twice, 2026-10-21), the last a few seconds into
+      `make publish`'s page export, failing that deploy until a rerun. Move to an arm64
+      image with PostgreSQL 16 and PostGIS 3.4 (a multi-arch PostGIS build, or
+      `postgres:16` with PostGIS installed), carrying the data over with
+      `pg_dump`/`pg_restore` rather than reusing the amd64 data directory. Then run the
+      full suite and a publish.
 ### Open decisions — not scheduled, not decided
 
 - [ ] **Adopt TIGER 2026 — not yet (owner, 2026-10-09).** (#360) Census published
