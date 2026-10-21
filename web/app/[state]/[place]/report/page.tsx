@@ -1,4 +1,5 @@
 import { Glossed } from "@/components/Glossed";
+import { stateCrumbs } from "@/lib/states";
 import { Term } from "@/components/Term";
 import { placeRouteParams, regionPath, resolvePlace } from "@/lib/placeRoutes";
 import { notFound } from "next/navigation";
@@ -171,7 +172,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
   const lead = verdict(peers, packet.metrics, packet.levels, uncertainties);
   const paid = paychecks(packet.metrics);
   const trade = tradeoff(peers, packet.levels);
-  const cost = await costInputs(region.level, packet.levels, packet.metrics);
+  const cost = await costInputs(region.state_code, region.level, packet.levels, packet.metrics);
   // The history behind the region page's trend chart, printed as tables (moved here from
   // the region page's evidence section, 2026-10-19).
   const history = (
@@ -193,7 +194,7 @@ export default async function ReportPage({ params }: { params: Promise<{ state: 
           <Crumbs
             trail={[
               { href: "/", label: "United States" },
-              { href: "/states/new-jersey", label: "New Jersey" },
+              ...stateCrumbs(region.state_code),
               ...(region.parent && region.parent.level !== "state"
                 ? [{ href: regionPath(region.parent.region_id), label: displayName(region.parent) }]
                 : []),

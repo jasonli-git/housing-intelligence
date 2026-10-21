@@ -61,6 +61,13 @@ are not yet recorded here.
 
 ### Changed
 
+- **New Jersey's assumptions made explicit for a second state** (ARCHITECTURE #406, #407):
+  sources declare the states they cover (32 are New Jersey's), and `hip acquire` and
+  `hip check-config` name a scoped state one does not cover; municipality labels are
+  unique within a state; the site reads one list of covered states for its home map,
+  counters, links and budget explorer; and seller fees, the deposit cap and relief
+  programs are per state. An all-sources `hip acquire` on a new database skips BLS and
+  HUD by name instead of stopping. Nothing New Jersey readers see changes.
 - **Rank ranges are counted about 51 times faster** (#208, ARCHITECTURE #403): 4.2 s
   instead of 215 s for the step, with all 178,880 ranking rows identical. The same
   Census significance test, counted in Python over sorted trees that skip a branch only

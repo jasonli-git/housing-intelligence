@@ -98,6 +98,7 @@ class SdwisAdapter(SourceAdapter):
     """Two layers: `violations` from Envirofacts, `codes` from ECHO's reference file."""
 
     source_id: ClassVar[str] = "epa_sdwis"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "ndjson"
     # EPA refreshes SDWIS quarterly; a month is well inside that.

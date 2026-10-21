@@ -1,8 +1,10 @@
+import { COVERED_STATES, PRIMARY_STATE } from "./states";
 import { fit, scene, view, rotate, screen, type Outline } from "./globe";
 
-export const STATE_DESTINATIONS: Readonly<Record<string, string>> = {
-  NJ: "/states/new-jersey",
-};
+/** Each covered state's own page, by postal code, from `COVERED_STATES` (#407). */
+export const STATE_DESTINATIONS: Readonly<Record<string, string>> = Object.fromEntries(
+  COVERED_STATES.map((state) => [state.code, state.path]),
+);
 
 export type CoverageViewport = { scale: number; x: number; y: number };
 export const COVERAGE_HOME: CoverageViewport = { scale: 1, x: 0, y: 0 };
@@ -63,7 +65,7 @@ export function coverageScene(outlines: Outline[]) {
   return {
     perspective,
     states: scene(perspective, contiguous, (id) => STATE_DESTINATIONS[String(id)] ? 6 : 0),
-    // A locator within NJ, not a measurement or a derived metric centroid.
-    locator: screen(perspective, rotate(camera, [-74.5, 40]), 6),
+    // A locator within the covered state, not a measurement or a derived metric centroid.
+    locator: screen(perspective, rotate(camera, [...PRIMARY_STATE.locator]), 6),
   };
 }

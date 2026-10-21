@@ -69,6 +69,7 @@ class NjTaxRatesAdapter(SourceAdapter):
     """Municipal tax rates and equalization ratios, as New Jersey publishes them."""
 
     source_id: ClassVar[str] = "nj_tax_rates"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     landing_format: ClassVar[str] = "xlsx"
 
     def __init__(self, *, end_year: int) -> None:

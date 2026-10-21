@@ -11,6 +11,7 @@ ORDER_URL = "https://nj.gov/bpu/pdf/boardorders/2025/20250813/2B%20ORDER%20JCP%2
 
 class BpuReliabilityAdapter(SourceAdapter):
     source_id: ClassVar[str] = "nj_bpu_reliability"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2025"
     landing_format: ClassVar[str] = "pdf"
 
@@ -193,6 +194,7 @@ class BpuAnnualReportsAdapter(SourceAdapter):
     """
 
     source_id: ClassVar[str] = "nj_bpu_reports"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2025"
     landing_format: ClassVar[str] = "pdf"
     manual: ClassVar[bool] = True

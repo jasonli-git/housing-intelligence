@@ -52,6 +52,7 @@ class LodesAdapter(SourceAdapter):
     """New Jersey's residents' jobs by home and workplace block, all jobs (`JT00`)."""
 
     source_id: ClassVar[str] = "census_lodes"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     # The floor: LODES 8.4, released 2025-12-18, adds 2023.
     default_vintage: ClassVar[str] = "2023"
     landing_format: ClassVar[str] = "csv"

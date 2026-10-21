@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import DBAPIError
 
 from hip.config import ConfigError, GeographyScope, fips_for, get_settings
 from hip.sources.base import SourceAdapter, read_discovery
@@ -250,9 +251,43 @@ def _county_fips(scope: GeographyScope) -> list[str]:
                         f"Invalid county GEOID in the geography spine for {state}"
                     )
                 counties.update(codes)
+    except DBAPIError as exc:
+        # A new database has no `regions` table until the spine is loaded; say that,
+        # not SQLAlchemy's "no such table" (2026-10-21).
+        raise ConfigError(
+            "No geography spine in the warehouse yet; run the pipeline through "
+            "`hip load` before BLS/HUD acquisition"
+        ) from exc
     finally:
         engine.dispose()
     return sorted(counties)
+
+
+def _source_classes() -> dict[str, type[SourceAdapter]]:
+    """Every adapter class by its source id, without constructing one (BLS and HUD read
+    the warehouse when built)."""
+    found: dict[str, type[SourceAdapter]] = {}
+    pending = list(SourceAdapter.__subclasses__())
+    while pending:
+        cls = pending.pop()
+        pending.extend(cls.__subclasses__())
+        sid = getattr(cls, "source_id", None)
+        if isinstance(sid, str) and sid not in found:
+            found[sid] = cls  # type: ignore[type-abstract]  # subclasses, never the base
+    return found
+
+
+def uncovered(
+    adapter: type[SourceAdapter] | SourceAdapter, scope: GeographyScope
+) -> list[str]:
+    """The scoped states a source does not cover (ARCHITECTURE #406): none for a source
+    that follows the scope, the others for one declared as a single state's."""
+    if adapter.states is None:
+        return []
+    return [s.upper() for s in scope.states if s.upper() not in adapter.states]
+
+
+SOURCE_CLASSES: dict[str, type[SourceAdapter]] = _source_classes()
 
 
 class UnknownSourceError(Exception):

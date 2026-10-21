@@ -15,7 +15,7 @@
  * "add if it applies" rather than making every total partial.
  */
 
-import { CLOSING, FHA, FHA_DOWN, njSellerFees, PMI } from "@/lib/costRules";
+import { CLOSING, FHA, FHA_DOWN, PMI, rulesFor } from "@/lib/costRules";
 import { monthlyPayment } from "@/lib/cost";
 
 /** Where an input came from, shown beside it. */
@@ -46,6 +46,8 @@ export type Inputs = {
   rentGrowthPct: number;
   commissionPct: number;
   rentMonth: number | null;
+  /** The place's state, whose sale fees apply (`rulesFor`); none where none are held. */
+  state: string;
 };
 
 export type Line = {
@@ -244,7 +246,8 @@ export function overYears(input: Inputs): Years {
   const up = upFront(input);
   const upfront = up.down + (up.closingLow + up.closingHigh) / 2 + (up.moving ?? 0) + (up.repairs ?? 0);
   const salePrice = input.price * (1 + input.appreciationPct / 100) ** input.years;
-  const sellingCosts = (salePrice * input.commissionPct) / 100 + njSellerFees(salePrice);
+  const sellerFees = rulesFor(input.state)?.sellerFees(salePrice) ?? 0;
+  const sellingCosts = (salePrice * input.commissionPct) / 100 + sellerFees;
   const equity = salePrice - balance - sellingCosts;
 
   let rent: number | null = null;

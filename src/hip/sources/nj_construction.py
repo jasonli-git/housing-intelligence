@@ -127,6 +127,7 @@ class NjConstructionAdapter(SourceAdapter):
     """One release per measure per year: `certified` and `demolished`."""
 
     source_id: ClassVar[str] = "nj_construction"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2025-ytd"
     landing_format: ClassVar[str] = "xls"
 

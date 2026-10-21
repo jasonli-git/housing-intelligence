@@ -34,6 +34,7 @@ class HmdaAdapter(SourceAdapter):
     """New Jersey's HMDA records, one release per year."""
 
     source_id: ClassVar[str] = "ffiec_hmda"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     # The floor: 2025's records were published by 2026-10-07.
     default_vintage: ClassVar[str] = "2025"
     landing_format: ClassVar[str] = "csv"

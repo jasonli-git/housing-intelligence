@@ -132,6 +132,7 @@ class ModivAdapter(SourceAdapter):
     """
 
     source_id: ClassVar[str] = "nj_modiv"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     # The endpoint always serves current data and never versions its URL, so the vintage
     # is ours to assign and the content hash is what actually distinguishes releases —
     # the same situation as Zillow (ARCHITECTURE #10).

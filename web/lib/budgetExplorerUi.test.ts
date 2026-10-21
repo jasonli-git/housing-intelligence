@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { AffordExplorer } from "@/components/AffordExplorer";
 import type { Place } from "./afford";
 
-const county: Place = { id: 5, name: "Atlantic County", level: "county", detail: null, home: 300000, rent: 1800, tax: 6000 };
+const county: Place = { id: 5, name: "Atlantic County", level: "county", state: "NJ", detail: null, home: 300000, rent: 1800, tax: 6000 };
 const base = { counties: [county], towns: [], rate: { value: 6, asOf: "2026-09-01" }, asOf: { home: "2026-08", rent: "2026-08", tax: "2025" } };
 describe("budget explorer presentation", () => {
   it("makes statewide scope and the empty-income starting point explicit", () => {

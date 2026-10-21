@@ -4,7 +4,7 @@ import { CLOSING, FHA, njSellerFees } from "@/lib/costRules";
 import { eachMonth, type Inputs, loanFor, mortgageInsurance, overYears, upFront } from "@/lib/ownership";
 
 const BASE: Inputs = {
-  price: 500_000,
+  state: "NJ", price: 500_000,
   downPct: 20,
   ratePct: 6,
   taxYear: 12_000,
@@ -116,5 +116,14 @@ describe("over the years", () => {
     expect(conventional.paid).toBeLessThan(conventional.always - conventional.mi * 12);
     const fha = thirty({ ...BASE, downPct: 3.5 });
     expect(fha.paid).toBeCloseTo(fha.always);
+  });
+});
+
+describe("seller fees follow the place's state", () => {
+  it("are New Jersey's in New Jersey and none where no rules are held", () => {
+    const nj = overYears({ ...BASE, state: "NJ", years: 10 });
+    const pa = overYears({ ...BASE, state: "PA", years: 10 });
+    expect(nj.sellingCosts).toBeGreaterThan(pa.sellingCosts);
+    expect(pa.sellingCosts).toBeCloseTo((pa.salePrice * BASE.commissionPct) / 100);
   });
 });

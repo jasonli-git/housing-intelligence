@@ -18,6 +18,7 @@ MF_BASE = "https://www.hud.gov/sites/dfiles/Housing/documents"
 
 class HudAssistedAdapter(SourceAdapter):
     source_id: ClassVar[str] = "hud_assisted"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "xlsx_records"
 
@@ -146,6 +147,7 @@ class HudLihtcAdapter(SourceAdapter):
     """
 
     source_id: ClassVar[str] = "hud_lihtc"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2024"
     landing_format: ClassVar[str] = "xlsx_records"
     manual: ClassVar[bool] = True

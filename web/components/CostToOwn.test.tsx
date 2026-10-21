@@ -6,12 +6,26 @@ import { CostToOwn, type CostProps } from "./CostToOwn";
 
 afterEach(() => { cleanup(); localStorage.clear(); });
 const inputs: CostProps = {
+  state: "NJ",
   home: { basis: "index", value: 400000, asOf: "Aug 2026" },
   rate: { value: 6.81, asOf: "Sep 2026" },
   tax: null, insurance: null, utilities: null, rentersPayUtilities: null,
   rent: { value: 2000, asOf: "Aug 2026" },
   noTax: "No ZIP-level tax estimate", gain: null, rateThen: null,
 };
+describe("a state whose rules are not held", () => {
+  it("shows its costs without New Jersey's fees, deposit cap or relief, and says so", () => {
+    const { container } = render(createElement(CostToOwn, { ...inputs, state: "PA", quiet: true }));
+    const text = container.textContent ?? "";
+    expect(text).not.toContain("New Jersey");
+    expect(container.querySelector(".cost-relief")).toBeNull();
+  });
+  it("keeps New Jersey's where they apply", () => {
+    const { container } = render(createElement(CostToOwn, { ...inputs, quiet: true }));
+    expect(container.textContent).toContain("the most a New Jersey landlord may ask");
+    expect(container.querySelector(".cost-relief")).not.toBeNull();
+  });
+});
 describe("local monthly budget", () => {
   it("updates monthly layers from existing inputs without changing the starting estimate", () => {
     const {container}=render(createElement(CostToOwn,{...inputs,quiet:true,showHelp:false}));

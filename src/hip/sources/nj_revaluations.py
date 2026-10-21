@@ -106,6 +106,7 @@ class NjRevaluationsAdapter(SourceAdapter):
     """One release per year's approval list."""
 
     source_id: ClassVar[str] = "nj_revaluations"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = str(NEWEST_FLOOR)
     landing_format: ClassVar[str] = "pdf"
 

@@ -363,7 +363,7 @@ export function DecisionGuide({
             </details>
           </>}
           <details className="guide-more"><summary>Housing programme income limits & rents by home size</summary>
-            <ForYourHousehold regionName={data.region.name} limits={data.incomeLimits} levels={data.levels} countyLevels={data.countyLevels} margins={new Map(data.levels.map(level => [level.metric_id, level.margin_of_error ?? null]))} />
+            <ForYourHousehold state={data.region.state_code} regionName={data.region.name} limits={data.incomeLimits} levels={data.levels} countyLevels={data.countyLevels} margins={new Map(data.levels.map(level => [level.metric_id, level.margin_of_error ?? null]))} />
           </details>
         </section>
 

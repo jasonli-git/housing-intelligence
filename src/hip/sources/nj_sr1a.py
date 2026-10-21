@@ -110,6 +110,7 @@ class Sr1aAdapter(SourceAdapter):
     """One archive per sales-ratio year of recorded New Jersey deeds (July to June)."""
 
     source_id: ClassVar[str] = "nj_sr1a"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = f"{LAST_COMPLETE_YEAR + 1}ytd"
     landing_format: ClassVar[str] = "fixed_width"
     fixed_width_fields: ClassVar[tuple[tuple[str, int, int], ...]] = FIELDS

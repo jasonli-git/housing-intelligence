@@ -40,6 +40,7 @@ class NfhlAdapter(ArcGisAdapter):
     """New Jersey's flood hazard zones from FEMA's national layer."""
 
     source_id: ClassVar[str] = "fema_nfhl"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     LAYERS: ClassVar[dict[str, ArcGisLayer]] = {
         "zones": ArcGisLayer(
             url=NFHL_URL,
@@ -73,6 +74,7 @@ class NfipClaimsAdapter(SourceAdapter):
     """Every NFIP claim in New Jersey, paged from OpenFEMA into one NDJSON file."""
 
     source_id: ClassVar[str] = "fema_nfip_claims"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "ndjson"
     # OpenFEMA refreshes the dataset about monthly; 21 requests are cheap, but there is

@@ -1,5 +1,6 @@
 import routes from "./placeRoutes.json";
 import { STATE_DESTINATIONS } from "./coverageMap";
+import { COVERED_STATES } from "./states";
 
 /**
  * Public HTML addresses for places: `/<state>/<slug>`, e.g. `/nj/princeton`. The state
@@ -14,7 +15,9 @@ const byPath = new Map(Object.entries(records).map(([id, r]) => [`${r.state}/${r
 // Region ids that are pages of their own elsewhere: the nation is the home page, and a
 // covered state has its own page. Neither is in the place registry.
 const NATION_ID = 16828;
-const STATE_IDS: Record<number, string> = { 1: "NJ" };
+const STATE_IDS: Record<number, string> = Object.fromEntries(
+  COVERED_STATES.map((state) => [state.regionId, state.code]),
+);
 
 export function regionPath(id: number | string): string {
   const n = Number(id);

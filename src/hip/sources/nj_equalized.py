@@ -107,6 +107,7 @@ class NjEqualizedAdapter(SourceAdapter):
     """One release per year's certified table."""
 
     source_id: ClassVar[str] = "nj_equalized"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = str(max(PUBLISHED))
     landing_format: ClassVar[str] = "pdf"
 
