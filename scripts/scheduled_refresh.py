@@ -85,6 +85,25 @@ def _completed_at() -> str | None:
     return RefreshState.read(get_settings().raw_dir).completed_at
 
 
+def _publish_status(outcome: str) -> None:
+    """Upload when this check succeeded beside the data (ARCHITECTURE #411), so the
+    site's status link can say so even in a quiet week that deploys nothing.
+
+    Never fails the run: a missed upload leaves the last date showing, which reads as a
+    late check rather than a wrong one, and the phone hears about it."""
+    checked_at = datetime.now(UTC).replace(microsecond=0).isoformat()
+    code = subprocess.call(
+        ["make", "publish-status", f"CHECKED_AT={checked_at}", f"OUTCOME={outcome}"],
+        cwd=REPO_ROOT,
+    )
+    if code != 0:
+        _notify(
+            "Weekly refresh: the check's date was not published",
+            "The sources were checked, but uploading status.json failed, so the site "
+            "still shows the previous check. Check the log on the Mac.",
+        )
+
+
 def _refresh_mode() -> str:
     from hip.config import get_settings
     from hip.refresh import RefreshGate
@@ -258,6 +277,10 @@ def main() -> int:
             priority=_PRIORITY_URGENT,
         )
         return 1
+
+    # The check itself succeeded (0, or 3 with a publisher out of reach): say so on the
+    # site whatever happens next, a quiet week included (ARCHITECTURE #411).
+    _publish_status("current" if refresh_code == 0 else "unreachable")
 
     # `RefreshState.completed_at` only moves when the pipeline actually ran, so comparing
     # it (not `refresh_code`) is what tells a quiet week from a real one. A quiet week

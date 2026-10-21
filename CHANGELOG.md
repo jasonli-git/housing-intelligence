@@ -13,6 +13,9 @@ are not yet recorded here.
 
 ### Added
 
+- **The status link says when sources were last checked** (ARCHITECTURE #411): "Sources
+  checked Oct 17", from a small file the weekly check uploads even when nothing changed,
+  and "Source check overdue" when the last one is more than nine days old.
 - **Changed figures are marked on place pages** (ARCHITECTURE #410): a figure in the
   housing profile that changed after the site first published it says when and what it
   first said, linked to the revised-figures page.

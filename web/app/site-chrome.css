@@ -47,3 +47,6 @@
   :root body .bar-tool-menu .bar-controls :is(a, button) + :is(a, button) { border-top: 0 !important; }
   :root body .bar-tool-menu .bar-controls :is(a, button):is(:hover, :focus-visible) { background: color-mix(in srgb, var(--plate-ink, var(--text-primary)) 8%, transparent) !important; }
 }
+
+/* A late weekly check (#411) reads in the page's ink, not the muted grey of a routine one. */
+.site-status[data-overdue] .site-status-kicker { color: var(--text-primary) !important; font-weight: 600; }
