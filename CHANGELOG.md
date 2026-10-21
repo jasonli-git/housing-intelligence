@@ -13,6 +13,10 @@ are not yet recorded here.
 
 ### Added
 
+- **Compare places** (`/compare`, ARCHITECTURE #408): up to four counties, towns or ZIP
+  codes side by side — costs, affordability, sales, commutes and risks, each dated with its
+  margin — with the choice in the address so it can be bookmarked or sent, and nothing
+  stored. Linked from the tools bar, every place page, and cheaper alternatives.
 - **Offline data-guard tests**: every validation-gate rule and all 59 value bounds;
   the real ZHVI/ZORI dbt unpivots over synthetic County/City/Zip manual CSVs; and
   MockTransport-backed FRED/BLS/FHFA request, landing and changed-shape checks.

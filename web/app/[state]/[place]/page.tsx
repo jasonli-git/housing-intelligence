@@ -1,5 +1,6 @@
 import { reportPageProblemUrl } from "@/lib/reportProblem";
 import { stateCrumbs } from "@/lib/states";
+import { placesQuery } from "@/lib/compare";
 import { AffordForward } from "@/components/AffordForward";
 import { Glossed } from "@/components/Glossed";
 import { Term } from "@/components/Term";
@@ -463,6 +464,7 @@ export default async function RegionPage({
               </aside>
             )}
             <Link className="eyebrow-report" href={`${regionPath(regionId)}/report`}>Full report <span aria-hidden="true">↗</span></Link>
+            <Link className="eyebrow-report" href={`/compare${placesQuery([regionId])}`}>Compare <span aria-hidden="true">↗</span></Link>
           </div>
           <div className="page-title-row">
             <h1 className="page-title">{name}</h1>

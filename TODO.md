@@ -202,14 +202,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       33 files (2026-10-20), frozen in `web/lib/colourBaseline.json`; the largest are
       `horizon-theme.css` (187), the atlas (86 + 67) and `state-exhibits.css` (83). Take
       them file by file when a file is touched for other work, lowering the baseline.
-- [ ] **A compare page shared by its link.** (owner, 2026-10-09, from an outside
-      review) `/compare?places=194,330,112`: a few towns side by side, the choice held in
-      the address so it can be bookmarked or sent, and nothing stored in the browser.
-      Milestone 46's side-by-side comparison is the likely base. Also Milestone 17's
-      second user path (a place you are moving to against where you live now). The API's
-      `/compare` is in the publish manifest's `unpublishable` list, since an arbitrary
-      set of ids is combinatorial, so the page reads each place's published files in the
-      browser, as `/guide` does.
 - [ ] **A second state will not fit Pages' limits as built.** (#367; measured in #201,
       ARCHITECTURE #400) 14,947 exported files of 20,000 and 1,772 redirect rules of
       2,000 for New Jersey alone; 598 ZIP-report aliases remain after 1,768 shadowed

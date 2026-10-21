@@ -1,5 +1,6 @@
 import { Term } from "@/components/Term";
 import { scopeName } from "@/lib/names";
+import { MAX_PLACES, placesQuery } from "@/lib/compare";
 import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 
@@ -57,6 +58,12 @@ export function SimilarPlaces({ name, state, data }: { name: string; state: stri
         {zip
           ? "Prices are Zillow’s typical single-family home value, an estimate, not recorded sales: sales are filed by town, so no ZIP code has a sale price. ZIP codes are compared only with ZIP codes."
           : <>Prices are the median recorded sale{window ? `, ${window}` : ""}, in towns with at least {data.min_sales} sales.</>}
+      </p>
+
+      <p className="similar-compare">
+        <Link href={`/compare${placesQuery(places.slice(0, MAX_PLACES).map((p) => p.region_id))}`}>
+          {data.matches.length > 0 ? "Compare these side by side" : `Compare ${name} with another place`} <span aria-hidden="true">→</span>
+        </Link>
       </p>
 
       {data.matches.length > 0 && (
