@@ -6,8 +6,8 @@ All notable changes to the Housing Intelligence Platform. Format loosely follows
 ## [Unreleased]
 
 Publication capacity (#201, ARCHITECTURE #400), state-scoped geometry (#205,
-ARCHITECTURE #401) and scale safety (#208, ARCHITECTURE #402, #403), all merged
-2026-10-20. This section holds those changes only; other changes merged since 0.50.0
+ARCHITECTURE #401), scale safety (#208, ARCHITECTURE #402, #403) and the accessibility
+gate (ARCHITECTURE #404), all 2026-10-20. This section holds those changes only; other changes merged since 0.50.0
 are not yet recorded here.
 
 ### Added
@@ -42,6 +42,9 @@ are not yet recorded here.
 - **A synthetic second-state capacity test** (`:capacity`): a manifest mirroring New
   Jersey's 1,183 places, reports and payloads under reserved `/zz/` paths. It is not a
   rendered state.
+- **`make check-accessibility`, a prerequisite of `make deploy`** (ARCHITECTURE #404): 80
+  axe scans of the tree about to ship — ten pages, desktop and phone, light and dark,
+  collapsed and expanded. Any finding stops the deploy.
 - **Completeness on published lists** (#208, ARCHITECTURE #402): `/rankings` and
   `/regions/{id}/metrics` return `total`, counted before `LIMIT` in the same query.
   `hip publish` refuses to write a list shorter than its total, and `make check-dist`
@@ -84,6 +87,13 @@ are not yet recorded here.
 
 ### Fixed
 
+- **Small grey text now meets 4.5:1 contrast on every page, in light and dark**
+  (ARCHITECTURE #404). Each page theme's muted grey, the data pages' lime accent and the
+  inquiry amber were too faint on tinted panels: 1,600+ findings on 24 of 40 light-mode
+  scans. The report's dark muted grey moved too.
+- **The skip link works on phones again** (ARCHITECTURE #404, amending #380): it stays
+  invisible until a keyboard focuses it, then appears above the masthead.
+- **The full report link is a 24px tap target on phones.**
 - The old-address browser check (`check-readable-urls.mjs`) looked for a report link
   class the place page no longer has; it now uses `a.eyebrow-report`.
 

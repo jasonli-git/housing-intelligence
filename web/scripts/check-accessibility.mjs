@@ -5,7 +5,7 @@ import { dirname } from 'node:path';
 
 const origin = process.env.A11Y_ORIGIN ?? 'http://localhost:3000';
 const output = process.env.A11Y_OUTPUT ?? '/tmp/hip-accessibility.json';
-const paths = (process.env.A11Y_PATHS ?? '/,/states/new-jersey,/regions/5,/regions/194,/regions/2842,/afford?income=120000,/tax,/freshness,/changes,/regions/5/report').split(',');
+const paths = (process.env.A11Y_PATHS ?? '/,/states/new-jersey,/nj/atlantic-county,/nj/absecon,/nj/zip-07001,/afford?income=120000,/tax,/freshness,/changes,/nj/atlantic-county/report').split(',');
 const widths = (process.env.A11Y_WIDTHS ?? '1440,390').split(',').map(Number);
 const themes = (process.env.A11Y_THEMES ?? 'light,dark').split(',');
 const browser = await chromium.launch();
@@ -30,7 +30,9 @@ try {
         if (await page.locator('#main-content').evaluate(node => node !== document.activeElement)) throw new Error('Skip link does not focus main content');
         for (const state of ['default', 'expanded']) {
         if (state === 'expanded') {
-          await page.locator('details').evaluateAll(nodes => nodes.forEach(node => node.open = true));
+          // The page's own disclosures; the masthead's Tools menu is a dropdown that
+          // covers content by design when open, so forcing it open is not a real state.
+          await page.locator('main details').evaluateAll(nodes => nodes.forEach(node => node.open = true));
           // Exercise ordinary tables/charts and source definitions, not just the hero.
           await page.locator('main').evaluate(node => node.scrollIntoView());
         }

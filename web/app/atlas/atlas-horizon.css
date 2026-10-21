@@ -9,7 +9,7 @@
     --plate-ink: light-dark(#1d1e21, #ecebe7); --plate-paper: light-dark(#f4f4f2, #0c0d0f);
     --plate-accent: light-dark(#3c3f46, #d9dbe0);
     --plate-rule: light-dark(#1d1e2114, #ecebe714); --plate-strong-rule: light-dark(#1d1e2124, #ecebe624);
-    --text-secondary: light-dark(#57595e, #b4b5b3); --text-muted: light-dark(#7d7f84, #8a8b89);
+    --text-secondary: light-dark(#57595e, #b4b5b3); --text-muted: light-dark(#636568, #a1a2a0);
     --glass: light-dark(#ffffff8c, #ffffff0f); --glass-edge: light-dark(#ffffffcc, #ffffff22);
   }
   body:has(main.horizon-page[data-region-level="atlas"])::before { background: radial-gradient(40% 50% at 30% 20%, light-dark(#dfe3ea,#1d222b) 0%, transparent 70%), radial-gradient(36% 46% at 78% 30%, light-dark(#e8e6e0,#22211e) 0%, transparent 70%) !important; opacity: .7 !important; animation: none !important; }

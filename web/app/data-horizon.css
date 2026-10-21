@@ -5,9 +5,9 @@
 @media screen {
   body:has(main.horizon-page[data-region-level="data"]) {
     --plate-ink: light-dark(#1f2116, #ecefe0); --plate-paper: light-dark(#f4f5ee, #0b0c08);
-    --plate-accent: light-dark(#5f7310, #cfe36a);
+    --plate-accent: light-dark(#55660e, #cfe36a);
     --plate-rule: light-dark(#1f211614, #ecefe014); --plate-strong-rule: light-dark(#1f211626, #ecefe626);
-    --text-secondary: light-dark(#53574a, #b5b9a8); --text-muted: light-dark(#7a7e70, #8b8f80);
+    --text-secondary: light-dark(#53574a, #b5b9a8); --text-muted: light-dark(#63655a, #a0a397);
     --glass: light-dark(#fdfdf8b3, #ffffff0b); --glass-edge: light-dark(#ffffff, #ecefe01f);
     --atlas-accent: var(--plate-accent);
   }
