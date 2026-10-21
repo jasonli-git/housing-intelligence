@@ -219,10 +219,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       address, so the build refuses rather than publish one that could change; the
       scheduled run then reports a failed build. Fix: `cd web && npm run routes:refresh`,
       review and commit. Rare: every place with any observation already has an address.
-- [ ] **A revised figure is not marked on the place page.** (M27, #224; narrowed
-      2026-10-20) The report's Historical values tables (#381) now show the earlier
-      readings of home value, rent and income. Left: a place page neither marks a figure
-      its publisher revised nor links its earlier values, which `fact_revision` holds.
 
 ### Publication
 

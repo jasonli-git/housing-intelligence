@@ -354,3 +354,59 @@ def revisions(
     Summarised per metric with the three places that moved most, never row by row.
     """
     return revision_report(session, batches=batches)
+
+
+class RevisedFigure(BaseModel):
+    """A figure a place page shows, its newest period, that changed after this site first
+    published it: first and current value, and when it last changed."""
+
+    metric_id: str
+    period_start: date
+    first_value: float
+    latest_value: float
+    revisions: int
+    last_revised_on: date
+
+
+class RegionRevisions(BaseModel):
+    region_id: int
+    figures: list[RevisedFigure]
+
+
+# Only each metric's newest period, which is what a place page shows; older periods'
+# revisions are the report's and /changes' (ARCHITECTURE #410). The same noise filter
+# as /changes, through `fact_revision_shown`.
+_REGION_SQL = text("""
+WITH latest AS (
+    SELECT metric_id, max(period_start) AS period_start
+    FROM fact_metric_observation
+    WHERE region_id = :region_id
+    GROUP BY metric_id
+)
+SELECT r.metric_id, r.period_start,
+       (array_agg(r.old_value ORDER BY r.revision_id))[1] AS first_value,
+       (array_agg(r.new_value ORDER BY r.revision_id DESC))[1] AS latest_value,
+       count(*) AS revisions,
+       max((r.revised_at AT TIME ZONE 'UTC')::date) AS last_revised_on
+FROM fact_revision_shown r
+JOIN latest l ON l.metric_id = r.metric_id AND l.period_start = r.period_start
+WHERE r.region_id = :region_id
+GROUP BY r.metric_id, r.period_start
+HAVING (array_agg(r.old_value ORDER BY r.revision_id))[1]
+       IS DISTINCT FROM (array_agg(r.new_value ORDER BY r.revision_id DESC))[1]
+ORDER BY r.metric_id
+""")
+
+
+@router.get(
+    "/regions/{region_id}/revisions",
+    response_model=RegionRevisions,
+    summary="A place's shown figures that changed after first publication",
+)
+def region_revisions(region_id: int, session: SessionDep) -> RegionRevisions:
+    """Empty `figures` when nothing a place page shows has changed since publication."""
+    rows = session.execute(_REGION_SQL, {"region_id": region_id}).mappings().all()
+    return RegionRevisions(
+        region_id=region_id,
+        figures=[RevisedFigure(**dict(r)) for r in rows],
+    )

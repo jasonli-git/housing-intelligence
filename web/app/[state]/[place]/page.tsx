@@ -201,11 +201,12 @@ export default async function RegionPage({
   // The explanations are fetched alongside the data and are allowed to be absent: the
   // dashboard is fully usable with no AI layer at all, so a missing one renders nothing
   // rather than an error or an empty slot (SPEC: the platform stays useful without it).
-  const [region, packet, summary, explanations] = await Promise.all([
+  const [region, packet, summary, explanations, revised] = await Promise.all([
     api.region(regionId),
     api.packet(regionId, WINDOW),
     api.summary(regionId, WINDOW),
     api.explanations(regionId, WINDOW),
+    api.regionRevisions(regionId),
   ]);
 
   if (!region || !packet) {
@@ -355,9 +356,18 @@ export default async function RegionPage({
   const trade = tradeoff(peers, packet.levels, uncertainties);
   // Population is promoted to the page head, where it can orient the reader without
   // repeating the same figure in the compact housing profile immediately below.
-  const profile = housingProfile(packet.levels, packet.metrics, uncertainties).filter(
-    (item) => item.metric_id !== "acs_population",
-  );
+  // A shown figure that changed after first publication carries when, and what it
+  // first said (ARCHITECTURE #410).
+  const revisedBy = new Map((revised?.figures ?? []).map((f) => [f.metric_id, f]));
+  const profile = housingProfile(packet.levels, packet.metrics, uncertainties)
+    .filter((item) => item.metric_id !== "acs_population")
+    .map((item) => {
+      const change = revisedBy.get(item.metric_id);
+      const level = packet.levels.find((l) => l.metric_id === item.metric_id);
+      return change && level && level.period_start === change.period_start
+        ? { ...item, updated: { from: formatMetric(change.first_value, level.unit, level.metric_id), on: change.last_revised_on } }
+        : item;
+    });
   const standing = standOuts(packet, uncertainties);
   const editorialItems = quiet ? [
     ["acs_renter_cost_burden","Renters spending over 30% of income on housing"],
