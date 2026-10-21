@@ -7,11 +7,18 @@ All notable changes to the Housing Intelligence Platform. Format loosely follows
 
 Publication capacity (#201, ARCHITECTURE #400), state-scoped geometry (#205,
 ARCHITECTURE #401), scale safety (#208, ARCHITECTURE #402, #403) and the accessibility
-gate (ARCHITECTURE #404), all 2026-10-20. This section holds those changes only; other changes merged since 0.50.0
+gate (ARCHITECTURE #404), all 2026-10-20, and fixture-based data guards (2026-10-21).
+This section holds those changes only; other changes merged since 0.50.0
 are not yet recorded here.
 
 ### Added
 
+- **Offline data-guard tests**: every validation-gate rule and all 59 value bounds;
+  the real ZHVI/ZORI dbt unpivots over synthetic County/City/Zip manual CSVs; and
+  MockTransport-backed FRED/BLS/FHFA request, landing and changed-shape checks.
+  Four strict expected failures record existing silent-loss/schema-validation gaps
+  in FRED, FHFA and Zillow, without changing production behavior. Existing BLS empty
+  series are confirmed to fail at landing. See `agent-handoffs/data-guards.md`.
 - **Geometry files per state**: `geo/{STATE}/{level}.json` for the state, county,
   municipality and ZIP levels, for every state in `config/geography.yml`'s scope. Today
   that is four additive files, `geo/NJ/*.json`, each byte-identical to the unscoped file

@@ -157,20 +157,32 @@ Not open work: each comes round on a date. The steps live where the row says.
       and `test_freshness.py` commit fixtures and clean up after; `test_publish.py`'s
       licence guard updates and rolls back. None rebuilds analytics. Move them to the
       scratch schema when next touched.
-- [ ] **Tests: unpivot shape and gate behavior — never written.** (M2, corrected
-      2026-08-13 after this line was briefly ticked in full) `test_matching.py` builds
-      `stg_zillow_zhvi` as a hand-made fixture, so the dbt UNPIVOT of ~318 date columns
-      is exercised by pipeline runs only. `hip.validate.gate` (216 lines) has no test
-      importing it at all — the thing whose whole job is to block a bad load is the
-      least-tested module in the pipeline.
-- [ ] **Unit tests for the source adapters.** (M3; narrowed 2026-09-27) Coverage has
+- [x] **Tests: unpivot shape and gate behavior.** (M2; covered 2026-10-21)
+      `test_validation_gate.py` exercises every gate rule, all 59 metric bounds on
+      both sides, tolerance thresholds, coverage floors, orphans, empty staging,
+      normalization collisions, informational rejects and saved reports. Previously
+      `test_affordable_housing.py` imported only two bound constants, not `run_checks`.
+      `test_zillow_unpivot.py` runs both real dbt models and their shared macro through
+      DuckDB over synthetic manual County/City/Zip CSVs: every region/month/value,
+      dates, leading-zero keys, layers, blanks versus zero and metadata changes.
+      One strict expected failure records silent loss of a renamed month column;
+      no production fix here. Full publisher-width files and live pipeline integration
+      are not covered by these small fixtures. See `agent-handoffs/data-guards.md`.
+- [x] **Unit tests for the source adapters.** (M3; covered 2026-10-21) Coverage has
       grown: TIGER, MOD-IV, SR1A and the NJ tax rates have their own tests, and
       `tests/test_sources.py` drives the requests of ACS, PEP, permits, Fair Market Rents
       and CHAS and the parsing of the last two, and `tests/test_migration.py` the IRS's
-      requests, discovery and file shape (M50). Zillow's ZHVI and ZORI, FRED, BLS and
-      FHFA still have nothing that reads a stubbed response, so a publisher changing a
-      file's shape surfaces as a pipeline failure rather than a test failure.
-      `test_nj_modiv.py` is the pattern to copy — a `MockTransport` subclass, no network.
+      requests, discovery and file shape (M50). `test_adapter_data_guards.py` now
+      drives FRED, BLS and FHFA master through MockTransport-backed fetching and real
+      landing, with request/key assertions, normal data and malformed HTTP-200 bodies.
+      Zillow's two manual adapters read synthetic wide-layout files, never HTTP;
+      `test_manual_sources.py` already covered manual caching and missing downloads,
+      and `test_persistence.py` already covered FHFA county workbook shape changes.
+      Strict expected failures retain FRED's partial loss of renamed values and FHFA
+      master's acceptance of renamed CSV fields/error bodies at landing. BLS empty
+      series already fail at landing. These are representative contracts, not every
+      publisher field or discovery/retry combination; no production fixes were made.
+      Bug details and remaining limits: `agent-handoffs/data-guards.md`.
 
 ### API and scale limits
 

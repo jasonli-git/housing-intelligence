@@ -1,0 +1,3 @@
+RegionID,SizeRank,RegionName,RegionType,StateName,State,Metro,StateCodeFIPS,MunicipalCodeFIPS,2025-01-31,2025-02-28,2025-03-31
+1,1,Sample County,county,NJ,NJ,Sample,34,001,300000,,320000
+2,2,Outside County,county,NY,NY,Outside,36,001,700000,710000,720000
