@@ -45,9 +45,12 @@ implementation work a second state needs:
    Left: the New Jersey assumptions that change inventoried and left, and an all-sources
    `hip acquire` on a new database (both under API and scale limits). Search results
    already name each place's state (#362).
-3. **Scale safety** — the analytics test that rebuilds the live warehouse (Test
-   coverage), a truncation signal on `/regions/{id}/metrics` and the `/rankings` cap,
-   then the rank-range step's cost (API and scale limits).
+3. **Scale safety** — done (2026-10-20, #208, ARCHITECTURE #402, #403): the analytics
+   tests rebuild a scratch schema, rankings and per-place series carry a `total` and
+   publication refuses a clipped list, and rank ranges count in about 4 s instead of
+   215 s with identical output. Left: other integration tests that still write to the
+   served warehouse (Test coverage), and paging `/rankings` past 1,000 (API and scale
+   limits).
 
 Kept out of that scope: publisher-dependent gaps (Correctness and data integrity) and
 the owner's decisions (Open decisions; HUD income-limit dating). `place` versus `cousub`
@@ -151,12 +154,15 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Test coverage
 
-- [ ] **`tests/test_analytics.py` rebuilds the analytics tables in the live warehouse.**
-      (found in review of PR #56, 2026-09-30) Its tests call `rebuild(get_engine())`
-      against the same database the API serves, so a suite run while the API or another
-      query is busy can deadlock. Nothing is lost — the rebuild is one transaction and
-      rolls back — but the run fails for a reason unrelated to the code. Point these
-      tests at a scratch schema or a disposable database.
+- [ ] **Some integration tests still write to the served warehouse.** (narrowed
+      2026-10-20, #208) The analytics rebuild tests now run in a disposable
+      `hip_test_<uuid>` schema (`tests/warehouse_scratch.py`), checked by
+      `scripts/verify_analytics_isolation.py`. Still on the real database:
+      `test_api_revisions.py`, `test_revisions.py` and `test_correctness_pass.py` mutate
+      real rows and roll back (row locks, advanced sequences); `test_api_explanations.py`
+      and `test_freshness.py` commit fixtures and clean up after; `test_publish.py`'s
+      licence guard updates and rolls back. None rebuilds analytics. Move them to the
+      scratch schema when next touched.
 - [ ] **Tests: unpivot shape and gate behavior — never written.** (M2, corrected
       2026-08-13 after this line was briefly ticked in full) `test_matching.py` builds
       `stg_zillow_zhvi` as a hand-made fixture, so the dbt UNPIVOT of ~318 date columns
@@ -174,21 +180,14 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### API and scale limits
 
-- [ ] **One published limit has no headroom for Milestone 15; the other is a watch item.** (pre-M12 review)
-      `/regions/{id}/metrics` is published at its default `limit=5000` with nothing in
-      the response saying whether it truncated; the largest region carries 1,152
-      observations since Milestone 34 (Hudson County; 760 before), so this is a watch
-      item. `/rankings` caps at 1,000, below the
-      3,144 counties national coverage would add (Milestone 15, unscheduled) — a national
-      ranking would be silently cut off at rank 1,000.
-- [ ] **Rank ranges compare every pair of regions, and Milestone 34 made that slow.**
-      (M34, measured 2026-10-01) `_rank_ranges` joins each ranking group to itself, so
-      a group costs the square of its regions: 598 ZCTAs across 26 more ranked metrics
-      and five windows took the step to about three minutes a rebuild, and the Python
-      suite, which rebuilt six times, to well over half an hour (since 2026-10-02 it
-      rebuilds twice, under `make test-all`; #299). The weekly refresh
-      rebuilds once, so it is tolerable for New Jersey; at Milestone 14's seven states it
-      is not. A sort-based count, or the step moved to DuckDB, are the leads.
+- [ ] **A ranking over 1,000 regions stops the publish.** (pre-M12 review; narrowed
+      2026-10-20, #208, ARCHITECTURE #402) `/rankings` and `/regions/{id}/metrics` now
+      return `total` beside their rows, and `hip publish` and `make check-dist` refuse
+      any list shorter than its total, so nothing is published clipped. `/rankings` still
+      caps a request at 1,000, below the 3,144 counties national coverage would add
+      (Milestone 15, unscheduled): such a ranking would now fail the build. Fix then:
+      page through a consistent snapshot. The largest per-place series is 1,152 of
+      5,000 (Hudson County).
 - [ ] **Other New Jersey assumptions remain, inventoried and not fixed.** (pre-M12
       review; narrowed 2026-10-20, #205, ARCHITECTURE #401) BLS and HUD county series now
       come from the loaded county regions, and the publisher and `api.geo` take a state
