@@ -1,4 +1,4 @@
-body:has(.housing-atlas-page) { --surface-1:light-dark(#f2f5f8,#19232c); --surface-2:light-dark(#f8fafc,#24333e); --surface-card:var(--surface-2); --text-primary:light-dark(#243c4c,#edf3f7); --text-secondary:light-dark(#506674,#c1d0da); --text-muted:light-dark(#5d6f7a,#aebfcb); --border:light-dark(#cad8e0,#465c6d); background:var(--surface-1); }
+body:has(.housing-atlas-page) { --surface-1:light-dark(#f2f5f8,#19232c); --surface-2:light-dark(#f8fafc,#24333e); --surface-card:var(--surface-2); --text-primary:light-dark(#243c4c,#edf3f7); --text-secondary:light-dark(#506674,#c1d0da); --text-muted:light-dark(#566771,#aebfcb); --border:light-dark(#cad8e0,#465c6d); background:var(--surface-1); }
 .housing-atlas-page { --atlas-ink:light-dark(#174d68,#c1dbe7); margin:0 auto; padding:1rem var(--gutter) 2rem; max-width:1800px; }
 .atlas-title { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding-bottom:.85rem; }
 .atlas-title h1 { font:500 clamp(25px,3vw,38px)/1.1 Georgia,serif; margin:.25rem 0 0; color:var(--text-primary); letter-spacing:-.035em; }
@@ -159,7 +159,7 @@ body:has(.housing-atlas-page) { --surface-1:light-dark(#f2f5f8,#19232c); --surfa
     --surface-card:var(--surface-2);
     --text-primary:light-dark(#263445,#edf2f8);
     --text-secondary:light-dark(#516174,#c2ccda);
-    --text-muted:light-dark(#5b6a7b,#adbdcf);
+    --text-muted:light-dark(#576676,#adbdcf);
     --border:light-dark(#d1d9e3,#46566a);
   }
   .housing-atlas {

@@ -7,7 +7,7 @@
     --plate-ink: light-dark(#22261b, #e8ecdf); --plate-paper: light-dark(#f1f2e8, #0b0d08);
     --plate-accent: var(--kind-help);
     --plate-rule: light-dark(#22261b14, #e8ecdf14); --plate-strong-rule: light-dark(#22261b26, #e8ecdf26);
-    --text-secondary: light-dark(#545c47, #b3bba5); --text-muted: light-dark(#7a8270, #8a927e);
+    --text-secondary: light-dark(#545c47, #b3bba5); --text-muted: light-dark(#616759, #9ea594);
     --glass: light-dark(#fbfcf6b3, #ffffff0b); --glass-edge: light-dark(#ffffff, #e8ecdf1f);
     --budget-accent: var(--plate-accent); --atlas-accent: var(--plate-accent);
   }

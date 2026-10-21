@@ -6,7 +6,7 @@
 body:has(.horizon-page) {
   --plate-ink:light-dark(#22201c,#f1ebe0); --plate-paper:light-dark(#f7f2ea,#0b0a09); --plate-accent:light-dark(#b2462e,#f08a5d);
   --plate-rule:light-dark(#22201c14,#f1ebe014); --plate-strong-rule:light-dark(#22201c26,#f1ebe026);
-  --text-primary:var(--plate-ink); --text-secondary:light-dark(#5e574d,#b9b1a4); --text-muted:light-dark(#8a8274,#8a8274);
+  --text-primary:var(--plate-ink); --text-secondary:light-dark(#5e574d,#b9b1a4); --text-muted:light-dark(#6a6459,#a8a198);
   --glass:light-dark(#ffffffa6,#ffffff0d); --glass-edge:light-dark(#ffffff,#f1ebe01f); --state-blue:var(--plate-accent);
   background:var(--plate-paper);
 }
@@ -130,7 +130,7 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
     --plate-rule: light-dark(#1c263214, #e8eef514);
     --plate-strong-rule: light-dark(#1c263226, #e8eef526);
     --text-secondary: light-dark(#4c5a69, #aebccb);
-    --text-muted: light-dark(#738192, #8495a7);
+    --text-muted: light-dark(#5b6674, #96a4b4);
     --glass: light-dark(#ffffffa6, #ffffff0b);
     --glass-edge: light-dark(#ffffff, #e8eef51f);
     --state-blue: var(--plate-accent);
@@ -297,7 +297,7 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
     --plate-ink: light-dark(#1d2a24, #e6efe9); --plate-paper: light-dark(#eef4f0, #0a120e);
     --plate-accent: light-dark(#2f7a55, #7fcfa4); --plate-sky: light-dark(#4f9a6c, #a8e3bf);
     --plate-rule: light-dark(#1d2a2414, #e6efe914); --plate-strong-rule: light-dark(#1d2a2426, #e6efe926);
-    --text-secondary: light-dark(#4b5d53, #adc1b5); --text-muted: light-dark(#728579, #84988b);
+    --text-secondary: light-dark(#4b5d53, #adc1b5); --text-muted: light-dark(#59685f, #95a69b);
     --glass: light-dark(#ffffffa6, #ffffff0b); --glass-edge: light-dark(#ffffff, #e6efe91f);
   }
   body:has(main.horizon-page[data-region-level="county"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#8fd0a8,#1f7a4c) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#c7e3a0,#4a6f1f) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#8fd3c7,#146e60) 0%, transparent 70%) !important; opacity: .55 !important; }
@@ -305,7 +305,7 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
     --plate-ink: light-dark(#1b2a2c, #e4eff0); --plate-paper: light-dark(#ecf4f5, #091214);
     --plate-accent: light-dark(#267775, #7fd2cc); --plate-sky: light-dark(#3a9aa0, #a6e6e8);
     --plate-rule: light-dark(#1b2a2c14, #e4eff014); --plate-strong-rule: light-dark(#1b2a2c26, #e4eff026);
-    --text-secondary: light-dark(#4a5e60, #abc3c5); --text-muted: light-dark(#708587, #839a9c);
+    --text-secondary: light-dark(#4a5e60, #abc3c5); --text-muted: light-dark(#58686a, #91a6a8);
     --glass: light-dark(#ffffffa6, #ffffff0b); --glass-edge: light-dark(#ffffff, #e4eff01f);
   }
   body:has(main.horizon-page[data-region-level="municipality"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#86d0cc,#1a6f6c) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#a6c8ef,#2a4f8a) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#a9e2c6,#1c6a4e) 0%, transparent 70%) !important; opacity: .55 !important; }
@@ -313,7 +313,7 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
     --plate-ink: light-dark(#28223a, #ece6f5); --plate-paper: light-dark(#f2eff8, #0f0b17);
     --plate-accent: light-dark(#735e91, #c8b2ea); --plate-sky: light-dark(#9277b8, #e0cff7);
     --plate-rule: light-dark(#28223a14, #ece6f514); --plate-strong-rule: light-dark(#28223a26, #ece6f526);
-    --text-secondary: light-dark(#5a5170, #bdb2d0); --text-muted: light-dark(#7d7493, #978dab);
+    --text-secondary: light-dark(#5a5170, #bdb2d0); --text-muted: light-dark(#68617b, #a69eb7);
     --glass: light-dark(#ffffffa6, #ffffff0b); --glass-edge: light-dark(#ffffff, #ece6f51f);
   }
   body:has(main.horizon-page[data-region-level="zip"])::before { background: radial-gradient(30% 40% at 25% 30%, light-dark(#c3aee8,#4b2f8a) 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#e9b8d8,#7a2f68) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, light-dark(#a9b8ef,#2f3f8a) 0%, transparent 70%) !important; opacity: .55 !important; }
@@ -502,7 +502,7 @@ body:has(.horizon-page) main.horizon-page .learning-exhibit .history-interactive
 @media screen {
   /* The full report, for the few who want it: a word in the eyebrow, a line at the end,
      a link inside the rankings — no button (2026-10-19). */
-  body:has(.horizon-page) main .page-head-eyebrow .eyebrow-report { font-size: 12.5px; color: var(--plate-accent) !important; text-decoration: none; }
+  body:has(.horizon-page) main .page-head-eyebrow .eyebrow-report { font-size: 12.5px; color: var(--plate-accent) !important; text-decoration: none; display: inline-block; min-height: 24px; line-height: 24px; }
   body:has(.horizon-page) main .page-head-eyebrow .eyebrow-report::before { content: "·"; margin-right: .55rem; color: var(--text-muted); }
   body:has(.horizon-page) main .page-head-eyebrow .eyebrow-report:is(:hover, :focus-visible) { text-decoration: underline; text-underline-offset: .2em; }
   body:has(.horizon-page) .place-report-line { margin: 2.6rem 0 1rem; padding-top: 1.2rem; border-top: 1px solid var(--plate-rule); color: var(--text-secondary); font-size: 14.5px; }

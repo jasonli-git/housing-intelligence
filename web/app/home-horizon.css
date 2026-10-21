@@ -9,7 +9,7 @@
 :root body:has(.search-first-home) {
   --plate-ink:light-dark(#22201c,#f1ebe0); --plate-paper:light-dark(#f7f2ea,#0b0a09); --plate-accent:light-dark(#b2462e,#f08a5d);
   --plate-rule:light-dark(#22201c14,#f1ebe014); --plate-strong-rule:light-dark(#22201c26,#f1ebe026);
-  --text-primary:var(--plate-ink); --text-secondary:light-dark(#5e574d,#b9b1a4); --text-muted:light-dark(#8a8274,#8a8274);
+  --text-primary:var(--plate-ink); --text-secondary:light-dark(#5e574d,#b9b1a4); --text-muted:light-dark(#6a6459,#a8a198);
   --glass:light-dark(#ffffffa6,#ffffff0d); --glass-edge:light-dark(#ffffff,#f1ebe01f); --state-blue:var(--plate-accent);
   background:var(--plate-paper);
 }

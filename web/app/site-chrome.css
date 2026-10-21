@@ -15,8 +15,12 @@
   .site-meta-row:has(.licence-box[open]) .licence { flex-basis: 100% !important; }
 }
 
-/* The skip link is for keyboards; on a phone it only sat behind the search box. */
-@media screen and (max-width: 600px) { .skip-link { display: none !important; } }
+/* The skip link is for keyboards. Hidden on phones on 2026-10-15 because it showed
+   behind the search box; hiding it removed it for keyboard and switch users on phones
+   and tablets too (WCAG 2.4.1). Now it is clipped to nothing until focused, so nothing
+   shows through, and once focused it sits above the masthead (2026-10-20). */
+.skip-link:not(:focus) { clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap; padding: 0; border: 0; }
+.skip-link:focus { z-index: 3000; }
 
 /* The Tools menu (2026-10-15), set apart from the search box beside it: a solid ink pill
    with a small grid mark instead of a second outlined box, and its menu a rounded, frosted

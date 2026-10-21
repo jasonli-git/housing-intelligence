@@ -6,7 +6,7 @@
     --surface-card: var(--surface-2);
     --text-primary: light-dark(#29332f, #e6eae7);
     --text-secondary: light-dark(#57615b, #bdc6bf);
-    --text-muted: light-dark(#657068, #abb7af);
+    --text-muted: light-dark(#5d6760, #abb7af);
     --border: light-dark(#d9e2da, #3e4e43);
     background: var(--surface-1);
   }
