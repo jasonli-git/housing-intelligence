@@ -5,9 +5,10 @@ All notable changes to the Housing Intelligence Platform. Format loosely follows
 
 ## [Unreleased]
 
-Publication capacity (#201, ARCHITECTURE #400) and state-scoped geometry (#205,
-ARCHITECTURE #401), both merged 2026-10-20. This section holds those two changes only;
-other changes merged since 0.50.0 are not yet recorded here.
+Publication capacity (#201, ARCHITECTURE #400), state-scoped geometry (#205,
+ARCHITECTURE #401) and scale safety (#208, ARCHITECTURE #402, #403), all merged
+2026-10-20. This section holds those changes only; other changes merged since 0.50.0
+are not yet recorded here.
 
 ### Added
 
@@ -26,9 +27,11 @@ other changes merged since 0.50.0 are not yet recorded here.
 - **A build-time check that every legacy numeric address has exactly one path**: each
   published place's `/regions/<id>` and `/regions/<id>/report`, and the four state and
   nation addresses, must have either a `_redirects` rule or a fallback page, never both
-  or neither, pointing at an existing canonical page. A duplicate rule, a wildcard,
-  rewrite or external target, or a wrong alias target fails the build
-  (`web/scripts/lib/publication.mjs`).
+  or neither, pointing at an existing canonical page. Among `/regions/` rules, a
+  duplicate, a wildcard, rewrite or external target, or a wrong alias target fails the
+  build (`web/scripts/lib/publication.mjs`); rules for other addresses pass through and
+  count only toward the 2,000-rule limit (#203). `make check-live` asks the live site
+  for a legacy place page, county report and ZIP report on every deploy (#203).
 - **`npm run build` writes diagnostics to `web/.publication/`** (ignored, outside the
   deployed `out/`): a per-category file and byte inventory, and a manifest of all 2,370
   legacy addresses. `npm run publication:inventory`, `:test`, `:capacity`, `:prepare`
@@ -39,9 +42,21 @@ other changes merged since 0.50.0 are not yet recorded here.
 - **A synthetic second-state capacity test** (`:capacity`): a manifest mirroring New
   Jersey's 1,183 places, reports and payloads under reserved `/zz/` paths. It is not a
   rendered state.
+- **Completeness on published lists** (#208, ARCHITECTURE #402): `/rankings` and
+  `/regions/{id}/metrics` return `total`, counted before `LIMIT` in the same query.
+  `hip publish` refuses to write a list shorter than its total, and `make check-dist`
+  checks all 1,814 such files. Apart from the new field, the files are byte-identical.
+- **Scratch-schema analytics tests** (#208): `tests/test_analytics.py` rebuilds a
+  disposable `hip_test_<uuid>` schema, so `make test-all` no longer rebuilds the
+  warehouse the API serves; `scripts/verify_analytics_isolation.py` proves it with
+  before/after checksums while the API serves.
 
 ### Changed
 
+- **Rank ranges are counted about 51 times faster** (#208, ARCHITECTURE #403): 4.2 s
+  instead of 215 s for the step, with all 178,880 ranking rows identical. The same
+  Census significance test, counted in Python over sorted trees that skip a branch only
+  when its outcome is certain; the old SQL is kept as the tests' reference.
 - **Fallback alias pages are written only where `_redirects` has no rule**, because
   Cloudflare Pages follows a redirect even when a file matches. 1,768 of 2,366 aliases
   were removed: the export is 14,947 files (16,715 by the same build with every alias),
