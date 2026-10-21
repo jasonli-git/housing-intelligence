@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import DBAPIError
 
 from hip.config import ConfigError, GeographyScope, fips_for, get_settings
 from hip.sources.base import SourceAdapter, read_discovery
@@ -250,6 +251,13 @@ def _county_fips(scope: GeographyScope) -> list[str]:
                         f"Invalid county GEOID in the geography spine for {state}"
                     )
                 counties.update(codes)
+    except DBAPIError as exc:
+        # A new database has no `regions` table until the spine is loaded; say that,
+        # not SQLAlchemy's "no such table" (2026-10-21).
+        raise ConfigError(
+            "No geography spine in the warehouse yet; run the pipeline through "
+            "`hip load` before BLS/HUD acquisition"
+        ) from exc
     finally:
         engine.dispose()
     return sorted(counties)

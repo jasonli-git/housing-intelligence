@@ -457,11 +457,22 @@ def _adapters(source: str | None) -> list[SourceAdapter]:
     scope = load_geography()
     raw_dir = get_settings().raw_dir
     names = [source] if source else list(IMPLEMENTED)
-    try:
-        return [build_adapter(name, scope, raw_dir=raw_dir) for name in names]
-    except UnknownSourceError as exc:
-        typer.secho(str(exc), fg=typer.colors.YELLOW, err=True)
-        raise typer.Exit(code=1) from exc
+    adapters: list[SourceAdapter] = []
+    for name in names:
+        try:
+            adapters.append(build_adapter(name, scope, raw_dir=raw_dir))
+        except UnknownSourceError as exc:
+            typer.secho(str(exc), fg=typer.colors.YELLOW, err=True)
+            raise typer.Exit(code=1) from exc
+        except ConfigError as exc:
+            # BLS and HUD list their counties from the loaded spine, which a new
+            # database does not have yet: on an all-sources run, skip them by name and
+            # acquire the rest, so the first run can build the spine (2026-10-21).
+            if source:
+                typer.secho(f"{name}: {exc}", fg=typer.colors.RED, err=True)
+                raise typer.Exit(code=1) from exc
+            typer.secho(f"{name:<14} skipped: {exc}", fg=typer.colors.YELLOW, err=True)
+    return adapters
 
 
 def _echo_discovery(discovery: Discovery) -> None:
