@@ -69,6 +69,7 @@ Not open work: each comes round on a date. The steps live where the row says.
 | When | Chore | Steps |
 |---|---|---|
 | Each January | Re-read the publishers' release calendars (BLS's ends 2026-12-30, Zillow's 2026-12-17; FHFA, PEP and HUD's run to 2027); add the ACS edition's date when announced (#298) | `config/sources.yml` `release_calendar` |
+| Each autumn, from 2027 | NJDEP's newest service-line inventory submissions are not online: request them from NJDEP's Office of Record Access under OPRA (as 407131 was, answered in 7 business days), drop the workbook into `data/manual/njdep_lead_lines_opra/`, review its sheets and header, then add the request to `LeadLinesOpraAdapter` (#409) | `config/sources.yml` `njdep_lead_lines_opra` |
 | 2027-01-01 | Gemini 3.6–3.8 Flash's introductory price ends: $1.50 / $7.50 per million tokens (Flex half); update `config/evaluation.yml` the same day | — |
 | Each quarter | Look at DCA's Construction Reporter, stopped at January 2026 while DCA overhauls it; discovery picks up the yearly summary (usually July) on its own, and a changed layout is refused (#300) | `config/sources.yml` `nj_construction` |
 | Each June and December | FCC's broadband files are downloaded by hand, so no refresh notices a new filing (#360, #372). Look for an as-of date or revision newer than the one held | County and place summaries into `data/manual/fcc_bdc/`, then `hip acquire --source fcc_bdc --vintage <as-of>_<revision>`; the two New Jersey location files (served/unserved and fiber) from the National Broadband Map into `data/manual/fcc_bdc_locations/` through a browser, since scripts get a 403 |
@@ -93,21 +94,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       can be delinquent reporting; audit its missing-report codes and schema before
       replacing the reviewed 2023 workbook. A town's own figures need an evidenced
       agency-to-municipality crosswalk, not names.
-- [ ] **NJDEP's public lead-line layer stops at the 2024 submission**, though statewide
-      2025 totals exist. (M42) The owner asked NJDEP's lead-in-drinking-water program;
-      Brandon Carreno (Division of Water Supply & Geoscience) replied 2026-10-08 that the
-      2025 and 2026 per-system submissions exist but are not hosted online, and that the
-      way to get them is an OPRA request (https://www.nj.gov/dep/opra/opraform.html).
-      The owner filed one on 2026-10-08 for the per-system inventory counts by category
-      in CSV or Excel. **NJDEP answered 2026-10-20 (OPRA 407131, from Water Allocation):**
-      `OPRA_407131_LSLI.xlsx`, one sheet, 429 water systems with PWSID, name, submittal
-      date (2025-07-01 to 2025-12-21) and the four counts — lead 57,362, galvanized
-      requiring replacement 57,616, unknown 676,067, non-lead 1,529,563. The 2025
-      submission only, not 2026; no reuse conditions stated in the reply. Next: load it as
-      a manual source beside the layer (as BPU's reports are, #347), cited as an OPRA
-      response with its date, and check the totals against the statewide 2025 figures.
-      A one-off extract means a new request each year unless NJDEP publishes the layer
-      again; the 2026 submission is a second request.
 - [ ] **Five counties have no DOE energy burden.** (M42) Essex, Hudson, Middlesex,
       Monmouth and Somerset carry signed weights or costs in DOE's file; withheld, not
       zeroed, until DOE explains them.
