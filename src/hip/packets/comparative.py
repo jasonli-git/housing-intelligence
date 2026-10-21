@@ -323,7 +323,12 @@ def comparative_problems(text: str, binding: Binding, packet: Packet) -> list[st
             # "Both measures sit near the low end": the measures of the sentence before.
             prior_start, prior_stop = sentence_span(text, start - 2, start - 1)
             mentions = [m[2] for m in _named(text[prior_start:prior_stop], words)]
-        ranks = by_standing if _STANDING.search(clause[:at]) else by_value
+        # "Ranks near the bottom" can mean the worst standing or the lowest values; since
+        # the packet states ranks by value (#413) either reading is the data's, so a
+        # clause about rank passes when either holds.
+        readings = (
+            [by_value, by_standing] if _STANDING.search(clause[:at]) else [by_value]
+        )
         phrase = match.group(0)
         if not mentions and end == "either":
             # A bare "stands out" says nothing a rank could check, and claims no end.
@@ -335,7 +340,8 @@ def comparative_problems(text: str, binding: Binding, packet: Packet) -> list[st
             )
             continue
         for metrics in mentions:
-            if not any(_holds(ranks[m], end, reach) for m in metrics):
+            if not any(_holds(r[m], end, reach) for r in readings for m in metrics):
+                ranks = readings[0]
                 shown = ", ".join(
                     f"{labels.get(m, m)!r} {ranks[m].best}–{ranks[m].worst} of "
                     f"{ranks[m].of}"

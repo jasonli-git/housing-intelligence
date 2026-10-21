@@ -181,6 +181,8 @@ def test_a_survey_figure_s_annualised_change_is_left_out(hudson: Packet) -> None
         ),
         # Standing, not value: the ratio's 19th of 21 best-first is near the bottom.
         ("Home value compared with household income ranks near the bottom.", False),
+        # By value, as the packet now states it, the same words also pass.
+        ("Home value compared with household income ranks among the highest.", False),
         ("Home value compared with household income is near the bottom.", True),
         # The Hudson sentence that started this (TODO, #275): no measure the data ranks.
         ("Housing here takes a particularly large share of everything.", True),

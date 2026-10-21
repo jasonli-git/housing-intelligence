@@ -138,8 +138,8 @@ Not open work: each comes round on a date. The steps live where the row says.
       published readings (Gloucester, Burlington, Camden, Salem) call a low home value to
       income ratio high and would be refused today; they stay live until the next
       regeneration, which the owner holds. The cause, best-first ranks the models read as
-      high, is fixed in the packet's Markdown (#413); confirming it takes a small billed
-      readings run (`hip eval readings`) on those four counties.
+      high, is fixed in the packet's Markdown (#413), confirmed on those four counties
+      (`reports/evaluation/readings-v10.md`: all four would publish, correctly).
 
 ### Test coverage
 
