@@ -11,8 +11,8 @@ carries its source file, date, licence and margin of error. It is not a listings
 and not a chatbot: pages, maps, tools, reports and an API are the product, and an
 optional AI layer only explains figures that were already computed.
 
-> **Status — 2026-10-21.** Versions 1 and 2 are complete and Version 3 is under way
-> (v0.50.0, 2026-10-08). New Jersey is published in full: the state, 21 counties, 564
+> **Status — v0.50.0 (2026-10-08), updated 2026-10-21.** Versions 1 and 2 are complete
+> and Version 3 is under way. New Jersey is published in full: the state, 21 counties, 564
 > towns and 598 ZIP codes, plus four tools.
 >
 > **Latest.** Groundwork for a second state: publication capacity measured and redirect

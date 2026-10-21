@@ -37,15 +37,17 @@ series, geometry and `api.geo` taken from scope (#205, #401), and scale safety (
 #402, #403). Config alone cannot fit a second New Jersey-sized state on Pages Free
 (#210); the accessibility check found on the way now runs on every deploy (#211, #404).
 
-1. **The owner's hosting decision** — under Frontend and presentation, "A second state
-   will not fit Pages' limits". Recommended 2026-10-20: Workers static assets on Workers
-   Paid (100,000 files), moving the numeric-link redirects to a Worker; then pages in R2
+1. **Hosting: decided by the owner 2026-10-21 — Workers static assets on Workers Paid**
+   (100,000 files), with the numeric-link redirects moved to a Worker; later, pages in R2
    behind a Worker past about seven states, and on-request rendering only for national
-   coverage.
+   coverage. Next: the owner subscribes to Workers Paid; then a brief to move the site
+   from Pages, tried on a preview address before production (under Frontend and
+   presentation, "A second state will not fit Pages' limits").
 2. **The remaining New Jersey assumptions** and **`hip acquire` on a new database**
    (API and scale limits).
-3. **Tests that guard data** — the validation gate, the Zillow unpivot, and the Zillow,
-   FRED, BLS and FHFA adapters against stubbed responses (Test coverage).
+3. **Tests that guard data** — done (2026-10-21, #214): every validation-gate rule, the
+   real Zillow unpivots, and FRED, BLS, FHFA and Zillow against recorded responses. The
+   four silent-loss gaps they found are fixed (ARCHITECTURE #405).
 
 Kept out of that scope: publisher-dependent gaps (Correctness and data integrity) and the
 owner's decisions (Open decisions; HUD income-limit dating). The readings are stale after
@@ -94,9 +96,15 @@ Not open work: each comes round on a date. The steps live where the row says.
       2025 and 2026 per-system submissions exist but are not hosted online, and that the
       way to get them is an OPRA request (https://www.nj.gov/dep/opra/opraform.html).
       The owner filed one on 2026-10-08 for the per-system inventory counts by category
-      in CSV or Excel; NJDEP has seven business days to answer. A one-off extract means a new request each year unless NJDEP
-      publishes the layer again; check whether it arrives with any reuse conditions
-      beyond the layer's Data Distribution Agreement (`config/sources.yml`).
+      in CSV or Excel. **NJDEP answered 2026-10-20 (OPRA 407131, from Water Allocation):**
+      `OPRA_407131_LSLI.xlsx`, one sheet, 429 water systems with PWSID, name, submittal
+      date (2025-07-01 to 2025-12-21) and the four counts — lead 57,362, galvanized
+      requiring replacement 57,616, unknown 676,067, non-lead 1,529,563. The 2025
+      submission only, not 2026; no reuse conditions stated in the reply. Next: load it as
+      a manual source beside the layer (as BPU's reports are, #347), cited as an OPRA
+      response with its date, and check the totals against the statewide 2025 figures.
+      A one-off extract means a new request each year unless NJDEP publishes the layer
+      again; the 2026 submission is a second request.
 - [ ] **Five counties have no DOE energy burden.** (M42) Essex, Hudson, Middlesex,
       Monmouth and Somerset carry signed weights or costs in DOE's file; withheld, not
       zeroed, until DOE explains them.
@@ -157,32 +165,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       and `test_freshness.py` commit fixtures and clean up after; `test_publish.py`'s
       licence guard updates and rolls back. None rebuilds analytics. Move them to the
       scratch schema when next touched.
-- [x] **Tests: unpivot shape and gate behavior.** (M2; covered 2026-10-21)
-      `test_validation_gate.py` exercises every gate rule, all 59 metric bounds on
-      both sides, tolerance thresholds, coverage floors, orphans, empty staging,
-      normalization collisions, informational rejects and saved reports. Previously
-      `test_affordable_housing.py` imported only two bound constants, not `run_checks`.
-      `test_zillow_unpivot.py` runs both real dbt models and their shared macro through
-      DuckDB over synthetic manual County/City/Zip CSVs: every region/month/value,
-      dates, leading-zero keys, layers, blanks versus zero and metadata changes.
-      One strict expected failure records silent loss of a renamed month column;
-      no production fix here. Full publisher-width files and live pipeline integration
-      are not covered by these small fixtures. See `agent-handoffs/data-guards.md`.
-- [x] **Unit tests for the source adapters.** (M3; covered 2026-10-21) Coverage has
-      grown: TIGER, MOD-IV, SR1A and the NJ tax rates have their own tests, and
-      `tests/test_sources.py` drives the requests of ACS, PEP, permits, Fair Market Rents
-      and CHAS and the parsing of the last two, and `tests/test_migration.py` the IRS's
-      requests, discovery and file shape (M50). `test_adapter_data_guards.py` now
-      drives FRED, BLS and FHFA master through MockTransport-backed fetching and real
-      landing, with request/key assertions, normal data and malformed HTTP-200 bodies.
-      Zillow's two manual adapters read synthetic wide-layout files, never HTTP;
-      `test_manual_sources.py` already covered manual caching and missing downloads,
-      and `test_persistence.py` already covered FHFA county workbook shape changes.
-      Strict expected failures retain FRED's partial loss of renamed values and FHFA
-      master's acceptance of renamed CSV fields/error bodies at landing. BLS empty
-      series already fail at landing. These are representative contracts, not every
-      publisher field or discovery/retry combination; no production fixes were made.
-      Bug details and remaining limits: `agent-handoffs/data-guards.md`.
 
 ### API and scale limits
 

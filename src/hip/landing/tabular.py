@@ -91,13 +91,33 @@ def land_csv(
     parquet_dir: Path,
     overwrite: bool = False,
     csv_options: str = "",
+    required_columns: tuple[str, ...] = (),
 ) -> LandedTable:
-    """Transcode one CSV to Parquet, letting DuckDB infer types over the whole file."""
+    """Transcode one CSV to Parquet, letting DuckDB infer types over the whole file.
+
+    `required_columns` (the adapter's) must all be in the header, or nothing is landed.
+    """
     out = parquet_path(release, parquet_dir)
     out.parent.mkdir(parents=True, exist_ok=True)
 
     with duckdb_session() as con:
         if needs_landing(release, out, overwrite):
+            if required_columns:
+                header = {
+                    row[0]
+                    for row in con.execute(
+                        f"DESCRIBE SELECT * FROM read_csv('{release.path}', header=true, "
+                        f"encoding='latin-1'{csv_options})"
+                    ).fetchall()
+                }
+                missing = [c for c in required_columns if c not in header]
+                if missing:
+                    raise ValueError(
+                        f"{release.ref.source_id}/{release.ref.key}: the file has no "
+                        f"{', '.join(missing)} column; its layout changed or it is an "
+                        f"error page, so it is refused rather than landed "
+                        f"(columns: {', '.join(sorted(header))})"
+                    )
             # sample_size=-1: Zillow's leading rows are frequently empty for newer
             # geographies, and a sampled inference reads those columns as VARCHAR and
             # then silently drops every value that will not cast.

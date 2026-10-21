@@ -16,9 +16,7 @@ are not yet recorded here.
 - **Offline data-guard tests**: every validation-gate rule and all 59 value bounds;
   the real ZHVI/ZORI dbt unpivots over synthetic County/City/Zip manual CSVs; and
   MockTransport-backed FRED/BLS/FHFA request, landing and changed-shape checks.
-  Four strict expected failures record existing silent-loss/schema-validation gaps
-  in FRED, FHFA and Zillow, without changing production behavior. Existing BLS empty
-  series are confirmed to fail at landing. See `agent-handoffs/data-guards.md`.
+  BLS empty series are confirmed to fail at landing (#214).
 - **Geometry files per state**: `geo/{STATE}/{level}.json` for the state, county,
   municipality and ZIP levels, for every state in `config/geography.yml`'s scope. Today
   that is four additive files, `geo/NJ/*.json`, each byte-identical to the unscoped file
@@ -94,6 +92,12 @@ are not yet recorded here.
 
 ### Fixed
 
+- **Four ways a publisher's changed layout could lose data silently now stop the load**
+  (ARCHITECTURE #405), found by #214's tests: a Zillow month column renamed or
+  reformatted, or missing from the run of months; a FRED observation without its
+  `value`; and an FHFA file with a renamed column or an error page sent with HTTP 200.
+  Each now fails with the column or field named. The real Zillow files (321 and 141
+  months) and FRED and FHFA files pass.
 - **Small grey text now meets 4.5:1 contrast on every page, in light and dark**
   (ARCHITECTURE #404). Each page theme's muted grey, the data pages' lime accent and the
   inquiry amber were too faint on tinted panels: 1,600+ findings on 24 of 40 light-mode

@@ -1,15 +1,11 @@
-"""Hold `README.md` to what `ROADMAP.md` says has shipped.
+"""Hold `README.md` to what `ROADMAP.md` and `CHANGELOG.md` say has shipped.
 
-A milestone marked ``✅ done`` in the roadmap has to be described somewhere in the
-README's Features list. Nothing else here checks that, and nothing noticed when it
-stopped being true: on 2026-09-19 the list named M0–M9, M13, M17, M21 and M23 while
-M11, M12, M16, M18, M19 and M20 had all shipped — including M16's globe, the most
-recent milestone and the platform's main visual object.
-
-This cannot write the prose. What a milestone *means* to a reader is editorial, and a
-generated sentence about a feature nobody checked is worse than no sentence. What it
-can do is refuse to let a shipped milestone go undescribed, which is the half that was
-actually failing.
+Until 2026-10-21 every milestone marked ``✅ done`` had to be described in the README's
+Features list, tagged ``(M<n>, built)``: the list had once lagged six shipped milestones
+behind (2026-09-19). The owner then asked for a README a visitor can read, with a short
+feature list and the milestone record left to ROADMAP and CHANGELOG (TODO, 2026-10-20),
+so the README now has to point at those two instead, and must still never describe
+unshipped work as built, name a stale release, or let Latest grow.
 
 The same shape as :mod:`tests.test_module_boundaries` — parse the artifact rather than
 trust it.
@@ -54,20 +50,19 @@ def _features_described() -> set[int]:
     return described
 
 
-def test_every_shipped_milestone_is_described_in_the_readme_features_list() -> None:
-    shipped = _roadmap_shipped()
-    described = _features_described()
-    assert shipped, (
+def test_the_readme_points_to_where_shipped_work_is_recorded() -> None:
+    """The milestone-by-milestone record lives in ROADMAP and CHANGELOG, so the README
+    has to send a reader there, near the top and again from its status block."""
+    assert _roadmap_shipped(), (
         "parsed no shipped milestones from ROADMAP.md — the table format moved"
     )
-
-    missing = sorted(shipped - described)
-    assert not missing, (
-        "ROADMAP.md marks these milestones done but README.md's Features list does not "
-        f"describe them: {', '.join(f'M{n}' for n in missing)}. Add a bullet tagged "
-        "`(M<n>, built)` saying what the milestone gives a reader — write it, do not "
-        "generate it."
-    )
+    text = README.read_text()
+    status = text[: text.index("\n## ")]
+    for document in ("ROADMAP.md", "CHANGELOG.md"):
+        assert f"]({document})" in status, (
+            f"README.md's opening and status block do not link {document}, where "
+            "shipped work is recorded now that the Features list is short."
+        )
 
 
 def test_the_features_list_does_not_claim_unshipped_milestones() -> None:
@@ -105,7 +100,7 @@ def test_the_readme_status_names_the_newest_release() -> None:
 
 def test_the_readme_latest_is_only_the_newest_milestone_and_short() -> None:
     """Latest grew to eight milestones in one paragraph; older ones belong in
-    CHANGELOG.md and the Project Status section, not the top of the README."""
+    CHANGELOG.md, not the top of the README. Work between milestones names none."""
     latest = _LATEST.search(README.read_text())
     assert latest, "README.md's status block has no `**Latest.**` paragraph."
     text = latest.group(1).replace(">", " ")
@@ -115,7 +110,7 @@ def test_the_readme_latest_is_only_the_newest_milestone_and_short() -> None:
         "milestone only."
     )
     named = {int(n) for n in re.findall(r"Milestone (\d+)", text)}
-    assert named == {max(_roadmap_shipped())}, (
-        f"README.md's Latest names milestones {sorted(named)}; it should name only the "
+    assert named <= {max(_roadmap_shipped())}, (
+        f"README.md's Latest names milestones {sorted(named)}; it may name only the "
         f"newest shipped one, M{max(_roadmap_shipped())}."
     )

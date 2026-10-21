@@ -94,14 +94,6 @@ def test_fred_changed_envelope_or_http_200_error_refused(tmp_path, recorded, bod
         land_json(release, type(adapter), parquet_dir=tmp_path / "parquet")
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=pytest.fail.Exception,
-    reason=(
-        "FRED silently drops observations when value is renamed "
-        "instead of refusing shape drift."
-    ),
-)
 def test_fred_renamed_value_is_not_silently_lost(tmp_path, recorded):
     recorded(
         b'{"observations":[{"date":"2025-01-01","value":"6.5"},'
@@ -204,22 +196,19 @@ def test_fhfa_master_request_and_csv_values(tmp_path, recorded):
     assert str(request.url) == MASTER_URL
     assert not request.url.params
     assert "authorization" not in request.headers
-    out = land_csv(release, parquet_dir=tmp_path / "parquet")
+    out = land_csv(
+        release,
+        parquet_dir=tmp_path / "parquet",
+        required_columns=HpiAdapter.required_columns,
+    )
     with duckdb.connect() as con:
         assert con.execute(
             "SELECT place_id, yr, period, index_sa FROM read_parquet(?)", [str(out.path)]
         ).fetchall() == [("NJ", 2025, 1, 310), ("USA", 2025, 1, 330)]
 
 
+# Landing checks the adapter's `required_columns`, as `hip land` passes them (2026-10-21).
 @pytest.mark.parametrize("variant", ["renamed_field", "http_200_error"])
-@pytest.mark.xfail(
-    strict=True,
-    raises=pytest.fail.Exception,
-    reason=(
-        "FHFA master has no adapter-level CSV schema validation: changed headers/HTTP200 "
-        "error bodies can land as Parquet; real staging may only fail later."
-    ),
-)
 def test_fhfa_changed_shape_must_be_refused_at_landing(tmp_path, recorded, variant):
     body = (FIXTURES / "fhfa.csv").read_bytes().replace(b"index_sa", b"renamed_index")
     if variant == "http_200_error":
@@ -227,5 +216,10 @@ def test_fhfa_changed_shape_must_be_refused_at_landing(tmp_path, recorded, varia
     recorded(body)
     adapter = HpiAdapter()
     release = adapter.fetch(adapter.refs()[0], raw_dir=tmp_path / "raw")
-    with pytest.raises((ValueError, duckdb.Error), match="index|error|schema|column"):
-        land_csv(release, parquet_dir=tmp_path / "parquet")
+    with pytest.raises(ValueError, match="column; its layout changed"):
+        land_csv(
+            release,
+            parquet_dir=tmp_path / "parquet",
+            required_columns=HpiAdapter.required_columns,
+        )
+    assert not list((tmp_path / "parquet").rglob("*.parquet"))

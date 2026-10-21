@@ -322,6 +322,11 @@ class SourceAdapter(ABC):
     # plain single-header CSV. Census Building Permits ships two header rows, which
     # collapse into one unusable column unless both are skipped.
     csv_read_options: ClassVar[str] = ""
+    # Columns a CSV must have for staging to read it. Landing refuses a file without
+    # them, so a renamed header or an error page sent with HTTP 200 stops at landing
+    # instead of becoming Parquet that staging may or may not reject (2026-10-21).
+    # Empty means not checked.
+    required_columns: ClassVar[tuple[str, ...]] = ()
     # Field layout for a fixed-width source: (name, one-based start, length). Pure
     # publisher knowledge, like `csv_read_options`, so it sits beside it rather than
     # behind a method. Empty for every source that is not fixed-width.
