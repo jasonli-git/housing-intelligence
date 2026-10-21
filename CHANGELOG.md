@@ -13,6 +13,10 @@ are not yet recorded here.
 
 ### Added
 
+- **Lead service lines from 2026** (ARCHITECTURE #409): each water system's 2025 and
+  2026 inventory submissions, from NJDEP's answer to OPRA request 407131 (2026-10-20), so
+  a place's water systems show their newest counts — 2026 for 454 systems — instead of
+  the public layer's 2024 submission.
 - **Compare places** (`/compare`, ARCHITECTURE #408): up to four counties, towns or ZIP
   codes side by side — costs, affordability, sales, commutes and risks, each dated with its
   margin — with the choice in the address so it can be bookmarked or sent, and nothing

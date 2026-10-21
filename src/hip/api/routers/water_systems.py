@@ -59,6 +59,24 @@ _SQL = text(
 )
 
 
+def newest_inventory(
+    context: list[InfrastructureRecord], pwsid: str
+) -> InfrastructureRecord | None:
+    """A system's newest service-line inventory (ARCHITECTURE #409): the public layer
+    holds the 2024 submission and NJDEP's OPRA response 407131 the 2025 and 2026 ones,
+    so the latest submission year wins, whichever source carries it."""
+    found = [
+        c
+        for c in context
+        if c.entity_id == f"pwsid:{pwsid}" and c.kind == "lead_inventory"
+    ]
+    return max(
+        found,
+        key=lambda c: (int(c.payload.get("submission_year") or 0), c.source_id),
+        default=None,
+    )
+
+
 @router.get(
     "/regions/{region_id}/water-systems",
     response_model=WaterSystems,
@@ -91,15 +109,7 @@ def water_systems(region_id: int, session: SessionDep) -> WaterSystems:
                 release_id=r["release_id"],
                 file_sha256=r["file_sha256"],
                 fetched_at=r["fetched_at"],
-                lead_inventory=next(
-                    (
-                        c
-                        for c in context
-                        if c.entity_id == f"pwsid:{r['pwsid']}"
-                        and c.kind == "lead_inventory"
-                    ),
-                    None,
-                ),
+                lead_inventory=newest_inventory(context, r["pwsid"]),
                 pfas_samples=[
                     c
                     for c in context

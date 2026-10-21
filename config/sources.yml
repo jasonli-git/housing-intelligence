@@ -153,6 +153,45 @@ sources:
     fallback: Keep the dated system inventory and direct readers to their water supplier for an individual line.
     notes: Lead, galvanized, lead connectors and unknown material are separate counts; these are not lead concentrations or a diagnosis of one property's pipe.
 
+  njdep_lead_lines_opra:
+    name: Community water systems' service line inventories, 2025 and 2026 submissions
+    publisher: New Jersey Department of Environmental Protection
+    license: Open public record
+    licence_class: public_record
+    commercial: {ads: unclear, paid: unclear, note: Publish attributed per-system counts only; no blanket licence inferred for the released workbook.}
+    terms_url: https://www.nj.gov/nj/legal.shtml
+    terms_checked: 2026-10-21
+    terms_note: >-
+      Released by NJDEP's Office of Record Access under OPRA (request 407131, answered
+      2026-10-20, from Water Allocation) as public records, with no reuse condition stated.
+      State Conditions of Use section F permits copying and distribution of State
+      information. Publish attributed per-system counts, as the public layer's are.
+    notices:
+      - "Source: community water systems' lead service line inventory submissions for 2025 and 2026, released by the New Jersey Department of Environmental Protection under OPRA request 407131. Counts as each system reported them, not a diagnosis of any one home's pipe."
+    url: https://www.nj.gov/dep/opra/opraform.html
+    homepage: https://dep.nj.gov/lead/map/
+    cadence: annual
+    adapter: hip.sources.infrastructure:LeadLinesOpraAdapter
+    fallback: >-
+      Keep the last response. Each year, request the newest submissions from NJDEP's Office
+      of Record Access under OPRA, drop the workbook into data/manual/njdep_lead_lines_opra/,
+      and review its sheets and header before adding the request number to
+      hip.sources.infrastructure; an unreviewed file fails visibly. If NJDEP publishes the
+      newer submissions on its public layer again, prefer the layer.
+    inquiries:
+      # NJDEP's public layer stops at the 2024 submission.
+      - answered: 2026-10-20
+        office: New Jersey Department of Environmental Protection
+        via: records request
+        received: >-
+          Each community water system's 2025 and 2026 lead service line inventory counts
+          (lead, galvanized requiring replacement, unknown, non-lead), which NJDEP does not
+          host online (OPRA request 407131).
+    notes: >-
+      The four counts NJDEP released; lead connectors, a separate category on the public
+      layer, are not in the extract. The date is when each system submitted, not when it
+      last updated its categories.
+
   nj_affordable:
     name: Affordable housing calculations and municipal status reports
     publisher: NJ Department of Community Affairs

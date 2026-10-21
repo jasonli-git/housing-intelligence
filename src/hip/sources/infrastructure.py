@@ -70,6 +70,123 @@ class LeadLinesAdapter(ArcGisAdapter):
     }
 
 
+OPRA_LEAD_REQUEST = "407131"
+OPRA_LEAD_FILE = "OPRA_407131_LSLI.xlsx"
+_OPRA_LEAD_HEADER = {
+    "A": "PWSID",
+    "B": "Water System Name",
+    "C": "Submittal Date",
+    "D": "Lead Service Lines",
+    "E": "Galvanized Requiring Replacement Service Lines",
+    "F": "Lead Status Unknown Service Lines",
+    "G": "Non-lead service lines",
+}
+
+
+class LeadLinesOpraAdapter(SourceAdapter):
+    """Each community water system's service-line inventory, 2025 and 2026 submissions.
+
+    NJDEP's public layer (`LeadLinesAdapter`) stops at the 2024 submission; the newer
+    per-system counts are not hosted online, and NJDEP's Division of Water Supply &
+    Geoscience pointed to an OPRA request for them (TODO, 2026-10-08). NJDEP's Office of
+    Record Access answered request 407131 on 2026-10-20 with one workbook, a sheet per
+    submission year. Downloaded by hand into `data/manual/njdep_lead_lines_opra/`.
+
+    Four counts per system — lead, galvanized requiring replacement, material unknown,
+    non-lead — the layer's categories less lead connectors, which the extract does not
+    carry. A sheet that is not a year, a changed header, an identifier that is not a
+    PWSID or a count that is not a whole number fails the load rather than guessing.
+    """
+
+    source_id: ClassVar[str] = "njdep_lead_lines_opra"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
+    default_vintage: ClassVar[str] = OPRA_LEAD_REQUEST
+    landing_format: ClassVar[str] = "xlsx_records"
+    manual: ClassVar[bool] = True
+    manual_from: ClassVar[str | None] = (
+        f"NJDEP's Office of Record Access (OPRA request {OPRA_LEAD_REQUEST})"
+    )
+
+    def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+        if (vintage or OPRA_LEAD_REQUEST) != OPRA_LEAD_REQUEST:
+            raise SourceError("Only OPRA response 407131 has been reviewed")
+        return [
+            ReleaseRef(
+                self.source_id,
+                "inventory",
+                OPRA_LEAD_REQUEST,
+                "https://www.nj.gov/dep/opra/opraform.html",
+            )
+        ]
+
+    @classmethod
+    def filename(cls, ref: ReleaseRef) -> str:
+        return OPRA_LEAD_FILE
+
+    @classmethod
+    def xlsx_records(cls, path: Path, ref: ReleaseRef) -> list[dict[str, object]]:
+        from hip.sources.xlsx import sheets
+
+        years = sheets(path)
+        if not years or not all(re.fullmatch(r"20\d\d", y) for y in years):
+            raise SourceError(f"njdep_lead_lines_opra: sheets are not years: {years}")
+        records: list[dict[str, object]] = []
+        for year in years:
+            seen: set[str] = set()
+            for number, cells in rows(path, year):
+                if number == 1:
+                    if {k: cells.get(k) for k in _OPRA_LEAD_HEADER} != _OPRA_LEAD_HEADER:
+                        raise SourceError(f"njdep_lead_lines_opra: {year} header changed")
+                    continue
+                if not any(cells.values()):
+                    continue
+                pwsid = cells.get("A", "")
+                if not re.fullmatch(r"NJ\d{7}", pwsid) or pwsid in seen:
+                    raise SourceError(f"njdep_lead_lines_opra: {year} row {number} PWSID")
+                seen.add(pwsid)
+                submitted = re.fullmatch(r"(\d{2})/(\d{2})/(\d{4})", cells.get("C", ""))
+                if not submitted:
+                    raise SourceError(f"njdep_lead_lines_opra: {year} row {number} date")
+                month, day, submitted_year = submitted.groups()
+                counts = {}
+                for column, field in (
+                    ("D", "lead"),
+                    ("E", "galvanized"),
+                    ("F", "unknown"),
+                    ("G", "non_lead"),
+                ):
+                    text = cells.get(column, "")
+                    if not text.isdigit():
+                        raise SourceError(
+                            f"njdep_lead_lines_opra: {year} row {number} {field}"
+                        )
+                    counts[field] = int(text)
+                records.append(
+                    {
+                        "record_id": f"{pwsid}:{year}",
+                        "pwsid": pwsid,
+                        "year": int(year),
+                        "payload": json.dumps(
+                            {
+                                "name": cells.get("B", ""),
+                                **counts,
+                                "lead_connectors": None,
+                                "submission_year": int(year),
+                                # When the system submitted, not when it last updated
+                                # its categories (the layer's `category_updated`).
+                                "category_updated": None,
+                                "submitted": f"{submitted_year}-{month}-{day}",
+                                "inventory_url": None,
+                                "opra_request": OPRA_LEAD_REQUEST,
+                            }
+                        ),
+                    }
+                )
+        if len(records) < 300:
+            raise SourceError("njdep_lead_lines_opra: fewer systems than reviewed")
+        return records
+
+
 class UcmrAdapter(SourceAdapter):
     source_id: ClassVar[str] = "epa_ucmr5"
     states: ClassVar[tuple[str, ...] | None] = ("NJ",)

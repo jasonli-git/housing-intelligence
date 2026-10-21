@@ -91,7 +91,7 @@ export function GroundAndWater({
               {report ? <p className="sales-note"><a href={report.url} target="_blank" rel="noreferrer">Read this system’s annual water-quality report</a> · system ID matched {report.verified}. Ask the supplier for current results; an annual report is not live testing.</p>
                 : <p className="sales-note">No direct annual-report link verified for this system. <a href="https://ordspub.epa.gov/ords/safewater/f?p=136:103::::103:P103_STATE:NJ" target="_blank" rel="noreferrer">Search EPA’s New Jersey report directory</a> using {s.pwsid} / {s.name}, or ask the supplier.</p>}
               {lead ? <>
-                <p className="sales-note">Service-line inventory, submission {lead.submission_year}{lead.category_updated ? ` · category data updated ${lead.category_updated}` : ""}.</p>
+                <p className="sales-note">Service-line inventory, submission {lead.submission_year}{lead.submitted ? ` · submitted ${lead.submitted}` : ""}{lead.category_updated ? ` · category data updated ${lead.category_updated}` : ""}{lead.opra_request ? ` · released by NJDEP under OPRA request ${lead.opra_request}` : ""}.</p>
                 <dl className="utility-reliability">
                   {([["Lead", lead.lead], ["Galvanized", lead.galvanized], ["Lead connectors", lead.lead_connectors], ["Material unknown", lead.unknown], ["Non-lead", lead.non_lead]] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value === null ? "Not reported" : count(value)}</dd></div>)}
                 </dl>

@@ -14,6 +14,7 @@ SOURCES = (
     "eia861",
     "doe_lead",
     "njdep_lead_lines",
+    "njdep_lead_lines_opra",
     "epa_ucmr5",
     "njdep_utility_areas",
     "nj_bpu_reliability",

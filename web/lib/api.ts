@@ -179,6 +179,9 @@ export type LeadInventory = {
   submission_year: number;
   category_updated: string | null;
   inventory_url: string | null;
+  /** NJDEP's OPRA response (2025 and 2026 submissions): when the system submitted. */
+  submitted?: string | null;
+  opra_request?: string | null;
 };
 
 export type PfasSamples = {

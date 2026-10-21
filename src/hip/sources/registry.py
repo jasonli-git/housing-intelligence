@@ -47,6 +47,7 @@ from hip.sources.infrastructure import (
     EiaAdapter,
     EnergyBurdenAdapter,
     LeadLinesAdapter,
+    LeadLinesOpraAdapter,
     UcmrAdapter,
     UtilityAreasAdapter,
 )
@@ -129,6 +130,7 @@ IMPLEMENTED: tuple[str, ...] = (
     HudLihtcAdapter.source_id,
     EiaAdapter.source_id,
     LeadLinesAdapter.source_id,
+    LeadLinesOpraAdapter.source_id,
     UcmrAdapter.source_id,
     UtilityAreasAdapter.source_id,
     EnergyBurdenAdapter.source_id,
@@ -189,6 +191,7 @@ METRIC_SOURCES: tuple[str, ...] = (
     HudLihtcAdapter.source_id,
     EiaAdapter.source_id,
     LeadLinesAdapter.source_id,
+    LeadLinesOpraAdapter.source_id,
     UcmrAdapter.source_id,
     UtilityAreasAdapter.source_id,
     EnergyBurdenAdapter.source_id,
@@ -327,6 +330,7 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         EiaAdapter,
         EnergyBurdenAdapter,
         LeadLinesAdapter,
+        LeadLinesOpraAdapter,
         UcmrAdapter,
         UtilityAreasAdapter,
     ):
