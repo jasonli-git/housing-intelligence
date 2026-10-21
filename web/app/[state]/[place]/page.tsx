@@ -1,4 +1,5 @@
 import { reportPageProblemUrl } from "@/lib/reportProblem";
+import { stateCrumbs } from "@/lib/states";
 import { AffordForward } from "@/components/AffordForward";
 import { Glossed } from "@/components/Glossed";
 import { Term } from "@/components/Term";
@@ -116,13 +117,14 @@ export async function generateMetadata({ params }: { params: Promise<{ state: st
 /** What kind of place this is, in the words a reader uses: "Township in Somerset County". */
 function placeLine(region: Region & { ancestors: Region[] }): string {
   const county = region.ancestors.find((a) => a.level === "county");
-  if (region.level === "county") return "County in New Jersey";
-  if (region.level === "zip") return "ZIP code in New Jersey";
+  const state = scopeName(region.state_code);
+  if (region.level === "county") return `County in ${state}`;
+  if (region.level === "zip") return `ZIP code in ${state}`;
   // TIGER's legal type is what `name_lsad` adds to the name: "Montgomery township".
   const kind = region.name_lsad?.startsWith(`${region.name} `)
     ? region.name_lsad.slice(region.name.length + 1)
     : "municipality";
-  const where = county ? `${displayName(county)}` : "New Jersey";
+  const where = county ? `${displayName(county)}` : state;
   return `${kind.charAt(0).toUpperCase()}${kind.slice(1)} in ${where}`;
 }
 
@@ -275,7 +277,7 @@ export default async function RegionPage({
         observations: (await api.observations(regionId, metricId))?.observations ?? [],
       })),
     ),
-    costInputs(region.level, packet.levels, packet.metrics),
+    costInputs(region.state_code, region.level, packet.levels, packet.metrics),
     api.incomeLimits(regionId),
     // Milestone 39: permits beside DCA's completions and demolitions, year by year.
     Promise.all(
@@ -417,12 +419,12 @@ export default async function RegionPage({
   const countyTowns = region.level === "county" ? (await api.regions(`level=municipality&parent_id=${regionId}&limit=1000`))?.items ?? [] : [];
 
   const householdContent = <><QuietDisclosure enabled={quiet} title="Your income & nearby places" icon={<StepIcon name="budget" />} note="Compare your income with local benchmarks and explore alternatives.">
-    <ForYourHousehold regionName={name} limits={incomeLimits} levels={packet.levels} countyLevels={countyLevels}
+    <ForYourHousehold state={region.state_code} regionName={name} limits={incomeLimits} levels={packet.levels} countyLevels={countyLevels}
       margins={new Map([...uncertainties.value].map(([metric, u]) => [metric, u.margin]))} />
     {region.level !== "zip" && <p className="household-next">
       <StepIcon name="budget" /><Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
         {region.level === "county" ? "Find towns within my budget" : "Compare nearby towns"} <span aria-hidden="true">→</span>
-      </Link><span>Starts in {region.level === "county" ? name : county ? displayName(county) : "New Jersey"}. You can search all New Jersey.</span>
+      </Link><span>Starts in {region.level === "county" ? name : county ? displayName(county) : scopeName(region.state_code)}. You can search all {scopeName(region.state_code)}.</span>
     </p>}
   </QuietDisclosure></>;
 
@@ -440,7 +442,7 @@ export default async function RegionPage({
           <Crumbs
             trail={[
               { href: "/", label: "United States" },
-              { href: "/states/new-jersey", label: "New Jersey" },
+              ...stateCrumbs(region.state_code),
               ...(county ? [{ href: regionPath(county.region_id), label: displayName(county) }] : []),
             ]}
             here={name}
@@ -669,7 +671,7 @@ export default async function RegionPage({
       </ExhibitGallery>
       </section>
       <div id="place-explore">
-      <SimilarPlaces name={name} data={similar} />
+      <SimilarPlaces name={name} state={region.state_code} data={similar} />
       </div>
 
       <p className="place-report-line" id="region-detailed-data">

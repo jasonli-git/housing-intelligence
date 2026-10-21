@@ -40,12 +40,15 @@ import { useBudgetScenario } from "@/components/useBudgetScenario";
  * page is interactive, so it reads without JavaScript.
  */
 export function ForYourHousehold({
+  state,
   regionName,
   limits,
   levels,
   countyLevels,
   margins,
 }: {
+  /** The place's state, whose relief programs are linked. */
+  state: string;
   regionName: string;
   limits: IncomeLimits | null;
   levels: PacketLevel[];
@@ -186,7 +189,7 @@ export function ForYourHousehold({
               NJ Housing and Mortgage Finance Agency
             </a>
           </p>
-          <HousingHelp />
+          <HousingHelp state={state} />
         </article>
       )}
 

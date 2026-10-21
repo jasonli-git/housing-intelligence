@@ -13,7 +13,7 @@ const SECTIONS = [
   ["Who is moving here", "#who-is-moving-heading"],
   ["Explore the evidence", "#region-detailed-data"],
   ["Statewide overview", "#state-overview"],
-  ["State profile", ".nj-page > .state-ticker, .nj-page .quiet-state-profile"],
+  ["State profile", "main[data-region-level=\"state\"] > .state-ticker, main[data-region-level=\"state\"] .quiet-state-profile"],
   ["Housing help", "#housing-assistance"],
   ["Statewide evidence", "#state-detailed-data"],
   ["Choose a place", "#guide-place-heading"],

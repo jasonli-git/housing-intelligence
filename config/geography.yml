@@ -1,6 +1,11 @@
 # Geographic scope. NJ-first, not NJ-only (SPEC principle 3, ARCHITECTURE #14).
 # Expanding to another state is an edit here plus source coverage — never a schema or
-# analytics change. No state code is hard-coded anywhere in src/hip.
+# analytics change. No structure assumes one state: geography, publication, series ids
+# and labels take their states from this scope (ARCHITECTURE #401, #406). What stays a
+# state's own is declared, not assumed: each source's `states` (`hip check-config` lists
+# those that do not cover the scope), and the site's covered states and per-state cost
+# rules (`web/lib/states.ts`, `web/lib/costRules.ts`, ARCHITECTURE #407). New Jersey's
+# own agencies and the federal files read for New Jersey alone remain New Jersey's.
 
 scope:
   states:

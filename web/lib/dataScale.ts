@@ -1,6 +1,9 @@
+import { COVERED_STATES } from "./states";
 import type { SourceEntry, MetricEntry, Region } from "./api";
 import { regionPath } from "./placeRoutes";
 
+// Places counted are the covered states' (#407): geometry alone is not coverage.
+const COVERED=new Set(COVERED_STATES.map(s=>s.code));
 export type DataScale = { sources:number; observations:number; places:number; measures:number };
 
 /** Different denominators, deliberately not a sum of raw release row counts. */
@@ -14,7 +17,7 @@ export function dataScale(metrics:MetricEntry[]|null, catalogue:SourceEntry[]|nu
     if(!Number.isSafeInteger(observations)) return null;
   }
   const sources=new Set(catalogue.filter(s=>s.source_id!=="hip_derived").map(s=>s.source_id)).size;
-  const places=new Set(regions.filter(r=>r.state_code==="NJ" && ["county","municipality","zip"].includes(r.level) && !regionPath(r.region_id).startsWith("/regions/")).map(r=>r.region_id)).size;
+  const places=new Set(regions.filter(r=>COVERED.has(r.state_code) && ["county","municipality","zip"].includes(r.level) && !regionPath(r.region_id).startsWith("/regions/")).map(r=>r.region_id)).size;
   if(!observations || !sources || !places) return null;
   return {sources,observations,places,measures:metrics.filter(m=>m.observations>0).length};
 }

@@ -28,6 +28,7 @@
  * the fallback.
  */
 
+import { coveredState } from "@/lib/states";
 import type { CostProps } from "@/components/CostToOwn";
 import { nationalMortgageRate, nationalMortgageRateIn, type PacketLevel, type PacketMetric } from "@/lib/api";
 import { changePerMonth, monthsBetween } from "@/lib/cost";
@@ -39,14 +40,16 @@ import { homePrice } from "./homePrice";
 export { homePrice, MAX_SALE_AGE_MONTHS } from "./homePrice";
 
 /** Why a region has no tax bill, in a reader's terms. */
-function noTaxReason(level: string): string {
+function noTaxReason(level: string, state: string): string {
+  const name = coveredState(state)?.name ?? state;
   return level === "zip"
-    ? "Property tax is not included: New Jersey’s assessment records give it by " +
+    ? `Property tax is not included: ${name}’s assessment records give it by ` +
         "municipality and county, not by ZIP code."
     : "Property tax is not included: no assessment records resolve to this place.";
 }
 
 export async function costInputs(
+  state: string,
   level: string,
   levels: PacketLevel[],
   metrics: PacketMetric[],
@@ -70,6 +73,7 @@ export async function costInputs(
   const water = find("acs_median_water_sewer");
 
   return {
+    state,
     home,
     rate: { value: latest.value, asOf: periodLabel(latest.period_start, latest.metric_id) },
     tax,
@@ -87,7 +91,7 @@ export async function costInputs(
       : null,
     rentersPayUtilities: dated(find("acs_renters_paying_utilities")),
     rent: dated(find("zori_all")),
-    noTax: tax ? null : noTaxReason(level),
+    noTax: tax ? null : noTaxReason(level, state),
     gain: rise
       ? {
           perMonth: changePerMonth(rise.start_value, rise.end_value, monthsBetween(rise.window_start, rise.window_end)),

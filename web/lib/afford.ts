@@ -19,6 +19,8 @@ export type Place = {
   id: number;
   name: string;
   level: "county" | "municipality";
+  /** Its state's postal code: which state's cost rules apply. */
+  state: string;
   /** County containing this place; null on the county rows themselves. */
   parentId?: number | null;
   /** What tells a municipality apart in a list — "Township in Morris County". */
@@ -63,7 +65,7 @@ export function reach(
       let upfront: Reached["upfront"] = null;
       if (mode === "own") {
         if (place.home === null || place.tax === null) return [];
-        const input = ownershipInputs({ price: place.home, ratePct, taxYear: place.tax,
+        const input = ownershipInputs({ state: place.state, price: place.home, ratePct, taxYear: place.tax,
           insuranceYear: place.insurance ?? null, utilitiesMonth: place.utilities ?? null, rentMonth: place.rent,
         }, { ...options.personal, downPct });
         const month = eachMonth(input);

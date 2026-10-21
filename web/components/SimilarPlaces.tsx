@@ -1,4 +1,5 @@
 import { Term } from "@/components/Term";
+import { scopeName } from "@/lib/names";
 import { regionPath } from "@/lib/placeRoutes";
 import Link from "next/link";
 
@@ -15,7 +16,7 @@ const COUNTS = ["", "one", "two", "three", "four", "five"];
  * price is one recorded-sales measure for every town; and where no town is near enough,
  * it says so instead of listing the least unlike.
  */
-export function SimilarPlaces({ name, data }: { name: string; data: SimilarPlacesData | null }) {
+export function SimilarPlaces({ name, state, data }: { name: string; state: string; data: SimilarPlacesData | null }) {
   if (!data) return null;
   const groups = similarGroups(data);
   const window = priceWindow(data);
@@ -44,7 +45,7 @@ export function SimilarPlaces({ name, data }: { name: string; data: SimilarPlace
           </>
         ) : (
           <>
-            No New Jersey {noun} is close enough to {name} on these measures with a{" "}
+            No {scopeName(state)} {noun} is close enough to {name} on these measures with a{" "}
             {zip ? `typical home value at least ${cheaper}% lower` : `median sale at least ${cheaper}% lower`} and a commute no more than{" "}
             {data.commute_minutes} minutes longer. The page does not loosen the rules to fill the list.
           </>

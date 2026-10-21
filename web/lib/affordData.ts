@@ -4,6 +4,7 @@ import { displayName } from "@/lib/names";
 import { periodLabel } from "@/lib/periods";
 import { searchEntries } from "@/lib/search";
 import { utilityTotal } from "./budgetScenario";
+import { COVERED_STATES } from "./states";
 
 export type AffordData = {
   counties: Place[];
@@ -17,11 +18,19 @@ async function latest(metricId: string, level: string): Promise<Map<number, Rank
   return new Map((ranking?.items ?? []).map((item) => [item.region_id, item]));
 }
 
+/** A level's regions in every covered state, or null if any state's request failed. */
+async function coveredRegions(level: string, limit: number) {
+  const parts = await Promise.all(
+    COVERED_STATES.map((state) => api.regions(`level=${level}&state=${state.code}&limit=${limit}`)),
+  );
+  return parts.every((part) => part) ? { items: parts.flatMap((part) => part!.items) } : null;
+}
+
 /** The one server-built affordability payload shared by `/` and the durable `/afford` URL. */
 export async function affordData(): Promise<AffordData | null> {
   const [counties, towns, catalog, rate, ...series] = await Promise.all([
-    api.regions("level=county&state=NJ&limit=50"),
-    api.regions("level=municipality&state=NJ&limit=1000"),
+    coveredRegions("county", 50),
+    coveredRegions("municipality", 1000),
     api.metrics(),
     nationalMortgageRate(),
     latest("zhvi_sfr", "county"),
@@ -52,12 +61,12 @@ export async function affordData(): Promise<AffordData | null> {
   const value = (map: Map<number, RankedRegion>, id: number) => map.get(id)?.value ?? null;
   const details = new Map(searchEntries([...counties.items, ...towns.items]).map((entry) => [entry.id, entry.detail]));
   const countyPlaces: Place[] = counties.items.map((county) => ({
-    id: county.region_id, name: displayName(county), level: "county", parentId: null, detail: null,
+    id: county.region_id, name: displayName(county), level: "county", parentId: null, detail: null, state: county.state_code,
     home: value(homeC, county.region_id), tax: value(taxC, county.region_id), rent: value(rentC, county.region_id),
     insurance: costValue(insurance, county.region_id), utilities: utilityTotal(costValue(electric, county.region_id), costValue(gas, county.region_id), costValue(water, county.region_id)),
   }));
   const townPlaces: Place[] = towns.items.map((town): Place => ({
-    id: town.region_id, name: town.name, level: "municipality", parentId: town.parent_id, detail: details.get(town.region_id) ?? null,
+    id: town.region_id, name: town.name, level: "municipality", parentId: town.parent_id, detail: details.get(town.region_id) ?? null, state: town.state_code,
     home: value(homeM, town.region_id), tax: value(taxM, town.region_id), rent: value(rentM, town.region_id),
     insurance: costValue(insurance, town.region_id), utilities: utilityTotal(costValue(electric, town.region_id), costValue(gas, town.region_id), costValue(water, town.region_id)),
   })); // Keep missing-data towns selectable; never substitute transaction prices in rankings.

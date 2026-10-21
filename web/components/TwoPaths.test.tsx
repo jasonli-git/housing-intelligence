@@ -5,7 +5,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { TwoPaths } from "./TwoPaths";
 import { ownershipInputs } from "@/lib/budgetScenario";
 afterEach(cleanup);
-const input=ownershipInputs({price:400000,ratePct:6,taxYear:null,insuranceYear:1200,utilitiesMonth:200,rentMonth:2000});
+const input=ownershipInputs({state: "NJ", price:400000,ratePct:6,taxYear:null,insuranceYear:1200,utilitiesMonth:200,rentMonth:2000});
 it("exposes separate cash concepts and accessible controls without forecasting",()=>{
   const onYears=vi.fn(),onFlat=vi.fn();
   render(<TwoPaths input={{...input,appreciationPct:3}} onYears={onYears} onFlat={onFlat} onPrice={vi.fn()} onDown={vi.fn()} onRate={vi.fn()} onUpkeep={vi.fn()} />);

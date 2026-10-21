@@ -4,6 +4,8 @@ import type { Personal } from "./costScenario";
 import type { Inputs } from "./ownership";
 
 export type PublishedCosts = {
+  /** The place's state: its sale fees and deposit rules (`rulesFor`). */
+  state: string;
   price: number; ratePct: number; taxYear: number | null;
   insuranceYear: number | null; utilitiesMonth: number | null; rentMonth: number | null;
 };

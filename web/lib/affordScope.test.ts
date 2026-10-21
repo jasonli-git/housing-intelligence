@@ -3,8 +3,8 @@ import type { Place } from "./afford";
 import { affordScope } from "./affordScope";
 
 const places: Place[] = [
-  { id: 5, name: "Atlantic County", level: "county", detail: null, home: null, rent: null, tax: null },
-  { id: 194, name: "Absecon", level: "municipality", parentId: 5, detail: "Atlantic County", home: null, rent: null, tax: null },
+  { id: 5, name: "Atlantic County", level: "county", state: "NJ", detail: null, home: null, rent: null, tax: null },
+  { id: 194, name: "Absecon", level: "municipality", state: "NJ", parentId: 5, detail: "Atlantic County", home: null, rent: null, tax: null },
 ];
 describe("budget explorer arrival scope", () => {
   it("starts statewide without a context", () => {

@@ -8,6 +8,7 @@ import { unpack, type PackedOutline } from "@/lib/mapdata";
 import { scene, type Outline } from "@/lib/globe";
 import { WORLD_LAND } from "@/lib/worldLand";
 import { PlaceSearch } from "@/components/PlaceSearch";
+import { COVERED_STATES, coveredNames, PRIMARY_STATE } from "@/lib/states";
 import { boundCoverage, COVERAGE_HOME, COVERAGE_REGIONS, coverageScene, regionViewport, STATE_DESTINATIONS, zoomCoverage, type CoverageRegion, type CoverageViewport } from "@/lib/coverageMap";
 
 /** Zoomable coverage geometry without continuous reprojection or local-data downloads. */
@@ -22,7 +23,7 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
   const flight = useRef<{ animation: Animation; timer: ReturnType<typeof setTimeout> } | null>(null);
   const [outlines, setOutlines] = useState<Outline[]>([]);
   const [failed, setFailed] = useState(false);
-  const [hovered, setHovered] = useState("New Jersey · Available now");
+  const [hovered, setHovered] = useState(`${coveredNames()} · Available now`);
   const home = { scale: 1.12, x: -54, y: -29 };
   const [viewport, setViewport] = useState(home);
   const [region, setRegion] = useState<CoverageRegion | null>(null);
@@ -121,7 +122,7 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
       || window.matchMedia("(prefers-reduced-motion: reduce)").matches || !drawing || !geography.current?.animate) return;
     event.preventDefault();
     if (flight.current) return;
-    const destination = STATE_DESTINATIONS.NJ;
+    const destination = PRIMARY_STATE.path;
     router.prefetch(destination);
     const x = viewport.x + drawing.locator[0] * viewport.scale;
     const y = viewport.y + drawing.locator[1] * viewport.scale;
@@ -177,9 +178,9 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
           }}>{name}</button>)}
       </div>
     </div>
-    <div ref={stage} className="coverage-map-stage" onMouseLeave={() => setHovered("New Jersey · Available now")}>
+    <div ref={stage} className="coverage-map-stage" onMouseLeave={() => setHovered(`${coveredNames()} · Available now`)}>
       <span className="coverage-map-caption">{region ? `${region} · Geographic view` : "Contiguous United States"}</span>
-      <Link className="coverage-mobile-link" href="/states/new-jersey" onClick={enterState}>New Jersey ↗</Link>
+      {COVERED_STATES.map((state) => <Link key={state.code} className="coverage-mobile-link" href={state.path} onClick={state.code === PRIMARY_STATE.code ? enterState : undefined}>{state.name} ↗</Link>)}
       <div className="coverage-map-window">
       {drawing ? <svg className="coverage-map" data-zoomed={viewport.scale > 1} data-dragging={dragging} viewBox="0 0 900 480" role="group" tabIndex={0} aria-labelledby="coverage-map-title coverage-map-description"
         onKeyDown={(event) => {
@@ -221,7 +222,7 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
           if (suppressClick.current && event.detail > 0) { event.preventDefault(); event.stopPropagation(); }
         }}>
         <title id="coverage-map-title">Explore housing coverage by state</title>
-        <desc id="coverage-map-description">New Jersey is blue and available. All other states are unavailable. Alaska and Hawaii are outside this view. Zoom with the buttons; drag the enlarged map, or swipe sideways on mobile. Vertical scrolling moves the page. Use the New Jersey link to explore.</desc>
+        <desc id="coverage-map-description">{coveredNames()} {COVERED_STATES.length > 1 ? "are" : "is"} blue and available. All other states are unavailable. Alaska and Hawaii are outside this view. Zoom with the buttons; drag the enlarged map, or swipe sideways on mobile. Vertical scrolling moves the page. Use the {coveredNames()} link{COVERED_STATES.length > 1 ? "s" : ""} to explore.</desc>
         <defs>
           <pattern id="coverage-atlas-stipple" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".55" /></pattern>
         </defs>
@@ -237,7 +238,7 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
           </a> : <path key={state.id} className="coverage-unavailable" pathLength="1" d={state.base} aria-hidden="true" onMouseEnter={() => setHovered(`${state.name} · Not available yet`)}><title>{state.name} — Not available yet</title></path>;
         })}
         <g className="coverage-atlas-traces" aria-hidden="true">{drawing.states.map(state => <path key={state.id} d={STATE_DESTINATIONS[state.id] ? state.top : state.base} pathLength="1" data-available={!!STATE_DESTINATIONS[state.id]} />)}</g>
-        {focusedEntry && STATE_DESTINATIONS.NJ && <g className="coverage-availability-glow" aria-hidden="true"><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="17" /><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="17" /><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="5" /></g>}
+        {focusedEntry && <g className="coverage-availability-glow" aria-hidden="true"><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="17" /><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="17" /><circle cx={drawing.locator[0]} cy={drawing.locator[1]} r="5" /></g>}
         </g>
         </g>
         <g className="coverage-atlas-guides" aria-hidden="true">
@@ -245,13 +246,13 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
           <path className="atlas-guide-line" d="M72 393v-10m28 10v-5m28 5v-5m28 5v-10m28 10v-5m28 5v-5M688 393v-10m28 10v-5m28 5v-5m28 5v-10m28 10v-5m28 5v-5" />
           <path className="atlas-travelling-line" pathLength="1" d="M45 295C180 60 375 55 530 188S740 325 855 138" />
         </g>
-        {locator && locator[0] > 0 && locator[0] < 900 && locator[1] > 0 && locator[1] < 480 && drawing.states.some((state) => state.id === "NJ") && <a href={STATE_DESTINATIONS.NJ} onClick={enterState} className="coverage-locator" aria-label="Explore New Jersey housing data">
+        {locator && locator[0] > 0 && locator[0] < 900 && locator[1] > 0 && locator[1] < 480 && drawing.states.some((state) => state.id === PRIMARY_STATE.code) && <a href={PRIMARY_STATE.path} onClick={enterState} className="coverage-locator" aria-label={`Explore ${PRIMARY_STATE.name} housing data`}>
           <path d={`M${locator[0]},${locator[1]} L${locator[0] - 26},${locator[1] - 48} H${locator[0] - 154}`} />
           <circle cx={locator[0]} cy={locator[1]} r="4" />
           <rect x={locator[0] - 167} y={locator[1] - 84} width="158" height="34" rx="8" />
-          <text x={locator[0] - 154} y={locator[1] - 62}>New Jersey ↗</text>
+          <text x={locator[0] - 154} y={locator[1] - 62}>{PRIMARY_STATE.name} ↗</text>
         </a>}
-      </svg> : <div className="coverage-map-placeholder"><p>{failed ? "Map unavailable. Explore New Jersey below." : "Loading the state map…"}</p></div>}
+      </svg> : <div className="coverage-map-placeholder"><p>{failed ? `Map unavailable. Explore ${coveredNames()} below.` : "Loading the state map…"}</p></div>}
       {drawing && <>
         <div className="globe-controls globe-controls-zoom coverage-zoom" role="group" aria-label="United States map zoom controls">
           <button type="button" aria-label="Zoom out United States map" disabled={viewport.scale === 1} onClick={() => zoomMap(1 / 1.4)}>−</button>
@@ -281,15 +282,15 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
       <div className="coverage-search-panel">
         {focusedEntry && <button className="coverage-explore-button coverage-explore-inline" type="button" aria-label="Explore map" title="Explore map" aria-controls="coverage-map-content" onClick={()=>changeMode(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2Zm6-2v16m6-14v16" /></svg></button>}
         <PlaceSearch variant="hero" />
-        {!focusedEntry && <p className="home-find-hint">Detailed coverage starts with New Jersey.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>}
+        {!focusedEntry && <p className="home-find-hint">Detailed coverage starts with {coveredNames()}.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>}
       </div>
     </div>}
     </div>
     {scaleStrip && <div className="coverage-scale-slot">{scaleStrip}</div>}
     </div>
     {!focusedEntry && <div className="coverage-state-preview">
-      <div><p className="entry-kicker">Detailed coverage available now</p><h3><Link href="/states/new-jersey" className="coverage-state-title">New Jersey <span aria-hidden="true">→</span></Link></h3><p>Counties, towns and ZIP codes.</p></div>
+      <div><p className="entry-kicker">Detailed coverage available now</p>{COVERED_STATES.map((state) => <h3 key={state.code}><Link href={state.path} className="coverage-state-title">{state.name} <span aria-hidden="true">→</span></Link></h3>)}<p>Counties, towns and ZIP codes.</p></div>
     </div>}
-    <p className="coverage-map-note">{focusedEntry ? "Map shows state coverage, not housing prices. Detailed housing pages are available for New Jersey; Alaska and Hawaii are outside the map view." : "Regions help you browse the map. Only New Jersey has published housing pages. Alaska and Hawaii are outside this view."}</p>
+    <p className="coverage-map-note">{focusedEntry ? `Map shows state coverage, not housing prices. Detailed housing pages are available for ${coveredNames()}; Alaska and Hawaii are outside the map view.` : `Regions help you browse the map. Only ${coveredNames()} ${COVERED_STATES.length > 1 ? "have" : "has"} published housing pages. Alaska and Hawaii are outside this view.`}</p>
   </div>;
 }

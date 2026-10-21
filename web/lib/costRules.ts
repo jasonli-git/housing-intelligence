@@ -182,6 +182,38 @@ export const RELIEF: ReadonlyArray<Rule> = [
   },
 ];
 
+/**
+ * The rules that belong to a state: what a seller pays it on a sale, how large a deposit
+ * a landlord may take, and its relief programs (2026-10-21, ARCHITECTURE #407). Only New
+ * Jersey's are held. A place in a state with none shows its costs without those lines and
+ * says so, rather than New Jersey's.
+ */
+export type StateRules = {
+  /** The state's possessive, for sentences: "New Jersey’s". */
+  name: string;
+  sellerFees: (price: number) => number;
+  transferRule: Rule;
+  depositMonths: number;
+  depositRule: Rule;
+  relief: ReadonlyArray<Rule>;
+};
+
+export const STATE_RULES: Readonly<Record<string, StateRules>> = {
+  NJ: {
+    name: "New Jersey",
+    sellerFees: njSellerFees,
+    transferRule: NJ_TRANSFER_RULE,
+    depositMonths: DEPOSIT_MONTHS,
+    depositRule: DEPOSIT_RULE,
+    relief: RELIEF,
+  },
+};
+
+/** A state's rules, or null where none are held. */
+export function rulesFor(state: string | null | undefined): StateRules | null {
+  return (state && STATE_RULES[state.toUpperCase()]) || null;
+}
+
 /** FEMA's flood map, for whether a home sits where lenders require flood insurance. */
 export const FLOOD_MAP: Rule = {
   label: "FEMA flood map",

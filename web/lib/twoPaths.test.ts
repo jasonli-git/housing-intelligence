@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import { ownershipInputs } from "./budgetScenario";
 import { overYears } from "./ownership";
 import { twoPaths } from "./twoPaths";
-const input=ownershipInputs({price:400000,ratePct:6,taxYear:6000,insuranceYear:1200,utilitiesMonth:200,rentMonth:2000});
+const input=ownershipInputs({state: "NJ", price:400000,ratePct:6,taxYear:6000,insuranceYear:1200,utilitiesMonth:200,rentMonth:2000});
 it("reuses the guide's cost engine at every whole year",()=>{
   const result=twoPaths(input);
   expect(result.points).toHaveLength(30);

@@ -24,7 +24,7 @@ describe("checkPlace", () => {
 });
 
 function place(id: number, fields: Partial<Place>): Place {
-  return { id, name: `P${id}`, level: "county", detail: null, home: null, tax: null, rent: null, insurance: 1200, utilities: 200, ...fields };
+  return { id, name: `P${id}`, level: "county", state: "NJ", detail: null, home: null, tax: null, rent: null, insurance: 1200, utilities: 200, ...fields };
 }
 
 describe("monthlyBudget", () => {
@@ -68,7 +68,7 @@ describe("one calculation for the profile and budget finder", () => {
   it.each([20, 10, 3.5])("matches full monthly and upfront costs at %s%% down, including mortgage insurance", (downPct) => {
     const p = place(1, { home: 300000, tax: 6000, rent: 1800 });
     const personal = { ratePct: 5.5, upkeepPct: .8, insuranceYear: 1600, closingPct: 3 };
-    const input = ownershipInputs({ price: p.home!, ratePct: 6, taxYear: p.tax, insuranceYear: p.insurance!, utilitiesMonth: p.utilities!, rentMonth: p.rent }, { ...personal, downPct });
+    const input = ownershipInputs({ state: "NJ", price: p.home!, ratePct: 6, taxYear: p.tax, insuranceYear: p.insurance!, utilitiesMonth: p.utilities!, rentMonth: p.rent }, { ...personal, downPct });
     const row = checkPlace(p, { income: 120000, ratePct: 6, downPct, personal }).own!;
     expect(row.monthly).toBe(eachMonth(input).total);
     expect(row.monthly).toBeGreaterThan(eachMonth(input).gone);
@@ -82,8 +82,8 @@ describe("one calculation for the profile and budget finder", () => {
     expect(row.missing).toEqual(["Homeowners insurance", "Utilities"]);
   });
   it("keeps home-specific prices and fees out of the shared scenario", () => {
-    const base = { price: 300000, ratePct: 6, taxYear: 6000, insuranceYear: 1200, utilitiesMonth: 200, rentMonth: 1800 };
-    const local = ownershipInputs(base, {}, { price: 350000, hoaMonth: 200 });
+    const base = { state: "NJ", price: 300000, ratePct: 6, taxYear: 6000, insuranceYear: 1200, utilitiesMonth: 200, rentMonth: 1800 };
+    const local = ownershipInputs(base, {}, { state: "NJ", price: 350000, hoaMonth: 200 });
     const comparison = ownershipInputs(base);
     expect(local.price).toBe(350000);
     expect(comparison.price).toBe(300000);

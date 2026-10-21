@@ -126,6 +126,7 @@ function inputsFor(data: GuideData, price: GuidePrice, ratePct: number, personal
   const value = (id: string) => find(data.levels, id)?.value ?? null;
   return ownershipInputs(
     {
+      state: data.region.state_code,
       price: price.value,
       ratePct,
       taxYear: value("modiv_median_tax_bill"),

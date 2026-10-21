@@ -6,19 +6,18 @@ import { type ReactNode, useId, useState } from "react";
 import { Glossed } from "@/components/Glossed";
 import { Term, type TermEntry } from "@/components/Term";
 import { HousingHelp } from "@/components/HousingHelp";
+import { coveredState } from "@/lib/states";
 import { ReaderDetails } from "@/components/ReaderDetails";
 import { DEFAULT_DOWN, DOWN_PAYMENTS, goneAgainstRent, incomeFor } from "@/lib/cost";
 import {
   CLOSING,
   COMMISSION_PCT,
-  DEPOSIT_MONTHS,
-  DEPOSIT_RULE,
   FHA,
   FHA_DOWN,
   FHA_LIMITS,
   FLOOD_MAP,
-  NJ_TRANSFER_RULE,
   PMI,
+  rulesFor,
   UPKEEP_PCT,
 } from "@/lib/costRules";
 import { type Personal, parseAmount } from "@/lib/costScenario";
@@ -67,6 +66,8 @@ export type Utilities = {
 };
 
 export type CostProps = {
+  /** The place's state: whose seller fees and deposit cap apply (`rulesFor`). */
+  state: string;
   home: HomePrice;
   rate: Dated;
   tax: Dated | null;
@@ -164,6 +165,7 @@ type View = "upfront" | "years";
  * The report prints the cards at the published figures, with every view and no controls.
  */
 export function CostToOwn({
+  state,
   home,
   rate,
   tax,
@@ -203,8 +205,10 @@ export function CostToOwn({
   const typedTax = parseAmount(fields.tax);
   const typedRent = parseAmount(fields.rent);
   const down = personal.downPct ?? DEFAULT_DOWN;
+  const rules = rulesFor(state);
+  const stateLabel = coveredState(state)?.name ?? "the state";
   const input: Inputs = ownershipInputs({
-    price: home.value, ratePct: rate.value, taxYear: tax?.value ?? null,
+    state, price: home.value, ratePct: rate.value, taxYear: tax?.value ?? null,
     insuranceYear: insurance?.value ?? null, utilitiesMonth: utilities?.month ?? null,
     rentMonth: rent?.value ?? null,
   }, personal, {
@@ -222,7 +226,7 @@ export function CostToOwn({
     upkeep: personal.upkeepPct !== undefined ? "reader" : "thumb",
   });
   const up = upFront(input);
-  const baselineMonth = eachMonth(ownershipInputs({ price: home.value, ratePct: rate.value,
+  const baselineMonth = eachMonth(ownershipInputs({ state, price: home.value, ratePct: rate.value,
     taxYear: tax?.value ?? null, insuranceYear: insurance?.value ?? null,
     utilitiesMonth: utilities?.month ?? null, rentMonth: rent?.value ?? null }));
   const years = overYears(input);
@@ -305,7 +309,7 @@ export function CostToOwn({
       : home.basis === "index"
         ? `The typical single-family home’s value (Zillow Home Value Index, ${home.asOf})`
         : `A purchase at ${money(home.value)} — the middle price of qualifying residential ` +
-          `sales here from ${home.from} to ${home.to}, from New Jersey’s SR1A sales file. ` +
+          `sales here from ${home.from} to ${home.to}, from ${stateLabel}’s SR1A sales file. ` +
           `That is the middle of what sold in that window, not a valuation of the typical ` +
           `home on any one date, and the homes that sell are not a cross-section of the ` +
           `homes that exist`;
@@ -325,7 +329,7 @@ export function CostToOwn({
           : "") +
         " A month adds property tax, homeowners insurance, any mortgage insurance, utilities " +
         "and upkeep, each with where it comes from; HOA fees and flood insurance only if you " +
-        "enter them. The tax bill is the area’s median from New Jersey’s assessment records " +
+        `enter them. The tax bill is the area’s median from ${stateLabel}’s assessment records ` +
         "unless you enter a bill — never worked out from the price.",
     ),
     rent: term(
@@ -493,7 +497,7 @@ export function CostToOwn({
           {rentMonth !== null && ` Rent alone uses ${Math.round(rentMonth / (household.income / 12) * 100)}% of your income.`}
         </p>}
         <p>Buying upfront: {money(up.low)}–{money(up.high)} · {cashFit(household.cash, up.low, up.high)}.</p>
-        {comparePlaceId !== undefined && <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}` : ""}`}>Compare typical homes across New Jersey →</a>}
+        {comparePlaceId !== undefined && <a href={`/afford?county=all&place=${comparePlaceId}${household.income ? `&income=${household.income}` : ""}`}>Compare typical homes across {stateLabel} →</a>}
         {Object.values(fields).some(Boolean) && <small>Your home’s price, tax and fees stay here; comparisons use each area’s figures.</small>}
         {home.basis === "transactions" && <small>This sale-price scenario is not included in cross-place ownership rankings.</small>}
       </aside>
@@ -826,10 +830,10 @@ export function CostToOwn({
                 <dd>{up.repairs === null ? "—" : money(up.repairs)}</dd>
               </div>
             </dl>
-            {rentMonth !== null && (
+            {rentMonth !== null && rules && (
               <p className="cost-view-note">
-                To rent instead: the first month and a deposit of up to {money(rentMonth * DEPOSIT_MONTHS)},
-                a month and a half’s rent — the most a New Jersey landlord may ask ({DEPOSIT_RULE.source}).
+                To rent instead: the first month and a deposit of up to {money(rentMonth * rules.depositMonths)},
+                a month and a half’s rent — the most a {rules.name} landlord may ask ({rules.depositRule.source}).
               </p>
             )}
           </div>
@@ -872,7 +876,7 @@ export function CostToOwn({
               <div>
                 <dt>
                   Less selling costs{" "}
-                  <small className="src">{input.commissionPct}% commission, an assumption, and New Jersey’s seller fees ({NJ_TRANSFER_RULE.source})</small>
+                  <small className="src">{input.commissionPct}% commission, an assumption, {rules ? <>and {rules.name}’s seller fees ({rules.transferRule.source})</> : "and no state seller fees: none are held for this state"}</small>
                 </dt>
                 <dd>−{money(years.sellingCosts)}</dd>
               </div>
@@ -901,7 +905,7 @@ export function CostToOwn({
       }}>Continue in the buyer’s guide →</a><span>Bring these home figures into a complete buying plan.</span></p>}
       </QuietToolGroup>}
 
-      {showHelp && <HousingHelp />}
+      {showHelp && <HousingHelp state={state} />}
 
       {!control && planning && (
         <div className="cost-strip">
