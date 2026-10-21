@@ -12,6 +12,7 @@ from sqlalchemy import text
 from hip.api.main import app
 from hip.warehouse.db import get_engine, probe
 from hip.warehouse.determinations import INCOME_LIMITS_IN_FORCE, income_limits_in_force
+from tests.warehouse_scratch import shadowed_warehouse
 
 warehouse = pytest.mark.skipif(
     not probe().migrated,
@@ -74,36 +75,43 @@ def test_no_revision_points_at_a_release_that_does_not_exist() -> None:
 
 @warehouse
 def test_the_trigger_keeps_a_revised_figure_s_margins() -> None:
-    """Revise one survey figure inside a transaction that is rolled back."""
-    engine = get_engine()
-    with engine.connect() as conn:
-        tx = conn.begin()
-        try:
-            row = conn.execute(
-                text(
-                    "SELECT region_id, metric_id, period_start, value, margin_of_error "
-                    "FROM fact_metric_observation WHERE margin_of_error > 0 "
-                    "AND metric_id = 'acs_median_hh_income' ORDER BY region_id, "
-                    "period_start LIMIT 1"
-                )
-            ).one()
-            conn.execute(
-                text(
-                    "UPDATE fact_metric_observation SET value = value * 1.1, "
-                    "margin_of_error = margin_of_error * 2 WHERE region_id = :r "
-                    "AND metric_id = :m AND period_start = :p"
-                ),
-                {"r": row.region_id, "m": row.metric_id, "p": row.period_start},
+    """Revise one survey figure in a copy carrying the real trigger."""
+    with get_engine().connect() as conn:
+        row = conn.execute(
+            text(
+                "SELECT region_id, metric_id, period_start, value, margin_of_error "
+                "FROM fact_metric_observation WHERE margin_of_error > 0 "
+                "AND metric_id = 'acs_median_hh_income' ORDER BY region_id, "
+                "period_start LIMIT 1"
             )
-            old, new = conn.execute(
-                text(
-                    "SELECT old_margin, new_margin FROM fact_revision "
-                    "WHERE region_id=:r AND metric_id=:m AND period_start=:p "
-                    "ORDER BY revision_id DESC LIMIT 1"
-                ),
-                {"r": row.region_id, "m": row.metric_id, "p": row.period_start},
-            ).one()
-            assert old == pytest.approx(row.margin_of_error)
-            assert new == pytest.approx(row.margin_of_error * 2)
-        finally:
-            tx.rollback()
+        ).one()
+    key = {"r": row.region_id, "m": row.metric_id, "p": row.period_start}
+    with (
+        shadowed_warehouse(
+            get_engine(),
+            ("fact_metric_observation", "fact_revision"),
+            copy={
+                "fact_metric_observation": f"region_id = {row.region_id} AND "
+                f"metric_id = '{row.metric_id}' AND period_start = '{row.period_start}'"
+            },
+            triggers=True,
+        ) as engine,
+        engine.begin() as conn,
+    ):
+        conn.execute(
+            text(
+                "UPDATE fact_metric_observation SET value = value * 1.1, "
+                "margin_of_error = margin_of_error * 2 WHERE region_id = :r "
+                "AND metric_id = :m AND period_start = :p"
+            ),
+            key,
+        )
+        old, new = conn.execute(
+            text(
+                "SELECT old_margin, new_margin FROM fact_revision "
+                "WHERE region_id=:r AND metric_id=:m AND period_start=:p"
+            ),
+            key,
+        ).one()
+    assert old == pytest.approx(row.margin_of_error)
+    assert new == pytest.approx(row.margin_of_error * 2)

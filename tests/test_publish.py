@@ -295,15 +295,16 @@ def test_publishing_refuses_while_a_figure_has_no_licence() -> None:
 
     from hip.publish import _unlicensed
     from hip.warehouse.db import get_engine
+    from tests.warehouse_scratch import shadowed_warehouse
 
     with get_engine().connect() as conn:
         assert _unlicensed(conn) == []
-        try:
-            conn.execute(
-                text(
-                    "UPDATE metrics SET licence_class = NULL WHERE metric_id = 'zhvi_sfr'"
-                )
-            )
-            assert _unlicensed(conn) == ["metric zhvi_sfr"]
-        finally:
-            conn.rollback()
+    copy = {"metrics": "true"}
+    with (
+        shadowed_warehouse(get_engine(), ("metrics",), copy=copy) as engine,
+        engine.begin() as conn,
+    ):
+        conn.execute(
+            text("UPDATE metrics SET licence_class = NULL WHERE metric_id = 'zhvi_sfr'")
+        )
+        assert _unlicensed(conn) == ["metric zhvi_sfr"]
