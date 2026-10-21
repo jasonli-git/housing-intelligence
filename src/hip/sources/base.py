@@ -327,6 +327,13 @@ class SourceAdapter(ABC):
     # instead of becoming Parquet that staging may or may not reject (2026-10-21).
     # Empty means not checked.
     required_columns: ClassVar[tuple[str, ...]] = ()
+    # The states this source covers (2026-10-21, ARCHITECTURE #406). None: whatever the
+    # geography scope names — a national file read per state, or one keyed by the
+    # scope's FIPS codes. A tuple: the source is that state's alone (New Jersey's
+    # agencies), or a federal file this project reads for that state only, whose shape
+    # and staging have been reviewed for no other. A scoped state outside it is "not
+    # covered", named by acquisition and `hip check-config`, never given this logic.
+    states: ClassVar[tuple[str, ...] | None] = None
     # Field layout for a fixed-width source: (name, one-based start, length). Pure
     # publisher knowledge, like `csv_read_options`, so it sits beside it rather than
     # behind a method. Empty for every source that is not fixed-width.

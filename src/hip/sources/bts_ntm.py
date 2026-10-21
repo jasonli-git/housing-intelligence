@@ -37,6 +37,7 @@ BOX = (
 
 class TransitStopsAdapter(ArcGisAdapter):
     source_id: ClassVar[str] = "bts_ntm"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     # Recompiled about yearly; a monthly look is ample.
     revalidate_after: ClassVar[timedelta] = timedelta(days=30)
     LAYERS: ClassVar[dict[str, ArcGisLayer]] = {

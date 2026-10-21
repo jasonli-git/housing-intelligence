@@ -84,8 +84,10 @@ from hip.sources.base import Discovery, Release, SourceAdapter, SourceError, red
 from hip.sources.registry import (
     IMPLEMENTED,
     METRIC_SOURCES,
+    SOURCE_CLASSES,
     UnknownSourceError,
     build_adapter,
+    uncovered,
 )
 from hip.sources.tiger import TigerAdapter, shapefile_member
 from hip.transform.dbt_runner import (
@@ -187,6 +189,17 @@ def check_config_command() -> None:
         f"states={','.join(geography.states)}, "
         f"levels={','.join(geography.levels)}"
     )
+    partial = {
+        name: missing
+        for name in IMPLEMENTED
+        if (missing := uncovered(SOURCE_CLASSES[name], geography))
+    }
+    if partial:
+        states = sorted({s for missing in partial.values() for s in missing})
+        typer.echo(
+            f"{len(partial)} of {len(IMPLEMENTED)} sources do not cover "
+            f"{', '.join(states)}: {', '.join(sorted(partial))}"
+        )
     if problems:
         typer.secho(f"{len(problems)} problem(s):", fg=typer.colors.YELLOW, err=True)
         for problem in problems:
@@ -472,6 +485,16 @@ def _adapters(source: str | None) -> list[SourceAdapter]:
                 typer.secho(f"{name}: {exc}", fg=typer.colors.RED, err=True)
                 raise typer.Exit(code=1) from exc
             typer.secho(f"{name:<14} skipped: {exc}", fg=typer.colors.YELLOW, err=True)
+    # A source declared as one state's runs that state's logic only; a scoped state it
+    # does not cover is named, never given it (ARCHITECTURE #406).
+    for adapter in adapters:
+        if missing := uncovered(adapter, scope):
+            typer.secho(
+                f"{adapter.source_id:<14} covers {', '.join(adapter.states or ())} only; "
+                f"not covered for {', '.join(missing)}",
+                fg=typer.colors.YELLOW,
+                err=True,
+            )
     return adapters
 
 

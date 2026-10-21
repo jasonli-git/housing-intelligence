@@ -69,6 +69,7 @@ def file_stamp(vintage: str) -> str:
 
 class BroadbandSummaryAdapter(SourceAdapter):
     source_id: ClassVar[str] = "fcc_bdc"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2025-12-31_2026-09-29"
     landing_format: ClassVar[str] = "xlsx_records"
     manual: ClassVar[bool] = True
@@ -245,6 +246,7 @@ class BroadbandLocationsAdapter(BroadbandSummaryAdapter):
     """
 
     source_id: ClassVar[str] = "fcc_bdc_locations"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2025-12-31_2026-10-13"
     manual_from: ClassVar[str] = FCC_STATE_DOWNLOAD
     minimum: ClassVar[int] = 100_000

@@ -42,6 +42,7 @@ CAFE_URL = (
 
 class CafeAdapter(ArcGisAdapter):
     source_id: ClassVar[str] = "njdep_cafe"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     LAYERS: ClassVar[dict[str, ArcGisLayer]] = {
         "tidal": ArcGisLayer(
             url=CAFE_URL,
@@ -54,6 +55,7 @@ class CafeAdapter(ArcGisAdapter):
 
 class KcslAdapter(ArcGisAdapter):
     source_id: ClassVar[str] = "njdep_kcsl"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     # Reloaded daily by NJDEP; a weekly read is current enough for a count.
     LAYERS: ClassVar[dict[str, ArcGisLayer]] = {
         "sites": ArcGisLayer(
@@ -67,6 +69,7 @@ class KcslAdapter(ArcGisAdapter):
 
 class WaterAreasAdapter(ArcGisAdapter):
     source_id: ClassVar[str] = "njdep_water_areas"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     LAYERS: ClassVar[dict[str, ArcGisLayer]] = {
         "areas": ArcGisLayer(
             url=f"{MAPS}/Utilities/MapServer/13",

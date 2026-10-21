@@ -55,6 +55,7 @@ def record(
 
 class NjAffordableAdapter(SourceAdapter):
     source_id: ClassVar[str] = "nj_affordable"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "xlsx_records"
 

@@ -78,6 +78,7 @@ def record(
 
 class SchoolPerformanceAdapter(SourceAdapter):
     source_id: ClassVar[str] = "nj_school_performance"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2024-2025"
     landing_format: ClassVar[str] = "xlsx_records"
     minimum: ClassVar[int] = 500
@@ -194,6 +195,7 @@ class SchoolPerformanceAdapter(SourceAdapter):
 
 class SchoolBoundariesAdapter(ArcGisAdapter):
     source_id: ClassVar[str] = "nj_school_boundaries"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     LAYERS: ClassVar[dict[str, ArcGisLayer]] = {
         kind: ArcGisLayer(
             url=f"https://services2.arcgis.com/XVOqAjTOJ5P6ngMu/arcgis/rest/services/School_Districts___{kind.title()}/FeatureServer/0",
@@ -210,6 +212,7 @@ class SchoolBoundariesAdapter(ArcGisAdapter):
 
 class CrimeAdapter(SourceAdapter):
     source_id: ClassVar[str] = "nj_crime"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2023"
     landing_format: ClassVar[str] = "xlsx_records"
     minimum: ClassVar[int] = 400
@@ -370,6 +373,7 @@ class CrimeAdapter(SourceAdapter):
 
 class PlacesAdapter(SourceAdapter):
     source_id: ClassVar[str] = "cdc_places"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "xlsx_records"
 
@@ -536,6 +540,7 @@ class DistrictDirectoryAdapter(SourceAdapter):
     """Each New Jersey school district's status in NCES's directory, by NJDOE code."""
 
     source_id: ClassVar[str] = "nces_ccd_lea"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2024-25"
     landing_format: ClassVar[str] = "xlsx_records"
 

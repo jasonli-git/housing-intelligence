@@ -33,6 +33,7 @@ def numeric(value: object) -> float | None:
 
 class UtilityAreasAdapter(ArcGisAdapter):
     source_id: ClassVar[str] = "njdep_utility_areas"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     LAYERS: ClassVar[dict[str, ArcGisLayer]] = {
         kind: ArcGisLayer(
             url=f"https://mapsdep.nj.gov/arcgis/rest/services/Features/Utilities/MapServer/{n}",
@@ -46,6 +47,7 @@ class UtilityAreasAdapter(ArcGisAdapter):
 
 class LeadLinesAdapter(ArcGisAdapter):
     source_id: ClassVar[str] = "njdep_lead_lines"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     LAYERS: ClassVar[dict[str, ArcGisLayer]] = {
         "lines": ArcGisLayer(
             url="https://services1.arcgis.com/QWdNfRs7lkPq4g4Q/arcgis/rest/services/Public_Community_Water_Purveyor_Service_Line_Inventory_for_New_Jersey/FeatureServer/37",
@@ -70,6 +72,7 @@ class LeadLinesAdapter(ArcGisAdapter):
 
 class UcmrAdapter(SourceAdapter):
     source_id: ClassVar[str] = "epa_ucmr5"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "current"
     landing_format: ClassVar[str] = "xlsx_records"
 
@@ -161,6 +164,7 @@ class UcmrAdapter(SourceAdapter):
 
 class EiaAdapter(SourceAdapter):
     source_id: ClassVar[str] = "eia861"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2024"
     landing_format: ClassVar[str] = "xlsx_records"
 
@@ -312,6 +316,7 @@ class EnergyBurdenAdapter(SourceAdapter):
     """
 
     source_id: ClassVar[str] = "doe_lead"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
     default_vintage: ClassVar[str] = "2022"
     landing_format: ClassVar[str] = "xlsx_records"
 
