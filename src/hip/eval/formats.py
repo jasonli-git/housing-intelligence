@@ -285,6 +285,9 @@ Rules:
   every time it appears.
 - Where the packet gives a rank as a range, say where the range sits ("near the middle
   of New Jersey's 21 counties") rather than any single rank.
+- Say where a place ranks only as the packet's own words put it: "2nd lowest of 21" is
+  among the lowest, "3rd of 21" among the highest. Never turn a rank into high or low
+  any other way.
 - Write for someone with no background in housing data: no names of sources, agencies,
   surveys or indexes, no abbreviations, and none of these words: \
 {", ".join(JARGON)}. The packet's own labels and caveats use some of these words — "home

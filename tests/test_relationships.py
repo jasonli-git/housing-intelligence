@@ -195,3 +195,16 @@ def test_ranking_words_need_the_ranks_to_bear_them_out(
 ) -> None:
     problems = comparative_problems(sentence, bind(sentence, hudson), hudson)
     assert bool(problems) is refused, problems
+
+
+@warehouse
+def test_a_ratio_where_lower_is_better_reads_its_rank_by_value(hudson: Packet) -> None:
+    """ARCHITECTURE #413: the packet ranks best-first, so Hudson's home value to income,
+    19th of 21, is the third highest — and the model is told so, not "19th of 21"."""
+    from hip.packets.report import value_rank_label
+
+    level = next(lv for lv in hudson.levels if lv.metric_id == "price_to_income")
+    assert value_rank_label(level).startswith(("3rd highest of 21", "2nd–", "3rd–"))
+    rent = next(lv for lv in hudson.levels if lv.metric_id == "zori_all")
+    assert value_rank_label(rent) == "1st of 21"
+    assert "highest of 21" in render_markdown(hudson)
