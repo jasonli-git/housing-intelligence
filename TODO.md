@@ -43,8 +43,10 @@ series, geometry and `api.geo` taken from scope (#205, #401), and scale safety (
    coverage. Next: the owner subscribes to Workers Paid; then a brief to move the site
    from Pages, tried on a preview address before production (under Frontend and
    presentation, "A second state will not fit Pages' limits").
-2. **The remaining New Jersey assumptions** and **`hip acquire` on a new database**
-   (API and scale limits).
+2. **The remaining New Jersey assumptions** — done (2026-10-21, ARCHITECTURE #406,
+   #407): sources declare their states, `hip acquire` works on a new database, labels
+   and cost rules are per state, and the site reads one list of covered states. What a
+   chosen second state still needs is under API and scale limits.
 3. **Tests that guard data** — done (2026-10-21, #214): every validation-gate rule, the
    real Zillow unpivots, and FRED, BLS, FHFA and Zillow against recorded responses. The
    four silent-loss gaps they found are fixed (ARCHITECTURE #405).
@@ -176,37 +178,15 @@ Not open work: each comes round on a date. The steps live where the row says.
       (Milestone 15, unscheduled): such a ranking would now fail the build. Fix then:
       page through a consistent snapshot. The largest per-place series is 1,152 of
       5,000 (Hudson County).
-- [ ] **Other New Jersey assumptions remain, inventoried and not fixed.** (pre-M12
-      review; narrowed 2026-10-20, #205, ARCHITECTURE #401) BLS and HUD county series now
-      come from the loaded county regions, and the publisher and `api.geo` take a state
-      explicitly, but `config/geography.yml` still says no state code is hard-coded
-      anywhere in `src/hip`, which is false. The handoff, removed after reconciliation
-      (`git show 87881b9:agent-handoffs/state-agnostic.md`), listed the 49 structural
-      lines in 20 files with each file's disposition; `scripts/audit_state_assumptions.py`
-      regenerates the list (it needs `rg` on the PATH, and it flags tokens, so
-      assumptions without one can still exist). Sources: LODES (main and crosswalk files, home-state
-      exclusion), FEMA, HMDA, EPA's SDWIS, CDC PLACES, HUD's assisted-property parser,
-      UCMR/EIA/LEAD and FCC's manual filings are pinned to New Jersey, as are
-      `bts_ntm.py`'s bounding box and the broadband completeness check; each needs its
-      file shape, provenance and staging reviewed, not a changed literal.
-      `warehouse/names.py` keeps municipality names unique across the whole warehouse,
-      so namesakes in two states may need state-qualified labels. Pages and tools: the
-      place and report pages' location copy and state breadcrumb, `SimilarPlaces` and
-      `HowUnusual` captions, `SectionJump`'s `.nj-page` selector, the home page's
-      coverage locator and counter (`NationalCoverageMap`, `dataScale`,
-      `coverageMap`), the budget enumeration (`affordData`), `placeRoutes.ts`'s single
-      state destination, and `ownership.ts`, which applies New Jersey's seller fees and
-      needs jurisdiction rules. A state-name label or a geometry file is not a
-      coverage announcement. Blocks the Northeast expansion (Milestone 14, unscheduled).
-- [ ] **`hip acquire` with no `--source` cannot start on a new database.** (#205 review,
-      2026-10-20) The BLS and HUD adapters now read the `regions` table to list their
-      counties, and an all-sources run builds every adapter before acquiring any,
-      TIGER included. With no `regions` table it stops on SQLAlchemy's `no such table:
-      regions` (checked on an empty SQLite database); with the table but no counties
-      for a scoped state, on a `ConfigError` that says to load the spine first (tested).
-      A `--source` run for any other source is unaffected. Fix: build the BLS and HUD
-      adapters only when they are acquired, or turn the missing table into the same
-      `ConfigError`.
+- [ ] **What a second state still needs from code, after the structural pass.** (pre-M12
+      review; narrowed 2026-10-20, #205, #401, and 2026-10-21, #406, #407) Sources now
+      declare their states, labels and cost rules are per state, and pages read one list of
+      covered states. Left, each a design or a source review for the state chosen: a
+      state page template (the New Jersey page is `app/states/new-jersey` with its own
+      `.nj-page` styles); a home map for several states (one pointer today,
+      `PRIMARY_STATE`); the 32 New Jersey-only sources reviewed or replaced per state;
+      that state's cost rules in `STATE_RULES`; and the "Region not found" page's
+      link to New Jersey. Blocks the Northeast expansion (Milestone 14, unscheduled).
 ### Frontend and presentation
 
 - [ ] **Accessibility checks the audit script cannot make.** (M43, #309) True 200%

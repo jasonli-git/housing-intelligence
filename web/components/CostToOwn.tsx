@@ -876,7 +876,7 @@ export function CostToOwn({
               <div>
                 <dt>
                   Less selling costs{" "}
-                  <small className="src">{input.commissionPct}% commission, an assumption, {rules ? <>and {rules.name}’s seller fees ({rules.transferRule.source})</> : "and no state seller fees: none are held for this state"}</small>
+                  <small className="src">{input.commissionPct}% commission, an assumption, {rules ? <>{`and ${rules.name}’s seller fees (`}{rules.transferRule.source})</> : "and no state seller fees: none are held for this state"}</small>
                 </dt>
                 <dd>−{money(years.sellingCosts)}</dd>
               </div>

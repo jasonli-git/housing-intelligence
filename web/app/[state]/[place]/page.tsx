@@ -424,7 +424,7 @@ export default async function RegionPage({
     {region.level !== "zip" && <p className="household-next">
       <StepIcon name="budget" /><Link href={`/afford?place=${regionId}&county=${region.level === "county" ? regionId : county?.region_id ?? "all"}`}>
         {region.level === "county" ? "Find towns within my budget" : "Compare nearby towns"} <span aria-hidden="true">→</span>
-      </Link><span>Starts in {region.level === "county" ? name : county ? displayName(county) : scopeName(region.state_code)}. You can search all {scopeName(region.state_code)}.</span>
+      </Link><span>Starts in {region.level === "county" ? name : county ? displayName(county) : scopeName(region.state_code)}{`. You can search all ${scopeName(region.state_code)}.`}</span>
     </p>}
   </QuietDisclosure></>;
 
