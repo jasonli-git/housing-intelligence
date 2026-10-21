@@ -3,9 +3,9 @@
 `window` is a reserved word in Postgres. The column exists because SQLAlchemy quoted
 it when creating the table, so every hand-written reference must quote it as well.
 
-Runs in Postgres rather than DuckDB because the facts are already there and the outputs
-are small — moving 330,000 rows out and back to compute a percentage would be work for
-its own sake.
+Changes and ratios run in Postgres, where their facts already live. Rank ranges use
+an exact sorted counting tree in Python (#403), avoiding the pairwise SQL self-join;
+only ranking inputs and the resulting counts cross that boundary.
 
 Every derived table is rebuilt in full. They are cheap to recompute and expensive to
 reason about when stale, so `analyze` truncates rather than updating incrementally.
@@ -15,9 +15,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
+from itertools import groupby
 
-from sqlalchemy import Engine, text
+from sqlalchemy import Connection, Engine, text
 
+from hip.analytics.rank_ranges import significance_counts
 from hip.config import load_metrics
 
 # Change windows, as (label, years). `since_2019` is anchored rather than relative: it
@@ -622,7 +624,7 @@ def _value_rankings(conn: object, unranked: list[str]) -> int:
     )
 
 
-def _rank_ranges(conn: object) -> int:
+def _rank_ranges(conn: Connection) -> int:
     """The ranks each region could plausibly hold, given everyone's margins of error.
 
     A rank from survey estimates claims more than the survey knows: "9th of 21" when
@@ -643,53 +645,57 @@ def _rank_ranges(conn: object) -> int:
     Always contains the rank itself (`ck_region_rankings_rank_range`): the significant
     betters are a subset of those ranked ahead, and the significant worses of those
     behind.
+
+    #403: sorted trees conservatively count/exclude whole branches using their value
+    and squared-margin bounds, then apply this same sqrt test at unresolved leaves.
+    This is neither interval overlap nor an approximate rank. Unknown-margin rivals
+    never count; a group with no known margins (or no rivals) is left untouched.
     """
+    rows = conn.execute(
+        text("""
+        SELECT rr.metric_id, rr.level, rr.basis, rr."window", rr.region_id,
+               CASE WHEN m.direction='lower_is_better'
+                    THEN rr.value ELSE -rr.value END AS k,
+               rr.margin_of_error
+        FROM region_rankings rr JOIN metrics m USING (metric_id)
+        ORDER BY rr.metric_id,rr.level,rr.basis,rr."window"
+    """)
+    )
+    updates = []
+    for key, group in groupby(rows, key=lambda row: tuple(row[:4])):
+        cohort = list(group)
+        counts = significance_counts([(r.k, r.margin_of_error) for r in cohort])
+        if counts is not None:
+            for row, (better, worse) in zip(cohort, counts, strict=True):
+                updates.append((*key, row.region_id, better, worse))
+    if not updates:
+        return 0
+    conn.execute(
+        text("""
+        CREATE TEMP TABLE rank_range_counts (
+          metric_id text, level text, basis text, "window" text, region_id bigint,
+          better bigint, worse bigint
+        ) ON COMMIT DROP
+    """)
+    )
+    # COPY keeps transport linear and bounded, instead of one UPDATE round-trip per
+    # region. All writes stay in rebuild's existing transaction.
+    driver = conn.connection.driver_connection
+    assert driver is not None
+    with (
+        driver.cursor() as cursor,
+        cursor.copy("COPY rank_range_counts FROM STDIN") as copy,
+    ):
+        for update in updates:
+            copy.write_row(update)
     return int(
-        conn.execute(  # type: ignore[attr-defined]
-            text(
-                """
-                WITH margins AS (
-                    SELECT rr.metric_id, rr.level, rr.basis, rr."window", rr.region_id,
-                           rr."of",
-                           -- The order ranks are assigned in: rank 1 is the better end.
-                           CASE WHEN m.direction = 'lower_is_better'
-                                THEN rr.value ELSE -rr.value END AS k,
-                           rr.margin_of_error AS margin
-                    FROM region_rankings rr
-                    JOIN metrics m ON m.metric_id = rr.metric_id
-                ),
-                margined AS (
-                    SELECT metric_id, level, basis, "window"
-                    FROM margins
-                    GROUP BY 1, 2, 3, 4
-                    HAVING count(margin) > 0
-                ),
-                counts AS (
-                    SELECT a.metric_id, a.level, a.basis, a."window", a.region_id,
-                           a."of",
-                           -- A comparison with an unknown margin is NULL, so it counts
-                           -- as no difference at all.
-                           count(*) FILTER (
-                               WHERE a.k - b.k > sqrt(a.margin ^ 2 + b.margin ^ 2)
-                           ) AS better,
-                           count(*) FILTER (
-                               WHERE b.k - a.k > sqrt(a.margin ^ 2 + b.margin ^ 2)
-                           ) AS worse
-                    FROM margins a
-                    JOIN margined g USING (metric_id, level, basis, "window")
-                    JOIN margins b
-                      ON b.metric_id = a.metric_id AND b.level = a.level
-                     AND b.basis = a.basis AND b."window" = a."window"
-                     AND b.region_id <> a.region_id
-                    GROUP BY 1, 2, 3, 4, 5, 6
-                )
-                UPDATE region_rankings rr
-                SET rank_best = 1 + c.better, rank_worst = c."of" - c.worse
-                FROM counts c
-                WHERE rr.metric_id = c.metric_id AND rr.level = c.level
-                  AND rr.basis = c.basis AND rr."window" = c."window"
-                  AND rr.region_id = c.region_id
-                """
-            )
+        conn.execute(
+            text("""
+        UPDATE region_rankings rr
+        SET rank_best=1+c.better, rank_worst=rr."of"-c.worse
+        FROM rank_range_counts c
+        WHERE rr.metric_id=c.metric_id AND rr.level=c.level AND rr.basis=c.basis
+          AND rr."window"=c."window" AND rr.region_id=c.region_id
+    """)
         ).rowcount
     )

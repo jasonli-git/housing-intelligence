@@ -53,7 +53,7 @@ async function loadPlace(artifactUrl: string, id: number, newest: Record<string,
   const base = `${artifactUrl}/regions/${id}`;
   const [packet, metrics, incomeLimits, water, community, utilities] = await Promise.all([
     getJson<Packet>(`${base}/packet/5y.json`),
-    getJson<{ observations: Observation[] }>(`${base}/metrics.json`),
+    getJson<{ total: number; observations: Observation[] }>(`${base}/metrics.json`),
     getJson<IncomeLimits>(`${base}/income-limits.json`),
     getJson<WaterSystems>(`${base}/water-systems.json`),
     getJson<CommunityContext>(`${base}/community.json`),

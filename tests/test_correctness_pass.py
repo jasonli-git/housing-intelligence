@@ -82,7 +82,9 @@ def test_the_trigger_keeps_a_revised_figure_s_margins() -> None:
             row = conn.execute(
                 text(
                     "SELECT region_id, metric_id, period_start, value, margin_of_error "
-                    "FROM fact_metric_observation WHERE margin_of_error > 0 LIMIT 1"
+                    "FROM fact_metric_observation WHERE margin_of_error > 0 "
+                    "AND metric_id = 'acs_median_hh_income' ORDER BY region_id, "
+                    "period_start LIMIT 1"
                 )
             ).one()
             conn.execute(
@@ -96,8 +98,10 @@ def test_the_trigger_keeps_a_revised_figure_s_margins() -> None:
             old, new = conn.execute(
                 text(
                     "SELECT old_margin, new_margin FROM fact_revision "
+                    "WHERE region_id=:r AND metric_id=:m AND period_start=:p "
                     "ORDER BY revision_id DESC LIMIT 1"
-                )
+                ),
+                {"r": row.region_id, "m": row.metric_id, "p": row.period_start},
             ).one()
             assert old == pytest.approx(row.margin_of_error)
             assert new == pytest.approx(row.margin_of_error * 2)

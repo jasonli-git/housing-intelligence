@@ -103,6 +103,39 @@ class RegionIdentityChanged(RuntimeError):
     """
 
 
+def require_complete_list(api_path: str, payload: object) -> None:
+    """Refuse truncated/unknown lists before writing their artifact (#402).
+
+    Deliberately fail rather than quietly raising API limits or concatenating pages
+    without a stable snapshot. `total` is computed before LIMIT in the same query.
+    """
+    route = api_path.partition("?")[0]
+    if route == "/rankings":
+        field = "items"
+    elif route.startswith("/regions/") and route.endswith("/metrics"):
+        field = "observations"
+    else:
+        return
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"{api_path}: missing list completeness metadata")
+    total, items = payload.get("total"), payload.get(field)
+    if type(total) is not int or not isinstance(items, list) or total != len(items):
+        fetched = len(items) if isinstance(items, list) else "unknown"
+        raise RuntimeError(
+            f"{api_path}: incomplete {field}: fetched {fetched}, total {total}; "
+            "refusing publication (fetch all rows before retrying)"
+        )
+
+
+def write_response(root: Path, api_path: str, out_path: str, payload: bytes) -> None:
+    """Validate completeness before touching an existing artifact."""
+    if out_path.endswith(".json"):
+        require_complete_list(api_path, json.loads(payload))
+    destination = root / out_path
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(payload)
+
+
 def _region_geoids(engine_conn) -> dict[str, str]:  # type: ignore[no-untyped-def]
     """region_id -> geoid for every region with data, as the manifest records it."""
     return {
@@ -411,9 +444,7 @@ def publish(root: Path) -> Result:
                     f"{api_path} returned {response.status_code}; refusing to publish "
                     f"a tree with a hole in it"
                 )
-            destination = root / out_path
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(response.content)
+            write_response(root, api_path, out_path, response.content)
             return api_path, out_path, response.content
 
         # Several requests at once: each is a few database queries, and one at a time
