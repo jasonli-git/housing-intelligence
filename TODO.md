@@ -40,8 +40,9 @@ series, geometry and `api.geo` taken from scope (#205, #401), and scale safety (
 1. **Hosting: decided by the owner 2026-10-21 — Workers static assets on Workers Paid**
    (100,000 files), with the numeric-link redirects moved to a Worker; later, pages in R2
    behind a Worker past about seven states, and on-request rendering only for national
-   coverage. Next: the owner subscribes to Workers Paid; then a brief to move the site
-   from Pages, tried on a preview address before production (under Frontend and
+   coverage. **On hold by the owner 2026-10-21** until TODO and most open Director
+   Notes are cleared; then the owner subscribes to Workers Paid and a brief moves the
+   site from Pages, tried on a preview address before production (under Frontend and
    presentation, "A second state will not fit Pages' limits").
 2. **The remaining New Jersey assumptions** and **`hip acquire` on a new database**
    (API and scale limits).
