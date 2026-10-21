@@ -613,3 +613,38 @@ Realtor.com publishes county and ZIP inventory, days on market and price cuts, b
 with Move's written permission. Whether to ask is the owner's call.
 
 Do not implement yet. Each item is promoted to TODO only when the owner decides to do it.
+
+## House-level detail in the housing atlas
+
+**Status:** Exploratory — not approved for implementation
+**Recorded:** 2026-10-21
+
+Explore whether the housing atlas could show individual homes when zoomed in to street
+level, starting with New Jersey. The state and county views would stay as they are.
+
+What exists:
+
+- The data per home is already held: about 3.08 million parcels from the state's
+  property tax assessment list (MOD-IV), with property class, assessed values and tax.
+- The state's sales file (SR1A) is used today only for town-level medians.
+
+What's missing or unsettled:
+
+- **Lot shapes.** The statewide parcel file is behind bot protection, which this project
+  won't get around (ARCHITECTURE #49). The state's public parcel API may return shapes;
+  that needs checking, along with the download size.
+- **A different map engine.** Millions of shapes would likely need map tiles in a single
+  R2 file, drawn with MapLibre, at street zoom only.
+- **What to show for each home.** Possibly assessed value and class only. Showing each
+  home's sale price would need sales matched to parcels without names, which is gated on
+  the Daniel's Law question.
+- **Privacy.** Homes withdrawn under Daniel's Law would have to stay out of the map,
+  including withdrawals made after a build. A map colouring every home by value makes
+  individuals easy to look up, so the lawyer's read already open in TODO may need to come
+  first.
+- **Other states.** Each depends on its own assessor data and terms.
+
+A possible first step, if pursued: check feasibility on one county by fetching its parcel
+shapes, measuring the size, and building a test tile file.
+
+Do not implement yet.
