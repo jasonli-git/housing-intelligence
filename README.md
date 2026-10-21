@@ -13,7 +13,7 @@ optional AI layer only explains figures that were already computed.
 
 > **Status — v0.50.0 (2026-10-08), updated 2026-10-21.** Versions 1 and 2 are complete
 > and Version 3 is under way. New Jersey is published in full: the state, 21 counties, 564
-> towns and 598 ZIP codes, plus four tools.
+> towns and 598 ZIP codes, plus five tools.
 >
 > **Latest.** Groundwork for a second state: publication capacity measured and redirect
 > files cut by 1,768 (#201), published geometry per state (#205), scale safety for
@@ -54,8 +54,9 @@ On a phone:
 - **What comes with a place** — flood risk, drinking water and lead lines, utilities and
   broadband, schools, commutes and transit, affordable housing, and who is moving in.
 - **Cheaper alternatives** — towns and ZIP codes like this one that cost less.
-- **Four tools** — a budget explorer, a buyer's guide, a property tax lookup for any
-  address in the state, and a housing atlas mapping every measure.
+- **Five tools** — a budget explorer, a buyer's guide, a property tax lookup for any
+  address in the state, a housing atlas mapping every measure, and a page comparing up to
+  four places side by side, shareable by its link.
 - **Sourced and honest** — every figure names its source, date and kind; survey figures
   carry their margin of error and uncertain ranks a range; revisions are recorded.
 - **Plain-language readings** — an AI reading per county that may state only figures the

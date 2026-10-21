@@ -31,6 +31,7 @@ export function Masthead({
   guideActive = false,
   helpActive = false,
   atlasActive = false,
+  compareActive = false,
   budgetLabel = "Budget explorer",
   search = true,
 }: {
@@ -41,6 +42,8 @@ export function Masthead({
   guideActive?: boolean;
   helpActive?: boolean;
   atlasActive?: boolean;
+  /** On the compare page. */
+  compareActive?: boolean;
   budgetLabel?: string;
   /** False on the home page, whose own search is the page's main action. */
   search?: boolean;
@@ -54,6 +57,7 @@ export function Masthead({
       <Link className="bar-budget" href="/afford?county=all" aria-current={affordability.kind === "route" && affordability.active ? "page" : undefined} aria-label="Find places within my budget across all New Jersey">{budgetContent}</Link>}
     <Link className="bar-link" href="/guide" aria-label="Buyer’s guide" aria-current={guideActive ? "page" : undefined}>Buyer’s guide</Link>
     <Link className="bar-link" href="/tax" aria-label="Property tax lookup" aria-current={taxActive ? "page" : undefined}>Property tax</Link>
+    <Link className="bar-link" href="/compare" aria-label="Compare places" aria-current={compareActive ? "page" : undefined}>Compare</Link>
     <Link className="bar-link bar-help-route" href="/help" aria-current={helpActive ? "page" : undefined}>Housing help</Link>
     <Link className="bar-link" href="/atlas" aria-current={atlasActive ? "page" : undefined}>Housing atlas</Link>
   </>;

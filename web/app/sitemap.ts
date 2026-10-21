@@ -12,6 +12,7 @@ const PAGES = [
   "/states/new-jersey",
   "/afford",
   "/atlas",
+  "/compare",
   "/guide",
   "/help",
   "/tax",
