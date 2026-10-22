@@ -1343,6 +1343,31 @@ def notice_command(
     typer.echo(f"NOTICE written: {listed} sources")
 
 
+@app.command("readme")
+def readme_command(
+    check: bool = typer.Option(False, "--check", help="Fail if README is out of date."),
+) -> None:
+    """Rewrite README's marked figures; check what is written by hand."""
+    from hip.config import REPO_ROOT
+    from hip.readme import fill, writing_problems
+
+    path = REPO_ROOT / "README.md"
+    current = path.read_text()
+    wanted = fill(current, REPO_ROOT)
+    problems = writing_problems(wanted, REPO_ROOT)
+    if check:
+        if wanted != current:
+            problems.insert(0, "a marked figure is out of date: run `hip readme`")
+    else:
+        path.write_text(wanted)
+        changed = wanted != current
+        typer.echo("README figures written" if changed else "README figures current")
+    for problem in problems:
+        typer.secho(f"README: {problem}", fg=typer.colors.RED)
+    if problems:
+        raise typer.Exit(code=1)
+
+
 @app.command("sync-registry")
 def sync_registry_command() -> None:
     """Write every source's licence, terms and notices and every metric's kind and

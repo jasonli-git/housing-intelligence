@@ -13,6 +13,9 @@ are not yet recorded here.
 
 ### Added
 
+- **The README's figures fill themselves** (ARCHITECTURE #417, #420): `hip readme` rewrites
+  each marked count and version from its source, and the tests fail when one is stale,
+  an evaluation report is not linked, or "Latest" is older than the changelog.
 - **A sale price to income ratio for about 540 towns** (ARCHITECTURE #416, #419): what
   buyers actually paid, from the state's sales records, over typical household income.
   It covers 163 towns Zillow does not, so every town with enough sales can be compared on
