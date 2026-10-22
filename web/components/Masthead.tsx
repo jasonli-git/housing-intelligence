@@ -31,7 +31,6 @@ export function Masthead({
   guideActive = false,
   helpActive = false,
   atlasActive = false,
-  storiesActive = false,
   compareActive = false,
   budgetLabel = "Budget explorer",
   search = true,
@@ -43,8 +42,6 @@ export function Masthead({
   guideActive?: boolean;
   helpActive?: boolean;
   atlasActive?: boolean;
-  /** On the visual stories index or a story. */
-  storiesActive?: boolean;
   /** On the compare page. */
   compareActive?: boolean;
   budgetLabel?: string;
@@ -63,7 +60,6 @@ export function Masthead({
     <Link className="bar-link" href="/compare" aria-label="Compare places" aria-current={compareActive ? "page" : undefined}>Compare</Link>
     <Link className="bar-link bar-help-route" href="/help" aria-current={helpActive ? "page" : undefined}>Housing help</Link>
     <Link className="bar-link" href="/atlas" aria-current={atlasActive ? "page" : undefined}>Housing atlas</Link>
-    <Link className="bar-link" href="/stories" aria-label="Visual stories" aria-current={storiesActive ? "page" : undefined}>Stories</Link>
   </>;
   return (
     <>

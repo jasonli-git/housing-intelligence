@@ -386,10 +386,10 @@
   .bar-tool-menu > summary { display: none; }
   .bar-tool-menu .bar-controls { display: flex; align-items: center; gap: .3rem; }
   .bar-tool-menu .bar-budget { border: 0; font: 500 11px/1.4 var(--font-mono); letter-spacing: .055em; text-transform: uppercase; }
-  /* The desktop links need the bar's full 1312px once the stories link joined them (2026-10-22);
-     narrower, they ran under the brand, so the Tools menu takes over below 1340px. */
-  @media (min-width: 1341px) { .bar .place-search { flex: 0 1 10rem; } }
-  @media (max-width: 1340px) {
+  /* Between 1150px and about 1235px the desktop links ran under the brand (found 2026-10-22),
+     so the Tools menu takes over below 1240px, and the search narrows to make room above it. */
+  @media (min-width: 1241px) { .bar .place-search { flex: 0 1 10rem; } }
+  @media (max-width: 1240px) {
     /* One row at every width (owner, 2026-10-10): brand, then search and Tools, then theme. */
     .bar-inner { grid-template-columns: auto minmax(0, 1fr) 38px; column-gap: .5rem; }
     .bar-tools { grid-column: 2; grid-row: 1; display: flex; align-items: center; justify-content: flex-end; gap: .4rem; }

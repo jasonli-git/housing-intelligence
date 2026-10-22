@@ -69,3 +69,7 @@
     .home-tools a:hover { transform: none; }
   }
 }
+/* The visual stories, indexed under the tools (2026-10-22): reached from here, the footer and the sections they draw from, not the bar. */
+.home-stories a { --tool-ink: var(--story-up); }
+.home-stories-all { margin: .8rem 0 0; font-size: 14px; }
+.home-stories-all a { display: inline-flex; min-height: 44px; align-items: center; padding: 0; border: 0; background: none; color: var(--text-secondary); text-decoration: underline; }

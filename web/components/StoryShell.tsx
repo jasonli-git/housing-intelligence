@@ -8,7 +8,7 @@ import { Masthead } from "@/components/Masthead";
 export function StoryShell({ title, lede, note, children }: { title: string; lede: ReactNode; note: ReactNode; children: ReactNode }) {
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} storiesActive />
+      <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
         <header className="page-head">
           <div>

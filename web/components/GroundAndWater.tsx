@@ -6,6 +6,7 @@ import { formatValue } from "@/lib/format";
 import { shareText, systemReportUrl } from "@/lib/hazards";
 import { pfasResult, publisherUrl, resolutionText } from "@/lib/infrastructure";
 import { waterQualityReport } from "@/lib/waterReports";
+import { StoryLink } from "@/components/StoryLink";
 
 /** NJDEP's map of every known contaminated site, with what each one is. */
 const SITES_MAP = "https://experience.arcgis.com/experience/f26272f8a41c4aeea77ac6f9b3c80ebb";
@@ -146,6 +147,7 @@ export function GroundAndWater({
       </p>
       </ReaderDetails>
       <p className="sales-note publisher-notice-inline">{NJDEP_NOTICE}</p>
+      <StoryLink href="/stories/water-you-can-check" />
     </section>
   );
 }

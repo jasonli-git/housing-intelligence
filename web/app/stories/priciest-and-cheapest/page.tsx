@@ -28,7 +28,7 @@ export default async function PriciestAndCheapestPage() {
   const at = (v: number) => `${Math.round(((Math.log(v) - lo) / (hi - lo)) * 10000) / 100}%`;
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} storiesActive />
+      <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
         <header className="page-head">
           <div>

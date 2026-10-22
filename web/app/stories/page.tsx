@@ -18,7 +18,7 @@ export const metadata: Metadata = pageMetadata({
 export default function StoriesPage() {
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} storiesActive />
+      <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
         <header className="page-head">
           <div>

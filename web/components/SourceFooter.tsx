@@ -184,6 +184,10 @@ export async function SourceFooter() {
               <span className="foot-link-title">Which figures changed? <span aria-hidden="true">→</span></span>
               <span className="foot-link-detail">Earlier values and revisions after publication.</span>
             </Link>
+            <Link href="/stories">
+              <span className="foot-link-title">Visual stories <span aria-hidden="true">→</span></span>
+              <span className="foot-link-detail">New Jersey&rsquo;s figures drawn as charts and maps, one question each.</span>
+            </Link>
           </div>
         </nav>
 

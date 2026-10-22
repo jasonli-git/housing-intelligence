@@ -24,7 +24,7 @@ export default async function PricierTownsPage() {
   const priced = towns.filter((t) => t.values.zhvi_sfr).length;
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} storiesActive />
+      <Masthead affordability={{ kind: "route" }} />
       <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
         <header className="page-head">
           <div>

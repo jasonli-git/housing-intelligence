@@ -9,6 +9,7 @@ import { periodLabel } from "@/lib/periods";
 import { pageMetadata } from "@/lib/meta";
 import "../horizon-theme.css";
 import "../tax-horizon.css";
+import { StoryLink } from "@/components/StoryLink";
 
 export const metadata: Metadata = pageMetadata({
   title: "Property tax lookup — Housing",
@@ -60,6 +61,7 @@ export default async function TaxPage() {
           </div>
         </header>
         <TaxLookup towns={towns} artifactUrl={artifactUrl} rate={rate} />
+        <StoryLink href="/stories/same-house-different-tax-bill" />
       </main>
     </>
   );

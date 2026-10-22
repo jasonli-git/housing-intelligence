@@ -4,6 +4,7 @@ import { ReaderDetails } from "@/components/ReaderDetails";
 import { formatValue } from "@/lib/format";
 import { shareText } from "@/lib/hazards";
 import { lending } from "@/lib/lending";
+import { StoryLink } from "@/components/StoryLink";
 
 /**
  * How do people here pay for homes (Milestone 48, ARCHITECTURE #324-#325)? The mortgages
@@ -72,6 +73,7 @@ export function MortgageLending({ name, levels }: { name: string; levels: Packet
             : ""}
         </Gloss></p>
       </ReaderDetails>
+      <StoryLink href="/stories/the-mortgage-market" />
     </section>
   );
 }

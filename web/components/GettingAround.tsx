@@ -7,6 +7,7 @@ import { ReaderDetails } from "@/components/ReaderDetails";
 import { formatValue } from "@/lib/format";
 import { commutePicture, ofHomes, sentence, transitPicture, workPicture } from "@/lib/gettingAround";
 import { shareText } from "@/lib/hazards";
+import { StoryLink } from "@/components/StoryLink";
 
 /** The Census Bureau's own map of where a place's workers live and work. */
 const ON_THE_MAP = "https://onthemap.ces.census.gov/";
@@ -154,6 +155,7 @@ export function GettingAround({
           </p>
         </ReaderDetails>
       )}
+      <StoryLink href="/stories/where-the-workday-goes" />
     </section>
   );
 }
