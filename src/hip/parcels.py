@@ -77,6 +77,9 @@ COLUMNS = (
     "year_built",
     "dwellings",
     "building",
+    # The lot's area from the parcel map (#427), for the fuller property page; none for
+    # a unit, which shares its building's lot.
+    "acres",
 )
 
 
@@ -186,7 +189,11 @@ def export(
                    nullif(trim(p.PROP_LOC), ''), trim(p.PROP_CLASS),
                    p.LAND_VAL, p.IMPRVT_VAL, p.NET_VALUE, p.LAST_YR_TX,
                    nullif(p.YR_CONSTR, 0), nullif(p.DWELL, 0),
-                   nullif(trim(p.BLDG_DESC), '')
+                   nullif(trim(p.BLDG_DESC), ''),
+                   -- A unit (a qualifier: a condo) shares its building's lot, and
+                   -- its area is the development's or nothing, so it has none (#427).
+                   CASE WHEN nullif(trim(p.PCLQCODE), '') IS NULL
+                        THEN nullif(round(p.CALC_ACRE, 3), 0) END
             FROM read_parquet('{parquet}') p
             JOIN region_codes c ON c.identifier = p.CD_CODE
             WHERE p.PROP_CLASS IS NOT NULL AND trim(p.PROP_CLASS) <> ''

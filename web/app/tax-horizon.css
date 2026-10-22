@@ -93,4 +93,29 @@
   .tax-places button small { font-size: 11px; color: var(--text-muted); }
   .tax-places button:hover, .tax-places button:focus-visible { border-color: var(--plate-accent); background: color-mix(in srgb, var(--plate-accent) 10%, transparent); }
   .tax-next span strong { font-weight: 600; color: var(--plate-ink); }
+
+  /* The fuller property page (#427): the lot, owning it, renting nearby, the town around it. */
+  .property-details { display: grid; gap: 1.4rem; margin-top: 1.4rem; padding-top: 1.1rem; border-top: 1px solid var(--plate-rule); }
+  .property-details h3 { margin: 0 0 .45rem; font: 400 22px/1.2 Georgia, serif !important; letter-spacing: -.02em; text-transform: none !important; }
+  .property-details .household-note { margin: 0 0 .6rem; }
+  .property-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7rem; margin: 0 0 .5rem; }
+  .property-tiles > div { display: grid; gap: .15rem; padding: .75rem .85rem; border: 1px solid var(--plate-strong-rule); border-radius: 16px; }
+  .property-tiles dt { font: 600 11px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--plate-accent); }
+  .property-tiles dd { margin: 0; font: 400 24px/1.15 Georgia, serif; font-variant-numeric: lining-nums tabular-nums; }
+  .property-tiles small { font-size: 11px; color: var(--text-muted); }
+  .property-downs { display: flex; flex-wrap: wrap; gap: .5rem; margin: .2rem 0 .8rem; }
+  .property-downs button { min-height: 44px; padding: 0 1rem; border: 1px solid var(--plate-strong-rule); border-radius: 999px; background: transparent; color: var(--plate-ink); font: 500 14px/1 var(--font-text); cursor: pointer; }
+  .property-downs button[aria-pressed="true"] { background: var(--plate-accent); border-color: var(--plate-accent); color: var(--plate-paper); }
+  .property-month { margin: 0 0 .5rem; font-size: 14px; color: var(--text-secondary); }
+  .property-month b { margin-right: .35rem; font: 400 40px/1 Georgia, serif; letter-spacing: -.03em; color: var(--plate-ink); }
+  .property-lines { display: grid; gap: .3rem; max-width: 520px; margin: 0 0 .6rem; font-size: 14px; }
+  .property-lines > div { display: flex; justify-content: space-between; gap: 1rem; }
+  .property-lines dt { color: var(--text-secondary); }
+  .property-lines dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .property-around { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .7rem; margin: 0; padding: 0; list-style: none; }
+  .property-around a { display: grid; gap: .25rem; height: 100%; box-sizing: border-box; padding: .85rem .95rem; border: 1px solid var(--plate-strong-rule); border-radius: 16px; text-decoration: none; color: var(--plate-ink) !important; }
+  .property-around a:hover { border-color: var(--plate-accent); background: var(--glass); }
+  .property-around span { font: 600 11px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--plate-accent); }
+  .property-around b { font-weight: 600; font-size: 15px; }
+  .property-around small { font-size: 12px; color: var(--text-muted); }
 }

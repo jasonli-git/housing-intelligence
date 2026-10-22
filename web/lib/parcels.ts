@@ -39,6 +39,8 @@ export type Parcel = {
   yearBuilt: number | null;
   dwellings: number | null;
   building: string | null;
+  /** The lot's area, from the parcel map; null in files written before #427. */
+  acres: number | null;
 };
 
 /** The rows of a town's file, as objects. */
@@ -57,6 +59,7 @@ export function parcelsOf(file: ParcelFile): Parcel[] {
     yearBuilt: at("year_built"),
     dwellings: at("dwellings"),
     building: at("building"),
+    acres: at("acres"),
   };
   return file.parcels.map((row) => ({
     block: String(row[index.block] ?? ""),
@@ -71,6 +74,7 @@ export function parcelsOf(file: ParcelFile): Parcel[] {
     yearBuilt: (row[index.yearBuilt] as number | null) ?? null,
     dwellings: (row[index.dwellings] as number | null) ?? null,
     building: (row[index.building] as string | null) ?? null,
+    acres: index.acres < 0 ? null : ((row[index.acres] as number | null) ?? null),
   }));
 }
 

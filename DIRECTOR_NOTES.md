@@ -708,3 +708,17 @@ Closed by the owner on 2026-10-22. What it asked for and where it went:
 
 Not pursued with the note's closing: the TODO usefulness audit, an automated SPEC audit,
 and automatic checks of the Setup and Publishing prose. Any of them can be raised again.
+
+---
+
+## Decision: the fuller property page
+
+**Status:** Approved direction — built 2026-10-22
+**Recorded:** 2026-10-22
+
+Promotes item 1 of *Parity with Zillow's home page*, which is otherwise left as written.
+The owner approved the mockup on 2026-10-22. The tax lookup's property card gains the
+lot and the building, what owning the home would cost at its likely sale value and actual
+tax bill, the town's rents by size, and the town's prices, flood, water and schools
+(ARCHITECTURE #427). The mockup's "last sold" date is left out: a home's own sale history
+stays gated on the Daniel's Law question, with item 7.

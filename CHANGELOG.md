@@ -13,6 +13,10 @@ are not yet recorded here.
 
 ### Added
 
+- **A fuller page for every property in the tax lookup** (ARCHITECTURE #427): its lot
+  size, what owning it would cost at its likely sale value and its own tax bill, what
+  renters in the town pay by size, and links into the town's prices, flood risk, water
+  and schools.
 - **A starter-home value, and Zillow's home value labelled correctly** (ARCHITECTURE
   #424): Zillow's typical value of the cheapest third of homes, for counties and towns;
   and the typical home value, which counts houses and condos together, is no longer

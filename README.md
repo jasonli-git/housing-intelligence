@@ -17,7 +17,8 @@ optional AI layer only explains figures that were already computed.
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** Readings may call a figure a survey estimate only if it is one; the
+> **Latest.** A fuller page for every property in the tax lookup (#427); readings may
+> call a figure a survey estimate only if it is one; the
 > warehouse runs natively on Apple silicon, a quarter to a third faster (#230); the
 > README's figures fill themselves (#229); a sale price to income ratio covering 163
 > towns Zillow does not (#228).

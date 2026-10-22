@@ -166,3 +166,10 @@ def test_one_towns_parcel_file(tmp_path: Path) -> None:  # type: ignore[no-untyp
     assert data["columns"] == list(COLUMNS)
     assert all(len(row) == len(COLUMNS) for row in data["parcels"])
     assert written.parcels > 1000
+    # The lot's area (#427), from the parcel map, in acres. Most of Hoboken's records are
+    # condo units, which share their building's lot and carry none.
+    acres = [row[COLUMNS.index("acres")] for row in data["parcels"]]
+    qualifiers = [row[COLUMNS.index("qualifier")] for row in data["parcels"]]
+    assert sum(a is not None for a in acres) > 1000
+    assert all(a is None for a, q in zip(acres, qualifiers, strict=True) if q)
+    assert all(a is None or a > 0 for a in acres)
