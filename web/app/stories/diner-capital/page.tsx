@@ -54,7 +54,7 @@ export default async function DinerCapitalPage() {
               <li key={r.id}>
                 <span><Link href={regionPath(r.id)}>{r.name}</Link></span>
                 <span className="bar-line"><i style={{ width: `${Math.round((r.per / max) * 1000) / 10}%`, background: "var(--story-2)" }} />{r.per.toFixed(1)}</span>
-                <small>{r.diners} diners · {r.starbucks} Starbucks</small>
+                <small>{r.diners} {r.diners === 1 ? "diner" : "diners"} · {r.starbucks} Starbucks</small>
               </li>
             ))}
           </ul>
@@ -66,7 +66,7 @@ export default async function DinerCapitalPage() {
               <li key={r.t.id}>
                 <span><Link href={regionPath(r.t.id)}>{r.t.name}</Link></span>
                 <span className="bar-line"><i style={{ width: `${Math.round((r.per / townMax) * 1000) / 10}%`, background: "var(--story-2)" }} />{r.per.toFixed(1)} per 10,000</span>
-                <small>{r.t.values.osm_diner_count} diners · {Math.round(r.t.values.acs_population!).toLocaleString("en-US")} people · {r.t.countyName}</small>
+                <small>{r.t.values.osm_diner_count} {r.t.values.osm_diner_count === 1 ? "diner" : "diners"} · {Math.round(r.t.values.acs_population!).toLocaleString("en-US")} people · {r.t.countyName}</small>
               </li>
             ))}
           </ul>

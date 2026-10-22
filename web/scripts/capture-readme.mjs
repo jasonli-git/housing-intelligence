@@ -3,6 +3,7 @@
 // into dist/artifacts/screenshots/, which the same deploy uploads beside the data. The
 // README links to them there, so they are never committed and always show the deployed
 // site — refreshed by every deploy, the Friday one included.
+import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
@@ -35,7 +36,7 @@ const VIEWPORTS = [
 // chart, light and dark, as JPEGs into screenshots/stories/. The list is read from the
 // stories index, so a new story is pictured without touching this file.
 const SHOT = { width: 820, height: 900, aspect: 0.62, scale: 1 };
-const INDEX = { width: 1800, height: 1400, aspect: 0.5625, columns: 5 };
+const INDEX = { width: 1800, height: 1600, aspect: 0.5625, columns: 7 };
 const only = process.env.SCREENSHOT_ONLY;
 
 await mkdir(resolve(outDir, 'stories'), { recursive: true });
@@ -67,7 +68,12 @@ try {
       }
       // Then the stories page itself, for the home page. Its cards show the pictures just
       // taken, which are not uploaded yet, so those requests are answered from disk.
-      await page.route('**/screenshots/stories/*', (route) => route.fulfill({ path: resolve(outDir, 'stories', route.request().url().split('/').pop()) }));
+      // The other theme's pictures are in the markup too, hidden, and may not be taken
+      // yet on this pass: a missing one is answered 404 rather than ending the run.
+      await page.route('**/screenshots/stories/*', async (route) => {
+        const file = resolve(outDir, 'stories', route.request().url().split('/').pop());
+        await route.fulfill(existsSync(file) ? { path: file } : { status: 404 });
+      });
       await page.setViewportSize({ width: INDEX.width, height: INDEX.height });
       await page.goto(origin + '/stories', { waitUntil: 'networkidle', timeout: 90_000 });
       await page.evaluate(async () => {
@@ -76,8 +82,9 @@ try {
         await Promise.all([...document.images].map((img) => { img.loading = 'eager'; return img.decode().catch(() => {}); }));
       });
       await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
-      // Five across on a wide page, so one picture holds nearly every story.
-      await page.addStyleTag({ content: `.stories-page{max-width:none!important}.stories-grid{grid-template-columns:repeat(${INDEX.columns},minmax(0,1fr))!important}` });
+      // Seven across on a wide page, pictures and titles only, so one picture holds
+      // every story; the page itself keeps each story's line of explanation.
+      await page.addStyleTag({ content: `.stories-page{max-width:none!important}.stories-grid{grid-template-columns:repeat(${INDEX.columns},minmax(0,1fr))!important}.stories-grid a>span:not(.story-shot){display:none!important}` });
       // The cards, not the page's head: the home page gives the section its own heading.
       const grid = await page.locator('.stories-grid').boundingBox();
       if (!grid) throw new Error('/stories: no .stories-grid');

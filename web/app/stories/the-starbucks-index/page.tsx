@@ -38,7 +38,7 @@ export default async function StarbucksIndexPage() {
   const rel = relativePrices(towns);
   const points = towns.flatMap((t) => {
     const s = t.values.osm_starbucks_count ?? 0, d = t.values.osm_dunkin_count ?? 0;
-    return s + d >= 2 && rel.has(t.id) ? [{ id: t.id, name: t.name, x: s / (s + d), y: rel.get(t.id)!, slot: s > d ? 1 : 2, tip: `${t.name}: ${s} Starbucks, ${d} Dunkin'` }] : [];
+    return s + d >= 2 && rel.has(t.id) ? [{ id: t.id, name: t.name, x: s / (s + d), y: rel.get(t.id)!, slot: s > d ? 1 : s < d ? 2 : 3, tip: `${t.name}: ${s} Starbucks, ${d} Dunkin'` }] : [];
   });
   const pct = (p: number) => `${p >= 0 ? "+" : "−"}${Math.abs(Math.round(p * 100))}%`;
   return (
@@ -51,7 +51,8 @@ export default async function StarbucksIndexPage() {
         <StoryPremiums premiums={premiums} />
       </figure>
       <h2 className="story-h">Starbucks or Dunkin&rsquo;?</h2>
-      <p className="story-note">Each dot is a town with at least two of the chains between them: right, mostly Starbucks; left, mostly Dunkin&rsquo;.</p>
+      <p className="ladder-key"><span><i style={{ background: "var(--story-1)" }} />More Starbucks</span><span><i style={{ background: "var(--story-3)" }} />Even</span><span><i style={{ background: "var(--story-2)" }} />More Dunkin&rsquo;</span></p>
+      <p className="story-note">Each dot is a town with at least two of the chains between them.</p>
       <figure className="story-figure">
         <StoryScatter
           points={points}
