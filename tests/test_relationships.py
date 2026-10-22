@@ -7,6 +7,7 @@ because a relationship is only worth narrating if it agrees with the figures bes
 from __future__ import annotations
 
 import pytest
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from hip.analytics.relationships import pace
@@ -226,3 +227,53 @@ def test_owner_costs_in_everyday_words_are_the_measure_a_refusal_names(
     assert "Owner costs a month, with a mortgage" in problem
     fits = "Monthly owner costs with a mortgage are among the highest."
     assert comparative_problems(fits, bind(fits, hudson), hudson) == []
+
+
+RENTERS_SHARE = "Renters here spend a large share of their income on housing."
+OWNERS_SHARE = "Homeowners here spend a large share of their income on housing."
+BUDGETS_SHARE = "Housing takes a substantial share of household budgets here."
+
+
+@pytest.fixture(scope="module")
+def cumberland() -> Packet:
+    with Session(get_engine()) as session:
+        region = session.execute(
+            text(
+                "SELECT region_id FROM regions WHERE level = 'county' AND geoid = '34011'"
+            )
+        ).scalar_one()
+        return build_packet(session, region)
+
+
+@warehouse
+@pytest.mark.parametrize(
+    ("county", "sentence", "refused"),
+    [
+        # The 2026-10-22 regeneration refused this of Cumberland, whose renters carry
+        # the state's heaviest burden, because income ranks last.
+        (
+            "cumberland",
+            "Renters here spend a large share of their income on housing.",
+            False,
+        ),
+        (
+            "cumberland",
+            "Housing takes a substantial share of household budgets here.",
+            False,
+        ),
+        ("cumberland", "Household income is among the highest in the state.", True),
+        # Hudson's renters carry a light burden and its owners a heavy one.
+        ("hudson", RENTERS_SHARE, True),
+        (
+            "hudson",
+            "Homeowners here spend a large share of their income on housing.",
+            False,
+        ),
+    ],
+)
+def test_a_share_of_income_is_the_burden_not_the_income(
+    request: pytest.FixtureRequest, county: str, sentence: str, refused: bool
+) -> None:
+    packet = request.getfixturevalue(county)
+    problems = comparative_problems(sentence, bind(sentence, packet), packet)
+    assert bool(problems) is refused, problems
