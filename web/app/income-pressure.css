@@ -21,6 +21,13 @@
   .atlas-comparison { border:1px solid var(--border); border-radius:14px; padding:.65rem; background:var(--surface-1); font:12px/1.5 var(--font-text); }
   .atlas-comparison header { display:flex; justify-content:space-between; gap:.5rem; }
   .atlas-comparison button { min-height:32px; border:0; background:transparent; color:var(--text-primary); font:inherit; text-align:left; cursor:pointer; }
+  /* The places chosen for the compare page (Director Note "Visualizing the data"). */
+  .atlas-compare-chips { display:flex; flex-wrap:wrap; gap:.35rem; margin:.5rem 0; padding:0; list-style:none; }
+  .atlas-compare-chips li { display:inline-flex; align-items:center; border:1px solid var(--border); border-radius:999px; padding-left:.55rem; }
+  .atlas-compare-chips button { min-height:32px; padding:0 .45rem; }
+  .atlas-compare-go { display:inline-flex; align-items:center; min-height:44px; font-weight:600; }
+  .atlas-comparison small { display:block; color:var(--text-muted); }
+  .atlas-measure-group h3 small { font-weight:400; color:var(--text-muted); }
   .atlas-comparison-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; margin:.5rem 0; }
   .atlas-comparison-pair>div { display:grid; align-content:start; gap:.2rem; }
   .atlas-comparison-pair strong { font-size:18px; }
