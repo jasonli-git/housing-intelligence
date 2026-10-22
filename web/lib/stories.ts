@@ -31,6 +31,8 @@ export const STORIES = [
   { href: "/stories/the-leafy-premium", title: "The leafy premium", blurb: "How much of the ground under homes is shaded by trees, and whether shade goes with price." },
   { href: "/stories/court-circle-lane", title: "Court, Circle, Lane", blurb: "Towns of Courts and Circles against towns of Streets and Avenues: what street names say about when a town was built, and its prices." },
   { href: "/stories/living-higher", title: "Living higher", blurb: "How high above the sea New Jersey's homes stand, which towns sit lowest, and whether height costs more." },
+  { href: "/stories/what-quiet-costs", title: "What quiet costs", blurb: "How many homes sit in the roar of highways, trains and planes, and whether the quiet towns cost more." },
+  { href: "/stories/where-you-can-see-the-stars", title: "Where you can see the stars", blurb: "The darkest night skies over New Jersey's homes, from satellite night lights, and what a view of the Milky Way costs." },
   { href: "/stories/how-data-gets-rewritten", title: "How data gets rewritten", blurb: "Every time a source revised figures it had already published, and by how much." },
 ];
 
