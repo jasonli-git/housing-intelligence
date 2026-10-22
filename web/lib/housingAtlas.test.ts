@@ -1,5 +1,5 @@
 import {expect,it} from "vitest";
-import {atlasColor,atlasDifference,atlasQuintileColor,atlasValue,atlasReading,ATLAS_COLORS,quintileBreaks,layerForZoom,coarserLayer,type AtlasMeasure} from "./housingAtlas";
+import {atlasColor,atlasDifference,atlasQuintileColor,atlasValue,atlasReading,ATLAS_COLORS,quintileBreaks,layerForZoom,type AtlasMeasure} from "./housingAtlas";
 const row={id:5,name:"Atlantic County",rank:1,of:21,change:20,latest:300000};
 const measure:AtlasMeasure={metric_id:"zhvi_sfr",label:"Home value",unit:"usd",direction:"neutral",source:"Zillow",sourceUrl:"",definition:"",windows:{"5y":{start:"2021-08-31",end:"2026-08-31",rows:[row]}},latest:{start:null,end:"2026-09-30",rows:[{...row,latest:310000}],periods:{5:"2026-09-30"}}};
 it("latest uses actual latest records, not the change window endpoint",()=>{expect(atlasReading(measure,"latest")?.rows[0].latest).toBe(310000);expect(atlasReading(measure,"5y")?.rows[0].latest).toBe(300000);});
@@ -24,15 +24,10 @@ it("a skewed level is shaded by fifths, not stretched by its outlier",()=>{
   expect(atlasQuintileColor(100,breaks)).toBe(ATLAS_COLORS[4]);
   expect(atlasQuintileColor(null,breaks)).toBe("url(#atlas-missing)");
 });
-it("zooming steps one layer at a time, with a gap so a resting zoom does not flicker",()=>{
-  expect(layerForZoom("states",3)).toBe("county");
-  expect(layerForZoom("county",2.1)).toBe("municipality");
-  expect(layerForZoom("municipality",1.8)).toBe("municipality");
-  expect(layerForZoom("municipality",1.6)).toBe("county");
-  expect(layerForZoom("municipality",4.2)).toBe("zip");
-  expect(layerForZoom("zip",3.6)).toBe("zip");
-  expect(layerForZoom("zip",3.3)).toBe("municipality");
-  expect(layerForZoom("county",.82)).toBe("states");
-  expect(coarserLayer("zip")).toBe("municipality");
-  expect(coarserLayer("states")).toBeNull();
+it("zooming moves only between the nation and the state; the state's layer is kept",()=>{
+  expect(layerForZoom("states",2,"county")).toBe("states");
+  expect(layerForZoom("states",3,"municipality")).toBe("municipality");
+  expect(layerForZoom("zip",9,"zip")).toBe("zip");
+  expect(layerForZoom("municipality",.9,"municipality")).toBe("municipality");
+  expect(layerForZoom("municipality",.82,"municipality")).toBe("states");
 });

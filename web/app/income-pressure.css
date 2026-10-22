@@ -34,6 +34,8 @@
   .atlas-layer-name small { font-weight:400; color:var(--text-muted); }
   .atlas-exit { display:inline-flex; align-items:center; gap:.35rem; min-height:36px; padding:0 .8rem; border:1px solid var(--border); border-radius:999px; background:transparent; color:var(--text-primary); font:500 13px/1 var(--font-text); cursor:pointer; }
   .atlas-exit:hover, .atlas-exit:focus-visible { border-color:var(--text-secondary); }
+  .atlas-layer-row .atlas-levels { flex:1 1 auto; width:auto; }
+  .atlas-inline-link { padding:0; border:0; background:none; color:var(--text-primary); font:inherit; text-decoration:underline; cursor:pointer; }
   .atlas-comparison-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; margin:.5rem 0; }
   .atlas-comparison-pair>div { display:grid; align-content:start; gap:.2rem; }
   .atlas-comparison-pair strong { font-size:18px; }

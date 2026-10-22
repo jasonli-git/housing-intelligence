@@ -140,31 +140,19 @@ export function atlasQuintileColor(value:number|null, breaks:number[]):string {
 }
 
 /**
- * Zooming moves between layers (owner, 2026-10-22): the United States, then New Jersey's
- * counties, towns and ZIP codes, each finer than the last. The three New Jersey layers
- * share one projection, so a layer is a band of zoom and switching keeps the view where
- * it is. Each band enters at one zoom and leaves at a lower one, so a zoom resting near a
- * boundary does not flicker between layers.
+ * Zooming moves between the nation and the state (owner, 2026-10-22): zoom in on the
+ * United States and New Jersey's map opens; zoom out of New Jersey and the nation returns.
+ * Within New Jersey the layer — counties, towns or ZIP codes — is a switch, not a zoom, so
+ * every layer can be seen whole. Entering and leaving happen at different zooms, so a zoom
+ * resting near the boundary does not flicker.
  */
 export type AtlasLayer = "states" | AtlasLevel;
-export const LAYER_ORDER: AtlasLayer[] = ["states", "county", "municipality", "zip"];
 export const MAX_ZOOM = 10;
-/** The zoom at which the next finer layer takes over, and the zoom below which it gives back. */
-const ENTER: Record<AtlasLevel, number> = { county: 2.5, municipality: 2, zip: 4 };
-const LEAVE: Record<AtlasLevel, number> = { county: 0.85, municipality: 1.7, zip: 3.4 };
-/** Where a layer is shown when it is entered directly, within its band. */
-export const LAYER_ZOOM: Record<AtlasLayer, number> = { states: 1, county: 1, municipality: 2.2, zip: 4.4 };
+const ENTER_STATE = 2.5;
+const LEAVE_STATE = 0.85;
 
-/** The layer a zoom calls for, starting from the current one: one step at most. */
-export function layerForZoom(current: AtlasLayer, zoom: number): AtlasLayer {
-  const index = LAYER_ORDER.indexOf(current);
-  const finer = LAYER_ORDER[index + 1] as AtlasLevel | undefined;
-  if (finer && zoom >= ENTER[finer]) return finer;
-  if (current !== "states" && zoom < LEAVE[current]) return LAYER_ORDER[index - 1];
-  return current;
-}
-/** The layer one step coarser, or null at the United States. */
-export function coarserLayer(current: AtlasLayer): AtlasLayer | null {
-  const index = LAYER_ORDER.indexOf(current);
-  return index > 0 ? LAYER_ORDER[index - 1] : null;
+/** The layer a zoom calls for: `stateLayer` is the New Jersey layer to open on the way in. */
+export function layerForZoom(current: AtlasLayer, zoom: number, stateLayer: AtlasLevel): AtlasLayer {
+  if (current === "states") return zoom >= ENTER_STATE ? stateLayer : "states";
+  return zoom < LEAVE_STATE ? "states" : current;
 }
