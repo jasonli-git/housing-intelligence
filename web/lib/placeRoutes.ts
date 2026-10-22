@@ -28,6 +28,12 @@ export function regionPath(id: number | string): string {
   return r ? `/${r.state}/${r.slug}` : `/regions/${n}`;
 }
 
+/** The region id of a place by its level and Census code, or null where it has no page. */
+const byGeoid = new Map(Object.entries(records).map(([id, r]) => [`${r.level}/${r.geoid}`, Number(id)]));
+export function placeIdOf(level: string, geoid: string): number | null {
+  return byGeoid.get(`${level}/${geoid}`) ?? null;
+}
+
 /** The region id an address names, or null: never a guessed id for an unknown address. */
 export function resolvePlace(state: string, slug: string): number | null {
   return byPath.get(`${state}/${slug}`) ?? null;

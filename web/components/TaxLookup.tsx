@@ -14,6 +14,7 @@ import {
   placesFor,
   type StreetShard,
 } from "@/lib/addressSearch";
+import { PropertyDetails } from "@/components/PropertyDetails";
 import { countyLookup } from "@/lib/countyLookups";
 import { formatValue } from "@/lib/format";
 import {
@@ -72,7 +73,15 @@ type Found = { file: ParcelFile; parcels: Parcel[]; parcel: Parcel };
  * files are fetched, and only up to `FETCH_AT_ONCE` before the reader is asked to choose.
  * A block and lot still takes a town, since those numbers repeat across the state.
  */
-export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: string }) {
+export function TaxLookup({
+  towns,
+  artifactUrl,
+  rate = null,
+}: {
+  towns: Town[];
+  artifactUrl: string;
+  rate?: { value: number; asOf: string } | null;
+}) {
   const [query, setQuery] = useState("");
   const [townQuery, setTownQuery] = useState("");
   const townFilter = useRef<HTMLDetailsElement>(null);
@@ -304,6 +313,8 @@ export function TaxLookup({ towns, artifactUrl }: { towns: Town[]; artifactUrl: 
           parcels={chosen.parcels}
           parcel={chosen.parcel}
           countyRecords={countyLookup(chosen.file.county ?? "", meta?.towns[chosen.file.geoid]?.[2] ?? "")}
+          rate={rate}
+          artifactUrl={artifactUrl}
         />
       )}
 
@@ -323,11 +334,15 @@ function ParcelCard({
   parcels,
   parcel,
   countyRecords,
+  rate,
+  artifactUrl,
 }: {
   file: ParcelFile;
   parcels: Parcel[];
   parcel: Parcel;
   countyRecords: string | null;
+  rate: { value: number; asOf: string } | null;
+  artifactUrl: string;
 }) {
   const town = file.municipality ?? "this town";
   const implied = impliedValue(parcel.assessed, file.assessment_ratio);
@@ -373,16 +388,21 @@ function ParcelCard({
         </div>
       )}
 
-      {(parcel.yearBuilt || parcel.dwellings || parcel.building) && (
+      {parcel.building && (
         <p className="tax-building">
           <span>The building</span>
-          {[
-            parcel.yearBuilt ? `built ${parcel.yearBuilt}` : null,
-            parcel.dwellings ? `${parcel.dwellings} ${parcel.dwellings === 1 ? "home" : "homes"}` : null,
-            building ?? (parcel.building ? `assessor’s code “${parcel.building.trim()}”` : null),
-          ].filter(Boolean).join(" · ")}
+          {building ?? `assessor’s code “${parcel.building.trim()}”`}
         </p>
       )}
+
+      <PropertyDetails
+        parcel={parcel}
+        geoid={file.geoid}
+        town={town}
+        likelyValue={implied !== null && file.assessment_ratio ? Math.round(implied / 1000) * 1000 : null}
+        rate={rate}
+        artifactUrl={artifactUrl}
+      />
 
       <section className="tax-town" aria-labelledby="tax-town-heading">
         <h3 id="tax-town-heading">{town}’s assessments</h3>
