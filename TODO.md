@@ -218,16 +218,17 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Documentation upkeep
 
-- [ ] **Which README figures are mechanically derivable has never been settled.** The
-      status counts (places and sources), the Tech Stack and the evaluation list have a
-      queryable or file-based source; the status narrative, the Features descriptions and
-      the setup prose do not. Deciding the boundary is what makes any "regenerate on
-      deploy" work scopeable, and ARCHITECTURE #175 settles only the images half. The
-      README was cut from 1,095 lines to about 250 on 2026-10-21: the milestone-by-
-      milestone features, sample output and status commentary went (CHANGELOG and ROADMAP
-      hold them), and so did the stale mac-sitrep resource table and the storage table
-      (`uv run hip footprint` measures storage on demand), so `src/hip/footprint.py`'s
-      docstring and a future sitrep run no longer have a README section to write into.
+- [ ] **Fill the README's numbers and check its writing.** (decided by the owner
+      2026-10-21, ARCHITECTURE #417, Director Note "Decision: README numbers are filled,
+      its writing is checked") A command (e.g. `hip readme`) rewrites the README's
+      figures from their sources: sources and places from the warehouse, tools and the
+      version from the site and CHANGELOG, the Tech Stack's versions from
+      `.python-version`, `pyproject.toml`, `web/package.json` and `docker-compose.yml`,
+      and the evaluation list from `reports/evaluation/`. A test fails if any differs,
+      or if the "Latest" line is older than CHANGELOG's newest entry. The writing stays
+      by hand. The README was cut from 1,095 lines to about 250 on 2026-10-21, and its
+      "Latest" and "Next" lines are already behind (they describe #201–#211 and a
+      hosting decision since put on hold).
 
 ### Housekeeping
 
