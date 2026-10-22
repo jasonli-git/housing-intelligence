@@ -709,31 +709,50 @@ which is why every write path lives there.
 
 ## Warehouse Schema
 
-**Every table below is built and populated.** Migration `0002` created `regions`,
-`region_identifiers`, `region_crosswalk`, `sources`, and `source_releases`; `0003` added
-`metrics`, `fact_metric_observation`, and `source_match_reject`; `0004` added the
-`nation` level; `0005` added `fact_metric_change` and `region_rankings`; `0006` added
-`region_rankings.basis` (#52); `0007` added `region_explanations` (#60); `0008` added
-`regions.name_lsad` (#70); `0009` added `sources.homepage` (#72); `0010` keyed
-`region_explanations` on the model and gave it a `rank` (#91); `0011` gave it `binding`
-and `content_sha256` (#112, #114). Measured 2026-09-10, the
-fact table holds 351,295 observations, with 26,805 changes, 26,790 change rankings and
-11,884 value rankings derived from them.
-Since then: `0012` added `map_backdrop` (#164); `0013` added `fact_revision` and the
-trigger that fills it (#194); `0014` redated MOD-IV figures by tax year (#208); `0015`
-added `source_discoveries` (#222); `0016` added `margin_of_error` to observations,
-`pct_change_margin` to changes and `rank_best`/`rank_worst` to rankings (#235–#239); and
-`0017` added `method_changes` (#243); and `0018` added `start_margin`/`end_margin` to
-changes and `margin_of_error` to rankings (#247). The DDL block below predates them; for
-these seven the migrations are the only statement.
-`region_identifiers`, empty since Milestone 1, now holds 554 NJ municipal codes under
-scheme `nj_cd_code` — the join MOD-IV was always going to supply (#21, #51).
-The block below was regenerated from the live tables on 2026-09-10, and
-`region_explanations` again on 2026-09-11 — every column in its
-real order with its real type, and every key and constraint, restated for reading;
-indexes other than keys are left out. The migrations stay authoritative for DDL.
-`src/hip/warehouse/models.py` maps only the spine and `region_explanations`; the fact and
-derived tables are written in SQL.
+**What the warehouse is, in plain terms.** One PostgreSQL database holds every figure
+the site publishes and where each came from. Everything else (pages, packets, readings,
+downloads) is drawn from it. Its tables fall into six groups:
+
+| Group | Tables | What they hold | Rows, 2026-10-21 |
+|---|---|---|---|
+| Places | `regions`, `region_identifiers`, `region_crosswalk`, `map_backdrop` | every state, county, town, ZIP and tract with its outline; second codes (NJ's municipal codes); how ZIPs split across towns; other states' outlines for the map | 3,366 places |
+| Where figures come from | `sources`, `source_releases`, `source_discoveries`, `source_match_reject` | each publisher and its licence; each file actually loaded; when each was last checked; places a file named that matched none of ours | 51 sources, 1,404 files |
+| The figures | `metrics`, `fact_metric_observation` | what each measure means; every figure, one per place, measure and period | 173 measures, 965,920 figures |
+| Worked out from the figures | `fact_metric_change`, `region_rankings`, `region_relationships`, `region_persistence`, `similar_places` | changes over each window, rankings, the relationships and history a reading may describe, cheaper places like this one; all rebuilt by `hip analyze` | 125,474 changes, 178,880 rankings |
+| Kept apart from ranked figures | `income_limits`, `water_systems`, `affordable_housing_records`, `infrastructure_records`, `community_records`, `work_destinations`, `migration_flows` | records that are not one number per place: HUD's limits by household size, water systems and their violations, affordable housing, utilities and lead lines, schools, crime, health and broadband, where residents work, who moves in and out | — |
+| History and readings | `fact_revision`, `method_changes`, `region_explanations` | every published figure that later changed; the days this site changed a calculation; the model-written readings | 648,027 revisions, 21 readings |
+
+Two rules hold across all of it: a figure exists once (reloading replaces it, never
+duplicates it), and every figure names the file it came from, so a bad file can be
+removed with exactly what it contributed.
+
+**How it got here.** Migration `0002` created `regions`, `region_identifiers`,
+`region_crosswalk`, `sources` and `source_releases`; `0003` added `metrics`,
+`fact_metric_observation` and `source_match_reject`; `0004` the `nation` level; `0005`
+`fact_metric_change` and `region_rankings`; `0006` `region_rankings.basis` (#52); `0007`
+`region_explanations` (#60); `0008` `regions.name_lsad` (#70); `0009` `sources.homepage`
+(#72); `0010` keyed readings on the model with a `rank` (#91); `0011` added `binding` and
+`content_sha256` (#112, #114); `0012` `map_backdrop` (#164); `0013` `fact_revision` and
+its trigger (#194); `0014` redated MOD-IV figures by tax year (#208); `0015`
+`source_discoveries` (#222); `0016` margins on observations, changes and rankings
+(#235–#239); `0017` `method_changes` (#243); `0018` start and end margins on changes
+(#247); `0019` readings keyed on `audience`, with `sections` (#260); `0020` each metric's
+kind and licence and each source's terms (#269); `0021` withdrawals recorded as revisions
+(#284); `0022` `income_limits` (#285); `0023` `water_systems` (#304); `0024`
+`affordable_housing_records` (#307); `0025` water systems' return-to-compliance dates;
+`0026` `infrastructure_records` (#308); `0027` `work_destinations` (#313); `0028`
+recomputed commute shares (#316); `0029` `similar_places` (#317); `0030`
+`community_records` (#318); `0031` `migration_flows` (#333); `0032` `revision_is_noise`,
+so floating-point noise is not a revision (#334); `0033` `region_relationships` (#336);
+`0034` HMDA's medians recomputed exactly (#338); `0035` `region_persistence` (#348);
+`0036` margins on revisions and pruned release pointers (#350); `0037`
+`region_rankings.ties`.
+
+The block below was regenerated from the live tables on 2026-10-21: every table, column,
+key and constraint, in real order with real types, restated for reading. Indexes other
+than keys are left out, and long checks are abbreviated where marked. The migrations
+stay authoritative for DDL. `src/hip/warehouse/models.py` maps only the spine and
+`region_explanations`; the other tables are written in SQL.
 
 `fact_metric_observation.match_method` records how each row's geography was resolved —
 `fips`, `zip_code`, `state_code`, `name_county` or `nj_cd_code`, plus `national` for the
@@ -745,140 +764,389 @@ tell them apart without redoing the join.
 CREATE TYPE region_level AS ENUM
   ('state', 'county', 'municipality', 'zip', 'tract', 'parcel', 'nation');
 
+-- ── Places ───────────────────────────────────────────────────────────────────────
+
 -- Every geography, every level, one table (#7).
 CREATE TABLE regions (
-  region_id  BIGSERIAL    PRIMARY KEY,
-  geoid      VARCHAR      NOT NULL,     -- Census GEOID, or source-native id
+  region_id  BIGSERIAL PRIMARY KEY,
+  geoid      VARCHAR(16) NOT NULL,       -- Census GEOID, or source-native id
   level      region_level NOT NULL,
-  name       TEXT         NOT NULL,     -- bare label: 'Boonton'
-  state_code VARCHAR      NOT NULL,
-  parent_id  BIGINT       REFERENCES regions(region_id),
-  geom       GEOMETRY(MultiPolygon, 4269),  -- NULL only for the nation row (#30)
-  name_lsad  TEXT         NOT NULL,     -- with legal status: 'Boonton township' (#70)
+  name       TEXT NOT NULL,              -- bare label: 'Boonton'
+  state_code VARCHAR(2) NOT NULL,
+  parent_id  BIGINT REFERENCES regions(region_id),
+  geom       GEOMETRY(MultiPolygon, 4269), -- NULL only for the nation row (#30)
+  name_lsad  TEXT NOT NULL,              -- with legal status: 'Boonton township' (#70)
   UNIQUE (level, geoid),
   -- state, zip and nation have no parent; every other level must have one
   CONSTRAINT ck_regions_parent_by_level
-    CHECK ((level IN ('state', 'zip', 'nation')) = (parent_id IS NULL))
+    CHECK ((level IN ('state', 'zip', 'nation')) = (parent_id IS NULL))  -- abbreviated
 );
 
--- A second identifier per region, by scheme: 554 NJ municipal codes (#21, #51).
+-- A second identifier per region, by scheme: 564 NJ municipal codes (#21, #51, #184).
 CREATE TABLE region_identifiers (
-  region_id  BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
-  scheme     VARCHAR NOT NULL,          -- 'nj_cd_code'
-  identifier VARCHAR NOT NULL,
+  region_id  BIGINT NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  scheme     VARCHAR(32) NOT NULL,       -- 'nj_cd_code'
+  identifier VARCHAR(32) NOT NULL,
   PRIMARY KEY (region_id, scheme)
 );
 
 -- ZIP↔municipality is many-to-many, so it cannot live in parent_id.
 CREATE TABLE region_crosswalk (
-  from_region_id BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
-  to_region_id   BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
-  weight         NUMERIC NOT NULL CHECK (weight > 0 AND weight <= 1),
-  method         VARCHAR NOT NULL,      -- 'hud_res_ratio' or 'area' (#37)
+  from_region_id BIGINT NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  to_region_id   BIGINT NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  weight         NUMERIC(9,8) NOT NULL CHECK (weight > 0 AND weight <= 1),
+  method         VARCHAR(16) NOT NULL,   -- 'hud_res_ratio' or 'area' (#37)
   PRIMARY KEY (from_region_id, to_region_id)
 );
 
+-- Every state's outline as map context, never a region (#164).
+CREATE TABLE map_backdrop (
+  level TEXT NOT NULL,
+  code  TEXT NOT NULL,
+  name  TEXT NOT NULL,
+  geom  GEOMETRY(MultiPolygon, 4269) NOT NULL,
+  PRIMARY KEY (level, code)
+);
+
+-- ── Where figures come from ──────────────────────────────────────────────────────
+
 CREATE TABLE sources (
-  source_id TEXT PRIMARY KEY,           -- 'zillow_zhvi', 'census_acs'
-  name      TEXT NOT NULL,
-  publisher TEXT NOT NULL,
-  license   TEXT NOT NULL,
-  url       TEXT NOT NULL,              -- canonical root; the packet carries this
-  cadence   TEXT NOT NULL,              -- 'monthly', 'annual'
-  homepage  TEXT                        -- page for a reader, when it differs (#72)
+  source_id     TEXT PRIMARY KEY,        -- 'zillow_zhvi', 'census_acs'
+  name          TEXT NOT NULL,
+  publisher     TEXT NOT NULL,
+  license       TEXT NOT NULL,
+  url           TEXT NOT NULL,           -- canonical root; the packet carries this
+  cadence       TEXT NOT NULL,           -- 'monthly', 'annual'
+  homepage      TEXT,                    -- page for a reader, when it differs (#72)
+  licence_class TEXT,                    -- filled by `hip sync-registry` (#269)
+  terms_url     TEXT,
+  terms_checked DATE,
+  terms_note    TEXT,
+  notices       TEXT[] NOT NULL DEFAULT '{}'  -- notices its terms require
 );
 
 -- One row per file actually ingested (#9, #10, #53).
 CREATE TABLE source_releases (
-  release_id  BIGSERIAL   PRIMARY KEY,
-  source_id   TEXT        NOT NULL REFERENCES sources(source_id) ON DELETE CASCADE,
-  layer       TEXT        NOT NULL,     -- the file in the release: 'county', 'cousub' (#75)
-  vintage     TEXT        NOT NULL,     -- '2023', 'current', or a derived digest (#73)
+  release_id  BIGSERIAL PRIMARY KEY,
+  source_id   TEXT NOT NULL REFERENCES sources(source_id) ON DELETE CASCADE,
+  layer       TEXT NOT NULL,             -- the file in the release: 'county', 'cousub' (#75)
+  vintage     TEXT NOT NULL,             -- '2023', 'current', or a derived digest (#73)
   fetched_at  TIMESTAMPTZ NOT NULL,
-  file_sha256 TEXT        NOT NULL,
-  row_count   BIGINT      NOT NULL,     -- rows, counted from the landed Parquet (#74)
+  file_sha256 TEXT NOT NULL,
+  row_count   BIGINT NOT NULL,           -- rows, counted from the landed Parquet (#74)
   UNIQUE (source_id, layer, vintage, file_sha256)
 );
 
-CREATE TABLE metrics (
-  metric_id   TEXT PRIMARY KEY,         -- 'zhvi_sfr', 'acs_median_hh_income'
-  label       TEXT NOT NULL,
-  unit        TEXT NOT NULL,            -- 'usd', 'usd_month', 'count', 'ratio'
-  frequency   TEXT NOT NULL,            -- 'monthly', 'annual'
-  direction   TEXT NOT NULL
-              CHECK (direction IN ('higher_is_better', 'lower_is_better', 'neutral')),
-  description TEXT NOT NULL,
-  source_id   TEXT NOT NULL REFERENCES sources(source_id)
+-- The newest release each publisher offers, as last checked (#222); no foreign key.
+CREATE TABLE source_discoveries (
+  source_id      TEXT PRIMARY KEY,
+  newest         TEXT NOT NULL,
+  checked_at     TIMESTAMPTZ NOT NULL,
+  outcome        TEXT NOT NULL,          -- 'confirmed', 'unreachable', ...
+  published      TEXT,
+  pending        TEXT,                   -- a newer release seen but not yet adopted
+  pending_from   DATE,
+  pending_reason TEXT,
+  loaded_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
--- The one fact table (#8).
-CREATE TABLE fact_metric_observation (
-  region_id    BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
-  metric_id    TEXT    NOT NULL REFERENCES metrics(metric_id),
-  period_start DATE    NOT NULL,
-  period_end   DATE    NOT NULL CHECK (period_end >= period_start),
-  value        DOUBLE PRECISION NOT NULL,
-  release_id   BIGINT  NOT NULL REFERENCES source_releases(release_id) ON DELETE CASCADE,
-  match_method VARCHAR NOT NULL,        -- how the geography resolved (#27)
-  PRIMARY KEY (region_id, metric_id, period_start)
-);
-CREATE INDEX ON fact_metric_observation (metric_id, period_start);
 
 -- Source geographies that matched no region, and why (#27, #28).
 CREATE TABLE source_match_reject (
   reject_id    BIGSERIAL PRIMARY KEY,
-  source_id    TEXT      NOT NULL REFERENCES sources(source_id) ON DELETE CASCADE,
-  layer        TEXT      NOT NULL,
-  region_name  TEXT      NOT NULL,
+  source_id    TEXT NOT NULL REFERENCES sources(source_id) ON DELETE CASCADE,
+  layer        TEXT NOT NULL,
+  region_name  TEXT NOT NULL,
   county_name  TEXT,
-  observations BIGINT    NOT NULL,
-  reason       TEXT      NOT NULL,
+  observations BIGINT NOT NULL,
+  reason       TEXT NOT NULL,
   UNIQUE (source_id, layer, region_name, county_name)
 );
 
--- Analytics output: derived, always rebuildable, never a source of truth.
+-- ── The figures ──────────────────────────────────────────────────────────────────
+
+CREATE TABLE metrics (
+  metric_id     TEXT PRIMARY KEY,        -- 'zhvi_sfr', 'acs_median_hh_income'
+  label         TEXT NOT NULL,
+  unit          TEXT NOT NULL,           -- 'usd', 'usd_month', 'count', 'ratio'
+  frequency     TEXT NOT NULL,           -- 'monthly', 'annual'
+  direction     TEXT NOT NULL CONSTRAINT ck_metrics_direction
+                CHECK (direction IN ('higher_is_better', 'lower_is_better', 'neutral')),
+  description   TEXT NOT NULL,
+  source_id     TEXT NOT NULL REFERENCES sources(source_id),
+  record_type   TEXT,                    -- survey, administrative, calculated, ... (#269)
+  licence_class TEXT,                    -- a calculated metric's strictest input's
+  originator    TEXT                     -- who owns a redistributed series
+);
+
+-- The one fact table (#8).
+CREATE TABLE fact_metric_observation (
+  region_id       BIGINT NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  metric_id       TEXT NOT NULL REFERENCES metrics(metric_id),
+  period_start    DATE NOT NULL,
+  period_end      DATE NOT NULL CHECK (period_end >= period_start),
+  value           DOUBLE PRECISION NOT NULL,
+  release_id      BIGINT NOT NULL
+                  REFERENCES source_releases(release_id) ON DELETE CASCADE,
+  match_method    VARCHAR(16) NOT NULL,  -- how the geography resolved (#27)
+  margin_of_error DOUBLE PRECISION,      -- a survey figure's 90% margin (#235)
+  PRIMARY KEY (region_id, metric_id, period_start)
+);
+
+-- ── Worked out from the figures: derived, rebuilt by `hip analyze` ───────────────
+
 CREATE TABLE fact_metric_change (
-  region_id    BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
-  metric_id    TEXT    NOT NULL REFERENCES metrics(metric_id),
-  "window"     VARCHAR NOT NULL,        -- '1y', '3y', '5y', '10y', 'since_2019'
-  window_start DATE    NOT NULL,
-  window_end   DATE    NOT NULL CHECK (window_end > window_start),
-  start_value  DOUBLE PRECISION NOT NULL,
-  end_value    DOUBLE PRECISION NOT NULL,
-  pct_change   DOUBLE PRECISION NOT NULL,
-  cagr         DOUBLE PRECISION,
+  region_id         BIGINT NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  metric_id         TEXT NOT NULL REFERENCES metrics(metric_id),
+  "window"          VARCHAR(16) NOT NULL, -- '1y', '3y', '5y', '10y', 'since_2019'
+  window_start      DATE NOT NULL,
+  window_end        DATE NOT NULL CHECK (window_end > window_start),
+  start_value       DOUBLE PRECISION NOT NULL,
+  end_value         DOUBLE PRECISION NOT NULL,
+  pct_change        DOUBLE PRECISION NOT NULL,
+  cagr              DOUBLE PRECISION,
+  pct_change_margin DOUBLE PRECISION,    -- (#238)
+  start_margin      DOUBLE PRECISION,    -- (#247)
+  end_margin        DOUBLE PRECISION,
   PRIMARY KEY (region_id, metric_id, "window")
 );
 
 CREATE TABLE region_rankings (
-  metric_id  TEXT    NOT NULL REFERENCES metrics(metric_id),
-  level      TEXT    NOT NULL,          -- a region_level value, stored as text
-  "window"   VARCHAR NOT NULL,          -- as above, or 'latest' for a value ranking
-  region_id  BIGINT  NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
-  value      DOUBLE PRECISION NOT NULL, -- the ranked quantity: pct_change, or the value
-  rank       INT     NOT NULL,
-  "of"       INT     NOT NULL,          -- cohort size
-  percentile DOUBLE PRECISION NOT NULL,
-  basis      VARCHAR NOT NULL CHECK (basis IN ('change', 'value')),  -- #52
+  metric_id       TEXT NOT NULL REFERENCES metrics(metric_id),
+  level           TEXT NOT NULL,         -- a region_level value, stored as text
+  "window"        VARCHAR(16) NOT NULL,  -- as above, or 'latest' for a value ranking
+  region_id       BIGINT NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  value           DOUBLE PRECISION NOT NULL, -- the ranked quantity: pct_change, or the value
+  rank            INTEGER NOT NULL,      -- best first (#413 restates it by value)
+  "of"            INTEGER NOT NULL,      -- cohort size
+  percentile      DOUBLE PRECISION NOT NULL,
+  basis           VARCHAR(8) NOT NULL CHECK (basis IN ('change', 'value')),  -- #52
+  rank_best       INTEGER,               -- the range the margins allow (#239, #403)
+  rank_worst      INTEGER,
+  margin_of_error DOUBLE PRECISION,
+  ties            INTEGER,               -- regions sharing this rank; NULL reads untied
+  PRIMARY KEY (metric_id, level, basis, "window", region_id),
   CHECK (rank >= 1 AND rank <= "of"),
-  PRIMARY KEY (metric_id, level, basis, "window", region_id)
+  CHECK ((rank_best IS NULL AND rank_worst IS NULL)
+         OR (1 <= rank_best AND rank_best <= rank AND rank <= rank_worst
+             AND rank_worst <= "of"))
 );
 
--- Generated interpretation: one row per region, window and model (#60, #91).
-CREATE TABLE region_explanations (
-  region_id     BIGINT      NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
-  "window"      VARCHAR     NOT NULL,
-  model_id      VARCHAR     NOT NULL,
-  model_label   TEXT        NOT NULL,
-  runtime       VARCHAR     NOT NULL,   -- the provider, for a hosted model: 'gemini'
-  body          TEXT        NOT NULL CHECK (length(body) > 0),
-  packet_sha256 VARCHAR     NOT NULL,   -- the packet the prose was written from (#61)
-  generated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  rank          SMALLINT    NOT NULL,   -- preference-list position when written (#91)
-  content_sha256 VARCHAR,               -- the packet without its provenance (#114)
-  binding       JSONB,                  -- every figure → field, period, release (#112)
-  PRIMARY KEY (region_id, "window", model_id)
+-- The relationships a reading may narrate, and whether causal wording is allowed (#336).
+CREATE TABLE region_relationships (
+  region_id    INTEGER NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  relation_id  TEXT NOT NULL,
+  kind         TEXT NOT NULL
+               CHECK (kind IN ('ratio_split', 'outpaced', 'supply_and_moves')),
+  period_start DATE NOT NULL,
+  period_end   DATE NOT NULL,
+  figures      JSONB NOT NULL,
+  direction    TEXT,
+  causal       BOOLEAN NOT NULL,
+  PRIMARY KEY (region_id, relation_id)
 );
+
+-- Today's price-to-income against the region's own history (#348).
+CREATE TABLE region_persistence (
+  region_id          INTEGER NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  fact_id            TEXT NOT NULL,
+  first_year         INTEGER NOT NULL,
+  last_year          INTEGER NOT NULL,
+  years              INTEGER NOT NULL,
+  missing_years      JSONB NOT NULL,
+  vs_median          NUMERIC NOT NULL,
+  vs_median_low      NUMERIC NOT NULL,
+  vs_median_high     NUMERIC NOT NULL,
+  rank               INTEGER NOT NULL,
+  rank_best          INTEGER NOT NULL,
+  rank_worst         INTEGER NOT NULL,
+  peak_year          INTEGER NOT NULL,
+  peak_vs_median     NUMERIC NOT NULL,
+  above_median_since INTEGER,
+  episodes           JSONB NOT NULL,
+  series             JSONB NOT NULL,
+  validation         JSONB,
+  withheld           TEXT,               -- why it is not shown, e.g. Hudson (#348)
+  PRIMARY KEY (region_id, fact_id)
+);
+
+-- Somewhere like here, but cheaper (#317).
+CREATE TABLE similar_places (
+  region_id       INTEGER NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  rank            SMALLINT NOT NULL,
+  place_region_id INTEGER NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  distance        DOUBLE PRECISION,
+  figures         JSONB NOT NULL,
+  basis           JSONB,
+  PRIMARY KEY (region_id, rank)
+);
+
+-- ── Kept apart from ranked figures: records, not one number per place ────────────
+
+-- HUD's income limits in full: every band and household size (#285).
+CREATE TABLE income_limits (
+  region_id      INTEGER NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  fiscal_year    SMALLINT NOT NULL,
+  band           SMALLINT NOT NULL CHECK (band IN (30, 50, 80)),
+  household_size SMALLINT NOT NULL CHECK (household_size BETWEEN 1 AND 8),
+  income_limit   DOUBLE PRECISION NOT NULL,
+  median_income  DOUBLE PRECISION,
+  release_id     INTEGER NOT NULL
+                 REFERENCES source_releases(release_id) ON DELETE CASCADE,
+  PRIMARY KEY (region_id, fiscal_year, band, household_size)
+);
+
+-- The community water systems serving each town and ZIP (#304).
+CREATE TABLE water_systems (
+  region_id                   INTEGER NOT NULL
+                              REFERENCES regions(region_id) ON DELETE CASCADE,
+  pwsid                       VARCHAR(9) NOT NULL,
+  name                        TEXT NOT NULL,
+  homes                       DOUBLE PRECISION NOT NULL,
+  share_of_homes              DOUBLE PRECISION NOT NULL,
+  violations                  INTEGER NOT NULL,
+  first_year                  SMALLINT NOT NULL,
+  last_year                   SMALLINT NOT NULL,
+  latest_violation            DATE,
+  latest_violation_what       TEXT,
+  violation_kinds             TEXT,
+  release_id                  INTEGER NOT NULL
+                              REFERENCES source_releases(release_id) ON DELETE CASCADE,
+  resolved_violations         INTEGER,   -- reported, never inferred (0025)
+  latest_return_to_compliance DATE,
+  PRIMARY KEY (region_id, pwsid),
+  CONSTRAINT water_resolution_count CHECK (resolved_violations IS NULL
+    OR resolved_violations BETWEEN 0 AND violations)
+);
+
+-- Three affordable-housing answers kept apart by programme and release (#307).
+CREATE TABLE affordable_housing_records (
+  region_id  INTEGER NOT NULL REFERENCES regions(region_id),
+  source_id  TEXT NOT NULL,
+  kind       TEXT NOT NULL,
+  record_id  TEXT NOT NULL,
+  payload    JSONB NOT NULL,
+  snapshot   DATE NOT NULL,
+  release_id INTEGER NOT NULL REFERENCES source_releases(release_id),
+  PRIMARY KEY (source_id, kind, record_id)
+);
+
+-- Utilities and what is in the pipes, by supplier, never by address (#308, #409).
+CREATE TABLE infrastructure_records (
+  source_id  TEXT NOT NULL,
+  kind       TEXT NOT NULL,
+  entity_id  TEXT NOT NULL,
+  record_id  TEXT NOT NULL,
+  payload    JSONB NOT NULL,
+  snapshot   DATE,
+  release_id INTEGER NOT NULL REFERENCES source_releases(release_id),
+  PRIMARY KEY (source_id, kind, entity_id, record_id)
+);
+
+-- Schools, crime reporting, health and broadband: cited records, never rankings (#318).
+CREATE TABLE community_records (
+  source_id  TEXT NOT NULL,
+  kind       TEXT NOT NULL,
+  entity_id  TEXT NOT NULL,
+  record_id  TEXT NOT NULL,
+  payload    JSONB NOT NULL,
+  snapshot   DATE,
+  release_id INTEGER NOT NULL REFERENCES source_releases(release_id),
+  PRIMARY KEY (source_id, kind, entity_id, record_id)
+);
+
+-- Where each place's residents work, as a short list (#313).
+CREATE TABLE work_destinations (
+  region_id             INTEGER NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  rank                  SMALLINT NOT NULL,
+  destination_region_id INTEGER REFERENCES regions(region_id) ON DELETE CASCADE,
+  destination_name      TEXT NOT NULL,
+  jobs                  INTEGER NOT NULL,
+  share                 DOUBLE PRECISION NOT NULL CHECK (share BETWEEN 0 AND 1),
+  total_jobs            INTEGER NOT NULL,
+  year                  SMALLINT NOT NULL,
+  release_id            INTEGER NOT NULL
+                        REFERENCES source_releases(release_id) ON DELETE CASCADE,
+  PRIMARY KEY (region_id, rank)
+);
+
+-- Where each county's movers came from and went to (#333).
+CREATE TABLE migration_flows (
+  region_id       INTEGER NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  direction       TEXT NOT NULL CHECK (direction IN ('in', 'out')),
+  rank            SMALLINT NOT NULL,
+  other_region_id INTEGER REFERENCES regions(region_id) ON DELETE CASCADE,
+  other_geoid     TEXT NOT NULL,
+  other_name      TEXT NOT NULL,
+  returns         INTEGER NOT NULL,
+  people          INTEGER NOT NULL,
+  agi_per_return  DOUBLE PRECISION,
+  share           DOUBLE PRECISION NOT NULL CHECK (share BETWEEN 0 AND 1),
+  total_returns   INTEGER NOT NULL,
+  year            SMALLINT NOT NULL,
+  release_id      INTEGER NOT NULL
+                  REFERENCES source_releases(release_id) ON DELETE CASCADE,
+  PRIMARY KEY (region_id, direction, rank)
+);
+
+-- ── History and readings ─────────────────────────────────────────────────────────
+
+-- Every published figure that changed, filled by triggers (#194, #284); no foreign
+-- keys on purpose, so a revision outlives its region, metric and release.
+CREATE TABLE fact_revision (
+  revision_id        BIGSERIAL PRIMARY KEY,
+  region_id          INTEGER NOT NULL,
+  metric_id          TEXT NOT NULL,
+  period_start       DATE NOT NULL,
+  old_value          DOUBLE PRECISION,
+  new_value          DOUBLE PRECISION,   -- NULL: the figure was withdrawn (#284)
+  old_release_id     INTEGER,
+  new_release_id     INTEGER,
+  revised_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  old_margin         DOUBLE PRECISION,   -- (#350)
+  new_margin         DOUBLE PRECISION,
+  old_release_pruned BOOLEAN NOT NULL DEFAULT false  -- its file was later removed
+);
+
+-- The days this site changed how it computes a figure (#243).
+CREATE TABLE method_changes (
+  changed_on DATE NOT NULL,
+  metric_id  TEXT NOT NULL,
+  note       TEXT NOT NULL,
+  PRIMARY KEY (changed_on, metric_id)
+);
+
+-- Generated interpretation: one row per region, window and audience (#60, #91, #260).
+CREATE TABLE region_explanations (
+  region_id      BIGINT NOT NULL REFERENCES regions(region_id) ON DELETE CASCADE,
+  "window"       VARCHAR(16) NOT NULL,
+  model_id       VARCHAR(64) NOT NULL,
+  model_label    TEXT NOT NULL,
+  runtime        VARCHAR(16) NOT NULL,   -- the provider, for a hosted model: 'gemini'
+  body           TEXT NOT NULL CHECK (length(body) > 0),
+  packet_sha256  VARCHAR(64) NOT NULL,   -- the packet the prose was written from (#61)
+  generated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  rank           SMALLINT NOT NULL,      -- preference-list position when written (#91)
+  content_sha256 VARCHAR(64),            -- the packet without its provenance (#114)
+  binding        JSONB,                  -- every figure → field, period, release (#112)
+  audience       VARCHAR(16) NOT NULL CHECK (audience IN ('analyst', 'consumer')),
+  sections       JSONB,                  -- a consumer reading's answers (#260)
+  PRIMARY KEY (region_id, "window", audience)
+);
+
+-- ── Beside the tables ────────────────────────────────────────────────────────────
+
+-- A recomputation differing by at most one part in a billion is not a revision (#334).
+-- FUNCTION revision_is_noise(old DOUBLE PRECISION, new DOUBLE PRECISION) RETURNS BOOLEAN
+
+-- Revisions a reader is shown: everything but that noise. `/changes` reads this.
+CREATE VIEW fact_revision_shown AS
+  SELECT * FROM fact_revision WHERE NOT revision_is_noise(old_value, new_value);
+
+-- A changed figure, and a withdrawn one, write themselves to fact_revision.
+CREATE TRIGGER fact_metric_observation_revised AFTER UPDATE ON fact_metric_observation
+  FOR EACH ROW EXECUTE FUNCTION record_fact_revision();
+CREATE TRIGGER fact_metric_observation_withdrawn AFTER DELETE ON fact_metric_observation
+  FOR EACH ROW EXECUTE FUNCTION record_fact_withdrawal();
 ```
 
 **Key properties encoded by the schema**
@@ -886,7 +1154,10 @@ CREATE TABLE region_explanations (
 - There is exactly one value per `(region, metric, period)`. Reloading a source upserts
   rather than appends, so a double-run cannot silently double a county's population.
 - Every fact traces to exactly one source file. `DELETE FROM source_releases WHERE
-  release_id = ?` removes precisely what that file contributed and nothing else.
+  release_id = ?` removes precisely what that file contributed and nothing else; the
+  record tables carry a `release_id` the same way.
+- A figure that changes or disappears leaves a row in `fact_revision`, written by the
+  database itself, so no load path can skip it (#194, #284).
 - `parent_id` is a strict hierarchy: `state → county → {municipality, tract}`.
   Municipality and tract are **siblings**, not nested — Census tracts nest within
   *counties*, and a tract can straddle municipal lines. (An earlier version of this
@@ -899,8 +1170,11 @@ CREATE TABLE region_explanations (
 - A metric is defined once. Two sources supplying median rent write to the same
   `metric_id` with different `release_id`s, and the disagreement becomes visible instead
   of becoming two columns.
-- `fact_metric_change` and `region_rankings` are derived and disposable. If they ever
-  disagree with `fact_metric_observation`, they are wrong and get rebuilt.
+- The derived tables are disposable. If they ever disagree with
+  `fact_metric_observation`, they are wrong and get rebuilt.
+- Records that are not one number per place (income limits, water systems, community
+  and infrastructure records) live outside the fact table, so they can never be ranked
+  or averaged by mistake (#308, #318).
 
 **Surprising but intentional.** ZIP-level values are allocated through
 `region_crosswalk`, not measured — a ZIP that straddles three municipalities gets a
