@@ -481,12 +481,21 @@ models:
         tests:
           - not_null
           - accepted_range: {name: stg_story_streets_is_a_share, min_value: 0, max_value: 1}
-  - name: stg_story_manual_raster
+  - name: stg_story_noise
     description: >-
-      Shares of homes in transportation noise of 55 and 65 dB or more, and night-time
-      brightness at homes; built once both hand-downloaded rasters have landed.
+      Shares of homes in transportation noise of 55 and 65 dB or more; built once the
+      hand-downloaded noise map has landed.
     columns:
       - name: value
         tests:
           - not_null
-          - accepted_range: {name: stg_story_manual_raster_in_range, min_value: 0, max_value: 1000}
+          - accepted_range: {name: stg_story_noise_is_a_share, min_value: 0, max_value: 1}
+  - name: stg_story_lights
+    description: >-
+      Night-time brightness at homes; built once the hand-downloaded night lights have
+      landed.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_lights_in_range, min_value: 0, max_value: 1000}

@@ -17,7 +17,7 @@ export const metadata: Metadata = pageMetadata({
 });
 
 const MAP_W = 520;
-const SHADES = [{ to: 0.1, o: 0.12, label: "under 10%" }, { to: 0.25, o: 0.35, label: "10–25%" }, { to: 0.5, o: 0.6, label: "25–50%" }, { to: Infinity, o: 0.92, label: "half or more" }];
+const SHADES = [{ to: 0.1, o: 0.18, label: "under 10%" }, { to: 0.25, o: 0.42, label: "10–25%" }, { to: 0.5, o: 0.68, label: "25–50%" }, { to: Infinity, o: 0.95, label: "half or more" }];
 const pct = (p: number) => `${p >= 0 ? "+" : "−"}${Math.abs(Math.round(p * 100))}%`;
 const share = (v: number) => `${Math.round(v * 100)}%`;
 
@@ -55,14 +55,14 @@ export default async function WhatQuietCostsPage() {
                   <li key={t.id}>
                     <span><Link href={regionPath(t.id)}>{t.name}</Link></span>
                     <span className="stacked-bar" role="img" aria-label={`${share(t.values.noise_homes_share_55db!)} at 55 dB or more, ${share(t.values.noise_homes_share_65db ?? 0)} at 65`}>
-                      <i style={{ width: share(t.values.noise_homes_share_65db ?? 0), background: "var(--story-8)" }} />
+                      <i style={{ width: share(t.values.noise_homes_share_65db ?? 0), background: "var(--story-7)" }} />
                       <i style={{ width: share(t.values.noise_homes_share_55db! - (t.values.noise_homes_share_65db ?? 0)), background: "var(--story-2)" }} />
                     </span>
                     <small>{share(t.values.noise_homes_share_55db!)} at 55 dB+ · {share(t.values.noise_homes_share_65db ?? 0)} at 65 dB+ · {t.countyName}</small>
                   </li>
                 ))}
               </ul>
-              <p className="ladder-key"><span><i style={{ background: "var(--story-8)" }} />65 dB or more, a busy road close by</span><span><i style={{ background: "var(--story-2)" }} />55–65 dB</span></p>
+              <p className="ladder-key"><span><i style={{ background: "var(--story-7)" }} />65 dB or more, a busy road close by</span><span><i style={{ background: "var(--story-2)" }} />55–65 dB</span></p>
             </div>
           </div>
           <figure className="story-figure">

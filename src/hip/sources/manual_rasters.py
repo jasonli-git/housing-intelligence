@@ -18,6 +18,9 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
+import subprocess
+import tempfile
 import zipfile
 from datetime import timedelta
 from pathlib import Path
@@ -93,11 +96,17 @@ class ManualRasterAdapter(SourceAdapter):
         found = sorted(self._manual_dir.glob(self.PATTERN))
         if not found:
             raise SourceError(f"{ref.source_id}: nothing matching {self.PATTERN}")
-        header, pixels = self.cut(self._open_path(found[-1]))
+        try:
+            header, pixels = self.cut(self._open_path(found[-1]))
+        finally:
+            self._cleanup()
         with destination.open("wb") as handle:
             handle.write((json.dumps(header) + "\n").encode())
             handle.write(pixels)
         self._last_validators = {}
+
+    def _cleanup(self) -> None:
+        """Remove anything `_open_path` made on the way; nothing, by default."""
 
     def cut(self, path: str) -> tuple[dict[str, Any], bytes]:
         """The raster at `path` on New Jersey's grid: header and float32 pixels."""
@@ -162,6 +171,55 @@ class NoiseAdapter(ManualRasterAdapter):
     # BTS models nothing quieter than 45 dB; an empty cell is quieter than that, not
     # unknown, and is kept as 0 so a quiet block counts as quiet.
     EMPTY_AS: ClassVar[float | None] = 0.0
+    _tmp: Path | None = None
+
+    def _open_path(self, dropped: Path) -> str:
+        """New Jersey's raster out of BTS's geodatabase, as a GeoTIFF rasterio can read.
+
+        The 2022/2023 release is a file geodatabase holding one raster per state. The
+        GDAL in rasterio's wheels has no OpenFileGDB driver, so Homebrew's GDAL
+        (`brew install gdal`) extracts New Jersey's with `gdal_translate`; the cut then
+        proceeds as for any GeoTIFF.
+        """
+        path = super()._open_path(dropped)
+        if not path.endswith(".gdb"):
+            return path
+        if shutil.which("gdal_translate") is None:
+            raise SourceError(
+                "bts_noise: the noise map is a file geodatabase, which needs GDAL's "
+                "command-line tools: `brew install gdal`."
+            )
+        self._tmp = Path(tempfile.mkdtemp(prefix="hip-noise-"))
+        tif = self._tmp / "nj.tif"
+        subprocess.run(
+            ["gdal_translate", "-q", "-of", "GTiff", _state_layer(path, "NJ"), str(tif)],
+            check=True,
+        )
+        return str(tif)
+
+    def _cleanup(self) -> None:
+        if self._tmp is not None:
+            shutil.rmtree(self._tmp, ignore_errors=True)
+            self._tmp = None
+
+
+def _state_layer(gdb: str, state: str) -> str:
+    """The geodatabase raster named for `state` ("NJ_rail_road_aviation_noise")."""
+    answer = subprocess.run(
+        ["gdalinfo", "-json", gdb], capture_output=True, text=True, check=True
+    )
+    names = [
+        v
+        for k, v in json.loads(answer.stdout)
+        .get("metadata", {})
+        .get("SUBDATASETS", {})
+        .items()
+        if k.endswith("_NAME")
+    ]
+    for name in names:
+        if name.rsplit(":", 1)[-1].startswith(f"{state}_"):
+            return name
+    raise SourceError(f"{gdb}: no raster for {state} among {len(names)}")
 
 
 LIGHTS_PAGE = "https://eogdata.mines.edu/nighttime_light/annual/v22/"
