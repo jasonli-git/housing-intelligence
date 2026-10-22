@@ -189,18 +189,6 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Documentation upkeep
 
-- [ ] **Fill the README's numbers and check its writing.** (decided by the owner
-      2026-10-21, ARCHITECTURE #417, Director Note "Decision: README numbers are filled,
-      its writing is checked") A command (e.g. `hip readme`) rewrites the README's
-      figures from their sources: sources and places from the warehouse, tools and the
-      version from the site and CHANGELOG, the Tech Stack's versions from
-      `.python-version`, `pyproject.toml`, `web/package.json` and `docker-compose.yml`,
-      and the evaluation list from `reports/evaluation/`. A test fails if any differs,
-      or if the "Latest" line is older than CHANGELOG's newest entry. The writing stays
-      by hand. The README was cut from 1,095 lines to about 250 on 2026-10-21, and its
-      "Latest" and "Next" lines are already behind (they describe #201–#211 and a
-      hosting decision since put on hold).
-
 ### Housekeeping
 
 - [ ] **Reply as housing@ and privacy@ from Gmail.** (#357, owner 2026-10-09) Both

@@ -5,22 +5,26 @@ household can afford, what the tax bill is, how homes sell, and what comes with 
 flood risk, water, schools, commutes. Live at
 **[housing.jasonli.app](https://housing.jasonli.app)**.
 
-It is built on 51 public sources pulled through one staged pipeline into a warehouse,
+It is built on <!-- fill:sources -->52<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
 resolved to a shared geography, and computed before anything is shown. Every figure
 carries its source file, date, licence and margin of error. It is not a listings site
 and not a chatbot: pages, maps, tools, reports and an API are the product, and an
 optional AI layer only explains figures that were already computed.
 
-> **Status — v0.50.0 (2026-10-08), updated 2026-10-21.** Versions 1 and 2 are complete
-> and Version 3 is under way. New Jersey is published in full: the state, 21 counties, 564
-> towns and 598 ZIP codes, plus five tools.
+> **Status — <!-- fill:version -->v0.50.0 (2026-10-08)<!-- /fill -->, updated
+> 2026-10-21.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
+> published in full: the state, <!-- fill:counties -->21<!-- /fill --> counties,
+> <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
+> codes, plus five tools.
 >
-> **Latest.** Groundwork for a second state: publication capacity measured and redirect
-> files cut by 1,768 (#201), published geometry per state (#205), scale safety for
-> rankings and tests (#208), and an accessibility check on every deploy (#211).
+> **Latest.** A sale price to income ratio from the state's sales records, covering 163
+> towns Zillow does not (#228); readings' ranking words checked against the data (#222);
+> revised figures marked on place pages (#220); the status link says when sources were
+> last checked (#221); lead service lines from NJDEP's 2025–2026 inventories (#219).
 >
-> **Next.** A hosting decision for a second state (TODO.md), then the remaining New
-> Jersey assumptions. See [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md).
+> **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
+> state, on hold until they are cleared. See [ROADMAP.md](ROADMAP.md) and
+> [CHANGELOG.md](CHANGELOG.md).
 
 [SPEC.md](SPEC.md) says what the platform is for, [ARCHITECTURE.md](ARCHITECTURE.md) how
 it is built and why, [ROADMAP.md](ROADMAP.md) where it is going and
@@ -79,13 +83,13 @@ On a phone:
 
 | Layer | Choice | Why |
 |-------|--------|-----|
-| Language | Python 3.12.13, TypeScript | Python for data work, TypeScript for the site |
+| Language | Python <!-- fill:python -->3.12.13<!-- /fill -->, TypeScript | Python for data work, TypeScript for the site |
 | CLI | Typer | One command per pipeline stage; the only write path |
 | Raw storage | Parquet | Immutable columnar landings, readable without a database |
 | Transform | DuckDB + dbt-core | Out-of-core SQL over Parquet, with lineage and tests |
-| Warehouse | PostgreSQL 16 + PostGIS | Concurrent readers, constraints, spatial queries |
+| Warehouse | PostgreSQL <!-- fill:postgres -->16<!-- /fill --> + PostGIS | Concurrent readers, constraints, spatial queries |
 | API | FastAPI + SQLAlchemy | Read-only, typed, OpenAPI for free |
-| Site | Next.js 16 + React 19 | Static export over the published files |
+| Site | Next.js <!-- fill:nextjs -->16<!-- /fill --> + React <!-- fill:react -->19<!-- /fill --> | Static export over the published files |
 | Hosting | Cloudflare Pages + R2 | Pages for the site, R2 for the data files |
 | Packaging | `uv`, Docker Compose | Locked Python env; Postgres is the only container |
 
@@ -105,7 +109,7 @@ of 4); a model stating a figure the packet does not hold is ineligible.
   scale): GPT-6 Luna, 3.64. It now writes the readings, ahead of Claude Haiku 5.5 and
   Gemini 3.8 Flash (ARCHITECTURE #352).
 
-The readings comparisons (`readings-v1` to `v9`) are in
+The readings comparisons (readings-v1 to <!-- fill:readings -->v10<!-- /fill -->) are in
 [reports/evaluation/](reports/evaluation/).
 
 ## Setup
@@ -175,6 +179,10 @@ keeping Zillow's file names:
 persists or the answer changed shape, follow that source's `fallback` in
 `config/sources.yml` and record the switch in ARCHITECTURE.md. With no route, the last
 release stays, labelled historical.
+
+**This README.** Its counts and versions are filled by `uv run hip readme`; the tests
+fail when one is stale, an evaluation report is unlinked, or the status line is older
+than the changelog's last change (ARCHITECTURE #420). "Latest" is written by hand.
 
 ## Publishing
 
