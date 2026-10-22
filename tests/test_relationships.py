@@ -210,3 +210,19 @@ def test_a_ratio_where_lower_is_better_reads_its_rank_by_value(hudson: Packet) -
     rent = next(lv for lv in hudson.levels if lv.metric_id == "zori_all")
     assert value_rank_label(rent) == "1st of 21"
     assert "highest of 21" in render_markdown(hudson)
+
+
+@warehouse
+def test_owner_costs_in_everyday_words_are_the_measure_a_refusal_names(
+    hudson: Packet,
+) -> None:
+    """readings-v11: the words reached the rents named before them, so the refusal sent
+    back for revision named the wrong measure. Hudson's ranks 2nd to 4th of 21."""
+    sentence = (
+        "Rents are the highest, while monthly owner costs with a mortgage are near the "
+        "bottom."
+    )
+    (problem,) = comparative_problems(sentence, bind(sentence, hudson), hudson)
+    assert "Owner costs a month, with a mortgage" in problem
+    fits = "Monthly owner costs with a mortgage are among the highest."
+    assert comparative_problems(fits, bind(fits, hudson), hudson) == []

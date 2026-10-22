@@ -109,17 +109,14 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Evaluation harness
 
-- [ ] **What a reading says in words is now checked for rankings only.** (#275; narrowed
-      2026-10-21, ARCHITECTURE #412) A ranking in words ("among the highest", "near the
-      bottom") must match the packet's ranks, and one naming no ranked measure is refused.
-      Still unchecked: a measure mislabelled in words (Cumberland's reading called Zillow's
-      home value a five-year survey estimate, `reports/evaluation/readings-v8.md`) and a
-      causal claim between measures named only in words (#337's blind spot). Four
-      published readings (Gloucester, Burlington, Camden, Salem) call a low home value to
-      income ratio high and would be refused today; they stay live until the next
-      regeneration, which the owner holds. The cause, best-first ranks the models read as
-      high, is fixed in the packet's Markdown (#413), confirmed on those four counties
-      (`reports/evaluation/readings-v10.md`: all four would publish, correctly).
+- [ ] **A causal claim between measures named only in words is unchecked.** (#275;
+      narrowed 2026-10-21 by ARCHITECTURE #412, and 2026-10-22 by #422) Ranking words
+      are checked against the packet's ranks (#412) and survey words against each
+      figure's kind (#422); #337's blind spot remains: a cause asserted between measures
+      the reading names but cites no figure for. Four published readings (Gloucester,
+      Burlington, Camden, Salem) call a low home value to income ratio high and would be
+      refused today; they stay live until the next regeneration, which the owner holds.
+      The cause is fixed in the packet's Markdown (#413, `readings-v10`).
 
 ### API and scale limits
 
