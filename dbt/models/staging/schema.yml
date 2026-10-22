@@ -28,6 +28,28 @@ models:
               min_value: 1000
               max_value: 100000000
 
+  - name: stg_zillow_zhvi_bottom
+    description: >-
+      ZHVI's bottom tier (the cheapest third of homes) in long form, same shape as ZHVI,
+      for counties and cities only.
+    columns:
+      - name: source_id
+        tests: [not_null]
+      - name: layer
+        tests:
+          - not_null
+          - accepted_values: {values: ['county', 'city']}
+      - name: region_name
+        tests: [not_null]
+      - name: period_start
+        tests: [not_null]
+      - name: value
+        tests:
+          - not_null
+          - accepted_range:
+              min_value: 1000
+              max_value: 100000000
+
   - name: stg_zillow_zori
     description: >-
       Zillow Observed Rent Index in long form, same shape as ZHVI. Coverage is thinner:

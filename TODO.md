@@ -231,14 +231,24 @@ Not open work: each comes round on a date. The steps live where the row says.
       model is given, and a change to it is a change to every reading's input, which
       wants its own side-by-side.
 
-- [ ] **Zillow's other datasets: look into whether and how to integrate them.** (owner,
-      2026-10-19; moved out of the parked data additions) Survey everything on Zillow
-      Research's data page — bottom- and top-tier and SFR-only ZHVI, sale prices, new
-      construction, days to pending, price cuts,
-      inventory, market heat — and for each note the geographies offered (most stop at
-      metro, which the site has no pages for), what reader question it answers, and how
-      many more files the monthly hand download would add (each is downloaded by hand,
-      #272). Same CSV host and adapter as ZHVI and ZORI.
+- [ ] **Zillow's other datasets: which to add next.** (owner, 2026-10-19; surveyed
+      2026-10-22, ARCHITECTURE #424) The bottom tier is being added and the home value
+      relabelled (#424). The owner's view, 2026-10-22: downloading by hand is not much
+      upkeep, so no dataset is ruled out for the files it adds. What each would take,
+      from Zillow's data page:
+      - **Usable for New Jersey's places now:** condo/co-op home value (counties, towns,
+        ZIPs; 3 files: what a condo costs, most telling in Hudson); home value by
+        bedrooms, 1 to 5+ (counties, towns, ZIPs; 15 files: what a 3-bedroom costs);
+        top-tier home value (counties, towns; 2 files); single-family-only home value
+        (counties, towns, ZIPs; 3 files: houses apart from condos).
+      - **Metro and national only:** for-sale inventory, new listings, newly pending,
+        median list price, sales counts and prices, sale-to-list ratios, days to pending
+        and to close, price cuts, the market heat index, new construction, Zillow's
+        payment and affordability series, and single-family or multifamily rents. Usable
+        only if the site gains metro pages (New Jersey's span New York, Philadelphia,
+        Allentown, Atlantic City, Trenton and Vineland), or as context beside a county.
+      - **Forecasts** (home values by metro and ZIP, rents nationally): conflict with the
+        no-forecast rule (#348) unless shown apart, as Zillow's, not this site's.
 
 ## Parked / needs user input
 

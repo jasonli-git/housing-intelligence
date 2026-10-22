@@ -31,6 +31,8 @@ export const GROUPS: readonly Group[] = [
     title: "Prices",
     metrics: [
       "zhvi_sfr",
+      // ARCHITECTURE #424: the cheapest third of homes, beside the typical one.
+      "zhvi_bottom_tier",
       // Beside the index on purpose. One is modelled, one is what buyers actually
       // paid, and SPEC principle 11 turns on a reader being able to see which is
       // which — adjacent is where that comparison is unavoidable.

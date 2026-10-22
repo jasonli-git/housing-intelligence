@@ -28,6 +28,6 @@ describe("DEFINITIONS", () => {
 describe("definitionOf", () => {
   it("is null for a metric it does not know", () => {
     expect(definitionOf("something_new")).toBeNull();
-    expect(definitionOf("zhvi_sfr")?.what).toContain("single-family");
+    expect(definitionOf("zhvi_sfr")?.what).toContain("houses, condos and co-ops");
   });
 });

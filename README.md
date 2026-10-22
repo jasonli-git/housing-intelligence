@@ -5,7 +5,7 @@ household can afford, what the tax bill is, how homes sell, and what comes with 
 flood risk, water, schools, commutes. Live at
 **[housing.jasonli.app](https://housing.jasonli.app)**.
 
-It is built on <!-- fill:sources -->52<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
+It is built on <!-- fill:sources -->53<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
 resolved to a shared geography, and computed before anything is shown. Every figure
 carries its source file, date, licence and margin of error. It is not a listings site
 and not a chatbot: pages, maps, tools, reports and an API are the product, and an
@@ -164,7 +164,7 @@ readings is billed, so it is gated: `hip refresh-mode ask|auto` (one file in iCl
 `HousingPipeline` folder, which an iPhone Shortcut can also write), and
 `hip regenerate-now` asks for one outside the schedule.
 
-**Zillow is downloaded by hand, monthly.** Its terms forbid automated fetching
+**Zillow is downloaded by hand, monthly: eight files.** Its terms forbid automated fetching
 (ARCHITECTURE #272). When Zillow publishes (the third Thursday of each month; the Friday
 refresh notifies when the files are behind), download from
 [zillow.com/research/data](https://www.zillow.com/research/data/) into `data/manual/`,
@@ -174,6 +174,7 @@ keeping Zillow's file names:
 |---|---|
 | `data/manual/zillow_zhvi/` | `County_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` and its `City_` and `Zip_` siblings |
 | `data/manual/zillow_zori/` | `County_zori_uc_sfrcondomfr_sm_month.csv` and its `City_` and `Zip_` siblings |
+| `data/manual/zillow_zhvi_bottom/` | `County_zhvi_uc_sfrcondo_tier_0.0_0.33_sm_sa_month.csv` and its `City_` sibling (no ZIP file) |
 
 **When a source stops answering**, the refresh exits 3 and names it. Wait a day; if it
 persists or the answer changed shape, follow that source's `fallback` in

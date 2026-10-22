@@ -39,6 +39,7 @@ def _cache(raw: Path, source_id: str, last_month: str) -> None:
 
 def test_a_source_behind_what_zillow_published_is_due(tmp_path: Path) -> None:
     _cache(tmp_path, "zillow_zhvi", "2026-09-30")
+    _cache(tmp_path, "zillow_zhvi_bottom", "2026-09-30")
     _cache(tmp_path, "zillow_zori", "2026-08-31")
     assert held_through(tmp_path, "zillow_zhvi") == date(2026, 9, 30)
     assert due(tmp_path, date(2026, 10, 16)) == {"zillow_zori": date(2026, 8, 31)}
@@ -46,4 +47,8 @@ def test_a_source_behind_what_zillow_published_is_due(tmp_path: Path) -> None:
 
 
 def test_a_source_never_handed_in_is_due(tmp_path: Path) -> None:
-    assert due(tmp_path, date(2026, 10, 16)) == {"zillow_zhvi": None, "zillow_zori": None}
+    assert due(tmp_path, date(2026, 10, 16)) == {
+        "zillow_zhvi": None,
+        "zillow_zhvi_bottom": None,
+        "zillow_zori": None,
+    }

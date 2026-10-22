@@ -13,6 +13,10 @@ are not yet recorded here.
 
 ### Added
 
+- **A starter-home value, and Zillow's home value labelled correctly** (ARCHITECTURE
+  #424): Zillow's typical value of the cheapest third of homes, for counties and towns;
+  and the typical home value, which counts houses and condos together, is no longer
+  called single-family.
 - **HUD's notice on every page** (ARCHITECTURE #423): "This product uses the HUD User
   Data API but is not endorsed or certified by HUD User" joins the footer, as HUD's
   terms ask it to be shown prominently.

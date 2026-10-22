@@ -21,7 +21,7 @@ DBT_DIR = REPO_ROOT / "dbt"
 STAGING_SCHEMA = "main_staging"
 
 # The staged models the rest of the pipeline reads.
-ZILLOW_MODELS = ("stg_zillow_zhvi", "stg_zillow_zori")
+ZILLOW_MODELS = ("stg_zillow_zhvi", "stg_zillow_zhvi_bottom", "stg_zillow_zori")
 
 # Models that already carry an exact (geoid, level); they need no name matching and are
 # unioned straight into the observation table.

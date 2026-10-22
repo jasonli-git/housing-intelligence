@@ -49,9 +49,14 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     why: "Unspent commitments are not deducted, so this is not the amount freely available for new projects. Negative reports stay negative.",
   },
   zhvi_sfr: {
-    short: "Zillow’s estimate of a typical single-family home’s value, not a recent sale price.",
-    what: "Zillow’s estimate of what a typical single-family house here is worth: one in the middle of the local market, not the cheapest or the dearest.",
+    short: "Zillow’s estimate of a typical home’s value, houses and condos together, not a recent sale price.",
+    what: "Zillow’s estimate of what a typical home here is worth, counting houses, condos and co-ops: one in the middle of the local market, not the cheapest or the dearest.",
     why: "It is the closest thing to “what a house costs here”, the figure a buyer’s budget starts from.",
+  },
+  zhvi_bottom_tier: {
+    short: "Zillow’s estimate of what a starter home is worth: the cheapest third of homes here.",
+    what: "Zillow’s typical value for the cheapest third of homes, houses and condos together. Published for counties and towns, not ZIP codes.",
+    why: "A first-time buyer’s budget usually starts here, below the typical home.",
   },
   sr1a_median_sale_price: {
     what: "The price of the middle home actually sold here over the last three years. New Jersey sets aside sales that are not open-market \u2014 inheritances, sales between relatives, sheriff\u2019s sales \u2014 and counts only the rest.",

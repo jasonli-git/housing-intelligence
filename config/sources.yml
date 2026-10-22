@@ -371,6 +371,44 @@ sources:
       Smoothed, seasonally adjusted index revised retroactively; a new release can
       change history already loaded. See Known Limitations in ARCHITECTURE.md.
 
+  zillow_zhvi_bottom:
+    # Released with ZHVI, on the same calendar (#424).
+    release_calendar:
+      url: https://fred.stlouisfed.org/releases/calendar?rid=503
+      checked: 2026-10-02
+      dates:
+        - {day: 2026-10-15, covers: September 2026}
+        - {day: 2026-11-19, covers: October 2026}
+        - {day: 2026-12-17, covers: November 2026}
+    name: Zillow Home Value Index, bottom tier
+    publisher: Zillow Research
+    license: Free for non-commercial use with attribution
+    licence_class: non_commercial
+    commercial:
+      ads: unclear
+      paid: not_allowed
+      note: >-
+        As zillow_zhvi: the same research page, Terms of Use and API terms.
+    terms_url: https://www.zillow.com/corporate/terms-of-use/
+    terms_checked: 2026-09-30
+    terms_note: >-
+      As zillow_zhvi, read by the owner on 2026-09-30: aggregate data may be shown with
+      "Data Provided by Zillow Group" on every page that shows it, and the files are
+      downloaded by hand (ARCHITECTURE #272).
+    notices:
+      - >-
+        Data Provided by Zillow Group.
+    url: https://www.zillow.com/research/data/
+    cadence: monthly
+    adapter: hip.sources.zillow:ZhviBottomAdapter
+    fallback: >-
+      No free equivalent; SR1A's lower-quartile sale price (sr1a_price_lower_quartile)
+      answers the same question from recorded sales. Otherwise keep the last release,
+      labelled historical.
+    notes: >-
+      Smoothed, seasonally adjusted, revised retroactively like ZHVI. Counties and
+      cities only: Zillow publishes no ZIP file for its tiers.
+
   zillow_zori:
     release_calendar:
       url: https://fred.stlouisfed.org/releases/calendar?rid=503

@@ -307,7 +307,7 @@ export function CostToOwn({
     typedPrice !== null
       ? `A purchase at ${money(typedPrice)}, the price you entered`
       : home.basis === "index"
-        ? `The typical single-family home’s value (Zillow Home Value Index, ${home.asOf})`
+        ? `The typical home’s value, houses and condos (Zillow Home Value Index, ${home.asOf})`
         : `A purchase at ${money(home.value)} — the middle price of qualifying residential ` +
           `sales here from ${home.from} to ${home.to}, from ${stateLabel}’s SR1A sales file. ` +
           `That is the middle of what sold in that window, not a valuation of the typical ` +
@@ -399,7 +399,7 @@ export function CostToOwn({
             </div>
             <div>
               <dt>
-                {typedPrice !== null ? "Your purchase price" : home.basis === "index" ? "Typical single-family home" : "Purchase price"}{" "}
+                {typedPrice !== null ? "Your purchase price" : home.basis === "index" ? "Typical home" : "Purchase price"}{" "}
                 <small className="src">
                   {typedPrice !== null
                     ? "your figure"
@@ -595,7 +595,7 @@ export function CostToOwn({
               {typedPrice !== null
                 ? `To own at your ${money(typedPrice)} price`
                 : home.basis === "index"
-                  ? "To own the typical single-family home"
+                  ? "To own the typical home"
                   : `To own at a ${money(home.value)} purchase price`}
             </Term>
           </h3>

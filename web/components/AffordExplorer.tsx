@@ -328,7 +328,7 @@ export function AffordExplorer({
       <details className="afford-notes"><summary>How we estimate</summary><p className="table-note"><Gloss>
         {mode === "own" ? (
           <>
-            Owning: Zillow’s typical single-family home value ({asOf.home}), a
+            Owning: Zillow’s typical home value, houses and condos ({asOf.home}), a
             30-year fixed loan at {options.ratePct.toFixed(2)}% ({personal.ratePct === undefined ? `national average, ${rate.asOf}` : "your quoted rate"}) with {down}% down, and the typical property
             tax bill from New Jersey’s assessment records ({asOf.tax}).
             Included: homeowners insurance ({personal.insuranceYear === undefined ? `Census, ${asOf.insurance ?? "area figure"}` : "your annual quote"}) and utilities (electricity vintage {asOf.utilities ?? "area figure"}, gas and water where supplied), mortgage insurance when applicable, and upkeep ({personal.upkeepPct ?? UPKEEP_PCT}% of price a year, {personal.upkeepPct === undefined ? "a rule of thumb" : "your assumption"}), using the same calculation and saved assumptions as the profile cost cards. Missing required costs mean an incomplete estimate, never a fit. Places without a Zillow value or a

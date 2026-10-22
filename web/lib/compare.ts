@@ -34,6 +34,7 @@ export const COMPARE_SECTIONS: ReadonlyArray<{ title: string; rows: CompareRow[]
     title: "What it costs",
     rows: [
       { metric: "zhvi_sfr", label: "Typical home value" },
+      { metric: "zhvi_bottom_tier", label: "Starter home value" },
       { metric: "zori_all", label: "Typical asking rent" },
       { cost: "own" },
       { metric: "modiv_median_tax_bill", label: "Typical property tax bill" },
