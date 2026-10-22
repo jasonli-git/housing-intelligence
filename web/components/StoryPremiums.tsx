@@ -1,10 +1,10 @@
 import type { Premium } from "@/lib/stories";
 
 const W = 880;
-const H = 760;
+const H = 800;
 const CX = W / 2;
 const GUTTER = 130;
-const TOP = 40;
+const TOP = 70;
 const BOTTOM = H - 40;
 
 const pct = (p: number) => `${p >= 0 ? "+" : "−"}${Math.abs(Math.round(p * 100))}%`;
@@ -54,6 +54,16 @@ export function StoryPremiums({ premiums }: { premiums: Premium[] }) {
             <text x={40} y={y(t) - 6}>{t === 0 ? "0" : pct(t)}</text>
           </g>
         ))}
+      </g>
+      {/* The chart's own key: what up means, what zero means, what size means. */}
+      <g aria-hidden="true">
+        <text className="sub" x={40} y={TOP - 22}>↑ Towns with the trait cost more than towns without it, same county</text>
+        <text className="sub" x={40} y={BOTTOM + 30}>↓ Towns with the trait cost less</text>
+        <text className="sub" x={W - 20} y={y(0) - 6} textAnchor="end">No difference</text>
+        {[25, 100, 250].map((n, i) => {
+          const r = radius(n), cx = 130 + i * 62;
+          return <g key={n}><circle cx={cx} cy={TOP + 50 - r} r={r} fill="none" className="leader" /><text className="sub" x={cx} y={TOP + 66} textAnchor="middle">{n} towns</text></g>;
+        })}
       </g>
       {labels.map((b) => {
         // Labels stand clear of the whole cluster, so no bubble covers one.

@@ -53,6 +53,26 @@ export function IncomeScatter({ points }: { points: IncomePoint[] }) {
             <text x={(L + W - R) / 2} y={H - 8} textAnchor="middle">Median household income</text>
             <text x={14} y={(T + H - B) / 2} textAnchor="middle" transform={`rotate(-90 14 ${(T + H - B) / 2})`}>Median home value</text>
           </g>
+          {/* The three zones, shaded and named on the chart itself. */}
+          <defs><clipPath id="income-plot"><rect x={L} y={T} width={W - L - R} height={H - T - B} /></clipPath></defs>
+          <g clipPath="url(#income-plot)" aria-hidden="true">
+            {(() => {
+              const [ax, bx] = [Math.exp(x0), Math.exp(x1)];
+              const edge = (k: number) => `${x(ax)},${y(ax * k)} ${x(bx)},${y(bx * k)}`;
+              const far = (k: number) => `${x(bx)},${y(bx * k)} ${x(ax)},${y(ax * k)}`;
+              return (
+                <>
+                  <polygon points={`${L},${H - B} ${W - R},${H - B} ${far(3)}`} className="s1" fillOpacity={0.09} />
+                  <polygon points={`${edge(3)} ${far(5)}`} className="s3" fillOpacity={0.09} />
+                  <polygon points={`${L},${T} ${W - R},${T} ${far(5)}`} className="s2" fillOpacity={0.09} />
+                </>
+              );
+            })()}
+          </g>
+          <g aria-hidden="true">
+            <text className="zone-label" x={W - R - 10} y={H - B - 14} textAnchor="end">Homes under 3× income · within reach</text>
+            <text className="zone-label" x={L + 10} y={T + 18}>Homes over 5× income · stretched</text>
+          </g>
           {[3, 5].map((k) => {
             const l = line(k);
             return <g key={k} aria-hidden="true"><line className="ratio-line" {...l} /><text className="sub" x={l.x1 + 6} y={l.y1 - 8}>{k}× income</text></g>;

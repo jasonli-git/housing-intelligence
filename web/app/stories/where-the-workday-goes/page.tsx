@@ -47,6 +47,11 @@ export default async function WhereTheWorkdayGoesPage() {
     >
       <div className="story-two">
         <figure className="story-figure">
+          <p className="ladder-key">
+            <span><i style={{ background: "var(--story-2)" }} />New York City</span>
+            <span><i style={{ background: "var(--story-3)" }} />Philadelphia</span>
+            <span><i style={{ background: "var(--story-1)" }} />A New Jersey town</span>
+          </p>
           <svg className="map" viewBox={`0 0 ${MAP_W} ${map.projector.height}`} role="img" aria-label="Map of New Jersey's towns, each joined by a line to its leading place of work. The leading destinations are listed beside it.">
             {map.shapes.map((s) => {
               const l = byTown.get(s.id);
@@ -55,33 +60,31 @@ export default async function WhereTheWorkdayGoesPage() {
             {leads.map((l) => (
               <line key={l.id} x1={l.from[0]} y1={l.from[1]} x2={l.to[0]} y2={l.to[1]} className={`flow ${l.kind}`} strokeWidth={Math.max(0.6, l.lead.share * 8)} strokeOpacity={0.55} />
             ))}
+            {centresRanked.filter(([, ls]) => ls[0].lead.region_id && ls.length >= 8).map(([name, ls]) => {
+              const c = centres.get(ls[0].lead.region_id!);
+              return c ? <text key={name} className="place" x={c[0] + 5} y={c[1] + 4}>{name.replace(/ township.*$/, "")}</text> : null;
+            })}
             <text className="place" x={nyc[0] - 4} y={nyc[1] - 8} textAnchor="end">New York City</text>
             <text className="place" x={philadelphia[0] + 6} y={philadelphia[1] + 4}>Philadelphia</text>
           </svg>
-          <p className="ladder-key">
-            <span><i style={{ background: "var(--story-2)" }} />New York City</span>
-            <span><i style={{ background: "var(--story-3)" }} />Philadelphia</span>
-            <span><i style={{ background: "var(--story-1)" }} />A New Jersey town</span>
-          </p>
+          
         </figure>
         <div>
           <h2 className="story-h">The leading destinations</h2>
-          <table className="story-table">
-            <thead><tr><th scope="col">Place of work</th><th scope="col" className="num">Towns it leads</th><th scope="col">Most reliant</th></tr></thead>
-            <tbody>
-              {centresRanked.map(([name, ls]) => {
-                const most = [...ls].sort((a, b) => b.lead.share - a.lead.share)[0];
-                const id = most.lead.region_id;
-                return (
-                  <tr key={name}>
-                    <th scope="row">{id ? <Link href={regionPath(id)}>{name}</Link> : name}</th>
-                    <td className="num">{ls.length}</td>
-                    <td><Link href={regionPath(most.id)}>{names.get(most.id)}</Link>, {pct(most.lead.share)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <p className="story-note">Bar: how many towns send more workers here than anywhere else.</p>
+          <ul className="count-bars">
+            {centresRanked.map(([name, ls]) => {
+              const most = [...ls].sort((a, b) => b.lead.share - a.lead.share)[0];
+              const id = most.lead.region_id;
+              return (
+                <li key={name}>
+                  <span>{id ? <Link href={regionPath(id)}>{name}</Link> : name}</span>
+                  <span className="bar-line"><i className={most.kind} style={{ width: `${Math.round((ls.length / centresRanked[0][1].length) * 1000) / 10}%`, background: `var(--story-${most.kind.slice(1)})` }} />{ls.length}</span>
+                  <small>most reliant: <Link href={regionPath(most.id)}>{names.get(most.id)}</Link> {pct(most.lead.share)}</small>
+                </li>
+              );
+            })}
+          </ul>
           <p className="story-note">{leads.length} towns have a leading destination outside themselves.</p>
         </div>
       </div>

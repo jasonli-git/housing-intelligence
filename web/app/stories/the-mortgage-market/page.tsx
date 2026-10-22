@@ -53,6 +53,8 @@ export default async function MortgageMarketPage() {
             max={1}
             format={pct}
             label="Stacked bars: each county's home-purchase loans by kind."
+            heads={["County", "Loans made"]}
+            ticks={[0.25, 0.5, 0.75].map((v) => ({ at: v, label: pct(v) }))}
             rows={rows.map((r) => {
               const conventional = r.m.hmda_conventional_share ?? 0, fha = r.m.hmda_fha_share ?? 0, va = r.m.hmda_va_share ?? 0;
               return { id: r.id, name: link(r.id, r.name), values: { conventional, fha, va, other: Math.max(0, 1 - conventional - fha - va) }, total: r.m.hmda_purchase_loans ? `${Math.round(r.m.hmda_purchase_loans).toLocaleString("en-US")} loans` : "" };
@@ -66,6 +68,8 @@ export default async function MortgageMarketPage() {
             max={1}
             format={pct}
             label="Stacked bars: each county's denied home-purchase applications by reason."
+            heads={["County", "Denied"]}
+            ticks={[0.25, 0.5, 0.75].map((v) => ({ at: v, label: pct(v) }))}
             rows={rows.map((r) => {
               const dti = r.m.hmda_denial_dti_share ?? 0, credit = r.m.hmda_denial_credit_share ?? 0, value = r.m.hmda_denial_value_share ?? 0;
               return { id: r.id, name: link(r.id, r.name), values: { dti, credit, value, other: Math.max(0, 1 - dti - credit - value) }, total: r.m.hmda_denial_rate === undefined ? "" : `${pct(r.m.hmda_denial_rate)} denied` };

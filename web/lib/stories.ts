@@ -197,3 +197,25 @@ export type Destination = { name: string; region_id: number | null; share: numbe
 export function leadingDestination(destinations: Destination[], self: number): Destination | null {
   return destinations.find((d) => d.region_id !== self && !d.name.startsWith("Elsewhere")) ?? null;
 }
+
+/** Round values for a ratio-scale axis between `lo` and `hi`: 1, 2 and 5 times powers of ten, at most `most` of them. */
+export function logTicks(lo: number, hi: number, most = 6): number[] {
+  const out: number[] = [];
+  for (let k = Math.floor(Math.log10(lo)); k <= Math.ceil(Math.log10(hi)); k++) {
+    for (const m of [1, 2, 5]) {
+      const v = m * 10 ** k;
+      if (v >= lo && v <= hi) out.push(v);
+    }
+  }
+  // Too many: keep every other one, so the labels never crowd.
+  return out.length > most ? out.filter((_, i) => i % 2 === out.length % 2) : out;
+}
+
+/** A least-squares line through points, for a trend drawn on a scatter. */
+export function trend(points: [number, number][]): { slope: number; intercept: number } {
+  const n = points.length || 1;
+  const mx = points.reduce((s, p) => s + p[0], 0) / n, my = points.reduce((s, p) => s + p[1], 0) / n;
+  const sxx = points.reduce((s, p) => s + (p[0] - mx) ** 2, 0), sxy = points.reduce((s, p) => s + (p[0] - mx) * (p[1] - my), 0);
+  const slope = sxx ? sxy / sxx : 0;
+  return { slope, intercept: my - slope * mx };
+}

@@ -53,25 +53,28 @@ export default async function WaterYouCanCheckPage() {
       note={<>Violations: the EPA&rsquo;s Safe Drinking Water Information System, health-based violations {range} to {lastYear}. PFAS: the EPA&rsquo;s fifth Unregulated Contaminant Monitoring Rule samples, against the EPA&rsquo;s reference of 4 nanograms a litre, shown for PFOA and PFOS only. Compliance is judged on running annual averages, not the single highest result shown here. Lead: each system&rsquo;s service-line inventory as filed with the state; galvanized lines that were ever downstream of lead must be replaced too. A violation can be resolved; each system&rsquo;s town pages show when.</>}
     >
       <h2 className="story-h">Systems with a health-based violation</h2>
-      <p className="story-note">{violating.length} of {all.length} systems, largest first by homes served.</p>
-      <table className="story-table">
-        <thead><tr><th scope="col">System</th><th scope="col" className="num">Homes</th><th scope="col" className="num">Violations</th><th scope="col">Latest, and what</th></tr></thead>
-        <tbody>
-          {violating.slice(0, 20).map((s) => (
-            <tr key={s.pwsid}>
-              <th scope="row">{title(s.name)}<br /><small>{s.towns.slice(0, 3).join(", ")}{s.towns.length > 3 ? ` and ${s.towns.length - 3} more` : ""}</small></th>
-              <td className="num">{n(s.allHomes)}</td>
-              <td className="num">{s.violations}</td>
-              <td>{s.latest_violation?.slice(0, 7)} · {s.latest_violation_what}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <p className="story-note">{violating.length} of {all.length} systems; bar: homes served, beside it the latest rule broken.</p>
+      <StackedBars
+        parts={[{ key: "homes", label: "Homes served" }]}
+        format={n}
+        heads={["System", "Violations"]}
+        ticks={[100_000, 200_000, 300_000].filter((v) => v < (violating[0]?.allHomes ?? 0)).map((v) => ({ at: v, label: n(v) }))}
+        label="Bars: the water systems with a health-based violation, by homes served."
+        rows={violating.slice(0, 20).map((s) => ({
+          id: s.pwsid,
+          name: title(s.name),
+          aside: `${s.latest_violation_what ?? "violation"}, ${s.latest_violation?.slice(0, 4)}`,
+          values: { homes: s.allHomes },
+          total: `${s.violations}`,
+        }))}
+      />
       <h2 className="story-h">PFAS results above the EPA reference</h2>
       <p className="story-note">{new Set(pfas.map((p) => p.s.pwsid)).size} of the {pfasSampled} systems sampled had a PFOA or PFOS result above 4 ng/L. The bar is the highest single result as a multiple of it.</p>
       <StackedBars
         parts={[{ key: "times", label: "Highest result, times the reference" }]}
         format={(v) => `${v.toFixed(1)}×`}
+        heads={["System", "Highest"]}
+        ticks={[1, 5, 10].map((v) => ({ at: v, label: v === 1 ? "1× = EPA reference" : `${v}×` }))}
         label="Bars: each water system's highest PFAS result as a multiple of the EPA reference."
         rows={pfas.slice(0, 20).map((p) => ({ id: `${p.s.pwsid}-${p.contaminant}`, name: title(p.s.name), aside: p.contaminant, values: { times: p.max / p.limit }, total: `${Number(p.max.toFixed(1))} ng/L` }))}
       />
@@ -80,6 +83,8 @@ export default async function WaterYouCanCheckPage() {
       <StackedBars
         parts={[{ key: "lead", label: "Lead" }, { key: "galvanized", label: "Galvanized" }]}
         format={n}
+        heads={["System", "Lines"]}
+        ticks={[5000, 10_000].map((v) => ({ at: v, label: n(v) }))}
         label="Stacked bars: each water system's lead and galvanized service lines."
         rows={lead.slice(0, 20).map((l) => ({ id: l.s.pwsid, name: title(l.s.name), aside: `${l.year}${l.unknown ? `, ${n(l.unknown)} more of unknown material` : ""}`, values: { lead: l.lead, galvanized: l.galvanized }, total: n(l.lead + l.galvanized) }))}
       />

@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 import { formatValue } from "@/lib/format";
 import { regionPath } from "@/lib/placeRoutes";
-import type { LadderRow } from "@/lib/stories";
+import { logTicks, type LadderRow } from "@/lib/stories";
 
 const usd = (v: number) => formatValue(v, "usd");
 
@@ -44,6 +44,13 @@ export function PriceLadder({ rows, counties }: { rows: LadderRow[]; counties: s
         {shown.length} towns · recent sales ran above the typical home value in {saleAbove} of them · scale {usd(Math.exp(lo))} to {usd(Math.exp(hi))}, spaced by ratio
       </p>
       <ul className="ladder">
+        <li className="ladder-axis" aria-hidden="true">
+          <span>Cheaper ←</span>
+          <span className="ladder-track">
+            {logTicks(Math.exp(lo), Math.exp(hi)).map((t) => <b key={t} style={{ left: at(t) }}>{usd(t)}</b>)}
+          </span>
+          <span className="num">Typical home</span>
+        </li>
         {shown.map((r) => {
           const points = [r.starter, r.typical, r.sale].filter((v): v is number => v !== null);
           return (

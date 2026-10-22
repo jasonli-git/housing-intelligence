@@ -29,8 +29,14 @@ const TYPE = [
 ];
 
 export default async function WhatTheHousingIsPage() {
-  const towns = await storyTowns([...AGE, ...TYPE].map((p) => p.key));
+  const keys = [...AGE, ...TYPE].map((p) => p.key);
+  const towns = await storyTowns([...keys, "acs_housing_units"]);
   const rows = towns.filter((t) => t.values.acs_share_detached !== undefined).map((t) => ({ id: t.id, name: t.name, county: t.countyName, values: t.values }));
+  // The state as a whole: each share weighted by the town's homes, since the survey's
+  // state figures are not loaded at this level.
+  const homes = (r: (typeof rows)[number]) => r.values.acs_housing_units ?? 0;
+  const allHomes = rows.reduce((t, r) => t + homes(r), 0) || 1;
+  const state = Object.fromEntries(keys.map((k) => [k, rows.reduce((t, r) => t + (r.values[k] ?? 0) * homes(r), 0) / allHomes]));
   const counties = [...new Set(rows.map((r) => r.county))].sort();
   return (
     <StoryShell
@@ -38,7 +44,7 @@ export default async function WhatTheHousingIsPage() {
       lede="Two bars for every town. The first is when its homes were built, oldest on the left; the second is the kind of building they are in, from detached houses to buildings of 20 homes or more."
       note={<>The Census Bureau&rsquo;s five-year American Community Survey: shares of all homes, occupied or not. Survey shares carry margins of error, widest in small towns; each town&rsquo;s page shows them.</>}
     >
-      <HousingMix rows={rows} counties={counties} age={AGE} type={TYPE} />
+      <HousingMix rows={rows} counties={counties} age={AGE} type={TYPE} state={{ id: 1, name: "New Jersey", county: "", values: state }} />
     </StoryShell>
   );
 }

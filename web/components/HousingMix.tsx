@@ -26,7 +26,7 @@ function Bar({ parts, values, label }: { parts: Part[]; values: MixRow["values"]
  * Every town's homes two ways at once: by age and by building type, each a bar of shares.
  * A county filter keeps the list short, and either bar can order it.
  */
-export function HousingMix({ rows, counties, age, type }: { rows: MixRow[]; counties: string[]; age: Part[]; type: Part[] }) {
+export function HousingMix({ rows, counties, age, type, state }: { rows: MixRow[]; counties: string[]; age: Part[]; type: Part[]; state?: MixRow }) {
   const [county, setCounty] = useState("");
   const [order, setOrder] = useState<"old" | "new" | "detached" | "apartments">("old");
   const shown = useMemo(() => {
@@ -57,6 +57,14 @@ export function HousingMix({ rows, counties, age, type }: { rows: MixRow[]; coun
       </div>
       <p className="story-note" role="status">{shown.length} towns</p>
       <ul className="mix">
+        <li className="ladder-axis" aria-hidden="true"><span>Town</span><span>When built: oldest → newest</span><span>Kind of building: houses → big buildings</span></li>
+        {state && (
+          <li className="mix-state">
+            <span><b>All of New Jersey</b></span>
+            <Bar parts={age} values={state.values} label="New Jersey, when built" />
+            <Bar parts={type} values={state.values} label="New Jersey, kind of building" />
+          </li>
+        )}
         {shown.map((r) => (
           <li key={r.id}>
             <span><Link href={regionPath(r.id)}>{r.name}</Link>{!county && <small> · {r.county}</small>}</span>

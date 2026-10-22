@@ -7,7 +7,7 @@ import { formatValue } from "@/lib/format";
 import { pageMetadata } from "@/lib/meta";
 import { regionPath } from "@/lib/placeRoutes";
 import { storyCounties, storyTowns, storyZips } from "@/lib/storyData";
-import { extremes } from "@/lib/stories";
+import { extremes, logTicks } from "@/lib/stories";
 import "../../horizon-theme.css";
 import "../stories.css";
 
@@ -22,6 +22,10 @@ const usd = (v: number) => formatValue(v, "usd");
 export default async function PriciestAndCheapestPage() {
   const [towns, zips, counties] = await Promise.all([storyTowns(), storyZips(), storyCounties()]);
   const rows = extremes(towns, zips, counties);
+  // One ratio scale for every county, padded so the town names beside the end dots fit.
+  const values = rows.flatMap((e) => [e.priciest.value, e.cheapest.value]);
+  const lo = Math.log(Math.min(...values) / 2.6), hi = Math.log(Math.max(...values) * 2.6);
+  const at = (v: number) => `${Math.round(((Math.log(v) - lo) / (hi - lo)) * 10000) / 100}%`;
   return (
     <>
       <Masthead affordability={{ kind: "route" }} storiesActive />
@@ -37,6 +41,32 @@ export default async function PriciestAndCheapestPage() {
             </p>
           </div>
         </header>
+        <figure className="story-figure">
+          <p className="ladder-key"><span><i className="starter" />Cheapest town</span><span><i style={{ background: "var(--story-up)" }} />Priciest town</span><span><i className="zip-mark" />Cheapest and priciest ZIP code</span></p>
+          <ul className="ladder extremes-chart">
+            <li className="ladder-axis" aria-hidden="true">
+              <span>County</span>
+              <span className="ladder-track">{logTicks(Math.exp(lo), Math.exp(hi), 7).map((t) => <b key={t} style={{ left: at(t) }}>{usd(t)}</b>)}</span>
+              <span className="num">Gap</span>
+            </li>
+            {rows.map((e) => (
+              <li key={e.county}>
+                <span><Link href={regionPath(e.county)}>{e.countyName}</Link></span>
+                <span className="ladder-track" role="img" aria-label={`${e.countyName}: cheapest ${e.cheapest.name} ${usd(e.cheapest.value)}, priciest ${e.priciest.name} ${usd(e.priciest.value)}`}>
+                  <span className="span" style={{ left: at(e.cheapest.value), right: `calc(100% - ${at(e.priciest.value)})` }} />
+                  {e.zipCheapest && <i className="zip-mark" style={{ left: at(e.zipCheapest.value) }} title={`ZIP ${e.zipCheapest.name}: ${usd(e.zipCheapest.value)}`} />}
+                  {e.zipPriciest && <i className="zip-mark" style={{ left: at(e.zipPriciest.value) }} title={`ZIP ${e.zipPriciest.name}: ${usd(e.zipPriciest.value)}`} />}
+                  <i className="starter" style={{ left: at(e.cheapest.value) }} />
+                  <i style={{ left: at(e.priciest.value), background: "var(--story-up)" }} />
+                  <em className="end-name left" style={{ left: at(e.cheapest.value) }}>{e.cheapest.name}</em>
+                  <em className="end-name" style={{ left: at(e.priciest.value) }}>{e.priciest.name}</em>
+                </span>
+                <span className="num"><b>{e.spread.toFixed(1)}×</b></span>
+              </li>
+            ))}
+          </ul>
+        </figure>
+        <h2 className="story-h">Each county&rsquo;s places</h2>
         <ul className="extremes">
           {rows.map((e) => (
             <li key={e.county}>

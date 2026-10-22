@@ -43,6 +43,12 @@ export default async function HowDataGetsRewrittenPage() {
       note={<>Kept since {report?.recorded_since ? day(report.recorded_since.slice(0, 10)) : "the first refresh"}, {report?.total_batches ?? 0} refreshes in all. Rows marked &ldquo;filling in&rdquo; are periods that had not ended when they changed, such as a month in progress, which is expected; the others are a source correcting a period already closed. Each place&rsquo;s page lists its own revised figures. <Link href="/freshness">Source freshness</Link> shows when each source last changed.</>}
     >
       <figure className="story-figure">
+        <p className="ladder-key">
+          <span>Circle size: figures changed{[100, 10_000, most].map((f) => <svg key={f} width={2 * r(f) + 4} height={2 * r(f) + 4} style={{ verticalAlign: "middle", margin: "0 .2rem 0 .5rem" }} aria-hidden="true"><circle cx={r(f) + 2} cy={r(f) + 2} r={r(f)} fill="none" stroke="currentColor" /></svg>)}{n(100)} · {n(10_000)} · {n(most)}</span>
+          <span><i style={{ background: "var(--story-2)" }} />Zillow, corrected</span>
+          <span><i style={{ background: "var(--story-1)" }} />Other sources, corrected</span>
+          <span><i style={{ background: "var(--story-3)" }} />Filling in</span>
+        </p>
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Timeline: each refresh, and how many figures in each measure it revised. The largest Zillow revisions are in the table below.">
           <g className="grid" aria-hidden="true">
             {batches.map((b, i) => <g key={b.revised_on}><line x1={x(i)} x2={x(i)} y1={TOP - 6} y2={H - 6} /><text x={x(i)} y={16} textAnchor="middle">{day(b.revised_on)}</text></g>)}
@@ -60,11 +66,7 @@ export default async function HowDataGetsRewrittenPage() {
             );
           }))}
         </svg>
-        <p className="ladder-key">
-          <span><i style={{ background: "var(--story-2)" }} />Zillow, corrected</span>
-          <span><i style={{ background: "var(--story-1)" }} />Other sources, corrected</span>
-          <span><i style={{ background: "var(--story-3)" }} />Filling in</span>
-        </p>
+        
       </figure>
       {latestZillow && (
         <>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { centre, extremes, inside, ladder, leadingDestination, monthlyCost, PRICE, ratioBand, traitPremiums, type StoryTown, type Trait } from "./stories";
+import { centre, extremes, inside, ladder, leadingDestination, logTicks, monthlyCost, PRICE, ratioBand, traitPremiums, trend, type StoryTown, type Trait } from "./stories";
 
 const town = (id: number, county: number, price: number, extra: Record<string, number> = {}): StoryTown => ({
   id, name: `Town ${id}`, county, countyName: `County ${county}`, values: { [PRICE]: price, ...extra },
@@ -80,5 +80,16 @@ describe("the newer stories' arithmetic", () => {
     ];
     expect(leadingDestination(d, 1)?.name).toBe("Newark");
     expect(leadingDestination(d.slice(0, 2), 1)).toBeNull();
+  });
+});
+
+describe("chart helpers", () => {
+  it("picks round ratio-scale ticks", () => {
+    expect(logTicks(150_000, 3_000_000)).toEqual([200_000, 500_000, 1_000_000, 2_000_000]);
+  });
+  it("fits a straight line", () => {
+    const t = trend([[0, 1], [1, 3], [2, 5]]);
+    expect(t.slope).toBeCloseTo(2);
+    expect(t.intercept).toBeCloseTo(1);
   });
 });

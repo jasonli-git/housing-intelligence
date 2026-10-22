@@ -50,6 +50,9 @@ export default async function WhoMovesInPage() {
   const all = rows.flatMap((r) => [r.arrivals, r.stayers, ...(r.leavers ? [r.leavers] : [])]);
   const lo = Math.min(...all) * 0.9, hi = Math.max(...all) * 1.05;
   const at = (v: number) => Math.round(((v - lo) / (hi - lo)) * 1000) / 10;
+  // Three or so round ticks, the step picked from the range.
+  const step = [10_000, 20_000, 25_000, 50_000, 100_000].find((k) => (hi - lo) / k <= 3.5) ?? 100_000;
+  const ticks = Array.from({ length: 20 }, (_, i) => (i + 1) * step).filter((t) => t > lo && t < hi);
   return (
     <StoryShell
       title="Who’s moving in"
@@ -58,21 +61,36 @@ export default async function WhoMovesInPage() {
     >
       <div className="story-two">
         <figure className="story-figure">
-          <svg viewBox={`0 0 ${MAP_W} ${map.projector.height}`} role="img" aria-label="Map of New Jersey's counties with arcs for the largest flows of households moving in. The counties' figures are in the chart beside it.">
-            {map.shapes.map((s) => <path key={s.id} d={s.d} className="county"><title>{counties.get(s.id)}</title></path>)}
-            {flows.map((f, i) => (
-              <path key={i} d={arc(f.from, f.to)} className={`flow ${f.kind}`} strokeWidth={Math.max(1, Math.sqrt(f.returns) / 9)} strokeOpacity={0.7}>
-                <title>{`${f.what}: ${f.returns.toLocaleString("en-US")} households`}</title>
-              </path>
-            ))}
-            <text className="place" x={nyc[0] - 4} y={nyc[1] - 8} textAnchor="end">New York City</text>
-            <text className="place" x={philadelphia[0] + 6} y={philadelphia[1] + 4}>Philadelphia</text>
-          </svg>
           <p className="ladder-key">
             <span><i style={{ background: "var(--story-1)" }} />From another NJ county</span>
             <span><i style={{ background: "var(--story-2)" }} />From New York City</span>
             <span><i style={{ background: "var(--story-3)" }} />From Philadelphia</span>
           </p>
+          <svg viewBox={`0 0 ${MAP_W} ${map.projector.height}`} role="img" aria-label="Map of New Jersey's counties with arcs for the largest flows of households moving in. The counties' figures are in the chart beside it.">
+            <defs>
+              <marker id="move-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="context-stroke" /></marker>
+            </defs>
+            {map.shapes.map((s) => <path key={s.id} d={s.d} className="county"><title>{counties.get(s.id)}</title></path>)}
+            {flows.map((f, i) => (
+              <path key={i} d={arc(f.from, f.to)} className={`flow ${f.kind}`} strokeWidth={Math.max(1, Math.sqrt(f.returns) / 9)} strokeOpacity={0.7} markerEnd="url(#move-head)">
+                <title>{`${f.what}: ${f.returns.toLocaleString("en-US")} households`}</title>
+              </path>
+            ))}
+            <text className="place" x={nyc[0] - 4} y={nyc[1] - 8} textAnchor="end">New York City</text>
+            <text className="place" x={philadelphia[0] + 6} y={philadelphia[1] + 4}>Philadelphia</text>
+            {/* Width key, in the open water off the shore. */}
+            <g aria-hidden="true" transform={`translate(${MAP_W - 150} ${map.projector.height - 90})`}>
+              <text className="sub" x={0} y={0}>Households a year</text>
+              {[1000, 2500].map((h, i) => (
+                <g key={h} transform={`translate(0 ${18 + i * 20})`}>
+                  <line x1={0} x2={40} y1={0} y2={0} className="flow s1" strokeWidth={Math.sqrt(h) / 9} />
+                  <text className="sub" x={48} y={4}>{h.toLocaleString("en-US")}</text>
+                </g>
+              ))}
+              <text className="sub" x={0} y={68}>Arrow points to the county moved to</text>
+            </g>
+          </svg>
+          
         </figure>
         <div>
           <h2 className="story-h">Arrivals against those who stayed</h2>
@@ -82,6 +100,11 @@ export default async function WhoMovesInPage() {
             <span><i style={{ background: "var(--story-2)" }} />Leaving</span>
           </p>
           <ul className="ladder">
+            <li className="ladder-axis" aria-hidden="true">
+              <span>Income</span>
+              <span className="ladder-track">{ticks.map((t) => <b key={t} style={{ left: `${at(t)}%` }}>${t / 1000}k</b>)}</span>
+              <span className="num">vs stayers</span>
+            </li>
             {rows.map((r) => (
               <li key={r.id}>
                 <span><Link href={regionPath(r.id)}>{r.name}</Link></span>

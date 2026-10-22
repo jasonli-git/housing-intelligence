@@ -52,6 +52,10 @@ export function MonthlyCostList({ rows, counties }: { rows: CostRow[]; counties:
         parts={PARTS}
         max={Math.max(...shown.map((r) => total(r.cost)))}
         shares={order === "running"}
+        heads={["Town", "Month (not loan)"]}
+        ticks={order === "running"
+          ? [0, 0.25, 0.5, 0.75].map((f) => ({ at: f, label: `${f * 100}%` }))
+          : [1000, 2000, 4000, 6000, 8000, 10000, 15000, 20000].filter((v) => v < Math.max(...shown.map((r) => total(r.cost)))).map((v) => ({ at: v, label: usd(v) }))}
         format={usd}
         label="Stacked bars: each town's typical monthly cost of owning, by part."
         rows={shown.map((r) => ({

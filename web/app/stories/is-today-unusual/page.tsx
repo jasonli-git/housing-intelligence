@@ -19,7 +19,7 @@ export const metadata: Metadata = pageMetadata({
 const W = 240, H = 110, PAD = 6;
 
 /** One county's years: above its own usual level shaded up, below shaded down, today a dot. */
-function Panel({ p, first, last, span }: { p: Persistence; first: number; last: number; span: number }) {
+function Panel({ p, first, last, span, annotate = false }: { p: Persistence; first: number; last: number; span: number; annotate?: boolean }) {
   const x = (yr: number) => Math.round((PAD + ((yr - first) / (last - first)) * (W - 2 * PAD)) * 10) / 10;
   const y = (v: number) => Math.round((H / 2 - (v / span) * (H / 2 - PAD)) * 10) / 10;
   const pts = p.series;
@@ -37,6 +37,14 @@ function Panel({ p, first, last, span }: { p: Persistence; first: number; last: 
       <line className="zero" x1={PAD} x2={W - PAD} y1={y(0)} y2={y(0)} />
       <path d={line} className="line" />
       <circle className="now" cx={x(now.year)} cy={y(now.vs_median)} r={3.5} />
+      {annotate && (
+        <>
+          <text x={PAD + 2} y={y(0) - 4}>usual level</text>
+          <text x={PAD + 2} y={PAD + 8}>dearer than usual ↑</text>
+          <text x={PAD + 2} y={H - PAD}>cheaper than usual ↓</text>
+          <text x={x(now.year) - 6} y={y(now.vs_median) - 6} textAnchor="end">today</text>
+        </>
+      )}
       <text x={PAD} y={H + 12}>{first}</text>
       <text x={W - PAD} y={H + 12} textAnchor="end">{last}</text>
     </svg>
@@ -63,7 +71,7 @@ export default async function IsTodayUnusualPage() {
         {[...(state ? [state] : []), ...rest].map((p) => (
           <li key={p.region_id} aria-label={`${name(p)}: ${againstUsual(p.vs_median!)} its usual level in ${p.last_year}${placeAmongYears(p) ? `, ${placeAmongYears(p)}` : ""}`}>
             <h3><Link href={regionPath(p.region_id)}>{name(p)}</Link><span>{againstUsual(p.vs_median!)}</span></h3>
-            <Panel p={p} first={first} last={last} span={span} />
+            <Panel p={p} first={first} last={last} span={span} annotate={p.region_id === 1} />
           </li>
         ))}
       </ul>

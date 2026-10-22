@@ -6,6 +6,7 @@ import { formatValue } from "@/lib/format";
 import { pageMetadata } from "@/lib/meta";
 import { regionPath } from "@/lib/placeRoutes";
 import { storyShapes, storyTowns } from "@/lib/storyData";
+import { trend } from "@/lib/stories";
 import "../../horizon-theme.css";
 import "../stories.css";
 
@@ -17,14 +18,15 @@ export const metadata: Metadata = pageMetadata({
 
 const usd = (v: number) => formatValue(v, "usd");
 const HOUSE = 500_000;
-const W = 880, H = 440, L = 64, R = 20, T = 16, B = 44;
+const W = 880, H = 460, L = 64, R = 150, T = 36, B = 44;
 const MAP_W = 520;
 /** Effective rates above this, per $100, are set aside from the chart (see below). */
 const SET_ASIDE = 6;
-const AGE = [
-  { slot: "s1", label: "Revalued 2020 or later", test: (y: number) => y >= 2020 },
-  { slot: "s3", label: "2010 to 2019", test: (y: number) => y >= 2010 && y < 2020 },
-  { slot: "s2", label: "Before 2010", test: (y: number) => y < 2010 },
+/** How far assessments trail sale prices, by the Director's Ratio. */
+const BANDS = [
+  { slot: "s1", label: "Current, 95% or more", test: (r: number) => r >= 95 },
+  { slot: "s3", label: "Slipping, 85–95%", test: (r: number) => r >= 85 && r < 95 },
+  { slot: "s2", label: "Overdue, under 85%", test: (r: number) => r < 85 },
 ];
 
 export default async function SameHouseDifferentTaxBillPage() {
@@ -45,8 +47,10 @@ export default async function SameHouseDifferentTaxBillPage() {
   const topRate = Math.ceil(Math.max(...points.map((t) => t.values.nj_effective_tax_rate!)));
   const x = (v: number) => Math.round((L + ((Math.log(v) - x0) / (x1 - x0)) * (W - L - R)) * 10) / 10;
   const y = (r: number) => Math.round((H - B - (r / topRate) * (H - T - B)) * 10) / 10;
+  // The trend: rate against log home value, straight on this chart's ratio scale.
+  const fit = trend(points.map((t) => [Math.log(t.values.acs_median_home_value!), t.values.nj_effective_tax_rate!]));
   const byId = new Map(towns.map((t) => [t.id, t]));
-  const ageOf = (yr?: number) => (yr ? AGE.find((a) => a.test(yr)) : undefined);
+  const bandOf = (r?: number) => (r === undefined ? undefined : BANDS.find((b) => b.test(r)));
   const overdue = towns.filter((t) => t.values.nj_director_ratio !== undefined && t.values.nj_director_ratio < 85).sort((a, b) => a.values.nj_director_ratio! - b.values.nj_director_ratio!);
   return (
     <StoryShell
@@ -58,8 +62,20 @@ export default async function SameHouseDifferentTaxBillPage() {
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Scatter plot: each town's effective property tax rate against its median home value.">
           <g className="grid" aria-hidden="true">
             {[200_000, 400_000, 800_000, 1_600_000].filter((t) => Math.log(t) > x0 && Math.log(t) < x1).map((t) => <g key={t}><line x1={x(t)} x2={x(t)} y1={T} y2={H - B} /><text x={x(t)} y={H - B + 18} textAnchor="middle">{usd(t)}</text></g>)}
-            {Array.from({ length: topRate + 1 }, (_, r) => <g key={r}><line x1={L} x2={W - R} y1={y(r)} y2={y(r)} /><text x={L - 6} y={y(r) + 4} textAnchor="end">{r}%</text></g>)}
-            <text x={(L + W - R) / 2} y={H - 6} textAnchor="middle">Median home value</text>
+            {Array.from({ length: topRate + 1 }, (_, r) => (
+              <g key={r}>
+                <line x1={L} x2={W - R} y1={y(r)} y2={y(r)} />
+                <text x={L - 6} y={y(r) + 4} textAnchor="end">{r}%</text>
+                {r > 0 && <text x={W - R + 8} y={y(r) + 4}>{usd(bill(r))} a year</text>}
+              </g>
+            ))}
+            <text x={(L + W - R) / 2} y={H - 6} textAnchor="middle">Median home value in the town →</text>
+            <text x={L} y={T - 18}>Tax rate, per $100 of value ↑</text>
+            <text x={W - R + 8} y={T - 18}>Bill on a {usd(HOUSE)} house</text>
+          </g>
+          <g aria-hidden="true">
+            <line className="trend-line" x1={x(Math.exp(x0))} y1={y(fit.intercept + fit.slope * x0)} x2={x(Math.exp(x1))} y2={y(fit.intercept + fit.slope * x1)} />
+            <text className="zone-label" x={x(Math.exp(x0)) + 10} y={y(fit.intercept + fit.slope * x0) + 22}>Trend: pricier towns, lower rates</text>
           </g>
           {points.map((t) => (
             <circle key={t.id} className="dot s1" cx={x(t.values.acs_median_home_value!)} cy={y(t.values.nj_effective_tax_rate!)} r={4}>
@@ -72,29 +88,37 @@ export default async function SameHouseDifferentTaxBillPage() {
       </figure>
       <div className="story-two">
         <figure className="story-figure">
-          <h2 className="story-h">When each town last revalued</h2>
+          <h2 className="story-h">How far assessments trail sale prices</h2>
+          <p className="ladder-key">{BANDS.map((a) => <span key={a.slot}><i style={{ background: `var(--story-${a.slot.slice(1)})` }} />{a.label} ({towns.filter((t) => t.values.nj_director_ratio !== undefined && a.test(t.values.nj_director_ratio)).length})</span>)}</p>
           <svg className="map" viewBox={`0 0 ${MAP_W} ${map.projector.height}`} role="img" aria-label="Map of New Jersey's towns shaded by when each last revalued its properties. Towns with overdue assessments are listed beside it.">
             {map.shapes.map((s) => {
-              const t = byId.get(s.id), a = ageOf(t?.values.nj_revaluation_year);
-              return <path key={s.id} d={s.d} className={`town ${a?.slot ?? "muted"}`}><title>{`${t?.name ?? s.name}: ${t?.values.nj_revaluation_year ? `revalued ${t.values.nj_revaluation_year}` : "no revaluation year on record"}`}</title></path>;
+              const t = byId.get(s.id), r = t?.values.nj_director_ratio, b = bandOf(r);
+              return <path key={s.id} d={s.d} className={`town ${b?.slot ?? "muted"}`}><title>{`${t?.name ?? s.name}: ${r === undefined ? "no ratio published" : `assessed at ${r.toFixed(1)}% of sale prices`}${t?.values.nj_revaluation_year ? `, last revalued ${t.values.nj_revaluation_year}` : ""}`}</title></path>;
             })}
           </svg>
-          <p className="ladder-key">{AGE.map((a) => <span key={a.slot}><i style={{ background: `var(--story-${a.slot.slice(1)})` }} />{a.label}</span>)}<span><i className="muted" style={{ background: "var(--plate-rule, var(--border))" }} />No year on record</span></p>
+          
         </figure>
         <div>
           <h2 className="story-h">Assessments furthest behind</h2>
-          <table className="story-table">
-            <thead><tr><th scope="col">Town</th><th scope="col" className="num">Director&rsquo;s Ratio</th><th scope="col" className="num">Last revalued</th></tr></thead>
-            <tbody>
-              {overdue.slice(0, 20).map((t) => (
-                <tr key={t.id}>
-                  <th scope="row"><Link href={regionPath(t.id)}>{t.name}</Link> <small>{t.countyName}</small></th>
-                  <td className="num">{t.values.nj_director_ratio!.toFixed(1)}%</td>
-                  <td className="num">{t.values.nj_revaluation_year ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <p className="story-note">Bar: assessed value as a share of what homes sell for. 100% is current; under 85%, a revaluation can be ordered.</p>
+          <ul className="ladder ratio-bars">
+            <li className="ladder-axis" aria-hidden="true">
+              <span>Town</span>
+              <span className="ladder-track"><b style={{ left: 0, transform: "none" }}>0%</b><b style={{ left: `${85 / 1.1}%`, transform: "translateX(-100%)" }}>85%</b><b style={{ left: `${100 / 1.1}%`, transform: "none" }}>100%</b></span>
+              <span className="num">Ratio</span>
+            </li>
+            {overdue.slice(0, 20).map((t) => (
+              <li key={t.id}>
+                <span><Link href={regionPath(t.id)}>{t.name}</Link> <small>{t.countyName}</small></span>
+                <span className="ladder-track" role="img" aria-label={`${t.name}: ${t.values.nj_director_ratio!.toFixed(1)}%`}>
+                  <span className="rule" style={{ left: `${85 / 1.1}%` }} />
+                  <span className="rule full" style={{ left: `${100 / 1.1}%` }} />
+                  <span className="fill" style={{ width: `${t.values.nj_director_ratio! / 1.1}%` }} />
+                </span>
+                <span className="num">{t.values.nj_director_ratio!.toFixed(0)}%</span>
+              </li>
+            ))}
+          </ul>
           <p className="story-note">{overdue.length} towns have a Director&rsquo;s Ratio under 85%; the 20 lowest are shown.</p>
         </div>
       </div>

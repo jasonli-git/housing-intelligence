@@ -42,6 +42,7 @@ export default async function IsNewJerseyBuildingPage() {
     return { id, name: counties.get(id)!, year: last, at, per1000: net.get(id)?.nj_net_units_per_1000 ?? null };
   }).sort((a, b) => (b.per1000 ?? -Infinity) - (a.per1000 ?? -Infinity));
   const top = Math.max(...rows.flatMap((r) => r.at.map((v) => v ?? 0)));
+  const topNet = Math.max(1, ...rows.map((r) => r.per1000 ?? 0));
   const w = (v: number | null) => `${Math.round(((v ?? 0) / top) * 10000) / 100}%`;
   return (
     <StoryShell
@@ -55,7 +56,7 @@ export default async function IsNewJerseyBuildingPage() {
       <h2 className="story-h">County by county</h2>
       <p className="ladder-key">{MEASURES.map((m) => <span key={m.metric}><i style={{ background: `var(--story-${m.slot})` }} />{m.label}</span>)}</p>
       <table className="story-table">
-        <thead><tr><th scope="col">County</th><th scope="col">Homes, latest year</th><th scope="col" className="num">Net per 1,000</th></tr></thead>
+        <thead><tr><th scope="col">County</th><th scope="col">Homes, latest year</th><th scope="col">Net homes added per 1,000 homes</th></tr></thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.id}>
@@ -68,7 +69,7 @@ export default async function IsNewJerseyBuildingPage() {
                   </div>
                 ))}
               </td>
-              <td className="num">{r.per1000 === null ? "—" : r.per1000.toFixed(1)}</td>
+              <td style={{ width: "22%" }}>{r.per1000 === null ? "—" : <div className="bar-line"><i style={{ width: `${Math.round((Math.max(0, r.per1000) / topNet) * 1000) / 10}%`, background: "var(--plate-ink, var(--text-primary))" }} /><span>{r.per1000.toFixed(1)}</span></div>}</td>
             </tr>
           ))}
         </tbody>
