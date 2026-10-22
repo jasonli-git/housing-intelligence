@@ -13,6 +13,10 @@ are not yet recorded here.
 
 ### Added
 
+- **Readings may call a figure a survey estimate only if it is one** (ARCHITECTURE
+  #422): a reading that calls Zillow's home value, a sale price or a tax bill a survey
+  estimate is refused and rewritten. Owner costs in everyday words are now recognised
+  by the ranking check, so its feedback names the right measure.
 - **The warehouse runs natively on Apple silicon** (ARCHITECTURE #421): no more crashes
   under emulation, and a rebuild, a publish and the tests run a quarter to a third
   faster. Tied places in a ranking now always come in the same order.

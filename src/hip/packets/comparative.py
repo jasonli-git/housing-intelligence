@@ -159,6 +159,16 @@ _SPOKEN: tuple[tuple[str, tuple[str, ...]], ...] = (
             "acs_owner_severe_burden",
         ),
     ),
+    # readings-v11: Cumberland's "monthly owner costs with a mortgage" fell through to
+    # the rents named earlier in its sentence, and the refusal blamed the wrong measure.
+    (
+        r"(?:monthly )?owner(?:s'?)? costs?(?: a month)?,? without a mortgage",
+        ("acs_owner_costs_no_mortgage",),
+    ),
+    (
+        r"(?:monthly )?owner(?:s'?)? costs?(?: a month)?,? with a mortgage",
+        ("acs_owner_costs_mortgage",),
+    ),
     (r"(?:household )?incomes?|paychecks?", ("acs_median_hh_income",)),
     (
         r"homeownership|home ?ownership|owner[- ]occupied share|owning a home",

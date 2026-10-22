@@ -12,15 +12,15 @@ and not a chatbot: pages, maps, tools, reports and an API are the product, and a
 optional AI layer only explains figures that were already computed.
 
 > **Status — <!-- fill:version -->v0.50.0 (2026-10-08)<!-- /fill -->, updated
-> 2026-10-21.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
+> 2026-10-22.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
 > published in full: the state, <!-- fill:counties -->21<!-- /fill --> counties,
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** A sale price to income ratio from the state's sales records, covering 163
-> towns Zillow does not (#228); readings' ranking words checked against the data (#222);
-> revised figures marked on place pages (#220); the status link says when sources were
-> last checked (#221); lead service lines from NJDEP's 2025–2026 inventories (#219).
+> **Latest.** Readings may call a figure a survey estimate only if it is one; the
+> warehouse runs natively on Apple silicon, a quarter to a third faster (#230); the
+> README's figures fill themselves (#229); a sale price to income ratio covering 163
+> towns Zillow does not (#228).
 >
 > **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
 > state, on hold until they are cleared. See [ROADMAP.md](ROADMAP.md) and
@@ -109,7 +109,7 @@ of 4); a model stating a figure the packet does not hold is ineligible.
   scale): GPT-6 Luna, 3.64. It now writes the readings, ahead of Claude Haiku 5.5 and
   Gemini 3.8 Flash (ARCHITECTURE #352).
 
-The readings comparisons (readings-v1 to <!-- fill:readings -->v10<!-- /fill -->) are in
+The readings comparisons (readings-v1 to <!-- fill:readings -->v12<!-- /fill -->) are in
 [reports/evaluation/](reports/evaluation/).
 
 ## Setup
