@@ -186,27 +186,23 @@ def test_no_window_claims_a_period_the_deeds_do_not_reach() -> None:
     assert beyond == 0
 
 
-def test_no_derived_ratio_is_computed_from_the_transaction_median() -> None:
-    """The owner's condition on the cost-to-own fallback, 2026-09-20.
+def test_the_two_price_families_never_mix() -> None:
+    """The owner's condition on the transaction median, 2026-09-20, as decided 2026-10-21.
 
-    A transaction median may price a mortgage on the page it belongs to, but must stay out
-    of cross-region affordability comparisons until those explicitly handle two price
-    sources: `price_to_income` computed from Zillow for one town and from deeds for its
-    neighbour would rank the two against a yardstick that changes between them. This reads
-    the ratio table in `hip.analytics.compute` rather than the warehouse, so it fails when
-    someone adds the input, not only after a pipeline run.
+    `price_to_income` computed from Zillow for one town and from deeds for its neighbour
+    would rank the two against a yardstick that changes between them. So the sale price
+    has a ratio family of its own, `WINDOW_RATIOS`, ranked only against itself
+    (ARCHITECTURE #416), and neither family may take the other's price. This reads the
+    tables in `hip.analytics.compute`, so it fails when someone adds the input, not only
+    after a pipeline run.
     """
-    from hip.analytics.compute import RATIOS
+    from hip.analytics.compute import RATIOS, WINDOW_RATIOS
 
-    inputs = {
-        metric
-        for _, numerator, denominator, _ in RATIOS
-        for metric in (numerator, denominator)
-    }
-    assert "zhvi_sfr" in inputs, "the ratio table moved; this reads the wrong list"
-    assert "sr1a_median_sale_price" not in inputs, (
-        "a derived ratio is computed from sr1a_median_sale_price. That figure is a "
-        "median of what sold, not of what exists, so a ratio mixing it with Zillow's "
-        "index across regions compares them on different yardsticks. Needs an explicit "
-        "methodology decision first — see TODO.md, Open decisions."
+    zillow = {numerator for _, numerator, _, _ in RATIOS}
+    sales = {numerator for _, numerator, _, _ in WINDOW_RATIOS}
+    assert "zhvi_sfr" in zillow, "the ratio table moved; this reads the wrong list"
+    assert "sr1a_median_sale_price" not in zillow, (
+        "a Zillow-family ratio takes the SR1A sale price. A median of what sold is not "
+        "an estimate of what exists; it belongs in WINDOW_RATIOS (ARCHITECTURE #416)."
     )
+    assert sales == {"sr1a_median_sale_price"}, sales

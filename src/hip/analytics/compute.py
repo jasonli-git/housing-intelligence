@@ -64,6 +64,15 @@ RATIOS: tuple[tuple[str, str, str, float], ...] = (
     ("nj_net_units_per_1000", "nj_net_units_added", "acs_housing_units", 1000.0),
 )
 
+# (computed metric, numerator over a window, annual denominator, multiplier): a ratio
+# whose numerator spans several years, paired with the edition ending the same year as
+# its window, so sales 2022-2024 meet income 2020-2024 and the newest lands in the year
+# price_to_income's does. The window still open (2024 to mid-2026) waits for its edition.
+# Its own family, never mixed into the ratios above (ARCHITECTURE #416).
+WINDOW_RATIOS: tuple[tuple[str, str, str, float], ...] = (
+    ("sale_price_to_income", "sr1a_median_sale_price", "acs_median_hh_income", 1.0),
+)
+
 # (computed metric, count over a window, stock, multiplier): a count spread over the
 # years its window spans, per unit of a stock. Milestone 49's market turnover is usable
 # one- to four-family sales a year per 1,000 class-2 parcels — the same property class on
@@ -106,7 +115,10 @@ def survey_metrics() -> list[str]:
     surveyed = {
         m for m, metric in load_metrics().items() if metric.record_type == "survey"
     }
-    return sorted(surveyed | {ratio for ratio, _, over, _ in RATIOS if over in surveyed})
+    return sorted(
+        surveyed
+        | {ratio for ratio, _, over, _ in RATIOS + WINDOW_RATIOS if over in surveyed}
+    )
 
 
 def rebuild(engine: Engine) -> AnalyticsResult:
@@ -221,6 +233,49 @@ def _affordability(conn: object) -> dict[str, int]:
                 ) num
                   ON num.region_id = income.region_id
                  AND num.yr = date_trunc('year', income.period_end)::date
+                WHERE income.metric_id = :denominator
+                  AND income.value > 0
+                """
+            ),
+            {
+                "metric_id": metric_id,
+                "numerator": numerator,
+                "denominator": denominator,
+                "multiplier": multiplier,
+            },
+        ).rowcount
+        counts[metric_id] = int(computed)
+
+    for metric_id, numerator, denominator, multiplier in WINDOW_RATIOS:
+        computed = conn.execute(  # type: ignore[attr-defined]
+            text(
+                """
+                INSERT INTO derived_facts
+                    (region_id, metric_id, period_start, period_end, value,
+                     margin_of_error)
+                SELECT income.region_id, :metric_id,
+                       income.period_start, income.period_end,
+                       -- Numeric and rounded, and the income's relative margin carried
+                       -- as the whole margin, exactly as the ratios above: a median of
+                       -- recorded sales publishes no sampling error.
+                       round(
+                           num.value::numeric * CAST(:multiplier AS numeric)
+                               / income.value::numeric,
+                           6
+                       )::double precision,
+                       round(
+                           num.value::numeric * CAST(:multiplier AS numeric)
+                               / income.value::numeric
+                               * income.margin_of_error::numeric
+                               / income.value::numeric,
+                           6
+                       )::double precision
+                FROM fact_metric_observation income
+                JOIN fact_metric_observation num
+                  ON num.region_id = income.region_id
+                 AND num.metric_id = :numerator
+                 AND date_trunc('year', num.period_end)
+                     = date_trunc('year', income.period_end)
                 WHERE income.metric_id = :denominator
                   AND income.value > 0
                 """

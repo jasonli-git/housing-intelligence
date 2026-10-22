@@ -20,7 +20,13 @@ from __future__ import annotations
 # net additions are measured against. `hip_derived` alone cannot say which derived
 # metrics these are, so they are named.
 ON_SURVEY_INCOME = frozenset(
-    {"fmr_to_income", "price_to_income", "rent_to_income", "nj_net_units_per_1000"}
+    {
+        "fmr_to_income",
+        "price_to_income",
+        "rent_to_income",
+        "nj_net_units_per_1000",
+        "sale_price_to_income",
+    }
 )
 
 SURVEY_METRICS = frozenset(

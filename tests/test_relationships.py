@@ -82,7 +82,7 @@ def test_the_report_states_every_relationship(hudson: Packet) -> None:
     [
         # A ratio explained by its two sides: arithmetic, so a cause may be said.
         (
-            "Home value to household income slipped from 6.81 to 6.65 because incomes "
+            "Home value to household income slipped from 6.75 to 6.60 because incomes "
             "rose 28.9% while home values rose 26%.",
             False,
         ),
@@ -105,7 +105,7 @@ def test_the_report_states_every_relationship(hudson: Packet) -> None:
             False,
         ),
         (
-            "Home value to household income slipped from 6.81 to 6.65. This happened "
+            "Home value to household income slipped from 6.75 to 6.60. This happened "
             "because incomes rose 28.9% while home values rose 26%.",
             False,
         ),
@@ -130,7 +130,7 @@ def test_the_report_states_every_relationship(hudson: Packet) -> None:
         # A ratio named, but explained by a measure that is not one of its sides.
         ("Home value to household income fell because rents rose 36.2%.", True),
         (
-            "Home value to household income slipped from 6.81 to 6.65. Median gross "
+            "Home value to household income slipped from 6.75 to 6.60. Median gross "
             "rent rose 36.2% due to incomes rising 28.9%.",
             True,
         ),

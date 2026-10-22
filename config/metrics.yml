@@ -314,6 +314,26 @@ metrics:
     record_type: calculated
     inputs: [zhvi_sfr, acs_median_hh_income]
 
+  # ARCHITECTURE #416: the same question as price_to_income, asked of what buyers
+  # paid. Its own family, ranked only against itself: a median of what sold is not an
+  # estimate of what exists, and the two differ by town (7% at the median, 2026-10-21).
+  sale_price_to_income:
+    label: Sale price to household income
+    unit: ratio
+    frequency: annual
+    direction: lower_is_better
+    description: >-
+      Median price of usable one- to four-family sales over three years, from the
+      state's SR1A records, divided by median household income for the ACS edition
+      ending the same year (sales 2022-2024 over income 2020-2024). A purchase price,
+      not the typical home's value: compare it with other places' sale-price ratios,
+      not with the Zillow-based home value to income. Shown where at least 20 sales
+      were recorded.
+    source_id: hip_derived
+    record_type: calculated
+    inputs: [sr1a_median_sale_price, acs_median_hh_income]
+    changed: false
+
   rent_to_income:
     label: Annual rent to household income
     unit: ratio

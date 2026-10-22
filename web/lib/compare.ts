@@ -45,6 +45,7 @@ export const COMPARE_SECTIONS: ReadonlyArray<{ title: string; rows: CompareRow[]
     rows: [
       { metric: "acs_median_hh_income", label: "Household income" },
       { metric: "price_to_income", label: "Home price to income" },
+      { metric: "sale_price_to_income", label: "Sale price to income" },
       { metric: "acs_renter_cost_burden", label: "Renters under housing-cost pressure" },
     ],
   },

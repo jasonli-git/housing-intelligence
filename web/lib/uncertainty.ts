@@ -193,6 +193,7 @@ export const SURVEY_METRICS = new Set([
   "nj_net_units_per_1000",
   "price_to_income",
   "rent_to_income",
+  "sale_price_to_income",
 ]);
 
 /**

@@ -71,6 +71,8 @@ export const GROUPS: readonly Group[] = [
     title: "Affordability",
     metrics: [
       "price_to_income",
+      // ARCHITECTURE #416: what buyers paid, its own measure beside Zillow's.
+      "sale_price_to_income",
       "price_to_ami",
       "rent_to_income",
       "fmr_to_income",

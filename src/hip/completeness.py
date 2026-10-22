@@ -85,6 +85,7 @@ METRIC_SUBJECTS: dict[str, str] = {
     "nj_revaluation_year": "taxes",
     "modiv_median_assessed_value": "price",
     "price_to_income": "price",
+    "sale_price_to_income": "price",
     "price_to_ami": "price",
     "zori_all": "rent",
     "acs_median_gross_rent": "rent",
