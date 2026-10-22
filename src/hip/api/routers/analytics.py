@@ -120,7 +120,10 @@ def rankings(
              AND c."window" = k."window"
             WHERE k.metric_id = :m AND k.level = :level
               AND k.basis = :basis AND k."window" = :w
-            ORDER BY k.rank
+            -- Tied regions by id: otherwise their order, and which of them a LIMIT
+            -- keeps, is the table's physical order, which a restore reshuffled
+            -- (55 published rankings, 2026-10-21, ARCHITECTURE #421).
+            ORDER BY k.rank, k.region_id
             LIMIT :limit
             """
             ),

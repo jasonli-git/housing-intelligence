@@ -192,3 +192,15 @@ def test_every_survey_figure_the_api_serves_carries_its_margin(analyzed: None) -
         f"/compare?metric_id=acs_median_hh_income&region_ids={mercer}"
     ).json()["regions"][0]["series"]
     assert all(point["margin_of_error"] > 0 for point in compared)
+
+
+def test_tied_regions_come_in_a_fixed_order() -> None:
+    """Equal ranks by region id, so a published ranking does not depend on how the
+    table happens to be stored (ARCHITECTURE #421)."""
+    body = client.get(
+        "/rankings?metric_id=acs_avg_household_size&level=county&window=1y&limit=1000"
+    ).json()
+    if not body.get("items"):
+        pytest.skip("no analytics; run `hip analyze`")
+    keys = [(item["rank"], item["region_id"]) for item in body["items"]]
+    assert keys == sorted(keys)
