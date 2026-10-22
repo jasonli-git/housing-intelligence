@@ -8,14 +8,6 @@ export type AtlasMode = "latest" | WindowKey;
 // order reads in either theme and in greyscale, and nothing else on the page competes.
 export const ATLAS_COLORS = ["#e6e9f5","#bcc5e8","#8d9bd6","#6170c2","#3b479c"];
 
-/** Difference is descriptive, not evidence of statistical significance. */
-export function atlasDifference(measure:AtlasMeasure,mode:AtlasMode,first:number,second:number) {
-  const rows=atlasReading(measure,mode)?.rows;
-  const a=atlasValue(rows?.find(row=>row.id===first),mode),b=atlasValue(rows?.find(row=>row.id===second),mode);
-  if(a===null||b===null)return {value:null,reason:"A figure is unavailable."};
-  if(mode==="latest"&&(!measure.latest.periods[first]||measure.latest.periods[first]!==measure.latest.periods[second]))return {value:null,reason:"Different dates; no difference calculated."};
-  return {value:b-a,reason:null};
-}
 
 /** Latest and change are distinct records; never silently substitute one. */
 export function atlasReading(measure:AtlasMeasure, mode:AtlasMode) {

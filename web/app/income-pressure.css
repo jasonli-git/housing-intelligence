@@ -36,12 +36,8 @@
   .atlas-exit:hover, .atlas-exit:focus-visible { border-color:var(--text-secondary); }
   .atlas-layer-row .atlas-levels { flex:1 1 auto; width:auto; }
   .atlas-inline-link { padding:0; border:0; background:none; color:var(--text-primary); font:inherit; text-decoration:underline; cursor:pointer; }
-  .atlas-comparison-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; margin:.5rem 0; }
-  .atlas-comparison-pair>div { display:grid; align-content:start; gap:.2rem; }
-  .atlas-comparison-pair strong { font-size:18px; }
   .atlas-comparison small { font-size:10px; color:var(--text-secondary); }
   .atlas-comparison a.destination-county { color:var(--kind-county); font-size:11px; }
-  .atlas-results:has(.atlas-comparison-pair) .atlas-selected { display:none; }
   .atlas-map-geography path[data-pinned="true"]:not([data-selected="true"]) { stroke:var(--atlas-accent); stroke-width:3px; stroke-dasharray:5 3; }
   .atlas-table-wrap tr[data-pinned="true"]:not([data-selected="true"]) { background:color-mix(in srgb,var(--atlas-accent) 8%,var(--surface-card)); }
   .atlas-table-wrap tr[data-pinned="true"] th button::before { content:"◆ "; color:var(--atlas-accent); }

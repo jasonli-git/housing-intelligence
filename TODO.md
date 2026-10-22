@@ -180,11 +180,13 @@ Not open work: each comes round on a date. The steps live where the row says.
       scheduled run then reports a failed build. Fix: `cd web && npm run routes:refresh`,
       review and commit. Rare: every place with any observation already has an address.
 
-- [ ] **Upgrade the housing atlas.** (owner, 2026-10-22; Director Note "Visualizing the
-      data") Town and ZIP layers from the published `geo/NJ/municipality.json` and
-      `zip.json`; many more measures than today's eight county ones (`METRICS` in
-      `web/app/atlas/page.tsx`); the two-place pin-compare replaced by a hand-off to
-      `/compare?places=…`; the "Compare counties" table kept and renamed as a ranking.
+- [ ] **The atlas's one-off visual checks predate its upgrade.** (found 2026-10-22,
+      ARCHITECTURE #428) `web/scripts/check-atlas-*.mjs`, `check-housing-atlas.mjs`,
+      `check-county-cabinet.mjs`, `check-shared-navigation.mjs` and
+      `check-state-refinement.mjs` look for the retired level breadcrumb, pin-compare or
+      "Compare counties" panel. None runs on deploy (the accessibility gate does, and
+      passes); update or delete each when it is next needed.
+
 - [ ] **Visual stories: the first three.** (owner, 2026-10-22; same note) A new section
       with: what goes with pricier towns (each trait's home-value premium against
       similar towns, `similar_places` giving the comparison); the price ladder (each
