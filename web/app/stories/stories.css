@@ -1,0 +1,58 @@
+/* Visual stories (Director Note "Visualizing the data", 2026-10-22). Colours are tokens:
+   above a baseline --story-up, below it --story-down. */
+.stories-page { max-width: 1080px; margin: 0 auto; padding: 0 16px 80px; }
+.stories-page .page-title { margin: .2rem 0 .4rem; }
+.stories-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 1.5rem 0 0; padding: 0; list-style: none; }
+.stories-grid a { display: grid; gap: .4rem; height: 100%; box-sizing: border-box; padding: 1.1rem 1.2rem; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 18px; color: var(--plate-ink, var(--text-primary)); text-decoration: none; }
+.stories-grid a:hover { border-color: var(--plate-accent, var(--text-secondary)); }
+.stories-grid b { font: 400 24px/1.15 Georgia, serif; letter-spacing: -.02em; }
+.stories-grid span { color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
+.story-lede { max-width: 62ch; color: var(--text-secondary); font-size: 16px; line-height: 1.6; }
+.story-note { color: var(--text-muted); font-size: 13px; line-height: 1.6; max-width: 70ch; }
+.story-figure { margin: 1.5rem 0; overflow-x: auto; }
+.story-figure svg { display: block; width: 100%; min-width: 640px; height: auto; }
+.story-figure .grid line { stroke: var(--plate-rule, var(--border)); }
+.story-figure .grid text, .story-figure .axis { fill: var(--text-muted); font: 12px var(--font-text); }
+.story-figure .zero { stroke: var(--plate-ink, var(--text-primary)); stroke-opacity: .5; }
+.story-figure .up { fill: var(--story-up); }
+.story-figure .down { fill: var(--story-down); }
+.story-figure .label { fill: var(--plate-ink, var(--text-primary)); font: 500 14px var(--font-text); }
+.story-figure .sub { fill: var(--text-muted); font: 12px var(--font-text); }
+.story-figure .leader { stroke: var(--text-muted); stroke-width: .8; }
+.story-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.story-table th, .story-table td { padding: .45rem .5rem; border-bottom: 1px solid var(--plate-rule, var(--border)); text-align: left; vertical-align: top; }
+.story-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.story-details { margin: 1rem 0; }
+.story-details summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-secondary); }
+
+/* The price ladder: one row per town, three prices on a shared log scale. */
+.ladder-controls { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; align-items: end; margin: 1rem 0; }
+.ladder-controls label { display: grid; gap: .3rem; font-size: 13px; color: var(--text-secondary); }
+.ladder-controls select, .ladder-controls input { min-height: 44px; padding: 0 .7rem; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 12px; background: transparent; color: var(--plate-ink, var(--text-primary)); font: 14px var(--font-text); }
+.ladder-key { display: flex; flex-wrap: wrap; gap: 1rem; font-size: 13px; color: var(--text-secondary); }
+.ladder-key i { display: inline-block; width: 10px; height: 10px; margin-right: .35rem; border-radius: 50%; vertical-align: -1px; }
+.ladder-key .starter { background: var(--story-down); }
+.ladder-key .typical { background: var(--plate-ink, var(--text-primary)); }
+.ladder-key .sale { border: 2px solid var(--story-up); box-sizing: border-box; }
+.ladder { margin: .5rem 0 0; padding: 0; list-style: none; }
+.ladder li { display: grid; grid-template-columns: minmax(120px, 210px) 1fr minmax(84px, auto); gap: .75rem; align-items: center; min-height: 28px; border-bottom: 1px solid var(--plate-rule, var(--border)); font-size: 13px; }
+.ladder li small { color: var(--text-muted); }
+.ladder-track { position: relative; height: 18px; }
+.ladder-track .span { position: absolute; top: 8px; height: 2px; background: var(--plate-strong-rule, var(--border)); }
+.ladder-track i { position: absolute; top: 4px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; }
+.ladder-track .starter { background: var(--story-down); }
+.ladder-track .typical { background: var(--plate-ink, var(--text-primary)); }
+.ladder-track .sale { border: 2px solid var(--story-up); box-sizing: border-box; background: transparent; }
+.ladder li .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* The priciest and cheapest in each county. */
+.extremes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1.5rem 0; padding: 0; list-style: none; }
+.extremes li { display: grid; gap: .6rem; padding: 1rem 1.1rem; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 18px; }
+.extremes h2 { margin: 0; font: 400 22px/1.2 Georgia, serif; letter-spacing: -.02em; }
+.extremes .spread { color: var(--text-secondary); font-size: 13px; }
+.extreme-pair { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; font-size: 13px; }
+.extreme-pair div { display: grid; gap: .1rem; }
+.extreme-pair b { font-size: 15px; }
+.extreme-pair .up { color: var(--story-up); }
+.extreme-pair .down { color: var(--story-down); }
+.extreme-kicker { font: 600 11px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }

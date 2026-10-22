@@ -63,6 +63,9 @@
   --series-2: #e07227;
   --series-3: #00866a;
   --state-blue: var(--kind-state);
+  /* Visual stories: above and below a baseline, told apart by lightness as well as hue. */
+  --story-up: light-dark(#2f6db0, #7fb6ec);
+  --story-down: light-dark(#b45309, #f0a35c);
 
   /* Sequential blue, for unsigned magnitude. */
   --seq-100: #9cb7e6;
