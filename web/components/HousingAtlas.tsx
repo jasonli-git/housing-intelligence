@@ -6,7 +6,7 @@ import Link from "next/link";
 import { fit, scene, view } from "@/lib/globe";
 import { WORLD_LAND } from "@/lib/worldLand";
 import { unpack, type PackedOutline } from "@/lib/mapdata";
-import { atlasColor, atlasQuintileColor, atlasReading, quintileBreaks, atlasValue, ATLAS_COLORS, ATLAS_LEVELS, compareHref, loadAtlasMeasure, type AtlasCounty, type AtlasEntry, type AtlasLevel, type AtlasMeasure, type AtlasMode } from "@/lib/housingAtlas";
+import { atlasColor, atlasQuintileColor, atlasReading, coarserLayer, LAYER_ZOOM, layerForZoom, MAX_ZOOM, quintileBreaks, atlasValue, ATLAS_COLORS, ATLAS_LEVELS, compareHref, loadAtlasMeasure, type AtlasCounty, type AtlasEntry, type AtlasLevel, type AtlasMeasure, type AtlasMode } from "@/lib/housingAtlas";
 import { GROUPS } from "@/lib/groups";
 import { MAX_PLACES } from "@/lib/compare";
 import { formatChange, formatMetric } from "@/lib/format";
@@ -16,7 +16,6 @@ import { WINDOWS, windowNote } from "@/lib/windows";
 import { regionPath } from "@/lib/placeRoutes";
 import { useAtlasCamera } from "./useAtlasCamera";
 
-const EVERYDAY = new Set(["zhvi_sfr","zori_all","acs_median_hh_income","acs_renter_cost_burden","pep_population"]);
 const FRIENDLY:Record<string,string> = {zhvi_sfr:"Typical home price",zori_all:"Typical asking rent",acs_median_hh_income:"Household income",acs_renter_cost_burden:"Renters under housing-cost pressure",pep_population:"Population"};
 
 type Level = "states" | AtlasLevel;
@@ -54,7 +53,7 @@ export function HousingAtlas({entries,artifactUrl,counties,stateMeasures,states}
   // area's, so the map cannot be dragged away from view.
   const extent=useRef<[number,number,number,number]|null>(null);
   const bounded=useCallback((v:{scale:number;x:number;y:number})=>{
-    const scale=Math.max(.8,Math.min(6,v.scale)), e=extent.current, box=frameRef.current;
+    const scale=Math.max(.8,Math.min(MAX_ZOOM,v.scale)), e=extent.current, box=frameRef.current;
     if(!e)return {...v,scale};
     const place=(lo:number,hi:number,offset:number,size:number)=>{const a=scale*lo,b=scale*hi;return b-a<=size?(size-a-b)/2:Math.min(-a,Math.max(size-b,offset));};
     return {scale,x:place(e[0],e[2],v.x,box.w),y:place(e[1],e[3],v.y,box.h)};
@@ -99,7 +98,10 @@ export function HousingAtlas({entries,artifactUrl,counties,stateMeasures,states}
       setSelected(params.has("place")&&Number.isFinite(id)?id:null);
       setPicks((params.get("compare")??"").split(",").map(Number).filter(n=>Number.isInteger(n)&&n>0).slice(0,MAX_PLACES));
       const scale=Number(params.get("zoom")),x=Number(params.get("x")),y=Number(params.get("y"));
-      setViewport({scale:params.has("zoom")&&Number.isFinite(scale)?Math.max(.8,Math.min(6,scale)):1,x:Number.isFinite(x)?x:0,y:Number.isFinite(y)?y:0});
+      // A zoom outside the layer's band would switch layers on arrival: start inside it.
+      const zoomed=params.has("zoom")&&Number.isFinite(scale)?Math.max(.8,Math.min(MAX_ZOOM,scale)):LAYER_ZOOM[nextLevel];
+      const fits=layerForZoom(nextLevel,zoomed)===nextLevel;
+      setViewport({scale:fits?zoomed:LAYER_ZOOM[nextLevel],x:fits&&Number.isFinite(x)?x:0,y:fits&&Number.isFinite(y)?y:0});
       setRestored(true);
     };
     restore();window.addEventListener("popstate",restore);return()=>window.removeEventListener("popstate",restore);
@@ -249,7 +251,7 @@ export function HousingAtlas({entries,artifactUrl,counties,stateMeasures,states}
     }
   };
   const zoom=(factor:number)=>setViewport(current=>{
-    const scale=Math.min(6,Math.max(.8,current.scale*factor)), ratio=scale/current.scale;
+    const scale=Math.min(MAX_ZOOM,Math.max(.8,current.scale*factor)), ratio=scale/current.scale;
     const cx=frameRef.current.w/2, cy=frameRef.current.h/2;
     return {scale,x:cx-(cx-current.x)*ratio,y:cy-(cy-current.y)*ratio};
   });
@@ -260,18 +262,37 @@ export function HousingAtlas({entries,artifactUrl,counties,stateMeasures,states}
     if(!node||!window.matchMedia("(max-width: 900px)").matches)return;
     node.style.maxHeight=`${Math.max(240,window.innerHeight-node.getBoundingClientRect().top-12)}px`;
   },[]);
-  const changeLevel=(next:Level)=>{setLevel(next);setSelected(null);setViewport({scale:1,x:0,y:0});const ids=next==="states"?stateMeasures.map(m=>m.metric_id):entries.filter(e=>e.levels.includes(next)).map(e=>e.metric_id);if(!ids.includes(metric))setMetric(ids.includes("zhvi_sfr")?"zhvi_sfr":ids[0]);if(next!==level&&(next==="states"||level==="states"))setPicks([]);};
+  // A layer entered by a control, not by zooming: shown at the middle of its zoom band.
+  const centredAt=(scale:number)=>{const cx=frameRef.current.w/2,cy=frameRef.current.h/2;return {scale,x:cx-cx*scale,y:cy-cy*scale};};
+  const changeLevel=(next:Level)=>{setLevel(next);setSelected(null);setViewport(next==="states"||next==="county"?{scale:1,x:0,y:0}:centredAt(LAYER_ZOOM[next]));const ids=next==="states"?stateMeasures.map(m=>m.metric_id):entries.filter(e=>e.levels.includes(next)).map(e=>e.metric_id);if(!ids.includes(metric))setMetric(ids.includes("zhvi_sfr")?"zhvi_sfr":ids[0]);if(next!==level&&(next==="states"||level==="states"))setPicks([]);};
+  // Zooming far enough in or out moves one layer finer or coarser. Between New Jersey's
+  // layers the view stays where it is; to and from the United States it is reframed.
+  useEffect(()=>{
+    if(!restored)return;
+    const next=layerForZoom(level,viewport.scale);
+    if(next===level)return;
+    if(next==="states"||level==="states"){changeLevel(next);return;}
+    setLevel(next);setSelected(null);setCountySearch("");
+    const ids=entries.filter(e=>e.levels.includes(next)).map(e=>e.metric_id);
+    if(!ids.includes(metric))setMetric(ids.includes("zhvi_sfr")?"zhvi_sfr":ids[0]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[viewport.scale,restored]);
+  // A window the chosen measure does not have is not offered, so fall back to the latest.
+  useEffect(()=>{if(!measureStatus&&mode!=="latest"&&!measure.windows[mode])setMode("latest");},[measureStatus,mode,measure]);
+  const outward=coarserLayer(level);
+  const layerNames:Record<Level,string>={states:"the United States",county:"New Jersey’s counties",municipality:"New Jersey’s towns",zip:"New Jersey’s ZIP codes"};
+  const finerHint:Record<Level,string|null>={states:"Zoom in on New Jersey for its counties",county:"Zoom in for towns",municipality:"Zoom in for ZIP codes",zip:null};
   return <section className="housing-atlas" aria-label="Housing atlas map and comparison" data-level={level} style={{"--atlas-panel-width":`${panelWidth}px`,"--atlas-sheet-height":`${sheetHeight}px`} as CSSProperties}>
     <div className="atlas-controls" ref={controls}>
-      <div className="atlas-levels" role="group" aria-label="Map geography"><button type="button" aria-pressed={level==="states"&&selected!==states.find(s=>s.code==="NJ")?.id} onClick={()=>{setCountySearch("");changeLevel("states");}}>United States</button><span aria-hidden="true">›</span><button type="button" aria-pressed={level==="states"&&selected===states.find(s=>s.code==="NJ")?.id} onClick={()=>{setCountySearch("");changeLevel("states");const nj=states.find(s=>s.code==="NJ")?.id;if(nj!==undefined)requestAnimationFrame(()=>select(nj));}}>New Jersey</button><span aria-hidden="true">›</span>{ATLAS_LEVELS.map(l=><button key={l.key} type="button" aria-pressed={level===l.key} onClick={()=>{setCountySearch("");changeLevel(l.key);}}>{l.label}</button>)}</div>
-      <div className="atlas-filter-row"><label className="atlas-measure-field"><span>Measure</span><div className="atlas-measure-control"><select aria-label="Measure" value={measure.metric_id} onChange={e=>setMetric(e.target.value)}>{nj?GROUPS.map(g=>{const inGroup=levelEntries.filter(e=>e.group===g.title);return inGroup.length?<optgroup key={g.key} label={g.title}>{inGroup.map(e=><option key={e.metric_id} value={e.metric_id}>{FRIENDLY[e.metric_id]??e.label}</option>)}</optgroup>:null;}):stateMeasures.filter(m=>EVERYDAY.has(m.metric_id)||m.metric_id===measure.metric_id).map(m=><option key={m.metric_id} value={m.metric_id}>{FRIENDLY[m.metric_id]??m.label}</option>)}</select><button ref={measureLauncher} className="atlas-catalogue-button" type="button" aria-label="Browse all measures" title="Browse all measures" aria-expanded={moreMeasures} aria-controls="atlas-measure-picker" onClick={()=>{setMoreMeasures(!moreMeasures);setMeasureSearch("");}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>All</span></button></div></label>
-      <label className="atlas-view-field"><span>Time</span><select aria-label="View" value={mode} onChange={e=>setMode(e.target.value as AtlasMode)}><option value="latest">Latest figure</option>{WINDOWS.map(w=><option key={w.key} value={w.key} disabled={!measureStatus&&!measure.windows[w.key]}>{w.label} · change</option>)}</select></label></div>
+      <div className="atlas-layer-row"><span className="atlas-layer-name">Showing {layerNames[level]}{finerHint[level]?<small> · {finerHint[level]}</small>:null}</span>{outward&&<button type="button" className="atlas-exit" onClick={()=>{setCountySearch("");changeLevel(outward);}}><span aria-hidden="true">←</span> Out to {outward==="states"?"the United States":outward==="county"?"counties":"towns"}</button>}</div>
+      <div className="atlas-filter-row"><label className="atlas-measure-field"><span>Measure</span><div className="atlas-measure-control"><select aria-label="Measure" value={measure.metric_id} onChange={e=>setMetric(e.target.value)}>{nj?GROUPS.map(g=>{const inGroup=levelEntries.filter(e=>e.group===g.title);return inGroup.length?<optgroup key={g.key} label={g.title}>{inGroup.map(e=><option key={e.metric_id} value={e.metric_id}>{FRIENDLY[e.metric_id]??e.label}</option>)}</optgroup>:null;}):stateMeasures.filter(m=>m.latest.rows.length>0||Object.keys(m.windows).length>0).map(m=><option key={m.metric_id} value={m.metric_id}>{FRIENDLY[m.metric_id]??m.label}</option>)}</select><button ref={measureLauncher} className="atlas-catalogue-button" type="button" aria-label="Browse all measures" title="Browse all measures" aria-expanded={moreMeasures} aria-controls="atlas-measure-picker" onClick={()=>{setMoreMeasures(!moreMeasures);setMeasureSearch("");}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>All</span></button></div></label>
+      <label className="atlas-view-field"><span>Time</span><select aria-label="View" value={mode} onChange={e=>setMode(e.target.value as AtlasMode)}><option value="latest">Latest figure</option>{WINDOWS.filter(w=>measure.windows[w.key]||mode===w.key).map(w=><option key={w.key} value={w.key}>{w.label} · change</option>)}</select></label></div>
       {moreMeasures&&<div id="atlas-measure-picker" className="atlas-measure-picker" ref={fitPicker} role="region" aria-label="Measure catalogue">
         <header><div><small>MEASURES</small><h2>Choose a measure</h2></div><button type="button" aria-label="Close measures" onClick={()=>{setMoreMeasures(false);measureLauncher.current?.focus({preventScroll:true});}}>×</button></header>
         <label>Search measures<input ref={measureSearchInput} type="search" value={measureSearch} onChange={e=>setMeasureSearch(e.target.value)} placeholder="Rent, income, building…"/></label>
         {(()=>{
           const q=measureSearch.trim().toLowerCase();
-          const pool=nj?levelEntries.map(e=>({id:e.metric_id,name:FRIENDLY[e.metric_id]??e.label,definition:e.definition,group:e.group})):stateMeasures.map(m=>({id:m.metric_id,name:FRIENDLY[m.metric_id]??m.label,definition:m.definition,group:"State figures"}));
+          const pool=nj?levelEntries.map(e=>({id:e.metric_id,name:FRIENDLY[e.metric_id]??e.label,definition:e.definition,group:e.group})):stateMeasures.filter(m=>m.latest.rows.length>0||Object.keys(m.windows).length>0).map(m=>({id:m.metric_id,name:FRIENDLY[m.metric_id]??m.label,definition:m.definition,group:"State figures"}));
           const matches=pool.filter(m=>`${m.name} ${m.definition}`.toLowerCase().includes(q));
           const groups=[...GROUPS.map(g=>g.title),"State figures"];
           return matches.length?<>{groups.map((group,index)=>{const inGroup=matches.filter(m=>m.group===group);return inGroup.length?<div className="atlas-measure-group" key={group} data-category={index%3}><h3>{group} <small>{inGroup.length}</small></h3>{inGroup.map(m=><button type="button" key={m.id} aria-pressed={m.id===measure.metric_id} onClick={()=>chooseMeasure(m.id)}><b>{m.name}<span aria-hidden="true">{m.id===measure.metric_id?"✓":"↗"}</span></b><span>{m.definition}</span></button>)}</div>:null;})}</>:<p>No matching measures. Try rent, income or building.</p>;
@@ -298,7 +319,7 @@ export function HousingAtlas({entries,artifactUrl,counties,stateMeasures,states}
           </g>
         </svg>
         {!(nj?levelGeometry??[]:stateGeometry).length&&<p className="atlas-map-status" role="status">{failed?"Map unavailable. Published figures remain in the table.":"Drawing the atlas…"}</p>}
-        <div className="atlas-map-buttons" aria-label="Map controls"><button type="button" aria-label="Zoom in" onClick={()=>zoom(1.25)}>+</button><button type="button" aria-label="Zoom out" onClick={()=>zoom(.8)}>−</button><button type="button" onClick={()=>setViewport({scale:1,x:0,y:0})}>Reset</button></div>
+        <div className="atlas-map-buttons" aria-label="Map controls"><button type="button" aria-label="Zoom in" onClick={()=>zoom(1.25)}>+</button><button type="button" aria-label="Zoom out" onClick={()=>zoom(.8)}>−</button><button type="button" onClick={()=>setViewport(level==="states"||level==="county"?{scale:1,x:0,y:0}:centredAt(LAYER_ZOOM[level]))}>Reset</button></div>
         <div className="atlas-legend"><span>{format(values.length?Math.min(...values):null)}</span><div role="img" aria-label="Color scale for published area figures">{legendColors.map(color=><i key={color} style={{background:color}}/>)}</div><span>{format(values.length?Math.max(...values):null)}</span><small>{values.length===1?"Only one published area; no cross-area comparison yet":shading}</small>{byFifths&&breaks.length>0&&<small>Each shade is a fifth of {levelInfo!.plural}: {breaks.map(b=>format(b)).join(" · ")}</small>}<small><i className="atlas-missing-key"/>{nj?"No figure for this view":"Outline only: no figures yet"} · higher is not necessarily better</small></div>
         <small className="atlas-map-credit">Boundaries: Census TIGER/Line · world silhouette: Natural Earth · area figures, not individual homes</small>
       </div>

@@ -138,3 +138,33 @@ export function atlasQuintileColor(value:number|null, breaks:number[]):string {
   if(!breaks.length) return ATLAS_COLORS[2];
   return ATLAS_COLORS[breaks.filter(b=>value>=b).length];
 }
+
+/**
+ * Zooming moves between layers (owner, 2026-10-22): the United States, then New Jersey's
+ * counties, towns and ZIP codes, each finer than the last. The three New Jersey layers
+ * share one projection, so a layer is a band of zoom and switching keeps the view where
+ * it is. Each band enters at one zoom and leaves at a lower one, so a zoom resting near a
+ * boundary does not flicker between layers.
+ */
+export type AtlasLayer = "states" | AtlasLevel;
+export const LAYER_ORDER: AtlasLayer[] = ["states", "county", "municipality", "zip"];
+export const MAX_ZOOM = 10;
+/** The zoom at which the next finer layer takes over, and the zoom below which it gives back. */
+const ENTER: Record<AtlasLevel, number> = { county: 2.5, municipality: 2, zip: 4 };
+const LEAVE: Record<AtlasLevel, number> = { county: 0.85, municipality: 1.7, zip: 3.4 };
+/** Where a layer is shown when it is entered directly, within its band. */
+export const LAYER_ZOOM: Record<AtlasLayer, number> = { states: 1, county: 1, municipality: 2.2, zip: 4.4 };
+
+/** The layer a zoom calls for, starting from the current one: one step at most. */
+export function layerForZoom(current: AtlasLayer, zoom: number): AtlasLayer {
+  const index = LAYER_ORDER.indexOf(current);
+  const finer = LAYER_ORDER[index + 1] as AtlasLevel | undefined;
+  if (finer && zoom >= ENTER[finer]) return finer;
+  if (current !== "states" && zoom < LEAVE[current]) return LAYER_ORDER[index - 1];
+  return current;
+}
+/** The layer one step coarser, or null at the United States. */
+export function coarserLayer(current: AtlasLayer): AtlasLayer | null {
+  const index = LAYER_ORDER.indexOf(current);
+  return index > 0 ? LAYER_ORDER[index - 1] : null;
+}

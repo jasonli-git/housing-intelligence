@@ -28,6 +28,12 @@
   .atlas-compare-go { display:inline-flex; align-items:center; min-height:44px; font-weight:600; }
   .atlas-comparison small { display:block; color:var(--text-muted); }
   .atlas-measure-group h3 small { font-weight:400; color:var(--text-muted); }
+  /* The layer the map shows, and one step back out (owner, 2026-10-22). */
+  .atlas-layer-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.4rem .6rem; width:100%; }
+  .atlas-layer-name { font:600 13px/1.4 var(--font-text); color:var(--text-primary); }
+  .atlas-layer-name small { font-weight:400; color:var(--text-muted); }
+  .atlas-exit { display:inline-flex; align-items:center; gap:.35rem; min-height:36px; padding:0 .8rem; border:1px solid var(--border); border-radius:999px; background:transparent; color:var(--text-primary); font:500 13px/1 var(--font-text); cursor:pointer; }
+  .atlas-exit:hover, .atlas-exit:focus-visible { border-color:var(--text-secondary); }
   .atlas-comparison-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; margin:.5rem 0; }
   .atlas-comparison-pair>div { display:grid; align-content:start; gap:.2rem; }
   .atlas-comparison-pair strong { font-size:18px; }
