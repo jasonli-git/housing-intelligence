@@ -148,10 +148,13 @@ _SPOKEN: tuple[tuple[str, tuple[str, ...]], ...] = (
         ("zhvi_sfr", "acs_median_home_value", "sr1a_median_sale_price"),
     ),
     (
-        r"(?:housing[- ]cost )?burden\w*|share of (?:household )?(?:income|budgets?)|"
+        r"(?:housing[- ]cost )?burden\w*|"
+        r"(?:share|portion|part|proportion) of (?:their |its |a |the )?"
+        r"(?:households?[’']? |family |renters?[’']? |owners?[’']? |monthly |yearly )?"
+        r"(?:incomes?|budgets?|paychecks?|earnings)(?: (?:going to|spent on|that goes "
+        r"to) housing)?|"
         r"household budgets?|(?:paying|spending|spend|pay) (?:over|more than) 30% of "
-        r"(?:their |household )?incomes?(?: on housing)?|share of income going to "
-        r"housing",
+        r"(?:their |household )?incomes?(?: on housing)?",
         (
             "acs_renter_cost_burden",
             "chas_renter_cost_burden",
@@ -209,6 +212,20 @@ _PEERS = re.compile(
     r"areas?|regions?)\b",
     re.I,
 )
+# "a large share of their income": a share phrase followed by what it is a share of
+# names the burden, not the income (`regenerate`, 2026-10-22: Cumberland, whose renters
+# carry the state's heaviest burden, was refused because income ranks last).
+_SHARE_END = re.compile(r"(?:share|portion|part|proportion)$", re.I)
+_SHARE_OF = re.compile(
+    r"^\s+of\s+(?:(?:their|its|a|the|households?[’']?|family|renters?[’']?|"
+    r"owners?[’']?|monthly|yearly)\s+)*(?:incomes?|budgets?|paychecks?|earnings)\b",
+    re.I,
+)
+_RENTER_BURDEN = ("acs_renter_cost_burden", "chas_renter_cost_burden")
+_OWNER_BURDEN = ("chas_owner_cost_burden", "acs_owner_severe_burden")
+_RENTERS = re.compile(r"\brent(?:er|ers|ing)\b", re.I)
+_OWNERS = re.compile(r"\b(?:owner|owners|homeowners?|owning|mortgage)\b", re.I)
+
 _CLAUSE = re.compile(r"[,;:—]|\s-\s|\b(?:while|but|whereas|although)\b", re.I)
 
 
@@ -327,6 +344,19 @@ def comparative_problems(text: str, binding: Binding, packet: Packet) -> list[st
         if _OWN_CHANGE.search(clause) and not _PEERS.search(clause):
             continue
         mentions = _claimed(clause, _named(clause, words), at, until)
+        if _SHARE_END.search(match.group(0)) and _SHARE_OF.match(text[match.end() :]):
+            # Whose burden the sentence says, where it says: renters' or owners'.
+            sentence = text[start:stop]
+            renters, owners = _RENTERS.search(sentence), _OWNERS.search(sentence)
+            whose = (
+                _RENTER_BURDEN
+                if renters and not owners
+                else _OWNER_BURDEN
+                if owners and not renters
+                else _RENTER_BURDEN + _OWNER_BURDEN
+            )
+            burden = set(whose) & set(by_value)
+            mentions = [burden] if burden else mentions
         if not mentions:
             sentence = text[start:stop]
             mentions = _claimed(
