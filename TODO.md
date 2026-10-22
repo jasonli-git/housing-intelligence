@@ -119,6 +119,22 @@ Not open work: each comes round on a date. The steps live where the row says.
       effective date means anchoring `price_to_ami`'s pairing on each year's start and
       accepting windows that end in the following year ("2022–2027"). Owner's decision.
 
+- [ ] **Build the sale-price-to-income ratio.** (decided by the owner 2026-10-21,
+      ARCHITECTURE #416) A second ratio family from actual sales, beside Zillow's: a
+      new derived metric (e.g. `sale_price_to_income`) of `sr1a_median_sale_price` over
+      `acs_median_hh_income`, for every region with SR1A's 20-sale floor met (about 540
+      towns and the counties), ranked only against itself. Pair each three-year sales
+      window with the ACS vintage ending the same year, so the newest is 2022–2024 sales
+      over 2020–2024 income, the same year Zillow's ratio reaches; the open window
+      (2024 to mid-2026) waits for its ACS. Label it on every page as a purchase-price
+      measure from state sales records, never as "the typical home". Then: the place
+      page, the compare page and the atlas show it; packets and readings carry it as a
+      separate measure; `tests/test_nj_sr1a.py`'s guard is narrowed to keep the sale
+      price out of Zillow's ratio rather than out of every ratio. Measured 2026-10-21:
+      388 of 564 towns have Zillow's ratio, 163 more have sales only, 13 have neither;
+      where both exist the median sale runs 7% below Zillow's value (10th–90th
+      percentile: 21% below to 4% above).
+
 ### Evaluation harness
 
 - [ ] **What a reading says in words is now checked for rankings only.** (#275; narrowed
@@ -256,22 +272,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       takes the cautious reading; whether an address with no name is covered, and whether
       the lookup needs more, is unsettled and was not reviewed by counsel.
 
-- [ ] **How should a cross-region comparison handle two price sources?** (M25, opened
-      2026-09-20 by the decision in ARCHITECTURE #187) The cost card may now be priced
-      from Zillow's index or from a transaction median depending on the region, but
-      `price_to_income` and `price_to_ami` are still computed from Zillow alone — so 163
-      municipalities have a monthly cost and no price-to-income, and any attempt to give
-      them one would rank a town measured on deeds against a neighbour measured on an
-      index. The owner's condition was explicit: keep the fallback out of cross-region
-      rankings until the comparison handles the difference. Options are to publish two
-      separately-labelled ratio families, to rank only within a price source, or to leave
-      the gap and say so on the page. **Leaning**, relayed by the owner 2026-09-20: two
-      families, and eventually a transaction-based price-to-income computed for *every*
-      qualifying town including those Zillow covers, so a reader compares one measure
-      across the whole state rather than a different one per town — with the Zillow-based
-      measure kept alongside it. That is a larger change than closing the gap, and it is
-      schedulable separately from the cards that are now live. `tests/test_nj_sr1a.py` fails if the input is added
-      before this is settled. **Not decided.**
 - [ ] **The 21 committed county reports are a snapshot that goes stale silently.**
       (M6; restated 2026-09-27) `reports/**` is gitignored, but the three evaluation
       reports and the 21 county reports were force-added and are tracked. The county
