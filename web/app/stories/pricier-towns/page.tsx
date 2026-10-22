@@ -37,7 +37,7 @@ export default async function PricierTownsPage() {
             </p>
           </div>
         </header>
-        <figure className="story-figure">
+        <figure className="story-figure" data-story-shot>
           <StoryPremiums premiums={premiums} />
           <figcaption className="story-note">
             Premium: the gap in Zillow&rsquo;s typical home value between towns with a trait and towns without it,

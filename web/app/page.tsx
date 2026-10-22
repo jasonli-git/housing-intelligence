@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { termOf } from "@/lib/terms";
 import { NationalCoverageMap } from "@/components/NationalCoverageMap";
 import { Masthead } from "@/components/Masthead";
-import { api, regionsWithData, nationalBenchmarkTrends, nationalHomePriceChange, nationalMortgageRate } from "@/lib/api";
+import { api, artifactUrl, regionsWithData, nationalBenchmarkTrends, nationalHomePriceChange, nationalMortgageRate } from "@/lib/api";
 import { dataScale } from "@/lib/dataScale";
 import { propertyScale } from "@/lib/propertyScale";
 import { DataScale, ScaleSignature } from "@/components/DataScale";
@@ -22,9 +22,6 @@ const HOME_TOOLS = [
   { href: "/help", title: "Housing help", text: "Find affordable homes, vouchers and housing authorities in New Jersey.", icon: "M3 11l9-7 9 7M5 9v12h14V9M9 21v-6h6v6" },
   { href: "/atlas", title: "Housing atlas", text: "Explore county figures on a map and compare places across New Jersey.", icon: "M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2V5M9 3v16M15 5v16" },
 ] as const;
-// Five of the visual stories, one row; the rest are one link away.
-const FEATURED = ["income-and-home-value", "the-true-monthly-cost", "same-house-different-tax-bill", "who-moves-in", "is-today-unusual"]
-  .map((slug) => STORIES.find((s) => s.href === `/stories/${slug}`)!);
 import "./housing-entry.css";
 import "./state-navigation.css";
 import "./home-refresh.css";
@@ -83,6 +80,26 @@ export default async function HousingLandingPage() {
         </div>
         <p className="national-backdrop-note">Each trend uses its own scale. Historical figures, not forecasts.</p>
       </section>
+      <section className="home-stories" aria-labelledby="home-stories-heading">
+        <h2 id="home-stories-heading">Visual stories <span aria-hidden="true">— New Jersey, drawn</span></h2>
+        <ul>
+          {STORIES.map((story) => {
+            const slug = story.href.split("/").pop();
+            const shot = (scheme: string) => `${artifactUrl}/screenshots/stories/${slug}-${scheme}.jpg`;
+            return <li key={story.href}>
+              <Link href={story.href}>
+                {/* The story's own chart, captured from the build each deploy ships (capture-readme.mjs). */}
+                <span className="home-story-shot" aria-hidden="true">
+                  <img className="shot-light" src={shot("light")} alt="" loading="lazy" decoding="async" width={788} height={489} />
+                  <img className="shot-dark" src={shot("dark")} alt="" loading="lazy" decoding="async" width={788} height={489} />
+                </span>
+                <span className="home-story-title">{story.title}</span>
+              </Link>
+            </li>;
+          })}
+        </ul>
+        <p className="home-stories-all"><Link href="/stories">All {STORIES.length} visual stories, with what each shows <span aria-hidden="true">→</span></Link></p>
+      </section>
       <section className="home-tools" aria-labelledby="home-tools-heading">
         <h2 id="home-tools-heading">Tools <span aria-hidden="true">— an index</span></h2>
         <ul>
@@ -96,21 +113,6 @@ export default async function HousingLandingPage() {
             </Link>
           </li>)}
         </ul>
-      </section>
-      <section className="home-tools home-stories" aria-labelledby="home-stories-heading">
-        <h2 id="home-stories-heading">Visual stories <span aria-hidden="true">— the data, drawn</span></h2>
-        <ul>
-          {FEATURED.map((story, i) => <li key={story.href}>
-            <Link href={story.href}>
-              <span className="home-tool-index" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
-              <span className="home-tool-title">{story.title} <span aria-hidden="true">→</span></span>
-              <span className="home-tool-text">{story.blurb}</span>
-              <span className="home-tool-scope">New Jersey</span>
-            </Link>
-          </li>)}
-        </ul>
-        <p className="home-stories-all"><Link href="/stories">All {STORIES.length} visual stories <span aria-hidden="true">→</span></Link></p>
       </section>
       </div>
     </main>

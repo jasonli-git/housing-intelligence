@@ -18,7 +18,8 @@ export function StoryShell({ title, lede, note, children }: { title: string; led
             <p className="story-lede">{lede}</p>
           </div>
         </header>
-        {children}
+        {/* The first screenful of this is what the home page shows of the story (capture-readme.mjs). */}
+        <div data-story-shot>{children}</div>
         <p className="story-note">{note} <Link href="/stories">More visual stories →</Link></p>
       </main>
     </>

@@ -41,7 +41,7 @@ export default async function PriciestAndCheapestPage() {
             </p>
           </div>
         </header>
-        <figure className="story-figure">
+        <figure className="story-figure" data-story-shot>
           <p className="ladder-key"><span><i className="starter" />Cheapest town</span><span><i style={{ background: "var(--story-up)" }} />Priciest town</span><span><i className="zip-mark" />Cheapest and priciest ZIP code</span></p>
           <ul className="ladder extremes-chart">
             <li className="ladder-axis" aria-hidden="true">

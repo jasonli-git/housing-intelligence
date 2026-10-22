@@ -35,7 +35,7 @@ export default async function PriceLadderPage() {
             </p>
           </div>
         </header>
-        <PriceLadder rows={rows} counties={counties} />
+        <div data-story-shot><PriceLadder rows={rows} counties={counties} /></div>
         <p className="story-note">
           Starter and typical homes: Zillow&rsquo;s values for the cheapest third and the middle third of homes, houses
           and condos together. Median sale: usable one- to four-family sales over the last three years, from the
