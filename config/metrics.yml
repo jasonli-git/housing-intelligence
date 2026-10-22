@@ -2375,3 +2375,50 @@ metrics:
     ranked: false
     changed: false
     shown: false
+
+  noise_homes_share_55db:
+    label: Homes in transportation noise of 55 dB or more
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of homes where BTS's model puts road, rail and aviation noise at 55
+      dB(A) or more over 24 hours, the level the EPA has long named for outdoor
+      activity, by each 2020 census block. Modelled and simplified: for comparing
+      towns, not judging one street.
+    source_id: bts_noise
+    record_type: modelled
+    ranked: false
+    changed: false
+    shown: false
+
+  noise_homes_share_65db:
+    label: Homes in transportation noise of 65 dB or more
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of homes where BTS's model puts road, rail and aviation noise at 65
+      dB(A) or more over 24 hours, the level of a busy road close by, by each 2020
+      census block. Modelled and simplified.
+    source_id: bts_noise
+    record_type: modelled
+    ranked: false
+    changed: false
+    shown: false
+
+  lights_homes_radiance:
+    label: Night-time brightness where homes are
+    unit: radiance
+    frequency: annual
+    direction: neutral
+    description: >-
+      Average night-time radiance at the region's homes, in nanowatts per square
+      centimetre per steradian, from VIIRS's annual night lights (Earth Observation
+      Group, CC BY 4.0), weighted by each 2020 census block's homes. The darker, the
+      more stars.
+    source_id: eog_vnl
+    record_type: calculated
+    ranked: false
+    changed: false
+    shown: false

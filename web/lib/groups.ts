@@ -318,6 +318,9 @@ export const GROUPS: readonly Group[] = [
       "elevation_low_homes_share",
       "streets_court_circle_share",
       "streets_street_avenue_share",
+      "noise_homes_share_55db",
+      "noise_homes_share_65db",
+      "lights_homes_radiance",
     ],
   },
 ];

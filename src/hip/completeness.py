@@ -259,6 +259,9 @@ METRIC_SUBJECTS: dict[str, str] = {
     "elevation_low_homes_share": "context",
     "streets_court_circle_share": "context",
     "streets_street_avenue_share": "context",
+    "noise_homes_share_55db": "context",
+    "noise_homes_share_65db": "context",
+    "lights_homes_radiance": "context",
 }
 
 Answer = Literal["answered", "declined", "unanswered"]

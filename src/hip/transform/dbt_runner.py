@@ -67,6 +67,8 @@ KEYED_MODELS = (
     "stg_story_raster",
     "stg_story_osm",
     "stg_story_streets",
+    # Built only once the two hand-downloaded rasters have landed.
+    "stg_story_manual_raster",
 )
 
 # Not a metric model: it feeds region_crosswalk, not fact_metric_observation.
@@ -119,6 +121,12 @@ def dbt_vars(
         # The year each layer republished in place was read (Milestone 40, #301): a
         # flood map or a site list has no period of its own, so its figures are dated
         # by the year the platform read the copy they came from.
+        # The noise map and night lights are downloaded by hand; their model waits for
+        # both, so the pipeline runs before they are handed in.
+        "story_rasters_landed": all(
+            any((settings.parquet_dir / source).glob(f"*/{layer}.parquet"))
+            for source, layer in (("bts_noise", "noise"), ("eog_vnl", "lights"))
+        ),
         # TIGER's road files, read for one story, take the boundary files' vintage.
         "tiger_roads_year": _tiger_roads_year(),
         "read_years": {

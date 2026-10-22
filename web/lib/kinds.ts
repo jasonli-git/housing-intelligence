@@ -207,6 +207,9 @@ export const KINDS: Record<string, RecordType> = {
   elevation_low_homes_share: "calculated",
   streets_court_circle_share: "calculated",
   streets_street_avenue_share: "calculated",
+  noise_homes_share_55db: "modelled",
+  noise_homes_share_65db: "modelled",
+  lights_homes_radiance: "calculated",
   transit_bus_homes_share: "calculated",
   transit_any_homes_share: "calculated",
   // Milestone 48: HMDA's count is the lenders' record; the medians and shares are the

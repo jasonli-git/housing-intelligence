@@ -5,7 +5,7 @@ household can afford, what the tax bill is, how homes sell, and what comes with 
 flood risk, water, schools, commutes. Live at
 **[housing.jasonli.app](https://housing.jasonli.app)**.
 
-It is built on <!-- fill:sources -->57<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
+It is built on <!-- fill:sources -->59<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
 resolved to a shared geography, and computed before anything is shown. Every figure
 carries its source file, date, licence and margin of error. It is not a listings site
 and not a chatbot: pages, maps, tools, reports and an API are the product, and an

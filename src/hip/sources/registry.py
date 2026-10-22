@@ -53,6 +53,7 @@ from hip.sources.infrastructure import (
     UtilityAreasAdapter,
 )
 from hip.sources.irs_migration import MigrationAdapter
+from hip.sources.manual_rasters import NightLightsAdapter, NoiseAdapter
 from hip.sources.nj_affordable import NjAffordableAdapter
 from hip.sources.nj_bpu import BpuAnnualReportsAdapter, BpuReliabilityAdapter
 from hip.sources.nj_construction import NjConstructionAdapter
@@ -159,6 +160,8 @@ IMPLEMENTED: tuple[str, ...] = (
     TigerRoadsAdapter.source_id,
     TreeCanopyAdapter.source_id,
     ElevationAdapter.source_id,
+    NoiseAdapter.source_id,
+    NightLightsAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -226,6 +229,8 @@ METRIC_SOURCES: tuple[str, ...] = (
     TigerRoadsAdapter.source_id,
     TreeCanopyAdapter.source_id,
     ElevationAdapter.source_id,
+    NoiseAdapter.source_id,
+    NightLightsAdapter.source_id,
 )
 
 
@@ -436,6 +441,10 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return TreeCanopyAdapter()
     if source_id == ElevationAdapter.source_id:
         return ElevationAdapter()
+    if source_id == NoiseAdapter.source_id:
+        return NoiseAdapter()
+    if source_id == NightLightsAdapter.source_id:
+        return NightLightsAdapter()
     if (milestone := PLANNED.get(source_id)) is not None:
         raise UnknownSourceError(
             f"'{source_id}' has no adapter yet — it ships in Milestone {milestone}. "

@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import struct
+import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -147,3 +148,41 @@ def test_osm_reads_one_extract() -> None:
     refs = OsmAdapter().refs()
     assert [(r.layer, r.vintage) for r in refs] == [("places", "current")]
     assert OsmAdapter.filename(refs[0]).endswith(".osm.pbf")
+
+
+def test_a_downloaded_raster_is_cut_to_new_jersey(tmp_path: Path) -> None:
+    import numpy as np
+    import rasterio
+    from rasterio.transform import from_bounds
+
+    from hip.sources.imagery import BOX, HEIGHT, WIDTH
+    from hip.sources.manual_rasters import NoiseAdapter
+
+    # A coarse 50 dB square over New Jersey's north, empty (quieter than BTS models)
+    # elsewhere, in a zip as BTS ships it.
+    tif = tmp_path / "noise.tif"
+    data = np.full((40, 40), -9999, dtype="float32")
+    data[:20, :] = 50.0
+    with rasterio.open(
+        tif,
+        "w",
+        driver="GTiff",
+        width=40,
+        height=40,
+        count=1,
+        dtype="float32",
+        crs="EPSG:4326",
+        transform=from_bounds(*BOX, 40, 40),
+        nodata=-9999,
+    ) as out:
+        out.write(data, 1)
+    archive = tmp_path / "CONUS_rail_road_and_aviation_noise_2020.zip"
+    with zipfile.ZipFile(archive, "w") as z:
+        z.write(tif, "noise/noise.tif")
+
+    adapter = NoiseAdapter()
+    header, pixels = adapter.cut(adapter._open_path(archive))
+    values = np.frombuffer(pixels, dtype="<f4").reshape(HEIGHT, WIDTH)
+    assert (header["width"], header["height"]) == (WIDTH, HEIGHT)
+    assert values[0, 0] == 50.0  # the north
+    assert values[-1, -1] == 0.0  # empty is kept as quiet, not unknown

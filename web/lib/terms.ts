@@ -742,6 +742,18 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "The share of a town’s local street names ending in Street or Avenue, from the Census Bureau’s road files.",
     why: "Read only by the visual stories: those are the names of the older grid.",
   },
+  noise_homes_share_55db: {
+    what: "The share of homes where the federal transportation noise model puts road, rail and aircraft noise at 55 decibels or more, averaged over a day.",
+    why: "Read only by the visual stories. A model for comparing places, not a measurement of one street.",
+  },
+  noise_homes_share_65db: {
+    what: "The share of homes where the federal transportation noise model puts road, rail and aircraft noise at 65 decibels or more, like a busy road close by.",
+    why: "Read only by the visual stories. A model for comparing places, not a measurement of one street.",
+  },
+  lights_homes_radiance: {
+    what: "How bright the night sky is over the homes, from satellite night-light measurements averaged over a year, weighted by each census block’s homes.",
+    why: "Read only by the visual stories: the darker the sky, the more stars you can see.",
+  },
   transit_rail_homes_share: {
     what: "The share of homes within half a mile, in a straight line, of a commuter rail, PATH, PATCO, subway or light rail stop.",
     why: "Nearness to a station, not how often trains call there.",

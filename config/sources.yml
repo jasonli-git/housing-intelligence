@@ -1733,3 +1733,63 @@ sources:
     notes: >-
       Ground height above sea level from the best DEM available at each place, read at
       about 100 metres.
+
+  bts_noise:
+    name: National Transportation Noise Map, 2020
+    publisher: Bureau of Transportation Statistics
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        An NTAD dataset, "a work of the United States government ... available for
+        unrestricted public use" (BTS's catalog entry); acknowledgment of BTS asked.
+    terms_url: https://geodata.bts.gov/content/fcd948117131499cb1289ddf6413b6d8
+    terms_checked: 2026-10-22
+    terms_note: >-
+      Downloaded by hand: bts.gov and the National Transportation Library answer
+      scripts with a 403. BTS says the modelling is simplified and is not for judging
+      noise at one location or for regulation; the story compares towns, and says so.
+      Esri's re-hosted image service was not used: it carries the Esri Master License
+      Agreement, not BTS's terms.
+    url: https://www.bts.gov/geospatial/national-transportation-noise-map
+    cadence: irregular
+    adapter: hip.sources.manual_rasters:NoiseAdapter
+    fallback: >-
+      The 2018 noise layers on the same page; or the University of Washington's
+      tract-level summary of the map (Seto and Huang, 2023), whose terms are unstated.
+    notes: >-
+      Modelled road, rail and aviation noise, the 24-hour equivalent level in dB(A),
+      at 30 metres; nothing quieter than 45 dB is modelled.
+
+  eog_vnl:
+    name: VIIRS annual night lights (VNL V2.2)
+    publisher: Earth Observation Group, Payne Institute, Colorado School of Mines
+    license: Creative Commons Attribution 4.0 International
+    licence_class: attribution
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        CC BY 4.0 allows any use with credit; EOG's licence note names the VIIRS night
+        lights among its CC BY products.
+    terms_url: https://eogdata.mines.edu/files/EOG_products_CC_License.pdf
+    terms_checked: 2026-10-22
+    terms_note: >-
+      Downloaded by hand: the file directory needs a free EOG login. The credit is the
+      notice below, on every page and download.
+    notices:
+      - >-
+        Night lights: Earth Observation Group, Payne Institute for Public Policy,
+        Colorado School of Mines, VIIRS annual night lights (CC BY 4.0).
+    url: https://eogdata.mines.edu/nighttime_light/annual/v22/
+    homepage: https://eogdata.mines.edu/products/vnl/
+    cadence: annual
+    adapter: hip.sources.manual_rasters:NightLightsAdapter
+    fallback: >-
+      NASA's Black Marble annual product (VNP46A4), from the same satellite, through
+      NASA Earthdata.
+    notes: >-
+      Average night-time radiance for a year, nanowatts per square centimetre per
+      steradian, about 460 metres a pixel, with background, fires and boats masked.
