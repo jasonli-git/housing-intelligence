@@ -25,7 +25,7 @@ the sale price where it exists, never ranked on.
 (ACS), so a cheaper town is not one nobody here could get to work from.
 
 **ZIP codes** (2026-10-20, #394) are matched among themselves by the same rules, priced
-on Zillow's typical single-family value instead: sales carry only a town code, so no ZIP
+on Zillow's typical home value instead: sales carry only a town code, so no ZIP
 has a recorded-sales price, and ZIPs are never compared with towns, so no comparison
 mixes the two measures. The page says which price it used.
 """

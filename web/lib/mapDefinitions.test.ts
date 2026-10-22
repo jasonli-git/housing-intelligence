@@ -11,7 +11,7 @@ describe("New Jersey map definitions", () => {
       "hud_area_median_income", "hud_income_limit_80", "unemployment_rate",
       "permits_total_units", "acs_vacancy_rate", "acs_homeownership_rate",
       "acs_population", "net_migration_returns", "pep_population",
-      "sale_price_to_income",
+      "sale_price_to_income", "zhvi_bottom_tier",
     ];
     expect(Object.keys(MAP_DEFINITIONS).sort()).toEqual(mapMeasureIds.sort());
     for (const id of mapMeasureIds) {

@@ -57,13 +57,30 @@ metrics:
     source_id: nj_affordable
     record_type: administrative
     ranked: false
+  # The id says sfr, but the file is Zillow's all-homes series: single-family houses,
+  # condos and co-ops (`sfrcondo`). Relabelled 2026-10-22; the id is kept, since it is
+  # in every packet, URL and stored reading (ARCHITECTURE #424).
   zhvi_sfr:
-    label: Home value index, single-family
+    label: Home value index, houses and condos
     unit: usd
     frequency: monthly
     direction: neutral
-    description: Zillow smoothed, seasonally adjusted typical home value.
+    description: >-
+      Zillow's smoothed, seasonally adjusted typical home value for single-family
+      houses, condos and co-ops together: the middle third of homes by value.
     source_id: zillow_zhvi
+    record_type: modelled
+
+  zhvi_bottom_tier:
+    label: Starter home value index
+    unit: usd
+    frequency: monthly
+    direction: neutral
+    description: >-
+      Zillow's smoothed, seasonally adjusted typical value of the cheapest third of
+      homes (houses, condos and co-ops): what a starter home is worth. Counties and
+      towns only.
+    source_id: zillow_zhvi_bottom
     record_type: modelled
 
   zori_all:

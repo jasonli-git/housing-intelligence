@@ -2,7 +2,7 @@
 const LABELS: Record<string, string> = {
   census_acs: "Census ACS", census_pep: "Census population", census_permits: "Census permits",
   census_saipe: "Census SAIPE", census_lodes: "Census LODES", census_tiger: "Census TIGER",
-  zillow_zhvi: "Zillow ZHVI", zillow_zori: "Zillow ZORI", hip_derived: "Calculated here",
+  zillow_zhvi: "Zillow ZHVI", zillow_zhvi_bottom: "Zillow ZHVI, bottom tier", zillow_zori: "Zillow ZORI", hip_derived: "Calculated here",
   fhfa_hpi: "FHFA HPI", fhfa_hpi_county: "FHFA county HPI", fred: "FRED", bls: "BLS",
   hud: "HUD income limits", hud_fmr: "HUD fair market rents", hud_chas: "HUD CHAS", hud_chas_bulk: "HUD CHAS",
   irs_migration: "IRS migration", nj_modiv: "NJ MOD-IV", nj_sr1a: "NJ sales", nj_tax_rates: "NJ tax rates",

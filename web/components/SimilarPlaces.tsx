@@ -56,7 +56,7 @@ export function SimilarPlaces({ name, state, data }: { name: string; state: stri
         “Like here” means only {measures.slice(0, -1).join(", ")} and {measures.at(-1)}: not
         schools, safety or anything else.{" "}
         {zip
-          ? "Prices are Zillow’s typical single-family home value, an estimate, not recorded sales: sales are filed by town, so no ZIP code has a sale price. ZIP codes are compared only with ZIP codes."
+          ? "Prices are Zillow’s typical home value, an estimate, not recorded sales: sales are filed by town, so no ZIP code has a sale price. ZIP codes are compared only with ZIP codes."
           : <>Prices are the median recorded sale{window ? `, ${window}` : ""}, in towns with at least {data.min_sales} sales.</>}
       </p>
 

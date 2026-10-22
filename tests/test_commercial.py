@@ -63,6 +63,7 @@ def test_what_survives_each_use_today() -> None:
     expected = sorted(
         [
             "zhvi_sfr",
+            "zhvi_bottom_tier",
             "zori_all",
             "mortgage_rate_30y",
             "mortgage_rate_30y_weekly",

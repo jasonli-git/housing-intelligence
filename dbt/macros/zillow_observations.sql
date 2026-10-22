@@ -81,14 +81,17 @@
 {% endmacro %}
 
 
-{% macro zillow_observations(source_id) %}
+{# `zip=false` for a series Zillow publishes for counties and cities only: ZHVI's tiers. #}
+{% macro zillow_observations(source_id, zip=true) %}
     {{ zillow_level(source_id, 'county', 'StateCodeFIPS || MunicipalCodeFIPS', 'null') }}
 
     union all
 
     {{ zillow_level(source_id, 'city', 'null', 'CountyName') }}
+    {%- if zip %}
 
     union all
 
     {{ zillow_level(source_id, 'zip', 'null', 'CountyName') }}
+    {%- endif %}
 {% endmacro %}

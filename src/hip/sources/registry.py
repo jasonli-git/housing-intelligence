@@ -62,7 +62,7 @@ from hip.sources.nj_sr1a import Sr1aAdapter
 from hip.sources.nj_tax_rates import NjTaxRatesAdapter
 from hip.sources.njdep import CafeAdapter, KcslAdapter, WaterAreasAdapter
 from hip.sources.tiger import TigerAdapter
-from hip.sources.zillow import ZhviAdapter, ZoriAdapter
+from hip.sources.zillow import ZhviAdapter, ZhviBottomAdapter, ZoriAdapter
 
 # source_id -> the milestone that delivers its adapter. Sources absent from this map
 # and absent from the builders below are simply unknown.
@@ -93,6 +93,7 @@ PLANNED: dict[str, int] = {
 IMPLEMENTED: tuple[str, ...] = (
     TigerAdapter.source_id,
     ZhviAdapter.source_id,
+    ZhviBottomAdapter.source_id,
     ZoriAdapter.source_id,
     HpiAdapter.source_id,
     # Milestone 52.
@@ -157,6 +158,7 @@ IMPLEMENTED: tuple[str, ...] = (
 # loader iterate this; TIGER is deliberately absent because it produces regions.
 METRIC_SOURCES: tuple[str, ...] = (
     ZhviAdapter.source_id,
+    ZhviBottomAdapter.source_id,
     ZoriAdapter.source_id,
     HpiAdapter.source_id,
     # Milestone 52.
@@ -342,6 +344,8 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return DistrictDirectoryAdapter(states=scope.states)
     if source_id == ZhviAdapter.source_id:
         return ZhviAdapter()
+    if source_id == ZhviBottomAdapter.source_id:
+        return ZhviBottomAdapter()
     if source_id == ZoriAdapter.source_id:
         return ZoriAdapter()
     if source_id == HpiAdapter.source_id:

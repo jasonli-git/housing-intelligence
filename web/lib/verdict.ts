@@ -30,7 +30,7 @@ import {
  * `cohort` qualifies the peers when the figure covers fewer than the whole level.
  */
 const HOME_VALUES = [
-  { metric_id: "zhvi_sfr", noun: "typical single-family home value", cohort: "Zillow covers" },
+  { metric_id: "zhvi_sfr", noun: "typical home value", cohort: "Zillow covers" },
   { metric_id: "acs_median_home_value", noun: "median owner-reported home value", cohort: "with an ACS estimate" },
 ] as const;
 
@@ -113,7 +113,7 @@ export function pace(rank: number, of: number): string {
 
 /**
  * "Mercer County is the 8th least expensive of New Jersey's 21 counties, by typical
- * single-family home value ($450,985), but its value rose faster than most over five
+ * home value ($450,985), but its value rose faster than most over five
  * years (+35.8%, 9th of 21 by change)."
  *
  * "But" where price and pace pull opposite ways — dear and slow, or cheap and quick —
@@ -198,7 +198,7 @@ export function verdictHeadline(peers: Peers, metrics: PacketMetric[], levels: P
     const price = high <= 1 / 3 ? "higher than in most of"
       : low >= 2 / 3 ? "lower than in most of"
       : low >= 1 / 3 && high <= 2 / 3 ? "near the middle among" : "difficult to place among";
-    const basis = home.metric_id === "zhvi_sfr" ? `Typical single-family home values in ${peers.name}`
+    const basis = home.metric_id === "zhvi_sfr" ? `Typical home values in ${peers.name}`
       : `Owner-reported home values in ${peers.name} (${periodLabel(level.period_end, level.metric_id)} survey)`;
     const cohort = level.of === peers.count ? `${peers.scope}’s ${peers.noun}`
       : `the ${peers.noun} ${home.cohort} in ${peers.scope}`;
@@ -507,7 +507,7 @@ export function housingProfile(
 
 /**
  * The ledger's note on what its ranks rank, shown on the region's own home value where
- * it has both: "Mercer County's typical single-family home value is 9th of 21 by its
+ * it has both: "Mercer County's typical home value is 9th of 21 by its
  * five-year rise and 14th of 21 by value." The example is the point — the two ranks of
  * one figure, side by side, are what stops a change rank being read as a price rank.
  * A survey's value gives the ranks its margins leave it, as the tables do (Milestone

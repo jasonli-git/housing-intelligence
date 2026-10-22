@@ -87,7 +87,7 @@ describe("verdict", () => {
 
     expect(verdict(COUNTY, metrics, levels)).toBe(
       "Mercer County is the 8th least expensive of New Jersey’s 21 counties, by typical " +
-        "single-family home value ($450,985), but its value rose faster than most over " +
+        "home value ($450,985), but its value rose faster than most over " +
         "five years (+35.8%, 9th of 21 by change).",
     );
   });
@@ -107,7 +107,7 @@ describe("verdict", () => {
 
     expect(verdict(TOWN, [], levels)).toBe(
       "Princeton is the 77th most expensive of the 388 New Jersey municipalities Zillow " +
-        "covers, by typical single-family home value ($979,905).",
+        "covers, by typical home value ($979,905).",
     );
   });
 
@@ -282,7 +282,7 @@ describe("verdictHeadline", () => {
   it("summarizes the price and pace, leaving exact figures in the full verdict", () => {
     const levels = [level("zhvi_sfr", { rank: 19, of: 21 })];
     expect(verdictHeadline(COUNTY, [metric("zhvi_sfr", { rank: 1, of: 21, pct_change: 40 })], levels))
-      .toBe("Typical single-family home values in Mercer County are lower than in most of New Jersey’s counties, but they rose faster than almost all over the past five years.");
+      .toBe("Typical home values in Mercer County are lower than in most of New Jersey’s counties, but they rose faster than almost all over the past five years.");
   });
   it("names survey and partial coverage rather than implying a current market index", () => {
     expect(verdictHeadline(TOWN, [], [level("acs_median_home_value", {rank: 2, of: 100, period_end: "2024-12-31"})]))
@@ -313,7 +313,7 @@ describe("rankBasisExample", () => {
     const levels = [level("zhvi_sfr", { rank: 14, of: 21 })];
 
     expect(rankBasisExample("Mercer County", metrics, levels)).toBe(
-      "Mercer County’s typical single-family home value is 9th of 21 by its five-year " +
+      "Mercer County’s typical home value is 9th of 21 by its five-year " +
         "rise and 14th of 21 by value.",
     );
   });

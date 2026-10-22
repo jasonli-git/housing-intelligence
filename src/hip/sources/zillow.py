@@ -8,9 +8,10 @@ Two adapters rather than one because ZHVI and ZORI are separate products with di
 file naming, different geography coverage, and different revision behavior. They share
 everything else through `SourceAdapter`.
 
-Series selection is deliberate and narrow: the headline ZHVI cut (mid-tier, smoothed,
-seasonally adjusted) and all-homes ZORI. Zillow also publishes bottom/top tier and
-SFR-only variants; adding one is a new `metric_id` and a row here, never a schema change.
+Series selection is deliberate: the headline ZHVI cut (mid-tier, smoothed, seasonally
+adjusted, all homes: houses, condos and co-ops), its bottom tier (#424), and all-homes
+ZORI. Zillow also publishes top-tier, single-family, condo and bedroom variants; adding
+one is a new `metric_id` and a row here, never a schema change.
 """
 
 from __future__ import annotations
@@ -86,6 +87,19 @@ class ZhviAdapter(_ZillowAdapter):
     metric_id: ClassVar[str] = "zhvi_sfr"
 
 
+class ZhviBottomAdapter(_ZillowAdapter):
+    """ZHVI's bottom tier: the typical value of the cheapest third of homes (the 5th to
+    35th percentile), a starter home's price. Zillow publishes it for counties and
+    cities but not ZIP codes (ARCHITECTURE #424)."""
+
+    source_id: ClassVar[str] = "zillow_zhvi_bottom"
+    default_vintage: ClassVar[str] = "current"
+    product: ClassVar[str] = "zhvi"
+    file_stem: ClassVar[str] = "zhvi_uc_sfrcondo_tier_0.0_0.33_sm_sa_month"
+    metric_id: ClassVar[str] = "zhvi_bottom_tier"
+    LAYER_PREFIX: ClassVar[dict[str, str]] = {"county": "County", "city": "City"}
+
+
 class ZoriAdapter(_ZillowAdapter):
     """Zillow Observed Rent Index: a repeat-rent index of asking rents."""
 
@@ -98,6 +112,7 @@ class ZoriAdapter(_ZillowAdapter):
 
 ADAPTERS: dict[str, type[_ZillowAdapter]] = {
     ZhviAdapter.source_id: ZhviAdapter,
+    ZhviBottomAdapter.source_id: ZhviBottomAdapter,
     ZoriAdapter.source_id: ZoriAdapter,
 }
 

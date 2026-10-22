@@ -1049,7 +1049,7 @@ def geocode(
 
 def _zillow_metric_sources() -> tuple[str, ...]:
     """Sources needing name matching. Everything else publishes an exact identifier."""
-    return ("zillow_zhvi", "zillow_zori")
+    return ("zillow_zhvi", "zillow_zhvi_bottom", "zillow_zori")
 
 
 def _staged_models() -> dict[str, str]:

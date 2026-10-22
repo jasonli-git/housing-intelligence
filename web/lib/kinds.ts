@@ -214,6 +214,7 @@ export const KINDS: Record<string, RecordType> = {
   hud_fha_limit_1unit: "determination",
   unemployment_rate: "modelled",
   zhvi_sfr: "modelled",
+  zhvi_bottom_tier: "modelled",
   zori_all: "modelled",
 };
 

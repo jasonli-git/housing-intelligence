@@ -68,6 +68,7 @@ METRIC_SUBJECTS: dict[str, str] = {
     "nj_ah_completed_units": "assistance",
     "nj_ah_trust_balance": "assistance",
     "zhvi_sfr": "price",
+    "zhvi_bottom_tier": "price",
     "acs_median_home_value": "price",
     "fhfa_hpi": "price",
     "fhfa_hpi_all_transactions": "price",
