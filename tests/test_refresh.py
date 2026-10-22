@@ -632,3 +632,42 @@ def test_a_dated_source_is_left_to_its_own_discovery(tmp_path: Path) -> None:
     adapter = Dated()
     refresh.collect(refresh.acquire([adapter], raw_dir=tmp_path))
     assert read_discovery(tmp_path, adapter.source_id) is None
+
+
+def test_a_source_that_keeps_its_history_keeps_every_release_it_lists(
+    tmp_path: Path,
+) -> None:
+    """MOD-IV's tax years are replaced in place by the publisher, so each file kept here
+    is the only copy of that year (ARCHITECTURE #426)."""
+    year_2024, year_2025, stray = "a" * 64, "b" * 64, "c" * 64
+    for sha in (year_2024, year_2025, stray):
+        _raw_release(tmp_path, "nj_modiv", sha)
+    _index(tmp_path, "nj_modiv", {"statewide@current": year_2025})
+    (tmp_path / "nj_modiv" / refresh.HISTORY_FILE).write_text(
+        json.dumps({year_2024: {"newest": "2024"}, year_2025: {"newest": "2025"}})
+    )
+    assert [s.sha256 for s in refresh.superseded_releases(tmp_path, cited=set())] == [
+        stray
+    ]
+
+
+def test_a_kept_release_is_recorded_once_with_its_year(tmp_path: Path) -> None:
+    from datetime import UTC, datetime
+
+    from hip.sources.base import Release, ReleaseRef
+
+    ref = ReleaseRef(source_id="nj_modiv", layer="statewide", vintage="current", url="u")
+    first = Release(
+        ref=ref,
+        path=tmp_path,
+        sha256="a" * 64,
+        size_bytes=1,
+        fetched_at=datetime(2026, 10, 1, tzinfo=UTC),
+    )
+    (tmp_path / "nj_modiv").mkdir()
+    refresh.record_history(tmp_path, first, "2024")
+    refresh.record_history(tmp_path, first, "2025")  # a later run never rewrites it
+    history = json.loads((tmp_path / "nj_modiv" / refresh.HISTORY_FILE).read_text())
+    assert history == {
+        "a" * 64: {"newest": "2024", "fetched_at": "2026-10-01T00:00:00+00:00"}
+    }

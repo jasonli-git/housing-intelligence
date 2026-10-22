@@ -143,6 +143,9 @@ class ModivAdapter(SourceAdapter):
     # source counties republish annually; a month bounds the staleness at a month, which
     # is inside the cadence of the data itself.
     revalidate_after: ClassVar[timedelta] = timedelta(days=30)
+    # NJOGIS republishes the layer for each tax year in place and keeps no earlier one,
+    # so a home's tax history exists only if each year's file is kept (#426).
+    keeps_history: ClassVar[bool] = True
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         return [

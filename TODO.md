@@ -81,6 +81,7 @@ Not open work: each comes round on a date. The steps live where the row says.
 | About June 2027 | Request the four utilities' 2026 reliability reports from BPU's Records Custodian; review each table into `REPORTS` (#347) | `config/sources.yml` `nj_bpu_reports` |
 | Late summer each year | Add NCES's next district directory to `CCD_LEA`; `DISTRICT_SUCCESSORS` is rechecked on read, and its rows can go once NJOGIS redraws the Henry Hudson merger (#356) | `hip.sources.community` |
 | After 2026-11-21 | Once the arm64 warehouse has run a month of weekly refreshes, remove the amd64 cluster it replaced: `docker volume rm housing-intelligence_pgdata`, the `pgdata:` line in `docker-compose.yml`, and the backup `data/backups/hip-amd64-20261021-2329.dump` (ARCHITECTURE #421) | — |
+| About February 2027 | NJOGIS's next MOD-IV tax year (2025): after the refresh fetches it, check `data/raw/nj_modiv/history.json` lists it beside 2024, so both years are kept (#426) | `hip acquire --source nj_modiv` |
 | 2027-10-01 | Re-read the cost rules in `web/lib/costRules.ts` (HUD's FHA premiums, NJ's transfer fees, the CFPB's closing range, Freddie Mac's mortgage-insurance range), or sooner on a HUD mortgagee letter on premiums | `web/lib/costRules.ts` |
 | Before it expires | Renew the restricted OpenAI key (List models: Read; Chat completions: Request) and replace `OPENAI_API_KEY` in `.env`; $5 prepaid, auto-recharge off (#351) | OpenAI console |
 

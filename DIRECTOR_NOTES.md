@@ -668,3 +668,43 @@ which is left as written.
   at merge, and a bot committing to `main` was ruled out (ARCHITECTURE #175).
 
 Tracked in TODO.md and ARCHITECTURE #417.
+
+---
+
+## Decision: keep every year's parcel file
+
+**Status:** Approved direction
+**Recorded:** 2026-10-22
+
+Promotes item 2 of *Parity with Zillow's home page*, which is otherwise left as written.
+
+NJOGIS replaces the MOD-IV parcel layer with each new tax year and keeps no earlier one,
+so a home's tax history can exist only if this project keeps each year's file. From now
+on every MOD-IV file fetched is kept, with the tax year it holds (ARCHITECTURE #426). The
+2024 file is the first; the next is expected about February 2027.
+
+Showing the history on a page is not part of this decision: it needs two years held
+first, and stays with the parity note.
+
+---
+
+## Follow-up: the README note is closed
+
+**Status:** Feedback — closes *README audit and documentation auto-maintenance*; the note
+above is left as written
+**Recorded:** 2026-10-22
+
+Closed by the owner on 2026-10-22. What it asked for and where it went:
+
+- Status much shorter, latest kept current: done (2026-10-21; "Latest" checked by
+  `tests/test_readme.py`, ARCHITECTURE #420).
+- Screenshots automated on desktop and mobile: done (ARCHITECTURE #175, #393).
+- Features, Tech Stack, sample output: the features were cut to a short list and the
+  sample output removed (2026-10-21); the Tech Stack's versions are filled (#420).
+- Resource requirements and storage footprint: removed (`hip footprint` measures storage
+  on demand).
+- Model evaluations as a short story with links: a short list with links (2026-10-21).
+- Numbers kept current on every change: `hip readme` and its test (#417, #420).
+
+Not pursued with the note's closing: the TODO usefulness audit, an automated SPEC audit,
+and automatic checks of the Setup and Publishing prose. Any of them can be raised again.
