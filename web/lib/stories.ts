@@ -19,6 +19,12 @@ export const STORIES = [
   { href: "/stories/the-mortgage-market", title: "The mortgage market", blurb: "Why home-purchase loans are turned down, and which kinds are made, county by county." },
   { href: "/stories/water-you-can-check", title: "Water you can check", blurb: "Water systems with health-based violations, PFAS results against the EPA reference, and lead service lines still in the ground." },
   { href: "/stories/is-today-unusual", title: "Is today unusual here?", blurb: "Each county's home prices against incomes now, set against its own history." },
+  { href: "/stories/whats-in-a-name", title: "What’s in a name?", blurb: "Do “Lake” towns cost more than “Park” towns? Every word New Jersey's town names share, priced against its own county." },
+  { href: "/stories/the-long-commute-premium", title: "The long commute premium", blurb: "Longer commutes go with pricier towns, not cheaper ones. Who is doing the commuting explains it." },
+  { href: "/stories/twin-towns", title: "Twin towns, different price tags", blurb: "Pairs of towns alike in income, housing and commute, yet one costs twice the other." },
+  { href: "/stories/what-a-house-buys-in-land", title: "What a house buys in land", blurb: "The typical home's value per acre of its lot, from Hoboken's slivers to the Pinelands' acres." },
+  { href: "/stories/your-towns-time-machine", title: "Your town's time machine", blurb: "The year each town's typical home first passed $500,000, and $1 million." },
+  { href: "/stories/the-winter-empty-shore", title: "The winter-empty Shore", blurb: "Towns where most homes stand empty for much of the year, kept for the summer." },
   { href: "/stories/how-data-gets-rewritten", title: "How data gets rewritten", blurb: "Every time a source revised figures it had already published, and by how much." },
 ];
 
@@ -79,12 +85,23 @@ export type Premium = {
  * mean relative price of towns with it and towns without, as a percentage.
  * Descriptive, not causal: a trait goes with pricier towns, it does not make them so.
  */
-export function traitPremiums(towns: StoryTown[], traits: Trait[] = TRAITS): Premium[] {
+/**
+ * Each priced town's log typical home value against its county's mean log value: how much
+ * dearer or cheaper it is than its own county, so a comparison is not "Bergen against
+ * Cumberland" in disguise.
+ */
+export function relativePrices(towns: StoryTown[]): Map<number, number> {
   const priced = towns.filter((t) => (t.values[PRICE] ?? 0) > 0);
   const byCounty = new Map<number, number[]>();
   for (const t of priced) byCounty.set(t.county, [...(byCounty.get(t.county) ?? []), Math.log(t.values[PRICE]!)]);
   const countyMean = new Map([...byCounty].map(([c, logs]) => [c, logs.reduce((a, b) => a + b, 0) / logs.length]));
-  const relative = (t: StoryTown) => Math.log(t.values[PRICE]!) - countyMean.get(t.county)!;
+  return new Map(priced.map((t) => [t.id, Math.log(t.values[PRICE]!) - countyMean.get(t.county)!]));
+}
+
+export function traitPremiums(towns: StoryTown[], traits: Trait[] = TRAITS): Premium[] {
+  const priced = towns.filter((t) => (t.values[PRICE] ?? 0) > 0);
+  const rel = relativePrices(towns);
+  const relative = (t: StoryTown) => rel.get(t.id)!;
   const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
   return traits
     .map((trait) => {
@@ -218,4 +235,75 @@ export function trend(points: [number, number][]): { slope: number; intercept: n
   const sxx = points.reduce((s, p) => s + (p[0] - mx) ** 2, 0), sxy = points.reduce((s, p) => s + (p[0] - mx) * (p[1] - my), 0);
   const slope = sxx ? sxy / sxx : 0;
   return { slope, intercept: my - slope * mx };
+}
+
+/** A town's name without its legal type ("Trenton city" → "Trenton"), so "City" means a name, not a form of government. */
+export function baseName(name: string): string {
+  return name.replace(/ (city|borough|township|town|village)$/, "");
+}
+
+export type WordPremium = { word: string; towns: StoryTown[]; premium: number };
+
+/**
+ * What a word in a town's name goes with: the mean county-relative price of towns whose
+ * name holds it, against all priced towns, for words at least `min` towns share.
+ */
+export function wordPremiums(towns: StoryTown[], words: string[], min = 5): WordPremium[] {
+  const rel = relativePrices(towns);
+  const all = [...rel.values()];
+  const base = all.reduce((a, b) => a + b, 0) / (all.length || 1);
+  return words
+    .map((word) => {
+      const pattern = new RegExp(word, "i");
+      const having = towns.filter((t) => rel.has(t.id) && pattern.test(baseName(t.name)));
+      const mean = having.reduce((a, t) => a + rel.get(t.id)!, 0) / (having.length || 1);
+      return { word, towns: having.sort((a, b) => b.values[PRICE]! - a.values[PRICE]!), premium: Math.exp(mean - base) - 1 };
+    })
+    .filter((w) => w.towns.length >= min)
+    .sort((a, b) => b.premium - a.premium);
+}
+
+/** The first year a series reached a threshold, or null if it never has. */
+export function crossingYear(series: { year: number; value: number }[], threshold: number): number | null {
+  return series.find((p) => p.value >= threshold)?.year ?? null;
+}
+
+export type Twin = { a: StoryTown; b: StoryTown; distance: number; ratio: number };
+
+/**
+ * Pairs of towns alike on every measure in `keys` (each scaled to its spread across towns)
+ * but far apart in price: each town's nearest neighbour, kept where the two are within
+ * `near` of each other, ordered by how many times dearer the pricier one is, each town
+ * in one pair at most.
+ */
+export function twins(towns: StoryTown[], keys: string[], near = 0.6): Twin[] {
+  const ready = towns.filter((t) => (t.values[PRICE] ?? 0) > 0 && keys.every((k) => t.values[k] !== undefined));
+  const spread = keys.map((k) => {
+    const xs = ready.map((t) => t.values[k]!);
+    const m = xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
+    return { m, sd: Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length || 1)) || 1 };
+  });
+  const z = (t: StoryTown) => keys.map((k, i) => (t.values[k]! - spread[i].m) / spread[i].sd);
+  const zs = new Map(ready.map((t) => [t.id, z(t)]));
+  const dist = (a: StoryTown, b: StoryTown) => Math.sqrt(zs.get(a.id)!.reduce((s, v, i) => s + (v - zs.get(b.id)![i]) ** 2, 0) / keys.length);
+  const seen = new Set<string>();
+  const out: Twin[] = [];
+  for (const a of ready) {
+    let best: StoryTown | null = null, d = Infinity;
+    for (const b of ready) if (b.id !== a.id) { const x = dist(a, b); if (x < d) { d = x; best = b; } }
+    if (!best || d > near) continue;
+    const [hi, lo] = a.values[PRICE]! >= best.values[PRICE]! ? [a, best] : [best, a];
+    const key = `${hi.id}-${lo.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ a: hi, b: lo, distance: d, ratio: hi.values[PRICE]! / lo.values[PRICE]! });
+  }
+  // Each town in one pair at most, its widest gap: a town twinned twice reads as a mistake.
+  const used = new Set<number>();
+  return out.sort((x, y) => y.ratio - x.ratio).filter((t) => {
+    if (used.has(t.a.id) || used.has(t.b.id)) return false;
+    used.add(t.a.id);
+    used.add(t.b.id);
+    return true;
+  });
 }

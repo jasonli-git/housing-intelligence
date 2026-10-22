@@ -145,3 +145,21 @@
 .stories-grid a b, .stories-grid a > span:not(.story-shot) { padding-inline: .5rem; }
 .story-shot { display: block; aspect-ratio: 788 / 489; overflow: hidden; margin-bottom: .4rem; border-radius: 12px; background: var(--surface-2); }
 .story-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+
+/* Diverging bars: one row each, out from a centre line, up blue and down orange. */
+.diverging { margin: 1rem 0; padding: 0; list-style: none; }
+.diverging li { display: grid; grid-template-columns: minmax(130px, 200px) 1fr minmax(64px, auto); gap: .75rem; align-items: center; min-height: 34px; border-bottom: 1px solid var(--plate-rule, var(--border)); font-size: 13px; }
+.diverging li small { display: block; color: var(--text-muted); font-size: 11px; }
+.diverging .track { position: relative; height: 16px; }
+.diverging .track::before { content: ""; position: absolute; left: 50%; top: -6px; bottom: -6px; border-left: 1px solid var(--text-muted); }
+.diverging .track i { position: absolute; top: 2px; height: 12px; }
+.diverging .track i.up { left: 50%; border-radius: 0 4px 4px 0; background: var(--story-up); }
+.diverging .track i.down { right: 50%; border-radius: 4px 0 0 4px; background: var(--story-down); }
+.diverging .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.diverging .ladder-axis .track::before { display: none; }
+.diverging .ladder-axis .track { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
+.story-figure .seq { fill: var(--story-1); }
+.twins li { min-height: 64px; }
+.twin-traits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .6rem; }
+.twin-traits small { color: var(--text-muted); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.twins li { grid-template-columns: minmax(220px, 300px) 1fr minmax(48px, auto) !important; }

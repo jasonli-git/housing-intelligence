@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { centre, extremes, inside, ladder, leadingDestination, logTicks, monthlyCost, PRICE, ratioBand, traitPremiums, trend, type StoryTown, type Trait } from "./stories";
+import { baseName, centre, crossingYear, extremes, inside, ladder, leadingDestination, logTicks, monthlyCost, PRICE, ratioBand, traitPremiums, trend, twins, wordPremiums, type StoryTown, type Trait } from "./stories";
 
 const town = (id: number, county: number, price: number, extra: Record<string, number> = {}): StoryTown => ({
   id, name: `Town ${id}`, county, countyName: `County ${county}`, values: { [PRICE]: price, ...extra },
@@ -91,5 +91,35 @@ describe("chart helpers", () => {
     const t = trend([[0, 1], [1, 3], [2, 5]]);
     expect(t.slope).toBeCloseTo(2);
     expect(t.intercept).toBeCloseTo(1);
+  });
+});
+
+describe("the experimental stories", () => {
+  it("prices a word in town names against its own county", () => {
+    const towns = [
+      ...[1, 2, 3, 4, 5].map((i) => ({ ...town(i, 1, 200), name: `Lake ${i}` })),
+      ...[6, 7, 8, 9, 10].map((i) => ({ ...town(i, 1, 100), name: `Plain ${i}` })),
+    ];
+    const [lake] = wordPremiums(towns, ["Lake"]);
+    expect(lake.towns).toHaveLength(5);
+    expect(lake.premium).toBeCloseTo(Math.SQRT2 - 1);
+  });
+
+  it("reads a name without its legal type", () => {
+    expect(baseName("Trenton city")).toBe("Trenton");
+    expect(baseName("Jersey City city")).toBe("Jersey City");
+    expect(baseName("Ventnor City")).toBe("Ventnor City");
+  });
+
+  it("finds the year a series first crossed a line", () => {
+    expect(crossingYear([{ year: 2000, value: 1 }, { year: 2001, value: 5 }], 5)).toBe(2001);
+    expect(crossingYear([{ year: 2000, value: 1 }], 5)).toBeNull();
+  });
+
+  it("pairs alike towns and orders them by the price gap", () => {
+    const towns = [town(1, 1, 900, { k: 1 }), town(2, 1, 300, { k: 1.01 }), town(3, 1, 500, { k: 9 }), town(4, 1, 450, { k: 9.02 })];
+    const out = twins(towns, ["k"], 0.1);
+    expect(out.map((t) => [t.a.id, t.b.id])).toEqual([[1, 2], [3, 4]]);
+    expect(out[0].ratio).toBe(3);
   });
 });
