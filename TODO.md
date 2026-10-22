@@ -121,14 +121,6 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Evaluation harness
 
-- [ ] **Watch the first regeneration under GPT-6 Luna.** (#345, #352) Under Haiku, the
-      first regeneration of the `v4` list (2026-10-08) needed a revision on 7 of 18
-      readings for a survey figure stated without its margin, and 3 fell to Gemini for
-      quoting a non-housing measure. Luna heads the list since #352 and was benchmarked
-      on 15 answers, its weakest criterion completeness; the next full pass is its first
-      on live packets. Read its revisions and fallthroughs, and decide then whether the
-      prompt should name margins.
-
 - [ ] **What a reading says in words is now checked for rankings only.** (#275; narrowed
       2026-10-21, ARCHITECTURE #412) A ranking in words ("among the highest", "near the
       bottom") must match the packet's ranks, and one naming no ranked measure is refused.
