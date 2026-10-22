@@ -124,6 +124,7 @@ export const SHARE_METRICS: ReadonlySet<string> = new Set([
 export const MULTIPLE_METRICS: ReadonlySet<string> = new Set([
   "price_to_income",
   "price_to_ami",
+  "sale_price_to_income",
   // Milestone 50: arrivals' mean income over stayers'.
   "irs_arrival_income_ratio",
 ]);

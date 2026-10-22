@@ -104,6 +104,11 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "How many years of the typical household’s income the typical home costs: Zillow’s home value divided by the Census Bureau’s median income for the same year.",
     why: "Around 3 was long thought affordable; above 5 is a stretch for most buyers.",
   },
+  sale_price_to_income: {
+    short: "What homes actually sold for divided by a typical household’s yearly income. Higher means buying is harder on local incomes.",
+    what: "How many years of the typical household’s income the typical sale cost: the state’s median of usable sales over three years, over the Census Bureau’s median income.",
+    why: "It covers towns Zillow does not. Compare it with other sale-price ratios, not with home value to income.",
+  },
   price_to_ami: {
     short: "Typical home value divided by HUD’s yearly income benchmark for families in this area.",
     what: "How many years of HUD’s area median income the typical home costs.",

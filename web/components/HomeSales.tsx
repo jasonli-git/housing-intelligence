@@ -4,8 +4,9 @@ import type { ReactNode } from "react";
 import { ReaderDetails } from "@/components/ReaderDetails";
 
 import type { PacketLevel } from "@/lib/api";
-import { formatValue } from "@/lib/format";
+import { formatMetric, formatValue } from "@/lib/format";
 import { monthLabel, periodLabel } from "@/lib/periods";
+import { rankWords } from "@/lib/ranks";
 import { SaleExhibit } from "@/components/ExhibitCharts";
 
 function SaleDetails({ compact, children }: {compact:boolean; children:ReactNode}) {
@@ -34,7 +35,8 @@ export function HomeSales({
   name: string;
   level: string;
   geoid: string;
-  levels: Pick<PacketLevel, "metric_id" | "value" | "period_start" | "period_end">[];
+  levels: (Pick<PacketLevel, "metric_id" | "value" | "period_start" | "period_end"> &
+    Partial<Pick<PacketLevel, "rank" | "of" | "direction">>)[];
   showLookup?: boolean;
   portrait?: boolean;
 }) {
@@ -50,6 +52,11 @@ export function HomeSales({
   const ratio = find("sr1a_median_sales_ratio");
   const director = find("nj_director_ratio");
   const reval = find("nj_revaluation_year");
+  // ARCHITECTURE #416: its own measure, compared only with other places' sale ratios.
+  const toIncome = find("sale_price_to_income");
+  const incomeYears = toIncome
+    ? [Number(toIncome.period_start.slice(0, 4)), Number(toIncome.period_end.slice(0, 4))]
+    : null;
   const usd = (value: number) => formatValue(value, "usd");
   const pct = (share: number) => `${(share * 100).toFixed(0)}%`;
   const span = `${monthLabel(median.period_start)} to ${monthLabel(median.period_end)}`;
@@ -72,6 +79,20 @@ export function HomeSales({
       </p>}
       <SaleDetails compact={portrait}>
       <dl className="cost-lines sales-lines">
+        {toIncome && incomeYears && (
+          <div>
+            <dt>
+              Sale price to household income
+              <small className="src">
+                sales {incomeYears[1] - 2}–{incomeYears[1]} over income {incomeYears[0]}–{incomeYears[1]}
+                {toIncome.rank && toIncome.of
+                  ? ` · ${rankWords(toIncome.rank, toIncome.of, "value", toIncome.direction ?? "lower_is_better")} among sale-price ratios`
+                  : ""}
+              </small>
+            </dt>
+            <dd>{formatMetric(toIncome.value, "ratio", "sale_price_to_income")}</dd>
+          </div>
+        )}
         {recent && (
           <div>
             <dt>

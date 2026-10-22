@@ -125,7 +125,12 @@ SHARE_METRICS = frozenset(
 )
 MULTIPLE_METRICS = frozenset(
     # Milestone 50: arrivals' mean income over stayers'.
-    {"price_to_income", "price_to_ami", "irs_arrival_income_ratio"}
+    {
+        "price_to_income",
+        "price_to_ami",
+        "sale_price_to_income",
+        "irs_arrival_income_ratio",
+    }
 )
 
 

@@ -13,6 +13,11 @@ are not yet recorded here.
 
 ### Added
 
+- **A sale price to income ratio for about 540 towns** (ARCHITECTURE #416, #419): what
+  buyers actually paid, from the state's sales records, over typical household income.
+  It covers 163 towns Zillow does not, so every town with enough sales can be compared on
+  one measure; it ranks only against other sale-price ratios, beside Zillow's home value
+  to income. Shown in each place's sold-homes card and on the compare page.
 - **Readings' ranking words are checked against the data** (ARCHITECTURE #412): "among
   the highest", "near the bottom" and the like must match the place's rank for the
   measure named, or the reading is refused and rewritten. Four published readings would

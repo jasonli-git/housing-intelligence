@@ -73,6 +73,12 @@ TEXTS: dict[str, str] = {
         "not published by either source. The monthly value or rent series is averaged "
         "over the survey year to match the annual income denominator."
     ),
+    "sale_price_ratio": (
+        "This site's sale-price ratio divides the median of usable sales over three "
+        "years by household income. It measures what buyers paid, not what the typical "
+        "home is worth, so it compares with other places' sale-price ratios, not with "
+        "the home value to income ratio."
+    ),
     "zori_sparse": (
         "Zillow's rent index begins in 2015 and covers far fewer places than its "
         "home-value index, so any rent figure rests on a thinner base — and ranks "
@@ -261,6 +267,8 @@ def scoped_caveats(
         add("acs_overlap", acs)
     if present & DERIVED_RATIOS:
         add("derived_ratio", present & DERIVED_RATIOS)
+    if "sale_price_to_income" in present:
+        add("sale_price_ratio", {"sale_price_to_income"})
     rent = present & {"zori_all", "rent_to_income"}
     if rent:
         add("zori_sparse", rent)

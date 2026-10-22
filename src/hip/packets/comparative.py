@@ -115,6 +115,12 @@ _PHRASE = re.compile(
 # Everyday words for measures, beside each packet label. A ratio's words come first, so
 # "home value compared with income" is the ratio, not its two sides.
 _SPOKEN: tuple[tuple[str, tuple[str, ...]], ...] = (
+    # Before the home value ratio, whose "price to income" it contains.
+    (
+        r"sale[- ]prices? (?:compared (?:with|to)|against|relative to|to) "
+        r"(?:household )?incomes?",
+        ("sale_price_to_income",),
+    ),
     (
         r"(?:home )?values? (?:compared (?:with|to)|against|relative to|to) "
         r"(?:household )?"

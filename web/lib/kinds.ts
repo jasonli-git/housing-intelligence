@@ -148,6 +148,7 @@ export const KINDS: Record<string, RecordType> = {
   price_to_ami: "calculated",
   price_to_income: "calculated",
   rent_to_income: "calculated",
+  sale_price_to_income: "calculated",
   sr1a_median_sale_price: "administrative",
   sr1a_sales_count: "administrative",
   sr1a_turnover_per_1000: "calculated",
