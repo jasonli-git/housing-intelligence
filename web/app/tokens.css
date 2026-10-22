@@ -66,6 +66,16 @@
   /* Visual stories: above and below a baseline, told apart by lightness as well as hue. */
   --story-up: light-dark(#2f6db0, #7fb6ec);
   --story-down: light-dark(#b45309, #f0a35c);
+  /* Story categories, in fixed order (the data-viz reference palette, validated for
+     adjacent pairs in stacks and bars, light and dark). */
+  --story-1: light-dark(#2a78d6, #3987e5);
+  --story-2: light-dark(#eb6834, #d95926);
+  --story-3: light-dark(#1baf7a, #199e70);
+  --story-4: light-dark(#eda100, #c98500);
+  --story-5: light-dark(#e87ba4, #d55181);
+  --story-6: light-dark(#008300, #008300);
+  --story-7: light-dark(#6250d6, #9085e9);
+  --story-8: light-dark(#e34948, #e66767);
 
   /* Sequential blue, for unsigned magnitude. */
   --seq-100: #9cb7e6;

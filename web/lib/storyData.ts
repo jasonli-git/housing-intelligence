@@ -2,8 +2,9 @@
  * The figures the visual stories are built from, read from the build's API. Server-only:
  * each story page awaits these and hands plain rows to its chart.
  */
-import { api } from "@/lib/api";
+import { api, type Region } from "@/lib/api";
 import { centre, inside, PRICE, TRAITS, type Place, type StoryTown } from "@/lib/stories";
+import { shapes, type Projector, type Shape } from "@/lib/storyMap";
 
 const TOWN_METRICS = [PRICE, "zhvi_bottom_tier", "sr1a_median_sale_price", ...TRAITS.map((t) => t.metric)];
 
@@ -12,38 +13,73 @@ export async function storyCounties(): Promise<Map<number, string>> {
   return new Map((counties?.items ?? []).map((c) => [c.region_id, c.name.replace(/ County$/, "")]));
 }
 
-/** Every New Jersey town with its county and the latest value of each story measure. */
-export async function storyTowns(): Promise<StoryTown[]> {
-  const [counties, towns, ...values] = await Promise.all([
-    storyCounties(),
-    api.regions("level=municipality&state=NJ&limit=1000"),
-    ...TOWN_METRICS.map((m) => api.values(m, "municipality", 1000)),
-  ]);
-  // Ranked measures come from their value ranking; the rest (rail access, NYC jobs and
-  // others no ranking holds) from their series, in batches of towns, latest period each.
-  const ids = (towns?.items ?? []).map((t) => t.region_id);
+export async function storyTownRegions(): Promise<Region[]> {
+  return (await api.regions("level=municipality&state=NJ&limit=1000"))?.items ?? [];
+}
+
+/** Each region's full yearly series of one measure, oldest first, in batches of regions. */
+export async function seriesFor(metric: string, ids: number[]): Promise<Map<number, { year: number; value: number }[]>> {
+  const out = new Map<number, { year: number; value: number }[]>();
+  for (let start = 0; start < ids.length; start += 150) {
+    const body = await api.costObservations(metric, ids.slice(start, start + 150));
+    for (const region of body?.regions ?? []) {
+      out.set(region.region_id, region.series.filter((o) => Number.isFinite(o.value)).map((o) => ({ year: Number(o.period_start.slice(0, 4)), value: o.value })));
+    }
+  }
+  return out;
+}
+
+/**
+ * The latest value of each measure for the given regions. Ranked measures come from their
+ * value ranking; the rest (rail access, NYC jobs and others no ranking holds) from their
+ * series, latest period each.
+ */
+export async function latestFor(metrics: string[], level: string, ids: number[]): Promise<Map<number, Partial<Record<string, number>>>> {
   const byMetric = await Promise.all(
-    TOWN_METRICS.map(async (m, i) => {
-      const ranked = values[i]?.items ?? [];
+    metrics.map(async (m) => {
+      const ranked = (await api.values(m, level, 1000))?.items ?? [];
       if (ranked.length) return [m, new Map(ranked.map((r) => [r.region_id, r.value]))] as const;
-      const latest = new Map<number, number>();
-      for (let start = 0; start < ids.length; start += 150) {
-        const body = await api.costObservations(m, ids.slice(start, start + 150));
-        for (const region of body?.regions ?? []) {
-          const last = region.series.at(-1);
-          if (last && Number.isFinite(last.value)) latest.set(region.region_id, last.value);
-        }
-      }
-      return [m, latest] as const;
+      const series = await seriesFor(m, ids);
+      return [m, new Map([...series].flatMap(([id, s]) => (s.length ? [[id, s.at(-1)!.value] as const] : [])))] as const;
     }),
   );
-  return (towns?.items ?? []).map((t) => ({
+  return new Map(ids.map((id) => [id, Object.fromEntries(byMetric.flatMap(([m, map]) => (map.has(id) ? [[m, map.get(id)!]] : [])))]));
+}
+
+/** Every New Jersey town with its county and the latest value of each measure asked for. */
+export async function storyTowns(metrics: string[] = TOWN_METRICS): Promise<StoryTown[]> {
+  const [counties, towns] = await Promise.all([storyCounties(), storyTownRegions()]);
+  const values = await latestFor(metrics, "municipality", towns.map((t) => t.region_id));
+  return towns.map((t) => ({
     id: t.region_id,
     name: t.name_lsad ?? t.name,
     county: t.parent_id ?? -1,
     countyName: counties.get(t.parent_id ?? -1) ?? "",
-    values: Object.fromEntries(byMetric.flatMap(([m, map]) => (map.has(t.region_id) ? [[m, map.get(t.region_id)!]] : []))),
+    values: values.get(t.region_id) ?? {},
   }));
+}
+
+/** Runs `fn` over every item, a few at a time, so a story reading every town does not flood the API. */
+export async function each<T, R>(items: T[], fn: (item: T) => Promise<R>, at = 8): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(at, items.length) }, async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i]);
+    }
+  }));
+  return out;
+}
+
+/** New Jersey's counties or towns as map paths, `width` wide; towns share the counties' frame. */
+export async function storyShapes(level: "county" | "municipality", width: number): Promise<{ shapes: Shape[]; projector: Projector }> {
+  type Feature = Parameters<typeof shapes>[0][number];
+  const counties = ((await api.geo("county", "NJ", 0.001))?.features ?? []) as unknown as Feature[];
+  const frame = shapes(counties, width);
+  if (level === "county") return frame;
+  const towns = ((await api.geo("municipality", "NJ", 0.0005))?.features ?? []) as unknown as Feature[];
+  return shapes(towns, width, frame.projector);
 }
 
 /**

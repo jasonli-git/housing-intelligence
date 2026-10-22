@@ -22,7 +22,7 @@ export default async function PriceLadderPage() {
   const counties = [...new Set(rows.map((r) => r.countyName))].sort();
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} />
+      <Masthead affordability={{ kind: "route" }} storiesActive />
       <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
         <header className="page-head">
           <div>

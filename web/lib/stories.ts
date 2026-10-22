@@ -9,6 +9,17 @@ export const STORIES = [
   { href: "/stories/pricier-towns", title: "What goes with pricier towns", blurb: "Working from home, owning, detached houses, a train nearby: which traits go with higher home values, against similar towns in the same county." },
   { href: "/stories/price-ladder", title: "The price ladder", blurb: "Every town's starter home, typical home and recent sales on one scale, so the spread and the gaps show." },
   { href: "/stories/priciest-and-cheapest", title: "Priciest and cheapest in each county", blurb: "The most and least expensive town and ZIP code in every county, widest gap first." },
+  { href: "/stories/income-and-home-value", title: "Income against home value", blurb: "Every town as a dot, its households' income against its homes' value, with the 3× and 5× lines. Find yours." },
+  { href: "/stories/who-moves-in", title: "Who’s moving in", blurb: "Households moving between counties, drawn as arcs, and whether those arriving earn more than those who stayed." },
+  { href: "/stories/where-the-workday-goes", title: "Where the workday goes", blurb: "Each town's leading place of work outside itself: New York, Philadelphia, or one of New Jersey's job centres." },
+  { href: "/stories/is-new-jersey-building", title: "Is New Jersey building?", blurb: "Homes permitted, finished and torn down, county by county, and the net homes added per 1,000." },
+  { href: "/stories/what-the-housing-is", title: "What the housing is", blurb: "How old every town's homes are, and what kind: detached houses through buildings of 20 or more." },
+  { href: "/stories/the-true-monthly-cost", title: "The true monthly cost", blurb: "Mortgage, tax, insurance, electricity, gas and water stacked by town, so low prices hiding high running costs show." },
+  { href: "/stories/same-house-different-tax-bill", title: "Same house, different tax bill", blurb: "What each town's tax rate does to a home's yearly bill, and the towns whose assessments are overdue." },
+  { href: "/stories/the-mortgage-market", title: "The mortgage market", blurb: "Why home-purchase loans are turned down, and which kinds are made, county by county." },
+  { href: "/stories/water-you-can-check", title: "Water you can check", blurb: "Water systems with health-based violations, PFAS results against the EPA reference, and lead service lines still in the ground." },
+  { href: "/stories/is-today-unusual", title: "Is today unusual here?", blurb: "Each county's home prices against incomes now, set against its own history." },
+  { href: "/stories/how-data-gets-rewritten", title: "How data gets rewritten", blurb: "Every time a source revised figures it had already published, and by how much." },
 ];
 
 /** A town with the latest value of each measure the stories read. */
@@ -151,4 +162,38 @@ export function inside([px, py]: [number, number], rings: number[][]): boolean {
     }
   }
   return hit;
+}
+
+/** Where a town's home values sit against its incomes: under 3×, 3× to 5×, or over 5×. */
+export function ratioBand(income: number, value: number): "under3" | "3to5" | "over5" {
+  const r = value / income;
+  return r < 3 ? "under3" : r <= 5 ? "3to5" : "over5";
+}
+
+export type MonthlyCost = { mortgage: number; tax: number; insurance: number; electricity: number; gas: number; water: number };
+
+/**
+ * A typical home's month, every part a typical figure for the town: principal and interest
+ * on the typical home value at 20% down and the national 30-year rate, a twelfth of the
+ * typical tax bill, insurance and water bills, and the monthly electricity and gas bills.
+ * Null where the town lacks the home value or tax bill the month mostly rests on.
+ */
+export function monthlyCost(values: Partial<Record<string, number>>, ratePct: number, payment: (principal: number, ratePct: number) => number): MonthlyCost | null {
+  const home = values[PRICE], tax = values.modiv_median_tax_bill;
+  if (!home || !tax) return null;
+  return {
+    mortgage: payment(home * 0.8, ratePct),
+    tax: tax / 12,
+    insurance: (values.acs_median_home_insurance ?? 0) / 12,
+    electricity: values.acs_median_electricity ?? 0,
+    gas: values.acs_median_gas ?? 0,
+    water: (values.acs_median_water_sewer ?? 0) / 12,
+  };
+}
+
+export type Destination = { name: string; region_id: number | null; share: number };
+
+/** A town's leading place of work other than itself and the catch-alls ("Elsewhere in ..."). */
+export function leadingDestination(destinations: Destination[], self: number): Destination | null {
+  return destinations.find((d) => d.region_id !== self && !d.name.startsWith("Elsewhere")) ?? null;
 }

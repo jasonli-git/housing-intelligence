@@ -24,7 +24,7 @@ export default async function PriciestAndCheapestPage() {
   const rows = extremes(towns, zips, counties);
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} />
+      <Masthead affordability={{ kind: "route" }} storiesActive />
       <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
         <header className="page-head">
           <div>

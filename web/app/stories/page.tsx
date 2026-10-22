@@ -10,7 +10,7 @@ import "./stories.css";
 
 export const metadata: Metadata = pageMetadata({
   title: "Visual stories — Housing",
-  description: "New Jersey's housing figures drawn as stories: what goes with pricier towns, every town's prices side by side, and each county's priciest and cheapest places.",
+  description: "New Jersey's housing figures drawn as stories: prices and incomes, who moves and where people work, what gets built, what a month costs, taxes, mortgages, water, and how data gets revised.",
   path: "/stories",
 });
 
@@ -18,7 +18,7 @@ export const metadata: Metadata = pageMetadata({
 export default function StoriesPage() {
   return (
     <>
-      <Masthead affordability={{ kind: "route" }} />
+      <Masthead affordability={{ kind: "route" }} storiesActive />
       <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
         <header className="page-head">
           <div>

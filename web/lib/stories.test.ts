@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { centre, extremes, inside, ladder, PRICE, traitPremiums, type StoryTown, type Trait } from "./stories";
+import { centre, extremes, inside, ladder, leadingDestination, monthlyCost, PRICE, ratioBand, traitPremiums, type StoryTown, type Trait } from "./stories";
 
 const town = (id: number, county: number, price: number, extra: Record<string, number> = {}): StoryTown => ({
   id, name: `Town ${id}`, county, countyName: `County ${county}`, values: { [PRICE]: price, ...extra },
@@ -52,5 +52,33 @@ describe("placing a ZIP code", () => {
     expect(centre(square)).toEqual([0.8, 0.8]);
     expect(inside([1, 1], square)).toBe(true);
     expect(inside([3, 1], square)).toBe(false);
+  });
+});
+
+describe("the newer stories' arithmetic", () => {
+  it("bands a town by home value to income", () => {
+    expect(ratioBand(100, 250)).toBe("under3");
+    expect(ratioBand(100, 500)).toBe("3to5");
+    expect(ratioBand(100, 501)).toBe("over5");
+  });
+
+  it("builds a month only where the home value and tax bill exist", () => {
+    const flat = (p: number) => p / 100;
+    expect(monthlyCost({ [PRICE]: 500 }, 6, flat)).toBeNull();
+    const m = monthlyCost({ [PRICE]: 500, modiv_median_tax_bill: 120, acs_median_gas: 50 }, 6, flat)!;
+    expect(m.mortgage).toBe(4);
+    expect(m.tax).toBe(10);
+    expect(m.gas).toBe(50);
+    expect(m.insurance).toBe(0);
+  });
+
+  it("skips the town itself and the catch-alls for its leading destination", () => {
+    const d = [
+      { name: "Montclair", region_id: 1, share: 0.2 },
+      { name: "Elsewhere in New York", region_id: null, share: 0.1 },
+      { name: "Newark", region_id: 2, share: 0.05 },
+    ];
+    expect(leadingDestination(d, 1)?.name).toBe("Newark");
+    expect(leadingDestination(d.slice(0, 2), 1)).toBeNull();
   });
 });
