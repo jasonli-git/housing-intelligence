@@ -43,6 +43,7 @@ from hip.sources.hud import (
 )
 from hip.sources.hud_assistance import HudAssistedAdapter, HudLihtcAdapter
 from hip.sources.hud_limits import HudFhaLimitsAdapter
+from hip.sources.imagery import ElevationAdapter, TreeCanopyAdapter
 from hip.sources.infrastructure import (
     EiaAdapter,
     EnergyBurdenAdapter,
@@ -61,7 +62,8 @@ from hip.sources.nj_revaluations import NjRevaluationsAdapter
 from hip.sources.nj_sr1a import Sr1aAdapter
 from hip.sources.nj_tax_rates import NjTaxRatesAdapter
 from hip.sources.njdep import CafeAdapter, KcslAdapter, WaterAreasAdapter
-from hip.sources.tiger import TigerAdapter
+from hip.sources.osm import OsmAdapter
+from hip.sources.tiger import TigerAdapter, TigerRoadsAdapter
 from hip.sources.zillow import ZhviAdapter, ZhviBottomAdapter, ZoriAdapter
 
 # source_id -> the milestone that delivers its adapter. Sources absent from this map
@@ -152,6 +154,11 @@ IMPLEMENTED: tuple[str, ...] = (
     # Milestone 48.
     HmdaAdapter.source_id,
     HudFhaLimitsAdapter.source_id,
+    # The visual stories (2026-10-22).
+    OsmAdapter.source_id,
+    TigerRoadsAdapter.source_id,
+    TreeCanopyAdapter.source_id,
+    ElevationAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -214,6 +221,11 @@ METRIC_SOURCES: tuple[str, ...] = (
     # Milestone 48.
     HmdaAdapter.source_id,
     HudFhaLimitsAdapter.source_id,
+    # The visual stories (2026-10-22).
+    OsmAdapter.source_id,
+    TigerRoadsAdapter.source_id,
+    TreeCanopyAdapter.source_id,
+    ElevationAdapter.source_id,
 )
 
 
@@ -416,6 +428,14 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return HmdaAdapter()
     if source_id == HudFhaLimitsAdapter.source_id:
         return HudFhaLimitsAdapter()
+    if source_id == OsmAdapter.source_id:
+        return OsmAdapter()
+    if source_id == TigerRoadsAdapter.source_id:
+        return TigerRoadsAdapter()
+    if source_id == TreeCanopyAdapter.source_id:
+        return TreeCanopyAdapter()
+    if source_id == ElevationAdapter.source_id:
+        return ElevationAdapter()
     if (milestone := PLANNED.get(source_id)) is not None:
         raise UnknownSourceError(
             f"'{source_id}' has no adapter yet — it ships in Milestone {milestone}. "

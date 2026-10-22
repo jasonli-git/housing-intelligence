@@ -104,6 +104,41 @@ class TigerAdapter(SourceAdapter):
         )
 
 
+# New Jersey's 21 counties, by FIPS code: every odd number from 001 to 041. TIGER's road
+# files come one per county, and the stories read New Jersey's alone.
+NJ_COUNTIES = tuple(f"{n:03d}" for n in range(1, 42, 2))
+
+
+class TigerRoadsAdapter(SourceAdapter):
+    """Every road's name and class, county by county (the visual stories).
+
+    TIGER's `ROADS` layer: each edge with its full name ("Maple Ct") and MAF/TIGER
+    feature class, S1400 for a local neighbourhood road. A separate source from the
+    boundary spine because it serves one story — the share of a town's streets named
+    Court, Circle, Lane and the like — and is pinned to the same vintage the spine is.
+    """
+
+    source_id: ClassVar[str] = "census_tiger_roads"
+    default_vintage: ClassVar[str] = TigerAdapter.default_vintage
+    landing_format: ClassVar[str] = "shapefile"
+    states: ClassVar[tuple[str, ...] | None] = ("NJ",)
+
+    def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
+        vintage = vintage or self.default_vintage
+        return [
+            # A layer per county rather than one layer scoped by county: the fact
+            # loader attributes each figure to one release by (source, layer,
+            # vintage), and a town's street names come from its own county's file.
+            ReleaseRef(
+                source_id=self.source_id,
+                layer=f"roads_{county}",
+                vintage=vintage,
+                url=f"{BASE_URL}/TIGER{vintage}/ROADS/tl_{vintage}_{fips_for('NJ')}{county}_roads.zip",
+            )
+            for county in NJ_COUNTIES
+        ]
+
+
 def shapefile_member(ref: ReleaseRef) -> str:
     """The .shp inside a TIGER zip. Census names it after the archive, always."""
     return ref.url.rsplit("/", 1)[-1].removesuffix(".zip") + ".shp"

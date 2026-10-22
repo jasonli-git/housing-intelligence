@@ -25,6 +25,12 @@ export const STORIES = [
   { href: "/stories/what-a-house-buys-in-land", title: "What a house buys in land", blurb: "The typical home's value per acre of its lot, from Hoboken's slivers to the Pinelands' acres." },
   { href: "/stories/your-towns-time-machine", title: "Your town's time machine", blurb: "The year each town's typical home first passed $500,000, and $1 million." },
   { href: "/stories/the-winter-empty-shore", title: "The winter-empty Shore", blurb: "Towns where most homes stand empty for much of the year, kept for the summer." },
+  { href: "/stories/the-wawa-line", title: "The Wawa line", blurb: "Where Wawa gives way to QuickChek: New Jersey's north–south border, drawn by convenience stores, and what homes cost on each side." },
+  { href: "/stories/the-starbucks-index", title: "The Starbucks index", blurb: "Starbucks or Dunkin', Trader Joe's or neither: what the shops in a town say about what its homes cost." },
+  { href: "/stories/diner-capital", title: "Diner capital", blurb: "Where New Jersey's diners are, county by county and town by town, per resident." },
+  { href: "/stories/the-leafy-premium", title: "The leafy premium", blurb: "How much of the ground under homes is shaded by trees, and whether shade goes with price." },
+  { href: "/stories/court-circle-lane", title: "Court, Circle, Lane", blurb: "Towns of Courts and Circles against towns of Streets and Avenues: what street names say about when a town was built, and its prices." },
+  { href: "/stories/living-higher", title: "Living higher", blurb: "How high above the sea New Jersey's homes stand, which towns sit lowest, and whether height costs more." },
   { href: "/stories/how-data-gets-rewritten", title: "How data gets rewritten", blurb: "Every time a source revised figures it had already published, and by how much." },
 ];
 

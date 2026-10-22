@@ -245,6 +245,20 @@ METRIC_SUBJECTS: dict[str, str] = {
     "acs_married_couple_share": "context",
     "acs_with_children_share": "context",
     "acs_disability_share": "context",
+    # The visual stories (2026-10-22): shops, shade, height and street names describe
+    # the place rather than its housing.
+    "osm_wawa_count": "context",
+    "osm_quickchek_count": "context",
+    "osm_starbucks_count": "context",
+    "osm_dunkin_count": "context",
+    "osm_trader_joes_count": "context",
+    "osm_whole_foods_count": "context",
+    "osm_diner_count": "context",
+    "tree_canopy_homes_share": "context",
+    "elevation_homes_feet": "context",
+    "elevation_low_homes_share": "context",
+    "streets_court_circle_share": "context",
+    "streets_street_avenue_share": "context",
 }
 
 Answer = Literal["answered", "declined", "unanswered"]
@@ -329,6 +343,9 @@ LICENCE_RIGHTS: dict[str, Rights] = {
     # OpenFEMA's terms forbid re-identification and describe the data as for statistical
     # research or a reporting record; commerce is not addressed in words (#302).
     "OpenFEMA Terms and Conditions": Rights("yes", "yes", "yes", "unverified"),
+    # The visual stories (2026-10-22). Any use, credited; a derived database made public
+    # is offered under the ODbL too, which the counts published from it are.
+    "Open Database License (ODbL) 1.0": Rights("yes", "yes", "yes", "yes"),
     "Derived from cited sources": Rights(
         "inherited", "inherited", "inherited", "inherited"
     ),
