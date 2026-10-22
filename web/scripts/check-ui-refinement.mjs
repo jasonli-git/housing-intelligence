@@ -86,7 +86,7 @@ try {
     assert.equal(Number(latest.toFixed(digits)), Number(headline.toFixed(digits)), 'Latest plotted observation matches its headline');
   }
   assert.equal(await prices.getByRole('link', { name: 'FHFA HPI®', exact: true }).getAttribute('href'), 'https://www.fhfa.gov/data/hpi/datasets?tab=monthly-data');
-  // Since #386 the footer keeps three notices; FHFA's, with every other, is on /sources.
+  // Since #386 the footer keeps the Census, FRED and Zillow notices, and HUD's since #423; FHFA's, with every other, is on /sources.
   const sourcesPage = await context.newPage();
   await sourcesPage.goto(origin + '/sources');
   assert.equal(await sourcesPage.locator('.source-notice').filter({ hasText: 'This product uses FHFA data but is neither endorsed nor certified by FHFA.' }).count(), 1, 'Required FHFA notice on /sources once');

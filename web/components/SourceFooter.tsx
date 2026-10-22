@@ -56,9 +56,9 @@ export async function SourceFooter() {
   // `hip_derived` is the platform's own computed metrics, not a third party to credit.
   const external = sources.filter((s) => s.source_id !== "hip_derived");
   const institutions = byInstitution(external);
-  // Three notices on every page (ARCHITECTURE #386): Zillow's citation, which its terms
-  // require on each page showing its data, and the Census and FRED API notices, which
-  // theirs ask for "prominently". FRED's own series citation and every other notice are on
+  // Four notices on every page (ARCHITECTURE #386, #423): Zillow's citation, which its
+  // terms require on each page showing its data, and the Census, FRED and HUD User API
+  // notices, which theirs ask for "prominently". FRED's own series citation and every other notice are on
   // /sources; NJDEP's also sits on the exhibits drawn from its data.
   const footerSources = new Set<string>(FOOTER_NOTICE_SOURCES);
   const notices = [

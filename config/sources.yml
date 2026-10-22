@@ -697,7 +697,9 @@ sources:
         implying endorsement of any product "not-for-profit, commercial or
         otherwise", so commercial services are contemplated. A U.S. Government work.
     terms_url: https://www.huduser.gov/portal/dataset/api-terms-of-service.html
-    terms_checked: 2026-09-30
+    # Re-read 2026-10-22 in a browser: the notice is to be displayed "prominently
+    # within the application", so it is in the footer of every page (ARCHITECTURE #423).
+    terms_checked: 2026-10-22
     notices:
       - >-
         This product uses the HUD User Data API but is not endorsed or certified by HUD User.
