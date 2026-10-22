@@ -180,6 +180,21 @@ Not open work: each comes round on a date. The steps live where the row says.
       scheduled run then reports a failed build. Fix: `cd web && npm run routes:refresh`,
       review and commit. Rare: every place with any observation already has an address.
 
+- [ ] **Upgrade the housing atlas.** (owner, 2026-10-22; Director Note "Visualizing the
+      data") Town and ZIP layers from the published `geo/NJ/municipality.json` and
+      `zip.json`; many more measures than today's eight county ones (`METRICS` in
+      `web/app/atlas/page.tsx`); the two-place pin-compare replaced by a hand-off to
+      `/compare?places=…`; the "Compare counties" table kept and renamed as a ranking.
+- [ ] **Visual stories: the first three.** (owner, 2026-10-22; same note) A new section
+      with: what goes with pricier towns (each trait's home-value premium against
+      similar towns, `similar_places` giving the comparison); the price ladder (each
+      town's starter, typical and sale price, sorted); the most and least expensive town
+      and ZIP in each county.
+- [ ] **A commute finder tool.** (owner, 2026-10-22; same note) Towns by commute to NYC,
+      Philadelphia or NJ job centres (`lodes_work_*`, `work_destinations`,
+      `acs_mean_commute_minutes`) and nearness to a train (`transit_rail_homes_share`,
+      the National Transit Map's stops).
+
 ### Publication
 
 ### Documentation upkeep

@@ -722,3 +722,51 @@ lot and the building, what owning the home would cost at its likely sale value a
 tax bill, the town's rents by size, and the town's prices, flood, water and schools
 (ARCHITECTURE #427). The mockup's "last sold" date is left out: a home's own sale history
 stays gated on the Daniel's Law question, with item 7.
+
+---
+
+## Visualizing the data: tools, the atlas and visual stories
+
+**Status:** Possible direction, with three items approved (below)
+**Recorded:** 2026-10-22
+
+The owner's view: the site holds a lot of data (about 175 measures for 564 towns and 598
+ZIP codes), and tool pages alone don't do it justice. It needs visualizations, including
+experimental ones, such as a chart of which chains go with pricier homes.
+
+**Approved by the owner, 2026-10-22:**
+
+1. **Upgrade the housing atlas:** town and ZIP layers (outlines already published), many
+   more measures than today's 8 county ones, and the atlas's two-place comparison
+   replaced by a hand-off to the compare page. The atlas's ranked table stays, renamed as
+   a ranking.
+2. **Start a "Visual stories" section with three pieces:**
+   - *What goes with pricier towns*: each trait's home-value premium against similar
+     towns;
+   - *The price ladder*: every town's starter, typical and sale price, sorted;
+   - *Most and least expensive in each county*: towns and ZIPs.
+3. **A commute finder tool:** towns by commute to NYC, Philadelphia or NJ job centres,
+   and nearness to a train.
+
+**Possible, not approved:**
+
+- **Tools:** an affordable-housing eligibility checker; a mortgage reality check
+  (lending, denial reasons, FHA limits); a tax appeal helper.
+- **Atlas:** two-measure maps (such as home value against income); a transit layer; a
+  time slider of home values since 2000.
+- **Stories:** who's moving in; where the workday goes; whether New Jersey is building;
+  what the housing is; the true monthly cost; same house, different tax bill; the
+  mortgage market; water you can check; whether today is unusual; how data gets
+  rewritten.
+
+**Gated:**
+
+- **A price heat map per property, and distance to a station per house:** need parcel
+  locations (the state's shapes are behind bot protection; NJOGIS's address points need
+  their terms checked) and the Daniel's Law read. These are the house-level atlas note.
+- **National rankings** ("richest counties and ZIPs in the US", the priciest ZIP per
+  state): Zillow's national files are already downloaded, but incomes need a national
+  Census pull, and the whole idea goes beyond New Jersey and the Northeast plan. A scope
+  decision for the owner.
+
+**No tool is to be removed.**
