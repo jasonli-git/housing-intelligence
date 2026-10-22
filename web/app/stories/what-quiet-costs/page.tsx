@@ -34,7 +34,7 @@ export default async function WhatQuietCostsPage() {
     <StoryShell
       title="What quiet costs"
       lede="Every highway, rail line and flight path casts a shadow of sound. The federal transportation noise model maps it across the country; here it is laid over New Jersey's homes, town by town, and set against what homes cost."
-      note={<>Noise: the Bureau of Transportation Statistics&rsquo; National Transportation Noise Map, 2020, road, rail and aviation together: the modelled 24-hour average level, dB(A). BTS says the model is simplified and not for judging one location; it is used here to compare towns. 55 dB is the level the EPA long named for outdoor activity. Weighted by each census block&rsquo;s homes. Prices: Zillow&rsquo;s typical home value, each town against its own county.</>}
+      note={<>Noise: the Bureau of Transportation Statistics&rsquo; National Transportation Noise Map, 2022/2023 (road 2023, rail and aviation 2022), together: the modelled 24-hour average level, dB(A). BTS says the model is simplified and not for judging one location; it is used here to compare towns. 55 dB is the level the EPA long named for outdoor activity. Weighted by each census block&rsquo;s homes. Prices: Zillow&rsquo;s typical home value, each town against its own county.</>}
     >
       {!points.length ? <p className="story-note">This story is waiting for the noise map, which is downloaded by hand.</p> : (
         <>

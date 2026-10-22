@@ -1735,7 +1735,7 @@ sources:
       about 100 metres.
 
   bts_noise:
-    name: National Transportation Noise Map, 2020
+    name: National Transportation Noise Map, 2022/2023
     publisher: Bureau of Transportation Statistics
     license: Public domain (U.S. Government work)
     licence_class: public_domain
@@ -1752,16 +1752,17 @@ sources:
       scripts with a 403. BTS says the modelling is simplified and is not for judging
       noise at one location or for regulation; the story compares towns, and says so.
       Esri's re-hosted image service was not used: it carries the Esri Master License
-      Agreement, not BTS's terms.
+      Agreement, not BTS's terms. The 2022/2023 release is read, not 2020's: it is
+      newer and needs none of the mosaic repair BTS asks of 2016-2020's.
     url: https://www.bts.gov/geospatial/national-transportation-noise-map
     cadence: irregular
     adapter: hip.sources.manual_rasters:NoiseAdapter
     fallback: >-
-      The 2018 noise layers on the same page; or the University of Washington's
+      The 2020 noise layers on the same page; or the University of Washington's
       tract-level summary of the map (Seto and Huang, 2023), whose terms are unstated.
     notes: >-
-      Modelled road, rail and aviation noise, the 24-hour equivalent level in dB(A),
-      at 30 metres; nothing quieter than 45 dB is modelled.
+      Modelled road (2023), rail and aviation (2022) noise, the 24-hour equivalent level
+      in dB(A), at 30 metres; nothing quieter than 45 dB is modelled.
 
   eog_vnl:
     name: VIIRS annual night lights (VNL V2.2)

@@ -145,13 +145,18 @@ NOISE_PAGE = "https://www.bts.gov/geospatial/national-transportation-noise-map"
 
 
 class NoiseAdapter(ManualRasterAdapter):
-    """Road, rail and aviation noise, 2020: the modelled 24-hour level, LAeq, in dB(A)."""
+    """Road, rail and aviation noise, 2022/2023: the modelled 24-hour level, LAeq, dB(A).
+
+    Aviation and rail are 2022's, road 2023's, so the release is dated 2023. Not 2020's:
+    the 2022/2023 release is newer and, unlike 2016-2020's, needs no mosaic repair.
+    """
 
     source_id: ClassVar[str] = "bts_noise"
-    default_vintage: ClassVar[str] = "2020"
+    default_vintage: ClassVar[str] = "2023"
     manual_from: ClassVar[str] = NOISE_PAGE
     LAYER: ClassVar[str] = "noise"
-    PATTERN: ClassVar[str] = "CONUS_rail_road_and_aviation_noise_2020*.zip"
+    # The road, rail and aviation layer; BTS's download names vary between releases.
+    PATTERN: ClassVar[str] = "*noise*"
     # Several 30 m cells to one ~100 m pixel: the loudest stands, as an ear would hear.
     RESAMPLING: ClassVar[str] = "max"
     # BTS models nothing quieter than 45 dB; an empty cell is quieter than that, not

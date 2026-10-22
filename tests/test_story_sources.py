@@ -176,7 +176,7 @@ def test_a_downloaded_raster_is_cut_to_new_jersey(tmp_path: Path) -> None:
         nodata=-9999,
     ) as out:
         out.write(data, 1)
-    archive = tmp_path / "CONUS_rail_road_and_aviation_noise_2020.zip"
+    archive = tmp_path / "CONUS_road_rail_and_aviation_noise_2022_2023.zip"
     with zipfile.ZipFile(archive, "w") as z:
         z.write(tif, "noise/noise.tif")
 

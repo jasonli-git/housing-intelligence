@@ -51,9 +51,10 @@ summed as (
 year as (select (select max(vintage) from lights)::integer as lights_year)
 select * from (
     select 'bts_noise' as source_id, metric_id, geoid, level,
-           make_date(2020, 1, 1) as period_start, make_date(2020, 12, 31) as period_end,
+           -- Aviation and rail 2022, road 2023: dated by its newest part.
+           make_date(2023, 1, 1) as period_start, make_date(2023, 12, 31) as period_end,
            coalesce(value, 0) as value, 'block_pixel' as match_method,
-           'noise' as release_layer, '2020' as release_vintage
+           'noise' as release_layer, '2023' as release_vintage
     from summed,
          lateral (values ('noise_homes_share_55db', loud),
                          ('noise_homes_share_65db', louder)) as v(metric_id, value)
