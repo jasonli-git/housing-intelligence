@@ -66,9 +66,9 @@ def _package(root: Path, name: str) -> str:
 
 def _postgres(root: Path) -> str:
     compose = (root / "docker-compose.yml").read_text()
-    match = re.search(r"image: postgis/postgis:(\d+)-", compose)
+    match = re.search(r"image: \S*postgis:(\d+)-", compose)
     if match is None:
-        raise ValueError("docker-compose.yml names no postgis/postgis image")
+        raise ValueError("docker-compose.yml names no PostGIS image")
     return match.group(1)
 
 

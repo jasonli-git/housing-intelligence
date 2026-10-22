@@ -80,6 +80,7 @@ Not open work: each comes round on a date. The steps live where the row says.
 | Spring 2027 | LIHTC 2025: download by hand to `data/manual/hud_lihtc/LIHTCPUB_2025.xlsx`, then `hip acquire --source hud_lihtc --vintage 2025` (#307) | `agent-handoffs/affordable-housing-assistance.md` |
 | About June 2027 | Request the four utilities' 2026 reliability reports from BPU's Records Custodian; review each table into `REPORTS` (#347) | `config/sources.yml` `nj_bpu_reports` |
 | Late summer each year | Add NCES's next district directory to `CCD_LEA`; `DISTRICT_SUCCESSORS` is rechecked on read, and its rows can go once NJOGIS redraws the Henry Hudson merger (#356) | `hip.sources.community` |
+| After 2026-11-21 | Once the arm64 warehouse has run a month of weekly refreshes, remove the amd64 cluster it replaced: `docker volume rm housing-intelligence_pgdata`, the `pgdata:` line in `docker-compose.yml`, and the backup `data/backups/hip-amd64-20261021-2329.dump` (ARCHITECTURE #421) | — |
 | 2027-10-01 | Re-read the cost rules in `web/lib/costRules.ts` (HUD's FHA premiums, NJ's transfer fees, the CFPB's closing range, Freddie Mac's mortgage-insurance range), or sooner on a HUD mortgagee letter on premiums | `web/lib/costRules.ts` |
 | Before it expires | Renew the restricted OpenAI key (List models: Read; Chat completions: Request) and replace `OPENAI_API_KEY` in `.env`; $5 prepaid, auto-recharge off (#351) | OpenAI console |
 
@@ -200,15 +201,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       a DMARC record, which the domain has none of, starting at `p=none` with reports,
       so mail sent as the domain is harder to spoof. Test a reply from each address to
       an outside account before relying on it.
-- [ ] **Run Postgres natively on Apple silicon.** (found 2026-10-21) `docker-compose.yml`
-      uses `postgis/postgis:16-3.4`, which is amd64 only, so it runs under Rosetta. It
-      has crashed three times ("rosetta error: unexpectedly got a signal during
-      sigreturn": 2026-10-01 twice, 2026-10-21), the last a few seconds into
-      `make publish`'s page export, failing that deploy until a rerun. Move to an arm64
-      image with PostgreSQL 16 and PostGIS 3.4 (a multi-arch PostGIS build, or
-      `postgres:16` with PostGIS installed), carrying the data over with
-      `pg_dump`/`pg_restore` rather than reusing the amd64 data directory. Then run the
-      full suite and a publish.
 ### Open decisions — not scheduled, not decided
 
 - [ ] **Adopt TIGER 2026 — not yet (owner, 2026-10-09).** (#360) Census published

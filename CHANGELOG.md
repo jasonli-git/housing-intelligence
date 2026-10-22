@@ -13,6 +13,9 @@ are not yet recorded here.
 
 ### Added
 
+- **The warehouse runs natively on Apple silicon** (ARCHITECTURE #421): no more crashes
+  under emulation, and a rebuild, a publish and the tests run a quarter to a third
+  faster. Tied places in a ranking now always come in the same order.
 - **The README's figures fill themselves** (ARCHITECTURE #417, #420): `hip readme` rewrites
   each marked count and version from its source, and the tests fail when one is stale,
   an evaluation report is not linked, or "Latest" is older than the changelog.

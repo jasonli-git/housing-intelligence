@@ -2,9 +2,18 @@
 # under edit is not behind a container rebuild.
 # Values come from .env; copy .env.example first.
 
+# Pinned so the volume's name does not depend on the checkout's folder: a worktree or a
+# renamed clone reaches the same warehouse.
+name: housing-intelligence
+
 services:
   postgres:
-    image: postgis/postgis:16-3.4
+    # Native arm64 since 2026-10-21 (ARCHITECTURE #421). The official postgis/postgis
+    # image is amd64 only, and under Rosetta it crashed three times ("rosetta error:
+    # unexpectedly got a signal during sigreturn"), once failing a deploy. This is the
+    # same PostgreSQL 16 and PostGIS 3.4, built multi-arch by a docker-postgis
+    # maintainer, pinned by digest.
+    image: imresamu/postgis:16-3.4-bookworm@sha256:6da75969915039b7356058b4310d43fde88c275ada982c2dfee29da68445ff4d
     container_name: hip-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-hip}
@@ -19,7 +28,7 @@ services:
       # Opt-in on purpose: switching the source does not migrate anything, it points
       # Postgres at a different directory, and an empty one initialises a new cluster.
       # Anyone who never sets the variable keeps the volume they already have.
-      - ${HIP_PGDATA:-pgdata}:/var/lib/postgresql/data
+      - ${HIP_PGDATA:-pgdata_arm64}:/var/lib/postgresql/data
     healthcheck:
       test:
         - CMD-SHELL
@@ -31,5 +40,8 @@ services:
 
 # Still declared, because that is what the default above resolves to. A bind-mount
 # path bypasses this block entirely.
+# `pgdata` is the amd64 cluster this replaced, kept until the arm64 one has run a release
+# cycle; the data moved across by pg_dump and pg_restore, not by reusing the directory.
 volumes:
+  pgdata_arm64:
   pgdata:
