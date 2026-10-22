@@ -155,9 +155,14 @@ export function HousingAtlas({entries,artifactUrl,counties,stateMeasures,states}
   const {box}=frame;
   const statesFrame=useMemo(()=>contiguous.length?fit(contiguous,{width:box.w,height:box.h,padding:.94}):{lon:-96,lat:38,scale:1150},[contiguous,box.w,box.h]);
   // New Jersey's counties keep their hand-set centre, scaled from the 900×1000 frame.
-  const countyScale=19000*Math.min(box.w/900,box.h/1000);
+  // New Jersey fills the open area, whichever layer is shown: fitted to its own outlines as
+  // the nation is to the states', rather than a hand-set centre and scale that left much
+  // of the frame empty (owner, 2026-10-22).
+  const njSource=level==="states"?null:outlinesByLevel[level]??outlinesByLevel.county??null;
+  const njFitOutlines=useMemo(()=>unpack(njSource??[]),[njSource]);
+  const njFrame=useMemo(()=>njFitOutlines.length?fit(njFitOutlines,{width:box.w,height:box.h,padding:.97}):{lon:-74.65,lat:40.15,scale:19000*Math.min(box.w/900,box.h/1000)},[njFitOutlines,box.w,box.h]);
   const nj=level!=="states";
-  const targetCamera=useMemo(()=>({lon:nj?-74.65:statesFrame.lon,lat:nj?40.15:statesFrame.lat,scale:nj?countyScale:statesFrame.scale,zoom:viewport.scale,x:viewport.x,y:viewport.y}),[level,statesFrame,countyScale,viewport]);
+  const targetCamera=useMemo(()=>({lon:nj?njFrame.lon:statesFrame.lon,lat:nj?njFrame.lat:statesFrame.lat,scale:nj?njFrame.scale:statesFrame.scale,zoom:viewport.scale,x:viewport.x,y:viewport.y}),[nj,statesFrame,njFrame,viewport]);
   const camera=useAtlasCamera(targetCamera,dragging||!restored);
   // The projection only: pan and zoom are the group's transform, so the outlines are not
   // re-projected on every frame of a pan.
@@ -193,10 +198,13 @@ export function HousingAtlas({entries,artifactUrl,counties,stateMeasures,states}
       if(window.matchMedia("(min-width: 901px)").matches){
         const controls=atlas?.querySelector(".atlas-controls")?.getBoundingClientRect();
         const results=atlas?.querySelector(".atlas-results")?.getBoundingClientRect();
-        if(controls)top=controls.bottom-area.top;
         const legend=atlas?.querySelector(".atlas-legend")?.getBoundingClientRect();
         if(results)right=results.left-area.left;
-        left=16;bottom=legend?legend.top-area.top-8:bottom-24;
+        // New Jersey is tall and narrow, so it takes the full height beside the controls
+        // and legend rather than the strip below them (owner, 2026-10-22); the wide nation
+        // keeps the strip.
+        if(atlas?.getAttribute("data-level")!=="states"&&controls&&legend){left=Math.max(controls.right,legend.right)-area.left+12;top=16;bottom=area.height-16;}
+        else{if(controls)top=controls.bottom-area.top;left=16;bottom=legend?legend.top-area.top-8:bottom-24;}
       }
       const next={x:left*unit,y:top*unit,w:Math.max(200,(right-left)*unit),h:Math.max(200,(bottom-top)*unit)};
       setFrame(current=>current.width===width&&Math.abs(current.box.x-next.x)<1&&Math.abs(current.box.y-next.y)<1&&Math.abs(current.box.w-next.w)<1&&Math.abs(current.box.h-next.h)<1?current:{width,height:1000,box:next});
@@ -207,7 +215,7 @@ export function HousingAtlas({entries,artifactUrl,counties,stateMeasures,states}
     for(const panel of atlas?.querySelectorAll(".atlas-controls, .atlas-results, .atlas-legend")??[])observer.observe(panel);
     measure();
     return()=>observer.disconnect();
-  },[]);
+  },[level]);
   // The low-resolution world silhouette is useful at globe scale, not parcel-close zoom.
   const land=useMemo(()=>nj?[]:scene(perspective,WORLD_LAND,()=>0),[perspective,nj]);
   const levelInfo=ATLAS_LEVELS.find(l=>l.key===level);
@@ -278,7 +286,7 @@ export function HousingAtlas({entries,artifactUrl,counties,stateMeasures,states}
   return <section className="housing-atlas" aria-label="Housing atlas map and comparison" data-level={level} style={{"--atlas-panel-width":`${panelWidth}px`,"--atlas-sheet-height":`${sheetHeight}px`} as CSSProperties}>
     <div className="atlas-controls" ref={controls}>
       <div className="atlas-layer-row">{nj?<><div className="atlas-levels" role="group" aria-label="New Jersey layer">{ATLAS_LEVELS.map(l=><button key={l.key} type="button" aria-pressed={level===l.key} onClick={()=>{setCountySearch("");changeLevel(l.key);}}>{l.label}</button>)}</div><button type="button" className="atlas-exit" onClick={()=>{setCountySearch("");changeLevel("states");}}><span aria-hidden="true">←</span> United States</button></>:<span className="atlas-layer-name">Showing the United States<small> · Zoom in on New Jersey, or <button type="button" className="atlas-inline-link" onClick={()=>changeLevel(stateLayer)}>open it</button></small></span>}</div>
-      <div className="atlas-filter-row"><label className="atlas-measure-field"><span>Measure</span><div className="atlas-measure-control"><select aria-label="Measure" value={measure.metric_id} onChange={e=>setMetric(e.target.value)}>{nj?GROUPS.map(g=>{const inGroup=levelEntries.filter(e=>e.group===g.title);return inGroup.length?<optgroup key={g.key} label={g.title}>{inGroup.map(e=><option key={e.metric_id} value={e.metric_id}>{FRIENDLY[e.metric_id]??e.label}</option>)}</optgroup>:null;}):stateMeasures.filter(m=>m.latest.rows.length>0||Object.keys(m.windows).length>0).map(m=><option key={m.metric_id} value={m.metric_id}>{FRIENDLY[m.metric_id]??m.label}</option>)}</select><button ref={measureLauncher} className="atlas-catalogue-button" type="button" aria-label="Browse all measures" title="Browse all measures" aria-expanded={moreMeasures} aria-controls="atlas-measure-picker" onClick={()=>{setMoreMeasures(!moreMeasures);setMeasureSearch("");}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>All</span></button></div></label>
+      <div className="atlas-filter-row"><label className="atlas-measure-field"><span>Measure</span><div className="atlas-measure-control"><button ref={measureLauncher} className="atlas-measure-button" type="button" aria-haspopup="dialog" aria-expanded={moreMeasures} aria-controls="atlas-measure-picker" onClick={()=>{setMoreMeasures(!moreMeasures);setMeasureSearch("");}}><span>{FRIENDLY[measure.metric_id]??measure.label}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div></label>
       <label className="atlas-view-field"><span>Time</span><select aria-label="View" value={mode} onChange={e=>setMode(e.target.value as AtlasMode)}><option value="latest">Latest figure</option>{WINDOWS.filter(w=>measure.windows[w.key]||mode===w.key).map(w=><option key={w.key} value={w.key}>{w.label} · change</option>)}</select></label></div>
       {moreMeasures&&<div id="atlas-measure-picker" className="atlas-measure-picker" ref={fitPicker} role="region" aria-label="Measure catalogue">
         <header><div><small>MEASURES</small><h2>Choose a measure</h2></div><button type="button" aria-label="Close measures" onClick={()=>{setMoreMeasures(false);measureLauncher.current?.focus({preventScroll:true});}}>×</button></header>
