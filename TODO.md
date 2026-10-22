@@ -221,13 +221,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       (`uv run hip footprint` measures storage on demand), so `src/hip/footprint.py`'s
       docstring and a future sitrep run no longer have a README section to write into.
 
-- [ ] **ARCHITECTURE's Warehouse Schema stops at migration 0018.** (found 2026-09-26;
-      narrowed 2026-10-21, when the Module Layout was rebuilt from the repository) Its
-      list of migrations since the DDL block names 0012–0018, and the block itself was
-      regenerated on 2026-09-10; migrations 0019–0037 appear in neither, and its counts
-      are from 2026-09-10. Regenerate the block from the live tables, or cut it to the
-      tables a reader needs and point at the migrations.
-
 ### Housekeeping
 
 - [ ] **Reply as housing@ and privacy@ from Gmail.** (#357, owner 2026-10-09) Both
