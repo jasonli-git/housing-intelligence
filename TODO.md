@@ -75,7 +75,7 @@ Not open work: each comes round on a date. The steps live where the row says.
 | Each June and December | FCC's broadband files are downloaded by hand, so no refresh notices a new filing (#360, #372). Look for an as-of date or revision newer than the one held | County and place summaries into `data/manual/fcc_bdc/`, then `hip acquire --source fcc_bdc --vintage <as-of>_<revision>`; the two New Jersey location files (served/unserved and fiber) from the National Broadband Map into `data/manual/fcc_bdc_locations/` through a browser, since scripts get a 403 |
 | Each January | DOE's LEAD energy burden (`doe_lead`) is pinned to its 2022 data, and a newer edition would be a new OpenEI submission at a new address (#360). Look for one | If there is one, review its county file against `EnergyBurdenAdapter` before moving the URL |
 | Each October | Review the 22 place photos (#368): each Commons page still exists under the same licence, and each scene is still current | `web/lib/photos.json`; a changed file already stops `make publish` |
-| About December 2026 | SAIPE's 2025 income estimates extend the long-run comparison past 2024 (#348) | automatic on refresh |
+| About December 2026 | SAIPE's 2025 income estimates extend the long-run comparison past 2024 (#348). Then recheck Hudson's, withheld while FHFA's index over SAIPE income (+16.3%, 2019–2024) and Zillow's value over ACS income (−2.3%) disagree; kept withheld by the owner 2026-10-21 | automatic on refresh; Hudson by hand |
 | With each CHAS release (about a year after 2025-12-23) | Download the county and town ZIPs and the dictionary; review Table 8; add to `CHAS_BULK_REVIEWED` (#353) | `config/sources.yml` `hud_chas_bulk` |
 | Spring 2027 | LIHTC 2025: download by hand to `data/manual/hud_lihtc/LIHTCPUB_2025.xlsx`, then `hip acquire --source hud_lihtc --vintage 2025` (#307) | `agent-handoffs/affordable-housing-assistance.md` |
 | About June 2027 | Request the four utilities' 2026 reliability reports from BPU's Records Custodian; review each table into `REPORTS` (#347) | `config/sources.yml` `nj_bpu_reports` |
@@ -85,11 +85,6 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Correctness and data integrity
 
-- [ ] **Hudson's long-run comparison is withheld.** (M52, #348) FHFA's index over SAIPE
-      income rose 16.3% over 2019–2024 while Zillow's value over ACS income fell 2.3%:
-      Hudson's mix leans to condominiums, which FHFA's mortgage-based index and Zillow's
-      typical value weigh differently. Revisit if a later year brings them into line, or
-      decide whether a disagreement of a few points near zero should withhold at all.
 - [ ] **Crime newer than 2023.** (M47, #320) NJSP's newer reporting route warns a zero
       can be delinquent reporting; audit its missing-report codes and schema before
       replacing the reviewed 2023 workbook. A town's own figures need an evidenced
@@ -110,14 +105,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       County). A claim-level field that names the census vintage, if FEMA adds one, or
       its rounded coordinates, would settle them; recheck when OpenFEMA's dictionary
       changes.
-
-- [ ] **HUD income limits are dated by calendar year in the facts.** (found
-      2026-09-23; #350) What a reader sees now names HUD's effective date — `/freshness`
-      says "in force since 1 May 2026", the household section "in force from" — but
-      `stg_hud_income_limits` still dates each year 1 January to 31 December, so the
-      packets' AMI windows and `price_to_ami`'s periods do. Re-dating the facts by
-      effective date means anchoring `price_to_ami`'s pairing on each year's start and
-      accepting windows that end in the following year ("2022–2027"). Owner's decision.
 
 ### Evaluation harness
 
@@ -202,16 +189,17 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Documentation upkeep
 
-- [ ] **Which README figures are mechanically derivable has never been settled.** The
-      status counts (places and sources), the Tech Stack and the evaluation list have a
-      queryable or file-based source; the status narrative, the Features descriptions and
-      the setup prose do not. Deciding the boundary is what makes any "regenerate on
-      deploy" work scopeable, and ARCHITECTURE #175 settles only the images half. The
-      README was cut from 1,095 lines to about 250 on 2026-10-21: the milestone-by-
-      milestone features, sample output and status commentary went (CHANGELOG and ROADMAP
-      hold them), and so did the stale mac-sitrep resource table and the storage table
-      (`uv run hip footprint` measures storage on demand), so `src/hip/footprint.py`'s
-      docstring and a future sitrep run no longer have a README section to write into.
+- [ ] **Fill the README's numbers and check its writing.** (decided by the owner
+      2026-10-21, ARCHITECTURE #417, Director Note "Decision: README numbers are filled,
+      its writing is checked") A command (e.g. `hip readme`) rewrites the README's
+      figures from their sources: sources and places from the warehouse, tools and the
+      version from the site and CHANGELOG, the Tech Stack's versions from
+      `.python-version`, `pyproject.toml`, `web/package.json` and `docker-compose.yml`,
+      and the evaluation list from `reports/evaluation/`. A test fails if any differs,
+      or if the "Latest" line is older than CHANGELOG's newest entry. The writing stays
+      by hand. The README was cut from 1,095 lines to about 250 on 2026-10-21, and its
+      "Latest" and "Next" lines are already behind (they describe #201–#211 and a
+      hosting decision since put on hold).
 
 ### Housekeeping
 
@@ -256,29 +244,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       takes the cautious reading; whether an address with no name is covered, and whether
       the lookup needs more, is unsettled and was not reviewed by counsel.
 
-- [ ] **How should a cross-region comparison handle two price sources?** (M25, opened
-      2026-09-20 by the decision in ARCHITECTURE #187) The cost card may now be priced
-      from Zillow's index or from a transaction median depending on the region, but
-      `price_to_income` and `price_to_ami` are still computed from Zillow alone — so 163
-      municipalities have a monthly cost and no price-to-income, and any attempt to give
-      them one would rank a town measured on deeds against a neighbour measured on an
-      index. The owner's condition was explicit: keep the fallback out of cross-region
-      rankings until the comparison handles the difference. Options are to publish two
-      separately-labelled ratio families, to rank only within a price source, or to leave
-      the gap and say so on the page. **Leaning**, relayed by the owner 2026-09-20: two
-      families, and eventually a transaction-based price-to-income computed for *every*
-      qualifying town including those Zillow covers, so a reader compares one measure
-      across the whole state rather than a different one per town — with the Zillow-based
-      measure kept alongside it. That is a larger change than closing the gap, and it is
-      schedulable separately from the cards that are now live. `tests/test_nj_sr1a.py` fails if the input is added
-      before this is settled. **Not decided.**
-- [ ] **The 21 committed county reports are a snapshot that goes stale silently.**
-      (M6; restated 2026-09-27) `reports/**` is gitignored, but the three evaluation
-      reports and the 21 county reports were force-added and are tracked. The county
-      reports were last regenerated on 2026-10-08 (#128, #129), by hand; the weekly run
-      leaves them alone (it packs without `--report`, #227), so they drift between
-      such passes. Either regenerate and commit them whenever the data moves, or
-      stop tracking them and link the published reports. **Not decided.**
 - [ ] **`place` versus `cousub` outside the strong-MCD states.** Not yet a live
       decision — the Northeast states of Milestone 14 are all strong-MCD, Milestone 15
       stops at county level, and both are unscheduled. It becomes blocking the first time municipality-level data is wanted

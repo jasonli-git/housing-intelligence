@@ -648,3 +648,23 @@ A possible first step, if pursued: check feasibility on one county by fetching i
 shapes, measuring the size, and building a test tile file.
 
 Do not implement yet.
+
+---
+
+## Decision: README numbers are filled, its writing is checked
+
+**Status:** Approved direction
+**Recorded:** 2026-10-21
+
+Settles the open question in *README audit and documentation auto-maintenance* above,
+which is left as written.
+
+- Every number and list in the README that has a source in the data or config (counts of
+  sources, places and tools, the version, the Tech Stack's versions, the list of
+  evaluations) is filled by a command, and a test fails if any is wrong.
+- The writing (the "Latest" line, the features) stays hand-written, but the test also
+  fails when "Latest" is older than the newest CHANGELOG entry.
+- "Automatic" means that command and test, run with each change: nothing runs on GitHub
+  at merge, and a bot committing to `main` was ruled out (ARCHITECTURE #175).
+
+Tracked in TODO.md and ARCHITECTURE #417.

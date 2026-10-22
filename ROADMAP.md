@@ -112,8 +112,8 @@ county level, which is where large national geometry would have been. **No Versi
 milestone as scoped requires an external volume.** What does justify the work is a
 defect: `Settings.reports_dir` derives from `data_dir.parent`
 ([src/hip/config.py:140](src/hip/config.py:140)), so relocating the data root silently
-relocates `reports/` with it — and `reports/regions/5y/*.md` are tracked in git and
-linked from the README. It is dormant until someone moves the data root, and a trap
+relocates `reports/` with it — and `reports/regions/5y/*.md` were then tracked in git and
+linked from the README (no longer, since #418). It is dormant until someone moves the data root, and a trap
 when they do.
 
 **Milestone 12 precedes 14 because of wall-clock, not price.** Gemma 4 E4B took
