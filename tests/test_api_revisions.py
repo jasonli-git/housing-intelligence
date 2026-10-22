@@ -2,8 +2,8 @@
 
 The endpoint's size must be bounded by the refreshes it covers, not by how much a
 publisher revised — the first refresh that recorded revisions wrote 313,536 of them.
-The synthetic tests write revisions dated 2099 so they are the newest batch, and roll
-back, so nothing they write persists.
+The synthetic tests write revisions dated 2099, into empty copies of `fact_revision` and
+`method_changes` (`shadowed_warehouse`), so the served tables are never written.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from hip.api.main import app
 from hip.api.routers.revisions import EXAMPLES, revision_report
 from hip.warehouse.db import get_engine, probe
+from tests.warehouse_scratch import shadowed_warehouse
 
 client = TestClient(app)
 
@@ -32,11 +33,11 @@ DAY = "2099-01-02 12:00:00+00"
 
 @pytest.fixture
 def session() -> Iterator[Session]:
-    with Session(get_engine()) as session:
-        try:
-            yield session
-        finally:
-            session.rollback()
+    with (
+        shadowed_warehouse(get_engine(), ("fact_revision", "method_changes")) as engine,
+        Session(engine) as session,
+    ):
+        yield session
 
 
 def _revise(

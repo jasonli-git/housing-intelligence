@@ -141,18 +141,6 @@ Not open work: each comes round on a date. The steps live where the row says.
       high, is fixed in the packet's Markdown (#413), confirmed on those four counties
       (`reports/evaluation/readings-v10.md`: all four would publish, correctly).
 
-### Test coverage
-
-- [ ] **Some integration tests still write to the served warehouse.** (narrowed
-      2026-10-20, #208) The analytics rebuild tests now run in a disposable
-      `hip_test_<uuid>` schema (`tests/warehouse_scratch.py`), checked by
-      `scripts/verify_analytics_isolation.py`. Still on the real database:
-      `test_api_revisions.py`, `test_revisions.py` and `test_correctness_pass.py` mutate
-      real rows and roll back (row locks, advanced sequences); `test_api_explanations.py`
-      and `test_freshness.py` commit fixtures and clean up after; `test_publish.py`'s
-      licence guard updates and rolls back. None rebuilds analytics. Move them to the
-      scratch schema when next touched.
-
 ### API and scale limits
 
 - [ ] **A ranking over 1,000 regions stops the publish.** (pre-M12 review; narrowed
@@ -233,12 +221,12 @@ Not open work: each comes round on a date. The steps live where the row says.
       (`uv run hip footprint` measures storage on demand), so `src/hip/footprint.py`'s
       docstring and a future sitrep run no longer have a README section to write into.
 
-- [ ] **ARCHITECTURE's Module Layout stops at 2026-09-11, plus Milestones 27 and 28's
-      files.** (found 2026-09-26) Files from Milestones 24–26 and 29 are missing —
-      `sources/nj_sr1a.py` and `sources/nj_tax_rates.py` among them — and its counts
-      are stale (15 sources and 31 metrics; 16 and 38 today). Its schema DDL block
-      predates migrations 0012–0019, which the section says. The status lines at the top
-      were brought up to date in Milestone 30.
+- [ ] **ARCHITECTURE's Warehouse Schema stops at migration 0018.** (found 2026-09-26;
+      narrowed 2026-10-21, when the Module Layout was rebuilt from the repository) Its
+      list of migrations since the DDL block names 0012–0018, and the block itself was
+      regenerated on 2026-09-10; migrations 0019–0037 appear in neither, and its counts
+      are from 2026-09-10. Regenerate the block from the live tables, or cut it to the
+      tables a reader needs and point at the migrations.
 
 ### Housekeeping
 

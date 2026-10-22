@@ -13,18 +13,21 @@ would.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
-from sqlalchemy import text
+from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session
 
 from hip.warehouse.db import get_engine, probe
+from tests.warehouse_scratch import shadowed_warehouse
 
 pytestmark = pytest.mark.skipif(not probe().migrated, reason="needs a migrated warehouse")
 
 
 @pytest.fixture
 def figure() -> tuple[int, str, object]:
-    """One real observation to revise. Every test rolls back, so nothing persists."""
+    """One real observation to revise, in a copy (see `engine`)."""
     with Session(get_engine()) as session:
         row = session.execute(
             text(
@@ -37,13 +40,33 @@ def figure() -> tuple[int, str, object]:
     return (row[0], row[1], row[2])
 
 
+@pytest.fixture
+def engine(figure: tuple[int, str, object]) -> Iterator[Engine]:
+    """The figure's row and an empty `fact_revision`, cloned with the real triggers.
+
+    A revision written to the served tables, even one rolled back, holds row locks and
+    advances `fact_revision`'s sequence; these tests write only the copies.
+    """
+    region, metric, period = figure
+    with shadowed_warehouse(
+        get_engine(),
+        ("fact_metric_observation", "fact_revision"),
+        copy={
+            "fact_metric_observation": f"region_id = {int(region)} AND "
+            f"metric_id = '{metric}' AND period_start = '{period}'"
+        },
+        triggers=True,
+    ) as shadow:
+        yield shadow
+
+
 def _revisions(session: Session, key: tuple[int, str, object]) -> list[tuple]:
     """Every revision recorded for one figure, oldest first.
 
-    Tests compare *before and after* rather than against an empty table: a real refresh
-    has already written 313,536 rows here, and whichever figure the fixture picks may
-    well be one of the 294,469 Zillow restated. Asserting an absolute count passed only
-    on a warehouse this feature had never run against.
+    Tests compare *before and after* rather than against an empty table. The copy starts
+    empty, but the served table held 313,536 rows after its first real refresh, and
+    asserting an absolute count passed only on a warehouse this feature had never run
+    against; relative counts hold on either.
     """
     return list(
         session.execute(
@@ -58,8 +81,8 @@ def _revisions(session: Session, key: tuple[int, str, object]) -> list[tuple]:
     )
 
 
-def test_a_changed_value_is_recorded_with_both_sides(figure) -> None:  # type: ignore[no-untyped-def]
-    with Session(get_engine()) as session:
+def test_a_changed_value_is_recorded_with_both_sides(figure, engine) -> None:  # type: ignore[no-untyped-def]
+    with Session(engine) as session:
         before = session.execute(
             text(
                 "SELECT value FROM fact_metric_observation "
@@ -84,10 +107,10 @@ def test_a_changed_value_is_recorded_with_both_sides(figure) -> None:  # type: i
         session.rollback()
 
 
-def test_an_unchanged_re_run_records_nothing(figure) -> None:  # type: ignore[no-untyped-def]
+def test_an_unchanged_re_run_records_nothing(figure, engine) -> None:  # type: ignore[no-untyped-def]
     """The common case, and it has to stay cheap: a refresh over data that has not moved
     upserts every row and must write no revisions at all."""
-    with Session(get_engine()) as session:
+    with Session(engine) as session:
         before = _revisions(session, figure)
         session.execute(
             text(
@@ -121,9 +144,9 @@ def test_a_figure_cannot_be_withdrawn_today(figure) -> None:  # type: ignore[no-
     assert nullable == "NO"
 
 
-def test_every_revision_names_the_release_on_both_sides(figure) -> None:  # type: ignore[no-untyped-def]
+def test_every_revision_names_the_release_on_both_sides(figure, engine) -> None:  # type: ignore[no-untyped-def]
     """A revision that cannot say which release said what is not provenance."""
-    with Session(get_engine()) as session:
+    with Session(engine) as session:
         session.execute(
             text(
                 # The fixture can select a valid zero; doubling it changes nothing.
@@ -137,10 +160,10 @@ def test_every_revision_names_the_release_on_both_sides(figure) -> None:  # type
         session.rollback()
 
 
-def test_a_withdrawn_figure_is_recorded_as_revised_to_nothing(figure) -> None:  # type: ignore[no-untyped-def]
+def test_a_withdrawn_figure_is_recorded_as_revised_to_nothing(figure, engine) -> None:  # type: ignore[no-untyped-def]
     """Milestone 34 (migration 0021): the loader deletes a figure its release no longer
     gives, and the deletion is recorded rather than the figure simply vanishing."""
-    with Session(get_engine()) as session:
+    with Session(engine) as session:
         value, release = session.execute(
             text(
                 "SELECT value, release_id FROM fact_metric_observation "

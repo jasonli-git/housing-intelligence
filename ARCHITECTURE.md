@@ -494,184 +494,197 @@ source adapters, because no state code is hard-coded into schema or analytics (#
 | 411 | **The status link says when the sources were last checked, from a file the weekly check uploads whether or not it deploys.** `scripts/scheduled_refresh.py` calls `make publish-status` after every successful `hip refresh` (exit 0, or 3 with a publisher out of reach), a quiet week included: `{"checked_at", "outcome"}` to `status.json` at the data bucket's root, five-minute cache. `make deploy`'s sync excludes it, so a deploy never deletes it, and it is not in the manifest. `SiteStatus` (now a client component) reads it: "Sources checked Oct 17", "… · some unreachable", or "Source check overdue · last Oct 1" past nine days (`web/lib/siteStatus.ts`); without it, the old "Source checks scheduled Fridays". A failed upload notifies and never fails the run. Decided with the owner 2026-10-21. | The link named the schedule and the footer the build date, so a quiet Friday — which republishes nothing — left no trace a reader could see (PR #45, #251). A file the check writes, beside the data rather than in the build, records the run itself. Nine days lets one Friday run late before the link says so. |
 | 412 | **A reading's ranking words must match the packet's ranks.** `hip.packets.comparative`, applied with the causal rule in `consumer_problems` (`hip.eval.formats`). By clause, each ranking phrase — "the highest", "among the highest", "near the top", "relatively low", "above average", "stands out" — is a claim about the measure it names, found by packet label or a short list of everyday words ("rents", "homeownership", "home value compared with income"), the nearest named before it (or the one it directly modifies), with any joined by "and". It passes when any measure the words could mean stands where the phrase says, margins allowed: first or last for "the highest/lowest", the end quarter for "among / near", the half for "relatively / above average". Words read value, so where lower is better the packet's best-first rank is turned over; a clause about rank ("ranks near the bottom") passes when it holds by value or by standing, since either reading is the data's. A phrase naming no ranked measure is refused; a heading's "What stands out here?", a bare "stands out", and a comparison among the place's own changes pass. Decided with the owner 2026-10-21, after a figure-only rule refused all 21 published readings. | Binding checks numbers, and the consumer reading ranks in words on purpose (at most three figures an answer), so the words are what must be checked. Measured on the 21 published readings: 4 refused, each calling a low home value to income ratio high (Gloucester, Burlington, Camden, Salem) — the models read a best-first rank 2 as "high". On 489 benchmark answers written against older packets and other questions, 33. Deterministic, like #337. A mislabelled measure and a causal claim in words remain unchecked (TODO). |
 | 413 | **The packet's Markdown says a current value's rank by value where lower is better: "3rd highest of 21", "1st–5th lowest of 21 (among the lowest values)".** `value_rank_label` (`hip.packets.report`), in the Current values table of `render_markdown` — what the readings' models read and the downloadable Markdown report shows. Counted from the nearer end; every other measure ranks largest first already and reads as before. The consumer prompt adds: say where a place ranks only as the packet's words put it. The packet JSON and the change table (best-first, as its note says) are unchanged. Decided with the owner 2026-10-21. | #412 found four published readings calling a low home value to income ratio high: the packet showed Salem's as "2nd of 21 (near the top)", best-first, and the models read it as near the highest. Fixing the words the model reads removes the cause, so the new check refuses less, rather than catching the same misreading every regeneration. Confirmed by `reports/evaluation/readings-v10.md` (GPT-6 Luna on Gloucester, Burlington, Camden and Salem, $0.005): all four publish, the two that rank the ratio calling it among the lowest, as it is. |
+| 414 | **A test that writes the warehouse writes a scratch schema, never the served tables.** `tests/warehouse_scratch.py`: `scratch_warehouse` clones every table empty, for the analytics rebuilds; `shadowed_warehouse` clones only the tables a test writes, searched before `public`, so it reads everything else as served. Public views over a shadowed table are recreated over the clone (a view is bound to its table: `fact_revision_shown` kept reading the served revisions), and `triggers=True` recreates the tables' own triggers, so the revision tests exercise the real `record_fact_revision`. Moved onto it on 2026-10-21: the revision, margin, licence-guard, discovery and reading tests, which had mutated real rows and rolled back (row locks, an advanced `fact_revision` sequence) or committed and restored (which once deleted Atlantic County's reading). | A test writing a shadowed table's neighbour still reaches `public`; nothing enforces that, so the helper's docstring says it. Rejected: a second database per run (a full copy of several GB); keeping rollbacks (locks and sequences still move). |
 
 ## Module Layout
 
-What exists as of 2026-09-11, with Milestone 27's files added on 2026-09-26; files from
-Milestones 24–26 and 29 are not all listed yet (TODO.md). Every pipeline package holds
-real modules; the boundary rule in `tests/test_module_boundaries.py` enforces the import
-direction between them. Planned files are marked with the milestone that adds them.
+What exists as of 2026-10-21, rebuilt from the repository that day. Every Python module
+is listed; `web/` is listed by directory, since its 135 components and 91 `lib` modules
+change with nearly every page. Every pipeline package holds real modules; the boundary
+rule in `tests/test_module_boundaries.py` enforces the import direction between them.
 
 ```text
 housing-intelligence/
 ├── .python-version            # pinned patch version (#18)
 ├── config/
-│   ├── sources.yml            # 15 sources: url, cadence, license, adapter name
+│   ├── sources.yml            # 54 sources: url, cadence, licence, states, adapter name
 │   ├── geography.yml          # in-scope states and levels (#14)
-│   ├── metrics.yml            # 31 metrics: label, unit, frequency, direction
-│   └── evaluation.yml         # candidates, scenarios, rubric, judge (#56)
+│   ├── metrics.yml            # 173 metrics: label, unit, frequency, direction
+│   └── evaluation.yml         # candidates, preference lists, prices, rubric (#56)
 ├── schemas/
 │   └── packet-v1.json         # published packet contract, generated from code (#43)
 ├── src/hip/
-│   ├── cli.py                 # Typer entrypoint: 8 stages, explain, publish, footprint, schema, check-config
+│   ├── cli.py                 # Typer entrypoint: the pipeline stages, refresh, publish,
+│   │                          #   rollback, explain, eval and upkeep commands
+│   ├── eval_cli.py            # `hip eval ...` and `hip explain`; optional deps lazily
 │   ├── config.py              # settings, YAML loading, env resolution, STATE_FIPS
 │   ├── duck.py                # DuckDB session + /vsizip path helper (#23)
 │   ├── footprint.py           # bytes per storage tier and per state (#66)
 │   ├── completeness.py        # the completeness standing check (#225)
 │   ├── refresh.py             # acquire every source, report what moved (#190, #223)
 │   ├── notify.py              # Pushover, for the scheduled runs (#218)
+│   ├── notice.py              # NOTICE's source list, generated from sources.yml
 │   ├── publish.py             # API surface rendered to static files (#67)
+│   ├── rollback.py            # undo the last deploy's data half (#359)
+│   ├── parcels.py             # the tax lookup's per-town files for R2 (M38)
+│   ├── addresses.py           # addresses normalised to meet the assessor's (M38)
+│   ├── removals.py            # Daniel's Law withdrawals from the lookup (M38, #295)
 │   ├── sources/
 │   │   ├── base.py            # SourceAdapter, retry, content-addressed cache (#10)
-│   │   ├── registry.py        # which sources have adapters; PLANNED names the rest
-│   │   ├── tiger.py           # Census TIGER/Line: 5 layers (#22)
-│   │   ├── zillow.py          # ZHVI + ZORI over county, city, ZIP
-│   │   ├── census_acs.py      # 5-year estimates at county and cousub (#31, #108)
+│   │   ├── registry.py        # which sources have adapters, and how to build them
+│   │   ├── arcgis.py          # any ArcGIS layer by id batches, geometry as GeoJSON (#301)
+│   │   ├── xlsx.py            # offered XLSX workbooks, no spreadsheet engine
+│   │   ├── tiger.py           # Census TIGER/Line boundaries (#22)
+│   │   ├── census_acs.py      # 5-year estimates at county, cousub and ZCTA (#31, #108)
+│   │   ├── census_blocks.py   # 2020 blocks with their homes, the weights (#301)
+│   │   ├── census_lodes.py    # where residents work (M45, #313)
+│   │   ├── census_pep.py      # population estimates, as of a date
 │   │   ├── census_permits.py  # Building Permits Survey, county and place (#110)
-│   │   ├── fhfa.py            # hpi_master.csv — state level, two flavors (#109)
+│   │   ├── census_saipe.py    # SAIPE median household income by year (M52)
+│   │   ├── zillow.py          # ZHVI + ZORI over county, city, ZIP
+│   │   ├── fhfa.py            # hpi_master.csv, state level (#109)
 │   │   ├── fred.py            # MORTGAGE30US, national
 │   │   ├── bls.py             # LAUS county unemployment
-│   │   ├── irs_migration.py   # SOI county inflow/outflow, reduced to net
-│   │   ├── hud.py             # crosswalk + income limits, FMR, CHAS (#37, #106, #107)
+│   │   ├── irs_migration.py   # SOI county flows (M50, #332)
+│   │   ├── hud.py             # crosswalk, income limits, FMR, CHAS (#37, #106, #107)
+│   │   ├── hud_assistance.py  # assisted contracts and LIHTC releases (#307)
+│   │   ├── hud_limits.py      # FHA county loan limits (M48)
+│   │   ├── hmda.py            # mortgages made (M48)
+│   │   ├── fema.py            # NFHL flood zones; NFIP claims (#301, #302)
+│   │   ├── epa_sdwis.py       # SDWIS violations (#304)
+│   │   ├── fcc.py             # broadband files handed in by the owner (#360)
+│   │   ├── bts_ntm.py         # National Transit Map stops (M45)
+│   │   ├── community.py       # schools, crime, health and other dated components
+│   │   ├── infrastructure.py  # dated utility and water records; lead lines (#409)
+│   │   ├── njdep.py           # tidal CAFE, contaminated sites, water areas (#301-#304)
 │   │   ├── nj_modiv.py        # 3.48M NJ parcels via OBJECTID paging (#49, #50)
-│   │   ├── arcgis.py          # any ArcGIS layer by id batches, geometry as GeoJSON (#301)
-│   │   ├── fema.py            # NFHL flood zones; NFIP claims from OpenFEMA (#301, #302)
-│   │   ├── njdep.py           # tidal CAFE, contaminated sites, water service areas (#301-#304)
-│   │   ├── epa_sdwis.py       # SDWIS violations; one file out of ECHO's zip by range (#304)
-│   │   └── census_blocks.py   # 2020 blocks with their homes, the weights (#301)
+│   │   ├── nj_sr1a.py         # the state's usable-sales record (M25, #187)
+│   │   ├── nj_tax_rates.py    # general and effective rates, Director's Ratio
+│   │   ├── nj_equalized.py    # Table of Equalized Valuations
+│   │   ├── nj_revaluations.py # towns that brought assessments back to market
+│   │   ├── nj_construction.py # homes finished and demolished (#300)
+│   │   ├── nj_affordable.py   # DCA's fourth-round calculations and self-reports
+│   │   └── nj_bpu.py          # reliability figures from BPU orders (#347)
 │   ├── landing/
 │   │   ├── shapefile.py       # zip → Parquet via ST_Read, geometry to MultiPolygon
 │   │   └── tabular.py         # CSV/JSON/NDJSON → Parquet, format preserved
 │   ├── transform/dbt_runner.py # runs dbt; STAGING_SCHEMA = main_staging
 │   ├── geography/
-│   │   ├── regions.py         # stg_regions: 5 levels, parent chain by geoid
+│   │   ├── regions.py         # stg_regions: levels, parent chain by geoid
 │   │   ├── backdrop.py        # every state's outline, as map context only (#164)
 │   │   ├── crosswalk.py       # ZIP allocation; HUD weights supersede area (#37)
 │   │   └── matching.py        # source keys → regions; rejects ambiguity (#27, #28)
 │   ├── validate/gate.py       # the load gate + JSON report (#15)
 │   ├── warehouse/
 │   │   ├── db.py              # engine, session_scope, probe() for /health
-│   │   ├── models.py          # Region, RegionIdentifier, RegionCrosswalk, RegionExplanation, MapBackdrop
+│   │   ├── models.py          # declarative models for the curated warehouse
 │   │   ├── load.py            # one-transaction upsert of spine and facts (#25)
+│   │   ├── names.py           # a municipality's name where counties are left out
+│   │   ├── determinations.py  # when HUD's income limits took effect (#350)
 │   │   ├── discoveries.py     # releases.json → source_discoveries at load (#222)
 │   │   ├── freshness.py       # the freshness report (#222)
-│   │   └── migrations/        # Alembic 0001–0033
-│   ├── analytics/compute.py   # change, CAGR, affordability, turnover, rankings (#34–#36, #328)
-│   ├── analytics/relationships.py # the relationships a reading may narrate (#336)
+│   │   ├── community.py       # ancillary components, replaced atomically
+│   │   ├── housing_pressure.py # CHAS income cohorts, apart from ranked facts
+│   │   ├── infrastructure.py  # dated inventories with exact-file provenance
+│   │   └── migrations/        # Alembic 0001–0037
+│   ├── analytics/
+│   │   ├── compute.py         # change, CAGR, affordability, turnover, rankings (#34–#36)
+│   │   ├── rank_ranges.py     # Census significance counts behind rank ranges
+│   │   ├── relationships.py   # the relationships a reading may narrate (#336)
+│   │   ├── persistence.py     # today's ratio against the region's history (#348)
+│   │   └── similar.py         # somewhere like here, but cheaper (#317)
 │   ├── packets/
 │   │   ├── schema.py          # Pydantic models = the contract (#12, #43, #44)
 │   │   ├── assemble.py        # build_packet(session, region_id, window) (#42)
 │   │   ├── caveats.py         # pure caveat derivation, shared with /summary (#46)
-│   │   ├── citations.py       # citation binding: figure index + bind() (#112, #116, #257)
-│   │   ├── margins.py         # principle 12 in prose: margins and ranges (#257)
+│   │   ├── citations.py       # citation binding: figure index + bind() (#112, #257)
+│   │   ├── margins.py         # margins and rank ranges in prose (#257)
 │   │   ├── causal.py          # causal wording only where a relationship allows (#337)
+│   │   ├── comparative.py     # ranking words only where the ranks bear them out (#412)
+│   │   ├── prediction.py      # no forecasts from history (#348)
 │   │   ├── survey.py          # which metrics are survey figures (#256)
-│   │   └── report.py          # render_markdown(packet) — pure (#45, #256)
-│   ├── eval/                  # Milestone 8: model evaluation + explanations (#56)
+│   │   ├── download.py        # a region's figures as a CSV (#270)
+│   │   └── report.py          # render_markdown(packet) — pure (#45, #256, #413)
+│   ├── eval/                  # model evaluation and readings (#56)
 │   │   ├── types.py           # Scenario, Generation, CheckResult, Judgment
 │   │   ├── scenarios.py       # questions x sampled packets, deterministic
-│   │   ├── prompts.py         # packet → JSON or Markdown payload; prompt assembly
-│   │   ├── normalize.py       # reasoning/answer split across both runtimes
+│   │   ├── prompts.py         # packet → the bytes a model sees
+│   │   ├── normalize.py       # reasoning/answer split
 │   │   ├── checks.py          # the fabrication count, by binding (#58, #112, #115)
-│   │   ├── runner.py          # the run loop: one local model at a time; hosted
-│   │   │                      #   cohorts fan out to max_concurrency (#82)
+│   │   ├── runner.py          # the run loop; hosted cohorts fan out (#82)
 │   │   ├── runners/           # base protocol (#57), ollama.py, mlx_runner.py,
-│   │   │                      #   hosted.py — 4 providers, 1 runner (#78)
+│   │   │                      #   hosted.py — every vendor behind one runner (#78)
 │   │   ├── selection.py       # preference lists → who heads each today (#258)
 │   │   ├── formats.py         # the analyst and consumer readings and their gates (#260)
 │   │   ├── costs.py           # a generation's price at the tier and hour it ran (#259)
 │   │   ├── sidebyside.py      # `hip eval readings`: both formats, several models (#261)
-│   │   ├── judge.py           # Claude rubric grading, Batch API; effort + usage per verdict (#101)
+│   │   ├── judge.py           # Claude rubric grading, Batch API (#101)
 │   │   ├── store.py           # JSONL artifacts per stage, resumable
 │   │   ├── report.py          # the published evaluation report (#59, #83, #98)
-│   │   └── explain.py         # readings; the gates, fallthrough and re-binding (#60, #113, #258)
-│   ├── eval_cli.py            # `hip eval ...`; optional deps imported lazily
+│   │   └── explain.py         # readings: gates, fallthrough, re-binding (#60, #113, #258)
 │   └── api/
 │       ├── main.py            # FastAPI app, CORS for the dashboard origin
 │       ├── deps.py            # session dependency; read-only by construction (#6)
 │       ├── params.py          # RegionLevel and Window, shared by the routers
 │       └── routers/           # health, regions, metrics, analytics, packets,
-│                              #   explanations (#60), freshness (#222),
-│                              #   revisions (#224)
+│                              #   explanations (#60), freshness (#222), revisions
+│                              #   (#224, #410), income_limits, housing_pressure,
+│                              #   affordable_housing, community, infrastructure,
+│                              #   water_systems (#304), work_destinations (#313),
+│                              #   migration (#332), persistence (#348),
+│                              #   similar_places (#317)
 ├── dbt/
 │   ├── dbt_project.yml        # staging = views, marts = tables
 │   ├── profiles.yml           # duckdb (default) and postgres targets
-│   ├── macros/                # zillow_observations, accepted_range,
-│   │                          #   release_vintage (#53), nj_municipal_name (#51)
-│   └── models/staging/        # 16 staging models + dbt tests
-├── web/                       # Next.js 16 + React 19 dashboard
-│   ├── app/layout.tsx         # fonts (#121), the shared bar, licence line, footer
-│   ├── app/tokens.css         # palette, type, space; the bar's jasonli.app values (#122)
-│   ├── app/globals.css        # base rules, the named component layer, print
-│   ├── app/page.tsx           # New Jersey: the measure card, map and ranking (#126, #152)
-│   ├── app/afford/page.tsx    # what can I afford; can I afford this place (#144, #153)
-│   ├── app/guide/page.tsx     # the decision guides, one page read in the browser (#330)
-│   ├── app/search.json/route.ts         # the search index, written at build (#143)
-│   ├── app/map.json/route.ts            # the map's outlines and measures (#163)
-│   ├── app/regions/[id]/page.tsx        # region, answers first, one expander (#156)
-│   ├── app/regions/[id]/report/page.tsx # print-ready report from the packet (#45, #160)
-│   ├── app/freshness/page.tsx # how current each source is (#222)
-│   ├── app/changes/page.tsx   # figures revised after they were published (#224)
-│   ├── components/            # Masthead, PlaceSearch, PlacePicker, ThemeToggle, Crumbs,
-│   │                          #   LicenceLine, SourceFooter, InlineScript, CountyExplorer,
-│   │                          #   GlobeMap, TownRanks, useMapFile (#163, #165),
-│   │                          #   AffordCta, AffordExplorer, CostToOwn,
-│   │                          #   StandOuts, MoreExpander, Ledger, CurrentValues,
-│   │                          #   TrendsExplorer, TrendChart, ExplanationPanel, Glossed,
-│   │                          #   Definition, MetricTerm (#161), PrintButton,
-│   │                          #   ReportProblem (#221)
-│   ├── lib/api.ts             # server-side fetchers + packet types; the national rate
-│   ├── lib/format.ts          # value formatting (#41); shares and multiples (#124)
-│   ├── lib/caveats.ts         # where each caveat sits on a page (#123)
-│   ├── lib/groups.ts          # the four page sections (#129)
-│   ├── lib/definitions.ts     # a plain definition and why it matters, per metric (#149)
-│   ├── lib/glossary.ts        # terms defined where they appear (#130)
-│   ├── lib/periods.ts         # a period in its source's own terms (#155)
-│   ├── lib/ranks.ts           # a rank in words: its basis and which end is first (#138)
-│   ├── lib/verdict.ts         # the head's answers and the housing cards (#139, #159)
-│   ├── lib/cost.ts            # the cost to own; money gone and kept (#142, #157)
-│   ├── lib/costInputs.ts      # the cost cards' inputs, read from a packet (#157)
-│   ├── lib/homePrice.ts       # the price a cost of owning is worked from (#330)
-│   ├── lib/guide.ts           # the three guides' answers and the checklist (#330, #331)
-│   ├── lib/evidence.ts        # strong, partial or limited, by fixed rules (#329)
-│   ├── lib/migration.ts       # who is moving here: moves and movers' incomes (#332)
-│   ├── lib/standouts.ts       # change and value stand-outs (#158)
-│   ├── lib/afford.ts          # within reach at 30% of income (#144, #153)
-│   ├── lib/search.ts          # places matched by name, type and county (#143)
-│   ├── lib/since.ts           # then against now; where the years begin (#145, #160)
-│   ├── lib/sources.ts         # the footer's institutions and the licence line (#128)
-│   ├── lib/theme.ts           # light, dark or the system's
-│   ├── lib/geo.ts             # county outlines projected on the server (#126)
-│   ├── lib/windows.ts         # the New Jersey page's change windows (#140)
-│   ├── lib/names.ts           # how a region is named to a reader
-│   ├── lib/citations.ts       # a model's prose read against its binding (#112)
-│   ├── lib/scale.ts           # ramp and breaks — pure and tested (#48)
-│   ├── lib/globe.ts           # the sphere, the camera, the prisms (#163)
-│   ├── lib/mapdata.ts         # map.json packed and unpacked (#163)
-│   ├── lib/uncertainty.ts     # margins and rank ranges, in words (#239–#242)
-│   ├── lib/freshness.ts       # the freshness page's wording and order (#222)
-│   ├── lib/changes.ts         # the what-changed page's sentences (#224)
-│   ├── lib/reportProblem.ts   # the pre-filled issue behind each figure (#221)
-│   ├── scripts/check-live.mjs # the deployed site against dist/ (#202, #203, #220)
-│   ├── public/_redirects      # /regions/1 → /states/new-jersey (#127, #305)
-│   └── vitest.config.ts       # node environment, lib/**/*.test.ts
+│   ├── macros/                # zillow_observations, acs_layers, acs_margins,
+│   │                          #   release_vintage (#53), nj_municipal_name (#51),
+│   │                          #   test_accepted_range
+│   └── models/staging/        # 68 staging models + dbt tests
+├── web/                       # Next.js 16 + React 19, exported to static files
+│   ├── app/                   # routes: home, states/new-jersey, [state]/[place] and
+│   │                          #   its report, atlas, compare, afford, guide, tax,
+│   │                          #   help, sources, freshness, changes, terms, privacy;
+│   │                          #   search.json, states.json, atlas/counties.json and
+│   │                          #   help/inventory.json written at build; tokens.css,
+│   │                          #   globals.css and one stylesheet per page family
+│   ├── components/            # 135 components (SiteStatus, PlaceSearch, the atlas,
+│   │                          #   the cost and guide explorers, ExplanationPanel, ...)
+│   ├── lib/                   # 91 pure modules, tests beside them: api.ts (fetchers
+│   │                          #   and packet types), states.ts (covered states),
+│   │                          #   costRules.ts (per-state cost rules), placeRoutes.json
+│   │                          #   (pinned addresses, #367), colourBaseline.json (#384),
+│   │                          #   notices.ts, photos.json (#368), siteStatus.ts (#411)
+│   ├── scripts/               # build and check scripts: write-place-aliases,
+│   │                          #   publication-capacity (#400), refresh-place-routes,
+│   │                          #   check-live (#202), check-terms, check-accessibility
+│   │                          #   (#404), check-export-navigation (#210), and the
+│   │                          #   per-page visual checks
+│   └── public/                # static files and _redirects (#127, #305)
+├── deploy/r2-cors.json        # the data bucket's CORS rule
 ├── data/                      # gitignored, machine-local
 │   ├── raw/                   # immutable downloads, content-addressed
+│   ├── manual/                # files the owner downloads by hand (Zillow, FCC, OPRA)
 │   ├── parquet/               # landing tier
 │   ├── duckdb/                # working analytical database; 3.48M parcels live here
 │   ├── packets/<window>/      # analysis packets, one JSON per region
 │   ├── eval/<run>/            # scenarios, generations, checks, judgments (JSONL)
 │   └── sidebyside/<name>/     # `hip eval readings` trials, kept as they complete (#261)
 ├── reports/                   # human-facing output, not rebuildable input
-│   ├── validation/            # gate reports per run; gitignored, per-run machine state
-│   ├── regions/<window>/      # Markdown reports, one per region; 5y committed, README-linked
-│   ├── evaluation/            # the published model-evaluation report; committed
+│   ├── validation/            # gate reports per run; gitignored
+│   ├── regions/<window>/      # Markdown reports, one per county; 5y committed
+│   ├── evaluation/            # evaluation and readings reports; committed
 │   └── completeness/          # one report per standing-check run; committed (#225)
-├── scripts/                   # scheduled_refresh.py, regenerate_now.py, launchd/ (#216–#219)
-├── tests/                     # 925 Python tests; nine `slow`; warehouse tests skip without one
+├── scripts/                   # scheduled_refresh.py, regenerate_now.py, launchd/
+│                              #   (#216–#219), verify_analytics_isolation.py,
+│                              #   audit_state_assumptions.py, check_list_completeness.py,
+│                              #   compare_state_publication.py, the rank benchmarks
+├── tests/                     # 89 Python test files; warehouse tests skip without one,
+│                              #   and those that write use scratch schemas
+│                              #   (warehouse_scratch.py, #414)
+├── agent-handoffs/            # Codex's receipts, removed once reconciled
 ├── alembic.ini                # URL comes from hip.config, not from here
 ├── docker-compose.yml         # postgres + postgis only (#13)
-├── Makefile                   # setup, db-up, migrate, pipeline, api, web, test, lint
+├── Makefile                   # setup, db-up, migrate, pipeline, api, publish, deploy
 └── pyproject.toml             # deps + dev / dbt / mlx / eval groups (#19, #55, #56)
 ```
 

@@ -15,9 +15,10 @@ from collections.abc import Iterator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import delete, select, text
+from sqlalchemy import Engine, delete, select, text
 from sqlalchemy.orm import Session
 
+from hip.api.deps import get_session
 from hip.api.main import app
 from hip.packets import (
     bind,
@@ -29,6 +30,7 @@ from hip.packets import (
 )
 from hip.warehouse.db import get_engine, probe
 from hip.warehouse.models import RegionExplanation
+from tests.warehouse_scratch import shadowed_warehouse
 
 client = TestClient(app)
 
@@ -48,7 +50,7 @@ def county_id() -> int:
 
 
 def _store(region_id: int, packet_sha256: str) -> None:
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         session.execute(
             delete(RegionExplanation).where(
                 RegionExplanation.region_id == region_id,
@@ -71,43 +73,49 @@ def _store(region_id: int, packet_sha256: str) -> None:
         session.commit()
 
 
-@pytest.fixture(autouse=True)
-def preserve_real_explanations(county_id: int) -> Iterator[None]:
-    """Snapshot and restore any real explanation for the county under test.
+_shadow: list[Engine] = []
 
-    These tests write and delete rows in a developer's actual warehouse, and one of
-    them deletes deliberately to exercise the 404 path. Without this, running the suite
-    silently destroys generated explanations — it removed Atlantic County's on
-    2026-08-14, which only surfaced because a count came back 20 instead of 21.
 
-    Autouse so a test added later cannot forget it. Restores the exact row, including
-    `generated_at`, so the warehouse is byte-identical afterwards — every column the
-    table has, read from the model, so a column added later is restored too. A
-    hand-written list of columns missed `audience` when migration 0019 added it, and
-    the restore failed after the test had already deleted Atlantic County's reading.
+def warehouse() -> Engine:
+    """The served warehouse with an empty `region_explanations` of its own."""
+    return _shadow[0]
+
+
+@pytest.fixture(scope="module", autouse=True)
+def shadow_explanations() -> Iterator[None]:
+    """Every read and write of a reading, the API's included, goes to a copy.
+
+    These tests write and delete readings, one deliberately to exercise the 404 path.
+    Against the served table they once deleted Atlantic County's reading (2026-08-14),
+    and a later restore that missed a new column failed after the delete. The copy is
+    dropped afterwards; everything else is read as served.
     """
-    columns = [column.key for column in RegionExplanation.__table__.columns]
-    with Session(get_engine()) as session:
-        saved = [
-            {column: getattr(row, column) for column in columns}
-            for row in session.execute(
-                select(RegionExplanation).where(RegionExplanation.region_id == county_id)
-            ).scalars()
-        ]
-    yield
-    with Session(get_engine()) as session:
-        session.execute(
-            delete(RegionExplanation).where(RegionExplanation.region_id == county_id)
-        )
-        for row in saved:
-            session.add(RegionExplanation(**row))
-        session.commit()
+    with shadowed_warehouse(get_engine(), ("region_explanations",)) as engine:
+        _shadow.append(engine)
+
+        def session() -> Iterator[Session]:
+            with Session(engine) as s:
+                yield s
+
+        app.dependency_overrides[get_session] = session
+        try:
+            yield
+        finally:
+            app.dependency_overrides.pop(get_session)
+            _shadow.clear()
+
+
+@pytest.fixture(autouse=True)
+def no_readings() -> None:
+    """Each test starts with no readings, as the served table's restore once did."""
+    with warehouse().begin() as conn:
+        conn.execute(delete(RegionExplanation))
 
 
 @pytest.fixture
 def current_explanation(county_id: int) -> Iterator[int]:
     """An explanation pinned to the packet as it currently stands."""
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         digest = packet_hash(build_packet(session, county_id, WINDOW))
     _store(county_id, digest)
     yield county_id
@@ -115,7 +123,7 @@ def current_explanation(county_id: int) -> Iterator[int]:
 
 def test_absent_explanation_is_a_404_not_an_error(county_id: int) -> None:
     """The ordinary state of a fresh warehouse: no AI layer, platform still works."""
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         session.execute(
             delete(RegionExplanation).where(RegionExplanation.region_id == county_id)
         )
@@ -165,13 +173,13 @@ def test_an_explanation_written_from_other_numbers_reports_stale(
 
 def test_the_endpoint_does_not_write(current_explanation: int) -> None:
     """Read-only by construction (ARCHITECTURE #6): a GET generates nothing."""
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         before = session.execute(select(RegionExplanation.body)).scalars().all()
 
     client.get(f"/regions/{current_explanation}/explanation?window={WINDOW}")
     client.get(f"/regions/{current_explanation}/explanation?window=since_2019")
 
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         after = session.execute(select(RegionExplanation.body)).scalars().all()
     assert before == after
 
@@ -193,7 +201,7 @@ def _store_both(
     region_id: int, analyst_sha256: str, consumer_sha256: str | None = None
 ) -> None:
     """A region's analyst and consumer readings, as `hip explain` writes them."""
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         session.execute(
             delete(RegionExplanation).where(
                 RegionExplanation.region_id == region_id,
@@ -232,7 +240,7 @@ def _store_both(
 
 @pytest.fixture
 def both_readings(county_id: int) -> Iterator[int]:
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         digest = packet_hash(build_packet(session, county_id, WINDOW))
     _store_both(county_id, digest)
     yield county_id
@@ -275,7 +283,7 @@ def test_the_singular_endpoint_keeps_its_shape_and_serves_the_analyst_reading(
 def test_one_reading_can_be_stale_while_the_other_is_current(county_id: int) -> None:
     """Generated independently, so collapsing staleness to one flag per region would
     misreport both."""
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         digest = packet_hash(build_packet(session, county_id, WINDOW))
     _store_both(county_id, digest, consumer_sha256="0" * 64)
 
@@ -287,10 +295,10 @@ def test_one_reading_can_be_stale_while_the_other_is_current(county_id: int) -> 
 def test_a_consumer_reading_alone_is_no_analyst_reading(county_id: int) -> None:
     """The singular endpoint serves the analyst reading or nothing — never the consumer
     reading under the analyst contract."""
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         digest = packet_hash(build_packet(session, county_id, WINDOW))
     _store_both(county_id, digest)
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         session.execute(
             delete(RegionExplanation).where(
                 RegionExplanation.region_id == county_id,
@@ -310,7 +318,7 @@ def test_absent_explanations_are_a_404_not_an_empty_list(
 ) -> None:
     """`hip publish` treats a 404 as a skip. An empty body would put a contentless file
     in the artifact tree for every region that has no explanation."""
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         session.execute(
             delete(RegionExplanation).where(RegionExplanation.region_id == county_id)
         )
@@ -326,13 +334,13 @@ def test_absent_explanations_are_a_404_not_an_empty_list(
 
 def _store_bound(region_id: int, *, packet_sha256: str | None = None) -> str:
     """A row as `hip explain` now writes one, bound and with both hashes; its body."""
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         packet = build_packet(session, region_id, WINDOW)
     level = next(lv for lv in packet.levels if lv.metric_id == "zhvi_sfr")
     body = f"The typical single-family home value is {format_value(level.value, 'usd')}."
     binding = bind(body, packet, payload=render_markdown(packet))
     assert binding.complete and binding.citations
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         session.execute(
             delete(RegionExplanation).where(RegionExplanation.region_id == region_id)
         )
@@ -402,7 +410,7 @@ def test_prune_removes_readings_from_models_off_their_audience_list(
     reading it wrote, and the prune is scoped to the run's window."""
     from hip.eval.explain import prune
 
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         session.add(
             RegionExplanation(
                 region_id=both_readings,
@@ -439,7 +447,7 @@ def test_prune_for_one_audience_preserves_the_other(both_readings: int) -> None:
     """A consumer-only explain run must not retire the analyst's reading."""
     from hip.eval.explain import prune
 
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         removed = prune(
             session,
             [both_readings],
@@ -457,14 +465,14 @@ def test_prune_refuses_to_keep_nothing(county_id: int) -> None:
     """An empty keep-set would delete every reading in scope."""
     from hip.eval.explain import prune
 
-    with Session(get_engine()) as session, pytest.raises(ValueError):
+    with Session(warehouse()) as session, pytest.raises(ValueError):
         prune(session, [county_id], WINDOW, {"analyst": set()})
 
 
 def test_a_row_without_a_binding_stores_sql_null(county_id: int) -> None:
     """Not the JSON value `null`, which `IS NULL` does not match. Restoring pre-binding
     rows wrote JSON nulls until the column set `none_as_null`."""
-    with Session(get_engine()) as session:
+    with Session(warehouse()) as session:
         session.execute(
             delete(RegionExplanation).where(RegionExplanation.region_id == county_id)
         )

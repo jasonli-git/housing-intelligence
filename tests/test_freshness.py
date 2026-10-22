@@ -8,11 +8,12 @@ page can read it. `load_discoveries` is that load; `build_report` is the read.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import Engine, text
 from sqlalchemy.orm import Session
 
 from hip.config import Source
@@ -29,6 +30,7 @@ from hip.warehouse.freshness import (
     build_report,
     page_changes,
 )
+from tests.warehouse_scratch import shadowed_warehouse
 
 pytestmark = pytest.mark.skipif(not probe().migrated, reason="needs a migrated warehouse")
 
@@ -49,14 +51,16 @@ def _source(**overrides: object) -> Source:
 
 
 @pytest.fixture
-def clean_test_source():
-    """A source_id no real pipeline uses, cleaned from `source_discoveries` after."""
-    source_id = "test_freshness_source"
-    yield source_id
-    with get_engine().begin() as conn:
-        conn.execute(
-            text("DELETE FROM source_discoveries WHERE source_id = :s"), {"s": source_id}
-        )
+def clean_test_source() -> str:
+    """A source_id no real pipeline uses."""
+    return "test_freshness_source"
+
+
+@pytest.fixture
+def discoveries() -> Iterator[Engine]:
+    """The warehouse with an empty `source_discoveries` of its own, dropped after."""
+    with shadowed_warehouse(get_engine(), ("source_discoveries",)) as engine:
+        yield engine
 
 
 def test_status_reads_outcome_and_pending_before_defaulting_to_current() -> None:
@@ -89,7 +93,7 @@ def test_changelog_version_falls_back_when_the_file_is_missing(tmp_path: Path) -
 
 
 def test_load_discoveries_round_trips_through_the_warehouse(
-    tmp_path: Path, clean_test_source: str
+    tmp_path: Path, clean_test_source: str, discoveries: Engine
 ) -> None:
     write_discovery(
         tmp_path,
@@ -102,10 +106,10 @@ def test_load_discoveries_round_trips_through_the_warehouse(
         ),
     )
 
-    written = load_discoveries(get_engine(), tmp_path, [clean_test_source])
+    written = load_discoveries(discoveries, tmp_path, [clean_test_source])
     assert written == 1
 
-    with get_engine().connect() as conn:
+    with discoveries.connect() as conn:
         row = (
             conn.execute(
                 text(
@@ -125,14 +129,14 @@ def test_load_discoveries_round_trips_through_the_warehouse(
 
 
 def test_load_discoveries_skips_a_source_with_no_record(
-    tmp_path: Path, clean_test_source: str
+    tmp_path: Path, clean_test_source: str, discoveries: Engine
 ) -> None:
     """No `discover()`, no file, no row — never a row of nulls (see this module's own
     header comment in `hip.warehouse.freshness`)."""
-    written = load_discoveries(get_engine(), tmp_path, [clean_test_source])
+    written = load_discoveries(discoveries, tmp_path, [clean_test_source])
     assert written == 0
 
-    with get_engine().connect() as conn:
+    with discoveries.connect() as conn:
         exists = conn.execute(
             text("SELECT 1 FROM source_discoveries WHERE source_id = :s"),
             {"s": clean_test_source},
@@ -141,7 +145,7 @@ def test_load_discoveries_skips_a_source_with_no_record(
 
 
 def test_load_discoveries_upserts_rather_than_duplicates(
-    tmp_path: Path, clean_test_source: str
+    tmp_path: Path, clean_test_source: str, discoveries: Engine
 ) -> None:
     write_discovery(
         tmp_path,
@@ -152,7 +156,7 @@ def test_load_discoveries_upserts_rather_than_duplicates(
             outcome="confirmed",
         ),
     )
-    load_discoveries(get_engine(), tmp_path, [clean_test_source])
+    load_discoveries(discoveries, tmp_path, [clean_test_source])
 
     write_discovery(
         tmp_path,
@@ -163,9 +167,9 @@ def test_load_discoveries_upserts_rather_than_duplicates(
             outcome="confirmed",
         ),
     )
-    load_discoveries(get_engine(), tmp_path, [clean_test_source])
+    load_discoveries(discoveries, tmp_path, [clean_test_source])
 
-    with get_engine().connect() as conn:
+    with discoveries.connect() as conn:
         rows = conn.execute(
             text("SELECT newest FROM source_discoveries WHERE source_id = :s"),
             {"s": clean_test_source},
@@ -267,7 +271,7 @@ def test_published_dates_come_out_iso_whatever_form_the_publisher_used() -> None
 
 
 def test_an_outage_reaches_the_page_through_the_normal_acquisition_path(
-    tmp_path: Path, clean_test_source: str
+    tmp_path: Path, clean_test_source: str, discoveries: Engine
 ) -> None:
     """Acquisition, then the warehouse, then the status the page shows.
 
@@ -315,8 +319,8 @@ def test_an_outage_reaches_the_page_through_the_normal_acquisition_path(
     down.newest = "2020"
     list(acquire([down], raw_dir=tmp_path, today=date(2026, 9, 30)))
 
-    load_discoveries(get_engine(), tmp_path, [clean_test_source])
-    with Session(get_engine()) as session:
+    load_discoveries(discoveries, tmp_path, [clean_test_source])
+    with Session(discoveries) as session:
         row = (
             session.execute(
                 text("SELECT * FROM source_discoveries WHERE source_id = :s"),
