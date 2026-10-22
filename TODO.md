@@ -142,10 +142,6 @@ Not open work: each comes round on a date. The steps live where the row says.
 - [ ] **Accessibility checks the audit script cannot make.** (M43, #309) True 200%
       text and 400% zoom, and axe's remaining needs-review results. (Print in Safari and
       Firefox checked 2026-10-20, #397.) The handoff (`m43-accessibility-audit.md`) lists each.
-- [ ] **Read HUD User's API terms for where its notice must appear.** (#386) The terms
-      page returned nothing to an automated reader on 2026-10-19; the notice is on
-      `/sources` and treated like the Census Bureau's. If HUD asks for it on each page or
-      in the footer, add `hud` to `FOOTER_NOTICE_SOURCES` (`web/lib/notices.ts`).
 - [ ] **Bring the remaining one-off colours behind tokens.** (owner, 2026-10-10; #383,
       #384) Kinds are tokens and a test now stops new hard-coded colours. 1,129 remain in
       33 files (2026-10-20), frozen in `web/lib/colourBaseline.json`; the largest are

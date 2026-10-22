@@ -13,6 +13,9 @@ are not yet recorded here.
 
 ### Added
 
+- **HUD's notice on every page** (ARCHITECTURE #423): "This product uses the HUD User
+  Data API but is not endorsed or certified by HUD User" joins the footer, as HUD's
+  terms ask it to be shown prominently.
 - **Readings may call a figure a survey estimate only if it is one** (ARCHITECTURE
   #422): a reading that calls Zillow's home value, a sale price or a tax bill a survey
   estimate is refused and rewritten. Owner costs in everyday words are now recognised
