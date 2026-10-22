@@ -240,6 +240,9 @@ def acquire(
                     yield adapter, adapter.fetch(child, raw_dir=raw_dir, force=force)
                 except (SourceError, OSError) as exc:
                     yield adapter, RefFailure.of(adapter.source_id, child.key, exc)
+        if adapter.keeps_history:
+            for release in fetched:
+                record_history(raw_dir, release, adapter.newest)
         # A hand-imported file says when the owner copied it in, not when anyone asked
         # the publisher, so a manual source gets no record from this.
         if (
@@ -363,6 +366,25 @@ class Superseded:
     size_bytes: int
 
 
+# Beside a source's raw releases when it keeps every one (`SourceAdapter.keeps_history`):
+# each release's hash, with the publisher's newest release (MOD-IV's tax year) and when
+# it was fetched. What it lists is never superseded.
+HISTORY_FILE = "history.json"
+
+
+def record_history(raw_dir: Path, release: Release, newest: str | None) -> None:
+    """Add a kept release to its source's history, once; an entry is never rewritten."""
+    path = raw_dir / release.ref.source_id / HISTORY_FILE
+    history = json.loads(path.read_text()) if path.exists() else {}
+    if release.sha256 in history:
+        return
+    history[release.sha256] = {
+        "newest": newest,
+        "fetched_at": release.fetched_at.isoformat(),
+    }
+    path.write_text(json.dumps(history, indent=2, sort_keys=True) + "\n")
+
+
 def superseded_releases(raw_dir: Path, cited: set[str]) -> list[Superseded]:
     """Raw directories that are neither current for their ref nor cited by a fact.
 
@@ -380,7 +402,9 @@ def superseded_releases(raw_dir: Path, cited: set[str]) -> list[Superseded]:
     * **every release a fact cites**, passed in as `cited`. A warehouse row names the
       release its value was read from, and deleting that file would leave a published
       figure whose provenance points at nothing. That is the whole claim of the platform,
-      so the rule is a retention rule rather than a "keep the newest N".
+      so the rule is a retention rule rather than a "keep the newest N";
+    * every release a source's `history.json` lists: a source that keeps its history
+      (#426) keeps every file.
 
     Nothing is deleted here. The caller decides, and `hip prune-raw` shows before it does.
     """
@@ -389,6 +413,9 @@ def superseded_releases(raw_dir: Path, cited: set[str]) -> list[Superseded]:
         source_dir = index_path.parent
         try:
             current = set(json.loads(index_path.read_text()).values())
+            history = source_dir / HISTORY_FILE
+            if history.exists():
+                current |= set(json.loads(history.read_text()))
         except (json.JSONDecodeError, OSError):
             # An unreadable index means we cannot tell what is current, so nothing in
             # this source is safe to remove.

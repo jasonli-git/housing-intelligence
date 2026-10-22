@@ -364,6 +364,11 @@ class SourceAdapter(ABC):
     # reads them from there and never makes a request. Zillow's Terms of Use forbid "any
     # other automated activity with the purpose of obtaining information" from it.
     manual: ClassVar[bool] = False
+    # A source whose publisher replaces each release with the next and keeps no archive:
+    # every release fetched is kept in the raw tier, recorded in its `history.json`, so
+    # the history exists here if nowhere else (MOD-IV's yearly assessments, ARCHITECTURE
+    # #426).
+    keeps_history: ClassVar[bool] = False
     # Where a person downloads a manual source's files, for the message that asks them to.
     manual_from: ClassVar[str | None] = None
     _manual_dir: Path | None = None
