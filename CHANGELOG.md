@@ -13,6 +13,10 @@ are not yet recorded here.
 
 ### Added
 
+- **The housing atlas maps towns and ZIP codes** (ARCHITECTURE #428): every county, town
+  and ZIP code in New Jersey, with each measure published for them (61 for towns, 40 for
+  ZIP codes); zoom in on the nation to open the state; pick up to four places to send to
+  the compare page.
 - **A fuller page for every property in the tax lookup** (ARCHITECTURE #427): its lot
   size, what owning it would cost at its likely sale value and its own tax bill, what
   renters in the town pay by size, and links into the town's prices, flood risk, water
