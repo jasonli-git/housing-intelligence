@@ -5,6 +5,7 @@ import { Crumbs, Kind } from "@/components/Crumbs";
 import { Masthead } from "@/components/Masthead";
 import { pageMetadata } from "@/lib/meta";
 import { STORIES } from "@/lib/stories";
+import { ThemedShot } from "@/components/ThemedShot";
 import "../horizon-theme.css";
 import "./stories.css";
 
@@ -31,7 +32,11 @@ export default function StoriesPage() {
         <ul className="stories-grid">
           {STORIES.map((s) => (
             <li key={s.href}>
-              <Link href={s.href}><b>{s.title}</b><span>{s.blurb}</span></Link>
+              <Link href={s.href}>
+                <ThemedShot name={`stories/${s.href.split("/").pop()}`} width={788} height={489} />
+                <b>{s.title}</b>
+                <span>{s.blurb}</span>
+              </Link>
             </li>
           ))}
         </ul>

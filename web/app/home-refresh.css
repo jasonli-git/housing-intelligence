@@ -69,26 +69,16 @@
     .home-tools a:hover { transform: none; }
   }
 }
-/* The visual stories, before the tools (2026-10-22): each a picture of its own chart, taken
-   from the build by capture-readme.mjs in the reader's theme. Reached from here, the footer
-   and the sections they draw from, not the bar. */
+/* The visual stories, before the tools (2026-10-22): one picture of the stories page, taken
+   from the build by capture-readme.mjs. The stories are reached from here, the footer and
+   the sections they draw from, not the bar. */
 .home-stories { margin-block: 2.6rem 0; padding-top: .7rem; border-top: 1px solid var(--plate-strong-rule, var(--border)); }
 .home-stories h2 { margin: 0 0 .9rem; font: 400 clamp(26px, 3vw, 34px)/1.1 Georgia, serif; letter-spacing: -.03em; }
 .home-stories h2 span { font-style: italic; color: var(--text-muted); font-size: .7em; }
-.home-stories ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1.4rem 1.2rem; margin: 0; padding: 0; list-style: none; }
-.home-stories a { display: grid; gap: .55rem; color: var(--text-primary); text-decoration: none; }
-.home-story-shot { display: block; aspect-ratio: 788 / 489; overflow: hidden; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); transition: border-color 160ms ease, transform 160ms ease; }
-.home-story-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
-.home-stories a:is(:hover, :focus-visible) .home-story-shot { border-color: var(--story-up); transform: translateY(-2px); }
-.home-story-title { font: 400 18px/1.25 Georgia, serif; letter-spacing: -.015em; }
-.home-stories a:is(:hover, :focus-visible) .home-story-title { text-decoration: underline; text-underline-offset: 3px; }
-.shot-dark { display: none !important; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .shot-dark { display: block !important; }
-  :root:not([data-theme="light"]) .shot-light { display: none !important; }
-}
-:root[data-theme="dark"] .shot-dark { display: block !important; }
-:root[data-theme="dark"] .shot-light { display: none !important; }
-@media (prefers-reduced-motion: reduce) { .home-story-shot { transition: none; } .home-stories a:hover .home-story-shot { transform: none; } }
-.home-stories-all { margin: 1rem 0 0; font-size: 14px; }
-.home-stories-all a { display: inline-flex; min-height: 44px; align-items: center; color: var(--text-secondary); text-decoration: underline; }
+.home-stories > a { display: grid; gap: .7rem; color: var(--text-secondary); text-decoration: none; }
+.home-stories-shot { display: block; aspect-ratio: 1768 / 995; overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-2); transition: border-color 160ms ease, transform 160ms ease; }
+.home-stories-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.home-stories > a:is(:hover, :focus-visible) .home-stories-shot { border-color: var(--story-up); transform: translateY(-2px); }
+.home-stories > a > span:last-child { min-height: 44px; display: flex; align-items: center; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .home-stories-shot { transition: none; } .home-stories > a:hover .home-stories-shot { transform: none; } }
+.home-tools a[data-tool="compare"] { --tool-wash: color-mix(in srgb, var(--story-up) 22%, transparent); --tool-ink: var(--story-up); }

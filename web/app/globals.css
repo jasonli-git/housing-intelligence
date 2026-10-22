@@ -3747,3 +3747,12 @@ html[data-housing-mode="afford"] .nj-head ~ .nj-source-notes {
 .story-link { margin: 1rem 0 0; font-size: 13px; }
 .story-link a { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .5rem; min-height: 44px; color: var(--text-secondary); text-decoration: underline; text-underline-offset: 3px; }
 .story-link a span { padding: .1rem .45rem; border: 1px solid var(--border); border-radius: 999px; font: 600 10px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; text-decoration: none; color: var(--text-muted); }
+
+/* Screenshots in the reader's theme (ThemedShot): both are in the markup, one is shown. */
+.shot-dark { display: none !important; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .shot-dark { display: block !important; }
+  :root:not([data-theme="light"]) .shot-light { display: none !important; }
+}
+:root[data-theme="dark"] .shot-dark { display: block !important; }
+:root[data-theme="dark"] .shot-light { display: none !important; }

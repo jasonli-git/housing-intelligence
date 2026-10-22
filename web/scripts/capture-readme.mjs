@@ -35,6 +35,7 @@ const VIEWPORTS = [
 // chart, light and dark, as JPEGs into screenshots/stories/. The list is read from the
 // stories index, so a new story is pictured without touching this file.
 const SHOT = { width: 820, height: 900, aspect: 0.62, scale: 1 };
+const INDEX = { width: 1800, height: 1400, aspect: 0.5625, columns: 5 };
 const only = process.env.SCREENSHOT_ONLY;
 
 await mkdir(resolve(outDir, 'stories'), { recursive: true });
@@ -64,6 +65,24 @@ try {
         });
         console.log(`screenshot: stories/${slug}-${scheme}`);
       }
+      // Then the stories page itself, for the home page. Its cards show the pictures just
+      // taken, which are not uploaded yet, so those requests are answered from disk.
+      await page.route('**/screenshots/stories/*', (route) => route.fulfill({ path: resolve(outDir, 'stories', route.request().url().split('/').pop()) }));
+      await page.setViewportSize({ width: INDEX.width, height: INDEX.height });
+      await page.goto(origin + '/stories', { waitUntil: 'networkidle', timeout: 90_000 });
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+        // Lazy pictures below the fold would otherwise be blank in the shot.
+        await Promise.all([...document.images].map((img) => { img.loading = 'eager'; return img.decode().catch(() => {}); }));
+      });
+      await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
+      // Five across on a wide page, so one picture holds nearly every story.
+      await page.addStyleTag({ content: `.stories-page{max-width:none!important}.stories-grid{grid-template-columns:repeat(${INDEX.columns},minmax(0,1fr))!important}` });
+      // The cards, not the page's head: the home page gives the section its own heading.
+      const grid = await page.locator('.stories-grid').boundingBox();
+      if (!grid) throw new Error('/stories: no .stories-grid');
+      await page.screenshot({ path: resolve(outDir, `stories-index-${scheme}.jpg`), type: 'jpeg', quality: 80, fullPage: true, clip: { x: grid.x, y: grid.y, width: grid.width, height: Math.min(grid.height, Math.round(grid.width * INDEX.aspect)) } });
+      console.log(`screenshot: stories-index-${scheme}`);
       await context.close();
     }
   }
