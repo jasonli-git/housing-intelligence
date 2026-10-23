@@ -6,6 +6,28 @@ import AxeBuilder from "@axe-core/playwright";
 const base = process.env.SITE_URL ?? "http://localhost:3002";
 const browser = await chromium.launch();
 try {
+  // Header overflow can occur inside its row without overflowing the document.
+  // Check both sides of the desktop/Tools breakpoint, not just standard viewports.
+  for (const width of [320, 390, 600, 768, 1024, 1240, 1241, 1280, 1440, 1920]) {
+    const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto(`${base}/stories`);
+    await page.evaluate(() => document.fonts.ready);
+    for (const theme of ["light", "dark"]) {
+      await page.evaluate((value) => document.documentElement.dataset.theme = value, theme);
+      const geometry = await page.evaluate(() => {
+        const box = (selector) => document.querySelector(selector).getBoundingClientRect();
+        const input = box(".bar .place-search input"), search = box(".bar .place-search"), toggle = box(".theme-toggle");
+        const hit = document.elementFromPoint(toggle.x + toggle.width / 2, toggle.y + toggle.height / 2);
+        return { inside: input.left >= search.left - 1 && input.right <= search.right + 1,
+          separate: input.right <= toggle.left, hittable: Boolean(hit?.closest(".theme-toggle")),
+          inViewport: toggle.right <= innerWidth && input.left >= 0 };
+      });
+      assert.deepEqual(geometry, { inside: true, separate: true, hittable: true, inViewport: true }, `header ${width}px/${theme}`);
+    }
+    await context.close();
+  }
+  console.log("Header: search containment and unobstructed theme control passed at 10 widths in both themes");
   for (const width of [1440, 768, 390]) {
     for (const theme of ["dark", "light"]) {
       const context = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: theme, reducedMotion: "reduce" });

@@ -145,3 +145,25 @@ Verification after the text pass: **743 tests passed (123 files)**; TypeScript p
 the route-scoped `/stories` production build passed against the normal read-only local
 API; browser/axe checks passed at 1440/768/390px in both themes. `git diff --check`
 passed. The build remains a debug subset, not a full deployable export. No deploy.
+
+## Review follow-up: header search/theme overlap — 2026-10-23
+
+- Reproduced at 1440px: the search wrapper was 160px wide, but its grid's intrinsic
+  input track was about 200px. The input extended beneath the adjacent theme button
+  even though the page itself did not overflow horizontally.
+- Shared `site-chrome.css` now uses a `minmax(0, 1fr)` search track and a shrinkable,
+  border-box input constrained to its wrapper. This fixes the underlying header
+  geometry, not just the stories page, without clipping results or changing controls.
+- Extended `check-story-library.mjs` to verify input containment, separation from the
+  theme button, button-center hit testing and viewport containment at 320, 390, 600,
+  768, 1024, 1240, 1241, 1280, 1440 and 1920px in both themes. All passed, as did
+  the existing six responsive library/axe combinations.
+- Frontend tests: **743 passed**; TypeScript and the stories-scoped production build
+  passed. `git diff --check` passed. No deployment or background colour change.
+
+Background explanation for the user: `/stories` inherits the existing Horizon theme,
+not a dedicated new library palette. The page base is warm ivory `#f7f2ea` in light
+mode and warm near-black `#0b0a09` in dark mode. A fixed, blurred rust/violet/amber
+radial-gradient layer, opacity .42, drifts on a 26-second alternating animation;
+reduced-motion disables that movement. The library's surfaces use existing neutral
+surface tokens, which can appear slightly cooler than the warm page base.

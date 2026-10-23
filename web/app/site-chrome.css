@@ -50,3 +50,8 @@
 
 /* A late weekly check (#411) reads in the page's ink, not the muted grey of a routine one. */
 .site-status[data-overdue] .site-status-kicker { color: var(--text-primary) !important; font-weight: 600; }
+
+/* The desktop search can be narrower than an input's intrinsic ~200px width.
+   Let its grid track and input shrink together instead of covering the theme button. */
+.bar .place-search { grid-template-columns: minmax(0, 1fr); }
+.bar .place-search input { box-sizing: border-box; min-width: 0; width: 100%; max-width: 100%; }
