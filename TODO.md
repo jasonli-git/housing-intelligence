@@ -29,33 +29,21 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — the hosting decision, then the rest of a second state's groundwork (2026-10-21)
+## Now — Milestone 56, the raw archive in R2 (2026-10-22)
 
-The three implementation steps the owner ordered on 2026-10-20 are done: publication
-capacity measured and 1,768 redirect files cut (#201, #203, ARCHITECTURE #400), county
-series, geometry and `api.geo` taken from scope (#205, #401), and scale safety (#208,
-#402, #403). Config alone cannot fit a second New Jersey-sized state on Pages Free
-(#210); the accessibility check found on the way now runs on every deploy (#211, #404).
+Ordered by the owner 2026-10-22 ahead of Milestones 53–55 (ROADMAP). Branch
+`milestone/m56-raw-archive-r2`. The previous `Now`, a second state's groundwork, is done
+but for hosting, which the owner holds (Frontend and presentation, "A second state will
+not fit Pages' limits").
 
-1. **Hosting: decided by the owner 2026-10-21 — Workers static assets on Workers Paid**
-   (100,000 files), with the numeric-link redirects moved to a Worker; later, pages in R2
-   behind a Worker past about seven states, and on-request rendering only for national
-   coverage. **On hold by the owner 2026-10-21** until TODO and most open Director
-   Notes are cleared; then the owner subscribes to Workers Paid and a brief moves the
-   site from Pages, tried on a preview address before production (under Frontend and
-   presentation, "A second state will not fit Pages' limits").
-2. **The remaining New Jersey assumptions** — done (2026-10-21, ARCHITECTURE #406,
-   #407): sources declare their states, `hip acquire` works on a new database, labels
-   and cost rules are per state, and the site reads one list of covered states. What a
-   chosen second state still needs is under API and scale limits.
-3. **Tests that guard data** — done (2026-10-21, #214): every validation-gate rule, the
-   real Zillow unpivots, and FRED, BLS, FHFA and Zillow against recorded responses. The
-   four silent-loss gaps they found are fixed (ARCHITECTURE #405).
-
-Kept out of that scope: publisher-dependent gaps (Correctness and data integrity) and the
-owner's decisions (Open decisions; HUD income-limit dating). The readings are stale after
-the 2026-10-19 Zillow refresh and #382; regenerating them is held by the owner. Rotating
-the six keys still listed under Parked is the owner's.
+1. **Archive layer, push, restore, trim, pull** — done: `hip.archive`, `hip archive`,
+   the restore in `SourceAdapter._from_cache`, tests against a local rclone remote.
+2. **The owner creates the bucket and token** — `housing-raw`, private, an R2 token with
+   read and write on it alone, an `[r2-raw]` rclone section and `HIP_ARCHIVE_REMOTE` in
+   `.env` (README, "The raw archive in R2").
+3. **First push and live check** — `hip archive push`, `status`, `trim --apply`; then a
+   cited, trimmed release's source landed again, its file restored with the same hash.
+4. **PR**, then stop for review.
 
 ## Open
 
@@ -202,6 +190,13 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Housekeeping
 
+- [ ] **Duplicate release files named by their request URL** (found 2026-10-22, M56):
+      70 release directories in `census_acs`, `hud`, `nj_affordable` and
+      `nj_tax_rates`, all fetched before 2026-08-12, hold a second copy of their file
+      under the URL it was fetched with, and the Census ones carry the Census API key in
+      the name. Identical to the file the manifest names; never pushed to R2 (#437). The
+      owner's to delete, and to decide whether that key, which never left this Mac,
+      needs rotating.
 - [ ] **Reply as housing@ and privacy@ from Gmail.** (#357, owner 2026-10-09) Both
       addresses are Cloudflare Email Routing forwards, which only receive, so a reply
       today shows the owner's personal address. Chosen: keep the forwards and add an
@@ -274,6 +269,10 @@ Not open work: each comes round on a date. The steps live where the row says.
       Lighthouse on one page of each kind (home, county, town, ZIP, `/afford`, `/guide`)
       and fix only what it flags. No photos to compress; the maps and the region JSON are
       the likely weight.
+- [ ] **Daniel's Law removals and the raw bucket — deferred by the owner 2026-10-22**
+      (M56). A removal reaches the published lookup, not the MOD-IV files as published,
+      which `housing-raw` holds as `data/raw/` always has (ARCHITECTURE Known
+      Limitations). Waiting for the owner to take it up.
 
 ### Data additions — parked by the owner 2026-10-09
 
