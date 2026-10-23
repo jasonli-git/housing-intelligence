@@ -91,6 +91,7 @@ def land_csv(
     parquet_dir: Path,
     overwrite: bool = False,
     csv_options: str = "",
+    encoding: str = "latin-1",
     required_columns: tuple[str, ...] = (),
 ) -> LandedTable:
     """Transcode one CSV to Parquet, letting DuckDB infer types over the whole file.
@@ -107,7 +108,7 @@ def land_csv(
                     row[0]
                     for row in con.execute(
                         f"DESCRIBE SELECT * FROM read_csv('{release.path}', header=true, "
-                        f"encoding='latin-1'{csv_options})"
+                        f"encoding='{encoding}'{csv_options})"
                     ).fetchall()
                 }
                 missing = [c for c in required_columns if c not in header]
@@ -121,15 +122,16 @@ def land_csv(
             # sample_size=-1: Zillow's leading rows are frequently empty for newer
             # geographies, and a sampled inference reads those columns as VARCHAR and
             # then silently drops every value that will not cast.
-            # encoding='latin-1': IRS SOI files carry non-UTF-8 bytes in county names
-            # (line 2333 of countyinflow2122.csv), which aborts a UTF-8 read outright.
-            # latin-1 decodes every byte, so no row is dropped.
+            # encoding: latin-1 unless the adapter says otherwise. IRS SOI files carry
+            # non-UTF-8 bytes in county names (line 2333 of countyinflow2122.csv), which
+            # aborts a UTF-8 read outright; latin-1 decodes every byte, so no row is
+            # dropped. Wikidata's names are UTF-8 and would land garbled (2026-10-23).
             con.execute(
                 f"""
                 COPY (
                     SELECT * FROM read_csv('{release.path}',
                                            header=true, sample_size=-1,
-                                           encoding='latin-1'{csv_options})
+                                           encoding='{encoding}'{csv_options})
                 ) TO '{out}' (FORMAT PARQUET, COMPRESSION ZSTD)
                 """
             )

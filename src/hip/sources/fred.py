@@ -1,10 +1,11 @@
 """Federal Reserve Economic Data — national macro series.
 
-Only `MORTGAGE30US` today: the 30-year fixed mortgage rate, which is national and has no
-regional breakdown. It lands at the `nation` level against a synthetic US region
-(ARCHITECTURE #30) rather than being attached to New Jersey, because recording a
-national rate as a state measurement is the kind of quiet inaccuracy this platform
-exists to refuse.
+`MORTGAGE30US`, the 30-year fixed mortgage rate, which is national and has no regional
+breakdown, and since 2026-10-23 Realtor.com's median days on market for New Jersey and
+its counties (`dom_*`), which the visual stories read. The rate lands at the `nation`
+level against a synthetic US region (ARCHITECTURE #30) rather than being attached to New
+Jersey, because recording a national rate as a state measurement is the kind of quiet
+inaccuracy this platform exists to refuse.
 
 **Two frequencies of one series** (Milestone 26). Freddie Mac publishes the rate weekly;
 the platform had only ever asked FRED for monthly averages. So on 2026-09-23 the cost card
@@ -30,6 +31,11 @@ BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 SERIES: dict[str, tuple[str, str | None]] = {
     "MORTGAGE30US": ("MORTGAGE30US", "m"),
     "MORTGAGE30US_weekly": ("MORTGAGE30US", None),
+    # Realtor.com's median days a listing spends on the market, monthly from 2016, for
+    # the state and each county (the stories, 2026-10-23). Realtor.com's copyright,
+    # "citation required", which the source's display-only class already honours.
+    "dom_34": ("MEDDAYONMARNJ", None),
+    **{f"dom_34{c:03d}": (f"MEDDAYONMAR34{c:03d}", None) for c in range(1, 42, 2)},
 }
 
 

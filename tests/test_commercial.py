@@ -73,6 +73,9 @@ def test_what_survives_each_use_today() -> None:
             "fema_flood_claims",
             "fema_flood_claims_paid",
             "fema_flood_claims_unplaced",
+            # Realtor.com's days on market through FRED (2026-10-23), read only by a
+            # story: FRED's terms leave commercial use to each series' owner.
+            "realtor_median_days_on_market",
         ]
     )
     assert restricted == {"ads": expected, "paid": expected}

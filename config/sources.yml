@@ -1794,3 +1794,117 @@ sources:
     notes: >-
       Average night-time radiance for a year, nanowatts per square centimetre per
       steradian, about 460 metres a pixel, with background, fires and boats masked.
+
+  # The third batch of visual stories (2026-10-23).
+  wikidata:
+    name: Wikidata — New Jersey municipalities and the people born in them
+    publisher: Wikimedia Foundation (Wikidata contributors)
+    license: Creative Commons CC0 1.0 (public domain dedication)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        CC0 waives every right Wikidata's editors hold in its structured data; any use is
+        allowed and credit is a courtesy.
+    terms_url: https://www.wikidata.org/wiki/Wikidata:Licensing
+    terms_checked: 2026-10-23
+    terms_note: >-
+      Structured data only, which is CC0; Wikipedia's article text, CC BY-SA, is not
+      read. People are named only where Wikidata already records them as notable, and
+      only the most widely known person born in each town is shown.
+    notices:
+      - >-
+        Incorporation dates and births: Wikidata (CC0), wikidata.org.
+    url: https://query.wikidata.org/sparql
+    homepage: https://www.wikidata.org/
+    cadence: monthly
+    adapter: hip.sources.wikidata:WikidataAdapter
+    fallback: >-
+      Wikidata's weekly JSON dumps (dumps.wikimedia.org/wikidatawiki/entities), the same
+      statements without the query service; for incorporation dates, John P. Snyder's
+      The Story of New Jersey's Civil Boundaries, 1606-1968 (NJ Geological Survey).
+    notes: >-
+      A municipality's inception is its incorporation or setting-off as Wikidata records
+      it; 134 of 564 had none on 2026-10-23. A person's notability is the number of
+      Wikipedia language editions with an article on them.
+
+  noaa_nclimgrid:
+    name: nClimGrid-Daily county averages
+    publisher: NOAA National Centers for Environmental Information
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: Federal government work, no restriction on use.
+    terms_url: https://www.ncei.noaa.gov/products/land-based-station/nclimgrid-daily
+    terms_checked: 2026-10-23
+    terms_note: >-
+      Read from NOAA's Open Data Dissemination bucket on AWS, which carries no
+      additional terms.
+    url: https://noaa-nclimgrid-daily-pds.s3.amazonaws.com/EpiNOAA/v1-0-0/csv/cty/
+    homepage: https://www.ncei.noaa.gov/products/land-based-station/nclimgrid-daily
+    cadence: monthly
+    adapter: hip.sources.nclimgrid:NClimGridAdapter
+    fallback: >-
+      NCEI's THREDDS server for the gridded files, averaged over counties here; or the
+      Global Historical Climatology Network's station records for one station a county.
+    notes: >-
+      Daily maximum temperature averaged over each county's area, degrees Celsius, since
+      1951. Summer months only (May to September); past years final ("scaled").
+
+  mrlc_nlcd:
+    name: National Land Cover Database — impervious surface
+    publisher: Multi-Resolution Land Characteristics Consortium (USGS)
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: Federal government work, no restriction on use.
+    terms_url: https://www.mrlc.gov/data
+    terms_checked: 2026-10-23
+    terms_note: Requested from MRLC's public Web Coverage Service for New Jersey's box.
+    url: https://www.mrlc.gov/geoserver/mrlc_download/wcs
+    homepage: https://www.mrlc.gov/
+    cadence: irregular
+    adapter: hip.sources.nlcd:ImperviousAdapter
+    fallback: >-
+      The Annual NLCD collection (doi.org/10.5066/P94UXNTS) as national GeoTIFFs, cut to
+      New Jersey with rasterio as the hand-downloaded rasters are.
+    notes: >-
+      The share of each 30 m cell covered by roofs, roads and pavement, 2021, averaged
+      onto the imagery grid (about 100 m) and read where homes are.
+
+  msft_buildings:
+    name: US Building Footprints — New Jersey
+    publisher: Microsoft
+    license: Open Database License (ODbL) 1.0
+    licence_class: attribution
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        The ODbL allows any use, commercial included, with credit, and a derived
+        database made public offered under the ODbL too.
+    terms_url: https://github.com/microsoft/USBuildingFootprints
+    terms_checked: 2026-10-23
+    terms_note: >-
+      Share-alike, as OpenStreetMap's extract is (osm_nj): the per-town building sizes
+      published from it are offered under the ODbL, as the notice says.
+    notices:
+      - >-
+        Building sizes: Microsoft US Building Footprints, available under the Open
+        Database License. The figures derived from it are offered under the same licence.
+    url: https://minedbuildings.z5.web.core.windows.net/legacy/usbuildings-v2/NewJersey.geojson.zip
+    homepage: https://github.com/microsoft/USBuildingFootprints
+    cadence: irregular
+    adapter: hip.sources.buildings:FootprintsAdapter
+    fallback: >-
+      OpenStreetMap's building outlines (osm_nj), fewer in rural towns; or a county's
+      own planimetric layer where it publishes one.
+    notes: >-
+      Outlines traced from aerial imagery by a neural network; a roof seen from above,
+      so an attached garage is part of the house and a row of attached houses may be
+      one shape.

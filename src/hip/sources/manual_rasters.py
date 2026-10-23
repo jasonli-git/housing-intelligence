@@ -47,6 +47,8 @@ class ManualRasterAdapter(SourceAdapter):
     RESAMPLING: ClassVar[str]
     # What a pixel the publisher left empty means here (None: no data).
     EMPTY_AS: ClassVar[float | None] = None
+    # The value read as no data, where the file's own tag is wrong; None keeps the tag.
+    SOURCE_NODATA: ClassVar[float | None] = None
 
     def refs(self, vintage: str | None = None) -> list[ReleaseRef]:
         return [
@@ -125,7 +127,9 @@ class ManualRasterAdapter(SourceAdapter):
         grid = from_bounds(xmin, ymin, xmax, ymax, WIDTH, HEIGHT)
         out = np.full((HEIGHT, WIDTH), np.nan, dtype="float32")
         with rasterio.open(path) as source:
-            nodata = source.nodata
+            nodata = (
+                self.SOURCE_NODATA if self.SOURCE_NODATA is not None else source.nodata
+            )
             reproject(
                 source=rasterio.band(source, 1),
                 destination=out,

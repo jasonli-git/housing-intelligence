@@ -29,19 +29,23 @@ ROADMAP's unscheduled ideas). They are in `git show a26d401:TODO.md`.
 and the FCC entry, whose town and ZIP counts shipped in #163, cut to the courtesy reply
 still outstanding and moved to Housekeeping.
 
-## Now — Milestone 56, the raw archive in R2 (2026-10-22)
+## Now — the third batch of visual stories (2026-10-23)
 
-Ordered by the owner 2026-10-22 ahead of Milestones 53–55 (ROADMAP). Branch
-`milestone/m56-raw-archive-r2`. The previous `Now`, a second state's groundwork, is done
-but for hosting, which the owner holds (Frontend and presentation, "A second state will
-not fit Pages' limits").
+Branch `feature/stories-batch-3`. Milestone 56 merged 2026-10-23 (#240). The owner asked
+for all twelve stories proposed that day; nine are built from data now held (ARCHITECTURE
+#438, #439). Hosting stays on hold (Frontend and presentation, "A second state will not
+fit Pages' limits").
 
-1. **Archive layer, push, restore, trim, pull** — done: `hip.archive`, `hip archive`,
-   restore on a read (`hip.sources.base.local`), tests against a local rclone remote.
-2. **The owner creates the bucket and token** — done 2026-10-23.
-3. **First push and live check** — done 2026-10-23: 2,872 files, 5.81GB pushed; a
-   current FRED file restored by `hip land` with its hash; 5.03GB trimmed.
-4. **PR**, then stop for review.
+1. **Three stories wait on the owner's downloads**, each registered only once its file
+   lands (a manual source with no file fails `hip refresh`):
+   - Minutes to Manhattan — NJ Transit's rail and bus GTFS zips into
+     `data/manual/njt_gtfs/` (developer.njtransit.com, free registration). Adapter,
+     landing, model and page are written; the page is not yet listed.
+   - The liquor licence lottery — the ABC's Retail Licensee Listing (.xlsx) into
+     `data/manual/nj_abc/` (njoag.gov refuses scripts).
+   - Who solar actually reaches — the Clean Energy Program's Installation Data (.xlsx)
+     into `data/manual/njcep_solar/` (cleanenergy.nj.gov refuses scripts).
+2. **PR**, then stop for review.
 
 ## Open
 

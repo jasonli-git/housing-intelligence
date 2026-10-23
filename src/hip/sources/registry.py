@@ -16,6 +16,7 @@ from hip.config import ConfigError, GeographyScope, fips_for, get_settings
 from hip.sources.base import SourceAdapter, read_discovery
 from hip.sources.bls import BlsAdapter
 from hip.sources.bts_ntm import TransitStopsAdapter
+from hip.sources.buildings import FootprintsAdapter
 from hip.sources.census_acs import AcsAdapter
 from hip.sources.census_blocks import BlockRelationshipAdapter, BlocksAdapter
 from hip.sources.census_lodes import LodesAdapter
@@ -54,6 +55,7 @@ from hip.sources.infrastructure import (
 )
 from hip.sources.irs_migration import MigrationAdapter
 from hip.sources.manual_rasters import NightLightsAdapter, NoiseAdapter
+from hip.sources.nclimgrid import NClimGridAdapter
 from hip.sources.nj_affordable import NjAffordableAdapter
 from hip.sources.nj_bpu import BpuAnnualReportsAdapter, BpuReliabilityAdapter
 from hip.sources.nj_construction import NjConstructionAdapter
@@ -63,8 +65,10 @@ from hip.sources.nj_revaluations import NjRevaluationsAdapter
 from hip.sources.nj_sr1a import Sr1aAdapter
 from hip.sources.nj_tax_rates import NjTaxRatesAdapter
 from hip.sources.njdep import CafeAdapter, KcslAdapter, WaterAreasAdapter
+from hip.sources.nlcd import ImperviousAdapter
 from hip.sources.osm import OsmAdapter
 from hip.sources.tiger import TigerAdapter, TigerRoadsAdapter
+from hip.sources.wikidata import WikidataAdapter
 from hip.sources.zillow import ZhviAdapter, ZhviBottomAdapter, ZoriAdapter
 
 # source_id -> the milestone that delivers its adapter. Sources absent from this map
@@ -162,6 +166,11 @@ IMPLEMENTED: tuple[str, ...] = (
     ElevationAdapter.source_id,
     NoiseAdapter.source_id,
     NightLightsAdapter.source_id,
+    # The third batch of stories (2026-10-23).
+    WikidataAdapter.source_id,
+    NClimGridAdapter.source_id,
+    ImperviousAdapter.source_id,
+    FootprintsAdapter.source_id,
 )
 
 # Sources carrying housing metrics, as opposed to geometry. `hip stage` and the fact
@@ -231,6 +240,11 @@ METRIC_SOURCES: tuple[str, ...] = (
     ElevationAdapter.source_id,
     NoiseAdapter.source_id,
     NightLightsAdapter.source_id,
+    # The third batch of stories (2026-10-23).
+    WikidataAdapter.source_id,
+    NClimGridAdapter.source_id,
+    ImperviousAdapter.source_id,
+    FootprintsAdapter.source_id,
 )
 
 
@@ -445,6 +459,14 @@ def _construct(source_id: str, scope: GeographyScope) -> SourceAdapter:
         return NoiseAdapter()
     if source_id == NightLightsAdapter.source_id:
         return NightLightsAdapter()
+    if source_id == WikidataAdapter.source_id:
+        return WikidataAdapter()
+    if source_id == NClimGridAdapter.source_id:
+        return NClimGridAdapter()
+    if source_id == ImperviousAdapter.source_id:
+        return ImperviousAdapter()
+    if source_id == FootprintsAdapter.source_id:
+        return FootprintsAdapter()
     if (milestone := PLANNED.get(source_id)) is not None:
         raise UnknownSourceError(
             f"'{source_id}' has no adapter yet — it ships in Milestone {milestone}. "

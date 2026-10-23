@@ -499,3 +499,59 @@ models:
         tests:
           - not_null
           - accepted_range: {name: stg_story_lights_in_range, min_value: 0, max_value: 1000}
+  - name: stg_story_market
+    description: Realtor.com's median days on market, monthly, for the state and counties.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_market_in_range, min_value: 0, max_value: 400}
+  - name: stg_story_wikidata
+    description: >-
+      Towns' incorporation years and notable births, from Wikidata; built once landed.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_wikidata_in_range, min_value: 0, max_value: 2100}
+  - name: stg_story_heat
+    description: Days a year each county's average high passed 90°F; built once landed.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_heat_in_range, min_value: 0, max_value: 153}
+  - name: stg_story_impervious
+    description: Paved share of the ground at homes, from NLCD; built once landed.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_impervious_is_a_share, min_value: 0, max_value: 1}
+  - name: stg_story_footprints
+    description: Median house-sized building footprint per town; built once landed.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_footprints_in_range, min_value: 400, max_value: 6000}
+  - name: story_points_flood_calendar
+    description: Flood insurance claims paid in New Jersey, per day of loss.
+    columns:
+      - name: x
+        tests: [not_null, unique]
+  - name: story_points_year_built
+    description: One-to-four-family houses by decade built, per county and the state.
+    columns:
+      - name: y
+        tests: [not_null]
+  - name: story_points_famous
+    description: The most widely known person born in each town; built once landed.
+    columns:
+      - name: geoid
+        tests: [not_null, unique]
+  - name: story_points_footprints
+    description: House-sized buildings per county by 200 sq ft bin; built once landed.
+    columns:
+      - name: y
+        tests: [not_null]

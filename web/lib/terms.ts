@@ -754,6 +754,38 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "How bright the night sky is over the homes, from satellite night-light measurements averaged over a year, weighted by each census block’s homes.",
     why: "Read only by the visual stories: the darker the sky, the more stars you can see.",
   },
+  osm_bagel_count: {
+    what: "Bagel shops mapped in OpenStreetMap: a place tagged as one or named for bagels.",
+    why: "Read only by the visual stories. Volunteer-mapped, so a floor.",
+  },
+  osm_pizza_count: {
+    what: "Pizzerias mapped in OpenStreetMap: a place tagged as one or named for pizza.",
+    why: "Read only by the visual stories. Volunteer-mapped, so a floor.",
+  },
+  realtor_median_days_on_market: {
+    what: "The median number of days a listing spent on the market in the month, as Realtor.com counts them.",
+    why: "Read only by the visual stories: a short wait means homes sell fast.",
+  },
+  wikidata_incorporated_year: {
+    what: "The year the town was incorporated or set off, as Wikidata records it.",
+    why: "Read only by the visual stories. Some towns have no date recorded.",
+  },
+  wikidata_notable_births: {
+    what: "How many people Wikidata records as born in the town.",
+    why: "Read only by the visual stories: notable as Wikidata’s editors judge it.",
+  },
+  nclimgrid_days_over_90: {
+    what: "Days in the year the county’s average daily high reached 90°F, from NOAA’s gridded daily temperatures.",
+    why: "Read only by the visual stories. A county average runs cooler than its hottest streets.",
+  },
+  nlcd_impervious_homes_share: {
+    what: "The share of ground covered by roofs, roads and pavement where the homes are, from the National Land Cover Database.",
+    why: "Read only by the visual stories: paved ground holds heat and sheds rain.",
+  },
+  msft_median_footprint_sqft: {
+    what: "The median footprint of the town’s house-sized buildings, from outlines traced from aerial imagery.",
+    why: "Read only by the visual stories. A roof seen from above, garage included.",
+  },
   transit_rail_homes_share: {
     what: "The share of homes within half a mile, in a straight line, of a commuter rail, PATH, PATCO, subway or light rail stop.",
     why: "Nearness to a station, not how often trains call there.",

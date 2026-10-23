@@ -50,6 +50,8 @@ from hip.geography.backdrop import load_backdrop
 from hip.geography.crosswalk import apply_hud_weights, build_crosswalk
 from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
+from hip.landing.footprints import land_footprints
+from hip.landing.gtfs import land_gtfs
 from hip.landing.osm import land_osm
 from hip.landing.raster import land_raster
 from hip.landing.shapefile import land_shapefile
@@ -123,6 +125,7 @@ from hip.warehouse.load import (
     load_income_limits,
     load_migration_flows,
     load_region_identifiers,
+    load_story_points,
     load_water_systems,
     load_work_destinations,
     metric_records,
@@ -643,7 +646,9 @@ def prune_raw(
                     "   OR EXISTS (SELECT 1 FROM work_destinations d "
                     "              WHERE d.release_id = sr.release_id) "
                     "   OR EXISTS (SELECT 1 FROM migration_flows f "
-                    "              WHERE f.release_id = sr.release_id)"
+                    "              WHERE f.release_id = sr.release_id) "
+                    "   OR EXISTS (SELECT 1 FROM story_points p "
+                    "              WHERE p.release_id = sr.release_id)"
                 )
             ).all()
             if row[0]
@@ -1077,6 +1082,14 @@ def land(
                 table = land_raster(
                     release, parquet_dir=settings.parquet_dir, overwrite=overwrite
                 )
+            elif adapter.landing_format == "gtfs":
+                table = land_gtfs(
+                    release, parquet_dir=settings.parquet_dir, overwrite=overwrite
+                )
+            elif adapter.landing_format == "footprints":
+                table = land_footprints(
+                    release, parquet_dir=settings.parquet_dir, overwrite=overwrite
+                )
             elif adapter.landing_format == "osm":
                 table = land_osm(
                     release, parquet_dir=settings.parquet_dir, overwrite=overwrite
@@ -1094,6 +1107,7 @@ def land(
                     parquet_dir=settings.parquet_dir,
                     overwrite=overwrite,
                     csv_options=adapter.csv_read_options,
+                    encoding=adapter.csv_encoding,
                     required_columns=adapter.required_columns,
                 )
             typer.echo(
@@ -1447,6 +1461,11 @@ def load(
         get_engine(), settings.duckdb_path, releases=fact_provenance
     )
     typer.echo(f"migration flows: {flow_rows:,}")
+    # What the visual stories draw beyond the measures (#438), each row citing a release.
+    story_rows = load_story_points(
+        get_engine(), settings.duckdb_path, releases=fact_provenance
+    )
+    typer.echo(f"story points: {story_rows:,}")
     assistance_rows = load_affordable_housing(
         get_engine(), settings.duckdb_path, releases=fact_provenance
     )

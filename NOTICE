@@ -242,6 +242,12 @@ packet for that region answers it precisely.
 - Terms: Public domain (U.S. Government work)
 - https://www.fema.gov/flood-maps/national-flood-hazard-layer
 
+### National Land Cover Database — impervious surface
+
+- Publisher: Multi-Resolution Land Characteristics Consortium (USGS)
+- Terms: Public domain (U.S. Government work)
+- https://www.mrlc.gov/
+
 ### National Transit Map — stops
 
 - Publisher: Bureau of Transportation Statistics
@@ -253,6 +259,12 @@ packet for that region answers it precisely.
 - Publisher: Bureau of Transportation Statistics
 - Terms: Public domain (U.S. Government work)
 - https://www.bts.gov/geospatial/national-transportation-noise-map
+
+### nClimGrid-Daily county averages
+
+- Publisher: NOAA National Centers for Environmental Information
+- Terms: Public domain (U.S. Government work)
+- https://www.ncei.noaa.gov/products/land-based-station/nclimgrid-daily
 
 ### New Jersey school district boundaries
 
@@ -368,6 +380,12 @@ packet for that region answers it precisely.
 - Terms: Public domain (U.S. Government work)
 - https://www.epa.gov/dwucmr/occurrence-data-unregulated-contaminant-monitoring-rule
 
+### US Building Footprints — New Jersey
+
+- Publisher: Microsoft
+- Terms: Open Database License (ODbL) 1.0
+- https://github.com/microsoft/USBuildingFootprints
+
 ### USPS ZIP crosswalk and income limits
 
 - Publisher: U.S. Department of Housing and Urban Development
@@ -379,6 +397,12 @@ packet for that region answers it precisely.
 - Publisher: Earth Observation Group, Payne Institute, Colorado School of Mines
 - Terms: Creative Commons Attribution 4.0 International
 - https://eogdata.mines.edu/products/vnl/
+
+### Wikidata — New Jersey municipalities and the people born in them
+
+- Publisher: Wikimedia Foundation (Wikidata contributors)
+- Terms: Creative Commons CC0 1.0 (public domain dedication)
+- https://www.wikidata.org/
 
 ### Zillow Home Value Index
 

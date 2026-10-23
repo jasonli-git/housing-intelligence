@@ -749,6 +749,94 @@ def load_work_destinations(
         )
 
 
+def load_story_points(
+    engine: Engine,
+    duckdb_path: Path,
+    *,
+    releases: Sequence[ReleaseProvenance],
+    schema: str = "main_staging",
+) -> int:
+    """Replace `story_points` from every staged `story_points_*` model (#438).
+
+    Each model is one story's rows: `story_id, series, geoid, level, x, y, label` and
+    the `source_id, layer, vintage` of the release they were counted from. Replaced
+    whole, as `work_destinations` is; a row naming a release this load did not record,
+    or a region that does not exist, aborts it. Returns 0, changing nothing, when no
+    model has been staged.
+    """
+    with duckdb_session(duckdb_path) as duck:
+        tables = [
+            row[0]
+            for row in duck.execute(
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_schema = ? AND table_name LIKE 'story_points_%' "
+                "ORDER BY table_name",
+                [schema],
+            ).fetchall()
+        ]
+        if not tables:
+            return 0
+        rows = [
+            row
+            for table in tables
+            for row in duck.execute(
+                f"""
+                SELECT story_id, series, geoid, level, CAST(x AS VARCHAR), y, label,
+                       source_id, layer, CAST(vintage AS VARCHAR)
+                FROM {schema}.{table} WHERE y IS NOT NULL
+                """
+            ).fetchall()
+        ]
+
+    keys = (
+        "story_id", "series", "geoid", "level", "x", "y", "label",
+        "source_id", "layer", "vintage",
+    )  # fmt: skip
+    with engine.begin() as conn:
+        release_ids = _release_ids(conn, releases)
+        regions = {
+            (geoid, str(level)): region_id
+            for region_id, geoid, level in conn.execute(
+                text("SELECT region_id, geoid, level FROM regions")
+            )
+        }
+        bound = []
+        for values in rows:
+            row = dict(zip(keys, values, strict=True))
+            release = (row["source_id"], row["layer"], row["vintage"])
+            if release not in release_ids:
+                raise ValueError(f"story points {row['story_id']}: no release {release}")
+            region_id = None
+            if row["geoid"] is not None:
+                region_id = regions.get((row["geoid"], row["level"]))
+                if region_id is None:
+                    raise ValueError(
+                        f"story points {row['story_id']}: no region {row['geoid']}"
+                    )
+            bound.append(
+                {
+                    "story_id": row["story_id"],
+                    "series": row["series"],
+                    "region_id": region_id,
+                    "x": row["x"],
+                    "y": float(row["y"]),
+                    "label": row["label"],
+                    "release_id": release_ids[release],
+                }
+            )
+        conn.execute(text("DELETE FROM story_points"))
+        if bound:
+            conn.execute(
+                text(
+                    "INSERT INTO story_points "
+                    "(story_id, series, region_id, x, y, label, release_id) "
+                    "VALUES (:story_id, :series, :region_id, :x, :y, :label, :release_id)"
+                ),
+                bound,
+            )
+        return len(bound)
+
+
 def load_migration_flows(
     engine: Engine,
     duckdb_path: Path,

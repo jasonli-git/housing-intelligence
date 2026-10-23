@@ -28,6 +28,7 @@ from hip.api.routers import (
     regions,
     revisions,
     similar_places,
+    stories,
     water_systems,
     work_destinations,
 )
@@ -58,6 +59,7 @@ app.include_router(freshness.router)
 app.include_router(revisions.router)
 app.include_router(income_limits.router)
 app.include_router(water_systems.router)
+app.include_router(stories.router)
 app.include_router(work_destinations.router)
 app.include_router(migration.router)
 app.include_router(persistence.router)

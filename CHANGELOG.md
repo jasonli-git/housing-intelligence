@@ -13,6 +13,16 @@ are not yet recorded here.
 
 ### Added
 
+- **Nine more visual stories** (ARCHITECTURE #438, #439): Boroughitis (every town by the
+  year it was incorporated, and the 1894 borough rush), the flood claims calendar (every
+  day's flood insurance claims since 1978), how long homes sit (a horizon chart of
+  days on market, every county since 2016), when the town was built and how big the
+  houses really are (two ridgelines), pavement or lawn, the hottest counties (days over
+  90°F, 1951–1980 against 1996–2025), the pizza–bagel line, and hometown famous. Four
+  new sources (Wikidata, NOAA nClimGrid, NLCD impervious surface, Microsoft building
+  footprints), Realtor.com's days on market through FRED, and a `story_points` table
+  with its `/stories/{story_id}/points` route for what a story draws beyond the
+  measures.
 - **The raw archive lives in R2** (Milestone 56, ARCHITECTURE #437): every download is
   also copied to a private bucket, `housing-raw`, and `data/raw/` is a working copy of
   it. `hip archive trim` removes files the bucket holds that no stage will read again,

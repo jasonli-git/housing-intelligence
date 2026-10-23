@@ -5,22 +5,23 @@ household can afford, what the tax bill is, how homes sell, and what comes with 
 flood risk, water, schools, commutes. Live at
 **[housing.jasonli.app](https://housing.jasonli.app)**.
 
-It is built on <!-- fill:sources -->59<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
+It is built on <!-- fill:sources -->63<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
 resolved to a shared geography, and computed before anything is shown. Every figure
 carries its source file, date, licence and margin of error. It is not a listings site
 and not a chatbot: pages, maps, tools, reports and an API are the product, and an
 optional AI layer only explains figures that were already computed.
 
 > **Status — <!-- fill:version -->v0.50.0 (2026-10-08)<!-- /fill -->, updated
-> 2026-10-22.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
+> 2026-10-23.** Versions 1 and 2 are complete and Version 3 is under way. New Jersey is
 > published in full: the state, <!-- fill:counties -->21<!-- /fill --> counties,
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** 28 visual stories, from what goes with pricier towns to the Wawa line,
-> noise and night skies, with eight new sources behind them (#429-#436); the housing
-> atlas maps every town and ZIP code (#428); a fuller page for every property in the
-> tax lookup (#427).
+> **Latest.** 37 visual stories, nine new: Boroughitis, the flood claims calendar, how
+> long homes sit, the hottest counties and five more, with four new sources (#438,
+> #439); the raw archive lives in R2, its working copy on the Mac down from 5.4GB to
+> 261MB (Milestone 56, #437); 28 stories before them, from the Wawa line to night skies
+> (#429-#436).
 >
 > **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
 > state, on hold until they are cleared. See [ROADMAP.md](ROADMAP.md) and
