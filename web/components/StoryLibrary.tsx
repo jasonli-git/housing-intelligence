@@ -10,7 +10,6 @@ function Cover({ story }: { story: Story }) {
   return <div className="library-cover" data-topic={collectionFor(story)}>
     {/* A cropped detail of the actual chart, not fabricated quantitative artwork. */}
     <ThemedShot name={`stories/${storySlug(story)}`} width={788} height={489} className="library-chart-detail" />
-    <span className="library-cover-caption">Chart detail</span>
     <span className="library-cover-open" aria-hidden="true">↗</span>
   </div>;
 }

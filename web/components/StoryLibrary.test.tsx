@@ -13,6 +13,7 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 it("shows the feature and six labelled rails with real story links", () => {
   render(<StoryLibrary />);
+  expect(screen.queryByText("Chart detail")).toBeNull();
   expect(screen.getByRole("link", { name: /Similar towns/ }).getAttribute("href")).toBe("/stories/twin-towns");
   expect(screen.getAllByRole("region")).toHaveLength(6);
   const rail = screen.getByRole("region", { name: "Only in New Jersey" });

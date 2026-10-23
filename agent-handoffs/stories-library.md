@@ -13,7 +13,7 @@ The `/stories` index is now a curated library rather than a uniform wall of grap
   small selection deliberately. All 37 current stories remain discoverable.
 - Landscape covers use cropped details from the existing, actual chart captures,
   with collection accents, rather than fabricated quantitative illustrations.
-  They are explicitly labelled “Chart detail.” These are art-directed existing
+  The covers have no overlaid caption. These are art-directed existing
   captures, not newly commissioned poster artwork or new live chart components.
 - Discover / All stories switch, collection-specific “View all,” title/description
   search, topic filter, result count and recoverable empty state.
@@ -183,3 +183,13 @@ measures desktop placeholder text against the usable input width and checks that
 tools do not overlap the brand, in addition to the earlier containment/hit-area
 checks. All passed, as did the six library/axe combinations, 743 frontend tests,
 TypeScript, the stories-scoped production build and `git diff --check`. No deploy.
+
+## Review follow-up: remove cover captions — 2026-10-23
+
+Removed “Chart detail” from all covers, including the feature and directory. Removed
+the unused caption styles/screenshot selector and its reserved top space, so chart
+images fill their covers rather than leaving an empty label strip. Added a regression
+assertion that the caption is absent. Full story pages remain unchanged.
+
+Verification: 743 frontend tests, TypeScript, the stories-scoped production build and
+`git diff --check` passed. No deployment.

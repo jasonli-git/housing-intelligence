@@ -87,7 +87,7 @@ try {
       await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
       // Ten across on a wide page (seven held 28; 37 need ten for four rows), pictures and titles only, so one picture holds
       // every story; the page itself keeps each story's line of explanation.
-      await page.addStyleTag({ content: `.stories-page{max-width:none!important}.library-grid{grid-template-columns:repeat(${INDEX.columns},minmax(0,1fr))!important}.library-card p,.library-cover-caption,.library-cover-open{display:none!important}` });
+      await page.addStyleTag({ content: `.stories-page{max-width:none!important}.library-grid{grid-template-columns:repeat(${INDEX.columns},minmax(0,1fr))!important}.library-card p,.library-cover-open{display:none!important}` });
       // The cards, not the page's head: the home page gives the section its own heading.
       const grid = await page.locator('.library-grid').boundingBox();
       if (!grid) throw new Error('/stories: no .library-grid');
