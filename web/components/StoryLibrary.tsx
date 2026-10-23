@@ -14,7 +14,8 @@ function StoryRail({ id, title, stories, viewAll }: {
   useEffect(() => {
     const el = track.current;
     if (!el) return;
-    const measure = () => setEdges({ start: el.scrollLeft <= 2, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2 });
+    // Scroll snapping may settle on the track's 3px focus-outline inset.
+    const measure = () => setEdges({ start: el.scrollLeft <= 4, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4 });
     measure();
     el.addEventListener("scroll", measure, { passive: true });
     const observer = new ResizeObserver(measure);
@@ -29,12 +30,12 @@ function StoryRail({ id, title, stories, viewAll }: {
   return <section className="library-rail" aria-labelledby={`${id}-heading`}>
     <header className="library-rail-head">
       <div><h2 id={`${id}-heading`}>{title}</h2></div>
-      <div className="library-rail-actions">
-        {viewAll && <button className="library-view-all" onClick={viewAll}>View all <span aria-hidden="true">↗</span></button>}
-        <button className="library-arrow" aria-label={`Previous stories in ${title}`} aria-controls={`${id}-track`} disabled={edges.start} onClick={() => move(-1)}>‹</button>
-        <button className="library-arrow" aria-label={`Next stories in ${title}`} aria-controls={`${id}-track`} disabled={edges.end} onClick={() => move(1)}>›</button>
-      </div>
+      {viewAll && <div className="library-rail-actions">
+        <button className="library-view-all" onClick={viewAll}>View all <span aria-hidden="true">↗</span></button>
+      </div>}
     </header>
+    <div className="library-rail-stage">
+    <button className="library-arrow library-arrow-previous" aria-label={`Previous stories in ${title}`} aria-controls={`${id}-track`} disabled={edges.start} onClick={() => move(-1)}>‹</button>
     <ul ref={track} id={`${id}-track`} className="library-track" aria-label={title} onKeyDown={(event) => {
       if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) return;
       const links = Array.from(event.currentTarget.querySelectorAll<HTMLAnchorElement>("a"));
@@ -46,6 +47,8 @@ function StoryRail({ id, title, stories, viewAll }: {
     }}>
       {stories.map((story) => <li key={story.href}><StoryCard story={story} /></li>)}
     </ul>
+    <button className="library-arrow library-arrow-next" aria-label={`Next stories in ${title}`} aria-controls={`${id}-track`} disabled={edges.end} onClick={() => move(1)}>›</button>
+    </div>
   </section>;
 }
 

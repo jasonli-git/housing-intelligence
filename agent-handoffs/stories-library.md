@@ -1,5 +1,45 @@
 # Visual stories library
 
+## Library follow-up: overlaid rail controls — 2026-10-23
+
+### What changed / files affected
+
+- `web/components/StoryLibrary.tsx`: move previous/next buttons from rail headings
+  onto the left/right edges of a positioned content-row wrapper. Keep “View all”
+  in the heading. Preserve native scrolling, keyboard link navigation, labels and
+  disabled-at-edge behavior.
+- `web/app/stories/library.css`: compact overlaid buttons fade in/out over 180ms
+  with row hover; keyboard focus within the row also reveals enabled buttons.
+  Touch/coarse-pointer devices retain visible enabled controls without requiring
+  hover. Disabled directions are invisible and cannot intercept clicks. Reduced
+  motion suppresses transitions and retains instant scrolling.
+- `web/components/StoryLibrary.test.tsx`: guard placement within the content row,
+  not the heading. `web/scripts/check-story-library.mjs`: test hover reveal/hide,
+  focus reveal, forward/back scrolling, overlay containment, touch taps and fades.
+
+### Decisions / assumptions / limitations
+
+Show controls on row hover, not in a persistent header toolbar. Native swipe/scroll
+and keyboard navigation remain alternatives. No autoplay or rotation added. Existing
+3px focus padding can be the first scroll-snap position, so edge detection now allows
+4px rather than 2px; this prevents a spurious back arrow at the start. The browser
+test initially caught that issue and then a test race that treated this inset as
+actual forward scrolling; both are addressed. Homepage, backgrounds, navigation,
+publisher notices, individual stories and canonical documents are unchanged.
+Checks use local Chromium and touch emulation, not physical devices or Safari/iOS.
+
+### Verification
+
+- `npm test -- --reporter=dot`: 744 tests across 124 files passed.
+- `npm run typecheck`: passed; `npm run publication:test`: all 5 passed.
+- Stories-scoped production build: passed (not a full-site export).
+- `node scripts/check-story-library.mjs`: header checks at 12 widths in both themes;
+  library/axe checks at 1440, 768 and 390px in light/dark; hover/focus reveal,
+  forward/back buttons, off-edge disabling, overlay positioning, native keyboard
+  access, touch emulation and 180ms/reduced-motion fade checks passed.
+- Inspected a desktop/dark hovered content-row screenshot. `git diff --check` passed.
+- No merge or deployment.
+
 ## Homepage finishing touches — 2026-10-23
 
 ### What changed / files affected

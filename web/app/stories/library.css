@@ -27,9 +27,15 @@
 .library-rail-head p { margin: .35rem 0 0; font-size: 13px; line-height: 1.4; color: var(--text-muted); }
 .library-rail-actions { display: flex; align-items: center; gap: .4rem; flex-shrink: 0; }
 .library-rail-actions button, .library-end button, .library-empty button { color: var(--text-primary); background: transparent; font: inherit; cursor: pointer; }
-.library-arrow { width: 44px; height: 44px; padding: 0; border: 1px solid var(--border); border-radius: 50%; font-size: 27px !important; display: grid; place-items: center; transition: background .2s; }
-.library-arrow:disabled { opacity: .28; cursor: default; }
+.library-rail-stage { position: relative; min-width: 0; }
+.library-arrow { position: absolute; top: 50%; transform: translateY(-75%); z-index: 3; width: 44px; height: 80px; padding: 0; color: var(--text-primary); background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; font: 36px/1 var(--font-text); display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; box-shadow: 0 4px 18px color-mix(in srgb, var(--text-primary) 15%, transparent); transition: opacity 180ms ease, background 180ms ease; }
+.library-arrow-previous { left: 6px; }
+.library-arrow-next { right: 6px; }
+.library-rail-stage:is(:hover, :focus-within) .library-arrow:not(:disabled) { opacity: 1; pointer-events: auto; }
+.library-arrow:disabled { opacity: 0; pointer-events: none; }
 .library-arrow:not(:disabled):hover { background: var(--surface-2); }
+.library-arrow:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+@media (hover: none), (pointer: coarse) { .library-rail-stage .library-arrow:not(:disabled) { opacity: 1; pointer-events: auto; } }
 .library-view-all { border: 0; min-height: 44px; font-size: 12px !important; padding-inline: .6rem; }
 .library-track { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 48px) / 3.25); gap: 16px; list-style: none; padding: 3px 3px 14px; margin: -3px; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 .library-track > li { scroll-snap-align: start; min-width: 0; }

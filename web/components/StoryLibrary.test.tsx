@@ -19,6 +19,9 @@ it("shows the feature and six labelled rails with real story links", () => {
   const rail = screen.getByRole("region", { name: "Only in New Jersey" });
   expect(within(rail).getAllByRole("link")).toHaveLength(9);
   expect(screen.getByRole("button", { name: "Previous stories in Only in New Jersey" }).hasAttribute("disabled")).toBe(true);
+  expect(rail.querySelector(".library-rail-head .library-arrow")).toBeNull();
+  expect(rail.querySelectorAll(".library-rail-stage > .library-arrow")).toHaveLength(2);
+  expect(rail.querySelector(".library-rail-stage > .library-track")).toBeTruthy();
 });
 it("provides every story in a searchable normal grid", () => {
   render(<StoryLibrary />);
