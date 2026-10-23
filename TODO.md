@@ -40,12 +40,12 @@ fit Pages' limits").
    lands (a manual source with no file fails `hip refresh`):
    - Minutes to Manhattan — NJ Transit's rail and bus GTFS zips into
      `data/manual/njt_gtfs/` (developer.njtransit.com, free registration). Adapter,
-     landing, model and page are written; the page is not yet listed.
+     landing and model are merged, unregistered; the page waits for the data.
    - The liquor licence lottery — the ABC's Retail Licensee Listing (.xlsx) into
      `data/manual/nj_abc/` (njoag.gov refuses scripts).
    - Who solar actually reaches — the Clean Energy Program's Installation Data (.xlsx)
      into `data/manual/njcep_solar/` (cleanenergy.nj.gov refuses scripts).
-2. **PR**, then stop for review.
+2. **The nine built stories' PR** is open; the three above follow in their own PR.
 
 ## Open
 
