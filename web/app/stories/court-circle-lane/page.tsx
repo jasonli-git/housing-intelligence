@@ -41,7 +41,7 @@ export default async function CourtCircleLanePage() {
       lede={<>Street names are a clock. The old grid called its streets Street and Avenue; the post-war subdivision, built for cars and dead ends, chose Court, Circle, Lane, Way, Place and Terrace. Sort New Jersey&rsquo;s towns by how many of their streets have the newer names and the year their homes were built moves from {fifths[0].year} to {fifths[4].year}.</>}
       note={<>Street names: the Census Bureau&rsquo;s TIGER road files, the distinct names of each town&rsquo;s local roads; towns with fewer than ten are left out. Year built: the Census Bureau&rsquo;s median year built, five-year American Community Survey. Prices: Zillow&rsquo;s typical home value, each town against its own county.</>}
     >
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <h2 className="story-h">The more Courts, the newer the town</h2>
         <ul className="count-bars clock">
           {fifths.map((f) => (
@@ -53,7 +53,7 @@ export default async function CourtCircleLanePage() {
           ))}
         </ul>
       </figure>
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <h2 className="story-h">{Math.abs(fittedChange(points, 0.1)) < 0.05 ? "And the price? Hardly related" : `And the price: ${pct(fittedChange(points, 0.1))} per 10 points of Courts`}</h2>
         <StoryScatter
           points={points}

@@ -39,7 +39,7 @@ export default async function WhatQuietCostsPage() {
       {!points.length ? <p className="story-note">This story is waiting for the noise map, which is downloaded by hand.</p> : (
         <>
           <div className="story-two">
-            <figure className="story-figure">
+            <figure className="story-figure" tabIndex={0}>
               <p className="ladder-key">{SHADES.map((s) => <span key={s.label}><i style={{ background: "var(--story-2)", opacity: s.o }} />{s.label} of homes at 55 dB+</span>)}</p>
               <svg className="map" viewBox={`0 0 ${MAP_W} ${map.projector.height}`} role="img" aria-label="Map of New Jersey's towns shaded by the share of homes in transportation noise of 55 dB or more.">
                 {map.shapes.map((s) => {
@@ -65,7 +65,7 @@ export default async function WhatQuietCostsPage() {
               <p className="ladder-key"><span><i style={{ background: "var(--story-7)" }} />65 dB or more, a busy road close by</span><span><i style={{ background: "var(--story-2)" }} />55–65 dB</span></p>
             </div>
           </div>
-          <figure className="story-figure">
+          <figure className="story-figure" tabIndex={0}>
             <h2 className="story-h">{Math.abs(per10) < 0.05 ? "Does quiet cost more? Hardly" : per10 < 0 ? `Quiet costs: each 10 points more homes in noise, ${pct(per10)}` : `Louder towns cost more: ${pct(per10)} per 10 points of homes in noise`}</h2>
             <StoryScatter
               points={points}

@@ -50,7 +50,7 @@ export default async function IsNewJerseyBuildingPage() {
       lede="Homes permitted are plans; homes completed are homes; homes demolished come off the count. Statewide over the years first, then each county's latest year, ordered by net homes added for every 1,000 it already had."
       note={<>Permits: the Census Bureau&rsquo;s Building Permits Survey. Completions and demolitions: certificates of occupancy and demolition permits reported to the New Jersey Department of Community Affairs, which not every town reports every year, so a county&rsquo;s totals can run low. Net homes added: completions less demolitions, per 1,000 existing homes.</>}
     >
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <StoryLines series={statewide} format={n} label="Line chart: homes permitted, completed and demolished statewide each year." />
       </figure>
       <h2 className="story-h">County by county</h2>

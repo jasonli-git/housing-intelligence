@@ -45,7 +45,7 @@ export function IncomeScatter({ points }: { points: IncomePoint[] }) {
           ))}
         </p>
       </div>
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Scatter plot: each New Jersey town's median household income against its median home value, with lines where value is 3 and 5 times income.">
           <g className="grid" aria-hidden="true">
             {xTicks.map((t) => <g key={t}><line x1={x(t)} x2={x(t)} y1={T} y2={H - B} /><text x={x(t)} y={H - B + 18} textAnchor="middle">{usd(t)}</text></g>)}

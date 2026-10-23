@@ -42,7 +42,14 @@ export function StackedBars({
         {ticks && (
           <li className="ladder-axis" aria-hidden="true">
             <span>{heads[0]}</span>
-            <span className="ladder-track">{ticks.map((t) => <b key={t.label} style={{ left: shares ? pct(t.at, 1) : pct(t.at) }}>{t.label}</b>)}</span>
+            <span className="ladder-track">
+              {ticks.map((t) => {
+                // A label near the right end reads leftward from its line, so it never
+                // runs past a phone's edge.
+                const at = shares ? t.at : t.at / top;
+                return <b key={t.label} style={{ left: shares ? pct(t.at, 1) : pct(t.at), transform: at > 0.8 ? "translateX(-100%)" : undefined }}>{t.label}</b>;
+              })}
+            </span>
             <span className="num">{heads[1]}</span>
           </li>
         )}

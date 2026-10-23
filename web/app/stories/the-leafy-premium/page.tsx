@@ -38,7 +38,7 @@ export default async function LeafyPremiumPage() {
       note={<>Canopy: USDA Forest Service, NLCD Percent Tree Canopy CONUS, from Landsat, read at about 100 metres and weighted by each census block&rsquo;s homes, so it is the shade where people live rather than across a town&rsquo;s woods. Prices: Zillow&rsquo;s typical home value, each town against its own county. The line is a straight fit and describes rather than explains: leafy towns are also older, larger-lotted suburbs.</>}
     >
       <div className="story-two">
-        <figure className="story-figure">
+        <figure className="story-figure" tabIndex={0}>
           <p className="ladder-key">{SHADES.map((o, i) => <span key={o}><i style={{ background: "var(--story-3)", opacity: o }} />{i === 4 ? "60%+" : `${i * 15}–${(i + 1) * 15}%`}</span>)}</p>
           <svg className="map" viewBox={`0 0 ${MAP_W} ${map.projector.height}`} role="img" aria-label="Map of New Jersey's towns shaded by the share of ground under tree canopy at their homes.">
             {map.shapes.map((s) => {
@@ -60,7 +60,7 @@ export default async function LeafyPremiumPage() {
           ))}
         </div>
       </div>
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <h2 className="story-h">{headline(fittedChange(points, 0.1))}</h2>
         <StoryScatter
           points={points}

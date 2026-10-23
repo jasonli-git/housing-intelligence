@@ -204,7 +204,7 @@ make r2-cors     # once per bucket: let the site's pages read the data files
 
 Before anything uploads, `make deploy` runs `check-dist` (a complete tree, every list
 complete, no `localhost` links), `check-terms` (every glossary word defined),
-`check-accessibility` (80 scans) and the README screenshots. Deploy on a change to
+`check-accessibility` (104 scans) and the README screenshots. Deploy on a change to
 published content, not on every push: the R2 half is an `rclone sync`, which deletes what
 `dist/` no longer holds.
 

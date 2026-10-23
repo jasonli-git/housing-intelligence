@@ -60,7 +60,7 @@ export default async function WhoMovesInPage() {
       note={<>Moves: the IRS&rsquo;s county-to-county migration data, counted in tax returns (roughly households) that changed county between filing years, {year ? `${year - 1} to ${year}` : "latest year"}. Flows under {SHOWN.toLocaleString("en-US")} returns are left off the map. Incomes: adjusted gross income per return. The IRS suppresses flows of fewer than 20 returns.</>}
     >
       <div className="story-two">
-        <figure className="story-figure">
+        <figure className="story-figure" tabIndex={0}>
           <p className="ladder-key">
             <span><i style={{ background: "var(--story-1)" }} />From another NJ county</span>
             <span><i style={{ background: "var(--story-2)" }} />From New York City</span>

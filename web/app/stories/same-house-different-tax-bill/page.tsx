@@ -58,7 +58,7 @@ export default async function SameHouseDifferentTaxBillPage() {
       lede={<>New Jersey taxes homes town by town, so the same house owes very different amounts depending on the line it sits behind. A {usd(HOUSE)} house would owe about {usd(bill(low.values.nj_effective_tax_rate!))} a year in {low.name} and {usd(bill(high.values.nj_effective_tax_rate!))} in {high.name}. Dearer towns tend to tax at lower rates, as the dots show.</>}
       note={<>Effective tax rate: the state&rsquo;s general rate adjusted by each town&rsquo;s Director&rsquo;s Ratio, giving tax per $100 of market value, from the Department of Community Affairs. Home value: the Census Bureau&rsquo;s median owner-reported value. Revaluation year: the last town-wide revaluation or reassessment the county board recorded. A Director&rsquo;s Ratio under 85% means assessments have fallen well behind sale prices, the level at which a county board can order a revaluation.</>}
     >
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Scatter plot: each town's effective property tax rate against its median home value.">
           <g className="grid" aria-hidden="true">
             {[200_000, 400_000, 800_000, 1_600_000].filter((t) => Math.log(t) > x0 && Math.log(t) < x1).map((t) => <g key={t}><line x1={x(t)} x2={x(t)} y1={T} y2={H - B} /><text x={x(t)} y={H - B + 18} textAnchor="middle">{usd(t)}</text></g>)}
@@ -87,7 +87,7 @@ export default async function SameHouseDifferentTaxBillPage() {
         <figcaption className="story-note">Effective tax rate, per $100 of market value, against median home value. {points.length} towns. Set aside: {apart.map((t) => `${t.name} (${t.values.nj_effective_tax_rate!.toFixed(1)}%)`).join(" and ")}, whose homes are held through a mutual housing corporation, so the rate falls on small assessments.</figcaption>
       </figure>
       <div className="story-two">
-        <figure className="story-figure">
+        <figure className="story-figure" tabIndex={0}>
           <h2 className="story-h">How far assessments trail sale prices</h2>
           <p className="ladder-key">{BANDS.map((a) => <span key={a.slot}><i style={{ background: `var(--story-${a.slot.slice(1)})` }} />{a.label} ({towns.filter((t) => t.values.nj_director_ratio !== undefined && a.test(t.values.nj_director_ratio)).length})</span>)}</p>
           <svg className="map" viewBox={`0 0 ${MAP_W} ${map.projector.height}`} role="img" aria-label="Map of New Jersey's towns shaded by when each last revalued its properties. Towns with overdue assessments are listed beside it.">

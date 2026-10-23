@@ -39,7 +39,7 @@ export default async function TwinTownsPage() {
       lede={<>Each pair below is as alike as any two New Jersey towns get on the six measures in grey: what households earn, the kind of homes, how many own, how old the housing is, the commute, the household size. Yet one twin&rsquo;s homes cost up to {pairs[0]?.ratio.toFixed(1)} times the other&rsquo;s. The gap is everything those measures leave out: the schools, the train, the water, the name.</>}
       note={<>Alike: each town&rsquo;s nearest neighbour on the six measures, each scaled to its spread across all towns, kept only where the two are close; then ordered by the price gap. Measures: the Census Bureau&rsquo;s five-year American Community Survey. Price: Zillow&rsquo;s typical home value. Survey figures carry margins of error, wide in small towns.</>}
     >
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <p className="ladder-key"><span><i style={{ background: "var(--story-up)" }} />The pricier twin</span><span><i className="starter" />The cheaper twin</span></p>
         <ul className="ladder extremes-chart twins">
           <li className="ladder-axis" aria-hidden="true">
@@ -52,7 +52,8 @@ export default async function TwinTownsPage() {
               <span className="twin-traits">
                 {ALIKE.map((a) => <small key={a.key}>{a.label} {a.show(p.a.values[a.key]!)} · {a.show(p.b.values[a.key]!)}</small>)}
               </span>
-              <span className="ladder-track" role="img" aria-label={`${p.a.name} ${usd(p.a.values[PRICE]!)} against ${p.b.name} ${usd(p.b.values[PRICE]!)}`}>
+              <span className="ladder-track">
+                <span className="visually-hidden">{`${p.a.name} ${usd(p.a.values[PRICE]!)} against ${p.b.name} ${usd(p.b.values[PRICE]!)}`}</span>
                 <span className="span" style={{ left: at(p.b.values[PRICE]!), right: `calc(100% - ${at(p.a.values[PRICE]!)})` }} />
                 <i className="starter" style={{ left: at(p.b.values[PRICE]!) }} />
                 <i style={{ left: at(p.a.values[PRICE]!), background: "var(--story-up)" }} />

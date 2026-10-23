@@ -163,3 +163,11 @@
 .twin-traits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .6rem; }
 .twin-traits small { color: var(--text-muted); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .twins li { grid-template-columns: minmax(220px, 300px) 1fr minmax(48px, auto) !important; }
+/* A chart wider than a phone scrolls sideways inside its figure, which the keyboard can
+   reach (tabIndex on each figure); the page itself never scrolls sideways. */
+.story-figure:focus-visible { outline: 2px solid var(--story-up); outline-offset: 4px; }
+@media (max-width: 480px) {
+  .story-table { font-size: 12px; }
+  .story-table th, .story-table td { padding: .35rem .25rem; }
+  .story-table td.num { white-space: normal; }
+}

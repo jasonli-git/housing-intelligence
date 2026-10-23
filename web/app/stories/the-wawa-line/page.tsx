@@ -61,7 +61,7 @@ export default async function WawaLinePage() {
       note={<>Stores: OpenStreetMap, © OpenStreetMap contributors, available under the Open Database License; the counts here are offered under the same licence. A store mapped twice, its shop and its pumps, is counted once. Volunteer-mapped, so a store nobody added is missing. Prices: Zillow&rsquo;s typical home value, each town against its own county&rsquo;s average, compared only in counties holding both kinds of town.</>}
     >
       <div className="story-two">
-        <figure className="story-figure">
+        <figure className="story-figure" tabIndex={0}>
           <p className="ladder-key"><span><i style={{ background: "var(--story-2)" }} />Wawa only</span><span><i style={{ background: "var(--story-1)" }} />QuickChek only</span><span><i style={{ background: "var(--story-3)" }} />Both</span></p>
           <svg className="map" viewBox={`0 0 ${MAP_W} ${height}`} role="img" aria-label="Map of New Jersey's towns coloured by whether they have Wawa stores, QuickChek stores, both or neither, with the line where QuickChek takes over.">
             {map.shapes.map((s) => {

@@ -71,7 +71,7 @@ export default async function TimeMachinePage() {
       note={<>Zillow&rsquo;s typical home value, monthly from {first}, in the dollars of each month: not adjusted for inflation, which is part of the story. A town crosses in the first month its value reaches the line. {all.length} towns have a Zillow series.</>}
     >
       {panels.map((p) => (
-        <figure key={p.line.value} className="story-figure">
+        <figure key={p.line.value} className="story-figure" tabIndex={0}>
           <h2 className="story-h">The year it passed {p.line.label}</h2>
           <Panel towns={p.towns} first={first} last={last} line={p.line} />
         </figure>

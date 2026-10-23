@@ -46,7 +46,7 @@ export default async function WhereTheWorkdayGoesPage() {
       note={<>The Census Bureau&rsquo;s LEHD Origin-Destination Employment Statistics, {year}: where residents of each town hold their primary job. It counts jobs covered by unemployment insurance, so federal workers and the self-employed are missing, and a job&rsquo;s location is its employer&rsquo;s address, which for a company with many sites can be its head office. Line width follows the share of residents working there.</>}
     >
       <div className="story-two">
-        <figure className="story-figure">
+        <figure className="story-figure" tabIndex={0}>
           <p className="ladder-key">
             <span><i style={{ background: "var(--story-2)" }} />New York City</span>
             <span><i style={{ background: "var(--story-3)" }} />Philadelphia</span>

@@ -39,7 +39,7 @@ export default async function LongCommutePremiumPage() {
       lede={<>You would expect a long commute to buy a cheaper house. In New Jersey it goes the other way: across all towns, each extra 10 minutes of commute goes with homes {pct(per10(all.slope))} dearer than the rest of their county. It is steepest in the orange towns, which send people into New York: {pct(per10(groups[0].fit.slope))} for every 10 minutes. But it holds everywhere else too, at {pct(per10(groups[1].fit.slope))}: a long commute is something buyers pay for, to live farther out.</>}
       note={<>Commute: the Census Bureau&rsquo;s mean travel time to work, one way. Price: Zillow&rsquo;s typical home value against the town&rsquo;s own county average. New York commuter towns: where {Math.round(NYC_LINE * 100)}% or more of working residents hold jobs in New York City (the Census Bureau&rsquo;s LEHD data). Lines are straight fits through each group; they describe, they do not explain.</>}
     >
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <p className="ladder-key">{groups.map((g) => <span key={g.key}><i style={{ background: `var(--story-${g.slot.slice(1)})` }} />{g.label} ({g.pts.length})</span>)}</p>
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Scatter plot: each town's mean commute against how much pricier or cheaper its homes are than its county's, coloured by whether it is a New York commuter town.">
           <g className="grid" aria-hidden="true">

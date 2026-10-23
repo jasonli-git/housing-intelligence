@@ -39,7 +39,7 @@ export default async function LivingHigherPage() {
       note={<>Height: USGS&rsquo;s 3D Elevation Program, bare earth, read at about 100 metres at each census block holding homes, weighted by its homes. Ground height, not flood risk: a seawall, a dune or a raised first floor is not in it, and the site&rsquo;s flood measures on each town&rsquo;s page are the ones to read for that. Prices: Zillow&rsquo;s typical home value, each town against its own county.</>}
     >
       <div className="story-two">
-        <figure className="story-figure">
+        <figure className="story-figure" tabIndex={0}>
           <p className="ladder-key">{BANDS.map((b) => <span key={b.label}><i style={{ background: "var(--story-1)", opacity: b.o }} />{b.label}</span>)}</p>
           <svg className="map" viewBox={`0 0 ${MAP_W} ${map.projector.height}`} role="img" aria-label="Map of New Jersey's towns shaded by the height above sea level of their homes.">
             {map.shapes.map((s) => {
@@ -61,7 +61,7 @@ export default async function LivingHigherPage() {
           </ul>
         </div>
       </div>
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <h2 className="story-h">{Math.abs(fittedChange(points, Math.log10(2))) < 0.05 ? "Does height cost more? Barely, if at all" : `Each doubling of height: ${pct(fittedChange(points, Math.log10(2)))} on price`}</h2>
         <StoryScatter
           points={points}

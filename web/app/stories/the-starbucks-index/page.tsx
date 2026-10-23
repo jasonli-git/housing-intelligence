@@ -47,13 +47,13 @@ export default async function StarbucksIndexPage() {
       lede="Economists have long joked that a Starbucks moving in is the surest sign a neighbourhood is gentrifying. In New Jersey the shops do sort the towns: each bubble below is a kind of shop, placed by how much dearer the towns that have one are than the other towns in their county."
       note={<>Shops: OpenStreetMap, © OpenStreetMap contributors, available under the Open Database License; the counts are offered under the same licence. Volunteer-mapped, so a shop nobody added is missing. Prices: Zillow&rsquo;s typical home value, each town against its own county. A chain opens where it expects customers; this shows which towns those are, not that the shop raises prices.</>}
     >
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <StoryPremiums premiums={premiums} />
       </figure>
       <h2 className="story-h">Starbucks or Dunkin&rsquo;?</h2>
       <p className="ladder-key"><span><i style={{ background: "var(--story-1)" }} />More Starbucks</span><span><i style={{ background: "var(--story-3)" }} />Even</span><span><i style={{ background: "var(--story-2)" }} />More Dunkin&rsquo;</span></p>
       <p className="story-note">Each dot is a town with at least two of the chains between them.</p>
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <StoryScatter
           points={points}
           xLabel="Starbucks' share of the town's Starbucks and Dunkin'"

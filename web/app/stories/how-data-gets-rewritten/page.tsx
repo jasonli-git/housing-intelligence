@@ -42,7 +42,7 @@ export default async function HowDataGetsRewrittenPage() {
       lede={<>Published figures are not final. Each time this site refreshes a source it keeps the old value of every figure that changed. Each circle is one refresh rewriting one measure: the bigger, the more figures it changed. {latestZillow ? <>On {day(latestZillow.on)} alone Zillow rewrote {n(latestZillow.g.figures)} past home values across {n(latestZillow.g.places)} places, by a median of {pct(latestZillow.g.median_change)}.</> : null}</>}
       note={<>Kept since {report?.recorded_since ? day(report.recorded_since.slice(0, 10)) : "the first refresh"}, {report?.total_batches ?? 0} refreshes in all. Rows marked &ldquo;filling in&rdquo; are periods that had not ended when they changed, such as a month in progress, which is expected; the others are a source correcting a period already closed. Each place&rsquo;s page lists its own revised figures. <Link href="/freshness">Source freshness</Link> shows when each source last changed.</>}
     >
-      <figure className="story-figure">
+      <figure className="story-figure" tabIndex={0}>
         <p className="ladder-key">
           <span>Circle size: figures changed{[100, 10_000, most].map((f) => <svg key={f} width={2 * r(f) + 4} height={2 * r(f) + 4} style={{ verticalAlign: "middle", margin: "0 .2rem 0 .5rem" }} aria-hidden="true"><circle cx={r(f) + 2} cy={r(f) + 2} r={r(f)} fill="none" stroke="currentColor" /></svg>)}{n(100)} · {n(10_000)} · {n(most)}</span>
           <span><i style={{ background: "var(--story-2)" }} />Zillow, corrected</span>

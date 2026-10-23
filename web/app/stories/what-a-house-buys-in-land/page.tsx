@@ -57,7 +57,7 @@ export default async function WhatAHouseBuysInLandPage() {
       note={<>Home value: Zillow&rsquo;s typical home value. Lot: the median lot of residential parcels on the state&rsquo;s tax list (MOD-IV); condominium units have no lot of their own and are left out of it. The figure prices the house and the land together, so it is a measure of how much ground a home&rsquo;s price comes with, not the price of land alone. {rows.length} towns have both; a median lot under {MIN_LOT} acres is left out as a recording quirk.</>}
     >
       <div className="story-two">
-        <figure className="story-figure">
+        <figure className="story-figure" tabIndex={0}>
           <p className="ladder-key">
             {SHADES.map((o, i) => <span key={o}><i style={{ background: "var(--story-1)", opacity: o }} />{i === 0 ? `under ${acre(breaks[0])}` : i === 4 ? `${acre(breaks[3])}+` : `${acre(breaks[i - 1])}–${acre(breaks[i])}`}</span>)}
           </p>

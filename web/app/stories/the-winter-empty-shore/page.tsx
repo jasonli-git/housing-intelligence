@@ -41,7 +41,7 @@ export default async function WinterEmptyShorePage() {
       note={<>The Census Bureau&rsquo;s five-year American Community Survey: homes vacant because they are held for seasonal, recreational or occasional use, as a share of all homes (the survey&rsquo;s share of empty homes, times the vacancy rate). A survey of a few homes in a small town carries a wide margin of error; each town&rsquo;s page shows it.</>}
     >
       <div className="story-two">
-        <figure className="story-figure">
+        <figure className="story-figure" tabIndex={0}>
           <p className="ladder-key">{SHADES.map((s) => <span key={s.from}><i style={{ background: "var(--story-1)", opacity: s.o }} />{s.label} kept for the season</span>)}</p>
           <svg className="map" viewBox={`0 0 ${MAP_W} ${map.projector.height}`} role="img" aria-label="Map of New Jersey's towns shaded by the share of homes kept for seasonal use. The highest are listed beside it.">
             {map.shapes.map((s) => {

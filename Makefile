@@ -257,7 +257,8 @@ check-terms: check-dist  ## Fail if a glossary word's first use on a page has no
 	  kill $$pid; exit $$status; }
 
 check-accessibility: check-dist  ## Fail on any axe finding, skip-link or overflow error in the tree about to ship
-	@# Ten pages at 1440 and 390px, light and dark, collapsed and expanded (#309). It ran
+	@# Thirteen pages (three of them visual stories) at 1440 and 390px, light and dark,
+	@# collapsed and expanded (#309). It ran
 	@# by hand only, and broke unnoticed between 2026-10-10 and 2026-10-20 (#404).
 	@cd web && { A11Y_ROOT=../dist/site A11Y_PORT=3007 node scripts/serve-accessibility.mjs > /dev/null & \
 	  pid=$$!; sleep 1; A11Y_ORIGIN=http://localhost:3007 node scripts/check-accessibility.mjs; status=$$?; \

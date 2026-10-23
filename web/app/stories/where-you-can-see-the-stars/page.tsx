@@ -41,7 +41,7 @@ export default async function SeeTheStarsPage() {
       {!points.length ? <p className="story-note">This story is waiting for the night-lights file, which is downloaded by hand.</p> : (
         <>
           <div className="story-two">
-            <figure className="story-figure">
+            <figure className="story-figure" tabIndex={0}>
               <p className="ladder-key">{BANDS.map((b) => <span key={b.label}><i style={{ background: "var(--story-4)", opacity: b.o }} />{b.label}</span>)}</p>
               <svg className="map" viewBox={`0 0 ${MAP_W} ${map.projector.height}`} role="img" aria-label="Map of New Jersey's towns shaded by the night-time brightness over their homes; the darkest are listed beside it.">
                 {map.shapes.map((s) => {
@@ -63,7 +63,7 @@ export default async function SeeTheStarsPage() {
               </ul>
             </div>
           </div>
-          <figure className="story-figure">
+          <figure className="story-figure" tabIndex={0}>
             <h2 className="story-h">{Math.abs(halving) < 0.05 ? "Does a dark sky cost more? Hardly" : `Each halving of the glow: ${pct(halving)} on price`}</h2>
             <StoryScatter
               points={points}
