@@ -171,3 +171,8 @@
   .story-table th, .story-table td { padding: .35rem .25rem; }
   .story-table td.num { white-space: normal; }
 }
+
+/* Hometown famous (2026-10-23): the town's best-known name beside its bar, and cards. */
+.count-bars.famous li { grid-template-columns: minmax(150px, 220px) 1fr minmax(120px, 200px); }
+.count-bars.famous small { grid-column: auto; font-size: 12px; color: var(--text-secondary); }
+.famous-grid li > div { display: grid; gap: .4rem; height: 100%; box-sizing: border-box; padding: 1rem 1.1rem; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 18px; }

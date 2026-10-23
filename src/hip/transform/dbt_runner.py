@@ -70,6 +70,13 @@ KEYED_MODELS = (
     # Each built only once its hand-downloaded raster has landed.
     "stg_story_noise",
     "stg_story_lights",
+    # The third batch (2026-10-23); each but the first two waits for its source.
+    "stg_story_market",
+    "stg_story_wikidata",
+    "stg_story_heat",
+    "stg_story_impervious",
+    "stg_story_footprints",
+    "stg_story_transit",
 )
 
 # Not a metric model: it feeds region_crosswalk, not fact_metric_observation.
@@ -130,6 +137,23 @@ def dbt_vars(
         "story_lights_landed": any(
             (settings.parquet_dir / "eog_vnl").glob("*/lights.parquet")
         ),
+        # The third batch's sources (2026-10-23): each model waits for its file.
+        "story_wikidata_landed": any(
+            (settings.parquet_dir / "wikidata").glob("*/births.parquet")
+        ),
+        "story_heat_landed": any(
+            (settings.parquet_dir / "noaa_nclimgrid").glob("*/tmax.parquet")
+        ),
+        "story_impervious_landed": any(
+            (settings.parquet_dir / "mrlc_nlcd").glob("*/impervious.parquet")
+        ),
+        "story_footprints_landed": any(
+            (settings.parquet_dir / "msft_buildings").glob("*/buildings.parquet")
+        ),
+        "story_transit_landed": all(
+            (settings.parquet_dir / "njt_gtfs" / "current" / f"{feed}.parquet").exists()
+            for feed in ("rail", "bus")
+        ),
         # TIGER's road files, read for one story, take the boundary files' vintage.
         "tiger_roads_year": _tiger_roads_year(),
         "read_years": {
@@ -148,6 +172,9 @@ READ_DATED = (
     # The visual stories' extracts republished in place (2026-10-22).
     "osm_nj",
     "usgs_3dep",
+    "wikidata",
+    "msft_buildings",
+    "njt_gtfs",
 )
 
 

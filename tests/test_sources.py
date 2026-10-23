@@ -815,4 +815,8 @@ def test_fred_asks_for_the_weekly_benchmark_and_the_monthly_history(
 
     assert "frequency=m" in refs["MORTGAGE30US"], "history stays monthly"
     assert "frequency" not in refs["MORTGAGE30US_weekly"], "the series' own, weekly"
-    assert all("series_id=MORTGAGE30US&" in url for url in refs.values())
+    assert all(
+        "series_id=MORTGAGE30US&" in url
+        for layer, url in refs.items()
+        if layer.startswith("MORTGAGE30US")
+    )

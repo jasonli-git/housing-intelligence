@@ -22,6 +22,12 @@ import { annualHomePriceChange, annualHomePriceTrend, mortgageRateTrend } from "
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+export type StoryPoints = {
+  story_id: string;
+  points: { series: string; region_id: number | null; x: string; y: number; label: string | null }[];
+  sources: string[];
+};
+
 export type Region = {
   region_id: number;
   geoid: string;
@@ -732,6 +738,8 @@ export const api = {
   migration: (id: number) => tryGet<Migration>(`/regions/${id}/migration`),
   /** Today's price-to-income against its own history (Milestone 52): counties and the state. */
   persistence: (id: number) => tryGet<Persistence>(`/regions/${id}/persistence`),
+  /** A visual story's rows beyond the measures (#438): a daily count, a distribution, a label. */
+  storyPoints: (story: string) => tryGet<StoryPoints>(`/stories/${story}/points`),
   workDestinations: (id: number) =>
     tryGet<WorkDestinations>(`/regions/${id}/work-destinations`),
   utilities: (id: number) => tryGet<Utilities>(`/regions/${id}/utilities`),

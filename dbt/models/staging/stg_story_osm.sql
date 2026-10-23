@@ -1,4 +1,5 @@
--- Chains and diners in each town, from OpenStreetMap (the visual stories, 2026-10-22).
+-- Chains, diners, bagel shops and pizzerias in each town, from OpenStreetMap (the visual
+-- stories, 2026-10-22; bagels and pizza 2026-10-23).
 --
 -- A brand's places counted once each: a Wawa is often mapped twice, the store and its
 -- fuel canopy, so a place within 150 metres of another of the same brand with a smaller
@@ -23,6 +24,12 @@ labelled as (
                when brand = 'Whole Foods Market' then 'whole_foods'
                when cuisine ilike '%diner%'
                  or (amenity = 'restaurant' and name ilike '%diner%') then 'diner'
+               -- The pizza-bagel line (2026-10-23): a place tagged with the cuisine or
+               -- named for it. A pizzeria-and-bagel shop counts once, as a bagel shop.
+               when cuisine ilike '%bagel%' or name ilike '%bagel%' then 'bagel'
+               when cuisine ilike '%pizza%'
+                 or (amenity in ('restaurant', 'fast_food') and name ilike '%pizz%')
+                 then 'pizza'
            end as kind
     from raw
 ),
@@ -62,7 +69,8 @@ regions as (
 ),
 kinds as (
     select * from (values ('wawa'), ('quickchek'), ('starbucks'), ('dunkin'),
-                          ('trader_joes'), ('whole_foods'), ('diner')) as k(kind)
+                          ('trader_joes'), ('whole_foods'), ('diner'), ('bagel'),
+                          ('pizza')) as k(kind)
 ),
 counted as (
     select r.geoid, r.level, k.kind,

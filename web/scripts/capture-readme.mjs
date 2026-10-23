@@ -36,7 +36,7 @@ const VIEWPORTS = [
 // chart, light and dark, as JPEGs into screenshots/stories/. The list is read from the
 // stories index, so a new story is pictured without touching this file.
 const SHOT = { width: 820, height: 900, aspect: 0.62, scale: 1 };
-const INDEX = { width: 1800, height: 1600, aspect: 0.5625, columns: 7 };
+const INDEX = { width: 1800, height: 1600, aspect: 0.5625, columns: 10 };
 const only = process.env.SCREENSHOT_ONLY;
 
 await mkdir(resolve(outDir, 'stories'), { recursive: true });
@@ -82,7 +82,7 @@ try {
         await Promise.all([...document.images].map((img) => { img.loading = 'eager'; return img.decode().catch(() => {}); }));
       });
       await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
-      // Seven across on a wide page, pictures and titles only, so one picture holds
+      // Ten across on a wide page (seven held 28; 37 need ten for four rows), pictures and titles only, so one picture holds
       // every story; the page itself keeps each story's line of explanation.
       await page.addStyleTag({ content: `.stories-page{max-width:none!important}.stories-grid{grid-template-columns:repeat(${INDEX.columns},minmax(0,1fr))!important}.stories-grid a>span:not(.story-shot){display:none!important}` });
       // The cards, not the page's head: the home page gives the section its own heading.

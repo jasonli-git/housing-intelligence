@@ -34,6 +34,15 @@ export const STORIES = [
   { href: "/stories/what-quiet-costs", title: "What quiet costs", blurb: "How many homes sit in the roar of highways, trains and planes, and whether the quiet towns cost more." },
   { href: "/stories/where-you-can-see-the-stars", title: "Where you can see the stars", blurb: "The darkest night skies over New Jersey's homes, from satellite night lights, and what a view of the Milky Way costs." },
   { href: "/stories/how-data-gets-rewritten", title: "How data gets rewritten", blurb: "Every time a source revised figures it had already published, and by how much." },
+  { href: "/stories/boroughitis", title: "Boroughitis", blurb: "Why New Jersey has 564 towns: every municipality by the year it was incorporated, and the 1890s rush of new boroughs." },
+  { href: "/stories/the-flood-claims-calendar", title: "The flood claims calendar", blurb: "Every day since 1978 that insured homes flooded, as a calendar: the storms are the bright stripes." },
+  { href: "/stories/how-long-homes-sit", title: "How long homes sit", blurb: "How many days a listing waits for a buyer, every county, every month since 2016, and the year everything sold at once." },
+  { href: "/stories/when-the-town-was-built", title: "When the town was built", blurb: "Each county's standing houses by the decade they went up, from the colonial towns to the Parkway suburbs." },
+  { href: "/stories/how-big-the-houses-are", title: "How big the houses really are", blurb: "Houses as seen from above: every county's spread of footprints, and the towns with the biggest and smallest." },
+  { href: "/stories/pavement-or-lawn", title: "Pavement or lawn", blurb: "How much of the ground under homes is paved, from Hoboken's concrete to the Pinelands' sand, and what it does to price." },
+  { href: "/stories/the-hottest-counties", title: "The hottest counties", blurb: "How many summer days pass 90°F in each county now, against the thirty years from 1951." },
+  { href: "/stories/the-pizza-bagel-line", title: "The pizza–bagel line", blurb: "How far from New York the bagel shop reaches: bagel shops against pizzerias, north to south." },
+  { href: "/stories/hometown-famous", title: "Hometown famous", blurb: "Which towns have produced the most notable people for their size, and the best-known person born in each." },
 ];
 
 /** A town with the latest value of each measure the stories read. */

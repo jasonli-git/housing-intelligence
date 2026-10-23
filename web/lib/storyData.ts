@@ -29,6 +29,24 @@ export async function seriesFor(metric: string, ids: number[]): Promise<Map<numb
   return out;
 }
 
+/** Each region's full monthly series of one measure, oldest first, keyed `YYYY-MM`. */
+export async function monthlySeriesFor(metric: string, ids: number[]): Promise<Map<number, { month: string; value: number }[]>> {
+  const out = new Map<number, { month: string; value: number }[]>();
+  for (let start = 0; start < ids.length; start += 150) {
+    const body = await api.costObservations(metric, ids.slice(start, start + 150));
+    for (const region of body?.regions ?? []) {
+      out.set(region.region_id, region.series.filter((o) => Number.isFinite(o.value)).map((o) => ({ month: o.period_start.slice(0, 7), value: o.value })));
+    }
+  }
+  return out;
+}
+
+/** A story's rows beyond the published measures (`story_points`, #438), with their sources. */
+export async function storyPoints(story: string): Promise<{ points: { series: string; region_id: number | null; x: string; y: number; label: string | null }[]; sources: string[] }> {
+  const body = await api.storyPoints(story);
+  return { points: body?.points ?? [], sources: body?.sources ?? [] };
+}
+
 /**
  * The latest value of each measure for the given regions. Ranked measures come from their
  * value ranking; the rest (rail access, NYC jobs and others no ranking holds) from their

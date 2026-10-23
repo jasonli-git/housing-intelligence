@@ -262,6 +262,14 @@ METRIC_SUBJECTS: dict[str, str] = {
     "noise_homes_share_55db": "context",
     "noise_homes_share_65db": "context",
     "lights_homes_radiance": "context",
+    "osm_bagel_count": "context",
+    "osm_pizza_count": "context",
+    "realtor_median_days_on_market": "price",
+    "wikidata_incorporated_year": "context",
+    "wikidata_notable_births": "context",
+    "nclimgrid_days_over_90": "hazards",
+    "nlcd_impervious_homes_share": "context",
+    "msft_median_footprint_sqft": "stock",
 }
 
 Answer = Literal["answered", "declined", "unanswered"]
@@ -349,6 +357,10 @@ LICENCE_RIGHTS: dict[str, Rights] = {
     # The visual stories (2026-10-22). Any use, credited; a derived database made public
     # is offered under the ODbL too, which the counts published from it are.
     "Open Database License (ODbL) 1.0": Rights("yes", "yes", "yes", "yes"),
+    # The third batch of stories (2026-10-23). CC0 waives every right Wikidata holds.
+    "Creative Commons CC0 1.0 (public domain dedication)": Rights(
+        "yes", "yes", "yes", "yes"
+    ),
     "Derived from cited sources": Rights(
         "inherited", "inherited", "inherited", "inherited"
     ),

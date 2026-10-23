@@ -347,6 +347,10 @@ class SourceAdapter(ABC):
     # plain single-header CSV. Census Building Permits ships two header rows, which
     # collapse into one unusable column unless both are skipped.
     csv_read_options: ClassVar[str] = ""
+    # The CSV's text encoding. Latin-1 by default, which decodes every byte (the IRS's
+    # county files carry non-UTF-8 ones); a publisher known to write UTF-8 says so, or
+    # every accented name lands garbled.
+    csv_encoding: ClassVar[str] = "latin-1"
     # Columns a CSV must have for staging to read it. Landing refuses a file without
     # them, so a renamed header or an error page sent with HTTP 200 stops at landing
     # instead of becoming Parquet that staging may or may not reject (2026-10-21).
