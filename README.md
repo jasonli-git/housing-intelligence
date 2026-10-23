@@ -156,6 +156,15 @@ unreachable, and **1** when the pipeline failed — so schedule `uv run hip refr
 `make refresh`, which collapses every failure to 2. `make prune-raw` lists superseded
 downloads (`ARGS=--apply` deletes them).
 
+**The raw archive in R2.** With `HIP_ARCHIVE_REMOTE` set (`.env.example`), every
+download is also copied to a private R2 bucket, and `data/raw/` is a working copy:
+`make archive-trim` lists files the bucket holds that can leave this Mac (`ARGS=--apply`
+removes them; a current file stays until it is landed in Parquet), and a stage that reads
+one fetches it back and checks its hash; `hip land --overwrite` fetches them all. `make archive-status` shows what is not yet up.
+On a new Mac, `uv run hip archive pull` copies the manifests and indexes down first.
+Setup: a private bucket (`housing-raw`), an R2 token with read and write on it alone,
+and an `[r2-raw]` section in `~/.config/rclone/rclone.conf` like the `[r2]` one.
+
 **The weekly refresh.** `scripts/scheduled_refresh.py` runs `hip refresh` and, only if
 something moved, rebuilds, deploys and runs `check-live`; it runs only from a clean
 `main`. Two `launchd` agents in `scripts/launchd/` run it on Fridays and on demand —

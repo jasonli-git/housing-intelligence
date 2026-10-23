@@ -21,6 +21,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import ClassVar
 
+from hip.archive import configured
 from hip.sources.base import ReleaseRef, SourceAdapter
 
 BASE_URL = "https://files.zillowstatic.com/research/public_csvs"
@@ -123,6 +124,16 @@ def third_thursday(year: int, month: int) -> date:
     return first + timedelta(days=(3 - first.weekday()) % 7 + 14)
 
 
+def _restore_current(release_dir: Path, raw_dir: Path, sha: str) -> Path | None:
+    """The county file `hip archive trim` took off this Mac, back from the archive."""
+    archive = configured()
+    manifest = release_dir / "manifest.json"
+    if archive is None or not manifest.exists():
+        return None
+    path = release_dir / json.loads(manifest.read_text())["filename"]
+    return path if archive.restore(path, raw_dir, sha) else None
+
+
 def held_through(raw_dir: Path, source_id: str) -> date | None:
     """The newest month of figures held for a Zillow source: the last date column of
     its county file in the raw cache, the file the owner last handed in."""
@@ -134,7 +145,11 @@ def held_through(raw_dir: Path, source_id: str) -> date | None:
         return None
     files = sorted((raw_dir / source_id / sha[:16]).glob("*.csv"))
     if not files:
-        return None
+        # Trimmed to the bucket, perhaps (Milestone 56): the manifest names the file.
+        restored = _restore_current(raw_dir / source_id / sha[:16], raw_dir, sha)
+        if restored is None:
+            return None
+        files = [restored]
     with files[0].open() as handle:
         header = handle.readline().strip().split(",")
     try:

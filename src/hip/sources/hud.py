@@ -42,6 +42,7 @@ from hip.sources.base import (
     ReleaseRef,
     SourceAdapter,
     SourceError,
+    local,
 )
 
 BASE_URL = "https://www.huduser.gov/hudapi/public"
@@ -309,7 +310,7 @@ class HudFmrAdapter(SourceAdapter):
         """
         if release.ref.layer != "fmr":
             return []
-        payload = json.loads(release.path.read_text())
+        payload = json.loads(local(release).path.read_text())
         data = payload.get("data") if isinstance(payload, dict) else None
         counties = data.get("counties") if isinstance(data, dict) else None
         if not isinstance(counties, list):
@@ -473,7 +474,7 @@ class HudChasAdapter(SourceAdapter):
     def municipal_refs(self, directory: Release, vintage: str | None) -> list[ReleaseRef]:
         """One ref per MCD in a fetched directory."""
         year = vintage or self.newest or self.default_vintage
-        entries = json.loads(directory.path.read_text())
+        entries = json.loads(local(directory).path.read_text())
         if not isinstance(entries, list):
             raise ValueError(f"hud_chas/{directory.ref.key}: directory is not a list")
         state = fips_for(directory.ref.scope or "")

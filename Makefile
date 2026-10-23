@@ -2,7 +2,8 @@
 # Every target is run from the repo root. `make` on its own lists what is available.
 
 .DEFAULT_GOAL := help
-.PHONY: help check-terms check-accessibility screenshots publish-status setup setup-eval venv-fix hooks rollback data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw publish r2-cors \
+.PHONY: help check-terms check-accessibility screenshots publish-status setup setup-eval venv-fix hooks rollback data-dirs db-up db-down db-logs migrate pipeline refresh prune-raw archive-push \
+        archive-status archive-trim publish r2-cors \
         check-dist check-live clean-dist deploy api web \
         test test-all test-py test-web lint format check-config dbt-debug eval clean
 
@@ -101,6 +102,15 @@ refresh:  ## Ask every publisher what changed, and rebuild only if something did
 
 prune-raw:  ## Show raw releases nothing points at (add ARGS=--apply to delete)
 	uv run hip prune-raw $(ARGS)
+
+archive-push:  ## Copy raw files the R2 archive lacks up to it (HIP_ARCHIVE_REMOTE)
+	uv run hip archive push
+
+archive-status:  ## How much of data/raw/ the R2 archive holds
+	uv run hip archive status
+
+archive-trim:  ## Show local raw files R2 holds and can go (add ARGS=--apply to delete)
+	uv run hip archive trim $(ARGS)
 
 api:  ## Run the API on http://localhost:8000 (docs at /docs)
 	uv run uvicorn hip.api.main:app --reload --port 8000
