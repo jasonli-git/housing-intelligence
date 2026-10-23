@@ -11,7 +11,7 @@ export const COLLECTIONS = [
 
 export type CollectionId = (typeof COLLECTIONS)[number]["id"];
 export const EDITOR_PICKS = ["twin-towns", "the-wawa-line", "the-true-monthly-cost", "the-flood-claims-calendar"];
-export const FEATURED_STORY = "twin-towns";
+export const FEATURED_STORY = "the-wawa-line";
 export const storySlug = (story: Story) => story.href.split("/").at(-1)!;
 
 /** Short library previews; full story descriptions and search vocabulary stay intact. */

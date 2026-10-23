@@ -14,11 +14,23 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 it("shows the feature and six labelled rails with real story links", () => {
   render(<StoryLibrary />);
   expect(screen.queryByText("Chart detail")).toBeNull();
-  expect(screen.getByRole("link", { name: /Similar towns/ }).getAttribute("href")).toBe("/stories/twin-towns");
+  expect(screen.getByRole("link", { name: "Explore The Wawa line" }).getAttribute("href")).toBe("/stories/the-wawa-line");
   expect(screen.getAllByRole("region")).toHaveLength(6);
   const rail = screen.getByRole("region", { name: "Only in New Jersey" });
   expect(within(rail).getAllByRole("link")).toHaveLength(9);
-  expect(screen.getByRole("button", { name: "Previous stories in Only in New Jersey" }).hasAttribute("disabled")).toBe(true);
+  expect(rail.querySelector('button[aria-label="Previous stories in Only in New Jersey"]')?.hasAttribute("disabled")).toBe(true);
+});
+
+it("switches the featured artwork and destination only on explicit selection", () => {
+  render(<StoryLibrary />);
+  const feature = screen.getByRole("article", { name: "Featured story" });
+  const selectors = within(feature).getByRole("group", { name: "Featured stories" });
+  expect(within(selectors).getAllByRole("button")).toHaveLength(4);
+  expect(within(selectors).getByRole("button", { name: "Feature The Wawa line" }).getAttribute("aria-pressed")).toBe("true");
+  fireEvent.click(within(selectors).getByRole("button", { name: "Feature Twin towns, different price tags" }));
+  expect(within(feature).getByRole("link", { name: "Explore Twin towns, different price tags" }).getAttribute("href")).toBe("/stories/twin-towns");
+  expect(within(selectors).getByRole("button", { name: "Feature The Wawa line" }).getAttribute("aria-pressed")).toBe("false");
+  expect(within(feature).getByRole("heading", { name: "Twin towns, different price tags" })).toBeTruthy();
 });
 it("provides every story in a searchable normal grid", () => {
   render(<StoryLibrary />);
