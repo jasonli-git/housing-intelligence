@@ -34,6 +34,10 @@ try {
       }));
       assert.equal(geometry.rows, 1);
       assert.equal(geometry.scrolls, width <= 600);
+      const gap = await page.evaluate(() => document.querySelector(".home-tools").getBoundingClientRect().top - document.querySelector(".home-stories").getBoundingClientRect().bottom);
+      assert(gap >= 32 && gap <= 64, `Tools separation stays compact and clear: ${gap}px`);
+      const origins = await section.locator(".library-cover").evaluateAll((covers) => covers.map((cover) => getComputedStyle(cover).getPropertyValue("--preview-origin").trim()));
+      assert.equal(new Set(origins).size, 3, "each preview has its own focal point");
       if (width <= 600) {
         await cards.first().focus();
         await page.keyboard.press("Tab");
@@ -57,6 +61,43 @@ try {
       await context.close();
     }
   }
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const page = await context.newPage();
+  await page.goto(base);
+  const card = page.locator(".home-stories .library-card").first();
+  await card.scrollIntoViewIfNeeded();
+  const state = () => card.evaluate((card) => {
+    const image = getComputedStyle(card.querySelector("img")), arrow = getComputedStyle(card.querySelector(".library-cover-open")), title = getComputedStyle(card.querySelector("h3"));
+    return { image: image.transform, arrow: arrow.transform, title: title.color, underline: title.textDecorationLine, transition: image.transitionDuration };
+  });
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(260);
+  const resting = await state();
+  await card.hover();
+  await page.waitForTimeout(260);
+  const hovered = await state();
+  assert.notEqual(hovered.image, resting.image);
+  assert.notEqual(hovered.arrow, resting.arrow);
+  assert.notEqual(hovered.title, resting.title);
+  assert.equal(hovered.underline, "underline");
+  await page.mouse.move(0, 0);
+  await card.focus();
+  await page.waitForTimeout(260);
+  const focused = await state();
+  assert.equal(focused.image, hovered.image);
+  assert.equal(focused.arrow, hovered.arrow);
+  assert.equal(focused.title, hovered.title);
+  await card.evaluate((card) => card.blur());
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.waitForTimeout(260);
+  const reducedRest = await state();
+  await card.hover();
+  const reducedHover = await state();
+  assert.equal(reducedHover.image, reducedRest.image);
+  assert.equal(reducedHover.arrow, reducedRest.arrow);
+  assert.equal(reducedHover.transition, "0s");
+  console.log("Hover/focus parity, reduced-motion transforms, story focal points and Tools spacing passed");
+  await context.close();
 } finally {
   await browser.close();
 }

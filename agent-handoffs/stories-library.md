@@ -1,5 +1,41 @@
 # Visual stories library
 
+## Homepage finishing touches — 2026-10-23
+
+### What changed / files affected
+
+- `web/components/StoryCard.tsx`: expose the story slug as a cover data attribute.
+- `web/app/home-refresh.css`: homepage-only focal points for the three previews:
+  Wawa's geographic divide, Twin towns' paired prices, and the flood calendar field.
+  Synchronize image zoom, title emphasis and corner-arrow movement at 220ms for
+  hover and keyboard focus. Reduced motion removes the zoom/movement while keeping
+  the underline, colour and visible focus indicator.
+- `web/scripts/check-home-stories.mjs`: add focal-point uniqueness, hover/focus
+  parity, reduced-motion and Tools-spacing assertions.
+
+### Decisions / assumptions / limitations
+
+Keep the accepted layout, existing cover assets and all full-story charts unchanged.
+Crop/interaction overrides apply to the homepage only; library styling is unchanged.
+The existing 3rem separation before Tools passed the 32–64px spacing check at all
+tested sizes, so no spacing adjustment was needed. Optional mobile fade not added.
+No new content, animations on timers, dependencies, canonical-document changes,
+deployment or merge. Verification is local Chromium, not physical-device or Safari.
+
+### Verification
+
+- 744 frontend tests across 124 files passed; TypeScript passed.
+- All 5 publication tests passed.
+- Homepage and stories scoped production build passed (not a full site export).
+- Homepage browser checks passed at 1440, 768 and 390px in both themes, including
+  sampler-scoped axe, image loading, direct links, overflow and keyboard scrolling.
+- New browser checks passed for distinct crops, synchronized hover/focus, no moving
+  transforms under reduced motion, and compact separation before Tools.
+- Library regression checks passed at all six size/theme combinations; header
+  containment checks passed at 12 widths in both themes.
+- Inspected updated desktop/light and mobile/dark screenshots; `git diff --check`
+  passed.
+
 ## What changed
 
 Experimental frontend pass on `experiment/stories-library`, approved by the user.

@@ -78,6 +78,21 @@
 .home-stories-all { display: inline-flex; align-items: center; gap: .7rem; min-height: 44px; color: var(--text-primary); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
 .home-story-track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; list-style: none; margin: -4px; padding: 4px; }
 .home-story-track > li { min-width: 0; }
+/* Editorial focal points: map divide, paired prices, and the full seasonal field.
+   These crop previews only; full story charts keep their original framing. */
+.home-stories .library-cover[data-story="the-wawa-line"] { --preview-scale: 2.05; --preview-origin: 0% 58%; }
+.home-stories .library-cover[data-story="twin-towns"] { --preview-scale: 1.6; --preview-origin: 100% 42%; }
+.home-stories .library-cover[data-story="the-flood-claims-calendar"] { --preview-scale: 1.08; --preview-origin: 50% 15%; }
+.home-stories .library-chart-detail img { transform: scale(var(--preview-scale)); transform-origin: var(--preview-origin); transition: transform 220ms ease; }
+.home-stories .library-card h3 { transition: color 220ms ease; }
+.home-stories .library-cover-open { transition: transform 220ms ease, border-color 220ms ease; }
+.home-stories .library-card:is(:hover, :focus-visible) .library-chart-detail img { transform: scale(calc(var(--preview-scale) + .04)); }
+.home-stories .library-card:is(:hover, :focus-visible) h3 { color: var(--text-primary); text-decoration: underline; text-underline-offset: .2em; }
+.home-stories .library-card:is(:hover, :focus-visible) .library-cover-open { transform: translate(2px, -2px); border-color: var(--text-secondary); }
+@media (prefers-reduced-motion: reduce) {
+  .home-stories .library-card:is(:hover, :focus-visible) .library-chart-detail img { transform: scale(var(--preview-scale)); }
+  .home-stories .library-card:is(:hover, :focus-visible) .library-cover-open { transform: none; }
+}
 @media (max-width: 600px) {
   .home-stories-title { display: grid; gap: .3rem; }
   .home-stories-all { font-size: 13px; }
