@@ -193,3 +193,17 @@ assertion that the caption is absent. Full story pages remain unchanged.
 
 Verification: 743 frontend tests, TypeScript, the stories-scoped production build and
 `git diff --check` passed. No deployment.
+
+## Review follow-up: neutral backgrounds — 2026-10-23
+
+Removed the coloured Horizon glow from the stories library and switched its page
+base/header paper to the existing neutral surface token: off-white in light mode,
+charcoal in dark mode. Removed the decorative coloured wash over cover images too.
+Actual chart colours and the thin topic accents remain. Overrides are scoped to
+`body:has(.story-library)`; individual stories and other Horizon pages are unchanged.
+This supersedes the earlier description of the library's warm animated background.
+
+Added a browser assertion that the body's computed background matches the neutral
+surface and its glow pseudo-element is absent in both themes. Verification: 743 tests,
+TypeScript, scoped production build, responsive/axe checks and `git diff --check`
+passed. No deployment.

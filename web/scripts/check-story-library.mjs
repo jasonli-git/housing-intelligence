@@ -49,6 +49,15 @@ try {
       page.on("pageerror", (error) => errors.push(error.message));
       assert.equal((await page.goto(`${base}/stories`)).status(), 200);
       await page.evaluate((theme) => document.documentElement.dataset.theme = theme, theme);
+      assert(await page.evaluate(() => {
+        const body = getComputedStyle(document.body), glow = getComputedStyle(document.body, "::before");
+        const sample = document.createElement("div");
+        sample.style.backgroundColor = "var(--surface-1)";
+        document.body.append(sample);
+        const neutral = getComputedStyle(sample).backgroundColor;
+        sample.remove();
+        return body.backgroundColor === neutral && glow.content === "none";
+      }), `neutral background without glow ${width}px/${theme}`);
       await page.getByRole("heading", { name: "Visual stories", exact: true }).waitFor();
       await page.locator(".library-feature img:visible").evaluate((img) => img.decode());
       const captureHrefs = await page.$$eval('.library-card[href^="/stories/"]', (links) => [...new Set(links.map((a) => a.getAttribute('href')))]);

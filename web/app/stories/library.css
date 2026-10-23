@@ -1,4 +1,8 @@
 /* Library only: full stories retain their own analytical layouts and colours. */
+@media screen {
+  body:has(.story-library) { --plate-paper: var(--surface-1); background: var(--surface-1); }
+  body:has(.story-library)::before { content: none; animation: none; background: none; }
+}
 .stories-page:has(.story-library) { max-width: 1320px; padding-inline: clamp(18px, 4vw, 56px); }
 .story-library { --library-ink: var(--text-primary); padding-bottom: 1rem; }
 .library-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin: 1.3rem 0; scroll-margin-top: 90px; }
@@ -20,7 +24,6 @@
 .library-cover[data-topic="place"] { --cover-accent: var(--story-3); }
 .library-cover[data-topic="motion"] { --cover-accent: var(--story-4); }
 .library-cover[data-topic="surface"] { --cover-accent: var(--story-down); }
-.library-cover::before { content: ""; position: absolute; inset: 0; background: linear-gradient(155deg, color-mix(in srgb, var(--cover-accent) 28%, transparent), transparent 60%); z-index: 1; pointer-events: none; }
 .library-cover::after { content: ""; position: absolute; inset: 0; border: 1px solid color-mix(in srgb, var(--cover-accent) 38%, var(--border)); border-top: 3px solid var(--cover-accent); border-radius: inherit; pointer-events: none; z-index: 2; }
 .library-chart-detail { display: block; position: absolute; inset: 0; overflow: hidden; }
 .library-chart-detail img { width: 100%; height: 100%; object-fit: cover; object-position: 60% 35%; display: block; transform: scale(1.28); transition: transform .5s cubic-bezier(.2,.7,.2,1); }
