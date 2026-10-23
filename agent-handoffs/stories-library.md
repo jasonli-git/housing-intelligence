@@ -1,5 +1,13 @@
 # Visual stories library
 
+## Breadcrumb follow-up — 2026-10-23
+
+Removed the New Jersey breadcrumb from `web/app/stories/page.tsx`, leaving
+United States → Visual stories. The collection's New Jersey scope label remains;
+no other navigation or story pages changed. Verification: 744 frontend tests,
+TypeScript, stories-scoped production build and local Chromium breadcrumb assertion
+passed. `git diff --check` passed. No merge or deployment.
+
 ## Library follow-up: taller frosted controls — 2026-10-23
 
 ### What changed / files affected

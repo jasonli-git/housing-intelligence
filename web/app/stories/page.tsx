@@ -23,7 +23,7 @@ export default function StoriesPage() {
       <main id="main-content" tabIndex={-1} className="shell horizon-page stories-page" data-region-level="stories">
         <header className="page-head">
           <div>
-            <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Visual stories" />
+            <Crumbs trail={[{ href: "/", label: "United States" }]} here="Visual stories" />
             <Kind kind="story" />
             <h1 className="page-title">Visual stories</h1>
           </div>
