@@ -188,13 +188,6 @@ Not open work: each comes round on a date. The steps live where the row says.
 
 ### Housekeeping
 
-- [ ] **Duplicate release files named by their request URL** (found 2026-10-22, M56):
-      70 release directories in `census_acs`, `hud`, `nj_affordable` and
-      `nj_tax_rates`, all fetched before 2026-08-12, hold a second copy of their file
-      under the URL it was fetched with, and the Census ones carry the Census API key in
-      the name. Identical to the file the manifest names; never pushed to R2 (#437). The
-      owner's to delete, and to decide whether that key, which never left this Mac,
-      needs rotating.
 - [ ] **Reply as housing@ and privacy@ from Gmail.** (#357, owner 2026-10-09) Both
       addresses are Cloudflare Email Routing forwards, which only receive, so a reply
       today shows the owner's personal address. Chosen: keep the forwards and add an
