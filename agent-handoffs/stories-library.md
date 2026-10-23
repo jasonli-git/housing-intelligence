@@ -167,3 +167,19 @@ mode and warm near-black `#0b0a09` in dark mode. A fixed, blurred rust/violet/am
 radial-gradient layer, opacity .42, drifts on a 26-second alternating animation;
 reduced-motion disables that movement. The library's surfaces use existing neutral
 surface tokens, which can appear slightly cooler than the warm page base.
+
+## Review follow-up: readable desktop search prompt — 2026-10-23
+
+The prior containment fix exposed the existing 160px desktop allocation: the input
+no longer overlapped the theme toggle, but the prompt was too wide for that space.
+At the user's request, increased the desktop search to a fixed 14rem (224px), moving
+the tool links 64px left at 1440px while preserving their order and the theme gap.
+The existing Tools disclosure now takes over at 1420px and below, rather than 1240px,
+so narrower desktop layouts cannot squeeze the full links and readable field together.
+No labels or font sizes were reduced to hide the problem.
+
+The browser check now covers 12 widths in both themes, including 1420/1421px. It
+measures desktop placeholder text against the usable input width and checks that
+tools do not overlap the brand, in addition to the earlier containment/hit-area
+checks. All passed, as did the six library/axe combinations, 743 frontend tests,
+TypeScript, the stories-scoped production build and `git diff --check`. No deploy.

@@ -8,7 +8,7 @@ const browser = await chromium.launch();
 try {
   // Header overflow can occur inside its row without overflowing the document.
   // Check both sides of the desktop/Tools breakpoint, not just standard viewports.
-  for (const width of [320, 390, 600, 768, 1024, 1240, 1241, 1280, 1440, 1920]) {
+  for (const width of [320, 390, 600, 768, 1024, 1240, 1241, 1280, 1420, 1421, 1440, 1920]) {
     const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto(`${base}/stories`);
@@ -24,10 +24,23 @@ try {
           inViewport: toggle.right <= innerWidth && input.left >= 0 };
       });
       assert.deepEqual(geometry, { inside: true, separate: true, hittable: true, inViewport: true }, `header ${width}px/${theme}`);
+      if (width >= 1421) {
+        const promptFits = await page.locator(".bar .place-search input").evaluate((input) => {
+          const style = getComputedStyle(input), prompt = getComputedStyle(input, "::placeholder");
+          const ctx = document.createElement("canvas").getContext("2d");
+          ctx.font = prompt.font;
+          const textWidth = ctx.measureText(input.placeholder).width + (parseFloat(prompt.letterSpacing) || 0) * input.placeholder.length;
+          const usableWidth = input.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+          const tools = document.querySelector(".bar-desktop-tools").getBoundingClientRect();
+          const brand = document.querySelector(".bar-trail").getBoundingClientRect();
+          return textWidth <= usableWidth && tools.left >= brand.right;
+        });
+        assert(promptFits, `full desktop prompt and tools fit at ${width}px/${theme}`);
+      }
     }
     await context.close();
   }
-  console.log("Header: search containment and unobstructed theme control passed at 10 widths in both themes");
+  console.log("Header: containment, theme hit area and readable desktop prompt passed at 12 widths in both themes");
   for (const width of [1440, 768, 390]) {
     for (const theme of ["dark", "light"]) {
       const context = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: theme, reducedMotion: "reduce" });
