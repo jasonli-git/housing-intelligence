@@ -11,8 +11,7 @@ import { NationalTrend } from "@/components/NationalTrend";
 import { periodLabel } from "@/lib/periods";
 import { pageMetadata } from "@/lib/meta";
 import Link from "next/link";
-import { STORIES } from "@/lib/stories";
-import { ThemedShot } from "@/components/ThemedShot";
+import { HomeStories } from "@/components/HomeStories";
 
 // The tools reachable from the bar, each with what it answers. All cover New
 // Jersey today, and say so, so the home page stays about no one state (#362).
@@ -27,6 +26,7 @@ const HOME_TOOLS = [
 import "./housing-entry.css";
 import "./state-navigation.css";
 import "./home-refresh.css";
+import "./stories/story-cards.css";
 import "./data-scale.css";
 import "./landing-search-first.css";
 import "./home-plate.css";
@@ -82,14 +82,7 @@ export default async function HousingLandingPage() {
         </div>
         <p className="national-backdrop-note">Each trend uses its own scale. Historical figures, not forecasts.</p>
       </section>
-      <section className="home-stories" aria-labelledby="home-stories-heading">
-        <h2 id="home-stories-heading">Visual stories <span aria-hidden="true">— New Jersey, drawn</span></h2>
-        <Link href="/stories">
-          {/* The stories page itself, captured from the build each deploy ships (capture-readme.mjs). */}
-          <ThemedShot name="stories-index" width={1768} height={995} className="home-stories-shot" />
-          <span>All {STORIES.length} visual stories <span aria-hidden="true">→</span></span>
-        </Link>
-      </section>
+      <HomeStories />
       <section className="home-tools" aria-labelledby="home-tools-heading">
         <h2 id="home-tools-heading">Tools <span aria-hidden="true">— an index</span></h2>
         <ul>

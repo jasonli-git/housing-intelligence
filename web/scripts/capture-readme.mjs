@@ -48,7 +48,9 @@ try {
       const page = await context.newPage();
       const index = await page.goto(origin + '/stories', { waitUntil: 'networkidle', timeout: 90_000 });
       if (!index?.ok()) throw new Error(`/stories: ${index?.status() ?? 'no response'}`);
-      const hrefs = await page.$$eval('.stories-grid a[href^="/stories/"]', (links) => links.map((a) => a.getAttribute('href')));
+      // Editorial picks also appear in their topic rail: capture each story once.
+      const hrefs = await page.$$eval('.library-card[href^="/stories/"]', (links) => [...new Set(links.map((a) => a.getAttribute('href')))]);
+      if (!hrefs.length) throw new Error('/stories: no story cards found');
       for (const href of hrefs) {
         const response = await page.goto(origin + href, { waitUntil: 'networkidle', timeout: 90_000 });
         if (!response?.ok()) throw new Error(`${href}: ${response?.status() ?? 'no response'}`);
@@ -76,6 +78,7 @@ try {
       });
       await page.setViewportSize({ width: INDEX.width, height: INDEX.height });
       await page.goto(origin + '/stories', { waitUntil: 'networkidle', timeout: 90_000 });
+      await page.getByRole('button', { name: /^All stories/ }).click();
       await page.evaluate(async () => {
         await document.fonts.ready;
         // Lazy pictures below the fold would otherwise be blank in the shot.
@@ -84,10 +87,10 @@ try {
       await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
       // Ten across on a wide page (seven held 28; 37 need ten for four rows), pictures and titles only, so one picture holds
       // every story; the page itself keeps each story's line of explanation.
-      await page.addStyleTag({ content: `.stories-page{max-width:none!important}.stories-grid{grid-template-columns:repeat(${INDEX.columns},minmax(0,1fr))!important}.stories-grid a>span:not(.story-shot){display:none!important}` });
+      await page.addStyleTag({ content: `.stories-page{max-width:none!important}.library-grid{grid-template-columns:repeat(${INDEX.columns},minmax(0,1fr))!important}.library-card p,.library-cover-open{display:none!important}` });
       // The cards, not the page's head: the home page gives the section its own heading.
-      const grid = await page.locator('.stories-grid').boundingBox();
-      if (!grid) throw new Error('/stories: no .stories-grid');
+      const grid = await page.locator('.library-grid').boundingBox();
+      if (!grid) throw new Error('/stories: no .library-grid');
       await page.screenshot({ path: resolve(outDir, `stories-index-${scheme}.jpg`), type: 'jpeg', quality: 80, fullPage: true, clip: { x: grid.x, y: grid.y, width: grid.width, height: Math.min(grid.height, Math.round(grid.width * INDEX.aspect)) } });
       console.log(`screenshot: stories-index-${scheme}`);
       await context.close();

@@ -770,3 +770,24 @@ experimental ones, such as a chart of which chains go with pricier homes.
   decision for the owner.
 
 **No tool is to be removed.**
+
+### Visual stories as a curated library — 2026-10-23
+
+**Status:** Approved direction for an experimental frontend pass.
+
+Explore a streaming-inspired story index with themed horizontal rails, a small
+editorial selection and story-specific visual covers. Preserve an accessible
+all-stories view and the analytical depth inside each story. Refine the actual
+stories index before redesigning its homepage preview. No autoplay rail movement;
+editorial picks are curated selections, not popularity claims.
+
+### Homepage story sampler — 2026-10-23
+
+**Status:** Approved direction for the experimental frontend pass.
+
+Replace the full-catalogue screenshot with three curated, directly linked previews
+using the restored library cards: The Wawa line, Twin towns, and The flood claims
+calendar. Keep the current placement after the national backdrop and before Tools,
+label the New Jersey scope, and provide a separate link to the full collection.
+Show three cards on desktop and a native horizontal strip on mobile, without
+autoplay, rotation, extra tagline or carousel buttons.
