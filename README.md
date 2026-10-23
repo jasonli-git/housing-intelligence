@@ -159,8 +159,8 @@ downloads (`ARGS=--apply` deletes them).
 **The raw archive in R2.** With `HIP_ARCHIVE_REMOTE` set (`.env.example`), every
 download is also copied to a private R2 bucket, and `data/raw/` is a working copy:
 `make archive-trim` lists files the bucket holds that can leave this Mac (`ARGS=--apply`
-removes them; current releases and the last 30 days stay), and a stage that needs one
-fetches it back and checks its hash. `make archive-status` shows what is not yet up.
+removes them; a current file stays until it is landed in Parquet), and a stage that reads
+one fetches it back and checks its hash; `hip land --overwrite` fetches them all. `make archive-status` shows what is not yet up.
 On a new Mac, `uv run hip archive pull` copies the manifests and indexes down first.
 Setup: a private bucket (`housing-raw`), an R2 token with read and write on it alone,
 and an `[r2-raw]` section in `~/.config/rclone/rclone.conf` like the `[r2]` one.

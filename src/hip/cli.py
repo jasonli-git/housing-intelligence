@@ -62,6 +62,7 @@ from hip.landing.tabular import (
     land_xls,
     land_xlsx,
     land_xlsx_records,
+    needs_landing,
     parquet_path,
 )
 from hip.packets import (
@@ -82,7 +83,14 @@ from hip.removals import write as write_removals
 from hip.rollback import RollbackRefused
 from hip.rollback import plan as rollback_plan
 from hip.rollback import run as run_rollback
-from hip.sources.base import Discovery, Release, SourceAdapter, SourceError, redact
+from hip.sources.base import (
+    Discovery,
+    Release,
+    SourceAdapter,
+    SourceError,
+    local,
+    redact,
+)
 from hip.sources.registry import (
     IMPLEMENTED,
     METRIC_SOURCES,
@@ -698,6 +706,21 @@ def _push_archive(raw_dir: Path) -> None:
     typer.echo(f"archive: {considered:,} file(s) in step with {store.remote}")
 
 
+def _reads_file(
+    adapter: SourceAdapter, release: Release, parquet_dir: Path, overwrite: bool
+) -> bool:
+    """Whether landing `release` will read its file, which `hip archive trim` may have
+    left only in the bucket. The landing functions' own skip tests, asked first, so a
+    release already in Parquet is never fetched back just to be skipped (Milestone 56).
+    """
+    if release.path.exists():
+        return False
+    out = parquet_path(release, parquet_dir)
+    if adapter.landing_format == "shapefile":
+        return overwrite or not out.exists()
+    return needs_landing(release, out, overwrite)
+
+
 archive_app = typer.Typer(
     help="The raw archive's copy in object storage (HIP_ARCHIVE_REMOTE).",
     no_args_is_help=True,
@@ -762,24 +785,23 @@ def archive_status() -> None:
 
 @archive_app.command(name="trim")
 def archive_trim(
-    keep_days: Annotated[
-        int,
-        typer.Option(help="Keep releases fetched within this many days, current or not."),
-    ] = 30,
     apply: Annotated[
         bool,
         typer.Option("--apply", help="Actually delete. Shows what it would do first."),
     ] = False,
 ) -> None:
-    """Remove local release files the bucket holds, keeping every current release.
+    """Remove local release files the bucket holds that no stage will read again.
 
-    Manifests and indexes always stay; a stage that needs a trimmed file restores it
-    from the bucket and checks its hash first. Unlike `hip prune-raw`, nothing is lost:
+    Superseded releases, and current ones already landed in Parquet. Manifests and
+    indexes always stay; a stage that reads a trimmed file restores it from the bucket
+    and checks its hash first. Unlike `hip prune-raw`, nothing is lost:
     each file removed here is checked to be in the bucket, at its size, first.
     """
     store = _archive_or_exit()
     raw_dir = get_settings().raw_dir
-    found = archive.trimmable(raw_dir, store.listing(), keep_days=keep_days)
+    found = archive.trimmable(
+        raw_dir, store.listing(), parquet_dir=get_settings().parquet_dir
+    )
     total = sum(t.size_bytes for t in found)
     if not found:
         typer.secho("nothing to trim", fg=typer.colors.GREEN)
@@ -1000,6 +1022,8 @@ def land(
             )
             continue
         for release in staged:
+            if _reads_file(adapter, release, settings.parquet_dir, overwrite):
+                release = local(release)
             if adapter.landing_format == "shapefile":
                 table = land_shapefile(
                     release,

@@ -252,15 +252,27 @@ def write_discovery(raw_dir: Path, discovery: Discovery) -> None:
     path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
 
 
-def _restore(path: Path, raw_dir: Path, sha: str) -> bool:
-    """Bring a trimmed release file back from the archive, when one is configured.
+def local(release: Release) -> Release:
+    """`release`, with its file on this Mac: restored from the archive if trimmed.
 
-    The manifest stayed on the Mac, so the release is known; only its bytes are in the
-    bucket (Milestone 56). Without an archive, or if it cannot answer, the release is
-    absent, which is what a missing file always meant.
+    A cached release whose file `hip archive trim` removed is still a release — its
+    manifest stayed, and the bucket holds the bytes (Milestone 56) — so the cache
+    answers with it, and only code about to *read* the file calls this. Asking first
+    and fetching only on a read is what lets the trim take current files too: `hip
+    land` skips a release whose Parquet it already holds, and a refresh that finds
+    nothing changed reads no file at all.
     """
+    if release.path.exists():
+        return release
     archive = configured()
-    return archive is not None and archive.restore(path, raw_dir, sha)
+    raw_dir = release.path.parents[2]
+    if archive is None or not archive.restore(release.path, raw_dir, release.sha256):
+        raise SourceError(
+            f"{release.ref.source_id}/{release.ref.key}: {release.path.name} is not on "
+            f"this Mac and could not be restored from "
+            f"{archive.remote if archive else 'an archive (HIP_ARCHIVE_REMOTE is unset)'}"
+        )
+    return release
 
 
 def _sha256(path: Path) -> str:
@@ -759,7 +771,9 @@ class SourceAdapter(ABC):
             return None
         data = json.loads(manifest.read_text())
         path = manifest.parent / data["filename"]
-        if not path.exists() and not _restore(path, raw_dir, sha):
+        if not path.exists() and configured() is None:
+            # Gone, and no archive holds it: absent, so a fetch downloads it again. With
+            # an archive the bucket has it, and `local` brings it back on a read.
             return None
         if same_request and _asked_differently(data, ref):
             return None

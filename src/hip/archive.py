@@ -9,11 +9,14 @@ copy of it:
 * **push** copies every new file up after acquisition. The layout is already
   content-addressed (`<source>/<sha[:16]>/<file>`), so the bucket uses the same keys
   and an unchanged release is never uploaded twice.
-* **restore** brings one release's file back when a stage needs it and the Mac no
+* **restore** brings one release's file back when a stage reads it and the Mac no
   longer holds it, and checks its SHA-256 against the manifest before using it.
-* **trim** removes local files the bucket is known to hold, never a source's current
-  release, and never a manifest: manifests and indexes are kilobytes, read on every
-  run, and are what says a file exists at all.
+* **trim** removes local files the bucket is known to hold and no stage will read
+  again — superseded releases, and current ones already landed in Parquet — and never a
+  manifest: manifests and indexes are kilobytes, read on every run, and are what says a
+  file exists at all.
+* **restore** is lazy: a trimmed release is still answered from the cache, and its file
+  comes back only when something reads it (`hip.sources.base.local`).
 
 Unset, nothing here runs and `data/raw/` behaves as it always has. rclone does the
 transfers, as it does for `make deploy`, so there is one way to reach R2 rather than
@@ -29,7 +32,6 @@ import shutil
 import subprocess
 import tempfile
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -96,17 +98,37 @@ def _current(source_dir: Path) -> set[str]:
     return {sha[:16] for sha in json.loads(index.read_text()).values()}
 
 
+def _landed(data: dict[str, object], parquet_dir: Path) -> bool:
+    """Whether the Parquet for this manifest's release is built from it.
+
+    The path is `hip.landing.tabular.parquet_path`'s, rebuilt from the manifest because
+    this module sits beneath `sources` and cannot import `landing`; a test holds the two
+    together. The `.src` stamp beside it names the release that produced it, so a file
+    built from an earlier release does not count. A shapefile is landed without a stamp,
+    and its Parquet existing is the test `hip land` itself applies.
+    """
+    layer = (
+        f"{data['layer']}_{data['scope']}" if data.get("scope") else str(data["layer"])
+    )
+    out = parquet_dir / str(data["source_id"]) / str(data["vintage"]) / f"{layer}.parquet"
+    if not out.exists():
+        return False
+    stamp = out.with_suffix(".parquet.src")
+    return not stamp.exists() or stamp.read_text().strip() == data["sha256"]
+
+
 def trimmable(
-    raw_dir: Path, held: dict[str, int], *, keep_days: int, now: datetime | None = None
+    raw_dir: Path, held: dict[str, int], *, parquet_dir: Path
 ) -> list[Trimmable]:
-    """Local release files that are safe to remove: in the bucket at the same size,
-    not current for their source, and fetched more than `keep_days` ago.
+    """Local release files that are safe to remove: in the bucket at the same size, and
+    not going to be read again — superseded, or current and already in Parquet.
 
     `held` is the bucket's listing, key to size. A file the listing lacks, or holds at
     another size, stays: the bucket's copy is what makes removing it safe, so the
-    listing is checked rather than a record of what was pushed.
+    listing is checked rather than a record of what was pushed. A current file nothing
+    has landed stays too; whatever reads it, `hip land` or an adapter's directory, would
+    otherwise fetch it back on the next run.
     """
-    cutoff = (now or datetime.now(UTC)) - timedelta(days=keep_days)
     found: list[Trimmable] = []
     for source_dir in sorted(p for p in raw_dir.iterdir() if p.is_dir()):
         try:
@@ -116,15 +138,16 @@ def trimmable(
             continue
         for release_dir in sorted(p for p in source_dir.iterdir() if p.is_dir()):
             manifest = release_dir / MANIFEST
-            if release_dir.name in current or not manifest.exists():
+            if not manifest.exists():
                 continue
             try:
                 data = json.loads(manifest.read_text())
-                fetched = datetime.fromisoformat(data["fetched_at"])
-            except (json.JSONDecodeError, KeyError, OSError, ValueError):
+                payload = release_dir / data["filename"]
+                if release_dir.name in current and not _landed(data, parquet_dir):
+                    continue
+            except (json.JSONDecodeError, KeyError, OSError):
                 continue
-            payload = release_dir / data["filename"]
-            if not payload.exists() or fetched > cutoff:
+            if not payload.exists():
                 continue
             size = payload.stat().st_size
             if held.get(payload.relative_to(raw_dir).as_posix()) == size:

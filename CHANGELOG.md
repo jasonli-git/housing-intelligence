@@ -13,6 +13,13 @@ are not yet recorded here.
 
 ### Added
 
+- **The raw archive lives in R2** (Milestone 56, ARCHITECTURE #437): every download is
+  also copied to a private bucket, `housing-raw`, and `data/raw/` is a working copy of
+  it. `hip archive trim` removes files the bucket holds that no stage will read again,
+  and a stage that reads one fetches it back and checks its hash; `hip archive pull`
+  seeds a new Mac with the manifests and indexes. First run, 2026-10-23: 2,872 files,
+  5.81GB pushed, and `data/raw/` down from 5.4GB to 261MB with `hip land` still
+  complete in 10 seconds. Off unless `HIP_ARCHIVE_REMOTE` is set.
 - **Visual stories** (ARCHITECTURE #429-#436): 28 pages under `/stories`, each one
   question about New Jersey answered by a chart that reads without its text, from what
   goes with pricier towns and every county's priciest and cheapest places to the Wawa

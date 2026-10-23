@@ -37,12 +37,10 @@ but for hosting, which the owner holds (Frontend and presentation, "A second sta
 not fit Pages' limits").
 
 1. **Archive layer, push, restore, trim, pull** — done: `hip.archive`, `hip archive`,
-   the restore in `SourceAdapter._from_cache`, tests against a local rclone remote.
-2. **The owner creates the bucket and token** — `housing-raw`, private, an R2 token with
-   read and write on it alone, an `[r2-raw]` rclone section and `HIP_ARCHIVE_REMOTE` in
-   `.env` (README, "The raw archive in R2").
-3. **First push and live check** — `hip archive push`, `status`, `trim --apply`; then a
-   cited, trimmed release's source landed again, its file restored with the same hash.
+   restore on a read (`hip.sources.base.local`), tests against a local rclone remote.
+2. **The owner creates the bucket and token** — done 2026-10-23.
+3. **First push and live check** — done 2026-10-23: 2,872 files, 5.81GB pushed; a
+   current FRED file restored by `hip land` with its hash; 5.03GB trimmed.
 4. **PR**, then stop for review.
 
 ## Open

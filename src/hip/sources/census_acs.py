@@ -26,7 +26,7 @@ from datetime import date
 from typing import ClassVar
 
 from hip.config import ConfigError, fips_for
-from hip.sources.base import Discovery, Release, ReleaseRef, SourceAdapter
+from hip.sources.base import Discovery, Release, ReleaseRef, SourceAdapter, local
 
 BASE_URL = "https://api.census.gov/data"
 
@@ -316,7 +316,7 @@ class AcsAdapter(SourceAdapter):
         """
         if release.ref.layer != "zctas":
             return []
-        rows = json.loads(release.path.read_text())
+        rows = json.loads(local(release).path.read_text())
         if not isinstance(rows, list) or len(rows) < 2:
             raise ValueError(f"census_acs/{release.ref.key}: directory is not a matrix")
         column = rows[0].index("zip code tabulation area (or part)")
