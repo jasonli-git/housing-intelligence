@@ -74,6 +74,14 @@ try {
       await page.mouse.move(0, 0);
       assert.equal(await next.evaluate((el) => getComputedStyle(el).opacity), "0", "idle desktop arrows hidden");
       await stage.hover();
+      const coverBox = await jersey.locator(".library-cover").first().boundingBox();
+      const arrowBox = await next.boundingBox();
+      assert.equal(Math.round(arrowBox.height), 160, "controls twice the original height");
+      assert(Math.abs(arrowBox.y + arrowBox.height / 2 - coverBox.y - coverBox.height / 2) <= 2, "controls centered on screenshot, not caption");
+      const glass = await next.evaluate((el) => { const s = getComputedStyle(el); return { border: s.borderTopWidth, blur: s.backdropFilter, background: s.backgroundColor }; });
+      assert.equal(glass.border, "0px");
+      assert(glass.blur.includes("blur(16px)"), "frosted backdrop");
+      assert(glass.background.includes("0.3"), "translucent surface");
       assert.equal(await next.evaluate((el) => getComputedStyle(el).opacity), "1", "row hover reveals controls");
       assert.equal(await previous.evaluate((el) => getComputedStyle(el).opacity), "0", "unavailable direction hidden");
       await stage.screenshot({ path: `/private/tmp/stories-controls-${width}-${theme}.png` });

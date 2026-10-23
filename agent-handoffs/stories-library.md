@@ -1,5 +1,41 @@
 # Visual stories library
 
+## Library follow-up: taller frosted controls — 2026-10-23
+
+### What changed / files affected
+
+`web/app/stories/library.css` doubles the overlaid controls from 80px to 160px tall,
+centers them vertically on the screenshot rather than the complete card/caption,
+and replaces the opaque background, border and shadow with a 30% theme-aware surface
+over 16px backdrop blur. Hover increases the surface tint to 45%; the default surface
+has no outline. Keyboard-only focus retains its visible outline for accessibility.
+
+The row is an inline-size container. One responsive `--rail-card-width` now drives
+both the existing card widths and the screenshot midpoint (16:10 aspect ratio), so
+alignment follows each breakpoint without measuring captions or adding JavaScript.
+`web/scripts/check-story-library.mjs` checks 160px height, screenshot-center alignment
+within 2px, zero border, translucency and actual computed backdrop blur.
+
+### Decisions / assumptions / limitations
+
+Existing hover fade, touch visibility, edge disabling and keyboard navigation remain.
+No background/nav/footer or homepage changes. Glass uses the underlying chart's colours;
+it does not impose a separate page accent. Keep the prefixed filter before the standard
+declaration: the reverse ordering was stripped by the current CSS transform, caught by
+the browser's computed-style check. No production-code workaround beyond ordering needed.
+CSS-container/backdrop behavior verified in local Chromium only; Safari/physical-device
+validation remains outstanding. No canonical-document edits, merge or deployment.
+
+### Verification
+
+- 744 frontend tests, TypeScript and all 5 publication tests passed.
+- Final stories-scoped production build passed (not a complete site export).
+- Library/browser/axe suite passed at 1440, 768 and 390px in both themes, including
+  the new glass/height/alignment checks, keyboard access, touch taps and reduced motion.
+- Header checks passed at 12 widths in both themes; inspected desktop/dark and
+  mobile/light screenshots of the controls.
+- `git diff --check` passed.
+
 ## Library follow-up: overlaid rail controls — 2026-10-23
 
 ### What changed / files affected
