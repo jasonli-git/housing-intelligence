@@ -208,56 +208,16 @@ surface and its glow pseudo-element is absent in both themes. Verification: 743 
 TypeScript, scoped production build, responsive/axe checks and `git diff --check`
 passed. No deployment.
 
-## Review follow-up: cinematic stories content — 2026-10-23
+## Review follow-up: restore the previous design — 2026-10-23
 
-The user requested a stronger streaming-library aesthetic, with explicit protected
-areas: current background, navigation, masthead, licence/source-check row, and
-Publisher notices and everything below it. This pass changes **stories main content
-only**, plus its presentation metadata/tests. The original main width/gutters remain
-so breadcrumb navigation stays positioned as before. No protected component or shared
-chrome stylesheet was edited in this pass (comparison base: `9f5ba9e`).
+The user rejected the cinematic overhaul and asked to return to the preceding
+design. Reverted only `fb7b16a`; all web files now match `9f5ba9e` exactly. Restored
+the split-panel feature, original rail/card treatment and typography. The prior
+concise copy, removed tagline/captions, neutral background and header search fixes
+are retained. Removed the overhaul-only feature selectors and boundary-check helper.
+The rejected experiment remains recoverable in Git history, not active code.
 
-### Design changes
-
-- Modern, compact sans-serif page title and understated Discover / All stories tabs.
-- Replaced the split-panel feature with a cinematic billboard: actual chart artwork
-  bleeding across the frame, neutral fades for legibility, bold title and a solid
-  inverse-ink Explore action. The Wawa line is now the initial feature.
-- Four manually selectable featured previews; selection changes artwork, title,
-  description and link together. No timers, automatic rotation or video-style claims.
-  Small entrance transitions respect reduced-motion; the mobile feature keeps a
-  stable height when switching stories.
-- Poster-style card titles sit over neutral readability fades. Map captures get a
-  map-focused crop; every picture remains an existing real chart capture. No invented
-  quantities, new publisher data, coloured background washes or new dependencies.
-- Larger Editor’s picks, denser topic rails with next-card peeks, and slim previous/
-  next controls at the artwork's edges. Disabled edge controls disappear. Controls
-  stay above titles, and scroll-padding rounding does not falsely enable the first
-  previous control. Keyboard, touch, search and collection browsing remain available.
-- The all-stories directory uses the same poster treatment; the homepage and actual
-  story pages remain unchanged. Existing capture discovery/grid contracts still pass.
-
-### Protected-area and implementation checks
-
-Added `web/scripts/check-story-boundaries.mjs`. Before implementation, recorded
-computed styles and horizontal geometry for the masthead/status row/footer and all
-their descendants, plus the body background, at 1440/390px in both themes. The
-post-overhaul comparison passed: exact computed CSS strings; geometry rounded to
-0.01px to disregard sub-millipixel SVG float noise. Vertical footer position is not
-compared because the main content's height legitimately changes. The baseline is
-local at `/private/tmp/stories-protected-chrome.json`, not committed. Run `--record`
-before future changes, then without that flag to compare.
-
-New component coverage tests the explicit feature selector and matching destination.
-The browser test also exercises switching the feature, its inverse-ink CTA contrast,
-initial disabled rail edge, and all previously covered library interactions.
-
-Verification: **744 frontend tests passed across 123 files**; TypeScript passed;
-five publication tests passed; the `/stories` scoped production build passed. Browser
-checks passed at 1440/768/390px in both themes with zero automated main-content axe
-violations; header regression checks passed at twelve widths in both themes. The
-protected-area comparison and `git diff --check` passed. Reviewed desktop-dark and
-mobile-light screenshots (`/private/tmp/stories-cinema-top-*.png` and full-page library
-captures). No full-site publication, full screenshot regeneration, physical-device
-validation, merge or deployment. Existing screenshot resolution is still a limit for
-large art crops; these are navigation artwork, not readable substitutes for the charts.
+Verification after restoration: 743 frontend tests passed, TypeScript passed, the
+stories-scoped production build passed, and responsive/axe checks passed in both
+themes. `git diff 9f5ba9e -- web` is empty; staged/unstaged whitespace checks passed.
+No merge or deployment.
