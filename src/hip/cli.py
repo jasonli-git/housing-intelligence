@@ -26,7 +26,7 @@ import typer
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from hip import __version__, refresh
+from hip import __version__, archive, refresh
 from hip.addresses import parse as parse_address
 from hip.analytics.compute import rebuild
 from hip.analytics.persistence import rebuild_persistence
@@ -580,6 +580,7 @@ def acquire(
         f"{len(report.unreachable) + len(report.undiscovered):>4} unreachable"
     )
     typer.secho(f"{report.total_bytes / 1e6:.1f} MB in data/raw/", fg=typer.colors.GREEN)
+    _push_archive(settings.raw_dir)
     if report.failures:
         typer.secho(
             f"{len(report.failures)} ref(s) failed; the rest completed",
@@ -675,6 +676,129 @@ def prune_raw(
     )
 
 
+def _push_archive(raw_dir: Path) -> None:
+    """Copy what acquisition just wrote up to the archive, when one is configured.
+
+    A failure warns rather than failing the run: the files are still on the Mac, the
+    next push sends them, and `hip archive trim` removes nothing the bucket does not
+    already hold, so a push that did not happen can never cost a file.
+    """
+    store = archive.configured()
+    if store is None:
+        return
+    try:
+        considered = store.push(raw_dir)
+    except archive.ArchiveError as exc:
+        typer.secho(
+            f"archive: push to {store.remote} failed; the next run retries ({exc})",
+            fg=typer.colors.YELLOW,
+            err=True,
+        )
+        return
+    typer.echo(f"archive: {considered:,} file(s) in step with {store.remote}")
+
+
+archive_app = typer.Typer(
+    help="The raw archive's copy in object storage (HIP_ARCHIVE_REMOTE).",
+    no_args_is_help=True,
+)
+app.add_typer(archive_app, name="archive")
+
+
+def _archive_or_exit() -> archive.Archive:
+    store = archive.configured()
+    if store is None:
+        typer.secho(
+            "HIP_ARCHIVE_REMOTE is not set, so data/raw/ is the whole archive. Set it to "
+            "an rclone remote and bucket, e.g. r2-raw:housing-raw.",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=1)
+    return store
+
+
+@archive_app.command(name="push")
+def archive_push() -> None:
+    """Copy every raw file the bucket lacks up to it. Never deletes from the bucket."""
+    store = _archive_or_exit()
+    considered = store.push(get_settings().raw_dir)
+    typer.secho(
+        f"{considered:,} file(s) in step with {store.remote}", fg=typer.colors.GREEN
+    )
+
+
+@archive_app.command(name="pull")
+def archive_pull() -> None:
+    """Copy every manifest and index down, and no release file: a new Mac's first step.
+
+    Each stage then restores the release files it reads, as it reads them.
+    """
+    store = _archive_or_exit()
+    store.pull_index(get_settings().raw_dir)
+    typer.secho("manifests and indexes copied down", fg=typer.colors.GREEN)
+
+
+@archive_app.command(name="status")
+def archive_status() -> None:
+    """How much of data/raw/ the bucket holds, and what is local only."""
+    store = _archive_or_exit()
+    raw_dir = get_settings().raw_dir
+    held = store.listing()
+    local = archive.archive_files(raw_dir)
+    missing = [k for k in local if held.get(k) != (raw_dir / k).stat().st_size]
+    typer.echo(
+        f"{len(held):,} file(s), {sum(held.values()) / 1e9:,.2f} GB in {store.remote}"
+    )
+    typer.echo(f"{len(local):,} file(s) on this Mac")
+    if missing:
+        typer.secho(
+            f"{len(missing):,} not yet in the bucket — run `hip archive push`",
+            fg=typer.colors.YELLOW,
+        )
+    else:
+        typer.secho("every local file is in the bucket", fg=typer.colors.GREEN)
+
+
+@archive_app.command(name="trim")
+def archive_trim(
+    keep_days: Annotated[
+        int,
+        typer.Option(help="Keep releases fetched within this many days, current or not."),
+    ] = 30,
+    apply: Annotated[
+        bool,
+        typer.Option("--apply", help="Actually delete. Shows what it would do first."),
+    ] = False,
+) -> None:
+    """Remove local release files the bucket holds, keeping every current release.
+
+    Manifests and indexes always stay; a stage that needs a trimmed file restores it
+    from the bucket and checks its hash first. Unlike `hip prune-raw`, nothing is lost:
+    each file removed here is checked to be in the bucket, at its size, first.
+    """
+    store = _archive_or_exit()
+    raw_dir = get_settings().raw_dir
+    found = archive.trimmable(raw_dir, store.listing(), keep_days=keep_days)
+    total = sum(t.size_bytes for t in found)
+    if not found:
+        typer.secho("nothing to trim", fg=typer.colors.GREEN)
+        return
+    if not apply:
+        typer.secho(
+            f"would remove {len(found):,} file(s), {total / 1e9:,.2f} GB, all held in "
+            f"{store.remote} — re-run with --apply",
+            fg=typer.colors.YELLOW,
+        )
+        return
+    for item in found:
+        item.path.unlink()
+    typer.secho(
+        f"removed {len(found):,} file(s), {total / 1e9:,.2f} GB from this Mac",
+        fg=typer.colors.GREEN,
+    )
+
+
 @app.command(name="refresh")
 def refresh_command(
     source: Annotated[
@@ -719,6 +843,7 @@ def refresh_command(
         f"{len(report.unreachable) + len(report.undiscovered):>4} unreachable   "
         f"{len(report.failures):>4} failed"
     )
+    _push_archive(settings.raw_dir)
 
     # What is on disk now, against what the warehouse was last built from. Not "did we
     # transfer bytes": a source with no validator is re-fetched on age alone and usually

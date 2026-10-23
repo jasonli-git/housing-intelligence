@@ -28,6 +28,8 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from hip.archive import configured
+
 logger = logging.getLogger(__name__)
 
 CHUNK_BYTES = 1 << 20
@@ -248,6 +250,17 @@ def write_discovery(raw_dir: Path, discovery: Discovery) -> None:
         else None,
     }
     path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
+
+
+def _restore(path: Path, raw_dir: Path, sha: str) -> bool:
+    """Bring a trimmed release file back from the archive, when one is configured.
+
+    The manifest stayed on the Mac, so the release is known; only its bytes are in the
+    bucket (Milestone 56). Without an archive, or if it cannot answer, the release is
+    absent, which is what a missing file always meant.
+    """
+    archive = configured()
+    return archive is not None and archive.restore(path, raw_dir, sha)
 
 
 def _sha256(path: Path) -> str:
@@ -746,7 +759,7 @@ class SourceAdapter(ABC):
             return None
         data = json.loads(manifest.read_text())
         path = manifest.parent / data["filename"]
-        if not path.exists():
+        if not path.exists() and not _restore(path, raw_dir, sha):
             return None
         if same_request and _asked_differently(data, ref):
             return None

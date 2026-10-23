@@ -203,6 +203,11 @@ class Settings(BaseSettings):
     # outside the repository, so it can never be committed — a public list of protected
     # addresses would be the disclosure the law forbids (ARCHITECTURE #296).
     address_removals: Path | None = None
+    # The raw archive's home in object storage (Milestone 56, `hip.archive`): an rclone
+    # remote and bucket such as `r2-raw:housing-raw`. Set, acquisition pushes every new
+    # file there and a stage restores any release `hip archive trim` took off the Mac.
+    # Unset, `data/raw/` is the whole archive, as it was before.
+    archive_remote: str | None = None
 
     @field_validator("data_dir", "config_dir", "reports_dir", "gate_dir")
     @classmethod
