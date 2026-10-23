@@ -50,6 +50,8 @@ from hip.geography.backdrop import load_backdrop
 from hip.geography.crosswalk import apply_hud_weights, build_crosswalk
 from hip.geography.matching import build_observations
 from hip.geography.regions import build_regions
+from hip.landing.osm import land_osm
+from hip.landing.raster import land_raster
 from hip.landing.shapefile import land_shapefile
 from hip.landing.tabular import (
     land_csv,
@@ -921,6 +923,14 @@ def land(
                     type(adapter),
                     parquet_dir=settings.parquet_dir,
                     overwrite=overwrite,
+                )
+            elif adapter.landing_format == "raster":
+                table = land_raster(
+                    release, parquet_dir=settings.parquet_dir, overwrite=overwrite
+                )
+            elif adapter.landing_format == "osm":
+                table = land_osm(
+                    release, parquet_dir=settings.parquet_dir, overwrite=overwrite
                 )
             elif adapter.landing_format == "json":
                 table = land_json(

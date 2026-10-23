@@ -50,6 +50,12 @@ packet for that region answers it precisely.
 - Terms: Public domain (U.S. Government work)
 - https://www.census.gov/geographies/reference-files/time-series/geo/relationship-files.html
 
+### 3D Elevation Program (3DEP) bare-earth elevation
+
+- Publisher: U.S. Geological Survey
+- Terms: Public domain (U.S. Government work)
+- https://www.usgs.gov/3d-elevation-program
+
 ### Affordable housing calculations and municipal status reports
 
 - Publisher: NJ Department of Community Affairs
@@ -242,6 +248,12 @@ packet for that region answers it precisely.
 - Terms: Public domain (U.S. Government work)
 - https://www.bts.gov/national-transit-map
 
+### National Transportation Noise Map, 2022/2023
+
+- Publisher: Bureau of Transportation Statistics
+- Terms: Public domain (U.S. Government work)
+- https://www.bts.gov/geospatial/national-transportation-noise-map
+
 ### New Jersey school district boundaries
 
 - Publisher: NJ Office of Information Technology, Office of GIS (NJOGIS)
@@ -271,6 +283,18 @@ packet for that region answers it precisely.
 - Publisher: New Jersey Board of Public Utilities
 - Terms: Open public record
 - https://www.nj.gov/bpu/about/divisions/reliability/
+
+### NLCD tree canopy cover
+
+- Publisher: USDA Forest Service
+- Terms: Public domain (U.S. Government work)
+- https://www.mrlc.gov/data
+
+### OpenStreetMap — New Jersey extract
+
+- Publisher: OpenStreetMap contributors (extract by Geofabrik)
+- Terms: Open Database License (ODbL) 1.0
+- https://www.openstreetmap.org/
 
 ### Population Estimates Program, Vintage 2025
 
@@ -332,6 +356,12 @@ packet for that region answers it precisely.
 - Terms: Public domain (U.S. Government work)
 - https://www2.census.gov/geo/tiger
 
+### TIGER/Line road files
+
+- Publisher: U.S. Census Bureau
+- Terms: Public domain (U.S. Government work)
+- https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
+
 ### UCMR 5 final occurrence data — PFAS entry-point samples
 
 - Publisher: U.S. Environmental Protection Agency
@@ -343,6 +373,12 @@ packet for that region answers it precisely.
 - Publisher: U.S. Department of Housing and Urban Development
 - Terms: Public domain (U.S. Government work)
 - https://www.huduser.gov/portal/datasets/usps_crosswalk.html
+
+### VIIRS annual night lights (VNL V2.2)
+
+- Publisher: Earth Observation Group, Payne Institute, Colorado School of Mines
+- Terms: Creative Commons Attribution 4.0 International
+- https://eogdata.mines.edu/products/vnl/
 
 ### Zillow Home Value Index
 

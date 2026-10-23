@@ -300,6 +300,29 @@ export const GROUPS: readonly Group[] = [
       "water_homes_share_violation",
     ],
   },
+  {
+    // Read only by the visual stories (2026-10-22); `shown: false`, unranked, so no
+    // picker or figure list offers them. Listed so the catalogue stays complete.
+    key: "stories",
+    title: "Visual stories only",
+    metrics: [
+      "osm_wawa_count",
+      "osm_quickchek_count",
+      "osm_starbucks_count",
+      "osm_dunkin_count",
+      "osm_trader_joes_count",
+      "osm_whole_foods_count",
+      "osm_diner_count",
+      "tree_canopy_homes_share",
+      "elevation_homes_feet",
+      "elevation_low_homes_share",
+      "streets_court_circle_share",
+      "streets_street_avenue_share",
+      "noise_homes_share_55db",
+      "noise_homes_share_65db",
+      "lights_homes_radiance",
+    ],
+  },
 ];
 
 export const OTHER: Omit<Group, "metrics"> = {

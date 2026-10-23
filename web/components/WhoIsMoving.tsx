@@ -6,6 +6,7 @@ import { ReaderDetails } from "@/components/ReaderDetails";
 import { MigrationExhibit } from "@/components/ExhibitCharts";
 import { shareText } from "@/lib/hazards";
 import { formatIncome, formatReturns, incomeSentence, latestYear, movesSentence, whose } from "@/lib/migration";
+import { StoryLink } from "@/components/StoryLink";
 
 /** The IRS's own page for the county-to-county files. */
 const IRS_MIGRATION = "https://www.irs.gov/statistics/soi-tax-stats-migration-data";
@@ -123,6 +124,7 @@ export function WhoIsMoving({ name, data, exhibit = false }: { name: string; dat
           more. <a href={IRS_MIGRATION} target="_blank" rel="noreferrer">The IRS’s migration data ↗</a>
         </p>
       </ReaderDetails>
+      <StoryLink href="/stories/who-moves-in" />
     </section>
   );
 }

@@ -5,7 +5,7 @@ household can afford, what the tax bill is, how homes sell, and what comes with 
 flood risk, water, schools, commutes. Live at
 **[housing.jasonli.app](https://housing.jasonli.app)**.
 
-It is built on <!-- fill:sources -->53<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
+It is built on <!-- fill:sources -->59<!-- /fill --> public sources pulled through one staged pipeline into a warehouse,
 resolved to a shared geography, and computed before anything is shown. Every figure
 carries its source file, date, licence and margin of error. It is not a listings site
 and not a chatbot: pages, maps, tools, reports and an API are the product, and an
@@ -17,10 +17,10 @@ optional AI layer only explains figures that were already computed.
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** The housing atlas maps every town and ZIP code (#428); a fuller page for
-> every property in the tax lookup (#427); a starter-home value and a sale price to
-> income ratio covering towns Zillow does not (#228, #233); the warehouse runs natively
-> on Apple silicon (#230).
+> **Latest.** 28 visual stories, from what goes with pricier towns to the Wawa line,
+> noise and night skies, with eight new sources behind them (#429-#436); the housing
+> atlas maps every town and ZIP code (#428); a fuller page for every property in the
+> tax lookup (#427).
 >
 > **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
 > state, on hold until they are cleared. See [ROADMAP.md](ROADMAP.md) and
@@ -41,6 +41,8 @@ Taken from the build each deploy ships, so they always show the live site (ARCHI
 | <a href="https://housing.jasonli.app/nj/mercer-county"><img src="https://housing-data.jasonli.app/screenshots/county-desktop.png" alt="Mercer County page" width="420"></a><br>**A county** — costs, the towns, about the place | <a href="https://housing.jasonli.app/nj/princeton"><img src="https://housing-data.jasonli.app/screenshots/town-desktop.png" alt="Princeton page" width="420"></a><br>**A town** — with cheaper alternatives |
 | <a href="https://housing.jasonli.app/afford"><img src="https://housing-data.jasonli.app/screenshots/budget-explorer-desktop.png" alt="Budget explorer" width="420"></a><br>**Budget explorer** — where can I afford? | <a href="https://housing.jasonli.app/guide"><img src="https://housing-data.jasonli.app/screenshots/buyers-guide-desktop.png" alt="Buyer’s guide" width="420"></a><br>**Buyer’s guide** — thinking of buying here? |
 | <a href="https://housing.jasonli.app/tax"><img src="https://housing-data.jasonli.app/screenshots/tax-lookup-desktop.png" alt="Property tax lookup" width="420"></a><br>**Property tax lookup** — any address’s bill | <a href="https://housing.jasonli.app/atlas"><img src="https://housing-data.jasonli.app/screenshots/atlas-desktop.png" alt="Housing atlas" width="420"></a><br>**Housing atlas** — every measure on a map |
+| <a href="https://housing.jasonli.app/compare?places=224,394,85"><img src="https://housing-data.jasonli.app/screenshots/compare-desktop.png" alt="Compare places" width="420"></a><br>**Compare** — up to four places side by side | <a href="https://housing.jasonli.app/help"><img src="https://housing-data.jasonli.app/screenshots/housing-help-desktop.png" alt="Housing help" width="420"></a><br>**Housing help** — affordable homes, vouchers, authorities |
+| <a href="https://housing.jasonli.app/stories"><img src="https://housing-data.jasonli.app/screenshots/visual-stories-desktop.png" alt="Visual stories" width="420"></a><br>**Visual stories** — New Jersey’s figures, drawn | |
 
 On a phone:
 
@@ -116,7 +118,8 @@ The readings comparisons (readings-v1 to <!-- fill:readings -->v12<!-- /fill -->
 
 **Prerequisites:** [`uv`](https://docs.astral.sh/uv/) (installs Python 3.12.13), Node.js
 22.18+, Docker Desktop (Postgres + PostGIS), Poppler's `pdftotext`
-(`brew install poppler`), and free API keys in `.env`: `CENSUS_API_KEY` and
+(`brew install poppler`), GDAL's command-line tools for the hand-downloaded noise map
+only (`brew install gdal`), and free API keys in `.env`: `CENSUS_API_KEY` and
 `FRED_API_KEY` are required, `BLS_API_KEY` is strongly recommended (20 years of history
 instead of 3). `.env.example` links each signup page. `ANTHROPIC_API_KEY`, the one paid
 key, is read only by `hip eval judge`.
@@ -201,7 +204,7 @@ make r2-cors     # once per bucket: let the site's pages read the data files
 
 Before anything uploads, `make deploy` runs `check-dist` (a complete tree, every list
 complete, no `localhost` links), `check-terms` (every glossary word defined),
-`check-accessibility` (80 scans) and the README screenshots. Deploy on a change to
+`check-accessibility` (104 scans) and the README screenshots. Deploy on a change to
 published content, not on every push: the R2 half is an `rclone sync`, which deletes what
 `dist/` no longer holds.
 

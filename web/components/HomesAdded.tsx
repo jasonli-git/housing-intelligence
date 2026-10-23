@@ -4,6 +4,7 @@ import { byYear, constructionYears, fiveYears } from "@/lib/construction";
 import { formatValue } from "@/lib/format";
 import { ConstructionExhibit } from "@/components/ExhibitCharts";
 import type { ReactNode } from "react";
+import { StoryLink } from "@/components/StoryLink";
 
 function AnnualFigures({ exhibit, children }: {exhibit:boolean; children:ReactNode}) {
   return exhibit ? <ReaderDetails title="Annual building figures">{children}</ReaderDetails> : <>{children}</>;
@@ -145,6 +146,7 @@ export function HomesAdded({
           : ""}
       </p>
       </ReaderDetails>
+      <StoryLink href="/stories/is-new-jersey-building" />
     </section>
   );
 }

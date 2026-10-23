@@ -454,3 +454,48 @@ models:
         tests:
           - not_null
           - accepted_range: {name: stg_hud_fha_limits_in_range, min_value: 400000, max_value: 2000000}
+
+  # The visual stories (2026-10-22).
+  - name: stg_story_raster
+    description: >-
+      Tree canopy, ground height and the share of homes under 10 feet, where homes are,
+      per municipality, county, ZIP code and the state.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_raster_in_range, min_value: 0, max_value: 2000}
+  - name: stg_story_osm
+    description: >-
+      Chains and diners mapped in OpenStreetMap, per municipality, county and the state.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_osm_is_a_count, min_value: 0, max_value: 2000}
+  - name: stg_story_streets
+    description: >-
+      Shares of a town's local street names by their ending, from TIGER's road files.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_streets_is_a_share, min_value: 0, max_value: 1}
+  - name: stg_story_noise
+    description: >-
+      Shares of homes in transportation noise of 55 and 65 dB or more; built once the
+      hand-downloaded noise map has landed.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_noise_is_a_share, min_value: 0, max_value: 1}
+  - name: stg_story_lights
+    description: >-
+      Night-time brightness at homes; built once the hand-downloaded night lights have
+      landed.
+    columns:
+      - name: value
+        tests:
+          - not_null
+          - accepted_range: {name: stg_story_lights_in_range, min_value: 0, max_value: 1000}

@@ -1,0 +1,173 @@
+/* Visual stories (Director Note "Visualizing the data", 2026-10-22). Colours are tokens:
+   above a baseline --story-up, below it --story-down. */
+.stories-page { max-width: 1080px; margin: 0 auto; padding: 0 16px 80px; }
+.stories-page .page-title { margin: .2rem 0 .4rem; }
+.stories-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 1.5rem 0 0; padding: 0; list-style: none; }
+.stories-grid a { display: grid; gap: .4rem; height: 100%; box-sizing: border-box; padding: 1.1rem 1.2rem; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 18px; color: var(--plate-ink, var(--text-primary)); text-decoration: none; }
+.stories-grid a:hover { border-color: var(--plate-accent, var(--text-secondary)); }
+.stories-grid b { font: 400 24px/1.15 Georgia, serif; letter-spacing: -.02em; }
+.stories-grid span { color: var(--text-secondary); font-size: 14px; line-height: 1.5; }
+.story-lede { max-width: 62ch; color: var(--text-secondary); font-size: 16px; line-height: 1.6; }
+.story-note { color: var(--text-muted); font-size: 13px; line-height: 1.6; max-width: 70ch; }
+.story-figure { margin: 1.5rem 0; overflow-x: auto; }
+.story-figure svg { display: block; width: 100%; min-width: 640px; height: auto; }
+.story-figure .grid line { stroke: var(--plate-rule, var(--border)); }
+.story-figure .grid text, .story-figure .axis { fill: var(--text-muted); font: 12px var(--font-text); }
+.story-figure .zero { stroke: var(--plate-ink, var(--text-primary)); stroke-opacity: .5; }
+.story-figure .up { fill: var(--story-up); }
+.story-figure .down { fill: var(--story-down); }
+.story-figure .label { fill: var(--plate-ink, var(--text-primary)); font: 500 14px var(--font-text); }
+.story-figure .sub { fill: var(--text-muted); font: 12px var(--font-text); }
+.story-figure .leader { stroke: var(--text-muted); stroke-width: .8; }
+.story-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.story-table th, .story-table td { padding: .45rem .5rem; border-bottom: 1px solid var(--plate-rule, var(--border)); text-align: left; vertical-align: top; }
+.story-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.story-details { margin: 1rem 0; }
+.story-details summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--text-secondary); }
+
+/* The price ladder: one row per town, three prices on a shared log scale. */
+.ladder-controls { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; align-items: end; margin: 1rem 0; }
+.ladder-controls label { display: grid; gap: .3rem; font-size: 13px; color: var(--text-secondary); }
+.ladder-controls select, .ladder-controls input { min-height: 44px; padding: 0 .7rem; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 12px; background: transparent; color: var(--plate-ink, var(--text-primary)); font: 14px var(--font-text); }
+.ladder-key { display: flex; flex-wrap: wrap; gap: 1rem; font-size: 13px; color: var(--text-secondary); }
+.ladder-key i { display: inline-block; width: 10px; height: 10px; margin-right: .35rem; border-radius: 50%; vertical-align: -1px; }
+.ladder-key .starter { background: var(--story-down); }
+.ladder-key .typical { background: var(--plate-ink, var(--text-primary)); }
+.ladder-key .sale { border: 2px solid var(--story-up); box-sizing: border-box; }
+.ladder { margin: .5rem 0 0; padding: 0; list-style: none; }
+.ladder li { display: grid; grid-template-columns: minmax(120px, 210px) 1fr minmax(84px, auto); gap: .75rem; align-items: center; min-height: 28px; border-bottom: 1px solid var(--plate-rule, var(--border)); font-size: 13px; }
+.ladder li small { color: var(--text-muted); }
+.ladder-track { position: relative; height: 18px; }
+.ladder-track .span { position: absolute; top: 8px; height: 2px; background: var(--plate-strong-rule, var(--border)); }
+.ladder-track i { position: absolute; top: 4px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; }
+.ladder-track .starter { background: var(--story-down); }
+.ladder-track .typical { background: var(--plate-ink, var(--text-primary)); }
+.ladder-track .sale { border: 2px solid var(--story-up); box-sizing: border-box; background: transparent; }
+.ladder li .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* The priciest and cheapest in each county. */
+.extremes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1.5rem 0; padding: 0; list-style: none; }
+.extremes li { display: grid; gap: .6rem; padding: 1rem 1.1rem; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 18px; }
+.extremes h2 { margin: 0; font: 400 22px/1.2 Georgia, serif; letter-spacing: -.02em; }
+.extremes .spread { color: var(--text-secondary); font-size: 13px; }
+.extreme-pair { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; font-size: 13px; }
+.extreme-pair div { display: grid; gap: .1rem; }
+.extreme-pair b { font-size: 15px; }
+.extreme-pair .up { color: var(--story-up); }
+.extreme-pair .down { color: var(--story-down); }
+.extreme-kicker { font: 600 11px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+
+/* Stacked bars: one row each, parts in fixed story colours with a 2px gap between them. */
+.stacked { margin: 1rem 0; }
+.stacked-key { display: flex; flex-wrap: wrap; gap: .4rem 1rem; margin: 0 0 .6rem; font-size: 13px; color: var(--text-secondary); }
+.stacked-key i { display: inline-block; width: 10px; height: 10px; margin-right: .35rem; border-radius: 3px; vertical-align: -1px; }
+.stacked ul { margin: 0; padding: 0; list-style: none; }
+.stacked li { display: grid; grid-template-columns: minmax(120px, 210px) 1fr minmax(64px, auto); gap: .75rem; align-items: center; min-height: 26px; border-bottom: 1px solid var(--plate-rule, var(--border)); font-size: 13px; }
+.stacked li small { color: var(--text-muted); }
+.stacked-bar { display: flex; gap: 2px; height: 12px; }
+.stacked-bar i { display: block; height: 100%; min-width: 1px; }
+.stacked-bar i:first-child { border-radius: 4px 0 0 4px; }
+.stacked-bar i:last-child { border-radius: 0 4px 4px 0; }
+.stacked-bar i:only-child { border-radius: 4px; }
+.stacked li .num { text-align: right; font-variant-numeric: tabular-nums; }
+.story-figure .s1 { fill: var(--story-1); }
+.story-figure .s2 { fill: var(--story-2); }
+.story-figure .s3 { fill: var(--story-3); }
+.story-figure .s4 { fill: var(--story-4); }
+.story-figure .muted { fill: var(--plate-rule, var(--border)); }
+.story-figure .county { fill: var(--surface-2); stroke: var(--plate-strong-rule, var(--border)); stroke-width: .8; }
+.story-figure .town { stroke: var(--surface-1); stroke-width: .4; }
+.story-figure .flow { fill: none; stroke-linecap: round; }
+.story-figure .flow.s1 { stroke: var(--story-1); fill: none; }
+.story-figure .flow.s2 { stroke: var(--story-2); fill: none; }
+.story-figure .flow.s3 { stroke: var(--story-3); fill: none; }
+.story-figure .ratio-line { stroke: var(--text-muted); stroke-dasharray: 4 4; }
+.story-figure .dot { stroke: var(--surface-1); stroke-width: 1; }
+.story-figure .dot.dim { opacity: .18; }
+.story-figure .dot.hit { stroke: var(--plate-ink, var(--text-primary)); stroke-width: 2; }
+.story-figure .place { fill: var(--plate-ink, var(--text-primary)); font: 600 12px var(--font-text); paint-order: stroke; stroke: var(--surface-1); stroke-width: 3px; }
+.story-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; align-items: start; }
+.story-two h2, .stories-page h2.story-h { margin: 1.5rem 0 .25rem; font: 400 24px/1.2 Georgia, serif; letter-spacing: -.02em; }
+
+/* Small multiples: one panel per county on the same scale. */
+.multiples { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .75rem; margin: 1.5rem 0; padding: 0; list-style: none; }
+.multiples li { padding: .7rem .8rem; border: 1px solid var(--plate-strong-rule, var(--border)); border-radius: 14px; }
+.multiples h3 { margin: 0; font-size: 15px; display: flex; justify-content: space-between; gap: .5rem; }
+.multiples h3 span { font-weight: 400; font-variant-numeric: tabular-nums; }
+.multiples svg { display: block; width: 100%; height: auto; }
+.multiples .area-up { fill: var(--story-up); fill-opacity: .25; }
+.multiples .area-down { fill: var(--story-down); fill-opacity: .25; }
+.multiples .line { fill: none; stroke: var(--plate-ink, var(--text-primary)); stroke-width: 1.5; }
+.multiples .zero { stroke: var(--text-muted); stroke-dasharray: 3 3; }
+.multiples .now { fill: var(--plate-ink, var(--text-primary)); }
+.multiples text { fill: var(--text-muted); font: 10px var(--font-text); }
+@media (max-width: 640px) { .stacked li { grid-template-columns: 1fr minmax(56px, auto); } .stacked-bar { grid-column: 1 / -1; grid-row: 2; } }
+.story-two .story-figure svg, .story-figure svg.map { min-width: 0; max-height: 80vh; }
+.bar-line { display: flex; align-items: center; gap: .4rem; height: 14px; font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.bar-line i { display: block; height: 8px; min-width: 1px; border-radius: 0 4px 4px 0; }
+.mix-keys { display: grid; gap: .25rem; }
+.mix-keys b { font-weight: 600; color: var(--plate-ink, var(--text-primary)); margin-right: .25rem; }
+.mix { margin: .5rem 0 0; padding: 0; list-style: none; }
+.mix li { display: grid; grid-template-columns: minmax(120px, 210px) 1fr 1fr; gap: .9rem; align-items: center; min-height: 26px; border-bottom: 1px solid var(--plate-rule, var(--border)); font-size: 13px; }
+.mix li small { color: var(--text-muted); }
+@media (max-width: 640px) { .mix li { grid-template-columns: 1fr 1fr; } .mix li > span:first-child { grid-column: 1 / -1; } }
+/* A track chart's scale, as a header row: round values where they fall, light lines down. */
+.ladder-axis { position: sticky; top: 0; z-index: 1; background: var(--surface-1); color: var(--text-muted); font-size: 11px; }
+.ladder-axis .ladder-track b { position: absolute; top: 2px; transform: translateX(-50%); font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ladder-axis .ladder-track b::after { content: ""; position: absolute; left: 50%; top: 16px; height: 6px; border-left: 1px solid var(--text-muted); }
+.extremes-chart li { min-height: 34px; }
+.extremes-chart .ladder-track .end-name { position: absolute; top: 1px; padding-left: 10px; font: normal 11px var(--font-text); color: var(--text-secondary); white-space: nowrap; }
+.extremes-chart .ladder-track .end-name.left { padding: 0 10px 0 0; transform: translateX(-100%); }
+.ladder-track .zip-mark, .ladder-key .zip-mark { width: 2px; height: 14px; top: 2px; margin-left: -1px; border-radius: 1px; background: var(--text-muted); }
+.ladder-key .zip-mark { display: inline-block; height: 10px; }
+.story-figure .zone-label { fill: var(--text-secondary); font: 600 13px var(--font-text); }
+.count-bars { margin: .5rem 0 0; padding: 0; list-style: none; }
+.count-bars li { display: grid; grid-template-columns: minmax(110px, 160px) 1fr; column-gap: .75rem; align-items: center; padding: .3rem 0; border-bottom: 1px solid var(--plate-rule, var(--border)); font-size: 13px; }
+.count-bars .bar-line { height: 16px; font-size: 12px; color: var(--text-secondary); }
+.count-bars .bar-line i { height: 12px; }
+.count-bars small { grid-column: 2; color: var(--text-muted); font-size: 11px; }
+.mix .ladder-axis { min-height: 28px; font-size: 11px; }
+.mix-state { border-bottom: 2px solid var(--plate-strong-rule, var(--border)) !important; min-height: 34px !important; }
+.mix-state .stacked-bar { height: 16px; }
+.stacked .ladder-axis { position: relative; min-height: 24px; }
+.stacked .ladder-axis .ladder-track { position: relative; height: 20px; }
+.story-figure .trend-line { stroke: var(--plate-ink, var(--text-primary)); stroke-width: 2; stroke-dasharray: 6 4; opacity: .7; }
+.ratio-bars .ladder-track .fill { position: absolute; top: 4px; left: 0; height: 10px; border-radius: 0 4px 4px 0; background: var(--story-down); }
+.ratio-bars .ladder-track .rule { position: absolute; top: 0; bottom: 0; border-left: 1px dashed var(--text-muted); }
+.ratio-bars .ladder-track .rule.full { border-left-style: solid; }
+.stacked-bar { position: relative; }
+.stacked-bar .grid-tick { position: absolute; top: -6px; bottom: -6px; border-left: 1px dashed var(--text-muted); opacity: .5; z-index: 1; pointer-events: none; }
+.story-figure .ladder-key svg { display: inline-block; width: auto; min-width: 0; }
+.ladder-key span { display: inline-flex; align-items: center; }
+/* Each story's card leads with a picture of its chart (ThemedShot, capture-readme.mjs). */
+.stories-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.stories-grid a { align-content: start; padding: .7rem .7rem 1.1rem; }
+.stories-grid a b, .stories-grid a > span:not(.story-shot) { padding-inline: .5rem; }
+.story-shot { display: block; aspect-ratio: 788 / 489; overflow: hidden; margin-bottom: .4rem; border-radius: 12px; background: var(--surface-2); }
+.story-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+
+/* Diverging bars: one row each, out from a centre line, up blue and down orange. */
+.diverging { margin: 1rem 0; padding: 0; list-style: none; }
+.diverging li { display: grid; grid-template-columns: minmax(130px, 200px) 1fr minmax(64px, auto); gap: .75rem; align-items: center; min-height: 34px; border-bottom: 1px solid var(--plate-rule, var(--border)); font-size: 13px; }
+.diverging li small { display: block; color: var(--text-muted); font-size: 11px; }
+.diverging .track { position: relative; height: 16px; }
+.diverging .track::before { content: ""; position: absolute; left: 50%; top: -6px; bottom: -6px; border-left: 1px solid var(--text-muted); }
+.diverging .track i { position: absolute; top: 2px; height: 12px; }
+.diverging .track i.up { left: 50%; border-radius: 0 4px 4px 0; background: var(--story-up); }
+.diverging .track i.down { right: 50%; border-radius: 4px 0 0 4px; background: var(--story-down); }
+.diverging .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.diverging .ladder-axis .track::before { display: none; }
+.diverging .ladder-axis .track { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
+.story-figure .seq { fill: var(--story-1); }
+.twins li { min-height: 64px; }
+.twin-traits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 .6rem; }
+.twin-traits small { color: var(--text-muted); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.twins li { grid-template-columns: minmax(220px, 300px) 1fr minmax(48px, auto) !important; }
+/* A chart wider than a phone scrolls sideways inside its figure, which the keyboard can
+   reach (tabIndex on each figure); the page itself never scrolls sideways. */
+.story-figure:focus-visible { outline: 2px solid var(--story-up); outline-offset: 4px; }
+@media (max-width: 480px) {
+  .story-table { font-size: 12px; }
+  .story-table th, .story-table td { padding: .35rem .25rem; }
+  .story-table td.num { white-space: normal; }
+}

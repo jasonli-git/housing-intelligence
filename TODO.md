@@ -187,11 +187,10 @@ Not open work: each comes round on a date. The steps live where the row says.
       "Compare counties" panel. None runs on deploy (the accessibility gate does, and
       passes); update or delete each when it is next needed.
 
-- [ ] **Visual stories: the first three.** (owner, 2026-10-22; same note) A new section
-      with: what goes with pricier towns (each trait's home-value premium against
-      similar towns, `similar_places` giving the comparison); the price ladder (each
-      town's starter, typical and sale price, sorted); the most and least expensive town
-      and ZIP in each county.
+- [ ] **Re-download the stories' two hand-fed rasters when they are republished.**
+      (2026-10-22, ARCHITECTURE #436) BTS's noise map (next after 2022/2023) and EOG's
+      night lights (2025's annual file) into `data/manual/bts_noise/` and
+      `data/manual/eog_vnl/`; `hip acquire` cuts them. Nothing announces either.
 - [ ] **A commute finder tool.** (owner, 2026-10-22; same note) Towns by commute to NYC,
       Philadelphia or NJ job centres (`lodes_work_*`, `work_destinations`,
       `acs_mean_commute_minutes`) and nearness to a train (`transit_rail_homes_share`,

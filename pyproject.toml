@@ -64,6 +64,14 @@ dbt = [
     "dbt-duckdb>=1.8",
     "dbt-postgres>=1.8",
 ]
+# GDAL, through rasterio's wheels, for the two hand-downloaded rasters the visual stories
+# read (BTS's noise map, EOG's night lights; 2026-10-22): each is cut to New Jersey once,
+# at acquisition, and nothing after that stage imports it. Its own group, as dbt has, so
+# GDAL's tree does not constrain the application's; a default group, as dbt is, so `uv
+# run` does not uninstall it between commands.
+rasters = [
+    "rasterio>=1.4",
+]
 
 [tool.uv]
 # `uv run` syncs the environment to the default groups before every command, so
@@ -72,7 +80,7 @@ dbt = [
 # removed it again, which surfaced as an import-not-found on dbt.cli.main. dbt is
 # named here because `make pipeline` needs it at runtime; `mlx` and `eval` stay
 # opt-in and are handled by the mypy overrides below instead.
-default-groups = ["dev", "dbt"]
+default-groups = ["dev", "dbt", "rasters"]
 
 [build-system]
 requires = ["hatchling"]

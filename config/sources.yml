@@ -1626,3 +1626,171 @@ sources:
     notes: >-
       The largest forward mortgage FHA insures, by county and number of units, for the
       calendar year.
+
+  # The visual stories (2026-10-22): sources read for one story each. Their measures are
+  # `shown: false`, kept out of packets, the atlas and place pages (config/metrics.yml).
+  osm_nj:
+    name: OpenStreetMap — New Jersey extract
+    publisher: OpenStreetMap contributors (extract by Geofabrik)
+    license: Open Database License (ODbL) 1.0
+    licence_class: attribution
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        The ODbL allows any use, commercial included, provided OpenStreetMap is credited
+        and a derived database made public is offered under the ODbL too.
+    terms_url: https://www.openstreetmap.org/copyright
+    terms_checked: 2026-10-22
+    terms_note: >-
+      Share-alike: the per-town counts published from this extract are a derived
+      database and are offered under the ODbL, as the notice below says; the owner
+      accepted that on 2026-10-22. The site's other figures are unaffected.
+    notices:
+      - >-
+        Shop, café and diner counts: © OpenStreetMap contributors, available under the
+        Open Database License (openstreetmap.org/copyright). The counts derived from it
+        are offered under the same licence.
+    url: https://download.geofabrik.de/north-america/us/new-jersey-latest.osm.pbf
+    homepage: https://www.openstreetmap.org/
+    cadence: monthly
+    adapter: hip.sources.osm:OsmAdapter
+    fallback: >-
+      Any other OpenStreetMap extract of New Jersey (BBBike, or the Overpass API for the
+      few tags read), under the same licence.
+    notes: >-
+      Volunteer-mapped: chains' branches are usually all there, a diner nobody tagged
+      as one is not, so counts are a floor.
+
+  census_tiger_roads:
+    name: TIGER/Line road files
+    publisher: U.S. Census Bureau
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105).
+    terms_url: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
+    terms_checked: 2026-10-22
+    url: https://www2.census.gov/geo/tiger/
+    homepage: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
+    cadence: annual
+    adapter: hip.sources.tiger:TigerRoadsAdapter
+    fallback: >-
+      OpenStreetMap's road names for New Jersey, from the extract already read.
+    notes: >-
+      Every road edge with its name and feature class, one file per county, pinned to
+      the vintage of the boundary files.
+
+  usfs_tcc:
+    name: NLCD tree canopy cover
+    publisher: USDA Forest Service
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work; the Forest Service's metadata says the data may be used
+        without additional permissions or fees and asks to be cited.
+    terms_url: https://www.mrlc.gov/data
+    terms_checked: 2026-10-22
+    terms_note: >-
+      The Forest Service asks to be cited ("USDA Forest Service. NLCD Percent Tree Canopy
+      CONUS"), which each story page does. Read from its image service on the federal
+      Image and Imagery Platform, cut to a box around New Jersey; mrlc.gov offers the
+      national files.
+    url: https://imagery.geoplatform.gov/iipp/rest/services/Vegetation/USFS_EDW_NLCD_TCC_CONUS/ImageServer
+    homepage: https://www.mrlc.gov/data
+    cadence: annual
+    adapter: hip.sources.imagery:TreeCanopyAdapter
+    fallback: >-
+      The national GeoTIFF for the same year from mrlc.gov, cut to New Jersey.
+    notes: >-
+      Percent of each 30-metre cell under tree canopy, from Landsat, one year; read at
+      about 100 metres.
+
+  usgs_3dep:
+    name: 3D Elevation Program (3DEP) bare-earth elevation
+    publisher: U.S. Geological Survey
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        A U.S. Government work, with no copyright to licence (17 U.S.C. 105).
+    terms_url: https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits
+    terms_checked: 2026-10-22
+    url: https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer
+    homepage: https://www.usgs.gov/3d-elevation-program
+    cadence: irregular
+    adapter: hip.sources.imagery:ElevationAdapter
+    fallback: >-
+      The National Map's 1/3 arc-second DEM tiles covering New Jersey.
+    notes: >-
+      Ground height above sea level from the best DEM available at each place, read at
+      about 100 metres.
+
+  bts_noise:
+    name: National Transportation Noise Map, 2022/2023
+    publisher: Bureau of Transportation Statistics
+    license: Public domain (U.S. Government work)
+    licence_class: public_domain
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        An NTAD dataset, "a work of the United States government ... available for
+        unrestricted public use" (BTS's catalog entry); acknowledgment of BTS asked.
+    terms_url: https://geodata.bts.gov/content/fcd948117131499cb1289ddf6413b6d8
+    terms_checked: 2026-10-22
+    terms_note: >-
+      Downloaded by hand: bts.gov and the National Transportation Library answer
+      scripts with a 403. BTS says the modelling is simplified and is not for judging
+      noise at one location or for regulation; the story compares towns, and says so.
+      Esri's re-hosted image service was not used: it carries the Esri Master License
+      Agreement, not BTS's terms. The 2022/2023 release is read, not 2020's: it is
+      newer and needs none of the mosaic repair BTS asks of 2016-2020's.
+    url: https://www.bts.gov/geospatial/national-transportation-noise-map
+    cadence: irregular
+    adapter: hip.sources.manual_rasters:NoiseAdapter
+    fallback: >-
+      The 2020 noise layers on the same page; or the University of Washington's
+      tract-level summary of the map (Seto and Huang, 2023), whose terms are unstated.
+    notes: >-
+      Modelled road (2023), rail and aviation (2022) noise, the 24-hour equivalent level
+      in dB(A), at 30 metres; nothing quieter than 45 dB is modelled.
+
+  eog_vnl:
+    name: VIIRS annual night lights (VNL V2.2)
+    publisher: Earth Observation Group, Payne Institute, Colorado School of Mines
+    license: Creative Commons Attribution 4.0 International
+    licence_class: attribution
+    commercial:
+      ads: allowed
+      paid: allowed
+      note: >-
+        CC BY 4.0 allows any use with credit; EOG's licence note names the VIIRS night
+        lights among its CC BY products.
+    terms_url: https://eogdata.mines.edu/files/EOG_products_CC_License.pdf
+    terms_checked: 2026-10-22
+    terms_note: >-
+      Downloaded by hand: the file directory needs a free EOG login. The credit is the
+      notice below, on every page and download.
+    notices:
+      - >-
+        Night lights: Earth Observation Group, Payne Institute for Public Policy,
+        Colorado School of Mines, VIIRS annual night lights (CC BY 4.0).
+    url: https://eogdata.mines.edu/nighttime_light/annual/v22/
+    homepage: https://eogdata.mines.edu/products/vnl/
+    cadence: annual
+    adapter: hip.sources.manual_rasters:NightLightsAdapter
+    fallback: >-
+      NASA's Black Marble annual product (VNP46A4), from the same satellite, through
+      NASA Earthdata.
+    notes: >-
+      Average night-time radiance for a year, nanowatts per square centimetre per
+      steradian, about 460 metres a pixel, with background, fires and boats masked.

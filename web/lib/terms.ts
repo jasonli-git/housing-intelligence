@@ -694,6 +694,66 @@ export const TERMS_BY_ID: Record<string, TermEntry> = {
     what: "The share of residents’ jobs outside New Jersey, New York City and Pennsylvania.",
     why: "Part of where residents work. LODES 2023 has no records for Alaska or Michigan.",
   },
+  osm_wawa_count: {
+    what: "How many Wawa locations are mapped in OpenStreetMap here, a store mapped twice counted once. © OpenStreetMap contributors, ODbL.",
+    why: "Read only by the visual stories, for what a town’s shops say about it. Volunteer-mapped, so a floor.",
+  },
+  osm_quickchek_count: {
+    what: "How many QuickChek locations are mapped in OpenStreetMap here, a store mapped twice counted once. © OpenStreetMap contributors, ODbL.",
+    why: "Read only by the visual stories, for what a town’s shops say about it. Volunteer-mapped, so a floor.",
+  },
+  osm_starbucks_count: {
+    what: "How many Starbucks locations are mapped in OpenStreetMap here, a store mapped twice counted once. © OpenStreetMap contributors, ODbL.",
+    why: "Read only by the visual stories, for what a town’s shops say about it. Volunteer-mapped, so a floor.",
+  },
+  osm_dunkin_count: {
+    what: "How many Dunkin’ locations are mapped in OpenStreetMap here, a store mapped twice counted once. © OpenStreetMap contributors, ODbL.",
+    why: "Read only by the visual stories, for what a town’s shops say about it. Volunteer-mapped, so a floor.",
+  },
+  osm_trader_joes_count: {
+    what: "How many Trader Joe’s locations are mapped in OpenStreetMap here, a store mapped twice counted once. © OpenStreetMap contributors, ODbL.",
+    why: "Read only by the visual stories, for what a town’s shops say about it. Volunteer-mapped, so a floor.",
+  },
+  osm_whole_foods_count: {
+    what: "How many Whole Foods Market locations are mapped in OpenStreetMap here, a store mapped twice counted once. © OpenStreetMap contributors, ODbL.",
+    why: "Read only by the visual stories, for what a town’s shops say about it. Volunteer-mapped, so a floor.",
+  },
+  osm_diner_count: {
+    what: "How many diners are mapped in OpenStreetMap here: restaurants tagged as a diner or named one. © OpenStreetMap contributors, ODbL.",
+    why: "Read only by the visual stories. Volunteer-mapped, so a diner nobody tagged is missing and the count is a floor.",
+  },
+  tree_canopy_homes_share: {
+    what: "The share of ground under tree canopy where the homes are, from the Forest Service’s satellite canopy map, weighted by each census block’s homes.",
+    why: "Read only by the visual stories: the shade where people live, not across a town’s woods.",
+  },
+  elevation_homes_feet: {
+    what: "The average height above sea level of the ground under the homes, in feet, from USGS elevation data, weighted by each census block’s homes.",
+    why: "Read only by the visual stories. Ground height, not flood risk.",
+  },
+  elevation_low_homes_share: {
+    what: "The share of homes on ground less than 10 feet above sea level, from USGS elevation data by census block.",
+    why: "Read only by the visual stories. A seawall, a dune or a raised floor is not in it, so it is not flood risk.",
+  },
+  streets_court_circle_share: {
+    what: "The share of a town’s local street names ending in Court, Circle, Lane, Way, Place or Terrace, from the Census Bureau’s road files.",
+    why: "Read only by the visual stories: those are the names of post-war subdivisions.",
+  },
+  streets_street_avenue_share: {
+    what: "The share of a town’s local street names ending in Street or Avenue, from the Census Bureau’s road files.",
+    why: "Read only by the visual stories: those are the names of the older grid.",
+  },
+  noise_homes_share_55db: {
+    what: "The share of homes where the federal transportation noise model puts road, rail and aircraft noise at 55 decibels or more, averaged over a day.",
+    why: "Read only by the visual stories. A model for comparing places, not a measurement of one street.",
+  },
+  noise_homes_share_65db: {
+    what: "The share of homes where the federal transportation noise model puts road, rail and aircraft noise at 65 decibels or more, like a busy road close by.",
+    why: "Read only by the visual stories. A model for comparing places, not a measurement of one street.",
+  },
+  lights_homes_radiance: {
+    what: "How bright the night sky is over the homes, from satellite night-light measurements averaged over a year, weighted by each census block’s homes.",
+    why: "Read only by the visual stories: the darker the sky, the more stars you can see.",
+  },
   transit_rail_homes_share: {
     what: "The share of homes within half a mile, in a straight line, of a commuter rail, PATH, PATCO, subway or light rail stop.",
     why: "Nearness to a station, not how often trains call there.",

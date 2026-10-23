@@ -5,7 +5,7 @@ import { dirname } from 'node:path';
 
 const origin = process.env.A11Y_ORIGIN ?? 'http://localhost:3000';
 const output = process.env.A11Y_OUTPUT ?? '/tmp/hip-accessibility.json';
-const paths = (process.env.A11Y_PATHS ?? '/,/states/new-jersey,/nj/atlantic-county,/nj/absecon,/nj/zip-07001,/afford?income=120000,/tax,/freshness,/changes,/nj/atlantic-county/report').split(',');
+const paths = (process.env.A11Y_PATHS ?? '/,/states/new-jersey,/nj/atlantic-county,/nj/absecon,/nj/zip-07001,/afford?income=120000,/tax,/freshness,/changes,/nj/atlantic-county/report,/stories,/stories/twin-towns,/stories/the-starbucks-index').split(',');
 const widths = (process.env.A11Y_WIDTHS ?? '1440,390').split(',').map(Number);
 const themes = (process.env.A11Y_THEMES ?? 'light,dark').split(',');
 const browser = await chromium.launch();

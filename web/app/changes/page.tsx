@@ -14,6 +14,7 @@ import { periodLabel } from "@/lib/periods";
 import { pageMetadata } from "@/lib/meta";
 import "../horizon-theme.css";
 import "../data-horizon.css";
+import { StoryLink } from "@/components/StoryLink";
 
 export const metadata: Metadata = pageMetadata({
   title: "What changed — Housing",
@@ -111,6 +112,7 @@ export default async function ChangesPage() {
             the most recent {report.batches.length} are shown.
           </p>
         )}
+        <StoryLink href="/stories/how-data-gets-rewritten" />
       </main>
     </>
   );

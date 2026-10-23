@@ -11,6 +11,8 @@ import { NationalTrend } from "@/components/NationalTrend";
 import { periodLabel } from "@/lib/periods";
 import { pageMetadata } from "@/lib/meta";
 import Link from "next/link";
+import { STORIES } from "@/lib/stories";
+import { ThemedShot } from "@/components/ThemedShot";
 
 // The tools reachable from the bar, each with what it answers. All cover New
 // Jersey today, and say so, so the home page stays about no one state (#362).
@@ -18,6 +20,7 @@ const HOME_TOOLS = [
   { href: "/afford", title: "Budget explorer", text: "Enter your income; see the towns where a typical home fits your budget.", icon: "M3 12h4l3-8 4 16 3-8h4" },
   { href: "/guide", title: "Buyer’s guide", text: "Afford, rent or buy, and what to check before an offer, for any place.", icon: "M4 5h7v14H4zM13 5h7v14h-7M7 9h1M16 9h1" },
   { href: "/tax", title: "Property tax lookup", text: "Any property by address or block and lot: its assessment and last year’s tax.", icon: "M5 21V8l7-5 7 5v13M9 21v-6h6v6" },
+  { href: "/compare", title: "Compare places", text: "Up to four places side by side: costs, incomes, homes and more.", icon: "M4 4h6v16H4zM14 4h6v16h-6" },
   { href: "/help", title: "Housing help", text: "Find affordable homes, vouchers and housing authorities in New Jersey.", icon: "M3 11l9-7 9 7M5 9v12h14V9M9 21v-6h6v6" },
   { href: "/atlas", title: "Housing atlas", text: "Explore county figures on a map and compare places across New Jersey.", icon: "M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2V5M9 3v16M15 5v16" },
 ] as const;
@@ -78,6 +81,14 @@ export default async function HousingLandingPage() {
           </section>
         </div>
         <p className="national-backdrop-note">Each trend uses its own scale. Historical figures, not forecasts.</p>
+      </section>
+      <section className="home-stories" aria-labelledby="home-stories-heading">
+        <h2 id="home-stories-heading">Visual stories <span aria-hidden="true">— New Jersey, drawn</span></h2>
+        <Link href="/stories">
+          {/* The stories page itself, captured from the build each deploy ships (capture-readme.mjs). */}
+          <ThemedShot name="stories-index" width={1768} height={995} className="home-stories-shot" />
+          <span>All {STORIES.length} visual stories <span aria-hidden="true">→</span></span>
+        </Link>
       </section>
       <section className="home-tools" aria-labelledby="home-tools-heading">
         <h2 id="home-tools-heading">Tools <span aria-hidden="true">— an index</span></h2>

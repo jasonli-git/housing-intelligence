@@ -63,6 +63,13 @@ KEYED_MODELS = (
     # Milestone 52.
     "stg_fhfa_hpi_county",
     "stg_census_saipe",
+    # The visual stories (2026-10-22): measures kept `shown: false`.
+    "stg_story_raster",
+    "stg_story_osm",
+    "stg_story_streets",
+    # Each built only once its hand-downloaded raster has landed.
+    "stg_story_noise",
+    "stg_story_lights",
 )
 
 # Not a metric model: it feeds region_crosswalk, not fact_metric_observation.
@@ -115,6 +122,16 @@ def dbt_vars(
         # The year each layer republished in place was read (Milestone 40, #301): a
         # flood map or a site list has no period of its own, so its figures are dated
         # by the year the platform read the copy they came from.
+        # The noise map and night lights are downloaded by hand; each one's model waits
+        # for its file, so the pipeline runs before they are handed in.
+        "story_noise_landed": any(
+            (settings.parquet_dir / "bts_noise").glob("*/noise.parquet")
+        ),
+        "story_lights_landed": any(
+            (settings.parquet_dir / "eog_vnl").glob("*/lights.parquet")
+        ),
+        # TIGER's road files, read for one story, take the boundary files' vintage.
+        "tiger_roads_year": _tiger_roads_year(),
         "read_years": {
             source_id: _read_year(settings.raw_dir, source_id) for source_id in READ_DATED
         },
@@ -122,7 +139,22 @@ def dbt_vars(
 
 
 # Sources republished in place whose figures are dated by the year they were read.
-READ_DATED = ("fema_nfhl", "njdep_cafe", "njdep_kcsl", "njdep_water_areas", "epa_sdwis")
+READ_DATED = (
+    "fema_nfhl",
+    "njdep_cafe",
+    "njdep_kcsl",
+    "njdep_water_areas",
+    "epa_sdwis",
+    # The visual stories' extracts republished in place (2026-10-22).
+    "osm_nj",
+    "usgs_3dep",
+)
+
+
+def _tiger_roads_year() -> str:
+    from hip.sources.tiger import TigerRoadsAdapter
+
+    return TigerRoadsAdapter.default_vintage
 
 
 def _read_year(raw_dir: Path, source_id: str) -> int | None:

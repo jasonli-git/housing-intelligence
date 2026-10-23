@@ -2,6 +2,7 @@ import type { Persistence } from "@/lib/api";
 import { ReaderDetails } from "@/components/ReaderDetails";
 import { HistoryExhibit } from "@/components/ExhibitCharts";
 import { againstUsual, leadSentence, spellsSentence } from "@/lib/persistence";
+import { StoryLink } from "@/components/StoryLink";
 
 const FHFA = "https://www.fhfa.gov/data/hpi/datasets?tab=additional-data";
 const SAIPE = "https://www.census.gov/programs-surveys/saipe.html";
@@ -88,6 +89,7 @@ export function HowUnusual({ name, data, exhibit = false, interactive = false }:
           {data.validation && <> Checked against the price-to-income figure elsewhere on this page: from {data.validation.from} to {data.validation.to} the two moved {data.validation.agrees ? "the same way" : "opposite ways"}.</>}
         </p>
       </ReaderDetails>
+      <StoryLink href="/stories/is-today-unusual" />
     </section>
   );
 }

@@ -2194,3 +2194,231 @@ metrics:
     record_type: determination
     ranked: false
     changed: false
+
+  # The visual stories (2026-10-22). Read for one story each and kept out of packets,
+  # the atlas and place pages (`shown: false`); the stories read them by id.
+  osm_wawa_count:
+    label: Wawa stores, mapped
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places mapped as Wawa in OpenStreetMap, within the region, a branch mapped twice counted once. Volunteer-mapped,
+      so a floor. © OpenStreetMap contributors, ODbL; the count is offered under the
+      same licence.
+    source_id: osm_nj
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  osm_quickchek_count:
+    label: QuickChek stores, mapped
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places mapped as QuickChek in OpenStreetMap, within the region, a branch mapped twice counted once. Volunteer-mapped,
+      so a floor. © OpenStreetMap contributors, ODbL; the count is offered under the
+      same licence.
+    source_id: osm_nj
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  osm_starbucks_count:
+    label: Starbucks cafés, mapped
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places mapped as Starbucks in OpenStreetMap, within the region, a branch mapped twice counted once. Volunteer-mapped,
+      so a floor. © OpenStreetMap contributors, ODbL; the count is offered under the
+      same licence.
+    source_id: osm_nj
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  osm_dunkin_count:
+    label: Dunkin' shops, mapped
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places mapped as Dunkin' in OpenStreetMap, within the region, a branch mapped twice counted once. Volunteer-mapped,
+      so a floor. © OpenStreetMap contributors, ODbL; the count is offered under the
+      same licence.
+    source_id: osm_nj
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  osm_trader_joes_count:
+    label: Trader Joe's stores, mapped
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places mapped as Trader Joe's in OpenStreetMap, within the region, a branch mapped twice counted once. Volunteer-mapped,
+      so a floor. © OpenStreetMap contributors, ODbL; the count is offered under the
+      same licence.
+    source_id: osm_nj
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  osm_whole_foods_count:
+    label: Whole Foods Market stores, mapped
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Places mapped as Whole Foods Market in OpenStreetMap, within the region, a branch mapped twice counted once. Volunteer-mapped,
+      so a floor. © OpenStreetMap contributors, ODbL; the count is offered under the
+      same licence.
+    source_id: osm_nj
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  osm_diner_count:
+    label: Diners, mapped
+    unit: count
+    frequency: annual
+    direction: neutral
+    description: >-
+      Diners mapped in OpenStreetMap: a restaurant tagged cuisine=diner or named a diner, within the region, a branch mapped twice counted once. Volunteer-mapped,
+      so a floor. © OpenStreetMap contributors, ODbL; the count is offered under the
+      same licence.
+    source_id: osm_nj
+    record_type: administrative
+    ranked: false
+    changed: false
+    shown: false
+
+  tree_canopy_homes_share:
+    label: Tree canopy where homes are
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of ground under tree canopy at the region's homes: each 2020 census
+      block's canopy, from the Forest Service's NLCD tree canopy cover read at about 100
+      metres, weighted by its homes.
+    source_id: usfs_tcc
+    record_type: calculated
+    ranked: false
+    changed: false
+    shown: false
+
+  elevation_homes_feet:
+    label: Ground height where homes are
+    unit: feet
+    frequency: annual
+    direction: neutral
+    description: >-
+      Mean height above sea level at the region's homes, in feet: each 2020 census
+      block's ground height from USGS 3DEP, read at about 100 metres, weighted by its homes.
+    source_id: usgs_3dep
+    record_type: calculated
+    ranked: false
+    changed: false
+    shown: false
+
+  elevation_low_homes_share:
+    label: Homes under 10 feet above sea level
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of the region's homes on ground under 10 feet above sea level, by each
+      2020 census block's height from USGS 3DEP. Ground height, not flood risk: a
+      seawall or a dune is not in it.
+    source_id: usgs_3dep
+    record_type: calculated
+    ranked: false
+    changed: false
+    shown: false
+
+  streets_court_circle_share:
+    label: Streets named Court, Circle, Lane, Way, Place or Terrace
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of a town's distinct local street names (TIGER road class S1400) ending
+      in Court, Circle, Lane, Way, Place or Terrace: the names of post-war subdivisions.
+      Towns with fewer than ten street names are left out.
+    source_id: census_tiger_roads
+    record_type: calculated
+    ranked: false
+    changed: false
+    shown: false
+
+  streets_street_avenue_share:
+    label: Streets named Street or Avenue
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of a town's distinct local street names (TIGER road class S1400) ending
+      in Street or Avenue: the names of the older grid. Towns with fewer than ten street
+      names are left out.
+    source_id: census_tiger_roads
+    record_type: calculated
+    ranked: false
+    changed: false
+    shown: false
+
+  noise_homes_share_55db:
+    label: Homes in transportation noise of 55 dB or more
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of homes where BTS's model puts road, rail and aviation noise at 55
+      dB(A) or more over 24 hours, the level the EPA has long named for outdoor
+      activity, by each 2020 census block. Modelled and simplified: for comparing
+      towns, not judging one street.
+    source_id: bts_noise
+    record_type: modelled
+    ranked: false
+    changed: false
+    shown: false
+
+  noise_homes_share_65db:
+    label: Homes in transportation noise of 65 dB or more
+    unit: ratio
+    frequency: annual
+    direction: neutral
+    description: >-
+      The share of homes where BTS's model puts road, rail and aviation noise at 65
+      dB(A) or more over 24 hours, the level of a busy road close by, by each 2020
+      census block. Modelled and simplified.
+    source_id: bts_noise
+    record_type: modelled
+    ranked: false
+    changed: false
+    shown: false
+
+  lights_homes_radiance:
+    label: Night-time brightness where homes are
+    unit: radiance
+    frequency: annual
+    direction: neutral
+    description: >-
+      Average night-time radiance at the region's homes, in nanowatts per square
+      centimetre per steradian, from VIIRS's annual night lights (Earth Observation
+      Group, CC BY 4.0), weighted by each 2020 census block's homes. The darker, the
+      more stars.
+    source_id: eog_vnl
+    record_type: calculated
+    ranked: false
+    changed: false
+    shown: false
