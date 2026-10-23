@@ -13,6 +13,19 @@ are not yet recorded here.
 
 ### Added
 
+- **Visual stories** (ARCHITECTURE #429-#436): 28 pages under `/stories`, each one
+  question about New Jersey answered by a chart that reads without its text, from what
+  goes with pricier towns and every county's priciest and cheapest places to the Wawa
+  line, the Starbucks index, diners, tree shade, street names, noise and night skies.
+  Reached from the home page, which shows a picture of them all, the footer, and the
+  page sections they draw from.
+- **Eight sources for the stories** (ARCHITECTURE #433-#436): OpenStreetMap's New
+  Jersey extract (under the ODbL, which the counts published from it carry), TIGER's
+  road files, the Forest Service's tree canopy, USGS elevation, BTS's transportation
+  noise map and EOG's VIIRS night lights, the last two downloaded by hand. Their
+  measures are read only by the stories.
+- **The README's screenshots cover every page in the bar again** (ARCHITECTURE #431):
+  Compare, Housing help and Visual stories had stopped being pictured.
 - **The housing atlas maps towns and ZIP codes** (ARCHITECTURE #428): every county, town
   and ZIP code in New Jersey, with each measure published for them (61 for towns, 40 for
   ZIP codes); zoom in on the nation to open the state; pick up to four places to send to

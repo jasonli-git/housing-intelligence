@@ -17,10 +17,10 @@ optional AI layer only explains figures that were already computed.
 > <!-- fill:towns -->564<!-- /fill --> towns and <!-- fill:zips -->598<!-- /fill --> ZIP
 > codes, plus five tools.
 >
-> **Latest.** The housing atlas maps every town and ZIP code (#428); a fuller page for
-> every property in the tax lookup (#427); a starter-home value and a sale price to
-> income ratio covering towns Zillow does not (#228, #233); the warehouse runs natively
-> on Apple silicon (#230).
+> **Latest.** 28 visual stories, from what goes with pricier towns to the Wawa line,
+> noise and night skies, with eight new sources behind them (#429-#436); the housing
+> atlas maps every town and ZIP code (#428); a fuller page for every property in the
+> tax lookup (#427).
 >
 > **Next.** Clearing TODO and the open Director Notes; then the hosting move for a second
 > state, on hold until they are cleared. See [ROADMAP.md](ROADMAP.md) and
@@ -118,7 +118,8 @@ The readings comparisons (readings-v1 to <!-- fill:readings -->v12<!-- /fill -->
 
 **Prerequisites:** [`uv`](https://docs.astral.sh/uv/) (installs Python 3.12.13), Node.js
 22.18+, Docker Desktop (Postgres + PostGIS), Poppler's `pdftotext`
-(`brew install poppler`), and free API keys in `.env`: `CENSUS_API_KEY` and
+(`brew install poppler`), GDAL's command-line tools for the hand-downloaded noise map
+only (`brew install gdal`), and free API keys in `.env`: `CENSUS_API_KEY` and
 `FRED_API_KEY` are required, `BLS_API_KEY` is strongly recommended (20 years of history
 instead of 3). `.env.example` links each signup page. `ANTHROPIC_API_KEY`, the one paid
 key, is read only by `hip eval judge`.
