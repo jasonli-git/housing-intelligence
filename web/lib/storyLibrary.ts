@@ -14,6 +14,49 @@ export const EDITOR_PICKS = ["twin-towns", "the-wawa-line", "the-true-monthly-co
 export const FEATURED_STORY = "twin-towns";
 export const storySlug = (story: Story) => story.href.split("/").at(-1)!;
 
+/** Short library previews; full story descriptions and search vocabulary stay intact. */
+export const STORY_PREVIEWS: Record<string, string> = {
+  "pricier-towns": "Which town traits go with higher home values?",
+  "price-ladder": "Starter homes, typical values and recent sales on one scale.",
+  "priciest-and-cheapest": "Each county’s most and least expensive towns and ZIPs.",
+  "income-and-home-value": "Home values against household incomes. Find your town.",
+  "who-moves-in": "Who moves between counties, and what arrivals earn.",
+  "where-the-workday-goes": "Where residents work beyond their hometown.",
+  "is-new-jersey-building": "Homes permitted, completed and demolished by county.",
+  "what-the-housing-is": "The age and mix of each town’s homes.",
+  "the-true-monthly-cost": "Mortgage, taxes, insurance and utilities by town.",
+  "same-house-different-tax-bill": "How local tax rates change the yearly bill.",
+  "the-mortgage-market": "Which loans get made, and why applications are denied.",
+  "water-you-can-check": "Water violations, PFAS results and lead service lines.",
+  "is-today-unusual": "Today’s prices and incomes against each county’s history.",
+  "whats-in-a-name": "Do “Lake” towns cost more than “Park” towns?",
+  "the-long-commute-premium": "Why longer commutes go with pricier towns.",
+  "twin-towns": "Similar incomes, homes and commutes. Different home values.",
+  "what-a-house-buys-in-land": "Home values per acre, from city lots to the Pinelands.",
+  "your-towns-time-machine": "When typical home values crossed $500,000 and $1 million.",
+  "the-winter-empty-shore": "Shore towns with homes kept for the summer.",
+  "the-wawa-line": "The Wawa–QuickChek divide, and home values on either side.",
+  "the-starbucks-index": "What a town’s shops reveal about its home values.",
+  "diner-capital": "Where the diners are, per resident.",
+  "the-leafy-premium": "Tree cover around homes, and how it relates to price.",
+  "court-circle-lane": "What street names reveal about a town’s age and prices.",
+  "living-higher": "How high homes sit above sea level, and what they cost.",
+  "what-quiet-costs": "Transport noise around homes, and the price of quieter towns.",
+  "where-you-can-see-the-stars": "Dark skies over homes, and what they cost.",
+  "how-data-gets-rewritten": "When publishers revise their figures, and by how much.",
+  "boroughitis": "The incorporation history behind New Jersey’s 564 towns.",
+  "the-flood-claims-calendar": "Insured flood claims since 1978, day by day.",
+  "how-long-homes-sit": "How long listings wait for a buyer, by county and month.",
+  "when-the-town-was-built": "Each county’s homes by the decade they were built.",
+  "how-big-the-houses-are": "Building footprints, from above.",
+  "pavement-or-lawn": "Paved ground around homes, and how it relates to price.",
+  "the-hottest-counties": "Summer days above 90°F, then and now.",
+  "the-pizza-bagel-line": "Bagel shops versus pizzerias, north to south.",
+  "hometown-famous": "Notable people born in each town, relative to its size.",
+};
+
+export const storyPreview = (story: Story) => STORY_PREVIEWS[storySlug(story)] ?? story.blurb;
+
 export function storyBySlug(slug: string): Story {
   const story = STORIES.find((s) => storySlug(s) === slug);
   if (!story) throw new Error(`Unknown visual story: ${slug}`);
@@ -28,7 +71,7 @@ export function findStories(query: string, collection: string = "all"): Story[] 
   const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   return STORIES.filter((s) => {
     if (collection !== "all" && collectionFor(s) !== collection) return false;
-    const text = `${s.title} ${s.blurb}`.toLocaleLowerCase();
+    const text = `${s.title} ${storyPreview(s)} ${s.blurb}`.toLocaleLowerCase();
     return words.every((word) => text.includes(word));
   });
 }

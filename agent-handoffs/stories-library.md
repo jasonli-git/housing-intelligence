@@ -65,7 +65,8 @@ naturally reflect the new card styling, not a separate homepage redesign.
 - New Jersey is the current catalogue’s scope. “Only in New Jersey” is an identity
   collection, not a misleading state filter that would currently include everything.
 - Editor’s picks are qualitative curation, not measured engagement or an objective
-  ranking. The page says so. The featured story and picks can be changed in metadata.
+  ranking. They are labelled as editorial picks, not popularity rankings. The featured
+  story and picks can be changed in metadata.
 - Future stories need primary collection assignment; the coverage test fails if a
   registry entry is omitted, assigned twice, or references a missing story.
 
@@ -123,3 +124,24 @@ and the development frontend on **http://localhost:3002/stories** restored to th
 normal API connection. Existing chart images are served locally on 8093. The API has
 no startup ingestion/load behavior; no warehouse writes were performed. Preview
 processes are local and are not deploys.
+
+## Review follow-up: concise library copy — 2026-10-23
+
+At the user's request, removed the tagline below “Visual stories” and tightened the
+visible copy throughout the library:
+
+- All 37 cards now have short, library-specific previews (under 90 characters each),
+  rather than repeating the longer source-registry descriptions. Individual stories
+  and original descriptions remain unchanged.
+- Removed all rail subtitles and the closing slogan; titles already identify each
+  collection. Shortened the feature label/CTA, scope and repeated cover caption.
+- Removed the search placeholder while retaining its visible label; shortened the
+  empty-state message and final directory link.
+- Search includes the short preview as well as the title and full original blurb,
+  so both new visible vocabulary and existing detailed terms remain discoverable.
+- Added a test checking complete preview coverage and length against the originals.
+
+Verification after the text pass: **743 tests passed (123 files)**; TypeScript passed;
+the route-scoped `/stories` production build passed against the normal read-only local
+API; browser/axe checks passed at 1440/768/390px in both themes. `git diff --check`
+passed. The build remains a debug subset, not a full deployable export. No deploy.

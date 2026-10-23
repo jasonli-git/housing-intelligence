@@ -25,7 +25,6 @@ export default function StoriesPage() {
             <Crumbs trail={[{ href: "/", label: "United States" }, { href: "/states/new-jersey", label: "New Jersey" }]} here="Visual stories" />
             <Kind kind="story" />
             <h1 className="page-title">Visual stories</h1>
-            <p className="story-lede">New Jersey&rsquo;s housing figures, drawn to answer one question each.</p>
           </div>
         </header>
         <StoryLibrary />
