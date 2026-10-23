@@ -13,6 +13,10 @@ are not yet recorded here.
 
 ### Added
 
+- **The visual stories are a library** (ARCHITECTURE #440): `/stories` opens on a
+  featured story, Editor's picks and five themed rails, with every story searchable and
+  filterable under All stories; the home page shows three picked stories instead of a
+  picture of the index.
 - **Nine more visual stories** (ARCHITECTURE #438, #439): Boroughitis (every town by the
   year it was incorporated, and the 1894 borough rush), the flood claims calendar (every
   day's flood insurance claims since 1978), how long homes sit (a horizon chart of
