@@ -770,3 +770,13 @@ experimental ones, such as a chart of which chains go with pricier homes.
   decision for the owner.
 
 **No tool is to be removed.**
+
+### Visual stories as a curated library — 2026-10-23
+
+**Status:** Approved direction for an experimental frontend pass.
+
+Explore a streaming-inspired story index with themed horizontal rails, a small
+editorial selection and story-specific visual covers. Preserve an accessible
+all-stories view and the analytical depth inside each story. Refine the actual
+stories index before redesigning its homepage preview. No autoplay rail movement;
+editorial picks are curated selections, not popularity claims.
