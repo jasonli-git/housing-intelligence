@@ -6,6 +6,7 @@ import { pageMetadata } from "@/lib/meta";
 import { StoryLibrary } from "@/components/StoryLibrary";
 import "../horizon-theme.css";
 import "./stories.css";
+import "./story-cards.css";
 import "./library.css";
 
 export const metadata: Metadata = pageMetadata({

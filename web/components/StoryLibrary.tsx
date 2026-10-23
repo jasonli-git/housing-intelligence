@@ -2,25 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ThemedShot } from "./ThemedShot";
+import { StoryCard, StoryCover } from "./StoryCard";
 import { STORIES } from "@/lib/stories";
-import { COLLECTIONS, EDITOR_PICKS, FEATURED_STORY, collectionFor, findStories, storyBySlug, storyPreview, storySlug, type Story } from "@/lib/storyLibrary";
-
-function Cover({ story }: { story: Story }) {
-  return <div className="library-cover" data-topic={collectionFor(story)}>
-    {/* A cropped detail of the actual chart, not fabricated quantitative artwork. */}
-    <ThemedShot name={`stories/${storySlug(story)}`} width={788} height={489} className="library-chart-detail" />
-    <span className="library-cover-open" aria-hidden="true">↗</span>
-  </div>;
-}
-
-function StoryCard({ story }: { story: Story }) {
-  return <Link className="library-card" href={story.href} prefetch={false}>
-    <Cover story={story} />
-    <h3>{story.title}</h3>
-    <p>{storyPreview(story)}</p>
-  </Link>;
-}
+import { COLLECTIONS, EDITOR_PICKS, FEATURED_STORY, findStories, storyBySlug, storyPreview, type Story } from "@/lib/storyLibrary";
 
 function StoryRail({ id, title, stories, viewAll }: {
   id: string; title: string; stories: Story[]; viewAll?: () => void;
@@ -95,7 +79,7 @@ export function StoryLibrary() {
           <p>{storyPreview(featured)}</p>
           <span className="library-feature-cta">Explore <span aria-hidden="true">↗</span></span>
         </div>
-        <Cover story={featured} />
+        <StoryCover story={featured} />
       </Link>
       <StoryRail id="editors" title="Editor’s picks" stories={EDITOR_PICKS.map(storyBySlug)} />
       {COLLECTIONS.map((c) => <StoryRail key={c.id} id={c.id} title={c.title} stories={c.stories.map(storyBySlug)} viewAll={() => showCollection(c.id)} />)}

@@ -1,0 +1,17 @@
+.library-cover { --cover-accent: var(--story-1); position: relative; overflow: hidden; aspect-ratio: 16/10; background: var(--surface-2); border-radius: 15px; isolation: isolate; }
+.library-cover[data-topic="jersey"] { --cover-accent: var(--story-2); }
+.library-cover[data-topic="place"] { --cover-accent: var(--story-3); }
+.library-cover[data-topic="motion"] { --cover-accent: var(--story-4); }
+.library-cover[data-topic="surface"] { --cover-accent: var(--story-down); }
+.library-cover::after { content: ""; position: absolute; inset: 0; border: 1px solid color-mix(in srgb, var(--cover-accent) 38%, var(--border)); border-top: 3px solid var(--cover-accent); border-radius: inherit; pointer-events: none; z-index: 2; }
+.library-chart-detail { display: block; position: absolute; inset: 0; overflow: hidden; }
+.library-cover-open { position: absolute; right: 12px; bottom: 12px; z-index: 2; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; color: var(--text-primary); background: var(--surface-1); border: 1px solid var(--border); transition: transform .2s; }
+.library-chart-detail img { width: 100%; height: 100%; object-fit: cover; object-position: 60% 35%; display: block; transform: scale(1.28); transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+.library-card { color: var(--text-primary); text-decoration: none; display: block; border-radius: 15px; }
+.library-card h3 { font: 400 21px/1.15 Georgia, serif; letter-spacing: -.02em; margin: .8rem 0 .35rem; }
+.library-card p { font-size: 13px; line-height: 1.5; margin: 0; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.library-card:hover .library-chart-detail img { transform: scale(1.34); }
+.library-card:hover h3 { text-decoration: underline; text-underline-offset: .2em; }
+.library-card:hover .library-cover-open { transform: translate(2px, -2px); }
+.library-card:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .library-card *, .library-card *::before, .library-card *::after { transition: none !important; animation: none !important; } }

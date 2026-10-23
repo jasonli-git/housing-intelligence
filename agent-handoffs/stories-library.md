@@ -221,3 +221,64 @@ Verification after restoration: 743 frontend tests passed, TypeScript passed, th
 stories-scoped production build passed, and responsive/axe checks passed in both
 themes. `git diff 9f5ba9e -- web` is empty; staged/unstaged whitespace checks passed.
 No merge or deployment.
+
+## Homepage follow-up: curated sampler — 2026-10-23
+
+### What changed
+
+Replaced the homepage's screenshot of the full stories catalogue with three direct
+previews, in the approved order: The Wawa line, Twin towns, different price tags,
+and The flood claims calendar. A separate “Browse all 37” link uses the actual
+catalogue count. “New Jersey” identifies the scope without an additional tagline.
+Placement remains after the national backdrop and before Tools.
+
+Desktop/tablet show three cards in one row; mobile uses native horizontal scrolling
+with the next card peeking into view. There are no carousel buttons, autoplay or
+rotation. Actual chart captures, concise teasers and the accepted library card
+styling are reused. The rejected cinematic design is not reintroduced.
+
+### Files/modules affected
+
+- `web/components/HomeStories.tsx` and its regression test: static homepage sampler.
+- `web/components/StoryCard.tsx` and `web/app/stories/story-cards.css`: extracted shared
+  card/cover presentation, also consumed by `StoryLibrary.tsx` and the stories index.
+- `web/app/page.tsx`, `web/app/home-refresh.css`: replace montage and scope layout.
+- `web/scripts/check-home-stories.mjs`: responsive, keyboard, image, navigation and
+  section-scoped automated accessibility checks.
+- `DIRECTOR_NOTES.md`: append the approved homepage direction.
+
+### Architectural or implementation decisions
+
+The sampler is server-renderable and adds no carousel state, timer or API request.
+The library retains its client-side rail/search interactions. Shared CSS has no
+page-background selectors, so the homepage does not inherit the library's neutral
+background override. Header/navigation/status, national figures, Tools, publisher
+notices and individual stories are unchanged. No canonical project docs edited.
+
+### Assumptions / new TODOs and limitations
+
+Selection is editorial, not popularity-based. Existing themed screenshot artifacts
+remain the cover source; their generation pipeline is unchanged. Browser verification
+is local Chromium, not physical-device, Safari/iOS, Android or deployed validation.
+The scoped export contains only the tested page subset, not a complete deployable
+site; no full data publication, deployment or merge was performed.
+
+### Verification
+
+- `npm test -- --reporter=dot`: 744 tests across 124 files passed.
+- `npm run typecheck`: passed.
+- `npm run publication:test`: all 5 tests passed.
+- `NEXT_PUBLIC_ARTIFACT_URL=http://localhost:8093 npx next build
+  --debug-build-paths=app/page.tsx,app/stories/page.tsx`: both pages compiled and
+  statically exported successfully; full-project TypeScript check passed.
+- `node scripts/check-home-stories.mjs`: passed at 1440, 768 and 390px in light/dark;
+  three correct direct links, placement, no document overflow, mobile keyboard
+  scrolling, both image variants, navigation, no page errors and sampler-scoped axe.
+  Inspected desktop/light and mobile/dark section screenshots.
+- `SITE_URL=http://localhost:3002 node scripts/check-story-library.mjs`: passed;
+  header checks at 12 widths in both themes, plus library rails/search/directory,
+  keyboard, overflow and axe at 1440, 768 and 390px in both themes.
+- Browser test development initially exposed whitespace formatting in `innerText`
+  and hidden lazy images not loading during verification. Normalized whitespace
+  and explicitly loaded both variants in the test; no production workaround needed.
+- `git diff --check`: passed.
