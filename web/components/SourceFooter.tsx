@@ -184,14 +184,10 @@ export async function SourceFooter() {
               <span className="foot-link-title">Which figures changed? <span aria-hidden="true">→</span></span>
               <span className="foot-link-detail">Earlier values and revisions after publication.</span>
             </Link>
-            <Link href="/stories">
-              <span className="foot-link-title">Visual stories <span aria-hidden="true">→</span></span>
-              <span className="foot-link-detail">New Jersey&rsquo;s figures drawn as charts and maps, one question each.</span>
-            </Link>
           </div>
         </nav>
 
-        <section className="foot-notice" aria-label="Code and data terms">
+        <section className="foot-notice footer-colophon" aria-label="Code and data terms">
           <div className="foot-notice-head">
             <svg viewBox="0 0 20 20" aria-hidden="true">
               <path d="M10 2.5 16 5v4.4c0 3.8-2.3 6.6-6 8.1-3.7-1.5-6-4.3-6-8.1V5Z" />
@@ -210,6 +206,16 @@ export async function SourceFooter() {
               </svg>
             </a>
           </div>
+          {/* AGPL section 13: a site running this code offers its users the source. */}
+          <p className="foot-intro">
+            The code is free software under the GNU Affero General Public License v3.0, and{" "}
+            <a href={REPO_URL} rel="noreferrer noopener" target="_blank">
+              its source is public
+            </a>
+            . The data is not ours to relicense, and this site cannot grant terms it was not
+            given. Questions or corrections:{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+          </p>
           <nav className="foot-policy-links" aria-label="Site policies">
             <Link className="foot-tab" href="/terms">
               Terms of use
@@ -227,16 +233,6 @@ export async function SourceFooter() {
               License: AGPL-3.0 <span aria-hidden="true">↗</span>
             </a>
           </nav>
-          {/* AGPL section 13: a site running this code offers its users the source. */}
-          <p className="foot-intro">
-            The code is free software under the GNU Affero General Public License v3.0, and{" "}
-            <a href={REPO_URL} rel="noreferrer noopener" target="_blank">
-              its source is public
-            </a>
-            . The data is not ours to relicense, and this site cannot grant terms it was not
-            given. Questions or corrections:{" "}
-            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
-          </p>
         </section>
       </div>
     </footer>

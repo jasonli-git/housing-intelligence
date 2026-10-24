@@ -1,5 +1,53 @@
 # Homepage text reduction
 
+## Shared-footer follow-up: remove duplicate stories and redesign Notice — 2026-10-24
+
+Remove the Visual stories entry from Source history across the site. That area now
+contains only freshness and revisions; the main homepage gateway and top-menu story
+navigation are unchanged.
+
+Replace the Notice card's enclosed/dashed treatment with a quiet, open colophon:
+a thin top divider, the yellow shield and Notice link at left, and the existing
+code/data statement with policy links at right. Mobile stacks heading, text and links.
+Preserve the external-link symbol, shared text typography, visible terms and source/
+contact links. Policy links have 44px mobile targets. The source-check status remains
+at the very bottom after this section.
+
+Reorder the unchanged paragraph before policy navigation in the DOM so its reading/
+tab order matches the new layout. The legal paragraph's wording is unchanged and
+guarded by a text assertion; publisher notices, source attribution and licence destinations are not
+shortened, removed or hidden. Screen-only colophon CSS preserves existing report print
+rules. Scoped specificity ensures home/tool page themes do not restore the old box.
+
+### Files and tests
+
+- `web/components/SourceFooter.tsx`: remove footer stories entry, add colophon marker,
+  move unchanged paragraph before policies.
+- `web/app/site-chrome.css`: universal responsive Notice layout.
+- `web/components/SourceFooter.test.tsx`: four new tests for the two source-history
+  destinations, exact legal paragraph and all policy/code/contact destinations,
+  preserved visible publisher notice, and unavailable source-data behavior.
+- `web/lib/sourceFooter.test.ts`: keep existing notice-order guard, update its exact
+  class expectation for the colophon marker.
+- `web/scripts/check-source-check-footer.mjs`: assert no footer stories entry, open
+  Notice styling and policy/source access; include Notice and Source history in axe.
+
+Verification: 760 frontend tests across 128 files, TypeScript and five publication
+tests passed. Representative-route production build passed; additional cross-page
+browser checks and final screenshot review are recorded below. Initial unit run caught
+the old exact class-string expectation; it was updated without weakening the notice-
+order check. No canonical document changes, data changes, deployment or merge.
+
+Final verification: 64 cross-page cases passed at 390/1440px in both themes, covering
+all representative route types from the source-check follow-up. Includes the two
+remaining history destinations, unboxed Notice styling, three policy links, visible
+source offer, scoped axe for Notice/history/status, keyboard access and status placement.
+Sixteen static-production cases passed across home/guide/atlas/freshness in both widths/
+themes, plus 320px fit. A report print-media smoke check confirmed the complete legal
+paragraph remains visible while source-check status stays hidden. Inspected desktop
+light and mobile dark Notice captures. Whitespace checks passed. No full-site export,
+physical-device testing or PDF-pagination rerun; print CSS itself was not changed.
+
 ## Approved shared-chrome follow-up: universal source-check footer — 2026-10-24
 
 This follow-up deliberately extends beyond homepage-only styling, as approved by the

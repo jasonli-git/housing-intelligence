@@ -17,6 +17,14 @@ try {
       const link = footer.getByRole('link', { name: 'Source checks scheduled Fridays', exact: true });
       assert.equal(await page.locator('.site-status').count(), 1, 'one universal status link');
       assert.equal(await page.locator('.site-meta-row .site-status').count(), 0);
+      assert.deepEqual(await page.locator('.foot-link-list a').evaluateAll((links) => links.map((a) => a.getAttribute('href'))), ['/freshness', '/changes']);
+      const notice = page.getByRole('region', { name: 'Code and data terms' });
+      assert(await notice.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return s.outlineStyle === 'none' && s.backgroundImage === 'none' && s.boxShadow === 'none' && s.borderLeftWidth === '0px' && s.borderTopWidth === '1px';
+      }), 'notice is a quiet open colophon, not an outlined card');
+      assert.equal(await notice.getByRole('navigation', { name: 'Site policies' }).getByRole('link').count(), 3);
+      assert(await notice.getByRole('link', { name: 'its source is public', exact: true }).isVisible());
       assert.equal(await link.getAttribute('href'), '/freshness');
       await footer.scrollIntoViewIfNeeded();
       assert(await link.isVisible());
@@ -31,7 +39,7 @@ try {
       }), 'status follows the complete notice/source/policy footer');
       await link.focus();
       assert(await link.evaluate((el) => el.matches(':focus-visible')));
-      const audit = await new AxeBuilder({ page }).include('.site-check-footer').include('.site-meta-row').analyze();
+      const audit = await new AxeBuilder({ page }).include('.site-check-footer').include('.site-meta-row').include('.footer-colophon').include('.foot-links').analyze();
       assert.deepEqual(audit.violations.map((v) => v.id), []);
       await page.emulateMedia({ media: 'print' });
       assert.equal(await footer.isVisible(), false, 'no extra status line in printed reports');

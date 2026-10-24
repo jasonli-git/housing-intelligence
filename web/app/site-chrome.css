@@ -58,6 +58,22 @@
 @media (prefers-reduced-motion: reduce) { .site-check-footer .site-status-arrow { transition: none; transform: none; } }
 @media print { .site-check-footer { display: none; } }
 
+/* A quiet colophon rather than another enclosed card. Keep all terms visible. */
+@media screen {
+  :root body .foot section.footer-colophon { display: grid; grid-template-columns: minmax(110px, .24fr) minmax(0, 1fr); grid-template-areas: "heading copy" "heading policies"; align-items: start; gap: .5rem 1.5rem; margin-top: .5rem; padding: 1.1rem 0 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; outline: none; background: none; box-shadow: none; }
+  :root body .foot .footer-colophon .foot-notice-head { grid-area: heading; display: flex; align-items: center; gap: .55rem; }
+  :root body .foot .footer-colophon .foot-notice-head > svg { width: 18px; height: 18px; stroke: var(--notice-text); }
+  :root body .foot .footer-colophon .foot-notice-title { display: inline-flex; align-items: center; gap: .4rem; min-height: 32px; font: 500 13px/1.4 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--notice-text); }
+  :root body .foot .footer-colophon > .foot-intro { grid-area: copy; margin: 0; max-width: 85ch; font: 12px/1.65 var(--font-text); color: var(--text-secondary); }
+  :root body .foot .footer-colophon .foot-policy-links { grid-area: policies; display: flex; flex-wrap: wrap; align-items: center; gap: .1rem 1.25rem; }
+  :root body .foot .footer-colophon .foot-policy-links .foot-tab { display: inline-flex; align-items: center; min-height: 32px; font: 500 13px/1.4 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--text-secondary); }
+  :root body .foot .footer-colophon a:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+  @media (max-width: 600px) {
+    :root body .foot section.footer-colophon { grid-template-columns: minmax(0, 1fr); grid-template-areas: "heading" "copy" "policies"; gap: .65rem; }
+    :root body .foot .footer-colophon .foot-policy-links .foot-tab { min-height: 44px; }
+  }
+}
+
 /* The desktop search can be narrower than an input's intrinsic ~200px width.
    Let its grid track and input shrink together instead of covering the theme button. */
 .bar .place-search { grid-template-columns: minmax(0, 1fr); }
