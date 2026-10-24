@@ -16,6 +16,9 @@ try {
     const tools = page.getByRole('region', { name: 'Tools', exact: true });
     await tools.scrollIntoViewIfNeeded();
     const links = tools.locator('a[data-tool]');
+    assert.equal(await tools.getByText('New Jersey coverage', { exact: true }).count(), 1);
+    assert.equal(await tools.locator('.home-tool-scope').count(), 0, 'no repeated state badges');
+    assert(await links.evaluateAll((links) => links.every((link) => link.getAttribute('aria-describedby') === 'home-tools-coverage')), 'shared coverage stays associated with every tool');
     assert.deepEqual(await links.evaluateAll((a) => a.map((e) => e.getAttribute('href'))), ['/afford', '/guide', '/tax', '/compare', '/help', '/atlas']);
     await tools.locator('img').evaluateAll(async (images) => {
       await Promise.all(images.map(async (img) => { img.loading = 'eager'; await img.decode(); }));

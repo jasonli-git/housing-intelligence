@@ -1,5 +1,12 @@
 /* Homepage-only experiment: real tool interfaces, with live text outside the image. */
 @media screen {
+  @media (min-width: 901px) {
+    :root .search-first-home .nation-head h1 { font-size: clamp(42px, 4.2vw, 64px) !important; }
+  }
+  .search-first-home .entry-free-assurance > .entry-free { display: inline-flex; align-items: center; min-height: 44px; margin: 0; font: 600 11px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+  .home-tools-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .25rem 1rem; margin-bottom: .6rem; }
+  :root .search-first-home .home-tools-heading h2 { margin-bottom: 0; }
+  .home-tools-heading p { margin: 0; font: 12px/1.4 var(--font-text); color: var(--text-secondary); }
   .home-tools-rail { position: relative; min-width: 0; container-type: inline-size; --tool-card-width: calc((100cqw - 48px) / 3.25); }
   :root .search-first-home .home-tools .home-tools-track { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: var(--tool-card-width); gap: 16px; padding: 4px 4px 14px; margin: -4px; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
   .home-tools-track > li { min-width: 0; scroll-snap-align: start; }

@@ -39,10 +39,9 @@ export default async function HousingLandingPage() {
     <main id="main-content" tabIndex={-1} className="shell nation-page quiet-nation">
       <div className="landing-canvas">
       <header className="page-head nation-head" data-kind="nation">
-        <p className="plate-kicker" aria-hidden="true"><span>Plate I</span><span>The United States</span><span>39.8° N · 98.6° W</span></p>
         <h1>Housing <em>Intelligence</em></h1>
-        <p className="entry-introduction">Housing costs. Local context. Clear sources.</p>
-        <details className="entry-free-assurance"><summary className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees or ads</span></summary><p>No fees, subscriptions or advertisements. Free to use.</p></details>
+        <p className="entry-introduction">Housing data. Clear sources.</p>
+        <p className="entry-free-assurance"><span className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees or ads</span></span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">
         <NationalCoverageMap searchFirst focusedEntry scaleStrip={<div className="scale-map-edge artwork-caption">

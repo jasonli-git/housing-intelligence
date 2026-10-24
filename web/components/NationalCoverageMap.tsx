@@ -291,6 +291,6 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
     {!focusedEntry && <div className="coverage-state-preview">
       <div><p className="entry-kicker">Detailed coverage available now</p>{COVERED_STATES.map((state) => <h3 key={state.code}><Link href={state.path} className="coverage-state-title">{state.name} <span aria-hidden="true">→</span></Link></h3>)}<p>Counties, towns and ZIP codes.</p></div>
     </div>}
-    <p className="coverage-map-note">{focusedEntry ? `Map shows state coverage, not housing prices. Detailed housing pages are available for ${coveredNames()}; Alaska and Hawaii are outside the map view.` : `Regions help you browse the map. Only ${coveredNames()} ${COVERED_STATES.length > 1 ? "have" : "has"} published housing pages. Alaska and Hawaii are outside this view.`}</p>
+    <p className="coverage-map-note">{focusedEntry ? `Coverage map—not prices. Housing pages: ${coveredNames()}. Alaska and Hawaii not shown.` : `Regions help you browse the map. Only ${coveredNames()} ${COVERED_STATES.length > 1 ? "have" : "has"} published housing pages. Alaska and Hawaii are outside this view.`}</p>
   </div>;
 }

@@ -1,14 +1,16 @@
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
+const origin=process.env.SITE_URL??'http://localhost:3002';
 const browser=await chromium.launch();
 try {
  for(const width of [320,390,768,1024,1280,1440,1920]) for(const theme of ['light','dark']) {
   const context=await browser.newContext({viewport:{width,height:900},colorScheme:theme,reducedMotion:'reduce'});
-  const page=await context.newPage();await page.goto('http://localhost:3002/',{waitUntil:'networkidle'});
+  const page=await context.newPage();await page.goto(origin,{waitUntil:'networkidle'});
   const input=page.locator('.coverage-search-panel input');
   assert((await input.boundingBox()).y<500,'Search should be on the first mobile screen');
-  assert(await page.getByText('Housing costs. Local context. Clear sources.').isVisible());
+  assert(await page.getByText('Housing data. Clear sources.').isVisible());
+  assert.equal(await page.locator('.plate-kicker').count(),0);
   assert.equal(await page.locator('.landing-coverage-link').count(),0);
   assert.equal(await page.locator('.coverage-scale-slot').count(),1);
   assert.equal(await page.locator('.nation-portrait').count(),0);
@@ -48,9 +50,8 @@ try {
   await page.locator('.coverage-search-stage').screenshot({path:`/tmp/search-first-map-${width}-${theme}.png`,animations:'disabled'});
   await page.locator('.coverage-zoom button').nth(2).click();
   await page.locator('.coverage-search-return').click();assert(await input.isVisible());
-  await page.locator('.entry-free-assurance summary').click();
-  assert(await page.getByText('No fees, subscriptions or advertisements. Free to use.').isVisible());
-  await page.locator('.entry-free-assurance summary').click();
+  assert(await page.locator('.entry-free').isVisible());
+  assert.equal(await page.locator('.entry-free-assurance summary').count(),0,'Free badge needs no repetitive disclosure');
   await page.emulateMedia({reducedMotion:'no-preference'});
   assert.equal(await page.locator('.coverage-atlas-traces path').first().evaluate(e=>getComputedStyle(e).animationName),'atlas-travel');
   assert.equal(await page.locator('.coverage-availability-glow circle').first().evaluate(e=>getComputedStyle(e).animationName),'coverage-blue-radial');
