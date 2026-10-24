@@ -22,7 +22,7 @@ it("keeps all six tools directly linked with real text and paired theme previews
     expect(link.querySelector(".shot-dark")?.getAttribute("src")).toContain(`/screenshots/tools/${HOME_TOOLS[i].shot}-dark.jpg`);
     expect(link.querySelector(".home-tool-preview")?.getAttribute("aria-hidden")).toBe("true");
   }
-  expect(within(tools).getByText(/Example views/)).toBeTruthy();
+  expect(within(tools).queryByText(/Example views/)).toBeNull();
 });
 
 it("supports rail keyboard navigation and reduced-motion arrow scrolling", () => {

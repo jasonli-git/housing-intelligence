@@ -11,7 +11,6 @@
   .home-tools-arrow:not(:disabled):hover { background: color-mix(in srgb, var(--plate-paper) 45%, transparent); }
   .home-tools-arrow:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
   @media (hover: none), (pointer: coarse) { .home-tools-rail .home-tools-arrow:not(:disabled) { opacity: 1; pointer-events: auto; } }
-  .home-tools-note { margin: -.35rem 0 1rem; color: var(--text-secondary); font-size: 13px; }
   :root .search-first-home.search-first-home .home-tools a[data-tool] { padding: 0; gap: 0; overflow: hidden; border-radius: 18px; }
   :root .search-first-home.search-first-home .home-tools a[data-tool]:is(:hover, :focus-visible) { transform: none; }
   .home-tool-preview { display: block; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; background: color-mix(in srgb, var(--tool-ink) 8%, var(--plate-paper)); border-bottom: 1px solid var(--glass-edge); }

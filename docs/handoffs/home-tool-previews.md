@@ -215,3 +215,12 @@ metric sizing or Visual stories layout changed. No deployment or merge.
   immediately after mouse input; it now sends an actual keyboard event. Alignment
   testing caught the inherited hover lift; removed it and reran checks successfully.
 - Inspected mobile/light and desktop/dark rail screenshots; `git diff --check` passed.
+
+## Review follow-up: remove Tools tagline — 2026-10-24
+
+Removed “Example views. Open a tool to use your own figures.” beneath Tools in
+`HomeTools.tsx`, removed its unused CSS, and updated the regression assertion.
+The rail, six cards, screenshots and other homepage sections are unchanged.
+Verification: 747 frontend tests, TypeScript, homepage-scoped production build,
+local browser assertion (tagline absent; rail and six links intact), and whitespace
+checks passed. No merge or deployment.

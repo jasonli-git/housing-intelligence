@@ -14,7 +14,6 @@ export const HOME_TOOLS = [
 export function HomeTools() {
   return <section className="home-tools" aria-labelledby="home-tools-heading">
     <h2 id="home-tools-heading">Tools</h2>
-    <p className="home-tools-note">Example views. Open a tool to use your own figures.</p>
     <ToolRail>{HOME_TOOLS.map((tool) => <li key={tool.href}>
       <Link href={tool.href} data-tool={tool.href.slice(1)} prefetch={false}>
         <ThemedShot name={`tools/${tool.shot}`} width={1440} height={900} className="home-tool-preview" />
