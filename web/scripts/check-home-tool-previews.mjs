@@ -67,6 +67,8 @@ try {
     assert((await figures.boundingBox()).width <= 520, 'narrow national figures footprint');
     assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => parseFloat(getComputedStyle(card).borderRadius) === 0 && parseFloat(getComputedStyle(card.querySelector('h3')).fontSize) >= 14)), 'square corners and readable labels');
     assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards[1].getBoundingClientRect().left - cards[0].getBoundingClientRect().right >= 11), 'two visibly separated cards');
+    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => getComputedStyle(cards[0]).borderTopColor !== getComputedStyle(cards[1]).borderTopColor), 'each metric has a distinct outline colour');
+    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => { const s = getComputedStyle(card); return [s.borderRightColor, s.borderBottomColor, s.borderLeftColor].every((c) => c === s.borderTopColor) && [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth].every((w) => w === '1px'); })), 'all four outline edges use the metric colour');
     assert.equal(await figures.locator('svg[role="img"]:visible').count(), 0);
     const sizes = await figures.locator('.national-benchmark').evaluateAll((cards) => cards.map((card) => ({ height: card.getBoundingClientRect().height })));
     assert(await figures.locator('.national-benchmark').evaluateAll((cards) => Math.abs(cards[0].getBoundingClientRect().top - cards[1].getBoundingClientRect().top) < 1), 'both figures stay side by side');

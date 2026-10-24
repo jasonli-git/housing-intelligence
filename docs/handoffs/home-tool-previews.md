@@ -1,5 +1,25 @@
 # Homepage tool previews
 
+## Review follow-up: luminous metric surfaces and distinct outlines — 2026-10-24
+
+Restore some of the original horizon-card aesthetic without restoring its size:
+soft lower-corner light pools, a faint glass surface and colour-tinted numeral sheen.
+Use the existing theme-aware `story-up` blue for mortgage rates and `story-down`
+warm amber for home-price change, including each card's full four-sided outline.
+These colours identify the two metrics, not positive/negative movements; no colour
+is selected from the current value. Keep labels neutral and readable. No new palette
+tokens, decorative chart lines, animation or data claims.
+
+Keep the separate cards, square corners, 520px maximum footprint, labels, source/date
+links, disclosure and height unchanged (176px desktop; 197px mobile). Only the homepage
+metric CSS and its browser guard change; the guard now checks distinct colours and
+matching 1px borders on all four sides, including the legacy adjacent-card override.
+
+Verification: 747 frontend tests and TypeScript passed. Final homepage/stories-scoped
+production build, whitespace checks and local responsive browser checks passed;
+the latter cover 1440/768/390/320px light/dark, histories, scoped axe and existing Tools
+interactions. No full-site publication, physical-device testing, deployment or merge.
+
 ## Review follow-up: separate narrow metric cards — 2026-10-24
 
 Supersedes the joined scoreboard styling below. Split the two metrics into separate
