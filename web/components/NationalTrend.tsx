@@ -2,6 +2,16 @@ import { trendGeometry, type TrendPoint } from "@/lib/nationalBenchmarks";
 import { periodLabel } from "@/lib/periods";
 import { TrendEntrance } from "./TrendEntrance";
 
+/** An aria-hidden echo of the same series; the full labelled plot lives in history. */
+export function NationalTrendBackdrop({ points }: { points: readonly TrendPoint[] }) {
+  const plot = trendGeometry(points);
+  if (!plot) return null;
+  return <svg className="national-score-trend" viewBox="38 0 258 80" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path d={plot.path} />
+    {plot.last && <circle cx={plot.last.x} cy={plot.last.y} r="2" />}
+  </svg>;
+}
+
 /** Static real-data linework: no chart library, client fetch or decorative fake trend. */
 export function NationalTrend({ points, label, metricId, frequency }: {
   points: readonly TrendPoint[]; label: string; metricId: string; frequency: string;

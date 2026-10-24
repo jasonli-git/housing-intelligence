@@ -9,6 +9,8 @@ try {
     await page.goto(`http://localhost:3002${route}`);
     assert.equal(await page.locator('.site-meta-row.shared-meta').count(),1);
     assert.equal(await page.locator('.site-status').getAttribute('href'),'/freshness');
+    assert.equal(await page.locator('.site-meta-row .site-status').count(),0);
+    assert.equal(await page.locator('.site-check-footer .site-status').count(),1);
     assert.equal(await page.locator('.site-status').evaluate(n=>getComputedStyle(n).borderTopWidth),'0px');
     assert.equal(await page.locator('.licence-label').evaluate(n=>getComputedStyle(n).textTransform),'none');
     await page.locator('.licence summary').click();

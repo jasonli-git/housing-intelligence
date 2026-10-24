@@ -16,13 +16,18 @@ it("keeps all six tools directly linked with real text and paired theme previews
   expect(links.map((a) => a.getAttribute("href"))).toEqual(["/afford", "/guide", "/tax", "/compare", "/help", "/atlas"]);
   for (const [i, link] of links.entries()) {
     expect(link.textContent).toContain(HOME_TOOLS[i].title);
-    expect(link.textContent).toContain("New Jersey");
+    expect(link.getAttribute("aria-describedby")).toBe("home-tools-coverage");
+    expect(link.textContent).not.toContain("New Jersey");
+    expect(link.textContent).toContain(HOME_TOOLS[i].text);
     expect(link.querySelectorAll("img")).toHaveLength(2);
     expect(link.querySelector(".shot-light")?.getAttribute("src")).toContain(`/screenshots/tools/${HOME_TOOLS[i].shot}-light.jpg`);
     expect(link.querySelector(".shot-dark")?.getAttribute("src")).toContain(`/screenshots/tools/${HOME_TOOLS[i].shot}-dark.jpg`);
     expect(link.querySelector(".home-tool-preview")?.getAttribute("aria-hidden")).toBe("true");
   }
   expect(within(tools).queryByText(/Example views/)).toBeNull();
+  expect(within(tools).getAllByText("New Jersey coverage")).toHaveLength(1);
+  expect(tools.querySelectorAll(".home-tool-scope")).toHaveLength(0);
+  expect(HOME_TOOLS.every((tool) => tool.text.split(/\s+/).length <= 6)).toBe(true);
 });
 
 it("supports rail keyboard navigation and reduced-motion arrow scrolling", () => {

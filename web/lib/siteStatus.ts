@@ -19,8 +19,8 @@ export function statusWords(
   }
   const day = `${MONTHS[checked.getUTCMonth()]} ${checked.getUTCDate()}`;
   const overdue = now.getTime() - checked.getTime() > OVERDUE_DAYS * 86_400_000;
-  // `word` is the part phones hide (site-chrome.css), so what must always show — that a
-  // check happened, or is late — sits in `kicker`.
+  // Keep the condition (checked or overdue) explicit in the label; the footer shows
+  // every word on mobile as well as desktop.
   if (overdue) return { kicker: "Source check overdue", word: "", when: `· last ${day}`, overdue: true };
   return {
     kicker: "Sources checked",

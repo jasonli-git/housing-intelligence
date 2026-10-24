@@ -16,6 +16,9 @@ try {
     const tools = page.getByRole('region', { name: 'Tools', exact: true });
     await tools.scrollIntoViewIfNeeded();
     const links = tools.locator('a[data-tool]');
+    assert.equal(await tools.getByText('New Jersey coverage', { exact: true }).count(), 1);
+    assert.equal(await tools.locator('.home-tool-scope').count(), 0, 'no repeated state badges');
+    assert(await links.evaluateAll((links) => links.every((link) => link.getAttribute('aria-describedby') === 'home-tools-coverage')), 'shared coverage stays associated with every tool');
     assert.deepEqual(await links.evaluateAll((a) => a.map((e) => e.getAttribute('href'))), ['/afford', '/guide', '/tax', '/compare', '/help', '/atlas']);
     await tools.locator('img').evaluateAll(async (images) => {
       await Promise.all(images.map(async (img) => { img.loading = 'eager'; await img.decode(); }));
@@ -64,7 +67,7 @@ try {
     assert.equal(await figures.locator('a[href^="https://"]').count(), 2);
     const panelHeight = (await figures.boundingBox()).height;
     assert(panelHeight <= 236, `compact default panel: ${panelHeight}px`);
-    assert((await figures.boundingBox()).width <= 520, 'narrow national figures footprint');
+    assert((await figures.boundingBox()).width <= 440, 'narrow national figures footprint');
     assert(await figures.locator('.national-rate small').evaluateAll((lines) => lines.every((line) => getComputedStyle(line).textAlign === 'center')), 'source/date lines centred');
     assert(await figures.locator('.national-rate small a').evaluateAll((links) => links.every((link) => getComputedStyle(link).whiteSpace === 'nowrap' && link.getClientRects().length === 1)), 'publisher names stay together');
     assert.equal(await figures.locator('#national-home-prices-heading br').count(), 1, 'deliberate home-price label line break');
@@ -72,15 +75,22 @@ try {
     assert(await figures.locator('.national-rate > strong').evaluateAll((values) => Math.abs(values[0].getBoundingClientRect().top - values[1].getBoundingClientRect().top) < 1), 'both values share a baseline row');
     assert(await figures.locator('.national-benchmark h3').evaluateAll((labels) => labels.every((label) => getComputedStyle(label).textAlign === 'center')), 'metric names centred');
     assert(await figures.locator('.national-rate > strong').evaluateAll((values) => values.every((value) => getComputedStyle(value).textAlign === 'center' && Math.abs((value.getBoundingClientRect().left + value.getBoundingClientRect().right) / 2 - (value.closest('.national-benchmark').getBoundingClientRect().left + value.closest('.national-benchmark').getBoundingClientRect().right) / 2) < 1)), 'numbers centred within each card');
-    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => parseFloat(getComputedStyle(card).borderRadius) === 24 && parseFloat(getComputedStyle(card.querySelector('h3')).fontSize) >= 16 && getComputedStyle(card.querySelector('h3')).fontFamily.includes('Georgia') && getComputedStyle(card.querySelector('strong')).fontFamily.includes('Georgia'))), 'rounded cards with readable editorial typography');
+    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => { const s = getComputedStyle(card), value = getComputedStyle(card.querySelector('strong')); return s.borderTopLeftRadius === '0px' && s.borderTopRightRadius === '0px' && s.borderBottomLeftRadius === '24px' && s.borderBottomRightRadius === '24px' && parseFloat(getComputedStyle(card.querySelector('h3')).fontSize) >= 16 && getComputedStyle(card.querySelector('h3')).fontFamily.includes('Georgia') && value.fontSize === '40px' && value.fontWeight === '400' && s.boxShadow === 'none'; })), 'unchanged card shape with quieter numbers and no glow');
+    assert(await figures.locator('.national-rate > strong').evaluateAll((values) => values.every((value) => { const probe = document.createElement('span'); probe.style.color = 'var(--score-accent)'; value.parentElement.append(probe); const matches = getComputedStyle(value).color === getComputedStyle(probe).color; probe.remove(); return matches && getComputedStyle(value).backgroundImage === 'none'; })), 'numbers use their own metric accent');
     assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards[1].getBoundingClientRect().left - cards[0].getBoundingClientRect().right >= 11), 'two visibly separated cards');
     assert(await figures.locator('.national-benchmark').evaluateAll((cards) => getComputedStyle(cards[0]).borderTopColor !== getComputedStyle(cards[1]).borderTopColor), 'each metric has a distinct outline colour');
     assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => { const s = getComputedStyle(card); return [s.borderRightColor, s.borderBottomColor, s.borderLeftColor].every((c) => c === s.borderTopColor) && s.borderTopWidth === '12px' && [s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth].every((w) => w === '1px'); })), 'metric-coloured outline with a 12px top edge');
     assert.equal(await figures.locator('svg[role="img"]:visible').count(), 0);
     const sizes = await figures.locator('.national-benchmark').evaluateAll((cards) => cards.map((card) => ({ height: card.getBoundingClientRect().height })));
+    assert(sizes.every((s) => Math.abs(s.height - (width > 600 ? 161 : 159)) < 1), 'card heights unchanged');
+    assert.equal(await figures.locator('.national-score-trend[aria-hidden="true"]').count(), 2);
+    assert(await figures.locator('.national-score-trend').evaluateAll((plots) => plots.every((p) => getComputedStyle(p).opacity === '0.6' && getComputedStyle(p.querySelector('path')).strokeWidth === '1.5px' && getComputedStyle(p.querySelector('path')).filter === 'none')), 'visible, heavier chart lines without restoring card glow');
+    assert(await figures.locator('.national-score-trend').evaluateAll((plots) => plots.every((plot) => getComputedStyle(plot).position === 'absolute' && plot.getBoundingClientRect().height > 60 && getComputedStyle(plot).pointerEvents === 'none')), 'background charts visible without taking layout space or intercepting input');
+    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => card.querySelector('.national-score-trend path').getBoundingClientRect().bottom < card.querySelector('.national-rate small').getBoundingClientRect().top)), 'linework stays clear of source/date text');
     assert(await figures.locator('.national-benchmark').evaluateAll((cards) => Math.abs(cards[0].getBoundingClientRect().top - cards[1].getBoundingClientRect().top) < 1), 'both figures stay side by side');
     await figures.locator('summary').click();
     assert.equal(await figures.locator('svg[role="img"]:visible').count(), 2);
+    assert.deepEqual(await figures.locator('.national-score-trend path').evaluateAll((paths) => paths.map((p) => p.getAttribute('d'))), await figures.locator('.national-history .national-trend-line').evaluateAll((paths) => paths.map((p) => p.getAttribute('d'))), 'backdrops match the full history plots exactly');
     assert((await figures.innerText()).includes('Historical figures, not forecasts.'));
     assert((await figures.innerText()).includes('National average—not a lender quote'));
     const audit = await new AxeBuilder({ page }).include('.home-tools').include('.national-backdrop').analyze();
@@ -123,6 +133,8 @@ try {
   await motionPage.waitForFunction(() => getComputedStyle(document.querySelector('.home-tools-next')).opacity === '0');
   await motionPage.emulateMedia({ reducedMotion: 'reduce' });
   assert.equal(await forward.evaluate((el) => getComputedStyle(el).transitionDuration), '0s');
+  await motionPage.emulateMedia({ media: 'print' });
+  assert.equal(await motionPage.locator('.national-score-trend:visible').count(), 0, 'background-only charts do not alter printed layout');
   await motion.close();
   console.log('Tools 180ms hover fade and reduced-motion suppression passed');
 } finally { await browser.close(); }

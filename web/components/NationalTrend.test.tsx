@@ -4,7 +4,22 @@ import { renderToString } from "react-dom/server";
 import { hydrateRoot, type Root } from "react-dom/client";
 import { act } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import { NationalTrend } from "./NationalTrend";
+import { NationalTrend, NationalTrendBackdrop } from "./NationalTrend";
+import { trendGeometry } from "@/lib/nationalBenchmarks";
+
+it("uses the real, gap-preserving geometry for the decorative backdrop", () => {
+  const points = [{ date: "2026-01-01", value: 6 }, { date: "2026-02-01", value: 7 }, { date: "2026-03-01", value: null }, { date: "2026-04-01", value: 5 }];
+  const html = renderToString(<NationalTrendBackdrop points={points} />);
+  const container = document.createElement("div");
+  container.innerHTML = html;
+  expect(container.querySelector("path")?.getAttribute("d")).toBe(trendGeometry(points)?.path);
+  expect(container.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+  expect(container.querySelector("svg")?.getAttribute("focusable")).toBe("false");
+});
+
+it("omits the background rather than inventing missing history", () => {
+  expect(renderToString(<NationalTrendBackdrop points={[]} />)).toBe("");
+});
 
 it("server-renders precise point titles and hydrates without warnings or recovery", async () => {
   const errors = vi.spyOn(console, "error").mockImplementation(() => {});
