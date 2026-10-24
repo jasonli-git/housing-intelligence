@@ -1,5 +1,23 @@
 # Homepage text reduction
 
+## Review follow-up: slightly muted metric palette — 2026-10-24
+
+Soften each metric accent by mixing 75% of its existing blue/amber token with 25% of
+the theme's neutral secondary text colour in Oklab. Scope this to the two homepage
+cards, not the shared story palette. Values, top/side borders, background lines and
+light pools all inherit the quieter accent. Preserve the blue-versus-amber distinction,
+contrast, sources, dimensions, fonts, geometry and interactions. No opacity reduction
+on text and no changes to other homepage sections.
+
+File: `web/app/home-tool-previews.css`. No data changes, deployment or merge.
+
+Verification: 751 frontend tests, TypeScript, affected-route production build and
+whitespace checks passed. The local metric/tool browser regression passed at
+1440/768/390/320px in both themes, including scoped axe contrast checks, matching
+metric colours, unchanged dimensions, graph/source clearance, full histories,
+keyboard/touch, tool destinations and print suppression. Inspected desktop light and
+mobile dark captures. No full-site publication or physical-device testing.
+
 ## Review follow-up: larger stories title and tighter section rhythm — 2026-10-24
 
 Remove “Explore collection” and its arrow from the Visual stories gateway. Keep the
