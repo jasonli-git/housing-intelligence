@@ -370,7 +370,7 @@ export type Observation = {
 };
 
 /**
- * The analysis packet, mirroring `schemas/packet-v1.json`. Hand-written rather than
+ * The analysis packet, mirroring `config/packet-v1.json`. Hand-written rather than
  * generated: one file, and a generator in the build would be a dependency for less
  * than a hundred lines. `packet_version` is what a consumer checks before trusting
  * the shape — bump it here when the published schema's major version changes.

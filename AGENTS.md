@@ -108,10 +108,10 @@ After the pull request is opened:
 Do not modify these files unless I explicitly instruct you to:
 
 ```text
-SPEC.md
-ARCHITECTURE.md
-ROADMAP.md
-TODO.md
+docs/SPEC.md
+docs/ARCHITECTURE.md
+docs/ROADMAP.md
+docs/TODO.md
 CHANGELOG.md
 README.md
 ```
@@ -122,7 +122,7 @@ Codex may identify information that should eventually affect these documents, bu
 
 ## Director Notes
 
-`DIRECTOR_NOTES.md` is shared user-directed documentation and is not owned by either Claude or Codex.
+`docs/DIRECTOR_NOTES.md` is shared user-directed documentation and is not owned by either Claude or Codex.
 
 A Director Note is not automatically:
 
@@ -138,7 +138,7 @@ Follow the `directors-note` skill whenever I provide informal feedback or explic
 Every completed Codex development task must create:
 
 ```text
-agent-handoffs/<task-name>.md
+docs/handoffs/<task-name>.md
 ```
 
 The handoff must contain:

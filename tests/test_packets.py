@@ -119,14 +119,14 @@ def _packet(**overrides: object) -> Packet:
 
 
 def test_committed_schema_matches_the_models() -> None:
-    """`schemas/packet-v1.json` is generated, not maintained by hand.
+    """`config/packet-v1.json` is generated, not maintained by hand.
 
     A consumer in another language validates against the file, so the file drifting
     from the models would let a packet be emitted that the published contract rejects.
     Regenerate with `hip schema --write`.
     """
     assert SCHEMA_PATH.read_text() == schema_text(), (
-        "schemas/packet-v1.json is stale — run `uv run hip schema --write`"
+        "config/packet-v1.json is stale — run `uv run hip schema --write`"
     )
 
 
