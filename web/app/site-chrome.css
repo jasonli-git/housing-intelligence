@@ -64,6 +64,8 @@
   :root body .foot .footer-provenance > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title hint" "publishers publishers"; align-items: start; gap: .75rem 1rem; min-height: 0; padding: .9rem 0; }
   :root body .foot .footer-provenance .foot-title-block { grid-area: title; min-width: 0; display: flex; align-items: baseline; gap: .75rem; }
   :root body .foot .footer-provenance .foot-title-block > * { margin: 0; }
+  :root body .foot .footer-provenance .foot-title-block .foot-label { font-size: 18px; }
+  :root body .foot .footer-provenance .foot-title-separator { color: var(--text-muted); }
   :root body .foot .footer-provenance .foot-brief,
   :root body .foot .footer-provenance .foot-intro.when-open { grid-area: publishers; margin: 0; }
   :root body .foot .footer-provenance .disclose-hint { grid-area: hint; align-self: center; justify-self: end; margin: 0; }

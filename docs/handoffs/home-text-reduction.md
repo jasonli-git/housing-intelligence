@@ -1,5 +1,19 @@
 # Homepage text reduction
 
+## Shared-footer follow-up: smaller Sources label and dot — 2026-10-24
+
+Reduce Sources to 18px and insert a decorative, aria-hidden middle dot between Data
+provenance and Sources. Keep the inline baseline layout and publisher list unchanged.
+Files: `web/components/SourceFooter.tsx`, `web/app/site-chrome.css`, and
+`web/scripts/check-source-check-footer.mjs`. The browser guard checks computed size,
+same-line placement and separator semantics. Print styles remain unchanged.
+
+Verification: 760 frontend tests, TypeScript, scoped homepage/guide production build
+and whitespace checks passed. Eight development browser cases passed at 390/1440px
+in both themes, plus 320px fit, including disclosure keyboard access and scoped axe.
+The same eight cases and 320px fit passed against the built static pages.
+No full export, deployment or merge.
+
 ## Shared-footer follow-up: inline Sources heading — 2026-10-24
 
 Place Sources immediately to the right of Data provenance, baseline-aligned, with

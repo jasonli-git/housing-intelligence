@@ -92,6 +92,7 @@ export async function SourceFooter() {
           <summary className="foot-head disclose">
             <span className="foot-title-block">
               <span className="foot-kicker">Data provenance</span>
+              <span className="foot-title-separator" aria-hidden="true">·</span>
               <h2 className="foot-label" id="sources-heading">
                 Sources
               </h2>

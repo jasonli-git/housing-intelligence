@@ -20,7 +20,8 @@ try {
       const provenance = page.locator('details.footer-provenance');
       assert(await provenance.locator('.foot-title-block').evaluate((el) => {
         const kicker = el.querySelector('.foot-kicker').getBoundingClientRect(), heading = el.querySelector('.foot-label').getBoundingClientRect();
-        return heading.left > kicker.right && heading.top < kicker.bottom && heading.bottom > kicker.top;
+        const separator = el.querySelector('.foot-title-separator');
+        return heading.left > kicker.right && heading.top < kicker.bottom && heading.bottom > kicker.top && getComputedStyle(el.querySelector('.foot-label')).fontSize === '18px' && separator.textContent === '·' && separator.getAttribute('aria-hidden') === 'true';
       }), 'Sources sits to the right of Data provenance on the same line');
       assert(await provenance.evaluate((el) => {
         const title = el.querySelector('.foot-title-block').getBoundingClientRect(), publishers = el.querySelector('.foot-brief').getBoundingClientRect(), s = getComputedStyle(el);
