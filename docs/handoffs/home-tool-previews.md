@@ -1,5 +1,42 @@
 # Homepage tool previews
 
+## Review follow-up: minimal national scoreboard — 2026-10-24
+
+Replace the two oversized national metric cards above Visual stories with a compact,
+centred score strip. Both figures stay side by side, including mobile, with small
+labels, tabular values and visible publisher/date links. Shorten the home-price label
+to “Home prices · past year.” Keep the existing fetching, percentage calculations,
+source links and missing-data messages unchanged.
+
+Move the existing real-data histories, term definitions and independent-scale / not-a-
+forecast caveat into one native “US figures · History & definitions” disclosure.
+No extra client state or data requests. This is deliberate progressive disclosure:
+the headline numbers stay immediately visible; definitions and history remain available.
+No changes to the Visual stories card, Tools rail, navigation or screenshots.
+
+Files: `web/app/page.tsx`, `web/app/home-tool-previews.css`, and
+`web/scripts/check-home-tool-previews.mjs`. The browser regression now guards the
+50% height reduction, side-by-side layout and accessible expanded histories.
+
+Measured default section heights (same local Chromium viewport widths):
+
+| Width | Before | After | Reduction |
+| --- | --- | --- | --- |
+| 1440px | 293px | 138px | 53% |
+| 390px | 473px | 160px | 66% |
+| 320px | 489px | 190px | 61% |
+
+The expanded history is intentionally not included in the default-height comparison.
+Verified light/dark at 1440, 768, 390 and 320px: two visible source links, no page
+overflow, working disclosure, both histories visible when expanded, zero scoped axe
+violations, no browser errors, and existing Tools keyboard/touch/navigation behavior.
+Inspected desktop light and mobile dark captures.
+
+Verification: 747 frontend tests across 125 files, TypeScript, five publication tests,
+homepage/stories-scoped production build, and `git diff --check` passed. This is not a
+full-site publication build or physical-device Safari/Android testing. No warehouse
+writes, deployment or merge; no canonical documentation changes.
+
 ## What changed
 
 - Created `experiment/home-tool-previews` from clean `main` at `5cbf5c1`.

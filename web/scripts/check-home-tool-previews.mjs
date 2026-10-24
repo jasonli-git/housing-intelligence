@@ -62,18 +62,21 @@ try {
     assert.equal(await page.getByRole('heading', { name: 'The national backdrop', exact: true }).count(), 0);
     assert.equal(await figures.locator('svg[role="img"]').count(), 2);
     assert.equal(await figures.locator('a[href^="https://"]').count(), 2);
+    const panelHeight = (await figures.boundingBox()).height;
+    assert(panelHeight <= (width > 760 ? 146 : 236), `at least 50% smaller than previous panel: ${panelHeight}px`);
+    assert.equal(await figures.locator('svg[role="img"]:visible').count(), 0);
+    const sizes = await figures.locator('.national-benchmark').evaluateAll((cards) => cards.map((card) => ({ height: card.getBoundingClientRect().height })));
+    assert(await figures.locator('.national-benchmark').evaluateAll((cards) => Math.abs(cards[0].getBoundingClientRect().top - cards[1].getBoundingClientRect().top) < 1), 'both figures stay side by side');
+    await figures.locator('summary').click();
+    assert.equal(await figures.locator('svg[role="img"]:visible').count(), 2);
     assert((await figures.innerText()).includes('Historical figures, not forecasts.'));
-    const sizes = await figures.locator('.national-benchmark').evaluateAll((cards) => cards.map((card) => {
-      const box = card.getBoundingClientRect(), definition = card.querySelector('.national-benchmark-definition').getBoundingClientRect(), caption = card.querySelector('figcaption').getBoundingClientRect();
-      return { height: box.height, textGap: caption.top - definition.bottom };
-    }));
-    assert(sizes.every((s) => s.height <= (width > 760 ? 260 : 240)), JSON.stringify(sizes));
-    assert(sizes.every((s) => s.textGap >= 0), `no definition/caption overlap: ${JSON.stringify(sizes)}`);
+    assert((await figures.innerText()).includes('National average—not a lender quote'));
     const audit = await new AxeBuilder({ page }).include('.home-tools').include('.national-backdrop').analyze();
     assert.deepEqual(audit.violations.map((v) => v.id), []);
+    await figures.locator('summary').click();
     await tools.screenshot({ path: `/tmp/home-tools-${width}-${theme}.png` });
     await figures.screenshot({ path: `/tmp/home-figures-${width}-${theme}.png` });
-    console.log(`${width}/${theme}: tool captures, themes, rail controls, keyboard, metrics, sources, no clipping and axe passed. Heights: ${sizes.map((s) => Math.round(s.height)).join(', ')}; national panel: ${Math.round((await figures.boundingBox()).height)}px`);
+    console.log(`${width}/${theme}: tool captures, themes, rail controls, keyboard, metrics, sources, histories and axe passed. Heights: ${sizes.map((s) => Math.round(s.height)).join(', ')}; national panel: ${Math.round(panelHeight)}px`);
     assert.deepEqual(errors, []);
     if ((width === 1440 && theme === 'light') || (width === 390 && theme === 'dark')) {
       for (const path of ['/afford', '/guide', '/tax', '/compare', '/help', '/atlas']) {
