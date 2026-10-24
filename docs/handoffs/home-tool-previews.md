@@ -158,3 +158,60 @@ the screenshot pipeline before release. No full-site publication/deployment or m
   actual dimensions, complete-frame fitting, image loading, focus, axe and unchanged
   national figures. All six card links and browser-back passed on desktop/mobile.
 - Inspected the actual guide capture and desktop/dark homepage tool grid.
+
+## Review follow-up: horizontal Tools rail — 2026-10-24
+
+### What changed
+
+At the user's request, make **only Tools** horizontally scroll like the Visual stories
+library. Keep all six destinations, normal-position screenshots, copy, colours and NJ
+scope unchanged. Desktop shows approximately three cards plus a peek, tablet two plus
+a peek, and mobile one plus a peek. No autoplay or automatic rotation.
+
+### Files/modules affected
+
+- `web/components/ToolRail.tsx`: small client-side scrolling wrapper around server-rendered
+  card children; native overflow, previous/next buttons, boundary state, ResizeObserver
+  updates and ArrowLeft/ArrowRight/Home/End navigation. This supersedes the original
+  “no new client component” decision; it adds no data fetch or carousel dependency.
+- `web/components/HomeTools.tsx`: replace the static grid wrapper with `ToolRail`.
+- `web/app/home-tool-previews.css`: horizontal snap track, peek sizing and screenshot-
+  centered 160px frosted controls. Enabled controls reveal on hover or keyboard focus,
+  stay available on touch/coarse pointers, and hide at unavailable boundaries.
+- `web/components/HomeTools.test.tsx`: add keyboard, scroll direction, reduced-motion
+  and boundary-state coverage. `web/scripts/check-home-tool-previews.mjs`: replace
+  grid assertions with rail, hover/focus, alignment, boundary and touch checks.
+
+### Architectural or implementation decisions / assumptions
+
+Mirror the accepted stories interaction without changing/refactoring the stories page
+or importing its page-wide CSS. Cards remain server-rendered children; only scrolling
+and control state hydrate. Native horizontal scrolling remains available independently
+of arrow controls. Keep reduced-motion scrolling instant and suppress control fades.
+Remove the inherited card hover lift so screenshot centers do not move away from the
+overlaid arrows; border/shadow focus treatments remain. Normal screenshot assets and
+the capture pipeline are unchanged and did not need regeneration.
+
+### New TODOs / limitations
+
+No new deferred work. Validation is local Chromium and touch emulation, not a physical
+device or deployed test. No canonical documents, source data, navigation, national
+metric sizing or Visual stories layout changed. No deployment or merge.
+
+### Verification
+
+- `npm test -- --reporter=dot`: **747 tests across 125 files passed**.
+- TypeScript and all five publication tests passed.
+- Scoped production build of homepage, six tools and supporting JSON routes passed.
+- Homepage rail/axe checks passed on dev and the static export at 1440, 768, 390 and
+  320px in both themes: one scrolling row, all normal-position theme images, no page
+  overflow, screenshot-centered controls, forward/back buttons, focus and keyboard
+  navigation, start/end boundaries and all six destinations/browser-back.
+- Touch controls are visible/tappable without hover; non-reduced-motion 180ms fades
+  and reduced-motion suppression passed.
+- Existing homepage Visual stories checks passed in all six size/theme combinations,
+  including hover/focus, reduced motion and Tools-section spacing.
+- An initial browser assertion incorrectly expected keyboard-only focus styling
+  immediately after mouse input; it now sends an actual keyboard event. Alignment
+  testing caught the inherited hover lift; removed it and reran checks successfully.
+- Inspected mobile/light and desktop/dark rail screenshots; `git diff --check` passed.
