@@ -18,6 +18,10 @@ try {
       assert.equal(await page.locator('.site-status').count(), 1, 'one universal status link');
       assert.equal(await page.locator('.site-meta-row .site-status').count(), 0);
       const provenance = page.locator('details.footer-provenance');
+      assert(await provenance.locator('.foot-title-block').evaluate((el) => {
+        const kicker = el.querySelector('.foot-kicker').getBoundingClientRect(), heading = el.querySelector('.foot-label').getBoundingClientRect();
+        return heading.left > kicker.right && heading.top < kicker.bottom && heading.bottom > kicker.top;
+      }), 'Sources sits to the right of Data provenance on the same line');
       assert(await provenance.evaluate((el) => {
         const title = el.querySelector('.foot-title-block').getBoundingClientRect(), publishers = el.querySelector('.foot-brief').getBoundingClientRect(), s = getComputedStyle(el);
         return publishers.top >= title.bottom + 8 && Math.abs(publishers.left - title.left) < 1 && s.borderRadius === '0px' && s.backgroundImage === 'none' && s.boxShadow === 'none';

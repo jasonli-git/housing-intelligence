@@ -1,5 +1,19 @@
 # Homepage text reduction
 
+## Shared-footer follow-up: inline Sources heading — 2026-10-24
+
+Place Sources immediately to the right of Data provenance, baseline-aligned, with
+publisher names still beneath both. This shared screen-only rule preserves print,
+disclosure behavior and all source content. Files: `web/app/site-chrome.css` and
+`web/scripts/check-source-check-footer.mjs`; the browser guard now asserts the two
+labels occupy the same line in the requested order.
+
+Verification: 760 frontend tests, TypeScript, homepage/guide scoped production build
+and whitespace checks passed. Development browser checks passed for both pages at
+390/1440px in both themes, including keyboard disclosure and scoped axe, plus 320px
+fit. The same eight cases and 320px fit also passed against the built static pages.
+No full export, deployment or merge.
+
 ## Shared-footer follow-up: top-left provenance heading — 2026-10-24
 
 Move Data provenance / Sources above the publisher list, aligned at its top-left,
