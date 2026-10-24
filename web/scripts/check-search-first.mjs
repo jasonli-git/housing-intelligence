@@ -12,7 +12,8 @@ try {
   assert.equal(await page.locator('.entry-introduction').count(),0,'No homepage tagline');
   assert.equal(await page.locator('.plate-kicker').count(),1);
   assert((await page.locator('.plate-kicker').textContent()).includes('39.8° N · 98.6° W'));
-  assert.equal(await input.getAttribute('placeholder'),'Find a place or ZIP code');
+  assert.equal(await input.getAttribute('placeholder'),'State, town, county or ZIP code');
+  assert.equal(await input.evaluate(el=>getComputedStyle(el,'::placeholder').fontStyle),'normal');
   assert.equal(await page.getByRole('combobox',{name:'Search by state, town, county or ZIP code',exact:true}).count(),1);
   assert.equal(await page.locator('.landing-coverage-link').count(),0);
   assert.equal(await page.locator('.coverage-scale-slot').count(),1);

@@ -281,7 +281,7 @@ export function NationalCoverageMap({ searchFirst = false, scaleStrip, focusedEn
     {searchFirst && <div id="coverage-place-search" className="coverage-search-overlay" inert={exploring} aria-hidden={exploring}>
       <div className="coverage-search-panel">
         {focusedEntry && <button className="coverage-explore-button coverage-explore-inline" type="button" aria-label="Explore map" title="Explore map" aria-controls="coverage-map-content" onClick={()=>changeMode(true)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2Zm6-2v16m6-14v16" /></svg></button>}
-        <PlaceSearch variant="hero" placeholder={focusedEntry ? "Find a place or ZIP code" : undefined} />
+        <PlaceSearch variant="hero" />
         {!focusedEntry && <p className="home-find-hint">Detailed coverage starts with {coveredNames()}.<span className="search-shortcut" aria-hidden="true">Press <kbd>/</kbd> to search</span></p>}
       </div>
     </div>}

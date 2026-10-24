@@ -1,5 +1,6 @@
 /* Homepage-only experiment: real tool interfaces, with live text outside the image. */
 @media screen {
+  :root .search-first-home .coverage-search-panel .place-search-hero input::placeholder { font-style: normal; }
   @media (min-width: 901px) {
     :root .search-first-home .nation-head h1 { font-size: clamp(50px, 5.2vw, 72px) !important; }
     :root .search-first-home .nation-page .landing-canvas .nation-head { padding-bottom: 4rem; }

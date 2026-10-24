@@ -1,5 +1,27 @@
 # Homepage text reduction
 
+## Review follow-up: original search wording, upright type — 2026-10-24
+
+Restore “State, town, county or ZIP code” in the homepage search and make its
+placeholder upright rather than italic. Scope the type change to the homepage;
+keep the serif face, accessible label, shared header/404 behavior and search logic.
+Remove the now-unused placeholder override prop introduced by the previous follow-up.
+Consolidate its unit tests to cover the default header and hero accessible names and
+placeholders. Update the browser check for the original wording and computed normal
+placeholder font style. Plate caption and tagline removal are unchanged.
+
+Files: `web/components/PlaceSearch.tsx`, `web/components/PlaceSearch.test.tsx`,
+`web/components/NationalCoverageMap.tsx`, `web/app/home-tool-previews.css`,
+`web/scripts/check-search-first.mjs`. No data changes, deployment or merge.
+
+Verification: 749 frontend tests across 126 files and TypeScript passed (one now-
+redundant override test was removed when consolidating defaults). Homepage/stories-
+scoped production build and whitespace checks passed. Inspected mobile light capture;
+placeholder is upright, fully readable and retains its original wording.
+All fourteen local search browser cases passed at 320/390/768/1024/1280/1440/1920px in
+light/dark, including the computed normal font style, accessible name, suggestions,
+map transitions, artwork clearance, reduced motion, scoped axe and no overflow.
+
 ## Review follow-up: restore plate caption and simplify search wording — 2026-10-24
 
 Restore the decorative “Plate I · The United States · 39.8° N · 98.6° W” caption exactly
