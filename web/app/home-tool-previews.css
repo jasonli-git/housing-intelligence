@@ -31,7 +31,7 @@
   .home-tools a:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
 
   /* Two narrow score cards; histories remain available on demand. */
-  :root .search-first-home .national-scoreboard { max-width: 520px; margin-inline: auto; margin-top: 1rem !important; padding-block: 0; }
+  :root .search-first-home .national-scoreboard { max-width: 440px; margin-inline: auto; margin-top: 1rem !important; padding-block: 0; }
   :root .search-first-home .national-scoreboard .national-backdrop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; border: 0; border-radius: 0; background: none; backdrop-filter: none; overflow: visible; }
   :root .search-first-home.search-first-home .national-scoreboard .national-benchmark { --score-accent: color-mix(in oklab, var(--story-up) 75%, var(--text-secondary)); display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 10px; min-height: 0; padding: 16px !important; border: 1px solid color-mix(in srgb, var(--score-accent) 35%, var(--border)) !important; border-radius: 0 !important; background: radial-gradient(ellipse at 85% 115%, color-mix(in srgb, var(--score-accent) 8%, transparent), transparent 70%), linear-gradient(165deg, color-mix(in srgb, var(--glass) 35%, transparent), transparent), var(--plate-paper) !important; box-shadow: none; }
   :root .search-first-home.search-first-home .national-scoreboard .national-benchmark + .national-benchmark { --score-accent: color-mix(in oklab, var(--story-down) 75%, var(--text-secondary)); border: 1px solid color-mix(in srgb, var(--score-accent) 35%, var(--border)) !important; }

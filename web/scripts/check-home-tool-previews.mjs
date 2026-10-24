@@ -67,7 +67,7 @@ try {
     assert.equal(await figures.locator('a[href^="https://"]').count(), 2);
     const panelHeight = (await figures.boundingBox()).height;
     assert(panelHeight <= 236, `compact default panel: ${panelHeight}px`);
-    assert((await figures.boundingBox()).width <= 520, 'narrow national figures footprint');
+    assert((await figures.boundingBox()).width <= 440, 'narrow national figures footprint');
     assert(await figures.locator('.national-rate small').evaluateAll((lines) => lines.every((line) => getComputedStyle(line).textAlign === 'center')), 'source/date lines centred');
     assert(await figures.locator('.national-rate small a').evaluateAll((links) => links.every((link) => getComputedStyle(link).whiteSpace === 'nowrap' && link.getClientRects().length === 1)), 'publisher names stay together');
     assert.equal(await figures.locator('#national-home-prices-heading br').count(), 1, 'deliberate home-price label line break');

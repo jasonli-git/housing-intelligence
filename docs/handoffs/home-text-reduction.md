@@ -1,5 +1,21 @@
 # Homepage text reduction
 
+## Review follow-up: narrower metric cards — 2026-10-24
+
+Reduce the metric pair's maximum width from 520px to 440px. With the unchanged 12px
+gap, each desktop card is now 214px rather than 254px (about 16% narrower). Preserve
+fonts, padding, heights, source dates, real graphs and muted treatment. Small screens
+remain fluid within the existing page gutters rather than squeezing their text further.
+Update the browser maximum-width guard. Files: `web/app/home-tool-previews.css` and
+`web/scripts/check-home-tool-previews.mjs`. No data, navigation or other section changes.
+
+Verification: TypeScript, affected-route production build and whitespace checks passed.
+Local Chromium metric/tool regression passed at 1440/768/390/320px in both themes,
+including narrowed width, unchanged 161px/159px heights, intact publisher names, source/
+graph clearance, history path equality, scoped axe, keyboard/touch, tool destinations
+and print behavior. Inspected desktop light capture. Unit suite not rerun for this
+width-only adjustment. No full-site publication, physical-device testing, deploy or merge.
+
 ## Review follow-up: mute whole metric cards — 2026-10-24
 
 User clarified that “mute” meant reducing overall prominence, not only desaturating
