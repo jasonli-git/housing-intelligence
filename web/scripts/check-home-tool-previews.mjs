@@ -65,6 +65,11 @@ try {
     const panelHeight = (await figures.boundingBox()).height;
     assert(panelHeight <= 236, `compact default panel: ${panelHeight}px`);
     assert((await figures.boundingBox()).width <= 520, 'narrow national figures footprint');
+    assert(await figures.locator('.national-rate small').evaluateAll((lines) => lines.every((line) => getComputedStyle(line).textAlign === 'center')), 'source/date lines centred');
+    assert(await figures.locator('.national-rate small a').evaluateAll((links) => links.every((link) => getComputedStyle(link).whiteSpace === 'nowrap' && link.getClientRects().length === 1)), 'publisher names stay together');
+    assert.equal(await figures.locator('#national-home-prices-heading br').count(), 1, 'deliberate home-price label line break');
+    assert((await figures.locator('#national-home-prices-heading').innerText()).includes('Year-over-year'));
+    assert(await figures.locator('.national-rate > strong').evaluateAll((values) => Math.abs(values[0].getBoundingClientRect().top - values[1].getBoundingClientRect().top) < 1), 'both values share a baseline row');
     assert(await figures.locator('.national-benchmark h3').evaluateAll((labels) => labels.every((label) => getComputedStyle(label).textAlign === 'center')), 'metric names centred');
     assert(await figures.locator('.national-rate > strong').evaluateAll((values) => values.every((value) => getComputedStyle(value).textAlign === 'center' && Math.abs((value.getBoundingClientRect().left + value.getBoundingClientRect().right) / 2 - (value.closest('.national-benchmark').getBoundingClientRect().left + value.closest('.national-benchmark').getBoundingClientRect().right) / 2) < 1)), 'numbers centred within each card');
     assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => parseFloat(getComputedStyle(card).borderRadius) === 24 && parseFloat(getComputedStyle(card.querySelector('h3')).fontSize) >= 16 && getComputedStyle(card.querySelector('h3')).fontFamily.includes('Georgia') && getComputedStyle(card.querySelector('strong')).fontFamily.includes('Georgia'))), 'rounded cards with readable editorial typography');

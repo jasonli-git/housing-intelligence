@@ -28,11 +28,12 @@
   :root .search-first-home .national-scoreboard .national-benchmark::after { content: none; }
   :root .search-first-home.search-first-home .national-scoreboard .national-benchmark,
   :root .search-first-home.search-first-home .national-scoreboard .national-benchmark + .national-benchmark { border-top-width: 12px !important; border-radius: 24px !important; }
-  :root .search-first-home .national-scoreboard .national-benchmark h3 { margin: 0 !important; font: 400 18px/1.25 Georgia, serif !important; letter-spacing: -.015em !important; text-align: center; }
+  :root .search-first-home .national-scoreboard .national-benchmark h3 { margin: 0 !important; min-height: 2.5em; font: 400 18px/1.25 Georgia, serif !important; letter-spacing: -.015em !important; text-align: center; }
   :root .search-first-home .national-scoreboard .national-rate { display: contents !important; }
   :root .search-first-home .national-scoreboard .national-rate > strong { text-align: center; }
   :root .search-first-home .national-scoreboard .national-rate > strong { font: 400 36px/1 Georgia, serif !important; letter-spacing: -.035em !important; background: linear-gradient(180deg, var(--text-primary) 45%, color-mix(in srgb, var(--score-accent) 45%, var(--text-primary))); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: var(--text-primary); font-variant-numeric: lining-nums tabular-nums; }
-  :root .search-first-home .national-scoreboard .national-rate small { grid-column: 1 / -1; margin: 0; font-size: 10px !important; line-height: 1.5; color: var(--text-secondary); }
+  :root .search-first-home .national-scoreboard .national-rate small { grid-column: 1 / -1; margin: 0; font-size: 10px !important; line-height: 1.5; color: var(--text-secondary); text-align: center; }
+  :root .search-first-home .national-scoreboard .national-rate small a { white-space: nowrap; }
   .national-history > summary { width: fit-content; margin-inline: auto; padding: 8px 4px; color: var(--text-secondary); font: 11px/1.5 var(--font-text); cursor: pointer; }
   .national-history > summary:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; border-radius: 4px; }
   .national-history-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; padding-top: 12px; }

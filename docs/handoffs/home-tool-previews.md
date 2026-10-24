@@ -1,5 +1,25 @@
 # Homepage tool previews
 
+## Review follow-up: approved metric finishing touches — 2026-10-24
+
+Centre source/date lines to complete the centred card composition. Set the price label
+to “Home prices” / “Year-over-year” with a deliberate line break; reserve two label
+lines in both cards so their values align, also deliberately breaking “30-year” /
+“mortgage rate.” Prevent publisher names (including FHFA
+HPI®) from breaking within a name. Keep existing dates, links, figures and definitions;
+add no further decoration or animation. These implement the user's approved suggestions.
+
+Files: `web/app/page.tsx`, `web/app/home-tool-previews.css`, and browser regression.
+The regression now checks source alignment, intact publisher links, the explicit label
+break and matching value rows. No data/API, navigation, or other section changes.
+
+Verification: 747 frontend tests, TypeScript, final affected-route production build,
+and whitespace checks passed. Local browser regression passed at 1440/768/390/320px
+in light/dark, including scoped axe, histories, source wrapping and Tools interactions.
+An additional final-label check passed at 1440/390/320px after balancing both headings.
+Inspected desktop light and mobile captures. No full-site publication, physical-device
+testing, deployment or merge.
+
 ## Review follow-up: centre metric names — 2026-10-24
 
 Centre the metric headings as requested, matching their already-centred values.
