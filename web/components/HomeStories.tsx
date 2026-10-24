@@ -8,7 +8,6 @@ export function HomeStories() {
       <div className="home-stories-copy">
         <h2 id="home-stories-heading">Visual stories</h2>
         <p className="home-stories-count"><strong>{STORIES.length} stories</strong><span aria-hidden="true"> · </span>New Jersey</p>
-        <span className="home-stories-enter">Explore collection <span aria-hidden="true">↗</span></span>
       </div>
       {/* Real chart fragments form one decorative composition, not new plotted data
           or separate destinations. The collection supplies full charts and sources. */}

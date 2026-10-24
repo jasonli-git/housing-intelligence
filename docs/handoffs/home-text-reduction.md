@@ -1,5 +1,39 @@
 # Homepage text reduction
 
+## Review follow-up: larger stories title and tighter section rhythm — 2026-10-24
+
+Remove “Explore collection” and its arrow from the Visual stories gateway. Keep the
+whole card as one accessible link, including its artwork; keep the real story count
+and NJ scope. Enlarge the serif title from a 46px desktop maximum to 54px, and from
+34px to 40px mobile. Interpret “justify center but keep aligned left” as vertical
+centring of the copy group on desktop, with unchanged left alignment. On mobile,
+centre the copy within its upper 142px region so it does not collide with the artwork
+below. Card heights stay 220px desktop / 300px mobile.
+
+Reduce the metric section's top margin from 48px to 16px and remove its 11.2px top/
+bottom padding. Reduce the stories section's top margin from 41.6px to 17.6px. Leave
+the search/map canvas, search-result stacking, metric cards (161px / 159px), charts,
+source text, tools rail and publisher notices unchanged. Remove unused CTA-specific
+CSS, including its old hover/reduced-motion rules.
+
+Files: `web/components/HomeStories.tsx`, `web/components/HomeStories.test.tsx`,
+`web/app/home-refresh.css`, `web/app/home-tool-previews.css`, and
+`web/scripts/check-home-stories.mjs`. Browser guards now check CTA absence, larger
+heading size, desktop vertical alignment, compact section gaps and existing link access.
+
+Verification: 751 frontend tests, TypeScript and affected-route production build
+passed. Eight local responsive/theme story cases passed at 1440/768/390/320px,
+including copy fit, gap/centring checks, artwork click-through, focus, scoped axe,
+hover/no-autoplay and reduced motion. Inspected desktop light and mobile dark cards.
+Additional metric/search checks are recorded with this follow-up. No data changes,
+full-site publication, physical-device testing, deployment or merge.
+The same eight story cases and motion checks also passed against the final static
+production build. Tool/metric checks passed at all four widths in both themes,
+including exact card heights, graph/source clearance, histories, keyboard/touch,
+destinations and scoped axe. All fourteen search/map cases passed from 320px to
+1920px in light/dark, including result stacking despite the closer metric section.
+Whitespace checks passed.
+
 ## Review follow-up: coloured values and square card tops — 2026-10-24
 
 Colour the headline numbers with each card's existing metric accent: blue mortgage
