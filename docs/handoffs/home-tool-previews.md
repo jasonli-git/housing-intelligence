@@ -298,3 +298,15 @@ scoped production build and whitespace checks passed. Local Chromium checks at
 1440 and 390px in light/dark confirmed the body pseudo-element has no content,
 background image or animation; the collection gateway and Tools rail remain intact.
 No merge or deployment.
+
+## Review follow-up: stronger Visual stories background — 2026-10-24
+
+Give only `.home-stories-gateway` a stronger blue-tinted gradient and coordinated
+border in `web/app/home-refresh.css`. Mix the existing story-blue token with the
+existing page base: pale blue in light mode, deep navy in dark mode. No new hard-coded
+colours. Keep copy, chart fragments, motion, card dimensions and other sections unchanged.
+
+Verification: 747 frontend tests, TypeScript, homepage/stories-scoped production build
+and whitespace checks passed. Gateway browser/axe checks passed at 1440, 768, 390 and
+320px in both themes, including focus, artwork click-through and reduced motion.
+Inspected light/dark desktop screenshots. No merge or deployment.
