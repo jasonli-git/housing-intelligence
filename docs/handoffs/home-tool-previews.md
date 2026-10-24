@@ -1,5 +1,17 @@
 # Homepage tool previews
 
+## Review follow-up: triple metric top borders — 2026-10-24
+
+Increase both metric cards' top borders from 4px to 12px as requested. Other borders
+remain 1px; typography, 24px corners, colours, width and interactions are unchanged.
+Update the browser assertion to require 12px top edges. Files: homepage metric CSS
+and browser regression script. This supersedes only the 4px top-border measurement
+in the preceding follow-up. Verification: 747 frontend tests, TypeScript, affected
+homepage/stories production build and whitespace checks passed. Local Chromium checks
+passed at 1440/768/390/320px in light/dark, including computed border widths, scoped
+axe, histories and Tools interactions. Inspected mobile dark capture. No data changes,
+full-site publication, physical-device testing, deployment or merge.
+
 ## Review follow-up: editorial type and rounded metric cards — 2026-10-24
 
 At the user's request, supersede the square corners and monospace scoreboard type.
