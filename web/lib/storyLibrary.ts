@@ -10,8 +10,14 @@ export const COLLECTIONS = [
 ] as const;
 
 export type CollectionId = (typeof COLLECTIONS)[number]["id"];
-export const EDITOR_PICKS = ["twin-towns", "the-wawa-line", "the-true-monthly-cost", "the-flood-claims-calendar"];
-export const FEATURED_STORY = "twin-towns";
+/**
+ * The library's front (owner, 2026-10-24): a featured story every New Jerseyan has an
+ * opinion on, then one pick from each collection, mixing chart types, and one a buyer
+ * can act on. The featured story is not repeated among the picks.
+ */
+export const FEATURED_STORY = "the-wawa-line";
+export const FEATURED_HEADLINE = ["Where South Jersey", "begins."] as const;
+export const EDITOR_PICKS = ["twin-towns", "the-flood-claims-calendar", "boroughitis", "how-long-homes-sit", "where-you-can-see-the-stars", "the-true-monthly-cost"];
 export const storySlug = (story: Story) => story.href.split("/").at(-1)!;
 
 /** Short library previews; full story descriptions and search vocabulary stay intact. */
