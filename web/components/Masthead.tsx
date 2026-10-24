@@ -4,7 +4,6 @@ import { PlaceSearch } from "@/components/PlaceSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import type { AffordabilityControl } from "@/components/HousingModeToggle";
 import { LicenceLine } from "@/components/LicenceLine";
-import { SiteStatus } from "@/components/SiteStatus";
 
 const REPOSITORY = "https://github.com/jasonli-git/housing-intelligence";
 
@@ -106,7 +105,6 @@ export function Masthead({
       </nav>
       <div className="site-meta-row shared-meta">
         <LicenceLine />
-        <SiteStatus />
       </div>
     </>
   );

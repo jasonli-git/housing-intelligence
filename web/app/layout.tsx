@@ -5,6 +5,7 @@ import { InlineScript } from "@/components/InlineScript";
 import { FrameMeter } from "@/components/FrameMeter";
 import { PrintFooter } from "@/components/PrintFooter";
 import { SourceFooter } from "@/components/SourceFooter";
+import { SourceCheckFooter } from "@/components/SourceCheckFooter";
 import { HOUSING_MODE_SCRIPT } from "@/lib/housingMode";
 import { SHARE_DEFAULTS } from "@/lib/meta";
 import { SITE_URL } from "@/lib/site";
@@ -82,6 +83,7 @@ export default function RootLayout({
             condition of Zillow's licence, and the pages most likely to be linked
             directly are the ones least likely to have remembered it. */}
         <SourceFooter />
+        <SourceCheckFooter />
         <PrintFooter />
       </body>
     </html>

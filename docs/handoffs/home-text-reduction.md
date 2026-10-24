@@ -1,5 +1,70 @@
 # Homepage text reduction
 
+## Approved shared-chrome follow-up: universal source-check footer — 2026-10-24
+
+This follow-up deliberately extends beyond homepage-only styling, as approved by the
+user: move source-check status out of the masthead on both desktop and mobile, and
+put it at the natural bottom of every page, after all publisher notices, source links,
+code/data terms and policies. The commercial-use notice remains below the menu.
+
+### Implementation and decisions
+
+- Remove `SiteStatus` from `Masthead`; mount a single `SourceCheckFooter` after
+  `SourceFooter` in the root layout. Keep it separate from `SourceFooter`'s data-
+  dependent return so status remains available even when source attribution cannot
+  load. No publisher/licence notice content is changed or moved into a disclosure.
+- Render the new area as uniquely labelled navigation, not another content-info
+  landmark. Initial accessibility checks caught duplicate footer landmarks; using
+  labelled status navigation resolves this while keeping the intended visual placement.
+- Reuse the existing `SiteStatus` logic and `/freshness` destination. Preserve full
+  “Source checks scheduled Fridays” fallback wording at every width. Preserve recent
+  check dates, overdue wording and unreachable-source qualifications when status JSON
+  is available; do not imply a successful check from a schedule alone.
+- Quiet unboxed 12px text, theme-aware colour, existing page gutters, 44px target,
+  keyboard focus, reduced-motion behavior. No floating/sticky control. Hide it when
+  printing, preserving report pagination rather than adding footer content.
+- Remove the obsolete mobile rule that hid the word “scheduled” in the old header.
+  Update the explanatory comment in `siteStatus.ts`; status calculation is unchanged.
+
+### Files affected
+
+- `web/app/layout.tsx`, `web/components/Masthead.tsx`: universal placement and removal.
+- `web/components/SourceCheckFooter.tsx`: new shared status navigation wrapper.
+- `web/app/site-chrome.css`: footer presentation and retired mobile-header rules.
+- `web/lib/siteStatus.ts`: comment only.
+- `web/components/SourceCheckFooter.test.tsx`: five tests for fallback, HTTP failure,
+  recent checks, overdue checks and unreachable-source wording.
+- `web/scripts/check-source-check-footer.mjs`: cross-page/theme/responsive regression.
+- `web/scripts/check-shared-navigation.mjs`: assert status is in footer, not metadata row.
+
+### Verification and limitations
+
+- `npm test -- --reporter=dot`: 756 tests across 127 files passed.
+- `npm run typecheck`: passed.
+- `npm run publication:test`: five tests passed.
+- Production build of 13 representative HTML routes (plus internal 404) and supporting
+  JSON routes passed; root layout is shared by every route. This was not a full-site
+  export of all place/report pages.
+- `node scripts/check-source-check-footer.mjs`: 64 cases passed (16 route types at
+  390/1440px in light/dark), plus a 320px full-wording check. Includes state, county,
+  town, ZIP, printable report, all six tools, stories, freshness, revisions, homepage
+  and real 404. Asserts one link, none in header, position below complete source
+  footer, full fallback text, no card treatment, focus, viewport fit, scoped axe,
+  destination click-through and print suppression. Status JSON is deliberately mocked
+  unreadable for repeatable schedule-wording checks; unit tests cover live-status states.
+- Same regression passed against static production output for home, guide, atlas and
+  freshness in both widths/themes (16 cases), plus 320px. Scoped export's existing
+  metadata-icon limitation remains unrelated to this footer work.
+- `node scripts/check-shared-navigation.mjs`: all 12 cases passed across state, guide,
+  tax and county at 390/814/1243px. Existing header tools/search/theme and licence
+  disclosure still work, with no header status copy.
+- Homepage search/map regression passed all fourteen width/theme cases (320 through
+  1920px), including first-screen search, result stacking, artwork clearance and map
+  transitions/reduced motion. Inspected mobile light and desktop dark footer captures.
+- `git diff --check`: passed.
+- No data ingestion/rebuild, hosting/account changes, full-site publication, deploy or
+  merge. Physical iOS/Android/Safari verification remains outstanding.
+
 ## Review follow-up: re-emphasise metric graphs — 2026-10-24
 
 Bring back stronger graph visibility while retaining the quieter card surfaces and

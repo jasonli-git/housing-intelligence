@@ -1,15 +1,11 @@
-/* Site chrome on phones (2026-10-15): the licence notice and the source-check link share one
-   row — the licence's toggle sits beside its label instead of pushing to the far edge, and
-   "scheduled" drops, leaving "Source checks · Fridays". Opening the licence still wraps its
-   text onto its own line below. */
+/* The licence stays below the menu. Source checks now live in the universal footer;
+   opening the licence still wraps its explanatory text onto its own line. */
 @media screen and (max-width: 600px) {
   :root body .site-meta-row.shared-meta, :root body .search-first-home .site-meta-row { display: flex !important; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .2rem .6rem !important; }
   :root body .site-meta-row .licence { flex: 0 1 auto !important; min-width: 0; margin: 0; }
   :root body .site-meta-row .licence-box > summary { justify-content: flex-start !important; gap: .35rem; width: auto; }
   :root body .site-meta-row .licence-box[open] { flex-basis: 100%; }
-  :root body .site-meta-row .site-status { flex: 0 0 auto; white-space: nowrap; margin-left: auto; }
-  :root body .site-meta-row .site-status-word { display: none; }
-  :root body .site-meta-row :is(.licence-label, .site-status, .site-status-kicker) { font-size: 9px !important; letter-spacing: .06em !important; }
+  :root body .site-meta-row .licence-label { font-size: 9px !important; letter-spacing: .06em !important; }
 }
 @media screen and (max-width: 600px) {
   .site-meta-row:has(.licence-box[open]) .licence { flex-basis: 100% !important; }
@@ -50,6 +46,17 @@
 
 /* A late weekly check (#411) reads in the page's ink, not the muted grey of a routine one. */
 .site-status[data-overdue] .site-status-kicker { color: var(--text-primary) !important; font-weight: 600; }
+
+/* One quiet, full-wording status line after all publisher notices and policies. */
+.site-check-footer { width: 100%; max-width: var(--shell); margin: 0 auto; padding: 0 var(--gutter) 1.5rem; box-sizing: border-box; }
+.site-check-footer .site-status { margin: 0; padding: .5rem 0; min-height: 44px; border: 0; border-radius: 0; background: none; box-shadow: none; font: 400 12px/1.5 var(--font-text); color: var(--text-secondary); }
+.site-check-footer .site-status-schedule { color: inherit; }
+.site-check-footer .site-status-kicker { font: inherit; letter-spacing: 0; text-transform: none; color: inherit; margin: 0; }
+.site-check-footer .site-status-word { display: inline; }
+.site-check-footer .site-status:hover { color: var(--text-primary); text-decoration: underline; text-underline-offset: 3px; }
+.site-check-footer .site-status:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .site-check-footer .site-status-arrow { transition: none; transform: none; } }
+@media print { .site-check-footer { display: none; } }
 
 /* The desktop search can be narrower than an input's intrinsic ~200px width.
    Let its grid track and input shrink together instead of covering the theme button. */
