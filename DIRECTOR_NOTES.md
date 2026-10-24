@@ -791,3 +791,81 @@ calendar. Keep the current placement after the national backdrop and before Tool
 label the New Jersey scope, and provide a separate link to the full collection.
 Show three cards on desktop and a native horizontal strip on mobile, without
 autoplay, rotation, extra tagline or carousel buttons.
+
+---
+
+## Professional-practice review (Claude and two Codex runs, via the owner)
+
+**Status:** Feedback — not approved for implementation
+**Recorded:** 2026-10-23
+
+The owner asked Claude and Codex (two runs, "6.1 sol") what a housing professional would
+consider that the project hasn't. Claude checked every claim against the repository.
+Points the code already handles are marked as such. Outside citations (the NJ assessor's
+handbook, Zillow's rent-versus-buy method, the CFPB, CNT's H+T Index) have not been
+checked.
+
+### Where all three reviews agree
+
+- **Check the likely sale value against real sales.** The property page divides a
+  home's assessment by the town's Director's Ratio (`impliedValue`,
+  `web/lib/parcels.ts`) and uses the result to price the monthly cost of owning, which
+  is also passed to the decision guide. Nothing measures how close that estimate comes
+  to the home's later sale price, or for which homes it misses: older assessments,
+  condos, price bands, renovated homes. The same per-sale comparison would also test how
+  fair assessments are, using the assessors' standard measures (IAAO dispersion and
+  regressivity tests). One study could answer both, from SR1A and MOD-IV, with no new
+  source.
+- **Watch real readers and a practitioner use the site.** There is extensive software
+  and model evaluation, but no record of people using the product or of a housing
+  professional reviewing whole answers. Both Codex runs suggested giving renters,
+  buyers, a housing counselor, an appraiser or a planner concrete tasks, then asking
+  what they concluded. The thing to look for is a confident misreading: taking a town's
+  flood share as a fact about one property, or an affordability result as mortgage
+  eligibility.
+
+### Raised by one or two reviews
+
+- **Inflation.** Every change figure is nominal, including FHFA's history back to 1975.
+  Each ACS 5-year income is in the dollars of its final year, so comparing incomes
+  across editions mixes dollar years. BLS CPI-U could supply real figures, or the pages
+  could at least say the figures are nominal. *(Claude)*
+- **Fair housing.** "Somewhere like here, but cheaper" matches on households with
+  children, and family status is protected under the Fair Housing Act. School and crime
+  figures on the decision guide are the other area where steering is a concern. Fair
+  lending was decided deliberately (#325); steering has not been considered. *(Claude;
+  Codex flagged scrutiny of recommendation wording)*
+- **Affordability benchmark versus a household's real room.** `/afford` counts a place
+  within reach at 30% of gross income. The decision guide warns that lenders, savings
+  and debts change the answer, but `/afford` has no such warning, and no page takes
+  spending, debts or household size as input. Suggested first step: make the
+  distinction clearer before building any new calculator. *(both Codex runs)*
+- **What the cheaper-place matching assumes.** The four measures and fixed thresholds
+  have no sensitivity test. The commute rule is the average for the town's residents,
+  not travel to the reader's own job. A rail stop nearby says nothing about how often
+  trains run; that question already waits on the NJ TRANSIT GTFS decision in TODO.
+  Fares, tolls and car costs aren't modelled. HUD's Location Affordability Index was
+  dropped in M45 for its 2012–2016 data; CNT's H+T Index hasn't been looked at. *(both
+  Codex runs)*
+- **Comparable homes and households.** The rent section already says the home's size
+  isn't public. Still, it puts all renters' ACS rents, long-time tenants included,
+  beside the cost of buying this home, under the heading "Renting nearby instead". The
+  sales-composition caveat exists, but no page warns that a rising median income can
+  mean different people moved in, or that a typical price is not a home for sale at
+  that price. *(both Codex runs)*
+- **A review standard for stories.** "Descriptive, not causal" is already a rule
+  (#429). There is no written check of whether a pattern survives another time window
+  or base, whether it reflects which places have data, or whether it is big enough to
+  matter. *(first Codex run)*
+- **Smaller items.** Housing supply against household growth, which `relationships.py`
+  deliberately doesn't call a shortage. Local rent-control ordinances, for which there
+  is no statewide source. QCEW wages as fresher income for the Milestone 53 nowcasts.
+  The rent-versus-buy break-even from the October 3 review, never decided. Short-term
+  rentals at the Shore, where nearly all the data is paid. *(Claude)*
+
+### Suggested order (the reviews' view, not a decision)
+
+All three put validating the property estimate first and the reader-and-practitioner
+round second. Claude would put inflation adjustment and the fair-housing review next.
+
+Do not implement yet.
