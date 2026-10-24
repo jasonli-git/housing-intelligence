@@ -65,6 +65,7 @@ try {
     const panelHeight = (await figures.boundingBox()).height;
     assert(panelHeight <= 236, `compact default panel: ${panelHeight}px`);
     assert((await figures.boundingBox()).width <= 520, 'narrow national figures footprint');
+    assert(await figures.locator('.national-benchmark h3').evaluateAll((labels) => labels.every((label) => getComputedStyle(label).textAlign === 'center')), 'metric names centred');
     assert(await figures.locator('.national-rate > strong').evaluateAll((values) => values.every((value) => getComputedStyle(value).textAlign === 'center' && Math.abs((value.getBoundingClientRect().left + value.getBoundingClientRect().right) / 2 - (value.closest('.national-benchmark').getBoundingClientRect().left + value.closest('.national-benchmark').getBoundingClientRect().right) / 2) < 1)), 'numbers centred within each card');
     assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards.every((card) => parseFloat(getComputedStyle(card).borderRadius) === 24 && parseFloat(getComputedStyle(card.querySelector('h3')).fontSize) >= 16 && getComputedStyle(card.querySelector('h3')).fontFamily.includes('Georgia') && getComputedStyle(card.querySelector('strong')).fontFamily.includes('Georgia'))), 'rounded cards with readable editorial typography');
     assert(await figures.locator('.national-benchmark').evaluateAll((cards) => cards[1].getBoundingClientRect().left - cards[0].getBoundingClientRect().right >= 11), 'two visibly separated cards');

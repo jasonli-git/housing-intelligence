@@ -1,5 +1,18 @@
 # Homepage tool previews
 
+## Review follow-up: centre metric names — 2026-10-24
+
+Centre the metric headings as requested, matching their already-centred values.
+Source/date lines remain left-aligned. No other visual or behavior change. Add a
+browser assertion for heading alignment. Files: homepage metric CSS and browser
+regression script. Finishing-touch suggestions are recommendations only, not approved
+implementation. No deployment, merge or data changes.
+
+Verification: TypeScript, affected homepage/stories production build and whitespace
+checks passed. Local Chromium regression passed at 1440/768/390/320px in both themes,
+including alignment, scoped axe, histories and Tools interactions. Inspected mobile
+dark capture. Unit suite not rerun for this text-alignment-only adjustment.
+
 ## Review follow-up: centre metric values — 2026-10-24
 
 Centre only the metric numbers horizontally in each card. Keep headings and source
