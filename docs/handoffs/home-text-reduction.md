@@ -1,5 +1,29 @@
 # Homepage text reduction
 
+## Review follow-up: restore plate caption and simplify search wording — 2026-10-24
+
+Restore the decorative “Plate I · The United States · 39.8° N · 98.6° W” caption exactly
+as before, including its existing mobile behavior (coordinates hidden at narrow widths)
+and `aria-hidden` treatment. Keep the tagline removed and larger desktop title.
+Change the hero-only search placeholder to “Find a place or ZIP code”; the shared
+header search wording and full accessible state/town/county/ZIP label are unchanged.
+No changes to search matching, destinations, keyboard behavior or coverage.
+
+Files: `web/app/page.tsx`, `web/components/PlaceSearch.tsx`,
+`web/components/NationalCoverageMap.tsx`, and the search browser regression, which now
+checks the restored caption, new placeholder and accessible name. Pass an optional
+placeholder override from the focused homepage map; the 404's existing hero placeholder
+and non-focused map uses keep their previous wording.
+Earlier text-count measurements describe prior iterations, not this restored caption.
+
+Verification: 750 frontend tests across 126 files, TypeScript, final affected-route
+production build and whitespace checks passed. Added three PlaceSearch unit tests for
+the unchanged header/default hero wording and the homepage override's full accessible
+label. Search browser checks passed at 320/390/768/1024/1280/1440/1920px in both themes,
+including caption/placeholder, first-screen search, suggestions, map/title/menu
+clearance, transitions/reduced motion and scoped axe. Inspected final desktop light
+capture. No full-site publication, physical-device testing, deployment or merge.
+
 ## Review follow-up: larger desktop title, no tagline — 2026-10-24
 
 Remove the homepage tagline altogether. Increase desktop heading size from

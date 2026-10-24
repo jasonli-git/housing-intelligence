@@ -22,9 +22,11 @@ import { entryPath, type SearchEntry } from "@/lib/search";
  */
 export function PlaceSearch({
   variant = "bar",
+  placeholder,
 }: {
   /** "hero": the home page's own search, larger and labelled "Find your place". */
   variant?: "bar" | "hero";
+  placeholder?: string;
 } = {}) {
   const [entries, setEntries] = useState<SearchEntry[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -49,7 +51,7 @@ export function PlaceSearch({
       onFocus={load}
       onPick={(entry) => router.push(entryPath(entry))}
       label="Search by state, town, county or ZIP code"
-      placeholder={variant === "hero" ? "State, town, county or ZIP code" : "Town, county or ZIP"}
+      placeholder={placeholder ?? (variant === "hero" ? "State, town, county or ZIP code" : "Town, county or ZIP")}
       name={variant === "hero" ? "home-place-query" : "place-query"}
     />
   );
