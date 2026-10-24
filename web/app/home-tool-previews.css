@@ -1,0 +1,60 @@
+/* Homepage-only experiment: real tool interfaces, with live text outside the image. */
+@media screen {
+  .home-tools-rail { position: relative; min-width: 0; container-type: inline-size; --tool-card-width: calc((100cqw - 48px) / 3.25); }
+  :root .search-first-home .home-tools .home-tools-track { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: var(--tool-card-width); gap: 16px; padding: 4px 4px 14px; margin: -4px; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .home-tools-track > li { min-width: 0; scroll-snap-align: start; }
+  .home-tools-arrow { position: absolute; top: calc(var(--tool-card-width) * .3125); transform: translateY(-50%); z-index: 3; width: 44px; height: 160px; padding: 0; border: 0; border-radius: 14px; color: var(--text-primary); background: color-mix(in srgb, var(--plate-paper) 30%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3); font: 36px/1 var(--font-text); display: grid; place-items: center; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 180ms ease, background 180ms ease; }
+  .home-tools-previous { left: 6px; }
+  .home-tools-next { right: 6px; }
+  .home-tools-rail:is(:hover, :focus-within) .home-tools-arrow:not(:disabled) { opacity: 1; pointer-events: auto; }
+  .home-tools-arrow:disabled { opacity: 0; pointer-events: none; }
+  .home-tools-arrow:not(:disabled):hover { background: color-mix(in srgb, var(--plate-paper) 45%, transparent); }
+  .home-tools-arrow:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+  @media (hover: none), (pointer: coarse) { .home-tools-rail .home-tools-arrow:not(:disabled) { opacity: 1; pointer-events: auto; } }
+  :root .search-first-home.search-first-home .home-tools a[data-tool] { padding: 0; gap: 0; overflow: hidden; border-radius: 18px; }
+  :root .search-first-home.search-first-home .home-tools a[data-tool]:is(:hover, :focus-visible) { transform: none; }
+  .home-tool-preview { display: block; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; background: color-mix(in srgb, var(--tool-ink) 8%, var(--plate-paper)); border-bottom: 1px solid var(--glass-edge); }
+  .home-tool-preview img { width: 100%; height: 100%; object-fit: contain; object-position: top center; }
+  .home-tool-copy { display: flex; flex: 1; flex-direction: column; align-items: start; gap: .5rem; padding: 1rem 1.1rem; }
+  :root .search-first-home .home-tool-title { font-size: 22px !important; }
+  :root .search-first-home .home-tool-scope { margin-top: .25rem !important; }
+  .home-tools a:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+
+  /* Two narrow score cards; histories remain available on demand. */
+  :root .search-first-home .national-scoreboard { max-width: 520px; margin-inline: auto; }
+  :root .search-first-home .national-scoreboard .national-backdrop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; border: 0; border-radius: 0; background: none; backdrop-filter: none; overflow: visible; }
+  :root .search-first-home.search-first-home .national-scoreboard .national-benchmark { --score-accent: var(--story-up); display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 10px; min-height: 0; padding: 16px !important; border: 1px solid color-mix(in srgb, var(--score-accent) 65%, var(--border)) !important; border-radius: 0 !important; background: radial-gradient(ellipse at 85% 115%, color-mix(in srgb, var(--score-accent) 20%, transparent), transparent 70%), linear-gradient(165deg, var(--glass), transparent), var(--plate-paper) !important; box-shadow: inset 0 1px 0 color-mix(in srgb, var(--score-accent) 30%, transparent), 0 8px 24px -20px var(--score-accent); }
+  :root .search-first-home.search-first-home .national-scoreboard .national-benchmark + .national-benchmark { --score-accent: var(--story-down); border: 1px solid color-mix(in srgb, var(--score-accent) 65%, var(--border)) !important; }
+  :root .search-first-home .national-scoreboard .national-benchmark::after { content: none; }
+  :root .search-first-home.search-first-home .national-scoreboard .national-benchmark,
+  :root .search-first-home.search-first-home .national-scoreboard .national-benchmark + .national-benchmark { border-top-width: 12px !important; border-radius: 24px !important; }
+  :root .search-first-home .national-scoreboard .national-benchmark h3 { margin: 0 !important; min-height: 2.5em; font: 400 18px/1.25 Georgia, serif !important; letter-spacing: -.015em !important; text-align: center; }
+  :root .search-first-home .national-scoreboard .national-rate { display: contents !important; }
+  :root .search-first-home .national-scoreboard .national-rate > strong { text-align: center; }
+  :root .search-first-home .national-scoreboard .national-rate > strong { font: 400 36px/1 Georgia, serif !important; letter-spacing: -.035em !important; background: linear-gradient(180deg, var(--text-primary) 45%, color-mix(in srgb, var(--score-accent) 45%, var(--text-primary))); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: var(--text-primary); font-variant-numeric: lining-nums tabular-nums; }
+  :root .search-first-home .national-scoreboard .national-rate small { grid-column: 1 / -1; margin: 0; font-size: 10px !important; line-height: 1.5; color: var(--text-secondary); text-align: center; }
+  :root .search-first-home .national-scoreboard .national-rate small a { white-space: nowrap; }
+  .national-history > summary { width: fit-content; margin-inline: auto; padding: 8px 4px; color: var(--text-secondary); font: 11px/1.5 var(--font-text); cursor: pointer; }
+  .national-history > summary:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; border-radius: 4px; }
+  .national-history-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; padding-top: 12px; }
+  :root .search-first-home .national-scoreboard .national-trend { position: static; height: auto; margin: 8px 0 !important; }
+  :root .search-first-home .national-scoreboard .national-trend-plot { display: grid !important; grid-template-columns: 40px minmax(0, 1fr); height: 100px; }
+  :root .search-first-home .national-scoreboard .national-trend-scale { display: flex !important; }
+  :root .search-first-home .national-scoreboard .national-trend svg { height: 100% !important; }
+  :root .search-first-home .national-scoreboard .national-trend figcaption { position: static; margin-top: 4px; font-size: 9px !important; letter-spacing: 0; }
+  :root .search-first-home .national-scoreboard .national-trend-end { animation: none; }
+  :root .search-first-home .national-scoreboard .national-backdrop-note { margin: 10px 0 0; font-size: 11px; text-align: center; }
+  @media (max-width: 1000px) {
+    .home-tools-rail { --tool-card-width: calc((100cqw - 24px) / 2.25); }
+  }
+  @media (max-width: 600px) {
+    :root .search-first-home.search-first-home .national-scoreboard .national-benchmark { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 12px !important; align-content: start; }
+    :root .search-first-home .national-scoreboard .national-benchmark h3 { font-size: 16px !important; }
+    .national-history-grid { grid-template-columns: minmax(0, 1fr); }
+    .home-tools-rail { --tool-card-width: 82cqw; }
+    .home-tool-copy { padding: .8rem; gap: .4rem; }
+    :root .search-first-home .home-tool-title { font-size: 18px !important; }
+    :root .search-first-home .home-tool-text { font-size: 13px !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { .home-tools-arrow { transition: none; } }
+}

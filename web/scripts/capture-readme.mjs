@@ -1,4 +1,4 @@
-// The README's screenshots, captured from the build about to ship (ARCHITECTURE #175,
+// README screenshots and homepage tool/story covers from the build about to ship (#175,
 // #393): `make deploy` runs this against dist/site served locally and writes the images
 // into dist/artifacts/screenshots/, which the same deploy uploads beside the data. The
 // README links to them there, so they are never committed and always show the deployed
@@ -7,6 +7,7 @@ import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
+import { captureToolPreviews } from './tool-previews.mjs';
 
 const origin = process.env.SCREENSHOT_ORIGIN ?? 'http://localhost:3006';
 const outDir = resolve(process.env.SCREENSHOT_DIR ?? '../dist/artifacts/screenshots');
@@ -42,7 +43,9 @@ const only = process.env.SCREENSHOT_ONLY;
 await mkdir(resolve(outDir, 'stories'), { recursive: true });
 const browser = await chromium.launch();
 try {
-  if (only !== 'readme') {
+  // Generate tool covers before the homepage/README captures that display them.
+  if (only !== 'stories') await captureToolPreviews(browser, { origin, outDir });
+  if (only !== 'readme' && only !== 'tools') {
     for (const scheme of ['light', 'dark']) {
       const context = await browser.newContext({ viewport: { width: SHOT.width, height: SHOT.height }, deviceScaleFactor: SHOT.scale, colorScheme: scheme, reducedMotion: 'reduce', locale: 'en-US' });
       const page = await context.newPage();
@@ -96,13 +99,19 @@ try {
       await context.close();
     }
   }
-  for (const viewport of only === 'stories' ? [] : VIEWPORTS) {
+  for (const viewport of only === 'stories' || only === 'tools' ? [] : VIEWPORTS) {
     const context = await browser.newContext({
       viewport: { width: viewport.width, height: viewport.height },
       deviceScaleFactor: viewport.scale,
       colorScheme: 'light',
       reducedMotion: 'reduce',
       locale: 'en-US',
+    });
+    // These images were just generated, so the deployed artifact origin may not
+    // have them yet. Render the homepage README capture from this run's covers.
+    await context.route('**/screenshots/tools/*', async (route) => {
+      const file = resolve(outDir, 'tools', route.request().url().split('/').pop());
+      await route.fulfill(existsSync(file) ? { path: file, contentType: 'image/jpeg' } : { status: 404 });
     });
     const page = await context.newPage();
     for (const { name, path } of PAGES) {
