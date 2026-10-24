@@ -1,11 +1,6 @@
-/* Horizon (2026-10-14): the home page's chosen look, over the atlas plate (home-plate.css).
-   Dark sky and glass with the plate's serif and rust; by day the same glass over warm
-   paper with a dawn glow. Follows the site's light/dark setting through light-dark(). */
+/* Horizon: glass over the plate's warm paper/dark base, with serif and rust accents.
+   The ambient background glow is retired; foreground accents and charts remain. */
 @media screen {
-@keyframes look-aurora { to { transform: translate3d(4vw, 3vh, 0) rotate(8deg) scale(1.1); } }
-
-/* 3. Plate at night: dark sky and glass with the plate's serif and rust; by day the
-   same glass over warm paper with a dawn glow. */
 :root body:has(.search-first-home) {
   --plate-ink:light-dark(#22201c,#f1ebe0); --plate-paper:light-dark(#f7f2ea,#0b0a09); --plate-accent:light-dark(#b2462e,#f08a5d);
   --plate-rule:light-dark(#22201c14,#f1ebe014); --plate-strong-rule:light-dark(#22201c26,#f1ebe026);
@@ -13,10 +8,7 @@
   --glass:light-dark(#ffffffa6,#ffffff0d); --glass-edge:light-dark(#ffffff,#f1ebe01f); --state-blue:var(--plate-accent);
   background:var(--plate-paper);
 }
-:root body:has(.search-first-home)::before { content:""; position:fixed; inset:-25vh -10vw auto; height:85vh; z-index:-1; pointer-events:none; filter:blur(70px); opacity:.42;
-  background: radial-gradient(30% 40% at 25% 30%, #d0613e 0%, transparent 70%), radial-gradient(28% 36% at 72% 22%, light-dark(#c9a7ff,#7a3cff) 0%, transparent 70%), radial-gradient(26% 30% at 55% 62%, #e5a64a 0%, transparent 70%);
-  animation: look-aurora 26s ease-in-out infinite alternate; }
-@media (prefers-reduced-motion: reduce) { :root body:has(.search-first-home)::before { animation:none; } }
+:root body:has(.search-first-home)::before { content:none; background:none; animation:none; }
 :root .search-first-home :is(.bar,.site-meta-row) { background:color-mix(in srgb,var(--plate-paper) 60%,transparent) !important; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
 :root .search-first-home .nation-head h1 { font-size:clamp(54px,8.5vw,120px) !important; }
 :root .search-first-home .nation-head h1 em { background:linear-gradient(90deg,var(--plate-accent),light-dark(#d98a2b,#ffc27a) 55%,var(--plate-accent)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }

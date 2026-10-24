@@ -284,3 +284,17 @@ physical-device/Safari and deployed validation remain outstanding. No new TODOs.
   including keyboard navigation, sources, touch, fades, reduced motion and axe.
 - Inspected desktop and mobile screenshots in both themes; `git diff --check` passed.
 - No full site publication, warehouse writes, merge or deployment.
+
+## Review follow-up: remove ambient background glow — 2026-10-24
+
+Removed the homepage's multicolour ambient pseudo-element responsible for the
+orange/gold glow in `web/app/home-horizon.css`, including its unused aurora keyframes.
+Keep the underlying warm-paper/dark base, foreground title/link accents, chart glows,
+tool colours and section layouts unchanged. Lowered the colour baseline from 47 to
+43 after removing four hard-coded background colours; no new colours introduced.
+
+Verification: 747 frontend tests (including colour policy), TypeScript, homepage-
+scoped production build and whitespace checks passed. Local Chromium checks at
+1440 and 390px in light/dark confirmed the body pseudo-element has no content,
+background image or animation; the collection gateway and Tools rail remain intact.
+No merge or deployment.
