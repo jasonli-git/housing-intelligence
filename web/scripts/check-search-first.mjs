@@ -9,7 +9,7 @@ try {
   const page=await context.newPage();await page.goto(origin,{waitUntil:'networkidle'});
   const input=page.locator('.coverage-search-panel input');
   assert((await input.boundingBox()).y<500,'Search should be on the first mobile screen');
-  assert(await page.getByText('Housing data. Clear sources.').isVisible());
+  assert.equal(await page.locator('.entry-introduction').count(),0,'No homepage tagline');
   assert.equal(await page.locator('.plate-kicker').count(),0);
   assert.equal(await page.locator('.landing-coverage-link').count(),0);
   assert.equal(await page.locator('.coverage-scale-slot').count(),1);
@@ -37,6 +37,7 @@ try {
       const boxes=[...document.querySelectorAll('.coverage-unavailable,.coverage-available')].map(e=>e.getBoundingClientRect());
       const range=document.createRange();range.selectNodeContents(document.querySelector('h1'));
       return Math.min(...boxes.map(b=>b.left))>range.getBoundingClientRect().right+8
+        && Math.min(...boxes.map(b=>b.top))>document.querySelector('.site-meta-row').getBoundingClientRect().bottom+4
         && Math.max(...boxes.map(b=>b.bottom))<document.querySelector('.coverage-search-panel input').getBoundingClientRect().top-6
         && Math.max(...boxes.map(b=>b.right))<innerWidth-8;
     }),'Desktop artwork must clear title, input and viewport edges');

@@ -40,7 +40,6 @@ export default async function HousingLandingPage() {
       <div className="landing-canvas">
       <header className="page-head nation-head" data-kind="nation">
         <h1>Housing <em>Intelligence</em></h1>
-        <p className="entry-introduction">Housing data. Clear sources.</p>
         <p className="entry-free-assurance"><span className="entry-free"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3 3 7-7" /></svg><span>Free · No fees or ads</span></span></p>
       </header>
       <section className="coverage-entry coverage-entry-map" aria-label="Find your place">

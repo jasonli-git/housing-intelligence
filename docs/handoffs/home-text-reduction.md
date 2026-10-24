@@ -1,5 +1,34 @@
 # Homepage text reduction
 
+## Review follow-up: larger desktop title, no tagline — 2026-10-24
+
+Remove the homepage tagline altogether. Increase desktop heading size from
+`clamp(42px, 4.2vw, 64px)` to `clamp(50px, 5.2vw, 72px)`. At 1440/1920px the title
+ends about 20px before the US artwork; 1024/1280px have more clearance. Preserve
+vertical space in the desktop header for the existing artwork so removing the tagline
+does not move it into the navigation/source-check row. Mobile heading size is unchanged.
+
+Update the search regression to require no tagline and to check that desktop artwork
+clears the source-check row as well as the heading, search box and viewport edges.
+No change to the map caveat in this follow-up: that means the small exploration-mode
+note identifying the map as coverage rather than prices, NJ's available housing pages,
+and the omission of Alaska/Hawaii. This was explained to the user, not newly hidden.
+
+Files: `web/app/page.tsx`, `web/app/home-tool-previews.css`,
+`web/scripts/check-search-first.mjs`. The hero now has eight rendered words instead of
+the previous twelve; the original region-specific measurement below is historical.
+
+Verification: 747 frontend tests and TypeScript passed. Final affected-route production
+build and whitespace checks passed. Static-production geometry checks passed at
+320/390/768/1024/1280/1440/1920px in both themes: no tagline/overflow, and desktop
+artwork clears the title, metadata row and search. During iteration, the new metadata
+clearance assertion caught insufficient spacing at 1280px; the final 4rem desktop
+header bottom padding resolves it. Inspected final desktop light and mobile dark
+captures (the scoped export's existing metadata-icon limitation still applies).
+No deploy, merge or data changes; source notices and metric cards remain unchanged.
+The final development search regression also passed all fourteen width/theme cases,
+including search suggestions, map transitions, reduced motion and scoped axe.
+
 ## What changed
 
 - Created `experiment/home-text-reduction` from clean `main` at `7580ed8` after approval.

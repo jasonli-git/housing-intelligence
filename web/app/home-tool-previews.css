@@ -1,7 +1,8 @@
 /* Homepage-only experiment: real tool interfaces, with live text outside the image. */
 @media screen {
   @media (min-width: 901px) {
-    :root .search-first-home .nation-head h1 { font-size: clamp(42px, 4.2vw, 64px) !important; }
+    :root .search-first-home .nation-head h1 { font-size: clamp(50px, 5.2vw, 72px) !important; }
+    :root .search-first-home .nation-page .landing-canvas .nation-head { padding-bottom: 4rem; }
   }
   .search-first-home .entry-free-assurance > .entry-free { display: inline-flex; align-items: center; min-height: 44px; margin: 0; font: 600 11px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
   .home-tools-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .25rem 1rem; margin-bottom: .6rem; }
