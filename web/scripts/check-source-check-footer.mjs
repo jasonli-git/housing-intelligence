@@ -28,9 +28,19 @@ try {
         return publishers.top >= title.bottom + 8 && Math.abs(publishers.left - title.left) < 1 && s.borderRadius === '0px' && s.backgroundImage === 'none' && s.boxShadow === 'none';
       }), 'provenance title sits above left-aligned publishers in an open section');
       const publisherCount = await provenance.locator('.brief-item').count();
+      assert(await provenance.locator('.brief-item').evaluateAll((items) => items.every((el) => {
+        const bounds = el.getBoundingClientRect(), container = el.closest('.foot-brief').getBoundingClientRect();
+        return bounds.left >= container.left - 1 && bounds.right <= container.right + 1 && el.scrollWidth <= el.clientWidth + 1;
+      })), 'long publisher names wrap instead of clipping');
+      const summary = provenance.locator('summary');
+      const closedChevron = await summary.locator('.disclose-hint').evaluate((el) => getComputedStyle(el, '::after').transform);
+      await summary.hover();
+      assert(await summary.evaluate((el) => getComputedStyle(el).boxShadow !== 'none' && getComputedStyle(el.querySelector('.foot-label')).textDecorationLine === 'underline'), 'disclosure row has a subtle hover affordance without changing its background');
+      assert(await summary.locator('.disclose-hint').evaluate((el) => getComputedStyle(el, '::after').transitionDuration === '0s'), 'reduced motion disables chevron transition');
       await provenance.locator('summary').focus();
       await page.keyboard.press('Enter');
       assert(await provenance.evaluate((el) => el.open), 'source disclosure opens by keyboard');
+      assert.notEqual(await summary.locator('.disclose-hint').evaluate((el) => getComputedStyle(el, '::after').transform), closedChevron, 'chevron reflects open state');
       assert.equal(await provenance.locator('.inst').count(), publisherCount, 'every publisher retained in full disclosure');
       assert(await provenance.locator('.inst-grid').isVisible());
       await page.keyboard.press('Enter');
@@ -62,7 +72,7 @@ try {
       await link.focus();
       assert(await link.evaluate((el) => el.matches(':focus-visible')));
       const audit = await new AxeBuilder({ page }).include('.site-check-footer').include('.site-meta-row').include('.footer-provenance').include('.footer-colophon').include('.foot-links').analyze();
-      assert.deepEqual(audit.violations.map((v) => v.id), []);
+      assert.deepEqual(audit.violations.map((v) => ({ id: v.id, targets: v.nodes.map((n) => n.target) })), []);
       await page.emulateMedia({ media: 'print' });
       assert.equal(await footer.isVisible(), false, 'no extra status line in printed reports');
       await page.emulateMedia({ media: 'screen' });
@@ -80,6 +90,9 @@ try {
   await context.route('**/status.json', (r) => r.fulfill({ status: 404, body: '' }));
   const page = await context.newPage();
   await page.goto(origin);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  assert.equal(await page.locator('.footer-provenance .disclose-hint').evaluate((el) => getComputedStyle(el, '::after').transitionDuration), '0.14s', 'normal motion gets a short chevron transition');
+  assert(await page.locator('.foot-inner').evaluate((el) => getComputedStyle(el).rowGap === '16px'), 'footer uses a consistent section gap');
   const link = page.locator('.site-check-footer .site-status');
   await link.scrollIntoViewIfNeeded();
   assert((await link.innerText()).includes('scheduled'));

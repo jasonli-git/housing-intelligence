@@ -1,5 +1,53 @@
 # Homepage text reduction
 
+## Finishing pass: disclosure, spacing and interaction review — 2026-10-24
+
+### What changed / files
+
+- `web/app/site-chrome.css`: consistent 16px footer section gaps and source-history
+  padding, a larger gap before Notice, and a subtle underline/inset edge cue on the
+  source summary's hover/focus state. The chevron rotates over 140ms; reduced motion
+  makes the state change immediate. Long publisher names wrap within the available
+  width instead of being clipped by the source disclosure on phones.
+- `web/scripts/check-source-check-footer.mjs`: guard hover affordance, chevron state,
+  reduced/normal motion, section gap and unclipped publisher names; include exact axe
+  targets in failures.
+
+### Decisions, assumptions and limitations
+
+Keep existing content, heading sizes, disclosure semantics, source links and legal
+wording. No new cards, copy or autoplay. Changes are screen-only; print rules remain
+unchanged. Initial hover-background tint failed contrast for the NJ provenance label
+and noncommercial badge; replaced it with an underline/edge cue, not recoloured data
+attribution. Visual inspection at 768px dark and 1024px light found no title/artwork
+collision or layout changes needed. Footer captures reviewed at 390px dark and 1440px
+light; the mobile capture exposed the long-name clipping fixed here.
+
+The first scoped static tool-click test timed out because its destination pages were
+not all in that build. Expanded the representative build to all six tools and reran.
+The scoped build omits the existing metadata icon route; a broken header icon in those
+captures is not a claim of full-export asset validation. No full export, physical-device
+test, data changes, canonical documentation changes, deployment or merge.
+
+### Verification
+
+- 760 frontend tests across 128 files passed; TypeScript and five publication tests
+  passed. Representative-route production build passed; `git diff --check` passed.
+- Search-first regression passed in development and built static pages at
+  320/390/768/1024/1280/1440/1920px in both themes: suggestion stacking, map identity,
+  normal/reduced-motion transitions, keyboard/focus, layout and scoped axe.
+- Development tool-preview checks passed at 320/390/768/1440px in both themes:
+  six destination links/back navigation, rail edge controls, touch, histories and axe.
+- Development story-gateway checks passed at the same four widths in both themes,
+  including click-through, keyboard, hover motion, no autoplay and reduced motion.
+- Static tool-preview and story-gateway reruns passed at the same four widths in
+  both themes, including all six tool destinations and back navigation.
+- Final footer regressions passed in 16 development cases (home, guide, NJ, printable
+  report) and 12 static cases (home, guide, NJ), each at 390/1440px in both themes,
+  plus 320px fit, 140ms normal-motion and immediate reduced-motion checks. Includes
+  publisher-name wrapping, disclosure state/focus, source retention and scoped axe.
+  Inspected the final 390px dark static capture to confirm long names are fully visible.
+
 ## Shared-footer follow-up: smaller Sources label and dot — 2026-10-24
 
 Reduce Sources to 18px and insert a decorative, aria-hidden middle dot between Data

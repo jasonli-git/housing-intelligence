@@ -60,6 +60,9 @@
 
 /* Shared provenance: heading above publishers, not a label beside a dense text row. */
 @media screen {
+  :root body .foot .foot-inner { gap: 1rem; }
+  :root body .foot .foot-notices { margin: 0; }
+  :root body .foot .foot-links { padding-block: 1rem; }
   :root body .foot details.footer-provenance { border: 0; border-top: 1px solid var(--border); border-radius: 0; background: none; box-shadow: none; padding-inline: 0; }
   :root body .foot .footer-provenance > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title hint" "publishers publishers"; align-items: start; gap: .75rem 1rem; min-height: 0; padding: .9rem 0; }
   :root body .foot .footer-provenance .foot-title-block { grid-area: title; min-width: 0; display: flex; align-items: baseline; gap: .75rem; }
@@ -68,13 +71,21 @@
   :root body .foot .footer-provenance .foot-title-separator { color: var(--text-muted); }
   :root body .foot .footer-provenance .foot-brief,
   :root body .foot .footer-provenance .foot-intro.when-open { grid-area: publishers; margin: 0; }
+  :root body .foot .footer-provenance .brief-item { display: inline-block; max-width: 100%; white-space: normal; overflow-wrap: anywhere; vertical-align: top; }
   :root body .foot .footer-provenance .disclose-hint { grid-area: hint; align-self: center; justify-self: end; margin: 0; }
   :root body .foot .footer-provenance > summary:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+  :root body .foot .footer-provenance > summary:is(:hover, :focus-visible) { box-shadow: inset 0 -1px var(--text-muted); }
+  :root body .foot .footer-provenance > summary:is(:hover, :focus-visible) .foot-label { text-decoration: underline; text-underline-offset: .2em; text-decoration-thickness: 1px; }
+  :root body .foot .footer-provenance .disclose-hint::after { margin: 0; transition: transform 140ms ease; }
+  @media (prefers-reduced-motion: reduce) {
+    :root body .foot .footer-provenance > summary,
+    :root body .foot .footer-provenance .disclose-hint::after { transition: none; }
+  }
 }
 
 /* A quiet colophon rather than another enclosed card. Keep all terms visible. */
 @media screen {
-  :root body .foot section.footer-colophon { display: grid; grid-template-columns: minmax(180px, .24fr) minmax(0, 1fr); grid-template-areas: "heading copy" "heading policies"; align-items: start; gap: .5rem 1.5rem; margin-top: .5rem; padding: 1.1rem 0 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; outline: none; background: none; box-shadow: none; }
+  :root body .foot section.footer-colophon { display: grid; grid-template-columns: minmax(180px, .24fr) minmax(0, 1fr); grid-template-areas: "heading copy" "heading policies"; align-items: start; gap: .5rem 1.5rem; margin-top: 1rem; padding: 1.1rem 0 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; outline: none; background: none; box-shadow: none; }
   :root body .foot .footer-colophon .foot-notice-head { grid-area: heading; display: flex; align-items: center; gap: .55rem; }
   :root body .foot .footer-colophon .foot-notice-head > svg { width: 28px; height: 28px; stroke: var(--notice-text); }
   :root body .foot .footer-colophon .foot-notice-head .foot-notice-title { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; font: 400 32px/1.15 Georgia, serif; font-family: Georgia, serif !important; font-size: 32px !important; letter-spacing: -.02em; text-transform: none; color: var(--notice-text); }
