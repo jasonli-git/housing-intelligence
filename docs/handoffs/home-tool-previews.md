@@ -310,3 +310,17 @@ Verification: 747 frontend tests, TypeScript, homepage/stories-scoped production
 and whitespace checks passed. Gateway browser/axe checks passed at 1440, 768, 390 and
 320px in both themes, including focus, artwork click-through and reduced motion.
 Inspected light/dark desktop screenshots. No merge or deployment.
+
+## Review follow-up: make the card colour prominent — 2026-10-24
+
+Strengthen the collection card from a faint tint to a blue-to-violet panel using
+existing story tokens at 45%/48% against the theme's base. Increase its blue border,
+brighten/darken secondary text from the primary token, and explicitly match the CTA
+to the foreground for contrast. Let 15% of the panel colour show through the chart
+composition so the colour reads across the card, not just behind the heading.
+Only `web/app/home-refresh.css` changes; keep normal light/dark treatment, dimensions,
+layout, artwork sources, interactions and other page sections unchanged. No new colours.
+
+Verification: 747 frontend tests, TypeScript, homepage/stories-scoped production build,
+whitespace checks and all eight local responsive/theme gateway/axe checks passed.
+Inspected desktop light/dark and mobile dark screenshots. No merge or deployment.
